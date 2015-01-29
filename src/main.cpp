@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <list>
 #include <fstream>
 #include <algorithm>
 
@@ -17,9 +18,9 @@ enum class cell_type
 using cell = boost::make_recursive_variant
              <
               std::string,
-              std::vector<boost::recursive_variant_>
+              std::list<boost::recursive_variant_>
              >::type;
-using cell_list = std::vector<cell>;
+using cell_list = std::list<cell>;
 
 std::ostream& operator <<(std::ostream &os, cell const &c)
 {
@@ -55,8 +56,46 @@ int main(int const argc, char ** const argv)
             jtl::it::back_inserter(file));
   std::string contents{ file.at(0) };
 
-  cell root{ cell_list{ "define", cell_list{ "bomp" }, "4" } };
-  std::cout << root << std::endl;
+  cell root{ cell_list{} };
+  std::vector<cell_list*> list_stack{ &boost::get<cell_list>(root) };
 
-  std::cout << contents << std::endl;
+  for(auto it(contents.begin()); it != contents.end();)
+  {
+    auto const index(std::distance(contents.begin(), it));
+    auto const next(contents.find_first_not_of(" \t\n\r\v", index));
+    if(next == std::string::npos)
+    { break; }
+
+    auto const word_end(contents.find_first_of(" \t\n\r\v", next));
+    it = std::next(contents.begin(), word_end);
+
+    auto word(contents.substr(next, word_end - next));
+    if(word.empty())
+    { continue; }
+
+    auto const active_list(list_stack.back());
+    auto const starts_list(word[0] == '(');
+    auto const ends_list(word.back() == ')');
+    std::cout << "word: '" << word << "' "
+              << "(start = " << starts_list << ", "
+              << "end = " << ends_list << ")"
+              << std::endl;
+    if(starts_list)
+    { word.erase(0, 1); }
+    if(ends_list)
+    { word.erase(word.size() - 1, 1); }
+
+    if(starts_list)
+    {
+      active_list->push_back(cell_list{ word });
+      list_stack.push_back(&boost::get<cell_list>(active_list->back()));
+    }
+    else
+    { active_list->push_back(word); }
+
+    if(ends_list)
+    { list_stack.pop_back(); }
+  }
+
+  std::cout << root << std::endl;
 }
