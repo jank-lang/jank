@@ -1,0 +1,33 @@
+structs:
+  non-generic:
+    (struct coord (x float) (y float))
+
+  generic:
+    (struct coord : (T1 T2) (x T1) (y T2)) ???
+      looks good
+    (struct coord<T1, T2> (x T1) (y T2)) ???
+      grammar is too irregular and not lispy
+      no commas, spacing should be lists only
+
+  member functions: ???
+    (struct file
+      (path string)
+      (opened bool false)
+
+      (open? (-> () bool) (lambda (-> () bool)
+        (do-system-is_open path)
+      )
+
+      (close (-> ()) (lambda (-> ())
+        (do-system-close path)
+      )
+   )
+
+non-member functions:
+  non-generic:
+    (func distance (float float) (float))
+    (func distance (coord : (float float) coord : (float float)) (float))
+
+  generic:
+    (func distance : (T1 T2) (coord : (T1 T2) coord : (T1 T2)) (float))
+      just ok; seems verbose; consider type param syntax?
