@@ -1,1 +1,4 @@
 (define (foo) 3)
+(struct coord : (T1 T2)
+  (x T1)
+  (y T2))

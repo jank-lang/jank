@@ -50,11 +50,11 @@ int main(int const argc, char ** const argv)
   }
 
   std::ifstream ifs{ argv[1] };
-  std::vector<std::string> file;
-  std::copy(jtl::it::stream_delim<>(ifs, ""),
-            jtl::it::stream_delim<>(),
-            jtl::it::back_inserter(file));
-  std::string contents{ file.at(0) };
+  std::string contents
+  (
+    std::istreambuf_iterator<char>{ ifs },
+    std::istreambuf_iterator<char>{}
+  );
 
   cell root{ cell_list{} };
   std::vector<cell_list*> list_stack{ &boost::get<cell_list>(root) };
