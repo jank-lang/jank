@@ -19,30 +19,30 @@ enum class cell_type
 };
 
 template <cell_type C>
-struct cell;
+struct cell_wrapper;
 
-using cell_variant = boost::variant
+using cell = boost::variant
 <
-  boost::recursive_wrapper<cell<cell_type::string>>,
-  boost::recursive_wrapper<cell<cell_type::list>>,
-  boost::recursive_wrapper<cell<cell_type::function>>
+  boost::recursive_wrapper<cell_wrapper<cell_type::string>>,
+  boost::recursive_wrapper<cell_wrapper<cell_type::list>>,
+  boost::recursive_wrapper<cell_wrapper<cell_type::function>>
 >;
 
 template <>
-struct cell<cell_type::string>
+struct cell_wrapper<cell_type::string>
 { std::string data; };
 template <>
-struct cell<cell_type::list>
-{ std::vector<cell_variant> data; };
+struct cell_wrapper<cell_type::list>
+{ std::vector<cell> data; };
 template <>
-struct cell<cell_type::function>
-{ std::function<cell_variant (cell<cell_type::list> const&)> data; };
+struct cell_wrapper<cell_type::function>
+{ std::function<cell (cell_wrapper<cell_type::list> const&)> data; };
 
-using cell_string = cell<cell_type::string>;
-using cell_list = cell<cell_type::list>;
-using cell_func = cell<cell_type::function>;
+using cell_string = cell_wrapper<cell_type::string>;
+using cell_list = cell_wrapper<cell_type::list>;
+using cell_func = cell_wrapper<cell_type::function>;
 
-std::ostream& operator <<(std::ostream &os, cell_variant const &c)
+std::ostream& operator <<(std::ostream &os, cell const &c)
 {
   switch(static_cast<cell_type>(c.which()))
   {
@@ -66,20 +66,20 @@ std::ostream& operator <<(std::ostream &os, cell_variant const &c)
 
 struct environment
 {
-  std::map<std::string, cell_variant> cells;
+  std::map<std::string, cell> cells;
 };
 environment env
 {
   {
     {
       "root",
-      cell_func{ [](cell_list const &) -> cell_variant{ return {}; } }
+      cell_func{ [](cell_list const &) -> cell{ return {}; } }
     },
     {
       "+",
       cell_func
       {
-        [](cell_list const &cl) -> cell_variant
+        [](cell_list const &cl) -> cell
         {
           auto const list(cl.data);
           if(list.size() < 3)
@@ -97,7 +97,7 @@ environment env
       "print",
       cell_func
       {
-        [](cell_list const &cl) -> cell_variant
+        [](cell_list const &cl) -> cell
         {
           auto const list(cl.data);
           if(list.size() < 2)
@@ -114,7 +114,7 @@ environment env
   }
 };
 
-cell_variant interpret(cell_list &root)
+cell interpret(cell_list &root)
 {
   /* Collapse all nested lists to values. */
   for(auto &c : root.data)
@@ -147,7 +147,7 @@ int main(int const argc, char ** const argv)
     std::istreambuf_iterator<char>{}
   );
 
-  cell_variant root{ cell_list{ { cell_string{ "root" } } } };
+  cell root{ cell_list{ { cell_string{ "root" } } } };
   std::vector<cell_list*> list_stack{ &boost::get<cell_list>(root) };
 
   for(auto it(contents.begin()); it != contents.end();)
@@ -178,7 +178,7 @@ int main(int const argc, char ** const argv)
 
     if(starts_list)
     {
-      active_list->data.push_back(cell_variant{ cell_list{ { cell_string{ word } } } });
+      active_list->data.push_back(cell{ cell_list{ { cell_string{ word } } } });
       list_stack.push_back(&boost::get<cell_list>(active_list->data.back()));
     }
     else
@@ -191,9 +191,6 @@ int main(int const argc, char ** const argv)
   /*******************************************************/
 
   std::cout << root << std::endl;
-
-  //cell_func c{ [](cell_list const&) -> cell{ return {}; } };
-  //env.cells["+"] = c;
 
   interpret(boost::get<cell_list>(root));
 }
