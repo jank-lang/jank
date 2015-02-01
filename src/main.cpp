@@ -10,6 +10,7 @@
 
 #include <jtl/iterator/stream_delim.hpp>
 #include <jtl/iterator/back_insert.hpp>
+#include <jtl/iterator/range.hpp>
 
 enum class cell_type
 {
@@ -42,18 +43,27 @@ using cell_string = cell_wrapper<cell_type::string>;
 using cell_list = cell_wrapper<cell_type::list>;
 using cell_func = cell_wrapper<cell_type::function>;
 
+int indent_level{ -1 };
+
 std::ostream& operator <<(std::ostream &os, cell const &c)
 {
   switch(static_cast<cell_type>(c.which()))
   {
     case cell_type::string:
-      os << boost::get<cell_string>(c).data << " ";
+      os << boost::get<cell_string>(c).data;
       break;
     case cell_type::list:
+      ++indent_level;
+      os << "\n";
+      for(int i{}; i < indent_level; ++i)
+      { (void)i; os << "  "; }
+
       os << "( ";
       for(auto const &v : boost::get<cell_list>(c).data)
       { os << v << " "; }
       os << ") ";
+
+      --indent_level;
       break;
     case cell_type::function:
       os << "function ";
@@ -61,6 +71,7 @@ std::ostream& operator <<(std::ostream &os, cell const &c)
     default:
       os << "??? ";
   }
+
   return os;
 }
 
@@ -164,27 +175,38 @@ int main(int const argc, char ** const argv)
     if(word.empty())
     { continue; }
 
-    auto const active_list(list_stack.back());
-    auto const starts_list(word[0] == '(');
-    auto const ends_list(word.back() == ')');
-    std::cout << "word: '" << word << "' "
-              << "(start = " << starts_list << ", "
-              << "end = " << ends_list << ")"
+    /* TODO: Count leading ( and trailing ). */
+    auto active_list(list_stack.back());
+    auto const starts_list(word.find_first_not_of("("));
+    auto const started(starts_list == std::string::npos ? 0 : starts_list);
+    auto const ends_list(word.find_last_of(")"));
+    auto const ended(ends_list == std::string::npos ? 0 : ends_list);
+    std::cout << "word: '" << word << "'\n\t"
+              << "([starts_list = " << starts_list << ", "
+              << "started = " << started << "], "
+              << "[ends_list = " << ends_list << ", "
+              << "ended = " << ended << "])"
               << std::endl;
-    if(starts_list)
-    { word.erase(0, 1); }
-    if(ends_list)
-    { word.erase(word.size() - 1, 1); }
+    if(ended)
+    { word.erase(word.size() - ends_list); }
 
-    if(starts_list)
+    if(started)
     {
-      active_list->data.push_back(cell{ cell_list{ { cell_string{ word } } } });
-      list_stack.push_back(&boost::get<cell_list>(active_list->data.back()));
+      word.erase(0, started);
+      for(std::size_t i{}; i < started; ++i)
+      {
+        active_list->data.push_back(cell_list{ { } });
+        active_list = &boost::get<cell_list>(active_list->data.back());
+        list_stack.push_back(active_list);
+      }
+      //active_list->data.push_back(cell_list{ { cell_string{ word } } });
+      //list_stack.push_back(&boost::get<cell_list>(active_list->data.back()));
+      active_list->data.push_back(cell_string{ word });
     }
     else
     { active_list->data.push_back(cell_string{ word }); }
 
-    if(ends_list)
+    for(std::size_t i{}; i < ended; ++i)
     { list_stack.pop_back(); }
   }
 
