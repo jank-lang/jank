@@ -24,30 +24,36 @@ cell parse(std::string contents)
     auto active_list(list_stack.back());
     auto const starts_list(word.find_first_not_of("("));
     auto const started(starts_list == std::string::npos ? 0 : starts_list);
-    auto const ends_list(word.find_last_of(")"));
-    auto const ended(ends_list == std::string::npos ? 0 : ends_list);
+    auto const ends_list(word.find_last_not_of(")"));
+    auto const ended(ends_list == word.size() - 1 ? 0 : ends_list);
     std::cout << "word: '" << word << "'\n\t"
               << "([starts_list = " << starts_list << ", "
               << "started = " << started << "], "
               << "[ends_list = " << ends_list << ", "
               << "ended = " << ended << "])"
               << std::endl;
+    if(started)
+    { word.erase(0, started); }
     if(ended)
-    { word.erase(word.size() - ends_list); }
+    { word.erase(ends_list + 1); }
+
+    cell word_cell{ cell_string{ word } };
+    std::cout << word << std::endl;
+    if(std::isdigit(word[0]) || word[0] == '-')
+    { word_cell = cell_int{ std::stoll(word) }; }
 
     if(started)
     {
-      word.erase(0, started);
       for(std::size_t i{}; i < started; ++i)
       {
         active_list->data.push_back(cell_list{ { } });
         active_list = &boost::get<cell_list>(active_list->data.back());
         list_stack.push_back(active_list);
       }
-      active_list->data.push_back(cell_string{ word });
+      active_list->data.push_back(word_cell);
     }
     else
-    { active_list->data.push_back(cell_string{ word }); }
+    { active_list->data.push_back(word_cell); }
 
     for(std::size_t i{}; i < ended; ++i)
     { list_stack.pop_back(); }

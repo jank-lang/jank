@@ -27,11 +27,11 @@ environment env
           if(list.size() < 3)
           { throw std::invalid_argument{ "invalid argument count" }; }
 
-          int val{};
+          cell_int::type val{};
           for(auto i(std::next(list.begin())); i != list.end(); ++i)
-          { val += std::stoi(boost::get<cell_string>(*i).data); }
+          { val += boost::get<cell_int>(*i).data; } /* TODO: type check */
 
-          return cell_string{ std::to_string(val) };
+          return cell_int{ val };
         }
       }
     },
@@ -46,7 +46,7 @@ environment env
           { throw std::invalid_argument{ "invalid argument count" }; }
 
           for(auto i(std::next(list.begin())); i != list.end(); ++i)
-          { std::cout << boost::get<cell_string>(*i).data; }
+          { std::cout << *i; }
           std::cout << std::endl;
 
           return {};
