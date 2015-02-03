@@ -25,7 +25,7 @@ cell parse(std::string contents)
     auto const starts_list(word.find_first_not_of("("));
     auto const started(starts_list == std::string::npos ? 0 : starts_list);
     auto const ends_list(word.find_last_not_of(")"));
-    auto const ended(ends_list == word.size() - 1 ? 0 : ends_list);
+    auto const ended(ends_list == word.size() - 1 ? 0 : word.size() - ends_list - 1);
     std::cout << "word: '" << word << "'\n\t"
               << "([starts_list = " << starts_list << ", "
               << "started = " << started << "], "
@@ -38,7 +38,6 @@ cell parse(std::string contents)
     { word.erase(ends_list + 1); }
 
     cell word_cell{ cell_string{ word } };
-    std::cout << word << std::endl;
     if(std::isdigit(word[0]) || word[0] == '-')
     { word_cell = cell_int{ std::stoll(word) }; }
 
