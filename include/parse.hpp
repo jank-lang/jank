@@ -38,7 +38,10 @@ cell parse(std::string contents)
     { word.erase(ends_list + 1); }
 
     cell word_cell{ cell_string{ word } };
-    if(std::isdigit(word[0]) || word[0] == '-')
+    auto const is_func(env.cells.find(word));
+    if(is_func != env.cells.end())
+    { }
+    else if(std::isdigit(word[0]) || word[0] == '-')
     { word_cell = cell_int{ std::stoll(word) }; }
 
     if(started)

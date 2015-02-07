@@ -12,16 +12,16 @@ enum class cell_type
 template <cell_type C>
 char constexpr const* cell_type_string();
 template <>
-char constexpr const* cell_type_string<cell_type::integer>()
+inline char constexpr const* cell_type_string<cell_type::integer>()
 { return "integer"; }
 template <>
-char constexpr const* cell_type_string<cell_type::string>()
+inline char constexpr const* cell_type_string<cell_type::string>()
 { return "string"; }
 template <>
-char constexpr const* cell_type_string<cell_type::list>()
+inline char constexpr const* cell_type_string<cell_type::list>()
 { return "list"; }
 template <>
-char constexpr const* cell_type_string<cell_type::function>()
+inline char constexpr const* cell_type_string<cell_type::function>()
 { return "function"; }
 
 inline char constexpr const* cell_type_string(cell_type const c)

@@ -62,7 +62,7 @@ std::ostream& operator <<(std::ostream &os, cell const &c)
       os << boost::get<cell_int>(c).data;
       break;
     case cell_type::string:
-      os << boost::get<cell_string>(c).data;
+      os << "<" << boost::get<cell_string>(c).data << ">";
       break;
     case cell_type::list:
       ++indent_level;

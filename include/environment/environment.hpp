@@ -19,7 +19,19 @@ environment env
     },
     {
       "+",
-      cell_func{ &add }
+      cell_func{ &sum }
+    },
+    {
+      "-",
+      cell_func{ &difference }
+    },
+    {
+      "/",
+      cell_func{ &quotient }
+    },
+    {
+      "*",
+      cell_func{ &product }
     },
     {
       "print",
