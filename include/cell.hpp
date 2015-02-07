@@ -9,14 +9,7 @@
 
 #include <boost/variant.hpp>
 
-/* TODO: ident, real, etc. */
-enum class cell_type
-{
-  integer,
-  string,
-  list,
-  function /* TODO: implement. */
-};
+#include "cell_type.hpp"
 
 template <cell_type C>
 struct cell_wrapper;
@@ -93,3 +86,23 @@ std::ostream& operator <<(std::ostream &os, cell const &c)
 
   return os;
 }
+
+namespace detail
+{
+  template <cell_type C>
+  struct cell_type_variant;
+  template <>
+  struct cell_type_variant<cell_type::integer>
+  { using type = cell_int; };
+  template <>
+  struct cell_type_variant<cell_type::string>
+  { using type = cell_string; };
+  template <>
+  struct cell_type_variant<cell_type::list>
+  { using type = cell_list; };
+  template <>
+  struct cell_type_variant<cell_type::function>
+  { using type = cell_func; };
+}
+template <cell_type C>
+using cell_type_variant_t = typename detail::cell_type_variant<C>::type;
