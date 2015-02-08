@@ -4,7 +4,7 @@
 
 cell parse(std::string contents)
 {
-  cell root{ cell_list{ { cell_string{ "root" } } } };
+  cell root{ cell_list{ { cell_ident{ "root" } } } };
   std::vector<cell_list*> list_stack{ &boost::get<cell_list>(root) };
 
   for(auto it(contents.begin()); it != contents.end();)
@@ -25,7 +25,8 @@ cell parse(std::string contents)
     auto const starts_list(word.find_first_not_of("("));
     auto const started(starts_list == std::string::npos ? 0 : starts_list);
     auto const ends_list(word.find_last_not_of(")"));
-    auto const ended(ends_list == word.size() - 1 ? 0 : word.size() - ends_list - 1);
+    auto const ended
+    (ends_list == word.size() - 1 ? 0 : word.size() - ends_list - 1);
     std::cout << "word: '" << word << "'\n\t"
               << "([starts_list = " << starts_list << ", "
               << "started = " << started << "], "
@@ -37,10 +38,10 @@ cell parse(std::string contents)
     if(ended)
     { word.erase(ends_list + 1); }
 
-    cell word_cell{ cell_string{ word } };
-    auto const is_func(env.cells.find(word));
-    if(is_func != env.cells.end())
-    { }
+    cell word_cell{ cell_ident{ word } };
+    auto const is_in_env(env.cells.find(word));
+    if(is_in_env != env.cells.end())
+    { /* TODO: ident */ }
     else if(std::isdigit(word[0]) || word[0] == '-')
     { word_cell = cell_int{ std::stoll(word) }; }
 

@@ -27,11 +27,10 @@ int main(int const argc, char ** const argv)
   (
     parse
     (
-      std::string
-      (
+      {
         std::istreambuf_iterator<char>{ ifs },
         std::istreambuf_iterator<char>{}
-      )
+      }
     )
   );
 

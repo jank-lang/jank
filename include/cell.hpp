@@ -18,6 +18,7 @@ using cell = boost::variant
 <
   boost::recursive_wrapper<cell_wrapper<cell_type::integer>>,
   boost::recursive_wrapper<cell_wrapper<cell_type::string>>,
+  boost::recursive_wrapper<cell_wrapper<cell_type::ident>>,
   boost::recursive_wrapper<cell_wrapper<cell_type::list>>,
   boost::recursive_wrapper<cell_wrapper<cell_type::function>>
 >;
@@ -30,6 +31,12 @@ struct cell_wrapper<cell_type::integer>
 };
 template <>
 struct cell_wrapper<cell_type::string>
+{
+  using type = std::string;
+  type data;
+};
+template <>
+struct cell_wrapper<cell_type::ident>
 {
   using type = std::string;
   type data;
@@ -49,6 +56,7 @@ struct cell_wrapper<cell_type::function>
 
 using cell_int = cell_wrapper<cell_type::integer>;
 using cell_string = cell_wrapper<cell_type::string>;
+using cell_ident = cell_wrapper<cell_type::ident>;
 using cell_list = cell_wrapper<cell_type::list>;
 using cell_func = cell_wrapper<cell_type::function>;
 
@@ -62,7 +70,10 @@ std::ostream& operator <<(std::ostream &os, cell const &c)
       os << boost::get<cell_int>(c).data;
       break;
     case cell_type::string:
-      os << "<" << boost::get<cell_string>(c).data << ">";
+      os << "\"" << boost::get<cell_string>(c).data << "\"";
+      break;
+    case cell_type::ident:
+      os << "<" << boost::get<cell_ident>(c).data << ">";
       break;
     case cell_type::list:
       ++indent_level;
@@ -97,6 +108,9 @@ namespace detail
   template <>
   struct cell_type_variant<cell_type::string>
   { using type = cell_string; };
+  template <>
+  struct cell_type_variant<cell_type::ident>
+  { using type = cell_ident; };
   template <>
   struct cell_type_variant<cell_type::list>
   { using type = cell_list; };

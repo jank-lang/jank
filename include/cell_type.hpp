@@ -5,6 +5,7 @@ enum class cell_type
 {
   integer,
   string,
+  ident,
   list,
   function /* TODO: implement. */
 };
@@ -17,6 +18,9 @@ inline char constexpr const* cell_type_string<cell_type::integer>()
 template <>
 inline char constexpr const* cell_type_string<cell_type::string>()
 { return "string"; }
+template <>
+inline char constexpr const* cell_type_string<cell_type::ident>()
+{ return "ident"; }
 template <>
 inline char constexpr const* cell_type_string<cell_type::list>()
 { return "list"; }
@@ -32,6 +36,8 @@ inline char constexpr const* cell_type_string(cell_type const c)
       return cell_type_string<cell_type::integer>();
     case cell_type::string:
       return cell_type_string<cell_type::string>();
+    case cell_type::ident:
+      return cell_type_string<cell_type::ident>();
     case cell_type::list:
       return cell_type_string<cell_type::list>();
     case cell_type::function:
