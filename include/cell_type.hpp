@@ -28,7 +28,8 @@ template <>
 inline char constexpr const* cell_type_string<cell_type::function>()
 { return "function"; }
 
-inline char constexpr const* cell_type_string(cell_type const c)
+/* TODO: constexpr */
+inline char const* cell_type_string(cell_type const c)
 {
   switch(c)
   {

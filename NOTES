@@ -1,3 +1,6 @@
+(\(+)([^\)\(]*)(\)*)
+(?<ident>[a-zA-Z]+)\s*|(?<string>\"(?<!\\\").*\")|(?<int>[\-|\+]?\d+(?!\d*\.\d+))|(?<real>[\-|\+]?\d+\.\d+)
+
 structs:
   non-generic:
     (struct coord (x float) (y float))
