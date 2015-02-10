@@ -4,6 +4,8 @@
 
 #include <jtl/iterator/range.hpp>
 
+#include <boost/algorithm/string/replace.hpp>
+
 #include "cell.hpp"
 
 cell parse(std::string contents)
@@ -28,7 +30,7 @@ cell parse(std::string contents)
       static std::regex inner_regex
       {
         R"(([a-zA-Z\_\+\*\/\^\?\!\:\%\.]+)\s*|)" /* idents */
-        R"(\"((?!\\\").*)\"|)" /* strings */
+        R"(\"((?:\\.|[^\\\"])*)\"|)" /* strings */
         R"((\-?\d+(?!\d*\.\d+))|)" /* integers */
         R"((\-?\d+\.\d+))" /* reals */
       };
@@ -71,9 +73,11 @@ cell parse(std::string contents)
           active_list->data.push_back(cell_ident{ inner_matches[1] }); }
         else if(inner_matches[2].matched) /* string */
         {
-          /* TODO: handle escapes */
-          std::cout << "string: " << inner_matches[2] << std::endl;
-          active_list->data.push_back(cell_string{ inner_matches[2] }); }
+          std::string word(inner_matches[2]);
+          boost::algorithm::replace_all(word, "\\\"", "\"");
+          std::cout << "string: " << word << std::endl;
+          active_list->data.push_back(cell_string{ word });
+        }
         else if(inner_matches[3].matched) /* integer */
         {
           std::cout << "int: " << inner_matches[3] << std::endl;
