@@ -1,9 +1,9 @@
 #pragma once
 
-/* TODO: ident, real, etc. */
 enum class cell_type
 {
   integer,
+  real,
   string,
   ident,
   list,
@@ -15,6 +15,9 @@ char constexpr const* cell_type_string();
 template <>
 inline char constexpr const* cell_type_string<cell_type::integer>()
 { return "integer"; }
+template <>
+inline char constexpr const* cell_type_string<cell_type::real>()
+{ return "real"; }
 template <>
 inline char constexpr const* cell_type_string<cell_type::string>()
 { return "string"; }
@@ -35,6 +38,8 @@ inline char const* cell_type_string(cell_type const c)
   {
     case cell_type::integer:
       return cell_type_string<cell_type::integer>();
+    case cell_type::real:
+      return cell_type_string<cell_type::real>();
     case cell_type::string:
       return cell_type_string<cell_type::string>();
     case cell_type::ident:

@@ -85,11 +85,7 @@ cell parse(std::string contents)
         else if(inner_matches[4].matched) /* real */
         {
           std::cout << "real: " << inner_matches[4] << std::endl;
-          /* TODO: real */
-          active_list->data.push_back
-          (
-            cell_int{ static_cast<cell_int::type>(std::stod(inner_matches[4])) }
-          );
+          active_list->data.push_back(cell_real{ std::stod(inner_matches[4]) });
         }
         else
         { std::cout << "nothing matched" << std::endl; }

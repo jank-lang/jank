@@ -1,1 +1,1 @@
-(print "\"value\": " (+ 100 42 (/ 84 -2)))
+(print "blood" " " 42 " " 3.14159 " " print)
