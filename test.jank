@@ -1,1 +1,8 @@
-(print "blood" " " 42 " " 3.14159 " " print)
+(func print_misa () ()
+  (print ">3<"))
+
+(func print_int () ()
+  (print 42)
+  (print 76)
+  (print_misa))
+(print_int)

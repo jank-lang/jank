@@ -58,6 +58,7 @@ template <>
 struct cell_wrapper<cell_type::function>
 {
   using type = std::function<cell (cell_wrapper<cell_type::list> const&)>;
+  std::vector<cell_type> arg_types;
   type data;
 };
 

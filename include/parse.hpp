@@ -2,9 +2,9 @@
 
 #include <regex>
 
-#include <jtl/iterator/range.hpp>
-
 #include <boost/algorithm/string/replace.hpp>
+
+#include <jtl/iterator/range.hpp>
 
 #include "cell.hpp"
 

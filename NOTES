@@ -1,36 +1,23 @@
-(\(+)([^\)\(]*)(\)*)
-(?<ident>[a-zA-Z]+)\s*|(?<string>\"(?<!\\\").*\")|(?<int>[\-|\+]?\d+(?!\d*\.\d+))|(?<real>[\-|\+]?\d+\.\d+)
-
 structs:
   non-generic:
-    (struct coord (x float) (y float))
+    (struct coord
+      (x float)
+      (y float))
 
   generic:
-    (struct coord : (T1 T2) (x T1) (y T2)) ???
-      looks good
-    (struct coord<T1, T2> (x T1) (y T2)) ???
-      grammar is too irregular and not lispy
-      no commas, spacing should be lists only
-
-  member functions: ???
-    (struct file
-      (path string)
-      (opened bool false)
-
-      (open? (-> () bool) (lambda (-> () bool)
-        (do-system-is_open path)
-      )
-
-      (close (-> ()) (lambda (-> ())
-        (do-system-close path)
-      )
-   )
+    (struct coord : (T:x T:y)
+      (x T:x)
+      (y T:y))
 
 non-member functions:
   non-generic:
-    (func distance (float float) (float))
-    (func distance (coord : (float float) coord : (float float)) (float))
+    (func square (i int) (int)
+      (* i i))
+    (func print_ints (a int b int) ()
+      (print a " " b))
 
   generic:
-    (func distance : (T1 T2) (coord : (T1 T2) coord : (T1 T2)) (float))
-      just ok; seems verbose; consider type param syntax?
+    (func square : (T:i) (i T:i) (T:i)
+      (* i i))
+    (func draw : (T:x T:y) (a coord : (T:x T:y) b coord : (T:x T:y)) ()
+      (print (field a x) ", " (field a y) " => " (field b x) ", " (field b y)))
