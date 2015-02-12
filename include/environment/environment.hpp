@@ -22,6 +22,10 @@ struct environment
 environment env /* TODO: fix this global shit */
 {
   { /* cells */
+    {
+      "forty_two",
+      cell_int{ 42 }
+    }
   },
   { /* funcs */
     {

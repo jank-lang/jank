@@ -15,8 +15,20 @@ cell interpret(cell_list &root)
   for(auto &c : root.data)
   {
     /* TODO: (quote foo bar spam) */
-    if(c.which() == static_cast<int>(cell_type::list))
-    { c = interpret(boost::get<cell_list>(c)); }
+    switch(static_cast<cell_type>(c.which()))
+    {
+      case cell_type::list:
+        c = interpret(boost::get<cell_list>(c));
+        break;
+      case cell_type::ident:
+      {
+        auto const ident_it(env.cells.find(boost::get<cell_ident>(c).data));
+        if(ident_it != env.cells.end())
+        { c = ident_it->second; }
+      } break;
+      default:
+        break;
+    }
   }
 
   auto const env_it(env.funcs.find(func_name));
