@@ -52,3 +52,21 @@ inline char const* cell_type_string(cell_type const c)
       return "unknown";
   }
 }
+
+inline cell_type cell_type_from_string(std::string const &str)
+{
+  if(str == "int")
+  { return cell_type::integer; }
+  else if(str == "real")
+  { return cell_type::real; }
+  else if(str == "string")
+  { return cell_type::string; }
+  else if(str == "ident")
+  { return cell_type::ident; }
+  else if(str == "list")
+  { return cell_type::list; }
+  else if(str == "function")
+  { return cell_type::function; }
+  else
+  { throw std::runtime_error{ "invalid cell type string: " + str }; }
+}

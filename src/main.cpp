@@ -90,18 +90,40 @@ environment env /* TODO: fix this global shit */
           { throw std::runtime_error{ "function already defined: " + name.data }; }
           env.funcs[name.data].emplace_back();
 
-          /* TODO: sort out this env shit */
           cell_func &func{ env.funcs[name.data].back() };
+          func.arguments = parse_arguments(args);
           func.env.parent = &env;
           func.data = [=, &func](auto &, cell_list const &args) -> cell
           {
-            /* TODO: merge args into function's env before interpreting */
-            for
-            (
-              auto const &a :
-              jtl::it::make_range(std::next(args.data.begin()), args.data.end())
-            )
-            { std::cout << "arg: " << a << std::endl; }
+            if(args.data.size() - 1 != func.arguments.size())
+            {
+              throw std::invalid_argument
+              {
+                "invalid argument count (expected " +
+                std::to_string(func.arguments.size()) +
+                ", found " + std::to_string(args.data.size() - 1) +
+                ")"
+              };
+            }
+            for(std::size_t i{}; i < func.arguments.size(); ++i)
+            {
+              auto const expected_type(func.arguments[i].type);
+              auto const found_type
+              (static_cast<cell_type>(args.data[i + 1].which()));
+
+              if(expected_type == found_type)
+              { func.env.cells[func.arguments[i].name] = args.data[i + 1]; }
+              else
+              {
+                throw std::invalid_argument
+                {
+                  std::string{ "invalid argument type: (expected " } +
+                  cell_type_string(expected_type) +
+                  ", found " + cell_type_string(found_type) +
+                  ")"
+                };
+              }
+            }
 
             cell_list body{ { cell_ident{ "root" } } };
             std::copy(std::next(list.begin(), 4), list.end(),

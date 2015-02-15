@@ -6,6 +6,7 @@
 #include <experimental/optional>
 
 #include "cell.hpp"
+#include "function/arg.hpp"
 
 struct environment
 {
@@ -31,7 +32,7 @@ struct cell_wrapper<cell_type::function>
 {
   using type = std::function<cell (environment&, cell_list const&)>;
 
-  std::vector<cell_type> arg_types;
+  std::vector<argument> arguments;
   type data;
   environment env;
 };

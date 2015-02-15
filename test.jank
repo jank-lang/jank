@@ -1,3 +1,7 @@
 (func print_int (i int) ()
-  (print forty_two))
-(print_int 42 "boob" ( + 4 3 ))
+  (print i))
+(func print_pair (a int b int) ()
+  (print_int a)
+  (print_int b))
+
+(print_pair 7000 800)
