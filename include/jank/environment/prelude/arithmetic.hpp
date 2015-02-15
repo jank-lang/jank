@@ -2,8 +2,8 @@
 
 #include <jtl/iterator/range.hpp>
 
-#include "cell.hpp"
-#include "environment/detail/expect.hpp"
+#include <jank/cell/cell.hpp>
+#include <jank/environment/detail/expect.hpp>
 
 namespace detail
 {

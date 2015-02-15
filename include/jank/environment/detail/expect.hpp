@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <cstdint>
 
-#include "cell.hpp"
+#include <jank/cell/cell.hpp>
 
 namespace detail
 {

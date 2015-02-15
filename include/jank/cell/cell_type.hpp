@@ -7,7 +7,7 @@ enum class cell_type
   string,
   ident,
   list,
-  function /* TODO: implement. */
+  function
 };
 
 template <cell_type C>

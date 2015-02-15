@@ -9,12 +9,12 @@
 #include <jtl/iterator/stream_delim.hpp>
 #include <jtl/iterator/back_insert.hpp>
 
-#include "environment/environment.hpp"
-#include "parse.hpp"
-#include "interpret.hpp"
-#include "environment/prelude/arithmetic.hpp"
+#include <jank/environment/environment.hpp>
+#include <jank/parse/parse.hpp>
+#include <jank/interpret/interpret.hpp>
+#include <jank/environment/prelude/arithmetic.hpp>
 
-environment env /* TODO: fix this global shit */
+environment env
 {
   { /* cells */
     {

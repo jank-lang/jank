@@ -9,7 +9,7 @@
 
 #include <boost/variant.hpp>
 
-#include "cell_type.hpp"
+#include <jank/cell/cell_type.hpp>
 
 template <cell_type C>
 struct cell_wrapper;

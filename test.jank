@@ -1,7 +1,9 @@
-(func print_int (i int) ()
-  (print i))
-(func print_pair (a int b int) ()
-  (print_int a)
-  (print_int b))
+(func print_val (s string v real) ()
+  (print s v)
+  
+  (func work (i int) ()
+    (print "working: " s v " with: " i))
+  
+  (work 42))
 
-(print_pair 7000 800)
+(print_val "pi: " 3.14159)

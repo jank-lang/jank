@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cell.hpp"
+#include <jank/cell/cell.hpp>
 
 cell interpret(environment &env, cell_list &root)
 {

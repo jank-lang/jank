@@ -6,7 +6,7 @@
 
 #include <jtl/iterator/range.hpp>
 
-#include "cell.hpp"
+#include <jank/cell/cell.hpp>
 
 cell parse(std::string contents)
 {
