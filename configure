@@ -1,0 +1,139 @@
+#!/bin/bash
+
+# Re-invoke the configure script
+# and keep the output at bay.
+if [ "$1" != "quiet" ];
+then
+  $0 "quiet" $@ > /dev/null
+  exit $?
+fi
+shift
+
+set -o errexit
+set -o nounset
+
+# Determine system
+uname_linux=0
+uname_cygwin=0
+uname_osx=0
+uname=$(uname)
+if [ "$uname" = "Linux" ];
+then
+  uname_linux=1
+elif [ "$uname" = "Darwin" ];
+then
+  uname_osx=1
+elif [ "$(uname -o)" = "Cygwin" ];
+then
+  uname_cygwin=1
+else
+  echo "Invalid uname ($uname): unsuppported platform" 1>&2
+  exit 1
+fi
+
+log() { echo "$@" 1>&2; }
+log_start() { printf "$@" 1>&2; }
+log_end() { echo "$@" 1>&2; }
+log_exit() { echo "$@" 1>&2; exit 1; }
+
+project=jank
+log "Configuring ${project}"
+
+prefix=/usr/local
+includedir="$prefix/include"
+cxx_platform_flags=
+ld_platform_libs=
+
+# Project-specific flags
+
+if [ "1" -eq "$uname_linux" ];
+then
+  log "Platform: Linux"
+elif [ "1" -eq "$uname_osx" ];
+then
+  log "Platform: OS X"
+  cxx_platform_flags="-stdlib=libc++ -I/opt/local/include"
+  ld_platform_libs="-lc++"
+elif [ "1" -eq "$uname_cygwin" ];
+then
+  log "Platform: Cygwin (NOT TESTED)"
+fi
+
+function show_help
+{
+  log "Usage: $0 [OPTION...]"
+  log
+  log "General:"
+  log "  -h, --help                                   Show this help message"
+  log "  --prefix=[/usr/local]                        Set installation prefix"
+  log "  --includedir=[/usr/local/include]            Set include prefix"
+  log
+  exit 0
+}
+
+# Parse params
+for i in "$@"
+do
+  case $i in
+    --prefix)
+      shift
+      prefix="$1"
+      includedir=$prefix/include
+      shift
+      ;;
+    --prefix=*)
+      prefix="${i#*=}"
+      includedir=$prefix/include
+      shift
+      ;;
+
+    --includedir)
+      shift
+      includedir="$1"
+      shift
+      ;;
+    --includedir=*)
+      includedir="${i#*=}"
+      shift
+      ;;
+
+    -h)
+      show_help
+      ;;
+    --help*)
+      show_help
+      ;;
+
+    *)
+      # Unknown option
+      ;;
+  esac
+done
+
+# Update after params
+log
+log "Install prefix: $prefix"
+log "Install include prefix: $includedir"
+log
+
+log_start "Updating submodules..."
+log_start " jest" && git submodule update --init --recursive lib/jest 2>&1 > /dev/null || true
+log_end " done"
+
+log_start "Populating Makefile..."
+rm -f Makefile
+sed "s#%CXX_PLATFORM_FLAGS%#${cxx_platform_flags}#" ./Makefile.in |\
+sed "s#%LD_PLATFORM_LIBS%#${ld_platform_libs}#" |\
+sed "s#%PREFIX%#${prefix}#" |\
+sed "s#%INCLUDEDIR%#${includedir}#" |\
+sed "s#%PROJECT%#${project}#" > Makefile
+log_end " done"
+
+log_start "Generating sources..."
+log_end " done"
+
+log "Done configuring ${project}"
+
+# Describe next steps
+log
+log "To run tests, use \`make && make test\`"

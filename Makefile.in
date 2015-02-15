@@ -1,0 +1,63 @@
+# Sources
+OUT_DIR = bin/
+OBJ_DIR = ${OUT_DIR}/obj/
+SOURCES = src/main.cpp
+OBJECTS = ${SOURCES:.cpp=.cpp.o}
+OUT_OBJECTS = $(foreach obj,${OBJECTS},${OBJ_DIR}$(shell echo "$(shell echo ${obj} | sed 's/\.cpp//')" | sed 's_src/__'))
+TARGET = ${OUT_DIR}/jank
+
+# Generation/Installation
+PREFIX = %PREFIX%
+INCLUDEDIR = %INCLUDEDIR%
+
+# Compiler flags
+CXX ?= c++
+CXX_WARN_FLAGS = -Wall -Wextra -Werror -pedantic
+CXX_NO_WARN_FLAGS =
+CXX_DEBUG_FLAGS = 
+CXX_OPTIM_FLAGS = -ggdb
+CXX_INCLUDE_FLAGS = -Iinclude -Ilib/jtl/include -Ilib/jest/include
+CXX_PLATFORM_FLAGS = %CXX_PLATFORM_FLAGS%
+CXX_FLAGS := -std=c++1y \
+						${CXX_PLATFORM_FLAGS} \
+						${CXX_INCLUDE_FLAGS} \
+						${CXX_NO_WARN_FLAGS} \
+						${CXX_WARN_FLAGS} \
+						${CXX_DEBUG_FLAGS} \
+						${CXX_OPTIM_FLAGS} \
+						${CXX_FLAGS}
+
+LD_PLATFORM_LIBS = %LD_PLATFORM_LIBS%
+LD_LIBS = ${LD_PLATFORM_LIBS}
+
+PROJECT = %PROJECT%
+
+all: ${PROJECT}
+	${MAKE} -j ${THREADS} threaded
+	echo "Success"
+
+setup: clean
+	echo "Preparing"
+	mkdir -p ${OUT_DIR} ${OBJ_DIR}
+
+clean:
+	rm -rf ${OUT_DIR} ${OBJ_DIR}
+	echo "Cleaned"
+
+${PROJECT}: ${PROJECT}_setup ${TARGET}
+	echo "Done building ${PROJECT}"
+
+${PROJECT}_setup: setup
+	echo "Building ${PROJECT}"
+
+${TARGET}: ${OBJECTS}
+	${CXX} ${CXX_FLAGS} -o ${TARGET} ${OUT_OBJECTS} ${LD_LIBS}
+
+%.cpp.o: %.cpp ${PROJECT}_setup
+	echo "  Compiling $<"
+	mkdir -p ${OBJ_DIR}$(dir $(shell echo $< | sed 's_src/__')) > /dev/null
+	${CXX} -c ${CXX_FLAGS} $< -o ${OBJ_DIR}$(shell echo "$(shell echo $< | sed 's/\.cpp/.o/')" | sed 's_src/__') > /dev/null
+
+.SILENT:
+
+.PHONY: all threaded setup clean ${PROJECT} ${PROJECT}_setup
