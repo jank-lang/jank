@@ -30,8 +30,9 @@ namespace detail
   inline auto apply<op::div>(cell_int::type const to, cell_int::type const from)
   { return to / from; }
 
+  /* TODO: read idents from env */
   template <op O>
-  cell apply_all(cell_list const &cl)
+  cell apply_all(environment&, cell_list const &cl)
   {
     auto const list(cl.data);
     detail::expect_at_least_args(cl, 2);
@@ -50,14 +51,14 @@ namespace detail
   }
 }
 
-inline cell sum(cell_list const &cl)
-{ return detail::apply_all<detail::op::add>(cl); }
+inline cell sum(environment &env, cell_list const &cl)
+{ return detail::apply_all<detail::op::add>(env, cl); }
 
-inline cell difference(cell_list const &cl)
-{ return detail::apply_all<detail::op::sub>(cl); }
+inline cell difference(environment &env, cell_list const &cl)
+{ return detail::apply_all<detail::op::sub>(env, cl); }
 
-inline cell product(cell_list const &cl)
-{ return detail::apply_all<detail::op::mul>(cl); }
+inline cell product(environment &env, cell_list const &cl)
+{ return detail::apply_all<detail::op::mul>(env, cl); }
 
-inline cell quotient(cell_list const &cl)
-{ return detail::apply_all<detail::op::div>(cl); }
+inline cell quotient(environment &env, cell_list const &cl)
+{ return detail::apply_all<detail::op::div>(env, cl); }

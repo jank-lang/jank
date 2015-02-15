@@ -2,13 +2,17 @@
 
 #include <map>
 #include <string>
+#include <memory>
+#include <experimental/optional>
 
-#include "prelude/arithmetic.hpp"
-
-cell interpret(cell_list &root);
+#include "cell.hpp"
 
 struct environment
 {
+  std::experimental::optional<cell> find_cell(std::string const &name);
+  std::experimental::optional<cell_func> find_function(std::string const &name);
+  std::experimental::optional<cell_func> find_special(std::string const &name);
+
   std::map<std::string, cell> cells;
   
   /* TODO: map<string, vector<cell_func>> for overloading.
@@ -17,114 +21,58 @@ struct environment
   std::map<std::string, std::vector<cell_func>> funcs;
 
   std::map<std::string, cell_func> special_funcs;
+
+  // TODO std::shared_ptr<environment> parent;
+  environment *parent;
 };
 
-environment env /* TODO: fix this global shit */
+template <>
+struct cell_wrapper<cell_type::function>
 {
-  { /* cells */
-    {
-      "forty_two",
-      cell_int{ 42 }
-    }
-  },
-  { /* funcs */
-    {
-      "root",
-      {
-        cell_func
-        {
-          {},
-          [](cell_list const &) -> cell{ return {}; }
-        }
-      }
-    },
-    {
-      "+",
-      { cell_func{ {}, &sum } }
-    },
-    {
-      "-",
-      { cell_func{ {}, &difference } }
-    },
-    {
-      "/",
-      { cell_func{ {}, &quotient } }
-    },
-    {
-      "*",
-      { cell_func{ {}, &product } }
-    },
-    {
-      "print",
-      {
-        cell_func
-        {
-          {},
-          [](cell_list const &cl) -> cell
-          {
-            auto const &list(cl.data);
-            if(list.size() < 2)
-            { throw std::invalid_argument{ "invalid argument count" }; }
+  using type = std::function<cell (environment&, cell_list const&)>;
 
-            for(auto i(std::next(list.begin())); i != list.end(); ++i)
-            { std::cout << *i; }
-            std::cout << std::endl;
-
-            return {};
-          }
-        }
-      }
-    }
-  },
-  { /* special */
-    {
-      "func",
-      cell_func
-      {
-        {},
-        [](cell_list const &cl) -> cell
-        {
-          std::cout << "func declaration:" << std::endl;
-          auto const &list(cl.data);
-
-          auto const name(detail::expect_type<cell_type::ident>(list[1]));
-          std::cout << " name: " << name << std::endl;
-
-          auto const args(detail::expect_type<cell_type::list>(list[2]));
-          std::cout << " args: " << args << std::endl;
-
-          auto const ret(detail::expect_type<cell_type::list>(list[3]));
-          std::cout << " ret: " << ret << std::endl;
-
-          for
-          (
-            auto const &l :
-            jtl::it::make_range
-            (
-              std::next(list.begin(), 4),
-              list.end()
-            )
-          )
-          { std::cout << "  body: " << l << std::endl; }
-
-          env.funcs[name.data] =
-          {
-            cell_func
-            {
-              {},
-              [=](cell_list const &) -> cell
-              {
-                cell_list body{ { cell_ident{ "root" } } };
-                std::copy(std::next(list.begin(), 4), list.end(),
-                          std::back_inserter(body.data));
-                return interpret(body);
-              }
-            }
-          };
-
-          return {};
-        }
-      }
-    }
-  }
+  std::vector<cell_type> arg_types;
+  type data;
+  environment env;
 };
+
+std::experimental::optional<cell> environment::find_cell(std::string const &name)
+{
+  auto const it(cells.find(name));
+  if(it == cells.end())
+  {
+    if(parent)
+    { return parent->find_cell(name); }
+    else
+    { return {}; }
+  }
+  return { it->second };
+}
+std::experimental::optional<cell_func> environment::find_function(std::string const &name)
+{
+  auto const it(funcs.find(name));
+  if(it == funcs.end())
+  {
+    if(parent)
+    { return parent->find_function(name); }
+    else
+    { return {}; }
+  }
+
+  if(it->second.empty())
+  { throw std::runtime_error{ "unknown function: " + name }; }
+
+  return { it->second[0] };
+}
+std::experimental::optional<cell_func> environment::find_special(std::string const &name)
+{
+  auto const it(special_funcs.find(name));
+  if(it == special_funcs.end())
+  {
+    if(parent)
+    { return parent->find_special(name); }
+    else
+    { return {}; }
+  }
+  return { it->second };
+}

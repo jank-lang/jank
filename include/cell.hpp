@@ -54,13 +54,6 @@ struct cell_wrapper<cell_type::list>
   using type = std::vector<cell>;
   type data;
 };
-template <>
-struct cell_wrapper<cell_type::function>
-{
-  using type = std::function<cell (cell_wrapper<cell_type::list> const&)>;
-  std::vector<cell_type> arg_types;
-  type data;
-};
 
 using cell_int = cell_wrapper<cell_type::integer>;
 using cell_real = cell_wrapper<cell_type::real>;
