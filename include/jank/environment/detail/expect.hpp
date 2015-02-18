@@ -35,10 +35,10 @@ namespace jank
         }
       }
 
-      template <cell::cell_type C>
+      template <cell::type C>
       auto const& expect_type(cell::cell const &c)
       {
-        auto type(static_cast<cell::cell_type>(c.which()));
+        auto type(static_cast<cell::type>(c.which()));
         if(type != C)
         {
           throw std::invalid_argument

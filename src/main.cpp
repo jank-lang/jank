@@ -82,9 +82,9 @@ jank::environment::environment env
         [](auto &env, jank::cell::cell_list const &cl) -> jank::cell::cell
         {
           auto const &list(cl.data);
-          auto const name(jank::environment::detail::expect_type<jank::cell::cell_type::ident>(list[1]));
-          auto const args(jank::environment::detail::expect_type<jank::cell::cell_type::list>(list[2]));
-          auto const ret(jank::environment::detail::expect_type<jank::cell::cell_type::list>(list[3]));
+          auto const name(jank::environment::detail::expect_type<jank::cell::type::ident>(list[1]));
+          auto const args(jank::environment::detail::expect_type<jank::cell::type::list>(list[2]));
+          auto const ret(jank::environment::detail::expect_type<jank::cell::type::list>(list[3]));
 
           if(env.funcs[name.data].size())
           { throw std::runtime_error{ "function already defined: " + name.data }; }
@@ -109,7 +109,7 @@ jank::environment::environment env
             {
               auto const expected_type(func.arguments[i].type);
               auto const found_type
-              (static_cast<jank::cell::cell_type>(args.data[i + 1].which()));
+              (static_cast<jank::cell::type>(args.data[i + 1].which()));
 
               if(expected_type == found_type)
               { func.env.cells[func.arguments[i].name] = args.data[i + 1]; }

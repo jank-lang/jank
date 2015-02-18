@@ -19,12 +19,12 @@ namespace jank
       for(auto &c : root.data)
       {
         /* TODO: (quote foo bar spam) */
-        switch(static_cast<cell::cell_type>(c.which()))
+        switch(static_cast<cell::type>(c.which()))
         {
-          case cell::cell_type::list:
+          case cell::type::list:
             c = interpret(env, boost::get<cell::cell_list>(c));
             break;
-          case cell::cell_type::ident:
+          case cell::type::ident:
           {
             auto const ident_it(env.find_cell(boost::get<cell::cell_ident>(c).data));
             if(ident_it)

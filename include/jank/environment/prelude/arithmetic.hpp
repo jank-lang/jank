@@ -45,13 +45,13 @@ namespace jank
 
           cell::cell_int::type val
           {
-            jank::environment::detail::expect_type<cell::cell_type::integer>
+            jank::environment::detail::expect_type<cell::type::integer>
             (
               *std::next(list.begin())
             ).data
           };
           for(auto &i : jtl::it::make_range(std::next(list.begin(), 2), list.end()))
-          { val = apply<O>(val, jank::environment::detail::expect_type<cell::cell_type::integer>(i).data); }
+          { val = apply<O>(val, jank::environment::detail::expect_type<cell::type::integer>(i).data); }
 
           return cell::cell_int{ val };
         }

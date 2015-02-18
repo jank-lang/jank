@@ -7,7 +7,7 @@ namespace jank
 {
   namespace cell
   {
-    enum class cell_type
+    enum class type
     {
       integer,
       real,
@@ -17,63 +17,63 @@ namespace jank
       function
     };
 
-    template <cell_type C>
+    template <type C>
     char constexpr const* cell_type_string();
     template <>
-    inline char constexpr const* cell_type_string<cell_type::integer>()
+    inline char constexpr const* cell_type_string<type::integer>()
     { return "integer"; }
     template <>
-    inline char constexpr const* cell_type_string<cell_type::real>()
+    inline char constexpr const* cell_type_string<type::real>()
     { return "real"; }
     template <>
-    inline char constexpr const* cell_type_string<cell_type::string>()
+    inline char constexpr const* cell_type_string<type::string>()
     { return "string"; }
     template <>
-    inline char constexpr const* cell_type_string<cell_type::ident>()
+    inline char constexpr const* cell_type_string<type::ident>()
     { return "ident"; }
     template <>
-    inline char constexpr const* cell_type_string<cell_type::list>()
+    inline char constexpr const* cell_type_string<type::list>()
     { return "list"; }
     template <>
-    inline char constexpr const* cell_type_string<cell_type::function>()
+    inline char constexpr const* cell_type_string<type::function>()
     { return "function"; }
 
     /* TODO: constexpr */
-    inline char const* cell_type_string(cell_type const c)
+    inline char const* cell_type_string(type const c)
     {
       switch(c)
       {
-        case cell_type::integer:
-          return cell_type_string<cell_type::integer>();
-        case cell_type::real:
-          return cell_type_string<cell_type::real>();
-        case cell_type::string:
-          return cell_type_string<cell_type::string>();
-        case cell_type::ident:
-          return cell_type_string<cell_type::ident>();
-        case cell_type::list:
-          return cell_type_string<cell_type::list>();
-        case cell_type::function:
-          return cell_type_string<cell_type::function>();
+        case type::integer:
+          return cell_type_string<type::integer>();
+        case type::real:
+          return cell_type_string<type::real>();
+        case type::string:
+          return cell_type_string<type::string>();
+        case type::ident:
+          return cell_type_string<type::ident>();
+        case type::list:
+          return cell_type_string<type::list>();
+        case type::function:
+          return cell_type_string<type::function>();
         default:
           return "unknown";
       }
     }
 
-    inline cell_type cell_type_from_string(std::string const &str)
+    inline type cell_type_from_string(std::string const &str)
     {
       if(str == "int")
-      { return cell_type::integer; }
+      { return type::integer; }
       else if(str == "real")
-      { return cell_type::real; }
+      { return type::real; }
       else if(str == "string")
-      { return cell_type::string; }
+      { return type::string; }
       else if(str == "ident")
-      { return cell_type::ident; }
+      { return type::ident; }
       else if(str == "list")
-      { return cell_type::list; }
+      { return type::list; }
       else if(str == "function")
-      { return cell_type::function; }
+      { return type::function; }
       else
       { throw std::runtime_error{ "invalid cell type string: " + str }; }
     }

@@ -21,7 +21,7 @@ namespace jank
       std::map<std::string, cell::cell> cells;
       
       /* TODO: map<string, vector<cell_func>> for overloading.
-       * Each cell_func has a vector<cell_type> for the args.
+       * Each cell_func has a vector<type> for the args.
        * Calling a function first type checks each overload. */
       std::map<std::string, std::vector<cell::cell_func>> funcs;
 
@@ -34,7 +34,7 @@ namespace jank
   namespace cell
   {
     template <>
-    struct cell_wrapper<cell_type::function>
+    struct wrapper<type::function>
     {
       using type = std::function<cell (environment::environment&, cell_list const&)>;
 
