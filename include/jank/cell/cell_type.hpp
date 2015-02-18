@@ -18,49 +18,49 @@ namespace jank
     };
 
     template <type C>
-    char constexpr const* cell_type_string();
+    char constexpr const* type_string();
     template <>
-    inline char constexpr const* cell_type_string<type::integer>()
+    inline char constexpr const* type_string<type::integer>()
     { return "integer"; }
     template <>
-    inline char constexpr const* cell_type_string<type::real>()
+    inline char constexpr const* type_string<type::real>()
     { return "real"; }
     template <>
-    inline char constexpr const* cell_type_string<type::string>()
+    inline char constexpr const* type_string<type::string>()
     { return "string"; }
     template <>
-    inline char constexpr const* cell_type_string<type::ident>()
+    inline char constexpr const* type_string<type::ident>()
     { return "ident"; }
     template <>
-    inline char constexpr const* cell_type_string<type::list>()
+    inline char constexpr const* type_string<type::list>()
     { return "list"; }
     template <>
-    inline char constexpr const* cell_type_string<type::function>()
+    inline char constexpr const* type_string<type::function>()
     { return "function"; }
 
     /* TODO: constexpr */
-    inline char const* cell_type_string(type const c)
+    inline char const* type_string(type const c)
     {
       switch(c)
       {
         case type::integer:
-          return cell_type_string<type::integer>();
+          return type_string<type::integer>();
         case type::real:
-          return cell_type_string<type::real>();
+          return type_string<type::real>();
         case type::string:
-          return cell_type_string<type::string>();
+          return type_string<type::string>();
         case type::ident:
-          return cell_type_string<type::ident>();
+          return type_string<type::ident>();
         case type::list:
-          return cell_type_string<type::list>();
+          return type_string<type::list>();
         case type::function:
-          return cell_type_string<type::function>();
+          return type_string<type::function>();
         default:
           return "unknown";
       }
     }
 
-    inline type cell_type_from_string(std::string const &str)
+    inline type type_from_string(std::string const &str)
     {
       if(str == "int")
       { return type::integer; }

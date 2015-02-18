@@ -43,8 +43,8 @@ namespace jank
         {
           throw std::invalid_argument
           { 
-            std::string{"invalid argument type (expected "} + cell::cell_type_string<C>() +
-            ", found: " + cell::cell_type_string(type) + ")"
+            std::string{"invalid argument type (expected "} + cell::type_string<C>() +
+            ", found: " + cell::type_string(type) + ")"
           };
         }
         return boost::get<cell::cell_type_variant_t<C>>(c);

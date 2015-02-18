@@ -27,7 +27,7 @@ namespace jank
         { throw std::runtime_error{ "syntax error: expected type after " + name }; }
 
         auto const &type(environment::detail::expect_type<cell::type::ident>(*it).data);
-        ret.push_back({ name, cell::cell_type_from_string(type) });
+        ret.push_back({ name, cell::type_from_string(type) });
       }
 
       return ret;

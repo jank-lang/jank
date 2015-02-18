@@ -118,8 +118,8 @@ jank::environment::environment env
                 throw std::invalid_argument
                 {
                   std::string{ "invalid argument type: (expected " } +
-                  jank::cell::cell_type_string(expected_type) +
-                  ", found " + jank::cell::cell_type_string(found_type) +
+                  jank::cell::type_string(expected_type) +
+                  ", found " + jank::cell::type_string(found_type) +
                   ")"
                 };
               }

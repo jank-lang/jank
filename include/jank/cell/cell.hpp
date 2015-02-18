@@ -9,7 +9,7 @@
 
 #include <boost/variant.hpp>
 
-#include <jank/cell/cell_type.hpp>
+#include <jank/cell/type.hpp>
 
 namespace jank
 {
