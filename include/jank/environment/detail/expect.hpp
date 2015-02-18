@@ -47,7 +47,7 @@ namespace jank
             ", found: " + cell::type_string(type) + ")"
           };
         }
-        return boost::get<cell::cell_type_variant_t<C>>(c);
+        return boost::get<cell::type_variant_t<C>>(c);
       }
     }
   }

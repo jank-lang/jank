@@ -110,27 +110,27 @@ namespace jank
     namespace detail
     {
       template <type C>
-      struct cell_type_variant;
+      struct type_variant;
       template <>
-      struct cell_type_variant<type::integer>
+      struct type_variant<type::integer>
       { using type = integer; };
       template <>
-      struct cell_type_variant<type::real>
+      struct type_variant<type::real>
       { using type = real; };
       template <>
-      struct cell_type_variant<type::string>
+      struct type_variant<type::string>
       { using type = string; };
       template <>
-      struct cell_type_variant<type::ident>
+      struct type_variant<type::ident>
       { using type = ident; };
       template <>
-      struct cell_type_variant<type::list>
+      struct type_variant<type::list>
       { using type = list; };
       template <>
-      struct cell_type_variant<type::function>
+      struct type_variant<type::function>
       { using type = func; };
     }
     template <type C>
-    using cell_type_variant_t = typename detail::cell_type_variant<C>::type;
+    using type_variant_t = typename detail::type_variant<C>::type;
   }
 }
