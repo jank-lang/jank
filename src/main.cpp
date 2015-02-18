@@ -14,49 +14,49 @@
 #include <jank/interpret/interpret.hpp>
 #include <jank/environment/prelude/arithmetic.hpp>
 
-environment env
+jank::environment::environment env
 {
   { /* cells */
     {
       "forty_two",
-      cell_int{ 42 }
+      jank::cell::cell_int{ 42 }
     }
   },
   { /* funcs */
     {
       "root",
       {
-        cell_func
+        jank::cell::cell_func
         {
           {},
-          [](auto const&, cell_list const &) -> cell{ return {}; },
-          environment()
+          [](auto const&, jank::cell::cell_list const &) -> jank::cell::cell{ return {}; },
+          jank::environment::environment()
         }
       }
     },
     {
       "+",
-      { cell_func{ {}, &sum, environment() } }
+      { jank::cell::cell_func{ {}, &jank::environment::prelude::sum, jank::environment::environment() } }
     },
     {
       "-",
-      { cell_func{ {}, &difference, environment() } }
+      { jank::cell::cell_func{ {}, &jank::environment::prelude::difference, jank::environment::environment() } }
     },
     {
       "/",
-      { cell_func{ {}, &quotient, environment() } }
+      { jank::cell::cell_func{ {}, &jank::environment::prelude::quotient, jank::environment::environment() } }
     },
     {
       "*",
-      { cell_func{ {}, &product, environment() } }
+      { jank::cell::cell_func{ {}, &jank::environment::prelude::product, jank::environment::environment() } }
     },
     {
       "print",
       {
-        cell_func
+        jank::cell::cell_func
         {
           {},
-          [](auto const&, cell_list const &cl) -> cell
+          [](auto const&, jank::cell::cell_list const &cl) -> jank::cell::cell
           {
             auto const &list(cl.data);
             if(list.size() < 2)
@@ -68,7 +68,7 @@ environment env
 
             return {};
           },
-          environment()
+          jank::environment::environment()
         }
       }
     }
@@ -76,24 +76,24 @@ environment env
   { /* special */
     {
       "func",
-      cell_func
+      jank::cell::cell_func
       {
         {},
-        [](auto &env, cell_list const &cl) -> cell
+        [](auto &env, jank::cell::cell_list const &cl) -> jank::cell::cell
         {
           auto const &list(cl.data);
-          auto const name(detail::expect_type<cell_type::ident>(list[1]));
-          auto const args(detail::expect_type<cell_type::list>(list[2]));
-          auto const ret(detail::expect_type<cell_type::list>(list[3]));
+          auto const name(jank::environment::detail::expect_type<jank::cell::cell_type::ident>(list[1]));
+          auto const args(jank::environment::detail::expect_type<jank::cell::cell_type::list>(list[2]));
+          auto const ret(jank::environment::detail::expect_type<jank::cell::cell_type::list>(list[3]));
 
           if(env.funcs[name.data].size())
           { throw std::runtime_error{ "function already defined: " + name.data }; }
           env.funcs[name.data].emplace_back();
 
-          cell_func &func{ env.funcs[name.data].back() };
-          func.arguments = parse_arguments(args);
+          jank::cell::cell_func &func{ env.funcs[name.data].back() };
+          func.arguments = jank::function::parse_arguments(args);
           func.env.parent = &env;
-          func.data = [=, &func](auto &, cell_list const &args) -> cell
+          func.data = [=, &func](auto &, jank::cell::cell_list const &args) -> jank::cell::cell
           {
             if(args.data.size() - 1 != func.arguments.size())
             {
@@ -109,7 +109,7 @@ environment env
             {
               auto const expected_type(func.arguments[i].type);
               auto const found_type
-              (static_cast<cell_type>(args.data[i + 1].which()));
+              (static_cast<jank::cell::cell_type>(args.data[i + 1].which()));
 
               if(expected_type == found_type)
               { func.env.cells[func.arguments[i].name] = args.data[i + 1]; }
@@ -118,22 +118,22 @@ environment env
                 throw std::invalid_argument
                 {
                   std::string{ "invalid argument type: (expected " } +
-                  cell_type_string(expected_type) +
-                  ", found " + cell_type_string(found_type) +
+                  jank::cell::cell_type_string(expected_type) +
+                  ", found " + jank::cell::cell_type_string(found_type) +
                   ")"
                 };
               }
             }
 
-            cell_list body{ { cell_ident{ "root" } } };
+            jank::cell::cell_list body{ { jank::cell::cell_ident{ "root" } } };
             std::copy(std::next(list.begin(), 4), list.end(),
                       std::back_inserter(body.data));
-            return interpret(func.env, body);
+            return jank::interpret::interpret(func.env, body);
           };
 
           return {};
         },
-        environment()
+        jank::environment::environment()
       }
     }
   },
@@ -152,7 +152,7 @@ int main(int const argc, char ** const argv)
 
   auto root
   (
-    parse
+    jank::parse::parse
     (
       {
         std::istreambuf_iterator<char>{ ifs },
@@ -163,5 +163,5 @@ int main(int const argc, char ** const argv)
 
   std::cout << root << std::endl;
 
-  interpret(env, boost::get<cell_list>(root));
+  jank::interpret::interpret(env, boost::get<jank::cell::cell_list>(root));
 }
