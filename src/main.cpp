@@ -105,7 +105,7 @@ environment env
                 ")"
               };
             }
-            for(std::size_t i{}; i < func.arguments.size(); ++i)
+            for(auto const i : jtl::it::make_range(func.arguments.size()))
             {
               auto const expected_type(func.arguments[i].type);
               auto const found_type
