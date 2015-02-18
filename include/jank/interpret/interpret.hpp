@@ -6,9 +6,9 @@ namespace jank
 {
   namespace interpret
   {
-    cell::cell interpret(environment::environment &env, cell::cell_list &root)
+    cell::cell interpret(environment::environment &env, cell::list &root)
     {
-      auto const &func_name(boost::get<cell::cell_ident>(root.data[0]).data);
+      auto const &func_name(boost::get<cell::ident>(root.data[0]).data);
 
       /* TODO: first handle special forms and shit. */
       auto const special_it(env.find_special(func_name));
@@ -22,11 +22,11 @@ namespace jank
         switch(static_cast<cell::type>(c.which()))
         {
           case cell::type::list:
-            c = interpret(env, boost::get<cell::cell_list>(c));
+            c = interpret(env, boost::get<cell::list>(c));
             break;
           case cell::type::ident:
           {
-            auto const ident_it(env.find_cell(boost::get<cell::cell_ident>(c).data));
+            auto const ident_it(env.find_cell(boost::get<cell::ident>(c).data));
             if(ident_it)
             { c = *ident_it; }
           } break;

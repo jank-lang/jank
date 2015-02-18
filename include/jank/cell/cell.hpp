@@ -59,12 +59,12 @@ namespace jank
       type data;
     };
 
-    using cell_int = wrapper<type::integer>;
-    using cell_real = wrapper<type::real>;
-    using cell_string = wrapper<type::string>;
-    using cell_ident = wrapper<type::ident>;
-    using cell_list = wrapper<type::list>;
-    using cell_func = wrapper<type::function>;
+    using integer = wrapper<type::integer>;
+    using real = wrapper<type::real>;
+    using string = wrapper<type::string>;
+    using ident = wrapper<type::ident>;
+    using list = wrapper<type::list>;
+    using func = wrapper<type::function>;
 
     std::ostream& operator <<(std::ostream &os, cell const &c)
     {
@@ -73,16 +73,16 @@ namespace jank
       switch(static_cast<type>(c.which()))
       {
         case type::integer:
-          os << boost::get<cell_int>(c).data;
+          os << boost::get<integer>(c).data;
           break;
         case type::real:
-          os << boost::get<cell_real>(c).data;
+          os << boost::get<real>(c).data;
           break;
         case type::string:
-          os << boost::get<cell_string>(c).data;
+          os << boost::get<string>(c).data;
           break;
         case type::ident:
-          os << "<" << boost::get<cell_ident>(c).data << ">";
+          os << "<" << boost::get<ident>(c).data << ">";
           break;
         case type::list:
           ++indent_level;
@@ -91,7 +91,7 @@ namespace jank
           { (void)i; os << "  "; }
 
           os << "( ";
-          for(auto const &v : boost::get<cell_list>(c).data)
+          for(auto const &v : boost::get<list>(c).data)
           { os << v << " "; }
           os << ") ";
 
@@ -113,22 +113,22 @@ namespace jank
       struct cell_type_variant;
       template <>
       struct cell_type_variant<type::integer>
-      { using type = cell_int; };
+      { using type = integer; };
       template <>
       struct cell_type_variant<type::real>
-      { using type = cell_real; };
+      { using type = real; };
       template <>
       struct cell_type_variant<type::string>
-      { using type = cell_string; };
+      { using type = string; };
       template <>
       struct cell_type_variant<type::ident>
-      { using type = cell_ident; };
+      { using type = ident; };
       template <>
       struct cell_type_variant<type::list>
-      { using type = cell_list; };
+      { using type = list; };
       template <>
       struct cell_type_variant<type::function>
-      { using type = cell_func; };
+      { using type = func; };
     }
     template <type C>
     using cell_type_variant_t = typename detail::cell_type_variant<C>::type;

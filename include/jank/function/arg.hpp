@@ -16,7 +16,7 @@ namespace jank
       cell::type type;
     };
 
-    inline std::vector<argument> parse_arguments(cell::cell_list const &list)
+    inline std::vector<argument> parse_arguments(cell::list const &list)
     {
       std::vector<argument> ret;
 
