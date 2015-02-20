@@ -4,7 +4,8 @@
 #include <vector>
 
 #include <jank/cell/cell.hpp>
-#include <jank/environment/detail/expect.hpp>
+#include <jank/expect/type.hpp>
+#include <jank/expect/arg.hpp>
 
 namespace jank
 {
@@ -22,11 +23,11 @@ namespace jank
 
       for(auto it(list.data.begin()); it != list.data.end(); ++it)
       {
-        auto const &name(environment::detail::expect_type<cell::type::ident>(*it).data);
+        auto const &name(expect::type<cell::type::ident>(*it).data);
         if(++it == list.data.end())
         { throw std::runtime_error{ "syntax error: expected type after " + name }; }
 
-        auto const &type(environment::detail::expect_type<cell::type::ident>(*it).data);
+        auto const &type(expect::type<cell::type::ident>(*it).data);
         ret.push_back({ name, cell::type_from_string(type) });
       }
 

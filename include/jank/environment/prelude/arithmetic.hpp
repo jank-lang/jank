@@ -3,7 +3,8 @@
 #include <jtl/iterator/range.hpp>
 
 #include <jank/cell/cell.hpp>
-#include <jank/environment/detail/expect.hpp>
+#include <jank/expect/type.hpp>
+#include <jank/expect/arg.hpp>
 
 namespace jank
 {
@@ -41,17 +42,17 @@ namespace jank
         cell::cell apply_all(state&, cell::list const &cl)
         {
           auto const list(cl.data);
-          jank::environment::detail::expect_at_least_args(cl, 2);
+          expect::at_least_args(cl, 2);
 
           cell::integer::type val
           {
-            jank::environment::detail::expect_type<cell::type::integer>
+            expect::type<cell::type::integer>
             (
               *std::next(list.begin())
             ).data
           };
           for(auto &i : jtl::it::make_range(std::next(list.begin(), 2), list.end()))
-          { val = apply<O>(val, jank::environment::detail::expect_type<cell::type::integer>(i).data); }
+          { val = apply<O>(val, expect::type<cell::type::integer>(i).data); }
 
           return cell::integer{ val };
         }

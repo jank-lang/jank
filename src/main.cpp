@@ -82,9 +82,9 @@ jank::environment::state env
         [](auto &env, jank::cell::list const &cl) -> jank::cell::cell
         {
           auto const &list(cl.data);
-          auto const name(jank::environment::detail::expect_type<jank::cell::type::ident>(list[1]));
-          auto const args(jank::environment::detail::expect_type<jank::cell::type::list>(list[2]));
-          auto const ret(jank::environment::detail::expect_type<jank::cell::type::list>(list[3]));
+          auto const name(jank::expect::type<jank::cell::type::ident>(list[1]));
+          auto const args(jank::expect::type<jank::cell::type::list>(list[2]));
+          auto const ret(jank::expect::type<jank::cell::type::list>(list[3]));
 
           if(env.funcs[name.data].size())
           { throw std::runtime_error{ "function already defined: " + name.data }; }
