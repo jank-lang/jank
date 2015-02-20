@@ -38,7 +38,7 @@ namespace jank
 
         /* TODO: read idents from env */
         template <op O>
-        cell::cell apply_all(environment&, cell::list const &cl)
+        cell::cell apply_all(state&, cell::list const &cl)
         {
           auto const list(cl.data);
           jank::environment::detail::expect_at_least_args(cl, 2);
@@ -57,16 +57,16 @@ namespace jank
         }
       }
 
-      inline cell::cell sum(environment &env, cell::list const &cl)
+      inline cell::cell sum(state &env, cell::list const &cl)
       { return detail::apply_all<detail::op::add>(env, cl); }
 
-      inline cell::cell difference(environment &env, cell::list const &cl)
+      inline cell::cell difference(state &env, cell::list const &cl)
       { return detail::apply_all<detail::op::sub>(env, cl); }
 
-      inline cell::cell product(environment &env, cell::list const &cl)
+      inline cell::cell product(state &env, cell::list const &cl)
       { return detail::apply_all<detail::op::mul>(env, cl); }
 
-      inline cell::cell quotient(environment &env, cell::list const &cl)
+      inline cell::cell quotient(state &env, cell::list const &cl)
       { return detail::apply_all<detail::op::div>(env, cl); }
     }
   }

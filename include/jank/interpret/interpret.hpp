@@ -6,7 +6,7 @@ namespace jank
 {
   namespace interpret
   {
-    cell::cell interpret(environment::environment &env, cell::list &root)
+    cell::cell interpret(environment::state &env, cell::list &root)
     {
       auto const &func_name(boost::get<cell::ident>(root.data[0]).data);
 

@@ -12,7 +12,7 @@ namespace jank
 {
   namespace environment
   {
-    struct environment
+    struct state
     {
       std::experimental::optional<cell::cell> find_cell(std::string const &name);
       std::experimental::optional<cell::func> find_function(std::string const &name);
@@ -27,8 +27,8 @@ namespace jank
 
       std::map<std::string, cell::func> special_funcs;
 
-      // TODO std::shared_ptr<environment> parent;
-      environment *parent;
+      // TODO std::shared_ptr<state> parent;
+      state *parent;
     };
   }
   namespace cell
@@ -36,17 +36,17 @@ namespace jank
     template <>
     struct wrapper<type::function>
     {
-      using type = std::function<cell (environment::environment&, list const&)>;
+      using type = std::function<cell (environment::state&, list const&)>;
 
       std::vector<function::argument> arguments;
       type data;
-      environment::environment env;
+      environment::state env;
     };
   }
 
   namespace environment
   {
-    std::experimental::optional<cell::cell> environment::find_cell(std::string const &name)
+    std::experimental::optional<cell::cell> state::find_cell(std::string const &name)
     {
       auto const it(cells.find(name));
       if(it == cells.end())
@@ -58,7 +58,7 @@ namespace jank
       }
       return { it->second };
     }
-    std::experimental::optional<cell::func> environment::find_function(std::string const &name)
+    std::experimental::optional<cell::func> state::find_function(std::string const &name)
     {
       auto const it(funcs.find(name));
       if(it == funcs.end())
@@ -74,7 +74,7 @@ namespace jank
 
       return { it->second[0] };
     }
-    std::experimental::optional<cell::func> environment::find_special(std::string const &name)
+    std::experimental::optional<cell::func> state::find_special(std::string const &name)
     {
       auto const it(special_funcs.find(name));
       if(it == special_funcs.end())

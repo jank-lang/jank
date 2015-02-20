@@ -9,12 +9,12 @@
 #include <jtl/iterator/stream_delim.hpp>
 #include <jtl/iterator/back_insert.hpp>
 
-#include <jank/environment/environment.hpp>
+#include <jank/environment/state.hpp>
 #include <jank/parse/parse.hpp>
 #include <jank/interpret/interpret.hpp>
 #include <jank/environment/prelude/arithmetic.hpp>
 
-jank::environment::environment env
+jank::environment::state env
 {
   { /* cells */
     {
@@ -30,25 +30,25 @@ jank::environment::environment env
         {
           {},
           [](auto const&, jank::cell::list const &) -> jank::cell::cell{ return {}; },
-          jank::environment::environment()
+          jank::environment::state()
         }
       }
     },
     {
       "+",
-      { jank::cell::func{ {}, &jank::environment::prelude::sum, jank::environment::environment() } }
+      { jank::cell::func{ {}, &jank::environment::prelude::sum, jank::environment::state() } }
     },
     {
       "-",
-      { jank::cell::func{ {}, &jank::environment::prelude::difference, jank::environment::environment() } }
+      { jank::cell::func{ {}, &jank::environment::prelude::difference, jank::environment::state() } }
     },
     {
       "/",
-      { jank::cell::func{ {}, &jank::environment::prelude::quotient, jank::environment::environment() } }
+      { jank::cell::func{ {}, &jank::environment::prelude::quotient, jank::environment::state() } }
     },
     {
       "*",
-      { jank::cell::func{ {}, &jank::environment::prelude::product, jank::environment::environment() } }
+      { jank::cell::func{ {}, &jank::environment::prelude::product, jank::environment::state() } }
     },
     {
       "print",
@@ -68,7 +68,7 @@ jank::environment::environment env
 
             return {};
           },
-          jank::environment::environment()
+          jank::environment::state()
         }
       }
     }
@@ -133,7 +133,7 @@ jank::environment::environment env
 
           return {};
         },
-        jank::environment::environment()
+        jank::environment::state()
       }
     }
   },
