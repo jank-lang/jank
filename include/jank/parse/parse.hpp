@@ -7,6 +7,7 @@
 #include <jtl/iterator/range.hpp>
 
 #include <jank/cell/cell.hpp>
+#include <jank/expect/type.hpp>
 
 namespace jank
 {
@@ -15,7 +16,7 @@ namespace jank
     cell::cell parse(std::string contents)
     {
       cell::cell root{ cell::list{ { cell::ident{ "root" } } } };
-      std::vector<cell::list*> list_stack{ &boost::get<cell::list>(root) };
+      std::vector<cell::list*> list_stack{ &expect::type<cell::type::list>(root) };
 
       static std::regex outer_regex{ R"((\(*)([^\)\(]*)(\)*))" };
       std::sregex_iterator const outer_begin
@@ -50,7 +51,8 @@ namespace jank
             {
               static_cast<void>(open);
               active_list->data.push_back(cell::list{ { } });
-              active_list = &boost::get<cell::list>(active_list->data.back());
+              active_list = &expect::type<cell::type::list>
+              (active_list->data.back());
               list_stack.push_back(active_list);
             }
             continue;

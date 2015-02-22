@@ -9,8 +9,8 @@ namespace jank
 {
   namespace expect
   {
-    template <cell::type C>
-    auto const& type(cell::cell const &c)
+    template <cell::type C, typename Cell>
+    decltype(auto) type(Cell &&c)
     {
       auto const type(static_cast<cell::type>(c.which()));
       if(type != C)

@@ -13,6 +13,7 @@
 #include <jank/parse/parse.hpp>
 #include <jank/interpret/interpret.hpp>
 #include <jank/environment/prelude/arithmetic.hpp>
+#include <jank/expect/type.hpp>
 
 jank::environment::state env
 {
@@ -93,7 +94,8 @@ jank::environment::state env
           jank::cell::func &func{ env.funcs[name.data].back() };
           func.arguments = jank::function::parse_arguments(args);
           func.env.parent = &env;
-          func.data = [=, &func](auto &, jank::cell::list const &args) -> jank::cell::cell
+          func.data = [=, &func](auto &, jank::cell::list const &args)
+            -> jank::cell::cell
           {
             if(args.data.size() - 1 != func.arguments.size())
             {
@@ -163,5 +165,9 @@ int main(int const argc, char ** const argv)
 
   std::cout << root << std::endl;
 
-  jank::interpret::interpret(env, boost::get<jank::cell::list>(root));
+  jank::interpret::interpret
+  (
+    env,
+    jank::expect::type<jank::cell::type::list>(root)
+  );
 }

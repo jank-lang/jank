@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/cell/cell.hpp>
+#include <jank/expect/type.hpp>
 
 namespace jank
 {
@@ -8,7 +9,7 @@ namespace jank
   {
     cell::cell interpret(environment::state &env, cell::list &root)
     {
-      auto const &func_name(boost::get<cell::ident>(root.data[0]).data);
+      auto const &func_name(expect::type<cell::type::ident>(root.data[0]).data);
 
       /* TODO: first handle special forms and shit. */
       auto const special_it(env.find_special(func_name));
