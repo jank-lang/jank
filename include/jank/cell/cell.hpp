@@ -9,6 +9,8 @@
 
 #include <boost/variant.hpp>
 
+#include <jtl/iterator/range.hpp>
+
 #include <jank/cell/type.hpp>
 
 namespace jank
@@ -87,8 +89,8 @@ namespace jank
         case type::list:
           ++indent_level;
           os << "\n";
-          for(int i{}; i < indent_level; ++i)
-          { (void)i; os << "  "; }
+          for(auto const i : jtl::it::make_range(0, indent_level))
+          { static_cast<void>(i); os << "  "; }
 
           os << "( ";
           for(auto const &v : boost::get<list>(c).data)

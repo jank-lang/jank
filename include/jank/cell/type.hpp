@@ -65,7 +65,7 @@ namespace jank
     /* TODO: this should be in env */
     inline type type_from_string(std::string const &str)
     {
-      if(str == "int")
+      if(str == "integer")
       { return type::integer; }
       else if(str == "real")
       { return type::real; }

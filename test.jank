@@ -1,9 +1,4 @@
 (func print_val (s string v real) ()
-  (print s v)
-  
-  (func work (i int) ()
-    (print "working: " s v " with: " i))
-  
-  (work 42))
+  (print s v))
 
-(print_val "pi: " 3)
+(print_val "pi: " -3.1459)

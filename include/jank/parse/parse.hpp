@@ -86,7 +86,7 @@ namespace jank
             }
             else if(inner_matches[3].matched) /* integer */
             {
-              std::cout << "int: " << inner_matches[3] << std::endl;
+              std::cout << "integer: " << inner_matches[3] << std::endl;
               active_list->data.push_back(cell::integer{ std::stoll(inner_matches[3]) }); }
             else if(inner_matches[4].matched) /* real */
             {
