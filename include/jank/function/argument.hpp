@@ -5,7 +5,7 @@
 
 #include <jank/cell/cell.hpp>
 #include <jank/expect/type.hpp>
-#include <jank/expect/arg.hpp>
+#include <jank/expect/argument.hpp>
 #include <jank/expect/error/syntax/syntax.hpp>
 
 namespace jank

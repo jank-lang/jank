@@ -6,7 +6,7 @@
 #include <experimental/optional>
 
 #include <jank/cell/cell.hpp>
-#include <jank/function/arg.hpp>
+#include <jank/function/argument.hpp>
 #include <jank/expect/error/type/type.hpp>
 
 namespace jank
