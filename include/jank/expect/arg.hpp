@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include <jank/cell/cell.hpp>
+#include <jank/expect/error/type/overload.hpp>
 
 namespace jank
 {
@@ -13,7 +14,7 @@ namespace jank
     {
       if(c.data.size() != count + 1) /* The first atom is not an arg. */
       {
-        throw std::invalid_argument
+        throw expect::error::type::overload
         {
           "invalid argument count (expected: " + std::to_string(count) + ", "
           "found: " + std::to_string(c.data.size() - 1) + ")"
@@ -25,7 +26,7 @@ namespace jank
     {
       if(c.data.size() < count + 1) /* The first atom is not an arg. */
       {
-        throw std::invalid_argument
+        throw expect::error::type::overload
         {
           "invalid argument count (expected at least: " + std::to_string(count) +
           ", found: " + std::to_string(c.data.size() - 1) + ")"

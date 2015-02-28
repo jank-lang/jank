@@ -6,6 +6,7 @@
 #include <jank/cell/cell.hpp>
 #include <jank/expect/type.hpp>
 #include <jank/expect/arg.hpp>
+#include <jank/expect/error/syntax/syntax.hpp>
 
 namespace jank
 {
@@ -25,7 +26,10 @@ namespace jank
       {
         auto const &name(expect::type<cell::type::ident>(*it).data);
         if(++it == list.data.end())
-        { throw std::runtime_error{ "syntax error: expected type after " + name }; }
+        {
+          throw expect::error::syntax::syntax<>
+          { "syntax error: expected type after " + name };
+        }
 
         auto const &type(expect::type<cell::type::ident>(*it).data);
         ret.push_back({ name, cell::type_from_string(type) });

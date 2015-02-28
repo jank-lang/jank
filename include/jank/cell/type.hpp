@@ -3,6 +3,8 @@
 #include <string>
 #include <stdexcept>
 
+#include <jank/expect/error/type/type.hpp>
+
 namespace jank
 {
   namespace cell
@@ -60,6 +62,7 @@ namespace jank
       }
     }
 
+    /* TODO: this should be in env */
     inline type type_from_string(std::string const &str)
     {
       if(str == "int")
@@ -75,7 +78,7 @@ namespace jank
       else if(str == "function")
       { return type::function; }
       else
-      { throw std::runtime_error{ "invalid cell type string: " + str }; }
+      { throw expect::error::type::type<>{ "invalid cell type string " + str }; }
     }
   }
 }

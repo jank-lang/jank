@@ -60,6 +60,8 @@ jank::environment::state env
           [](auto const&, jank::cell::list const &cl) -> jank::cell::cell
           {
             auto const &list(cl.data);
+
+            /* TODO: remove; use a proper signature */
             if(list.size() < 2)
             { throw std::invalid_argument{ "invalid argument count" }; }
 
@@ -88,7 +90,10 @@ jank::environment::state env
           auto const ret(jank::expect::type<jank::cell::type::list>(list[3]));
 
           if(env.funcs[name.data].size())
-          { throw std::runtime_error{ "function already defined: " + name.data }; }
+          {
+            throw jank::expect::error::type::type<>
+            { "function already defined " + name.data };
+          }
           env.funcs[name.data].emplace_back();
 
           jank::cell::func &func{ env.funcs[name.data].back() };
@@ -99,7 +104,7 @@ jank::environment::state env
           {
             if(args.data.size() - 1 != func.arguments.size())
             {
-              throw std::invalid_argument
+              throw jank::expect::error::type::overload
               {
                 "invalid argument count (expected " +
                 std::to_string(func.arguments.size()) +
@@ -117,9 +122,9 @@ jank::environment::state env
               { func.env.cells[func.arguments[i].name] = args.data[i + 1]; }
               else
               {
-                throw std::invalid_argument
+                throw jank::expect::error::type::overload
                 {
-                  std::string{ "invalid argument type: (expected " } +
+                  std::string{ "invalid argument type (expected " } +
                   jank::cell::type_string(expected_type) +
                   ", found " + jank::cell::type_string(found_type) +
                   ")"

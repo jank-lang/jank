@@ -7,6 +7,7 @@
 
 #include <jank/cell/cell.hpp>
 #include <jank/function/arg.hpp>
+#include <jank/expect/error/type/type.hpp>
 
 namespace jank
 {
@@ -70,7 +71,7 @@ namespace jank
       }
 
       if(it->second.empty())
-      { throw std::runtime_error{ "unknown function: " + name }; }
+      { throw expect::error::type::type<>{ "unknown function: " + name }; }
 
       return { it->second[0] };
     }

@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include <jank/cell/cell.hpp>
+#include <jank/expect/error/type/type.hpp>
 
 namespace jank
 {
@@ -15,12 +16,12 @@ namespace jank
       auto const type(static_cast<cell::type>(c.which()));
       if(type != C)
       {
-        throw std::invalid_argument
+        throw error::type::type<>
         { 
-          std::string{"invalid argument type (expected "} +
+          std::string{ "expected " } +
           cell::type_string<C>() +
           ", found: " +
-          cell::type_string(type) + ")"
+          cell::type_string(type)
         };
       }
       return boost::get<cell::type_variant_t<C>>(c);

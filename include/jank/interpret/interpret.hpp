@@ -2,6 +2,7 @@
 
 #include <jank/cell/cell.hpp>
 #include <jank/expect/type.hpp>
+#include <jank/expect/error/type/type.hpp>
 
 namespace jank
 {
@@ -38,7 +39,7 @@ namespace jank
 
       auto const env_it(env.find_function(func_name));
       if(!env_it)
-      { throw std::runtime_error{ "unknown function: " + func_name }; }
+      { throw expect::error::type::type<>{ "unknown function: " + func_name }; }
 
       auto const &func(env_it->data);
       return func(env, root);
