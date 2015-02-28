@@ -34,10 +34,11 @@ namespace jank
         {
           static std::regex inner_regex
           {
-            R"(([a-zA-Z\_\+\*\/\^\?\!\:\%\.]+)\s*|)" /* idents */
-            R"(\"((?:\\.|[^\\\"])*)\"|)" /* strings */
-            R"((\-?\d+(?!\d*\.\d+))|)" /* integers */
-            R"((\-?\d+\.\d+))" /* reals */
+            /* TODO: _ in ident */
+            R"(([a-zA-Z\-\+\*\/\^\?\!\:\%\.]+)(?:\s|\$)*)" /* idents */
+            R"(|\"((?:\\.|[^\\\"])*)\")" /* strings */
+            R"(|(\-?\d+(?!\d*\.\d+)))" /* integers */
+            R"(|(\-?\d+\.\d+))" /* reals */
           };
           auto const &outer_str(outer_match.str());
           if(outer_str.empty())
@@ -76,7 +77,8 @@ namespace jank
             if(inner_matches[1].matched) /* ident */
             {
               std::cout << "ident: " << inner_matches[1] << std::endl;
-              active_list->data.push_back(cell::ident{ inner_matches[1] }); }
+              active_list->data.push_back(cell::ident{ inner_matches[1] });
+            }
             else if(inner_matches[2].matched) /* string */
             {
               std::string word(inner_matches[2]);
@@ -87,7 +89,8 @@ namespace jank
             else if(inner_matches[3].matched) /* integer */
             {
               std::cout << "integer: " << inner_matches[3] << std::endl;
-              active_list->data.push_back(cell::integer{ std::stoll(inner_matches[3]) }); }
+              active_list->data.push_back(cell::integer{ std::stoll(inner_matches[3]) });
+            }
             else if(inner_matches[4].matched) /* real */
             {
               std::cout << "real: " << inner_matches[4] << std::endl;
