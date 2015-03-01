@@ -3,6 +3,7 @@
 #include <jank/cell/cell.hpp>
 #include <jank/expect/type.hpp>
 #include <jank/expect/error/type/type.hpp>
+#include <jank/environment/state.hpp>
 
 namespace jank
 {
@@ -12,7 +13,6 @@ namespace jank
     {
       auto const &func_name(expect::type<cell::type::ident>(root.data[0]).data);
 
-      /* TODO: first handle special forms and shit. */
       auto const special_it(env.find_special(func_name));
       if(special_it)
       { return special_it->data(env, root); }
