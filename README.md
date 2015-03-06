@@ -19,6 +19,14 @@ There are a few primitive types which are part of the language.
 ```
 Functions are defined via the `func` special identifier and require a `name` identifier, an argument list (which may be empty), a return type list (which may be empty), and, optionally, 
 
+## Structs
+```
+(struct coord
+  (x float)
+  (y float))
+```
+User-defined datatypes are supported, in the form of structs. Structs may contain any number of members, all of which are public (as in C). Structs may also be generic.
+
 ## Variables
 ```
 (var name T
@@ -36,9 +44,18 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 ### Examples
 #### Function
 ```
-(func square : (T) (i T) (T)
+(| T:i is just an identifier, not specific grammar.
+   it reads as "T of i", or "T for i." |)
+
+(func square : (T:i) (i T:i) (T:i)
   (| square from T takes one param, i, and returns a T |)
   (* i i))
+```
+#### Struct
+```
+(struct coord : (T:x T:y)
+  (x T:x)
+  (y T:y))
 ```
 
 ### Dependency from type(s)
