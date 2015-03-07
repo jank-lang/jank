@@ -1,5 +1,13 @@
 # jank - a statically typed, generic lisp
 
+jank aims to be the child of Typed Racket and C++: a lisp-1 with hygienic, code-as-data macros, a strong, static type system, scope-based resource management, and a native compiler.
+
+  - no garbage collector
+  - no bytecode/JIT compiler
+
+
+TODO: RAII (pointers), SFINAE (concepts), unions (variants), enums
+
 ## Types
 There are a few primitive types which are part of the language.
 
@@ -25,7 +33,9 @@ Functions are defined via the `func` special identifier and require a `name` ide
   (x float)
   (y float))
 ```
-User-defined datatypes are supported, in the form of structs. Structs may contain any number of members, all of which are public (as in C). Structs may also be generic.
+User-defined datatypes are supported, in the form of structs. Structs may contain any number of members, all of which are public (as in C). Structs may also be generic. Unlike C++, but like C, structs may not have member functions. Instead, functions should be designed in a generic manner and may be overloaded for certain types.
+
+## Enums
 
 ## Variables
 ```
@@ -47,7 +57,7 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 (| T:i is just an identifier, not specific grammar.
    it reads as "T of i", or "T for i." |)
 
-(func square : (T:i) (i T:i) (T:i)
+(func square : (T:i) (i T:i) T:i
   (| square from T takes one param, i, and returns a T |)
   (* i i))
 ```
@@ -66,3 +76,42 @@ Dependencies may be dependent on other types. The only distinction, syntacticall
 
 ## Comments
 Only multi-line comments are supported. Anything within `(|` and `|)` is considered a comment. Nested comments are allowed.
+
+## Allocation
+```
+(| TODO: shared/owned enum? |)
+
+(| Defaults to allocating an owned resource. |)
+(allocate : (coord) ...)
+
+(| Explicitly allocates a shared resource. |)
+(allocate : (coord) ...)
+```
+Objects can either be in automatic or dynamic memory (stack vs. heap); to get an object into dynamic memory, you need a smart pointer.
+
+### RAII
+```
+(func construct : (T:object, ...) (...) (T:object)
+  (T:object ...))
+
+(func destruct : (T:object) (o T:object) ()
+  )
+
+(allocate : (T:object) (...) (T:object)
+  (construct : (T:object)))
+```
+Scope-based resource management ties resource ownership to object lifetimes, similar to C++. Types can take advantage of this by overloading `construct` and `destruct` to perform any custom logic.
+
+### Example
+```
+(struct coord : (T:x T:y)
+  (x T:x)
+  (y T:y))
+
+(func construct : (T:x T:y) (x T:x y T:y) (T:object)
+  (print "constructing object")
+  (T:object : (T:x T:y) x y))
+
+(func destruct : (T:x T:y) (c coord :: (T:x T:y)) ()
+  (print "destructing coord"))
+```
