@@ -40,9 +40,9 @@ User-defined datatypes are supported, in the form of structs. Structs may contai
 ## Variables
 ```
 (var name T
-  value)
+  values...)
 ```
-Variables are defined via the `var` special identifier and require a `name` identifier, a type, and a value.
+Variables are defined via the `var` special identifier and require a `name` identifier, a type, and a value(s). The type may be empty `()` if it can be deduced by the value. If the type is supplied, multiple values may be supplied which are not necessarily of type `T`, but instead are constructor arguments.
 
 ## Generics
 ### Definition from type(s)
@@ -79,13 +79,7 @@ Only multi-line comments are supported. Anything within `(|` and `|)` is conside
 
 ## Allocation
 ```
-(| TODO: shared/owned enum? |)
-
-(| Defaults to allocating an owned resource. |)
-(allocate : (coord) ...)
-
-(| Explicitly allocates a shared resource. |)
-(allocate : (coord) ...)
+(| TODO: shared/owned pointers |)
 ```
 Objects can either be in automatic or dynamic memory (stack vs. heap); to get an object into dynamic memory, you need a smart pointer.
 
@@ -108,10 +102,13 @@ Scope-based resource management ties resource ownership to object lifetimes, sim
   (x T:x)
   (y T:y))
 
-(func construct : (T:x T:y) (x T:x y T:y) (T:object)
+(func construct : (coord :: (T:x T:y)) (x T:x y T:y) (coord :: (T:x T:y))
   (print "constructing object")
-  (T:object : (T:x T:y) x y))
+  (coord :: (T:x T:y) x y))
 
 (func destruct : (T:x T:y) (c coord :: (T:x T:y)) ()
   (print "destructing coord"))
+
+(| Usage... |)
+(var c (coord :: (real real)) 0.0 5.4)
 ```
