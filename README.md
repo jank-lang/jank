@@ -1,12 +1,12 @@
 # jank - a statically typed, generic lisp
 
-jank aims to be the child of Typed Racket and C++: a lisp-1 with hygienic, code-as-data macros, a strong, static type system, scope-based resource management, and a native compiler.
+jank aims to be a lisp-1 with hygienic, code-as-data macros, a strong, static type system, scope-based resource management, and a native compiler.
 
   - no garbage collector
   - no bytecode/JIT compiler
+  - strong, static typing
 
-
-TODO: RAII (pointers), SFINAE (concepts), unions (variants), enums, matching
+TODO: SFINAE (concepts), unions (variants), enums, matching
 
 ## Types
 There are a few primitive types which are part of the language.
@@ -84,21 +84,12 @@ Dependencies may be dependent on other types. The only distinction, syntacticall
 ## Comments
 Only multi-line comments are supported. Anything within `(|` and `|)` is considered a comment. Nested comments are allowed.
 
-## Allocation
-```
-(| TODO: shared/owned pointers |)
-```
-Objects can either be in automatic or dynamic memory (stack vs. heap); to get an object into dynamic memory, you need a smart pointer.
-
 ### RAII
 ```
 (func construct : (T:object, ...) (...) (T:object)
   )
 
 (func destruct : (T:object) (o T:object) ()
-  )
-
-(allocate : (T:object) (...) (T:object)
   )
 ```
 Scope-based resource management ties resource ownership to object lifetimes, similar to C++. Types can take advantage of this by overloading `construct` and `destruct` to perform any custom logic.
@@ -126,6 +117,24 @@ When constructing an object, constructors are first considered, then aggregate i
 
 (| Invokes bar and uses aggregate initialization for the coord. |)
 (bar (coord :: (real real) :x 0.0 :y 5.4))
+```
+
+## Allocation
+```
+(struct owned : (T:ptr)
+  )
+(struct shared : (T:ptr)
+  )
+```
+Objects can either be in automatic or dynamic memory (stack vs. heap); to get an object into dynamic memory, you need a smart pointer. Two types of smart pointers exist, `owned` and `shared`.
+
+### Example
+```
+(| Call foo with a new owned ptr to int containing 42. |)
+(foo (ptr::owned :: int 42))
+
+(| Call bar with a new owned ptr to int containing 42. |)
+(bar (ptr::shared :: int 42))
 ```
 
 ### Type aliasing
