@@ -170,6 +170,9 @@ int main(int const argc, char ** const argv)
 
   std::cout << root << std::endl;
 
+  /* TODO: translate */
+
+  /* TODO: Keep all interpret shit in cells or AST cells? */
   jank::interpret::interpret
   (
     env,

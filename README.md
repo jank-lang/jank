@@ -6,7 +6,7 @@ jank aims to be the child of Typed Racket and C++: a lisp-1 with hygienic, code-
   - no bytecode/JIT compiler
 
 
-TODO: RAII (pointers), SFINAE (concepts), unions (variants), enums
+TODO: RAII (pointers), SFINAE (concepts), unions (variants), enums, matching
 
 ## Types
 There are a few primitive types which are part of the language.
@@ -34,6 +34,13 @@ Functions are defined via the `func` special identifier and require a `name` ide
   (y float))
 ```
 User-defined datatypes are supported, in the form of structs. Structs may contain any number of members, all of which are public (as in C). Structs may also be generic. Unlike C++, but like C, structs may not have member functions. Instead, functions should be designed in a generic manner and may be overloaded for certain types.
+
+```
+(struct name
+  (first string "John")
+  (last string "Doe"))
+```
+Struct members may be given a default value. If a member doesn't have a default value, one must be provided at the time of initialization; no uninitialized variables are allowed.
 
 ## Enums
 
@@ -86,17 +93,19 @@ Objects can either be in automatic or dynamic memory (stack vs. heap); to get an
 ### RAII
 ```
 (func construct : (T:object, ...) (...) (T:object)
-  (T:object ...))
+  )
 
 (func destruct : (T:object) (o T:object) ()
   )
 
 (allocate : (T:object) (...) (T:object)
-  (construct : (T:object)))
+  )
 ```
 Scope-based resource management ties resource ownership to object lifetimes, similar to C++. Types can take advantage of this by overloading `construct` and `destruct` to perform any custom logic.
 
-### Example
+When constructing an object, constructors are first considered, then aggregate initialization is considered. Alternatively, aggregate initialization can be used by directly specifying keywords for each initialized struct field. In aggregate initialization, any uninitialized fields are an error. If the struct specifies a default for a field, that field may be omitted in aggregate initialization. 
+
+#### Example
 ```
 (struct coord : (T:x T:y)
   (x T:x)
@@ -104,11 +113,20 @@ Scope-based resource management ties resource ownership to object lifetimes, sim
 
 (func construct : (coord :: (T:x T:y)) (x T:x y T:y) (coord :: (T:x T:y))
   (print "constructing object")
-  (coord :: (T:x T:y) x y))
+  (coord :: (T:x T:y) :x x :y y))
 
 (func destruct : (T:x T:y) (c coord :: (T:x T:y)) ()
   (print "destructing coord"))
 
-(| Usage... |)
+(| Calls the constructor. |)
 (var c (coord :: (real real)) 0.0 5.4)
+
+(| Invokes foo and calls the coord constructor. |)
+(foo (coord :: (real real) 0.0 5.4))
+
+(| Invokes bar and uses aggregate initialization for the coord. |)
+(bar (coord :: (real real) :x 0.0 :y 5.4))
 ```
+
+### Type aliasing
+All type aliases are strong. Since the focus is so strongly on generics, types are designed to be specialized and aliased to create unique, custom types. Aliases can also be generic.
