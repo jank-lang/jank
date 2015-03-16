@@ -54,7 +54,7 @@ Variables are defined via the `var` special identifier and require a `name` iden
 ## Generics
 ### Definition from type(s)
 ```
-name : (T_1 [T_2 ... T_n])
+name :: (T_1 [T_2 ... T_n])
 ```
 Definitions may be dependent on types. Such definitions may be functions or structs. The type list must never be empty.
 
@@ -64,20 +64,20 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 (| T:i is just an identifier, not specific grammar.
    it reads as "T of i", or "T for i." |)
 
-(func square : (T:i) (i T:i) T:i
+(func square :: (T:i) (i T:i) T:i
   (| square from T takes one param, i, and returns a T |)
   (* i i))
 ```
 #### Struct
 ```
-(struct coord : (T:x T:y)
+(struct coord :: (T:x T:y)
   (x T:x)
   (y T:y))
 ```
 
 ### Dependency from type(s)
 ```
-name :: (T_1 [T_2 ... T_n])
+name : (T_1 [T_2 ... T_n])
 ```
 Dependencies may be dependent on other types. The only distinction, syntactically, between this dependency and *definition from type* dependency is the double colon. The type list must never be empty.
 
@@ -86,10 +86,10 @@ Only multi-line comments are supported. Anything within `(|` and `|)` is conside
 
 ### RAII
 ```
-(func construct : (T:object, ...) (...) (T:object)
+(func construct :: (T:object, ...) (...) (T:object)
   )
 
-(func destruct : (T:object) (o T:object) ()
+(func destruct :: (T:object) (o T:object) ()
   )
 ```
 Scope-based resource management ties resource ownership to object lifetimes, similar to C++. Types can take advantage of this by overloading `construct` and `destruct` to perform any custom logic.
@@ -98,32 +98,32 @@ When constructing an object, constructors are first considered, then aggregate i
 
 #### Example
 ```
-(struct coord : (T:x T:y)
+(struct coord :: (T:x T:y)
   (x T:x)
   (y T:y))
 
-(func construct : (coord :: (T:x T:y)) (x T:x y T:y) (coord :: (T:x T:y))
+(func construct :: (coord : (T:x T:y)) (x T:x y T:y) (coord : (T:x T:y))
   (print "constructing object")
-  (coord :: (T:x T:y) :x x :y y))
+  (coord : (T:x T:y) :x x :y y))
 
-(func destruct : (T:x T:y) (c coord :: (T:x T:y)) ()
+(func destruct :: (T:x T:y) (c coord : (T:x T:y)) ()
   (print "destructing coord"))
 
 (| Calls the constructor. |)
-(var c (coord :: (real real)) 0.0 5.4)
+(var c (coord : (real real)) 0.0 5.4)
 
 (| Invokes foo and calls the coord constructor. |)
-(foo (coord :: (real real) 0.0 5.4))
+(foo (coord : (real real) 0.0 5.4))
 
 (| Invokes bar and uses aggregate initialization for the coord. |)
-(bar (coord :: (real real) :x 0.0 :y 5.4))
+(bar (coord : (real real) :x 0.0 :y 5.4))
 ```
 
 ## Allocation
 ```
-(struct owned : (T:ptr)
+(struct owned :: (T:ptr)
   )
-(struct shared : (T:ptr)
+(struct shared :: (T:ptr)
   )
 ```
 Objects can either be in automatic or dynamic memory (stack vs. heap); to get an object into dynamic memory, you need a smart pointer. Two types of smart pointers exist, `owned` and `shared`.
@@ -131,10 +131,10 @@ Objects can either be in automatic or dynamic memory (stack vs. heap); to get an
 ### Example
 ```
 (| Call foo with a new owned ptr to int containing 42. |)
-(foo (ptr::owned :: int 42))
+(foo (ptr::owned : int 42))
 
 (| Call bar with a new owned ptr to int containing 42. |)
-(bar (ptr::shared :: int 42))
+(bar (ptr::shared : int 42))
 ```
 
 ### Type aliasing
