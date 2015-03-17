@@ -9,11 +9,11 @@
 #include <jtl/iterator/stream_delim.hpp>
 #include <jtl/iterator/back_insert.hpp>
 
-#include <jank/environment/state.hpp>
+#include <jank/interpret/environment/state.hpp>
 #include <jank/parse/parse.hpp>
 #include <jank/interpret/interpret.hpp>
-#include <jank/environment/prelude/arithmetic.hpp>
-#include <jank/expect/type.hpp>
+#include <jank/interpret/environment/prelude/arithmetic.hpp>
+#include <jank/interpret/expect/type.hpp>
 
 jank::environment::state env
 {

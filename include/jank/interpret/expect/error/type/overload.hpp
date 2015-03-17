@@ -1,6 +1,6 @@
 #pragma once
 
-#include <jank/expect/error/type/type.hpp>
+#include <jank/interpret/expect/error/type/type.hpp>
 
 namespace jank
 {

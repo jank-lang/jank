@@ -11,7 +11,7 @@
 
 #include <jtl/iterator/range.hpp>
 
-#include <jank/cell/type.hpp>
+#include <jank/interpret/cell/type.hpp>
 
 namespace jank
 {

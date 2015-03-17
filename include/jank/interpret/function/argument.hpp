@@ -3,10 +3,10 @@
 #include <string>
 #include <vector>
 
-#include <jank/cell/cell.hpp>
-#include <jank/expect/type.hpp>
-#include <jank/expect/argument.hpp>
-#include <jank/expect/error/syntax/syntax.hpp>
+#include <jank/interpret/cell/cell.hpp>
+#include <jank/interpret/expect/type.hpp>
+#include <jank/interpret/expect/argument.hpp>
+#include <jank/interpret/expect/error/syntax/syntax.hpp>
 
 namespace jank
 {

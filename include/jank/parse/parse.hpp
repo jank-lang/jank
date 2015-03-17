@@ -6,8 +6,8 @@
 
 #include <jtl/iterator/range.hpp>
 
-#include <jank/cell/cell.hpp>
-#include <jank/expect/type.hpp>
+#include <jank/interpret/cell/cell.hpp>
+#include <jank/interpret/expect/type.hpp>
 
 namespace jank
 {

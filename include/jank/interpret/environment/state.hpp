@@ -5,9 +5,9 @@
 #include <memory>
 #include <experimental/optional>
 
-#include <jank/cell/cell.hpp>
-#include <jank/function/argument.hpp>
-#include <jank/expect/error/type/type.hpp>
+#include <jank/interpret/cell/cell.hpp>
+#include <jank/interpret/function/argument.hpp>
+#include <jank/interpret/expect/error/type/type.hpp>
 
 namespace jank
 {
