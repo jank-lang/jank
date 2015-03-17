@@ -10,32 +10,35 @@
 
 namespace jank
 {
-  namespace function
+  namespace interpret
   {
-    struct argument
+    namespace function
     {
-      std::string name;
-      cell::type type;
-    };
-
-    inline std::vector<argument> parse_arguments(cell::list const &list)
-    {
-      std::vector<argument> ret;
-
-      for(auto it(list.data.begin()); it != list.data.end(); ++it)
+      struct argument
       {
-        auto const &name(expect::type<cell::type::ident>(*it).data);
-        if(++it == list.data.end())
+        std::string name;
+        cell::type type;
+      };
+
+      inline std::vector<argument> parse_arguments(cell::list const &list)
+      {
+        std::vector<argument> ret;
+
+        for(auto it(list.data.begin()); it != list.data.end(); ++it)
         {
-          throw expect::error::syntax::syntax<>
-          { "syntax error: expected type after " + name };
+          auto const &name(expect::type<cell::type::ident>(*it).data);
+          if(++it == list.data.end())
+          {
+            throw expect::error::syntax::syntax<>
+            { "syntax error: expected type after " + name };
+          }
+
+          auto const &type(expect::type<cell::type::ident>(*it).data);
+          ret.push_back({ name, cell::type_from_string(type) });
         }
 
-        auto const &type(expect::type<cell::type::ident>(*it).data);
-        ret.push_back({ name, cell::type_from_string(type) });
+        return ret;
       }
-
-      return ret;
     }
   }
 }

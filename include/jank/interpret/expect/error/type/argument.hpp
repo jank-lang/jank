@@ -1,21 +1,26 @@
 #pragma once
 
-#include <jank/expect/error/type/type.hpp>
+#include <jank/interpret/expect/error/type/type.hpp>
+
+/* TODO remove? */
 
 namespace jank
 {
-  namespace expect
+  namespace interpret
   {
-    namespace error
+    namespace expect
     {
-      namespace type
+      namespace error
       {
-        namespace detail
+        namespace type
         {
-          struct argument
-          { static char const constexpr *description{ "argument" }; };
+          namespace detail
+          {
+            struct argument
+            { static char const constexpr *description{ "argument" }; };
+          }
+          using argument = type<detail::argument>;
         }
-        using argument = type<detail::argument>;
       }
     }
   }

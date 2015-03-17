@@ -5,27 +5,30 @@
 
 namespace jank
 {
-  namespace expect
+  namespace interpret
   {
-    namespace error
+    namespace expect
     {
-      namespace type
+      namespace error
       {
-        struct generic
-        { static char const constexpr *description{ "expression" }; };
-
-        template <typename T = generic>
-        struct type : std::runtime_error
+        namespace type
         {
-          type()
-            : std::runtime_error
-              { std::string{ "type error (" } + T::description + ")" }
-          { }
-          type(std::string const &s)
-            : std::runtime_error
-              { std::string{ "type error (" } + T::description + "): " + s }
-          { }
-        };
+          struct generic
+          { static char const constexpr *description{ "expression" }; };
+
+          template <typename T = generic>
+          struct type : std::runtime_error
+          {
+            type()
+              : std::runtime_error
+                { std::string{ "type error (" } + T::description + ")" }
+            { }
+            type(std::string const &s)
+              : std::runtime_error
+                { std::string{ "type error (" } + T::description + "): " + s }
+            { }
+          };
+        }
       }
     }
   }

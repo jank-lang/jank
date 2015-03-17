@@ -8,23 +8,26 @@
 
 namespace jank
 {
-  namespace expect
+  namespace interpret
   {
-    template <cell::type C, typename Cell>
-    decltype(auto) type(Cell &&c)
+    namespace expect
     {
-      auto const type(static_cast<cell::type>(c.which()));
-      if(type != C)
+      template <cell::type C, typename Cell>
+      decltype(auto) type(Cell &&c)
       {
-        throw error::type::type<>
-        { 
-          std::string{ "expected " } +
-          cell::type_string<C>() +
-          ", found: " +
-          cell::type_string(type)
-        };
+        auto const type(static_cast<cell::type>(c.which()));
+        if(type != C)
+        {
+          throw error::type::type<>
+          { 
+            std::string{ "expected " } +
+            cell::type_string<C>() +
+            ", found: " +
+            cell::type_string(type)
+          };
+        }
+        return boost::get<cell::type_variant_t<C>>(c);
       }
-      return boost::get<cell::type_variant_t<C>>(c);
     }
   }
 }

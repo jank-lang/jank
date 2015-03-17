@@ -15,49 +15,51 @@
 #include <jank/interpret/environment/prelude/arithmetic.hpp>
 #include <jank/interpret/expect/type.hpp>
 
-jank::environment::state env
+jank::interpret::environment::state env
 {
   { /* cells */
     {
       "forty_two",
-      jank::cell::integer{ 42 }
+      jank::interpret::cell::integer{ 42 }
     }
   },
   { /* funcs */
     {
       "root",
       {
-        jank::cell::func
+        jank::interpret::cell::func
         {
           {},
-          [](auto const&, jank::cell::list const &) -> jank::cell::cell{ return {}; },
-          jank::environment::state()
+          [](auto const&, jank::interpret::cell::list const &)
+            -> jank::interpret::cell::cell{ return {}; },
+          jank::interpret::environment::state()
         }
       }
     },
     {
       "+",
-      { jank::cell::func{ {}, &jank::environment::prelude::sum, jank::environment::state() } }
+      { jank::interpret::cell::func{ {}, &jank::interpret::environment::prelude::sum, jank::interpret::environment::state() } }
     },
     {
       "-",
-      { jank::cell::func{ {}, &jank::environment::prelude::difference, jank::environment::state() } }
+      { jank::interpret::cell::func{ {}, &jank::interpret::environment::prelude::difference, jank::interpret::environment::state() } }
     },
     {
       "/",
-      { jank::cell::func{ {}, &jank::environment::prelude::quotient, jank::environment::state() } }
+      { jank::interpret::cell::func{ {}, &jank::interpret::environment::prelude::quotient, jank::interpret::environment::state() } }
     },
     {
       "*",
-      { jank::cell::func{ {}, &jank::environment::prelude::product, jank::environment::state() } }
+      { jank::interpret::cell::func{ {}, &jank::interpret::environment::prelude::product, jank::interpret::environment::state() } }
     },
     {
       "print",
       {
-        jank::cell::func
+        jank::interpret::cell::func
         {
           {},
-          [](auto const&, jank::cell::list const &cl) -> jank::cell::cell
+          [](auto const&, jank::interpret::cell::list const &cl)
+            -> jank::interpret::cell::cell
           {
             auto const &list(cl.data);
 
@@ -71,7 +73,7 @@ jank::environment::state env
 
             return {};
           },
-          jank::environment::state()
+          jank::interpret::environment::state()
         }
       }
     }
@@ -79,32 +81,33 @@ jank::environment::state env
   { /* special */
     {
       "func",
-      jank::cell::func
+      jank::interpret::cell::func
       {
         {},
-        [](auto &env, jank::cell::list const &cl) -> jank::cell::cell
+        [](auto &env, jank::interpret::cell::list const &cl)
+          -> jank::interpret::cell::cell
         {
           auto const &list(cl.data);
-          auto const name(jank::expect::type<jank::cell::type::ident>(list[1]));
-          auto const args(jank::expect::type<jank::cell::type::list>(list[2]));
-          auto const ret(jank::expect::type<jank::cell::type::list>(list[3]));
+          auto const name(jank::interpret::expect::type<jank::interpret::cell::type::ident>(list[1]));
+          auto const args(jank::interpret::expect::type<jank::interpret::cell::type::list>(list[2]));
+          auto const ret(jank::interpret::expect::type<jank::interpret::cell::type::list>(list[3]));
 
           if(env.funcs[name.data].size())
           {
-            throw jank::expect::error::type::type<>
+            throw jank::interpret::expect::error::type::type<>
             { "function already defined " + name.data };
           }
           env.funcs[name.data].emplace_back();
 
-          jank::cell::func &func{ env.funcs[name.data].back() };
-          func.arguments = jank::function::parse_arguments(args);
+          jank::interpret::cell::func &func{ env.funcs[name.data].back() };
+          func.arguments = jank::interpret::function::parse_arguments(args);
           func.env.parent = &env;
-          func.data = [=, &func](auto &, jank::cell::list const &args)
-            -> jank::cell::cell
+          func.data = [=, &func](auto &, jank::interpret::cell::list const &args)
+            -> jank::interpret::cell::cell
           {
             if(args.data.size() - 1 != func.arguments.size())
             {
-              throw jank::expect::error::type::overload
+              throw jank::interpret::expect::error::type::overload
               {
                 "invalid argument count (expected " +
                 std::to_string(func.arguments.size()) +
@@ -116,23 +119,23 @@ jank::environment::state env
             {
               auto const expected_type(func.arguments[i].type);
               auto const found_type
-              (static_cast<jank::cell::type>(args.data[i + 1].which()));
+              (static_cast<jank::interpret::cell::type>(args.data[i + 1].which()));
 
               if(expected_type == found_type)
               { func.env.cells[func.arguments[i].name] = args.data[i + 1]; }
               else
               {
-                throw jank::expect::error::type::overload
+                throw jank::interpret::expect::error::type::overload
                 {
                   std::string{ "invalid argument type (expected " } +
-                  jank::cell::type_string(expected_type) +
-                  ", found " + jank::cell::type_string(found_type) +
+                  jank::interpret::cell::type_string(expected_type) +
+                  ", found " + jank::interpret::cell::type_string(found_type) +
                   ")"
                 };
               }
             }
 
-            jank::cell::list body{ { jank::cell::ident{ "root" } } };
+            jank::interpret::cell::list body{ { jank::interpret::cell::ident{ "root" } } };
             std::copy(std::next(list.begin(), 4), list.end(),
                       std::back_inserter(body.data));
             return jank::interpret::interpret(func.env, body);
@@ -140,7 +143,7 @@ jank::environment::state env
 
           return {};
         },
-        jank::environment::state()
+        jank::interpret::environment::state()
       }
     }
   },
@@ -176,6 +179,6 @@ int main(int const argc, char ** const argv)
   jank::interpret::interpret
   (
     env,
-    jank::expect::type<jank::cell::type::list>(root)
+    jank::interpret::expect::type<jank::interpret::cell::type::list>(root)
   );
 }

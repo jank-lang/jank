@@ -4,18 +4,21 @@
 
 namespace jank
 {
-  namespace expect
+  namespace interpret
   {
-    namespace error
+    namespace expect
     {
-      namespace type
+      namespace error
       {
-        namespace detail
+        namespace type
         {
-          struct overload
-          { static char const constexpr *description{ "overload" }; };
+          namespace detail
+          {
+            struct overload
+            { static char const constexpr *description{ "overload" }; };
+          }
+          using overload = type<detail::overload>;
         }
-        using overload = type<detail::overload>;
       }
     }
   }
