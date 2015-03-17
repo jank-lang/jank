@@ -64,7 +64,7 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 (| T:i is just an identifier, not specific grammar.
    it reads as "T of i", or "T for i." |)
 
-(func square :: (T:i) (i T:i) T:i
+(func square :: (T:i) (i T:i) (T:i)
   (| square from T takes one param, i, and returns a T |)
   (* i i))
 ```
