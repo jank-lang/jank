@@ -17,42 +17,49 @@ namespace jank
     {
       struct state
       {
-        std::experimental::optional<cell::cell> find_cell
+        std::experimental::optional<parse::cell::cell> find_cell
         (std::string const &name);
-        std::experimental::optional<cell::func> find_function
+        std::experimental::optional<parse::cell::func> find_function
         (std::string const &name);
-        std::experimental::optional<cell::func> find_special
+        std::experimental::optional<parse::cell::func> find_special
         (std::string const &name);
 
-        std::map<std::string, cell::cell> cells;
+        std::map<std::string, parse::cell::cell> cells;
         
         /* TODO: map<string, vector<func>> for overloading.
          * Each func has a vector<type> for the args.
          * Calling a function first type checks each overload. */
-        std::map<std::string, std::vector<cell::func>> funcs;
+        std::map<std::string, std::vector<parse::cell::func>> funcs;
 
-        std::map<std::string, cell::func> special_funcs;
+        std::map<std::string, parse::cell::func> special_funcs;
 
         // TODO std::shared_ptr<state> parent;
         state *parent;
       };
     }
+  }
+
+  namespace parse
+  {
     namespace cell
     {
       template <>
       struct wrapper<type::function>
       {
-        using type = std::function<cell (environment::state&, list const&)>;
+        using type = std::function<cell (interpret::environment::state&, list const&)>;
 
-        std::vector<function::argument> arguments;
+        std::vector<interpret::function::argument> arguments;
         type data;
-        environment::state env;
+        interpret::environment::state env;
       };
     }
+  }
 
+  namespace interpret
+  {
     namespace environment
     {
-      std::experimental::optional<cell::cell> state::find_cell
+      std::experimental::optional<jank::parse::cell::cell> state::find_cell
       (std::string const &name)
       {
         auto const it(cells.find(name));
@@ -65,7 +72,7 @@ namespace jank
         }
         return { it->second };
       }
-      std::experimental::optional<cell::func> state::find_function
+      std::experimental::optional<jank::parse::cell::func> state::find_function
       (std::string const &name)
       {
         auto const it(funcs.find(name));
@@ -82,7 +89,7 @@ namespace jank
 
         return { it->second[0] };
       }
-      std::experimental::optional<cell::func> state::find_special
+      std::experimental::optional<jank::parse::cell::func> state::find_special
       (std::string const &name)
       {
         auto const it(special_funcs.find(name));

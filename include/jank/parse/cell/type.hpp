@@ -7,7 +7,7 @@
 
 namespace jank
 {
-  namespace interpret
+  namespace parse
   {
     namespace cell
     {
@@ -80,7 +80,10 @@ namespace jank
         else if(str == "function")
         { return type::function; }
         else
-        { throw expect::error::type::type<>{ "invalid cell type string " + str }; }
+        {
+          throw interpret::expect::error::type::type<>
+          { "invalid cell type string " + str };
+        }
       }
     }
   }

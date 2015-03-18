@@ -12,7 +12,7 @@ namespace jank
   {
     namespace expect
     {
-      inline void args(cell::list const &c, std::size_t const count)
+      inline void args(parse::cell::list const &c, std::size_t const count)
       {
         if(c.data.size() != count + 1) /* The first atom is not an arg. */
         {
@@ -24,7 +24,7 @@ namespace jank
         }
       }
 
-      inline void at_least_args(cell::list const &c, std::size_t const count)
+      inline void at_least_args(parse::cell::list const &c, std::size_t const count)
       {
         if(c.data.size() < count + 1) /* The first atom is not an arg. */
         {

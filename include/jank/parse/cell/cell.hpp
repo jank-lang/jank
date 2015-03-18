@@ -15,7 +15,7 @@
 
 namespace jank
 {
-  namespace interpret
+  namespace parse
   {
     namespace cell
     {

@@ -13,10 +13,10 @@ namespace jank
 {
   namespace parse
   {
-    interpret::cell::cell parse(std::string contents)
+    cell::cell parse(std::string contents)
     {
-      interpret::cell::cell root{ interpret::cell::list{ { interpret::cell::ident{ "root" } } } };
-      std::vector<interpret::cell::list*> list_stack{ &interpret::expect::type<interpret::cell::type::list>(root) };
+      cell::cell root{ cell::list{ { cell::ident{ "root" } } } };
+      std::vector<cell::list*> list_stack{ &interpret::expect::type<cell::type::list>(root) };
 
       static std::regex outer_regex{ R"((\(*)([^\)\(]*)(\)*))" };
       std::sregex_iterator const outer_begin
@@ -51,8 +51,8 @@ namespace jank
             for(auto const &open : outer_str)
             {
               static_cast<void>(open);
-              active_list->data.push_back(interpret::cell::list{ { } });
-              active_list = &interpret::expect::type<interpret::cell::type::list>
+              active_list->data.push_back(cell::list{ { } });
+              active_list = &interpret::expect::type<cell::type::list>
               (active_list->data.back());
               list_stack.push_back(active_list);
             }
@@ -77,24 +77,24 @@ namespace jank
             if(inner_matches[1].matched) /* ident */
             {
               std::cout << "ident: " << inner_matches[1] << std::endl;
-              active_list->data.push_back(interpret::cell::ident{ inner_matches[1] });
+              active_list->data.push_back(cell::ident{ inner_matches[1] });
             }
             else if(inner_matches[2].matched) /* string */
             {
               std::string word(inner_matches[2]);
               boost::algorithm::replace_all(word, "\\\"", "\"");
               std::cout << "string: " << word << std::endl;
-              active_list->data.push_back(interpret::cell::string{ word });
+              active_list->data.push_back(cell::string{ word });
             }
             else if(inner_matches[3].matched) /* integer */
             {
               std::cout << "integer: " << inner_matches[3] << std::endl;
-              active_list->data.push_back(interpret::cell::integer{ std::stoll(inner_matches[3]) });
+              active_list->data.push_back(cell::integer{ std::stoll(inner_matches[3]) });
             }
             else if(inner_matches[4].matched) /* real */
             {
               std::cout << "real: " << inner_matches[4] << std::endl;
-              active_list->data.push_back(interpret::cell::real{ std::stod(inner_matches[4]) });
+              active_list->data.push_back(cell::real{ std::stod(inner_matches[4]) });
             }
             else
             { std::cout << "nothing matched" << std::endl; }
