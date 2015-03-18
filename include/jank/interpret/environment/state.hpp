@@ -5,7 +5,7 @@
 #include <memory>
 #include <experimental/optional>
 
-#include <jank/interpret/cell/cell.hpp>
+#include <jank/parse/cell/cell.hpp>
 #include <jank/interpret/function/argument.hpp>
 #include <jank/interpret/expect/error/type/type.hpp>
 

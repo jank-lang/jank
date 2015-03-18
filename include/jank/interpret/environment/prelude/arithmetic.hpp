@@ -2,7 +2,7 @@
 
 #include <jtl/iterator/range.hpp>
 
-#include <jank/interpret/cell/cell.hpp>
+#include <jank/parse/cell/cell.hpp>
 #include <jank/interpret/expect/type.hpp>
 #include <jank/interpret/expect/argument.hpp>
 

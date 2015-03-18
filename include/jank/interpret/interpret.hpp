@@ -1,6 +1,6 @@
 #pragma once
 
-#include <jank/interpret/cell/cell.hpp>
+#include <jank/parse/cell/cell.hpp>
 #include <jank/interpret/expect/type.hpp>
 #include <jank/interpret/expect/error/type/type.hpp>
 #include <jank/interpret/environment/state.hpp>

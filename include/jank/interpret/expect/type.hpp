@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <cstdint>
 
-#include <jank/interpret/cell/cell.hpp>
+#include <jank/parse/cell/cell.hpp>
 #include <jank/interpret/expect/error/type/type.hpp>
 
 namespace jank
