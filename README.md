@@ -6,7 +6,7 @@ jank aims to be a lisp-1 with hygienic, code-as-data macros, a strong, static ty
   - no bytecode/JIT compiler
   - strong, static typing
 
-TODO: unions (variants), enums, matching
+TODO: unions (variants), enums, matching, bool type
 
 ## Types
 There are a few primitive types which are part of the language.
@@ -55,6 +55,9 @@ Variables are defined via the `var` special identifier and require a `name` iden
 ### Definition from type(s)
 ```
 name :: (T_1 [T_2 ... T_n])
+```
+```
+name :: (I_1 :: T_1 [I_2 :: T_2 ... I_n :: T_n])
 ```
 Definitions may be dependent on types. Such definitions may be functions or structs. The type list must never be empty.
 
@@ -149,11 +152,18 @@ Constaints can be applied to various definitions, including functions and struct
 ### Examples
 #### Functions
 ```
-(func square :: (T:i) (i T:i) (T:i) requires (integer? : T:i)
+(func number? :: (T) () (bool)
+  false)
+(func number? :: (integer) () (bool)
+  true)
+(func number? :: (real) () (bool)
+  true)
+
+(func square :: (T:i) (i T:i) (T:i) requires (number? : T:i)
   (* i i))
 ```
 #### Structs
 ```
-(struct coord :: (T:data) requires (real? T:data)
+(struct coord :: (T:data) requires (number? : T:data)
   (data T:data))
 ```
