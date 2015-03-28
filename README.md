@@ -6,7 +6,7 @@ jank aims to be a lisp-1 with hygienic, code-as-data macros, a strong, static ty
   - no bytecode/JIT compiler
   - strong, static typing
 
-TODO: unions (variants), enums, matching, bool type
+TODO: unions (variants), enums, matching, boolean type
 
 ## Types
 There are a few primitive types which are part of the language.
@@ -144,7 +144,13 @@ Objects can either be in automatic or dynamic memory (stack vs. heap); to get an
 All type aliases are strong. Since the focus is so strongly on generics, types are designed to be specialized and aliased to create unique, custom types. Aliases can also be generic.
 
 ### Examples
-TODO
+```
+(| name is now a strong type alias of the builtin string type. |)
+(alias name as string)
+
+(| position is generic, yet still strong |)
+(alias position : (T:x T:y) as coord : (T:x T:y))
+```
 
 ## Concepts
 Constaints can be applied to various definitions, including functions and structs. The contraints act along with overload resolution to further exclude instantiations/matches. The constraints must evaluate to boolean and can use functions, macros, and values available at compile-time.
