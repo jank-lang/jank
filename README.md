@@ -22,11 +22,10 @@ There are a few primitive types which are part of the language.
 
 ## Functions
 ```
-(func name ([arg1 T_1 ... arg_n T_n]) ([T_1 ... T_n])
-  (expression_1 ...)
-  [... expression_n])
+(func square (i integer) (integer)
+  (* i i))
 ```
-Functions are defined via the `func` special identifier and require a `name` identifier, an argument list (which may be empty), a return type list (which may be empty).
+Functions are defined via the `func` (or `ƒ`) special identifier and require a `name` identifier, an argument list (which may be empty), a return type list (which may be empty).
 
 ## Structs
 ```
@@ -42,8 +41,6 @@ User-defined datatypes are supported, in the form of structs. Structs may contai
   (last string "Doe"))
 ```
 Struct members may be given a default value. If a member doesn't have a default value, one must be provided at the time of initialization; no uninitialized variables are allowed.
-
-## Enums
 
 ## Variables
 ```
@@ -68,7 +65,7 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 (| T:i is just an identifier, not specific grammar.
    it reads as "T of i", or "T for i." |)
 
-(func square :: (T:i) (i T:i) (T:i)
+(ƒ square :: (T:i) (i T:i) (T:i)
   (| square from T takes one param, i, and returns a T |)
   (* i i))
 ```
@@ -88,17 +85,17 @@ Dependencies may be dependent on other types. The only distinction, syntacticall
 ## Comments
 Only multi-line comments are supported. Anything within `(|` and `|)` is considered a comment. Nested comments are allowed.
 
-### RAII
+### Resource management
 ```
-(func construct :: (T:object, ...) (...) (T:object)
+(ƒ construct :: (T:object, ...) (...) (T:object)
   )
 
-(func destruct :: (T:object) (o T:object) ()
+(ƒ destruct :: (T:object) (o T:object) ()
   )
 ```
 Scope-based resource management ties resource ownership to object lifetimes, similar to C++. Types can take advantage of this by overloading `construct` and `destruct` to perform any custom logic.
 
-When constructing an object, constructors are first considered, then aggregate initialization is considered. Alternatively, aggregate initialization can be used by directly specifying keywords for each initialized struct field. In aggregate initialization, any uninitialized fields are an error. If the struct specifies a default for a field, that field may be omitted in aggregate initialization. 
+When constructing an object, constructors are first considered, then aggregate initialization is considered. Alternatively, aggregate initialization can be used by directly specifying keywords for each initialized struct field. In aggregate initialization, any uninitialized fields are an error. If the struct specifies a default for a field, that field may be omitted in aggregate initialization.
 
 #### Example
 ```
@@ -106,11 +103,11 @@ When constructing an object, constructors are first considered, then aggregate i
   (x T:x)
   (y T:y))
 
-(func construct :: (coord : (T:x T:y)) (x T:x y T:y) (coord : (T:x T:y))
+(ƒ construct :: (coord : (T:x T:y)) (x T:x y T:y) (coord : (T:x T:y))
   (print "constructing object")
   (coord : (T:x T:y) :x x :y y))
 
-(func destruct :: (T:x T:y) (c coord : (T:x T:y)) ()
+(ƒ destruct :: (T:x T:y) (c coord : (T:x T:y)) ()
   (print "destructing coord"))
 
 (| Calls the constructor. |)
@@ -135,10 +132,10 @@ Objects can either be in automatic or dynamic memory (stack vs. heap); to get an
 ### Example
 ```
 (| Call foo with a new owned ptr to int containing 42. |)
-(foo (ptr::owned : int 42))
+(foo (owned : int 42))
 
 (| Call bar with a new owned ptr to int containing 42. |)
-(bar (ptr::shared : int 42))
+(bar (shared : int 42))
 ```
 
 ## Type aliasing
@@ -149,7 +146,7 @@ All type aliases are strong. Since the focus is so strongly on generics, types a
 (| name is now a strong type alias of the builtin string type. |)
 (alias name as string)
 
-(| position is generic, yet still strong |)
+(| position is generic, yet still strong. |)
 (alias position : (T:x T:y) as coord : (T:x T:y))
 ```
 
@@ -159,14 +156,14 @@ Constaints can be applied to various definitions, including functions and struct
 ### Examples
 #### Functions
 ```
-(func number? :: (T) () (bool)
+(ƒ number? :: (T) () (bool)
   false)
-(func number? :: (integer) () (bool)
+(ƒ number? :: (integer) () (bool)
   true)
-(func number? :: (real) () (bool)
+(ƒ number? :: (real) () (bool)
   true)
 
-(func square :: (T:i) (i T:i) (T:i) requires (number? : T:i)
+(ƒ square :: (T:i) (i T:i) (T:i) requires (number? : T:i)
   (* i i))
 ```
 #### Structs
@@ -176,7 +173,7 @@ Constaints can be applied to various definitions, including functions and struct
 ```
 
 ## Enums
-TODO
+Enums function as variant sum types. Each variant can have its own type or simply represent its own value (as in C). Enums can also be generic.
 ```
 (| Unique values; like a C enum. |)
 (enum gender
@@ -198,11 +195,10 @@ TODO
 ```
 
 ## Matching
-TODO
+Matching can be used in lieu of `car`, `cdr`, `cond`, `eq`, and `atom`. It still needs the syntax and flexibility to be worked out though.
+
 Consider something like:
 http://www.brool.com/index.php/pattern-matching-in-clojure
-
-This is going to take some more research though.
 ```
 (ƒ fib (i integer) (integer)
   (match i
