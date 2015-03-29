@@ -6,7 +6,7 @@ jank aims to be a lisp-1 with hygienic, code-as-data macros, a strong, static ty
   - no bytecode/JIT compiler
   - strong, static typing
 
-TODO: unions (variants), enums, matching, boolean type
+**NOTE:** jank, at this point, is almost entirely theoretical. I have an incomplete interpreter and not much of a compiler. **jank cannot currently be used.**
 
 ## Types
 There are a few primitive types which are part of the language.
@@ -198,6 +198,7 @@ TODO
 ```
 
 ## Matching
+TODO
 Consider something like:
 http://www.brool.com/index.php/pattern-matching-in-clojure
 
