@@ -13,6 +13,7 @@ There are a few primitive types which are part of the language.
 
 |Name               |Description                                |
 |:------------------|:------------------------------------------|
+|`boolean`          |A variant of true or false                 |
 |`integer`          |A 64bit signed integer                     |
 |`real`             |A 64bit float                              |
 |`string`           |An array of UTF-8 characters               |
@@ -25,7 +26,7 @@ There are a few primitive types which are part of the language.
   (expression_1 ...)
   [... expression_n])
 ```
-Functions are defined via the `func` special identifier and require a `name` identifier, an argument list (which may be empty), a return type list (which may be empty), and, optionally, 
+Functions are defined via the `func` special identifier and require a `name` identifier, an argument list (which may be empty), a return type list (which may be empty).
 
 ## Structs
 ```
@@ -172,4 +173,39 @@ Constaints can be applied to various definitions, including functions and struct
 ```
 (struct coord :: (T:data) requires (number? : T:data)
   (data T:data))
+```
+
+## Enums
+TODO
+```
+(| Unique values; like a C enum. |)
+(enum gender
+  male
+  female
+  other)
+
+(| Unique types. |)
+(enum character
+  (struct digit
+    (value integer))
+  (struct other))
+
+(| A generic enum. |)
+(enum optional :: (T:value)
+  (struct some
+    (value T:value))
+  (struct none))
+```
+
+## Matching
+Consider something like:
+http://www.brool.com/index.php/pattern-matching-in-clojure
+
+This is going to take some more research though.
+```
+(ƒ fib (i integer) (integer)
+  (match i
+    (0 → 0)
+    (1 → 1)
+    (n → (+ (fib (- n 1)) (fib (- n 2))))))
 ```
