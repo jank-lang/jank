@@ -29,14 +29,14 @@ Functions are defined via the `func` (or `ƒ`) special identifier and require a 
   (x float)
   (y float))
 ```
-User-defined datatypes are supported, in the form of structs. Structs may contain any number of members, all of which are public (as in C). Structs may also be generic. Unlike C++, but like C, structs may not have member functions. Instead, functions should be designed in a generic manner and may be overloaded for certain types.
+User-defined datatypes are supported, in the form of structs. Structs may contain any number of members, all of which are public (as in C). Structs may also be generic. Unlike C++, but like C, structs may not have member functions. Instead, functions should be designed in a generic manner and may be overloaded/specialized for certain types.
 
 ```
 (struct name
   (first string "John")
   (last string "Doe"))
 ```
-Struct members may be given a default value. If a member doesn't have a default value, one must be provided at the time of initialization; no uninitialized variables are allowed.
+Struct members may be given a default value. If a member doesn't have a default value, one must be provided at the time of initialization; the compiler will make sure no variables are uninitialized.
 
 ## Variables
 ```
@@ -62,7 +62,7 @@ Definitions may be dependent on types. Such definitions may be functions or stru
    it reads as "T of i", or "T for i." |)
 
 (ƒ square :: (T:i) (i T:i) (T:i)
-  (| square from T takes one param, i, and returns a T |)
+  (| square for T:i takes one param, i, and returns a T:i |)
   (* i i))
 ```
 #### Struct
@@ -83,7 +83,7 @@ Only multi-line comments are supported. Anything within `(|` and `|)` is conside
 
 ### Resource management
 ```
-(ƒ construct :: (T:object, ...) (...) (T:object)
+(ƒ construct :: (T:object) (...) (T:object)
   )
 
 (ƒ destruct :: (T:object) (o T:object) ()
@@ -147,7 +147,7 @@ All type aliases are strong. Since the focus is so strongly on generics, types a
 ```
 
 ## Concepts
-Constaints can be applied to various definitions, including functions and structs. The contraints act along with overload resolution to further exclude instantiations/matches. The constraints must evaluate to boolean and can use functions, macros, and values available at compile-time.
+Constraints can be applied to various definitions, including functions and structs. The contraints act along with overload resolution to further exclude instantiations/matches. The constraints must evaluate to boolean and can use functions, macros, and values available at compile-time.
 
 ### Examples
 #### Functions
@@ -169,7 +169,7 @@ Constaints can be applied to various definitions, including functions and struct
 ```
 
 ## Enums
-Enums function as variant sum types. Each variant can have its own type or simply represent its own value (as in C). Enums can also be generic.
+Enums function as variant sum types; each variant can have its own type or simply represent its own value (as in C). Enums can also be generic.
 ```
 (| Unique values; like a C enum. |)
 (enum gender
@@ -194,7 +194,6 @@ Enums function as variant sum types. Each variant can have its own type or simpl
 Matching can be used in lieu of `car`, `cdr`, `cond`, `eq`, and `atom`. It still needs the syntax and flexibility to be worked out though.
 
 Consider something like:
-http://www.brool.com/index.php/pattern-matching-in-clojure
 ```
 (ƒ fib (i integer) (integer)
   (match i
@@ -202,3 +201,4 @@ http://www.brool.com/index.php/pattern-matching-in-clojure
     (1 → 1)
     (n → (+ (fib (- n 1)) (fib (- n 2))))))
 ```
+TODO: http://www.brool.com/index.php/pattern-matching-in-clojure
