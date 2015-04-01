@@ -86,10 +86,10 @@ Only multi-line comments are supported. Anything within `(|` and `|)` is conside
 (ƒ construct :: (T:object) (...) (T:object)
   )
 
-(ƒ destruct :: (T:object) (o T:object) ()
+(ƒ destruct (o T:object) ()
   )
 ```
-Scope-based resource management ties resource ownership to object lifetimes, similar to C++. Types can take advantage of this by overloading `construct` and `destruct` to perform any custom logic.
+Scope-based resource management ties resource ownership to object lifetimes, similar to C++. Types can take advantage of this by specializing `construct` and `destruct` to perform any custom logic.
 
 When constructing an object, constructors are first considered, then aggregate initialization is considered. Alternatively, aggregate initialization can be used by directly specifying keywords for each initialized struct field. In aggregate initialization, any uninitialized fields are an error. If the struct specifies a default for a field, that field may be omitted in aggregate initialization.
 
