@@ -1,4 +1,8 @@
 (func foo (a integer b integer) ()
   (print (- a b)))
 
+(func bar (b boolean) ()
+  )
+
 (foo 10 1)
+(bar true)

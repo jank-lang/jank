@@ -24,6 +24,7 @@ namespace jank
 
       using cell = boost::variant
       <
+        boost::recursive_wrapper<wrapper<type::boolean>>,
         boost::recursive_wrapper<wrapper<type::integer>>,
         boost::recursive_wrapper<wrapper<type::real>>,
         boost::recursive_wrapper<wrapper<type::string>>,
@@ -32,6 +33,12 @@ namespace jank
         boost::recursive_wrapper<wrapper<type::function>>
       >;
 
+      template <>
+      struct wrapper<type::boolean>
+      {
+        using type = bool;
+        type data;
+      };
       template <>
       struct wrapper<type::integer>
       {
@@ -63,6 +70,7 @@ namespace jank
         type data;
       };
 
+      using boolean = wrapper<type::boolean>;
       using integer = wrapper<type::integer>;
       using real = wrapper<type::real>;
       using string = wrapper<type::string>;
@@ -76,6 +84,9 @@ namespace jank
 
         switch(static_cast<type>(c.which()))
         {
+          case type::boolean:
+            os << std::boolalpha << boost::get<boolean>(c).data;
+            break;
           case type::integer:
             os << boost::get<integer>(c).data;
             break;
@@ -115,6 +126,9 @@ namespace jank
       {
         template <type C>
         struct type_variant;
+        template <>
+        struct type_variant<type::boolean>
+        { using type = boolean; };
         template <>
         struct type_variant<type::integer>
         { using type = integer; };

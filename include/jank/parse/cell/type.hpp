@@ -13,6 +13,7 @@ namespace jank
     {
       enum class type
       {
+        boolean,
         integer,
         real,
         string,
@@ -23,6 +24,9 @@ namespace jank
 
       template <type C>
       char constexpr const* type_string();
+      template <>
+      inline char constexpr const* type_string<type::boolean>()
+      { return "boolean"; }
       template <>
       inline char constexpr const* type_string<type::integer>()
       { return "integer"; }
@@ -47,6 +51,8 @@ namespace jank
       {
         switch(c)
         {
+          case type::boolean:
+            return type_string<type::boolean>();
           case type::integer:
             return type_string<type::integer>();
           case type::real:
@@ -67,7 +73,9 @@ namespace jank
       /* TODO: this should be in env */
       inline type type_from_string(std::string const &str)
       {
-        if(str == "integer")
+        if(str == "boolean")
+        { return type::boolean; }
+        else if(str == "integer")
         { return type::integer; }
         else if(str == "real")
         { return type::real; }

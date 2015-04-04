@@ -76,8 +76,18 @@ namespace jank
             std::smatch const &inner_matches{ inner };
             if(inner_matches[1].matched) /* ident */
             {
+              /* TODO: break into regex. */
+              auto const match(inner_matches[1]);
+              if(match == "true" || match == "false")
+              {
+                std::cout << "boolean: " << inner_matches[1] << std::endl;
+                active_list->data.push_back(cell::boolean{ inner_matches[1] == "true" });
+              }
+              else
+              {
               std::cout << "ident: " << inner_matches[1] << std::endl;
               active_list->data.push_back(cell::ident{ inner_matches[1] });
+              }
             }
             else if(inner_matches[2].matched) /* string */
             {
