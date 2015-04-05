@@ -35,10 +35,14 @@ namespace jank
           static std::regex inner_regex
           {
             /* TODO: _ in ident */
-            R"(([a-zA-Z\-\+\*\/\^\?\!\:\%\.]+)(?:\s|\$)*)" /* idents */
+            R"(([a-zA-Z\-\+\*\/\^\?\!\:\%\.]+))" /* idents */
             R"(|\"((?:\\.|[^\\\"])*)\")" /* strings */
             R"(|(\-?\d+(?!\d*\.\d+)))" /* integers */
             R"(|(\-?\d+\.\d+))" /* reals */
+            R"(|(true|false))" /* booleans */
+            /* XXX: A GCC bug in 4.9 causes this to be read right to left.
+             * This will hopefully be fixed in GCC 5.0; it works fine in clang
+             * but I'm targetting GCC for now. */
           };
           auto const &outer_str(outer_match.str());
           if(outer_str.empty())
@@ -76,18 +80,8 @@ namespace jank
             std::smatch const &inner_matches{ inner };
             if(inner_matches[1].matched) /* ident */
             {
-              /* TODO: break into regex. */
-              auto const match(inner_matches[1]);
-              if(match == "true" || match == "false")
-              {
-                std::cout << "boolean: " << inner_matches[1] << std::endl;
-                active_list->data.push_back(cell::boolean{ inner_matches[1] == "true" });
-              }
-              else
-              {
               std::cout << "ident: " << inner_matches[1] << std::endl;
               active_list->data.push_back(cell::ident{ inner_matches[1] });
-              }
             }
             else if(inner_matches[2].matched) /* string */
             {
@@ -105,6 +99,11 @@ namespace jank
             {
               std::cout << "real: " << inner_matches[4] << std::endl;
               active_list->data.push_back(cell::real{ std::stod(inner_matches[4]) });
+            }
+            else if(inner_matches[5].matched) /* boolean */
+            {
+              std::cout << "boolean: " << inner_matches[5] << std::endl;
+              active_list->data.push_back(cell::boolean{ inner_matches[5] == "true" });
             }
             else
             { std::cout << "nothing matched" << std::endl; }
