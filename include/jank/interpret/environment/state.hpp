@@ -50,6 +50,7 @@ namespace jank
 
         std::vector<interpret::function::argument> arguments;
         type data;
+        parse::cell::list body;
         interpret::environment::state env;
       };
     }

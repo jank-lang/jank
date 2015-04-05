@@ -1,4 +1,9 @@
 (func foo (b boolean) ()
-  )
+  (print "calling foo with a boolean"))
 (func foo (int integer) ()
-  )
+  (print "calling foo with an integer"))
+
+(foo 42)
+(foo true)
+(foo false)
+(foo -100)

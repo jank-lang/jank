@@ -32,25 +32,26 @@ jank::interpret::environment::state env
           {},
           [](auto const&, jank::parse::cell::list const &)
             -> jank::parse::cell::cell{ return {}; },
+          {{}},
           jank::interpret::environment::state()
         }
       }
     },
     {
       "+",
-      { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::sum, jank::interpret::environment::state() } }
+      { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::sum, {{}}, jank::interpret::environment::state() } }
     },
     {
       "-",
-      { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::difference, jank::interpret::environment::state() } }
+      { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::difference, {{}}, jank::interpret::environment::state() } }
     },
     {
       "/",
-      { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::quotient, jank::interpret::environment::state() } }
+      { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::quotient, {{}}, jank::interpret::environment::state() } }
     },
     {
       "*",
-      { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::product, jank::interpret::environment::state() } }
+      { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::product, {{}}, jank::interpret::environment::state() } }
     },
     {
       "print",
@@ -73,6 +74,7 @@ jank::interpret::environment::state env
 
             return {};
           },
+          {{}},
           jank::interpret::environment::state()
         }
       }
@@ -113,47 +115,74 @@ jank::interpret::environment::state env
           jank::parse::cell::func &func{ overloads.back() };
           func.arguments = std::move(arguments);
           func.env.parent = &env;
-          func.data = [=, &func](auto &, jank::parse::cell::list const &args)
+          std::copy(std::next(list.begin(), 4), list.end(),
+                    std::back_inserter(func.body.data));
+
+          func.data = [=, &overloads](auto &, jank::parse::cell::list const &args)
             -> jank::parse::cell::cell
           {
-            if(args.data.size() - 1 != func.arguments.size())
+            for(auto const &func : overloads)
             {
-              throw jank::interpret::expect::error::type::overload
+              std::cout << "function: " << name.data << "\n"
+                        << "\targuments: ";
+              for(auto const &arg : func.arguments)
               {
-                "invalid argument count (expected " +
-                std::to_string(func.arguments.size()) +
-                ", found " + std::to_string(args.data.size() - 1) +
-                ")"
-              };
-            }
-            for(auto const i : jtl::it::make_range(func.arguments.size()))
-            {
-              auto const expected_type(func.arguments[i].type);
-              auto const found_type
-              (static_cast<jank::parse::cell::type>(args.data[i + 1].which()));
-
-              if(expected_type == found_type)
-              { func.env.cells[func.arguments[i].name] = args.data[i + 1]; }
-              else
-              {
-                throw jank::interpret::expect::error::type::overload
-                {
-                  std::string{ "invalid argument type (expected " } +
-                  jank::parse::cell::type_string(expected_type) +
-                  ", found " + jank::parse::cell::type_string(found_type) +
-                  ")"
-                };
+                std::cout << arg.name << " : "
+                          << jank::parse::cell::type_string(arg.type)
+                          << "; ";
               }
+              std::cout << std::endl;
             }
 
-            jank::parse::cell::list body{ { jank::parse::cell::ident{ "root" } } };
-            std::copy(std::next(list.begin(), 4), list.end(),
-                      std::back_inserter(body.data));
-            return jank::interpret::interpret(func.env, body);
+            for(auto func : overloads)
+            {
+              if(args.data.size() - 1 != func.arguments.size())
+              { continue; }
+
+              std::size_t matched{};
+              for(auto const i : jtl::it::make_range(func.arguments.size()))
+              {
+                auto const expected_type(func.arguments[i].type);
+                auto const found_type
+                (static_cast<jank::parse::cell::type>(args.data[i + 1].which()));
+
+                std::cout << "expected: "
+                          << jank::parse::cell::type_string(expected_type)
+                          << ", found: "
+                          << jank::parse::cell::type_string(found_type)
+                          << std::endl;
+                if(expected_type == found_type)
+                {
+                  func.env.cells[func.arguments[i].name] = args.data[i + 1];
+                  ++matched;
+                }
+                else
+                { continue; }
+              }
+              if(matched != func.arguments.size())
+              { continue; }
+
+              std::cout << "selected: ";
+              for(auto const &arg : func.arguments)
+              {
+                std::cout << arg.name << " : "
+                          << jank::parse::cell::type_string(arg.type)
+                          << "; ";
+              }
+              std::cout << std::endl;
+
+              jank::parse::cell::list body{ { jank::parse::cell::ident{ "root" } } };
+              std::copy(func.body.data.begin(), func.body.data.end(),
+                        std::back_inserter(body.data));
+              return jank::interpret::interpret(func.env, body);
+            }
+            throw jank::interpret::expect::error::type::overload
+            { "invalid function call to function: " + name.data };
           };
 
           return {};
         },
+        {{}},
         jank::interpret::environment::state()
       }
     }
