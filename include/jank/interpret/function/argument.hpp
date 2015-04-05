@@ -19,10 +19,19 @@ namespace jank
         std::string name;
         parse::cell::type type;
       };
+      using argument_list = std::vector<argument>;
 
-      inline std::vector<argument> parse_arguments(parse::cell::list const &list)
+      inline bool operator ==(argument_list const &lhs, argument_list const &rhs)
       {
-        std::vector<argument> ret;
+        return (lhs.size() == rhs.size()) &&
+                std::equal(lhs.begin(), lhs.end(), rhs.begin(),
+                           [](auto const &lhs, auto const &rhs)
+                           { return lhs.type == rhs.type; });
+      }
+
+      inline argument_list parse_arguments(parse::cell::list const &list)
+      {
+        argument_list ret;
 
         for(auto it(list.data.begin()); it != list.data.end(); ++it)
         {

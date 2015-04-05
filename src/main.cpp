@@ -92,15 +92,26 @@ jank::interpret::environment::state env
           auto const args(jank::interpret::expect::type<jank::parse::cell::type::list>(list[2]));
           auto const ret(jank::interpret::expect::type<jank::parse::cell::type::list>(list[3]));
 
-          if(env.funcs[name.data].size())
-          {
-            throw jank::interpret::expect::error::type::type<>
-            { "function already defined " + name.data };
-          }
-          env.funcs[name.data].emplace_back();
+          auto &overloads(env.funcs[name.data]);
+          auto arguments(jank::interpret::function::parse_arguments(args));
 
-          jank::parse::cell::func &func{ env.funcs[name.data].back() };
-          func.arguments = jank::interpret::function::parse_arguments(args);
+          /* Prevent redefinition. */
+          if(overloads.size())
+          {
+            if(std::find_if(overloads.begin(), overloads.end(),
+                            [&](auto const &e)
+                            { return e.arguments == arguments; })
+               != overloads.end())
+            {
+              throw jank::interpret::expect::error::type::type<>
+              { "function already defined: " + name.data };
+            }
+            std::cout << "overloading function: " << name.data << std::endl;
+          }
+
+          overloads.emplace_back();
+          jank::parse::cell::func &func{ overloads.back() };
+          func.arguments = std::move(arguments);
           func.env.parent = &env;
           func.data = [=, &func](auto &, jank::parse::cell::list const &args)
             -> jank::parse::cell::cell

@@ -25,7 +25,7 @@ namespace jank
         (std::string const &name);
 
         std::map<std::string, parse::cell::cell> cells;
-        
+
         /* TODO: map<string, vector<func>> for overloading.
          * Each func has a vector<type> for the args.
          * Calling a function first type checks each overload. */
