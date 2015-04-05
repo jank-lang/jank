@@ -108,7 +108,6 @@ jank::interpret::environment::state env
               throw jank::interpret::expect::error::type::type<>
               { "function already defined: " + name.data };
             }
-            std::cout << "overloading function: " << name.data << std::endl;
           }
 
           overloads.emplace_back();
@@ -121,19 +120,6 @@ jank::interpret::environment::state env
           func.data = [=, &overloads](auto &, jank::parse::cell::list const &args)
             -> jank::parse::cell::cell
           {
-            for(auto const &func : overloads)
-            {
-              std::cout << "function: " << name.data << "\n"
-                        << "\targuments: ";
-              for(auto const &arg : func.arguments)
-              {
-                std::cout << arg.name << " : "
-                          << jank::parse::cell::type_string(arg.type)
-                          << "; ";
-              }
-              std::cout << std::endl;
-            }
-
             for(auto func : overloads)
             {
               if(args.data.size() - 1 != func.arguments.size())
@@ -146,11 +132,6 @@ jank::interpret::environment::state env
                 auto const found_type
                 (static_cast<jank::parse::cell::type>(args.data[i + 1].which()));
 
-                std::cout << "expected: "
-                          << jank::parse::cell::type_string(expected_type)
-                          << ", found: "
-                          << jank::parse::cell::type_string(found_type)
-                          << std::endl;
                 if(expected_type == found_type)
                 {
                   func.env.cells[func.arguments[i].name] = args.data[i + 1];
@@ -161,15 +142,6 @@ jank::interpret::environment::state env
               }
               if(matched != func.arguments.size())
               { continue; }
-
-              std::cout << "selected: ";
-              for(auto const &arg : func.arguments)
-              {
-                std::cout << arg.name << " : "
-                          << jank::parse::cell::type_string(arg.type)
-                          << "; ";
-              }
-              std::cout << std::endl;
 
               jank::parse::cell::list body{ { jank::parse::cell::ident{ "root" } } };
               std::copy(func.body.data.begin(), func.body.data.end(),
