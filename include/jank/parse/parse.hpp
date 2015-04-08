@@ -51,7 +51,6 @@ namespace jank
           auto active_list(list_stack.back());
           if(outer_str[0] == '(')
           {
-            std::cout << outer_str << std::endl;
             for(auto const &open : outer_str)
             {
               static_cast<void>(open);
@@ -64,7 +63,6 @@ namespace jank
           }
           else if(outer_str[0] == ')')
           {
-            std::cout << outer_str << std::endl;
             for(auto const &close : outer_str)
             {
               static_cast<void>(close);
@@ -79,34 +77,21 @@ namespace jank
           {
             std::smatch const &inner_matches{ inner };
             if(inner_matches[1].matched) /* ident */
-            {
-              std::cout << "ident: " << inner_matches[1] << std::endl;
-              active_list->data.push_back(cell::ident{ inner_matches[1] });
-            }
+            { active_list->data.push_back(cell::ident{ inner_matches[1] }); }
             else if(inner_matches[2].matched) /* string */
             {
               std::string word(inner_matches[2]);
               boost::algorithm::replace_all(word, "\\\"", "\"");
-              std::cout << "string: " << word << std::endl;
               active_list->data.push_back(cell::string{ word });
             }
             else if(inner_matches[3].matched) /* integer */
-            {
-              std::cout << "integer: " << inner_matches[3] << std::endl;
-              active_list->data.push_back(cell::integer{ std::stoll(inner_matches[3]) });
-            }
+            { active_list->data.push_back(cell::integer{ std::stoll(inner_matches[3]) }); }
             else if(inner_matches[4].matched) /* real */
-            {
-              std::cout << "real: " << inner_matches[4] << std::endl;
-              active_list->data.push_back(cell::real{ std::stod(inner_matches[4]) });
-            }
+            { active_list->data.push_back(cell::real{ std::stod(inner_matches[4]) }); }
             else if(inner_matches[5].matched) /* boolean */
-            {
-              std::cout << "boolean: " << inner_matches[5] << std::endl;
-              active_list->data.push_back(cell::boolean{ inner_matches[5] == "true" });
-            }
+            { active_list->data.push_back(cell::boolean{ inner_matches[5] == "true" }); }
             else
-            { std::cout << "nothing matched" << std::endl; }
+            { throw std::runtime_error{ "invalid parsing match" }; }
           }
         }
       }

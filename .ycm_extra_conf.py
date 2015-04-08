@@ -10,8 +10,8 @@ flags = [
 #'-stdlib=libc++',
 '-x',
 'c++',
-'-Iinclude',
 '-Itest/include',
+'-Iinclude',
 '-Ilib/jtl/include',
 '-Ilib/jest/include',
 

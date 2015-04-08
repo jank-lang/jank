@@ -52,7 +52,7 @@ then
 elif [ "1" -eq "$uname_osx" ];
 then
   log "Platform: OS X"
-  cxx_platform_flags="-stdlib=libc++ -I/opt/local/include"
+  cxx_platform_flags=" -I/opt/local/include"
   ld_platform_libs="-lc++"
 elif [ "1" -eq "$uname_cygwin" ];
 then

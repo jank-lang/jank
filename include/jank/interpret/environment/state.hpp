@@ -26,9 +26,6 @@ namespace jank
 
         std::map<std::string, parse::cell::cell> cells;
 
-        /* TODO: map<string, vector<func>> for overloading.
-         * Each func has a vector<type> for the args.
-         * Calling a function first type checks each overload. */
         std::map<std::string, std::vector<parse::cell::func>> funcs;
 
         std::map<std::string, parse::cell::func> special_funcs;
