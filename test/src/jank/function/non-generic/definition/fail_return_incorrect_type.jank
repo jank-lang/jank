@@ -1,0 +1,2 @@
+(func test-boolean () (boolean)
+  3.14)

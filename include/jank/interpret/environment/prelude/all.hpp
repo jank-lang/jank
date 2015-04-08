@@ -1,7 +1,7 @@
 #pragma once
 
-#include <jank/interpret/environment/prelude/arithmetic.hpp>
 #include <jank/interpret/environment/state.hpp>
+#include <jank/interpret/environment/prelude/arithmetic.hpp>
 
 namespace jank
 {

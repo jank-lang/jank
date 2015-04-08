@@ -1,0 +1,3 @@
+(func test (d integer) (boolean)
+  (print "testing: " (* d d))
+  true)

@@ -23,7 +23,7 @@ namespace jank
   {
     inline void run(std::string const &file)
     {
-      std::ifstream ifs{ file };
+      std::ifstream ifs{ "test/src/jank/" + file };
 
       auto root
       (
@@ -37,9 +37,10 @@ namespace jank
       );
 
       /* TODO: add an assert function to env before passing it along. */
+      auto env(jank::interpret::environment::prelude::env());
       jank::interpret::interpret
       (
-        jank::interpret::environment::prelude::env(),
+        env,
         jank::interpret::expect::type<jank::parse::cell::type::list>(root)
       );
     }

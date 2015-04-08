@@ -1,2 +1,11 @@
-(func test () ()
+(func test-boolean (d boolean) ()
+  )
+
+(func test-integer (d integer) ()
+  )
+
+(func test-real (d real) ()
+  )
+
+(func test-string (d string) ()
   )
