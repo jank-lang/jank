@@ -1,0 +1,4 @@
+(func test () ()
+  (print "all good"))
+
+(test)
