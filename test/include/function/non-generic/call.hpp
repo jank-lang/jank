@@ -8,10 +8,8 @@ namespace jank
 {
   struct call_test
   {
-    call_test()
-    { std::cout.rdbuf(out.rdbuf()); }
     void reset()
-    { out.str(""); }
+    { std::cout.rdbuf(out.rdbuf()); out.str(""); }
     std::stringstream out;
   };
   using call_group = jest::group<call_test>;

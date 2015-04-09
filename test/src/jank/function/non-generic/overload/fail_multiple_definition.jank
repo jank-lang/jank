@@ -1,0 +1,8 @@
+(func overloaded () ()
+  (print "nullary"))
+
+(func overloaded (d integer) ()
+  (print "integer"))
+
+(func overloaded (d integer) ()
+  (print "integer"))

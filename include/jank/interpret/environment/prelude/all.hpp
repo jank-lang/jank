@@ -103,7 +103,7 @@ namespace jank
                                       { return e.arguments == arguments; })
                          != overloads.end())
                       {
-                        throw jank::interpret::expect::error::type::type<>
+                        throw jank::interpret::expect::error::type::overload
                         { "function already defined: " + name.data };
                       }
                     }

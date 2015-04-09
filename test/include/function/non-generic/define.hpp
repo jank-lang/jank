@@ -6,12 +6,7 @@
 
 namespace jank
 {
-  struct define_test
-  {
-    define_test()
-    { std::cout.rdbuf(out.rdbuf()); }
-    std::stringstream out;
-  };
+  struct define_test{ };
   using define_group = jest::group<define_test>;
   static define_group const define_obj{ "non-generic function define" };
 }
@@ -43,7 +38,7 @@ namespace jest
   template <> template <>
   void jank::define_group::test<4>()
   {
-    expect_exception<jank::interpret::expect::error::type::type<>>
+    expect_exception<jank::interpret::expect::error::type::overload>
     ([]{ jank::common::run("function/non-generic/define/fail_multiple_definition.jank"); });
   }
 

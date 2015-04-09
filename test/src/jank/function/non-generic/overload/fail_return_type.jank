@@ -1,0 +1,5 @@
+(func overloaded () (real)
+  )
+
+(func overloaded () (integer)
+  )
