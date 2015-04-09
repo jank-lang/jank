@@ -24,6 +24,8 @@ namespace jank
     inline void run(std::string const &file)
     {
       std::ifstream ifs{ "test/src/jank/" + file };
+      if(!ifs.is_open())
+      { throw std::runtime_error{ "unable to open file: test/src/jank/" + file }; }
 
       auto root
       (
