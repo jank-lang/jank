@@ -11,8 +11,6 @@ idents
 compilation
   build ast
 
-tests
-
 use long names
   func => function
   var => variable
@@ -34,8 +32,5 @@ ambiguity with specializations
     use a specialization syntax instead
 
 Maybes?
-  clojure
-    instaparse
-
   pattern matching
     replace car, cdr, cond, eq, atom
