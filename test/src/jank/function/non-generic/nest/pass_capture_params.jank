@@ -1,0 +1,6 @@
+(func outer (d boolean) ()
+  (func show-boolean () ()
+    (print d))
+  (show-boolean))
+
+(outer true)

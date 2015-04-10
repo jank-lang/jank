@@ -1,0 +1,6 @@
+(func outer () ()
+  (func outer (d string) ()
+    (print d))
+  (outer "all good"))
+
+(outer)
