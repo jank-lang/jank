@@ -19,14 +19,14 @@ namespace jank
         if(type != C)
         {
           throw error::type::type<>
-          { 
+          {
             std::string{ "expected " } +
             parse::cell::type_string<C>() +
             ", found: " +
             parse::cell::type_string(type)
           };
         }
-        return boost::get<parse::cell::type_variant_t<C>>(c);
+        return boost::get<parse::cell::type_variant<C>>(c);
       }
     }
   }

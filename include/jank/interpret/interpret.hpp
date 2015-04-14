@@ -3,13 +3,13 @@
 #include <jank/parse/cell/cell.hpp>
 #include <jank/interpret/expect/type.hpp>
 #include <jank/interpret/expect/error/type/type.hpp>
-#include <jank/interpret/environment/state.hpp>
+#include <jank/interpret/environment/scope.hpp>
 
 namespace jank
 {
   namespace interpret
   {
-    parse::cell::cell interpret(environment::state &env, parse::cell::list &root)
+    parse::cell::cell interpret(environment::scope &env, parse::cell::list &root)
     {
       auto const &func_name(expect::type<parse::cell::type::ident>(root.data[0]).data);
 

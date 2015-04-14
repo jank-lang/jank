@@ -41,7 +41,7 @@ namespace jank
 
           /* TODO: read idents from env */
           template <op O>
-          parse::cell::cell apply_all(state&, parse::cell::list const &cl)
+          parse::cell::cell apply_all(scope&, parse::cell::list const &cl)
           {
             auto const list(cl.data);
             expect::at_least_args(cl, 2);
@@ -60,16 +60,16 @@ namespace jank
           }
         }
 
-        inline parse::cell::cell sum(state &env, parse::cell::list const &cl)
+        inline parse::cell::cell sum(scope &env, parse::cell::list const &cl)
         { return detail::apply_all<detail::op::add>(env, cl); }
 
-        inline parse::cell::cell difference(state &env, parse::cell::list const &cl)
+        inline parse::cell::cell difference(scope &env, parse::cell::list const &cl)
         { return detail::apply_all<detail::op::sub>(env, cl); }
 
-        inline parse::cell::cell product(state &env, parse::cell::list const &cl)
+        inline parse::cell::cell product(scope &env, parse::cell::list const &cl)
         { return detail::apply_all<detail::op::mul>(env, cl); }
 
-        inline parse::cell::cell quotient(state &env, parse::cell::list const &cl)
+        inline parse::cell::cell quotient(scope &env, parse::cell::list const &cl)
         { return detail::apply_all<detail::op::div>(env, cl); }
       }
     }

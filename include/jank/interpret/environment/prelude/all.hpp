@@ -1,6 +1,6 @@
 #pragma once
 
-#include <jank/interpret/environment/state.hpp>
+#include <jank/interpret/environment/scope.hpp>
 #include <jank/interpret/environment/prelude/arithmetic.hpp>
 
 namespace jank
@@ -13,7 +13,7 @@ namespace jank
       {
         inline auto& env()
         {
-          static state env
+          static scope env
           {
             { /* cells */
               {
@@ -31,25 +31,25 @@ namespace jank
                     [](auto const&, jank::parse::cell::list const &)
                       -> jank::parse::cell::cell{ return {}; },
                     {{}},
-                    jank::interpret::environment::state()
+                    jank::interpret::environment::scope()
                   }
                 }
               },
               {
                 "+",
-                { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::sum, {{}}, jank::interpret::environment::state() } }
+                { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::sum, {{}}, jank::interpret::environment::scope() } }
               },
               {
                 "-",
-                { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::difference, {{}}, jank::interpret::environment::state() } }
+                { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::difference, {{}}, jank::interpret::environment::scope() } }
               },
               {
                 "/",
-                { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::quotient, {{}}, jank::interpret::environment::state() } }
+                { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::quotient, {{}}, jank::interpret::environment::scope() } }
               },
               {
                 "*",
-                { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::product, {{}}, jank::interpret::environment::state() } }
+                { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::product, {{}}, jank::interpret::environment::scope() } }
               },
               {
                 "print",
@@ -73,7 +73,7 @@ namespace jank
                       return {};
                     },
                     {{}},
-                    jank::interpret::environment::state()
+                    jank::interpret::environment::scope()
                   }
                 }
               }
@@ -153,7 +153,7 @@ namespace jank
                     return {};
                   },
                   {{}},
-                  jank::interpret::environment::state()
+                  jank::interpret::environment::scope()
                 }
               }
             },

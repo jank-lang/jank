@@ -149,7 +149,7 @@ namespace jank
         { using type = func; };
       }
       template <type C>
-      using type_variant_t = typename detail::type_variant<C>::type;
+      using type_variant = typename detail::type_variant<C>::type;
     }
   }
 }

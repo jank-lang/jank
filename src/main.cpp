@@ -9,7 +9,7 @@
 #include <jtl/iterator/stream_delim.hpp>
 #include <jtl/iterator/back_insert.hpp>
 
-#include <jank/interpret/environment/state.hpp>
+#include <jank/interpret/environment/scope.hpp>
 #include <jank/parse/parse.hpp>
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/environment/prelude/all.hpp>

@@ -24,13 +24,6 @@ allow unicode for specials
   function => ƒ
   lambda => λ
 
-ambiguity with specializations
-  (func foo :: (T) () ()
-    )
-    might be generic, but what if there is a type T present?
-      it'll be a specialization
-    use a specialization syntax instead
-
 Maybes?
   pattern matching
     replace car, cdr, cond, eq, atom
