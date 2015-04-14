@@ -13,7 +13,7 @@ namespace jank
     {
       enum class type
       {
-        body,
+        function_body,
         function_definition,
         function_call
       };
@@ -21,8 +21,8 @@ namespace jank
       template <type C>
       char constexpr const* type_string();
       template <>
-      inline char constexpr const* type_string<type::body>()
-      { return "body"; }
+      inline char constexpr const* type_string<type::function_body>()
+      { return "function_body"; }
       template <>
       inline char constexpr const* type_string<type::function_definition>()
       { return "function_definition"; }
@@ -35,8 +35,8 @@ namespace jank
       {
         switch(c)
         {
-          case type::body:
-            return type_string<type::body>();
+          case type::function_body:
+            return type_string<type::function_body>();
           case type::function_definition:
             return type_string<type::function_definition>();
           case type::function_call:
@@ -49,8 +49,8 @@ namespace jank
       /* TODO: This should be in env. */
       inline type type_from_string(std::string const &str)
       {
-        if(str == "body")
-        { return type::body; }
+        if(str == "function_body")
+        { return type::function_body; }
         else if(str == "function_definition")
         { return type::function_definition; }
         else if(str == "function_call")

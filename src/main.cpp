@@ -11,6 +11,7 @@
 
 #include <jank/interpret/environment/scope.hpp>
 #include <jank/parse/parse.hpp>
+#include <jank/translate/translate.hpp>
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/environment/prelude/all.hpp>
 #include <jank/interpret/expect/type.hpp>

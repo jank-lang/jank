@@ -11,7 +11,7 @@ namespace jank
       namespace detail
       {
         template <typename C>
-        struct body
+        struct function_body
         {
           std::vector<C> cells;
         };

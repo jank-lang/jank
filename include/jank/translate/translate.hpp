@@ -1,13 +1,16 @@
 #pragma once
 
 #include <jank/parse/cell/cell.hpp>
+#include <jank/translate/cell/cell.hpp>
 
 namespace jank
 {
   namespace translate
   {
-    parse::cell::cell translate(parse::cell::list &root)
+    translate::cell::cell translate(parse::cell::list &root)
     {
+      static_cast<void>(root);
+      return {};
       //auto const &func_name(expect::type<parse::cell::type::ident>(root.data[0]).data);
 
       //auto const special_it(env.find_special(func_name));

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <jank/translate/cell/detail/body.hpp>
+#include <jank/translate/cell/detail/function_body.hpp>
 
 namespace jank
 {
@@ -14,7 +14,7 @@ namespace jank
         struct function_definition
         {
           /* TODO: argument list. */
-          body<C> body;
+          function_body<C> body;
         };
       }
     }

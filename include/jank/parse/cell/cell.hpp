@@ -122,7 +122,7 @@ namespace jank
         return os;
       }
 
-      namespace detail
+      namespace trait
       {
         template <type C>
         struct type_variant;
@@ -149,7 +149,7 @@ namespace jank
         { using type = func; };
       }
       template <type C>
-      using type_variant = typename detail::type_variant<C>::type;
+      using type_variant = typename trait::type_variant<C>::type;
     }
   }
 }
