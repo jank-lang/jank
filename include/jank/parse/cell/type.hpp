@@ -90,7 +90,7 @@ namespace jank
         else
         {
           throw interpret::expect::error::type::type<>
-          { "invalid cell type string " + str };
+          { "invalid parse cell type string " + str };
         }
       }
     }
