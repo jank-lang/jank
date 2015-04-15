@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include <jank/translate/function/argument.hpp>
+
 namespace jank
 {
   namespace translate
@@ -13,7 +15,7 @@ namespace jank
         template <typename C>
         struct function_call
         {
-          /* TODO: argument list. */
+          function::argument_list arguments;
           std::string name;
         };
       }
