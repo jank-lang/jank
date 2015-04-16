@@ -16,13 +16,13 @@ namespace jank
       namespace special
       {
         inline std::experimental::optional<cell::cell> handle
-        (parse::cell::list const &list, cell::cell const &translated)
+        (parse::cell::list const &list, cell::function_body const &translated)
         {
           static std::map
           <
             std::string,
             std::function
-            <cell::cell (parse::cell::list const &input, cell::cell output)>
+            <cell::cell (parse::cell::list const &input, cell::function_body const &output)>
           > specials
           {
             { "func", &func }

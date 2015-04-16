@@ -9,12 +9,14 @@ namespace jank
 {
   namespace translate
   {
-    cell::cell translate(parse::cell::list &root)
+    cell::function_body translate(parse::cell::list &root)
     {
-      cell::cell translated;
+      cell::function_body translated;
       for(auto &c : root.data)
       {
-        environment::special::handle(expect::type<parse::cell::type::list>(c));
+        auto const opt(environment::special::handle(expect::type<parse::cell::type::list>(c), translated));
+        if(opt)
+        { translated.data.cells.push_back(opt.value()); }
       }
       return translated;
       //auto const &func_name(expect::type<parse::cell::type::ident>(root.data[0]).data);
