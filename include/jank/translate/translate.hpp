@@ -14,7 +14,11 @@ namespace jank
       cell::function_body translated;
       for(auto &c : root.data)
       {
-        auto const opt(environment::special::handle(expect::type<parse::cell::type::list>(c), translated));
+        auto const opt
+        (
+          environment::special::handle
+          (expect::type<parse::cell::type::list>(c), translated)
+        );
         if(opt)
         { translated.data.cells.push_back(opt.value()); }
       }

@@ -12,27 +12,30 @@ namespace jank
   {
     namespace expect
     {
-      inline void args(parse::cell::list const &c, std::size_t const count)
+      namespace argument
       {
-        if(c.data.size() != count + 1) /* The first atom is not an arg. */
+        inline void exactly(parse::cell::list const &c, std::size_t const count)
         {
-          throw expect::error::type::overload
+          if(c.data.size() != count + 1) /* The first atom is not an arg. */
           {
-            "invalid argument count (expected: " + std::to_string(count) + ", "
-            "found: " + std::to_string(c.data.size() - 1) + ")"
-          };
+            throw expect::error::type::overload
+            {
+              "invalid argument count (expected: " + std::to_string(count) + ", "
+              "found: " + std::to_string(c.data.size() - 1) + ")"
+            };
+          }
         }
-      }
 
-      inline void at_least_args(parse::cell::list const &c, std::size_t const count)
-      {
-        if(c.data.size() < count + 1) /* The first atom is not an arg. */
+        inline void at_least(parse::cell::list const &c, std::size_t const count)
         {
-          throw expect::error::type::overload
+          if(c.data.size() < count + 1) /* The first atom is not an arg. */
           {
-            "invalid argument count (expected at least: " + std::to_string(count) +
-            ", found: " + std::to_string(c.data.size() - 1) + ")"
-          };
+            throw expect::error::type::overload
+            {
+              "invalid argument count (expected at least: " + std::to_string(count) +
+              ", found: " + std::to_string(c.data.size() - 1) + ")"
+            };
+          }
         }
       }
     }
