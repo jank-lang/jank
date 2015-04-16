@@ -2,15 +2,21 @@
 
 #include <jank/parse/cell/cell.hpp>
 #include <jank/translate/cell/cell.hpp>
+#include <jank/translate/environment/scope.hpp>
+#include <jank/translate/environment/special/all.hpp>
 
 namespace jank
 {
   namespace translate
   {
-    translate::cell::cell translate(parse::cell::list &root)
+    cell::cell translate(parse::cell::list &root)
     {
-      static_cast<void>(root);
-      return {};
+      cell::cell translated;
+      for(auto &c : root.data)
+      {
+        environment::special::handle(expect::type<parse::cell::type::list>(c));
+      }
+      return translated;
       //auto const &func_name(expect::type<parse::cell::type::ident>(root.data[0]).data);
 
       //auto const special_it(env.find_special(func_name));

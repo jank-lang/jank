@@ -6,18 +6,17 @@
 #include <experimental/optional>
 
 #include <jank/translate/cell/cell.hpp>
-#include <jank/interpret/function/argument.hpp>
-#include <jank/interpret/expect/error/type/type.hpp>
+#include <jank/translate/expect/type.hpp>
 
 namespace jank
 {
-  namespace interpret
+  namespace translate
   {
     namespace environment
     {
       struct scope
       {
-        std::experimental::optional<jank::translate::cell::function_definition> find_function
+        std::experimental::optional<cell::function_definition> find_function
         (std::string const &name)
         {
           auto const it(function_definitions.find(name));
@@ -35,7 +34,7 @@ namespace jank
           return { it->second[0] };
         }
 
-        std::map<std::string, std::vector<translate::cell::function_definition>> function_definitions;
+        std::map<std::string, std::vector<cell::function_definition>> function_definitions;
         std::shared_ptr<scope> parent;
       };
     }
