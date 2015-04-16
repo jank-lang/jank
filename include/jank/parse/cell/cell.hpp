@@ -78,7 +78,7 @@ namespace jank
       using list = wrapper<type::list>;
       using func = wrapper<type::function>;
 
-      std::ostream& operator <<(std::ostream &os, cell const &c)
+      inline std::ostream& operator <<(std::ostream &os, cell const &c)
       {
         static int indent_level{ -1 };
 

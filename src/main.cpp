@@ -39,9 +39,13 @@ int main(int const argc, char ** const argv)
 
   std::cout << root << std::endl;
 
-  /* TODO: translate */
+  auto const body
+  (
+    jank::translate::translate
+    (jank::interpret::expect::type<jank::parse::cell::type::list>(root))
+  );
 
-  /* TODO: Keep all interpret shit in cells or AST cells? */
+  /* TODO: interpret from translation */
   jank::interpret::interpret
   (
     jank::interpret::environment::prelude::env(),
