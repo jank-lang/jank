@@ -81,7 +81,7 @@ namespace jank
             { static_cast<void>(i); os << "  "; }
 
             auto const &def(boost::get<function_definition>(c));
-            os << "function " << def.data.name << " : " /*<< def.data.arguments*/ << std::endl;
+            os << "function " << def.data.name << " : " << def.data.arguments << std::endl;
             os << "( ";
             for(auto const &v : def.data.body.cells)
             { os << v << " "; }
@@ -97,7 +97,7 @@ namespace jank
             { static_cast<void>(i); os << "  "; }
 
             auto const &def(boost::get<function_call>(c));
-            os << "call " << def.data.name << " : " /*<< def.data.arguments*/ << std::endl;
+            os << "call " << def.data.name << " : " << def.data.arguments << std::endl;
 
             --indent_level;
           } break;

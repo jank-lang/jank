@@ -4,6 +4,7 @@
 
 #include <jank/parse/cell/cell.hpp>
 #include <jank/translate/cell/cell.hpp>
+#include <jank/translate/function/argument.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/translate/expect/error/syntax/syntax.hpp>
 
@@ -22,13 +23,17 @@ namespace jank
           if(data.size() < 4)
           { throw expect::error::syntax::syntax<>{ "invalid function definition" }; }
 
+          auto const name(expect::type<parse::cell::type::ident>(data[1]));
+          auto const args(expect::type<parse::cell::type::list>(data[2]));
+          auto const ret(expect::type<parse::cell::type::list>(data[3]));
+
           return
           {
             cell::function_definition
             {
               {
-                expect::type<parse::cell::type::ident>(input.data[1]).data,
-                {},
+                name.data,
+                function::argument::parse(args),
                 {{}}
               }
             }
