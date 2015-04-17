@@ -11,17 +11,24 @@ namespace jank
   {
     cell::function_body translate(parse::cell::list &root)
     {
+      if(root.data.empty())
+      { throw std::runtime_error{ "invalid root parse list" }; }
+
       cell::function_body translated;
-      for(auto &c : root.data)
-      {
-        auto const opt
-        (
-          environment::special::handle
-          (expect::type<parse::cell::type::list>(c), translated)
-        );
-        if(opt)
-        { translated.data.cells.push_back(opt.value()); }
-      }
+      std::for_each
+      (
+        std::next(root.data.begin()), root.data.end(),
+        [&](auto &c)
+        {
+          auto const opt
+          (
+            environment::special::handle
+            (expect::type<parse::cell::type::list>(c), translated)
+          );
+          if(opt)
+          { translated.data.cells.push_back(opt.value()); }
+        }
+      );
       return translated;
       //auto const &func_name(expect::type<parse::cell::type::ident>(root.data[0]).data);
 

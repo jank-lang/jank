@@ -15,8 +15,8 @@ namespace jank
         template <typename C>
         struct function_call
         {
-          function::argument_list arguments;
           std::string name;
+          function::argument_list arguments;
         };
       }
     }

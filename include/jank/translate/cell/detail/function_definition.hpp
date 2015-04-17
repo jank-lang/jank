@@ -14,6 +14,7 @@ namespace jank
         template <typename C>
         struct function_definition
         {
+          std::string name;
           function::argument_list arguments;
           function_body<C> body;
         };

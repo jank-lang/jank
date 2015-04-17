@@ -16,6 +16,8 @@
 #include <jank/interpret/environment/prelude/all.hpp>
 #include <jank/interpret/expect/type.hpp>
 
+#include "common/run.hpp"
+
 int main(int const argc, char ** const argv)
 {
   if(argc != 2)
@@ -25,6 +27,8 @@ int main(int const argc, char ** const argv)
   }
 
   std::ifstream ifs{ argv[1] };
+  if(!ifs.is_open())
+  { throw std::runtime_error{ "unable to open file: " + std::string{ argv[1] } }; }
 
   auto root
   (
@@ -37,13 +41,15 @@ int main(int const argc, char ** const argv)
     )
   );
 
-  std::cout << root << std::endl;
+  std::cout << "parsed: " << root << std::endl;
 
   auto const body
   (
     jank::translate::translate
     (jank::interpret::expect::type<jank::parse::cell::type::list>(root))
   );
+
+  std::cout << "translated: " << body << std::endl;
 
   /* TODO: interpret from translation */
   jank::interpret::interpret
