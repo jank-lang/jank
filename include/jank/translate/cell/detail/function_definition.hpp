@@ -7,6 +7,9 @@ namespace jank
 {
   namespace translate
   {
+    namespace environment
+    { struct scope; }
+
     namespace cell
     {
       namespace detail
@@ -17,6 +20,7 @@ namespace jank
           std::string name;
           function::argument::list arguments;
           function_body<C> body;
+          std::shared_ptr<environment::scope> scope;
         };
       }
     }

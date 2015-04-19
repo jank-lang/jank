@@ -43,13 +43,21 @@ int main(int const argc, char ** const argv)
 
   std::cout << "parsed: " << root << std::endl;
 
-  auto const body
+  auto const body(jank::interpret::expect::type<jank::parse::cell::type::list>(root));
+  auto const translated_body
   (
     jank::translate::translate
-    (jank::interpret::expect::type<jank::parse::cell::type::list>(root))
+    (
+      jtl::it::make_range
+      (
+        std::next(body.data.begin()),
+        body.data.end()
+      ),
+      std::make_shared<jank::translate::environment::scope>(nullptr)
+    )
   );
 
-  std::cout << "translated: " << body << std::endl;
+  std::cout << "translated: " << translated_body << std::endl;
 
   /* TODO: interpret from translation */
   jank::interpret::interpret

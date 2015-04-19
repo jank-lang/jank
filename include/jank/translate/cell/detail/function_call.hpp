@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include <memory>
 
 #include <jank/translate/function/argument.hpp>
 
@@ -8,6 +8,9 @@ namespace jank
 {
   namespace translate
   {
+    namespace environment
+    { struct scope; }
+
     namespace cell
     {
       namespace detail
@@ -17,6 +20,7 @@ namespace jank
         {
           std::string name;
           function::argument::list arguments;
+          std::shared_ptr<environment::scope> scope;
         };
       }
     }

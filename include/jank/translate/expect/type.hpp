@@ -20,7 +20,7 @@ namespace jank
         {
           throw error::type::type<>
           {
-            std::string{ "expected " } +
+            std::string{ "expected: " } +
             parse::cell::type_string<C>() +
             ", found: " +
             parse::cell::type_string(type)

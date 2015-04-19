@@ -9,24 +9,32 @@ namespace jank
 {
   namespace translate
   {
-    cell::function_body translate(parse::cell::list &root)
+    template <typename Range>
+    cell::function_body translate(Range const &range, std::shared_ptr<environment::scope> const &scope)
     {
-      if(root.data.empty())
-      { throw std::runtime_error{ "invalid root parse list" }; }
+      if(!std::distance(range.begin(), range.end()))
+      { return { { {}, {} } }; }
 
-      cell::function_body translated;
+      cell::function_body translated{ { {}, scope } };
       std::for_each
       (
-        std::next(root.data.begin()), root.data.end(),
-        [&](auto &c)
+        range.begin(), range.end(),
+        [&](auto const &c)
         {
-          auto const opt
-          (
-            environment::special::handle
-            (expect::type<parse::cell::type::list>(c), translated)
-          );
-          if(opt)
-          { translated.data.cells.push_back(opt.value()); }
+          /* Handle specials. */
+          if(static_cast<parse::cell::type>(c.which()) == parse::cell::type::list) /* TODO */
+          {
+            auto const opt
+            (
+              environment::special::handle
+              (expect::type<parse::cell::type::list>(c), translated)
+            );
+            if(opt)
+            { translated.data.cells.push_back(opt.value()); }
+          }
+
+          /* TODO: Handle plain values (only useful at the end of a function? */
+          /* TODO: Handle function calls. */
         }
       );
       return translated;

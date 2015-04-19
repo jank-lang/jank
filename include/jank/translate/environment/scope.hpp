@@ -16,6 +16,11 @@ namespace jank
     {
       struct scope
       {
+        scope() = default;
+        explicit scope(std::shared_ptr<scope> const &p)
+          : parent{ p }
+        { }
+
         std::experimental::optional<cell::function_definition> find_function
         (std::string const &name)
         {
@@ -35,7 +40,7 @@ namespace jank
         }
 
         std::map<std::string, std::vector<cell::function_definition>> function_definitions;
-        std::shared_ptr<scope> parent;
+        std::shared_ptr<scope> parent{ std::make_shared<scope>() };
       };
     }
   }
