@@ -22,7 +22,7 @@ namespace jank
         [&](auto const &c)
         {
           /* Handle specials. */
-          if(static_cast<parse::cell::type>(c.which()) == parse::cell::type::list) /* TODO */
+          if(expect::is<parse::cell::type::list>(c))
           {
             auto const opt
             (

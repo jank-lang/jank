@@ -13,6 +13,10 @@ namespace jank
     namespace expect
     {
       template <parse::cell::type C, typename Cell>
+      bool is(Cell const &c)
+      { return static_cast<parse::cell::type>(c.which()) == C; }
+
+      template <parse::cell::type C, typename Cell>
       decltype(auto) type(Cell &&c)
       {
         auto const type(static_cast<parse::cell::type>(c.which()));
