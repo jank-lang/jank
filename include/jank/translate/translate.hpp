@@ -24,51 +24,33 @@ namespace jank
           /* Handle specials. */
           if(expect::is<parse::cell::type::list>(c))
           {
-            auto const opt
+            auto const &list(expect::type<parse::cell::type::list>(c));
+
+            auto const special_opt
             (
-              environment::special::handle
-              (expect::type<parse::cell::type::list>(c), translated)
+              environment::special::handle(list, translated)
             );
-            if(opt)
-            { translated.data.cells.push_back(opt.value()); }
+            if(special_opt)
+            { translated.data.cells.push_back(special_opt.value()); }
+
+            if(list.empty())
+            { throw expect::error::syntax::syntax<>{ "invalid empty list" }; }
+
+            auto const function_opt
+            (
+              scope->find_function
+              (expect::type<parse::cell::type::ident>(list[0]))
+            );
+            if(function_opt)
+            {
+              /* TODO: Handle function calls. */
+            }
           }
 
-          /* TODO: Handle plain values (only useful at the end of a function? */
-          /* TODO: Handle function calls. */
+          /* TODO: Handle plain values (only useful at the end of a function?) */
         }
       );
       return translated;
-      //auto const &func_name(expect::type<parse::cell::type::ident>(root.data[0]).data);
-
-      //auto const special_it(env.find_special(func_name));
-      //if(special_it)
-      //{ return special_it->data(env, root); }
-
-      ///* Collapse all nested lists to values. */
-      //for(auto &c : root.data)
-      //{
-      //  switch(static_cast<parse::cell::type>(c.which()))
-      //  {
-      //    case parse::cell::type::list:
-      //      c = interpret(env, boost::get<parse::cell::list>(c));
-      //      break;
-      //    case parse::cell::type::ident:
-      //    {
-      //      auto const ident_it(env.find_cell(boost::get<parse::cell::ident>(c).data));
-      //      if(ident_it)
-      //      { c = *ident_it; }
-      //    } break;
-      //    default:
-      //      break;
-      //  }
-      //}
-
-      //auto const env_it(env.find_function(func_name));
-      //if(!env_it)
-      //{ throw expect::error::type::type<>{ "unknown function: " + func_name }; }
-
-      //auto const &func(env_it->data);
-      //return func(env, root);
     }
   }
 }

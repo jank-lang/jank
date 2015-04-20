@@ -38,7 +38,7 @@ namespace jank
             {
               {
                 name.data,
-                function::argument::parse(args),
+                function::argument::definition::parse(args),
                 translate
                 (
                   jtl::it::make_range(std::next(data.begin(), 4), data.end()),

@@ -21,7 +21,7 @@ namespace jank
           : parent{ p }
         { }
 
-        std::experimental::optional<cell::function_definition> find_function
+        std::experimental::optional<std::vector<cell::function_definition>> find_function
         (std::string const &name)
         {
           auto const it(function_definitions.find(name));
@@ -36,7 +36,7 @@ namespace jank
           if(it->second.empty())
           { throw expect::error::type::type<>{ "unknown function: " + name }; }
 
-          return { it->second[0] };
+          return { it->second };
         }
 
         std::map<std::string, std::vector<cell::function_definition>> function_definitions;

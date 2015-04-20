@@ -2,7 +2,7 @@
 
 jank aims to be a lisp-1 with hygienic, code-as-data macros, a strong, static type system, scope-based resource management, a direct focus on generic programming, and a native compiler.
 
-**NOTE:** jank, at this point, is almost entirely theoretical. I have an incomplete interpreter and not much of a compiler. **jank cannot currently be used.** Furthermore, the design for jank will change a lot; what you see here is an interpolation between where the interpreter is and where I want jank to go. Nothing here is final.
+**NOTE:** jank, at this point, is almost entirely theoretical; I have an incomplete interpreter and compiler. **jank cannot currently be used.** Furthermore, the design for jank will change a lot; what you see here is an interpolation between where the interpreter is and where I want jank to go. Nothing here is final.
 
 ## Types
 There are a few primitive types which are part of the language.

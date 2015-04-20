@@ -6,6 +6,7 @@
 
 #include <jank/parse/cell/cell.hpp>
 #include <jank/translate/cell/type.hpp>
+#include <jank/translate/environment/scope.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/translate/expect/error/syntax/syntax.hpp>
 
@@ -45,24 +46,54 @@ namespace jank
         }
         using list = std::vector<detail::argument>;
 
-        inline list parse(parse::cell::list const &l)
+        namespace definition
         {
-          list ret;
-
-          for(auto it(l.data.begin()); it != l.data.end(); ++it)
+          inline list parse(parse::cell::list const &l)
           {
-            auto const &name(expect::type<parse::cell::type::ident>(*it).data);
-            if(++it == l.data.end())
+            list ret;
+
+            for(auto it(l.data.begin()); it != l.data.end(); ++it)
             {
-              throw expect::error::syntax::syntax<>
-              { "syntax error: expected type after " + name };
+              auto const &name(expect::type<parse::cell::type::ident>(*it).data);
+              if(++it == l.data.end())
+              {
+                throw expect::error::syntax::syntax<>
+                { "syntax error: expected type after " + name };
+              }
+
+              auto const &type(expect::type<parse::cell::type::ident>(*it).data);
+              ret.push_back({ name, parse::cell::type_from_string(type) });
             }
 
-            auto const &type(expect::type<parse::cell::type::ident>(*it).data);
-            ret.push_back({ name, parse::cell::type_from_string(type) });
+            return ret;
           }
+        }
 
-          return ret;
+        /* TODO: Move to separate header? */
+        namespace call
+        {
+          inline list parse
+          (
+            parse::cell::list const &l,
+            std::shared_ptr<environment::scope> const &scope
+          )
+          {
+            list ret;
+
+            std::transform
+            (
+              l.data.begin(), l.data.end(), std::back_inserter(ret),
+              [](auto const &a)
+              {
+                /* TODO: Read type from scope. */
+                auto const &name(expect::type<parse::cell::type::ident>(a).data);
+                auto const &type(expect::type<parse::cell::type::ident>(a).data);
+                return detail::argument{ name, parse::cell::type_from_string(type) };
+              }
+            );
+
+            return ret;
+          }
         }
       }
     }
