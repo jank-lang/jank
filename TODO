@@ -8,9 +8,6 @@ idents
   allow numbers
   allow underscores
 
-compilation
-  build ast
-
 use long names
   func => function
   var => variable
