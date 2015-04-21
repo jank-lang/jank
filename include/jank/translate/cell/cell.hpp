@@ -107,23 +107,6 @@ namespace jank
 
         return os;
       }
-
-      namespace trait
-      {
-        template <type C>
-        struct type_variant;
-        template <>
-        struct type_variant<type::function_body>
-        { using type = function_body; };
-        template <>
-        struct type_variant<type::function_definition>
-        { using type = function_definition; };
-        template <>
-        struct type_variant<type::function_call>
-        { using type = function_call; };
-      }
-      template <type C>
-      using type_variant = typename trait::type_variant<C>::type;
     }
   }
 }

@@ -87,7 +87,6 @@ namespace jank
               [](auto const &a)
               {
                 /* TODO: Read type from scope. */
-                //return detail::argument{ "", parse::cell::type::integer };
                 return parse::cell::visit
                 (
                   a, [](auto const &c)
@@ -98,7 +97,8 @@ namespace jank
                     {
                       return detail::argument
                       {
-                        std::string{ "rvalue " } + parse::cell::trait::enum_to_string<decltype(c)::value>(),
+                        std::string{ "rvalue " } +
+                        parse::cell::trait::enum_to_string<decltype(c)::value>(),
                         decltype(c)::value
                       };
                     }

@@ -32,7 +32,7 @@ namespace jank
           case type::function:
             return func(boost::get<func>(c).data);
           default:
-            throw std::runtime_error{ "invalid cell" };
+            throw std::runtime_error{ "invalid parse cell" };
         }
       }
     }
