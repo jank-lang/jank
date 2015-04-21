@@ -33,6 +33,7 @@ namespace jank
         boost::recursive_wrapper<wrapper<type::function>>
       >;
 
+      /* TODO: Sort out traits for these. */
       template <>
       struct wrapper<type::boolean>
       {
@@ -76,7 +77,7 @@ namespace jank
       using string = wrapper<type::string>;
       using ident = wrapper<type::ident>;
       using list = wrapper<type::list>;
-      using func = wrapper<type::function>;
+      using function = wrapper<type::function>;
 
       inline std::ostream& operator <<(std::ostream &os, cell const &c)
       {
@@ -121,35 +122,6 @@ namespace jank
 
         return os;
       }
-
-      namespace trait
-      {
-        template <type C>
-        struct type_variant;
-        template <>
-        struct type_variant<type::boolean>
-        { using type = boolean; };
-        template <>
-        struct type_variant<type::integer>
-        { using type = integer; };
-        template <>
-        struct type_variant<type::real>
-        { using type = real; };
-        template <>
-        struct type_variant<type::string>
-        { using type = string; };
-        template <>
-        struct type_variant<type::ident>
-        { using type = ident; };
-        template <>
-        struct type_variant<type::list>
-        { using type = list; };
-        template <>
-        struct type_variant<type::function>
-        { using type = func; };
-      }
-      template <type C>
-      using type_variant = typename trait::type_variant<C>::type;
     }
   }
 }

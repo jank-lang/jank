@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include <jank/parse/cell/cell.hpp>
+#include <jank/parse/cell/trait.hpp>
 #include <jank/translate/expect/error/type/type.hpp>
 
 namespace jank
@@ -25,12 +26,12 @@ namespace jank
           throw error::type::type<>
           {
             std::string{ "expected: " } +
-            parse::cell::type_string<C>() +
+            parse::cell::trait::enum_to_string<C>() +
             ", found: " +
-            parse::cell::type_string(type)
+            parse::cell::trait::enum_to_string(type)
           };
         }
-        return boost::get<parse::cell::type_variant<C>>(c);
+        return boost::get<parse::cell::trait::enum_to_type<C>>(c);
       }
     }
   }

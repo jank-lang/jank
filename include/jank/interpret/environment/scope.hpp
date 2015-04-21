@@ -19,16 +19,16 @@ namespace jank
       {
         std::experimental::optional<parse::cell::cell> find_cell
         (std::string const &name);
-        std::experimental::optional<parse::cell::func> find_function
+        std::experimental::optional<parse::cell::function> find_function
         (std::string const &name);
-        std::experimental::optional<parse::cell::func> find_special
+        std::experimental::optional<parse::cell::function> find_special
         (std::string const &name);
 
         std::map<std::string, parse::cell::cell> cells;
 
-        std::map<std::string, std::vector<parse::cell::func>> funcs;
+        std::map<std::string, std::vector<parse::cell::function>> funcs;
 
-        std::map<std::string, parse::cell::func> special_funcs;
+        std::map<std::string, parse::cell::function> special_funcs;
 
         // TODO std::shared_ptr<scope> parent;
         scope *parent;
@@ -71,7 +71,7 @@ namespace jank
         }
         return { it->second };
       }
-      std::experimental::optional<jank::parse::cell::func> scope::find_function
+      std::experimental::optional<jank::parse::cell::function> scope::find_function
       (std::string const &name)
       {
         auto const it(funcs.find(name));
@@ -88,7 +88,7 @@ namespace jank
 
         return { it->second[0] };
       }
-      std::experimental::optional<jank::parse::cell::func> scope::find_special
+      std::experimental::optional<jank::parse::cell::function> scope::find_special
       (std::string const &name)
       {
         auto const it(special_funcs.find(name));

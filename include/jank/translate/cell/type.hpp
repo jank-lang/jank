@@ -30,7 +30,7 @@ namespace jank
       inline char constexpr const* type_string<type::function_call>()
       { return "function_call"; }
 
-      /* TODO: constexpr */
+      /* TODO: GCC doesn't allow constexpr here yet. */
       inline char const* type_string(type const c)
       {
         switch(c)

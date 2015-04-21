@@ -25,7 +25,7 @@ namespace jank
               {
                 "root",
                 {
-                  jank::parse::cell::func
+                  jank::parse::cell::function
                   {
                     {},
                     [](auto const&, jank::parse::cell::list const &)
@@ -37,24 +37,24 @@ namespace jank
               },
               {
                 "+",
-                { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::sum, {{}}, jank::interpret::environment::scope() } }
+                { jank::parse::cell::function{ {}, &jank::interpret::environment::prelude::sum, {{}}, jank::interpret::environment::scope() } }
               },
               {
                 "-",
-                { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::difference, {{}}, jank::interpret::environment::scope() } }
+                { jank::parse::cell::function{ {}, &jank::interpret::environment::prelude::difference, {{}}, jank::interpret::environment::scope() } }
               },
               {
                 "/",
-                { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::quotient, {{}}, jank::interpret::environment::scope() } }
+                { jank::parse::cell::function{ {}, &jank::interpret::environment::prelude::quotient, {{}}, jank::interpret::environment::scope() } }
               },
               {
                 "*",
-                { jank::parse::cell::func{ {}, &jank::interpret::environment::prelude::product, {{}}, jank::interpret::environment::scope() } }
+                { jank::parse::cell::function{ {}, &jank::interpret::environment::prelude::product, {{}}, jank::interpret::environment::scope() } }
               },
               {
                 "print",
                 {
-                  jank::parse::cell::func
+                  jank::parse::cell::function
                   {
                     {},
                     [](auto const&, jank::parse::cell::list const &cl)
@@ -81,7 +81,7 @@ namespace jank
             { /* special */
               {
                 "func",
-                jank::parse::cell::func
+                jank::parse::cell::function
                 {
                   {},
                   [](auto &env, jank::parse::cell::list const &cl)
@@ -109,7 +109,7 @@ namespace jank
                     }
 
                     overloads.emplace_back();
-                    jank::parse::cell::func &func{ overloads.back() };
+                    jank::parse::cell::function &func{ overloads.back() };
                     func.arguments = std::move(arguments);
                     func.env.parent = &env;
                     std::copy(std::next(list.begin(), 4), list.end(),

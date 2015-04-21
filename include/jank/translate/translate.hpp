@@ -33,13 +33,13 @@ namespace jank
             if(special_opt)
             { translated.data.cells.push_back(special_opt.value()); }
 
-            if(list.empty())
+            if(list.data.empty())
             { throw expect::error::syntax::syntax<>{ "invalid empty list" }; }
 
             auto const function_opt
             (
               scope->find_function
-              (expect::type<parse::cell::type::ident>(list[0]))
+              (expect::type<parse::cell::type::ident>(list.data[0]).data)
             );
             if(function_opt)
             {

@@ -5,8 +5,9 @@
 #include <ostream>
 
 #include <jank/parse/cell/cell.hpp>
+#include <jank/parse/cell/visit.hpp>
+#include <jank/parse/cell/trait.hpp>
 #include <jank/translate/cell/type.hpp>
-#include <jank/translate/environment/scope.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/translate/expect/error/syntax/syntax.hpp>
 
@@ -39,7 +40,7 @@ namespace jank
           {
             os << "( ";
             for(auto const &a : args)
-            { os << a.name << " : " << parse::cell::type_string(a.type) << " "; }
+            { os << a.name << " : " << parse::cell::trait::enum_to_string(a.type) << " "; }
             os << ") ";
             return os;
           }
@@ -62,20 +63,20 @@ namespace jank
               }
 
               auto const &type(expect::type<parse::cell::type::ident>(*it).data);
-              ret.push_back({ name, parse::cell::type_from_string(type) });
+              ret.push_back({ name, parse::cell::trait::enum_from_string(type) });
             }
 
             return ret;
           }
         }
 
-        /* TODO: Move to separate header? */
         namespace call
         {
-          inline list parse
+          template <typename Scope>
+          list parse
           (
             parse::cell::list const &l,
-            std::shared_ptr<environment::scope> const &scope
+            Scope const &/*scope*/
           )
           {
             list ret;
@@ -86,9 +87,23 @@ namespace jank
               [](auto const &a)
               {
                 /* TODO: Read type from scope. */
-                auto const &name(expect::type<parse::cell::type::ident>(a).data);
-                auto const &type(expect::type<parse::cell::type::ident>(a).data);
-                return detail::argument{ name, parse::cell::type_from_string(type) };
+                //return detail::argument{ "", parse::cell::type::integer };
+                return parse::cell::visit
+                (
+                  a, [](auto const &c)
+                  {
+                    if(std::is_same<decltype(c), parse::cell::ident>::value)
+                    { throw expect::error::type::type<>{ "unsupported ident in function call" }; }
+                    else
+                    {
+                      return detail::argument
+                      {
+                        std::string{ "rvalue " } + parse::cell::trait::enum_to_string<decltype(c)::value>(),
+                        decltype(c)::value
+                      };
+                    }
+                  }
+                );
               }
             );
 
