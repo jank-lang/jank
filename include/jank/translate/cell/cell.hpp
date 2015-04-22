@@ -13,6 +13,7 @@
 #include <jank/translate/cell/detail/function_body.hpp>
 #include <jank/translate/cell/detail/function_definition.hpp>
 #include <jank/translate/cell/detail/function_call.hpp>
+#include <jank/translate/cell/detail/variable_definition.hpp>
 
 namespace jank
 {
@@ -27,7 +28,8 @@ namespace jank
       <
         boost::recursive_wrapper<wrapper<type::function_body>>,
         boost::recursive_wrapper<wrapper<type::function_definition>>,
-        boost::recursive_wrapper<wrapper<type::function_call>>
+        boost::recursive_wrapper<wrapper<type::function_call>>,
+        boost::recursive_wrapper<wrapper<type::variable_definition>>
       >;
 
       template <>
@@ -48,11 +50,19 @@ namespace jank
         using type = detail::function_call<cell>;
         type data;
       };
+      template <>
+      struct wrapper<type::variable_definition>
+      {
+        using type = detail::variable_definition;
+        type data;
+      };
 
       using function_body = wrapper<type::function_body>;
       using function_definition = wrapper<type::function_definition>;
       using function_call = wrapper<type::function_call>;
+      using variable_definition = wrapper<type::variable_definition>;
 
+      /* TODO: move to separate file */
       inline std::ostream& operator <<(std::ostream &os, cell const &c)
       {
         static int indent_level{ -1 };
@@ -98,6 +108,18 @@ namespace jank
 
             auto const &def(boost::get<function_call>(c));
             os << "call " << def.data.name << " : " << def.data.arguments << std::endl;
+
+            --indent_level;
+          } break;
+          case type::variable_definition:
+          {
+            ++indent_level;
+            os << "\n";
+            for(auto const i : jtl::it::make_range(0, indent_level))
+            { static_cast<void>(i); os << "  "; }
+
+            auto const &def(boost::get<variable_definition>(c));
+            os << "var " << def.data.name << std::endl;
 
             --indent_level;
           } break;

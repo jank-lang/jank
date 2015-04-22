@@ -21,6 +21,9 @@ namespace jank
         template <>
         inline char constexpr const* enum_to_string<type::function_call>()
         { return "function_call"; }
+        template <>
+        inline char constexpr const* enum_to_string<type::variable_definition>()
+        { return "variable_definition"; }
 
         /* TODO: GCC doesn't allow constexpr here yet. */
         inline char const* enum_to_string(type const c)
@@ -33,6 +36,8 @@ namespace jank
               return enum_to_string<type::function_definition>();
             case type::function_call:
               return enum_to_string<type::function_call>();
+            case type::variable_definition:
+              return enum_to_string<type::variable_definition>();
             default:
               return "unknown";
           }
@@ -47,6 +52,8 @@ namespace jank
           { return type::function_definition; }
           else if(str == "function_call")
           { return type::function_call; }
+          else if(str == "variable_definition")
+          { return type::variable_definition; }
           else
           {
             throw interpret::expect::error::type::type<>
@@ -67,6 +74,9 @@ namespace jank
           template <>
           struct enum_to_type<type::function_call>
           { using type = function_call; };
+          template <>
+          struct enum_to_type<type::variable_definition>
+          { using type = variable_definition; };
         }
         template <type C>
         using enum_to_type = typename detail::enum_to_type<C>::type;
@@ -84,6 +94,9 @@ namespace jank
           template <>
           struct type_to_enum<function_call>
           { static type constexpr value{ type::function_call }; };
+          template <>
+          struct type_to_enum<variable_definition>
+          { static type constexpr value{ type::variable_definition }; };
         }
         template <typename C>
         using type_to_enum = typename detail::type_to_enum<C>::type;
