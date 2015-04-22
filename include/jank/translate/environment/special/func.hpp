@@ -32,6 +32,8 @@ namespace jank
           auto const ret(expect::type<parse::cell::type::list>(data[3]));
           auto const nested_scope(std::make_shared<scope>(body.data.scope));
 
+          /* TODO: Add args to scope. */
+
           return
           {
             cell::function_definition
