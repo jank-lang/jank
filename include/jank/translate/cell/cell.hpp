@@ -14,6 +14,8 @@
 #include <jank/translate/cell/detail/function_definition.hpp>
 #include <jank/translate/cell/detail/function_call.hpp>
 #include <jank/translate/cell/detail/variable_definition.hpp>
+#include <jank/translate/cell/detail/variable_reference.hpp>
+#include <jank/translate/cell/detail/literal_value.hpp>
 
 namespace jank
 {
@@ -29,7 +31,9 @@ namespace jank
         boost::recursive_wrapper<wrapper<type::function_body>>,
         boost::recursive_wrapper<wrapper<type::function_definition>>,
         boost::recursive_wrapper<wrapper<type::function_call>>,
-        boost::recursive_wrapper<wrapper<type::variable_definition>>
+        boost::recursive_wrapper<wrapper<type::variable_definition>>,
+        boost::recursive_wrapper<wrapper<type::variable_reference>>,
+        boost::recursive_wrapper<wrapper<type::literal_value>>
       >;
 
       template <>
@@ -56,11 +60,25 @@ namespace jank
         using type = detail::variable_definition;
         type data;
       };
+      template <>
+      struct wrapper<type::variable_reference>
+      {
+        using type = detail::variable_reference;
+        type data;
+      };
+      template <>
+      struct wrapper<type::literal_value>
+      {
+        using type = detail::literal_value;
+        type data;
+      };
 
       using function_body = wrapper<type::function_body>;
       using function_definition = wrapper<type::function_definition>;
       using function_call = wrapper<type::function_call>;
       using variable_definition = wrapper<type::variable_definition>;
+      using variable_reference = wrapper<type::variable_reference>;
+      using literal_value = wrapper<type::literal_value>;
     }
   }
 }

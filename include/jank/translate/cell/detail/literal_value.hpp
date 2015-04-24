@@ -1,5 +1,7 @@
 #pragma once
 
+#include <boost/variant.hpp>
+
 #include <jank/parse/cell/cell.hpp>
 #include <jank/parse/cell/trait.hpp>
 
@@ -11,13 +13,14 @@ namespace jank
     {
       namespace detail
       {
-        /* TODO: Need a variant here; maybe parse::cell::cell. */
-        template <parse::cell::type T>
-        struct literal_value
-        {
-          std::string name;
-          parse::cell::trait::enum_to_type<T> value;
-        };
+        using literal_value = boost::variant
+        <
+          parse::cell::boolean::type,
+          parse::cell::integer::type,
+          parse::cell::real::type,
+          parse::cell::string::type,
+          parse::cell::ident::type
+        >;
       }
     }
   }

@@ -24,6 +24,12 @@ namespace jank
         template <>
         inline char constexpr const* enum_to_string<type::variable_definition>()
         { return "variable_definition"; }
+        template <>
+        inline char constexpr const* enum_to_string<type::variable_reference>()
+        { return "variable_reference"; }
+        template <>
+        inline char constexpr const* enum_to_string<type::literal_value>()
+        { return "literal_value"; }
 
         /* TODO: GCC doesn't allow constexpr here yet. */
         inline char const* enum_to_string(type const c)
@@ -38,6 +44,10 @@ namespace jank
               return enum_to_string<type::function_call>();
             case type::variable_definition:
               return enum_to_string<type::variable_definition>();
+            case type::variable_reference:
+              return enum_to_string<type::variable_reference>();
+            case type::literal_value:
+              return enum_to_string<type::literal_value>();
             default:
               return "unknown";
           }
@@ -54,6 +64,10 @@ namespace jank
           { return type::function_call; }
           else if(str == "variable_definition")
           { return type::variable_definition; }
+          else if(str == "variable_reference")
+          { return type::variable_reference; }
+          else if(str == "literal_value")
+          { return type::literal_value; }
           else
           {
             throw interpret::expect::error::type::type<>
@@ -77,6 +91,12 @@ namespace jank
           template <>
           struct enum_to_type<type::variable_definition>
           { using type = variable_definition; };
+          template <>
+          struct enum_to_type<type::variable_reference>
+          { using type = variable_reference; };
+          template <>
+          struct enum_to_type<type::literal_value>
+          { using type = literal_value; };
         }
         template <type C>
         using enum_to_type = typename detail::enum_to_type<C>::type;
@@ -97,6 +117,12 @@ namespace jank
           template <>
           struct type_to_enum<variable_definition>
           { static type constexpr value{ type::variable_definition }; };
+          template <>
+          struct type_to_enum<variable_reference>
+          { static type constexpr value{ type::variable_reference }; };
+          template <>
+          struct type_to_enum<literal_value>
+          { static type constexpr value{ type::literal_value }; };
         }
         template <typename C>
         using type_to_enum = typename detail::type_to_enum<C>::type;
