@@ -10,7 +10,11 @@ namespace jank
   namespace translate
   {
     template <typename Range>
-    cell::function_body translate(Range const &range, std::shared_ptr<environment::scope> const &scope)
+    cell::function_body translate
+    (
+      Range const &range,
+      std::shared_ptr<environment::scope> const &scope
+    )
     {
       if(!std::distance(range.begin(), range.end()))
       { return { { {}, {} } }; }

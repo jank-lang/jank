@@ -16,7 +16,9 @@ namespace jank
         function_body,
         function_definition,
         function_call,
-        variable_definition
+        variable_definition,
+        variable_reference,
+        literal_value
       };
     }
   }
