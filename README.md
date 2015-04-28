@@ -46,7 +46,7 @@ Struct members may be given a default value. If a member doesn't have a default 
 Variables are defined via the `var` special identifier and require a `name` identifier, a type, and a value(s). The type may be empty `()` if it can be deduced by the value. If the type is supplied, multiple values may be supplied which are not necessarily of type `T`, but instead are constructor arguments.
 
 ## Generics
-Definitions may be dependent on types. Such definitions may be functions or structs. The type list must never be empty.
+Definitions may be dependent on types. Such definitions may be functions or structs. The type list must never be empty. Dependent (incomplete) types of a template must be prefixed with `:` to disambiguate from full specializations.
 
 ### Examples
 #### Function
