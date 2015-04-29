@@ -202,3 +202,6 @@ Consider something like:
     (n → (+ (fib (- n 1)) (fib (- n 2))))))
 ```
 TODO: http://www.brool.com/index.php/pattern-matching-in-clojure
+
+## Tests
+There is currently a suite of tests outlining all existing functionality. The existing tests are functional and implementing using [jest](https://github.com/jeaye/jest) - a sane and minimal C++14 testing framework.
