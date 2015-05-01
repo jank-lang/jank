@@ -159,12 +159,12 @@ Constraints can be applied to various definitions, including functions and struc
 (ƒ number? : (real) () (bool)
   true)
 
-(ƒ square : (:T:i) (i T:i) (T:i) requires (number? : T:i)
+(ƒ square : (:T:i) (i T:i) (T:i) where (number? : T:i)
   (* i i))
 ```
 #### Structs
 ```
-(struct coord : (:T:data) requires (number? : T:data)
+(struct coord : (:T:data) where (number? : T:data)
   (data T:data))
 ```
 
