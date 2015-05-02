@@ -147,7 +147,7 @@ All type aliases are strong. Since the focus is so strongly on generics, types a
 ```
 
 ## Concepts
-Constraints can be applied to various definitions, including functions and structs. The contraints act along with overload resolution to further exclude instantiations/matches. The constraints must evaluate to boolean and can use functions, macros, and values available at compile-time.
+Constraints can be applied to various definitions, including functions and structs, using the optional `where` expression. The expression acts along with overload resolution to further exclude instantiations/matches. The expression must evaluate to boolean and can use any functions, macros, and values available at compile-time.
 
 ### Examples
 #### Functions
