@@ -29,7 +29,7 @@ Functions are defined via the `func` (or `ƒ`) special identifier and require a 
   (x float)
   (y float))
 ```
-User-defined datatypes are supported, in the form of structs. Structs may contain any number of members, all of which are public (as in C). Structs may also be generic. Unlike C++, but like C, structs may not have member functions. Instead, functions should be designed in a generic manner and may be overloaded/specialized for certain types.
+User-defined datatypes are supported, in the form of structs. Structs may contain any number of members, all of which are public (as in C). Structs may also be generic. Unlike C++, but like C, structs may not have member functions. Instead, functions should be designed in a generic manner and may be overloaded/specialized for certain types. See [generics](#generics).
 
 ```
 (struct name
@@ -146,7 +146,7 @@ All type aliases are strong. Since the focus is so strongly on generics, types a
 (alias position : (:T:x :T:y) as coord : (T:x T:y))
 ```
 
-## Concepts
+## Generic constraints
 Constraints can be applied to various definitions, including functions and structs, using the optional `where` expression. The expression acts along with overload resolution to further exclude instantiations/matches. The expression must evaluate to boolean and can use any functions, macros, and values available at compile-time.
 
 ### Examples
