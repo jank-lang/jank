@@ -9,7 +9,7 @@ namespace jank
     namespace cell
     {
       /* Follows the same pattern as parse::cell::visit. */
-      template <typename Cell, typename Func, typename Ret>
+      template <typename Cell, typename Func>
       auto visit(Cell &&c, Func const &func)
       {
         switch(static_cast<type>(c.which()))

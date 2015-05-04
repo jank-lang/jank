@@ -1,10 +1,12 @@
 # Sources
 OUT_DIR = bin/
 OBJ_DIR = ${OUT_DIR}/obj/
-SOURCES = src/main.cpp
+SOURCES = src/main.cpp \
+					src/jank/translate/function/argument/definition.cpp \
+					src/jank/translate/function/argument/call.cpp
 OBJECTS = ${SOURCES:.cpp=.cpp.o}
 OUT_OBJECTS = $(foreach obj,${OBJECTS},${OBJ_DIR}$(shell echo "$(shell echo ${obj} | sed 's/\.cpp//')" | sed 's_src/__'))
-TARGET = ${OUT_DIR}/jank
+TARGET = ${OUT_DIR}jank
 
 # Tests
 TEST_OUT_DIR = bin/
@@ -58,6 +60,7 @@ ${PROJECT}_setup: setup
 	echo "Building ${PROJECT}"
 
 ${TARGET}: ${OBJECTS} ${TEST_OBJECTS}
+	echo "  Linking ${TARGET}"
 	${CXX} ${CXX_FLAGS} -o ${TARGET} ${OUT_OBJECTS} ${LD_LIBS}
 
 %.cpp.o: %.cpp ${PROJECT}_setup

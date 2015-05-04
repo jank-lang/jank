@@ -58,7 +58,7 @@ namespace jank
   {
     namespace environment
     {
-      std::experimental::optional<jank::parse::cell::cell> scope::find_cell
+      inline std::experimental::optional<jank::parse::cell::cell> scope::find_cell
       (std::string const &name)
       {
         auto const it(cells.find(name));
@@ -71,7 +71,7 @@ namespace jank
         }
         return { it->second };
       }
-      std::experimental::optional<jank::parse::cell::function> scope::find_function
+      inline std::experimental::optional<jank::parse::cell::function> scope::find_function
       (std::string const &name)
       {
         auto const it(funcs.find(name));
@@ -88,7 +88,7 @@ namespace jank
 
         return { it->second[0] };
       }
-      std::experimental::optional<jank::parse::cell::function> scope::find_special
+      inline std::experimental::optional<jank::parse::cell::function> scope::find_special
       (std::string const &name)
       {
         auto const it(special_funcs.find(name));

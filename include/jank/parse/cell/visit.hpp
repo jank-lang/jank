@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/parse/cell/cell.hpp>
+#include <jank/interpret/environment/scope.hpp> /* TODO: shouldn't be looking in interpret */
 
 namespace jank
 {
@@ -12,7 +13,7 @@ namespace jank
        * overloaded op(). This will be called with
        * the extracted cell of its own type; lambdas could condition
        * on is_same<decltype(cell), whatever> if desired. */
-      template <typename Cell, typename Func, typename Ret>
+      template <typename Cell, typename Func>
       auto visit(Cell &&c, Func const &func)
       {
         switch(static_cast<type>(c.which()))
@@ -30,7 +31,7 @@ namespace jank
           case type::list:
             return func(boost::get<list>(c).data);
           case type::function:
-            return func(boost::get<func>(c).data);
+            return func(boost::get<function>(c).data);
           default:
             throw std::runtime_error{ "invalid parse cell" };
         }
