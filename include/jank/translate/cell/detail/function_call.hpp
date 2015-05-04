@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include <jank/translate/function/argument.hpp>
+#include <jank/translate/function/argument/definition.hpp>
 
 namespace jank
 {
@@ -19,7 +19,7 @@ namespace jank
         struct function_call
         {
           std::string name;
-          function::argument::list arguments;
+          function::argument::type_list arguments;
           std::shared_ptr<environment::scope> scope;
         };
       }

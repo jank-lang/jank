@@ -22,14 +22,14 @@ namespace jank
       {
         namespace detail
         {
-          using list = std::vector<struct argument>;
-          struct argument
+          struct argument_type
           {
             std::string name;
             parse::cell::type type;
           };
+          using type_list = std::vector<argument_type>;
 
-          inline bool operator ==(list const &lhs, list const &rhs)
+          inline bool operator ==(type_list const &lhs, type_list const &rhs)
           {
             return (lhs.size() == rhs.size()) &&
                     std::equal(lhs.begin(), lhs.end(), rhs.begin(),
@@ -37,7 +37,7 @@ namespace jank
                                { return lhs.type == rhs.type; });
           }
 
-          inline std::ostream& operator <<(std::ostream &os, list const &args)
+          inline std::ostream& operator <<(std::ostream &os, type_list const &args)
           {
             os << "( ";
             for(auto const &a : args)
@@ -46,13 +46,13 @@ namespace jank
             return os;
           }
         }
-        using list = std::vector<detail::argument>;
+        using type_list = detail::type_list;
 
         namespace definition
         {
-          inline list parse(parse::cell::list const &l)
+          inline type_list parse_types(parse::cell::list const &l)
           {
-            list ret;
+            type_list ret;
 
             for(auto it(l.data.begin()); it != l.data.end(); ++it)
             {
@@ -66,47 +66,6 @@ namespace jank
               auto const &type(expect::type<parse::cell::type::ident>(*it).data);
               ret.push_back({ name, parse::cell::trait::enum_from_string(type) });
             }
-
-            return ret;
-          }
-        }
-
-        namespace call
-        {
-          template <typename Scope>
-          list parse
-          (
-            parse::cell::list const &l,
-            Scope const &/*scope*/
-          )
-          {
-            list ret;
-
-            std::transform
-            (
-              l.data.begin(), l.data.end(), std::back_inserter(ret),
-              [](auto const &a)
-              {
-                /* TODO: Read type from scope. */
-                return parse::cell::visit
-                (
-                  a, [](auto const &c)
-                  {
-                    if(std::is_same<decltype(c), parse::cell::ident>::value)
-                    { throw expect::error::internal::unimplemented{ "ident in function call" }; }
-                    else
-                    {
-                      return detail::argument
-                      {
-                        std::string{ "rvalue " } +
-                        parse::cell::trait::enum_to_string<decltype(c)::value>(),
-                        decltype(c)::value
-                      };
-                    }
-                  }
-                );
-              }
-            );
 
             return ret;
           }

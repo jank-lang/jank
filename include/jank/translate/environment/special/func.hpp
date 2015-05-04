@@ -4,7 +4,7 @@
 
 #include <jank/parse/cell/cell.hpp>
 #include <jank/translate/cell/cell.hpp>
-#include <jank/translate/function/argument.hpp>
+#include <jank/translate/function/argument/definition.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/translate/expect/error/syntax/syntax.hpp>
 #include <jank/translate/environment/scope.hpp>
@@ -40,7 +40,7 @@ namespace jank
             {
               {
                 name.data,
-                function::argument::definition::parse(args),
+                function::argument::definition::parse_types(args),
                 translate
                 (
                   jtl::it::make_range(std::next(data.begin(), 4), data.end()),
