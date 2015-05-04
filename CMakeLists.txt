@@ -22,6 +22,10 @@ endif()
 # C++14
 include(cmake/cxx14.cmake)
 
+# Boost
+set(Boost_USE_STATIC_LIBS ON)
+find_package(Boost COMPONENTS system REQUIRED)
+
 # PThread
 find_package(Threads REQUIRED)
 
@@ -34,6 +38,7 @@ include_directories(
 
 add_executable(${PROJECT_NAME}
                src/main.cpp
+	             src/jank/parse/parse.cpp
 	             src/jank/translate/cell/stream.cpp
 	             src/jank/translate/function/argument/definition.cpp
                src/jank/translate/function/argument/call.cpp
@@ -49,7 +54,10 @@ set_property(
   PROPERTY COMPILE_FLAGS "-Wall -Wextra -Werror -pedantic")
 
 # Testing
-add_executable(${PROJECT_NAME}_function_test test/src/cpp/function/main.cpp)
+add_executable(${PROJECT_NAME}_function_test
+               test/src/cpp/function/main.cpp
+	             src/jank/parse/parse.cpp
+)
 add_custom_target(${PROJECT_NAME}_test
   COMMAND ${PROJECT_NAME}_function_test
   WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
