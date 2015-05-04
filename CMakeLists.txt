@@ -45,6 +45,7 @@ add_executable(${PROJECT_NAME}
                src/jank/translate/function/argument/call.cpp
                src/jank/translate/environment/scope.cpp
                src/jank/translate/environment/special/func.cpp
+	             src/jank/interpret/interpret.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
@@ -60,6 +61,7 @@ add_executable(${PROJECT_NAME}_function_test
                test/src/cpp/function/main.cpp
 	             src/jank/parse/parse.cpp
 	             src/jank/parse/cell/stream.cpp
+	             src/jank/interpret/interpret.cpp
 )
 add_custom_target(${PROJECT_NAME}_test
   COMMAND ${PROJECT_NAME}_function_test
