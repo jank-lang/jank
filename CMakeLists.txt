@@ -36,6 +36,7 @@ add_executable(${PROJECT_NAME}
                src/main.cpp
 	             src/jank/translate/function/argument/definition.cpp
                src/jank/translate/function/argument/call.cpp
+               src/jank/translate/environment/special/func.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
@@ -43,7 +44,7 @@ target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
 # Enable warnings
 set_property(
   TARGET ${PROJECT_NAME}
-  PROPERTY COMPILE_FLAGS "-Wall -Wextra -pedantic")
+  PROPERTY COMPILE_FLAGS "-Wall -Wextra -Werror -pedantic")
 
 # Testing
 add_executable(${PROJECT_NAME}_function_test test/src/cpp/function/main.cpp)

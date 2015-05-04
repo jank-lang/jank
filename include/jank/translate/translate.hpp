@@ -4,6 +4,7 @@
 #include <jank/translate/cell/cell.hpp>
 #include <jank/translate/environment/scope.hpp>
 #include <jank/translate/environment/special/all.hpp>
+#include <jank/translate/expect/error/syntax/syntax.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
 
 namespace jank
