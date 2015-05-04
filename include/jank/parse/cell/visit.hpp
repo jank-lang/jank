@@ -19,19 +19,19 @@ namespace jank
         switch(static_cast<type>(c.which()))
         {
           case type::boolean:
-            return func(boost::get<boolean>(c).data);
+            return func(boost::get<boolean>(c));
           case type::integer:
-            return func(boost::get<integer>(c).data);
+            return func(boost::get<integer>(c));
           case type::real:
-            return func(boost::get<real>(c).data);
+            return func(boost::get<real>(c));
           case type::string:
-            return func(boost::get<string>(c).data);
+            return func(boost::get<string>(c));
           case type::ident:
-            return func(boost::get<ident>(c).data);
+            return func(boost::get<ident>(c));
           case type::list:
-            return func(boost::get<list>(c).data);
+            return func(boost::get<list>(c));
           case type::function:
-            return func(boost::get<function>(c).data);
+            return func(boost::get<function>(c));
           default:
             throw std::runtime_error{ "invalid parse cell" };
         }

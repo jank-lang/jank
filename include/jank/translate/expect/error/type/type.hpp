@@ -13,10 +13,13 @@ namespace jank
       {
         namespace type
         {
-          struct generic
-          { static char const constexpr *description{ "expression" }; };
+          namespace detail
+          {
+            struct generic
+            { static char const constexpr *description{ "expression" }; };
+          }
 
-          template <typename T = generic>
+          template <typename T = detail::generic>
           struct type : std::runtime_error
           {
             type()

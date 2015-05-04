@@ -15,11 +15,11 @@ namespace jank
         switch(static_cast<type>(c.which()))
         {
           case type::function_body:
-            return func(boost::get<function_body>(c).data);
+            return func(boost::get<function_body>(c));
           case type::function_definition:
-            return func(boost::get<function_definition>(c).data);
+            return func(boost::get<function_definition>(c));
           case type::function_call:
-            return func(boost::get<function_call>(c).data);
+            return func(boost::get<function_call>(c));
           default:
             throw std::runtime_error{ "invalid translation cell" };
         }

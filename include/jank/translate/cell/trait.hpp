@@ -101,31 +101,26 @@ namespace jank
         template <type C>
         using enum_to_type = typename detail::enum_to_type<C>::type;
 
-        namespace detail
-        {
-          template <typename C>
-          struct type_to_enum;
-          template <>
-          struct type_to_enum<function_body>
-          { static type constexpr value{ type::function_body }; };
-          template <>
-          struct type_to_enum<function_definition>
-          { static type constexpr value{ type::function_definition }; };
-          template <>
-          struct type_to_enum<function_call>
-          { static type constexpr value{ type::function_call }; };
-          template <>
-          struct type_to_enum<variable_definition>
-          { static type constexpr value{ type::variable_definition }; };
-          template <>
-          struct type_to_enum<variable_reference>
-          { static type constexpr value{ type::variable_reference }; };
-          template <>
-          struct type_to_enum<literal_value>
-          { static type constexpr value{ type::literal_value }; };
-        }
         template <typename C>
-        using type_to_enum = typename detail::type_to_enum<C>::type;
+        type constexpr type_to_enum();
+        template <>
+        type constexpr type_to_enum<function_body>()
+        { return type::function_body; }
+        template <>
+        type constexpr type_to_enum<function_definition>()
+        { return type::function_definition; }
+        template <>
+        type constexpr type_to_enum<function_call>()
+        { return type::function_call; }
+        template <>
+        type constexpr type_to_enum<variable_definition>()
+        { return type::variable_definition; }
+        template <>
+        type constexpr type_to_enum<variable_reference>()
+        { return type::variable_reference; }
+        template <>
+        type constexpr type_to_enum<literal_value>()
+        { return type::literal_value; }
       }
     }
   }

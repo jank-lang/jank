@@ -1,6 +1,6 @@
 #pragma once
 
-#include <jank/translate/function/argument/definition.hpp>
+#include <jank/translate/cell/cell.hpp>
 
 namespace jank
 {
@@ -17,8 +17,8 @@ namespace jank
         {
           struct argument_value
           {
-            argument_type type;
-            //translate::cell::cell cell;
+            std::string name;
+            cell::cell cell;
           };
           using value_list = std::vector<argument_value>;
         }

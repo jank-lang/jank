@@ -10,6 +10,8 @@ namespace jank
     {
       namespace trait
       {
+        /* TODO: type_to_string */
+
         template <type C>
         char constexpr const* enum_to_string();
         template <>
@@ -111,34 +113,29 @@ namespace jank
         template <type C>
         using enum_to_type = typename detail::enum_to_type<C>::type;
 
-        namespace detail
-        {
-          template <typename C>
-          struct type_to_enum;
-          template <>
-          struct type_to_enum<boolean>
-          { static type constexpr value{ type::boolean }; };
-          template <>
-          struct type_to_enum<integer>
-          { static type constexpr value{ type::integer }; };
-          template <>
-          struct type_to_enum<real>
-          { static type constexpr value{ type::real }; };
-          template <>
-          struct type_to_enum<string>
-          { static type constexpr value{ type::string }; };
-          template <>
-          struct type_to_enum<ident>
-          { static type constexpr value{ type::ident }; };
-          template <>
-          struct type_to_enum<list>
-          { static type constexpr value{ type::list }; };
-          template <>
-          struct type_to_enum<function>
-          { static type constexpr value{ type::function }; };
-        }
         template <typename C>
-        using type_to_enum = typename detail::type_to_enum<C>::type;
+        type constexpr type_to_enum();
+        template <>
+        type constexpr type_to_enum<boolean>()
+        { return type::boolean; }
+        template <>
+        type constexpr type_to_enum<integer>()
+        { return type::integer; }
+        template <>
+        type constexpr type_to_enum<real>()
+        { return type::real; }
+        template <>
+        type constexpr type_to_enum<string>()
+        { return type::string; }
+        template <>
+        type constexpr type_to_enum<ident>()
+        { return type::ident; }
+        template <>
+        type constexpr type_to_enum<list>()
+        { return type::list; }
+        template <>
+        type constexpr type_to_enum<function>()
+        { return type::function; }
       }
     }
   }

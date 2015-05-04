@@ -15,11 +15,11 @@ namespace jank
       {
         using literal_value = boost::variant
         <
-          parse::cell::boolean::type,
-          parse::cell::integer::type,
-          parse::cell::real::type,
-          parse::cell::string::type,
-          parse::cell::ident::type
+          parse::cell::boolean,
+          parse::cell::integer,
+          parse::cell::real,
+          parse::cell::string,
+          parse::cell::ident
         >;
       }
     }
