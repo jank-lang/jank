@@ -10,6 +10,7 @@
 #include <jank/translate/cell/type.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/translate/expect/error/syntax/syntax.hpp>
+#include <jank/translate/expect/error/internal/unimplemented.hpp>
 
 namespace jank
 {
@@ -92,7 +93,7 @@ namespace jank
                   a, [](auto const &c)
                   {
                     if(std::is_same<decltype(c), parse::cell::ident>::value)
-                    { throw expect::error::type::type<>{ "unsupported ident in function call" }; }
+                    { throw expect::error::internal::unimplemented{ "ident in function call" }; }
                     else
                     {
                       return detail::argument

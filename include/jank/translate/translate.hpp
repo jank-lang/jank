@@ -25,11 +25,11 @@ namespace jank
         range.begin(), range.end(),
         [&](auto const &c)
         {
-          /* Handle specials. */
           if(expect::is<parse::cell::type::list>(c))
           {
             auto const &list(expect::type<parse::cell::type::list>(c));
 
+            /* Handle specials. */
             auto const special_opt
             (
               environment::special::handle(list, translated)
@@ -48,10 +48,12 @@ namespace jank
             if(function_opt)
             {
               /* TODO: Handle function calls. */
+              throw expect::error::internal::unimplemented{ "function calls" };
             }
           }
 
           /* TODO: Handle plain values (only useful at the end of a function?) */
+          throw expect::error::internal::unimplemented{ "atoms" };
         }
       );
       return translated;
