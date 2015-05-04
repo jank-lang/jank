@@ -39,6 +39,7 @@ include_directories(
 add_executable(${PROJECT_NAME}
                src/main.cpp
 	             src/jank/parse/parse.cpp
+	             src/jank/parse/cell/stream.cpp
 	             src/jank/translate/cell/stream.cpp
 	             src/jank/translate/function/argument/definition.cpp
                src/jank/translate/function/argument/call.cpp
@@ -57,6 +58,7 @@ set_property(
 add_executable(${PROJECT_NAME}_function_test
                test/src/cpp/function/main.cpp
 	             src/jank/parse/parse.cpp
+	             src/jank/parse/cell/stream.cpp
 )
 add_custom_target(${PROJECT_NAME}_test
   COMMAND ${PROJECT_NAME}_function_test
