@@ -34,6 +34,7 @@ include_directories(
 
 add_executable(${PROJECT_NAME}
                src/main.cpp
+	             src/jank/translate/cell/stream.cpp
 	             src/jank/translate/function/argument/definition.cpp
                src/jank/translate/function/argument/call.cpp
                src/jank/translate/environment/scope.cpp
