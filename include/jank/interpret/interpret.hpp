@@ -9,7 +9,7 @@ namespace jank
 {
   namespace interpret
   {
-    parse::cell::cell interpret(environment::scope &env, parse::cell::list &root)
+    inline parse::cell::cell interpret(environment::scope &env, parse::cell::list &root)
     {
       auto const &func_name(expect::type<parse::cell::type::ident>(root.data[0]).data);
 

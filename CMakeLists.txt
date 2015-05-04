@@ -56,6 +56,7 @@ set_property(
 
 # Testing
 add_executable(${PROJECT_NAME}_function_test
+               test/src/common/run.cpp
                test/src/cpp/function/main.cpp
 	             src/jank/parse/parse.cpp
 	             src/jank/parse/cell/stream.cpp
