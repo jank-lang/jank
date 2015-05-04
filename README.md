@@ -206,14 +206,13 @@ TODO: http://www.brool.com/index.php/pattern-matching-in-clojure
 ## Building
 To build, follow the normal steps:
 ```bash
-mkdir build ; cd build
-cmake ..
-make -j8
+$ mkdir build ; cd build
+$ cmake ..
+$ make -j8
 ```
 
 ## Tests
-There is currently a suite of tests outlining all existing functionality. The existing tests are functional and implementing using [jest](https://github.com/jeaye/jest) - a sane and minimal C++14 testing framework. You can test with:
+There is currently a suite of tests outlining all existing functionality. The existing tests are functional and implementing using [jest](https://github.com/jeaye/jest) - a sane and minimal C++14 testing framework. You can test with (from the build directory):
 ```bash
-# from build directory
-make jank_test
+$ make jank_test
 ```
