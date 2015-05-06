@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 #include <jank/parse/cell/cell.hpp>
 #include <jank/translate/cell/cell.hpp>
 #include <jank/translate/environment/scope.hpp>

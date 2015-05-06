@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <jank/translate/function/argument/call.hpp>
 #include <jank/parse/cell/cell.hpp>
 #include <jank/parse/cell/trait.hpp>
