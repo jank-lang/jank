@@ -23,7 +23,6 @@ endif()
 include(cmake/cxx14.cmake)
 
 # Boost
-set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost COMPONENTS system REQUIRED)
 
 # PThread
