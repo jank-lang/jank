@@ -22,6 +22,9 @@ allow unicode for specials
   function => ƒ
   lambda => λ
 
+variadic generics
+  working with parameter packs
+
 Maybes?
   pattern matching
     replace car, cdr, cond, eq, atom
