@@ -7,7 +7,7 @@ namespace jank
   {
     namespace environment
     {
-      std::experimental::optional<std::vector<cell::variable_definition>> scope::find_variable
+      std::experimental::optional<cell::variable_definition> scope::find_variable
       (std::string const &name)
       {
         auto const it(variable_definitions.find(name));
@@ -18,9 +18,6 @@ namespace jank
           else
           { return {}; }
         }
-
-        if(it->second.empty())
-        { throw expect::error::type::type<>{ "unknown variable: " + name }; }
 
         return { it->second };
       }

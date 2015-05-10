@@ -31,10 +31,22 @@ namespace jank
           auto const arg_definitions(function::argument::definition::parse_types(args));
 
           /* Add args to function's scope. */
-          std::copy
+          std::transform
           (
             arg_definitions.begin(), arg_definitions.end(),
-            std::back_inserter(nested_scope->variable_definitions)
+            std::inserter
+            (
+              nested_scope->variable_definitions,
+              nested_scope->variable_definitions.end()
+            ),
+            [](auto const &arg)
+            {
+              return std::make_pair
+              (
+                arg.name,
+                cell::variable_definition{ { arg.name, arg.type } }
+              );
+            }
           );
 
           return
