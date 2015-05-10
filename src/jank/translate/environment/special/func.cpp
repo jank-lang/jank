@@ -28,8 +28,14 @@ namespace jank
           auto const args(expect::type<parse::cell::type::list>(data[2]));
           auto const ret(expect::type<parse::cell::type::list>(data[3]));
           auto const nested_scope(std::make_shared<scope>(outer_body.data.scope));
+          auto const arg_definitions(function::argument::definition::parse_types(args));
 
-          /* TODO: Add args to scope. */
+          /* Add args to function's scope. */
+          std::copy
+          (
+            arg_definitions.begin(), arg_definitions.end(),
+            std::back_inserter(nested_scope->variable_definitions)
+          );
 
           return
           {
@@ -37,7 +43,7 @@ namespace jank
             {
               {
                 name.data,
-                function::argument::definition::parse_types(args),
+                arg_definitions,
                 translate
                 (
                   jtl::it::make_range(std::next(data.begin(), 4), data.end()),
