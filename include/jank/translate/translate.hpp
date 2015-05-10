@@ -57,12 +57,13 @@ namespace jank
             );
             if(function_opt)
             {
-              /* TODO: Handle function calls. */
+              /* TODO: Arguments could be lists which need to be evaluated. */
               auto const arguments(function::argument::call::parse(list, scope));
               for(auto const & arg : arguments)
               {
                 std::cout << "arg: " << arg.name << " " << arg.cell << std::endl;
               }
+              /* TODO: Handle function calls. */
             }
             return;
           }

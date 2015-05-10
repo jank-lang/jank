@@ -1,4 +1,5 @@
 #include <jank/translate/cell/stream.hpp>
+#include <jank/parse/cell/stream.hpp>
 
 namespace jank
 {
@@ -6,90 +7,95 @@ namespace jank
   {
     namespace cell
     {
+      struct indenter
+      {
+        indenter(std::ostream &os)
+        {
+          ++level;
+          os << "\n";
+          for(auto const i : jtl::it::make_range(0, level))
+          { static_cast<void>(i); os << "  "; }
+        }
+        ~indenter()
+        { --level; }
+
+        static int level;
+      };
+      int indenter::level{ -1 };
+
+      std::ostream& operator <<(std::ostream &os, function_body const &c)
+      {
+        indenter const indent{ os };
+
+        os << "( ";
+        for(auto const &v : c.data.cells)
+        { os << v << " "; }
+        os << ") ";
+
+        return os;
+      }
+
+      std::ostream& operator <<(std::ostream &os, function_definition const &c)
+      {
+        indenter const indent{ os };
+
+        os << "function " << c.data.name << " : " << c.data.arguments << std::endl;
+        os << "( ";
+        for(auto const &v : c.data.body.cells)
+        { os << v << " "; }
+        os << ") ";
+
+        return os;
+      }
+
+      std::ostream& operator <<(std::ostream &os, function_call const &c)
+      {
+        indenter const indent{ os };
+        return os << "call "
+                  << c.data.name << " : "
+                  << c.data.arguments << std::endl;
+      }
+
+      std::ostream& operator <<(std::ostream &os, variable_definition const &c)
+      {
+        indenter const indent{ os };
+        return os << "variable " << c.data.name << std::endl;
+      }
+
+      std::ostream& operator <<(std::ostream &os, variable_reference const &c)
+      {
+        indenter const indent{ os };
+        return os << "variable reference " << c.data.definition.name << std::endl;
+      }
+
+      std::ostream& operator <<(std::ostream &os, literal_value const &c)
+      {
+        indenter const indent{ os };
+        return os << "value " << c.data << std::endl;
+      }
+
       std::ostream& operator <<(std::ostream &os, cell const &c)
       {
-        static int indent_level{ -1 };
-
         switch(static_cast<type>(c.which()))
         {
           case type::function_body:
-          {
-            ++indent_level;
-            os << "\n";
-            for(auto const i : jtl::it::make_range(0, indent_level))
-            { static_cast<void>(i); os << "  "; }
-
-            os << "( ";
-            for(auto const &v : boost::get<function_body>(c).data.cells)
-            { os << v << " "; }
-            os << ") ";
-
-            --indent_level;
-          } break;
+            os << boost::get<function_body>(c);
+            break;
           case type::function_definition:
-          {
-            ++indent_level;
-            os << "\n";
-            for(auto const i : jtl::it::make_range(0, indent_level))
-            { static_cast<void>(i); os << "  "; }
-
-            auto const &def(boost::get<function_definition>(c));
-            os << "function " << def.data.name << " : " << def.data.arguments << std::endl;
-            os << "( ";
-            for(auto const &v : def.data.body.cells)
-            { os << v << " "; }
-            os << ") ";
-
-            --indent_level;
-          } break;
+            os << boost::get<function_definition>(c);
+            break;
           case type::function_call:
-          {
-            ++indent_level;
-            os << "\n";
-            for(auto const i : jtl::it::make_range(0, indent_level))
-            { static_cast<void>(i); os << "  "; }
-
-            auto const &def(boost::get<function_call>(c));
-            os << "call " << def.data.name << " : " << def.data.arguments << std::endl;
-
-            --indent_level;
-          } break;
+            os << boost::get<function_call>(c);
+            break;
           case type::variable_definition:
-          {
-            ++indent_level;
-            os << "\n";
-            for(auto const i : jtl::it::make_range(0, indent_level))
-            { static_cast<void>(i); os << "  "; }
-
-            auto const &def(boost::get<variable_definition>(c));
-            os << "variable " << def.data.name << std::endl;
-
-            --indent_level;
-          } break;
+            os << boost::get<variable_definition>(c);
+            break;
           case type::variable_reference:
-          {
-            ++indent_level;
-            os << "\n";
-            for(auto const i : jtl::it::make_range(0, indent_level))
-            { static_cast<void>(i); os << "  "; }
-
-            auto const &def(boost::get<variable_reference>(c));
-            os << "variable reference " << def.data.definition.name << std::endl;
-
-            --indent_level;
-          } break;
+            os << boost::get<variable_reference>(c);
+            break;
           case type::literal_value:
-          {
-            ++indent_level;
-            os << "\n";
-            for(auto const i : jtl::it::make_range(0, indent_level))
-            { static_cast<void>(i); os << "  "; }
-
-            auto const &def(boost::get<literal_value>(c));
-            os << "value " << cell{ def } << std::endl; /* TODO: recurses */
-
-            --indent_level;
-          } break;
+            os << boost::get<literal_value>(c);
+            break;
           default:
             os << "??? ";
         }
