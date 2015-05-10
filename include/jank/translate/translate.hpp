@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include <jank/parse/cell/cell.hpp>
+#include <jank/parse/cell/stream.hpp>
 #include <jank/translate/cell/cell.hpp>
 #include <jank/translate/environment/scope.hpp>
 #include <jank/translate/environment/special/all.hpp>
@@ -39,11 +40,15 @@ namespace jank
               environment::special::handle(list, translated)
             );
             if(special_opt)
-            { translated.data.cells.push_back(special_opt.value()); }
+            {
+              translated.data.cells.push_back(special_opt.value());
+              return;
+            }
 
             if(list.data.empty())
             { throw expect::error::syntax::syntax<>{ "invalid empty list" }; }
 
+            std::cout << "looking for function call: " << list.data[0] << std::endl;
             auto const function_opt
             (
               scope->find_function
@@ -54,6 +59,7 @@ namespace jank
               /* TODO: Handle function calls. */
               throw expect::error::internal::unimplemented{ "function calls" };
             }
+            return;
           }
 
           /* TODO: Handle plain values (only useful at the end of a function?) */

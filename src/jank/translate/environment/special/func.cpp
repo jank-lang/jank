@@ -26,7 +26,7 @@ namespace jank
 
           auto const name(expect::type<parse::cell::type::ident>(data[1]));
           auto const args(expect::type<parse::cell::type::list>(data[2]));
-          auto const ret(expect::type<parse::cell::type::list>(data[3]));
+          //auto const return_type(expect::type<parse::cell::type::list>(data[3]));
           auto const nested_scope(std::make_shared<scope>(outer_body.data.scope));
           auto const arg_definitions(function::argument::definition::parse_types(args));
 
@@ -49,22 +49,23 @@ namespace jank
             }
           );
 
-          return
+          cell::function_definition const ret
           {
-            cell::function_definition
             {
-              {
-                name.data,
-                arg_definitions,
-                translate
-                (
-                  jtl::it::make_range(std::next(data.begin(), 4), data.end()),
-                  nested_scope
-                ).data,
+              name.data,
+              arg_definitions,
+              translate /* Recurse into translate for the body. */
+              (
+                jtl::it::make_range(std::next(data.begin(), 4), data.end()),
                 nested_scope
-              }
+              ).data,
+              nested_scope
             }
           };
+
+          /* Add the function definition to the out body's scope. */
+          outer_body.data.scope->function_definitions[name.data].push_back(ret);
+          return { ret };
         }
       }
     }

@@ -59,7 +59,7 @@ int main(int const argc, char ** const argv)
     )
   );
 
-  std::cout << "translated: " << translated_body << std::endl;
+  std::cout << "\ntranslated: " << translated_body << std::endl;
 
   /* TODO: interpret from translation */
   jank::interpret::interpret
