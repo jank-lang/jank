@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <memory>
 
 #include <jank/translate/function/argument/call.hpp>
 #include <jank/parse/cell/cell.hpp>
@@ -22,6 +23,11 @@ namespace jank
           class visitor
           {
             public:
+              visitor() = delete;
+              visitor(std::shared_ptr<environment::scope> const &s)
+                : scope{ s }
+              { }
+
               template <typename C>
               detail::argument_value operator ()(C const&) const
               {
@@ -58,21 +64,28 @@ namespace jank
                   { cell::literal_value{ c } }
                 };
               }
+
+              std::shared_ptr<environment::scope> scope;
           };
 
           value_list parse
           (
             parse::cell::list const &l,
-            environment::scope const &/*scope*/
+            std::shared_ptr<environment::scope> const &scope
           )
           {
             value_list ret;
 
+            /* No parameters to parse. */
+            if(l.data.empty())
+            { return ret; }
+
             std::transform
             (
-              l.data.begin(), l.data.end(), std::back_inserter(ret),
-              [](auto const &a) -> detail::argument_value
-              { return parse::cell::visit(a, visitor{}); }
+              std::next(l.data.begin(), 1), l.data.end(),
+              std::back_inserter(ret),
+              [&](auto const &a) -> detail::argument_value
+              { return parse::cell::visit(a, visitor{ scope }); }
             );
 
             return ret;

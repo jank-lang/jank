@@ -29,7 +29,7 @@ namespace jank
           value_list parse
           (
             parse::cell::list const &l,
-            environment::scope const &scope
+            std::shared_ptr<environment::scope> const &scope
           );
         }
       }

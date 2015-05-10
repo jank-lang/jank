@@ -62,7 +62,31 @@ namespace jank
             { static_cast<void>(i); os << "  "; }
 
             auto const &def(boost::get<variable_definition>(c));
-            os << "var " << def.data.name << std::endl;
+            os << "variable " << def.data.name << std::endl;
+
+            --indent_level;
+          } break;
+          case type::variable_reference:
+          {
+            ++indent_level;
+            os << "\n";
+            for(auto const i : jtl::it::make_range(0, indent_level))
+            { static_cast<void>(i); os << "  "; }
+
+            auto const &def(boost::get<variable_reference>(c));
+            os << "variable reference " << def.data.definition.name << std::endl;
+
+            --indent_level;
+          } break;
+          case type::literal_value:
+          {
+            ++indent_level;
+            os << "\n";
+            for(auto const i : jtl::it::make_range(0, indent_level))
+            { static_cast<void>(i); os << "  "; }
+
+            auto const &def(boost::get<literal_value>(c));
+            os << "value " << cell{ def } << std::endl; /* TODO: recurses */
 
             --indent_level;
           } break;

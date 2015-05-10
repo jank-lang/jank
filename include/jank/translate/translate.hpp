@@ -5,8 +5,10 @@
 #include <jank/parse/cell/cell.hpp>
 #include <jank/parse/cell/stream.hpp>
 #include <jank/translate/cell/cell.hpp>
+#include <jank/translate/cell/stream.hpp>
 #include <jank/translate/environment/scope.hpp>
 #include <jank/translate/environment/special/all.hpp>
+#include <jank/translate/function/argument/call.hpp>
 #include <jank/translate/expect/error/syntax/syntax.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
 
@@ -48,7 +50,6 @@ namespace jank
             if(list.data.empty())
             { throw expect::error::syntax::syntax<>{ "invalid empty list" }; }
 
-            std::cout << "looking for function call: " << list.data[0] << std::endl;
             auto const function_opt
             (
               scope->find_function
@@ -57,7 +58,11 @@ namespace jank
             if(function_opt)
             {
               /* TODO: Handle function calls. */
-              throw expect::error::internal::unimplemented{ "function calls" };
+              auto const arguments(function::argument::call::parse(list, scope));
+              for(auto const & arg : arguments)
+              {
+                std::cout << "arg: " << arg.name << " " << arg.cell << std::endl;
+              }
             }
             return;
           }

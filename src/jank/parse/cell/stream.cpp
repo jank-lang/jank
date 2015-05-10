@@ -6,6 +6,7 @@ namespace jank
   {
     namespace cell
     {
+      /* TODO: overload for all variants. */
       std::ostream& operator <<(std::ostream &os, cell const &c)
       {
         static int indent_level{ -1 };
