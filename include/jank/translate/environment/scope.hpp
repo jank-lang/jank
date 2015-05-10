@@ -20,9 +20,12 @@ namespace jank
           : parent{ p }
         { }
 
+        std::experimental::optional<std::vector<cell::variable_definition>> find_variable
+        (std::string const &name);
         std::experimental::optional<std::vector<cell::function_definition>> find_function
         (std::string const &name);
 
+        std::map<std::string, std::vector<cell::variable_definition>> variable_definitions;
         std::map<std::string, std::vector<cell::function_definition>> function_definitions;
         std::shared_ptr<scope> parent{ std::make_shared<scope>() };
       };

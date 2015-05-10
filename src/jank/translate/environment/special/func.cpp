@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <memory>
 
 #include <jank/translate/environment/special/func.hpp>
 
@@ -17,7 +18,7 @@ namespace jank
       namespace special
       {
         cell::cell func
-        (parse::cell::list const &input, cell::function_body const &body)
+        (parse::cell::list const &input, cell::function_body const &outer_body)
         {
           auto &data(input.data);
           if(data.size() < 4)
@@ -26,7 +27,7 @@ namespace jank
           auto const name(expect::type<parse::cell::type::ident>(data[1]));
           auto const args(expect::type<parse::cell::type::list>(data[2]));
           auto const ret(expect::type<parse::cell::type::list>(data[3]));
-          auto const nested_scope(std::make_shared<scope>(body.data.scope));
+          auto const nested_scope(std::make_shared<scope>(outer_body.data.scope));
 
           /* TODO: Add args to scope. */
 
