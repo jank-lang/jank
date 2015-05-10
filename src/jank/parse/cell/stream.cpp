@@ -1,4 +1,5 @@
 #include <jank/parse/cell/stream.hpp>
+#include <jank/detail/stream/indenter.hpp>
 
 namespace jank
 {
@@ -6,43 +7,60 @@ namespace jank
   {
     namespace cell
     {
-      /* TODO: overload for all variants. */
+      static int indent_level{ -1 };
+
+      static std::ostream& operator <<(std::ostream &os, boolean const &c)
+      { return os << std::boolalpha << c.data; }
+
+      static std::ostream& operator <<(std::ostream &os, integer const &c)
+      { return os << c.data; }
+
+      static std::ostream& operator <<(std::ostream &os, real const &c)
+      { return os << c.data; }
+
+      static std::ostream& operator <<(std::ostream &os, string const &c)
+      { return os << c.data; }
+
+      static std::ostream& operator <<(std::ostream &os, ident const &c)
+      { return os << "<" << c.data << "> "; }
+
+      static std::ostream& operator <<(std::ostream &os, list const &c)
+      {
+        detail::stream::indenter const indent{ os, indent_level };
+
+        os << "( ";
+        for(auto const &v : c.data)
+        { os << v << " "; }
+        return os << ") ";
+      }
+
+      static std::ostream& operator <<(std::ostream &os, function const &)
+      { return os << "function "; }
+
       std::ostream& operator <<(std::ostream &os, cell const &c)
       {
-        static int indent_level{ -1 };
-
         switch(static_cast<type>(c.which()))
         {
           case type::boolean:
-            os << std::boolalpha << boost::get<boolean>(c).data;
+            os << boost::get<boolean>(c);
             break;
           case type::integer:
-            os << boost::get<integer>(c).data;
+            os << boost::get<integer>(c);
             break;
           case type::real:
-            os << boost::get<real>(c).data;
+            os << boost::get<real>(c);
             break;
           case type::string:
-            os << boost::get<string>(c).data;
+            os << boost::get<string>(c);
             break;
           case type::ident:
-            os << "<" << boost::get<ident>(c).data << ">";
+            os << boost::get<ident>(c);
             break;
           case type::list:
-            ++indent_level;
-            os << "\n";
-            for(auto const i : jtl::it::make_range(0, indent_level))
-            { static_cast<void>(i); os << "  "; }
-
-            os << "( ";
-            for(auto const &v : boost::get<list>(c).data)
-            { os << v << " "; }
-            os << ") ";
-
-            --indent_level;
+            os << boost::get<list>(c);
             break;
           case type::function:
-            os << "function ";
+            os << boost::get<function>(c);
             break;
           default:
             os << "??? ";

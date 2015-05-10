@@ -1,31 +1,19 @@
 #include <jank/translate/cell/stream.hpp>
 #include <jank/parse/cell/stream.hpp>
+#include <jank/detail/stream/indenter.hpp>
 
 namespace jank
 {
+  using indenter = detail::stream::indenter;
   namespace translate
   {
     namespace cell
     {
-      struct indenter
-      {
-        indenter(std::ostream &os)
-        {
-          ++level;
-          os << "\n";
-          for(auto const i : jtl::it::make_range(0, level))
-          { static_cast<void>(i); os << "  "; }
-        }
-        ~indenter()
-        { --level; }
+      static int indent_level{ -1 };
 
-        static int level;
-      };
-      int indenter::level{ -1 };
-
-      std::ostream& operator <<(std::ostream &os, function_body const &c)
+      static std::ostream& operator <<(std::ostream &os, function_body const &c)
       {
-        indenter const indent{ os };
+        indenter const indent{ os, indent_level };
 
         os << "( ";
         for(auto const &v : c.data.cells)
@@ -35,9 +23,9 @@ namespace jank
         return os;
       }
 
-      std::ostream& operator <<(std::ostream &os, function_definition const &c)
+      static std::ostream& operator <<(std::ostream &os, function_definition const &c)
       {
-        indenter const indent{ os };
+        indenter const indent{ os, indent_level };
 
         os << "function " << c.data.name << " : " << c.data.arguments << std::endl;
         os << "( ";
@@ -48,29 +36,29 @@ namespace jank
         return os;
       }
 
-      std::ostream& operator <<(std::ostream &os, function_call const &c)
+      static std::ostream& operator <<(std::ostream &os, function_call const &c)
       {
-        indenter const indent{ os };
+        indenter const indent{ os, indent_level };
         return os << "call "
                   << c.data.name << " : "
                   << c.data.arguments << std::endl;
       }
 
-      std::ostream& operator <<(std::ostream &os, variable_definition const &c)
+      static std::ostream& operator <<(std::ostream &os, variable_definition const &c)
       {
-        indenter const indent{ os };
+        indenter const indent{ os, indent_level };
         return os << "variable " << c.data.name << std::endl;
       }
 
-      std::ostream& operator <<(std::ostream &os, variable_reference const &c)
+      static std::ostream& operator <<(std::ostream &os, variable_reference const &c)
       {
-        indenter const indent{ os };
+        indenter const indent{ os, indent_level };
         return os << "variable reference " << c.data.definition.name << std::endl;
       }
 
-      std::ostream& operator <<(std::ostream &os, literal_value const &c)
+      static std::ostream& operator <<(std::ostream &os, literal_value const &c)
       {
-        indenter const indent{ os };
+        indenter const indent{ os, indent_level };
         return os << "value " << c.data << std::endl;
       }
 
