@@ -39,8 +39,31 @@ namespace jank
         inline char constexpr const* enum_to_string<type::function>()
         { return "function"; }
 
-        /* TODO: GCC doesn't allow constexpr here yet. */
-        inline char const* enum_to_string(type const c)
+        template <typename C>
+        char constexpr const* type_to_string();
+        template <>
+        inline char constexpr const* type_to_string<boolean>()
+        { return enum_to_string<type::boolean>(); }
+        template <>
+        inline char constexpr const* type_to_string<integer>()
+        { return enum_to_string<type::integer>(); }
+        template <>
+        inline char constexpr const* type_to_string<real>()
+        { return enum_to_string<type::real>(); }
+        template <>
+        inline char constexpr const* type_to_string<string>()
+        { return enum_to_string<type::string>(); }
+        template <>
+        inline char constexpr const* type_to_string<ident>()
+        { return enum_to_string<type::ident>(); }
+        template <>
+        inline char constexpr const* type_to_string<list>()
+        { return enum_to_string<type::list>(); }
+        template <>
+        inline char constexpr const* type_to_string<function>()
+        { return enum_to_string<type::function>(); }
+
+        inline char constexpr const* enum_to_string(type const c)
         {
           switch(c)
           {
