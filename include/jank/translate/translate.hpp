@@ -6,11 +6,13 @@
 #include <jank/parse/cell/stream.hpp>
 #include <jank/translate/cell/cell.hpp>
 #include <jank/translate/cell/stream.hpp>
+#include <jank/translate/cell/trait.hpp>
 #include <jank/translate/environment/scope.hpp>
 #include <jank/translate/environment/special/all.hpp>
 #include <jank/translate/function/argument/call.hpp>
 #include <jank/translate/expect/error/syntax/syntax.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
+#include <jank/translate/expect/error/type/overload.hpp> /* TODO */
 
 namespace jank
 {
@@ -63,7 +65,43 @@ namespace jank
               {
                 std::cout << "arg: " << arg.name << " " << arg.cell << std::endl;
               }
+
               /* TODO: Handle function overload resolution. */
+              auto const functions(function_opt.value());
+              for(auto const &overload_cell : functions)
+              {
+                auto const &overload(overload_cell.data);
+
+                if(overload.arguments.size() != arguments.size())
+                { continue; }
+
+                if
+                (
+                  std::equal
+                  (
+                    overload.arguments.begin(), overload.arguments.end(),
+                    arguments.begin(),
+                    [](auto const &, auto const &)
+                    {
+                      /* TODO: This can't work, since we have parse types and translation types.
+                       * We need to provide type_definition in translation and use that instead
+                       * of parse types. */
+                      //return lhs.type == cell::trait::cell_to_enum(rhs.cell);
+                      return true;
+                    }
+                  )
+                )
+                {
+                  /* We have a match. */
+                }
+              }
+
+              /* No matching overload found. */
+              throw expect::error::type::overload
+              {
+                "no matching function: " +
+                expect::type<parse::cell::type::ident>(list.data[0]).data
+              };
             }
             return;
           }

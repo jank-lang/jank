@@ -10,6 +10,9 @@ namespace jank
     {
       namespace trait
       {
+        inline type cell_to_enum(cell const &c)
+        { return static_cast<type>(c.which()); }
+
         template <type C>
         char constexpr const* enum_to_string();
         template <>
