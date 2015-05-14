@@ -13,8 +13,6 @@ namespace jank
         inline type cell_to_enum(cell const &c)
         { return static_cast<type>(c.which()); }
 
-        /* TODO: type_to_string */
-
         template <type C>
         char constexpr const* enum_to_string();
         template <>
@@ -86,22 +84,21 @@ namespace jank
           }
         }
 
-        /* TODO: this should be in env */
         inline type enum_from_string(std::string const &str)
         {
-          if(str == "boolean")
+          if(str == type_to_string<boolean>())
           { return type::boolean; }
-          else if(str == "integer")
+          else if(str == type_to_string<integer>())
           { return type::integer; }
-          else if(str == "real")
+          else if(str == type_to_string<real>())
           { return type::real; }
-          else if(str == "string")
+          else if(str == type_to_string<string>())
           { return type::string; }
-          else if(str == "ident")
+          else if(str == type_to_string<ident>())
           { return type::ident; }
-          else if(str == "list")
+          else if(str == type_to_string<list>())
           { return type::list; }
-          else if(str == "function")
+          else if(str == type_to_string<function>())
           { return type::function; }
           else
           {

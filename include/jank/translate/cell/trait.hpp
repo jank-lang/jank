@@ -92,25 +92,23 @@ namespace jank
           }
         }
 
-        /* TODO: This should be in env. */
-        /* TODO: Remove duplication. */
         inline type enum_from_string(std::string const &str)
         {
-          if(str == "function_body")
+          if(str == type_to_string<function_body>())
           { return type::function_body; }
-          else if(str == "function_definition")
+          else if(str == type_to_string<function_definition>())
           { return type::function_definition; }
-          else if(str == "function_call")
+          else if(str == type_to_string<function_call>())
           { return type::function_call; }
-          else if(str == "type_definition")
+          else if(str == type_to_string<type_definition>())
           { return type::type_definition; }
-          else if(str == "type_reference")
+          else if(str == type_to_string<type_reference>())
           { return type::type_reference; }
-          else if(str == "variable_definition")
+          else if(str == type_to_string<variable_definition>())
           { return type::variable_definition; }
-          else if(str == "variable_reference")
+          else if(str == type_to_string<variable_reference>())
           { return type::variable_reference; }
-          else if(str == "literal_value")
+          else if(str == type_to_string<literal_value>())
           { return type::literal_value; }
           else
           {

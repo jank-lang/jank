@@ -16,7 +16,7 @@ namespace jank
         function_body,
         function_definition,
         function_call,
-        type_definition, /* TODO: integrate with cell and traits */
+        type_definition,
         type_reference,
         variable_definition,
         variable_reference,
