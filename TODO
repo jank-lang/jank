@@ -14,6 +14,18 @@ use long names
   var => variable
   let => where
 
+members
+  global member name with . prefix
+  (struct coord
+    (x int)
+    (y int))
+
+  (.x my_coord)
+  (.y my_coord)
+
+  Swizzling with tuples?
+    (.x.y my_coord)
+
 current list
   should be a tuple
   list should be a generic heterogenous container
