@@ -18,7 +18,9 @@ namespace jank
         function_call,
         variable_definition,
         variable_reference,
-        literal_value
+        literal_value,
+        type_definition, /* TODO: integrate with cell and traits */
+        type_reference /* TODO: reorder */
       };
     }
   }

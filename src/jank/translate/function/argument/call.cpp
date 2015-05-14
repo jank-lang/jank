@@ -59,7 +59,7 @@ namespace jank
                   std::string{ "rvalue " } +
                   parse::cell::trait::enum_to_string
                   <
-                    parse::cell::trait::type_to_enum<std::decay_t<decltype(c)>>()
+                    parse::cell::trait::type_to_enum<C>()
                   >(),
                   { cell::literal_value{ c } }
                 };

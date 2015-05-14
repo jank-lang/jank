@@ -1,6 +1,6 @@
 #pragma once
 
-#include <jank/parse/cell/cell.hpp>
+#include <jank/translate/cell/detail/type_reference.hpp>
 
 namespace jank
 {
@@ -13,7 +13,7 @@ namespace jank
         struct variable_definition
         {
           std::string name;
-          parse::cell::type type;
+          type_reference const &type;
         };
       }
     }

@@ -30,7 +30,7 @@ namespace jank
           {
             os << "( ";
             for(auto const &a : args)
-            { os << a.name << " : " << parse::cell::trait::enum_to_string(a.type) << " "; }
+            { os << a.name << " : " << a.type.definition.name << " "; }
             os << ") ";
             return os;
           }
@@ -51,8 +51,8 @@ namespace jank
                 { "syntax error: expected type after " + name };
               }
 
-              auto const &type(expect::type<parse::cell::type::ident>(*it).data);
-              ret.push_back({ name, parse::cell::trait::enum_from_string(type) });
+              //auto const &type(expect::type<parse::cell::type::ident>(*it).data);
+              ret.push_back({ name, { { { }, { } } } }); /* TODO: lookup type in scope */
             }
 
             return ret;
