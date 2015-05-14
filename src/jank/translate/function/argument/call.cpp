@@ -6,7 +6,7 @@
 #include <jank/parse/cell/trait.hpp>
 #include <jank/interpret/environment/scope.hpp> /* TODO: for function */
 #include <jank/translate/environment/scope.hpp>
-#include <jank/translate/expect/type.hpp>
+#include <jank/translate/expect/error/type/type.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
 
 namespace jank

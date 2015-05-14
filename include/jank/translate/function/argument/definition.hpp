@@ -9,7 +9,7 @@
 #include <jank/parse/cell/trait.hpp>
 #include <jank/translate/cell/type.hpp>
 #include <jank/translate/cell/detail/type_reference.hpp>
-#include <jank/translate/expect/type.hpp>
+#include <jank/translate/expect/error/type/type.hpp>
 
 namespace jank
 {

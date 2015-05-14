@@ -3,12 +3,13 @@
 #include <stdexcept>
 #include <cstdint>
 
-#include <jank/translate/cell/trait.hpp>
-#include <jank/translate/expect/error/type/type.hpp>
+#include <jank/parse/cell/cell.hpp>
+#include <jank/parse/cell/trait.hpp>
+#include <jank/parse/expect/error/type/type.hpp>
 
 namespace jank
 {
-  namespace translate
+  namespace parse
   {
     namespace expect
     {

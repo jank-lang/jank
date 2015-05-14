@@ -1,5 +1,5 @@
 #include <jank/translate/environment/scope.hpp>
-#include <jank/translate/expect/type.hpp>
+#include <jank/translate/expect/error/type/type.hpp>
 
 namespace jank
 {

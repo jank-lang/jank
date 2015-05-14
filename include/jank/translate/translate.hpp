@@ -4,6 +4,7 @@
 
 #include <jank/parse/cell/cell.hpp>
 #include <jank/parse/cell/stream.hpp>
+#include <jank/parse/expect/type.hpp>
 #include <jank/translate/cell/cell.hpp>
 #include <jank/translate/cell/stream.hpp>
 #include <jank/translate/cell/trait.hpp>
@@ -12,7 +13,7 @@
 #include <jank/translate/function/argument/call.hpp>
 #include <jank/translate/expect/error/syntax/syntax.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
-#include <jank/translate/expect/error/type/overload.hpp> /* TODO */
+#include <jank/translate/expect/error/type/overload.hpp> /* TODO: Refactor to new file. */
 
 namespace jank
 {
@@ -34,9 +35,9 @@ namespace jank
         range.begin(), range.end(),
         [&](auto const &c)
         {
-          if(expect::is<parse::cell::type::list>(c))
+          if(parse::expect::is<parse::cell::type::list>(c))
           {
-            auto const &list(expect::type<parse::cell::type::list>(c));
+            auto const &list(parse::expect::type<parse::cell::type::list>(c));
 
             /* Handle specials. */
             auto const special_opt
@@ -55,11 +56,11 @@ namespace jank
             auto const function_opt
             (
               scope->find_function
-              (expect::type<parse::cell::type::ident>(list.data[0]).data)
+              (parse::expect::type<parse::cell::type::ident>(list.data[0]).data)
             );
             if(function_opt)
             {
-              /* TODO: Arguments could be lists which need to be evaluated. */
+              /* TODO: Arguments could be expressions which need to be evaluated. */
               auto const arguments(function::argument::call::parse(list, scope));
               for(auto const &arg : arguments)
               {
@@ -100,7 +101,7 @@ namespace jank
               throw expect::error::type::overload
               {
                 "no matching function: " +
-                expect::type<parse::cell::type::ident>(list.data[0]).data
+                parse::expect::type<parse::cell::type::ident>(list.data[0]).data
               };
             }
             return;

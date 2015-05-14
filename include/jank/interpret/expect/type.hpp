@@ -14,6 +14,10 @@ namespace jank
     namespace expect
     {
       template <parse::cell::type C, typename Cell>
+      bool is(Cell const &c)
+      { return static_cast<parse::cell::type>(c.which()) == C; }
+
+      template <parse::cell::type C, typename Cell>
       decltype(auto) type(Cell &&c)
       {
         auto const type(static_cast<parse::cell::type>(c.which()));
@@ -21,7 +25,7 @@ namespace jank
         {
           throw error::type::type<>
           {
-            std::string{ "expected " } +
+            std::string{ "expected: " } +
             parse::cell::trait::enum_to_string<C>() +
             ", found: " +
             parse::cell::trait::enum_to_string(type)

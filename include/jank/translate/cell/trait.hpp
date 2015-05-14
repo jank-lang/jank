@@ -92,6 +92,7 @@ namespace jank
           }
         }
 
+        /* TODO: Rename to 'to' not 'from'. */
         inline type enum_from_string(std::string const &str)
         {
           if(str == type_to_string<function_body>())

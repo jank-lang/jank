@@ -6,7 +6,7 @@
 #include <jank/translate/translate.hpp>
 #include <jank/translate/function/argument/definition.hpp>
 #include <jank/translate/environment/scope.hpp>
-#include <jank/translate/expect/type.hpp>
+#include <jank/parse/expect/type.hpp>
 #include <jank/translate/expect/error/syntax/syntax.hpp>
 
 namespace jank
@@ -24,9 +24,9 @@ namespace jank
           if(data.size() < 4)
           { throw expect::error::syntax::syntax<>{ "invalid function definition" }; }
 
-          auto const name(expect::type<parse::cell::type::ident>(data[1]));
-          auto const args(expect::type<parse::cell::type::list>(data[2]));
-          //auto const return_type(expect::type<parse::cell::type::list>(data[3]));
+          auto const name(parse::expect::type<parse::cell::type::ident>(data[1]));
+          auto const args(parse::expect::type<parse::cell::type::list>(data[2]));
+          //auto const return_type(parse::expect::type<parse::cell::type::list>(data[3]));
           auto const nested_scope(std::make_shared<scope>(outer_body.data.scope));
           auto const arg_definitions
           (

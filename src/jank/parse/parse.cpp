@@ -6,7 +6,7 @@
 
 #include <jank/parse/parse.hpp>
 #include <jank/interpret/environment/scope.hpp> /* TODO: shouldn't use interpret here */
-#include <jank/interpret/expect/type.hpp> /* TODO: shouldn't use interpret here */
+#include <jank/parse/expect/type.hpp>
 
 namespace jank
 {
@@ -15,7 +15,7 @@ namespace jank
     cell::cell parse(std::string contents)
     {
       cell::cell root{ cell::list{ { cell::ident{ "root" } } } };
-      std::vector<cell::list*> list_stack{ &interpret::expect::type<cell::type::list>(root) };
+      std::vector<cell::list*> list_stack{ &expect::type<cell::type::list>(root) };
 
       static std::regex outer_regex{ R"((\(*)([^\)\(]*)(\)*))" };
       std::sregex_iterator const outer_begin
@@ -54,7 +54,7 @@ namespace jank
             {
               static_cast<void>(open);
               active_list->data.push_back(cell::list{ { } });
-              active_list = &interpret::expect::type<cell::type::list>
+              active_list = &expect::type<cell::type::list>
               (active_list->data.back());
               list_stack.push_back(active_list);
             }
