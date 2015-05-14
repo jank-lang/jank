@@ -7,6 +7,21 @@ namespace jank
   {
     namespace environment
     {
+      std::experimental::optional<cell::type_definition> scope::find_type
+      (std::string const &name)
+      {
+        auto const it(type_definitions.find(name));
+        if(it == type_definitions.end())
+        {
+          if(parent)
+          { return parent->find_type(name); }
+          else
+          { return {}; }
+        }
+
+        return { it->second };
+      }
+
       std::experimental::optional<cell::variable_definition> scope::find_variable
       (std::string const &name)
       {

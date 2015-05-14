@@ -12,7 +12,7 @@ namespace jank
       {
         struct type_reference
         {
-          type_definition const &definition;
+          type_definition definition;
         };
 
         inline bool operator ==(type_reference const &lhs, type_reference const &rhs)

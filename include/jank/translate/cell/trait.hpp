@@ -25,6 +25,12 @@ namespace jank
         inline char constexpr const* enum_to_string<type::function_call>()
         { return "function_call"; }
         template <>
+        inline char constexpr const* enum_to_string<type::type_definition>()
+        { return "type_definition"; }
+        template <>
+        inline char constexpr const* enum_to_string<type::type_reference>()
+        { return "type_reference"; }
+        template <>
         inline char constexpr const* enum_to_string<type::variable_definition>()
         { return "variable_definition"; }
         template <>
@@ -46,6 +52,12 @@ namespace jank
         inline char constexpr const* type_to_string<function_call>()
         { return enum_to_string<type::function_call>(); }
         template <>
+        inline char constexpr const* type_to_string<type_definition>()
+        { return enum_to_string<type::type_definition>(); }
+        template <>
+        inline char constexpr const* type_to_string<type_reference>()
+        { return enum_to_string<type::type_reference>(); }
+        template <>
         inline char constexpr const* type_to_string<variable_definition>()
         { return enum_to_string<type::variable_definition>(); }
         template <>
@@ -65,6 +77,10 @@ namespace jank
               return enum_to_string<type::function_definition>();
             case type::function_call:
               return enum_to_string<type::function_call>();
+            case type::type_definition:
+              return enum_to_string<type::type_definition>();
+            case type::type_reference:
+              return enum_to_string<type::type_reference>();
             case type::variable_definition:
               return enum_to_string<type::variable_definition>();
             case type::variable_reference:
@@ -77,6 +93,7 @@ namespace jank
         }
 
         /* TODO: This should be in env. */
+        /* TODO: Remove duplication. */
         inline type enum_from_string(std::string const &str)
         {
           if(str == "function_body")
@@ -85,6 +102,10 @@ namespace jank
           { return type::function_definition; }
           else if(str == "function_call")
           { return type::function_call; }
+          else if(str == "type_definition")
+          { return type::type_definition; }
+          else if(str == "type_reference")
+          { return type::type_reference; }
           else if(str == "variable_definition")
           { return type::variable_definition; }
           else if(str == "variable_reference")
@@ -112,6 +133,12 @@ namespace jank
           struct enum_to_type<type::function_call>
           { using type = function_call; };
           template <>
+          struct enum_to_type<type::type_definition>
+          { using type = type_definition; };
+          template <>
+          struct enum_to_type<type::type_reference>
+          { using type = type_reference; };
+          template <>
           struct enum_to_type<type::variable_definition>
           { using type = variable_definition; };
           template <>
@@ -135,6 +162,12 @@ namespace jank
         template <>
         type constexpr type_to_enum<function_call>()
         { return type::function_call; }
+        template <>
+        type constexpr type_to_enum<type_definition>()
+        { return type::type_definition; }
+        template <>
+        type constexpr type_to_enum<type_reference>()
+        { return type::type_reference; }
         template <>
         type constexpr type_to_enum<variable_definition>()
         { return type::variable_definition; }

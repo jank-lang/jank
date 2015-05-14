@@ -15,6 +15,9 @@ namespace jank
 {
   namespace translate
   {
+    namespace environment
+    { struct scope; }
+
     namespace function
     {
       namespace argument
@@ -35,7 +38,11 @@ namespace jank
 
         namespace definition
         {
-          type_list parse_types(parse::cell::list const &l);
+          type_list parse_types
+          (
+            parse::cell::list const &l,
+            std::shared_ptr<environment::scope> const &scope
+          );
         }
       }
     }

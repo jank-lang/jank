@@ -12,7 +12,7 @@ namespace jank
       {
         struct variable_reference
         {
-          variable_definition const &definition;
+          variable_definition definition;
         };
       }
     }

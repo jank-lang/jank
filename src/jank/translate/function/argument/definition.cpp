@@ -5,6 +5,7 @@
 #include <jank/translate/function/argument/definition.hpp>
 
 #include <jank/translate/cell/cell.hpp>
+#include <jank/translate/environment/scope.hpp>
 #include <jank/translate/expect/error/syntax/syntax.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
 
@@ -38,7 +39,11 @@ namespace jank
 
         namespace definition
         {
-          type_list parse_types(parse::cell::list const &l)
+          type_list parse_types
+          (
+            parse::cell::list const &l,
+            std::shared_ptr<environment::scope> const &scope
+          )
           {
             type_list ret;
 
@@ -48,11 +53,17 @@ namespace jank
               if(++it == l.data.end())
               {
                 throw expect::error::syntax::syntax<>
-                { "syntax error: expected type after " + name };
+                { "expected type after " + name };
               }
 
-              //auto const &type(expect::type<parse::cell::type::ident>(*it).data);
-              ret.push_back({ name, { { { }, { } } } }); /* TODO: lookup type in scope */
+              auto const &type(expect::type<parse::cell::type::ident>(*it).data);
+              auto const &type_def(scope->find_type(type));
+              if(!type_def)
+              {
+                throw expect::error::type::type<>
+                { "unknown type " + type };
+              }
+              ret.push_back({ name, { type_def.value().data } });
             }
 
             return ret;

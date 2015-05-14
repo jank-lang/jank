@@ -28,7 +28,10 @@ namespace jank
           auto const args(expect::type<parse::cell::type::list>(data[2]));
           //auto const return_type(expect::type<parse::cell::type::list>(data[3]));
           auto const nested_scope(std::make_shared<scope>(outer_body.data.scope));
-          auto const arg_definitions(function::argument::definition::parse_types(args));
+          auto const arg_definitions
+          (
+            function::argument::definition::parse_types(args, nested_scope)
+          );
 
           /* Add args to function's scope. */
           std::transform
