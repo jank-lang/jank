@@ -34,8 +34,8 @@ namespace jank
                 throw expect::error::type::type<>
                 {
                   std::string{ "invalid argument type: " } +
-                  parse::cell::trait::enum_to_string
-                  <parse::cell::trait::type_to_enum<C>()>()
+                  parse::cell::trait::to_string
+                  <parse::cell::trait::to_enum<C>()>()
                 };
               }
 
@@ -57,9 +57,9 @@ namespace jank
                 return detail::argument_value
                 {
                   std::string{ "rvalue " } +
-                  parse::cell::trait::enum_to_string
+                  parse::cell::trait::to_string
                   <
-                    parse::cell::trait::type_to_enum<C>()
+                    parse::cell::trait::to_enum<C>()
                   >(),
                   { cell::literal_value{ c } }
                 };

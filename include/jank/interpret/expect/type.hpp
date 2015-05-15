@@ -26,12 +26,12 @@ namespace jank
           throw error::type::type<>
           {
             std::string{ "expected: " } +
-            parse::cell::trait::enum_to_string<C>() +
+            parse::cell::trait::to_string<C>() +
             ", found: " +
-            parse::cell::trait::enum_to_string(type)
+            parse::cell::trait::to_string(type)
           };
         }
-        return boost::get<parse::cell::trait::enum_to_type<C>>(c);
+        return boost::get<parse::cell::trait::to_type<C>>(c);
       }
     }
   }

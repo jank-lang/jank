@@ -43,7 +43,7 @@ namespace jank
           }
 
           auto const &type(expect::type<parse::cell::type::ident>(*it).data);
-          ret.push_back({ name, parse::cell::trait::enum_from_string(type) });
+          ret.push_back({ name, parse::cell::trait::to_enum(type) });
         }
 
         return ret;
