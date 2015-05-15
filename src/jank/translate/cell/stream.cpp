@@ -1,4 +1,5 @@
 #include <jank/translate/cell/stream.hpp>
+#include <jank/translate/function/argument/call.hpp>
 #include <jank/parse/cell/stream.hpp>
 #include <jank/detail/stream/indenter.hpp>
 
@@ -40,8 +41,8 @@ namespace jank
       {
         indenter const indent{ os, indent_level };
         return os << "call "
-                  << c.data.name << " : "
-                  << c.data.arguments << std::endl;
+                  << c.data.definition.name << " : " /* TODO: arguments. */
+                  /*<< c.data.arguments*/ << std::endl;
       }
 
       static std::ostream& operator <<(std::ostream &os, variable_definition const &c)

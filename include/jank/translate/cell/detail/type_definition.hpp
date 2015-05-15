@@ -11,6 +11,7 @@ namespace jank
     {
       namespace detail
       {
+        /* TODO: Add scope members to all of these. */
         struct type_definition
         {
           std::string name;

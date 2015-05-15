@@ -14,7 +14,7 @@
 #include <jank/translate/expect/error/syntax/syntax.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
 
-//#include <jank/translate/function/argument/resolve_type.hpp>
+#include <jank/translate/function/argument/resolve_type.hpp>
 #include <jank/translate/expect/error/type/overload.hpp> /* TODO: Refactor to new file. */
 
 namespace jank
@@ -63,7 +63,7 @@ namespace jank
             if(function_opt)
             {
               /* TODO: Arguments could be expressions which need to be evaluated. */
-              auto const arguments(function::argument::call::parse(list, scope));
+              auto const arguments(function::argument::call::parse<cell::cell>(list, scope));
               for(auto const &arg : arguments)
               {
                 std::cout << "arg: " << arg.name << " " << arg.cell << std::endl;
@@ -84,16 +84,19 @@ namespace jank
                   (
                     overload.arguments.begin(), overload.arguments.end(),
                     arguments.begin(),
-                    [](auto const &, auto const &)
+                    [&](auto const &lhs, auto const &rhs)
                     {
-                      /* TODO: Finish implementing. */
-                      //return lhs.type.definition == function::argument::resolve_type(rhs);
-                      return true;
+                      return
+                      (
+                        lhs.type.definition ==
+                        function::argument::resolve_type(rhs.cell, scope).data
+                      );
                     }
                   )
                 )
                 {
-                  /* We have a match. */
+                  /* We have a match! */
+                  translated.data.cells.push_back(overload_cell);
                 }
               }
 

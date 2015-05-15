@@ -19,7 +19,8 @@ namespace jank
       {
         namespace call
         {
-          /* TODO: Read type from scope. */
+          /* TODO: Read type from scope for idents. */
+          template <typename C>
           class visitor
           {
             public:
@@ -28,38 +29,38 @@ namespace jank
                 : scope{ s }
               { }
 
-              template <typename C>
-              detail::argument_value operator ()(C const&) const
+              template <typename T>
+              detail::argument_value<C> operator ()(T const&) const
               {
                 throw expect::error::type::type<>
                 {
                   std::string{ "invalid argument type: " } +
                   parse::cell::trait::to_string
-                  <parse::cell::trait::to_enum<C>()>()
+                  <parse::cell::trait::to_enum<T>()>()
                 };
               }
 
-              detail::argument_value operator ()(parse::cell::boolean const &c) const
+              detail::argument_value<C> operator ()(parse::cell::boolean const &c) const
               { return call(c); }
-              detail::argument_value operator ()(parse::cell::integer const &c) const
+              detail::argument_value<C> operator ()(parse::cell::integer const &c) const
               { return call(c); }
-              detail::argument_value operator ()(parse::cell::real const &c) const
+              detail::argument_value<C> operator ()(parse::cell::real const &c) const
               { return call(c); }
-              detail::argument_value operator ()(parse::cell::string const &c) const
+              detail::argument_value<C> operator ()(parse::cell::string const &c) const
               { return call(c); }
-              detail::argument_value operator ()(parse::cell::ident const &c) const
+              detail::argument_value<C> operator ()(parse::cell::ident const &c) const
               { return call(c); }
 
             private:
-              template <typename C>
-              detail::argument_value call(C const &c) const
+              template <typename T>
+              detail::argument_value<C> call(T const &c) const
               {
-                return detail::argument_value
+                return detail::argument_value<C>
                 {
                   std::string{ "rvalue " } +
                   parse::cell::trait::to_string
                   <
-                    parse::cell::trait::to_enum<C>()
+                    parse::cell::trait::to_enum<T>()
                   >(),
                   { cell::literal_value{ c } }
                 };
@@ -68,13 +69,14 @@ namespace jank
               std::shared_ptr<environment::scope> scope;
           };
 
-          value_list parse
+          template <>
+          value_list<cell::cell> parse<cell::cell>
           (
             parse::cell::list const &l,
             std::shared_ptr<environment::scope> const &scope
           )
           {
-            value_list ret;
+            value_list<cell::cell> ret;
 
             /* No parameters to parse. */
             if(l.data.empty())
@@ -84,8 +86,8 @@ namespace jank
             (
               std::next(l.data.begin(), 1), l.data.end(),
               std::back_inserter(ret),
-              [&](auto const &a) -> detail::argument_value
-              { return parse::cell::visit(a, visitor{ scope }); }
+              [&](auto const &a) -> detail::argument_value<cell::cell>
+              { return parse::cell::visit(a, visitor<cell::cell>{ scope }); }
             );
 
             return ret;

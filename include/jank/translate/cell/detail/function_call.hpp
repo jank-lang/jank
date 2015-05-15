@@ -1,8 +1,10 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
-#include <jank/translate/function/argument/definition.hpp>
+#include <jank/translate/cell/detail/function_definition.hpp>
+#include <jank/translate/function/argument/call.hpp>
 
 namespace jank
 {
@@ -18,8 +20,8 @@ namespace jank
         template <typename C>
         struct function_call
         {
-          std::string name;
-          function::argument::type_list arguments;
+          function_definition<C> definition;
+          jank::translate::function::argument::value_list<C> arguments;
           std::shared_ptr<environment::scope> scope;
         };
       }

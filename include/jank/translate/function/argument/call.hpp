@@ -1,6 +1,10 @@
 #pragma once
 
-#include <jank/translate/cell/cell.hpp>
+#include <string>
+#include <vector>
+#include <memory>
+
+#include <jank/parse/cell/cell.hpp>
 
 namespace jank
 {
@@ -15,18 +19,22 @@ namespace jank
       {
         namespace detail
         {
+          template <typename C>
           struct argument_value
           {
             std::string name;
-            cell::cell cell;
+            C cell;
           };
-          using value_list = std::vector<argument_value>;
+          template <typename C>
+          using value_list = typename std::vector<argument_value<C>>;
         }
-        using value_list = detail::value_list;
+        template <typename C>
+        using value_list = typename detail::value_list<C>;
 
         namespace call
         {
-          value_list parse
+          template <typename C>
+          value_list<C> parse
           (
             parse::cell::list const &l,
             std::shared_ptr<environment::scope> const &scope
