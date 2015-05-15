@@ -19,6 +19,7 @@ namespace jank
             { static char const constexpr *description{ "expression" }; };
           }
 
+          /* TODO: Rename to exception. */
           template <typename T = detail::generic>
           struct type : std::runtime_error
           {

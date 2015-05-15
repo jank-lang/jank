@@ -3,8 +3,6 @@
 #include <string>
 #include <stdexcept>
 
-#include <jank/interpret/expect/error/type/type.hpp> /* TODO: remove */
-
 namespace jank
 {
   namespace translate

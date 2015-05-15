@@ -12,11 +12,11 @@
 #include <jank/interpret/environment/scope.hpp>
 #include <jank/parse/parse.hpp>
 #include <jank/parse/cell/stream.hpp>
+#include <jank/parse/expect/type.hpp>
 #include <jank/translate/translate.hpp>
 #include <jank/translate/cell/stream.hpp>
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/environment/prelude/all.hpp>
-#include <jank/interpret/expect/type.hpp>
 
 #include "common/run.hpp"
 
@@ -45,7 +45,7 @@ int main(int const argc, char ** const argv)
 
   std::cout << "parsed: " << root << std::endl;
 
-  auto const body(jank::interpret::expect::type<jank::parse::cell::type::list>(root));
+  auto const body(jank::parse::expect::type<jank::parse::cell::type::list>(root));
   auto const translated_body
   (
     jank::translate::translate
@@ -65,6 +65,6 @@ int main(int const argc, char ** const argv)
   jank::interpret::interpret
   (
     jank::interpret::environment::prelude::env(),
-    jank::interpret::expect::type<jank::parse::cell::type::list>(root)
+    jank::parse::expect::type<jank::parse::cell::type::list>(root)
   );
 }

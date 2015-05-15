@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/parse/cell/cell.hpp>
+#include <jank/parse/expect/error/type/type.hpp>
 
 namespace jank
 {
@@ -102,7 +103,7 @@ namespace jank
           { return type::function; }
           else
           {
-            throw interpret::expect::error::type::type<>
+            throw expect::error::type::type<>
             { "invalid parse cell type string " + str };
           }
         }

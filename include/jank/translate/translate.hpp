@@ -13,6 +13,8 @@
 #include <jank/translate/function/argument/call.hpp>
 #include <jank/translate/expect/error/syntax/syntax.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
+
+//#include <jank/translate/function/argument/resolve_type.hpp>
 #include <jank/translate/expect/error/type/overload.hpp> /* TODO: Refactor to new file. */
 
 namespace jank
@@ -84,10 +86,8 @@ namespace jank
                     arguments.begin(),
                     [](auto const &, auto const &)
                     {
-                      /* TODO: This can't work, since we have parse types and translation types.
-                       * We need to provide type_definition in translation and use that instead
-                       * of parse types. */
-                      //return lhs.type == cell::trait::cell_to_enum(rhs.cell);
+                      /* TODO: Finish implementing. */
+                      //return lhs.type.definition == function::argument::resolve_type(rhs);
                       return true;
                     }
                   )
