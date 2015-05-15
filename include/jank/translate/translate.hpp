@@ -96,7 +96,8 @@ namespace jank
                 )
                 {
                   /* We have a match! */
-                  translated.data.cells.push_back(overload_cell);
+                  translated.data.cells.push_back
+                  ({ cell::function_call{ overload_cell.data, arguments, scope } });
                 }
               }
 
