@@ -13,7 +13,7 @@ namespace jank
         struct variable_definition
         {
           std::string name;
-          type_reference const &type;
+          type_reference type;
         };
       }
     }

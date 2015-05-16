@@ -19,14 +19,13 @@ namespace jank
       {
         namespace call
         {
-          /* TODO: Read type from scope for idents. */
           template <typename C>
           class visitor
           {
             public:
               visitor() = delete;
               visitor(std::shared_ptr<environment::scope> const &s)
-                : scope{ s }
+                : scope_{ s }
               { }
 
               template <typename T>
@@ -49,7 +48,17 @@ namespace jank
               detail::argument_value<C> operator ()(parse::cell::string const &c) const
               { return call(c); }
               detail::argument_value<C> operator ()(parse::cell::ident const &c) const
-              { return call(c); }
+              {
+                auto const def(scope_->find_variable(c.data));
+                if(!def)
+                { throw expect::error::type::type<>{ "unknown variable: " + c.data }; }
+
+                return detail::argument_value<C>
+                {
+                  c.data,
+                  { cell::variable_reference{ def.value().data } }
+                };
+              }
 
             private:
               template <typename T>
@@ -66,7 +75,7 @@ namespace jank
                 };
               }
 
-              std::shared_ptr<environment::scope> scope;
+              std::shared_ptr<environment::scope> scope_;
           };
 
           template <>
