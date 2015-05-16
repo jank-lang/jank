@@ -34,14 +34,12 @@ namespace jank
           static std::regex inner_regex
           {
             /* TODO: _ in ident */
-            R"(([a-zA-Z\-\+\*\/\^\?\!\:\%\.]+))" /* idents */
-            R"(|\"((?:\\.|[^\\\"])*)\")" /* strings */
+            R"((true|false))" /* booleans */
             R"(|(\-?\d+(?!\d*\.\d+)))" /* integers */
             R"(|(\-?\d+\.\d+))" /* reals */
-            R"(|(true|false))" /* booleans */
-            /* XXX: A GCC bug in 4.9 causes this to be read right to left.
-             * This will hopefully be fixed in GCC 5.0; it works fine in clang
-             * but I'm targetting GCC for now. */
+            R"(|\"((?:\\.|[^\\\"])*)\")" /* strings */
+            R"(|([a-zA-Z\-\+\*\/\^\?\!\:\%\.]+))" /* idents */
+            /* XXX: Only works in GCC 5.0+ and clang 3.6+. */
           };
           auto const &outer_str(outer_match.str());
           if(outer_str.empty())
@@ -75,20 +73,20 @@ namespace jank
           for(auto const &inner : jtl::it::make_range(inner_begin, end))
           {
             std::smatch const &inner_matches{ inner };
-            if(inner_matches[1].matched) /* ident */
-            { active_list->data.push_back(cell::ident{ inner_matches[1] }); }
-            else if(inner_matches[2].matched) /* string */
+            if(inner_matches[1].matched) /* boolean */
+            { active_list->data.push_back(cell::boolean{ inner_matches[1] == "true" }); }
+            else if(inner_matches[2].matched) /* integer */
+            { active_list->data.push_back(cell::integer{ std::stoll(inner_matches[2]) }); }
+            else if(inner_matches[3].matched) /* real */
+            { active_list->data.push_back(cell::real{ std::stod(inner_matches[3]) }); }
+            else if(inner_matches[4].matched) /* string */
             {
-              std::string word(inner_matches[2]);
+              std::string word(inner_matches[4]);
               boost::algorithm::replace_all(word, "\\\"", "\"");
               active_list->data.push_back(cell::string{ word });
             }
-            else if(inner_matches[3].matched) /* integer */
-            { active_list->data.push_back(cell::integer{ std::stoll(inner_matches[3]) }); }
-            else if(inner_matches[4].matched) /* real */
-            { active_list->data.push_back(cell::real{ std::stod(inner_matches[4]) }); }
-            else if(inner_matches[5].matched) /* boolean */
-            { active_list->data.push_back(cell::boolean{ inner_matches[5] == "true" }); }
+            else if(inner_matches[5].matched) /* ident */
+            { active_list->data.push_back(cell::ident{ inner_matches[5] }); }
             else
             { throw std::runtime_error{ "invalid parsing match" }; }
           }
