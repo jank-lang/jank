@@ -15,6 +15,7 @@
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/translate.hpp>
 #include <jank/translate/cell/stream.hpp>
+#include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/environment/prelude/all.hpp>
 
@@ -46,6 +47,7 @@ int main(int const argc, char ** const argv)
   std::cout << "parsed: " << root << std::endl;
 
   auto const body(jank::parse::expect::type<jank::parse::cell::type::list>(root));
+  auto const scope(std::make_shared<jank::translate::environment::scope>(nullptr));
   auto const translated_body
   (
     jank::translate::translate
@@ -55,7 +57,7 @@ int main(int const argc, char ** const argv)
         std::next(body.data.begin()),
         body.data.end()
       ),
-      std::make_shared<jank::translate::environment::scope>(nullptr)
+      jank::translate::environment::builtin::type::add_primitives(scope)
     )
   );
 
