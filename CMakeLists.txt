@@ -44,6 +44,7 @@ add_executable(${PROJECT_NAME}
                src/jank/translate/function/argument/call.cpp
                src/jank/translate/function/argument/resolve_type.cpp
                src/jank/translate/environment/scope.cpp
+               src/jank/translate/environment/builtin/type/primitive.cpp
                src/jank/translate/environment/special/all.cpp
                src/jank/translate/environment/special/func.cpp
 	             src/jank/interpret/interpret.cpp
