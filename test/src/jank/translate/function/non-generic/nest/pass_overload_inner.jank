@@ -1,0 +1,8 @@
+(func outer () ()
+  (func inner () ()
+    (print "nullary"))
+  (func inner (d integer) ()
+    (print "integer"))
+  (inner 5230498273))
+
+(outer)

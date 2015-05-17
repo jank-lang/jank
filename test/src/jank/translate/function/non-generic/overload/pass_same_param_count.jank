@@ -1,0 +1,17 @@
+(func overloaded (d integer) ()
+  (print "integer"))
+
+(func overloaded (d real) ()
+  (print "real"))
+
+(func overloaded (d string dd boolean) ()
+  (print "string and boolean"))
+
+(func overloaded (d boolean dd string) ()
+  (print "boolean and string"))
+
+(overloaded 42)
+(overloaded 42.0)
+
+(overloaded "foo" false)
+(overloaded true "bar")

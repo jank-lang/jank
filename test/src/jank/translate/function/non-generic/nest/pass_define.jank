@@ -1,0 +1,6 @@
+(func outer () ()
+  (func inner () ()
+    (print "all good"))
+  (inner))
+
+(outer)

@@ -1,0 +1,9 @@
+(func show (d integer) ()
+  (print d))
+
+(func outer () ()
+  (func show (d real) ()
+    (print d))
+  (show 42.7))
+
+(outer)

@@ -1,0 +1,4 @@
+(func test (a integer b real c string) ()
+  (print a " " b " " c))
+
+(test 42 3.14 "ok")

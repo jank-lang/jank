@@ -1,0 +1,15 @@
+(func test-integer (d integer) ()
+  (print d))
+
+(func test-real (d real) ()
+  (print d))
+
+(func test-string (d string) ()
+  (print d))
+
+(func test (a integer b real c string) ()
+  (test-integer a)
+  (test-real b)
+  (test-string c))
+
+(test 77 -5.05 "good")
