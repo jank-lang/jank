@@ -219,6 +219,7 @@ TODO: http://www.brool.com/index.php/pattern-matching-in-clojure
 ## Building
 To build, follow the normal steps:
 ```bash
+$ git submodule update --recursive --init
 $ mkdir build ; cd build
 $ cmake ..
 $ make -j8
