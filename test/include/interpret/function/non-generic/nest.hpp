@@ -77,16 +77,8 @@ namespace jest
   template <> template <>
   void jank::nest_group::test<7>()
   {
-    expect_exception<jank::interpret::expect::error::type::overload>
-    ([]{ jank::common::interpret("function/non-generic/nest/fail_multiple_inner_definition.jank"); });
-  }
-
-  template <> template <>
-  void jank::nest_group::test<8>()
-  {
     reset();
     jank::common::interpret("function/non-generic/nest/pass_overload_outer_call_outer.jank");
     expect_equal(out.str(), "42\n");
   }
-
 }

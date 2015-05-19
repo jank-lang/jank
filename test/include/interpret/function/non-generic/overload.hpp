@@ -29,22 +29,8 @@ namespace jest
   template <> template <>
   void jank::overload_group::test<1>()
   {
-    expect_exception<jank::interpret::expect::error::type::overload>
-    ([]{ jank::common::interpret("function/non-generic/overload/fail_multiple_definition.jank"); });
-  }
-
-  template <> template <>
-  void jank::overload_group::test<2>()
-  {
     reset();
     jank::common::interpret("function/non-generic/overload/pass_same_param_count.jank");
     expect_equal(out.str(), "integer\nreal\nstring and boolean\nboolean and string\n");
-  }
-
-  template <> template <>
-  void jank::overload_group::test<3>()
-  {
-    expect_exception<jank::interpret::expect::error::type::overload>
-    ([]{ jank::common::interpret("function/non-generic/overload/fail_return_type.jank"); });
   }
 }

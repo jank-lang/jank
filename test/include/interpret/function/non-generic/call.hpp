@@ -33,41 +33,13 @@ namespace jest
   template <> template <>
   void jank::call_group::test<2>()
   {
-    expect_exception<jank::interpret::expect::error::type::type<>>
-    ([]{ jank::common::interpret("function/non-generic/call/fail_invalid_function.jank"); });
-  }
-
-  template <> template <>
-  void jank::call_group::test<3>()
-  {
     reset();
     jank::common::interpret("function/non-generic/call/pass_print_primitive.jank");
     expect_equal(out.str(), "42 3.14 ok\n");
   }
 
   template <> template <>
-  void jank::call_group::test<4>()
-  {
-    expect_exception<jank::interpret::expect::error::type::overload>
-    ([]{ jank::common::interpret("function/non-generic/call/fail_too_few_params.jank"); });
-  }
-
-  template <> template <>
-  void jank::call_group::test<5>()
-  {
-    expect_exception<jank::interpret::expect::error::type::overload>
-    ([]{ jank::common::interpret("function/non-generic/call/fail_too_many_params.jank"); });
-  }
-
-  template <> template <>
-  void jank::call_group::test<6>()
-  {
-    expect_exception<jank::interpret::expect::error::type::overload>
-    ([]{ jank::common::interpret("function/non-generic/call/fail_invalid_param_type.jank"); });
-  }
-
-  template <> template <>
-  void jank::call_group::test<7>()
+  void jank::call_group::test<3>()
   {
     reset();
     jank::common::interpret("function/non-generic/call/pass_chain.jank");
