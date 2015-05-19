@@ -27,7 +27,7 @@ namespace jank
     {
       /* TODO: Re-use the translate function. */
       /* TODO: Remove duplication of strings. */
-      std::ifstream ifs{ "test/src/jank/" + file };
+      std::ifstream ifs{ "test/src/jank/interpret/" + file };
       if(!ifs.is_open())
       { throw std::runtime_error{ "unable to open file: test/src/jank/" + file }; }
 

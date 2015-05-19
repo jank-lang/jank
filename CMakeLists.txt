@@ -35,45 +35,45 @@ include_directories(
   lib/jest/include
 )
 
-add_executable(${PROJECT_NAME}
-               src/main.cpp
-	             src/jank/parse/parse.cpp
-	             src/jank/parse/cell/stream.cpp
-	             src/jank/translate/cell/stream.cpp
-	             src/jank/translate/function/argument/definition.cpp
-               src/jank/translate/function/argument/call.cpp
-               src/jank/translate/function/argument/resolve_type.cpp
-               src/jank/translate/environment/scope.cpp
-               src/jank/translate/environment/builtin/type/primitive.cpp
-               src/jank/translate/environment/special/all.cpp
-               src/jank/translate/environment/special/func.cpp
-	             src/jank/interpret/interpret.cpp
+add_library(${PROJECT_NAME}_static STATIC
+	          src/jank/parse/parse.cpp
+	          src/jank/parse/cell/stream.cpp
+	          src/jank/translate/cell/stream.cpp
+	          src/jank/translate/function/argument/definition.cpp
+            src/jank/translate/function/argument/call.cpp
+            src/jank/translate/function/argument/resolve_type.cpp
+            src/jank/translate/environment/scope.cpp
+            src/jank/translate/environment/builtin/type/primitive.cpp
+            src/jank/translate/environment/special/all.cpp
+            src/jank/translate/environment/special/func.cpp
+	          src/jank/interpret/interpret.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
+add_executable(${PROJECT_NAME} src/main.cpp)
+
+target_link_libraries(${PROJECT_NAME}
+                      ${CMAKE_THREAD_LIBS_INIT}
+                      ${PROJECT_NAME}_static
+)
 
 # Enable warnings
 set_property(
-  TARGET ${PROJECT_NAME}
+  TARGET ${PROJECT_NAME} ${PROJECT_NAME}_static
   PROPERTY COMPILE_FLAGS "-Wall -Wextra -Werror -pedantic")
 
 # Testing
-add_executable(${PROJECT_NAME}_function_test
-               test/src/cpp/common/interpret.cpp
-               test/src/cpp/common/translate.cpp
-               test/src/cpp/interpret/function/main.cpp
-	             src/jank/parse/parse.cpp
-	             src/jank/parse/cell/stream.cpp
-	             src/jank/translate/cell/stream.cpp
-	             src/jank/translate/function/argument/definition.cpp
-               src/jank/translate/function/argument/call.cpp
-               src/jank/translate/function/argument/resolve_type.cpp
-               src/jank/translate/environment/scope.cpp
-               src/jank/translate/environment/builtin/type/primitive.cpp
-               src/jank/translate/environment/special/all.cpp
-               src/jank/translate/environment/special/func.cpp
-	             src/jank/interpret/interpret.cpp
+add_library(${PROJECT_NAME}_test_common_static STATIC
+            test/src/cpp/common/interpret.cpp
+            test/src/cpp/common/translate.cpp
 )
+
+add_executable(${PROJECT_NAME}_function_test test/src/cpp/interpret/function/main.cpp)
+target_link_libraries(${PROJECT_NAME}_function_test
+                      ${CMAKE_THREAD_LIBS_INIT}
+                      ${PROJECT_NAME}_test_common_static
+                      ${PROJECT_NAME}_static
+)
+
 add_custom_target(${PROJECT_NAME}_test
   COMMAND ${PROJECT_NAME}_function_test
   WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
