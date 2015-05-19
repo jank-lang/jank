@@ -11,6 +11,7 @@ namespace jank
 {
   namespace common
   {
-    jank::translate::cell::function_body translate(std::string const &file);
+    std::pair<parse::cell::cell, translate::cell::function_body>
+    translate(std::string const &file);
   }
 }

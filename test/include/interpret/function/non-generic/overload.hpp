@@ -22,7 +22,7 @@ namespace jest
   void jank::overload_group::test<0>()
   {
     reset();
-    jank::common::interpret("function/non-generic/overload/pass_different_param_count.jank");
+    jank::common::interpret("interpret/function/non-generic/overload/pass_different_param_count.jank");
     expect_equal(out.str(), "integer and real\ninteger\nnullary\n");
   }
 
@@ -30,7 +30,7 @@ namespace jest
   void jank::overload_group::test<1>()
   {
     reset();
-    jank::common::interpret("function/non-generic/overload/pass_same_param_count.jank");
+    jank::common::interpret("interpret/function/non-generic/overload/pass_same_param_count.jank");
     expect_equal(out.str(), "integer\nreal\nstring and boolean\nboolean and string\n");
   }
 }

@@ -25,29 +25,16 @@ namespace jank
   {
     void interpret(std::string const &file)
     {
-      /* TODO: Re-use the translate function. */
-      /* TODO: Remove duplication of strings. */
-      std::ifstream ifs{ "test/src/jank/interpret/" + file };
-      if(!ifs.is_open())
-      { throw std::runtime_error{ "unable to open file: test/src/jank/interpret/" + file }; }
-
-      auto root
-      (
-        jank::parse::parse
-        (
-          {
-            std::istreambuf_iterator<char>{ ifs },
-            std::istreambuf_iterator<char>{}
-          }
-        )
-      );
+      parse::cell::cell root;
+      translate::cell::function_body translated_body;
+      std::tie(root, translated_body) = translate(file);
 
       /* TODO: add an assert function to env before passing it along. */
-      auto env(jank::interpret::environment::prelude::env());
-      jank::interpret::interpret
+      auto env(interpret::environment::prelude::env());
+      interpret::interpret
       (
         env,
-        jank::interpret::expect::type<jank::parse::cell::type::list>(root)
+        interpret::expect::type<parse::cell::type::list>(root)
       );
     }
   }

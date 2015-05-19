@@ -23,16 +23,18 @@ namespace jank
 {
   namespace common
   {
-    jank::translate::cell::function_body translate(std::string const &file)
+    std::pair<parse::cell::cell, translate::cell::function_body>
+    translate(std::string const &file)
     {
-      /* TODO: Remove duplication of strings. */
-      std::ifstream ifs{ "test/src/jank/" + file };
+      static std::string const prefix("test/src/jank/");
+
+      std::ifstream ifs{ prefix + file };
       if(!ifs.is_open())
-      { throw std::runtime_error{ "unable to open file: test/src/jank/" + file }; }
+      { throw std::runtime_error{ "unable to open file: " + prefix + file }; }
 
       auto root
       (
-        jank::parse::parse
+        parse::parse
         (
           {
             std::istreambuf_iterator<char>{ ifs },
@@ -41,21 +43,21 @@ namespace jank
         )
       );
 
-      auto const body(jank::parse::expect::type<jank::parse::cell::type::list>(root));
-      auto const scope(std::make_shared<jank::translate::environment::scope>(nullptr));
+      auto const body(parse::expect::type<parse::cell::type::list>(root));
+      auto const scope(std::make_shared<translate::environment::scope>(nullptr));
       auto const translated_body
       (
-        jank::translate::translate
+        translate::translate
         (
           jtl::it::make_range
           (
             std::next(body.data.begin()),
             body.data.end()
           ),
-          jank::translate::environment::builtin::type::add_primitives(scope)
+          translate::environment::builtin::type::add_primitives(scope)
         )
       );
-      return translated_body;
+      return { root, translated_body };
     }
   }
 }
