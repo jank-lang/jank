@@ -66,6 +66,13 @@ namespace jank
             }
           };
 
+          /* Check for an already-defined function of this type. */
+          for(auto const &overload : outer_body.data.scope->function_definitions[name.data])
+          {
+            if(overload.data.arguments == arg_definitions)
+            { throw expect::error::type::overload{ "multiple definition of: " + name.data }; }
+          }
+
           /* Add the function definition to the out body's scope. */
           outer_body.data.scope->function_definitions[name.data].push_back(ret);
           return { ret };
