@@ -1,4 +1,0 @@
-(func test (a integer b real c string) ()
-  (print a " " b " " c))
-
-(test true 3.14 "ok" false)

@@ -2,7 +2,7 @@
 
 #include <jest/jest.hpp>
 
-#include "common/run.hpp"
+#include "common/interpret.hpp"
 
 namespace jank
 {
@@ -22,7 +22,7 @@ namespace jest
   void jank::overload_group::test<0>()
   {
     reset();
-    jank::common::run("function/non-generic/overload/pass_different_param_count.jank");
+    jank::common::interpret("function/non-generic/overload/pass_different_param_count.jank");
     expect_equal(out.str(), "integer and real\ninteger\nnullary\n");
   }
 
@@ -30,14 +30,14 @@ namespace jest
   void jank::overload_group::test<1>()
   {
     expect_exception<jank::interpret::expect::error::type::overload>
-    ([]{ jank::common::run("function/non-generic/overload/fail_multiple_definition.jank"); });
+    ([]{ jank::common::interpret("function/non-generic/overload/fail_multiple_definition.jank"); });
   }
 
   template <> template <>
   void jank::overload_group::test<2>()
   {
     reset();
-    jank::common::run("function/non-generic/overload/pass_same_param_count.jank");
+    jank::common::interpret("function/non-generic/overload/pass_same_param_count.jank");
     expect_equal(out.str(), "integer\nreal\nstring and boolean\nboolean and string\n");
   }
 
@@ -45,6 +45,6 @@ namespace jest
   void jank::overload_group::test<3>()
   {
     expect_exception<jank::interpret::expect::error::type::overload>
-    ([]{ jank::common::run("function/non-generic/overload/fail_return_type.jank"); });
+    ([]{ jank::common::interpret("function/non-generic/overload/fail_return_type.jank"); });
   }
 }

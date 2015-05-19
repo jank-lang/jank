@@ -59,10 +59,19 @@ set_property(
 
 # Testing
 add_executable(${PROJECT_NAME}_function_test
-               test/src/common/run.cpp
-               test/src/cpp/function/main.cpp
+               test/src/cpp/common/interpret.cpp
+               test/src/cpp/common/translate.cpp
+               test/src/cpp/interpret/function/main.cpp
 	             src/jank/parse/parse.cpp
 	             src/jank/parse/cell/stream.cpp
+	             src/jank/translate/cell/stream.cpp
+	             src/jank/translate/function/argument/definition.cpp
+               src/jank/translate/function/argument/call.cpp
+               src/jank/translate/function/argument/resolve_type.cpp
+               src/jank/translate/environment/scope.cpp
+               src/jank/translate/environment/builtin/type/primitive.cpp
+               src/jank/translate/environment/special/all.cpp
+               src/jank/translate/environment/special/func.cpp
 	             src/jank/interpret/interpret.cpp
 )
 add_custom_target(${PROJECT_NAME}_test

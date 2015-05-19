@@ -19,7 +19,8 @@
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/environment/prelude/all.hpp>
 
-#include "common/run.hpp"
+#include "common/translate.hpp"
+#include "common/interpret.hpp"
 
 int main(int const argc, char ** const argv)
 {
