@@ -56,14 +56,14 @@ namespace jest
   template <> template <>
   void jank::define_group::test<7>()
   {
-    expect_exception<jank::translate::expect::error::type::type<>>
+    expect_exception<jank::translate::expect::error::syntax::syntax<>>
     ([]{ jank::common::translate("translate/function/non-generic/define/fail_no_param_list.jank"); });
   }
 
   template <> template <>
   void jank::define_group::test<8>()
   {
-    expect_exception<jank::translate::expect::error::type::type<>>
+    expect_exception<jank::translate::expect::error::syntax::syntax<>>
     ([]{ jank::common::translate("translate/function/non-generic/define/fail_no_return_type.jank"); });
   }
 

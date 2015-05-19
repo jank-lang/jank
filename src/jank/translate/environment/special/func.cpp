@@ -26,6 +26,7 @@ namespace jank
 
           auto const name(parse::expect::type<parse::cell::type::ident>(data[1]));
           auto const args(parse::expect::type<parse::cell::type::list>(data[2]));
+          /* TODO: Handle return types. */
           //auto const return_type(parse::expect::type<parse::cell::type::list>(data[3]));
           auto const nested_scope(std::make_shared<scope>(outer_body.data.scope));
           auto const arg_definitions
