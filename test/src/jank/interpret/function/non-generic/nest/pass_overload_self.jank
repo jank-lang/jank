@@ -1,6 +1,1 @@
-(func outer () ()
-  (func outer (d string) ()
-    (print d))
-  (outer "all good"))
-
-(outer)
+../../../../translate/function/non-generic/nest/pass_overload_self.jank

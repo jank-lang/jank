@@ -1,4 +1,1 @@
-(func test () ()
-  (print "all good"))
-
-(test)
+../../../../translate/function/non-generic/call/pass_print.jank

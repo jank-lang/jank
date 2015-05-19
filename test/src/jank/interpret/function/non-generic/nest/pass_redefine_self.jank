@@ -1,6 +1,1 @@
-(func outer (d boolean) ()
-  (func outer (d boolean) ()
-    (print "not " d))
-  (outer d))
-
-(outer false)
+../../../../translate/function/non-generic/nest/pass_redefine_self.jank

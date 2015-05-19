@@ -1,8 +1,1 @@
-(func outer () ()
-  (func inner () ()
-    (print "nullary"))
-  (func inner (d integer) ()
-    (print "integer"))
-  (inner 5230498273))
-
-(outer)
+../../../../translate/function/non-generic/nest/pass_overload_inner.jank

@@ -1,9 +1,1 @@
-(func show (d integer) ()
-  (print d))
-
-(func outer () ()
-  (func show (d real) ()
-    (print d))
-  (show 42))
-
-(outer)
+../../../../translate/function/non-generic/nest/pass_overload_outer_call_outer.jank

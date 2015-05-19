@@ -1,12 +1,1 @@
-(func overloaded () ()
-  (print "nullary"))
-
-(func overloaded (d integer) ()
-  (print "integer"))
-
-(func overloaded (d integer dd real) ()
-  (print "integer and real"))
-
-(overloaded 42 3.14)
-(overloaded -77)
-(overloaded)
+../../../../translate/function/non-generic/overload/pass_different_param_count.jank

@@ -1,6 +1,1 @@
-(func outer () ()
-  (func inner () ()
-    (print "all good"))
-  (inner))
-
-(outer)
+../../../../translate/function/non-generic/nest/pass_define.jank
