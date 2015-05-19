@@ -67,18 +67,25 @@ add_library(${PROJECT_NAME}_test_common_static STATIC
             test/src/cpp/common/translate.cpp
 )
 
-add_executable(${PROJECT_NAME}_function_test test/src/cpp/interpret/function/main.cpp)
-target_link_libraries(${PROJECT_NAME}_function_test
-                      ${CMAKE_THREAD_LIBS_INIT}
-                      ${PROJECT_NAME}_test_common_static
-                      ${PROJECT_NAME}_static
+set(${PROJECT_NAME}_test_libs
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${PROJECT_NAME}_test_common_static
+    ${PROJECT_NAME}_static
 )
 
+add_executable(${PROJECT_NAME}_interpret_function_test test/src/cpp/interpret/function/main.cpp)
+target_link_libraries(${PROJECT_NAME}_interpret_function_test ${${PROJECT_NAME}_test_libs})
+
+add_executable(${PROJECT_NAME}_translate_function_test test/src/cpp/translate/function/main.cpp)
+target_link_libraries(${PROJECT_NAME}_translate_function_test ${${PROJECT_NAME}_test_libs})
+
 add_custom_target(${PROJECT_NAME}_test
-  COMMAND ${PROJECT_NAME}_function_test
+  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_function_test || true && echo &&
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_function_test
+  DEPENDS ${PROJECT_NAME}_interpret_function_test
+          ${PROJECT_NAME}_translate_function_test
   WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 )
-add_dependencies(${PROJECT_NAME}_test ${PROJECT_NAME}_function_test)
 
 # Install locally
 set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_LIST_DIR})

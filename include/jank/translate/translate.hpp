@@ -64,12 +64,12 @@ namespace jank
             {
               /* TODO: Arguments could be expressions which need to be evaluated. */
               auto const arguments(function::argument::call::parse<cell::cell>(list, scope));
-              for(auto const &arg : arguments)
-              {
-                std::cout << "arg: " << arg.name
-                          << " " << arg.cell
-                          << std::endl;
-              }
+              //for(auto const &arg : arguments)
+              //{
+              //  std::cout << "arg: " << arg.name
+              //            << " " << arg.cell
+              //            << std::endl;
+              //}
 
               auto const functions(function_opt.value());
               for(auto const &overload_cell : functions)
@@ -112,9 +112,9 @@ namespace jank
             }
 
             /* TODO: It's a list, but the function wasn't found. Throw the above exception. */
-            std::cout << "no function named "
-                      << parse::expect::type<parse::cell::type::ident>(list.data[0]).data
-                      << " found" << std::endl;
+            //std::cout << "no function named "
+            //          << parse::expect::type<parse::cell::type::ident>(list.data[0]).data
+            //          << " found" << std::endl;
             return;
           }
 

@@ -25,7 +25,7 @@ namespace jest
   template <> template <>
   void jank::call_group::test<2>()
   {
-    expect_exception<jank::traslate::expect::error::type::type<>>
+    expect_exception<jank::translate::expect::error::type::type<>>
     ([]{ jank::common::translate("translate/function/non-generic/call/fail_invalid_function.jank"); });
   }
 
@@ -36,21 +36,21 @@ namespace jest
   template <> template <>
   void jank::call_group::test<4>()
   {
-    expect_exception<jank::traslate::expect::error::type::overload>
+    expect_exception<jank::translate::expect::error::type::overload>
     ([]{ jank::common::translate("translate/function/non-generic/call/fail_too_few_params.jank"); });
   }
 
   template <> template <>
   void jank::call_group::test<5>()
   {
-    expect_exception<jank::traslate::expect::error::type::overload>
+    expect_exception<jank::translate::expect::error::type::overload>
     ([]{ jank::common::translate("translate/function/non-generic/call/fail_too_many_params.jank"); });
   }
 
   template <> template <>
   void jank::call_group::test<6>()
   {
-    expect_exception<jank::traslate::expect::error::type::overload>
+    expect_exception<jank::translate::expect::error::type::overload>
     ([]{ jank::common::translate("translate/function/non-generic/call/fail_invalid_param_type.jank"); });
   }
 
