@@ -1,5 +1,6 @@
 #include <jank/translate/environment/scope.hpp>
 #include <jank/translate/expect/error/type/type.hpp>
+#include <jank/translate/expect/error/internal/internal.hpp>
 
 namespace jank
 {
@@ -37,22 +38,42 @@ namespace jank
         return { it->second };
       }
 
+      /* Build a vector of all function overloads in each scope, from this to the root. */
       std::experimental::optional<std::vector<cell::function_definition>> scope::find_function
       (std::string const &name)
       {
+        std::vector<cell::function_definition> ret;
+
+        /* Add all from the current scope. */
         auto const it(function_definitions.find(name));
-        if(it == function_definitions.end())
+        if(it != function_definitions.end())
         {
-          if(parent)
-          { return parent->find_function(name); }
-          else
-          { return {}; }
+          std::copy
+          (
+            it->second.begin(), it->second.end(),
+            std::back_inserter(ret)
+          );
         }
 
-        if(it->second.empty())
-        { throw expect::error::type::type<>{ "unknown function: " + name }; }
+        /* Add all from the parent scope(s). */
+        if(parent)
+        {
+          auto const parent_ret(parent->find_function(name));
+          if(parent_ret)
+          {
+            auto const &found(parent_ret.value());
+            std::copy
+            (
+              found.begin(), found.end(),
+              std::back_inserter(ret)
+            );
+          }
+        }
 
-        return { it->second };
+        if(ret.empty())
+        { return {}; }
+        else
+        { return { ret }; }
       }
     }
   }
