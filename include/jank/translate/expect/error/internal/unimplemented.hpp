@@ -17,7 +17,7 @@ namespace jank
             struct unimplemented
             { static char const constexpr *description{ "unimplemented" }; };
           }
-          using unimplemented = internal<detail::unimplemented>;
+          using unimplemented = exception<detail::unimplemented>;
         }
       }
     }

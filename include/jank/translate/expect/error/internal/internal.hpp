@@ -16,15 +16,14 @@ namespace jank
           struct generic
           { static char const constexpr *description{ "expression" }; };
 
-          /* TODO: Rename these templates to 'exception'. */
           template <typename T = generic>
-          struct internal : std::runtime_error
+          struct exception : std::runtime_error
           {
-            internal()
+            exception()
               : std::runtime_error
                 { std::string{ "internal error (" } + T::description + ")" }
             { }
-            internal(std::string const &s)
+            exception(std::string const &s)
               : std::runtime_error
                 { std::string{ "internal error (" } + T::description + "): " + s }
             { }
