@@ -3,11 +3,12 @@
 
 #include <jank/translate/environment/special/func.hpp>
 
+#include <jank/parse/expect/type.hpp>
 #include <jank/translate/translate.hpp>
 #include <jank/translate/function/argument/definition.hpp>
 #include <jank/translate/environment/scope.hpp>
-#include <jank/parse/expect/type.hpp>
 #include <jank/translate/expect/error/syntax/syntax.hpp>
+#include <jank/translate/expect/error/type/overload.hpp>
 
 namespace jank
 {

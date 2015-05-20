@@ -42,6 +42,7 @@ add_library(${PROJECT_NAME}_static STATIC
 	          src/jank/translate/function/argument/definition.cpp
             src/jank/translate/function/argument/call.cpp
             src/jank/translate/function/argument/resolve_type.cpp
+            src/jank/translate/function/match_overload.cpp
             src/jank/translate/environment/scope.cpp
             src/jank/translate/environment/builtin/type/primitive.cpp
             src/jank/translate/environment/special/all.cpp
