@@ -23,7 +23,7 @@ namespace jank
         {
           auto &data(input.data);
           if(data.size() < 4)
-          { throw expect::error::syntax::syntax<>{ "invalid function definition" }; }
+          { throw expect::error::syntax::exception<>{ "invalid function definition" }; }
 
           auto const name(parse::expect::type<parse::cell::type::ident>(data[1]));
           auto const args(parse::expect::type<parse::cell::type::list>(data[2]));

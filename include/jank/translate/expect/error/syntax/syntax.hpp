@@ -20,13 +20,13 @@ namespace jank
           }
 
           template <typename T = detail::generic>
-          struct syntax : std::runtime_error
+          struct exception : std::runtime_error
           {
-            syntax()
+            exception()
               : std::runtime_error
                 { std::string{ "syntax error (" } + T::description + ")" }
             { }
-            syntax(std::string const &s)
+            exception(std::string const &s)
               : std::runtime_error
                 { std::string{ "syntax error (" } + T::description + "): " + s }
             { }

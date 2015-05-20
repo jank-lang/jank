@@ -38,7 +38,7 @@ namespace jank
           auto const &name(expect::type<parse::cell::type::ident>(*it).data);
           if(++it == list.data.end())
           {
-            throw expect::error::syntax::syntax<>
+            throw expect::error::syntax::exception<>
             { "syntax error: expected type after " + name };
           }
 

@@ -53,7 +53,7 @@ namespace jank
               auto const &name(parse::expect::type<parse::cell::type::ident>(*it).data);
               if(++it == l.data.end())
               {
-                throw expect::error::syntax::syntax<>
+                throw expect::error::syntax::exception<>
                 { "expected type after " + name };
               }
 

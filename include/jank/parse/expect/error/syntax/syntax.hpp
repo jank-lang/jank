@@ -17,13 +17,13 @@ namespace jank
           { static char const constexpr *description{ "expression" }; };
 
           template <typename T = generic>
-          struct syntax : std::runtime_error
+          struct exception : std::runtime_error
           {
-            syntax()
+            exception()
               : std::runtime_error
                 { std::string{ "syntax error (" } + T::description + ")" }
             { }
-            syntax(std::string const &s)
+            exception(std::string const &s)
               : std::runtime_error
                 { std::string{ "syntax error (" } + T::description + "): " + s }
             { }

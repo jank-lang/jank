@@ -24,7 +24,7 @@ namespace jest
   template <> template <>
   void jank::define_group::test<2>()
   {
-    expect_exception<jank::translate::expect::error::syntax::syntax<>>
+    expect_exception<jank::translate::expect::error::syntax::exception<>>
     ([]{ jank::common::translate("translate/function/non-generic/define/fail_missing_param_name.jank"); });
   }
 
@@ -56,14 +56,14 @@ namespace jest
   template <> template <>
   void jank::define_group::test<7>()
   {
-    expect_exception<jank::translate::expect::error::syntax::syntax<>>
+    expect_exception<jank::translate::expect::error::syntax::exception<>>
     ([]{ jank::common::translate("translate/function/non-generic/define/fail_no_param_list.jank"); });
   }
 
   template <> template <>
   void jank::define_group::test<8>()
   {
-    expect_exception<jank::translate::expect::error::syntax::syntax<>>
+    expect_exception<jank::translate::expect::error::syntax::exception<>>
     ([]{ jank::common::translate("translate/function/non-generic/define/fail_no_return_type.jank"); });
   }
 
