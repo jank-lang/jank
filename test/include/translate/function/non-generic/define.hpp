@@ -31,7 +31,7 @@ namespace jest
   template <> template <>
   void jank::define_group::test<3>()
   {
-    expect_exception<jank::translate::expect::error::type::type<>>
+    expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("translate/function/non-generic/define/fail_invalid_param_type.jank"); });
   }
 
@@ -49,7 +49,7 @@ namespace jest
   template <> template <>
   void jank::define_group::test<6>()
   {
-    expect_exception<jank::translate::expect::error::type::type<>>
+    expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("translate/function/non-generic/define/fail_invalid_return_type.jank"); });
   }
 
@@ -74,7 +74,7 @@ namespace jest
   template <> template <>
   void jank::define_group::test<10>()
   {
-    expect_exception<jank::translate::expect::error::type::type<>>
+    expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("translate/function/non-generic/define/fail_return_incorrect_type.jank"); });
   }
 

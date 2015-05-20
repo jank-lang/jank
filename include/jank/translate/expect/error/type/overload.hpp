@@ -17,7 +17,7 @@ namespace jank
             struct overload
             { static char const constexpr *description{ "overload" }; };
           }
-          using overload = type<detail::overload>;
+          using overload = exception<detail::overload>;
         }
       }
     }

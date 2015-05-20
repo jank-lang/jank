@@ -25,7 +25,7 @@ namespace jest
   template <> template <>
   void jank::call_group::test<2>()
   {
-    expect_exception<jank::translate::expect::error::type::type<>>
+    expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("translate/function/non-generic/call/fail_invalid_function.jank"); });
   }
 

@@ -18,13 +18,13 @@ namespace jank
 
           /* TODO: rename to exception. */
           template <typename T = generic>
-          struct type : std::runtime_error
+          struct exception : std::runtime_error
           {
-            type()
+            exception()
               : std::runtime_error
                 { std::string{ "type error (" } + T::description + ")" }
             { }
-            type(std::string const &s)
+            exception(std::string const &s)
               : std::runtime_error
                 { std::string{ "type error (" } + T::description + "): " + s }
             { }

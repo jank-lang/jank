@@ -37,14 +37,14 @@ namespace jank
               auto const &def_opt(scope->find_type(name));
               if(!def_opt)
               {
-                throw expect::error::type::type<>
+                throw expect::error::type::exception<>
                 { std::string{ "invalid literal type: " } + name };
               }
 
               return def_opt.value();
             }
             default:
-              throw expect::error::type::type<>
+              throw expect::error::type::exception<>
               { "invalid argument type: " + std::to_string(c.which()) };
           }
         }

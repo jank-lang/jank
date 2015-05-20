@@ -23,7 +23,7 @@ namespace jank
         auto const type(static_cast<parse::cell::type>(c.which()));
         if(type != C)
         {
-          throw error::type::type<>
+          throw error::type::exception<>
           {
             std::string{ "expected: " } +
             parse::cell::trait::to_string<C>() +

@@ -31,7 +31,7 @@ namespace jank
               template <typename T>
               detail::argument_value<C> operator ()(T const&) const
               {
-                throw expect::error::type::type<>
+                throw expect::error::type::exception<>
                 {
                   std::string{ "invalid argument type: " } +
                   parse::cell::trait::to_string
@@ -51,7 +51,7 @@ namespace jank
               {
                 auto const def(scope_->find_variable(c.data));
                 if(!def)
-                { throw expect::error::type::type<>{ "unknown variable: " + c.data }; }
+                { throw expect::error::type::exception<>{ "unknown variable: " + c.data }; }
 
                 return detail::argument_value<C>
                 {

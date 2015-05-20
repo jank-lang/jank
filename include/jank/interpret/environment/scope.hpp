@@ -36,6 +36,7 @@ namespace jank
     }
   }
 
+  /* TODO: Move back into parse. */
   namespace parse
   {
     namespace cell
@@ -84,7 +85,7 @@ namespace jank
         }
 
         if(it->second.empty())
-        { throw expect::error::type::type<>{ "unknown function: " + name }; }
+        { throw expect::error::type::exception<>{ "unknown function: " + name }; }
 
         return { it->second[0] };
       }

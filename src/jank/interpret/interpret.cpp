@@ -36,7 +36,7 @@ namespace jank
 
       auto const env_it(env.find_function(func_name));
       if(!env_it)
-      { throw expect::error::type::type<>{ "unknown function: " + func_name }; }
+      { throw expect::error::type::exception<>{ "unknown function: " + func_name }; }
 
       auto const &func(env_it->data);
       return func(env, root);

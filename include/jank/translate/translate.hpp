@@ -66,7 +66,7 @@ namespace jank
               { translated.data.cells.push_back(matched_opt.value()); }
             }
 
-            /* TODO: It's a list, but the function wasn't found. Throw the above exception. */
+            /* TODO: It's a list, but the function wasn't found. Throw an exception. */
             //std::cout << "no function named "
             //          << parse::expect::type<parse::cell::type::ident>(list.data[0]).data
             //          << " found" << std::endl;

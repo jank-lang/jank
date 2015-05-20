@@ -61,7 +61,7 @@ namespace jank
               auto const &type_def(scope->find_type(type));
               if(!type_def)
               {
-                throw expect::error::type::type<>
+                throw expect::error::type::exception<>
                 { "unknown type " + type };
               }
               ret.push_back({ name, { type_def.value().data } });

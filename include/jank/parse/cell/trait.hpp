@@ -103,7 +103,7 @@ namespace jank
           { return type::function; }
           else
           {
-            throw expect::error::type::type<>
+            throw expect::error::type::exception<>
             { "invalid parse cell type string " + str };
           }
         }
