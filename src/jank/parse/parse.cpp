@@ -12,6 +12,8 @@ namespace jank
 {
   namespace parse
   {
+    /* TODO: Parse the contents into a vector of lines. Read the iterators from
+     * each match and calculate the line/column range for each cell. */
     cell::cell parse(std::string contents)
     {
       cell::cell root{ cell::list{ { cell::ident{ "root" } } } };

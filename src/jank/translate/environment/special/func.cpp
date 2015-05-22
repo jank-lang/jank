@@ -54,6 +54,9 @@ namespace jank
             }
           );
 
+          /* TODO: Add a return statement cell at the end of each function body.
+           * Validate return types and verify all paths return a value of that type. */
+
           cell::function_definition const ret
           {
             {
