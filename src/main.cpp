@@ -30,16 +30,23 @@ int main(int const argc, char ** const argv)
     return 1;
   }
 
-  std::ifstream ifs{ argv[1] };
-  if(!ifs.is_open())
-  { throw std::runtime_error{ "unable to open file: " + std::string{ argv[1] } }; }
+  /* Read from stdin. */
+  bool const from_stdin{ argv[1] == std::string{ "-" } };
+  std::ifstream ifs;
+  std::istream &is{ from_stdin ? std::cin : ifs };
+  if(!from_stdin)
+  {
+    ifs.open(argv[1]);
+    if(!ifs.is_open())
+    { throw std::runtime_error{ "unable to open file: " + std::string{ argv[1] } }; }
+  }
 
   auto root
   (
     jank::parse::parse
     (
       {
-        std::istreambuf_iterator<char>{ ifs },
+        std::istreambuf_iterator<char>{ is },
         std::istreambuf_iterator<char>{}
       }
     )
