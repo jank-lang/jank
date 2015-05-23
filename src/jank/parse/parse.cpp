@@ -93,7 +93,18 @@ namespace jank
             {
               std::string str(inner_matches[4]);
 
-              /* TODO: Find unescaped parens and die. */
+              auto const unescaped_paren
+              (
+                std::adjacent_find
+                (
+                  str.begin(), str.end(),
+                  [](auto const &lhs, auto const &rhs)
+                  { return (rhs == '(' || rhs == ')') && lhs != '\\'; }
+                )
+              );
+              if(unescaped_paren != str.end())
+              { throw expect::error::syntax::exception<>{ "string with unescaped paren" }; }
+
               boost::algorithm::replace_all(str, "\\\"", "\"");
               boost::algorithm::replace_all(str, "\\(", "(");
               boost::algorithm::replace_all(str, "\\)", ")");
