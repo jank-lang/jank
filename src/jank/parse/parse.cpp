@@ -20,6 +20,7 @@ namespace jank
       std::vector<cell::list*> list_stack{ &expect::type<cell::type::list>(root) };
 
       static std::regex outer_regex{ R"((\(*)([^\)\(]*)(\)*))" };
+      //static std::regex outer_regex{ R"((\(*)((?:\\.|[^\\\(\)])*)(\)*))" };
       std::sregex_iterator const outer_begin
       { contents.begin(), contents.end(), outer_regex };
       std::sregex_iterator const end{};

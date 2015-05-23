@@ -5,7 +5,7 @@
 
 namespace jank
 {
-  namespace interpret
+  namespace parse
   {
     namespace expect
     {
