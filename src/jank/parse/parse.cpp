@@ -7,6 +7,7 @@
 #include <jank/parse/parse.hpp>
 #include <jank/interpret/environment/scope.hpp> /* TODO: shouldn't use interpret here */
 #include <jank/parse/expect/type.hpp>
+#include <jank/parse/expect/error/syntax/syntax.hpp>
 
 namespace jank
 {
@@ -66,7 +67,12 @@ namespace jank
             for(auto const &close : outer_str)
             {
               static_cast<void>(close);
-              /* TODO: Assert size of stack. */
+
+              if(list_stack.empty())
+              {
+                throw jank::parse::expect::error::syntax::exception<>
+                { "unbalanced/unescaped parentheses" };
+              }
               list_stack.pop_back();
             }
             continue;
