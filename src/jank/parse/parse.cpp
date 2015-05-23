@@ -68,9 +68,10 @@ namespace jank
             {
               static_cast<void>(close);
 
+              /* If the stack is empty, there are too many closing parens. */
               if(list_stack.empty())
               {
-                throw jank::parse::expect::error::syntax::exception<>
+                throw expect::error::syntax::exception<>
                 { "unbalanced/unescaped parentheses" };
               }
               list_stack.pop_back();
@@ -103,7 +104,18 @@ namespace jank
         }
       }
 
-      /* TODO: Assert list_stack is empty. */
+      /* The only list on the stack which should be remaining is the root list.
+       * If there are more, or if the list isn't root, we have bad parens. */
+      if
+      (
+        list_stack.size() != 1 ||
+        list_stack.back()->data.empty() ||
+        expect::type<cell::type::ident>(list_stack.back()->data[0]).data != "root"
+      )
+      {
+        throw expect::error::syntax::exception<>
+        { "unbalanced/unescaped parens" };
+      }
 
       return root;
     }
