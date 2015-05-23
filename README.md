@@ -1,4 +1,4 @@
-# jank - a statically typed, generic lisp
+# jank - a statically typed, generic lisp!
 
 jank aims to be a lisp-1 with hygienic, code-as-data macros, a strong, static type system, scope-based resource management, a direct focus on generic programming, and a native compiler.
 
@@ -51,23 +51,23 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 ### Examples
 #### Function
 ```
-(| Generic. |)
+(; Generic. ;)
 (ƒ show : (:T:o) (o T:o) ()
   (print o))
 
-(| Full specialization. |)
+(; Full specialization. ;)
 (ƒ show : (real) (o real) ()
   (print "real: " o))
 
-(| Partial specialization. |)
+(; Partial specialization. ;)
 (ƒ show : (coord : (:T:x :T:y)) (o coord : (T:x T:y)) ()
   (print "coord: " o))
 
-(| Non-type parameter partial specialization. |)
+(; Non-type parameter partial specialization. ;)
 (ƒ show : ((o coord : (:T:x :T:y))) () ()
   (print "coord: " o))
 
-(| Non-type parameter full specialization. |)
+(; Non-type parameter full specialization. ;)
 (ƒ show : ((o coord : (real integer))) () ()
   (print "coord: " o))
 ```
@@ -92,7 +92,7 @@ TODO
 ```
 
 ## Comments
-Only multi-line comments are supported. Anything within `(|` and `|)` is considered a comment. Nested comments are allowed.
+Only multi-line comments are supported. Anything within `(;` and `;)` is considered a comment. Nested comments are allowed.
 
 ### Resource management
 ```
@@ -119,13 +119,13 @@ When constructing an object, constructors are first considered, then aggregate i
 (ƒ destruct : (:T:x :T:y) (c coord : (T:x T:y)) ()
   (print "destructing coord"))
 
-(| Calls the constructor. |)
+(; Calls the constructor. ;)
 (var c (coord : (real real)) 0.0 5.4)
 
-(| Invokes foo and calls the coord constructor. |)
+(; Invokes foo and calls the coord constructor. ;)
 (foo (coord : (real real) 0.0 5.4))
 
-(| Invokes bar and uses aggregate initialization for the coord. |)
+(; Invokes bar and uses aggregate initialization for the coord. ;)
 (bar (coord : (real real) :x 0.0 :y 5.4))
 ```
 
@@ -140,10 +140,10 @@ Objects can either be in automatic or dynamic memory (stack vs. heap); to get an
 
 ### Example
 ```
-(| Call foo with a new owned ptr to int containing 42. |)
+(; Call foo with a new owned ptr to int containing 42. ;)
 (foo (owned : int 42))
 
-(| Call bar with a new owned ptr to int containing 42. |)
+(; Call bar with a new owned ptr to int containing 42. ;)
 (bar (shared : int 42))
 ```
 
@@ -152,10 +152,10 @@ All type aliases are strong. Since the focus is so strongly on generics, types a
 
 ### Examples
 ```
-(| name is now a strong type alias of the builtin string type. |)
+(; name is now a strong type alias of the builtin string type. ;)
 (alias name as string)
 
-(| position is generic, yet still strong. |)
+(; position is generic, yet still strong. ;)
 (alias position : (:T:x :T:y) as coord : (T:x T:y))
 ```
 
@@ -184,19 +184,19 @@ Constraints can be applied to various definitions, including functions and struc
 ## Enums
 Enums function as variant sum types; each variant can have its own type or simply represent its own value (as in C). Enums can also be generic. Value enums work similar to C, whereas type enums must use matching to destructure.
 ```
-(| Unique values; like a C enum. |)
+(; Unique values; like a C enum. ;)
 (enum gender
   male
   female
   other)
 
-(| Unique types. |)
+(; Unique types. ;)
 (enum character
   (struct digit
     (value integer))
   (struct other))
 
-(| A generic enum. |)
+(; A generic enum. ;)
 (enum optional : (:T:value)
   (struct some
     (value T:value))
