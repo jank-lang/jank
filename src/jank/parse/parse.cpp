@@ -41,6 +41,7 @@ namespace jank
             R"(|(\-?\d+(?!\d*\.\d+)))" /* integers */
             R"(|(\-?\d+\.\d+))" /* reals */
             R"(|\"((?:\\.|[^\\\"])*)\")" /* strings */
+            R"(|\;([\s\S]*)\;)" /* comments */
             R"(|([a-zA-Z\-\+\*\/\^\?\!\:\%\.]+))" /* idents */
             /* XXX: Only works in GCC 5.0+ and clang 3.6+. */
           };
@@ -73,6 +74,22 @@ namespace jank
                 throw expect::error::syntax::exception<>
                 { "unbalanced/unescaped parentheses" };
               }
+
+              auto &back_data(list_stack.back()->data);
+
+              /* Comments will be in lists which should just be replaced with the
+               * comment itself, to make things simpler. */
+              if(back_data.size() && expect::is<cell::type::comment>(back_data[0]))
+              {
+                /* This should never happen. */
+                if(list_stack.size() < 2)
+                { throw expect::error::syntax::exception<>{ "malformed comment" }; }
+
+                auto const comment(expect::type<cell::type::comment>(back_data[0]));
+                list_stack[list_stack.size() - 2]->data.pop_back();
+                list_stack[list_stack.size() - 2]->data.push_back(comment);
+              }
+
               list_stack.pop_back();
             }
             continue;
@@ -110,8 +127,14 @@ namespace jank
               boost::algorithm::replace_all(str, "\\)", ")");
               active_list->data.push_back(cell::string{ str });
             }
-            else if(inner_matches[5].matched) /* ident */
-            { active_list->data.push_back(cell::ident{ inner_matches[5] }); }
+            else if(inner_matches[5].matched) /* comment */
+            {
+              std::cout << "comment: " << inner_matches[5] << std::endl;
+
+              active_list->data.push_back(cell::comment{ inner_matches[5] });
+            }
+            else if(inner_matches[6].matched) /* ident */
+            { active_list->data.push_back(cell::ident{ inner_matches[6] }); }
             else
             { throw std::runtime_error{ "invalid parsing match" }; }
           }

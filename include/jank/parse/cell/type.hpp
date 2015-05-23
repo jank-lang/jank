@@ -17,7 +17,8 @@ namespace jank
         string,
         ident,
         list,
-        function
+        function,
+        comment
       };
     }
   }

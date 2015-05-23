@@ -35,7 +35,9 @@ namespace jank
         range.begin(), range.end(),
         [&](auto const &c)
         {
-          if(parse::expect::is<parse::cell::type::list>(c))
+          if(parse::expect::is<parse::cell::type::comment>(c))
+          { /* ignore */ return; }
+          else if(parse::expect::is<parse::cell::type::list>(c))
           {
             auto const &list(parse::expect::type<parse::cell::type::list>(c));
 

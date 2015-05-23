@@ -30,7 +30,8 @@ namespace jank
         boost::recursive_wrapper<wrapper<type::string>>,
         boost::recursive_wrapper<wrapper<type::ident>>,
         boost::recursive_wrapper<wrapper<type::list>>,
-        boost::recursive_wrapper<wrapper<type::function>>
+        boost::recursive_wrapper<wrapper<type::function>>,
+        boost::recursive_wrapper<wrapper<type::comment>>
       >;
 
       template <>
@@ -69,6 +70,12 @@ namespace jank
         using type = std::vector<cell>;
         type data;
       };
+      template <>
+      struct wrapper<type::comment>
+      {
+        using type = std::string;
+        type data;
+      };
 
       using boolean = wrapper<type::boolean>;
       using integer = wrapper<type::integer>;
@@ -77,6 +84,7 @@ namespace jank
       using ident = wrapper<type::ident>;
       using list = wrapper<type::list>;
       using function = wrapper<type::function>;
+      using comment = wrapper<type::comment>;
     }
   }
 }

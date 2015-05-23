@@ -37,6 +37,12 @@ namespace jank
       static std::ostream& operator <<(std::ostream &os, function const &)
       { return os << "function "; }
 
+      static std::ostream& operator <<(std::ostream &os, comment const &c)
+      {
+        detail::stream::indenter const indent{ os, indent_level };
+        return os << "(; " << c.data << " ;) ";
+      }
+
       std::ostream& operator <<(std::ostream &os, cell const &c)
       {
         switch(static_cast<type>(c.which()))
@@ -61,6 +67,9 @@ namespace jank
             break;
           case type::function:
             os << boost::get<function>(c);
+            break;
+          case type::comment:
+            os << boost::get<comment>(c);
             break;
           default:
             os << "??? ";
