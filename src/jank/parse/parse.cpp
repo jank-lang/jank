@@ -20,8 +20,7 @@ namespace jank
       cell::cell root{ cell::list{ { cell::ident{ "root" } } } };
       std::vector<cell::list*> list_stack{ &expect::type<cell::type::list>(root) };
 
-      static std::regex outer_regex{ R"((\(*)([^\)\(]*)(\)*))" };
-      //static std::regex outer_regex{ R"((\(*)((?:\\.|[^\\\(\)])*)(\)*))" };
+      static std::regex outer_regex{ R"((\(*)((?:\\.|[^\\\(\)])*)(\)*))" };
       std::sregex_iterator const outer_begin
       { contents.begin(), contents.end(), outer_regex };
       std::sregex_iterator const end{};
@@ -92,9 +91,13 @@ namespace jank
             { active_list->data.push_back(cell::real{ std::stod(inner_matches[3]) }); }
             else if(inner_matches[4].matched) /* string */
             {
-              std::string word(inner_matches[4]);
-              boost::algorithm::replace_all(word, "\\\"", "\"");
-              active_list->data.push_back(cell::string{ word });
+              std::string str(inner_matches[4]);
+
+              /* TODO: Find unescaped parens and die. */
+              boost::algorithm::replace_all(str, "\\\"", "\"");
+              boost::algorithm::replace_all(str, "\\(", "(");
+              boost::algorithm::replace_all(str, "\\)", ")");
+              active_list->data.push_back(cell::string{ str });
             }
             else if(inner_matches[5].matched) /* ident */
             { active_list->data.push_back(cell::ident{ inner_matches[5] }); }

@@ -1,7 +1,14 @@
 #include <jest/jest.hpp>
 
 #include "parse/paren/match.hpp"
-/* TODO: numbers, strings, etc. */
+#include "parse/string/escape.hpp"
+/* TODO:
+ *  numbers,
+ *    integers, reals (without tenths place), negative
+ *  strings,
+ *    escape, utf8
+ *  etc.
+ */
 
 int main()
 {

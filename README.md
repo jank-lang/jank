@@ -216,6 +216,9 @@ Consider something like:
 ```
 TODO: http://www.brool.com/index.php/pattern-matching-in-clojure
 
+## Strings
+For now, due to the simplicity of the parser, parens in string need to be escaped. This will change, but it's very low priority.
+
 ## Building
 To build, follow the normal steps:
 ```bash
