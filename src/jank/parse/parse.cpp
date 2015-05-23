@@ -65,6 +65,7 @@ namespace jank
             for(auto const &close : outer_str)
             {
               static_cast<void>(close);
+              /* TODO: Assert size of stack. */
               list_stack.pop_back();
             }
             continue;
@@ -94,6 +95,8 @@ namespace jank
           }
         }
       }
+
+      /* TODO: Assert list_stack is empty. */
 
       return root;
     }
