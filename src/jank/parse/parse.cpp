@@ -20,6 +20,7 @@ namespace jank
       cell::cell root{ cell::list{ { cell::ident{ "root" } } } };
       std::vector<cell::list*> list_stack{ &expect::type<cell::type::list>(root) };
 
+      /* TODO: Ignores comments: (\(*)(?!;)((?:\\.|[^\\\(\)])*)(?!;)(\)*) */
       static std::regex outer_regex{ R"((\(*)((?:\\.|[^\\\(\)])*)(\)*))" };
       std::sregex_iterator const outer_begin
       { contents.begin(), contents.end(), outer_regex };
@@ -128,11 +129,7 @@ namespace jank
               active_list->data.push_back(cell::string{ str });
             }
             else if(inner_matches[5].matched) /* comment */
-            {
-              std::cout << "comment: " << inner_matches[5] << std::endl;
-
-              active_list->data.push_back(cell::comment{ inner_matches[5] });
-            }
+            { active_list->data.push_back(cell::comment{ inner_matches[5] }); }
             else if(inner_matches[6].matched) /* ident */
             { active_list->data.push_back(cell::ident{ inner_matches[6] }); }
             else
