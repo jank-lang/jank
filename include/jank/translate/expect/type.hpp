@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <cstdint>
+#include <experimental/optional>
 
 #include <jank/translate/cell/trait.hpp>
 #include <jank/translate/expect/error/type/type.hpp>
@@ -31,6 +32,16 @@ namespace jank
           };
         }
         return boost::get<cell::trait::to_type<C>>(c);
+      }
+
+      template <cell::type C, typename Cell>
+      std::experimental::optional<parse::cell::trait::to_type<C>>
+      optional_cast(Cell const &c)
+      {
+        if(is<C>(c))
+        { return { type<C>(c) }; }
+        else
+        { return {}; }
       }
     }
   }

@@ -37,15 +37,17 @@ namespace jank
         {
           if(parse::expect::is<parse::cell::type::comment>(c))
           { /* ignore */ return; }
-          else if(parse::expect::is<parse::cell::type::list>(c))
+          else if
+          (
+            auto const list_opt = parse::expect::optional_cast
+            <parse::cell::type::list>(c)
+          )
           {
-            auto const &list(parse::expect::type<parse::cell::type::list>(c));
+            auto const &list(list_opt.value());
 
             /* Handle specials. */
             auto const special_opt
-            (
-              environment::special::handle(list, translated)
-            );
+            (environment::special::handle(list, translated));
             if(special_opt)
             {
               translated.data.cells.push_back(special_opt.value());
