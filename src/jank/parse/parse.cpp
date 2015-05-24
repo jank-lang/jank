@@ -1,6 +1,7 @@
 #include <regex>
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/trim.hpp>
 
 #include <jtl/iterator/range.hpp>
 
@@ -20,15 +21,21 @@ namespace jank
       cell::cell root{ cell::list{ { cell::ident{ "root" } } } };
       std::vector<cell::list*> list_stack{ &expect::type<cell::type::list>(root) };
 
-      /* TODO: Ignores comments: (\(*)(?!;)((?:\\.|[^\\\(\)])*)(?!;)(\)*) */
-      static std::regex outer_regex{ R"((\(*)((?:\\.|[^\\\(\)])*)(\)*))" };
+      /* Remove all edge whitespace. */
+      boost::algorithm::trim(contents);
+
+      static std::regex outer_regex
+      { R"((\(;)([\s\S]*)(;\)+)|(\(*)((?:\\.|[^\\\(\)])*)(\)*))" };
       std::sregex_iterator const outer_begin
       { contents.begin(), contents.end(), outer_regex };
       std::sregex_iterator const end{};
 
+      /* For each list in the file. */
       for(auto const &outer : jtl::it::make_range(outer_begin, end))
       {
         std::smatch const &outer_matches{ outer };
+
+        /* For each atom within that list. */
         for
         (
           auto const &outer_match :
@@ -42,7 +49,6 @@ namespace jank
             R"(|(\-?\d+(?!\d*\.\d+)))" /* integers */
             R"(|(\-?\d+\.\d+))" /* reals */
             R"(|\"((?:\\.|[^\\\"])*)\")" /* strings */
-            R"(|\;([\s\S]*)\;)" /* comments */
             R"(|([a-zA-Z\-\+\*\/\^\?\!\:\%\.]+))" /* idents */
             /* XXX: Only works in GCC 5.0+ and clang 3.6+. */
           };
@@ -51,7 +57,16 @@ namespace jank
           { continue; }
 
           auto active_list(list_stack.back());
-          if(outer_str[0] == '(')
+          if(outer_str == "(;")
+          {
+            /* This should never happen. */
+            if(std::distance(std::next(outer_matches.begin()), outer_matches.end())  < 3)
+            { throw expect::error::syntax::exception<>{ "malformed comment" }; }
+
+            active_list->data.push_back(cell::comment{ outer_matches[2].str() });
+            break; /* Done parsing this whole match and all of its groups. */
+          }
+          else if(outer_str[0] == '(')
           {
             for(auto const &open : outer_str)
             {
@@ -75,22 +90,6 @@ namespace jank
                 throw expect::error::syntax::exception<>
                 { "unbalanced/unescaped parentheses" };
               }
-
-              auto &back_data(list_stack.back()->data);
-
-              /* Comments will be in lists which should just be replaced with the
-               * comment itself, to make things simpler. */
-              if(back_data.size() && expect::is<cell::type::comment>(back_data[0]))
-              {
-                /* This should never happen. */
-                if(list_stack.size() < 2)
-                { throw expect::error::syntax::exception<>{ "malformed comment" }; }
-
-                auto const comment(expect::type<cell::type::comment>(back_data[0]));
-                list_stack[list_stack.size() - 2]->data.pop_back();
-                list_stack[list_stack.size() - 2]->data.push_back(comment);
-              }
-
               list_stack.pop_back();
             }
             continue;
@@ -128,10 +127,8 @@ namespace jank
               boost::algorithm::replace_all(str, "\\)", ")");
               active_list->data.push_back(cell::string{ str });
             }
-            else if(inner_matches[5].matched) /* comment */
-            { active_list->data.push_back(cell::comment{ inner_matches[5] }); }
-            else if(inner_matches[6].matched) /* ident */
-            { active_list->data.push_back(cell::ident{ inner_matches[6] }); }
+            else if(inner_matches[5].matched) /* ident */
+            { active_list->data.push_back(cell::ident{ inner_matches[5] }); }
             else
             { throw std::runtime_error{ "invalid parsing match" }; }
           }

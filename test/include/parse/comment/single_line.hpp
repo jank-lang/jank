@@ -33,10 +33,7 @@ namespace jest
 
   template <> template <>
   void jank::single_line_group::test<4>()
-  {
-    expect_exception<jank::parse::expect::error::syntax::exception<>>
-    ([]{ jank::common::translate("parse/comment/single_line/fail_double_close.jank"); });
-  }
+  { jank::common::translate("parse/comment/single_line/pass_double_close.jank"); }
 
   template <> template <>
   void jank::single_line_group::test<5>()
