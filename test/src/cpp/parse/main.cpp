@@ -6,6 +6,7 @@
 #include "parse/comment/multi_line.hpp"
 #include "parse/comment/nested.hpp"
 #include "parse/ident/ascii.hpp"
+#include "parse/ident/unicode.hpp"
 
 /* TODO:
  *  numbers,
