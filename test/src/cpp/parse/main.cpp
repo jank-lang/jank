@@ -5,6 +5,7 @@
 #include "parse/comment/single_line.hpp"
 #include "parse/comment/multi_line.hpp"
 #include "parse/comment/nested.hpp"
+#include "parse/ident/ascii.hpp"
 
 /* TODO:
  *  numbers,
