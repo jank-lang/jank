@@ -18,10 +18,10 @@ There are a few primitive types which are part of the language.
 
 ## Functions
 ```
-(func square (i integer) (integer)
+(function square (i integer) (integer)
   (* i i))
 ```
-Functions are defined via the `func` (or `ƒ`) special identifier and require a `name` identifier, an argument list (which may be empty), a return type list (which may be empty).
+Functions are defined via the `function` (or `ƒ`) special identifier and require a `name` identifier, an argument list (which may be empty), a return type list (which may be empty).
 
 ## Structs
 ```

@@ -26,9 +26,9 @@ namespace jank
 
         std::map<std::string, parse::cell::cell> cells;
 
-        std::map<std::string, std::vector<parse::cell::function>> funcs;
+        std::map<std::string, std::vector<parse::cell::function>> functions;
 
-        std::map<std::string, parse::cell::function> special_funcs;
+        std::map<std::string, parse::cell::function> special_functions;
 
         // TODO std::shared_ptr<scope> parent;
         scope *parent;
@@ -75,8 +75,8 @@ namespace jank
       inline std::experimental::optional<jank::parse::cell::function> scope::find_function
       (std::string const &name)
       {
-        auto const it(funcs.find(name));
-        if(it == funcs.end())
+        auto const it(functions.find(name));
+        if(it == functions.end())
         {
           if(parent)
           { return parent->find_function(name); }
@@ -92,8 +92,8 @@ namespace jank
       inline std::experimental::optional<jank::parse::cell::function> scope::find_special
       (std::string const &name)
       {
-        auto const it(special_funcs.find(name));
-        if(it == special_funcs.end())
+        auto const it(special_functions.find(name));
+        if(it == special_functions.end())
         {
           if(parent)
           { return parent->find_special(name); }

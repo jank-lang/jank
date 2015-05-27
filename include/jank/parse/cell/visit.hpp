@@ -13,8 +13,8 @@ namespace jank
        * overloaded op(). This will be called with
        * the extracted cell of its own type; lambdas could condition
        * on is_same<decltype(cell), whatever> if desired. */
-      template <typename Cell, typename Func>
-      auto visit(Cell &&c, Func const &func)
+      template <typename Cell, typename Function>
+      auto visit(Cell &&c, Function const &func)
       {
         switch(static_cast<type>(c.which()))
         {

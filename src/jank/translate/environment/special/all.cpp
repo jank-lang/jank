@@ -19,7 +19,7 @@ namespace jank
             <cell::cell (parse::cell::list const &input, cell::function_body const &output)>
           > specials
           {
-            { "func", &func }
+            { "function", &func } /* TODO: allow unicode alternatives. */
           };
 
           auto &data(list.data);

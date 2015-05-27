@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <experimental/optional>
 
-#include <jank/translate/environment/special/func.hpp>
+#include <jank/translate/environment/special/function.hpp>
 
 namespace jank
 {

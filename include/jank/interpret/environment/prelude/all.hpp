@@ -21,7 +21,7 @@ namespace jank
                 jank::parse::cell::integer{ 42 }
               }
             },
-            { /* funcs */
+            { /* functions */
               {
                 "root",
                 {
@@ -80,7 +80,7 @@ namespace jank
             },
             { /* special */
               {
-                "func",
+                "function",
                 jank::parse::cell::function
                 {
                   {},
@@ -92,7 +92,7 @@ namespace jank
                     auto const args(jank::interpret::expect::type<jank::parse::cell::type::list>(list[2]));
                     auto const ret(jank::interpret::expect::type<jank::parse::cell::type::list>(list[3]));
 
-                    auto &overloads(env.funcs[name.data]);
+                    auto &overloads(env.functions[name.data]);
                     auto arguments(jank::interpret::function::parse_arguments(args));
 
                     /* Prevent redefinition. */

@@ -1,7 +1,7 @@
 #include <stdexcept>
 #include <memory>
 
-#include <jank/translate/environment/special/func.hpp>
+#include <jank/translate/environment/special/function.hpp>
 
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/translate.hpp>
