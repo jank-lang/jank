@@ -17,8 +17,5 @@ namespace jest
 {
   template <> template <>
   void jank::unicode_group::test<0>()
-  {
-    expect_exception<jank::parse::expect::error::type::exception<>>
-    ([]{ jank::common::translate("parse/ident/unicode/fail_not_supported.jank"); });
-  }
+  { jank::common::translate("parse/ident/unicode/pass_all_good.jank"); }
 }
