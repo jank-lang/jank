@@ -1,5 +1,5 @@
 (;
   Parens (like quotes) can span multiple lines.
-  (func blarg () ()
+  (function blarg () ()
     )
 ;)

@@ -1,4 +1,4 @@
-(func test () ()
+(function test () ()
   (print "all good"))
 
 (test)

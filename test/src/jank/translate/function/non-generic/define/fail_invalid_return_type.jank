@@ -1,2 +1,2 @@
-(func test () (bad)
+(function test () (bad)
   )

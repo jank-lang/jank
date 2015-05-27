@@ -1,2 +1,2 @@
-(func test (integer)
+(function test (integer)
   )

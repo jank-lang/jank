@@ -1,5 +1,5 @@
-(func empty () ()
+(function empty () ()
   )
 
-(func also-empty () ()
+(function also-empty () ()
   )

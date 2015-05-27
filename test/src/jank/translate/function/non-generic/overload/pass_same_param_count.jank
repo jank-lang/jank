@@ -1,13 +1,13 @@
-(func overloaded (d integer) ()
+(function overloaded (d integer) ()
   (print "integer"))
 
-(func overloaded (d real) ()
+(function overloaded (d real) ()
   (print "real"))
 
-(func overloaded (d string dd boolean) ()
+(function overloaded (d string dd boolean) ()
   (print "string and boolean"))
 
-(func overloaded (d boolean dd string) ()
+(function overloaded (d boolean dd string) ()
   (print "boolean and string"))
 
 (overloaded 42)

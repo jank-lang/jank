@@ -1,4 +1,4 @@
-(func multiple () ()
+(function multiple () ()
   )
-(func multiple () ()
+(function multiple () ()
   )

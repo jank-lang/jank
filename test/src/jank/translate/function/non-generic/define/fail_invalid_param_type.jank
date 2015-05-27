@@ -1,2 +1,2 @@
-(func test (d something-bad) ()
+(function test (d something-bad) ()
   )

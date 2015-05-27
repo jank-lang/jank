@@ -1,11 +1,11 @@
-(func test-boolean () (boolean)
+(function test-boolean () (boolean)
   false)
 
-(func test-integer () (integer)
+(function test-integer () (integer)
   42)
 
-(func test-real () (real)
+(function test-real () (real)
   3.14)
 
-(func test-string () (string)
+(function test-string () (string)
   "foo")

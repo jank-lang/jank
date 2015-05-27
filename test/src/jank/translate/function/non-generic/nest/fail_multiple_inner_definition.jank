@@ -1,7 +1,7 @@
-(func outer (d boolean) ()
-  (func outer (d boolean) ()
+(function outer (d boolean) ()
+  (function outer (d boolean) ()
     (print "not " d))
-  (func outer (d boolean) ()
+  (function outer (d boolean) ()
     (print "again not " d))
   (outer d))
 

@@ -1,4 +1,4 @@
-(func ♥ (♦ string) ()
+(function ♥ (♦ string) ()
   (print ♦))
 
 (♥ "not happening")

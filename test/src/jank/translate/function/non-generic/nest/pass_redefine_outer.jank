@@ -1,8 +1,8 @@
-(func show (d integer) ()
+(function show (d integer) ()
   (print d))
 
-(func outer () ()
-  (func show (d integer) ()
+(function outer () ()
+  (function show (d integer) ()
     (print "redefined: " d))
   (show 42))
 

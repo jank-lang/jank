@@ -1,5 +1,5 @@
-(func outer () ()
-  (func inner () ()
+(function outer () ()
+  (function inner () ()
     (print "all good"))
   (inner))
 
