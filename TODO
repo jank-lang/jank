@@ -14,14 +14,6 @@ use long names
   let => where
 
 members
-  global member name with . prefix
-  (struct coord
-    (x int)
-    (y int))
-
-  (.x my_coord)
-  (.y my_coord)
-
   Swizzling with tuples?
     (.x.y my_coord)
 
@@ -35,6 +27,10 @@ allow unicode for specials
 
 variadic generics
   working with parameter packs
+
+lambdas
+  function syntax is?
+    function : (R A1 A2...)
 
 Maybes?
   pattern matching
