@@ -50,10 +50,10 @@ Members of struct are accessed with a `.foo` syntax, where `.foo` is a function 
 
 ## Variables
 ```
-(var name T
+(variable name T
   values...)
 ```
-Variables are defined via the `var` special identifier and require a `name` identifier, a type, and a value(s). The type may be empty `()` if it can be deduced by the value. If the type is supplied, multiple values may be supplied which are not necessarily of type `T`, but instead are constructor arguments.
+Variables are defined via the `variable` special identifier and require a `name` identifier, a type, and a value(s). The type may be empty `()` if it can be deduced by the value. If the type is supplied, multiple values may be supplied which are not necessarily of type `T`, but instead are constructor arguments.
 
 ## Generics
 Definitions may be dependent on types. Such definitions may be functions or structs. The type list must never be empty. Dependent (incomplete) types of a generic item must be prefixed with `:` to disambiguate from full specializations.
@@ -130,7 +130,7 @@ When constructing an object, constructors are first considered, then aggregate i
   (print "destructing coord"))
 
 (; Calls the constructor. ;)
-(var c (coord : (real real)) 0.0 5.4)
+(variable c (coord : (real real)) 0.0 5.4)
 
 (; Invokes foo and calls the coord constructor. ;)
 (foo (coord : (real real) 0.0 5.4))

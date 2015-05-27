@@ -10,7 +10,6 @@ idents
   allow underscores
 
 use long names
-  func => function
   var => variable
   let => where
 
