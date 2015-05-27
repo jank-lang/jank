@@ -1,13 +1,13 @@
-(function test-integer (d integer) ()
+(ƒ test-integer (d integer) ()
   (print d))
 
-(function test-real (d real) ()
+(ƒ test-real (d real) ()
   (print d))
 
-(function test-string (d string) ()
+(ƒ test-string (d string) ()
   (print d))
 
-(function test (a integer b real c string) ()
+(ƒ test (a integer b real c string) ()
   (test-integer a)
   (test-real b)
   (test-string c))

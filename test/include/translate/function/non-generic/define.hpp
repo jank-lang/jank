@@ -81,4 +81,8 @@ namespace jest
   template <> template <>
   void jank::define_group::test<11>()
   { jank::common::translate("translate/function/non-generic/define/pass_body.jank"); }
+
+  template <> template <>
+  void jank::define_group::test<12>()
+  { jank::common::translate("translate/function/non-generic/define/pass_unicode_short_form.jank"); }
 }

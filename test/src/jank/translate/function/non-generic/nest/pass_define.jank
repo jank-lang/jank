@@ -1,5 +1,5 @@
-(function outer () ()
-  (function inner () ()
+(ƒ outer () ()
+  (ƒ inner () ()
     (print "all good"))
   (inner))
 

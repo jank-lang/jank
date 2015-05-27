@@ -1,5 +1,5 @@
-(function outer (d boolean) ()
-  (function show-boolean () ()
+(ƒ outer (d boolean) ()
+  (ƒ show-boolean () ()
     (print d))
   (show-boolean))
 

@@ -1,8 +1,8 @@
-(function overloaded () ()
+(ƒ overloaded () ()
   (print "nullary"))
 
-(function overloaded (d integer) ()
+(ƒ overloaded (d integer) ()
   (print "integer"))
 
-(function overloaded (d integer) ()
+(ƒ overloaded (d integer) ()
   (print "integer"))

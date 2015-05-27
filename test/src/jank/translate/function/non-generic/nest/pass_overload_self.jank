@@ -1,5 +1,5 @@
-(function outer () ()
-  (function outer (d string) ()
+(ƒ outer () ()
+  (ƒ outer (d string) ()
     (print d))
   (outer "all good"))
 

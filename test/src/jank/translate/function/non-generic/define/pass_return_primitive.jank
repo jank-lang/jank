@@ -1,11 +1,11 @@
-(function test-boolean () (boolean)
+(ƒ test-boolean () (boolean)
   )
 
-(function test-integer () (integer)
+(ƒ test-integer () (integer)
   )
 
-(function test-real () (real)
+(ƒ test-real () (real)
   )
 
-(function test-string () (string)
+(ƒ test-string () (string)
   )

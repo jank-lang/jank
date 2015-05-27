@@ -1,8 +1,8 @@
-(function show (d integer) ()
+(ƒ show (d integer) ()
   (print d))
 
-(function outer () ()
-  (function show (d real) ()
+(ƒ outer () ()
+  (ƒ show (d real) ()
     (print d))
   (show 42.7))
 

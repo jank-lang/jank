@@ -44,12 +44,11 @@ namespace jank
         {
           static std::regex inner_regex
           {
-            /* TODO: _ in ident */
             R"((true|false))" /* booleans */
             R"(|(\-?\d+(?!\d*\.\d+)))" /* integers */
             R"(|(\-?\d+\.\d+))" /* reals */
             R"(|\"((?:\\.|[^\\\"])*)\")" /* strings */
-            R"(|([a-zA-Z\-\+\*\/\^\?\!\:\%\.\`\@\_\;\[\]\~\|]+))" /* idents */
+            R"(|([^\s"']+))" /* idents */
             /* XXX: Only works in GCC 5.0+ and clang 3.6+. */
           };
           auto const &outer_str(outer_match.str());

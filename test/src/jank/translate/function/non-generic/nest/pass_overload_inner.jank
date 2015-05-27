@@ -1,7 +1,7 @@
-(function outer () ()
-  (function inner () ()
+(ƒ outer () ()
+  (ƒ inner () ()
     (print "nullary"))
-  (function inner (d integer) ()
+  (ƒ inner (d integer) ()
     (print "integer"))
   (inner 5230498273))
 
