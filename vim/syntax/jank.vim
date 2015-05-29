@@ -14,7 +14,7 @@ let b:current_syntax = "jank"
 syntax keyword jank_todo TODO XXX FIXME NOTE
 syntax keyword jank_keyword function
 syntax region	jank_string start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=jank_todo extend
-syntax region jank_comment start="(;" end=";)"
+syntax region jank_comment start="(;" skipnl end=";)" contains=jank_comment,jank_todo
 
 highlight link jank_keyword Keyword
 highlight link jank_string String
