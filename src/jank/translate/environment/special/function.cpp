@@ -21,14 +21,14 @@ namespace jank
         cell::cell func
         (parse::cell::list const &input, cell::function_body const &outer_body)
         {
+          static std::size_t constexpr forms_required{ 4 };
+
           auto &data(input.data);
-          if(data.size() < 4)
+          if(data.size() < forms_required)
           { throw expect::error::syntax::exception<>{ "invalid function definition" }; }
 
           auto const name(parse::expect::type<parse::cell::type::ident>(data[1]));
           auto const args(parse::expect::type<parse::cell::type::list>(data[2]));
-          /* TODO: Handle return types. */
-          //auto const return_type(parse::expect::type<parse::cell::type::list>(data[3]));
           auto const nested_scope(std::make_shared<scope>(outer_body.data.scope));
           auto const arg_definitions
           (
@@ -54,6 +54,9 @@ namespace jank
             }
           );
 
+          /* Parse return types. */
+          //auto const return_types(parse::expect::type<parse::cell::type::list>(data[3]));
+
           /* TODO: Add a return statement cell at the end of each function body.
            * Validate return types and verify all paths return a value of that type. */
 
@@ -64,7 +67,7 @@ namespace jank
               arg_definitions,
               translate /* Recurse into translate for the body. */
               (
-                jtl::it::make_range(std::next(data.begin(), 4), data.end()),
+                jtl::it::make_range(std::next(data.begin(), forms_required), data.end()),
                 nested_scope
               ).data,
               nested_scope

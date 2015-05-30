@@ -18,6 +18,8 @@ namespace jank
       {
         switch(static_cast<type>(c.which()))
         {
+          case type::null:
+            return func(boost::get<null>(c));
           case type::boolean:
             return func(boost::get<boolean>(c));
           case type::integer:
@@ -32,8 +34,10 @@ namespace jank
             return func(boost::get<list>(c));
           case type::function:
             return func(boost::get<function>(c));
+          case type::comment:
+            return func(boost::get<comment>(c));
           default:
-            throw std::runtime_error{ "invalid parse cell" };
+            throw std::runtime_error{ "invalid visit on parse cell" };
         }
       }
     }

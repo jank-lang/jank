@@ -39,6 +39,8 @@ namespace jank
                 };
               }
 
+              detail::argument_value<C> operator ()(parse::cell::null const &c) const
+              { return call(c); }
               detail::argument_value<C> operator ()(parse::cell::boolean const &c) const
               { return call(c); }
               detail::argument_value<C> operator ()(parse::cell::integer const &c) const

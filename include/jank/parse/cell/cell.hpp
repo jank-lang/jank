@@ -24,6 +24,7 @@ namespace jank
 
       using cell = boost::variant
       <
+        boost::recursive_wrapper<wrapper<type::null>>,
         boost::recursive_wrapper<wrapper<type::boolean>>,
         boost::recursive_wrapper<wrapper<type::integer>>,
         boost::recursive_wrapper<wrapper<type::real>>,
@@ -34,6 +35,14 @@ namespace jank
         boost::recursive_wrapper<wrapper<type::comment>>
       >;
 
+      template <>
+      struct wrapper<type::null>
+      {
+        struct type{ }; /* No actual data. */
+        friend std::ostream& operator <<(std::ostream &os, type const&)
+        { return os << "null"; }
+        type data;
+      };
       template <>
       struct wrapper<type::boolean>
       {
@@ -77,6 +86,7 @@ namespace jank
         type data;
       };
 
+      using null = wrapper<type::null>;
       using boolean = wrapper<type::boolean>;
       using integer = wrapper<type::integer>;
       using real = wrapper<type::real>;

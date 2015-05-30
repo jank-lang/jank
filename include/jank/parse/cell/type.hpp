@@ -11,6 +11,7 @@ namespace jank
     {
       enum class type
       {
+        null,
         boolean,
         integer,
         real,

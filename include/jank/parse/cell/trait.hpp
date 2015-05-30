@@ -17,6 +17,9 @@ namespace jank
         template <type C>
         char constexpr const* to_string();
         template <>
+        inline char constexpr const* to_string<type::null>()
+        { return "null"; }
+        template <>
         inline char constexpr const* to_string<type::boolean>()
         { return "boolean"; }
         template <>
@@ -43,6 +46,9 @@ namespace jank
 
         template <typename C>
         char constexpr const* to_string();
+        template <>
+        inline char constexpr const* to_string<null>()
+        { return to_string<type::null>(); }
         template <>
         inline char constexpr const* to_string<boolean>()
         { return to_string<type::boolean>(); }
@@ -72,6 +78,8 @@ namespace jank
         {
           switch(c)
           {
+            case type::null:
+              return to_string<type::null>();
             case type::boolean:
               return to_string<type::boolean>();
             case type::integer:
@@ -95,7 +103,9 @@ namespace jank
 
         inline type to_enum(std::string const &str)
         {
-          if(str == to_string<boolean>())
+          if(str == to_string<null>())
+          { return type::null; }
+          else if(str == to_string<boolean>())
           { return type::boolean; }
           else if(str == to_string<integer>())
           { return type::integer; }
@@ -122,6 +132,9 @@ namespace jank
         {
           template <type C>
           struct to_type;
+          template <>
+          struct to_type<type::null>
+          { using type = null; };
           template <>
           struct to_type<type::boolean>
           { using type = boolean; };
@@ -152,6 +165,9 @@ namespace jank
 
         template <typename C>
         type constexpr to_enum();
+        template <>
+        type constexpr to_enum<null>()
+        { return type::null; }
         template <>
         type constexpr to_enum<boolean>()
         { return type::boolean; }

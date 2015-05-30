@@ -15,6 +15,7 @@ namespace jank
       {
         using literal_value = boost::variant
         <
+          parse::cell::null,
           parse::cell::boolean,
           parse::cell::integer,
           parse::cell::real,

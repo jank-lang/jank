@@ -9,6 +9,9 @@ namespace jank
     {
       static int indent_level{ -1 };
 
+      static std::ostream& operator <<(std::ostream &os, null const &)
+      { return os << "null"; }
+
       static std::ostream& operator <<(std::ostream &os, boolean const &c)
       { return os << std::boolalpha << c.data; }
 
@@ -47,6 +50,9 @@ namespace jank
       {
         switch(static_cast<type>(c.which()))
         {
+          case type::null:
+            os << boost::get<null>(c);
+            break;
           case type::boolean:
             os << boost::get<boolean>(c);
             break;

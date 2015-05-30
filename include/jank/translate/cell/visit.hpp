@@ -21,7 +21,7 @@ namespace jank
           case type::function_call:
             return func(boost::get<function_call>(c));
           default:
-            throw std::runtime_error{ "invalid translation cell" };
+            throw std::runtime_error{ "invalid visit on translation cell" };
         }
       }
     }
