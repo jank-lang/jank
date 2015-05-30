@@ -6,6 +6,7 @@
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/translate.hpp>
 #include <jank/translate/function/argument/definition.hpp>
+#include <jank/translate/function/return/parse.hpp>
 #include <jank/translate/environment/scope.hpp>
 #include <jank/translate/expect/error/syntax/syntax.hpp>
 #include <jank/translate/expect/error/type/overload.hpp>
@@ -55,7 +56,9 @@ namespace jank
           );
 
           /* Parse return types. */
-          //auto const return_types(parse::expect::type<parse::cell::type::list>(data[3]));
+          auto const return_type_names(parse::expect::type<parse::cell::type::list>(data[3]));
+          auto const return_types(function::ret::parse(return_type_names, nested_scope));
+          static_cast<void>(return_types);
 
           /* TODO: Add a return statement cell at the end of each function body.
            * Validate return types and verify all paths return a value of that type. */

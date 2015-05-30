@@ -43,6 +43,7 @@ namespace jank
 
               return def_opt.value();
             }
+            /* TODO: Evaluate lists here, which are function calls. */
             default:
               throw expect::error::type::exception<>
               { "invalid argument type: " + std::to_string(c.which()) };
