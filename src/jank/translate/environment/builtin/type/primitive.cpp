@@ -20,6 +20,7 @@ namespace jank
           std::shared_ptr<scope> add_primitives
           (std::shared_ptr<scope> const &s)
           {
+            s->type_definitions.insert(detail::make_primitive("null"));
             s->type_definitions.insert(detail::make_primitive("boolean"));
             s->type_definitions.insert(detail::make_primitive("integer"));
             s->type_definitions.insert(detail::make_primitive("real"));

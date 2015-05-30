@@ -45,6 +45,7 @@ namespace jank
           static std::regex inner_regex
           {
             R"((true|false))" /* booleans */
+            R"(|(null))" /* null */
             R"(|(\-?\d+(?!\d*\.\d+)))" /* integers */
             R"(|(\-?\d+\.\d+))" /* reals */
             R"(|\"((?:\\.|[^\\\"])*)\")" /* strings */
@@ -99,15 +100,17 @@ namespace jank
           for(auto const &inner : jtl::it::make_range(inner_begin, end))
           {
             std::smatch const &inner_matches{ inner };
-            if(inner_matches[1].matched) /* boolean */
-            { active_list->data.push_back(cell::boolean{ inner_matches[1] == "true" }); }
-            else if(inner_matches[2].matched) /* integer */
-            { active_list->data.push_back(cell::integer{ std::stoll(inner_matches[2]) }); }
-            else if(inner_matches[3].matched) /* real */
-            { active_list->data.push_back(cell::real{ std::stod(inner_matches[3]) }); }
-            else if(inner_matches[4].matched) /* string */
+            if(inner_matches[1].matched) /* null */
+            { active_list->data.push_back(cell::null{}); }
+            else if(inner_matches[2].matched) /* boolean */
+            { active_list->data.push_back(cell::boolean{ inner_matches[2] == "true" }); }
+            else if(inner_matches[3].matched) /* integer */
+            { active_list->data.push_back(cell::integer{ std::stoll(inner_matches[3]) }); }
+            else if(inner_matches[4].matched) /* real */
+            { active_list->data.push_back(cell::real{ std::stod(inner_matches[4]) }); }
+            else if(inner_matches[5].matched) /* string */
             {
-              std::string str(inner_matches[4]);
+              std::string str(inner_matches[5]);
 
               auto const unescaped_paren
               (
@@ -126,8 +129,8 @@ namespace jank
               boost::algorithm::replace_all(str, "\\)", ")");
               active_list->data.push_back(cell::string{ str });
             }
-            else if(inner_matches[5].matched) /* ident */
-            { active_list->data.push_back(cell::ident{ inner_matches[5] }); }
+            else if(inner_matches[6].matched) /* ident */
+            { active_list->data.push_back(cell::ident{ inner_matches[6] }); }
             else
             { throw std::runtime_error{ "invalid parsing match" }; }
           }
