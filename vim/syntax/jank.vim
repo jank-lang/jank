@@ -17,7 +17,8 @@ syntax keyword jank_special
              \ variable
              \ alias
 syntax keyword jank_builtin_type
-             \ boolean integer real
+             \ null boolean
+             \ integer real
              \ string
 syntax region	jank_string start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=jank_todo extend
 syntax region jank_comment start="(;" skipnl end=";)" contains=jank_comment,jank_todo
