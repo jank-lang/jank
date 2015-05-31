@@ -56,6 +56,8 @@ int main(int const argc, char ** const argv)
 
   auto const body(jank::parse::expect::type<jank::parse::cell::type::list>(root));
   auto const scope(std::make_shared<jank::translate::environment::scope>(nullptr));
+  jank::translate::environment::builtin::type::add_primitives(scope);
+
   auto const translated_body
   (
     jank::translate::translate
@@ -65,7 +67,16 @@ int main(int const argc, char ** const argv)
         std::next(body.data.begin()),
         body.data.end()
       ),
-      jank::translate::environment::builtin::type::add_primitives(scope)
+      scope,
+      { /* The outermost body returns null. */
+        {
+          scope->find_type
+          (
+            jank::parse::cell::trait::to_string
+            <jank::parse::cell::type::null>()
+          ).value().data
+        }
+      }
     )
   );
 

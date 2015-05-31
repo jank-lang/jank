@@ -23,13 +23,14 @@ namespace jank
     cell::function_body translate
     (
       Range const &range,
-      std::shared_ptr<environment::scope> const &scope
+      std::shared_ptr<environment::scope> const &scope,
+      cell::type_reference return_type
     )
     {
       if(!std::distance(range.begin(), range.end()))
-      { return { { {}, {} } }; }
+      { return { { {}, {}, {} } }; }
 
-      cell::function_body translated{ { {}, scope } };
+      cell::function_body translated{ { {}, return_type.data, scope } };
       std::for_each
       (
         range.begin(), range.end(),

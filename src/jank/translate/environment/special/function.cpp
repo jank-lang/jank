@@ -55,10 +55,10 @@ namespace jank
             }
           );
 
+          /* TODO: Add multiple return types into a tuple. */
           /* Parse return types. */
           auto const return_type_names(parse::expect::type<parse::cell::type::list>(data[3]));
           auto const return_types(function::ret::parse(return_type_names, nested_scope));
-          static_cast<void>(return_types);
 
           /* TODO: Add a return statement cell at the end of each function body.
            * Validate return types and verify all paths return a value of that type. */
@@ -69,10 +69,12 @@ namespace jank
             {
               name.data,
               arg_definitions,
+              return_types[0].data,
               translate /* Recurse into translate for the body. */
               (
                 jtl::it::make_range(std::next(data.begin(), forms_required), data.end()),
-                nested_scope
+                nested_scope,
+                return_types[0]
               ).data,
               nested_scope
             }

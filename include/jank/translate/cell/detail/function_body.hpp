@@ -3,6 +3,8 @@
 #include <memory>
 #include <vector>
 
+#include <jank/translate/cell/detail/type_reference.hpp>
+
 namespace jank
 {
   namespace translate
@@ -18,6 +20,7 @@ namespace jank
         struct function_body
         {
           std::vector<C> cells;
+          type_reference return_type;
           std::shared_ptr<environment::scope> scope;
         };
       }

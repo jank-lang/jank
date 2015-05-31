@@ -17,9 +17,9 @@ namespace jank
         template <typename C>
         struct function_definition
         {
-          /* TODO: return type list */
           std::string name;
           function::argument::type_list arguments;
+          type_reference return_type;
           function_body<C> body;
           std::shared_ptr<environment::scope> scope;
         };
