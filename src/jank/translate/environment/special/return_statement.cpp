@@ -15,17 +15,15 @@ namespace jank
         cell::cell return_statement
         (parse::cell::list const &input, cell::function_body const &outer_body)
         {
-          static std::size_t constexpr minimum_cells{ 1 };
-
           auto const args
           (
             function::argument::call::parse<cell::cell>
             (input, outer_body.data.scope)
           );
 
-          if(args.size() > minimum_cells + 1)
+          if(args.size() > 1)
           { throw expect::error::internal::unimplemented{ "multiple return values" }; }
-          else if(args.size() == minimum_cells + 1)
+          else if(args.size() == 1)
           {
             auto const type
             (
