@@ -16,6 +16,7 @@ syntax keyword jank_special
              \ function ƒ
              \ variable
              \ alias
+             \ return
 syntax keyword jank_builtin_type
              \ null boolean
              \ integer real

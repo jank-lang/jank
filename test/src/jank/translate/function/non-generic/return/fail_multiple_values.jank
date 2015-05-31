@@ -1,0 +1,2 @@
+(ƒ foo () (integer real)
+  (return 42 3.14))
