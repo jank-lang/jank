@@ -12,6 +12,7 @@
 #include <jank/translate/environment/special/all.hpp>
 #include <jank/translate/function/argument/call.hpp>
 #include <jank/translate/function/match_overload.hpp>
+#include <jank/translate/function/return/validate.hpp>
 #include <jank/translate/expect/error/syntax/syntax.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
 
@@ -27,9 +28,6 @@ namespace jank
       cell::type_reference return_type
     )
     {
-      if(!std::distance(range.begin(), range.end()))
-      { return { { {}, {}, {} } }; }
-
       cell::function_body translated{ { {}, return_type.data, scope } };
       std::for_each
       (
@@ -95,6 +93,10 @@ namespace jank
           );
         }
       );
+
+      /* Verify all paths return a value. */
+      function::ret::validate(translated);
+
       return translated;
     }
   }

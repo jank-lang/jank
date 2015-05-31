@@ -32,7 +32,7 @@ namespace jest
   template <> template <>
   void jank::overload_group::test<3>()
   {
-    expect_exception<jank::translate::expect::error::type::overload>
+    expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("translate/function/non-generic/overload/fail_return_type.jank"); });
   }
 }

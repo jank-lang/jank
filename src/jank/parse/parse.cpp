@@ -10,6 +10,7 @@
 #include <jank/parse/expect/type.hpp>
 #include <jank/parse/expect/error/syntax/syntax.hpp>
 
+/* TODO: enum for group numbers. */
 namespace jank
 {
   namespace parse

@@ -29,7 +29,10 @@ namespace jank
       {
         indenter const indent{ os, indent_level };
 
-        os << "function " << c.data.name << " : " << c.data.arguments << std::endl;
+        os << "function " << c.data.name
+           << " : " << c.data.arguments
+           << " : " << c.data.return_type.definition.name
+           << std::endl;
         os << "( ";
         for(auto const &v : c.data.body.cells)
         { os << v << " "; }

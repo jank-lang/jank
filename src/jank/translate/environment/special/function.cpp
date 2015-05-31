@@ -60,10 +60,6 @@ namespace jank
           auto const return_type_names(parse::expect::type<parse::cell::type::list>(data[3]));
           auto const return_types(function::ret::parse(return_type_names, nested_scope));
 
-          /* TODO: Add a return statement cell at the end of each function body.
-           * Validate return types and verify all paths return a value of that type. */
-
-          /* TODO: Change translate() to take in an expected resulting type? */
           cell::function_definition const ret
           {
             {

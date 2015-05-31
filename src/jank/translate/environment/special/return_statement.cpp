@@ -1,5 +1,6 @@
 #include <jank/translate/environment/special/return_statement.hpp>
 #include <jank/translate/environment/scope.hpp>
+#include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/function/argument/call.hpp>
 #include <jank/translate/function/argument/resolve_type.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
@@ -38,15 +39,7 @@ namespace jank
 
           /* Fallback to returning null. */
           cell::type_reference type
-          {
-            {
-              outer_body.data.scope->find_type
-              (
-                parse::cell::trait::to_string
-                <parse::cell::type::null>()
-              ).value().data
-            }
-          };
+          { environment::builtin::type::null(outer_body.data.scope) };
           if(type.data != outer_body.data.return_type)
           { throw expect::error::type::exception<>{ "invalid return type" }; }
           return { cell::return_statement{ { {}, type.data } } };

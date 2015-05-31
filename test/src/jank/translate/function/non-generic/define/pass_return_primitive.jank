@@ -1,11 +1,11 @@
 (ƒ test-boolean () (boolean)
-  )
+  true)
 
 (ƒ test-integer () (integer)
-  )
+  -20)
 
 (ƒ test-real () (real)
-  )
+  9999.00901)
 
 (ƒ test-string () (string)
-  )
+  "good")

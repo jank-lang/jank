@@ -27,6 +27,24 @@ namespace jank
             s->type_definitions.insert(detail::make_primitive("string"));
             return s;
           }
+
+          namespace detail
+          {
+            static cell::detail::type_reference find_primitive
+            (std::shared_ptr<scope> const &s, std::string const &name)
+            { return { s->find_type(name).value().data }; }
+          }
+
+          cell::detail::type_reference null(std::shared_ptr<scope> const &s)
+          { return detail::find_primitive(s, "null"); }
+          cell::detail::type_reference boolean(std::shared_ptr<scope> const &s)
+          { return detail::find_primitive(s, "boolean"); }
+          cell::detail::type_reference integer(std::shared_ptr<scope> const &s)
+          { return detail::find_primitive(s, "integer"); }
+          cell::detail::type_reference real(std::shared_ptr<scope> const &s)
+          { return detail::find_primitive(s, "real"); }
+          cell::detail::type_reference string(std::shared_ptr<scope> const &s)
+          { return detail::find_primitive(s, "string"); }
         }
       }
     }

@@ -57,13 +57,7 @@ namespace jank
           ),
           scope,
           { /* The outermost body returns null. */
-            {
-              scope->find_type
-              (
-                jank::parse::cell::trait::to_string
-                <jank::parse::cell::type::null>()
-              ).value().data
-            }
+            translate::environment::builtin::type::null(scope)
           }
         )
       );

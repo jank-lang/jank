@@ -69,13 +69,7 @@ int main(int const argc, char ** const argv)
       ),
       scope,
       { /* The outermost body returns null. */
-        {
-          scope->find_type
-          (
-            jank::parse::cell::trait::to_string
-            <jank::parse::cell::type::null>()
-          ).value().data
-        }
+        jank::translate::environment::builtin::type::null(scope)
       }
     )
   );
