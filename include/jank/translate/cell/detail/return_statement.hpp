@@ -1,5 +1,7 @@
 #pragma once
 
+#include <jank/translate/cell/detail/type_reference.hpp>
+
 namespace jank
 {
   namespace translate
@@ -8,12 +10,11 @@ namespace jank
     {
       namespace detail
       {
-        /* C = cell, T = cell::type. */
-        template <typename C, typename T>
+        template <typename C>
         struct return_statement
         {
           C cell;
-          T expected_type;
+          type_reference expected_type;
         };
       }
     }

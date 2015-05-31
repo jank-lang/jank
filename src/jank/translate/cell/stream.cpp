@@ -67,7 +67,7 @@ namespace jank
       static std::ostream& operator <<(std::ostream &os, literal_value const &c)
       {
         indenter const indent{ os, indent_level };
-        return os << "value " << c.data << std::endl;
+        return os << "literal " << c.data << std::endl;
       }
 
       static std::ostream& operator <<(std::ostream &os, return_statement const &c)

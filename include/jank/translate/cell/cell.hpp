@@ -93,7 +93,7 @@ namespace jank
       template <>
       struct wrapper<type::return_statement>
       {
-        using type = detail::return_statement<cell, jank::translate::cell::type>;
+        using type = detail::return_statement<cell>;
         type data;
       };
 
