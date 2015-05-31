@@ -19,8 +19,9 @@ namespace jank
             <cell::cell (parse::cell::list const &input, cell::function_body const &output)>
           > specials
           {
-            { "function", &func },
-            { "ƒ", &func }
+            { "function", &function },
+            { "ƒ", &function },
+            { "return", &return_statement }
           };
 
           auto &data(list.data);

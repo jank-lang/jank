@@ -17,6 +17,8 @@ namespace jank
 
         inline bool operator ==(type_reference const &lhs, type_reference const &rhs)
         { return lhs.definition == rhs.definition; }
+        inline bool operator !=(type_reference const &lhs, type_reference const &rhs)
+        { return lhs.definition != rhs.definition; }
       }
     }
   }

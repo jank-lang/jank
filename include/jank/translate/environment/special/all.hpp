@@ -5,6 +5,7 @@
 #include <experimental/optional>
 
 #include <jank/translate/environment/special/function.hpp>
+#include <jank/translate/environment/special/return_statement.hpp>
 
 namespace jank
 {

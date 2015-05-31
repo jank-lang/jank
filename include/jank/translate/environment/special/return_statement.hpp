@@ -11,8 +11,8 @@ namespace jank
     {
       namespace special
       {
-        cell::cell function
-        (parse::cell::list const &input, cell::function_body const &body);
+        cell::cell return_statement
+        (parse::cell::list const &input, cell::function_body const &outer_body);
       }
     }
   }
