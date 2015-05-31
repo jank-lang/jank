@@ -70,6 +70,12 @@ namespace jank
         return os << "value " << c.data << std::endl;
       }
 
+      static std::ostream& operator <<(std::ostream &os, return_statement const &c)
+      {
+        indenter const indent{ os, indent_level };
+        return os << "return " << c.data.cell << std::endl;
+      }
+
       std::ostream& operator <<(std::ostream &os, cell const &c)
       {
         switch(static_cast<type>(c.which()))
@@ -91,6 +97,9 @@ namespace jank
             break;
           case type::literal_value:
             os << boost::get<literal_value>(c);
+            break;
+          case type::return_statement:
+            os << boost::get<return_statement>(c);
             break;
           default:
             os << "??? ";

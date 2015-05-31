@@ -39,6 +39,9 @@ namespace jank
         template <>
         inline char constexpr const* to_string<type::literal_value>()
         { return "literal_value"; }
+        template <>
+        inline char constexpr const* to_string<type::return_statement>()
+        { return "return_statement"; }
 
         template <typename C>
         char constexpr const* to_string();
@@ -66,6 +69,9 @@ namespace jank
         template <>
         inline char constexpr const* to_string<literal_value>()
         { return to_string<type::literal_value>(); }
+        template <>
+        inline char constexpr const* to_string<return_statement>()
+        { return to_string<type::return_statement>(); }
 
         inline char constexpr const* to_string(type const c)
         {
@@ -87,6 +93,8 @@ namespace jank
               return to_string<type::variable_reference>();
             case type::literal_value:
               return to_string<type::literal_value>();
+            case type::return_statement:
+              return to_string<type::return_statement>();
             default:
               return "unknown";
           }
@@ -110,6 +118,8 @@ namespace jank
           { return type::variable_reference; }
           else if(str == to_string<literal_value>())
           { return type::literal_value; }
+          else if(str == to_string<return_statement>())
+          { return type::return_statement; }
           else
           {
             throw interpret::expect::error::type::exception<>
@@ -145,6 +155,9 @@ namespace jank
           template <>
           struct to_type<type::literal_value>
           { using type = literal_value; };
+          template <>
+          struct to_type<type::return_statement>
+          { using type = literal_value; };
         }
         template <type C>
         using to_type = typename detail::to_type<C>::type;
@@ -175,6 +188,9 @@ namespace jank
         template <>
         type constexpr to_enum<literal_value>()
         { return type::literal_value; }
+        template <>
+        type constexpr to_enum<return_statement>()
+        { return type::return_statement; }
       }
     }
   }

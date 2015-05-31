@@ -18,7 +18,8 @@ namespace jank
         type_reference,
         variable_definition,
         variable_reference,
-        literal_value
+        literal_value,
+        return_statement
       };
     }
   }

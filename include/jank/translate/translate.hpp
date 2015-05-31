@@ -56,7 +56,7 @@ namespace jank
 
             /* Arbitrary empty lists are no good. */
             if(list.data.empty())
-            { throw expect::error::syntax::exception<>{ "invalid empty list" }; }
+            { throw expect::error::syntax::exception<>{ "invalid empty translation list" }; }
 
             auto const function_opt
             (
