@@ -78,8 +78,21 @@ namespace jank
             return;
           }
 
-          /* TODO: Handle plain values (only useful at the end of a function?) */
-          throw expect::error::internal::unimplemented{ "atoms" };
+          /* Treat plain values as an implicit return. */
+          translated.data.cells.push_back
+          (
+            environment::special::return_statement
+            (
+              parse::cell::list
+              {
+                {
+                  parse::cell::ident{ "return" },
+                  c
+                }
+              },
+              translated
+            )
+          );
         }
       );
       return translated;

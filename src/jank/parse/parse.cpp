@@ -44,8 +44,8 @@ namespace jank
         {
           static std::regex inner_regex
           {
-            R"((true|false))" /* booleans */
-            R"(|(null))" /* null */
+            R"((null))" /* null */
+            R"(|(true|false))" /* booleans */
             R"(|(\-?\d+(?!\d*\.\d+)))" /* integers */
             R"(|(\-?\d+\.\d+))" /* reals */
             R"(|\"((?:\\.|[^\\\"])*)\")" /* strings */
