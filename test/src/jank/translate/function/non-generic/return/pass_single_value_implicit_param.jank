@@ -1,0 +1,5 @@
+(ƒ bar (s string) (string)
+  s)
+
+(ƒ identity (b boolean) (boolean)
+  b)

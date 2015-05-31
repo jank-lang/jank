@@ -34,55 +34,63 @@ namespace jest
 
   template <> template <>
   void jank::return_group::test<4>()
+  { jank::common::translate("translate/function/non-generic/return/pass_single_value_implicit.jank"); }
+
+  template <> template <>
+  void jank::return_group::test<5>()
+  { jank::common::translate("translate/function/non-generic/return/pass_single_value_implicit_param.jank"); }
+
+  template <> template <>
+  void jank::return_group::test<6>()
   {
     expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("translate/function/non-generic/return/fail_single_value_wrong_type.jank"); });
   }
 
   template <> template <>
-  void jank::return_group::test<5>()
+  void jank::return_group::test<7>()
   {
     expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("translate/function/non-generic/return/fail_null_wrong_type.jank"); });
   }
 
   template <> template <>
-  void jank::return_group::test<6>()
+  void jank::return_group::test<8>()
   {
     expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("translate/function/non-generic/return/fail_unknown_type.jank"); });
   }
 
   template <> template <>
-  void jank::return_group::test<7>()
+  void jank::return_group::test<9>()
   {
     expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("translate/function/non-generic/return/fail_single_value_no_return.jank"); });
   }
 
   template <> template <>
-  void jank::return_group::test<8>()
+  void jank::return_group::test<10>()
   {
     expect_exception<jank::translate::expect::error::internal::unimplemented>
     ([]{ jank::common::translate("translate/function/non-generic/return/fail_multiple_values.jank"); });
   }
 
   template <> template <>
-  void jank::return_group::test<9>()
+  void jank::return_group::test<11>()
   {
     expect_exception<jank::translate::expect::error::internal::unimplemented>
     ([]{ jank::common::translate("translate/function/non-generic/return/fail_single_value_multiple_value_return.jank"); });
   }
 
   template <> template <>
-  void jank::return_group::test<10>()
+  void jank::return_group::test<12>()
   {
     expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("translate/function/non-generic/return/fail_single_value_unkown_value.jank"); });
   }
 
   template <> template <>
-  void jank::return_group::test<11>()
+  void jank::return_group::test<13>()
   {
     expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("translate/function/non-generic/return/fail_single_value_wrong_param_type.jank"); });

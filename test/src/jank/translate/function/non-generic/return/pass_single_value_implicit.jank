@@ -1,0 +1,5 @@
+(ƒ bar () (string)
+  "blah")
+
+(ƒ truth () (boolean)
+  true)
