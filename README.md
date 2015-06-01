@@ -175,11 +175,11 @@ Constraints can be applied to various definitions, including functions and struc
 ### Examples
 #### Functions
 ```
-(ƒ number? : (:T) () (bool)
+(ƒ number? : (:T) () (boolean)
   false)
-(ƒ number? : (integer) () (bool)
+(ƒ number? : (integer) () (boolean)
   true)
-(ƒ number? : (real) () (bool)
+(ƒ number? : (real) () (boolean)
   true)
 
 (ƒ square : (:T:i) (i T:i) (T:i) where (number? : T:i)
