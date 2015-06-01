@@ -17,14 +17,7 @@ namespace jank
         std::vector<cell::function_definition> const &functions
       )
       {
-        /* TODO: Arguments could be expressions which need to be evaluated. */
         auto const arguments(function::argument::call::parse<cell::cell>(list, scope));
-        //for(auto const &arg : arguments)
-        //{
-        //  std::cout << "arg: " << arg.name
-        //            << " " << arg.cell
-        //            << std::endl;
-        //}
 
         for(auto const &overload_cell : functions)
         {
