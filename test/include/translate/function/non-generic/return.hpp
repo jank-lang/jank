@@ -12,8 +12,6 @@ namespace jank
   static return_group const return_obj{ "non-generic function return" };
 }
 
-/* TODO: implicit return tests. */
-
 namespace jest
 {
   template <> template <>
