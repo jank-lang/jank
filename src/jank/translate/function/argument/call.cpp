@@ -4,9 +4,12 @@
 #include <jank/translate/function/argument/call.hpp>
 #include <jank/parse/cell/cell.hpp>
 #include <jank/parse/cell/trait.hpp>
+#include <jank/parse/expect/type.hpp>
 #include <jank/interpret/environment/scope.hpp> /* TODO: for function */
 #include <jank/translate/environment/scope.hpp>
+#include <jank/translate/function/match_overload.hpp>
 #include <jank/translate/expect/error/type/type.hpp>
+#include <jank/translate/expect/error/syntax/syntax.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
 
 namespace jank
@@ -60,6 +63,36 @@ namespace jank
                   c.data,
                   { cell::variable_reference{ def.value().data } }
                 };
+              }
+              detail::argument_value<C> operator ()(parse::cell::list const &c) const
+              {
+                if(c.data.empty())
+                { throw expect::error::syntax::exception<>{ "invalid argument list" }; }
+
+                auto const name(parse::expect::type<parse::cell::type::ident>(c.data[0]).data);
+                auto const function_opt(scope_->find_function(name));
+                if(function_opt)
+                {
+                  auto const matched_opt(function::match_overload(c, scope_, function_opt.value()));
+                  if(matched_opt)
+                  {
+                    return detail::argument_value<C>
+                    {
+                      name,
+                      { matched_opt.value() }
+                    };
+                  }
+                  else
+                  {
+                    throw expect::error::type::exception<>
+                    { "invalid function call: " + name };
+                  }
+                }
+                else
+                {
+                  throw expect::error::type::exception<>
+                  { "unknown function: " + name };
+                }
               }
 
             private:

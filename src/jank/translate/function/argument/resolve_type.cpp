@@ -43,6 +43,11 @@ namespace jank
 
               return def_opt.value();
             }
+            case cell::type::function_call:
+            {
+              auto const &call(expect::type<cell::type::function_call>(c));
+              return { call.data.definition.return_type.definition };
+            }
             /* TODO: Evaluate lists here, which are function calls. */
             default:
               throw expect::error::type::exception<>
