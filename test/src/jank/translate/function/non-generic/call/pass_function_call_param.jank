@@ -1,0 +1,8 @@
+(function + (a integer b integer) (integer)
+  4)
+
+(function print (i integer) ()
+  )
+
+(print (+ 1 2))
+(print (+ (+ 10 -20) 2))

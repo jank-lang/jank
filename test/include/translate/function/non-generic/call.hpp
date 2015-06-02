@@ -57,4 +57,8 @@ namespace jest
   template <> template <>
   void jank::call_group::test<7>()
   { jank::common::translate("translate/function/non-generic/call/pass_chain.jank"); }
+
+  template <> template <>
+  void jank::call_group::test<8>()
+  { jank::common::translate("translate/function/non-generic/call/pass_function_call_param.jank"); }
 }
