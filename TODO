@@ -5,14 +5,6 @@ syntax errors...?
   will the regex remain?
     need to map s-exprs to file positions
 
-idents
-  allow numbers
-  allow underscores
-
-use long names
-  var => variable
-  let => where
-
 members
   Swizzling with tuples?
     (.x.y my_coord)
@@ -21,16 +13,13 @@ current list
   should be a tuple
   list should be a generic heterogenous container
 
-allow unicode for specials
-  function => ƒ
-  lambda => λ
-
 variadic generics
   working with parameter packs
 
 lambdas
+  lambda => λ
   function syntax is?
-    function : (R A1 A2...)
+    (function : ((A1 A2...) (R1 R2...)))
 
 Maybes?
   pattern matching
