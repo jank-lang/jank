@@ -31,7 +31,7 @@ namespace jank
             );
             if(!null) /* Shouldn't ever happen. */
             { throw expect::error::internal::exception<>{ "no null type found" }; }
-            return { { { null.value().data } } };
+            return { { { null.value().first.data } } };
           }
 
           /* Resolve each type. */
@@ -46,7 +46,7 @@ namespace jank
               throw expect::error::type::exception<>
               { "invalid return type: " + type_string };
             }
-            types.push_back({ { type.value().data } });
+            types.push_back({ { type.value().first.data } });
           }
 
           return types;

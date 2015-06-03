@@ -61,7 +61,7 @@ namespace jank
                 return detail::argument_value<C>
                 {
                   c.data,
-                  { cell::variable_reference{ def.value().data } }
+                  { cell::variable_reference{ def.value().first.data } }
                 };
               }
               detail::argument_value<C> operator ()(parse::cell::list const &c) const

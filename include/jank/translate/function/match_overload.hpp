@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/translate/cell/cell.hpp>
+#include <jank/translate/environment/scope.hpp>
 
 namespace jank
 {
@@ -12,7 +13,7 @@ namespace jank
       (
         parse::cell::list const &list,
         std::shared_ptr<environment::scope> const &scope,
-        std::vector<cell::function_definition> const &functions
+        std::vector<environment::scope::result<cell::function_definition>> const &functions
       );
     }
   }

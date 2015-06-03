@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <jank/translate/environment/scope.hpp>
 #include <jank/translate/expect/error/type/type.hpp>
 #include <jank/translate/expect/error/internal/internal.hpp>
@@ -8,7 +10,7 @@ namespace jank
   {
     namespace environment
     {
-      std::experimental::optional<cell::type_definition> scope::find_type
+      std::experimental::optional<scope::result<cell::type_definition>> scope::find_type
       (std::string const &name)
       {
         auto const it(type_definitions.find(name));
@@ -20,10 +22,10 @@ namespace jank
           { return {}; }
         }
 
-        return { it->second };
+        return { { it->second, shared_from_this() } };
       }
 
-      std::experimental::optional<cell::variable_definition> scope::find_variable
+      std::experimental::optional<scope::result<cell::variable_definition>> scope::find_variable
       (std::string const &name)
       {
         auto const it(variable_definitions.find(name));
@@ -35,23 +37,25 @@ namespace jank
           { return {}; }
         }
 
-        return { it->second };
+        return { { it->second, shared_from_this() } };
       }
 
       /* Build a vector of all function overloads in each scope, from this to the root. */
-      std::experimental::optional<std::vector<cell::function_definition>> scope::find_function
-      (std::string const &name)
+      std::experimental::optional<std::vector<scope::result<cell::function_definition>>>
+      scope::find_function(std::string const &name)
       {
-        std::vector<cell::function_definition> ret;
+        std::vector<scope::result<cell::function_definition>> ret;
 
         /* Add all from the current scope. */
         auto const it(function_definitions.find(name));
         if(it != function_definitions.end())
         {
-          std::copy
+          std::transform
           (
             it->second.begin(), it->second.end(),
-            std::back_inserter(ret)
+            std::back_inserter(ret),
+            [this](auto const &def) -> scope::result<cell::function_definition>
+            { return { def, this->shared_from_this() }; }
           );
         }
 

@@ -21,6 +21,7 @@ namespace jank
           {
             { "function", &function },
             { "ƒ", &function },
+            { "variable", &variable },
             { "return", &return_statement }
           };
 

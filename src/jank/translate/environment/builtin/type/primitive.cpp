@@ -32,7 +32,7 @@ namespace jank
           {
             static cell::detail::type_reference find_primitive
             (std::shared_ptr<scope> const &s, std::string const &name)
-            { return { s->find_type(name).value().data }; }
+            { return { s->find_type(name).value().first.data }; }
           }
 
           cell::detail::type_reference null(std::shared_ptr<scope> const &s)

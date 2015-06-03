@@ -49,6 +49,7 @@ add_library(${PROJECT_NAME}_static STATIC
             src/jank/translate/environment/builtin/type/primitive.cpp
             src/jank/translate/environment/special/all.cpp
             src/jank/translate/environment/special/function.cpp
+            src/jank/translate/environment/special/variable.cpp
             src/jank/translate/environment/special/return_statement.cpp
 	          src/jank/interpret/interpret.cpp
 )

@@ -64,7 +64,7 @@ namespace jank
                 throw expect::error::type::exception<>
                 { "unknown type " + type };
               }
-              ret.push_back({ name, { type_def.value().data } });
+              ret.push_back({ name, { type_def.value().first.data } });
             }
 
             return ret;

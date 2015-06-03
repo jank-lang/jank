@@ -14,14 +14,14 @@ namespace jank
       (
         parse::cell::list const &list,
         std::shared_ptr<environment::scope> const &scope,
-        std::vector<cell::function_definition> const &functions
+        std::vector<environment::scope::result<cell::function_definition>> const &functions
       )
       {
         auto const arguments(function::argument::call::parse<cell::cell>(list, scope));
 
         for(auto const &overload_cell : functions)
         {
-          auto const &overload(overload_cell.data);
+          auto const &overload(overload_cell.first.data);
 
           if(overload.arguments.size() != arguments.size())
           { continue; }
@@ -42,7 +42,7 @@ namespace jank
               }
             )
           )
-          { return { cell::function_call{ { overload_cell.data, arguments, scope } } }; }
+          { return { cell::function_call{ { overload_cell.first.data, arguments, scope } } }; }
         }
 
         /* No matching overload found. */
