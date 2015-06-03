@@ -6,6 +6,8 @@ cons, lists
 
 use null in the appropriate areas
 
+constants
+
 syntax errors...?
   will the regex remain?
     need to map s-exprs to file positions
