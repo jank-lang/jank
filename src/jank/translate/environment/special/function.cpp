@@ -77,6 +77,7 @@ namespace jank
           };
 
           /* Check for an already-defined function of this type. */
+          /* XXX: We're only checking *this* scope's functions, so shadowing is allowed. */
           for(auto const &overload : outer_body.data.scope->function_definitions[name.data])
           {
             if(overload.data.arguments == arg_definitions)
