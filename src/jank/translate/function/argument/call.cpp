@@ -113,6 +113,7 @@ namespace jank
               std::shared_ptr<environment::scope> scope_;
           };
 
+          /* TODO: Have this not skip the first item. Instead, it should only be passed the args. */
           template <>
           value_list<cell::cell> parse<cell::cell>
           (
