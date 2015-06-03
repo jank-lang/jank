@@ -1,6 +1,9 @@
 refactoring
   expect state
 
+cons, lists
+  built-in sum types?
+
 syntax errors...?
   will the regex remain?
     need to map s-exprs to file positions
