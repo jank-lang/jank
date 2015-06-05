@@ -1,0 +1,9 @@
+(ƒ test (i integer b boolean s string r real) ()
+  (variable foo integer
+    i)
+  (variable boo boolean
+    b)
+  (variable soo string
+    s)
+  (variable roo real
+    r))
