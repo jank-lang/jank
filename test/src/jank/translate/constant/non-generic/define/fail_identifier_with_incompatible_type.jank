@@ -1,0 +1,5 @@
+(constant foo boolean
+  false)
+
+(constant bar real
+  foo)

@@ -1,0 +1,11 @@
+(constant foo integer
+  42)
+
+(constant boo boolean
+  true)
+
+(constant soo string
+  "blah")
+
+(constant roo real
+  3.14159)

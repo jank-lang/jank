@@ -1,0 +1,2 @@
+(constant foo boolean
+  does-not-exist)
