@@ -1,0 +1,5 @@
+(ƒ func (i integer) (integer)
+  i)
+
+(variable foo integer
+  (func -100))
