@@ -93,7 +93,7 @@ target_link_libraries(${PROJECT_NAME}_interpret_function_test ${${PROJECT_NAME}_
 add_custom_target(${PROJECT_NAME}_test
   COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_parse_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_function_test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_variable_function_test || true && echo &&
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_variable_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_function_test
   DEPENDS ${PROJECT_NAME}_parse_test
           ${PROJECT_NAME}_translate_function_test
