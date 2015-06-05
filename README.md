@@ -58,7 +58,7 @@ Variables are defined via the `variable` special identifier and require a `name`
 (constant name T
   values...)
 ```
-Using the same syntax as `variable`, but with the `constant` identifier, one can introduce variables which will be verified, at compile-time, to never be modified. The values themselves, however, can be set at run-time, a la C++'s `const` (not `constexpr`).
+Using the same syntax as `variable`, but with the `constant` identifier, one can introduce variables which will be verified, at compile-time, to never be modified. The values themselves, however, can be set at run-time, à la C++'s `const` (not `constexpr`).
 
 ## Generics
 Definitions may be dependent on types. Such definitions may be functions or structs. The type list must never be empty. Dependent (incomplete) types of a generic item must be prefixed with `:` to disambiguate from full specializations.
