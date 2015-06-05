@@ -10,11 +10,20 @@
 #include <jank/parse/expect/type.hpp>
 #include <jank/parse/expect/error/syntax/syntax.hpp>
 
-/* TODO: enum for group numbers. */
 namespace jank
 {
   namespace parse
   {
+    enum match_group
+    {
+      null = 1,
+      boolean,
+      integer,
+      real,
+      string,
+      ident
+    };
+
     /* TODO: Parse the contents into a vector of lines. Read the iterators from
      * each match and calculate the line/column range for each cell. */
     cell::cell parse(std::string contents)
@@ -101,17 +110,26 @@ namespace jank
           for(auto const &inner : jtl::it::make_range(inner_begin, end))
           {
             std::smatch const &inner_matches{ inner };
-            if(inner_matches[1].matched) /* null */
+            if(inner_matches[match_group::null].matched) /* null */
             { active_list->data.push_back(cell::null{}); }
-            else if(inner_matches[2].matched) /* boolean */
-            { active_list->data.push_back(cell::boolean{ inner_matches[2] == "true" }); }
-            else if(inner_matches[3].matched) /* integer */
-            { active_list->data.push_back(cell::integer{ std::stoll(inner_matches[3]) }); }
-            else if(inner_matches[4].matched) /* real */
-            { active_list->data.push_back(cell::real{ std::stod(inner_matches[4]) }); }
-            else if(inner_matches[5].matched) /* string */
+            else if(inner_matches[match_group::boolean].matched) /* boolean */
             {
-              std::string str(inner_matches[5]);
+              active_list->data.push_back
+              (cell::boolean{ inner_matches[match_group::boolean] == "true" });
+            }
+            else if(inner_matches[match_group::integer].matched) /* integer */
+            {
+              active_list->data.push_back
+              (cell::integer{ std::stoll(inner_matches[match_group::integer]) });
+            }
+            else if(inner_matches[match_group::real].matched) /* real */
+            {
+              active_list->data.push_back
+              (cell::real{ std::stod(inner_matches[match_group::real]) });
+            }
+            else if(inner_matches[match_group::string].matched) /* string */
+            {
+              std::string str(inner_matches[match_group::string]);
 
               auto const unescaped_paren
               (
