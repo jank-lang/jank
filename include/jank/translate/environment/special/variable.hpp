@@ -18,9 +18,12 @@ namespace jank
         {
           namespace variable
           {
-            template <cell::detail::constness Constness>
             cell::cell make
-            (parse::cell::list const &input, cell::function_body const &body);
+            (
+              parse::cell::list const &input,
+              cell::function_body const &body,
+              cell::detail::constness c
+            );
           }
         }
       }

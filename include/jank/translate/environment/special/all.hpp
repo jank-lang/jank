@@ -6,6 +6,7 @@
 
 #include <jank/translate/environment/special/function.hpp>
 #include <jank/translate/environment/special/variable.hpp>
+#include <jank/translate/environment/special/constant.hpp>
 #include <jank/translate/environment/special/return_statement.hpp>
 
 namespace jank

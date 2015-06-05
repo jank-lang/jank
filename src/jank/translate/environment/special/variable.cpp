@@ -18,9 +18,12 @@ namespace jank
         {
           namespace variable
           {
-            template <cell::detail::constness Constness>
             cell::cell make
-            (parse::cell::list const &input, cell::function_body const &body)
+            (
+              parse::cell::list const &input,
+              cell::function_body const &body,
+              cell::detail::constness c
+            )
             {
               static std::size_t constexpr forms_required{ 4 };
 
@@ -68,7 +71,7 @@ namespace jank
               if(value_type.data != type.data)
               { throw expect::error::type::exception<>{ "incompatible types for variable definition" }; }
 
-              auto const def(cell::variable_definition{ { name.data, { value_type.data }, Constness } });
+              auto const def(cell::variable_definition{ { name.data, { value_type.data }, c } });
               body.data.scope->variable_definitions[name.data] = def;
               return { def };
             }
@@ -77,7 +80,7 @@ namespace jank
 
         cell::cell variable
         (parse::cell::list const &input, cell::function_body const &body)
-        { return detail::variable::make<cell::detail::constness::non_constant>(input, body); }
+        { return detail::variable::make(input, body, cell::detail::constness::non_constant); }
       }
     }
   }
