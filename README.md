@@ -53,6 +53,13 @@ Members of struct are accessed with a `.foo` syntax, where `.foo` is a function 
 ```
 Variables are defined via the `variable` special identifier and require a `name` identifier, a type, and a value(s). The type may be empty `()` if it can be deduced by the value. If the type is supplied, multiple values may be supplied which are not necessarily of type `T`, but instead are constructor arguments.
 
+### Constants
+```
+(constant name T
+  values...)
+```
+Using the same syntax as `variable`, but with the `constant` identifier, one can introduce variables which will be verified, at compile-time, to never be modified.
+
 ## Generics
 Definitions may be dependent on types. Such definitions may be functions or structs. The type list must never be empty. Dependent (incomplete) types of a generic item must be prefixed with `:` to disambiguate from full specializations.
 
