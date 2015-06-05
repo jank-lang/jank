@@ -77,4 +77,11 @@ namespace jest
     expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("translate/variable/non-generic/define/fail_function_with_incompatible_type.jank"); });
   }
+
+  template <> template <>
+  void jank::define_group::test<11>()
+  {
+    expect_exception<jank::translate::expect::error::type::exception<>>
+    ([]{ jank::common::translate("translate/variable/non-generic/define/fail_multiple_definition.jank"); });
+  }
 }

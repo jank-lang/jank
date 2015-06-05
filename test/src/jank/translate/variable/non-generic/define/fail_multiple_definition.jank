@@ -1,0 +1,5 @@
+(variable foo integer
+  42)
+
+(variable foo string
+  "nope")
