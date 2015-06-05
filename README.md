@@ -243,3 +243,7 @@ There is currently a suite of tests outlining all existing functionality. The ex
 ```bash
 $ make jank_test
 ```
+
+## License
+jank is under the MIT open-source license.  
+See the `LICENSE` file or http://opensource.org/licenses/MIT
