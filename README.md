@@ -242,6 +242,14 @@ There is currently a suite of tests outlining all existing functionality. The ex
 $ make jank_test
 ```
 
+## Editor support
+There are syntax files for Vim available in the `vim` directory of the repository. You can add these to your runtime path using something like:
+
+```viml
+set runtimepath^=~/projects/jank/vim
+set runtimepath^=~/projects/jank/vim/after
+```
+
 ## License
 jank is under the MIT open-source license.  
 See the `LICENSE` file or http://opensource.org/licenses/MIT
