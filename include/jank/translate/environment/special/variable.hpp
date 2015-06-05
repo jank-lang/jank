@@ -13,6 +13,16 @@ namespace jank
       {
         cell::cell variable
         (parse::cell::list const &input, cell::function_body const &body);
+
+        namespace detail
+        {
+          namespace variable
+          {
+            template <cell::detail::constness Constness>
+            cell::cell make
+            (parse::cell::list const &input, cell::function_body const &body);
+          }
+        }
       }
     }
   }

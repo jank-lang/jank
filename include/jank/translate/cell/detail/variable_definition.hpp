@@ -10,10 +10,14 @@ namespace jank
     {
       namespace detail
       {
+        enum class constness
+        { non_constant, constant };
+
         struct variable_definition
         {
           std::string name;
           type_reference type;
+          constness constant;
         };
       }
     }

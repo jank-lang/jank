@@ -50,7 +50,7 @@ namespace jank
               return std::make_pair
               (
                 arg.name,
-                cell::variable_definition{ { arg.name, arg.type } }
+                cell::variable_definition{ { arg.name, arg.type, cell::detail::constness::non_constant } }
               );
             }
           );
