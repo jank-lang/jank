@@ -48,7 +48,6 @@ namespace jank
               auto const &call(expect::type<cell::type::function_call>(c));
               return { call.data.definition.return_type.definition };
             }
-            /* TODO: Evaluate lists here, which are function calls. */
             default:
               throw expect::error::type::exception<>
               { "invalid argument type: " + std::to_string(c.which()) };
