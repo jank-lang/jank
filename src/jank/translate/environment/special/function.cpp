@@ -56,10 +56,20 @@ namespace jank
             }
           );
 
+          /* Check for an already-defined function of this type. */
+          /* XXX: We're only checking *this* scope's functions, so shadowing is allowed. */
+          for(auto const &overload : outer_body.data.scope->function_definitions[name.data])
+          {
+            if(overload.data.arguments == arg_definitions)
+            { throw expect::error::type::overload{ "multiple definition of: " + name.data }; }
+          }
+
           /* TODO: Add multiple return types into a tuple. */
           /* Parse return types. */
           auto const return_type_names(parse::expect::type<parse::cell::type::list>(data[3]));
           auto const return_types(function::ret::parse(return_type_names, nested_scope));
+
+          outer_body.data.scope->function_definitions[name.data].emplace_back();
 
           cell::function_definition const ret
           {
@@ -76,14 +86,6 @@ namespace jank
               nested_scope
             }
           };
-
-          /* Check for an already-defined function of this type. */
-          /* XXX: We're only checking *this* scope's functions, so shadowing is allowed. */
-          for(auto const &overload : outer_body.data.scope->function_definitions[name.data])
-          {
-            if(overload.data.arguments == arg_definitions)
-            { throw expect::error::type::overload{ "multiple definition of: " + name.data }; }
-          }
 
           /* Add the function definition to the out body's scope. */
           outer_body.data.scope->function_definitions[name.data].push_back(ret);
