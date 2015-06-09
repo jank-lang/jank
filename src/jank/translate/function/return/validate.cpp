@@ -48,7 +48,6 @@ namespace jank
           }
           else /* Found at least one return statement. */
           {
-            /* TODO: write a test case for this. */
             if(std::distance(it, body.data.cells.end()) > 1)
             { throw expect::error::syntax::exception<>{ "extraneous statements after return" }; }
           }

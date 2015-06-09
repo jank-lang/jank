@@ -19,6 +19,7 @@ namespace jank
     {
       namespace special
       {
+        /* TODO: allow function recursing. */
         cell::cell function
         (parse::cell::list const &input, cell::function_body const &outer_body)
         {

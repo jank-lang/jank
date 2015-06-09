@@ -93,4 +93,18 @@ namespace jest
     expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("translate/function/non-generic/return/fail_single_value_wrong_param_type.jank"); });
   }
+
+  template <> template <>
+  void jank::return_group::test<14>()
+  {
+    expect_exception<jank::translate::expect::error::syntax::exception<>>
+    ([]{ jank::common::translate("translate/function/non-generic/return/fail_code_after_return.jank"); });
+  }
+
+  template <> template <>
+  void jank::return_group::test<15>()
+  {
+    expect_exception<jank::translate::expect::error::syntax::exception<>>
+    ([]{ jank::common::translate("translate/function/non-generic/return/fail_code_after_return_implicit.jank"); });
+  }
 }
