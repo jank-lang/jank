@@ -27,6 +27,7 @@ int main(int const argc, char ** const argv)
   if(argc != 2)
   {
     std::cout << "usage: " << argv[0] << " <file>" << std::endl;
+    std::cout << "       " << argv[0] << " -" << std::endl;
     return 1;
   }
 
