@@ -68,6 +68,7 @@ namespace jank
           auto const return_type_names(parse::expect::type<parse::cell::type::list>(data[3]));
           auto const return_types(function::ret::parse(return_type_names, nested_scope));
 
+          /* Add an empty declaration first, to allow for recursive references. */
           outer_body.data.scope->function_definitions[name.data].emplace_back();
 
           cell::function_definition const ret
