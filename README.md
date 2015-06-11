@@ -1,4 +1,4 @@
-# jank - a statically typed, generic lisp!
+# jank - a statically typed, generic lisp
 
 jank aims to be a lisp-1 with hygienic, code-as-data macros, a strong, static type system, scope-based resource management (RAII), a direct focus on generic programming, and a native compiler.
 
