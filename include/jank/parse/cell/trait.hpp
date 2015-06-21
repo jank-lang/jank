@@ -38,9 +38,6 @@ namespace jank
         inline char constexpr const* to_string<type::list>()
         { return "list"; }
         template <>
-        inline char constexpr const* to_string<type::function>()
-        { return "function"; }
-        template <>
         inline char constexpr const* to_string<type::comment>()
         { return "comment"; }
 
@@ -68,9 +65,6 @@ namespace jank
         inline char constexpr const* to_string<list>()
         { return to_string<type::list>(); }
         template <>
-        inline char constexpr const* to_string<function>()
-        { return to_string<type::function>(); }
-        template <>
         inline char constexpr const* to_string<comment>()
         { return to_string<type::comment>(); }
 
@@ -92,8 +86,6 @@ namespace jank
               return to_string<type::ident>();
             case type::list:
               return to_string<type::list>();
-            case type::function:
-              return to_string<type::function>();
             case type::comment:
               return to_string<type::comment>();
             default:
@@ -117,8 +109,6 @@ namespace jank
           { return type::ident; }
           else if(str == to_string<list>())
           { return type::list; }
-          else if(str == to_string<function>())
-          { return type::function; }
           else if(str == to_string<comment>())
           { return type::comment; }
           else
@@ -154,9 +144,6 @@ namespace jank
           struct to_type<type::list>
           { using type = list; };
           template <>
-          struct to_type<type::function>
-          { using type = function; };
-          template <>
           struct to_type<type::comment>
           { using type = comment; };
         }
@@ -186,9 +173,6 @@ namespace jank
         template <>
         type constexpr to_enum<list>()
         { return type::list; }
-        template <>
-        type constexpr to_enum<function>()
-        { return type::function; }
         template <>
         type constexpr to_enum<comment>()
         { return type::comment; }

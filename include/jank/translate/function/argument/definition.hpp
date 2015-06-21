@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <ostream>
+#include <memory>
 
 #include <jank/parse/cell/cell.hpp>
 #include <jank/parse/cell/visit.hpp>

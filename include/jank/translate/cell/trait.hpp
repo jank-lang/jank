@@ -122,7 +122,7 @@ namespace jank
           { return type::return_statement; }
           else
           {
-            throw interpret::expect::error::type::exception<>
+            throw expect::error::type::exception<>
             { "invalid translate cell type string " + str };
           }
         }

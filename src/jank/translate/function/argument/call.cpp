@@ -5,7 +5,6 @@
 #include <jank/parse/cell/cell.hpp>
 #include <jank/parse/cell/trait.hpp>
 #include <jank/parse/expect/type.hpp>
-#include <jank/interpret/environment/scope.hpp> /* TODO: for function */
 #include <jank/translate/environment/scope.hpp>
 #include <jank/translate/function/match_overload.hpp>
 #include <jank/translate/expect/error/type/type.hpp>

@@ -6,7 +6,6 @@
 #include <jtl/iterator/range.hpp>
 
 #include <jank/parse/parse.hpp>
-#include <jank/interpret/environment/scope.hpp> /* TODO: remove after new interpreter */
 #include <jank/parse/expect/type.hpp>
 #include <jank/parse/expect/error/syntax/syntax.hpp>
 

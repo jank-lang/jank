@@ -9,7 +9,6 @@
 #include <jtl/iterator/stream_delim.hpp>
 #include <jtl/iterator/back_insert.hpp>
 
-#include <jank/interpret/environment/scope.hpp>
 #include <jank/parse/parse.hpp>
 #include <jank/parse/cell/stream.hpp>
 #include <jank/parse/expect/type.hpp>
@@ -17,7 +16,6 @@
 #include <jank/translate/cell/stream.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/interpret/interpret.hpp>
-#include <jank/interpret/environment/prelude/all.hpp>
 
 #include "common/translate.hpp"
 #include "common/interpret.hpp"
@@ -79,12 +77,4 @@ int main(int const argc, char ** const argv)
 
   std::cout << "\ninterpreted: " << std::endl;
   jank::interpret::interpret(std::make_shared<jank::interpret::scope>(), translated_body);
-
-
-  /* TODO: interpret from translation */
-  //jank::interpret::interpret
-  //(
-  //  jank::interpret::environment::prelude::env(),
-  //  jank::parse::expect::type<jank::parse::cell::type::list>(root)
-  //);
 }

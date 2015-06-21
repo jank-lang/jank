@@ -37,9 +37,6 @@ namespace jank
         return os << ") ";
       }
 
-      static std::ostream& operator <<(std::ostream &os, function const &)
-      { return os << "function "; }
-
       static std::ostream& operator <<(std::ostream &os, comment const &c)
       {
         detail::stream::indenter const indent{ os, indent_level };
@@ -70,9 +67,6 @@ namespace jank
             break;
           case type::list:
             os << boost::get<list>(c);
-            break;
-          case type::function:
-            os << boost::get<function>(c);
             break;
           case type::comment:
             os << boost::get<comment>(c);

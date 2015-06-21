@@ -1,7 +1,6 @@
 #pragma once
 
 #include <jank/parse/cell/cell.hpp>
-#include <jank/interpret/environment/scope.hpp> /* TODO: shouldn't be looking in interpret */
 
 namespace jank
 {
@@ -32,8 +31,6 @@ namespace jank
             return func(boost::get<ident>(c));
           case type::list:
             return func(boost::get<list>(c));
-          case type::function:
-            return func(boost::get<function>(c));
           case type::comment:
             return func(boost::get<comment>(c));
           default:

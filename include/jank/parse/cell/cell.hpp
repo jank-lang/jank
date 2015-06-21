@@ -31,7 +31,6 @@ namespace jank
         boost::recursive_wrapper<wrapper<type::string>>,
         boost::recursive_wrapper<wrapper<type::ident>>,
         boost::recursive_wrapper<wrapper<type::list>>,
-        boost::recursive_wrapper<wrapper<type::function>>,
         boost::recursive_wrapper<wrapper<type::comment>>
       >;
 
@@ -93,7 +92,6 @@ namespace jank
       using string = wrapper<type::string>;
       using ident = wrapper<type::ident>;
       using list = wrapper<type::list>;
-      using function = wrapper<type::function>;
       using comment = wrapper<type::comment>;
     }
   }
