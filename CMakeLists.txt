@@ -19,6 +19,13 @@ else()
   set(64_BIT_PLATFORM 1)
 endif()
 
+# Submodules
+message(STATUS "Updating submodules")
+execute_process(
+  COMMAND git submodule update --recursive --init
+  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+)
+
 # C++14
 include(cmake/cxx14.cmake)
 
