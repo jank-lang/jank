@@ -1,4 +1,5 @@
 #include <jank/parse/cell/stream.hpp>
+#include <jank/translate/cell/stream.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/expect/type.hpp>
@@ -42,7 +43,7 @@ namespace jank
         } break;
 
         default:
-          throw expect::error::type::exception<>{ "invalid value" };
+          throw expect::error::type::exception<>{ "invalid value: " + std::to_string(c.which()) };
       }
     }
 
@@ -71,10 +72,17 @@ namespace jank
 
             std::cout << "call (" << cell.data.definition.name << "): ";
             for(auto const &arg : cell.data.arguments)
-            { std::cout << resolve_value(next_scope, arg.cell) << " "; }
+            { std::cout << resolve_value(env, arg.cell) << " "; }
             std::cout << std::endl;
 
             return interpret(next_scope, { cell.data.definition.body });
+          } break;
+
+          case translate::cell::type::return_statement:
+          {
+            auto const &cell(translate::expect::type<translate::cell::type::return_statement>(c));
+            std::cout << "returning: " << cell.data.cell << std::endl;
+            return resolve_value(env, cell.data.cell);
           } break;
 
           case translate::cell::type::function_body:
@@ -84,7 +92,6 @@ namespace jank
           case translate::cell::type::variable_definition:
           case translate::cell::type::variable_reference:
           case translate::cell::type::literal_value:
-          case translate::cell::type::return_statement:
           default:
             break;
         }

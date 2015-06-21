@@ -157,7 +157,7 @@ namespace jank
           { using type = literal_value; };
           template <>
           struct to_type<type::return_statement>
-          { using type = literal_value; };
+          { using type = return_statement; };
         }
         template <type C>
         using to_type = typename detail::to_type<C>::type;
