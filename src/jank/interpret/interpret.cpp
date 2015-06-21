@@ -65,9 +65,11 @@ namespace jank
 
             for(auto const &arg : cell.data.arguments)
             {
-              static_cast<void>(arg);
+              auto const var(resolve_value(next_scope, arg.cell));
+              next_scope->variables[arg.name] = var;
             }
 
+            return interpret(next_scope, { cell.data.definition.body });
           } break;
 
           case translate::cell::type::function_body:
