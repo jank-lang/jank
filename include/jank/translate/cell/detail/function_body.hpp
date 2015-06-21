@@ -16,6 +16,11 @@ namespace jank
     {
       namespace detail
       {
+        /* TODO: Allow native function bodies.
+         * 1) function for translating
+         * 2) function for interpreting
+         * 3) function for streaming
+         */
         template <typename C>
         struct function_body
         {
