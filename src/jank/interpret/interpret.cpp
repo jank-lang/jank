@@ -1,3 +1,4 @@
+#include <jank/translate/expect/type.hpp>
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/expect/type.hpp>
 #include <jank/interpret/expect/error/type/type.hpp>
@@ -6,6 +7,38 @@ namespace jank
 {
   namespace interpret
   {
+    parse::cell::cell interpret(std::shared_ptr<scope> const &env, translate::cell::function_body const &root)
+    {
+      static_cast<void>(env);
+      for(auto const &c : root.data.cells)
+      {
+        switch(static_cast<translate::cell::type>(c.which()))
+        {
+          case translate::cell::type::function_call:
+          {
+            auto const &cell(translate::expect::type<translate::cell::type::function_call>(c));
+            if(cell.data.definition.name == "print")
+            {
+              std::cout << "print call" << std::endl;
+            }
+          } break;
+
+          case translate::cell::type::function_body:
+          case translate::cell::type::function_definition:
+          case translate::cell::type::type_definition:
+          case translate::cell::type::type_reference:
+          case translate::cell::type::variable_definition:
+          case translate::cell::type::variable_reference:
+          case translate::cell::type::literal_value:
+          case translate::cell::type::return_statement:
+          default:
+            break;
+        }
+      }
+
+      return {};
+    }
+
     parse::cell::cell interpret(environment::scope &env, parse::cell::list &root)
     {
       auto const &func_name(expect::type<parse::cell::type::ident>(root.data[0]).data);

@@ -77,10 +77,14 @@ int main(int const argc, char ** const argv)
 
   std::cout << "\ntranslated: " << translated_body << std::endl;
 
+  std::cout << "\ninterpreted: " << std::endl;
+  jank::interpret::interpret(std::make_shared<jank::interpret::scope>(), translated_body);
+
+
   /* TODO: interpret from translation */
-  jank::interpret::interpret
-  (
-    jank::interpret::environment::prelude::env(),
-    jank::parse::expect::type<jank::parse::cell::type::list>(root)
-  );
+  //jank::interpret::interpret
+  //(
+  //  jank::interpret::environment::prelude::env(),
+  //  jank::parse::expect::type<jank::parse::cell::type::list>(root)
+  //);
 }
