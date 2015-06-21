@@ -11,6 +11,16 @@ namespace jank
   {
     namespace cell
     {
+      enum class literal_type
+      {
+        null,
+        boolean,
+        integer,
+        real,
+        string,
+        ident
+      };
+
       namespace detail
       {
         using literal_value = boost::variant

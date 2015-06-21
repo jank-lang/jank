@@ -7,6 +7,35 @@ namespace jank
 {
   namespace interpret
   {
+    parse::cell::cell resolve_value(translate::cell::cell const &c)
+    {
+      switch(static_cast<translate::cell::type>(c.which()))
+      {
+        case translate::cell::type::variable_reference:
+        case translate::cell::type::literal_value:
+        {
+          auto const &cell(translate::expect::type<translate::cell::type::literal_value>(c));
+          switch(static_cast<translate::cell::literal_type>(cell.data.which()))
+          {
+            case translate::cell::literal_type::null:
+              return boost::get<parse::cell::null>(cell.data);
+            case translate::cell::literal_type::boolean:
+              return boost::get<parse::cell::boolean>(cell.data);
+            case translate::cell::literal_type::integer:
+              return boost::get<parse::cell::integer>(cell.data);
+            case translate::cell::literal_type::real:
+              return boost::get<parse::cell::real>(cell.data);
+            case translate::cell::literal_type::string:
+              return boost::get<parse::cell::string>(cell.data);
+            default:
+              throw expect::error::type::exception<>{ "invalid literal" };
+          }
+        } break;
+        default:
+          throw expect::error::type::exception<>{ "invalid value" };
+      }
+    }
+
     parse::cell::cell interpret(std::shared_ptr<scope> const &env, translate::cell::function_body const &root)
     {
       static_cast<void>(env);
@@ -20,6 +49,14 @@ namespace jank
             if(cell.data.definition.name == "print")
             {
               std::cout << "print call" << std::endl;
+            }
+
+            auto const next_scope(std::make_shared<scope>());
+            next_scope->parent = env;
+
+            for(auto const &arg : cell.data.arguments)
+            {
+              static_cast<void>(arg);
             }
 
           } break;

@@ -10,6 +10,7 @@ namespace jank
   {
     struct scope
     {
+      /* TODO: Use a custom interpret cell for these values. */
       std::map<std::string, parse::cell::cell> variables;
       std::shared_ptr<scope> parent;
 
