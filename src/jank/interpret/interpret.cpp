@@ -1,3 +1,4 @@
+#include <jank/parse/cell/stream.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/expect/type.hpp>
@@ -55,10 +56,6 @@ namespace jank
           case translate::cell::type::function_call:
           {
             auto const &cell(translate::expect::type<translate::cell::type::function_call>(c));
-            if(cell.data.definition.name == "print")
-            {
-              std::cout << "print call" << std::endl;
-            }
 
             auto const next_scope(std::make_shared<scope>());
             next_scope->parent = env;
@@ -67,6 +64,14 @@ namespace jank
             {
               auto const var(resolve_value(next_scope, arg.cell));
               next_scope->variables[arg.name] = var;
+            }
+
+            if(cell.data.definition.name == "print")
+            {
+              std::cout << "print call: ";
+              for(auto const &arg : cell.data.arguments)
+              { std::cout << resolve_value(next_scope, arg.cell) << " "; }
+              std::cout << std::endl;
             }
 
             return interpret(next_scope, { cell.data.definition.body });
