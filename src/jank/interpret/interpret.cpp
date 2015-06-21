@@ -42,6 +42,12 @@ namespace jank
           }
         } break;
 
+        case translate::cell::type::function_call:
+        {
+          auto const &cell(translate::expect::type<translate::cell::type::function_call>(c));
+          return interpret(scope, { cell.data.definition.body });
+        } break;
+
         default:
           throw expect::error::type::exception<>{ "invalid value: " + std::to_string(c.which()) };
       }
