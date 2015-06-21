@@ -7,11 +7,19 @@ namespace jank
 {
   namespace interpret
   {
-    parse::cell::cell resolve_value(translate::cell::cell const &c)
+    parse::cell::cell resolve_value(std::shared_ptr<scope> const &scope, translate::cell::cell const &c)
     {
       switch(static_cast<translate::cell::type>(c.which()))
       {
         case translate::cell::type::variable_reference:
+        {
+          auto const &cell(translate::expect::type<translate::cell::type::variable_reference>(c));
+          auto const opt(scope->find_variable(cell.data.definition.name));
+          if(!opt)
+          { throw expect::error::type::exception<>{ "unknown variable: " + cell.data.definition.name }; }
+          return opt.value();
+        } break;
+
         case translate::cell::type::literal_value:
         {
           auto const &cell(translate::expect::type<translate::cell::type::literal_value>(c));
@@ -31,6 +39,7 @@ namespace jank
               throw expect::error::type::exception<>{ "invalid literal" };
           }
         } break;
+
         default:
           throw expect::error::type::exception<>{ "invalid value" };
       }
