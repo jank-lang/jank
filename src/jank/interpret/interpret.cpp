@@ -91,19 +91,12 @@ namespace jank
             return resolve_value(env, cell.data.cell);
           } break;
 
-          case translate::cell::type::function_body:
-          case translate::cell::type::function_definition:
-          case translate::cell::type::type_definition:
-          case translate::cell::type::type_reference:
-          case translate::cell::type::variable_definition:
-          case translate::cell::type::variable_reference:
-          case translate::cell::type::literal_value:
           default:
             break;
         }
       }
 
-      return {};
+      throw expect::error::type::exception<>{ "no return statement" };
     }
 
     parse::cell::cell interpret(environment::scope &env, parse::cell::list &root)
