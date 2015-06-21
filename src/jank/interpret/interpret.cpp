@@ -60,19 +60,19 @@ namespace jank
             auto const next_scope(std::make_shared<scope>());
             next_scope->parent = env;
 
+            auto arg_name_it(cell.data.definition.arguments.begin());
             for(auto const &arg : cell.data.arguments)
             {
+              auto const &name(*arg_name_it++);
               auto const var(resolve_value(next_scope, arg.cell));
-              next_scope->variables[arg.name] = var;
+              std::cout << "adding " << name.name << " to next scope as: " << var << std::endl;
+              next_scope->variables[name.name] = var;
             }
 
-            if(cell.data.definition.name == "print")
-            {
-              std::cout << "print call: ";
-              for(auto const &arg : cell.data.arguments)
-              { std::cout << resolve_value(next_scope, arg.cell) << " "; }
-              std::cout << std::endl;
-            }
+            std::cout << "call (" << cell.data.definition.name << "): ";
+            for(auto const &arg : cell.data.arguments)
+            { std::cout << resolve_value(next_scope, arg.cell) << " "; }
+            std::cout << std::endl;
 
             return interpret(next_scope, { cell.data.definition.body });
           } break;
