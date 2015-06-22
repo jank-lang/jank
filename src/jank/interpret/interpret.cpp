@@ -2,8 +2,9 @@
 #include <jank/translate/cell/stream.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/interpret/interpret.hpp>
-#include <jank/interpret/expect/type.hpp>
-#include <jank/interpret/expect/error/type/type.hpp>
+#include <jank/interpret/expect/error/lookup/exception.hpp>
+
+/* TODO: rename except files to exception.hpp */
 
 namespace jank
 {
@@ -19,7 +20,7 @@ namespace jank
           auto const &cell(translate::expect::type<translate::cell::type::variable_reference>(c));
           auto const opt(scope->find_variable(cell.data.definition.name));
           if(!opt)
-          { throw expect::error::type::exception<>{ "unknown variable: " + cell.data.definition.name }; }
+          { throw expect::error::lookup::exception<>{ "unknown variable: " + cell.data.definition.name }; }
           return opt.value();
         } break;
 
@@ -39,7 +40,7 @@ namespace jank
             case translate::cell::literal_type::string:
               return boost::get<parse::cell::string>(cell.data);
             default:
-              throw expect::error::type::exception<>{ "invalid literal" };
+              throw expect::error::lookup::exception<>{ "invalid literal" };
           }
         } break;
 
@@ -50,7 +51,7 @@ namespace jank
         } break;
 
         default:
-          throw expect::error::type::exception<>{ "invalid value: " + std::to_string(c.which()) };
+          throw expect::error::lookup::exception<>{ "invalid value: " + std::to_string(c.which()) };
       }
     }
 
