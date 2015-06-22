@@ -104,7 +104,7 @@ namespace jank
         }
       }
 
-      throw expect::error::type::exception<>{ "no return statement" };
+      return parse::cell::null{};
     }
   }
 }
