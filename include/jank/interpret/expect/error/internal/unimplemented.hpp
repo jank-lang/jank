@@ -1,6 +1,6 @@
 #pragma once
 
-#include <jank/interpret/expect/error/internal/internal.hpp>
+#include <jank/interpret/expect/error/internal/exception.hpp>
 
 namespace jank
 {

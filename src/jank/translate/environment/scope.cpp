@@ -1,8 +1,8 @@
 #include <algorithm>
 
 #include <jank/translate/environment/scope.hpp>
-#include <jank/translate/expect/error/type/type.hpp>
-#include <jank/translate/expect/error/internal/internal.hpp>
+#include <jank/translate/expect/error/type/exception.hpp>
+#include <jank/translate/expect/error/internal/exception.hpp>
 
 namespace jank
 {

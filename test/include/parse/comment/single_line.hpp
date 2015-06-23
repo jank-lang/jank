@@ -3,7 +3,7 @@
 #include <jest/jest.hpp>
 
 #include "common/translate.hpp"
-#include <jank/parse/expect/error/syntax/syntax.hpp>
+#include <jank/parse/expect/error/syntax/exception.hpp>
 
 namespace jank
 {

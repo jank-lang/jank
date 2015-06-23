@@ -7,7 +7,7 @@
 
 #include <jank/parse/parse.hpp>
 #include <jank/parse/expect/type.hpp>
-#include <jank/parse/expect/error/syntax/syntax.hpp>
+#include <jank/parse/expect/error/syntax/exception.hpp>
 
 namespace jank
 {

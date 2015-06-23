@@ -13,7 +13,7 @@
 #include <jank/translate/function/argument/call.hpp>
 #include <jank/translate/function/match_overload.hpp>
 #include <jank/translate/function/return/validate.hpp>
-#include <jank/translate/expect/error/syntax/syntax.hpp>
+#include <jank/translate/expect/error/syntax/exception.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
 
 namespace jank

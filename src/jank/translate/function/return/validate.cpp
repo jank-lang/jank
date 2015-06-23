@@ -6,7 +6,7 @@
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/environment/special/return_statement.hpp>
 #include <jank/translate/expect/type.hpp>
-#include <jank/translate/expect/error/syntax/syntax.hpp>
+#include <jank/translate/expect/error/syntax/exception.hpp>
 
 namespace jank
 {

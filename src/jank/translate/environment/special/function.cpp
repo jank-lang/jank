@@ -8,7 +8,7 @@
 #include <jank/translate/function/argument/definition.hpp>
 #include <jank/translate/function/return/parse.hpp>
 #include <jank/translate/environment/scope.hpp>
-#include <jank/translate/expect/error/syntax/syntax.hpp>
+#include <jank/translate/expect/error/syntax/exception.hpp>
 #include <jank/translate/expect/error/type/overload.hpp>
 
 namespace jank

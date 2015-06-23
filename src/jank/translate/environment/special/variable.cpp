@@ -4,7 +4,7 @@
 #include <jank/translate/translate.hpp>
 #include <jank/translate/environment/scope.hpp>
 #include <jank/translate/function/argument/resolve_type.hpp>
-#include <jank/translate/expect/error/syntax/syntax.hpp>
+#include <jank/translate/expect/error/syntax/exception.hpp>
 
 namespace jank
 {

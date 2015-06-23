@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jank/parse/cell/cell.hpp>
-#include <jank/parse/expect/error/type/type.hpp>
+#include <jank/parse/expect/error/type/exception.hpp>
 
 namespace jank
 {

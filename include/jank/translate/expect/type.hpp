@@ -5,7 +5,7 @@
 #include <experimental/optional>
 
 #include <jank/translate/cell/trait.hpp>
-#include <jank/translate/expect/error/type/type.hpp>
+#include <jank/translate/expect/error/type/exception.hpp>
 
 namespace jank
 {

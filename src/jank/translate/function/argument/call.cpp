@@ -7,8 +7,8 @@
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/environment/scope.hpp>
 #include <jank/translate/function/match_overload.hpp>
-#include <jank/translate/expect/error/type/type.hpp>
-#include <jank/translate/expect/error/syntax/syntax.hpp>
+#include <jank/translate/expect/error/type/exception.hpp>
+#include <jank/translate/expect/error/syntax/exception.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
 
 namespace jank
