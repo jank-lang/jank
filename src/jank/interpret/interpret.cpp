@@ -9,7 +9,7 @@ namespace jank
   namespace interpret
   {
     /* TODO: cleanup */
-    parse::cell::cell resolve_value(std::shared_ptr<scope> const &scope, translate::cell::cell const &c)
+    parse::cell::cell resolve_value(std::shared_ptr<environment::scope> const &scope, translate::cell::cell const &c)
     {
       switch(static_cast<translate::cell::type>(c.which()))
       {
@@ -55,7 +55,7 @@ namespace jank
 
     parse::cell::cell interpret
     (
-      std::shared_ptr<scope> const &env,
+      std::shared_ptr<environment::scope> const &env,
       translate::cell::function_body const &root
     )
     {
@@ -69,7 +69,7 @@ namespace jank
             auto const &cell
             (translate::expect::type<translate::cell::type::function_call>(c));
 
-            auto const next_scope(std::make_shared<scope>());
+            auto const next_scope(std::make_shared<environment::scope>());
             next_scope->parent = env;
 
             auto arg_name_it(cell.data.definition.arguments.begin());

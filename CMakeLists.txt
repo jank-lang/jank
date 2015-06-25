@@ -45,6 +45,7 @@ include_directories(
 add_library(${PROJECT_NAME}_static STATIC
 	          src/jank/parse/parse.cpp
 	          src/jank/parse/cell/stream.cpp
+
 	          src/jank/translate/cell/stream.cpp
 	          src/jank/translate/function/argument/definition.cpp
             src/jank/translate/function/argument/call.cpp
@@ -59,7 +60,9 @@ add_library(${PROJECT_NAME}_static STATIC
             src/jank/translate/environment/special/variable.cpp
             src/jank/translate/environment/special/constant.cpp
             src/jank/translate/environment/special/return_statement.cpp
+
 	          src/jank/interpret/interpret.cpp
+	          src/jank/interpret/environment/scope.cpp
 )
 
 add_executable(${PROJECT_NAME} src/main.cpp)
