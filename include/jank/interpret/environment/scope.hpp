@@ -19,7 +19,8 @@ namespace jank
         std::map<std::string, parse::cell::cell> variables;
         std::shared_ptr<scope> parent;
 
-        std::experimental::optional<parse::cell::cell> find_variable;
+        std::experimental::optional<parse::cell::cell> find_variable
+        (std::string const &name);
       };
     }
   }

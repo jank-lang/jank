@@ -76,5 +76,9 @@ int main(int const argc, char ** const argv)
   std::cout << "\ntranslated: " << translated_body << std::endl;
 
   std::cout << "\ninterpreted: " << std::endl;
-  jank::interpret::interpret(std::make_shared<jank::interpret::scope>(), translated_body);
+  jank::interpret::interpret
+  (
+    std::make_shared<jank::interpret::environment::scope>(),
+    translated_body
+  );
 }

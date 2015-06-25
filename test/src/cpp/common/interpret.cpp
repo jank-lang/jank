@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <string>
 #include <vector>
@@ -31,7 +30,7 @@ namespace jank
       /* TODO: add an assert function to env before passing it along. */
       interpret::interpret
       (
-        std::make_shared<jank::interpret::scope>(),
+        std::make_shared<jank::interpret::environment::scope>(),
         translated_body
       );
     }
