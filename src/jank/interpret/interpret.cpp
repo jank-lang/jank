@@ -4,8 +4,6 @@
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/expect/error/lookup/exception.hpp>
 
-/* TODO: rename except files to exception.hpp */
-
 namespace jank
 {
   namespace interpret
