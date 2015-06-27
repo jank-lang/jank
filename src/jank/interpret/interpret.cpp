@@ -5,6 +5,7 @@
 #include <jank/interpret/environment/resolve_value.hpp>
 #include <jank/interpret/expect/error/lookup/exception.hpp>
 
+/* TODO: print with no newline. */
 namespace jank
 {
   namespace interpret
@@ -15,7 +16,6 @@ namespace jank
       translate::cell::function_body const &root
     )
     {
-      static_cast<void>(env);
       for(auto const &c : root.data.cells)
       {
         switch(static_cast<translate::cell::type>(c.which()))
