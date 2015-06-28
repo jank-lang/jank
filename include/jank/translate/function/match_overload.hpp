@@ -22,6 +22,7 @@ namespace jank
         { using type = cell::native_function_call; };
       }
 
+      /* Handles native and non-native functions. */
       template <typename Def>
       std::experimental::optional<typename detail::call<Def>::type> match_overload
       (

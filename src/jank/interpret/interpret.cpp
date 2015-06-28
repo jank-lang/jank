@@ -46,6 +46,11 @@ namespace jank
             return interpret(next_scope, { cell.data.definition.body });
           } break;
 
+          case translate::cell::type::native_function_call:
+          {
+            std::cout << "native function call" << std::endl;
+          } break;
+
           case translate::cell::type::return_statement:
           {
             auto const &cell
