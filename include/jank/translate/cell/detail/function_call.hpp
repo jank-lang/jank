@@ -17,10 +17,10 @@ namespace jank
     {
       namespace detail
       {
-        template <typename C>
+        template <typename C, typename Def = function_definition<C>>
         struct function_call
         {
-          function_definition<C> definition;
+          Def definition;
           jank::translate::function::argument::value_list<C> arguments;
           std::shared_ptr<environment::scope> scope;
         };

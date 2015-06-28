@@ -55,19 +55,34 @@ namespace jank
 
             /* Arbitrary empty lists are no good. */
             if(list.data.empty())
-            { throw expect::error::syntax::exception<>{ "invalid empty translation list" }; }
-
-            auto const function_opt
-            (
-              scope->find_function
-              (parse::expect::type<parse::cell::type::ident>(list.data[0]).data)
-            );
-            if(function_opt)
             {
-              auto const matched_opt(function::match_overload(list, scope, function_opt.value()));
-              if(matched_opt)
-              { translated.data.cells.push_back(matched_opt.value()); }
+              throw expect::error::syntax::exception<>
+              { "invalid empty translation list" };
             }
+
+            auto const &function_name
+            (parse::expect::type<parse::cell::type::ident>(list.data[0]).data);
+            auto const native_function_opt
+            (scope->find_native_function(function_name));
+            auto const function_opt
+            (scope->find_function(function_name));
+
+            auto const match
+            (
+              [&](auto const &opt)
+              {
+                if(!opt)
+                { return false; }
+
+                auto const matched_opt
+                (function::match_overload(list, scope, opt.value()));
+                if(matched_opt)
+                { translated.data.cells.push_back(matched_opt.value()); }
+                return static_cast<bool>(matched_opt);
+              }
+            );
+            if(!match(native_function_opt))
+            { match(function_opt); }
 
             /* TODO: It's a list, but the function wasn't found. Throw an exception. */
             //std::cout << "no function named "

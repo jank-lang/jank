@@ -40,29 +40,35 @@ namespace jank
         return { { it->second, shared_from_this() } };
       }
 
-      /* Build a vector of all function overloads in each scope, from this to the root. */
-      std::experimental::optional<std::vector<scope::result<cell::function_definition>>>
-      scope::find_function(std::string const &name)
+      template <typename T, typename F>
+      static std::experimental::optional<std::vector<scope::result<T>>>
+      find
+      (
+        std::string const &name,
+        std::shared_ptr<scope> const &s,
+        std::map<std::string, std::vector<T>> const &functions,
+        F const &recurse
+      )
       {
-        std::vector<scope::result<cell::function_definition>> ret;
+        std::vector<scope::result<T>> ret;
 
         /* Add all from the current scope. */
-        auto const it(function_definitions.find(name));
-        if(it != function_definitions.end())
+        auto const it(functions.find(name));
+        if(it != functions.end())
         {
           std::transform
           (
             it->second.begin(), it->second.end(),
             std::back_inserter(ret),
-            [this](auto const &def) -> scope::result<cell::function_definition>
-            { return { def, this->shared_from_this() }; }
+            [&](auto const &def) -> scope::result<T>
+            { return { def, s }; }
           );
         }
 
         /* Add all from the parent scope(s). */
-        if(parent)
+        if(s->parent)
         {
-          auto const parent_ret(parent->find_function(name));
+          auto const parent_ret((s->parent.get()->*recurse)(name));
           if(parent_ret)
           {
             auto const &found(parent_ret.value());
@@ -78,6 +84,33 @@ namespace jank
         { return {}; }
         else
         { return { ret }; }
+      }
+
+      /* Build a vector of all function overloads in each scope, from this to the root. */
+      std::experimental::optional
+      <std::vector<scope::result<cell::function_definition>>>
+      scope::find_function(std::string const &name)
+      {
+        return find
+        (
+          name,
+          shared_from_this(),
+          function_definitions,
+          &scope::find_function
+        );
+      }
+
+      std::experimental::optional
+      <std::vector<scope::result<cell::native_function_definition>>>
+      scope::find_native_function(std::string const &name)
+      {
+        return find
+        (
+          name,
+          shared_from_this(),
+          native_function_definitions,
+          &scope::find_native_function
+        );
       }
     }
   }
