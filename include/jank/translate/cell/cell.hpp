@@ -36,6 +36,7 @@ namespace jank
         boost::recursive_wrapper<wrapper<type::function_definition>>,
         boost::recursive_wrapper<wrapper<type::native_function_definition>>,
         boost::recursive_wrapper<wrapper<type::function_call>>,
+        boost::recursive_wrapper<wrapper<type::native_function_call>>,
         boost::recursive_wrapper<wrapper<type::type_definition>>,
         boost::recursive_wrapper<wrapper<type::type_reference>>,
         boost::recursive_wrapper<wrapper<type::variable_definition>>,
@@ -65,7 +66,13 @@ namespace jank
       template <>
       struct wrapper<type::function_call>
       {
-        using type = detail::function_call<cell>;
+        using type = detail::function_call<cell, detail::function_definition<cell>>;
+        type data;
+      };
+      template <>
+      struct wrapper<type::native_function_call>
+      {
+        using type = detail::function_call<cell, detail::native_function_definition<cell>>;
         type data;
       };
       template <>
@@ -109,6 +116,7 @@ namespace jank
       using function_definition = wrapper<type::function_definition>;
       using native_function_definition = wrapper<type::native_function_definition>;
       using function_call = wrapper<type::function_call>;
+      using native_function_call = wrapper<type::native_function_call>;
       using type_definition = wrapper<type::type_definition>;
       using type_reference = wrapper<type::type_reference>;
       using variable_definition = wrapper<type::variable_definition>;

@@ -4,6 +4,7 @@
 #include <jank/translate/function/argument/resolve_type.hpp>
 #include <jank/translate/expect/error/type/overload.hpp>
 
+/* TODO: remove */
 //namespace jank
 //{
 //  namespace translate
