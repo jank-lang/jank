@@ -17,7 +17,7 @@ namespace jank
     {
       namespace detail
       {
-        template <typename C, typename Def = function_definition<C>>
+        template <typename C, typename Def>
         struct function_call
         {
           Def definition;
