@@ -41,6 +41,18 @@ namespace jank
         return os;
       }
 
+      static std::ostream& operator <<(std::ostream &os, native_function_definition const &c)
+      {
+        indenter const indent{ os, indent_level };
+
+        os << "native function " << c.data.name
+           << " : " << c.data.arguments
+           << " : " << c.data.return_type.definition.name
+           << std::endl;
+
+        return os;
+      }
+
       static std::ostream& operator <<(std::ostream &os, function_call const &c)
       {
         indenter const indent{ os, indent_level };
@@ -88,6 +100,9 @@ namespace jank
             break;
           case type::function_definition:
             os << boost::get<function_definition>(c);
+            break;
+          case type::native_function_definition:
+            os << boost::get<native_function_definition>(c);
             break;
           case type::function_call:
             os << boost::get<function_call>(c);

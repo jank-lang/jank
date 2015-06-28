@@ -13,6 +13,7 @@ namespace jank
       {
         function_body,
         function_definition,
+        native_function_definition,
         function_call,
         type_definition,
         type_reference,
