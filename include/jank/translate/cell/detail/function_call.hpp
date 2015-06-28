@@ -17,6 +17,7 @@ namespace jank
     {
       namespace detail
       {
+        /* Native and non-native definitions are supported. */
         template <typename C, typename Def>
         struct function_call
         {

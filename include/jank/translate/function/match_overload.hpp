@@ -12,12 +12,22 @@ namespace jank
   {
     namespace function
     {
-      template <typename T>
-      std::experimental::optional<cell::function_call> match_overload
+      namespace detail
+      {
+        template <typename Def>
+        struct call
+        { using type = cell::function_call; };
+        template <>
+        struct call<cell::native_function_definition>
+        { using type = cell::native_function_call; };
+      }
+
+      template <typename Def>
+      std::experimental::optional<typename detail::call<Def>::type> match_overload
       (
         parse::cell::list const &list,
         std::shared_ptr<environment::scope> const &scope,
-        std::vector<environment::scope::result<T>> const &functions
+        std::vector<environment::scope::result<Def>> const &functions
       )
       {
         auto const arguments(function::argument::call::parse<cell::cell>(list, scope));
@@ -45,9 +55,7 @@ namespace jank
               }
             )
           )
-          /* TODO: reinstate */
-          //{ return { cell::function_call{ { overload_cell.first.data, arguments, scope } } }; }
-          { return { cell::function_call{ { {}, arguments, scope } } }; }
+          { return { { { overload, arguments, scope } } }; }
         }
 
         /* No matching overload found. */
