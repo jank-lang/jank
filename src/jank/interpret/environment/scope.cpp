@@ -7,7 +7,7 @@ namespace jank
     namespace environment
     {
       std::experimental::optional<parse::cell::cell> scope::find_variable
-      (std::string const &name)
+      (std::string const &name) const
       {
         auto const it(variables.find(name));
         if(it == variables.end())

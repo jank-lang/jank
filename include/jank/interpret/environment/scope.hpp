@@ -20,7 +20,7 @@ namespace jank
         std::shared_ptr<scope> parent;
 
         std::experimental::optional<parse::cell::cell> find_variable
-        (std::string const &name);
+        (std::string const &name) const;
       };
     }
   }
