@@ -17,22 +17,21 @@ namespace jank
       struct scope : std::enable_shared_from_this<scope>
       {
         template <typename T>
-        using result = std::pair<T, std::shared_ptr<scope>>;
+        using result = std::pair<T, std::shared_ptr<scope const>>;
 
         scope() = default;
         explicit scope(std::shared_ptr<scope> const &p)
           : parent{ p }
         { }
 
-        /* TODO: const */
         std::experimental::optional<result<cell::type_definition>> find_type
-        (std::string const &name);
+        (std::string const &name) const;
         std::experimental::optional<result<cell::variable_definition>> find_variable
-        (std::string const &name);
+        (std::string const &name) const;
         std::experimental::optional<std::vector<result<cell::function_definition>>> find_function
-        (std::string const &name);
+        (std::string const &name) const;
         std::experimental::optional<std::vector<result<cell::native_function_definition>>> find_native_function
-        (std::string const &name);
+        (std::string const &name) const;
 
         std::map<std::string, cell::type_definition> type_definitions;
         std::map<std::string, cell::variable_definition> variable_definitions;

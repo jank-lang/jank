@@ -11,7 +11,7 @@ namespace jank
     namespace environment
     {
       std::experimental::optional<scope::result<cell::type_definition>> scope::find_type
-      (std::string const &name)
+      (std::string const &name) const
       {
         auto const it(type_definitions.find(name));
         if(it == type_definitions.end())
@@ -26,7 +26,7 @@ namespace jank
       }
 
       std::experimental::optional<scope::result<cell::variable_definition>> scope::find_variable
-      (std::string const &name)
+      (std::string const &name) const
       {
         auto const it(variable_definitions.find(name));
         if(it == variable_definitions.end())
@@ -45,7 +45,7 @@ namespace jank
       find
       (
         std::string const &name,
-        std::shared_ptr<scope> const &s,
+        std::shared_ptr<scope const> const &s,
         std::map<std::string, std::vector<T>> const &functions,
         F const &recurse
       )
@@ -89,7 +89,7 @@ namespace jank
       /* Build a vector of all function overloads in each scope, from this to the root. */
       std::experimental::optional
       <std::vector<scope::result<cell::function_definition>>>
-      scope::find_function(std::string const &name)
+      scope::find_function(std::string const &name) const
       {
         return find
         (
@@ -102,7 +102,7 @@ namespace jank
 
       std::experimental::optional
       <std::vector<scope::result<cell::native_function_definition>>>
-      scope::find_native_function(std::string const &name)
+      scope::find_native_function(std::string const &name) const
       {
         return find
         (
