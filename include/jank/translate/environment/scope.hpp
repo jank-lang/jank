@@ -13,6 +13,7 @@ namespace jank
   {
     namespace environment
     {
+      /* TODO: Have a shared_scope_ptr or scope_ptr here and in interpret. */
       struct scope : std::enable_shared_from_this<scope>
       {
         template <typename T>
