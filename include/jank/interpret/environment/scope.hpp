@@ -15,12 +15,17 @@ namespace jank
     {
       struct scope
       {
-        /* TODO: Use a custom interpret cell for these values. */
-        std::map<std::string, parse::cell::cell> variables;
-        std::shared_ptr<scope> parent;
+        scope() = default;
+        explicit scope(std::shared_ptr<scope> const &p)
+          : parent{ p }
+        { }
 
         std::experimental::optional<parse::cell::cell> find_variable
         (std::string const &name) const;
+
+        /* TODO: Use a custom interpret cell for these values. */
+        std::map<std::string, parse::cell::cell> variables;
+        std::shared_ptr<scope> parent;
       };
     }
   }
