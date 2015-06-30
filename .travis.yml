@@ -1,0 +1,15 @@
+language: cpp
+compiler:
+  - gcc
+  - clang
+before_install:
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - if [ "$CXX" == "clang++"  ]; then sudo add-apt-repository -y 'deb http://llvm.org/apt/precise/ llvm-toolchain-precise-3.5 main'; fi
+  - sudo apt-get update -qq
+install:
+  - sudo apt-get install libboost-dev
+  - if [ "$CXX" == "clang++"  ]; then sudo apt-get install --allow-unauthenticated libstdc++-4.9-dev clang-3.5; fi
+  - if [ "$CXX" == "clang++"  ]; then export CXX="clang++-3.5"; fi
+script:
+  - cmake . && make
+  - make jank_test
