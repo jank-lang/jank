@@ -37,7 +37,7 @@ namespace jank
         std::map<std::string, cell::variable_definition> variable_definitions;
         std::map<std::string, std::vector<cell::function_definition>> function_definitions;
         std::map<std::string, std::vector<cell::native_function_definition>> native_function_definitions;
-        std::shared_ptr<scope> parent{ std::make_shared<scope>() };
+        std::shared_ptr<scope> parent;
       };
     }
   }
