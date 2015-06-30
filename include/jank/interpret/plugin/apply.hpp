@@ -1,18 +1,17 @@
 #pragma once
 
-#include <jank/translate/environment/scope.hpp>
-#include <jank/translate/plugin/io/print.hpp>
+#include <jank/interpret/environment/scope.hpp>
+#include <jank/interpret/plugin/io/print.hpp>
 
 namespace jank
 {
-  namespace translate
+  namespace interpret
   {
     namespace plugin
     {
       /* TODO: Move to cpp */
       inline auto apply(std::shared_ptr<environment::scope> const &scope)
       {
-        /* TODO: Refactor to some shared collection of plugins; shared with interpret. */
         std::vector
         <
           std::function<void (std::shared_ptr<environment::scope> const&)>

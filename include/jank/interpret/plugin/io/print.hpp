@@ -1,10 +1,10 @@
 #pragma once
 
-#include <jank/translate/environment/scope.hpp>
+#include <jank/interpret/environment/scope.hpp>
 
 namespace jank
 {
-  namespace translate
+  namespace interpret
   {
     namespace plugin
     {

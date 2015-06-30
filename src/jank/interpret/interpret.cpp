@@ -3,6 +3,7 @@
 #include <jank/translate/expect/type.hpp>
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
+#include <jank/interpret/plugin/apply.hpp>
 #include <jank/interpret/expect/error/lookup/exception.hpp>
 
 /* TODO: print with no newline. */
