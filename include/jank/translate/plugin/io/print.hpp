@@ -12,21 +12,21 @@ namespace jank
       namespace io
       {
         /* TODO: move to cpp. */
-        inline void print(std::shared_ptr<environment::scope> const &)
+        inline void print(std::shared_ptr<environment::scope> const &scope)
         {
           auto const nested_scope(std::make_shared<environment::scope>());
-          //nested_scope->parent = scope;
+          nested_scope->parent = scope;
 
-          //cell::native_function_definition def
-          //{
-          //  {
-          //    "print",
-          //    { { "i", environment::builtin::type::integer(scope) } },
-          //    environment::builtin::type::null(scope),
-          //    nested_scope
-          //  }
-          //};
-          //scope->native_function_definitions[def.data.name].emplace_back(std::move(def));
+          cell::native_function_definition def
+          {
+            {
+              "print",
+              { { "i", environment::builtin::type::integer(scope) } },
+              environment::builtin::type::null(scope),
+              nested_scope
+            }
+          };
+          scope->native_function_definitions[def.data.name].emplace_back(std::move(def));
         }
       }
     }
