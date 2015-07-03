@@ -5,16 +5,17 @@ jank aims to be a lisp-1 with hygienic, code-as-data macros, a strong, static ty
 **NOTE:** jank, at this point, is _very_ incomplete. **jank cannot currently be used.** Furthermore, the design for jank will change a lot; what you see here is an interpolation between where the compiler is and where I want jank to go. Nothing here is final.
 
 ## Progress
-|Compiler              |Status                                     |
-|:---------------------|:------------------------------------------|
-|non-generic functions |Complete and tested.                       |
-|non-generic variables |Complete and partially tested.             |
+|Compiler                     |Status                                     |
+|:----------------------------|:------------------------------------------|
+|non-generic functions        |Complete and tested.                       |
+|non-generic variables        |Complete and partially tested.             |
+|non-generic native functions |Complete; needs testing.                   |
 
-|Interpreter           |Status                                     |
-|:---------------------|:------------------------------------------|
-|general               |Existing implementation needs a rewrite; doesn't currently use AST. |
-|non-generic functions |Complete and tested.                       |
-|non-generic variables |Not started.                               |
+|Interpreter                  |Status                                     |
+|:----------------------------|:------------------------------------------|
+|non-generic functions        |Complete and tested.                       |
+|non-generic variables        |Not started.                               |
+|non-generic native functions |Not started.                               |
 
 ## Built-in types
 There are a few primitive types which are part of the language.
