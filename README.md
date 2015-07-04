@@ -247,6 +247,9 @@ TODO: http://www.brool.com/index.php/pattern-matching-in-clojure
 ## Strings
 For now, due to the simplicity of the parser, parens in string need to be escaped. This will change, but it's very low priority.
 
+## Native API
+Native types and functions can be exposed through the native API, which is in C++. Though currently only exposed in the compiler, there's planned support for loading dynamic libraries *at compile-time* which specify wrappers around native code. An example might be OpenGL, glfw, or other similar packages.
+
 ## Building
 To build, follow the normal steps:
 ```bash
