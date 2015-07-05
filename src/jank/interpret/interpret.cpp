@@ -37,7 +37,8 @@ namespace jank
               next_scope->variables[name.name] = var;
             }
 
-            return interpret(next_scope, { cell.data.definition.body });
+            /* TODO: Handle value. */
+            interpret(next_scope, { cell.data.definition.body });
           } break;
 
           case translate::cell::type::native_function_call:
