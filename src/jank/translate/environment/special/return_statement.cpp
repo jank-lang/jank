@@ -39,7 +39,7 @@ namespace jank
 
           /* Fallback to returning null. */
           cell::type_reference type
-          { environment::builtin::type::null(outer_body.data.scope) };
+          { environment::builtin::type::null(*outer_body.data.scope) };
           if(type.data != outer_body.data.return_type)
           { throw expect::error::type::exception<>{ "invalid return type" }; }
           return { cell::return_statement{ { cell::literal_value{}, type.data } } };

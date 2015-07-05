@@ -33,7 +33,7 @@ namespace jank
           if(it == body.data.cells.end())
           {
             /* TODO: The last function call might yield the right type! */
-            auto const &null(environment::builtin::type::null(body.data.scope));
+            auto const &null(environment::builtin::type::null(*body.data.scope));
             if(body.data.return_type != null)
             { throw expect::error::type::exception<>{ "no return statement in function" }; }
 

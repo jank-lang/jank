@@ -13,13 +13,13 @@ namespace jank
       {
         namespace type
         {
-          std::shared_ptr<scope> add_primitives(std::shared_ptr<scope> const &s);
+          scope& add_primitives(scope &s);
 
-          cell::detail::type_reference null(std::shared_ptr<scope> const &s);
-          cell::detail::type_reference boolean(std::shared_ptr<scope> const &s);
-          cell::detail::type_reference integer(std::shared_ptr<scope> const &s);
-          cell::detail::type_reference real(std::shared_ptr<scope> const &s);
-          cell::detail::type_reference string(std::shared_ptr<scope> const &s);
+          cell::detail::type_reference null(scope &s);
+          cell::detail::type_reference boolean(scope &s);
+          cell::detail::type_reference integer(scope &s);
+          cell::detail::type_reference real(scope &s);
+          cell::detail::type_reference string(scope &s);
         }
       }
     }

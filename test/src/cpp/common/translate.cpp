@@ -45,7 +45,7 @@ namespace jank
 
       auto const body(parse::expect::type<parse::cell::type::list>(root));
       auto const scope(std::make_shared<translate::environment::scope>(nullptr));
-      translate::environment::builtin::type::add_primitives(scope);
+      translate::environment::builtin::type::add_primitives(*scope);
       auto const translated_body
       (
         translate::translate
@@ -57,7 +57,7 @@ namespace jank
           ),
           scope,
           { /* The outermost body returns null. */
-            translate::environment::builtin::type::null(scope)
+            translate::environment::builtin::type::null(*scope)
           }
         )
       );
