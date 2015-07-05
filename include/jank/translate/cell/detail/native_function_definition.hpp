@@ -2,6 +2,7 @@
 
 #include <jank/translate/function/argument/definition.hpp>
 #include <jank/translate/function/argument/call.hpp>
+#include <jank/interpret/environment/scope.hpp>
 
 namespace jank
 {
@@ -22,8 +23,11 @@ namespace jank
           type_reference return_type;
           std::function
           <
-            function::argument::detail::value<C>
-            (function::argument::value_list<C> const&)
+            C
+            (
+              std::shared_ptr<interpret::environment::scope> const&,
+              function::argument::value_list<C> const&
+            )
           > interpret;
           std::shared_ptr<environment::scope> scope;
         };
