@@ -54,7 +54,9 @@ namespace jank
               translate::expect::type
               <translate::cell::type::native_function_call>(c)
             );
-            return resolve_value
+
+            /* TODO: What do we do with this value? */
+            resolve_value
             (env, cell.data.definition.interpret(env, cell.data.arguments));
           } break;
 

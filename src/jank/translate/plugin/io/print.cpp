@@ -13,17 +13,20 @@ namespace jank
     {
       namespace io
       {
-        void print(std::shared_ptr<environment::scope> const &scope)
+        static void make_print
+        (
+          std::shared_ptr<environment::scope> const &scope,
+          cell::detail::type_reference const &type
+        )
         {
           auto const nested_scope(std::make_shared<environment::scope>());
           nested_scope->parent = scope;
 
-          /* TODO: Add overloads for all primitives. */
           cell::native_function_definition def
           {
             {
               "print",
-              { { "i", environment::builtin::type::integer(*scope) } },
+              { { "data", type } },
               environment::builtin::type::null(*scope),
               [](auto const &scope, auto const &args) -> cell::cell
               {
@@ -35,8 +38,17 @@ namespace jank
               nested_scope
             }
           };
+
           scope->native_function_definitions[def.data.name].emplace_back
           (std::move(def));
+        }
+
+        void print(std::shared_ptr<environment::scope> const &scope)
+        {
+          make_print(scope, environment::builtin::type::null(*scope));
+          make_print(scope, environment::builtin::type::integer(*scope));
+          make_print(scope, environment::builtin::type::real(*scope));
+          make_print(scope, environment::builtin::type::string(*scope));
         }
       }
     }
