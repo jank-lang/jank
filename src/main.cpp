@@ -17,7 +17,6 @@
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/plugin/apply.hpp>
 #include <jank/interpret/interpret.hpp>
-#include <jank/interpret/plugin/apply.hpp>
 
 #include "common/translate.hpp"
 #include "common/interpret.hpp"
@@ -85,7 +84,6 @@ int main(int const argc, char ** const argv)
   std::cout << "\ninterpreted: " << std::endl;
   auto const interpret_scope
   (std::make_shared<jank::interpret::environment::scope>());
-  jank::interpret::plugin::apply(interpret_scope);
   jank::interpret::interpret
   (
     interpret_scope,
