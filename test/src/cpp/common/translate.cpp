@@ -18,6 +18,7 @@
 #include <jank/translate/expect/type.hpp>
 #include <jank/translate/cell/stream.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
+#include <jank/translate/plugin/apply.hpp>
 
 namespace jank
 {
@@ -46,6 +47,7 @@ namespace jank
       auto const body(parse::expect::type<parse::cell::type::list>(root));
       auto const scope(std::make_shared<translate::environment::scope>(nullptr));
       translate::environment::builtin::type::add_primitives(*scope);
+      translate::plugin::apply(scope);
       auto const translated_body
       (
         translate::translate
