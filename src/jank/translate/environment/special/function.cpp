@@ -88,7 +88,7 @@ namespace jank
           };
 
           /* Add the function definition to the out body's scope. */
-          outer_body.data.scope->function_definitions[name.data].push_back(ret);
+          outer_body.data.scope->function_definitions[name.data].back() = ret;
           return { ret };
         }
       }

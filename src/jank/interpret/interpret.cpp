@@ -34,15 +34,8 @@ namespace jank
             {
               auto const &name(*arg_name_it++);
               auto const var(resolve_value(next_scope, arg.cell));
-              std::cout << "adding " << name.name
-                        << " to next scope as: " << var << std::endl;
               next_scope->variables[name.name] = var;
             }
-
-            std::cout << "call (" << cell.data.definition.name << "): ";
-            for(auto const &arg : cell.data.arguments)
-            { std::cout << resolve_value(env, arg.cell) << " "; }
-            std::cout << std::endl;
 
             return interpret(next_scope, { cell.data.definition.body });
           } break;
@@ -64,7 +57,6 @@ namespace jank
           {
             auto const &cell
             (translate::expect::type<translate::cell::type::return_statement>(c));
-            std::cout << "returning: " << cell.data.cell << std::endl;
             return resolve_value(env, cell.data.cell);
           } break;
 
