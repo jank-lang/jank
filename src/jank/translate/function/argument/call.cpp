@@ -31,7 +31,7 @@ namespace jank
               { }
 
               template <typename T>
-              detail::argument_value<C> operator ()(T const&) const
+              detail::value<C> operator ()(T const&) const
               {
                 throw expect::error::type::exception<>
                 {
@@ -41,29 +41,29 @@ namespace jank
                 };
               }
 
-              detail::argument_value<C> operator ()(parse::cell::null const &c) const
+              detail::value<C> operator ()(parse::cell::null const &c) const
               { return call(c); }
-              detail::argument_value<C> operator ()(parse::cell::boolean const &c) const
+              detail::value<C> operator ()(parse::cell::boolean const &c) const
               { return call(c); }
-              detail::argument_value<C> operator ()(parse::cell::integer const &c) const
+              detail::value<C> operator ()(parse::cell::integer const &c) const
               { return call(c); }
-              detail::argument_value<C> operator ()(parse::cell::real const &c) const
+              detail::value<C> operator ()(parse::cell::real const &c) const
               { return call(c); }
-              detail::argument_value<C> operator ()(parse::cell::string const &c) const
+              detail::value<C> operator ()(parse::cell::string const &c) const
               { return call(c); }
-              detail::argument_value<C> operator ()(parse::cell::ident const &c) const
+              detail::value<C> operator ()(parse::cell::ident const &c) const
               {
                 auto const def(scope_->find_variable(c.data));
                 if(!def)
                 { throw expect::error::type::exception<>{ "unknown variable: " + c.data }; }
 
-                return detail::argument_value<C>
+                return detail::value<C>
                 {
                   c.data,
                   { cell::variable_reference{ { def.value().first.data } } }
                 };
               }
-              detail::argument_value<C> operator ()(parse::cell::list const &c) const
+              detail::value<C> operator ()(parse::cell::list const &c) const
               {
                 if(c.data.empty())
                 { throw expect::error::syntax::exception<>{ "invalid argument list" }; }
@@ -75,7 +75,7 @@ namespace jank
                   auto const matched_opt(function::match_overload(c, scope_, function_opt.value()));
                   if(matched_opt)
                   {
-                    return detail::argument_value<C>
+                    return detail::value<C>
                     {
                       name,
                       { matched_opt.value() }
@@ -96,9 +96,9 @@ namespace jank
 
             private:
               template <typename T>
-              detail::argument_value<C> call(T const &c) const
+              detail::value<C> call(T const &c) const
               {
-                return detail::argument_value<C>
+                return detail::value<C>
                 {
                   std::string{ "rvalue " } +
                   parse::cell::trait::to_string
@@ -130,7 +130,7 @@ namespace jank
             (
               std::next(l.data.begin(), 1), l.data.end(),
               std::back_inserter(ret),
-              [&](auto const &a) -> detail::argument_value<cell::cell>
+              [&](auto const &a) -> detail::value<cell::cell>
               { return parse::cell::visit(a, visitor<cell::cell>{ scope }); }
             );
 

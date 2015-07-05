@@ -20,13 +20,13 @@ namespace jank
         namespace detail
         {
           template <typename C>
-          struct argument_value
+          struct value
           {
             std::string name;
             C cell;
           };
           template <typename C>
-          using value_list = typename std::vector<argument_value<C>>;
+          using value_list = typename std::vector<value<C>>;
         }
         template <typename C>
         using value_list = typename detail::value_list<C>;

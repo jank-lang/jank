@@ -22,7 +22,7 @@ namespace jank
         struct function_call
         {
           Def definition;
-          jank::translate::function::argument::value_list<C> arguments;
+          function::argument::value_list<C> arguments;
           std::shared_ptr<environment::scope> scope;
         };
       }

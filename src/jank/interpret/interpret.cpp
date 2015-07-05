@@ -50,6 +50,9 @@ namespace jank
           case translate::cell::type::native_function_call:
           {
             std::cout << "native function call" << std::endl;
+            auto const &cell
+            (translate::expect::type<translate::cell::type::native_function_call>(c));
+            return resolve_value(env, cell.data.definition.interpret(cell.data.arguments).cell);
           } break;
 
           case translate::cell::type::return_statement:

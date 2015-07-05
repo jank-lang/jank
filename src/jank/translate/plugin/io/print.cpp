@@ -20,6 +20,11 @@ namespace jank
               "print",
               { { "i", environment::builtin::type::integer(scope) } },
               environment::builtin::type::null(scope),
+              [](auto const &) -> function::argument::detail::value<cell::cell>
+              {
+                //return environment::builtin::type::null(scope);
+                return {};
+              },
               nested_scope
             }
           };

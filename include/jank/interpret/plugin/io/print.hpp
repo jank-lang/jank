@@ -14,7 +14,7 @@ namespace jank
         inline void print(std::shared_ptr<environment::scope> const &scope)
         {
           static_cast<void>(scope);
-          /* TODO: Add the print body; bring in args as a vector. */
+          /* TODO: Add native function impl to scope. What about overloads? */
         }
       }
     }
