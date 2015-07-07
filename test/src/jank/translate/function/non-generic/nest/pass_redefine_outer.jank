@@ -3,7 +3,7 @@
 
 (ƒ outer () ()
   (ƒ show (d integer) ()
-    (print "redefined: " d))
+    (print "redefined"))
   (show 42))
 
 (outer)

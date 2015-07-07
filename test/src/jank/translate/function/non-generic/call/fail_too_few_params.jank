@@ -1,4 +1,6 @@
 (ƒ test (a integer b real c string) ()
-  (print a " " b " " c))
+  (print a)
+  (print b)
+  (print c))
 
 (test 42 3.14)

@@ -1,8 +1,8 @@
 (ƒ outer (d boolean) ()
   (ƒ outer (d boolean) ()
-    (print "not " d))
+    (print d))
   (ƒ outer (d boolean) ()
-    (print "again not " d))
+    (print d))
   (outer d))
 
 (outer false)

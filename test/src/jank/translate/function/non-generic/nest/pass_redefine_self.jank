@@ -1,6 +1,6 @@
 (ƒ outer (d boolean) ()
   (ƒ outer (d boolean) ()
-    (print "not " d))
+    (print "inner"))
   (outer d))
 
 (outer false)
