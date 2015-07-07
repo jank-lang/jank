@@ -46,6 +46,7 @@ namespace jank
         void print(std::shared_ptr<environment::scope> const &scope)
         {
           make_print(scope, environment::builtin::type::null(*scope));
+          make_print(scope, environment::builtin::type::boolean(*scope));
           make_print(scope, environment::builtin::type::integer(*scope));
           make_print(scope, environment::builtin::type::real(*scope));
           make_print(scope, environment::builtin::type::string(*scope));
