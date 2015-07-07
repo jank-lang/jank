@@ -35,7 +35,7 @@ namespace jest
   {
     reset();
     jank::common::interpret("interpret/function/non-generic/call/pass_print_primitive.jank");
-    expect_equal(out.str(), "42 3.14 ok\n");
+    expect_equal(out.str(), "42\n3.14\nok\n");
   }
 
   template <> template <>

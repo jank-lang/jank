@@ -31,7 +31,7 @@ namespace jest
   {
     reset();
     jank::common::interpret("interpret/function/non-generic/nest/pass_redefine_outer.jank");
-    expect_equal(out.str(), "redefined: 42\n");
+    expect_equal(out.str(), "redefined\n");
   }
 
   template <> template <>
@@ -71,7 +71,7 @@ namespace jest
   {
     reset();
     jank::common::interpret("interpret/function/non-generic/nest/pass_redefine_self.jank");
-    expect_equal(out.str(), "not false\n");
+    expect_equal(out.str(), "inner\n");
   }
 
   template <> template <>
