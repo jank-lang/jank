@@ -44,7 +44,7 @@ namespace jest
   template <> template <>
   void jank::string_escape_group::test<5>()
   {
-    expect_exception<jank::parse::expect::error::syntax::exception<>>
+    expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("parse/string/escape/fail_unescaped_both.jank"); });
   }
 
