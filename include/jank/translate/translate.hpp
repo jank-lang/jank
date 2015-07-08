@@ -81,14 +81,18 @@ namespace jank
                 return static_cast<bool>(matched_opt);
               }
             );
-            if(!match(native_function_opt))
-            { match(function_opt); }
 
-            /* TODO: It's a list, but the function wasn't found. Throw an exception. */
-            //std::cout << "no function named "
-            //          << parse::expect::type<parse::cell::type::ident>(list.data[0]).data
-            //          << " found" << std::endl;
-            return;
+            if((!match(native_function_opt)) && (!match(function_opt)))
+            {
+              /* TODO: Should be a lookup exception? */
+              throw expect::error::type::exception<>
+              {
+                "invalid function: " +
+                parse::expect::type<parse::cell::type::ident>(list.data[0]).data
+              };
+            }
+            else
+            { return; }
           }
 
           /* Treat plain values as an implicit return. */
