@@ -15,6 +15,7 @@
 #include <jank/translate/function/return/validate.hpp>
 #include <jank/translate/expect/error/syntax/exception.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
+#include <jank/translate/expect/error/lookup/exception.hpp>
 
 namespace jank
 {
@@ -84,8 +85,7 @@ namespace jank
 
             if((!match(native_function_opt)) && (!match(function_opt)))
             {
-              /* TODO: Should be a lookup exception? */
-              throw expect::error::type::exception<>
+              throw expect::error::lookup::exception<>
               {
                 "invalid function: " +
                 parse::expect::type<parse::cell::type::ident>(list.data[0]).data
