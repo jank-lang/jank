@@ -101,6 +101,7 @@ namespace jank
                 { return ret; }
                 else
                 {
+                  /* TODO: A proper error system. */
                   throw expect::error::lookup::exception<>
                   { "unknown function: " + name };
                 }
