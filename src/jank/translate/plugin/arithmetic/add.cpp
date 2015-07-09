@@ -51,7 +51,7 @@ namespace jank
 
         void add(std::shared_ptr<environment::scope> const &scope)
         {
-          /* TODO: Add op+ and * and / and - */
+          /* TODO: Add op+ and * and / and - for all primitives. */
           make_binary_operator
           (scope, "+", environment::builtin::type::integer(*scope));
         }

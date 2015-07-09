@@ -37,7 +37,7 @@ namespace jank
               next_scope->variables[name.name] = var;
             }
 
-            /* TODO: Handle value. */
+            /* TODO: Could be return value? */
             interpret(next_scope, { cell.data.definition.body });
           } break;
 
@@ -49,7 +49,7 @@ namespace jank
               <translate::cell::type::native_function_call>(c)
             );
 
-            /* TODO: What do we do with this value? */
+            /* TODO: Could be return value? */
             resolve_value
             (env, cell.data.definition.interpret(env, cell.data.arguments));
           } break;
