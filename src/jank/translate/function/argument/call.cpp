@@ -9,6 +9,7 @@
 #include <jank/translate/function/match_overload.hpp>
 #include <jank/translate/expect/error/type/exception.hpp>
 #include <jank/translate/expect/error/syntax/exception.hpp>
+#include <jank/translate/expect/error/lookup/exception.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
 
 namespace jank
@@ -66,30 +67,41 @@ namespace jank
               detail::value<C> operator ()(parse::cell::list const &c) const
               {
                 if(c.data.empty())
-                { throw expect::error::syntax::exception<>{ "invalid argument list" }; }
-
-                auto const name(parse::expect::type<parse::cell::type::ident>(c.data[0]).data);
-                auto const function_opt(scope_->find_function(name));
-                if(function_opt)
                 {
-                  auto const matched_opt(function::match_overload(c, scope_, function_opt.value()));
-                  if(matched_opt)
-                  {
-                    return detail::value<C>
-                    {
-                      name,
-                      { matched_opt.value() }
-                    };
-                  }
-                  else
-                  {
-                    throw expect::error::type::exception<>
-                    { "invalid function call: " + name };
-                  }
+                  throw expect::error::syntax::exception<>
+                  { "invalid argument list" };
                 }
+
+                auto const name
+                (parse::expect::type<parse::cell::type::ident>(c.data[0]).data);
+                auto const native_function_opt
+                (scope_->find_native_function(name));
+                auto const function_opt(scope_->find_function(name));
+
+                /* TODO: This mutation over a closure is shitty. */
+                /* TODO: There is some code in translate.hpp which does
+                 * very similar work; I'm not sure how they can be merged. */
+                detail::value<C> ret;
+                auto matched
+                (
+                  function::match_overload
+                  (
+                    c, scope_, native_function_opt, function_opt,
+                    [&](auto const &match)
+                    {
+                      ret = detail::value<C>
+                      {
+                        name,
+                        { match }
+                      };
+                    }
+                  )
+                );
+                if(matched)
+                { return ret; }
                 else
                 {
-                  throw expect::error::type::exception<>
+                  throw expect::error::lookup::exception<>
                   { "unknown function: " + name };
                 }
               }

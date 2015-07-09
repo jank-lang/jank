@@ -66,6 +66,34 @@ namespace jank
           parse::expect::type<parse::cell::type::ident>(list.data[0]).data
         };
       }
+
+      template <typename Native, typename Non_Native, typename Callback>
+      bool match_overload
+      (
+        parse::cell::list const &list,
+        std::shared_ptr<environment::scope> const &scope,
+        Native const &native,
+        Non_Native const &non_native,
+        Callback const &callback
+      )
+      {
+        auto const match
+        (
+          [&](auto const &opt)
+          {
+            if(!opt)
+            { return false; }
+
+            auto const matched_opt(match_overload(list, scope, opt.value()));
+            if(matched_opt)
+            { callback(matched_opt.value()); }
+            return static_cast<bool>(matched_opt);
+          }
+        );
+        if(!match(native))
+        { return match(non_native); }
+        return true;
+      }
     }
   }
 }

@@ -68,22 +68,17 @@ namespace jank
             auto const function_opt
             (scope->find_function(function_name));
 
-            auto const match
+            /* Try to match native and non-native overloads. */
+            auto matched
             (
-              [&](auto const &opt)
-              {
-                if(!opt)
-                { return false; }
-
-                auto const matched_opt
-                (function::match_overload(list, scope, opt.value()));
-                if(matched_opt)
-                { translated.data.cells.push_back(matched_opt.value()); }
-                return static_cast<bool>(matched_opt);
-              }
+              function::match_overload
+              (
+                list, scope, native_function_opt, function_opt,
+                [&](auto const &match)
+                { translated.data.cells.push_back(match); }
+              )
             );
-
-            if((!match(native_function_opt)) && (!match(function_opt)))
+            if(!matched)
             {
               throw expect::error::lookup::exception<>
               {

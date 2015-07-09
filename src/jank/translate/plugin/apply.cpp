@@ -1,5 +1,6 @@
 #include <jank/translate/plugin/apply.hpp>
 #include <jank/translate/plugin/io/print.hpp>
+#include <jank/translate/plugin/arithmetic/add.hpp>
 
 namespace jank
 {
@@ -16,7 +17,8 @@ namespace jank
           std::function<void (std::shared_ptr<environment::scope> const&)>
         > const plugins
         {
-          &io::print
+          &io::print,
+          &arithmetic::add
         };
 
         for(auto const &plugin : plugins)
