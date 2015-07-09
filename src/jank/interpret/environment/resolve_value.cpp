@@ -59,6 +59,19 @@ namespace jank
           return interpret(scope, { cell.data.definition.body });
         } break;
 
+        case translate::cell::type::native_function_call:
+        {
+          auto const &cell
+          (
+            translate::expect::type
+            <translate::cell::type::native_function_call>(c)
+          );
+
+          /* Recurse. */
+          return resolve_value
+          (scope, cell.data.definition.interpret(scope, cell.data.arguments));
+        } break;
+
         default:
           throw expect::error::lookup::exception<>
           { "invalid value: " + std::to_string(c.which()) };
