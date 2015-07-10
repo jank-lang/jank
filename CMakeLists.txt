@@ -63,6 +63,7 @@ add_library(${PROJECT_NAME}_static STATIC
             src/jank/translate/plugin/apply.cpp
             src/jank/translate/plugin/io/print.cpp
             src/jank/translate/plugin/arithmetic/add.cpp
+            src/jank/translate/plugin/arithmetic/subtract.cpp
 
 	          src/jank/interpret/interpret.cpp
 	          src/jank/interpret/environment/scope.cpp

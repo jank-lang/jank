@@ -1,6 +1,7 @@
 #include <jank/translate/plugin/apply.hpp>
 #include <jank/translate/plugin/io/print.hpp>
 #include <jank/translate/plugin/arithmetic/add.hpp>
+#include <jank/translate/plugin/arithmetic/subtract.hpp>
 
 namespace jank
 {
@@ -18,7 +19,8 @@ namespace jank
         > const plugins
         {
           &io::print,
-          &arithmetic::add
+          &arithmetic::add,
+          &arithmetic::subtract
         };
 
         for(auto const &plugin : plugins)
