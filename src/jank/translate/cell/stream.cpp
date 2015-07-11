@@ -96,7 +96,29 @@ namespace jank
       static std::ostream& operator <<(std::ostream &os, literal_value const &c)
       {
         indenter const indent{ os, indent_level };
-        return os << "literal " << c.data << std::endl;
+        os << "literal ";
+        switch(static_cast<literal_type>(c.data.which()))
+        {
+          case literal_type::null:
+            os << "null ";
+            break;
+          case literal_type::boolean:
+            os << "boolean ";
+            break;
+          case literal_type::integer:
+            os << "integer ";
+            break;
+          case literal_type::real:
+            os << "real ";
+            break;
+          case literal_type::string:
+            os << "string ";
+            break;
+          case literal_type::ident:
+            os << "ident ";
+            break;
+        }
+        return os << c.data << std::endl;
       }
 
       static std::ostream& operator <<(std::ostream &os, return_statement const &c)

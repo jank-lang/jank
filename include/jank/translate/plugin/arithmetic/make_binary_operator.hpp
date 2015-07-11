@@ -48,6 +48,7 @@ namespace jank
           (std::move(def));
         }
 
+        /* Handy wrapper for same types, same return type. */
         template <typename F>
         void make_binary_operator
         (
