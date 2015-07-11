@@ -17,7 +17,9 @@ namespace jank
         (
           std::shared_ptr<environment::scope> const &scope,
           std::string const &op,
-          cell::detail::type_reference const &type,
+          cell::detail::type_reference const &type1,
+          cell::detail::type_reference const &type2,
+          cell::detail::type_reference const &ret_type,
           F const &apply
         )
         {
@@ -28,8 +30,8 @@ namespace jank
           {
             {
               op,
-              { { "data1", type }, { "data2", type } },
-              type,
+              { { "data1", type1 }, { "data2", type2 } },
+              ret_type,
               [apply](auto const &scope, auto const &args) -> cell::cell
               {
                 if(args.size() != 2)
@@ -45,6 +47,16 @@ namespace jank
           scope->native_function_definitions[def.data.name].emplace_back
           (std::move(def));
         }
+
+        template <typename F>
+        void make_binary_operator
+        (
+          std::shared_ptr<environment::scope> const &scope,
+          std::string const &op,
+          cell::detail::type_reference const &type,
+          F const &apply
+        )
+        { make_binary_operator(scope, op, type, type, type, apply); }
       }
     }
   }
