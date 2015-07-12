@@ -17,7 +17,10 @@ namespace jank
         template <typename... Args, std::size_t... Indices>
         function::argument::type_list
         make_args(std::index_sequence<Indices...> const&, Args &&...args)
-        { return { { std::string{ "arg_" } + std::to_string(Indices), args }... }; }
+        {
+          return
+          { { std::string{ "arg_" } + std::to_string(Indices), args }... };
+        }
 
         /* Defines a native function in the specified scope. */
         template <typename F, typename... Args>
@@ -42,7 +45,10 @@ namespace jank
               [apply](auto const &scope, auto const &args) -> cell::cell
               {
                 if(args.size() != sizeof...(Args))
-                { throw expect::error::internal::exception<>{ "invalid function args" }; }
+                {
+                  throw expect::error::internal::exception<>
+                  { "invalid function args" };
+                }
                 return apply(scope, args);
               },
               nested_scope
