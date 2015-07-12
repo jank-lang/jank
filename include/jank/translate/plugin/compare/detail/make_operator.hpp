@@ -22,7 +22,11 @@ namespace jank
           )
           {
             plugin::detail::make_function
-            (scope, name, apply, type, type, type);
+            (
+              scope, name, apply,
+              environment::builtin::type::boolean(*scope),
+              type, type
+            );
           }
         }
       }
