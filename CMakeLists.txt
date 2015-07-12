@@ -70,6 +70,7 @@ add_library(${PROJECT_NAME}_static STATIC
             src/jank/translate/plugin/compare/less.cpp
             src/jank/translate/plugin/compare/less_equal.cpp
             src/jank/translate/plugin/compare/greater.cpp
+            src/jank/translate/plugin/compare/greater_equal.cpp
             src/jank/translate/plugin/assertion/assertion.cpp
 
 	          src/jank/interpret/interpret.cpp
