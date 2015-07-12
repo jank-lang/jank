@@ -16,7 +16,7 @@ namespace jank
           namespace detail
           {
             struct generic
-            { static char const constexpr *description{ "expression" }; };
+            { static char const constexpr *description{ "generic" }; };
           }
 
           template <typename T = detail::generic>
