@@ -3,6 +3,7 @@
 #include <jank/translate/plugin/arithmetic/add.hpp>
 #include <jank/translate/plugin/arithmetic/subtract.hpp>
 #include <jank/translate/plugin/arithmetic/multiply.hpp>
+#include <jank/translate/plugin/compare/equal.hpp>
 
 namespace jank
 {
@@ -22,7 +23,8 @@ namespace jank
           &io::print,
           &arithmetic::add,
           &arithmetic::subtract,
-          &arithmetic::multiply
+          &arithmetic::multiply,
+          &compare::equal
         };
 
         for(auto const &plugin : plugins)
