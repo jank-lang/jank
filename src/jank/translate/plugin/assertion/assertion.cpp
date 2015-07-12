@@ -31,6 +31,23 @@ namespace jank
             environment::builtin::type::null(*scope),
             environment::builtin::type::boolean(*scope)
           );
+          detail::make_function
+          (
+            scope, "assert-not",
+            [](auto const &scope, auto const &args)
+            {
+              auto const val
+              (
+                parse::expect::type<parse::cell::type::boolean>
+                (interpret::resolve_value(scope, args[0].cell)).data
+              );
+              if(val)
+              { throw expect::error::assertion::exception<>{}; }
+              return environment::builtin::value::null();
+            },
+            environment::builtin::type::null(*scope),
+            environment::builtin::type::boolean(*scope)
+          );
         }
       }
     }
