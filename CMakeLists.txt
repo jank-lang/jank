@@ -67,6 +67,7 @@ add_library(${PROJECT_NAME}_static STATIC
             src/jank/translate/plugin/arithmetic/multiply.cpp
             src/jank/translate/plugin/arithmetic/divide.cpp
             src/jank/translate/plugin/compare/equal.cpp
+            src/jank/translate/plugin/compare/less.cpp
             src/jank/translate/plugin/assertion/assertion.cpp
 
 	          src/jank/interpret/interpret.cpp
