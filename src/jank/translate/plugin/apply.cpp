@@ -14,7 +14,7 @@ namespace jank
       std::shared_ptr<environment::scope> apply
       (std::shared_ptr<environment::scope> const &scope)
       {
-        /* TODO: Refactor to some shared collection of plugins; shared with interpret. */
+        /* TODO: Read from shared objects. */
         std::vector
         <
           std::function<void (std::shared_ptr<environment::scope> const&)>

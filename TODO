@@ -1,6 +1,10 @@
 refactoring
   expect state
 
+op==
+  tests use print
+  native assert in tests using op==
+
 cons, lists
   built-in sum types?
 
