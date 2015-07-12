@@ -3,6 +3,7 @@
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/environment/builtin/value/primitive.hpp>
+#include <jank/translate/expect/error/internal/exception.hpp>
 
 namespace jank
 {
@@ -10,20 +11,21 @@ namespace jank
   {
     namespace plugin
     {
-      /* TODO: Rename to make_operator and move to detail. */
-      namespace arithmetic
+      namespace detail
       {
-        /* TODO: Change to a single make_function interface which is variadic
-         * and supports everything I need. */
-        template <typename F>
-        void make_binary_operator
+        template <typename... Args, std::size_t... Indices>
+        function::argument::value_list<cell::cell>
+        make_args(Args &&...args, std::index_sequence<Indices...> const&)
+        { return { { args, std::string{ "arg_" } + std::to_string(Indices) }... }; }
+
+        template <typename F, typename... Args>
+        void make_function
         (
           std::shared_ptr<environment::scope> const &scope,
           std::string const &op,
-          cell::detail::type_reference const &type1,
-          cell::detail::type_reference const &type2,
+          F const &apply,
           cell::detail::type_reference const &ret_type,
-          F const &apply
+          Args &&...args
         )
         {
           auto const nested_scope(std::make_shared<environment::scope>());
@@ -33,12 +35,12 @@ namespace jank
           {
             {
               op,
-              { { "data1", type1 }, { "data2", type2 } },
+              make_args(args..., std::index_sequence_for<Args...>{}),
               ret_type,
               [apply](auto const &scope, auto const &args) -> cell::cell
               {
-                if(args.size() != 2)
-                { throw expect::error::type::exception<>{ "invalid binary operator args" }; }
+                if(args.size() != sizeof...(Args))
+                { throw expect::error::internal::exception<>{ "invalid function args" }; }
                 return apply(scope, args);
               },
               nested_scope
@@ -50,17 +52,6 @@ namespace jank
           scope->native_function_definitions[def.data.name].emplace_back
           (std::move(def));
         }
-
-        /* Handy wrapper for same types, same return type. */
-        template <typename F>
-        void make_binary_operator
-        (
-          std::shared_ptr<environment::scope> const &scope,
-          std::string const &op,
-          cell::detail::type_reference const &type,
-          F const &apply
-        )
-        { make_binary_operator(scope, op, type, type, type, apply); }
       }
     }
   }
