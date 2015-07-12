@@ -13,7 +13,7 @@ namespace jank
         namespace detail
         {
           template <typename F>
-          void make_binary_operator
+          void make_operator
           (
             std::shared_ptr<environment::scope> const &scope,
             std::string const &name,
@@ -26,7 +26,7 @@ namespace jank
           }
 
           template <typename F>
-          void make_binary_operator
+          void make_operator
           (
             std::shared_ptr<environment::scope> const &scope,
             std::string const &name,

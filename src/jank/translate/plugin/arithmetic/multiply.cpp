@@ -1,6 +1,6 @@
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/plugin/arithmetic/multiply.hpp>
-#include <jank/translate/plugin/arithmetic/detail/make_binary_operator.hpp>
+#include <jank/translate/plugin/arithmetic/detail/make_operator.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
 
 namespace jank
@@ -13,7 +13,7 @@ namespace jank
       {
         void multiply(std::shared_ptr<environment::scope> const &scope)
         {
-          detail::make_binary_operator
+          detail::make_operator
           (
             scope, "*", environment::builtin::type::integer(*scope),
             [](auto const &scope, auto const &args)
@@ -28,7 +28,7 @@ namespace jank
               return environment::builtin::value::integer(ret);
             }
           );
-          detail::make_binary_operator
+          detail::make_operator
           (
             scope, "*", environment::builtin::type::real(*scope),
             [](auto const &scope, auto const &args)
@@ -43,7 +43,7 @@ namespace jank
               return environment::builtin::value::real(ret);
             }
           );
-          detail::make_binary_operator
+          detail::make_operator
           (
             scope, "*",
             environment::builtin::type::string(*scope),
