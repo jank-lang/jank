@@ -1,10 +1,6 @@
 refactoring
   expect state
 
-op==
-  tests use print
-  native assert in tests using op==
-
 cons, lists
   built-in sum types?
 
@@ -13,7 +9,8 @@ use null in the appropriate areas
 business class functions
 fragrant generics
 
-constants
+variables and constants
+  tests
 
 syntax errors...?
   will the regex remain?
