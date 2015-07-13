@@ -8,6 +8,7 @@
 #include "translate/plugin/compare/greater_equal.hpp"
 #include "translate/plugin/arithmetic/add.hpp"
 #include "translate/plugin/arithmetic/subtract.hpp"
+#include "translate/plugin/arithmetic/multiply.hpp"
 
 int main()
 {
