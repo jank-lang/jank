@@ -9,6 +9,7 @@
 #include "translate/plugin/arithmetic/add.hpp"
 #include "translate/plugin/arithmetic/subtract.hpp"
 #include "translate/plugin/arithmetic/multiply.hpp"
+#include "translate/plugin/arithmetic/divide.hpp"
 
 int main()
 {
