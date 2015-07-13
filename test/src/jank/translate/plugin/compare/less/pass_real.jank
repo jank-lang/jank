@@ -1,0 +1,8 @@
+(assert (< 0.0 0.1))
+(assert (< 4.11 400.11))
+(assert (< -700.5 700.5))
+
+(assert-not (< 1.9 1.9))
+(assert-not (< 1.9 0.9))
+(assert-not (< 0.0 -1.11))
+(assert-not (< 102398.1 102391.1))
