@@ -9,6 +9,8 @@ endif
 let s:cpo_save = &cpo
 set cpo&vim
 
+set iskeyword+=-
+
 let b:current_syntax = "jank"
 
 syntax keyword jank_todo TODO XXX FIXME NOTE
