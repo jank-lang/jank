@@ -5,6 +5,7 @@
 #include "translate/plugin/compare/less.hpp"
 #include "translate/plugin/compare/less_equal.hpp"
 #include "translate/plugin/compare/greater.hpp"
+#include "translate/plugin/compare/greater_equal.hpp"
 
 int main()
 {

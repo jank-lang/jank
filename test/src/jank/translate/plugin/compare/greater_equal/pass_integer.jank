@@ -1,0 +1,8 @@
+(assert (>= 0 0))
+(assert (>= 1 0))
+(assert (>= 4 -4))
+(assert (>= 700 -700))
+
+(assert-not (>= 0 1))
+(assert-not (>= -1 10))
+(assert-not (>= 102397 102398))
