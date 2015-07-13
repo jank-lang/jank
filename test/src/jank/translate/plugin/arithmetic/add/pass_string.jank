@@ -1,0 +1,4 @@
+(assert (== (+ "foo" "bar") "foobar"))
+(assert (== (+ "" "") ""))
+(assert (== (+ "" " ") " "))
+(assert (== (+ " " "") " "))
