@@ -16,6 +16,7 @@ jank aims to be a lisp-1 with hygienic, code-as-data macros, a strong, static ty
 |non-generic functions        |Complete and tested.                       |
 |non-generic variables        |Not started.                               |
 |non-generic native functions |Complete and tested.                       |
+|arithmetic for primitives    |Complete and tested.                       |
 
 ## Built-in types
 There are a few primitive types which are part of the language.
