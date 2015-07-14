@@ -29,18 +29,29 @@ namespace jank
 
               auto &data(input.data);
               if(data.size() < forms_required)
-              { throw expect::error::syntax::exception<>{ "invalid variable definition" }; }
+              {
+                throw expect::error::syntax::exception<>
+                { "invalid variable definition" };
+              }
 
-              auto const name(parse::expect::type<parse::cell::type::ident>(data[1]));
-              auto const type_name(parse::expect::type<parse::cell::type::ident>(data[2]));
+              auto const name
+              (parse::expect::type<parse::cell::type::ident>(data[1]));
+              auto const type_name
+              (parse::expect::type<parse::cell::type::ident>(data[2]));
 
               auto const var_opt(body.data.scope->find_variable(name.data));
               if(var_opt && var_opt.value().second == body.data.scope)
-              { throw expect::error::type::exception<>{ "multiple definition of: " + name.data }; }
+              {
+                throw expect::error::type::exception<>
+                { "multiple definition of: " + name.data };
+              }
 
               auto const type_opt(body.data.scope->find_type(type_name.data));
               if(!type_opt)
-              { throw expect::error::type::exception<>{ "unknown type: " + type_name.data }; }
+              {
+                throw expect::error::type::exception<>
+                { "unknown type: " + type_name.data };
+              }
               auto const &type(type_opt.value().first);
 
               /* Remove everything but the type and the value and parse it as a function call.
@@ -67,11 +78,19 @@ namespace jank
                 { "multiple values specified in variable definition" };
               }
 
-              auto const value_type(function::argument::resolve_type(arguments[0].cell, body.data.scope));
+              auto const value_type
+              (
+                function::argument::resolve_type
+                (arguments[0].cell, body.data.scope)
+              );
               if(value_type.data != type.data)
-              { throw expect::error::type::exception<>{ "incompatible types for variable definition" }; }
+              {
+                throw expect::error::type::exception<>
+                { "incompatible types for variable definition" };
+              }
 
-              auto const def(cell::variable_definition{ { name.data, { value_type.data }, c } });
+              cell::variable_definition const def
+              { { name.data, { value_type.data }, c } };
               body.data.scope->variable_definitions[name.data] = def;
               return { def };
             }
@@ -80,7 +99,10 @@ namespace jank
 
         cell::cell variable
         (parse::cell::list const &input, cell::function_body const &body)
-        { return detail::variable::make(input, body, cell::detail::constness::non_constant); }
+        {
+          return detail::variable::make
+          (input, body, cell::detail::constness::non_constant);
+        }
       }
     }
   }
