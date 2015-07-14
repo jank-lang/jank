@@ -213,7 +213,7 @@ Constraints can be applied to various definitions, including functions and struc
 ## Enums
 Enums function as variant sum types; each variant can have its own type or simply represent its own value (as in C). Enums can also be generic. Value enums work similar to C, whereas type enums must use matching to destructure.
 ```
-(; Unique values; like a C enum. ;)
+(; Unique values, like a C enum. ;)
 (enum gender
   male
   female
@@ -225,7 +225,7 @@ Enums function as variant sum types; each variant can have its own type or simpl
     (value integer))
   (struct other))
 
-(; A generic enum. ;)
+(; A generic enum of unique types. ;)
 (enum optional : (:T:value)
   (struct some
     (value T:value))
@@ -254,7 +254,6 @@ Native types and functions can be exposed through the native API, which is in C+
 ## Building
 To build, follow the normal steps:
 ```bash
-$ git submodule update --recursive --init
 $ mkdir build ; cd build
 $ cmake ..
 $ make -j8
