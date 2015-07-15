@@ -9,6 +9,11 @@ use null in the appropriate areas
 business class functions
 fragrant generics
 
+BUG
+  (; interpreter doesn't find 'a'... ;)
+  (function mult (a integer b integer) (integer)
+    (* a b))
+
 variables and constants
   tests
 
