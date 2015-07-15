@@ -17,6 +17,9 @@ BUG
 variables and constants
   tests
 
+implicit return for function calls -- tests
+  native and non-native
+
 syntax errors...?
   will the regex remain?
     need to map s-exprs to file positions
