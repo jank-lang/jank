@@ -32,7 +32,6 @@ namespace jank
           /* No return statement found. */
           if(it == body.data.cells.end())
           {
-            /* TODO: The last function call might yield the right type! */
             /* TODO: Move this logic into a separate file. */
             auto const &null(environment::builtin::type::null(*body.data.scope));
             if(body.data.return_type != null)
@@ -54,17 +53,40 @@ namespace jank
               /* The function needs to be the last cell in the body. */
               if(std::next(last_function) == body.data.cells.rend())
               {
-                auto const last
-                (expect::type<cell::type::function_call>(*last_function));
-                if(last.data.definition.return_type == body.data.return_type)
-                {
-                  /* Change the cell to be a return. */
-                  body.data.cells.back() = cell::return_statement
+                auto const native_opt
+                (
+                  expect::optional_cast<cell::type::native_function_call>
+                  (*last_function)
+                );
+                auto const non_native_opt
+                (
+                  expect::optional_cast<cell::type::function_call>
+                  (*last_function)
+                );
+                auto const match
+                (
+                  [&](auto const &opt)
                   {
-                    { last, { last.data.definition.return_type.definition } }
-                  };
-                  return;
-                }
+                    if
+                    (
+                      !opt ||
+                      opt.value().data.definition.return_type !=
+                      body.data.return_type
+                    )
+                    { return false; }
+
+                    auto const &func(opt.value());
+
+                    /* Change the cell to be a return. */
+                    body.data.cells.back() = cell::return_statement
+                    {
+                      { func, { func.data.definition.return_type.definition } }
+                    };
+                    return true;
+                  }
+                );
+                if(match(native_opt) || match(non_native_opt))
+                { return; }
               }
 
               throw expect::error::type::exception<>

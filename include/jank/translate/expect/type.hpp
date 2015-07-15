@@ -35,7 +35,7 @@ namespace jank
       }
 
       template <cell::type C, typename Cell>
-      std::experimental::optional<parse::cell::trait::to_type<C>>
+      std::experimental::optional<cell::trait::to_type<C>>
       optional_cast(Cell const &c)
       {
         if(is<C>(c))
