@@ -260,7 +260,7 @@ $ make -j8
 ```
 
 ## Tests
-There is currently a suite of tests outlining all existing functionality. The existing tests are functional and implementing using [jest](https://github.com/jeaye/jest) - a sane and minimal C++14 testing framework. You can test with (from the build directory):
+There is currently a suite of tests outlining most functionality. The tests are implemented using [jest](https://github.com/jeaye/jest) - a sane and minimal C++14 testing framework. You can test with (from the build directory):
 ```bash
 $ make jank_test
 ```
