@@ -33,9 +33,43 @@ namespace jank
           if(it == body.data.cells.end())
           {
             /* TODO: The last function call might yield the right type! */
+            /* TODO: Move this logic into a separate file. */
             auto const &null(environment::builtin::type::null(*body.data.scope));
             if(body.data.return_type != null)
-            { throw expect::error::type::exception<>{ "no return statement in function" }; }
+            {
+              /* The previous function call may suffice as an implicit return. */
+              auto const last_function
+              (
+                std::find_if
+                (
+                  body.data.cells.rbegin(), body.data.cells.rend(),
+                  [](auto const &c)
+                  {
+                    return expect::is<cell::type::function_call>(c) ||
+                           expect::is<cell::type::native_function_call>(c);
+                  }
+                )
+              );
+
+              /* The function needs to be the last cell in the body. */
+              if(std::next(last_function) == body.data.cells.rend())
+              {
+                auto const last
+                (expect::type<cell::type::function_call>(*last_function));
+                if(last.data.definition.return_type == body.data.return_type)
+                {
+                  /* Change the cell to be a return. */
+                  body.data.cells.back() = cell::return_statement
+                  {
+                    { last, { last.data.definition.return_type.definition } }
+                  };
+                  return;
+                }
+              }
+
+              throw expect::error::type::exception<>
+              { "not all code paths return a value" };
+            }
 
             /* Add an empty return. */
             body.data.cells.push_back

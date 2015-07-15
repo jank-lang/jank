@@ -22,8 +22,12 @@ namespace jank
             (input, outer_body.data.scope)
           );
 
+          /* TODO: Handle multiple return values? */
           if(args.size() > 1)
-          { throw expect::error::internal::unimplemented{ "multiple return values" }; }
+          {
+            throw expect::error::internal::unimplemented
+            { "multiple return values" };
+          }
           else if(args.size() == 1)
           {
             auto const type
