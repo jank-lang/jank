@@ -8,7 +8,6 @@
 /* TODO: print with no newline. */
 namespace jank
 {
-  /* TODO: Redo all interpret tests. */
   namespace interpret
   {
     parse::cell::cell interpret
@@ -48,6 +47,8 @@ namespace jank
               translate::expect::type
               <translate::cell::type::native_function_call>(c)
             );
+
+            /* TODO: Add arguments into scope. */
 
             /* TODO: Could be return value? */
             resolve_value
