@@ -10,9 +10,8 @@ business class functions
 fragrant generics
 
 BUG
-  (; interpreter doesn't find 'a'... ;)
-  (function mult (a integer b integer) (integer)
-    (* a b))
+  native functions don't have their args resolved before calling
+  ** Write tests for this **
 
 variables and constants
   tests
