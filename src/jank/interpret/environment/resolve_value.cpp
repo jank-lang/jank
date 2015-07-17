@@ -56,7 +56,20 @@ namespace jank
         {
           auto const &cell
           (translate::expect::type<translate::cell::type::function_call>(c));
-          return interpret(scope, { cell.data.definition.body });
+
+          /* TODO: This is copied from interpret.cpp. */
+          auto const next_scope(std::make_shared<environment::scope>());
+          next_scope->parent = scope;
+
+          auto arg_name_it(cell.data.definition.arguments.begin());
+          for(auto const &arg : cell.data.arguments)
+          {
+            auto const &name(*arg_name_it++);
+            auto const var(resolve_value(next_scope, arg.cell));
+            next_scope->variables[name.name] = var;
+          }
+
+          return interpret(next_scope, { cell.data.definition.body });
         } break;
 
         case translate::cell::type::native_function_call:
