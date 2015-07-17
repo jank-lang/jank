@@ -14,7 +14,7 @@ namespace jank
           {
             static auto make_primitive
             (std::string const &name)
-            { return std::make_pair(name, cell::type_definition{ { name, {} } }); }
+            { return std::make_pair(name, cell::type_definition{ { name } }); }
           }
 
           scope& add_primitives

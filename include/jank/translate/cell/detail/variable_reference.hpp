@@ -10,9 +10,10 @@ namespace jank
     {
       namespace detail
       {
+        template <typename C>
         struct variable_reference
         {
-          variable_definition definition;
+          variable_definition<C> definition;
         };
       }
     }

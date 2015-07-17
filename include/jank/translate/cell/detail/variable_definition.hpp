@@ -13,11 +13,13 @@ namespace jank
         enum class constness
         { non_constant, constant };
 
+        template <typename C>
         struct variable_definition
         {
           std::string name;
           type_reference type;
           constness constant;
+          C argument;
         };
       }
     }

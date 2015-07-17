@@ -10,7 +10,8 @@ business class functions
 fragrant generics
 
 variables and constants
-  tests
+  integrate into interpreter
+  interpret tests
 
 syntax errors...?
   will the regex remain?

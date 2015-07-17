@@ -90,7 +90,7 @@ namespace jank
               }
 
               cell::variable_definition const def
-              { { name.data, { value_type.data }, c } };
+              { { name.data, { value_type.data }, c, arguments[0].cell } };
               body.data.scope->variable_definitions[name.data] = def;
               return { def };
             }

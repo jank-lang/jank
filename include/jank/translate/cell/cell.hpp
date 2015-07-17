@@ -90,13 +90,13 @@ namespace jank
       template <>
       struct wrapper<type::variable_definition>
       {
-        using type = detail::variable_definition;
+        using type = detail::variable_definition<cell>;
         type data;
       };
       template <>
       struct wrapper<type::variable_reference>
       {
-        using type = detail::variable_reference;
+        using type = detail::variable_reference<cell>;
         type data;
       };
       template <>

@@ -11,11 +11,11 @@ namespace jank
     {
       namespace detail
       {
-        /* TODO: Add scope members to all of these. */
         struct type_definition
         {
           std::string name;
-          std::vector<struct variable_definition> members;
+          /* TODO: Add member support. */
+          //std::vector<struct variable_definition> members;
         };
 
         inline bool operator ==(type_definition const &lhs, type_definition const &rhs)

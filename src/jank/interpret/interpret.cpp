@@ -58,6 +58,13 @@ namespace jank
             return resolve_value(env, cell.data.cell);
           } break;
 
+          case translate::cell::type::variable_definition:
+          {
+            //auto const &cell
+            //(translate::expect::type<translate::cell::type::variable_definition>(c));
+            //return resolve_value(env, cell.data.cell);
+          } break;
+
           default:
             break;
         }

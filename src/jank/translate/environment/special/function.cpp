@@ -26,15 +26,16 @@ namespace jank
 
           auto &data(input.data);
           if(data.size() < forms_required)
-          { throw expect::error::syntax::exception<>{ "invalid function definition" }; }
+          {
+            throw expect::error::syntax::exception<>
+            { "invalid function definition" };
+          }
 
           auto const name(parse::expect::type<parse::cell::type::ident>(data[1]));
           auto const args(parse::expect::type<parse::cell::type::list>(data[2]));
           auto const nested_scope(std::make_shared<scope>(outer_body.data.scope));
           auto const arg_definitions
-          (
-            function::argument::definition::parse_types(args, nested_scope)
-          );
+          (function::argument::definition::parse_types(args, nested_scope));
 
           /* Add args to function's scope. */
           std::transform
@@ -50,7 +51,8 @@ namespace jank
               return std::make_pair
               (
                 arg.name,
-                cell::variable_definition{ { arg.name, arg.type, cell::detail::constness::non_constant } }
+                cell::variable_definition
+                { { arg.name, arg.type, cell::detail::constness::non_constant, {} } }
               );
             }
           );
