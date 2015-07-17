@@ -19,7 +19,7 @@ namespace jank
           std::string name;
           type_reference type;
           constness constant;
-          C argument;
+          C cell;
         };
       }
     }

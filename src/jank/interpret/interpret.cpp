@@ -60,10 +60,19 @@ namespace jank
 
           case translate::cell::type::variable_definition:
           {
-            //auto const &cell
-            //(translate::expect::type<translate::cell::type::variable_definition>(c));
-            //return resolve_value(env, cell.data.cell);
+            auto const &cell
+            (translate::expect::type<translate::cell::type::variable_definition>(c));
+
+            auto &var(env->variables[cell.data.name]);
+            var = resolve_value
+            (
+              env,
+              translate::cell::variable_reference{ { cell.data } }
+            );
+            return var;
           } break;
+
+          /* TODO: constants. */
 
           default:
             break;
