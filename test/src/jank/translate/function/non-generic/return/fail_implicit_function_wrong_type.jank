@@ -1,0 +1,7 @@
+(ƒ bar-foo () (string)
+  "good")
+
+(ƒ foo-bar () (integer)
+  (bar-foo))
+
+(print (foo-bar))

@@ -107,4 +107,15 @@ namespace jest
     expect_exception<jank::translate::expect::error::syntax::exception<>>
     ([]{ jank::common::translate("translate/function/non-generic/return/fail_code_after_return_implicit.jank"); });
   }
+
+  template <> template <>
+  void jank::return_group::test<16>()
+  { jank::common::translate("translate/function/non-generic/return/pass_implicit_function.jank"); }
+
+  template <> template <>
+  void jank::return_group::test<17>()
+  {
+    expect_exception<jank::translate::expect::error::type::exception<>>
+    ([]{ jank::common::translate("translate/function/non-generic/return/fail_implicit_function_wrong_type.jank"); });
+  }
 }
