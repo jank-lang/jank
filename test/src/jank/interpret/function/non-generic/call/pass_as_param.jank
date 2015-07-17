@@ -1,0 +1,4 @@
+(function foo (a integer) (integer)
+  a)
+
+(print (foo 4))

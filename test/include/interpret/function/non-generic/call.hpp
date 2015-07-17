@@ -45,4 +45,13 @@ namespace jest
     jank::common::interpret("interpret/function/non-generic/call/pass_chain.jank");
     expect_equal(out.str(), "77\n-5.05\ngood\n");
   }
+
+  /* There was a bug where params were not properly put into a function's scope. */
+  template <> template <>
+  void jank::call_group::test<4>()
+  {
+    reset();
+    jank::common::interpret("interpret/function/non-generic/call/pass_as_param.jank");
+    expect_equal(out.str(), "4\n");
+  }
 }

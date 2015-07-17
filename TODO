@@ -9,10 +9,6 @@ use null in the appropriate areas
 business class functions
 fragrant generics
 
-BUG
-  native functions don't have their args resolved before calling
-  ** Write tests for this **
-
 variables and constants
   tests
 
