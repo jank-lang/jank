@@ -8,13 +8,13 @@ jank aims to be a lisp-1 with hygienic, code-as-data macros, a strong, static ty
 |Compiler                     |Status                                     |
 |:----------------------------|:------------------------------------------|
 |non-generic functions        |Complete and tested.                       |
-|non-generic variables        |Complete and partially tested.             |
+|non-generic variables        |Complete and tested.                       |
 |non-generic native functions |Complete and tested.                       |
 
 |Interpreter                  |Status                                     |
 |:----------------------------|:------------------------------------------|
 |non-generic functions        |Complete and tested.                       |
-|non-generic variables        |Not started.                               |
+|non-generic variables        |Complete and tested.                       |
 |non-generic native functions |Complete and tested.                       |
 |arithmetic for primitives    |Complete and tested.                       |
 
