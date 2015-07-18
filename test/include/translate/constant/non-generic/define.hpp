@@ -39,16 +39,13 @@ namespace jest
   template <> template <>
   void jank::define_group::test<5>()
   {
-    expect_exception<jank::translate::expect::error::syntax::exception<>>
+    expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("translate/constant/non-generic/define/fail_missing_value.jank"); });
   }
 
   template <> template <>
   void jank::define_group::test<6>()
-  {
-    expect_exception<jank::translate::expect::error::syntax::exception<>>
-    ([]{ jank::common::translate("translate/constant/non-generic/define/fail_missing_type.jank"); });
-  }
+  { jank::common::translate("translate/constant/non-generic/define/pass_deduce_type.jank"); }
 
   template <> template <>
   void jank::define_group::test<7>()

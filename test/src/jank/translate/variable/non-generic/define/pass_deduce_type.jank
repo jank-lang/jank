@@ -1,0 +1,6 @@
+(variable foo "string")
+
+(ƒ test (s string) ()
+  (assert (== s "string")))
+
+(test foo)
