@@ -25,7 +25,7 @@ namespace jank
               cell::detail::constness c
             )
             {
-              static std::size_t constexpr forms_required{ 4 };
+              static std::size_t constexpr forms_required{ 3 };
 
               /* TODO: If the type is not specified, deduce it. */
               auto &data(input.data);
@@ -37,8 +37,6 @@ namespace jank
 
               auto const name
               (parse::expect::type<parse::cell::type::ident>(data[1]));
-              auto const type_name
-              (parse::expect::type<parse::cell::type::ident>(data[2]));
 
               auto const var_opt(body.data.scope->find_variable(name.data));
               if(var_opt && var_opt.value().second == body.data.scope)
@@ -47,13 +45,7 @@ namespace jank
                 { "multiple definition of: " + name.data };
               }
 
-              auto const type_opt(body.data.scope->find_type(type_name.data));
-              if(!type_opt)
-              {
-                throw expect::error::type::exception<>
-                { "unknown type: " + type_name.data };
-              }
-              auto const &type(type_opt.value().first);
+              bool const deduce_type{ data.size() == 3 };
 
               /* Remove everything but the type and the value and parse it as a function call.
                * The type will be skipped, as it's considered the function's name. */
@@ -61,7 +53,7 @@ namespace jank
               parsable_list.data.erase
               (
                 parsable_list.data.begin(),
-                std::next(parsable_list.data.begin(), 2)
+                std::next(parsable_list.data.begin(), deduce_type ? 1 : 2)
               );
               auto const arguments
               (
@@ -79,15 +71,33 @@ namespace jank
                 { "multiple values specified in variable definition" };
               }
 
+              cell::type_definition expected_type;
               auto const value_type
               (
                 function::argument::resolve_type
                 (arguments[0].cell, body.data.scope)
               );
-              if(value_type.data != type.data)
+              if(deduce_type)
+              { expected_type = value_type; }
+              else
               {
-                throw expect::error::type::exception<>
-                { "incompatible types for variable definition" };
+                auto const type_name
+                (parse::expect::type<parse::cell::type::ident>(data[2]));
+                auto const type_opt
+                (body.data.scope->find_type(type_name.data));
+
+                if(!type_opt)
+                {
+                  throw expect::error::type::exception<>
+                  { "unknown type in variable definition" };
+                }
+
+                expected_type = type_opt.value().first;
+                if(value_type.data != expected_type.data)
+                {
+                  throw expect::error::type::exception<>
+                  { "incompatible types for variable definition" };
+                }
               }
 
               cell::variable_definition const def
