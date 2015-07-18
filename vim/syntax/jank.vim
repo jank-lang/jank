@@ -17,6 +17,7 @@ syntax keyword jank_todo TODO XXX FIXME NOTE
 syntax keyword jank_special
              \ function ƒ
              \ variable
+             \ constant
              \ alias
              \ return
 syntax keyword jank_builtin_type
