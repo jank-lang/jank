@@ -9,10 +9,6 @@ use null in the appropriate areas
 business class functions
 fragrant generics
 
-variables and constants
-  integrate into interpreter
-  interpret tests
-
 syntax errors...?
   will the regex remain?
     need to map s-exprs to file positions
