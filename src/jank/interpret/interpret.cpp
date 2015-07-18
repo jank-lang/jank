@@ -63,13 +63,11 @@ namespace jank
             auto const &cell
             (translate::expect::type<translate::cell::type::variable_definition>(c));
 
-            auto &var(env->variables[cell.data.name]);
-            var = resolve_value
+            env->variables[cell.data.name] = resolve_value
             (
               env,
-              translate::cell::variable_reference{ { cell.data } }
+              cell.data.cell
             );
-            return var;
           } break;
 
           /* TODO: constants. */
