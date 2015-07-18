@@ -27,6 +27,7 @@ namespace jank
             {
               static std::size_t constexpr forms_required{ 4 };
 
+              /* TODO: If the type is not specified, deduce it. */
               auto &data(input.data);
               if(data.size() < forms_required)
               {
