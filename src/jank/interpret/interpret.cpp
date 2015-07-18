@@ -58,6 +58,7 @@ namespace jank
             return resolve_value(env, cell.data.cell);
           } break;
 
+          /* Handles const and non-const. */
           case translate::cell::type::variable_definition:
           {
             auto const &cell
@@ -69,8 +70,6 @@ namespace jank
               cell.data.cell
             );
           } break;
-
-          /* TODO: constants. */
 
           default:
             break;
