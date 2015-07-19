@@ -1,0 +1,20 @@
+#include <jank/parse/expect/type.hpp>
+#include <jank/interpret/interpret.hpp>
+#include <jank/interpret/detail/do_statement.hpp>
+#include <jank/interpret/environment/resolve_value.hpp>
+
+namespace jank
+{
+  namespace interpret
+  {
+    namespace detail
+    {
+      parse::cell::cell do_statement
+      (
+        std::shared_ptr<environment::scope> const &scope,
+        translate::cell::do_statement const &cell
+      )
+      { return interpret(scope, { cell.data.body }); }
+    }
+  }
+}

@@ -6,6 +6,7 @@
 #include <jank/interpret/detail/variable_definition.hpp>
 #include <jank/interpret/detail/if_statement.hpp>
 #include <jank/interpret/detail/return_statement.hpp>
+#include <jank/interpret/detail/do_statement.hpp>
 
 /* TODO: print with no newline. */
 namespace jank
@@ -14,7 +15,7 @@ namespace jank
   {
     parse::cell::cell interpret
     (
-      std::shared_ptr<environment::scope> const &env,
+      std::shared_ptr<environment::scope> const &scope,
       translate::cell::function_body const &root
     )
     {
@@ -26,7 +27,7 @@ namespace jank
           {
             auto const &cell
             (translate::expect::type<translate::cell::type::function_call>(c));
-            detail::function_call(env, cell);
+            detail::function_call(scope, cell);
           } break;
 
           case translate::cell::type::native_function_call:
@@ -36,7 +37,7 @@ namespace jank
               translate::expect::type
               <translate::cell::type::native_function_call>(c)
             );
-            detail::native_function_call(env, cell);
+            detail::native_function_call(scope, cell);
           } break;
 
           case translate::cell::type::return_statement:
@@ -46,21 +47,21 @@ namespace jank
               translate::expect::type
               <translate::cell::type::return_statement>(c)
             );
-            return detail::return_statement(env, cell);
+            return detail::return_statement(scope, cell);
           } break;
 
           case translate::cell::type::if_statement:
           {
             auto const &cell
             (translate::expect::type<translate::cell::type::if_statement>(c));
-            detail::if_statement(env, cell);
+            detail::if_statement(scope, cell);
           } break;
 
           case translate::cell::type::do_statement:
           {
             auto const &cell
             (translate::expect::type<translate::cell::type::do_statement>(c));
-            interpret(env, { cell.data.body });
+            detail::do_statement(scope, cell);
           } break;
 
           /* Handles const and non-const. */
@@ -71,7 +72,7 @@ namespace jank
               translate::expect::type
               <translate::cell::type::variable_definition>(c)
             );
-            detail::variable_definition(env, cell);
+            detail::variable_definition(scope, cell);
           } break;
 
           default:
