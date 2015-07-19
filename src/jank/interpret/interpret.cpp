@@ -1,14 +1,11 @@
-#include <jank/parse/cell/stream.hpp>
-#include <jank/parse/expect/type.hpp>
-#include <jank/translate/cell/stream.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
-#include <jank/interpret/expect/error/lookup/exception.hpp>
 #include <jank/interpret/detail/function_call.hpp>
 #include <jank/interpret/detail/native_function_call.hpp>
 #include <jank/interpret/detail/variable_definition.hpp>
 #include <jank/interpret/detail/if_statement.hpp>
+#include <jank/interpret/detail/return_statement.hpp>
 
 /* TODO: print with no newline. */
 namespace jank
@@ -21,7 +18,6 @@ namespace jank
       translate::cell::function_body const &root
     )
     {
-      /* TODO: Move each of these to their own source files. */
       for(auto const &c : root.data.cells)
       {
         switch(static_cast<translate::cell::type>(c.which()))
@@ -50,7 +46,7 @@ namespace jank
               translate::expect::type
               <translate::cell::type::return_statement>(c)
             );
-            return resolve_value(env, cell.data.cell);
+            return detail::return_statement(env, cell);
           } break;
 
           case translate::cell::type::if_statement:
