@@ -4,6 +4,9 @@ refactoring
 cons, lists
   built-in sum types?
 
+if and do
+  tests
+
 null
   allow calling nullary functions with null
   allow null-typed variables
