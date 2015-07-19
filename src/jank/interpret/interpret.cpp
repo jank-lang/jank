@@ -5,6 +5,7 @@
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
 #include <jank/interpret/expect/error/lookup/exception.hpp>
+#include <jank/interpret/detail/function_call.hpp>
 
 /* TODO: print with no newline. */
 namespace jank
@@ -26,19 +27,7 @@ namespace jank
           {
             auto const &cell
             (translate::expect::type<translate::cell::type::function_call>(c));
-
-            auto const next_scope(std::make_shared<environment::scope>());
-            next_scope->parent = env;
-
-            auto arg_name_it(cell.data.definition.arguments.begin());
-            for(auto const &arg : cell.data.arguments)
-            {
-              auto const &name(*arg_name_it++);
-              auto const var(resolve_value(next_scope, arg.cell));
-              next_scope->variables[name.name] = var;
-            }
-
-            interpret(next_scope, { cell.data.definition.body });
+            detail::function_call(env, cell);
           } break;
 
           case translate::cell::type::native_function_call:

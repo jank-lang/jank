@@ -79,6 +79,7 @@ add_library(${PROJECT_NAME}_static STATIC
 	          src/jank/interpret/interpret.cpp
 	          src/jank/interpret/environment/scope.cpp
 	          src/jank/interpret/environment/resolve_value.cpp
+	          src/jank/interpret/detail/function_call.cpp
 )
 
 add_executable(${PROJECT_NAME} src/main.cpp)
