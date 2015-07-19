@@ -8,6 +8,7 @@
 #include <jank/interpret/detail/function_call.hpp>
 #include <jank/interpret/detail/native_function_call.hpp>
 #include <jank/interpret/detail/variable_definition.hpp>
+#include <jank/interpret/detail/if_statement.hpp>
 
 /* TODO: print with no newline. */
 namespace jank
@@ -56,12 +57,7 @@ namespace jank
           {
             auto const &cell
             (translate::expect::type<translate::cell::type::if_statement>(c));
-            auto const condition
-            (resolve_value(env, cell.data.condition));
-            if(parse::expect::type<parse::cell::type::boolean>(condition).data)
-            { interpret(env, { cell.data.true_body }); }
-            else
-            { interpret(env, { cell.data.false_body }); }
+            detail::if_statement(env, cell);
           } break;
 
           case translate::cell::type::do_statement:

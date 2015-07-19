@@ -82,6 +82,7 @@ add_library(${PROJECT_NAME}_static STATIC
 	          src/jank/interpret/detail/function_call.cpp
             src/jank/interpret/detail/native_function_call.cpp
             src/jank/interpret/detail/variable_definition.cpp
+            src/jank/interpret/detail/if_statement.cpp
 )
 
 add_executable(${PROJECT_NAME} src/main.cpp)
