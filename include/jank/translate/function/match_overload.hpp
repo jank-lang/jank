@@ -24,14 +24,16 @@ namespace jank
 
       /* Handles native and non-native functions. */
       template <typename Def>
-      std::experimental::optional<typename detail::call<Def>::type> match_overload
+      std::experimental::optional<typename detail::call<Def>::type>
+      match_overload
       (
         parse::cell::list const &list,
         std::shared_ptr<environment::scope> const &scope,
         std::vector<environment::scope::result<Def>> const &functions
       )
       {
-        auto const arguments(function::argument::call::parse<cell::cell>(list, scope));
+        auto const arguments
+        (function::argument::call::parse<cell::cell>(list, scope));
 
         for(auto const &overload_cell : functions)
         {

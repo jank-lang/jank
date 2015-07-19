@@ -16,21 +16,32 @@ namespace jank
           <
             std::string,
             std::function
-            <cell::cell (parse::cell::list const &input, cell::function_body const &output)>
+            <
+              cell::cell
+              (
+                parse::cell::list const &input,
+                cell::function_body const &output
+              )
+            >
           > specials
           {
             { "function", &function },
             { "ƒ", &function },
             { "variable", &variable },
             { "constant", &constant },
-            { "return", &return_statement }
+            { "return", &return_statement },
+            { "if", &if_statement },
           };
 
           auto &data(list.data);
           if(data.empty())
           { throw std::runtime_error{ "invalid parse list" }; }
 
-          auto const it(specials.find(parse::expect::type<parse::cell::type::ident>(list.data[0]).data));
+          auto const it
+          (
+            specials.find
+            (parse::expect::type<parse::cell::type::ident>(list.data[0]).data)
+          );
           if(it != specials.end())
           { return { it->second(list, translated) }; }
           return {};

@@ -50,14 +50,16 @@ namespace jank
 
             for(auto it(l.data.begin()); it != l.data.end(); ++it)
             {
-              auto const &name(parse::expect::type<parse::cell::type::ident>(*it).data);
+              auto const &name
+              (parse::expect::type<parse::cell::type::ident>(*it).data);
               if(++it == l.data.end())
               {
                 throw expect::error::syntax::exception<>
                 { "expected type after " + name };
               }
 
-              auto const &type(parse::expect::type<parse::cell::type::ident>(*it).data);
+              auto const &type
+              (parse::expect::type<parse::cell::type::ident>(*it).data);
               auto const &type_def(scope->find_type(type));
               if(!type_def)
               {

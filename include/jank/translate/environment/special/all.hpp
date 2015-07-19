@@ -8,6 +8,7 @@
 #include <jank/translate/environment/special/variable.hpp>
 #include <jank/translate/environment/special/constant.hpp>
 #include <jank/translate/environment/special/return_statement.hpp>
+#include <jank/translate/environment/special/if_statement.hpp>
 
 namespace jank
 {

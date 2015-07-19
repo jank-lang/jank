@@ -31,9 +31,12 @@ namespace jank
             { "invalid function definition" };
           }
 
-          auto const name(parse::expect::type<parse::cell::type::ident>(data[1]));
-          auto const args(parse::expect::type<parse::cell::type::list>(data[2]));
-          auto const nested_scope(std::make_shared<scope>(outer_body.data.scope));
+          auto const name
+          (parse::expect::type<parse::cell::type::ident>(data[1]));
+          auto const args
+          (parse::expect::type<parse::cell::type::list>(data[2]));
+          auto const nested_scope
+          (std::make_shared<scope>(outer_body.data.scope));
           auto const arg_definitions
           (function::argument::definition::parse_types(args, nested_scope));
 
@@ -52,24 +55,36 @@ namespace jank
               (
                 arg.name,
                 cell::variable_definition
-                { { arg.name, arg.type, cell::detail::constness::non_constant, {} } }
+                { {
+                  arg.name, arg.type, cell::detail::constness::non_constant, {}
+                } }
               );
             }
           );
 
           /* TODO: Check native functions, too. */
           /* Check for an already-defined function of this type. */
-          /* XXX: We're only checking *this* scope's functions, so shadowing is allowed. */
-          for(auto const &overload : outer_body.data.scope->function_definitions[name.data])
+          /* XXX: We're only checking *this* scope's functions, so
+           * shadowing is allowed. */
+          for
+          (
+            auto const &overload :
+            outer_body.data.scope->function_definitions[name.data]
+          )
           {
             if(overload.data.arguments == arg_definitions)
-            { throw expect::error::type::overload{ "multiple definition of: " + name.data }; }
+            {
+              throw expect::error::type::overload
+              { "multiple definition of: " + name.data };
+            }
           }
 
           /* TODO: Add multiple return types into a tuple. */
           /* Parse return types. */
-          auto const return_type_names(parse::expect::type<parse::cell::type::list>(data[3]));
-          auto const return_types(function::ret::parse(return_type_names, nested_scope));
+          auto const return_type_names
+          (parse::expect::type<parse::cell::type::list>(data[3]));
+          auto const return_types
+          (function::ret::parse(return_type_names, nested_scope));
 
           /* Add an empty declaration first, to allow for recursive references. */
           outer_body.data.scope->function_definitions[name.data].emplace_back();
@@ -82,7 +97,8 @@ namespace jank
               return_types[0].data,
               translate /* Recurse into translate for the body. */
               (
-                jtl::it::make_range(std::next(data.begin(), forms_required), data.end()),
+                jtl::it::make_range
+                (std::next(data.begin(), forms_required), data.end()),
                 nested_scope,
                 return_types[0]
               ).data,

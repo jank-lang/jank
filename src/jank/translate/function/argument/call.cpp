@@ -56,7 +56,10 @@ namespace jank
               {
                 auto const def(scope_->find_variable(c.data));
                 if(!def)
-                { throw expect::error::type::exception<>{ "unknown variable: " + c.data }; }
+                {
+                  throw expect::error::type::exception<>
+                  { "unknown variable: " + c.data };
+                }
 
                 return detail::value<C>
                 {
@@ -125,7 +128,8 @@ namespace jank
               std::shared_ptr<environment::scope> scope_;
           };
 
-          /* TODO: Have this not skip the first item. Instead, it should only be passed the args. */
+          /* TODO: Have this not skip the first item.
+           * Instead, it should only be passed the args. */
           template <>
           value_list<cell::cell> parse<cell::cell>
           (
