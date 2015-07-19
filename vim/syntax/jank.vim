@@ -20,6 +20,8 @@ syntax keyword jank_special
              \ constant
              \ alias
              \ return
+             \ if
+             \ do
 syntax keyword jank_builtin_type
              \ null boolean
              \ integer real
