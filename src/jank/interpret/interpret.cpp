@@ -1,4 +1,5 @@
 #include <jank/parse/cell/stream.hpp>
+#include <jank/parse/expect/type.hpp>
 #include <jank/translate/cell/stream.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/interpret/interpret.hpp>
@@ -56,6 +57,16 @@ namespace jank
             auto const &cell
             (translate::expect::type<translate::cell::type::return_statement>(c));
             return resolve_value(env, cell.data.cell);
+          } break;
+
+          case translate::cell::type::if_statement:
+          {
+            auto const &cell
+            (translate::expect::type<translate::cell::type::if_statement>(c));
+            auto const condition
+            (resolve_value(env, cell.data.condition));
+            if(parse::expect::type<parse::cell::type::boolean>(condition).data)
+            { interpret(env, { cell.data.body }); }
           } break;
 
           /* Handles const and non-const. */
