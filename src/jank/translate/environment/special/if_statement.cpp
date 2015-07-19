@@ -61,18 +61,38 @@ namespace jank
           auto const nested_scope
           (std::make_shared<scope>(outer_body.data.scope));
 
-          auto const body
+          auto const true_range_start(std::next(data.begin(), forms_required));
+          auto const true_body
           (
-            translate /* Recurse into translate for the body. */
+            translate
             (
               jtl::it::make_range
-              (std::next(data.begin(), forms_required), data.end()),
+              (true_range_start, std::next(true_range_start)),
               nested_scope,
               { outer_body.data.return_type }
             ).data
           );
 
-          return { cell::if_statement{ { condition.cell, body } } };
+          cell::function_body::type false_body
+          {
+            {}, outer_body.data.return_type, outer_body.data.scope
+          };
+
+          /* Add a false body, if it's there. */
+          if(data.size() == forms_required + 2)
+          {
+            auto const false_range_start(std::next(true_range_start));
+            false_body = translate
+            (
+              jtl::it::make_range
+              (false_range_start, std::next(false_range_start)),
+              nested_scope,
+              { outer_body.data.return_type }
+            ).data;
+          }
+
+          return
+          { cell::if_statement{ { condition.cell, true_body, false_body } } };
         }
       }
     }

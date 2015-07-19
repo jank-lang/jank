@@ -15,7 +15,7 @@ namespace jank
         struct if_statement
         {
           C condition;
-          function_body<C> body;
+          function_body<C> true_body, false_body;
         };
       }
     }

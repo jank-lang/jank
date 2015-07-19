@@ -66,7 +66,9 @@ namespace jank
             auto const condition
             (resolve_value(env, cell.data.condition));
             if(parse::expect::type<parse::cell::type::boolean>(condition).data)
-            { interpret(env, { cell.data.body }); }
+            { interpret(env, { cell.data.true_body }); }
+            else
+            { interpret(env, { cell.data.false_body }); }
           } break;
 
           /* Handles const and non-const. */

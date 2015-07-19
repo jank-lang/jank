@@ -30,7 +30,7 @@ namespace jank
     )
     {
       cell::function_body translated{ { {}, return_type.data, scope } };
-      std::for_each
+      std::for_each /* TODO: range-based for? o.O */
       (
         range.begin(), range.end(),
         [&](auto const &c)

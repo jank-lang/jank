@@ -131,7 +131,9 @@ namespace jank
       {
         indenter const indent{ os, indent_level };
         os << "if " << c.data.condition << std::endl;
-        return os << function_body{ c.data.body } << std::endl;
+        os << function_body{ c.data.true_body } << std::endl;
+        os << "else" << std::endl;
+        return os << function_body{ c.data.false_body } << std::endl;
       }
 
       std::ostream& operator <<(std::ostream &os, cell const &c)
