@@ -7,6 +7,7 @@
 #include <jank/interpret/expect/error/lookup/exception.hpp>
 #include <jank/interpret/detail/function_call.hpp>
 #include <jank/interpret/detail/native_function_call.hpp>
+#include <jank/interpret/detail/variable_definition.hpp>
 
 /* TODO: print with no newline. */
 namespace jank
@@ -44,7 +45,10 @@ namespace jank
           case translate::cell::type::return_statement:
           {
             auto const &cell
-            (translate::expect::type<translate::cell::type::return_statement>(c));
+            (
+              translate::expect::type
+              <translate::cell::type::return_statement>(c)
+            );
             return resolve_value(env, cell.data.cell);
           } break;
 
@@ -71,13 +75,11 @@ namespace jank
           case translate::cell::type::variable_definition:
           {
             auto const &cell
-            (translate::expect::type<translate::cell::type::variable_definition>(c));
-
-            env->variables[cell.data.name] = resolve_value
             (
-              env,
-              cell.data.cell
+              translate::expect::type
+              <translate::cell::type::variable_definition>(c)
             );
+            detail::variable_definition(env, cell);
           } break;
 
           default:
