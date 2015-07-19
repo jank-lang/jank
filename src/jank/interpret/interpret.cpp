@@ -6,6 +6,7 @@
 #include <jank/interpret/environment/resolve_value.hpp>
 #include <jank/interpret/expect/error/lookup/exception.hpp>
 #include <jank/interpret/detail/function_call.hpp>
+#include <jank/interpret/detail/native_function_call.hpp>
 
 /* TODO: print with no newline. */
 namespace jank
@@ -37,9 +38,7 @@ namespace jank
               translate::expect::type
               <translate::cell::type::native_function_call>(c)
             );
-
-            resolve_value
-            (env, cell.data.definition.interpret(env, cell.data.arguments));
+            detail::native_function_call(env, cell);
           } break;
 
           case translate::cell::type::return_statement:
