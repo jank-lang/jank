@@ -9,6 +9,7 @@
 #include <jank/translate/environment/special/constant.hpp>
 #include <jank/translate/environment/special/return_statement.hpp>
 #include <jank/translate/environment/special/if_statement.hpp>
+#include <jank/translate/environment/special/do_statement.hpp>
 
 namespace jank
 {

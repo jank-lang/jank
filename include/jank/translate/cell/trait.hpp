@@ -51,6 +51,9 @@ namespace jank
         template <>
         inline char constexpr const* to_string<type::if_statement>()
         { return "if_statement"; }
+        template <>
+        inline char constexpr const* to_string<type::do_statement>()
+        { return "do_statement"; }
 
         template <typename C>
         char constexpr const* to_string();
@@ -90,6 +93,9 @@ namespace jank
         template <>
         inline char constexpr const* to_string<if_statement>()
         { return to_string<type::if_statement>(); }
+        template <>
+        inline char constexpr const* to_string<do_statement>()
+        { return to_string<type::do_statement>(); }
 
         inline char constexpr const* to_string(type const c)
         {
@@ -119,6 +125,8 @@ namespace jank
               return to_string<type::return_statement>();
             case type::if_statement:
               return to_string<type::if_statement>();
+            case type::do_statement:
+              return to_string<type::do_statement>();
             default:
               return "unknown";
           }
@@ -150,6 +158,8 @@ namespace jank
           { return type::return_statement; }
           else if(str == to_string<if_statement>())
           { return type::if_statement; }
+          else if(str == to_string<do_statement>())
+          { return type::do_statement; }
           else
           {
             throw expect::error::type::exception<>
@@ -197,6 +207,9 @@ namespace jank
           template <>
           struct to_type<type::if_statement>
           { using type = if_statement; };
+          template <>
+          struct to_type<type::do_statement>
+          { using type = do_statement; };
         }
         template <type C>
         using to_type = typename detail::to_type<C>::type;
@@ -239,6 +252,9 @@ namespace jank
         template <>
         type constexpr to_enum<if_statement>()
         { return type::if_statement; }
+        template <>
+        type constexpr to_enum<do_statement>()
+        { return type::do_statement; }
       }
     }
   }

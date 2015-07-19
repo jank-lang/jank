@@ -13,9 +13,6 @@ namespace jank
     {
       namespace special
       {
-        /* TODO: Handle return checking during validation. */
-        /* TODO: First arg is then, second is else.
-         * Use a do statement for bodies. */
         cell::cell if_statement
         (parse::cell::list const &input, cell::function_body const &outer_body)
         {

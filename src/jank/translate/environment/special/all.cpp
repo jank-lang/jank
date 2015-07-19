@@ -31,6 +31,7 @@ namespace jank
             { "constant", &constant },
             { "return", &return_statement },
             { "if", &if_statement },
+            { "do", &do_statement },
           };
 
           auto &data(list.data);

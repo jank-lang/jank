@@ -21,6 +21,7 @@
 #include <jank/translate/cell/detail/literal_value.hpp>
 #include <jank/translate/cell/detail/return_statement.hpp>
 #include <jank/translate/cell/detail/if_statement.hpp>
+#include <jank/translate/cell/detail/do_statement.hpp>
 
 namespace jank
 {
@@ -44,7 +45,8 @@ namespace jank
         boost::recursive_wrapper<wrapper<type::variable_reference>>,
         boost::recursive_wrapper<wrapper<type::literal_value>>,
         boost::recursive_wrapper<wrapper<type::return_statement>>,
-        boost::recursive_wrapper<wrapper<type::if_statement>>
+        boost::recursive_wrapper<wrapper<type::if_statement>>,
+        boost::recursive_wrapper<wrapper<type::do_statement>>
       >;
 
       template <>
@@ -119,6 +121,12 @@ namespace jank
         using type = detail::if_statement<cell>;
         type data;
       };
+      template <>
+      struct wrapper<type::do_statement>
+      {
+        using type = detail::do_statement<cell>;
+        type data;
+      };
 
       using function_body = wrapper<type::function_body>;
       using function_definition = wrapper<type::function_definition>;
@@ -132,6 +140,7 @@ namespace jank
       using literal_value = wrapper<type::literal_value>;
       using return_statement = wrapper<type::return_statement>;
       using if_statement = wrapper<type::if_statement>;
+      using do_statement = wrapper<type::do_statement>;
     }
   }
 }

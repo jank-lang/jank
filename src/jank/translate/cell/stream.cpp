@@ -136,6 +136,12 @@ namespace jank
         return os << function_body{ c.data.false_body } << std::endl;
       }
 
+      static std::ostream& operator <<(std::ostream &os, do_statement const &c)
+      {
+        indenter const indent{ os, indent_level };
+        return os << "do " << function_body{ c.data.body } << std::endl;
+      }
+
       std::ostream& operator <<(std::ostream &os, cell const &c)
       {
         switch(static_cast<type>(c.which()))
@@ -169,6 +175,9 @@ namespace jank
             break;
           case type::if_statement:
             os << boost::get<if_statement>(c);
+            break;
+          case type::do_statement:
+            os << boost::get<do_statement>(c);
             break;
           default:
             os << "??? ";

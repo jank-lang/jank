@@ -23,6 +23,7 @@ namespace jank
         literal_value,
         return_statement,
         if_statement,
+        do_statement,
       };
     }
   }

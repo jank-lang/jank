@@ -7,6 +7,7 @@ namespace jank
 {
   namespace interpret
   {
+    /* TODO: This should be in the environment namespace. */
     parse::cell::cell resolve_value
     (
       std::shared_ptr<environment::scope> const &scope,
