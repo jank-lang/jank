@@ -7,6 +7,8 @@ cons, lists
 if and do
   tests
 
+document if and do in the readme
+
 null
   allow calling nullary functions with null
   allow null-typed variables
