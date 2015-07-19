@@ -1,6 +1,6 @@
-# jank - a statically typed, generic lisp [![Build Status](https://travis-ci.org/jeaye/jank.svg?branch=master)](https://travis-ci.org/jeaye/jank)
+# jank - a statically typed, generic language [![Build Status](https://travis-ci.org/jeaye/jank.svg?branch=master)](https://travis-ci.org/jeaye/jank)
 
-jank aims to be a lisp-1 with hygienic, code-as-data macros, a strong, static type system, scope-based resource management (RAII), a direct focus on generic programming, and a native compiler.
+jank aims to be a programming language with hygienic, code-as-data macros, a strong, static type system, scope-based resource management (RAII), a direct focus on generic programming, and a native compiler.
 
 **NOTE:** jank, at this point, is _very_ incomplete. **jank cannot currently be used.** Furthermore, the design for jank will change a lot; what you see here is an interpolation between where the compiler is and where I want jank to go. Nothing here is final.
 
