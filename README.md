@@ -1,4 +1,4 @@
-# jank - a statically typed, generic language [![Build Status](https://travis-ci.org/jeaye/jank.svg?branch=master)](https://travis-ci.org/jeaye/jank)
+# The jank programming language [![Build Status](https://travis-ci.org/jeaye/jank.svg?branch=master)](https://travis-ci.org/jeaye/jank)
 
 jank aims to be a programming language with hygienic, code-as-data macros, a strong, static type system, scope-based resource management (RAII), a direct focus on generic programming, and a native compiler.
 
