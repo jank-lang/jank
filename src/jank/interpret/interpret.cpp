@@ -71,6 +71,13 @@ namespace jank
             { interpret(env, { cell.data.false_body }); }
           } break;
 
+          case translate::cell::type::do_statement:
+          {
+            auto const &cell
+            (translate::expect::type<translate::cell::type::do_statement>(c));
+            interpret(env, { cell.data.body });
+          } break;
+
           /* Handles const and non-const. */
           case translate::cell::type::variable_definition:
           {
