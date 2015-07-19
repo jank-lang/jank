@@ -1,6 +1,12 @@
 (constant foo "string")
 
-(ƒ test (s string) ()
+(ƒ test-string (s string) ()
   (assert (== s "string")))
 
-(test foo)
+(test-string foo)
+
+(constant num 3.14)
+(constant num_copy num)
+(constant mult_num (* num_copy 2.0))
+
+(assert (== mult_num (* num 2.0)))
