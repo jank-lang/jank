@@ -1,7 +1,7 @@
+#include <jank/parse/cell/stream.hpp>
 #include <jank/translate/cell/stream.hpp>
 #include <jank/translate/cell/trait.hpp>
 #include <jank/translate/function/argument/call.hpp>
-#include <jank/parse/cell/stream.hpp>
 #include <jank/detail/stream/indenter.hpp>
 
 namespace jank
@@ -127,6 +127,13 @@ namespace jank
         return os << "return " << c.data.cell << std::endl;
       }
 
+      static std::ostream& operator <<(std::ostream &os, if_statement const &c)
+      {
+        indenter const indent{ os, indent_level };
+        os << "if " << c.data.condition << std::endl;
+        return os << function_body{ c.data.body } << std::endl;
+      }
+
       std::ostream& operator <<(std::ostream &os, cell const &c)
       {
         switch(static_cast<type>(c.which()))
@@ -157,6 +164,9 @@ namespace jank
             break;
           case type::return_statement:
             os << boost::get<return_statement>(c);
+            break;
+          case type::if_statement:
+            os << boost::get<if_statement>(c);
             break;
           default:
             os << "??? ";

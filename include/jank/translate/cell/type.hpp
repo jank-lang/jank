@@ -21,7 +21,8 @@ namespace jank
         variable_definition,
         variable_reference,
         literal_value,
-        return_statement
+        return_statement,
+        if_statement,
       };
     }
   }

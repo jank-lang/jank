@@ -1,27 +1,21 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-
 #include <jank/translate/cell/detail/type_reference.hpp>
+#include <jank/translate/cell/detail/function_body.hpp>
 
 namespace jank
 {
   namespace translate
   {
-    namespace environment
-    { struct scope; }
-
     namespace cell
     {
       namespace detail
       {
         template <typename C>
-        struct function_body
+        struct if_statement
         {
-          std::vector<C> cells;
-          type_reference return_type;
-          std::shared_ptr<environment::scope> scope;
+          C condition;
+          function_body<C> body;
         };
       }
     }
