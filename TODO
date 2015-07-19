@@ -4,7 +4,9 @@ refactoring
 cons, lists
   built-in sum types?
 
-use null in the appropriate areas
+null
+  allow calling nullary functions with null
+  allow null-typed variables
 
 business class functions
 fragrant generics
