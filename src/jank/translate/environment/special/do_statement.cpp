@@ -29,13 +29,12 @@ namespace jank
           auto const nested_scope
           (std::make_shared<scope>(outer_body.data.scope));
 
-          auto const range_start(std::next(data.begin(), forms_required));
           auto const body
           (
             translate
             (
               jtl::it::make_range
-              (range_start, std::next(range_start)),
+              (std::next(data.begin()), data.end()),
               nested_scope,
               { outer_body.data.return_type }
             ).data
