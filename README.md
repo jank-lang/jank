@@ -236,6 +236,27 @@ Enums function as variant sum types; each variant can have its own type or simpl
   (struct none))
 ```
 
+## Branching
+```
+(constant num 42)
+
+(if (even? num)
+  (print "even")
+  (print "not even"))
+```
+Branching, using `if`, allows for specifying a single form for the true and false cases. All conditions must be of type `boolean` and the false case is optional. To have more than one line in a true or false case, introduce scope with a `do` statement.
+
+```
+(ƒ next-even (i integer) (integer)
+  (if (even? num)
+    (do
+      (print "even")
+      (return i))
+    (do
+      (print "not even")
+      (return (+ 1 i)))))
+```
+
 ## Matching
 Matching can be used in lieu of `car`, `cdr`, `cond`, `eq`, and `atom`. It still needs the syntax and flexibility to be worked out though.
 
