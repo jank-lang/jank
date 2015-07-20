@@ -248,7 +248,7 @@ Branching, using `if`, allows for specifying a single form for the true and fals
 
 ```
 (ƒ next-even (i integer) (integer)
-  (if (even? num)
+  (if (even? i)
     (do
       (print "even")
       (return i))

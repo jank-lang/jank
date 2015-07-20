@@ -7,7 +7,13 @@ cons, lists
 if and do
   tests
 
-document if and do in the readme
+operators
+  != %
+
+stdlib
+  print print-line format
+  not and or
+  even? odd?
 
 null
   allow calling nullary functions with null
