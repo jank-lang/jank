@@ -16,11 +16,11 @@ addons:
       - libboost-all-dev
 
 before_install:
-  - if [ ${CC} == "g++" ]; then
-    export CXX=/usr/bin/g++-5;
+  - if [[ "$CXX" == "clang++" ]]; then
+      export CXX=clang++-3.6; export CC=clang-3.6;
     fi
-  - if [ ${CC} == "clang" ]; then
-    export CC=/usr/bin/clang-3.6 CXX=/usr/bin/clang++-3.6;
+  - if [[ "$CXX" == "g++" ]]; then
+      export CXX=g++-5; export CC=gcc-5;
     fi
 
 script:
