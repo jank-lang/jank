@@ -85,7 +85,7 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 #### Function
 ```
 (; Generic. ;)
-(ƒ show : (:T:o) (o T:o) ()
+(ƒ show : (:T) (o T) ()
   (print o))
 
 (; Full specialization. ;)
@@ -93,11 +93,11 @@ Definitions may be dependent on types. Such definitions may be functions or stru
   (print "real: " o))
 
 (; Partial specialization. ;)
-(ƒ show : (coord : (:T:x :T:y)) (o coord : (T:x T:y)) ()
+(ƒ show : (coord : (:T-x :T-y)) (o coord : (T-x T-y)) ()
   (print "coord: " o))
 
 (; Non-type parameter partial specialization. ;)
-(ƒ show : ((o coord : (:T:x :T:y))) () ()
+(ƒ show : ((o coord : (:T-x :T-y))) () ()
   (print "coord: " o))
 
 (; Non-type parameter full specialization. ;)
@@ -106,9 +106,9 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 ```
 #### Struct
 ```
-(struct coord : (:T:x :T:y)
-  (x T:x)
-  (y T:y))
+(struct coord : (:T-x :T-y)
+  (x T-x)
+  (y T-y))
 ```
 
 ### Variadic
@@ -129,10 +129,10 @@ Only multi-line comments are supported. Anything within `(;` and `;)` is conside
 
 ### Resource management
 ```
-(ƒ construct : (:T:object) (...) (T:object)
+(ƒ construct : (:T) (...) (T)
   )
 
-(ƒ destruct : (:T:object) (o T:object) ()
+(ƒ destruct : (:T) (o T) ()
   )
 ```
 Scope-based resource management ties resource ownership to object lifetimes, similar to C++. Types can take advantage of this by specializing `construct` and `destruct` to perform any custom logic.
@@ -141,15 +141,15 @@ When constructing an object, constructors are first considered, then aggregate i
 
 #### Example
 ```
-(struct coord : (:T:x :T:y)
-  (x T:x)
-  (y T:y))
+(struct coord : (:T-x :T-y)
+  (x T-x)
+  (y T-y))
 
-(ƒ construct : (coord : (:T:x :T:y)) (x T:x y T:y) (coord : (T:x T:y))
+(ƒ construct : (coord : (:T-x :T-y)) (x T-x y T-y) (coord : (T-x T-y))
   (print "constructing object")
-  (coord : (T:x T:y) :x x :y y))
+  (coord : (T-x T-y) :x x :y y))
 
-(ƒ destruct : (:T:x :T:y) (c coord : (T:x T:y)) ()
+(ƒ destruct : (:T-x :T-y) (c coord : (T-x T-y)) ()
   (print "destructing coord"))
 
 (; Calls the constructor. ;)
@@ -164,9 +164,9 @@ When constructing an object, constructors are first considered, then aggregate i
 
 ## Allocation
 ```
-(struct owned : (:T:ptr)
+(struct owned : (:T)
   )
-(struct shared : (:T:ptr)
+(struct shared : (:T)
   )
 ```
 Objects can either be in automatic or dynamic memory (stack vs. heap); to get an object into dynamic memory, you need a smart pointer. Two types of smart pointers exist, `owned` and `shared`.
@@ -189,7 +189,7 @@ All type aliases are strong. Since the focus is so strongly on generics, types a
 (alias name as string)
 
 (; position is generic, yet still strong. ;)
-(alias position : (:T:x :T:y) as coord : (T:x T:y))
+(alias position : (:T-x :T-y) as coord : (T-x T-y))
 ```
 
 ## Generic constraints
@@ -205,13 +205,13 @@ Constraints can be applied to various definitions, including functions and struc
 (ƒ number? : (real) () (boolean)
   true)
 
-(ƒ square : (:T:i) (i T:i) (T:i) where (number? : T:i)
+(ƒ square : (:T) (i T) (T) where (number? : T)
   (* i i))
 ```
 #### Structs
 ```
-(struct coord : (:T:data) where (number? : T:data)
-  (data T:data))
+(struct coord : (:T) where (number? : T)
+  (data T))
 ```
 
 ## Enums
@@ -230,9 +230,9 @@ Enums function as variant sum types; each variant can have its own type or simpl
   (struct other))
 
 (; A generic enum of unique types. ;)
-(enum optional : (:T:value)
+(enum optional : (:T)
   (struct some
-    (value T:value))
+    (value T))
   (struct none))
 ```
 
