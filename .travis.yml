@@ -3,6 +3,8 @@ compiler:
   - gcc
   - clang
 
+sudo: false
+
 addons:
   apt:
     sources:
@@ -14,9 +16,9 @@ addons:
       - libboost-all-dev
 
 before_install:
-  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 50
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 50
-  - sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-5 50
+  - if [ ${CC} == "g++" ]; then
+    export CXX=/usr/bin/g++-5
+    fi
   - if [ ${CC} == "clang" ]; then
     export CC=/usr/bin/clang-3.6 CXX=/usr/bin/clang++-3.6;
     fi
