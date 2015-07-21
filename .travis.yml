@@ -17,7 +17,7 @@ addons:
 
 before_install:
   - if [ ${CC} == "g++" ]; then
-    export CXX=/usr/bin/g++-5
+    export CXX=/usr/bin/g++-5;
     fi
   - if [ ${CC} == "clang" ]; then
     export CC=/usr/bin/clang-3.6 CXX=/usr/bin/clang++-3.6;
