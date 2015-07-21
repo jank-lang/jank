@@ -38,7 +38,10 @@ int main(int const argc, char ** const argv)
   {
     ifs.open(argv[1]);
     if(!ifs.is_open())
-    { throw std::runtime_error{ "unable to open file: " + std::string{ argv[1] } }; }
+    {
+      throw std::runtime_error
+      { "unable to open file: " + std::string{ argv[1] } };
+    }
   }
 
   std::cout << "parsing..." << std::endl;
@@ -56,8 +59,10 @@ int main(int const argc, char ** const argv)
 
   std::cout << "parsed: " << root << std::endl;
 
-  auto const body(jank::parse::expect::type<jank::parse::cell::type::list>(root));
-  auto const scope(std::make_shared<jank::translate::environment::scope>(nullptr));
+  auto const body
+  (jank::parse::expect::type<jank::parse::cell::type::list>(root));
+  auto const scope
+  (std::make_shared<jank::translate::environment::scope>(nullptr));
   jank::translate::environment::builtin::type::add_primitives(*scope);
   jank::translate::plugin::apply(scope);
 
