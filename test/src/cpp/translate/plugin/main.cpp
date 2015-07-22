@@ -11,6 +11,7 @@
 #include "translate/plugin/arithmetic/multiply.hpp"
 #include "translate/plugin/arithmetic/divide.hpp"
 #include "translate/plugin/arithmetic/modulo.hpp"
+#include "translate/plugin/arithmetic/bitwise_and.hpp"
 
 int main()
 {
