@@ -7,6 +7,7 @@
 #include <jank/translate/plugin/arithmetic/modulo.hpp>
 #include <jank/translate/plugin/arithmetic/bitwise_and.hpp>
 #include <jank/translate/plugin/arithmetic/bitwise_or.hpp>
+#include <jank/translate/plugin/arithmetic/bitwise_xor.hpp>
 #include <jank/translate/plugin/compare/equal.hpp>
 #include <jank/translate/plugin/compare/less.hpp>
 #include <jank/translate/plugin/compare/less_equal.hpp>
@@ -40,6 +41,7 @@ namespace jank
           &arithmetic::modulo,
           &arithmetic::bitwise_and,
           &arithmetic::bitwise_or,
+          &arithmetic::bitwise_xor,
           &compare::equal,
           &compare::less,
           &compare::less_equal,
