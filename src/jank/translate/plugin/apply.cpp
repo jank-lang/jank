@@ -5,6 +5,7 @@
 #include <jank/translate/plugin/arithmetic/multiply.hpp>
 #include <jank/translate/plugin/arithmetic/divide.hpp>
 #include <jank/translate/plugin/arithmetic/modulo.hpp>
+#include <jank/translate/plugin/arithmetic/bitwise_and.hpp>
 #include <jank/translate/plugin/compare/equal.hpp>
 #include <jank/translate/plugin/compare/less.hpp>
 #include <jank/translate/plugin/compare/less_equal.hpp>
@@ -36,6 +37,7 @@ namespace jank
           &arithmetic::multiply,
           &arithmetic::divide,
           &arithmetic::modulo,
+          &arithmetic::bitwise_and,
           &compare::equal,
           &compare::less,
           &compare::less_equal,

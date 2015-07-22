@@ -70,6 +70,7 @@ add_library(${PROJECT_NAME}_static STATIC
             src/jank/translate/plugin/arithmetic/multiply.cpp
             src/jank/translate/plugin/arithmetic/divide.cpp
             src/jank/translate/plugin/arithmetic/modulo.cpp
+            src/jank/translate/plugin/arithmetic/bitwise_and.cpp
             src/jank/translate/plugin/compare/equal.cpp
             src/jank/translate/plugin/compare/less.cpp
             src/jank/translate/plugin/compare/less_equal.cpp
