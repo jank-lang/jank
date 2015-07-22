@@ -14,6 +14,7 @@
 #include "translate/plugin/arithmetic/bitwise_and.hpp"
 #include "translate/plugin/arithmetic/bitwise_or.hpp"
 #include "translate/plugin/arithmetic/bitwise_xor.hpp"
+#include "translate/plugin/arithmetic/bitwise_not.hpp"
 
 int main()
 {
