@@ -12,6 +12,7 @@
 #include "translate/plugin/arithmetic/divide.hpp"
 #include "translate/plugin/arithmetic/modulo.hpp"
 #include "translate/plugin/arithmetic/bitwise_and.hpp"
+#include "translate/plugin/arithmetic/bitwise_or.hpp"
 
 int main()
 {
