@@ -75,6 +75,7 @@ add_library(${PROJECT_NAME}_static STATIC
             src/jank/translate/plugin/arithmetic/bitwise_xor.cpp
             src/jank/translate/plugin/arithmetic/bitwise_not.cpp
             src/jank/translate/plugin/arithmetic/bitwise_left_shift.cpp
+            src/jank/translate/plugin/arithmetic/bitwise_right_shift.cpp
             src/jank/translate/plugin/compare/equal.cpp
             src/jank/translate/plugin/compare/less.cpp
             src/jank/translate/plugin/compare/less_equal.cpp

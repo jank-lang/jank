@@ -10,6 +10,7 @@
 #include <jank/translate/plugin/arithmetic/bitwise_xor.hpp>
 #include <jank/translate/plugin/arithmetic/bitwise_not.hpp>
 #include <jank/translate/plugin/arithmetic/bitwise_left_shift.hpp>
+#include <jank/translate/plugin/arithmetic/bitwise_right_shift.hpp>
 #include <jank/translate/plugin/compare/equal.hpp>
 #include <jank/translate/plugin/compare/less.hpp>
 #include <jank/translate/plugin/compare/less_equal.hpp>
@@ -46,6 +47,7 @@ namespace jank
           &arithmetic::bitwise_xor,
           &arithmetic::bitwise_not,
           &arithmetic::bitwise_left_shift,
+          &arithmetic::bitwise_right_shift,
           &compare::equal,
           &compare::less,
           &compare::less_equal,
