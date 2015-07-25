@@ -78,9 +78,6 @@ namespace jest
     ([]{ jank::common::translate("translate/function/non-generic/define/fail_return_incorrect_type.jank"); });
   }
 
-  /* TODO: test returning a value when there's a null return type. */
-  /* TODO: test returning a value of the wrong type. */
-
   template <> template <>
   void jank::define_group::test<11>()
   { jank::common::translate("translate/function/non-generic/define/pass_body.jank"); }
