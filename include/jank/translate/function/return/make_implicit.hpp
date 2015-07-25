@@ -14,11 +14,11 @@ namespace jank
       namespace ret
       {
         /* null */
-        cell::cell make_implicit(cell::function_body const &body);
+        cell::cell make_implicit(cell::function_body::type const &body);
 
         /* Builds an implicit return statement from the last function call. */
         std::experimental::optional<cell::cell>
-        make_implicit_from_call(cell::function_body const &body);
+        make_implicit_from_call(cell::function_body::type const &body);
       }
     }
   }

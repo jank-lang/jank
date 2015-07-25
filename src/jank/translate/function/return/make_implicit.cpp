@@ -13,24 +13,24 @@ namespace jank
     {
       namespace ret
       {
-        cell::cell make_implicit(cell::function_body const &body)
+        cell::cell make_implicit(cell::function_body::type const &body)
         {
           return environment::special::return_statement
           (
             parse::cell::list{ { parse::cell::ident{ "return" } } },
-            body
+            { body }
           );
         }
 
         /* Builds an implicit return statement from the last function call. */
         std::experimental::optional<cell::cell>
-        make_implicit_from_call(cell::function_body const &body)
+        make_implicit_from_call(cell::function_body::type const &body)
         {
           auto const last_function
           (
             std::find_if
             (
-              body.data.cells.rbegin(), body.data.cells.rend(),
+              body.cells.rbegin(), body.cells.rend(),
               [](auto const &c)
               {
                 return expect::is<cell::type::function_call>(c) ||
@@ -40,7 +40,7 @@ namespace jank
           );
 
           /* The function needs to be the last cell in the body. */
-          if(std::next(last_function) != body.data.cells.rend())
+          if(std::next(last_function) != body.cells.rend())
           { return {}; }
 
           auto const native_opt
@@ -61,7 +61,7 @@ namespace jank
               (
                 !opt ||
                 opt.value().data.definition.return_type !=
-                body.data.return_type
+                body.return_type
               )
               { return {}; }
 

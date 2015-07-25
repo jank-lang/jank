@@ -6,6 +6,7 @@ cons, lists
 
 if and do
   tests
+  returning from their bodies needs to return from function
 
 operators
   != %
