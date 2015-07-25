@@ -108,9 +108,6 @@ namespace jank
         }
       );
 
-      /* Verify all paths return a value. */
-      function::ret::validate(translated.data);
-
       return translated;
     }
   }

@@ -16,21 +16,6 @@ namespace jank
     {
       namespace ret
       {
-        namespace detail
-        {
-          template <typename It>
-          static void validate(It const begin, It const end)
-          {
-            // hit if statement, recurse for true and false
-
-            // hit return statement, assert no more code is after
-
-            // if begin + 1 == end
-            //  check implicit return on begin
-          }
-        }
-
-        /* TODO: once we have control logic, this will likely need to recurse. */
         void validate(cell::function_body::type &body)
         {
           auto const it
@@ -64,28 +49,25 @@ namespace jank
             }
 
             /* There may be an if/else with returns. */
-            auto if_opt /* TODO: copied? */
+            auto const if_opt
             (
-              expect::optional_cast<cell::type::if_statement>
+              expect::optional_pointer_cast<cell::type::if_statement>
               (body.cells.back())
             );
             if(if_opt)
             {
-              validate(if_opt.value().data.true_body);
-              validate(if_opt.value().data.false_body);
+              validate(if_opt->data.true_body);
+              validate(if_opt->data.false_body);
               return;
             }
 
-            auto do_opt /* TODO: copied? */
+            auto const do_opt
             (
-              expect::optional_cast<cell::type::do_statement>
+              expect::optional_pointer_cast<cell::type::do_statement>
               (body.cells.back())
             );
             if(do_opt)
-            {
-              validate(do_opt.value().data.body);
-              return;
-            }
+            { return validate(do_opt->data.body); }
 
             throw expect::error::type::exception<>
             { "not all code paths return a value" };
@@ -93,7 +75,10 @@ namespace jank
           else /* Found at least one return statement. */
           {
             if(std::distance(it, body.cells.end()) > 1)
-            { throw expect::error::syntax::exception<>{ "extraneous statements after return" }; }
+            {
+              throw expect::error::syntax::exception<>
+              { "extraneous statements after return" };
+            }
           }
         }
       }

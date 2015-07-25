@@ -89,7 +89,7 @@ namespace jank
           /* Add an empty declaration first, to allow for recursive references. */
           outer_body.data.scope->function_definitions[name.data].emplace_back();
 
-          cell::function_definition const ret
+          cell::function_definition ret
           {
             {
               name.data,
@@ -105,6 +105,9 @@ namespace jank
               nested_scope
             }
           };
+
+          /* Verify all paths return a value. */
+          function::ret::validate(ret.data.body);
 
           /* Add the function definition to the out body's scope. */
           outer_body.data.scope->function_definitions[name.data].back() = ret;
