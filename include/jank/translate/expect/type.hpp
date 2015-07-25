@@ -34,6 +34,7 @@ namespace jank
         return boost::get<cell::trait::to_type<C>>(c);
       }
 
+      /* Returns by copy. */
       template <cell::type C, typename Cell>
       std::experimental::optional<cell::trait::to_type<C>>
       optional_cast(Cell const &c)
@@ -44,6 +45,7 @@ namespace jank
         { return {}; }
       }
 
+      /* Returns by pointer. */
       template <cell::type C, typename Cell>
       cell::trait::to_type<C>* optional_pointer_cast(Cell &&c)
       {
