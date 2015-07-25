@@ -8,7 +8,7 @@ if and do
   tests
 
 operators
-  != %
+  != !
 
 stdlib
   print print-line format
