@@ -251,10 +251,10 @@ Branching, using `if`, allows for specifying a single form for the true and fals
   (if (even? i)
     (do
       (print "even")
-      (return i))
+      i)
     (do
       (print "not even")
-      (return (+ 1 i)))))
+      (+ 1 i))))
 ```
 
 ## Matching
