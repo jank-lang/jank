@@ -43,6 +43,15 @@ namespace jank
         else
         { return {}; }
       }
+
+      template <cell::type C, typename Cell>
+      cell::trait::to_type<C>* optional_pointer_cast(Cell &&c)
+      {
+        if(is<C>(c))
+        { return &type<C>(std::forward<Cell>(c)); }
+        else
+        { return {}; }
+      }
     }
   }
 }
