@@ -1,0 +1,5 @@
+(ƒ int () (integer)
+  42)
+
+(if (int)
+  (print "not good")

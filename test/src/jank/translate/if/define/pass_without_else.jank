@@ -1,0 +1,7 @@
+(constant truth true)
+
+(if truth
+  (print "so true"))
+
+(if (== truth false)
+  (assert false))

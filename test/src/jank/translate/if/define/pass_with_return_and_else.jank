@@ -1,0 +1,4 @@
+(ƒ foo () (integer)
+  (if true
+    42
+    0))

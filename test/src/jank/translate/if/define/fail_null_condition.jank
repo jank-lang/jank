@@ -1,0 +1,5 @@
+(ƒ nil () ()
+  )
+
+(if (nil)
+  (print "not good")
