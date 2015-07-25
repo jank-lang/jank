@@ -61,6 +61,7 @@ namespace jank
               return;
             }
 
+            /* There may be a do with returns. */
             auto const do_opt
             (
               expect::optional_pointer_cast<cell::type::do_statement>
