@@ -1,3 +1,4 @@
+#include <jank/parse/expect/type.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
@@ -54,14 +55,18 @@ namespace jank
           {
             auto const &cell
             (translate::expect::type<translate::cell::type::if_statement>(c));
-            detail::if_statement(scope, cell);
+            auto const ret(detail::if_statement(scope, cell));
+            if(!parse::expect::is<parse::cell::type::null>(ret))
+            { return ret; }
           } break;
 
           case translate::cell::type::do_statement:
           {
             auto const &cell
             (translate::expect::type<translate::cell::type::do_statement>(c));
-            detail::do_statement(scope, cell);
+            auto const ret(detail::do_statement(scope, cell));
+            if(!parse::expect::is<parse::cell::type::null>(ret))
+            { return ret; }
           } break;
 
           /* Handles const and non-const. */
