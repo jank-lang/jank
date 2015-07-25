@@ -100,7 +100,6 @@ namespace jank
         switch(static_cast<literal_type>(c.data.which()))
         {
           case literal_type::null:
-            os << "null ";
             break;
           case literal_type::boolean:
             os << "boolean ";
