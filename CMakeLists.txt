@@ -145,6 +145,9 @@ target_link_libraries(${PROJECT_NAME}_interpret_variable_test ${${PROJECT_NAME}_
 add_executable(${PROJECT_NAME}_interpret_constant_test test/src/cpp/interpret/constant/main.cpp)
 target_link_libraries(${PROJECT_NAME}_interpret_constant_test ${${PROJECT_NAME}_test_libs})
 
+add_executable(${PROJECT_NAME}_interpret_if_test test/src/cpp/interpret/if/main.cpp)
+target_link_libraries(${PROJECT_NAME}_interpret_if_test ${${PROJECT_NAME}_test_libs})
+
 add_custom_target(${PROJECT_NAME}_test
   COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_parse_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_function_test || true && echo &&
@@ -154,7 +157,8 @@ add_custom_target(${PROJECT_NAME}_test
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_if_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_function_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_variable_test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_constant_test
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_constant_test || true && echo &&
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_if_test
   DEPENDS ${PROJECT_NAME}_parse_test
           ${PROJECT_NAME}_translate_function_test
           ${PROJECT_NAME}_translate_variable_test
@@ -164,6 +168,7 @@ add_custom_target(${PROJECT_NAME}_test
           ${PROJECT_NAME}_interpret_function_test
           ${PROJECT_NAME}_interpret_variable_test
           ${PROJECT_NAME}_interpret_constant_test
+          ${PROJECT_NAME}_interpret_if_test
   WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 )
 

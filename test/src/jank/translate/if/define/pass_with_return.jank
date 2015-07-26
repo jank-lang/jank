@@ -1,4 +1,7 @@
-(ƒ foo () (integer)
-  (if true
+(ƒ foo (cond boolean) (integer)
+  (if cond
     42)
   0)
+
+(assert (== 42 (foo true)))
+(assert (== 0 (foo false)))

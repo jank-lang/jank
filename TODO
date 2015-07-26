@@ -6,6 +6,7 @@ cons, lists
 
 if and do
   tests
+  if which returns value and is embedded
 
 operators
   != !
