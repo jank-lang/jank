@@ -8,6 +8,7 @@
 #include <jank/parse/parse.hpp>
 #include <jank/parse/expect/type.hpp>
 #include <jank/parse/expect/error/syntax/exception.hpp>
+#include <jank/parse/expect/error/internal/exception.hpp>
 
 namespace jank
 {
@@ -28,7 +29,8 @@ namespace jank
     cell::cell parse(std::string contents)
     {
       cell::cell root{ cell::list{ { cell::ident{ "root" } } } };
-      std::vector<cell::list*> list_stack{ &expect::type<cell::type::list>(root) };
+      std::vector<cell::list*> list_stack
+      { &expect::type<cell::type::list>(root) };
 
       /* Remove all edge whitespace. */
       boost::algorithm::trim(contents);
@@ -48,7 +50,8 @@ namespace jank
         for
         (
           auto const &outer_match :
-          jtl::it::make_range(std::next(outer_matches.begin()), outer_matches.end())
+          jtl::it::make_range
+          (std::next(outer_matches.begin()), outer_matches.end())
         )
         {
           static std::regex inner_regex
@@ -69,10 +72,16 @@ namespace jank
           if(outer_str == "(;")
           {
             /* This should never happen. */
-            if(std::distance(std::next(outer_matches.begin()), outer_matches.end())  < 3)
+            if
+            (
+              std::distance
+              (std::next(outer_matches.begin()), outer_matches.end())
+              < 3
+            )
             { throw expect::error::syntax::exception<>{ "malformed comment" }; }
 
-            active_list->data.push_back(cell::comment{ outer_matches[2].str() });
+            active_list->data.push_back
+            (cell::comment{ outer_matches[2].str() });
             break; /* Done parsing this whole match and all of its groups. */
           }
           else if(outer_str[0] == '(')
@@ -140,7 +149,10 @@ namespace jank
                 )
               );
               if(unescaped_paren != str.end())
-              { throw expect::error::syntax::exception<>{ "string with unescaped paren" }; }
+              {
+                throw expect::error::syntax::exception<>
+                { "string with unescaped paren" };
+              }
 
               boost::algorithm::replace_all(str, "\\\"", "\"");
               boost::algorithm::replace_all(str, "\\(", "(");
@@ -150,7 +162,10 @@ namespace jank
             else if(inner_matches[6].matched) /* ident */
             { active_list->data.push_back(cell::ident{ inner_matches[6] }); }
             else
-            { throw std::runtime_error{ "invalid parsing match" }; }
+            {
+              throw expect::error::internal::exception<>
+              { "invalid parsing match" };
+            }
           }
         }
       }
