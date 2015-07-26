@@ -1,0 +1,10 @@
+(ƒ foo (i integer) (integer)
+  (if (> i 10)
+    (if (== 1 (& i 1))
+      0
+      1)
+    2))
+
+(assert (== 0 (foo 11)))
+(assert (== 1 (foo 12)))
+(assert (== 2 (foo 5)))

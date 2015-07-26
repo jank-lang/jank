@@ -20,4 +20,8 @@ namespace jest
   template <> template <>
   void jank::use_group::test<1>()
   { jank::common::translate("interpret/if/use/pass_with_return_and_else.jank"); }
+
+  template <> template <>
+  void jank::use_group::test<2>()
+  { jank::common::translate("interpret/if/use/pass_nested.jank"); }
 }

@@ -56,4 +56,15 @@ namespace jest
   template <> template <>
   void jank::define_group::test<7>()
   { jank::common::translate("translate/if/define/pass_with_return_and_else.jank"); }
+
+  template <> template <>
+  void jank::define_group::test<8>()
+  { jank::common::translate("translate/if/define/pass_nested.jank"); }
+
+  template <> template <>
+  void jank::define_group::test<9>()
+  {
+    expect_exception<jank::translate::expect::error::type::exception<>>
+    ([]{ jank::common::translate("translate/if/define/fail_nested_missing_return.jank"); });
+  }
 }
