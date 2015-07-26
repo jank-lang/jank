@@ -19,7 +19,7 @@ jank aims to be a programming language with hygienic, code-as-data macros, a str
 |non-generic variables        |Complete and tested.                       |
 |non-generic native functions |Complete and tested.                       |
 |arithmetic for primitives    |Complete and tested.                       |
-|conditional branching        |Complete; not yet tested.                  |
+|conditional branching        |Complete and tested.                       |
 |do statements                |Complete; not yet tested.                  |
 
 ## Built-in types
