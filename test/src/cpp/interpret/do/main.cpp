@@ -1,6 +1,6 @@
 #include <jest/jest.hpp>
 
-#include "translate/if/define.hpp"
+#include "interpret/do/use.hpp"
 
 int main()
 {
