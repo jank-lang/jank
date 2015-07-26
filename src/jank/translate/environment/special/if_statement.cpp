@@ -16,7 +16,7 @@ namespace jank
         cell::cell if_statement
         (parse::cell::list const &input, cell::function_body const &outer_body)
         {
-          static std::size_t constexpr forms_required{ 2 };
+          static std::size_t constexpr forms_required{ 3 };
           auto const &data(input.data);
 
           /* Need at least one arg: the condition. */
@@ -31,7 +31,7 @@ namespace jank
           list.data.insert
           (
             list.data.end(),
-            data.begin(), std::next(data.begin(), forms_required)
+            data.begin(), std::next(data.begin(), forms_required - 1)
           );
           auto const condition
           (
@@ -58,7 +58,8 @@ namespace jank
           auto const nested_scope
           (std::make_shared<scope>(outer_body.data.scope));
 
-          auto const true_range_start(std::next(data.begin(), forms_required));
+          auto const true_range_start
+          (std::next(data.begin(), forms_required - 1));
           auto const true_body
           (
             translate
@@ -76,7 +77,7 @@ namespace jank
           };
 
           /* Add a false body, if it's there. */
-          if(data.size() == forms_required + 2)
+          if(data.size() == forms_required + 1)
           {
             auto const false_range_start(std::next(true_range_start));
             false_body = translate
