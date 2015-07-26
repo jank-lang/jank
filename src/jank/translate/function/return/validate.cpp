@@ -49,6 +49,7 @@ namespace jank
               return;
             }
 
+            /* Non-null return, yet no body. */
             if(body.cells.empty())
             { detail::fail(); }
 
