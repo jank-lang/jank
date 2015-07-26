@@ -16,6 +16,15 @@ namespace jank
     {
       namespace ret
       {
+        namespace detail
+        {
+          [[noreturn]] static void fail()
+          {
+            throw expect::error::type::exception<>
+            { "not all code paths return a value" };
+          }
+        }
+
         void validate(cell::function_body::type &body)
         {
           auto const it
@@ -39,6 +48,9 @@ namespace jank
               (function::ret::make_implicit(body));
               return;
             }
+
+            if(body.cells.empty())
+            { detail::fail(); }
 
             /* The previous function call may suffice as an implicit return. */
             auto const implicit(function::ret::make_implicit_from_call(body));
@@ -70,8 +82,7 @@ namespace jank
             if(do_opt)
             { return validate(do_opt->data.body); }
 
-            throw expect::error::type::exception<>
-            { "not all code paths return a value" };
+            detail::fail();
           }
           else /* Found at least one return statement. */
           {
