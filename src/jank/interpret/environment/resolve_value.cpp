@@ -1,3 +1,4 @@
+#include <jank/translate/environment/scope.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
@@ -70,7 +71,13 @@ namespace jank
             next_scope->variables[name.name] = var;
           }
 
-          return interpret(next_scope, { cell.data.definition.body });
+          /* We need to look up the function body here, instead of using
+           * the one we have; recursive calls will have empty bodies. */
+          return interpret
+          (
+            next_scope,
+            { cell.data.scope->expect_function(cell.data.definition) }
+          );
         } break;
 
         case translate::cell::type::native_function_call:

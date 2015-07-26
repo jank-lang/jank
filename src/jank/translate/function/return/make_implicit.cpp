@@ -40,7 +40,7 @@ namespace jank
           );
 
           /* The function needs to be the last cell in the body. */
-          if(std::next(last_function) != body.cells.rend())
+          if((last_function) != body.cells.rbegin())
           { return {}; }
 
           auto const native_opt

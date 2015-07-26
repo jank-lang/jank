@@ -4,5 +4,5 @@
       0.0))
   (foo true)) (; recurse ;)
 
-(asset (== 0.0 (foo true)))
-(asset (== 0.0 (foo false)))
+(assert (== 0.0 (foo true)))
+(assert (== 0.0 (foo false)))

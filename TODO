@@ -10,7 +10,8 @@ do
 if which returns value and is embedded
 
 operators
-  != !
+  !=
+  logical or, and, not, etc
 
 stdlib
   print print-line format

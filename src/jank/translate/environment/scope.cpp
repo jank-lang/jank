@@ -112,6 +112,38 @@ namespace jank
           &scope::find_native_function
         );
       }
+
+      cell::function_body::type
+      scope::expect_function(cell::function_definition::type const &def)
+      {
+        auto const fail
+        (
+          [&]
+          {
+            throw expect::error::internal::exception<>
+            { "invalid function definition: " + def.name };
+          }
+        );
+
+        auto const funcs_opt(find_function(def.name));
+        if(!funcs_opt)
+        { fail(); }
+
+        auto const funcs(funcs_opt.value());
+        auto const found
+        (
+          std::find_if
+          (
+            funcs.begin(), funcs.end(),
+            [&](auto const &f)
+            { return f.first.data.arguments == def.arguments; }
+          )
+        );
+        if(found == funcs.end())
+        { fail(); }
+
+        return found->first.data.body;
+      }
     }
   }
 }

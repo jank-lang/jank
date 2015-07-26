@@ -36,7 +36,7 @@ namespace jest
   template <> template <>
   void jank::define_group::test<5>()
   {
-    expect_exception<jank::translate::expect::error:syntax::exception<>>
+    expect_exception<jank::translate::expect::error::syntax::exception<>>
     ([]{ jank::common::translate("translate/do/define/fail_empty.jank"); });
   }
 }

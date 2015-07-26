@@ -87,7 +87,11 @@ namespace jank
           (function::ret::parse(return_type_names, nested_scope));
 
           /* Add an empty declaration first, to allow for recursive references. */
-          outer_body.data.scope->function_definitions[name.data].emplace_back();
+          auto &decls(outer_body.data.scope->function_definitions[name.data]);
+          decls.emplace_back();
+          decls.back().data.name = name.data;
+          decls.back().data.return_type = return_types[0].data;
+          decls.back().data.arguments = arg_definitions;
 
           cell::function_definition ret
           {
@@ -109,7 +113,7 @@ namespace jank
           /* Verify all paths return a value. */
           function::ret::validate(ret.data.body);
 
-          /* Add the function definition to the out body's scope. */
+          /* Add the function definition to the outer body's scope. */
           outer_body.data.scope->function_definitions[name.data].back() = ret;
           return { ret };
         }

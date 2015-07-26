@@ -33,6 +33,8 @@ namespace jank
         std::experimental::optional<std::vector<result<cell::native_function_definition>>> find_native_function
         (std::string const &name) const;
 
+        cell::function_body::type expect_function(cell::function_definition::type const &def);
+
         std::map<std::string, cell::type_definition> type_definitions;
         std::map<std::string, cell::variable_definition> variable_definitions;
         std::map<std::string, std::vector<cell::function_definition>> function_definitions;
