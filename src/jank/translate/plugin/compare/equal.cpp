@@ -15,6 +15,20 @@ namespace jank
         {
           detail::make_operator
           (
+            scope, "==", environment::builtin::type::boolean(*scope),
+            [](auto const &scope, auto const &args)
+            {
+              return environment::builtin::value::boolean
+              (
+                parse::expect::type<parse::cell::type::boolean>
+                (interpret::resolve_value(scope, args[0].cell)).data ==
+                parse::expect::type<parse::cell::type::boolean>
+                (interpret::resolve_value(scope, args[1].cell)).data
+              );
+            }
+          );
+          detail::make_operator
+          (
             scope, "==", environment::builtin::type::integer(*scope),
             [](auto const &scope, auto const &args)
             {
