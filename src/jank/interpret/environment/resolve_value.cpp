@@ -71,6 +71,7 @@ namespace jank
             next_scope->variables[name.name] = var;
           }
 
+          /* TODO: This is nasty. */
           /* We need to look up the function body here, instead of using
            * the one we have; recursive calls will have empty bodies. */
           return interpret
