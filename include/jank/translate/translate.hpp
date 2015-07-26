@@ -30,83 +30,79 @@ namespace jank
     )
     {
       cell::function_body translated{ { {}, return_type.data, scope } };
-      std::for_each /* TODO: range-based for? o.O */
-      (
-        range.begin(), range.end(),
-        [&](auto const &c)
+      for(auto const &c : range)
+      {
+        if(parse::expect::is<parse::cell::type::comment>(c))
+        { /* ignore */ continue; }
+        else if
+        (
+          auto const list_opt = parse::expect::optional_cast
+          <parse::cell::type::list>(c)
+        )
         {
-          if(parse::expect::is<parse::cell::type::comment>(c))
-          { /* ignore */ return; }
-          else if
-          (
-            auto const list_opt = parse::expect::optional_cast
-            <parse::cell::type::list>(c)
-          )
+          auto const &list(list_opt.value());
+
+          /* Handle specials. */
+          auto const special_opt
+          (environment::special::handle(list, translated));
+          if(special_opt)
           {
-            auto const &list(list_opt.value());
-
-            /* Handle specials. */
-            auto const special_opt
-            (environment::special::handle(list, translated));
-            if(special_opt)
-            {
-              translated.data.cells.push_back(special_opt.value());
-              return;
-            }
-
-            /* Arbitrary empty lists are no good. */
-            if(list.data.empty())
-            {
-              throw expect::error::syntax::exception<>
-              { "invalid empty translation list" };
-            }
-
-            auto const &function_name
-            (parse::expect::type<parse::cell::type::ident>(list.data[0]).data);
-            auto const native_function_opt
-            (scope->find_native_function(function_name));
-            auto const function_opt
-            (scope->find_function(function_name));
-
-            /* Try to match native and non-native overloads. */
-            auto matched
-            (
-              function::match_overload
-              (
-                list, scope, native_function_opt, function_opt,
-                [&](auto const &match)
-                { translated.data.cells.push_back(match); }
-              )
-            );
-            if(!matched)
-            {
-              throw expect::error::lookup::exception<>
-              {
-                "invalid function: " +
-                parse::expect::type<parse::cell::type::ident>(list.data[0]).data
-              };
-            }
-            else
-            { return; }
+            translated.data.cells.push_back(special_opt.value());
+            continue;
           }
 
-          /* Treat plain values as an implicit return. */
-          translated.data.cells.push_back
+          /* Arbitrary empty lists are no good. */
+          if(list.data.empty())
+          {
+            throw expect::error::syntax::exception<>
+            { "invalid empty translation list" };
+          }
+
+          auto const &function_name
+          (parse::expect::type<parse::cell::type::ident>(list.data[0]).data);
+          auto const native_function_opt
+          (scope->find_native_function(function_name));
+          auto const function_opt
+          (scope->find_function(function_name));
+
+          /* Try to match native and non-native overloads. */
+          auto matched
           (
-            environment::special::return_statement
+            function::match_overload
             (
-              parse::cell::list
-              {
-                {
-                  parse::cell::ident{ "return" },
-                  c
-                }
-              },
-              translated
+              list, scope, native_function_opt, function_opt,
+              [&](auto const &match)
+              { translated.data.cells.push_back(match); }
             )
           );
+          if(!matched)
+          {
+            throw expect::error::lookup::exception<>
+            {
+              "invalid function: " +
+              parse::expect::type<parse::cell::type::ident>(list.data[0]).data
+            };
+          }
+          else
+          { continue; }
         }
-      );
+
+        /* Treat plain values as an implicit return. */
+        translated.data.cells.push_back
+        (
+          environment::special::return_statement
+          (
+            parse::cell::list
+            {
+              {
+                parse::cell::ident{ "return" },
+                c
+              }
+            },
+            translated
+          )
+        );
+      }
 
       return translated;
     }
