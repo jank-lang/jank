@@ -10,29 +10,29 @@ operators
   !=
   logical or, and, not, etc
 
+clojure is a huge inspiration
+
 stdlib
   print print-line format
   not and or
   even? odd?
+  map, reduce, filter
+  vector
+  list
+  map
+  tuple
 
 null
   allow calling nullary functions with null
   allow null-typed variables
-
-business class functions
-fragrant generics
 
 syntax errors...?
   will the regex remain?
     need to map s-exprs to file positions
 
 members
-  Swizzling with tuples?
+  Swizzling with tuples and structs?
     (.x.y my_coord)
-
-current list
-  should be a tuple
-  list should be a generic heterogenous container
 
 variadic generics
   working with parameter packs
