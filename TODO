@@ -39,10 +39,19 @@ members
 variadic generics
   working with parameter packs
 
+generic functions
+  short-hand generics?
+    (ƒ foo (i :T) ()
+      (print i))
+
 lambdas
+  type deduction?
   lambda => λ
-  function syntax is?
-    (function : ((A1 A2...) (R1 R2...)))
+    (ƒ foo (f λ : ((integer) (integer))) ()
+      (print (f 42)))
+    (foo
+      (λ : ((i integer) (integer))
+        i))
 
 Maybes?
   pattern matching
