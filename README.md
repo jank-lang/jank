@@ -1,6 +1,6 @@
 # The jank programming language [![Build Status](https://travis-ci.org/jeaye/jank.svg?branch=master)](https://travis-ci.org/jeaye/jank)
 
-jank aims to be a functional programming language with hygienic, code-as-data macros, a strong, static type system, scope-based resource management (RAII), a direct focus on generic programming, and a native compiler.
+jank aims to be a functional programming language with a strong, static type system, scope-based resource management (RAII), a direct focus on generic, compile-time metaprogramming using both a powerful concept-based template system and hygienic, code-as-data macros, and a native compiler.
 
 **NOTE:** jank, at this point, is _very_ incomplete. Furthermore, the design for jank will change a lot; what you see here is an interpolation between where the compiler is and where I want jank to go. Nothing here is final.
 
