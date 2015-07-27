@@ -1,8 +1,10 @@
 refactoring
   expect state
 
-cons, lists
-  built-in sum types?
+start with cons and lambdas
+  list
+  map
+  reduce
 
 if which returns value and is embedded
 
