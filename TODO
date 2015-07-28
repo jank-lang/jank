@@ -7,7 +7,7 @@ start with cons and lambdas
   reduce
 
 auto type
-  function and variable type deduction
+  function type deduction
 
 if which returns value and is embedded
 
@@ -44,8 +44,10 @@ variadic generics
 
 lambdas
   type deduction?
+    auto works, return type can be deduced
+      auto works, return type can be deduced
   lambda => λ
-    (ƒ foo (f λ : ((integer) (integer))) ()
+    (ƒ foo (f ƒ : ((integer) (integer))) ()
       (print (f 42)))
     (foo
       (λ : ((i integer) (integer))

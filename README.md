@@ -8,7 +8,7 @@ jank aims to be a functional programming language with a strong, static type sys
 |Compiler                     |Status                                     |
 |:----------------------------|:------------------------------------------|
 |non-generic functions        |Complete and tested.                       |
-|non-generic variables        |Complete and tested.                       |
+|non-generic bound values     |Complete and tested.                       |
 |non-generic native functions |Complete and tested.                       |
 |conditional branching        |Complete and tested.                       |
 |do statements                |Complete and tested.                       |
@@ -16,7 +16,7 @@ jank aims to be a functional programming language with a strong, static type sys
 |Interpreter                  |Status                                     |
 |:----------------------------|:------------------------------------------|
 |non-generic functions        |Complete and tested.                       |
-|non-generic variables        |Complete and tested.                       |
+|non-generic bound values     |Complete and tested.                       |
 |non-generic native functions |Complete and tested.                       |
 |arithmetic for primitives    |Complete and tested.                       |
 |conditional branching        |Complete and tested.                       |
@@ -52,7 +52,7 @@ User-defined datatypes are supported, in the form of structs. Structs may contai
   (first string "John")
   (last string "Doe"))
 ```
-Struct members may be given a default value. If a member doesn't have a default value, one must be provided at the time of initialization; the compiler will make sure no variables are uninitialized.
+Struct members may be given a default value. If a member doesn't have a default value, one must be provided at the time of initialization; the compiler will make sure no members are uninitialized.
 
 ### Members
 Members of struct are accessed with a `.foo` syntax, where `.foo` is a function and `foo` is the field. Name. An example:
@@ -64,22 +64,15 @@ Members of struct are accessed with a `.foo` syntax, where `.foo` is a function 
 (.data my_numer)
 ```
 
-## Variables
+## Bindings (constant values)
 ```
-(variable name T
+(bind name T
   values...)
 ```
-Variables are defined via the `variable` special identifier and require a `name` identifier, a type, and a value(s). The type may be left out (or specified as `auto`) if it can be deduced by the value. If the type is supplied, multiple values may be supplied which are not necessarily of type `T`, but instead are constructor arguments.
-
-### Constants
-```
-(constant name T
-  values...)
-```
-Using the same syntax as `variable`, but with the `constant` identifier, one can introduce variables which will be verified, at compile-time, to never be modified. The values themselves, however, can be set at run-time, à la C++'s `const` (not `constexpr`).
+Bound values are defined via the `bind` special identifier and require a `name` identifier, a type, and a value(s). The type may be left out and it will be deduced by the value.
 
 ## Generics
-Definitions may be dependent on types. Such definitions may be functions or structs. The type list must never be empty. Dependent (incomplete) types of a generic item must be prefixed with `:` to disambiguate from full specializations. To aid in cleanliness, function parameters and return types may be set to `auto`, implicitly making them generic. Like variables, function return types may also be left out entirely, if they can be deduced.
+Definitions may be dependent on types. Such definitions may be functions or structs. The type list must never be empty. Dependent (incomplete) types of a generic item must be prefixed with `:` to disambiguate from full specializations. To aid in cleanliness, function parameters and return types may be set to `auto`, implicitly making them generic. Like bound values, function return types may also be left out entirely, if they can be deduced.
 
 ### Examples
 #### Function
@@ -153,7 +146,7 @@ When constructing an object, constructors are first considered, then aggregate i
   (print "destructing coord"))
 
 (; Calls the constructor. ;)
-(variable c (coord : (real real)) 0.0 5.4)
+(bind c (coord : (real real)) 0.0 5.4)
 
 (; Invokes foo and calls the coord constructor. ;)
 (foo (coord : (real real) 0.0 5.4))
@@ -239,7 +232,7 @@ Enums function as variant sum types; each variant can have its own type or simpl
 
 ## Branching
 ```
-(constant num 42)
+(bind num 42)
 
 (if (even? num)
   (print "even")
