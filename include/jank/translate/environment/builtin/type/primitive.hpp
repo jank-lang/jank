@@ -15,6 +15,7 @@ namespace jank
         {
           scope& add_primitives(scope &s);
 
+          cell::detail::type_reference automatic(scope &s);
           cell::detail::type_reference null(scope &s);
           cell::detail::type_reference boolean(scope &s);
           cell::detail::type_reference integer(scope &s);

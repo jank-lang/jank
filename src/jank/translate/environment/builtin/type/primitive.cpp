@@ -20,6 +20,7 @@ namespace jank
           scope& add_primitives
           (scope &s)
           {
+            s.type_definitions.insert(detail::make_primitive("auto"));
             s.type_definitions.insert(detail::make_primitive("null"));
             s.type_definitions.insert(detail::make_primitive("boolean"));
             s.type_definitions.insert(detail::make_primitive("integer"));
@@ -35,6 +36,8 @@ namespace jank
             { return { s.find_type(name).value().first.data }; }
           }
 
+          cell::detail::type_reference automatic(scope &s)
+          { return detail::find_primitive(s, "auto"); }
           cell::detail::type_reference null(scope &s)
           { return detail::find_primitive(s, "null"); }
           cell::detail::type_reference boolean(scope &s)
