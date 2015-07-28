@@ -69,7 +69,7 @@ Members of struct are accessed with a `.foo` syntax, where `.foo` is a function 
 (variable name T
   values...)
 ```
-Variables are defined via the `variable` special identifier and require a `name` identifier, a type, and a value(s). The type may be left out if it can be deduced by the value. If the type is supplied, multiple values may be supplied which are not necessarily of type `T`, but instead are constructor arguments.
+Variables are defined via the `variable` special identifier and require a `name` identifier, a type, and a value(s). The type may be left out (or specified as `auto`) if it can be deduced by the value. If the type is supplied, multiple values may be supplied which are not necessarily of type `T`, but instead are constructor arguments.
 
 ### Constants
 ```
@@ -79,13 +79,13 @@ Variables are defined via the `variable` special identifier and require a `name`
 Using the same syntax as `variable`, but with the `constant` identifier, one can introduce variables which will be verified, at compile-time, to never be modified. The values themselves, however, can be set at run-time, à la C++'s `const` (not `constexpr`).
 
 ## Generics
-Definitions may be dependent on types. Such definitions may be functions or structs. The type list must never be empty. Dependent (incomplete) types of a generic item must be prefixed with `:` to disambiguate from full specializations.
+Definitions may be dependent on types. Such definitions may be functions or structs. The type list must never be empty. Dependent (incomplete) types of a generic item must be prefixed with `:` to disambiguate from full specializations. To aid in cleanliness, function parameters and return types may be set to `auto`, implicitly making them generic.
 
 ### Examples
 #### Function
 ```
 (; Generic. ;)
-(ƒ show : (:T) (o T) ()
+(ƒ show (o auto) ()
   (print o))
 
 (; Full specialization. ;)
