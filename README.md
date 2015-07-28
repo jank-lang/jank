@@ -78,6 +78,10 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 #### Function
 ```
 (; Generic. ;)
+(ƒ show : (:T) (o T) ()
+  (print o))
+
+(; Short-hand for above, where T isn't needed. ;)
 (ƒ show (o auto) ()
   (print o))
 
