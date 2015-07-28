@@ -6,6 +6,9 @@ start with cons and lambdas
   map
   reduce
 
+auto type
+  function and variable type deduction
+
 if which returns value and is embedded
 
 operators
@@ -38,11 +41,6 @@ members
 
 variadic generics
   working with parameter packs
-
-generic functions
-  short-hand generics?
-    (ƒ foo (i :T) ()
-      (print i))
 
 lambdas
   type deduction?
