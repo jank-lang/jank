@@ -25,14 +25,14 @@ namespace jank
         return { { it->second, shared_from_this() } };
       }
 
-      std::experimental::optional<scope::result<cell::variable_definition>> scope::find_variable
+      std::experimental::optional<scope::result<cell::binding_definition>> scope::find_binding
       (std::string const &name) const
       {
-        auto const it(variable_definitions.find(name));
-        if(it == variable_definitions.end())
+        auto const it(binding_definitions.find(name));
+        if(it == binding_definitions.end())
         {
           if(parent)
-          { return parent->find_variable(name); }
+          { return parent->find_binding(name); }
           else
           { return {}; }
         }

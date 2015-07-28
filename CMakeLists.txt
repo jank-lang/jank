@@ -58,8 +58,7 @@ add_library(${PROJECT_NAME}_static STATIC
             src/jank/translate/environment/builtin/value/primitive.cpp
             src/jank/translate/environment/special/all.cpp
             src/jank/translate/environment/special/function.cpp
-            src/jank/translate/environment/special/variable.cpp
-            src/jank/translate/environment/special/constant.cpp
+            src/jank/translate/environment/special/binding.cpp
             src/jank/translate/environment/special/return_statement.cpp
             src/jank/translate/environment/special/if_statement.cpp
             src/jank/translate/environment/special/do_statement.cpp
@@ -88,7 +87,7 @@ add_library(${PROJECT_NAME}_static STATIC
 	          src/jank/interpret/environment/resolve_value.cpp
 	          src/jank/interpret/detail/function_call.cpp
             src/jank/interpret/detail/native_function_call.cpp
-            src/jank/interpret/detail/variable_definition.cpp
+            src/jank/interpret/detail/binding_definition.cpp
             src/jank/interpret/detail/if_statement.cpp
             src/jank/interpret/detail/return_statement.cpp
             src/jank/interpret/detail/do_statement.cpp
@@ -124,11 +123,8 @@ target_link_libraries(${PROJECT_NAME}_parse_test ${${PROJECT_NAME}_test_libs})
 add_executable(${PROJECT_NAME}_translate_function_test test/src/cpp/translate/function/main.cpp)
 target_link_libraries(${PROJECT_NAME}_translate_function_test ${${PROJECT_NAME}_test_libs})
 
-add_executable(${PROJECT_NAME}_translate_variable_test test/src/cpp/translate/variable/main.cpp)
-target_link_libraries(${PROJECT_NAME}_translate_variable_test ${${PROJECT_NAME}_test_libs})
-
-add_executable(${PROJECT_NAME}_translate_constant_test test/src/cpp/translate/constant/main.cpp)
-target_link_libraries(${PROJECT_NAME}_translate_constant_test ${${PROJECT_NAME}_test_libs})
+add_executable(${PROJECT_NAME}_translate_binding_test test/src/cpp/translate/binding/main.cpp)
+target_link_libraries(${PROJECT_NAME}_translate_binding_test ${${PROJECT_NAME}_test_libs})
 
 add_executable(${PROJECT_NAME}_translate_plugin_test test/src/cpp/translate/plugin/main.cpp)
 target_link_libraries(${PROJECT_NAME}_translate_plugin_test ${${PROJECT_NAME}_test_libs})
@@ -142,11 +138,8 @@ target_link_libraries(${PROJECT_NAME}_translate_do_test ${${PROJECT_NAME}_test_l
 add_executable(${PROJECT_NAME}_interpret_function_test test/src/cpp/interpret/function/main.cpp)
 target_link_libraries(${PROJECT_NAME}_interpret_function_test ${${PROJECT_NAME}_test_libs})
 
-add_executable(${PROJECT_NAME}_interpret_variable_test test/src/cpp/interpret/variable/main.cpp)
-target_link_libraries(${PROJECT_NAME}_interpret_variable_test ${${PROJECT_NAME}_test_libs})
-
-add_executable(${PROJECT_NAME}_interpret_constant_test test/src/cpp/interpret/constant/main.cpp)
-target_link_libraries(${PROJECT_NAME}_interpret_constant_test ${${PROJECT_NAME}_test_libs})
+add_executable(${PROJECT_NAME}_interpret_binding_test test/src/cpp/interpret/binding/main.cpp)
+target_link_libraries(${PROJECT_NAME}_interpret_binding_test ${${PROJECT_NAME}_test_libs})
 
 add_executable(${PROJECT_NAME}_interpret_if_test test/src/cpp/interpret/if/main.cpp)
 target_link_libraries(${PROJECT_NAME}_interpret_if_test ${${PROJECT_NAME}_test_libs})
@@ -157,26 +150,22 @@ target_link_libraries(${PROJECT_NAME}_interpret_do_test ${${PROJECT_NAME}_test_l
 add_custom_target(${PROJECT_NAME}_test
   COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_parse_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_function_test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_variable_test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_constant_test || true && echo &&
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_binding_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_plugin_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_if_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_do_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_function_test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_variable_test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_constant_test || true && echo &&
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_binding_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_if_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_do_test
   DEPENDS ${PROJECT_NAME}_parse_test
           ${PROJECT_NAME}_translate_function_test
-          ${PROJECT_NAME}_translate_variable_test
-          ${PROJECT_NAME}_translate_constant_test
+          ${PROJECT_NAME}_translate_binding_test
           ${PROJECT_NAME}_translate_plugin_test
           ${PROJECT_NAME}_translate_if_test
           ${PROJECT_NAME}_translate_do_test
           ${PROJECT_NAME}_interpret_function_test
-          ${PROJECT_NAME}_interpret_variable_test
-          ${PROJECT_NAME}_interpret_constant_test
+          ${PROJECT_NAME}_interpret_binding_test
           ${PROJECT_NAME}_interpret_if_test
           ${PROJECT_NAME}_interpret_do_test
   WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}

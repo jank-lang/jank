@@ -17,18 +17,18 @@ namespace jank
     {
       switch(static_cast<translate::cell::type>(c.which()))
       {
-        case translate::cell::type::variable_reference:
+        case translate::cell::type::binding_reference:
         {
           auto const &cell
           (
             translate::expect::type
-            <translate::cell::type::variable_reference>(c)
+            <translate::cell::type::binding_reference>(c)
           );
-          auto const opt(scope->find_variable(cell.data.definition.name));
+          auto const opt(scope->find_binding(cell.data.definition.name));
           if(!opt)
           {
             throw expect::error::lookup::exception<>
-            { "unknown variable: " + cell.data.definition.name };
+            { "unknown binding: " + cell.data.definition.name };
           }
           return opt.value();
         } break;
@@ -68,7 +68,7 @@ namespace jank
           {
             auto const &name(*arg_name_it++);
             auto const var(resolve_value(next_scope, arg.cell));
-            next_scope->variables[name.name] = var;
+            next_scope->bindings[name.name] = var;
           }
 
           /* TODO: This is nasty. */

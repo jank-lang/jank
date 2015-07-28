@@ -15,7 +15,7 @@ namespace jest
 {
   template <> template <>
   void jank::define_group::test<0>()
-  { jank::common::translate("translate/do/define/pass_shadow_variable.jank"); }
+  { jank::common::translate("translate/do/define/pass_shadow_binding.jank"); }
 
   template <> template <>
   void jank::define_group::test<1>()

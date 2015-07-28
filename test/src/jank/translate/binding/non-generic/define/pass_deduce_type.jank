@@ -1,0 +1,12 @@
+(bind foo "string")
+
+(ƒ test-string (s string) ()
+  (assert (== s "string")))
+
+(test-string foo)
+
+(bind num 3.14)
+(bind num_copy num)
+(bind mult_num (* num_copy 2.0))
+
+(assert (== mult_num (* num 2.0)))

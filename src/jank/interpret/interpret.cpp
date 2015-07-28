@@ -4,7 +4,7 @@
 #include <jank/interpret/environment/resolve_value.hpp>
 #include <jank/interpret/detail/function_call.hpp>
 #include <jank/interpret/detail/native_function_call.hpp>
-#include <jank/interpret/detail/variable_definition.hpp>
+#include <jank/interpret/detail/binding_definition.hpp>
 #include <jank/interpret/detail/if_statement.hpp>
 #include <jank/interpret/detail/return_statement.hpp>
 #include <jank/interpret/detail/do_statement.hpp>
@@ -70,14 +70,14 @@ namespace jank
           } break;
 
           /* Handles const and non-const. */
-          case translate::cell::type::variable_definition:
+          case translate::cell::type::binding_definition:
           {
             auto const &cell
             (
               translate::expect::type
-              <translate::cell::type::variable_definition>(c)
+              <translate::cell::type::binding_definition>(c)
             );
-            detail::variable_definition(scope, cell);
+            detail::binding_definition(scope, cell);
           } break;
 
           default:

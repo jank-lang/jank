@@ -1,5 +1,0 @@
-(variable foo boolean
-  false)
-
-(variable bar real
-  foo)

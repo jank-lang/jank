@@ -46,17 +46,17 @@ namespace jank
             arg_definitions.begin(), arg_definitions.end(),
             std::inserter
             (
-              nested_scope->variable_definitions,
-              nested_scope->variable_definitions.end()
+              nested_scope->binding_definitions,
+              nested_scope->binding_definitions.end()
             ),
             [](auto const &arg)
             {
               return std::make_pair
               (
                 arg.name,
-                cell::variable_definition
+                cell::binding_definition
                 { {
-                  arg.name, arg.type, cell::detail::constness::non_constant, {}
+                  arg.name, arg.type, {}
                 } }
               );
             }

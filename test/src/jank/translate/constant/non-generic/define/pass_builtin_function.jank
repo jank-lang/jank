@@ -1,5 +1,0 @@
-(ƒ func (i integer) (integer)
-  i)
-
-(constant foo integer
-  (func -100))

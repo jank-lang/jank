@@ -27,8 +27,7 @@ namespace jank
           {
             { "function", &function },
             { "ƒ", &function },
-            { "variable", &variable },
-            { "constant", &constant },
+            { "bind", &binding },
             { "return", &return_statement },
             { "if", &if_statement },
             { "do", &do_statement },

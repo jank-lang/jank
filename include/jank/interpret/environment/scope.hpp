@@ -20,11 +20,11 @@ namespace jank
           : parent{ p }
         { }
 
-        std::experimental::optional<parse::cell::cell> find_variable
+        std::experimental::optional<parse::cell::cell> find_binding
         (std::string const &name) const;
 
         /* TODO: Use a custom interpret cell for these values. */
-        std::map<std::string, parse::cell::cell> variables;
+        std::map<std::string, parse::cell::cell> bindings;
         std::shared_ptr<scope> parent;
       };
     }

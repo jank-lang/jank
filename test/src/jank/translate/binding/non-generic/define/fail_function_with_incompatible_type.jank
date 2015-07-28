@@ -1,0 +1,5 @@
+(ƒ func (i integer) (integer)
+  i)
+
+(bind foo string
+  (func -100))

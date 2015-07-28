@@ -29,7 +29,7 @@ stdlib
 
 null
   allow calling nullary functions with null
-  allow null-typed variables
+  allow null-typed bindings
 
 syntax errors...?
   will the regex remain?

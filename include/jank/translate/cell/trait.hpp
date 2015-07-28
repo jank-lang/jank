@@ -37,11 +37,11 @@ namespace jank
         inline char constexpr const* to_string<type::type_reference>()
         { return "type_reference"; }
         template <>
-        inline char constexpr const* to_string<type::variable_definition>()
-        { return "variable_definition"; }
+        inline char constexpr const* to_string<type::binding_definition>()
+        { return "binding_definition"; }
         template <>
-        inline char constexpr const* to_string<type::variable_reference>()
-        { return "variable_reference"; }
+        inline char constexpr const* to_string<type::binding_reference>()
+        { return "binding_reference"; }
         template <>
         inline char constexpr const* to_string<type::literal_value>()
         { return "literal_value"; }
@@ -79,11 +79,11 @@ namespace jank
         inline char constexpr const* to_string<type_reference>()
         { return to_string<type::type_reference>(); }
         template <>
-        inline char constexpr const* to_string<variable_definition>()
-        { return to_string<type::variable_definition>(); }
+        inline char constexpr const* to_string<binding_definition>()
+        { return to_string<type::binding_definition>(); }
         template <>
-        inline char constexpr const* to_string<variable_reference>()
-        { return to_string<type::variable_reference>(); }
+        inline char constexpr const* to_string<binding_reference>()
+        { return to_string<type::binding_reference>(); }
         template <>
         inline char constexpr const* to_string<literal_value>()
         { return to_string<type::literal_value>(); }
@@ -115,10 +115,10 @@ namespace jank
               return to_string<type::type_definition>();
             case type::type_reference:
               return to_string<type::type_reference>();
-            case type::variable_definition:
-              return to_string<type::variable_definition>();
-            case type::variable_reference:
-              return to_string<type::variable_reference>();
+            case type::binding_definition:
+              return to_string<type::binding_definition>();
+            case type::binding_reference:
+              return to_string<type::binding_reference>();
             case type::literal_value:
               return to_string<type::literal_value>();
             case type::return_statement:
@@ -148,10 +148,10 @@ namespace jank
           { return type::type_definition; }
           else if(str == to_string<type_reference>())
           { return type::type_reference; }
-          else if(str == to_string<variable_definition>())
-          { return type::variable_definition; }
-          else if(str == to_string<variable_reference>())
-          { return type::variable_reference; }
+          else if(str == to_string<binding_definition>())
+          { return type::binding_definition; }
+          else if(str == to_string<binding_reference>())
+          { return type::binding_reference; }
           else if(str == to_string<literal_value>())
           { return type::literal_value; }
           else if(str == to_string<return_statement>())
@@ -193,11 +193,11 @@ namespace jank
           struct to_type<type::type_reference>
           { using type = type_reference; };
           template <>
-          struct to_type<type::variable_definition>
-          { using type = variable_definition; };
+          struct to_type<type::binding_definition>
+          { using type = binding_definition; };
           template <>
-          struct to_type<type::variable_reference>
-          { using type = variable_reference; };
+          struct to_type<type::binding_reference>
+          { using type = binding_reference; };
           template <>
           struct to_type<type::literal_value>
           { using type = literal_value; };
@@ -238,11 +238,11 @@ namespace jank
         type constexpr to_enum<type_reference>()
         { return type::type_reference; }
         template <>
-        type constexpr to_enum<variable_definition>()
-        { return type::variable_definition; }
+        type constexpr to_enum<binding_definition>()
+        { return type::binding_definition; }
         template <>
-        type constexpr to_enum<variable_reference>()
-        { return type::variable_reference; }
+        type constexpr to_enum<binding_reference>()
+        { return type::binding_reference; }
         template <>
         type constexpr to_enum<literal_value>()
         { return type::literal_value; }

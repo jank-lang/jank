@@ -23,7 +23,7 @@ namespace jest
 
   template <> template <>
   void jank::use_group::test<2>()
-  { jank::common::translate("interpret/do/use/pass_shadow_variable.jank"); }
+  { jank::common::translate("interpret/do/use/pass_shadow_binding.jank"); }
 
   template <> template <>
   void jank::use_group::test<3>()

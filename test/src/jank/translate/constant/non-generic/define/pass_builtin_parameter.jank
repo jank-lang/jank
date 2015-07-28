@@ -1,9 +1,0 @@
-(ƒ test (i integer b boolean s string r real) ()
-  (constant foo integer
-    i)
-  (constant boo boolean
-    b)
-  (constant soo string
-    s)
-  (constant roo real
-    r))

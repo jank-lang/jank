@@ -20,9 +20,9 @@ namespace jank
         {
           switch(cell::trait::to_enum(c))
           {
-            case cell::type::variable_reference:
+            case cell::type::binding_reference:
             {
-              auto const &ref(expect::type<cell::type::variable_reference>(c));
+              auto const &ref(expect::type<cell::type::binding_reference>(c));
               return { ref.data.definition.type.definition };
             }
             case cell::type::literal_value:

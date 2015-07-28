@@ -1,0 +1,9 @@
+(ƒ test (i integer b boolean s string r real) ()
+  (bind foo integer
+    i)
+  (bind boo boolean
+    b)
+  (bind soo string
+    s)
+  (bind roo real
+    r))

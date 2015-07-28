@@ -81,16 +81,16 @@ namespace jank
         return os << std::endl;
       }
 
-      static std::ostream& operator <<(std::ostream &os, variable_definition const &c)
+      static std::ostream& operator <<(std::ostream &os, binding_definition const &c)
       {
         indenter const indent{ os, indent_level };
-        return os << "variable " << c.data.name << std::endl;
+        return os << "binding " << c.data.name << std::endl;
       }
 
-      static std::ostream& operator <<(std::ostream &os, variable_reference const &c)
+      static std::ostream& operator <<(std::ostream &os, binding_reference const &c)
       {
         indenter const indent{ os, indent_level };
-        return os << "variable reference " << c.data.definition.name << std::endl;
+        return os << "binding reference " << c.data.definition.name << std::endl;
       }
 
       static std::ostream& operator <<(std::ostream &os, literal_value const &c)
@@ -160,11 +160,11 @@ namespace jank
           case type::native_function_call:
             os << boost::get<native_function_call>(c);
             break;
-          case type::variable_definition:
-            os << boost::get<variable_definition>(c);
+          case type::binding_definition:
+            os << boost::get<binding_definition>(c);
             break;
-          case type::variable_reference:
-            os << boost::get<variable_reference>(c);
+          case type::binding_reference:
+            os << boost::get<binding_reference>(c);
             break;
           case type::literal_value:
             os << boost::get<literal_value>(c);

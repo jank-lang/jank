@@ -1,8 +1,0 @@
-(ƒ some-func () ()
-  (variable local string
-    "nice")
-  (assert (== local "nice"))
-
-  (variable blarb boolean
-    true)
-  (assert blarb))

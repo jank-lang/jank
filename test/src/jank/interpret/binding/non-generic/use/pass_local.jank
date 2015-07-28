@@ -1,0 +1,8 @@
+(ƒ some-func () ()
+  (bind local string
+    "nice")
+  (assert (== local "nice"))
+
+  (bind blarb boolean
+    true)
+  (assert blarb))

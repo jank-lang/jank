@@ -54,17 +54,17 @@ namespace jank
               { return call(c); }
               detail::value<C> operator ()(parse::cell::ident const &c) const
               {
-                auto const def(scope_->find_variable(c.data));
+                auto const def(scope_->find_binding(c.data));
                 if(!def)
                 {
                   throw expect::error::type::exception<>
-                  { "unknown variable: " + c.data };
+                  { "unknown binding: " + c.data };
                 }
 
                 return detail::value<C>
                 {
                   c.data,
-                  { cell::variable_reference{ { def.value().first.data } } }
+                  { cell::binding_reference{ { def.value().first.data } } }
                 };
               }
               detail::value<C> operator ()(parse::cell::list const &c) const

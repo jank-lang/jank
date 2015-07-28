@@ -22,7 +22,7 @@ namespace jank
         {
           auto const &name(*arg_name_it++);
           auto const var(resolve_value(next_scope, arg.cell));
-          next_scope->variables[name.name] = var;
+          next_scope->bindings[name.name] = var;
         }
 
         return interpret(next_scope, { cell.data.definition.body });

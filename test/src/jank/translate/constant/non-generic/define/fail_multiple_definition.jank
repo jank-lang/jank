@@ -1,5 +1,0 @@
-(constant foo integer
-  42)
-
-(constant foo string
-  "nope")

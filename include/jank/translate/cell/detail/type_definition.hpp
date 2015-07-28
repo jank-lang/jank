@@ -15,7 +15,7 @@ namespace jank
         {
           std::string name;
           /* TODO: Add member support. */
-          //std::vector<struct variable_definition> members;
+          //std::vector<struct binding_definition> members;
         };
 
         inline bool operator ==(type_definition const &lhs, type_definition const &rhs)

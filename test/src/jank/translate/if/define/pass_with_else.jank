@@ -1,4 +1,4 @@
-(constant truth true)
+(bind truth true)
 
 (if truth
   (print "so true")

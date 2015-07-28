@@ -16,8 +16,8 @@
 #include <jank/translate/cell/detail/function_call.hpp>
 #include <jank/translate/cell/detail/type_definition.hpp>
 #include <jank/translate/cell/detail/type_reference.hpp>
-#include <jank/translate/cell/detail/variable_definition.hpp>
-#include <jank/translate/cell/detail/variable_reference.hpp>
+#include <jank/translate/cell/detail/binding_definition.hpp>
+#include <jank/translate/cell/detail/binding_reference.hpp>
 #include <jank/translate/cell/detail/literal_value.hpp>
 #include <jank/translate/cell/detail/return_statement.hpp>
 #include <jank/translate/cell/detail/if_statement.hpp>
@@ -41,8 +41,8 @@ namespace jank
         boost::recursive_wrapper<wrapper<type::native_function_call>>,
         boost::recursive_wrapper<wrapper<type::type_definition>>,
         boost::recursive_wrapper<wrapper<type::type_reference>>,
-        boost::recursive_wrapper<wrapper<type::variable_definition>>,
-        boost::recursive_wrapper<wrapper<type::variable_reference>>,
+        boost::recursive_wrapper<wrapper<type::binding_definition>>,
+        boost::recursive_wrapper<wrapper<type::binding_reference>>,
         boost::recursive_wrapper<wrapper<type::literal_value>>,
         boost::recursive_wrapper<wrapper<type::return_statement>>,
         boost::recursive_wrapper<wrapper<type::if_statement>>,
@@ -92,15 +92,15 @@ namespace jank
         type data;
       };
       template <>
-      struct wrapper<type::variable_definition>
+      struct wrapper<type::binding_definition>
       {
-        using type = detail::variable_definition<cell>;
+        using type = detail::binding_definition<cell>;
         type data;
       };
       template <>
-      struct wrapper<type::variable_reference>
+      struct wrapper<type::binding_reference>
       {
-        using type = detail::variable_reference<cell>;
+        using type = detail::binding_reference<cell>;
         type data;
       };
       template <>
@@ -135,8 +135,8 @@ namespace jank
       using native_function_call = wrapper<type::native_function_call>;
       using type_definition = wrapper<type::type_definition>;
       using type_reference = wrapper<type::type_reference>;
-      using variable_definition = wrapper<type::variable_definition>;
-      using variable_reference = wrapper<type::variable_reference>;
+      using binding_definition = wrapper<type::binding_definition>;
+      using binding_reference = wrapper<type::binding_reference>;
       using literal_value = wrapper<type::literal_value>;
       using return_statement = wrapper<type::return_statement>;
       using if_statement = wrapper<type::if_statement>;

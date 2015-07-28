@@ -12,7 +12,7 @@ namespace jank
       namespace argument
       {
         /* Arguments are stored in translation cells, but not tied directly to
-         * a type_definition. This is because they can be literal values, variable
+         * a type_definition. This is because they can be literal values, binding
          * references, or maybe other things. */
         cell::type_definition resolve_type
         (
