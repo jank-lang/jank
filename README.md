@@ -79,7 +79,7 @@ Variables are defined via the `variable` special identifier and require a `name`
 Using the same syntax as `variable`, but with the `constant` identifier, one can introduce variables which will be verified, at compile-time, to never be modified. The values themselves, however, can be set at run-time, à la C++'s `const` (not `constexpr`).
 
 ## Generics
-Definitions may be dependent on types. Such definitions may be functions or structs. The type list must never be empty. Dependent (incomplete) types of a generic item must be prefixed with `:` to disambiguate from full specializations. To aid in cleanliness, function parameters and return types may be set to `auto`, implicitly making them generic.
+Definitions may be dependent on types. Such definitions may be functions or structs. The type list must never be empty. Dependent (incomplete) types of a generic item must be prefixed with `:` to disambiguate from full specializations. To aid in cleanliness, function parameters and return types may be set to `auto`, implicitly making them generic. Like variables, function return types may also be left out entirely, if they can be deduced.
 
 ### Examples
 #### Function
@@ -129,10 +129,10 @@ Only multi-line comments are supported. Anything within `(;` and `;)` is conside
 
 ### Resource management
 ```
-(ƒ construct : (:T) (...) (T)
+(ƒ construct (...) (auto)
   )
 
-(ƒ destruct : (:T) (o T) ()
+(ƒ destruct (o auto) ()
   )
 ```
 Scope-based resource management ties resource ownership to object lifetimes, similar to C++. Types can take advantage of this by specializing `construct` and `destruct` to perform any custom logic.
@@ -198,11 +198,12 @@ Constraints can be applied to various definitions, including functions and struc
 ### Examples
 #### Functions
 ```
-(ƒ number? : (:T) () (boolean)
+(; We can leave out the return types for cleanliness. ;)
+(ƒ number? : (:T) ()
   false)
-(ƒ number? : (integer) () (boolean)
+(ƒ number? : (integer) ()
   true)
-(ƒ number? : (real) () (boolean)
+(ƒ number? : (real) ()
   true)
 
 (ƒ square : (:T) (i T) (T) where (number? : T)
@@ -247,7 +248,7 @@ Enums function as variant sum types; each variant can have its own type or simpl
 Branching, using `if`, allows for specifying a single form for the true and false cases. All conditions must be of type `boolean` and the false case is optional. To have more than one line in a true or false case, introduce scope with a `do` statement.
 
 ```
-(ƒ next-even (i integer) (integer)
+(ƒ next-even (i integer)
   (if (even? i)
     (do
       (print "even")
