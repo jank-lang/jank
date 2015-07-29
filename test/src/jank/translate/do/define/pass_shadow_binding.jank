@@ -2,4 +2,4 @@
 
 (do
   (bind foo 1.0)
-  (assert (== 1.0 foo)))
+  (assert (= 1.0 foo)))

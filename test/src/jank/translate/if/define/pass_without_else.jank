@@ -3,5 +3,5 @@
 (if truth
   (print "so true"))
 
-(if (== truth false)
+(if (= truth false)
   (assert false))

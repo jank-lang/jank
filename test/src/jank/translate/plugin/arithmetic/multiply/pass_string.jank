@@ -1,4 +1,4 @@
-(assert (== (* "foo" 1) "foo"))
-(assert (== (* "foo" 3) "foofoofoo"))
-(assert (== (* "bar" 0) ""))
-(assert (== (* "" 0) ""))
+(assert (= (* "foo" 1) "foo"))
+(assert (= (* "foo" 3) "foofoofoo"))
+(assert (= (* "bar" 0) ""))
+(assert (= (* "" 0) ""))

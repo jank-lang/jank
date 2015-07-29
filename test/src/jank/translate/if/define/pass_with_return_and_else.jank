@@ -3,5 +3,5 @@
     42
     0))
 
-(assert (== 42 (foo true)))
-(assert (== 0 (foo false)))
+(assert (= 42 (foo true)))
+(assert (= 0 (foo false)))
