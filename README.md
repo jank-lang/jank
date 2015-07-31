@@ -159,24 +159,6 @@ When constructing an object, constructors are first considered, then aggregate i
 (bar (coord : (real real) :x 0.0 :y 5.4))
 ```
 
-## Allocation
-```
-(struct owned : (:T)
-  )
-(struct shared : (:T)
-  )
-```
-Objects can either be in automatic or dynamic memory (stack vs. heap); to get an object into dynamic memory, you need a smart pointer. Two types of smart pointers exist, `owned` and `shared`.
-
-### Example
-```
-(; Call foo with a new owned ptr to int containing 42. ;)
-(foo (owned : int 42))
-
-(; Call bar with a new owned ptr to int containing 42. ;)
-(bar (shared : int 42))
-```
-
 ## Type aliasing
 All type aliases are strong. Since the focus is so strongly on generics, types are designed to be specialized and aliased to create unique, custom types. Aliases can also be generic.
 
@@ -249,7 +231,7 @@ Branching, using `if`, allows for specifying a single form for the true and fals
   (if (even? i)
     (do
       (print "even")
-      i)
+      (+ 2 i))
     (do
       (print "not even")
       (+ 1 i))))
