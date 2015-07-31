@@ -6,6 +6,12 @@ start with cons and lambdas
   map
   reduce
 
+custom types are dynamically allocated by default
+  traits to control allocation? (later)
+  reference counted a la shared_ptr
+  copied on mutation
+  explicit copy function as well
+
 auto type
   function type deduction
 
