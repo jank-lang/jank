@@ -131,6 +131,7 @@ namespace jank
           /* Verify all paths return a value. */
           ret.data.body = function::ret::validate
           (function::ret::deduce(std::move(ret.data.body)));
+          ret.data.return_type = ret.data.body.return_type;
 
           /* Add the function definition to the outer body's scope. */
           outer_body.data.scope->function_definitions[name.data].back() = ret;

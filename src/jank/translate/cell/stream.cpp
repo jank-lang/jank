@@ -17,7 +17,7 @@ namespace jank
       {
         indenter const indent{ os, indent_level };
 
-        os << "( ";
+        os << "( : " << c.data.return_type.definition.name << " ";
         for(auto const &v : c.data.cells)
         { os << v << " "; }
         os << ") ";

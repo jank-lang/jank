@@ -22,6 +22,12 @@ namespace jank
             (input, outer_body.data.scope)
           );
 
+          auto const automatic
+          (
+            outer_body.data.return_type ==
+            builtin::type::automatic(*outer_body.data.scope)
+          );
+
           /* TODO: Handle multiple return values? */
           if(args.size() > 1)
           {
@@ -35,7 +41,11 @@ namespace jank
               function::argument::resolve_type
               (args[0].cell, outer_body.data.scope)
             );
-            if(type.data != outer_body.data.return_type.definition)
+            if
+            (
+              type.data != outer_body.data.return_type.definition &&
+              !automatic
+            )
             { throw expect::error::type::exception<>{ "invalid return type" }; }
 
             return { cell::return_statement{ { args[0].cell, { type.data } } } };
@@ -44,7 +54,7 @@ namespace jank
           /* Fallback to returning null. */
           cell::type_reference type
           { environment::builtin::type::null(*outer_body.data.scope) };
-          if(type.data != outer_body.data.return_type)
+          if(type.data != outer_body.data.return_type && !automatic)
           { throw expect::error::type::exception<>{ "invalid return type" }; }
           return { cell::return_statement{ { cell::literal_value{}, type.data } } };
         }

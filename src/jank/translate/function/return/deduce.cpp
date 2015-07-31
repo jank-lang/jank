@@ -8,6 +8,7 @@
 #include <jank/translate/environment/special/return_statement.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/translate/expect/error/syntax/exception.hpp>
+#include <jank/translate/cell/stream.hpp> // TODO
 
 namespace jank
 {
@@ -32,7 +33,8 @@ namespace jank
             { continue; }
 
             auto &statement(expect::type<cell::type::return_statement>(c));
-            auto const type(argument::resolve_type(statement, body.scope));
+            auto const type
+            (argument::resolve_type(statement.data.cell, body.scope));
 
             if(body.return_type == automatic)
             {
@@ -45,6 +47,8 @@ namespace jank
               { "unable to deduce return type; mismatched types" };
             }
           }
+
+          std::cout << cell::function_body{ body } << std::endl;
 
           return body;
         }
