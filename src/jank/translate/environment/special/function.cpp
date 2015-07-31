@@ -5,6 +5,7 @@
 #include <jank/translate/translate.hpp>
 #include <jank/translate/function/argument/definition.hpp>
 #include <jank/translate/function/return/parse.hpp>
+#include <jank/translate/function/return/deduce.hpp>
 #include <jank/translate/environment/scope.hpp>
 #include <jank/translate/environment/special/function.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
@@ -128,7 +129,8 @@ namespace jank
           };
 
           /* Verify all paths return a value. */
-          ret.data.body = function::ret::validate(std::move(ret.data.body));
+          ret.data.body = function::ret::validate
+          (function::ret::deduce(std::move(ret.data.body)));
 
           /* Add the function definition to the outer body's scope. */
           outer_body.data.scope->function_definitions[name.data].back() = ret;

@@ -52,6 +52,7 @@ add_library(${PROJECT_NAME}_static STATIC
             src/jank/translate/function/argument/resolve_type.cpp
             src/jank/translate/function/return/parse.cpp
             src/jank/translate/function/return/validate.cpp
+            src/jank/translate/function/return/deduce.cpp
             src/jank/translate/function/return/make_implicit.cpp
             src/jank/translate/environment/scope.cpp
             src/jank/translate/environment/builtin/type/primitive.cpp
