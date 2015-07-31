@@ -14,6 +14,7 @@ custom types are dynamically allocated by default
 
 auto type
   function type deduction
+    tests
 
 change comments to just need ; at the beginning
 
