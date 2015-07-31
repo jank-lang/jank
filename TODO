@@ -1,6 +1,9 @@
 refactoring
   expect state
 
+returning from an if with a native function call
+  not working
+
 start with cons and lambdas
   list
   map
