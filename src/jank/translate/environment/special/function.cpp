@@ -20,7 +20,7 @@ namespace jank
       namespace special
       {
         cell::cell function
-        (parse::cell::list const &input, cell::function_body const &outer_body)
+        (parse::cell::list const &input, cell::function_body &outer_body)
         {
           static std::size_t constexpr forms_required{ 3 };
 
@@ -121,7 +121,8 @@ namespace jank
                   data.end()
                 ),
                 nested_scope,
-                { return_type }
+                { return_type },
+                &outer_body.data
               ).data,
               nested_scope
             }
