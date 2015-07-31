@@ -21,8 +21,12 @@ namespace jank
         )
         {
           if(list.data.size() > 1)
-          { throw expect::error::internal::unimplemented{ "multiple return types" }; }
-          else if(list.data.empty()) /* No return type means null return type. */
+          {
+            throw expect::error::internal::unimplemented
+            { "multiple return types" };
+          }
+          /* No return type means null return type. */
+          else if(list.data.empty())
           {
             auto const null
             (
@@ -30,7 +34,10 @@ namespace jank
               (parse::cell::trait::to_string<parse::cell::type::null>())
             );
             if(!null) /* Shouldn't ever happen. */
-            { throw expect::error::internal::exception<>{ "no null type found" }; }
+            {
+              throw expect::error::internal::exception<>
+              { "no null type found" };
+            }
             return { { { null.value().first.data } } };
           }
 
