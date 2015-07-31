@@ -14,7 +14,7 @@ namespace jank
       namespace special
       {
         cell::cell if_statement
-        (parse::cell::list const &input, cell::function_body &outer_body)
+        (parse::cell::list const &input, cell::function_body const &outer_body)
         {
           static std::size_t constexpr forms_required{ 3 };
           auto const &data(input.data);
@@ -67,14 +67,13 @@ namespace jank
               jtl::it::make_range
               (true_range_start, std::next(true_range_start)),
               nested_scope,
-              { outer_body.data.return_type },
-              &outer_body.data
+              { outer_body.data.return_type }
             ).data
           );
 
           cell::function_body::type false_body
           {
-            {}, outer_body.data.return_type, outer_body.data.scope, {}
+            {}, outer_body.data.return_type, outer_body.data.scope
           };
 
           /* Add a false body, if it's there. */
@@ -86,8 +85,7 @@ namespace jank
               jtl::it::make_range
               (false_range_start, std::next(false_range_start)),
               nested_scope,
-              { outer_body.data.return_type },
-              &outer_body.data
+              { outer_body.data.return_type }
             ).data;
           }
 

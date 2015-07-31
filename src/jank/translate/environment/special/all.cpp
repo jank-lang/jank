@@ -10,7 +10,7 @@ namespace jank
       namespace special
       {
         std::experimental::optional<cell::cell> handle
-        (parse::cell::list const &list, cell::function_body &translated)
+        (parse::cell::list const &list, cell::function_body const &translated)
         {
           static std::map
           <
@@ -20,7 +20,7 @@ namespace jank
               cell::cell
               (
                 parse::cell::list const &input,
-                cell::function_body &output
+                cell::function_body const &output
               )
             >
           > specials

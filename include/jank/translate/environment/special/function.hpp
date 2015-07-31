@@ -12,7 +12,7 @@ namespace jank
       namespace special
       {
         cell::cell function
-        (parse::cell::list const &input, cell::function_body &body);
+        (parse::cell::list const &input, cell::function_body const &body);
       }
     }
   }

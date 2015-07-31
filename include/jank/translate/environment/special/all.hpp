@@ -19,7 +19,7 @@ namespace jank
       namespace special
       {
         std::experimental::optional<cell::cell> handle
-        (parse::cell::list const &list, cell::function_body &translated);
+        (parse::cell::list const &list, cell::function_body const &translated);
       }
     }
   }

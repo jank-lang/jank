@@ -22,7 +22,6 @@ namespace jank
           std::vector<C> cells;
           type_reference return_type;
           std::shared_ptr<environment::scope> scope;
-          function_body<C> *parent;
         };
       }
     }
