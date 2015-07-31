@@ -1,13 +1,13 @@
 #include <stdexcept>
 #include <memory>
 
-#include <jank/translate/environment/special/function.hpp>
-
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/translate.hpp>
 #include <jank/translate/function/argument/definition.hpp>
 #include <jank/translate/function/return/parse.hpp>
 #include <jank/translate/environment/scope.hpp>
+#include <jank/translate/environment/special/function.hpp>
+#include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/expect/error/syntax/exception.hpp>
 #include <jank/translate/expect/error/type/overload.hpp>
 
@@ -22,7 +22,7 @@ namespace jank
         cell::cell function
         (parse::cell::list const &input, cell::function_body const &outer_body)
         {
-          static std::size_t constexpr forms_required{ 4 };
+          static std::size_t constexpr forms_required{ 3 };
 
           auto &data(input.data);
           if(data.size() < forms_required)
@@ -79,32 +79,49 @@ namespace jank
             }
           }
 
+          auto return_type(builtin::type::automatic(*nested_scope));
+
           /* TODO: Add multiple return types into a tuple. */
           /* Parse return types. */
-          auto const return_type_names
-          (parse::expect::type<parse::cell::type::list>(data[3]));
-          auto const return_types
-          (function::ret::parse(return_type_names, nested_scope));
+          /* TODO: Ambiguity between no return type and a single function
+           * call and an explicit return type with an empty function body. */
+          bool const return_type_provided(data.size() >= 4);
+          if(return_type_provided)
+          {
+            auto const return_type_names
+            (parse::expect::type<parse::cell::type::list>(data[3]));
+            auto const return_types
+            (function::ret::parse(return_type_names, nested_scope));
+            return_type = return_types[0].data;
+          }
 
           /* Add an empty declaration first, to allow for recursive references. */
           auto &decls(outer_body.data.scope->function_definitions[name.data]);
           decls.emplace_back();
-          decls.back().data.name = name.data;
-          decls.back().data.return_type = return_types[0].data;
-          decls.back().data.arguments = arg_definitions;
+          auto &decl(decls.back());
+          decl.data.name = name.data;
+          decl.data.return_type = return_type;
+          decl.data.arguments = arg_definitions;
 
           cell::function_definition ret
           {
             {
               name.data,
               arg_definitions,
-              return_types[0].data,
+              return_type,
               translate /* Recurse into translate for the body. */
               (
                 jtl::it::make_range
-                (std::next(data.begin(), forms_required), data.end()),
+                (
+                  std::next
+                  (
+                    data.begin(),
+                    forms_required + (return_type_provided ? 1 : 0)
+                  ),
+                  data.end()
+                ),
                 nested_scope,
-                return_types[0]
+                { return_type }
               ).data,
               nested_scope
             }
