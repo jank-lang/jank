@@ -2,9 +2,9 @@
 #include <memory>
 #include <algorithm>
 
+#include <jank/translate/function/return/deduce.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/environment/special/return_statement.hpp>
-#include <jank/translate/function/return/deduce.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/translate/expect/error/syntax/exception.hpp>
 
@@ -18,6 +18,14 @@ namespace jank
       {
         cell::function_body::type deduce(cell::function_body::type body)
         {
+          /* Nothing to deduce if the type isn't auto. */
+          if
+          (
+            body.return_type !=
+            environment::builtin::type::automatic(*body.scope)
+          )
+          { return body; }
+
           return body;
         }
       }
