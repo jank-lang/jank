@@ -40,7 +40,13 @@ namespace jank
           /* No return statement found. */
           if(it == body.cells.end())
           {
-            auto const &null(environment::builtin::type::null(*body.scope));
+            auto const &null
+            (environment::builtin::type::null(*body.scope));
+            auto const &automatic
+            (environment::builtin::type::automatic(*body.scope));
+
+            if(body.return_type == automatic)
+            { body.return_type = null; } /* TODO: apply to all children? */
             if(body.return_type == null)
             {
               /* Add an empty return. */
