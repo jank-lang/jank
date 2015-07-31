@@ -14,7 +14,7 @@ namespace jank
       namespace ret
       {
         /* Validates the all control paths return a value. */
-        void validate(cell::function_body::type &body);
+        cell::function_body::type validate(cell::function_body::type body);
       }
     }
   }

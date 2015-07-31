@@ -25,7 +25,7 @@ namespace jank
           }
         }
 
-        void validate(cell::function_body::type &body)
+        cell::function_body::type validate(cell::function_body::type body)
         {
           auto const it
           (
@@ -46,7 +46,7 @@ namespace jank
               /* Add an empty return. */
               body.cells.push_back
               (function::ret::make_implicit(body));
-              return;
+              return body;
             }
 
             /* Non-null return, yet no body. */
@@ -58,7 +58,7 @@ namespace jank
             if(implicit) /* Turn the last call into a return. */
             {
               body.cells.back() = implicit.value();
-              return;
+              return body;
             }
 
             /* There may be an if/else with returns. */
@@ -71,7 +71,7 @@ namespace jank
             {
               validate(if_opt->data.true_body);
               validate(if_opt->data.false_body);
-              return;
+              return body;
             }
 
             /* There may be a do with returns. */
@@ -92,6 +92,7 @@ namespace jank
               throw expect::error::syntax::exception<>
               { "extraneous statements after return" };
             }
+            return body;
           }
         }
       }

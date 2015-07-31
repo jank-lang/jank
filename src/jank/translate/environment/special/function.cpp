@@ -128,7 +128,7 @@ namespace jank
           };
 
           /* Verify all paths return a value. */
-          function::ret::validate(ret.data.body);
+          ret.data.body = function::ret::validate(std::move(ret.data.body));
 
           /* Add the function definition to the outer body's scope. */
           outer_body.data.scope->function_definitions[name.data].back() = ret;
