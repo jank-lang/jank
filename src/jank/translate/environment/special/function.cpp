@@ -85,7 +85,7 @@ namespace jank
           /* Parse return types. */
           /* TODO: Ambiguity between no return type and a single function
            * call and an explicit return type with an empty function body. */
-          bool const return_type_provided(data.size() >= 4);
+          bool const return_type_provided(data.size() > 4);
           if(return_type_provided)
           {
             auto const return_type_names
