@@ -2,7 +2,7 @@
 
 jank aims to be a functional programming language with a strong, static type system, scope-based resource management (RAII), a direct focus on generic, compile-time metaprogramming using both a powerful type-based template system, hygienic, code-as-data macros, and a native compiler.
 
-**NOTE:** jank, at this point, is _very_ incomplete. Furthermore, the design for jank will change a lot; what you see here is an interpolation between where the compiler is and where I want jank to go. Nothing here is final.
+**NOTE:** jank, at this point, is incomplete. Furthermore, the design for jank will change a lot; what you see here is an interpolation between where the compiler is and where I want jank to go. Nothing here is final.
 
 ## Progress
 |Compiler                     |Status                                     |
