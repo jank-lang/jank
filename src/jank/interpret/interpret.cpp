@@ -17,7 +17,8 @@ namespace jank
     parse::cell::cell interpret
     (
       std::shared_ptr<environment::scope> const &scope,
-      translate::cell::function_body const &root
+      translate::cell::function_body const &root,
+      consume_style const consume
     )
     {
       for(auto const &c : root.data.cells)
@@ -28,7 +29,9 @@ namespace jank
           {
             auto const &cell
             (translate::expect::type<translate::cell::type::function_call>(c));
-            detail::function_call(scope, cell);
+            auto const &ret(detail::function_call(scope, cell));
+            if(consume == consume_style::greedy)
+            { return ret; }
           } break;
 
           case translate::cell::type::native_function_call:
@@ -38,7 +41,9 @@ namespace jank
               translate::expect::type
               <translate::cell::type::native_function_call>(c)
             );
-            detail::native_function_call(scope, cell);
+            auto const &ret(detail::native_function_call(scope, cell));
+            if(consume == consume_style::greedy)
+            { return ret; }
           } break;
 
           case translate::cell::type::return_statement:
@@ -87,5 +92,12 @@ namespace jank
 
       return parse::cell::null{};
     }
+
+    parse::cell::cell interpret
+    (
+      std::shared_ptr<environment::scope> const &scope,
+      translate::cell::function_body const &root
+    )
+    { return interpret(scope, root, consume_style::normal); }
   }
 }
