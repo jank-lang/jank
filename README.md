@@ -237,19 +237,6 @@ Branching, using `if`, allows for specifying a single form for the true and fals
       (+ 1 i))))
 ```
 
-## Matching
-Matching can be used in lieu of `car`, `cdr`, `cond`, `eq`, and `atom`. It still needs the syntax and flexibility to be worked out though.
-
-Consider something like:
-```
-(ƒ fib (i integer) (integer)
-  (match i
-    (0 → 0)
-    (1 → 1)
-    (n → (+ (fib (- n 1)) (fib (- n 2))))))
-```
-TODO: http://www.brool.com/index.php/pattern-matching-in-clojure
-
 ## Strings
 For now, due to the simplicity of the parser, parens in string need to be escaped. This will change, but it's very low priority.
 
