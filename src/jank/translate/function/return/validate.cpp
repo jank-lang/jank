@@ -44,8 +44,6 @@ namespace jank
           {
             auto const &null
             (environment::builtin::type::null(*body.scope));
-            //auto const &automatic // TODO
-            //(environment::builtin::type::automatic(*body.scope));
 
             if(body.return_type == null)
             {
@@ -64,17 +62,6 @@ namespace jank
             if(implicit) /* Turn the last call into a return. */
             {
               body.cells.back() = implicit.value();
-
-              /* TODO: Get back from make_implicit. */
-              auto const type
-              (
-                function::argument::resolve_type
-                (
-                  expect::type<cell::type::return_statement>
-                  (body.cells.back()).data.cell,
-                  body.scope
-                )
-              );
               return body;
             }
 
