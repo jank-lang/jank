@@ -5,6 +5,7 @@
 #include "translate/function/non-generic/overload.hpp"
 #include "translate/function/non-generic/nest.hpp"
 #include "translate/function/non-generic/return.hpp"
+#include "translate/function/non-generic/deduce.hpp"
 
 int main()
 {

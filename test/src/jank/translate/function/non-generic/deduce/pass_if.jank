@@ -1,0 +1,15 @@
+(ƒ switch (b boolean) (auto)
+  (if b
+    1
+    0))
+
+(assert (= (switch true) 1))
+(assert (= (switch false) 0))
+
+(ƒ switch-func (b boolean) (auto)
+  (if b
+    (+ 1 0)
+    (+ 0 0)))
+
+(assert (= (switch-func true) 1))
+(assert (= (switch-func false) 0))

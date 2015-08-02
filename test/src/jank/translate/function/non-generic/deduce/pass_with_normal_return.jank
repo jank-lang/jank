@@ -1,0 +1,7 @@
+(ƒ switch (b boolean) (auto)
+  (if b
+    1)
+  (return 0))
+
+(assert (= (switch true) 1))
+(assert (= (switch false) 0))
