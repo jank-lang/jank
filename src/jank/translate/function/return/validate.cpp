@@ -45,8 +45,8 @@ namespace jank
             auto const &automatic
             (environment::builtin::type::automatic(*body.scope));
 
-            if(body.return_type == automatic)
-            { body.return_type = null; } /* TODO: apply to all children? */
+            //if(body.return_type == automatic)
+            //{ body.return_type = null; } /* TODO: apply to all children? */
             if(body.return_type == null)
             {
               /* Add an empty return. */

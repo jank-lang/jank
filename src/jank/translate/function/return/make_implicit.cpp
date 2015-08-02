@@ -60,8 +60,12 @@ namespace jank
               if
               (
                 !opt ||
-                opt.value().data.definition.return_type !=
-                body.return_type
+                (
+                  opt.value().data.definition.return_type !=
+                  body.return_type &&
+                  body.return_type !=
+                  environment::builtin::type::automatic(*body.scope)
+                )
               )
               { return {}; }
 
