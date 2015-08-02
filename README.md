@@ -34,7 +34,7 @@ There are a few primitive types which are part of the language.
 
 ## Functions
 ```
-(ƒ square (i integer) (integer)
+(ƒ square (i integer) (auto)
   (* i i))
 ```
 Functions are defined via the `function` (or `ƒ`) special identifier and require a `name` identifier, an argument list (which may be empty), and a return type list (which may be empty). Return type lists may also be `(auto)`, which forces the compiler to deduce the type.
@@ -142,7 +142,7 @@ When constructing an object, constructors are first considered, then aggregate i
   (x T-x)
   (y T-y))
 
-(ƒ construct : (coord : (:T-x :T-y)) (x T-x y T-y) (coord : (T-x T-y))
+(ƒ construct : (coord : (:T-x :T-y)) (x T-x y T-y) (auto)
   (print "constructing object")
   (coord : (T-x T-y) :x x :y y))
 
