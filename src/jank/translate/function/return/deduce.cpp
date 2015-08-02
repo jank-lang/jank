@@ -75,6 +75,25 @@ namespace jank
                 body.return_type = statement.true_body.return_type;
               } break;
 
+              case cell::type::do_statement:
+              {
+                auto &statement(expect::type<cell::type::do_statement>(c).data);
+                statement.body = deduce(std::move(statement.body));
+
+                if
+                (
+                  !detail::compatible
+                  (
+                    statement.body.return_type,
+                    body.return_type,
+                    *body.scope
+                  )
+                )
+                { detail::fail(); }
+
+                body.return_type = statement.body.return_type;
+              } break;
+
               case cell::type::return_statement:
               {
                 auto &statement(expect::type<cell::type::return_statement>(c));
