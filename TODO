@@ -15,10 +15,6 @@ custom types are dynamically allocated by default
   copied on mutation
   explicit copy function as well
 
-auto type
-  function type deduction
-    tests
-
 change comments to just need ; at the beginning
 
 if which returns value and is embedded
