@@ -5,6 +5,7 @@
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/environment/special/return_statement.hpp>
 #include <jank/translate/function/return/make_implicit.hpp>
+#include <jank/translate/function/argument/resolve_type.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/translate/expect/error/syntax/exception.hpp>
 
@@ -25,7 +26,8 @@ namespace jank
           }
         }
 
-        cell::function_body::type validate(cell::function_body::type body)
+        cell::function_body::type validate
+        (cell::function_body::type body)
         {
           auto const it
           (
@@ -42,11 +44,9 @@ namespace jank
           {
             auto const &null
             (environment::builtin::type::null(*body.scope));
-            auto const &automatic
-            (environment::builtin::type::automatic(*body.scope));
+            //auto const &automatic // TODO
+            //(environment::builtin::type::automatic(*body.scope));
 
-            //if(body.return_type == automatic)
-            //{ body.return_type = null; } /* TODO: apply to all children? */
             if(body.return_type == null)
             {
               /* Add an empty return. */
@@ -64,6 +64,17 @@ namespace jank
             if(implicit) /* Turn the last call into a return. */
             {
               body.cells.back() = implicit.value();
+
+              /* TODO: Get back from make_implicit. */
+              auto const type
+              (
+                function::argument::resolve_type
+                (
+                  expect::type<cell::type::return_statement>
+                  (body.cells.back()).data.cell,
+                  body.scope
+                )
+              );
               return body;
             }
 
@@ -75,8 +86,12 @@ namespace jank
             );
             if(if_opt)
             {
-              validate(if_opt->data.true_body);
-              validate(if_opt->data.false_body);
+              if_opt->data.true_body = validate
+              (std::move(if_opt->data.true_body));
+
+              if_opt->data.false_body = validate
+              (std::move(if_opt->data.false_body));
+
               return body;
             }
 
@@ -87,7 +102,10 @@ namespace jank
               (body.cells.back())
             );
             if(do_opt)
-            { return validate(do_opt->data.body); }
+            {
+              do_opt->data.body = validate(std::move(do_opt->data.body));
+              return body;
+            }
 
             detail::fail();
           }
