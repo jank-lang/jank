@@ -23,7 +23,7 @@ namespace jank
         cell::cell function
         (parse::cell::list const &input, cell::function_body const &outer_body)
         {
-          static std::size_t constexpr forms_required{ 3 };
+          static std::size_t constexpr forms_required{ 4 };
 
           auto &data(input.data);
           if(data.size() < forms_required)
@@ -80,21 +80,13 @@ namespace jank
             }
           }
 
-          auto return_type(builtin::type::automatic(*nested_scope));
-
           /* TODO: Add multiple return types into a tuple. */
           /* Parse return types. */
-          /* TODO: Ambiguity between no return type and a single function
-           * call and an explicit return type with an empty function body. */
-          bool const return_type_provided(data.size() > 4);
-          if(return_type_provided)
-          {
-            auto const return_type_names
-            (parse::expect::type<parse::cell::type::list>(data[3]));
-            auto const return_types
-            (function::ret::parse(return_type_names, nested_scope));
-            return_type = return_types[0].data;
-          }
+          auto const return_type_names
+          (parse::expect::type<parse::cell::type::list>(data[3]));
+          auto const return_types
+          (function::ret::parse(return_type_names, nested_scope));
+          auto const return_type(return_types[0].data);
 
           /* Add an empty declaration first, to allow for recursive references. */
           auto &decls(outer_body.data.scope->function_definitions[name.data]);
@@ -117,7 +109,7 @@ namespace jank
                   std::next
                   (
                     data.begin(),
-                    forms_required + (return_type_provided ? 1 : 0)
+                    forms_required
                   ),
                   data.end()
                 ),
