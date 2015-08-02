@@ -67,4 +67,8 @@ namespace jest
     expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("translate/if/define/fail_nested_missing_return.jank"); });
   }
+
+  template <> template <>
+  void jank::define_group::test<10>()
+  { jank::common::translate("translate/if/define/pass_with_native_call_and_return.jank"); }
 }
