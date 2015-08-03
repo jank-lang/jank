@@ -12,7 +12,10 @@ namespace jank
       namespace special
       {
         cell::cell return_statement
-        (parse::cell::list const &input, cell::function_body const &outer_body);
+        (
+          parse::cell::list const &input,
+          std::shared_ptr<scope> const &outer_scope
+        );
       }
     }
   }

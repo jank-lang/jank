@@ -15,7 +15,10 @@ namespace jank
       namespace special
       {
         cell::cell binding
-        (parse::cell::list const &input, cell::function_body const &body)
+        (
+          parse::cell::list const &input,
+          std::shared_ptr<scope> const &outer_scope
+        )
         {
           static std::size_t constexpr forms_required{ 3 };
 
@@ -29,8 +32,8 @@ namespace jank
           auto const name
           (parse::expect::type<parse::cell::type::ident>(data[1]));
 
-          auto const var_opt(body.data.scope->find_binding(name.data));
-          if(var_opt && var_opt.value().second == body.data.scope)
+          auto const var_opt(outer_scope->find_binding(name.data));
+          if(var_opt && var_opt.value().second == outer_scope)
           {
             throw expect::error::type::exception<>
             { "multiple definition of: " + name.data };
@@ -49,7 +52,7 @@ namespace jank
           auto const arguments
           (
             function::argument::call::parse<cell::cell>
-            (parsable_list, body.data.scope)
+            (parsable_list, outer_scope)
           );
           if(arguments.empty())
           {
@@ -66,7 +69,7 @@ namespace jank
           auto const value_type
           (
             function::argument::resolve_type
-            (arguments[0].cell, body.data.scope)
+            (arguments[0].cell, outer_scope)
           );
           if(deduce_type)
           { expected_type = value_type; }
@@ -75,7 +78,7 @@ namespace jank
             auto const type_name
             (parse::expect::type<parse::cell::type::ident>(data[2]));
             auto const type_opt
-            (body.data.scope->find_type(type_name.data));
+            (outer_scope->find_type(type_name.data));
 
             if(!type_opt)
             {
@@ -93,7 +96,7 @@ namespace jank
 
           cell::binding_definition const def
           { { name.data, { value_type.data }, arguments[0].cell } };
-          body.data.scope->binding_definitions[name.data] = def;
+          outer_scope->binding_definitions[name.data] = def;
           return { def };
         }
       }

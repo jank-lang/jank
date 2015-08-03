@@ -10,7 +10,10 @@ namespace jank
       namespace special
       {
         std::experimental::optional<cell::cell> handle
-        (parse::cell::list const &list, cell::function_body const &translated)
+        (
+          parse::cell::list const &list,
+          cell::function_body const &translated
+        )
         {
           static std::map
           <
@@ -25,12 +28,12 @@ namespace jank
             >
           > specials
           {
-            { "function", &function },
-            { "ƒ", &function },
-            { "bind", &binding },
-            { "return", &return_statement },
-            { "if", &if_statement },
-            { "do", &do_statement },
+            { "function", [](auto const &body){ return function(body.scope); } },
+            //{ "ƒ", &function },
+            //{ "bind", &binding },
+            //{ "return", &return_statement },
+            //{ "if", &if_statement },
+            //{ "do", &do_statement },
           };
 
           auto &data(list.data);
@@ -50,4 +53,3 @@ namespace jank
     }
   }
 }
-

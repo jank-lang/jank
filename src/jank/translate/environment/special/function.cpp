@@ -21,7 +21,10 @@ namespace jank
       namespace special
       {
         cell::cell function
-        (parse::cell::list const &input, cell::function_body const &outer_body)
+        (
+          parse::cell::list const &input,
+          std::shared_ptr<scope> const &outer_scope
+        )
         {
           static std::size_t constexpr forms_required{ 4 };
 
@@ -37,7 +40,7 @@ namespace jank
           auto const args
           (parse::expect::type<parse::cell::type::list>(data[2]));
           auto const nested_scope
-          (std::make_shared<scope>(outer_body.data.scope));
+          (std::make_shared<scope>(outer_scope));
           auto const arg_definitions
           (function::argument::definition::parse_types(args, nested_scope));
 
@@ -70,7 +73,7 @@ namespace jank
           for
           (
             auto const &overload :
-            outer_body.data.scope->function_definitions[name.data]
+            outer_scope->function_definitions[name.data]
           )
           {
             if(overload.data.arguments == arg_definitions)
@@ -89,7 +92,7 @@ namespace jank
           auto const return_type(return_types[0].data);
 
           /* Add an empty declaration first, to allow for recursive references. */
-          auto &decls(outer_body.data.scope->function_definitions[name.data]);
+          auto &decls(outer_scope->function_definitions[name.data]);
           decls.emplace_back();
           auto &decl(decls.back());
           decl.data.name = name.data;
@@ -126,7 +129,7 @@ namespace jank
           ret.data.return_type = ret.data.body.return_type;
 
           /* Add the function definition to the outer body's scope. */
-          outer_body.data.scope->function_definitions[name.data].back() = ret;
+          outer_scope->function_definitions[name.data].back() = ret;
           return { ret };
         }
       }
