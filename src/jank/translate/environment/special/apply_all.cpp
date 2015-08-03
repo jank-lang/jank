@@ -1,4 +1,5 @@
 #include <jank/translate/environment/special/apply_all.hpp>
+#include <jank/translate/environment/special/apply_expression.hpp>
 #include <jank/parse/expect/type.hpp>
 
 namespace jank
@@ -47,14 +48,6 @@ namespace jank
               "return",
               &return_statement
             },
-            {
-              "if",
-              &if_statement
-            },
-            {
-              "do",
-              &do_statement
-            },
           };
 
           auto &data(list.data);
@@ -68,6 +61,8 @@ namespace jank
           );
           if(it != specials.end())
           { return { it->second(list, outer_body) }; }
+          else
+          { return apply_expression(list, outer_body); }
           return {};
         }
       }
