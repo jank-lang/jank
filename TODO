@@ -14,8 +14,6 @@ custom types are dynamically allocated by default
 
 change comments to just need ; at the beginning
 
-if which returns value and is embedded
-
 operators
   !=
   logical or, and, not, etc
