@@ -18,7 +18,7 @@ namespace jank
     {
       namespace special
       {
-        std::experimental::optional<cell::cell> handle
+        std::experimental::optional<cell::cell> apply_all
         (
           parse::cell::list const &list,
           cell::function_body const &translated

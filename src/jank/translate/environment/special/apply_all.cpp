@@ -1,4 +1,4 @@
-#include <jank/translate/environment/special/all.hpp>
+#include <jank/translate/environment/special/apply_all.hpp>
 #include <jank/parse/expect/type.hpp>
 
 namespace jank
@@ -9,7 +9,7 @@ namespace jank
     {
       namespace special
       {
-        std::experimental::optional<cell::cell> handle
+        std::experimental::optional<cell::cell> apply_all
         (
           parse::cell::list const &list,
           cell::function_body const &outer_body

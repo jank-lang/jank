@@ -9,7 +9,7 @@
 #include <jank/translate/cell/stream.hpp>
 #include <jank/translate/cell/trait.hpp>
 #include <jank/translate/environment/scope.hpp>
-#include <jank/translate/environment/special/all.hpp>
+#include <jank/translate/environment/special/apply_all.hpp>
 #include <jank/translate/function/argument/call.hpp>
 #include <jank/translate/function/match_overload.hpp>
 #include <jank/translate/function/return/validate.hpp>
@@ -44,7 +44,7 @@ namespace jank
 
           /* Handle specials. */
           auto const special_opt
-          (environment::special::handle(list, translated));
+          (environment::special::apply_all(list, translated));
           if(special_opt)
           {
             translated.data.cells.push_back(special_opt.value());
