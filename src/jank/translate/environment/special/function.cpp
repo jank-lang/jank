@@ -91,6 +91,7 @@ namespace jank
           (function::ret::parse(return_type_names, nested_scope));
           auto const return_type(return_types[0].data);
 
+          /* TODO: Recursion with auto return types? */
           /* Add an empty declaration first, to allow for recursive references. */
           auto &decls(outer_scope->function_definitions[name.data]);
           decls.emplace_back();

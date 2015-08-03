@@ -7,8 +7,7 @@
 #include <jank/translate/environment/special/function.hpp>
 #include <jank/translate/environment/special/binding.hpp>
 #include <jank/translate/environment/special/return_statement.hpp>
-#include <jank/translate/environment/special/if_statement.hpp>
-#include <jank/translate/environment/special/do_statement.hpp>
+#include <jank/translate/environment/special/apply_expression.hpp>
 
 namespace jank
 {

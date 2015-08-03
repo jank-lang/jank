@@ -6,7 +6,11 @@
 #include <jank/parse/cell/trait.hpp>
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/environment/scope.hpp>
+#include <jank/translate/environment/special/apply_expression.hpp>
+#include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/function/match_overload.hpp>
+#include <jank/translate/function/return/deduce.hpp>
+#include <jank/translate/function/return/validate.hpp>
 #include <jank/translate/expect/error/type/exception.hpp>
 #include <jank/translate/expect/error/syntax/exception.hpp>
 #include <jank/translate/expect/error/lookup/exception.hpp>
@@ -73,6 +77,31 @@ namespace jank
                 {
                   throw expect::error::syntax::exception<>
                   { "invalid argument list" };
+                }
+
+                /* See if it's a special. */
+                {
+                  cell::function_body body
+                  { {
+                    {},
+                    environment::builtin::type::automatic(*scope_),
+                    scope_
+                  } };
+
+                  auto const special_opt
+                  (environment::special::apply_expression(c, body));
+                  if(special_opt)
+                  {
+                    body.data.cells.push_back(special_opt.value());
+                    body.data = function::ret::deduce
+                    (function::ret::validate(std::move(body.data)));
+
+                    return detail::value<C>
+                    {
+                      "special",
+                      { body }
+                    };
+                  }
                 }
 
                 auto const name

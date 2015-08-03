@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sstream>
+
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/cell/cell.hpp>
 #include <jank/translate/environment/scope.hpp>
@@ -62,11 +64,18 @@ namespace jank
         }
 
         /* No matching overload found. */
-        throw expect::error::type::overload
+        std::stringstream ss;
+        ss << "no matching function: "
+           << parse::expect::type<parse::cell::type::ident>(list.data[0]).data
+           << " with arguments: ";
+        for(auto const &arg : arguments)
         {
-          "no matching function: " +
-          parse::expect::type<parse::cell::type::ident>(list.data[0]).data
-        };
+          ss << arg.name << " : "
+             << function::argument::resolve_type(arg.cell, scope).data.name
+             << " ";
+        }
+        throw expect::error::type::overload
+        { ss.str() };
       }
 
       template <typename Native, typename Non_Native, typename Callback>

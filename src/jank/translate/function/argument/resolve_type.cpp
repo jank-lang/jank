@@ -53,6 +53,21 @@ namespace jank
               auto const &call(expect::type<cell::type::native_function_call>(c));
               return { call.data.definition.return_type.definition };
             }
+            case cell::type::function_body:
+            {
+              auto const &body(expect::type<cell::type::function_body>(c));
+              return { body.data.return_type.definition };
+            }
+            case cell::type::if_statement:
+            {
+              auto const &statement(expect::type<cell::type::if_statement>(c));
+              return { statement.data.true_body.return_type.definition };
+            }
+            case cell::type::do_statement:
+            {
+              auto const &statement(expect::type<cell::type::do_statement>(c));
+              return { statement.data.body.return_type.definition };
+            }
             default:
               throw expect::error::type::exception<>
               { "invalid argument type: " + std::to_string(c.which()) };
