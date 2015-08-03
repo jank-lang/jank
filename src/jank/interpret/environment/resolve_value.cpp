@@ -94,6 +94,17 @@ namespace jank
           (scope, cell.data.definition.interpret(scope, cell.data.arguments));
         } break;
 
+        case translate::cell::type::function_body:
+        {
+          auto const &cell
+          (translate::expect::type<translate::cell::type::function_body>(c));
+
+          auto const next_scope(std::make_shared<environment::scope>());
+          next_scope->parent = scope;
+
+          return interpret(next_scope, cell);
+        } break;
+
         default:
           throw expect::error::lookup::exception<>
           { "invalid value: " + std::to_string(c.which()) };
