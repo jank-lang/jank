@@ -12,7 +12,7 @@ namespace jank
         std::experimental::optional<cell::cell> handle
         (
           parse::cell::list const &list,
-          cell::function_body const &translated
+          cell::function_body const &outer_body
         )
         {
           static std::map
@@ -23,17 +23,38 @@ namespace jank
               cell::cell
               (
                 parse::cell::list const &input,
-                cell::function_body const &output
+                cell::function_body const &outer_body
               )
             >
           > specials
           {
-            { "function", [](auto const &body){ return function(body.scope); } },
-            //{ "ƒ", &function },
-            //{ "bind", &binding },
-            //{ "return", &return_statement },
-            //{ "if", &if_statement },
-            //{ "do", &do_statement },
+            {
+              "function",
+              [](auto const &input, auto const &body)
+              { return function(input, body.data.scope); }
+            },
+            {
+              "ƒ",
+              [](auto const &input, auto const &body)
+              { return function(input, body.data.scope); }
+            },
+            {
+              "bind",
+              [](auto const &input, auto const &body)
+              { return binding(input, body.data.scope); }
+            },
+            {
+              "return",
+              &return_statement
+            },
+            {
+              "if",
+              &if_statement
+            },
+            {
+              "do",
+              &do_statement
+            },
           };
 
           auto &data(list.data);
@@ -46,7 +67,7 @@ namespace jank
             (parse::expect::type<parse::cell::type::ident>(list.data[0]).data)
           );
           if(it != specials.end())
-          { return { it->second(list, translated) }; }
+          { return { it->second(list, outer_body) }; }
           return {};
         }
       }

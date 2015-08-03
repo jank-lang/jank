@@ -16,7 +16,7 @@ namespace jank
         cell::cell return_statement
         (
           parse::cell::list const &input,
-          std::shared_ptr<scope> const &outer_scope
+          cell::function_body const &outer_body
         )
         {
           auto const args

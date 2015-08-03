@@ -14,7 +14,10 @@ namespace jank
       namespace special
       {
         cell::cell do_statement
-        (parse::cell::list const &input, cell::function_body const &outer_body)
+        (
+          parse::cell::list const &input,
+          cell::function_body const &outer_body
+        )
         {
           static std::size_t constexpr forms_required{ 2 };
           auto const &data(input.data);
