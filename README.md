@@ -237,6 +237,20 @@ Branching, using `if`, allows for specifying a single form for the true and fals
       (+ 1 i))))
 ```
 
+### Expressions
+`if` and `do` statements can be used as expressions in function calls, allowing arbitrary code bodies to be used as parameters.
+
+```
+(print
+  (if (even? 3)
+    "even"
+    "odd"))
+
+(print
+  (do
+    "always true"))
+```
+
 ## Strings
 For now, due to the simplicity of the parser, parens in string need to be escaped. This will change, but it's very low priority.
 
