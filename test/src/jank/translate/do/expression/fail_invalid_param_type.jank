@@ -1,0 +1,7 @@
+(ƒ foo (s string) ()
+  (assert (= s "foo")))
+
+(foo
+  (do
+    (print "meow")
+    3.14))

@@ -1,0 +1,6 @@
+(assert
+  (=
+    (do
+      (print "good")
+      42)
+    42))

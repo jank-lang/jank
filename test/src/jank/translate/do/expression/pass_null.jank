@@ -1,0 +1,5 @@
+(assert
+  (=
+    (do
+      null)
+    null))
