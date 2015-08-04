@@ -9,7 +9,7 @@ namespace jank
   struct equal_test
   { };
   using equal_group = jest::group<equal_test>;
-  static equal_group const equal_obj{ "comparison ==" };
+  static equal_group const equal_obj{ "comparison =" };
 }
 
 namespace jest
@@ -29,4 +29,8 @@ namespace jest
   template <> template <>
   void jank::equal_group::test<3>()
   { jank::common::interpret("translate/plugin/compare/equal/pass_string.jank"); }
+
+  template <> template <>
+  void jank::equal_group::test<4>()
+  { jank::common::interpret("translate/plugin/compare/equal/pass_null.jank"); }
 }
