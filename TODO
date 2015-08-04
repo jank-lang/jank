@@ -13,6 +13,7 @@ custom types are dynamically allocated by default
   explicit copy function as well
 
 change comments to just need ; at the beginning
+  allow comments anywhere in forms
 
 operators
   !=
