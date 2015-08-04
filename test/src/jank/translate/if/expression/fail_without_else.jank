@@ -1,0 +1,5 @@
+(assert
+  (=
+    (if true
+      "truth")
+    "truth"))

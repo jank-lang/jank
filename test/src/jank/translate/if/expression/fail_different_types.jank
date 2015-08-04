@@ -1,0 +1,7 @@
+(ƒ foo (i integer) ()
+  )
+
+(foo
+  (if true
+    42
+    "no bueno"))

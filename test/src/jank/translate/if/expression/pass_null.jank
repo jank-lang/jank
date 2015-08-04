@@ -1,0 +1,9 @@
+(ƒ get-null () ()
+  )
+
+(assert
+  (=
+    (if true
+      (get-null)
+      (get-null))
+    null))

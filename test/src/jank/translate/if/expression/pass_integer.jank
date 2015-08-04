@@ -1,0 +1,13 @@
+(assert
+  (=
+    (if true
+      "truth"
+      "lie")
+    "truth"))
+
+(assert
+  (=
+    (if false
+      "lie"
+      "truth")
+    "truth"))
