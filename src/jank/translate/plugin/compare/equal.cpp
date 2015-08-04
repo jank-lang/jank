@@ -15,6 +15,15 @@ namespace jank
         {
           detail::make_operator
           (
+            scope, "=", environment::builtin::type::null(*scope),
+            [](auto const &, auto const &)
+            {
+              return environment::builtin::value::boolean
+              (true);
+            }
+          );
+          detail::make_operator
+          (
             scope, "=", environment::builtin::type::boolean(*scope),
             [](auto const &scope, auto const &args)
             {
