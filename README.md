@@ -67,7 +67,7 @@ Members of struct are accessed with a `.foo` syntax, where `.foo` is a function 
 ## Bindings (constant values)
 ```
 (bind name T
-  values...)
+  value)
 ```
 Bindings are defined via the `bind` special identifier and require a `name` identifier, an optional type, and a value. The type may be left out and it will be deduced by the value.
 
