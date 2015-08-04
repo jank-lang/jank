@@ -11,7 +11,7 @@ jank aims to be a functional programming language with a strong, static type sys
 |non-generic bindings         |Complete and tested.                       |
 |non-generic native functions |Complete and tested.                       |
 |if/do statements             |Complete and tested.                       |
-|if/do expressions            |Complete; not fully tested.                |
+|if/do expressions            |Complete and tested.                       |
 
 |Interpreter                  |Status                                     |
 |:----------------------------|:------------------------------------------|
