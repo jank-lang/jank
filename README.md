@@ -10,8 +10,8 @@ jank aims to be a functional programming language with a strong, static type sys
 |non-generic functions        |Complete and tested.                       |
 |non-generic bindings         |Complete and tested.                       |
 |non-generic native functions |Complete and tested.                       |
-|conditional branching        |Complete and tested.                       |
-|do statements                |Complete and tested.                       |
+|if/do statements             |Complete and tested.                       |
+|if/do expressions            |Complete; not fully tested.                |
 
 |Interpreter                  |Status                                     |
 |:----------------------------|:------------------------------------------|
@@ -19,8 +19,8 @@ jank aims to be a functional programming language with a strong, static type sys
 |non-generic bindings         |Complete and tested.                       |
 |non-generic native functions |Complete and tested.                       |
 |arithmetic for primitives    |Complete and tested.                       |
-|conditional branching        |Complete and tested.                       |
-|do statements                |Complete and tested.                       |
+|if/do statements             |Complete and tested.                       |
+|if/do expressions            |Complete; not fully tested.                |
 
 ## Built-in types
 There are a few primitive types which are part of the language.
@@ -235,6 +235,20 @@ Branching, using `if`, allows for specifying a single form for the true and fals
     (do
       (print "not even")
       (+ 1 i))))
+```
+
+### Expressions
+`if` and `do` statements can be used as expressions in function calls, allowing arbitrary code bodies to be used as parameters.
+
+```
+(print
+  (if (even? 3)
+    "even"
+    "odd"))
+
+(print
+  (do
+    "always true"))
 ```
 
 ## Strings
