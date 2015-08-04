@@ -31,7 +31,7 @@ namespace jank
               auto const name
               (
                 parse::cell::trait::to_string
-                (static_cast<parse::cell::type>(literal.data.which()))
+                (parse::cell::trait::to_enum(literal.data))
               );
 
               auto const &def_opt(scope->find_type(name));

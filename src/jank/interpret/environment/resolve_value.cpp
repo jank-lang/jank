@@ -15,7 +15,7 @@ namespace jank
       translate::cell::cell const &c
     )
     {
-      switch(static_cast<translate::cell::type>(c.which()))
+      switch(translate::cell::trait::to_enum(c))
       {
         case translate::cell::type::binding_reference:
         {

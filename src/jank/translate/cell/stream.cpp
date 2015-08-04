@@ -143,7 +143,7 @@ namespace jank
 
       std::ostream& operator <<(std::ostream &os, cell const &c)
       {
-        switch(static_cast<type>(c.which()))
+        switch(trait::to_enum(c))
         {
           case type::function_body:
             os << boost::get<function_body>(c);

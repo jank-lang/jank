@@ -47,7 +47,7 @@ namespace jank
 
           for(auto &c : body.cells)
           {
-            switch(static_cast<cell::type>(c.which()))
+            switch(cell::trait::to_enum(c))
             {
               case cell::type::if_statement:
               {

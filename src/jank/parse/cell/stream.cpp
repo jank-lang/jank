@@ -1,4 +1,5 @@
 #include <jank/parse/cell/stream.hpp>
+#include <jank/parse/cell/trait.hpp>
 #include <jank/detail/stream/indenter.hpp>
 
 namespace jank
@@ -45,7 +46,7 @@ namespace jank
 
       std::ostream& operator <<(std::ostream &os, cell const &c)
       {
-        switch(static_cast<type>(c.which()))
+        switch(trait::to_enum(c))
         {
           case type::null:
             os << boost::get<null>(c);

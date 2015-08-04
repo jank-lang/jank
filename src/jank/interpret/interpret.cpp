@@ -23,7 +23,7 @@ namespace jank
     {
       for(auto const &c : root.data.cells)
       {
-        switch(static_cast<translate::cell::type>(c.which()))
+        switch(translate::cell::trait::to_enum(c))
         {
           case translate::cell::type::function_call:
           {

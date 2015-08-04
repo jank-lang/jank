@@ -16,12 +16,12 @@ namespace jank
     {
       template <cell::type C, typename Cell>
       bool is(Cell const &c)
-      { return static_cast<cell::type>(c.which()) == C; }
+      { return cell::trait::to_enum(c) == C; }
 
       template <cell::type C, typename Cell>
       decltype(auto) type(Cell &&c)
       {
-        auto const type(static_cast<cell::type>(c.which()));
+        auto const type(cell::trait::to_enum(c));
         if(type != C)
         {
           throw error::type::exception<>

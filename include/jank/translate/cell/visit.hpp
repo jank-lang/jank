@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/translate/cell/cell.hpp>
+#include <jank/translate/cell/trait.hpp>
 
 namespace jank
 {
@@ -12,7 +13,7 @@ namespace jank
       template <typename Cell, typename Function>
       auto visit(Cell &&c, Function const &func)
       {
-        switch(static_cast<type>(c.which()))
+        switch(trait::to_enum(c))
         {
           case type::function_body:
             return func(boost::get<function_body>(c));
