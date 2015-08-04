@@ -15,21 +15,21 @@ namespace jest
 {
   template <> template <>
   void jank::use_group::test<0>()
-  { jank::common::translate("interpret/do/use/pass_return.jank"); }
+  { jank::common::interpret("interpret/do/use/pass_return.jank"); }
 
   template <> template <>
   void jank::use_group::test<1>()
-  { jank::common::translate("interpret/do/use/pass_nested_return.jank"); }
+  { jank::common::interpret("interpret/do/use/pass_nested_return.jank"); }
 
   template <> template <>
   void jank::use_group::test<2>()
-  { jank::common::translate("interpret/do/use/pass_shadow_binding.jank"); }
+  { jank::common::interpret("interpret/do/use/pass_shadow_binding.jank"); }
 
   template <> template <>
   void jank::use_group::test<3>()
-  { jank::common::translate("interpret/do/use/pass_shadow_function.jank"); }
+  { jank::common::interpret("interpret/do/use/pass_shadow_function.jank"); }
 
   template <> template <>
   void jank::use_group::test<4>()
-  { jank::common::translate("interpret/do/use/pass_within_if.jank"); }
+  { jank::common::interpret("interpret/do/use/pass_within_if.jank"); }
 }

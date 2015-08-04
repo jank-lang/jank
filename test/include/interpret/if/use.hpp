@@ -15,17 +15,17 @@ namespace jest
 {
   template <> template <>
   void jank::use_group::test<0>()
-  { jank::common::translate("interpret/if/use/pass_with_return.jank"); }
+  { jank::common::interpret("interpret/if/use/pass_with_return.jank"); }
 
   template <> template <>
   void jank::use_group::test<1>()
-  { jank::common::translate("interpret/if/use/pass_with_return_and_else.jank"); }
+  { jank::common::interpret("interpret/if/use/pass_with_return_and_else.jank"); }
 
   template <> template <>
   void jank::use_group::test<2>()
-  { jank::common::translate("interpret/if/use/pass_nested.jank"); }
+  { jank::common::interpret("interpret/if/use/pass_nested.jank"); }
 
   template <> template <>
   void jank::use_group::test<3>()
-  { jank::common::translate("interpret/if/use/pass_with_native_call_and_return.jank"); }
+  { jank::common::interpret("interpret/if/use/pass_with_native_call_and_return.jank"); }
 }
