@@ -39,23 +39,15 @@ syntax errors...?
   will the regex remain?
     need to map s-exprs to file positions
 
-members
-  Swizzling with tuples and structs?
-    (.x.y my_coord)
-
 variadic generics
   working with parameter packs
 
-lambdas
-  type deduction?
-    auto works, return type can be deduced
-      auto works, return type can be deduced
-  lambda => λ
-    (ƒ foo (f ƒ : ((integer) (integer))) ()
-      (print (f 42)))
-    (foo
-      (λ : ((i integer) (integer))
-        i))
+lambdas / function objects
+  (ƒ foo (func ƒ : ((integer) (integer))) ()
+    (print (func 42)))
+  (foo
+    (λ : ((i integer) (auto))
+      i))
 
 Maybes?
   pattern matching
