@@ -185,7 +185,7 @@ Constraints can be applied to various definitions, including functions and struc
 (ƒ number? : (real) () (auto)
   true)
 
-(ƒ square : (:T) (i T) (T) where (number? : T)
+(ƒ square : (:T) (i T) (auto) where (number? : T)
   (* i i))
 ```
 #### Structs
