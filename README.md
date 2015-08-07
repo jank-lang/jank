@@ -3,7 +3,7 @@
 jank is a functional programming language with a strong, static type system, scope-based resource management (RAII), a direct focus on generic, compile-time metaprogramming using both a powerful type-based template system, hygienic, code-as-data macros, and a native compiler.
 
 ## Appetizer
-```
+```lisp
 (; Update all entities. ;)
 (ƒ update (delta real entities list : entity) (auto)
   (map (partial update delta) entities))
@@ -33,21 +33,21 @@ There are a few primitive types which are part of the language.
 |`string`           |An array of UTF-8 characters               |
 
 ## Functions
-```
+```lisp
 (ƒ square (i integer) (auto)
   (* i i))
 ```
 Functions are defined via the `function` (or `ƒ`) special identifier and require a `name` identifier, an argument list (which may be empty), and a return type list (which may be empty). Return type lists may also be `(auto)`, which forces the compiler to deduce the type.
 
 ## Structs
-```
+```lisp
 (struct coord
   (x float)
   (y float))
 ```
 User-defined data types are supported, in the form of structs. Structs may contain any number of members, all of which are public (as in C). Structs may also be generic. Unlike C++, but like C, structs may not have member functions. Instead, functions should be designed in a generic manner and may be overloaded/specialized for certain types. See [generics](#generics).
 
-```
+```lisp
 (struct name
   (first string "John")
   (last string "Doe"))
@@ -56,7 +56,7 @@ Struct members may be given a default value. If a member doesn't have a default 
 
 ### Members
 Members of struct are accessed with a `.foo` syntax, where `.foo` is a function and `foo` is the field. Name. An example:
-```
+```lisp
 (struct number
   (data integer))
 
@@ -65,7 +65,7 @@ Members of struct are accessed with a `.foo` syntax, where `.foo` is a function 
 ```
 
 ## Bindings (constant values)
-```
+```lisp
 (bind name T
   value)
 ```
@@ -76,7 +76,7 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 
 ### Examples
 #### Function
-```
+```lisp
 (; Generic. ;)
 (ƒ show : (:T) (o T) ()
   (print o))
@@ -102,7 +102,7 @@ Definitions may be dependent on types. Such definitions may be functions or stru
   (print "coord: " o))
 ```
 #### Struct
-```
+```lisp
 (struct coord : (:T-x :T-y)
   (x T-x)
   (y T-y))
@@ -115,7 +115,7 @@ Generic functions and types can be variadic, allowing any number of parameters, 
 Only multi-line comments are supported. Anything within `(;` and `;)` is considered a comment. Nested comments are allowed. Each closing `;)` matches the closest opening `(;`, even overpowering previous closing `;)` along the way. Thus, `(; foo ;) ;)` is a single comment.
 
 ### Resource management
-```
+```lisp
 (ƒ construct (...) (auto)
   )
 
@@ -127,7 +127,7 @@ Scope-based resource management ties resource ownership to object lifetimes, sim
 When constructing an object, constructors are first considered, then aggregate initialization is considered. Alternatively, aggregate initialization can be used by directly specifying keywords for each initialized struct field. In aggregate initialization, any uninitialized fields are an error. If the struct specifies a default for a field, that field may be omitted in aggregate initialization.
 
 #### Example
-```
+```lisp
 (struct coord : (:T-x :T-y)
   (x T-x)
   (y T-y))
@@ -153,7 +153,7 @@ When constructing an object, constructors are first considered, then aggregate i
 All type aliases are strong. Since the focus is so strongly on generics, types are designed to be specialized and aliased to create unique, custom types. Aliases can also be generic.
 
 ### Examples
-```
+```lisp
 (; name is now a strong type alias of the builtin string type. ;)
 (alias name as string)
 
@@ -166,7 +166,7 @@ Constraints can be applied to various definitions, including functions and struc
 
 ### Examples
 #### Functions
-```
+```lisp
 (; We can deduce the return types for cleanliness. ;)
 (ƒ number? : (:T) () (auto)
   false)
@@ -179,14 +179,14 @@ Constraints can be applied to various definitions, including functions and struc
   (* i i))
 ```
 #### Structs
-```
+```lisp
 (struct coord : (:T) where (number? : T)
   (data T))
 ```
 
 ## Enums
 Enums function as variant sum types; each variant can have its own type or simply represent its own value (as in C). Enums can also be generic. Value enums work similar to C, whereas type enums must use matching to destructure.
-```
+```lisp
 (; Unique values, like a C enum. ;)
 (enum gender
   male
@@ -207,7 +207,7 @@ Enums function as variant sum types; each variant can have its own type or simpl
 ```
 
 ## Branching
-```
+```lisp
 (bind num 42)
 
 (if (even? num)
@@ -216,7 +216,7 @@ Enums function as variant sum types; each variant can have its own type or simpl
 ```
 Branching, using `if`, allows for specifying a single form for the true and false cases. All conditions must be of type `boolean` and the false case is optional. To have more than one line in a true or false case, introduce scope with a `do` statement.
 
-```
+```lisp
 (ƒ next-even (i integer) (auto)
   (if (even? i)
     (do
@@ -230,7 +230,7 @@ Branching, using `if`, allows for specifying a single form for the true and fals
 ### Expressions
 `if` and `do` statements can be used as expressions in function calls, allowing arbitrary code bodies to be used as parameters.
 
-```
+```lisp
 (print
   (if (even? 3)
     "even"
