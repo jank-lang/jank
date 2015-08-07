@@ -5,13 +5,21 @@ jank is a functional programming language with a strong, static type system, sco
 ## Appetizer
 ```
 (; Update all entities. ;)
-(ƒ update (entities list : entity) ()
-  (apply update entities))
+(ƒ update (delta real entities list : entity) (auto)
+  (map (partial update delta) entities))
 
 (; Damage nearby entities. ;)
-(ƒ cast-aoe (area : real entities list : entity) ()
-  (apply damage
+(ƒ cast-aoe (area real entities list : entity) (auto)
+  (map damage
     (filter entities (partial within-distance area))))
+
+(; Find a winner, based on score. ;)
+(ƒ find-winner (entities list : entity) (auto)
+  (reduce
+    (λ : ((a auto b auto) (auto))
+      (if (> (.score a) (.score b))
+        a b))
+    entities))
 ```
 
 ## Built-in types
