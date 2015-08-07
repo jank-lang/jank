@@ -2,24 +2,6 @@
 
 jank is a functional programming language with a strong, static type system, scope-based resource management (RAII), a direct focus on generic, compile-time metaprogramming using both a powerful type-based template system, hygienic, code-as-data macros, and a native compiler.
 
-## Progress
-|Compiler                     |Status                                     |
-|:----------------------------|:------------------------------------------|
-|non-generic functions        |Complete and tested.                       |
-|non-generic bindings         |Complete and tested.                       |
-|non-generic native functions |Complete and tested.                       |
-|if/do statements             |Complete and tested.                       |
-|if/do expressions            |Complete and tested.                       |
-
-|Interpreter                  |Status                                     |
-|:----------------------------|:------------------------------------------|
-|non-generic functions        |Complete and tested.                       |
-|non-generic bindings         |Complete and tested.                       |
-|non-generic native functions |Complete and tested.                       |
-|arithmetic for primitives    |Complete and tested.                       |
-|if/do statements             |Complete and tested.                       |
-|if/do expressions            |Complete and tested.                       |
-
 ## Built-in types
 There are a few primitive types which are part of the language.
 
@@ -268,6 +250,24 @@ There is currently a suite of tests outlining most functionality. The tests are 
 ```bash
 $ make jank_test
 ```
+
+## Progress
+|Compiler                     |Status                                     |
+|:----------------------------|:------------------------------------------|
+|non-generic functions        |Complete and tested.                       |
+|non-generic bindings         |Complete and tested.                       |
+|non-generic native functions |Complete and tested.                       |
+|if/do statements             |Complete and tested.                       |
+|if/do expressions            |Complete and tested.                       |
+
+|Interpreter                  |Status                                     |
+|:----------------------------|:------------------------------------------|
+|non-generic functions        |Complete and tested.                       |
+|non-generic bindings         |Complete and tested.                       |
+|non-generic native functions |Complete and tested.                       |
+|arithmetic for primitives    |Complete and tested.                       |
+|if/do statements             |Complete and tested.                       |
+|if/do expressions            |Complete and tested.                       |
 
 ## Editor support
 There are syntax files for Vim available in the `vim` directory of the repository. You can add these to your runtime path using something like:
