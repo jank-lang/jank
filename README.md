@@ -11,7 +11,7 @@ jank is a functional programming language with a strong, static type system, sco
 (; Damage nearby entities. ;)
 (ƒ cast-aoe (area real entities list : entity) (auto)
   (map damage
-    (filter entities (partial within-distance area))))
+    (filter (partial within-distance area) entities)))
 
 (; Find a winner, based on score. ;)
 (ƒ find-winner (entities list : entity) (auto)
