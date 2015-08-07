@@ -1,6 +1,8 @@
 # The jank programming language [![Build Status](https://travis-ci.org/jeaye/jank.svg?branch=master)](https://travis-ci.org/jeaye/jank)
 
-jank is a functional programming language with a strong, static type system, scope-based resource management (RAII), a direct focus on generic, compile-time metaprogramming using both a powerful type-based template system, hygienic, code-as-data macros, and a native compiler.
+jank is a functional programming language with a strong, static type system, scope-based resource management (RAII), a direct focus on generic, compile-time meta-programming using both a powerful type-based template system, hygienic, code-as-data macros, and a native compiler.
+
+## Appetiser
 
 ## Built-in types
 There are a few primitive types which are part of the language.
@@ -25,7 +27,7 @@ Functions are defined via the `function` (or `ƒ`) special identifier and requir
   (x float)
   (y float))
 ```
-User-defined datatypes are supported, in the form of structs. Structs may contain any number of members, all of which are public (as in C). Structs may also be generic. Unlike C++, but like C, structs may not have member functions. Instead, functions should be designed in a generic manner and may be overloaded/specialized for certain types. See [generics](#generics).
+User-defined data types are supported, in the form of structs. Structs may contain any number of members, all of which are public (as in C). Structs may also be generic. Unlike C++, but like C, structs may not have member functions. Instead, functions should be designed in a generic manner and may be overloaded/specialized for certain types. See [generics](#generics).
 
 ```
 (struct name
@@ -232,7 +234,7 @@ Branching, using `if`, allows for specifying a single form for the true and fals
 ```
 
 ## Strings
-For now, due to the simplicity of the parser, parens in string need to be escaped. This will change, but it's very low priority.
+For now, due to the simplicity of the parser, parentheses in strings need to be escaped. This will change, but it's very low priority.
 
 ## Native API
 Native types and functions can be exposed through the native API, which is in C++. Though currently only exposed in the compiler, there's planned support for loading dynamic libraries *at compile-time* which specify wrappers around native code. An example might be OpenGL, glfw, or other similar packages.
