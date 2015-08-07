@@ -111,16 +111,6 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 ### Variadic
 Generic functions and types can be variadic, allowing any number of parameters, both type and non-type. Parameter packs are expandable and iterable, as they're just a tuple.
 
-#### Examples
-##### Function
-```
-TODO
-```
-##### Struct
-```
-TODO
-```
-
 ## Comments
 Only multi-line comments are supported. Anything within `(;` and `;)` is considered a comment. Nested comments are allowed. Each closing `;)` matches the closest opening `(;`, even overpowering previous closing `;)` along the way. Thus, `(; foo ;) ;)` is a single comment.
 
