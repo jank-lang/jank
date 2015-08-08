@@ -16,7 +16,7 @@ jank is a functional programming language with a strong, static type system, sco
 (; Find a winner, based on score. ;)
 (ƒ find-winner (entities list : entity) (auto)
   (reduce
-    (λ : ((a auto b auto) (auto))
+    (λ (a auto b auto) (auto)
       (if (> (.score a) (.score b))
         a b))
     entities))

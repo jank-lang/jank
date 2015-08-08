@@ -46,7 +46,7 @@ lambdas / function objects
   (ƒ foo (func ƒ : ((integer) (integer))) ()
     (print (func 42)))
   (foo
-    (λ : ((i integer) (auto))
+    (λ (i integer) (auto)
       i))
 
 Maybes?
