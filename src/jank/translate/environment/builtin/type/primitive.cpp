@@ -1,4 +1,5 @@
-#include <jank/translate/environment/scope.hpp>
+#include <jank/translate/environment/builtin/type/primitive.hpp>
+#include <jank/translate/environment/builtin/type/detail/make_type.hpp>
 
 namespace jank
 {
@@ -10,22 +11,15 @@ namespace jank
       {
         namespace type
         {
-          namespace detail
-          {
-            static auto make_primitive
-            (std::string const &name)
-            { return std::make_pair(name, cell::type_definition{ { name } }); }
-          }
-
           scope& add_primitives
           (scope &s)
           {
-            s.type_definitions.insert(detail::make_primitive("auto"));
-            s.type_definitions.insert(detail::make_primitive("null"));
-            s.type_definitions.insert(detail::make_primitive("boolean"));
-            s.type_definitions.insert(detail::make_primitive("integer"));
-            s.type_definitions.insert(detail::make_primitive("real"));
-            s.type_definitions.insert(detail::make_primitive("string"));
+            s.type_definitions.insert(detail::make_type("auto"));
+            s.type_definitions.insert(detail::make_type("null"));
+            s.type_definitions.insert(detail::make_type("boolean"));
+            s.type_definitions.insert(detail::make_type("integer"));
+            s.type_definitions.insert(detail::make_type("real"));
+            s.type_definitions.insert(detail::make_type("string"));
             return s;
           }
 
