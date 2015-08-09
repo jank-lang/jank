@@ -1,5 +1,6 @@
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/environment/builtin/type/detail/make_type.hpp>
+#include <jank/translate/environment/builtin/type/detail/find_type.hpp>
 
 namespace jank
 {
@@ -23,25 +24,18 @@ namespace jank
             return s;
           }
 
-          namespace detail
-          {
-            static cell::detail::type_reference find_primitive
-            (scope &s, std::string const &name)
-            { return { s.find_type(name).value().first.data }; }
-          }
-
           cell::detail::type_reference automatic(scope &s)
-          { return detail::find_primitive(s, "auto"); }
+          { return detail::find_type(s, "auto"); }
           cell::detail::type_reference null(scope &s)
-          { return detail::find_primitive(s, "null"); }
+          { return detail::find_type(s, "null"); }
           cell::detail::type_reference boolean(scope &s)
-          { return detail::find_primitive(s, "boolean"); }
+          { return detail::find_type(s, "boolean"); }
           cell::detail::type_reference integer(scope &s)
-          { return detail::find_primitive(s, "integer"); }
+          { return detail::find_type(s, "integer"); }
           cell::detail::type_reference real(scope &s)
-          { return detail::find_primitive(s, "real"); }
+          { return detail::find_type(s, "real"); }
           cell::detail::type_reference string(scope &s)
-          { return detail::find_primitive(s, "string"); }
+          { return detail::find_type(s, "string"); }
         }
       }
     }
