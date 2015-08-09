@@ -31,6 +31,9 @@ namespace jank
         inline char constexpr const* to_string<type::native_function_call>()
         { return "native_function_call"; }
         template <>
+        inline char constexpr const* to_string<type::function_reference>()
+        { return "function_reference"; }
+        template <>
         inline char constexpr const* to_string<type::type_definition>()
         { return "type_definition"; }
         template <>
@@ -73,6 +76,9 @@ namespace jank
         inline char constexpr const* to_string<native_function_call>()
         { return to_string<type::native_function_call>(); }
         template <>
+        inline char constexpr const* to_string<function_reference>()
+        { return to_string<type::function_reference>(); }
+        template <>
         inline char constexpr const* to_string<type_definition>()
         { return to_string<type::type_definition>(); }
         template <>
@@ -111,6 +117,8 @@ namespace jank
               return to_string<type::function_call>();
             case type::native_function_call:
               return to_string<type::native_function_call>();
+            case type::function_reference:
+              return to_string<type::function_reference>();
             case type::type_definition:
               return to_string<type::type_definition>();
             case type::type_reference:
@@ -144,6 +152,8 @@ namespace jank
           { return type::function_call; }
           else if(str == to_string<native_function_call>())
           { return type::native_function_call; }
+          else if(str == to_string<function_reference>())
+          { return type::function_reference; }
           else if(str == to_string<type_definition>())
           { return type::type_definition; }
           else if(str == to_string<type_reference>())
@@ -186,6 +196,9 @@ namespace jank
           template <>
           struct to_type<type::native_function_call>
           { using type = native_function_call; };
+          template <>
+          struct to_type<type::function_reference>
+          { using type = function_reference; };
           template <>
           struct to_type<type::type_definition>
           { using type = type_definition; };
@@ -231,6 +244,9 @@ namespace jank
         template <>
         type constexpr to_enum<native_function_call>()
         { return type::native_function_call; }
+        template <>
+        type constexpr to_enum<function_reference>()
+        { return type::function_reference; }
         template <>
         type constexpr to_enum<type_definition>()
         { return type::type_definition; }

@@ -81,6 +81,15 @@ namespace jank
         return os << std::endl;
       }
 
+      static std::ostream& operator <<(std::ostream &os, function_reference const &c)
+      {
+        indenter const indent{ os, indent_level };
+        /* TODO: Generic information. */
+        os << "function reference "
+           << c.data.definition.name;
+        return os << std::endl;
+      }
+
       static std::ostream& operator <<(std::ostream &os, binding_definition const &c)
       {
         indenter const indent{ os, indent_level };
@@ -159,6 +168,9 @@ namespace jank
             break;
           case type::native_function_call:
             os << boost::get<native_function_call>(c);
+            break;
+          case type::function_reference:
+            os << boost::get<function_reference>(c);
             break;
           case type::binding_definition:
             os << boost::get<binding_definition>(c);
