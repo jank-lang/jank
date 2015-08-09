@@ -21,6 +21,7 @@ namespace jank
         template <typename C, typename Def>
         struct function_call
         {
+          /* TODO: Use a function_reference here. */
           Def definition;
           function::argument::value_list<C> arguments;
           std::shared_ptr<environment::scope> scope;
