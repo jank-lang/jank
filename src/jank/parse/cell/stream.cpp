@@ -23,7 +23,7 @@ namespace jank
       { return os << c.data; }
 
       static std::ostream& operator <<(std::ostream &os, string const &c)
-      { return os << c.data; }
+      { return os << "\"" << c.data << "\""; }
 
       static std::ostream& operator <<(std::ostream &os, ident const &c)
       { return os << "<" << c.data << "> "; }
