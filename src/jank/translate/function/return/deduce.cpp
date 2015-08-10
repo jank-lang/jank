@@ -117,6 +117,8 @@ namespace jank
             }
           }
 
+          /* TODO: Check if it's still auto and throw? */
+
           return body;
         }
       }
