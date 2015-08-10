@@ -85,6 +85,23 @@ namespace jank
                   };
                 }
 
+                auto const native_function(scope_->find_native_function(c.data));
+                if(native_function)
+                {
+                  auto const &overloads(native_function.value());
+                  if(overloads.size() != 1)
+                  {
+                    throw expect::error::type::overload
+                    { "ambiguous native function reference" };
+                  }
+
+                  return detail::value<C>
+                  {
+                    c.data,
+                    { cell::native_function_reference{ { overloads[0].first.data } } }
+                  };
+                }
+
                 throw expect::error::type::exception<>
                 { "unknown binding: " + c.data };
               }
