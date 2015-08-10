@@ -10,10 +10,11 @@ namespace jank
     {
       namespace detail
       {
-        template <typename C>
+        /* May be native or non-native. */
+        template <typename Def>
         struct function_reference
         {
-          function_definition<C> definition;
+          Def definition;
         };
       }
     }

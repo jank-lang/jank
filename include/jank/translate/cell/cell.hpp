@@ -14,6 +14,7 @@
 #include <jank/translate/cell/detail/function_definition.hpp>
 #include <jank/translate/cell/detail/native_function_definition.hpp>
 #include <jank/translate/cell/detail/function_reference.hpp>
+#include <jank/translate/cell/detail/native_function_reference.hpp>
 #include <jank/translate/cell/detail/function_call.hpp>
 #include <jank/translate/cell/detail/type_definition.hpp>
 #include <jank/translate/cell/detail/type_reference.hpp>
@@ -41,6 +42,7 @@ namespace jank
         boost::recursive_wrapper<wrapper<type::function_call>>,
         boost::recursive_wrapper<wrapper<type::native_function_call>>,
         boost::recursive_wrapper<wrapper<type::function_reference>>,
+        boost::recursive_wrapper<wrapper<type::native_function_reference>>,
         boost::recursive_wrapper<wrapper<type::type_definition>>,
         boost::recursive_wrapper<wrapper<type::type_reference>>,
         boost::recursive_wrapper<wrapper<type::binding_definition>>,
@@ -84,7 +86,13 @@ namespace jank
       template <>
       struct wrapper<type::function_reference>
       {
-        using type = detail::function_reference<cell>;
+        using type = detail::function_reference<detail::function_definition<cell>>;
+        type data;
+      };
+      template <>
+      struct wrapper<type::native_function_reference>
+      {
+        using type = detail::function_reference<detail::native_function_definition<cell>>;
         type data;
       };
       template <>
@@ -141,7 +149,8 @@ namespace jank
       using native_function_definition = wrapper<type::native_function_definition>;
       using function_call = wrapper<type::function_call>;
       using native_function_call = wrapper<type::native_function_call>;
-      using function_reference = wrapper<type::function_reference>; /* TODO: finish adding. */
+      using function_reference = wrapper<type::function_reference>;
+      using native_function_reference = wrapper<type::native_function_reference>;
       using type_definition = wrapper<type::type_definition>;
       using type_reference = wrapper<type::type_reference>;
       using binding_definition = wrapper<type::binding_definition>;
