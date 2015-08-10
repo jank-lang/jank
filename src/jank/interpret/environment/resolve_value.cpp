@@ -1,4 +1,5 @@
 #include <jank/translate/environment/scope.hpp>
+#include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
@@ -103,6 +104,17 @@ namespace jank
           next_scope->parent = scope;
 
           return interpret(next_scope, cell);
+        } break;
+
+        case translate::cell::type::function_reference:
+        {
+          /* TODO: Handle these properly. */
+          return parse::cell::null{};
+        } break;
+
+        case translate::cell::type::native_function_reference:
+        {
+          return parse::cell::null{};
         } break;
 
         default:
