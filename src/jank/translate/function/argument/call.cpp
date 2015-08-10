@@ -58,18 +58,35 @@ namespace jank
               { return call(c); }
               detail::value<C> operator ()(parse::cell::ident const &c) const
               {
-                auto const def(scope_->find_binding(c.data));
-                if(!def)
+                auto const binding(scope_->find_binding(c.data));
+                if(binding)
                 {
-                  throw expect::error::type::exception<>
-                  { "unknown binding: " + c.data };
+                  return detail::value<C>
+                  {
+                    c.data,
+                    { cell::binding_reference{ { binding.value().first.data } } }
+                  };
                 }
 
-                return detail::value<C>
+                auto const function(scope_->find_function(c.data));
+                if(function)
                 {
-                  c.data,
-                  { cell::binding_reference{ { def.value().first.data } } }
-                };
+                  auto const &overloads(function.value());
+                  if(overloads.size() != 1)
+                  {
+                    throw expect::error::type::overload
+                    { "ambiguous function reference" };
+                  }
+
+                  return detail::value<C>
+                  {
+                    c.data,
+                    { cell::function_reference{ { overloads[0].first.data } } }
+                  };
+                }
+
+                throw expect::error::type::exception<>
+                { "unknown binding: " + c.data };
               }
               detail::value<C> operator ()(parse::cell::list const &c) const
               {
