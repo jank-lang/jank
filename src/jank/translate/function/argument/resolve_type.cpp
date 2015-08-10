@@ -1,6 +1,7 @@
-#include <jank/translate/function/argument/resolve_type.hpp>
 #include <jank/parse/cell/trait.hpp>
 #include <jank/translate/cell/trait.hpp>
+#include <jank/translate/environment/builtin/type/function.hpp>
+#include <jank/translate/function/argument/resolve_type.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/translate/expect/error/type/exception.hpp>
 
@@ -57,6 +58,12 @@ namespace jank
             {
               auto const &body(expect::type<cell::type::function_body>(c));
               return { body.data.return_type.definition };
+            }
+            case cell::type::function_reference:
+            {
+              /* TODO: Actually read the type info and apply generics. */
+              //auto const &body(expect::type<cell::type::function_reference>(c));
+              return { environment::builtin::type::function(*scope).definition };
             }
             default:
               throw expect::error::type::exception<>

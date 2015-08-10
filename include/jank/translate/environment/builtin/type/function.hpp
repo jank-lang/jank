@@ -14,6 +14,8 @@ namespace jank
         namespace type
         {
           scope& add_function(scope &s);
+
+          cell::detail::type_reference function(scope &s);
         }
       }
     }
