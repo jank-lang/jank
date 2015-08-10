@@ -1,6 +1,12 @@
 refactoring
   expect state
 
+test
+  function referencing
+    ambiguous error
+  function binding
+  calling from binding
+
 start with cons and lambdas
   list
   map
