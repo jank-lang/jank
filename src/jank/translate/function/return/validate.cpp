@@ -94,6 +94,17 @@ namespace jank
               return body;
             }
 
+            /* Last chance: if it's auto, we'll add a null return and
+             * pass it on for deduction. */
+            auto const &automatic
+            (environment::builtin::type::automatic(*body.scope));
+            if(body.return_type == automatic)
+            {
+              body.cells.push_back
+              (function::ret::make_implicit(body));
+              return body;
+            }
+
             detail::fail();
           }
           else /* Found at least one return statement. */
