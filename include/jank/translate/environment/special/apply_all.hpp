@@ -4,7 +4,6 @@
 #include <stdexcept>
 #include <experimental/optional>
 
-#include <jank/translate/environment/special/function.hpp>
 #include <jank/translate/environment/special/binding.hpp>
 #include <jank/translate/environment/special/return_statement.hpp>
 #include <jank/translate/environment/special/apply_expression.hpp>
