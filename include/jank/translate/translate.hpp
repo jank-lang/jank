@@ -13,6 +13,7 @@
 #include <jank/translate/function/argument/call.hpp>
 #include <jank/translate/function/match_overload.hpp>
 #include <jank/translate/function/return/validate.hpp>
+#include <jank/translate/expect/type.hpp>
 #include <jank/translate/expect/error/syntax/exception.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
 #include <jank/translate/expect/error/lookup/exception.hpp>
@@ -60,10 +61,37 @@ namespace jank
 
           auto const &function_name
           (parse::expect::type<parse::cell::type::ident>(list.data[0]).data);
-          auto const native_function_opt
+          auto native_function_opt
           (scope->find_native_function(function_name));
-          auto const function_opt
+          auto function_opt
           (scope->find_function(function_name));
+          auto const function_binding
+          (scope->find_binding(function_name));
+
+          /* Allow the binding to override the functions. */
+          /* TODO: Refactor this out. */
+          if(function_binding)
+          {
+            auto const &def(function_binding.value().first);
+            if
+            (
+              auto func_opt = expect::optional_cast
+              <cell::type::function_reference>(def.data.cell)
+            )
+            {
+              function_opt =
+              { { { { func_opt.value().data.definition }, {} } } };
+            }
+            else if
+            (
+              auto native_func_opt = expect::optional_cast
+              <cell::type::native_function_reference>(def.data.cell)
+            )
+            {
+              native_function_opt =
+              { { { { native_func_opt.value().data.definition }, {} } } };
+            }
+          }
 
           /* Try to match native and non-native overloads. */
           auto matched
