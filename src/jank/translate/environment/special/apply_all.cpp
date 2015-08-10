@@ -30,11 +30,6 @@ namespace jank
           > specials
           {
             {
-              "ƒ",
-              [](auto const &input, auto const &body)
-              { return function(input, body.data.scope); }
-            },
-            {
               "bind",
               [](auto const &input, auto const &body)
               { return binding(input, body.data.scope); }

@@ -59,6 +59,12 @@ namespace jank
               auto const &body(expect::type<cell::type::function_body>(c));
               return { body.data.return_type.definition };
             }
+            case cell::type::function_definition:
+            {
+              /* TODO: Handle like function references. */
+              //auto const &body(expect::type<cell::type::function_definition>(c));
+              //return { body.data.return_type.definition };
+            }
             case cell::type::function_reference:
             {
               /* TODO: Actually read the type info and apply generics. */

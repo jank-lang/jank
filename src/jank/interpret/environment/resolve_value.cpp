@@ -106,6 +106,7 @@ namespace jank
           return interpret(next_scope, cell);
         } break;
 
+        case translate::cell::type::function_definition:
         case translate::cell::type::function_reference:
         {
           /* TODO: Handle these properly. */
