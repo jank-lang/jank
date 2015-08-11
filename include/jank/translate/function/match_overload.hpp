@@ -67,9 +67,8 @@ namespace jank
         }
       }
 
-      /* TODO: No point of a bool here if we throw. */
       template <typename Native, typename Non_Native, typename Callback>
-      bool match_overload
+      void match_overload
       (
         parse::cell::list const &list,
         std::shared_ptr<environment::scope> const &scope,
@@ -112,7 +111,6 @@ namespace jank
           throw expect::error::type::overload
           { ss.str() };
         }
-        return true;
       }
     }
   }

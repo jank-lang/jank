@@ -148,29 +148,19 @@ namespace jank
                 /* TODO: There is some code in translate.hpp which does
                  * very similar work; I'm not sure how they can be merged. */
                 detail::value<C> ret;
-                auto matched
+                function::match_overload
                 (
-                  function::match_overload
-                  (
-                    c, scope_, native_function_opt, function_opt,
-                    [&](auto const &match)
+                  c, scope_, native_function_opt, function_opt,
+                  [&](auto const &match)
+                  {
+                    ret = detail::value<C>
                     {
-                      ret = detail::value<C>
-                      {
-                        name,
-                        { match }
-                      };
-                    }
-                  )
+                      name,
+                      { match }
+                    };
+                  }
                 );
-                if(matched)
-                { return ret; }
-                else
-                {
-                  /* TODO: A proper error system. */
-                  throw expect::error::lookup::exception<>
-                  { "unknown function: " + name };
-                }
+                return ret;
               }
 
             private:

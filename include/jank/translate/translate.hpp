@@ -98,25 +98,13 @@ namespace jank
           }
 
           /* Try to match native and non-native overloads. */
-          auto matched
+          function::match_overload
           (
-            function::match_overload
-            (
-              list, scope, native_function_opt, function_opt,
-              [&](auto const &match)
-              { translated.data.cells.push_back(match); }
-            )
+            list, scope, native_function_opt, function_opt,
+            [&](auto const &match)
+            { translated.data.cells.push_back(match); }
           );
-          if(!matched)
-          {
-            throw expect::error::lookup::exception<>
-            {
-              "invalid function: " +
-              parse::expect::type<parse::cell::type::ident>(list.data[0]).data
-            };
-          }
-          else
-          { continue; }
+          continue;
         }
 
         /* Treat plain values as an implicit return. */
