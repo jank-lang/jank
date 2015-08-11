@@ -94,7 +94,7 @@ namespace jank
               return body;
             }
 
-            /* TODO: Docs */
+            /* Allow function definition expressions; this covers lambdas. */
             auto const func_opt
             (
               expect::optional_pointer_cast<cell::type::function_definition>
