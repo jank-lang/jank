@@ -94,14 +94,20 @@ namespace jank
               return body;
             }
 
-            /* Last chance: if it's auto, we'll add a null return and
-             * pass it on for deduction. */
-            auto const &automatic
-            (environment::builtin::type::automatic(*body.scope));
-            if(body.return_type == automatic)
+            /* TODO: Docs */
+            auto const func_opt
+            (
+              expect::optional_pointer_cast<cell::type::function_definition>
+              (body.cells.back())
+            );
+            if(func_opt)
             {
+              auto const type(argument::resolve_type(*func_opt, body.scope));
               body.cells.push_back
-              (function::ret::make_implicit(body));
+              (
+                cell::return_statement
+                { { *func_opt, { type.data } } }
+              );
               return body;
             }
 
