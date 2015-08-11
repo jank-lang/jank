@@ -72,6 +72,7 @@ namespace jank
           /* TODO: Refactor this out. */
           if(function_binding)
           {
+            std::cout << "function binding" << std::endl;
             auto const &def(function_binding.value().first);
             if
             (
@@ -91,6 +92,9 @@ namespace jank
               native_function_opt =
               { { { { native_func_opt.value().data.definition }, {} } } };
             }
+
+            /* A binding has that name, but it's not a function.
+             * Fall through and see if a function has the same name. */
           }
 
           /* Try to match native and non-native overloads. */
