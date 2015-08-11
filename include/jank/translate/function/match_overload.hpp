@@ -28,16 +28,11 @@ namespace jank
         std::experimental::optional<typename detail::call<Def>::type>
         match_overload
         (
-          parse::cell::list const &list,
+          function::argument::value_list<cell::cell> arguments,
           std::shared_ptr<environment::scope> const &scope,
           std::vector<environment::scope::result<Def>> const &functions
         )
         {
-          /* TODO: Argument parsing is happening twice: once for non-native, once
-           * for native. We should just do it once. */
-          auto const arguments
-          (function::argument::call::parse<cell::cell>(list, scope));
-
           for(auto const &overload_cell : functions)
           {
             auto const &overload(overload_cell.first.data);
@@ -77,6 +72,9 @@ namespace jank
         Callback const &callback
       )
       {
+        auto const arguments
+        (function::argument::call::parse<cell::cell>(list, scope));
+
         auto const match
         (
           [&](auto const &opt)
@@ -84,7 +82,8 @@ namespace jank
             if(!opt)
             { return false; }
 
-            auto const matched_opt(detail::match_overload(list, scope, opt.value()));
+            auto const matched_opt
+            (detail::match_overload(arguments, scope, opt.value()));
             if(matched_opt)
             { callback(matched_opt.value()); }
             return static_cast<bool>(matched_opt);
@@ -94,9 +93,6 @@ namespace jank
         if(!match(non_native) && !match(native))
         {
           /* No matching overload found. */
-          auto const arguments
-          (function::argument::call::parse<cell::cell>(list, scope));
-
           std::stringstream ss;
           ss << "no matching function: "
              << parse::expect::type<parse::cell::type::ident>(list.data[0]).data
