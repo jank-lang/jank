@@ -102,7 +102,9 @@ namespace jank
       static std::ostream& operator <<(std::ostream &os, binding_definition const &c)
       {
         indenter const indent{ os, indent_level };
-        return os << "binding " << c.data.name << std::endl;
+        return os << "binding " << c.data.name << " : "
+                  << c.data.type.definition.name
+                  << std::endl;
       }
 
       static std::ostream& operator <<(std::ostream &os, binding_reference const &c)
