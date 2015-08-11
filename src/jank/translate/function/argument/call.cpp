@@ -145,8 +145,6 @@ namespace jank
                 auto const function_opt(scope_->find_function(name));
 
                 /* TODO: This mutation over a closure is shitty. */
-                /* TODO: There is some code in translate.hpp which does
-                 * very similar work; I'm not sure how they can be merged. */
                 detail::value<C> ret;
                 function::match_overload
                 (

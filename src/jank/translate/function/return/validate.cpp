@@ -106,7 +106,10 @@ namespace jank
               body.cells.push_back
               (
                 cell::return_statement
-                { { *func_opt, { type.data } } }
+                { {
+                  cell::function_reference
+                  { { func_opt->data } }, { type.data }
+                } }
               );
               return body;
             }

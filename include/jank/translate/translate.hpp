@@ -10,6 +10,7 @@
 #include <jank/translate/cell/trait.hpp>
 #include <jank/translate/environment/scope.hpp>
 #include <jank/translate/environment/special/apply_all.hpp>
+#include <jank/translate/environment/builtin/type/function.hpp>
 #include <jank/translate/function/argument/call.hpp>
 #include <jank/translate/function/match_overload.hpp>
 #include <jank/translate/function/return/validate.hpp>
@@ -70,27 +71,16 @@ namespace jank
 
           /* Allow the binding to override the functions. */
           /* TODO: Refactor this out. */
+          /* TODO: Implement a custom match_binding instead of falling through
+           * to match_overload. */
           if(function_binding)
           {
-            std::cout << "function binding" << std::endl;
             auto const &def(function_binding.value().first);
-            if
-            (
-              auto func_opt = expect::optional_cast
-              <cell::type::function_reference>(def.data.cell)
-            )
+            auto const type(def.data.type);
+            if(type == environment::builtin::type::function(*scope))
             {
-              function_opt =
-              { { { { func_opt.value().data.definition }, {} } } };
-            }
-            else if
-            (
-              auto native_func_opt = expect::optional_cast
-              <cell::type::native_function_reference>(def.data.cell)
-            )
-            {
-              native_function_opt =
-              { { { { native_func_opt.value().data.definition }, {} } } };
+              /* TODO: Function references need to be lazy; I can't know to what
+               * function an arg is bound when translating its usage. */
             }
 
             /* A binding has that name, but it's not a function.
