@@ -28,6 +28,9 @@ namespace jank
         inline char constexpr const* to_string<type::function_call>()
         { return "function_call"; }
         template <>
+        inline char constexpr const* to_string<type::indirect_function_call>()
+        { return "indirect_function_call"; }
+        template <>
         inline char constexpr const* to_string<type::native_function_call>()
         { return "native_function_call"; }
         template <>
@@ -76,6 +79,9 @@ namespace jank
         inline char constexpr const* to_string<function_call>()
         { return to_string<type::function_call>(); }
         template <>
+        inline char constexpr const* to_string<indirect_function_call>()
+        { return to_string<type::indirect_function_call>(); }
+        template <>
         inline char constexpr const* to_string<native_function_call>()
         { return to_string<type::native_function_call>(); }
         template <>
@@ -121,6 +127,8 @@ namespace jank
               return to_string<type::native_function_definition>();
             case type::function_call:
               return to_string<type::function_call>();
+            case type::indirect_function_call:
+              return to_string<type::indirect_function_call>();
             case type::native_function_call:
               return to_string<type::native_function_call>();
             case type::function_reference:
@@ -158,6 +166,8 @@ namespace jank
           { return type::native_function_definition; }
           else if(str == to_string<function_call>())
           { return type::function_call; }
+          else if(str == to_string<indirect_function_call>())
+          { return type::indirect_function_call; }
           else if(str == to_string<native_function_call>())
           { return type::native_function_call; }
           else if(str == to_string<function_reference>())
@@ -203,6 +213,9 @@ namespace jank
           template <>
           struct to_type<type::function_call>
           { using type = function_call; };
+          template <>
+          struct to_type<type::indirect_function_call>
+          { using type = indirect_function_call; };
           template <>
           struct to_type<type::native_function_call>
           { using type = native_function_call; };
@@ -254,6 +267,9 @@ namespace jank
         template <>
         type constexpr to_enum<function_call>()
         { return type::function_call; }
+        template <>
+        type constexpr to_enum<indirect_function_call>()
+        { return type::indirect_function_call; }
         template <>
         type constexpr to_enum<native_function_call>()
         { return type::native_function_call; }

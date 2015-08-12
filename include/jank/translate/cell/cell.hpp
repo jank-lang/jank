@@ -16,6 +16,7 @@
 #include <jank/translate/cell/detail/function_reference.hpp>
 #include <jank/translate/cell/detail/native_function_reference.hpp>
 #include <jank/translate/cell/detail/function_call.hpp>
+#include <jank/translate/cell/detail/indirect_function_call.hpp>
 #include <jank/translate/cell/detail/type_definition.hpp>
 #include <jank/translate/cell/detail/type_reference.hpp>
 #include <jank/translate/cell/detail/binding_definition.hpp>
@@ -40,6 +41,7 @@ namespace jank
         boost::recursive_wrapper<wrapper<type::function_definition>>,
         boost::recursive_wrapper<wrapper<type::native_function_definition>>,
         boost::recursive_wrapper<wrapper<type::function_call>>,
+        boost::recursive_wrapper<wrapper<type::indirect_function_call>>,
         boost::recursive_wrapper<wrapper<type::native_function_call>>,
         boost::recursive_wrapper<wrapper<type::function_reference>>,
         boost::recursive_wrapper<wrapper<type::native_function_reference>>,
@@ -75,6 +77,12 @@ namespace jank
       struct wrapper<type::function_call>
       {
         using type = detail::function_call<cell, detail::function_definition<cell>>;
+        type data;
+      };
+      template <>
+      struct wrapper<type::indirect_function_call>
+      {
+        using type = detail::indirect_function_call<cell>;
         type data;
       };
       template <>
@@ -148,6 +156,7 @@ namespace jank
       using function_definition = wrapper<type::function_definition>;
       using native_function_definition = wrapper<type::native_function_definition>;
       using function_call = wrapper<type::function_call>;
+      using indirect_function_call = wrapper<type::indirect_function_call>;
       using native_function_call = wrapper<type::native_function_call>;
       using function_reference = wrapper<type::function_reference>;
       using native_function_reference = wrapper<type::native_function_reference>;

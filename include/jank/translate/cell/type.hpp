@@ -15,6 +15,7 @@ namespace jank
         function_definition,
         native_function_definition,
         function_call,
+        indirect_function_call,
         native_function_call,
         function_reference,
         native_function_reference,

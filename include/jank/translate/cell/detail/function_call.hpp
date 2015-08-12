@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <vector>
 
 #include <jank/translate/cell/detail/function_definition.hpp>
 #include <jank/translate/function/argument/call.hpp>

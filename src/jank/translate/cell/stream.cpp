@@ -67,6 +67,20 @@ namespace jank
         return os << std::endl;
       }
 
+      static std::ostream& operator <<(std::ostream &os, indirect_function_call const &c)
+      {
+        indenter const indent{ os, indent_level };
+        os << "indirect call "
+           << c.data.binding.name << " : ";
+        for(auto const &a : c.data.arguments)
+        {
+          os << "( " << a.name << " "
+             << trait::to_string(trait::to_enum(a.cell))
+             << " ) ";
+        }
+        return os << std::endl;
+      }
+
       static std::ostream& operator <<(std::ostream &os, native_function_call const &c)
       {
         indenter const indent{ os, indent_level };
@@ -176,6 +190,9 @@ namespace jank
             break;
           case type::function_call:
             os << boost::get<function_call>(c);
+            break;
+          case type::indirect_function_call:
+            os << boost::get<indirect_function_call>(c);
             break;
           case type::native_function_call:
             os << boost::get<native_function_call>(c);
