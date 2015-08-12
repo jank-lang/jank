@@ -71,16 +71,18 @@ namespace jank
 
           /* Allow the binding to override the functions. */
           /* TODO: Refactor this out. */
-          /* TODO: Implement a custom match_binding instead of falling through
-           * to match_overload. */
           if(function_binding)
           {
             auto const &def(function_binding.value().first);
             auto const type(def.data.type);
             if(type == environment::builtin::type::function(*scope))
             {
-              /* TODO: Function references need to be lazy; I can't know to what
-               * function an arg is bound when translating its usage. */
+              /* TODO: Perform type checking based on function type and parameter
+               * types; see how code with match_overload can be shared. */
+
+              /* TODO: Make an indirect_function_call which just uses a
+               * binding_definition to reference the binding containing the
+               * function reference to be evaluated at interpret time. */
             }
 
             /* A binding has that name, but it's not a function.
