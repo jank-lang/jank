@@ -62,10 +62,6 @@ namespace jank
 
           auto const &function_name
           (parse::expect::type<parse::cell::type::ident>(list.data[0]).data);
-          auto native_function_opt
-          (scope->find_native_function(function_name));
-          auto function_opt
-          (scope->find_function(function_name));
           auto const function_binding
           (scope->find_binding(function_name));
 
@@ -83,11 +79,22 @@ namespace jank
               /* TODO: Make an indirect_function_call which just uses a
                * binding_definition to reference the binding containing the
                * function reference to be evaluated at interpret time. */
+              translated.data.cells.push_back
+              (
+                cell::indirect_function_call
+                { { def.data, {} } } /* TODO: Parse args. */
+              );
+              continue;
             }
 
             /* A binding has that name, but it's not a function.
              * Fall through and see if a function has the same name. */
           }
+
+          auto native_function_opt
+          (scope->find_native_function(function_name));
+          auto function_opt
+          (scope->find_function(function_name));
 
           /* Try to match native and non-native overloads. */
           function::match_overload
@@ -105,12 +112,7 @@ namespace jank
           environment::special::return_statement
           (
             parse::cell::list
-            {
-              {
-                parse::cell::ident{ "return" },
-                c
-              }
-            },
+            { { parse::cell::ident{ "return" }, c } },
             translated
           )
         );
