@@ -6,6 +6,7 @@
 
 namespace jank
 {
+  /* TODO: Use the existing traits for the names, not string literals. */
   using indenter = detail::stream::indenter;
   namespace translate
   {
