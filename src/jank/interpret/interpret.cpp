@@ -4,6 +4,7 @@
 #include <jank/interpret/environment/resolve_value.hpp>
 #include <jank/interpret/detail/function_call.hpp>
 #include <jank/interpret/detail/native_function_call.hpp>
+#include <jank/interpret/detail/indirect_function_call.hpp>
 #include <jank/interpret/detail/binding_definition.hpp>
 #include <jank/interpret/detail/if_statement.hpp>
 #include <jank/interpret/detail/return_statement.hpp>
@@ -42,6 +43,15 @@ namespace jank
               <translate::cell::type::native_function_call>(c)
             );
             auto const &ret(detail::native_function_call(scope, cell));
+            if(consume == consume_style::greedy)
+            { return ret; }
+          } break;
+
+          case translate::cell::type::indirect_function_call:
+          {
+            auto const &cell
+            (translate::expect::type<translate::cell::type::indirect_function_call>(c));
+            auto const &ret(detail::indirect_function_call(scope, cell));
             if(consume == consume_style::greedy)
             { return ret; }
           } break;

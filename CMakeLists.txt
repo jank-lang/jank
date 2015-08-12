@@ -91,6 +91,7 @@ add_library(
   src/jank/interpret/environment/resolve_value.cpp
   src/jank/interpret/detail/function_call.cpp
   src/jank/interpret/detail/native_function_call.cpp
+  src/jank/interpret/detail/indirect_function_call.cpp
   src/jank/interpret/detail/binding_definition.cpp
   src/jank/interpret/detail/if_statement.cpp
   src/jank/interpret/detail/return_statement.cpp
