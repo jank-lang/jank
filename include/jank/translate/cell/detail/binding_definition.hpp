@@ -10,6 +10,9 @@ namespace jank
     {
       namespace detail
       {
+        /* Used both for explicit binding definitions and parameter definitions.
+         * In the former case, the cell will contain the actual value supplied.
+         * In the latter case, the cell isn't used; it's not known until run time. */
         template <typename C>
         struct binding_definition
         {
