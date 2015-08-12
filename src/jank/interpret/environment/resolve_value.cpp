@@ -107,14 +107,28 @@ namespace jank
         } break;
 
         case translate::cell::type::function_definition:
+        {
+          /* TODO: Handle properly. */
+          std::cout << "resolving function definition" << std::endl;
+          return parse::cell::null{};
+        } break;
+
         case translate::cell::type::function_reference:
         {
-          /* TODO: Handle these properly. */
+          /* TODO: Handle properly. */
+          auto const &cell
+          (
+            translate::expect::type
+            <translate::cell::type::function_reference>(c)
+          );
+          /* TODO: Need to use interpret::cell which supports functions. */
+          std::cout << "resolving function reference" << std::endl;
           return parse::cell::null{};
         } break;
 
         case translate::cell::type::native_function_reference:
         {
+          /* TODO: Handle properly. */
           return parse::cell::null{};
         } break;
 
