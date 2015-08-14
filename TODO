@@ -6,6 +6,8 @@ test
     ambiguous error
   function binding
   calling from binding
+  calling from indirect binding
+    native and non-native
 
 start with cons and lambdas
   list
