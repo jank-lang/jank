@@ -12,6 +12,7 @@ test
 start with cons and lambdas
   list
   map
+  filter
   reduce
 
 custom types are dynamically allocated by default
