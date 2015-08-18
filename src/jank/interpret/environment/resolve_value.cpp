@@ -116,11 +116,11 @@ namespace jank
         case translate::cell::type::function_reference:
         {
           /* TODO: Handle properly. */
-          auto const &cell
-          (
-            translate::expect::type
-            <translate::cell::type::function_reference>(c)
-          );
+          //auto const &cell
+          //(
+          //  translate::expect::type
+          //  <translate::cell::type::function_reference>(c)
+          //);
           /* TODO: Need to use interpret::cell which supports functions. */
           std::cout << "resolving function reference" << std::endl;
           return parse::cell::null{};
