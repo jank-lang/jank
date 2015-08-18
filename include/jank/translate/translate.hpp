@@ -74,11 +74,7 @@ namespace jank
             if(type == environment::builtin::type::function(*scope))
             {
               /* TODO: Perform type checking based on function type and parameter
-               * types; see how code with match_overload can be shared. */
-
-              /* TODO: Make an indirect_function_call which just uses a
-               * binding_definition to reference the binding containing the
-               * function reference to be evaluated at interpret time. */
+               * types; make a match_indirect function which takes the type and the args. */
               translated.data.cells.push_back
               (
                 cell::indirect_function_call
