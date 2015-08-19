@@ -13,6 +13,7 @@
 #include <jank/translate/environment/builtin/type/function.hpp>
 #include <jank/translate/function/argument/call.hpp>
 #include <jank/translate/function/match_overload.hpp>
+#include <jank/translate/function/match_indirect.hpp>
 #include <jank/translate/function/return/validate.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/translate/expect/error/syntax/exception.hpp>
@@ -66,19 +67,17 @@ namespace jank
           (scope->find_binding(function_name));
 
           /* Allow the binding to override the functions. */
-          /* TODO: Refactor this out. */
           if(function_binding)
           {
             auto const &def(function_binding.value().first);
             auto const type(def.data.type);
             if(type == environment::builtin::type::function(*scope))
             {
-              /* TODO: Perform type checking based on function type and parameter
-               * types; make a match_indirect function which takes the type and the args. */
-              translated.data.cells.push_back
+              function::match_indirect
               (
-                cell::indirect_function_call
-                { { def.data, {} } } /* TODO: Parse args. */
+                type.definition, list, scope,
+                [&](auto const &call)
+                { translated.data.cells.push_back(call); }
               );
               continue;
             }
