@@ -1,3 +1,5 @@
+#include <jtl/iterator/range.hpp>
+
 #include <jank/translate/translate.hpp>
 #include <jank/translate/environment/special/do_statement.hpp>
 #include <jank/translate/environment/scope.hpp>

@@ -9,8 +9,6 @@
 
 #include <boost/variant.hpp>
 
-#include <jtl/iterator/range.hpp>
-
 #include <jank/parse/cell/type.hpp>
 
 namespace jank

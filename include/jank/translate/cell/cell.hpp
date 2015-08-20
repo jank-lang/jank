@@ -7,8 +7,6 @@
 
 #include <boost/variant.hpp>
 
-#include <jtl/iterator/range.hpp>
-
 #include <jank/translate/cell/type.hpp>
 #include <jank/translate/cell/detail/function_body.hpp>
 #include <jank/translate/cell/detail/function_definition.hpp>

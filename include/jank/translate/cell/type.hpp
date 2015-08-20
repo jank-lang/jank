@@ -1,8 +1,5 @@
 #pragma once
 
-#include <string>
-#include <stdexcept>
-
 namespace jank
 {
   namespace translate

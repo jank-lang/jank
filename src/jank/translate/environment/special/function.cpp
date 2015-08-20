@@ -1,6 +1,8 @@
 #include <stdexcept>
 #include <memory>
 
+#include <jtl/iterator/range.hpp>
+
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/translate.hpp>
 #include <jank/translate/function/argument/definition.hpp>
