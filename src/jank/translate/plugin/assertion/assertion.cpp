@@ -22,7 +22,7 @@ namespace jank
               auto const val
               (
                 parse::expect::type<parse::cell::type::boolean>
-                (interpret::resolve_value(scope, args[0].cell)).data
+                (interpret::environment::resolve_value(scope, args[0].cell)).data
               );
               if(!val)
               { throw expect::error::assertion::exception<>{}; }
@@ -39,7 +39,7 @@ namespace jank
               auto const val
               (
                 parse::expect::type<parse::cell::type::boolean>
-                (interpret::resolve_value(scope, args[0].cell)).data
+                (interpret::environment::resolve_value(scope, args[0].cell)).data
               );
               if(val)
               { throw expect::error::assertion::exception<>{}; }

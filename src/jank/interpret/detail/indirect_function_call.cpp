@@ -21,7 +21,7 @@ namespace jank
         for(auto const &arg : cell.data.arguments)
         {
           auto const &name(*arg_name_it++);
-          auto const var(resolve_value(next_scope, arg.cell));
+          auto const var(environment::resolve_value(next_scope, arg.cell));
           next_scope->bindings[name.name] = var;
         }
 

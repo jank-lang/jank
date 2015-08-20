@@ -1,7 +1,6 @@
 #include <jank/parse/expect/type.hpp>
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/detail/do_statement.hpp>
-#include <jank/interpret/environment/resolve_value.hpp>
 
 namespace jank
 {

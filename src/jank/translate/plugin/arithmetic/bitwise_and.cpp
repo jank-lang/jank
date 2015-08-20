@@ -21,10 +21,10 @@ namespace jank
               auto ret
               (
                 parse::expect::type<parse::cell::type::integer>
-                (interpret::resolve_value(scope, args[0].cell)).data
+                (interpret::environment::resolve_value(scope, args[0].cell)).data
               );
               ret &= parse::expect::type<parse::cell::type::integer>
-              (interpret::resolve_value(scope, args[1].cell)).data;
+              (interpret::environment::resolve_value(scope, args[1].cell)).data;
               return environment::builtin::value::integer(ret);
             }
           );

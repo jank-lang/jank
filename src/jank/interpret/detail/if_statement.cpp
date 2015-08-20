@@ -16,7 +16,7 @@ namespace jank
       )
       {
         auto const condition
-        (resolve_value(scope, cell.data.condition));
+        (environment::resolve_value(scope, cell.data.condition));
         if(parse::expect::type<parse::cell::type::boolean>(condition).data)
         { return interpret(scope, { cell.data.true_body }); }
         else

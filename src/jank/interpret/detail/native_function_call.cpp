@@ -14,7 +14,7 @@ namespace jank
         translate::cell::native_function_call const &cell
       )
       {
-        return resolve_value
+        return environment::resolve_value
         (scope, cell.data.definition.interpret(scope, cell.data.arguments));
       }
     }

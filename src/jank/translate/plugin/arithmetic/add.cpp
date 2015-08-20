@@ -22,7 +22,7 @@ namespace jank
               for(auto const &arg : args)
               {
                 ret += parse::expect::type<parse::cell::type::integer>
-                (interpret::resolve_value(scope, arg.cell)).data;
+                (interpret::environment::resolve_value(scope, arg.cell)).data;
               }
               return environment::builtin::value::integer(ret);
             }
@@ -36,7 +36,7 @@ namespace jank
               for(auto const &arg : args)
               {
                 ret += parse::expect::type<parse::cell::type::real>
-                (interpret::resolve_value(scope, arg.cell)).data;
+                (interpret::environment::resolve_value(scope, arg.cell)).data;
               }
               return environment::builtin::value::real(ret);
             }
@@ -50,7 +50,7 @@ namespace jank
               for(auto const &arg : args)
               {
                 ret += parse::expect::type<parse::cell::type::string>
-                (interpret::resolve_value(scope, arg.cell)).data;
+                (interpret::environment::resolve_value(scope, arg.cell)).data;
               }
               return environment::builtin::value::string(ret);
             }

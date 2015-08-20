@@ -1,7 +1,6 @@
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/interpret/interpret.hpp>
-#include <jank/interpret/environment/resolve_value.hpp>
 #include <jank/interpret/detail/function_call.hpp>
 #include <jank/interpret/detail/native_function_call.hpp>
 #include <jank/interpret/detail/indirect_function_call.hpp>

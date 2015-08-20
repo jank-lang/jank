@@ -8,10 +8,13 @@ namespace jank
 {
   namespace interpret
   {
-    parse::cell::cell resolve_value
-    (
-      std::shared_ptr<environment::scope> const &scope,
-      translate::cell::cell const &c
-    );
+    namespace environment
+    {
+      parse::cell::cell resolve_value
+      (
+        std::shared_ptr<environment::scope> const &scope,
+        translate::cell::cell const &c
+      );
+    }
   }
 }

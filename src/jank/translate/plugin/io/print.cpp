@@ -31,7 +31,7 @@ namespace jank
               [](auto const &scope, auto const &args) -> cell::cell
               {
                 for(auto const &arg : args)
-                { std::cout << interpret::resolve_value(scope, arg.cell); }
+                { std::cout << interpret::environment::resolve_value(scope, arg.cell); }
                 std::cout << std::endl;
                 return environment::builtin::value::null();
               },

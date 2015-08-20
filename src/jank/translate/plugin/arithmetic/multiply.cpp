@@ -21,10 +21,10 @@ namespace jank
               auto ret
               (
                 parse::expect::type<parse::cell::type::integer>
-                (interpret::resolve_value(scope, args[0].cell)).data
+                (interpret::environment::resolve_value(scope, args[0].cell)).data
               );
               ret *= parse::expect::type<parse::cell::type::integer>
-              (interpret::resolve_value(scope, args[1].cell)).data;
+              (interpret::environment::resolve_value(scope, args[1].cell)).data;
               return environment::builtin::value::integer(ret);
             }
           );
@@ -36,10 +36,10 @@ namespace jank
               auto ret
               (
                 parse::expect::type<parse::cell::type::real>
-                (interpret::resolve_value(scope, args[0].cell)).data
+                (interpret::environment::resolve_value(scope, args[0].cell)).data
               );
               ret *= parse::expect::type<parse::cell::type::real>
-              (interpret::resolve_value(scope, args[1].cell)).data;
+              (interpret::environment::resolve_value(scope, args[1].cell)).data;
               return environment::builtin::value::real(ret);
             }
           );
@@ -54,12 +54,12 @@ namespace jank
               auto const data
               (
                 parse::expect::type<parse::cell::type::string>
-                (interpret::resolve_value(scope, args[0].cell)).data
+                (interpret::environment::resolve_value(scope, args[0].cell)).data
               );
               auto const count
               (
                 parse::expect::type<parse::cell::type::integer>
-                (interpret::resolve_value(scope, args[1].cell)).data
+                (interpret::environment::resolve_value(scope, args[1].cell)).data
               );
 
               /* TODO: Exception type for this sort of thing? */

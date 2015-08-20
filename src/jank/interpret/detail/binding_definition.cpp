@@ -14,7 +14,7 @@ namespace jank
         translate::cell::binding_definition const &cell
       )
       {
-        return scope->bindings[cell.data.name] = resolve_value
+        return scope->bindings[cell.data.name] = environment::resolve_value
         (scope, cell.data.cell);
       }
     }

@@ -14,7 +14,7 @@ namespace jank
         std::shared_ptr<environment::scope> const &scope,
         translate::cell::return_statement const &cell
       )
-      { return resolve_value(scope, cell.data.cell); }
+      { return environment::resolve_value(scope, cell.data.cell); }
     }
   }
 }

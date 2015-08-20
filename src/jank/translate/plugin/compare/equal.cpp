@@ -30,9 +30,9 @@ namespace jank
               return environment::builtin::value::boolean
               (
                 parse::expect::type<parse::cell::type::boolean>
-                (interpret::resolve_value(scope, args[0].cell)).data ==
+                (interpret::environment::resolve_value(scope, args[0].cell)).data ==
                 parse::expect::type<parse::cell::type::boolean>
-                (interpret::resolve_value(scope, args[1].cell)).data
+                (interpret::environment::resolve_value(scope, args[1].cell)).data
               );
             }
           );
@@ -44,9 +44,9 @@ namespace jank
               return environment::builtin::value::boolean
               (
                 parse::expect::type<parse::cell::type::integer>
-                (interpret::resolve_value(scope, args[0].cell)).data ==
+                (interpret::environment::resolve_value(scope, args[0].cell)).data ==
                 parse::expect::type<parse::cell::type::integer>
-                (interpret::resolve_value(scope, args[1].cell)).data
+                (interpret::environment::resolve_value(scope, args[1].cell)).data
               );
             }
           );
@@ -59,9 +59,9 @@ namespace jank
               return environment::builtin::value::boolean
               (
                 parse::expect::type<parse::cell::type::real>
-                (interpret::resolve_value(scope, args[0].cell)).data ==
+                (interpret::environment::resolve_value(scope, args[0].cell)).data ==
                 parse::expect::type<parse::cell::type::real>
-                (interpret::resolve_value(scope, args[1].cell)).data
+                (interpret::environment::resolve_value(scope, args[1].cell)).data
               );
             }
           );
@@ -73,9 +73,9 @@ namespace jank
               return environment::builtin::value::boolean
               (
                 parse::expect::type<parse::cell::type::string>
-                (interpret::resolve_value(scope, args[0].cell)).data ==
+                (interpret::environment::resolve_value(scope, args[0].cell)).data ==
                 parse::expect::type<parse::cell::type::string>
-                (interpret::resolve_value(scope, args[1].cell)).data
+                (interpret::environment::resolve_value(scope, args[1].cell)).data
               );
             }
           );
