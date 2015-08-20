@@ -124,6 +124,8 @@ namespace jank
             //);
             /* TODO: Need to use interpret::cell which supports functions. */
             std::cout << "resolving function reference" << std::endl;
+
+            /* TODO: Loop up the function by name and type. */
             return parse::cell::null{};
           } break;
 
