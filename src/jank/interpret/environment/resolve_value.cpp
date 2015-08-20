@@ -42,15 +42,35 @@ namespace jank
             switch(static_cast<translate::cell::literal_type>(cell.data.which()))
             {
               case translate::cell::literal_type::null:
-                return boost::get<cell::null>(cell.data);
+                return
+                {
+                  cell::null
+                  { boost::get<parse::cell::null>(cell.data).data }
+                };
               case translate::cell::literal_type::boolean:
-                return boost::get<cell::boolean>(cell.data);
+                return
+                {
+                  cell::boolean
+                  { boost::get<parse::cell::boolean>(cell.data).data }
+                };
               case translate::cell::literal_type::integer:
-                return boost::get<cell::integer>(cell.data);
+                return
+                {
+                  cell::integer
+                  { boost::get<parse::cell::integer>(cell.data).data }
+                };
               case translate::cell::literal_type::real:
-                return boost::get<cell::real>(cell.data);
+                return
+                {
+                  cell::real
+                  { boost::get<parse::cell::real>(cell.data).data }
+                };
               case translate::cell::literal_type::string:
-                return boost::get<cell::string>(cell.data);
+                return
+                {
+                  cell::string
+                  { boost::get<parse::cell::string>(cell.data).data }
+                };
               default:
                 throw expect::error::lookup::exception<>{ "invalid literal" };
             }
