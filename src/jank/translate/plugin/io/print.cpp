@@ -1,9 +1,9 @@
+#include <jank/interpret/cell/stream.hpp>
 #include <jank/translate/plugin/io/print.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/environment/builtin/value/primitive.hpp>
 #include <jank/translate/cell/stream.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
-#include <jank/parse/cell/stream.hpp>
 
 namespace jank
 {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <jank/parse/cell/cell.hpp>
 #include <jank/translate/cell/cell.hpp>
+#include <jank/interpret/cell/cell.hpp>
 #include <jank/interpret/environment/scope.hpp>
 
 namespace jank
@@ -10,7 +10,7 @@ namespace jank
   {
     namespace detail
     {
-      parse::cell::cell indirect_function_call
+      cell::cell indirect_function_call
       (
         std::shared_ptr<environment::scope> const&,
         translate::cell::indirect_function_call const&

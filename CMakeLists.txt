@@ -88,6 +88,7 @@ add_library(
   src/jank/translate/plugin/assertion/assertion.cpp
 
   src/jank/interpret/interpret.cpp
+  src/jank/interpret/cell/stream.cpp
   src/jank/interpret/environment/scope.cpp
   src/jank/interpret/environment/resolve_value.cpp
   src/jank/interpret/detail/function_call.cpp

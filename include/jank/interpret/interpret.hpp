@@ -3,8 +3,8 @@
 #include <map>
 #include <memory>
 
-#include <jank/parse/cell/cell.hpp>
 #include <jank/translate/cell/cell.hpp>
+#include <jank/interpret/cell/cell.hpp>
 #include <jank/interpret/environment/scope.hpp>
 
 namespace jank
@@ -21,13 +21,13 @@ namespace jank
       greedy
     };
 
-    parse::cell::cell interpret
+    cell::cell interpret
     (
       std::shared_ptr<environment::scope> const &env,
       translate::cell::function_body const &root,
       consume_style const consume
     );
-    parse::cell::cell interpret
+    cell::cell interpret
     (
       std::shared_ptr<environment::scope> const &env,
       translate::cell::function_body const &root

@@ -11,7 +11,7 @@ namespace jank
   {
     namespace environment
     {
-      parse::cell::cell resolve_value
+      cell::cell resolve_value
       (
         std::shared_ptr<scope> const &s,
         translate::cell::cell const &c
@@ -42,15 +42,15 @@ namespace jank
             switch(static_cast<translate::cell::literal_type>(cell.data.which()))
             {
               case translate::cell::literal_type::null:
-                return boost::get<parse::cell::null>(cell.data);
+                return boost::get<cell::null>(cell.data);
               case translate::cell::literal_type::boolean:
-                return boost::get<parse::cell::boolean>(cell.data);
+                return boost::get<cell::boolean>(cell.data);
               case translate::cell::literal_type::integer:
-                return boost::get<parse::cell::integer>(cell.data);
+                return boost::get<cell::integer>(cell.data);
               case translate::cell::literal_type::real:
-                return boost::get<parse::cell::real>(cell.data);
+                return boost::get<cell::real>(cell.data);
               case translate::cell::literal_type::string:
-                return boost::get<parse::cell::string>(cell.data);
+                return boost::get<cell::string>(cell.data);
               default:
                 throw expect::error::lookup::exception<>{ "invalid literal" };
             }
@@ -111,7 +111,7 @@ namespace jank
           {
             /* TODO: Handle properly. */
             std::cout << "resolving function definition" << std::endl;
-            return parse::cell::null{};
+            return cell::null{};
           } break;
 
           case translate::cell::type::function_reference:
@@ -122,17 +122,16 @@ namespace jank
             //  translate::expect::type
             //  <translate::cell::type::function_reference>(c)
             //);
-            /* TODO: Need to use interpret::cell which supports functions. */
             std::cout << "resolving function reference" << std::endl;
 
             /* TODO: Loop up the function by name and type. */
-            return parse::cell::null{};
+            return cell::null{};
           } break;
 
           case translate::cell::type::native_function_reference:
           {
             /* TODO: Handle properly. */
-            return parse::cell::null{};
+            return cell::null{};
           } break;
 
           default:

@@ -1,4 +1,3 @@
-#include <jank/parse/expect/type.hpp>
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/detail/do_statement.hpp>
 
@@ -8,7 +7,7 @@ namespace jank
   {
     namespace detail
     {
-      parse::cell::cell do_statement
+      cell::cell do_statement
       (
         std::shared_ptr<environment::scope> const &scope,
         translate::cell::do_statement const &cell

@@ -5,7 +5,7 @@
 
 #include <jank/interpret/cell/cell.hpp>
 #include <jank/interpret/cell/trait.hpp>
-#include <jank/interpret/expect/error/internal/exception.hpp>
+#include <jank/interpret/expect/error/type/exception.hpp>
 
 namespace jank
 {
@@ -23,7 +23,7 @@ namespace jank
         auto const type(cell::trait::to_enum(c));
         if(type != C)
         {
-          throw error::internal::exception<>
+          throw error::type::exception<>
           {
             std::string{ "expected: " } +
             cell::trait::to_string<C>() +

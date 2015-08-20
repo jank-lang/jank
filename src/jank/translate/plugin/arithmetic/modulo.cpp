@@ -1,7 +1,7 @@
-#include <jank/parse/expect/type.hpp>
 #include <jank/translate/plugin/arithmetic/modulo.hpp>
 #include <jank/translate/plugin/arithmetic/detail/make_operator.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
+#include <jank/interpret/expect/type.hpp>
 
 namespace jank
 {
@@ -21,10 +21,10 @@ namespace jank
             {
               auto ret
               (
-                parse::expect::type<parse::cell::type::integer>
+                interpret::expect::type<interpret::cell::type::integer>
                 (interpret::environment::resolve_value(scope, args[0].cell)).data
               );
-              ret %= parse::expect::type<parse::cell::type::integer>
+              ret %= interpret::expect::type<interpret::cell::type::integer>
               (interpret::environment::resolve_value(scope, args[1].cell)).data;
               return environment::builtin::value::integer(ret);
             }

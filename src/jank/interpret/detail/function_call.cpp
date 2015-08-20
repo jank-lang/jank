@@ -8,7 +8,7 @@ namespace jank
   {
     namespace detail
     {
-      parse::cell::cell function_call
+      cell::cell function_call
       (
         std::shared_ptr<environment::scope> const &scope,
         translate::cell::function_call const &cell

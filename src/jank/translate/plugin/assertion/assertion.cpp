@@ -1,8 +1,8 @@
-#include <jank/parse/expect/type.hpp>
 #include <jank/translate/plugin/assertion/assertion.hpp>
 #include <jank/translate/plugin/detail/make_function.hpp>
 #include <jank/translate/expect/error/assertion/exception.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
+#include <jank/interpret/expect/type.hpp>
 
 namespace jank
 {
@@ -21,7 +21,7 @@ namespace jank
             {
               auto const val
               (
-                parse::expect::type<parse::cell::type::boolean>
+                interpret::expect::type<interpret::cell::type::boolean>
                 (interpret::environment::resolve_value(scope, args[0].cell)).data
               );
               if(!val)
@@ -38,7 +38,7 @@ namespace jank
             {
               auto const val
               (
-                parse::expect::type<parse::cell::type::boolean>
+                interpret::expect::type<interpret::cell::type::boolean>
                 (interpret::environment::resolve_value(scope, args[0].cell)).data
               );
               if(val)

@@ -2,7 +2,7 @@
 
 #include <jank/parse/cell/trait.hpp>
 #include <jank/interpret/cell/cell.hpp>
-#include <jank/interpret/expect/error/internal/exception.hpp>
+#include <jank/interpret/expect/error/type/exception.hpp>
 
 namespace jank
 {
@@ -94,7 +94,7 @@ namespace jank
           { return type::function; }
           else
           {
-            throw expect::error::internal::exception<>
+            throw expect::error::type::exception<>
             { "invalid interpret cell type string " + str };
           }
         }

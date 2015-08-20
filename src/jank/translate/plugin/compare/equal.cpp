@@ -1,7 +1,7 @@
-#include <jank/parse/expect/type.hpp>
 #include <jank/translate/plugin/compare/equal.hpp>
 #include <jank/translate/plugin/compare/detail/make_operator.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
+#include <jank/interpret/expect/type.hpp>
 
 namespace jank
 {
@@ -29,9 +29,9 @@ namespace jank
             {
               return environment::builtin::value::boolean
               (
-                parse::expect::type<parse::cell::type::boolean>
+                interpret::expect::type<interpret::cell::type::boolean>
                 (interpret::environment::resolve_value(scope, args[0].cell)).data ==
-                parse::expect::type<parse::cell::type::boolean>
+                interpret::expect::type<interpret::cell::type::boolean>
                 (interpret::environment::resolve_value(scope, args[1].cell)).data
               );
             }
@@ -43,9 +43,9 @@ namespace jank
             {
               return environment::builtin::value::boolean
               (
-                parse::expect::type<parse::cell::type::integer>
+                interpret::expect::type<interpret::cell::type::integer>
                 (interpret::environment::resolve_value(scope, args[0].cell)).data ==
-                parse::expect::type<parse::cell::type::integer>
+                interpret::expect::type<interpret::cell::type::integer>
                 (interpret::environment::resolve_value(scope, args[1].cell)).data
               );
             }
@@ -58,9 +58,9 @@ namespace jank
               /* TODO: Use an approximate equality? */
               return environment::builtin::value::boolean
               (
-                parse::expect::type<parse::cell::type::real>
+                interpret::expect::type<interpret::cell::type::real>
                 (interpret::environment::resolve_value(scope, args[0].cell)).data ==
-                parse::expect::type<parse::cell::type::real>
+                interpret::expect::type<interpret::cell::type::real>
                 (interpret::environment::resolve_value(scope, args[1].cell)).data
               );
             }
@@ -72,9 +72,9 @@ namespace jank
             {
               return environment::builtin::value::boolean
               (
-                parse::expect::type<parse::cell::type::string>
+                interpret::expect::type<interpret::cell::type::string>
                 (interpret::environment::resolve_value(scope, args[0].cell)).data ==
-                parse::expect::type<parse::cell::type::string>
+                interpret::expect::type<interpret::cell::type::string>
                 (interpret::environment::resolve_value(scope, args[1].cell)).data
               );
             }

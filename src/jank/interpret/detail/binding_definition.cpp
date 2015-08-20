@@ -8,7 +8,7 @@ namespace jank
   {
     namespace detail
     {
-      parse::cell::cell binding_definition
+      cell::cell binding_definition
       (
         std::shared_ptr<environment::scope> const &scope,
         translate::cell::binding_definition const &cell

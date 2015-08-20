@@ -6,7 +6,7 @@ namespace jank
   {
     namespace environment
     {
-      std::experimental::optional<parse::cell::cell> scope::find_binding
+      std::experimental::optional<cell::cell> scope::find_binding
       (std::string const &name) const
       {
         auto const it(bindings.find(name));

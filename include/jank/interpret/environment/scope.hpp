@@ -5,7 +5,7 @@
 #include <string>
 #include <experimental/optional>
 
-#include <jank/parse/cell/cell.hpp>
+#include <jank/interpret/cell/cell.hpp>
 
 namespace jank
 {
@@ -20,11 +20,10 @@ namespace jank
           : parent{ p }
         { }
 
-        std::experimental::optional<parse::cell::cell> find_binding
+        std::experimental::optional<cell::cell> find_binding
         (std::string const &name) const;
 
-        /* TODO: Use a custom interpret cell for these values. */
-        std::map<std::string, parse::cell::cell> bindings;
+        std::map<std::string, cell::cell> bindings;
         std::shared_ptr<scope> parent;
       };
     }

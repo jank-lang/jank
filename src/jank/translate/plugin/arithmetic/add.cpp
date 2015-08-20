@@ -1,7 +1,7 @@
-#include <jank/parse/expect/type.hpp>
 #include <jank/translate/plugin/arithmetic/add.hpp>
 #include <jank/translate/plugin/arithmetic/detail/make_operator.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
+#include <jank/interpret/expect/type.hpp>
 
 namespace jank
 {
@@ -18,10 +18,10 @@ namespace jank
             scope, "+", environment::builtin::type::integer(*scope),
             [](auto const &scope, auto const &args)
             {
-              parse::cell::integer::type ret{};
+              interpret::cell::integer::type ret{};
               for(auto const &arg : args)
               {
-                ret += parse::expect::type<parse::cell::type::integer>
+                ret += interpret::expect::type<interpret::cell::type::integer>
                 (interpret::environment::resolve_value(scope, arg.cell)).data;
               }
               return environment::builtin::value::integer(ret);
@@ -32,10 +32,10 @@ namespace jank
             scope, "+", environment::builtin::type::real(*scope),
             [](auto const &scope, auto const &args)
             {
-              parse::cell::real::type ret{};
+              interpret::cell::real::type ret{};
               for(auto const &arg : args)
               {
-                ret += parse::expect::type<parse::cell::type::real>
+                ret += interpret::expect::type<interpret::cell::type::real>
                 (interpret::environment::resolve_value(scope, arg.cell)).data;
               }
               return environment::builtin::value::real(ret);
@@ -46,10 +46,10 @@ namespace jank
             scope, "+", environment::builtin::type::string(*scope),
             [](auto const &scope, auto const &args)
             {
-              parse::cell::string::type ret{};
+              interpret::cell::string::type ret{};
               for(auto const &arg : args)
               {
-                ret += parse::expect::type<parse::cell::type::string>
+                ret += interpret::expect::type<interpret::cell::type::string>
                 (interpret::environment::resolve_value(scope, arg.cell)).data;
               }
               return environment::builtin::value::string(ret);

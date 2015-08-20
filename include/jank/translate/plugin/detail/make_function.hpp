@@ -1,6 +1,5 @@
 #pragma once
 
-#include <jank/parse/expect/type.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/environment/builtin/value/primitive.hpp>
 #include <jank/translate/expect/error/internal/exception.hpp>

@@ -1,4 +1,3 @@
-#include <jank/parse/expect/type.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/detail/function_call.hpp>
@@ -8,13 +7,14 @@
 #include <jank/interpret/detail/if_statement.hpp>
 #include <jank/interpret/detail/return_statement.hpp>
 #include <jank/interpret/detail/do_statement.hpp>
+#include <jank/interpret/expect/type.hpp>
 
 /* TODO: print with no newline. */
 namespace jank
 {
   namespace interpret
   {
-    parse::cell::cell interpret
+    cell::cell interpret
     (
       std::shared_ptr<environment::scope> const &scope,
       translate::cell::function_body const &root,
@@ -70,7 +70,7 @@ namespace jank
             auto const &cell
             (translate::expect::type<translate::cell::type::if_statement>(c));
             auto const ret(detail::if_statement(scope, cell));
-            if(!parse::expect::is<parse::cell::type::null>(ret))
+            if(!expect::is<cell::type::null>(ret))
             { return ret; }
           } break;
 
@@ -79,7 +79,7 @@ namespace jank
             auto const &cell
             (translate::expect::type<translate::cell::type::do_statement>(c));
             auto const ret(detail::do_statement(scope, cell));
-            if(!parse::expect::is<parse::cell::type::null>(ret))
+            if(!expect::is<cell::type::null>(ret))
             { return ret; }
           } break;
 
@@ -99,10 +99,10 @@ namespace jank
         }
       }
 
-      return parse::cell::null{};
+      return cell::null{};
     }
 
-    parse::cell::cell interpret
+    cell::cell interpret
     (
       std::shared_ptr<environment::scope> const &scope,
       translate::cell::function_body const &root
