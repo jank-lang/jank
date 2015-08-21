@@ -65,7 +65,7 @@ namespace jank
       template <>
       struct wrapper<type::function>
       {
-        using type = translate::cell::function_call::type;
+        using type = translate::cell::function_definition::type;
         type data;
       };
 

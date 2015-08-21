@@ -136,16 +136,12 @@ namespace jank
 
           case translate::cell::type::function_reference:
           {
-            /* TODO: Handle properly. */
-            //auto const &cell
-            //(
-            //  translate::expect::type
-            //  <translate::cell::type::function_reference>(c)
-            //);
-            std::cout << "resolving function reference" << std::endl;
-
-            /* TODO: Look up the function by name and type. */
-            return cell::null{};
+            auto const &cell
+            (
+              translate::expect::type
+              <translate::cell::type::function_reference>(c)
+            );
+            return cell::function{ { cell.data.definition } };
           } break;
 
           case translate::cell::type::native_function_reference:
