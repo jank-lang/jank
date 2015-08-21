@@ -10,6 +10,7 @@
 #include <boost/variant.hpp>
 
 #include <jank/parse/cell/cell.hpp>
+#include <jank/translate/cell/cell.hpp>
 #include <jank/interpret/cell/type.hpp>
 
 namespace jank
@@ -64,8 +65,7 @@ namespace jank
       template <>
       struct wrapper<type::function>
       {
-        /* TODO: Take arg list, scope, etc. */
-        using type = std::function<void ()>;
+        using type = translate::cell::function_call::type;
         type data;
       };
 

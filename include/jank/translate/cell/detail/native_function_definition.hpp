@@ -2,10 +2,15 @@
 
 #include <jank/translate/function/argument/definition.hpp>
 #include <jank/translate/function/argument/call.hpp>
-#include <jank/interpret/environment/scope.hpp>
 
 namespace jank
 {
+  namespace interpret
+  {
+    namespace environment
+    { struct scope; }
+  }
+
   namespace translate
   {
     namespace environment
