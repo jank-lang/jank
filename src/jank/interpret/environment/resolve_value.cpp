@@ -144,7 +144,7 @@ namespace jank
             //);
             std::cout << "resolving function reference" << std::endl;
 
-            /* TODO: Loop up the function by name and type. */
+            /* TODO: Look up the function by name and type. */
             return cell::null{};
           } break;
 

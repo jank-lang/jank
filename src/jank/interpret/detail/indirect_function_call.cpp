@@ -1,6 +1,7 @@
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/detail/indirect_function_call.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
+#include <jank/interpret/expect/type.hpp>
 
 namespace jank
 {
@@ -25,9 +26,10 @@ namespace jank
           next_scope->bindings[name.name] = var;
         }
 
-        /* TODO: Get the body out of the binding. */
-        //return interpret(next_scope, { cell.data.definition.body });
-        return {};
+        auto const func_cell
+        (environment::resolve_value(scope, cell.data.binding.cell));
+        auto const func(expect::type<cell::type::function>(func_cell));
+        return interpret(next_scope, { func.data.definition.body });
       }
     }
   }
