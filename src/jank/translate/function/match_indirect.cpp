@@ -13,14 +13,14 @@ namespace jank
     {
       void match_indirect
       (
-        cell::type_definition::type const &type,
+        cell::binding_definition const &binding,
         parse::cell::list const &list,
         std::shared_ptr<environment::scope> const &scope,
         std::function<void (cell::indirect_function_call)> callback
       )
       {
         /* TODO: Parse args, match args against type, throw on failure. */
-        static_cast<void>(type);
+        static_cast<void>(binding);
         static_cast<void>(scope);
         static_cast<void>(callback);
 
@@ -34,7 +34,7 @@ namespace jank
 
         if(true) /* TODO: Final check. */
         {
-          callback({});
+          callback({ { binding.data, arguments } });
           return;
         }
 

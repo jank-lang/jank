@@ -4,6 +4,7 @@
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
 #include <jank/interpret/expect/error/lookup/exception.hpp>
+#include <jank/interpret/expect/error/internal/unimplemented.hpp>
 
 namespace jank
 {
@@ -129,9 +130,12 @@ namespace jank
 
           case translate::cell::type::function_definition:
           {
-            /* TODO: Handle properly. */
-            std::cout << "resolving function definition" << std::endl;
-            return cell::null{};
+            auto const &cell
+            (
+              translate::expect::type
+              <translate::cell::type::function_definition>(c)
+            );
+            return cell::function{ cell.data };
           } break;
 
           case translate::cell::type::function_reference:
@@ -141,13 +145,14 @@ namespace jank
               translate::expect::type
               <translate::cell::type::function_reference>(c)
             );
-            return cell::function{ { cell.data.definition } };
+            return cell::function{ cell.data.definition };
           } break;
 
           case translate::cell::type::native_function_reference:
           {
             /* TODO: Handle properly. */
-            return cell::null{};
+            throw expect::error::internal::unimplemented
+            { "native function references" };
           } break;
 
           default:

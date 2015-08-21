@@ -75,7 +75,7 @@ namespace jank
             {
               function::match_indirect
               (
-                type.definition, list, scope,
+                def, list, scope,
                 [&](auto const &call)
                 { translated.data.cells.push_back(call); }
               );

@@ -12,7 +12,7 @@ namespace jank
     {
       void match_indirect
       (
-        cell::type_definition::type const &type,
+        cell::binding_definition const &binding,
         parse::cell::list const &args,
         std::shared_ptr<environment::scope> const &scope,
         std::function<void (cell::indirect_function_call)> callback
