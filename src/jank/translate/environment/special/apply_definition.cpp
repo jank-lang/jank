@@ -1,4 +1,4 @@
-#include <jank/translate/environment/special/apply_all.hpp>
+#include <jank/translate/environment/special/apply_definition.hpp>
 #include <jank/parse/expect/type.hpp>
 
 namespace jank
@@ -9,7 +9,7 @@ namespace jank
     {
       namespace special
       {
-        std::experimental::optional<cell::cell> apply_all
+        std::experimental::optional<cell::cell> apply_definition
         (
           parse::cell::list const &list,
           cell::function_body const &outer_body
@@ -29,18 +29,19 @@ namespace jank
           > specials
           {
             {
-              "bind",
+              "function",
               [](auto const &input, auto const &body)
-              { return binding(input, body.data.scope); }
+              { return function(input, body.data.scope); }
             },
             {
-              "return",
-              &return_statement
+              "ƒ",
+              [](auto const &input, auto const &body)
+              { return function(input, body.data.scope); }
             },
           };
 
           auto &data(list.data);
-          if(data.empty())
+          if(data.empty()) /* TODO: Turn these all into internal errors. */
           { throw std::runtime_error{ "invalid parse list" }; }
 
           auto const it
@@ -50,11 +51,6 @@ namespace jank
           );
           if(it != specials.end())
           { return { it->second(list, outer_body) }; }
-          else if(auto const expression = apply_expression(list, outer_body))
-          { return expression; }
-          else if(auto const definition = apply_definition(list, outer_body))
-          { return definition; }
-
           return {};
         }
       }

@@ -29,16 +29,6 @@ namespace jank
           > specials
           {
             {
-              "function",
-              [](auto const &input, auto const &body)
-              { return function(input, body.data.scope); }
-            },
-            {
-              "ƒ",
-              [](auto const &input, auto const &body)
-              { return function(input, body.data.scope); }
-            },
-            {
               "if",
               &if_statement
             },

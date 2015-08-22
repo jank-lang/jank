@@ -4,10 +4,9 @@
 #include <stdexcept>
 #include <experimental/optional>
 
-#include <jank/translate/environment/special/binding.hpp>
-#include <jank/translate/environment/special/return_statement.hpp>
-#include <jank/translate/environment/special/apply_expression.hpp>
-#include <jank/translate/environment/special/apply_definition.hpp>
+#include <jank/translate/environment/special/function.hpp>
+#include <jank/translate/environment/special/if_statement.hpp>
+#include <jank/translate/environment/special/do_statement.hpp>
 
 namespace jank
 {
@@ -17,7 +16,7 @@ namespace jank
     {
       namespace special
       {
-        std::experimental::optional<cell::cell> apply_all
+        std::experimental::optional<cell::cell> apply_definition
         (
           parse::cell::list const &list,
           cell::function_body const &translated
