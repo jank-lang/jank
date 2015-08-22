@@ -26,9 +26,11 @@ namespace jank
           next_scope->bindings[name.name] = var;
         }
 
-        /* TODO: Value is a function_body and is being evaluated. :( */
         auto const func_cell
-        (environment::resolve_value(scope, cell.data.binding.cell));
+        (
+          environment::resolve_value
+          (scope, translate::cell::binding_reference{ { cell.data.binding } })
+        );
         auto const func(expect::type<cell::type::function>(func_cell));
         return interpret(next_scope, { func.data.body });
       }
