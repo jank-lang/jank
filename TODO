@@ -4,6 +4,8 @@ refactoring
 REPL
   online repl sandbox
 
+"falsey" is not a valid ident!!!
+
 test
   function referencing
     ambiguous error
