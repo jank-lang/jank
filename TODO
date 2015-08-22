@@ -6,6 +6,8 @@ REPL
 
 "falsey" is not a valid ident!!!
 
+ƒ isn't working as a type
+
 test
   function referencing
     ambiguous error
