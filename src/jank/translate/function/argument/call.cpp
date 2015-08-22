@@ -7,6 +7,7 @@
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/environment/scope.hpp>
 #include <jank/translate/environment/special/apply_expression.hpp>
+#include <jank/translate/environment/special/apply_definition.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/function/match_overload.hpp>
 #include <jank/translate/function/return/deduce.hpp>
@@ -113,7 +114,27 @@ namespace jank
                   { "invalid argument list" };
                 }
 
-                /* See if it's a special. */
+                /* See if it's a special definition. */
+                {
+                  cell::function_body body
+                  { {
+                    {},
+                    environment::builtin::type::automatic(*scope_),
+                    scope_
+                  } };
+
+                  auto const special_opt
+                  (environment::special::apply_definition(c, body));
+                  if(special_opt)
+                  {
+                    return detail::value<C>
+                    {
+                      "special", /* TODO: Better name? */
+                      { special_opt.value() }
+                    };
+                  }
+                }
+                /* See if it's a special expression. */
                 {
                   cell::function_body body
                   { {
