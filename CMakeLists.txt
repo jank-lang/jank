@@ -64,6 +64,7 @@ add_library(
   src/jank/translate/environment/special/apply_expression.cpp
   src/jank/translate/environment/special/apply_definition.cpp
   src/jank/translate/environment/special/function.cpp
+  src/jank/translate/environment/special/lambda.cpp
   src/jank/translate/environment/special/binding.cpp
   src/jank/translate/environment/special/return_statement.cpp
   src/jank/translate/environment/special/if_statement.cpp

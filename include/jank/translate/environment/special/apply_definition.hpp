@@ -5,6 +5,7 @@
 #include <experimental/optional>
 
 #include <jank/translate/environment/special/function.hpp>
+#include <jank/translate/environment/special/lambda.hpp>
 #include <jank/translate/environment/special/if_statement.hpp>
 #include <jank/translate/environment/special/do_statement.hpp>
 

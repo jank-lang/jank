@@ -38,6 +38,16 @@ namespace jank
               [](auto const &input, auto const &body)
               { return function(input, body.data.scope); }
             },
+            {
+              "lambda",
+              [](auto const &input, auto const &body)
+              { return lambda(input, body.data.scope); }
+            },
+            {
+              "λ",
+              [](auto const &input, auto const &body)
+              { return lambda(input, body.data.scope); }
+            },
           };
 
           auto &data(list.data);
