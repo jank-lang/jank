@@ -4,6 +4,7 @@
 #include <jank/parse/cell/trait.hpp>
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/environment/scope.hpp>
+#include <jank/translate/environment/builtin/type/normalize.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
 
 namespace jank
@@ -28,6 +29,7 @@ namespace jank
           /* No return type means null return type. */
           else if(list.data.empty())
           {
+            /* TODO: Use builtin::type? */
             auto const null
             (
               scope->find_type
@@ -53,7 +55,13 @@ namespace jank
               throw expect::error::type::exception<>
               { "invalid return type: " + type_string };
             }
-            types.push_back({ { type.value().first.data } });
+            types.push_back
+            (
+              { {
+                environment::builtin::type::normalize
+                (type.value().first.data, *scope)
+              } }
+            );
           }
 
           return types;

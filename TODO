@@ -14,6 +14,7 @@ test
   calling from indirect binding
     native and non-native
   closures (returning closures)
+    need to copy captures
   ƒ as a function type
 
 start with cons and lambdas
