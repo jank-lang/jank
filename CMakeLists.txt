@@ -59,6 +59,7 @@ add_library(
   src/jank/translate/environment/scope.cpp
   src/jank/translate/environment/builtin/type/primitive.cpp
   src/jank/translate/environment/builtin/type/function.cpp
+  src/jank/translate/environment/builtin/type/normalize.cpp
   src/jank/translate/environment/builtin/value/primitive.cpp
   src/jank/translate/environment/special/apply_all.cpp
   src/jank/translate/environment/special/apply_expression.cpp

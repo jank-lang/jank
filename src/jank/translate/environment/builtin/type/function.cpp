@@ -21,6 +21,7 @@ namespace jank
             return s;
           }
 
+          /* TODO: This doesn't match against ƒ. */
           cell::detail::type_reference function(scope &s)
           { return detail::find_type(s, "function"); }
         }

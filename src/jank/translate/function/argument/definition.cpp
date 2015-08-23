@@ -7,6 +7,7 @@
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/cell/cell.hpp>
 #include <jank/translate/environment/scope.hpp>
+#include <jank/translate/environment/builtin/type/normalize.hpp>
 #include <jank/translate/expect/error/syntax/exception.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
 
@@ -66,7 +67,16 @@ namespace jank
                 throw expect::error::type::exception<>
                 { "unknown type " + type };
               }
-              ret.push_back({ name, { type_def.value().first.data } });
+              ret.push_back
+              (
+                {
+                  name,
+                  {
+                    environment::builtin::type::normalize
+                    (type_def.value().first.data, *scope)
+                  }
+                }
+              );
             }
 
             return ret;
