@@ -6,8 +6,6 @@ REPL
 
 "falsey" is not a valid ident!!!
 
-ƒ isn't working as a type
-
 test
   function referencing
     ambiguous error
@@ -15,6 +13,8 @@ test
   calling from binding
   calling from indirect binding
     native and non-native
+  closures (returning closures)
+  ƒ as a function type
 
 start with cons and lambdas
   list
