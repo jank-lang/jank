@@ -22,6 +22,20 @@ namespace jank
                 cell::type_definition{ { name, {} } }
               );
             }
+
+            inline auto make_type
+            (
+              std::string const &name,
+              translate::type::generic::genericity
+              <cell::type_definition::type> const &generics
+            )
+            {
+              return std::make_pair
+              (
+                name,
+                cell::type_definition{ { name, generics } }
+              );
+            }
           }
         }
       }
