@@ -19,9 +19,11 @@ namespace jank
           translate::type::generic::genericity<type_definition> generics;
         };
 
-        inline bool operator ==(type_definition const &lhs, type_definition const &rhs)
+        inline bool operator ==
+        (type_definition const &lhs, type_definition const &rhs)
         { return lhs.name == rhs.name; }
-        inline bool operator !=(type_definition const &lhs, type_definition const &rhs)
+        inline bool operator !=
+        (type_definition const &lhs, type_definition const &rhs)
         { return lhs.name != rhs.name; }
       }
     }
