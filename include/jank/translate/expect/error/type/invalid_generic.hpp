@@ -15,7 +15,7 @@ namespace jank
           namespace detail
           {
             struct invalid_generic
-            { static char const constexpr *description{ "invalid_generic" }; };
+            { static char const constexpr *description{ "invalid generic" }; };
           }
           using invalid_generic = exception<detail::invalid_generic>;
         }
