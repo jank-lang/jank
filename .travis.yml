@@ -24,5 +24,16 @@ before_install:
     fi
 
 script:
-  - cmake . && make
+  - cmake . && make -j2
   - make jank_test
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
+  irc:
+    channels:
+      - "chat.freenode.net#jank"
+    on_success: always
+    on_failure: always
+    use_notice: true
