@@ -269,7 +269,8 @@ $ make jank_test
 |non-generic native functions |Complete and tested.                       |
 |if/do statements             |Complete and tested.                       |
 |if/do expressions            |Complete and tested.                       |
-|lambda expressions           |Partially implemented; not yet tested.     |
+|lambda expressions           |Complete; not yet tested.                  |
+|generic functions            |Partially implemented; not yet tested.     |
 
 |Interpreter                  |Status                                     |
 |:----------------------------|:------------------------------------------|
@@ -279,7 +280,8 @@ $ make jank_test
 |arithmetic for primitives    |Complete and tested.                       |
 |if/do statements             |Complete and tested.                       |
 |if/do expressions            |Complete and tested.                       |
-|lambda expressions           |Partially implemented; not yet tested.     |
+|lambda expressions           |Complete; not yet tested.                  |
+|generic functions            |Partially implemented; not yet tested.     |
 
 ## Editor support
 There are syntax files for Vim available in the `vim` directory of the repository. You can add these to your runtime path using something like:
