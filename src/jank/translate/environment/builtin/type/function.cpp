@@ -15,13 +15,22 @@ namespace jank
           scope& add_function
           (scope &s)
           {
-            /* TODO: Generics. */
-            s.type_definitions.insert(detail::make_type("function"));
-            s.type_definitions.insert(detail::make_type("ƒ"));
+            s.type_definitions.insert
+            (
+              detail::make_type
+              (
+                "function",
+                { {
+                  translate::type::generic::tuple<cell::type_definition::type>
+                  {},
+                  translate::type::generic::tuple<cell::type_definition::type>
+                  {},
+                } }
+              )
+            );
             return s;
           }
 
-          /* TODO: This doesn't match against ƒ. */
           cell::detail::type_reference function(scope &s)
           { return detail::find_type(s, "function"); }
         }
