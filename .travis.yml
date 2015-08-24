@@ -24,7 +24,7 @@ before_install:
     fi
 
 script:
-  - cmake . && make
+  - cmake . && make -j2
   - make jank_test
 
 notifications:
