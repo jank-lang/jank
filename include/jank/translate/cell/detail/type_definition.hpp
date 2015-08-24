@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include <jank/translate/type/generic/genericity.hpp>
+
 namespace jank
 {
   namespace translate
@@ -14,8 +16,7 @@ namespace jank
         struct type_definition
         {
           std::string name;
-          /* TODO: Add member support. */
-          //std::vector<struct binding_definition> members;
+          translate::type::generic::genericity<type_definition> generics;
         };
 
         inline bool operator ==(type_definition const &lhs, type_definition const &rhs)

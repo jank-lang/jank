@@ -1,10 +1,5 @@
 #pragma once
 
-#include <vector>
-
-#include <boost/variant.hpp>
-
-#include <jank/translate/cell/cell.hpp>
 #include <jank/translate/type/generic/parameter.hpp>
 
 namespace jank
@@ -15,10 +10,10 @@ namespace jank
     {
       namespace generic
       {
-        template <typename C>
+        template <typename T>
         struct genericity
         {
-          std::vector<parameter<C>> parameters;
+          std::vector<parameter<T>> parameters;
         };
       }
     }

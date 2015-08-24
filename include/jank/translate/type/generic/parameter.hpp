@@ -4,8 +4,6 @@
 
 #include <boost/variant.hpp>
 
-#include <jank/translate/cell/cell.hpp>
-
 namespace jank
 {
   namespace translate
@@ -20,26 +18,26 @@ namespace jank
           tuple
         };
 
-        template <typename C>
+        template <typename T>
         struct single
         {
-          using type = C;
+          using type = T;
           type data;
         };
 
-        template <typename C>
+        template <typename T>
         struct tuple
         {
-          using type = std::vector<C>;
+          using type = std::vector<T>;
           type data;
         };
 
         /* Cells can be types or values. */
-        template <typename C>
+        template <typename T> /* T = detail::type_definition */
         using parameter = boost::variant
         <
-          single<C>,
-          tuple<C>
+          single<T>,
+          tuple<T>
         >;
       }
     }

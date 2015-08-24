@@ -15,7 +15,13 @@ namespace jank
           {
             inline auto make_type
             (std::string const &name)
-            { return std::make_pair(name, cell::type_definition{ { name } }); }
+            {
+              return std::make_pair
+              (
+                name,
+                cell::type_definition{ { name, {} } }
+              );
+            }
           }
         }
       }
