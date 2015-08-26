@@ -33,7 +33,7 @@ namespace jank
         {
           return
           (
-            lhs.name != rhs.name &&
+            lhs.name != rhs.name ||
             lhs.generics != rhs.generics
           );
         }
