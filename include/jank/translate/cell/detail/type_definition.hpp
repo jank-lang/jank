@@ -21,10 +21,22 @@ namespace jank
 
         inline bool operator ==
         (type_definition const &lhs, type_definition const &rhs)
-        { return lhs.name == rhs.name; }
+        {
+          return
+          (
+            lhs.name == rhs.name &&
+            lhs.generics == rhs.generics
+          );
+        }
         inline bool operator !=
         (type_definition const &lhs, type_definition const &rhs)
-        { return lhs.name != rhs.name; }
+        {
+          return
+          (
+            lhs.name != rhs.name &&
+            lhs.generics != rhs.generics
+          );
+        }
       }
     }
   }

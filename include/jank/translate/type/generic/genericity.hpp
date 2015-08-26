@@ -15,6 +15,23 @@ namespace jank
         {
           std::vector<parameter<T>> parameters;
         };
+
+        template <typename T>
+        bool operator ==(genericity<T> const &lhs, genericity<T> const &rhs)
+        {
+          return
+          (
+            lhs.parameters.size() == rhs.parameters.size() &&
+            std::equal
+            (
+              lhs.parameters.begin(), lhs.parameters.end(),
+              rhs.parameters.begin()
+            )
+          );
+        }
+        template <typename T>
+        bool operator !=(genericity<T> const &lhs, genericity<T> const &rhs)
+        { return !(lhs == rhs); }
       }
     }
   }
