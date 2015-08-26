@@ -48,6 +48,7 @@ add_library(
   src/jank/parse/cell/stream.cpp
 
   src/jank/translate/cell/stream.cpp
+  src/jank/translate/type/generic/extract.cpp
   src/jank/translate/type/generic/parse.cpp
   src/jank/translate/type/generic/verify.cpp
   src/jank/translate/function/argument/definition.cpp
