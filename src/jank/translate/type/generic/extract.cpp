@@ -26,7 +26,7 @@ namespace jank
             parse::expect::optional_cast<parse::cell::type::ident>
             (*colon_it)
           );
-          if(colon.value().data == ":")
+          if(colon && colon.value().data == ":")
           {
             auto const list_it(std::next(colon_it));
             if(list_it == end)
