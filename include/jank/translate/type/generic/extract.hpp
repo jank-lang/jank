@@ -16,11 +16,11 @@ namespace jank
         inline std::tuple
         <
           std::experimental::optional<parse::cell::list>,
-          parse::cell::list::type::iterator
+          parse::cell::list::type::const_iterator
         > extract /* TODO: move to cpp */
         (
-          parse::cell::list::type::iterator begin,
-          parse::cell::list::type::iterator const end
+          parse::cell::list::type::const_iterator begin,
+          parse::cell::list::type::const_iterator const end
         )
         {
           auto const &colon
@@ -32,19 +32,19 @@ namespace jank
               throw expect::error::type::invalid_generic
               { "no type list after colon" };
             }
-            return
-            {
+            return std::make_tuple
+            (
               std::experimental::optional<parse::cell::list>
               { parse::expect::type<parse::cell::type::list>(*begin) },
               std::next(begin)
-            };
+            );
           }
 
-          return
-          {
+          return std::make_tuple
+          (
             std::experimental::optional<parse::cell::list>{},
             std::next(begin)
-          };
+          );
         }
       }
     }

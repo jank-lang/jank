@@ -6,6 +6,9 @@
 
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/cell/cell.hpp>
+#include <jank/translate/type/generic/extract.hpp>
+#include <jank/translate/type/generic/parse.hpp>
+#include <jank/translate/type/generic/verify.hpp>
 #include <jank/translate/environment/scope.hpp>
 #include <jank/translate/environment/builtin/type/normalize.hpp>
 #include <jank/translate/expect/error/syntax/exception.hpp>
@@ -67,6 +70,24 @@ namespace jank
                 throw expect::error::type::exception<>
                 { "unknown type " + type };
               }
+
+              auto const &extracted_generic
+              (type::generic::extract(it, l.data.end()));
+              it = std::get<1>(extracted_generic);
+              auto const &generic_list_opt(std::get<0>(extracted_generic));
+              if(generic_list_opt)
+              {
+                auto const &parsed_generics
+                (type::generic::parse(generic_list_opt.value(), scope));
+                type::generic::verify
+                (
+                  type_def.value().first.data.generics,
+                  parsed_generics
+                );
+
+                /* TODO: Copy parsed generics into type? */
+              }
+
               ret.push_back
               (
                 {
