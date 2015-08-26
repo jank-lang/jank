@@ -29,7 +29,9 @@ namespace jank
             std::equal
             (
               expected.parameters.begin(), expected.parameters.end(),
-              provided.parameters.begin()
+              provided.parameters.begin(),
+              [](auto const &lhs, auto const &rhs)
+              { return lhs.which() == rhs.which(); }
             )
           );
           if(!equal)
