@@ -228,7 +228,7 @@ add_custom_target(
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_function_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_binding_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_if_test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_do_test
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_do_test || true
   DEPENDS ${PROJECT_NAME}_parse_test
           ${PROJECT_NAME}_translate_function_test
           ${PROJECT_NAME}_translate_binding_test
