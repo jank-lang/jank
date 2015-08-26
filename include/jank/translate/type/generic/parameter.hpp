@@ -25,8 +25,8 @@ namespace jank
           type data;
         };
         template <typename T>
-        bool operator ==(single<T> const &lhs, single<T> const &rhs)
-        { return lhs.data == rhs.data; }
+        bool operator ==(single<T> const &, single<T> const &)
+        { return true; }
 
         template <typename T>
         struct tuple
@@ -35,8 +35,8 @@ namespace jank
           type data;
         };
         template <typename T>
-        bool operator ==(tuple<T> const &lhs, tuple<T> const &rhs)
-        { return lhs.data == rhs.data; }
+        bool operator ==(tuple<T> const &, tuple<T> const &)
+        { return true; }
 
         /* Cells can be types or values. */
         template <typename T> /* T = detail::type_definition */
