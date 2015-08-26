@@ -62,15 +62,16 @@ namespace jank
                 { "expected type after " + name };
               }
 
-              auto const &type
+              auto const &type_name
               (parse::expect::type<parse::cell::type::ident>(*it).data);
-              auto const &type_def(scope->find_type(type));
+              auto const &type_def(scope->find_type(type_name));
               if(!type_def)
               {
                 throw expect::error::type::exception<>
-                { "unknown type " + type };
+                { "unknown type " + type_name };
               }
 
+              auto type(type_def.value().first);
               auto const &extracted_generic
               (type::generic::extract(it, l.data.end()));
               it = std::get<1>(extracted_generic);
@@ -85,7 +86,7 @@ namespace jank
                   parsed_generics
                 );
 
-                /* TODO: Copy parsed generics into type? */
+                type.data.generics = parsed_generics;
               }
 
               ret.push_back
@@ -94,7 +95,7 @@ namespace jank
                   name,
                   {
                     environment::builtin::type::normalize
-                    (type_def.value().first.data, *scope)
+                    (type.data, *scope)
                   }
                 }
               );
