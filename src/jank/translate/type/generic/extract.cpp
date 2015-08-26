@@ -21,6 +21,15 @@ namespace jank
         )
         {
           auto const colon_it(std::next(begin));
+          if(colon_it == end)
+          {
+            return std::make_tuple
+            (
+              std::experimental::optional<parse::cell::list>{},
+              begin
+            );
+          }
+
           auto const &colon
           (
             parse::expect::optional_cast<parse::cell::type::ident>
