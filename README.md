@@ -7,16 +7,16 @@ With a focus on safe concurrency, jank has immutable, persistent data structures
 ## Appetizer
 ```lisp
 (; Update all entities. ;)
-(ƒ update (delta real entities vector : entity) (auto)
+(ƒ update (delta real entities vector : (entity)) (auto)
   (map (partial update delta) entities))
 
 (; Damage nearby entities. ;)
-(ƒ cast-aoe (area real entities vector : entity) (auto)
+(ƒ cast-aoe (area real entities vector : (entity)) (auto)
   (map damage
-       (filter (partial within-distance area) entities)))
+       (filter (partial within-distance area) (entity))))
 
 (; Find a winner, based on score. ;)
-(ƒ find-winner (entities vector : entity) (auto)
+(ƒ find-winner (entities vector : (entity)) (auto)
   (reduce
     (λ (a auto b auto) (auto)
       (if (> (.score a) (.score b))
