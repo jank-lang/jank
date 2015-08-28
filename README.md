@@ -1,6 +1,8 @@
 # The jank programming language [![Build Status](https://travis-ci.org/jeaye/jank.svg?branch=master)](https://travis-ci.org/jeaye/jank)
 
-jank is a functional programming language with a strong, static type system, scope-based resource management (RAII), a direct focus on generic, compile-time metaprogramming using both a powerful type-based template system, hygienic, code-as-data macros, and a native compiler.
+jank is a compiled functional programming language with a strong, static type system, scope-based resource management (RAII), a direct focus on generic, compile-time metaprogramming using both a powerful type-based template system, and hygienic, code-as-data macros.
+
+With a strong focus on immutability and concurrency, it has immutable, persistent data structures and requires mutation to be both explicit and atomic.
 
 ## Appetizer
 ```lisp
