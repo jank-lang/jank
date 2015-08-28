@@ -5,16 +5,16 @@ jank is a functional programming language with a strong, static type system, sco
 ## Appetizer
 ```lisp
 (; Update all entities. ;)
-(ƒ update (delta real entities list : entity) (auto)
+(ƒ update (delta real entities vector : entity) (auto)
   (map (partial update delta) entities))
 
 (; Damage nearby entities. ;)
-(ƒ cast-aoe (area real entities list : entity) (auto)
+(ƒ cast-aoe (area real entities vector : entity) (auto)
   (map damage
-    (filter (partial within-distance area) entities)))
+       (filter (partial within-distance area) entities)))
 
 (; Find a winner, based on score. ;)
-(ƒ find-winner (entities list : entity) (auto)
+(ƒ find-winner (entities vector : entity) (auto)
   (reduce
     (λ (a auto b auto) (auto)
       (if (> (.score a) (.score b))
@@ -66,8 +66,7 @@ Members of struct are accessed with a `.foo` syntax, where `.foo` is a function 
 
 ## Bindings (constant values)
 ```lisp
-(bind name T
-  value)
+(bind name T value)
 ```
 Bindings are defined via the `bind` special identifier and require a `name` identifier, an optional type, and a value. The type may be left out and it will be deduced by the value.
 
@@ -117,10 +116,10 @@ Only multi-line comments are supported. Anything within `(;` and `;)` is conside
 ### Resource management
 ```lisp
 (ƒ construct (...) (auto)
-  )
+  ...)
 
 (ƒ destruct (o auto) ()
-  )
+  ...)
 ```
 Scope-based resource management ties resource ownership to object lifetimes, similar to C++. Types can take advantage of this by specializing `construct` and `destruct` to perform any custom logic.
 
