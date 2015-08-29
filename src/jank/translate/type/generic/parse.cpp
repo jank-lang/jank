@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <jank/translate/type/generic/parse.hpp>
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/environment/scope.hpp>
@@ -21,7 +23,28 @@ namespace jank
 
           for(auto it(l.data.begin()); it != l.data.end(); ++it)
           {
-            /* TODO: Handle lists/tuples by recursing. */
+            if
+            (
+              auto const &list = parse::expect::optional_cast
+              <parse::cell::type::list>(*it)
+            )
+            {
+              auto const parsed(parse(list.value(), scope));
+              tuple<cell::detail::type_definition> tup{};
+              std::transform
+              (
+                parsed.parameters.begin(), parsed.parameters.end(),
+                std::back_inserter(tup.data),
+                [](auto const &p)
+                {
+                  return boost::get
+                  <single<cell::detail::type_definition>>(p).data;
+                }
+              );
+              ret.parameters.push_back(tup);
+              continue;
+            }
+
             auto const &type
             (parse::expect::type<parse::cell::type::ident>(*it).data);
             auto const &type_def(scope->find_type(type));
