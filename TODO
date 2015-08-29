@@ -1,6 +1,10 @@
 refactoring
   expect state
 
+generics
+  tuples
+  function types
+
 REPL
   add repl trait and compile separate lib
     allow multiple definitions
@@ -18,6 +22,8 @@ test
   closures (returning closures)
     need to copy captures
   ƒ as a function type
+  generics
+    type matching
 
 start with cons and lambdas
   list
