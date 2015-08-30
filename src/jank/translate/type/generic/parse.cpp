@@ -49,7 +49,7 @@ namespace jank
             (parse::expect::type<parse::cell::type::ident>(*it).data);
             auto const &type_def(scope->find_type(type));
 
-            /* TODO: Try to extract generics from this type. */
+            /* TODO: Try to extract generics from this type recursively. */
             if(!type_def)
             {
               throw expect::error::type::exception<>

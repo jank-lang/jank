@@ -16,6 +16,7 @@ let b:current_syntax = "jank"
 syntax keyword jank_todo TODO XXX FIXME NOTE
 syntax keyword jank_special
              \ function ƒ
+             \ lambda λ
              \ bind
              \ alias
              \ return
