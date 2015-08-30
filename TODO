@@ -8,6 +8,9 @@ REPL
 
 "falsey" is not a valid ident!!!
 
+closures
+  explicitly copy from scope? this may be messy
+
 test
   function referencing
     ambiguous error
