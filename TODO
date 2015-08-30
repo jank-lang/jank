@@ -33,14 +33,11 @@ custom types are dynamically allocated by default
   copied on mutation
   explicit copy function as well
 
-change comments to just need ; at the beginning
-  allow comments anywhere in forms
+allow comments anywhere in forms
 
 operators
   !=
   logical or, and, not, etc
-
-clojure is a huge inspiration
 
 stdlib
   print print-line format
@@ -53,7 +50,6 @@ stdlib
   tuple
 
 null
-  allow calling nullary functions with null
   allow null-typed bindings
 
 syntax errors...?
@@ -62,13 +58,6 @@ syntax errors...?
 
 variadic generics
   working with parameter packs
-
-lambdas / function objects
-  (ƒ foo (func ƒ : ((integer) (integer))) ()
-    (print (func 42)))
-  (foo
-    (λ (i integer) (auto)
-      i))
 
 Maybes?
   pattern matching
