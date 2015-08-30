@@ -46,6 +46,7 @@ namespace jank
 
               return def_opt.value().first;
             }
+            /* TODO: Indirect function call? */
             case cell::type::function_call:
             {
               auto const &call(expect::type<cell::type::function_call>(c));
