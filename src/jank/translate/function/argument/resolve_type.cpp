@@ -75,6 +75,9 @@ namespace jank
               );
               type::generic::tuple<cell::detail::type_definition> returns;
               returns.data.push_back(body.data.return_type.definition);
+              def.generics.parameters.clear();
+              def.generics.parameters.push_back(args);
+              def.generics.parameters.push_back(returns);
 
               return { def };
             }
