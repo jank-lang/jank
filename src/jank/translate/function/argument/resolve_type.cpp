@@ -2,6 +2,7 @@
 
 #include <jank/parse/cell/trait.hpp>
 #include <jank/translate/cell/trait.hpp>
+#include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/environment/builtin/type/function.hpp>
 #include <jank/translate/function/argument/resolve_type.hpp>
 #include <jank/translate/expect/type.hpp>
@@ -66,6 +67,7 @@ namespace jank
             {
               auto const &body(expect::type<cell::type::function_definition>(c));
               auto def(environment::builtin::type::function(*scope).definition);
+
               type::generic::tuple<cell::detail::type_definition> args;
               std::transform
               (
@@ -74,8 +76,16 @@ namespace jank
                 [](auto const &arg)
                 { return arg.type.definition; }
               );
+
+              /* Null return types should be considered empty lists. */
               type::generic::tuple<cell::detail::type_definition> returns;
-              returns.data.push_back(body.data.return_type.definition);
+              if
+              (
+                body.data.return_type.definition !=
+                environment::builtin::type::null(*scope).definition
+              )
+              { returns.data.push_back(body.data.return_type.definition); }
+
               def.generics.parameters.clear();
               def.generics.parameters.push_back(args);
               def.generics.parameters.push_back(returns);
