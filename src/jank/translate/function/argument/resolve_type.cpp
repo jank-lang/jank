@@ -7,6 +7,7 @@
 #include <jank/translate/function/argument/resolve_type.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/translate/expect/error/type/exception.hpp>
+#include <jank/translate/expect/error/internal/exception.hpp>
 
 namespace jank
 {
@@ -57,6 +58,28 @@ namespace jank
             {
               auto const &call(expect::type<cell::type::native_function_call>(c));
               return { call.data.definition.return_type.definition };
+            }
+            case cell::type::indirect_function_call:
+            {
+              auto const &call(expect::type<cell::type::indirect_function_call>(c));
+              auto const &generics(call.data.binding.type.definition.generics);
+              if(generics.parameters.size() != 2)
+              {
+                throw expect::error::internal::exception<>
+                { "invalid indirect function call" };
+              }
+
+              auto const &ret_tuple
+              (
+                boost::get
+                <type::generic::tuple<cell::detail::type_definition>>
+                (call.data.binding.type.definition.generics.parameters[1])
+              );
+              if(ret_tuple.data.empty())
+              { return { environment::builtin::type::null(*scope).definition }; }
+
+              /* TODO: Handle multiple return types. */
+              return { ret_tuple.data.front() };
             }
             case cell::type::function_body:
             {

@@ -1,6 +1,7 @@
 #include <algorithm>
 
 #include <jank/translate/function/return/make_implicit.hpp>
+#include <jank/translate/function/return/make_implicit_from_indirect_call.hpp>
 #include <jank/translate/environment/special/return_statement.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/expect/type.hpp>
@@ -34,7 +35,8 @@ namespace jank
               [](auto const &c)
               {
                 return expect::is<cell::type::function_call>(c) ||
-                       expect::is<cell::type::native_function_call>(c);
+                       expect::is<cell::type::native_function_call>(c) ||
+                       expect::is<cell::type::indirect_function_call>(c);
               }
             )
           );
@@ -42,6 +44,17 @@ namespace jank
           /* The function needs to be the last cell in the body. */
           if((last_function) != body.cells.rbegin())
           { return {}; }
+
+          if
+          (
+            auto const indirect_opt =
+              expect::optional_cast<cell::type::indirect_function_call>
+              (*last_function)
+          )
+          {
+            return make_implicit_from_indirect_call
+            (indirect_opt.value(), body);
+          }
 
           auto const native_opt
           (
