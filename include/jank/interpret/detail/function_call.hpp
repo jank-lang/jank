@@ -13,6 +13,20 @@ namespace jank
       cell::cell function_call
       (
         std::shared_ptr<environment::scope> const&,
+        translate::cell::function_call const&,
+        std::function
+        <
+          cell::cell
+          (
+            std::shared_ptr<environment::scope> const&,
+            translate::cell::function_body const&
+          )
+        > const &processor
+      );
+
+      cell::cell function_call
+      (
+        std::shared_ptr<environment::scope> const&,
         translate::cell::function_call const&
       );
     }

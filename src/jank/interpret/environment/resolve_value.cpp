@@ -2,6 +2,7 @@
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/interpret/interpret.hpp>
+#include <jank/interpret/detail/function_call.hpp>
 #include <jank/interpret/detail/indirect_function_call.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
 #include <jank/interpret/expect/error/lookup/exception.hpp>
@@ -13,8 +14,6 @@ namespace jank
   {
     namespace environment
     {
-      /* TODO: Shared these impls with the details from interpret.
-       * eg. detail/function_call.cpp does the same shit. */
       cell::cell resolve_value
       (
         std::shared_ptr<scope> const &s,
@@ -85,25 +84,19 @@ namespace jank
             auto const &cell
             (translate::expect::type<translate::cell::type::function_call>(c));
 
-            /* TODO: This is copied from interpret.cpp. */
-            auto const next_scope(std::make_shared<scope>());
-            next_scope->parent = s;
-
-            auto arg_name_it(cell.data.definition.arguments.begin());
-            for(auto const &arg : cell.data.arguments)
-            {
-              auto const &name(*arg_name_it++);
-              auto const var(environment::resolve_value(next_scope, arg.cell));
-              next_scope->bindings[name.name] = var;
-            }
-
-            /* TODO: This is nasty. */
             /* We need to look up the function body here, instead of using
              * the one we have; recursive calls will have empty bodies. */
-            return interpret
+            return detail::function_call
             (
-              next_scope,
-              { cell.data.scope->expect_function(cell.data.definition) }
+              s, cell,
+              [&](auto const &scope, auto const &/*body*/)
+              {
+                return interpret
+                (
+                  scope,
+                  { cell.data.scope->expect_function(cell.data.definition) }
+                );
+              }
             );
           } break;
 

@@ -11,7 +11,15 @@ namespace jank
       cell::cell function_call
       (
         std::shared_ptr<environment::scope> const &scope,
-        translate::cell::function_call const &cell
+        translate::cell::function_call const &cell,
+        std::function
+        <
+          cell::cell
+          (
+            std::shared_ptr<environment::scope> const&,
+            translate::cell::function_body const&
+          )
+        > const &processor
       )
       {
         auto const next_scope(std::make_shared<environment::scope>());
@@ -25,7 +33,21 @@ namespace jank
           next_scope->bindings[name.name] = var;
         }
 
-        return interpret(next_scope, { cell.data.definition.body });
+        return processor(next_scope, { cell.data.definition.body });
+      }
+
+      cell::cell function_call
+      (
+        std::shared_ptr<environment::scope> const &scope,
+        translate::cell::function_call const &cell
+      )
+      {
+        return function_call
+        (
+          scope, cell,
+          [](auto const &scope, auto const &body)
+          { return interpret(scope, body); }
+        );
       }
     }
   }
