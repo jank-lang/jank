@@ -4,6 +4,7 @@
 #include <jank/translate/function/match_indirect.hpp>
 #include <jank/translate/function/argument/resolve_type.hpp>
 #include <jank/translate/expect/error/type/overload.hpp>
+#include <jank/translate/expect/error/internal/exception.hpp>
 
 namespace jank
 {
@@ -19,20 +20,31 @@ namespace jank
         std::function<void (cell::indirect_function_call)> const &callback
       )
       {
-        /* TODO: Parse args, match args against type, throw on failure. */
-        static_cast<void>(binding);
-        static_cast<void>(scope);
-        static_cast<void>(callback);
-
         auto const arguments
         (function::argument::call::parse<cell::cell>(args, scope));
 
-        /* TODO: Look up generics in type. */
-        static_cast<void>(arguments);
+        auto const &generics(binding.data.type.definition.generics);
+        if(generics.parameters.size() != 2)
+        { throw expect::error::internal::exception<>{ "invalid generic" }; }
+        auto const &expected_args
+        (
+          boost::get
+          <
+            type::generic::tuple<cell::detail::type_definition>
+          >(generics.parameters[0])
+        );
 
-        /* TODO: Match args size and types. */
-
-        if(true) /* TODO: Final check. */
+        if
+        (
+          arguments.size() == expected_args.data.size() &&
+          std::equal
+          (
+            arguments.begin(), arguments.end(),
+            expected_args.data.begin(),
+            [&](auto const &arg, auto const &expected)
+            { return argument::resolve_type(arg.cell, scope).data == expected; }
+          )
+        )
         {
           callback({ { binding.data, arguments } });
           return;
