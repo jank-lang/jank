@@ -1,10 +1,6 @@
 refactoring
   expect state
 
-generics
-  tuples
-  function types
-
 REPL
   add repl trait and compile separate lib
     allow multiple definitions
