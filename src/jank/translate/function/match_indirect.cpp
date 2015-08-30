@@ -14,9 +14,9 @@ namespace jank
       void match_indirect
       (
         cell::binding_definition const &binding,
-        parse::cell::list const &list,
+        parse::cell::list const &args,
         std::shared_ptr<environment::scope> const &scope,
-        std::function<void (cell::indirect_function_call)> callback
+        std::function<void (cell::indirect_function_call)> const &callback
       )
       {
         /* TODO: Parse args, match args against type, throw on failure. */
@@ -25,7 +25,7 @@ namespace jank
         static_cast<void>(callback);
 
         auto const arguments
-        (function::argument::call::parse<cell::cell>(list, scope));
+        (function::argument::call::parse<cell::cell>(args, scope));
 
         /* TODO: Look up generics in type. */
         static_cast<void>(arguments);
@@ -40,7 +40,7 @@ namespace jank
 
         std::stringstream ss;
         ss << "no matching function: "
-           << parse::expect::type<parse::cell::type::ident>(list.data[0]).data
+           << parse::expect::type<parse::cell::type::ident>(args.data[0]).data
            << " with arguments: ";
 
         for(auto const &arg : arguments)

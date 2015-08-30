@@ -15,7 +15,7 @@ namespace jank
         cell::binding_definition const &binding,
         parse::cell::list const &args,
         std::shared_ptr<environment::scope> const &scope,
-        std::function<void (cell::indirect_function_call)> callback
+        std::function<void (cell::indirect_function_call)> const &callback
       );
     }
   }
