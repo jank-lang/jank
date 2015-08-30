@@ -69,6 +69,7 @@ namespace jank
                 { "invalid indirect function call" };
               }
 
+              /* Empty means a null return. */
               auto const &ret_tuple
               (
                 boost::get
