@@ -2,6 +2,7 @@
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/interpret/interpret.hpp>
+#include <jank/interpret/detail/indirect_function_call.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
 #include <jank/interpret/expect/error/lookup/exception.hpp>
 #include <jank/interpret/expect/error/internal/unimplemented.hpp>
@@ -12,6 +13,8 @@ namespace jank
   {
     namespace environment
     {
+      /* TODO: Shared these impls with the details from interpret.
+       * eg. detail/function_call.cpp does the same shit. */
       cell::cell resolve_value
       (
         std::shared_ptr<scope> const &s,
@@ -115,6 +118,17 @@ namespace jank
             /* Recurse. */
             return environment::resolve_value
             (s, cell.data.definition.interpret(s, cell.data.arguments));
+          } break;
+
+          case translate::cell::type::indirect_function_call:
+          {
+            auto const &cell
+            (
+              translate::expect::type
+              <translate::cell::type::indirect_function_call>(c)
+            );
+
+            return interpret::detail::indirect_function_call(s, cell);
           } break;
 
           case translate::cell::type::function_body:
