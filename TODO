@@ -8,6 +8,8 @@ REPL
 
 "falsey" is not a valid ident!!!
 
+ƒ is broken as a generic type
+
 closures
   explicitly copy from scope? this may be messy
 
