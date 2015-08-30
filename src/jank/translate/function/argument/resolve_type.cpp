@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <jank/parse/cell/trait.hpp>
 #include <jank/translate/cell/trait.hpp>
 #include <jank/translate/environment/builtin/type/function.hpp>
@@ -61,15 +63,30 @@ namespace jank
             }
             case cell::type::function_definition:
             {
-              /* TODO: Handle like function references. */
-              //auto const &body(expect::type<cell::type::function_definition>(c));
-              //return { body.data.return_type.definition };
+              auto const &body(expect::type<cell::type::function_definition>(c));
+              auto def(environment::builtin::type::function(*scope).definition);
+              type::generic::tuple<cell::detail::type_definition> args;
+              std::transform
+              (
+                body.data.arguments.begin(), body.data.arguments.end(),
+                std::back_inserter(args.data),
+                [](auto const &arg)
+                { return arg.type.definition; }
+              );
+              type::generic::tuple<cell::detail::type_definition> returns;
+              returns.data.push_back(body.data.return_type.definition);
+
+              return { def };
             }
             case cell::type::function_reference:
             {
-              /* TODO: Actually read the type info and apply generics. */
-              //auto const &body(expect::type<cell::type::function_reference>(c));
-              return { environment::builtin::type::function(*scope).definition };
+              /* Recurse with the definition. */
+              auto const &body(expect::type<cell::type::function_reference>(c));
+              return resolve_type
+              (
+                cell::function_definition{ body.data.definition },
+                scope
+              );
             }
             default:
               throw expect::error::type::exception<>
