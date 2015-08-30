@@ -71,8 +71,11 @@ namespace jank
           {
             auto const &def(function_binding.value().first);
             auto const type(def.data.type);
-            std::cout << type.definition.name << std::endl;
-            if(type == environment::builtin::type::function(*scope))
+            if
+            (
+              type.definition.name ==
+              environment::builtin::type::function(*scope).definition.name
+            )
             {
               function::match_indirect
               (
