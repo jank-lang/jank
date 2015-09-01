@@ -76,6 +76,8 @@ namespace jank
                 environment::builtin::type::normalize
                 (type_def.value().first.data, *scope)
               );
+              /* TODO: Refactor into shared function? This is being used in
+               * a few places. */
               auto const &extracted_generic
               (type::generic::extract(it, l.data.end()));
               it = std::get<1>(extracted_generic);

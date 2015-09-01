@@ -35,6 +35,7 @@ namespace jank
           type_list types;
           for(auto const &t : list.data)
           {
+            /* TODO: Extract generics properly. */
             auto const &type_string
             (parse::expect::type<parse::cell::type::ident>(t).data);
             auto const type(scope->find_type(type_string));
