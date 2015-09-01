@@ -7,18 +7,18 @@ With a focus on safe concurrency, jank has immutable, persistent data structures
 ## Appetizer
 ```lisp
 (; Update all entities. ;)
-(ƒ update (delta real entities vector : (entity)) (auto)
+(ƒ update (delta real entities vector : (entity)) (Ɐ)
   (map (partial update delta) entities))
 
 (; Damage nearby entities. ;)
-(ƒ cast-aoe (area real entities vector : (entity)) (auto)
+(ƒ cast-aoe (area real entities vector : (entity)) (Ɐ)
   (map damage
        (filter (partial within-distance area) (entity))))
 
 (; Find a winner, based on score. ;)
-(ƒ find-winner (entities vector : (entity)) (auto)
+(ƒ find-winner (entities vector : (entity)) (Ɐ)
   (reduce
-    (λ (a auto b auto) (auto)
+    (λ (a Ɐ b Ɐ) (Ɐ)
       (if (> (.score a) (.score b))
         a b))
     entities))
@@ -36,10 +36,10 @@ There are a few primitive types which are part of the language.
 
 ## Functions
 ```lisp
-(ƒ square (i integer) (auto)
+(ƒ square (i integer) (Ɐ)
   (* i i))
 ```
-Functions are defined via the `function` (or `ƒ`) special identifier and require a `name` identifier, an argument list (which may be empty), and a return type list (which may be empty). Return type lists may also be `(auto)`, which forces the compiler to deduce the type.
+Functions are defined via the `function` (or `ƒ`) special identifier and require a `name` identifier, an argument list (which may be empty), and a return type list (which may be empty). Return type lists may also be `(auto)` or `(Ɐ)`, which forces the compiler to deduce the type.
 
 ## Structs
 ```lisp
@@ -73,7 +73,7 @@ Members of struct are accessed with a `.foo` syntax, where `.foo` is a function 
 Bindings are defined via the `bind` special identifier and require a `name` identifier, an optional type, and a value. The type may be left out and it will be deduced by the value.
 
 ## Generics
-Definitions may be dependent on types. Such definitions may be functions or structs. The type list must never be empty. Dependent (incomplete) types of a generic item must be prefixed with `:` to disambiguate from full specializations. To aid in cleanliness, function parameters and return types may be set to `auto`, implicitly making them generic.
+Definitions may be dependent on types. Such definitions may be functions or structs. The type list must never be empty. Dependent (incomplete) types of a generic item must be prefixed with `:` to disambiguate from full specializations. To aid in cleanliness, function parameters and return types may be set to `auto` or `Ɐ`, implicitly making them generic.
 
 ### Examples
 #### Function
@@ -117,10 +117,10 @@ Only multi-line comments are supported. Anything within `(;` and `;)` is conside
 
 ### Resource management
 ```lisp
-(ƒ construct (...) (auto)
+(ƒ construct (...) (Ɐ)
   ...)
 
-(ƒ destruct (o auto) ()
+(ƒ destruct (o Ɐ) ()
   ...)
 ```
 Scope-based resource management ties resource ownership to object lifetimes, similar to C++. Types can take advantage of this by specializing `construct` and `destruct` to perform any custom logic.
@@ -133,7 +133,7 @@ When constructing an object, constructors are first considered, then aggregate i
   (x T-x)
   (y T-y))
 
-(ƒ construct : (coord : (:T-x :T-y)) (x T-x y T-y) (auto)
+(ƒ construct : (coord : (:T-x :T-y)) (x T-x y T-y) (Ɐ)
   (print "constructing object")
   (coord : (T-x T-y) :x x :y y))
 
@@ -169,14 +169,14 @@ Constraints can be applied to various definitions, including functions and struc
 #### Functions
 ```lisp
 (; We can deduce the return types for cleanliness. ;)
-(ƒ number? : (:T) () (auto)
+(ƒ number? : (:T) () (Ɐ)
   false)
-(ƒ number? : (integer) () (auto)
+(ƒ number? : (integer) () (Ɐ)
   true)
-(ƒ number? : (real) () (auto)
+(ƒ number? : (real) () (Ɐ)
   true)
 
-(ƒ square : (:T) (i T) (auto) where (number? : T)
+(ƒ square : (:T) (i T) (Ɐ) where (number? : T)
   (* i i))
 ```
 #### Structs
@@ -218,7 +218,7 @@ Enums function as variant sum types; each variant can have its own type or simpl
 Branching, using `if`, allows for specifying a single form for the true and false cases. All conditions must be of type `boolean` and the false case is optional. To have more than one line in a true or false case, introduce scope with a `do` statement.
 
 ```lisp
-(ƒ next-even (i integer) (auto)
+(ƒ next-even (i integer) (Ɐ)
   (if (even? i)
     (do
       (print "even")
