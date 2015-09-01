@@ -4,6 +4,7 @@
 #include <jank/parse/cell/trait.hpp>
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/environment/scope.hpp>
+#include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/environment/builtin/type/normalize.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
 
@@ -28,20 +29,7 @@ namespace jank
           }
           /* No return type means null return type. */
           else if(list.data.empty())
-          {
-            /* TODO: Use builtin::type? */
-            auto const null
-            (
-              scope->find_type
-              (parse::cell::trait::to_string<parse::cell::type::null>())
-            );
-            if(!null) /* Shouldn't ever happen. */
-            {
-              throw expect::error::internal::exception<>
-              { "no null type found" };
-            }
-            return { { { null.value().first.data } } };
-          }
+          { return { { { environment::builtin::type::null(*scope) } } }; }
 
           /* Resolve each type. */
           type_list types;
