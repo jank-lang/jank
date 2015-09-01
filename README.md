@@ -129,7 +129,7 @@ To construct an object using a constructor, `new` or `construct` must be called.
 
 `new` is a convenience macro which will first try to match constructors and will fall back on aggregate initialization. These checks are all done at compile-time. Since `new` allows types to intercept aggregate initialization with constructors, it's the preferred way of instantiating objects.
 
-Because the constructors are the functions to actually create the objects, and not something that's called with an already-created object, delegation to other constructors and other functions is very flexible.
+Since constructors are the functions to actually create objects, not something that's called after creation, delegation to other constructors and other functions is very flexible.
 
 #### Example
 ```lisp
