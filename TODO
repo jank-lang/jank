@@ -10,9 +10,6 @@ REPL
 
 ƒ is broken as a generic type
 
-unicode alternative to auto
-  Ɐ will work well
-
 closures
   explicitly copy from scope? this may be messy
 
