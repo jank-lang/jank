@@ -8,6 +8,8 @@ REPL
 
 "falsey" is not a valid ident!!!
 
+auto deduction of null return is failing
+
 closures
   explicitly copy from scope? this may be messy
 
