@@ -57,7 +57,7 @@ User-defined data types are supported, in the form of structs. Structs may conta
 Struct members may be given a default value. If a member doesn't have a default value, one must be provided at the time of initialization; the compiler will make sure no members are uninitialized.
 
 ### Members
-Members of struct are accessed with a `.foo` syntax, where `.foo` is a function and `foo` is the field. Name. An example:
+Members of struct are accessed with a `.foo` syntax, where `.foo` is a function and `foo` is the field. An example:
 ```lisp
 (struct number
   (data integer))
