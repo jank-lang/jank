@@ -156,10 +156,10 @@ All type aliases are strong. Since the focus is so strongly on generics, types a
 ### Examples
 ```lisp
 (; name is now a strong type alias of the builtin string type. ;)
-(alias name as string)
+(alias string as name)
 
 (; position is generic, yet still strong. ;)
-(alias position : (:T-x :T-y) as coord : (T-x T-y))
+(alias coord : (:T-x :T-y) as position : (T-x T-y))
 ```
 
 ## Generic constraints
