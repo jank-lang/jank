@@ -125,7 +125,11 @@ Only multi-line comments are supported. Anything within `(;` and `;)` is conside
 ```
 Scope-based resource management ties resource ownership to object lifetimes, similar to C++. Types can take advantage of this by specializing `construct` and `destruct` to perform any custom logic.
 
-When constructing an object, constructors are first considered, then aggregate initialization is considered. Alternatively, aggregate initialization can be used by directly specifying keywords for each initialized struct field. In aggregate initialization, any uninitialized fields are an error. If the struct specifies a default for a field, that field may be omitted in aggregate initialization.
+To construct an object using a constructor, `new` or `construct` must be called. To construct an object using aggregate initialization, the type of the object can be used as the function; all members which don't have defaults provided in the `struct` definition must be specified in aggregate initialization.
+
+`new` is a convenience macro which will first try to match constructors and will fall back on aggregate initialization. These checks are all done at compile-time. Since `new` allows types to intercept aggregate initialization with constructors, it's the preferred way of instantiating objects.
+
+Because the constructors are the functions to actually create the objects, and not something that's called with an already-created object, delegation to other constructors and other functions is very flexible.
 
 #### Example
 ```lisp
@@ -133,21 +137,23 @@ When constructing an object, constructors are first considered, then aggregate i
   (x T-x)
   (y T-y))
 
+(; Defines a constructor which has a side effect and then uses
+   aggregate initialization to build the coord. ;)
 (ƒ construct : (coord : (:T-x :T-y)) (x T-x y T-y) (Ɐ)
   (print "constructing object")
-  (coord : (T-x T-y) :x x :y y))
+  (coord : (T-x T-y) x y))
 
 (ƒ destruct : (:T-x :T-y) (c coord : (T-x T-y)) ()
   (print "destructing coord"))
 
-(; Calls the constructor. ;)
-(bind c (coord : (real real)) 0.0 5.4)
+(; Calls the constructor explicitly. ;)
+(bind c1 (construct : coord : (real real) 0.0 5.4))
 
-(; Invokes foo and calls the coord constructor. ;)
-(foo (coord : (real real) 0.0 5.4))
+(; Calls the constructor via new. ;)
+(bind c2 (new : coord : (real real) 0.0 5.4))
 
 (; Invokes bar and uses aggregate initialization for the coord. ;)
-(bar (coord : (real real) :x 0.0 :y 5.4))
+(bar (coord : (real real) 0.0 5.4))
 ```
 
 ## Type aliasing
