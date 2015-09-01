@@ -28,17 +28,6 @@ namespace jank
                 } }
               )
             );
-            s.type_definitions.insert // TODO
-            (
-              detail::make_type
-              (
-                "curry",
-                { {
-                  translate::type::generic::single<cell::type_definition::type>
-                  {},
-                } }
-              )
-            );
             return s;
           }
 
