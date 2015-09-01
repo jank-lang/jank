@@ -47,7 +47,7 @@ Functions are defined via the `function` (or `ƒ`) special identifier and requir
   (x float)
   (y float))
 ```
-User-defined data types are supported, in the form of structs. Structs may contain any number of members, all of which are public (as in C). Structs may also be generic. Unlike C++, but like C, structs may not have member functions. Instead, functions should be designed in a generic manner and may be overloaded/specialized for certain types. See [generics](#generics).
+User-defined data types are supported, in the form of structs. Structs may contain any number of members, all of which are public (as in C). Structs may also be generic. Structs may not have member functions. Instead, functions should be designed in a generic manner and may be overloaded/specialized for certain types. See [generics](#generics).
 
 ```lisp
 (struct name
@@ -123,7 +123,7 @@ Only multi-line comments are supported. Anything within `(;` and `;)` is conside
 (ƒ destruct (o Ɐ) ()
   ...)
 ```
-Scope-based resource management ties resource ownership to object lifetimes, similar to C++. Types can take advantage of this by specializing `construct` and `destruct` to perform any custom logic.
+Scope-based resource management ties resource ownership to object lifetimes. Types can take advantage of this by specializing `construct` and `destruct` to perform any custom logic.
 
 To construct an object using a constructor, `new` or `construct` must be called. To construct an object using aggregate initialization, the type of the object can be used as the function; all members which don't have defaults provided in the `struct` definition must be specified in aggregate initialization.
 
@@ -252,7 +252,7 @@ Branching, using `if`, allows for specifying a single form for the true and fals
 For now, due to the simplicity of the parser, parentheses in strings need to be escaped. This will change, but it's very low priority.
 
 ## Native API
-Native types and functions can be exposed through the native API, which is in C++. Though currently only exposed in the compiler, there's planned support for loading dynamic libraries *at compile-time* which specify wrappers around native code. An example might be OpenGL, glfw, or other similar packages.
+Native types and functions can be exposed through the native API, which is in C++14. Though currently only exposed in the compiler, there's planned support for loading dynamic libraries *at compile-time* which specify wrappers around native code. An example might be OpenGL, glfw, or other similar packages.
 
 ## Building
 To build, follow the normal steps:
