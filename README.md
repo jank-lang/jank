@@ -138,7 +138,7 @@ Since constructors are the functions to actually create objects, not something t
   (y T-y))
 
 (; Defines a constructor which has a side effect and then uses
-   aggregate initialization to build the coord. ;)
+ ; aggregate initialization to build the coord. ;)
 (ƒ construct : (coord : (:T-x :T-y)) (x T-x y T-y) (Ɐ)
   (print "constructing object")
   (coord : (T-x T-y) x y))
