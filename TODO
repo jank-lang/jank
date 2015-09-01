@@ -10,6 +10,8 @@ REPL
 
 auto deduction of null return is failing
 
+indirect functions calls, when arguments, don't work
+
 closures
   explicitly copy from scope? this may be messy
 
