@@ -151,9 +151,6 @@ Since constructors are the functions to actually create objects, not something t
 
 (; Calls the constructor via new. ;)
 (bind c2 (new : coord : (real real) 0.0 5.4))
-
-(; Invokes bar and uses aggregate initialization for the coord. ;)
-(bar (coord : (real real) 0.0 5.4))
 ```
 
 ## Type aliasing
