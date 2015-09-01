@@ -28,6 +28,7 @@ test
   ƒ as a function type
   generics
     type matching
+  Ɐ as auto
 
 start with cons and lambdas
   list
