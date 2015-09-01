@@ -28,6 +28,19 @@ namespace jank
                 } }
               )
             );
+            s.type_definitions.insert
+            (
+              detail::make_type
+              (
+                "ƒ",
+                { {
+                  translate::type::generic::tuple<cell::type_definition::type>
+                  {},
+                  translate::type::generic::tuple<cell::type_definition::type>
+                  {},
+                } }
+              )
+            );
             return s;
           }
 

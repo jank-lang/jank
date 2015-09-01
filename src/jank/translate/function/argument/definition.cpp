@@ -71,7 +71,11 @@ namespace jank
                 { "unknown type " + type_name };
               }
 
-              auto type(type_def.value().first);
+              auto type
+              (
+                environment::builtin::type::normalize
+                (type_def.value().first.data, *scope)
+              );
               auto const &extracted_generic
               (type::generic::extract(it, l.data.end()));
               it = std::get<1>(extracted_generic);
@@ -82,23 +86,14 @@ namespace jank
                 (type::generic::parse(generic_list_opt.value(), scope));
                 type::generic::verify
                 (
-                  type_def.value().first.data.generics,
+                  type.generics,
                   parsed_generics
                 );
 
-                type.data.generics = parsed_generics;
+                type.generics = parsed_generics;
               }
 
-              ret.push_back
-              (
-                {
-                  name,
-                  {
-                    environment::builtin::type::normalize
-                    (type.data, *scope)
-                  }
-                }
-              );
+              ret.push_back({ name, { type } });
             }
 
             return ret;
