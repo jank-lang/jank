@@ -16,6 +16,7 @@ namespace jank
           (scope &s)
           {
             s.type_definitions.insert(detail::make_type("auto"));
+            s.type_definitions.insert(detail::make_type("Ɐ"));
             s.type_definitions.insert(detail::make_type("null"));
             s.type_definitions.insert(detail::make_type("boolean"));
             s.type_definitions.insert(detail::make_type("integer"));

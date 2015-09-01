@@ -1,5 +1,6 @@
 #include <jank/translate/environment/builtin/type/normalize.hpp>
 #include <jank/translate/environment/builtin/type/function.hpp>
+#include <jank/translate/environment/builtin/type/primitive.hpp>
 
 namespace jank
 {
@@ -16,6 +17,8 @@ namespace jank
           {
             if(type.name == "ƒ")
             { return function(s).definition; }
+            if(type.name == "Ɐ")
+            { return automatic(s).definition; }
             return type;
           }
         }
