@@ -159,6 +159,7 @@ namespace jank
                   }
                 }
 
+                /* TODO: Indirect function calls/ */
                 auto const name
                 (parse::expect::type<parse::cell::type::ident>(c.data[0]).data);
                 auto const native_function_opt
