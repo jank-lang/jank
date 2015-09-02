@@ -10,8 +10,6 @@ REPL
 
 auto deduction of null return is failing
 
-indirect functions calls, when arguments, don't work
-
 closures
   explicitly copy from scope? this may be messy
 
@@ -22,6 +20,7 @@ test
   calling from binding
   calling from indirect binding
     native and non-native
+    as params
   closures (returning closures)
     need to copy captures
   ƒ as a function type
