@@ -161,14 +161,12 @@ namespace jank
                   }
                 }
 
-                /* TODO: Indirect function calls? */
                 auto const function_name
                 (parse::expect::type<parse::cell::type::ident>(c.data[0]).data);
 
+                /* TODO: Refactor into function; translate.hpp is using it, too. */
                 auto const function_binding
                 (scope_->find_binding(function_name));
-
-                /* Allow the binding to override the functions. */
                 if(function_binding)
                 {
                   auto const &def(function_binding.value().first);
