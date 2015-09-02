@@ -9,7 +9,9 @@
 #include <jank/translate/environment/special/apply_expression.hpp>
 #include <jank/translate/environment/special/apply_definition.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
+#include <jank/translate/environment/builtin/type/function.hpp>
 #include <jank/translate/function/match_overload.hpp>
+#include <jank/translate/function/match_indirect.hpp>
 #include <jank/translate/function/return/deduce.hpp>
 #include <jank/translate/function/return/validate.hpp>
 #include <jank/translate/expect/error/type/exception.hpp>
@@ -160,11 +162,41 @@ namespace jank
                 }
 
                 /* TODO: Indirect function calls? */
-                auto const name
+                auto const function_name
                 (parse::expect::type<parse::cell::type::ident>(c.data[0]).data);
+
+                auto const function_binding
+                (scope_->find_binding(function_name));
+
+                /* Allow the binding to override the functions. */
+                if(function_binding)
+                {
+                  auto const &def(function_binding.value().first);
+                  auto const type(def.data.type);
+                  if
+                  (
+                    type.definition.name ==
+                    environment::builtin::type::function(*scope_).definition.name
+                  )
+                  {
+                    cell::indirect_function_call call;
+                    function::match_indirect
+                    (
+                      def, c, scope_,
+                      [&](auto const &matched_call)
+                      { call = matched_call; }
+                    );
+                    return detail::value<C>
+                    {
+                      function_name,
+                      { call }
+                    };
+                  }
+                }
+
                 auto const native_function_opt
-                (scope_->find_native_function(name));
-                auto const function_opt(scope_->find_function(name));
+                (scope_->find_native_function(function_name));
+                auto const function_opt(scope_->find_function(function_name));
 
                 /* TODO: This mutation over a closure is shitty. */
                 detail::value<C> ret;
@@ -175,7 +207,7 @@ namespace jank
                   {
                     ret = detail::value<C>
                     {
-                      name,
+                      function_name,
                       { match }
                     };
                   }
