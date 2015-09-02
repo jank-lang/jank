@@ -25,6 +25,7 @@ test
   closures (returning closures)
     need to copy captures
   ƒ as a function type
+    generic and non-generic
   generics
     type matching
   Ɐ as auto
