@@ -271,9 +271,9 @@ The form of a macro definition is very similar to that of a function definition.
 (; Compile-time type traits using partial specialization. ;)
 (macro ^sequence? : (:T) ()
   false)
-(macro ^sequence? : (list : :T) ()
+(macro ^sequence? : (list : (:T)) ()
   true)
-(macro ^sequence? : (vector : :T) ()
+(macro ^sequence? : (vector : (:T)) ()
   true)
 ```
 
