@@ -246,13 +246,13 @@ Branching, using `if`, allows for specifying a single form for the true and fals
 ```
 
 ## Macros
-Macros provide the ability for arbitrary code execution, including disk and network IO, and direct modification of the source code at compile-time. Macros, like functions, can be made generic and can be partially and fully specialized. Aside from generics, macros don't distinguish between atom types.
+Macros provide the ability for arbitrary code execution, including disk and network IO, and direct modification of the source code at compile-time. Macros, like functions, can be made generic and can be partially and fully specialized. Along with generics, macros use the same type-safety and overloading rules as normal functions. There are two added types, during macro definition, which can be used: `^list` and `^atom` which correspond to arbitrary lists of code and single code atoms respectively.
 
 The form of a macro definition is very similar to that of a function definition. Macros, however, have no specific return type; they emit whatever they return as replacement code for the call. As a convention, macros begin with `^`.
 
 ### Non-generic
 ```lisp
-(macro ^reverse-args (args : list)
+(macro ^reverse-args (args : ^list)
   (list (first args) (reverse (rest args))))
 
 (^reverse-args (print 3 2 1))
