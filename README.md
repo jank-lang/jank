@@ -268,6 +268,13 @@ The form of a macro definition is very similar to that of a function definition.
 
 ### Generic
 ```lisp
+(; Compile-time type traits using partial specialization. ;)
+(macro ^sequence? : (:T) ()
+  false)
+(macro ^sequence? : (list : :T) ()
+  true)
+(macro ^sequence? : (vector : :T) ()
+  true)
 ```
 
 ## Strings
