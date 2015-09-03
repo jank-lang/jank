@@ -171,20 +171,20 @@ Constraints can be applied to various definitions, including functions and struc
 ### Examples
 #### Functions
 ```lisp
-(; We can deduce the return types for cleanliness. ;)
-(ƒ number? : (:T) () (Ɐ)
+(; Specialize on generic macros as type traits. ;)
+(macro ^number? : (:T) ()
   false)
-(ƒ number? : (integer) () (Ɐ)
+(macro ^number? : (integer) ()
   true)
-(ƒ number? : (real) () (Ɐ)
+(macro ^number? : (real) ()
   true)
 
-(ƒ square : (:T) (i T) (Ɐ) where (number? : T)
+(ƒ square : (:T) (i T) (Ɐ) where (^number? : T)
   (* i i))
 ```
 #### Structs
 ```lisp
-(struct coord : (:T) where (number? : T)
+(struct coord : (:T) where (^number? : T)
   (data T))
 ```
 
