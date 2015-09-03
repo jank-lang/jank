@@ -110,7 +110,19 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 ```
 
 ### Variadic
-Generic functions and types can be variadic, allowing any number of parameters, both type and non-type. Parameter packs are expandable and iterable, as they're just a tuple.
+Generic functions and types can be variadic, allowing any number of parameters, both type and non-type. To accept arbitrary arguments into a tuple, the tuple must be prefixed with `&`; there may only be one such tuple per argument list.
+
+#### Struct
+```lisp
+(; Use variadic type args as a form of policies. ;)
+(struct coord : (:T-component &T-policies)
+  (x T-component)
+  (y T-component))
+
+(; Builds a cartesian coordinate with an offset origin.
+ ; All of this is built in to the coordinate's type. ;)
+(coord : (real cartesian origin : (77.0)) 0.0 0.0)
+```
 
 ## Comments
 Only multi-line comments are supported. Anything within `(;` and `;)` is considered a comment. Nested comments are allowed. Each closing `;)` matches the closest opening `(;`, even overpowering previous closing `;)` along the way. Thus, `(; foo ;) ;)` is a single comment.
