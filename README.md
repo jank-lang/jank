@@ -59,11 +59,11 @@ Struct members may be given a default value. If a member doesn't have a default 
 ### Members
 Members of struct are accessed with a `.foo` syntax, where `.foo` is a function and `foo` is the field. An example:
 ```lisp
-(struct number
-  (data integer))
+(struct person
+  (first-name string)
+  (last-name string))
 
-(; Access the member using the .data function. ;)
-(.data my_numer)
+(print (.last-name my_person))
 ```
 
 ## Bindings (constant values)
