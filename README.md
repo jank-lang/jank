@@ -278,13 +278,13 @@ The form of a macro definition is very similar to that of a function definition.
   (list (first args) (reverse (rest args))))
 
 (^reverse-args (print 3 2 1))
-(; becomes => (print 1 2 3) at compile-time. ;)
+(; Becomes => (print 1 2 3) at compile-time. ;)
 
 (macro ^constructor (type ^list args ^list &body)
   (ƒ construct : type args (Ɐ)
     body))
 
-(^constructor (person) (first-name string last-name string)
+(^constructor (person) (first-name Ɐ last-name Ɐ)
   (person first-name last-name))
 ```
 
