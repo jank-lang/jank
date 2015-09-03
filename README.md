@@ -245,6 +245,13 @@ Branching, using `if`, allows for specifying a single form for the true and fals
     "always true"))
 ```
 
+## Macros
+Macros provide the ability for arbitrary code execution, including disk and network IO, and direct modification of the source code at compile-time. Macros, like functions, can be made generic and can be partially and fully specialized. Aside from generics, macros don't distinguish between atom types.
+
+### Non-generic
+
+### Generic
+
 ## Strings
 For now, due to the simplicity of the parser, parentheses in strings need to be escaped. This will change, but it's very low priority.
 
