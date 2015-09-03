@@ -112,6 +112,16 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 ### Variadic
 Generic functions and types can be variadic, allowing any number of parameters, both type and non-type. To accept arbitrary arguments into a tuple, the tuple must be prefixed with `&`; there may only be one such tuple per argument list.
 
+#### Function
+```lisp
+(ƒ shout (&noises) ()
+  (for ((noise noises))
+    (print (upper noise))))
+
+(shout "fus" " ro" " dah")
+(; Prints => FUS RO DAH ;)
+```
+
 #### Struct
 ```lisp
 (; Use variadic type args as a form of policies. ;)
