@@ -253,7 +253,7 @@ The form of a macro definition is very similar to that of a function definition.
 ### Non-generic
 ```lisp
 (macro ^reverse-args (args : list)
-  (list (first args) (rest args)))
+  (list (first args) (reverse (rest args))))
 
 (^reverse-args (print 3 2 1))
 (; becomes => (print 1 2 3) at compile-time. ;)
