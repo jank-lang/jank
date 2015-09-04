@@ -17,6 +17,9 @@ auto deduction of null return is failing
 closures
   explicitly copy from scope? this may be messy
 
+remove named function referencing
+  it's of limited use
+
 test
   function referencing
     ambiguous error
