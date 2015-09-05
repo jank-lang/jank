@@ -21,10 +21,8 @@ remove named function referencing
   it's of limited use
 
 test
-  function referencing
-    ambiguous error
-  function binding
-  calling from binding
+  lambda expressions
+    binding, too
   calling from indirect binding
     native and non-native
     as params
@@ -32,6 +30,7 @@ test
     need to copy captures
   ƒ as a function type
     generic and non-generic
+    as a bind type
   generics
     type matching
   Ɐ as auto
