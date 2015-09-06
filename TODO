@@ -24,7 +24,6 @@ test
   lambda expressions
     binding, too
   calling from indirect binding
-    native and non-native
     as params
   closures (returning closures)
     need to copy captures
