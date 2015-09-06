@@ -21,11 +21,7 @@ remove named function referencing
   it's of limited use
 
 test
-  ƒ as a function type
-    generic and non-generic
-    as a bind type
-  generics
-    type matching
+  deduce function return from indirect call
 
 start with cons and lambdas
   list
