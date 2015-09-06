@@ -21,8 +21,6 @@ remove named function referencing
   it's of limited use
 
 test
-  calling from indirect binding
-    as params
   ƒ as a function type
     generic and non-generic
     as a bind type
