@@ -44,4 +44,8 @@ namespace jest
   template <> template <>
   void jank::deduce_group::test<6>()
   { jank::common::translate("translate/function/non-generic/deduce/pass_indirect_call.jank"); }
+
+  template <> template <>
+  void jank::deduce_group::test<7>()
+  { jank::common::translate("translate/function/non-generic/deduce/pass_null_no_return.jank"); }
 }

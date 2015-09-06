@@ -44,6 +44,11 @@ namespace jank
           (environment::builtin::type::automatic(*body.scope));
           if(body.return_type != automatic)
           { return body; }
+          else if(body.cells.empty())
+          {
+            body.return_type = environment::builtin::type::null(*body.scope);
+            return body;
+          }
 
           for(auto &c : body.cells)
           {
@@ -116,8 +121,6 @@ namespace jank
                 break;
             }
           }
-
-          /* TODO: Check if it's still auto and throw? */
 
           return body;
         }

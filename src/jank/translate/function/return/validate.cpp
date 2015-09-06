@@ -44,6 +44,8 @@ namespace jank
           {
             auto const &null
             (environment::builtin::type::null(*body.scope));
+            auto const &automatic
+            (environment::builtin::type::automatic(*body.scope));
 
             if(body.return_type == null)
             {
@@ -55,7 +57,12 @@ namespace jank
 
             /* Non-null return, yet no body. */
             if(body.cells.empty())
-            { detail::fail(); }
+            {
+              if(body.return_type == automatic)
+              { return body; }
+              else
+              { detail::fail(); }
+            }
 
             /* The previous function call may suffice as an implicit return. */
             auto const implicit(function::ret::make_implicit_from_call(body));
