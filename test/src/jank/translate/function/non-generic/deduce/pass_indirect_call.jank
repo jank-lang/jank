@@ -1,4 +1,4 @@
-(ƒ pred? (func ƒ :((integer) (bool)) i integer) (Ɐ)
+(ƒ pred? (func ƒ :((integer) (boolean)) i integer) (Ɐ)
   (func i))
 
 (bind even?
