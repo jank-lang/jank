@@ -1,7 +1,7 @@
 refactoring
   expect state
 
-allow keywords
+allow keywords?
   each keyword is its own type
   useful in the case of policies?
 
@@ -21,6 +21,7 @@ remove named function referencing
   it's of limited use
 
 test
+  call from direct binding
   deduce function return from indirect call
 
 start with cons and lambdas
