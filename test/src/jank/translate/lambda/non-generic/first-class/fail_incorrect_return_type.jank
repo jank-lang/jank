@@ -1,0 +1,6 @@
+(ƒ higher-order (func ƒ : (() (string))) ()
+  )
+
+(higher-order
+  (λ () (Ɐ)
+    4.0))

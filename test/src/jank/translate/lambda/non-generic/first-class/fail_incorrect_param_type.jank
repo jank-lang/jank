@@ -1,0 +1,6 @@
+(ƒ higher-order (func ƒ : ((real) ())) ()
+  )
+
+(higher-order
+  (λ (string) ()
+    ))
