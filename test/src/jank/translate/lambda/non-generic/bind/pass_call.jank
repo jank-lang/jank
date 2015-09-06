@@ -1,0 +1,7 @@
+(bind func
+  (λ () (boolean)
+    true))
+
+(func)
+(bind val (func))
+(assert (func))
