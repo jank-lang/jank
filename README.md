@@ -63,7 +63,7 @@ Members of struct are accessed with a `.foo` syntax, where `.foo` is a function 
   (first-name string)
   (last-name string))
 
-(print (.last-name my_person))
+(print (.last-name john))
 ```
 
 ## Bindings (constant values)
