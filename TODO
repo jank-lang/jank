@@ -21,8 +21,6 @@ remove named function referencing
   it's of limited use
 
 test
-  lambda expressions
-    binding, too
   calling from indirect binding
     as params
   ƒ as a function type
