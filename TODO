@@ -20,9 +20,6 @@ closures
 remove named function referencing
   it's of limited use
 
-test
-  call from direct binding
-
 start with cons and lambdas
   list
   map
