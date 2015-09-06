@@ -63,22 +63,8 @@ namespace jank
               environment::builtin::type::normalize
               (type_def.value().first.data, *scope)
             );
-            auto const &extracted_generic
-            (type::generic::extract(it, l.data.end()));
-            it = std::get<1>(extracted_generic);
-            auto const &generic_list_opt(std::get<0>(extracted_generic));
-            if(generic_list_opt)
-            {
-              auto const &parsed_generics
-              (type::generic::parse(generic_list_opt.value(), scope));
-              type::generic::verify
-              (
-                type.generics,
-                parsed_generics
-              );
-
-              type.generics = parsed_generics;
-            }
+            std::tie(type, it) = apply_genericity
+            (std::move(type), it, l.data.end(), scope);
 
             ret.parameters.push_back
             (
@@ -88,6 +74,36 @@ namespace jank
           }
 
           return ret;
+        }
+
+        std::tuple
+        <
+          cell::detail::type_definition,
+          parse::cell::list::type::const_iterator
+        > apply_genericity
+        (
+          cell::detail::type_definition &&type,
+          parse::cell::list::type::const_iterator const begin,
+          parse::cell::list::type::const_iterator const end,
+          std::shared_ptr<environment::scope> const &scope
+        )
+        {
+          auto const &extracted_generic
+          (type::generic::extract(begin, end));
+          auto const &generic_list_opt(std::get<0>(extracted_generic));
+          if(generic_list_opt)
+          {
+            auto const &parsed_generics
+            (type::generic::parse(generic_list_opt.value(), scope));
+            type::generic::verify
+            (
+              type.generics,
+              parsed_generics
+            );
+
+            type.generics = parsed_generics;
+          }
+          return std::make_tuple(type, std::get<1>(extracted_generic));
         }
       }
     }
