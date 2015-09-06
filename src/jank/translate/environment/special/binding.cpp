@@ -45,13 +45,38 @@ namespace jank
 
           bool const deduce_type{ data.size() == 3 };
 
-          /* Remove everything but the type and the value and parse it as a function call.
-           * The type will be skipped, as it's considered the function's name. */
+          auto it(std::next(data.begin(), 1));
+          cell::type_definition expected_type;
+          if(!deduce_type)
+          {
+            it = std::next(it);
+            auto const type_name
+            (parse::expect::type<parse::cell::type::ident>(*it));
+            auto const type_opt
+            (outer_scope->find_type(type_name.data));
+
+            if(!type_opt)
+            {
+              throw expect::error::type::exception<>
+              { "unknown type in binding definition" };
+            }
+            expected_type.data = environment::builtin::type::normalize
+            (type_opt.value().first.data, *outer_scope);
+
+            /* Parse any generics along with this type. */
+            std::tie(expected_type.data, it) = type::generic::apply_genericity
+            (std::move(expected_type.data), it, data.end(), outer_scope);
+          }
+
+          /* Remove everything but the type and the value and parse it as a
+           * function call. The type will be skipped, as it's considered the
+           * function's name. */
           auto parsable_list(input);
           parsable_list.data.erase
           (
             parsable_list.data.begin(),
-            std::next(parsable_list.data.begin(), deduce_type ? 1 : 2)
+            std::next
+            (parsable_list.data.begin(), std::distance(data.begin(), it))
           );
           auto const arguments
           (
@@ -69,7 +94,6 @@ namespace jank
             { "multiple values specified in binding definition" };
           }
 
-          cell::type_definition expected_type;
           auto const value_type
           (
             function::argument::resolve_type
@@ -79,31 +103,6 @@ namespace jank
           { expected_type = value_type; }
           else
           {
-            auto const type_name
-            (parse::expect::type<parse::cell::type::ident>(data[2]));
-            auto const type_opt
-            (outer_scope->find_type(type_name.data));
-
-            if(!type_opt)
-            {
-              throw expect::error::type::exception<>
-              { "unknown type in binding definition" };
-            }
-            expected_type.data = environment::builtin::type::normalize
-            (type_opt.value().first.data, *outer_scope);
-
-            /* Parse any generics along with this type. */
-            auto const &with_generics
-            (
-              type::generic::apply_genericity
-              (
-                std::move(expected_type.data),
-                std::next(data.begin(), 2), data.end(),
-                outer_scope
-              )
-            );
-            expected_type.data = std::get<0>(with_generics);
-
             if(value_type.data != expected_type.data)
             {
               throw expect::error::type::exception<>

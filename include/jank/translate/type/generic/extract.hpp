@@ -12,7 +12,8 @@ namespace jank
     {
       namespace generic
       {
-        /* Tries to find a generic specialization. */
+        /* Tries to find a generic specialization. Returns an it to the last
+         * element of used such that ++it is the next element you want. */
         std::tuple
         <
           std::experimental::optional<parse::cell::list>,
