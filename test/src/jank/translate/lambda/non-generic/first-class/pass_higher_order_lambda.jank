@@ -1,0 +1,9 @@
+(ƒ higher-order (func ƒ : ((ƒ : ((string) (string))) (string))) ()
+  (assert (= (func
+               (λ (s string) (Ɐ)
+                 (+ "inner " s)))
+             "outer inner meow")))
+
+(higher-order
+  (λ (func ƒ : ((string) (string))) (Ɐ)
+    (+ "outer " (func "meow"))))
