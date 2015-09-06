@@ -36,7 +36,10 @@ namespace jank
       boost::algorithm::trim(contents);
 
       static std::regex outer_regex
-      { R"((\(;)([\s\S]*)(;\)+)|(\(*)((?:\\.|[^\\\(\)])*)(\)*))" };
+      {
+        R"((\(;)([\s\S]*)(;\)+)|(\(*)((?:\\.|[^\\\(\)])*)(\)*))",
+        std::regex_constants::ECMAScript | std::regex_constants::optimize
+      };
       std::sregex_iterator const outer_begin
       { contents.begin(), contents.end(), outer_regex };
       std::sregex_iterator const end{};
@@ -61,8 +64,9 @@ namespace jank
             R"(|(\-?\d+(?!\d*\.\d+)))" /* integers */
             R"(|(\-?\d+\.\d+))" /* reals */
             R"(|\"((?:\\.|[^\\\"])*)\")" /* strings */
-            R"(|([^\s"']+))" /* idents */
+            R"(|([^\s"']+))", /* idents */
             /* XXX: Only works in GCC 5.0+ and clang 3.6+. */
+            std::regex_constants::ECMAScript | std::regex_constants::optimize
           };
           auto const &outer_str(outer_match.str());
           if(outer_str.empty())
