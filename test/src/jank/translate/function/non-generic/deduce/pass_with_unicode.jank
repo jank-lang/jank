@@ -1,0 +1,5 @@
+(ƒ even? (i integer) (Ɐ)
+  (= (% i 2) 0))
+
+(assert (even? 0))
+(assert-not (even? 1))
