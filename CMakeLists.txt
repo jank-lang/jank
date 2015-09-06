@@ -182,6 +182,15 @@ target_link_libraries(
 )
 
 add_executable(
+  ${PROJECT_NAME}_translate_lambda_test
+  test/src/cpp/translate/lambda/main.cpp
+)
+target_link_libraries(
+  ${PROJECT_NAME}_translate_lambda_test
+  ${${PROJECT_NAME}_test_libs}
+)
+
+add_executable(
   ${PROJECT_NAME}_interpret_function_test
   test/src/cpp/interpret/function/main.cpp
 )
@@ -225,6 +234,7 @@ add_custom_target(
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_plugin_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_if_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_do_test || true && echo &&
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_lambda_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_function_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_binding_test || true && echo &&
           ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_if_test || true && echo &&
@@ -235,6 +245,7 @@ add_custom_target(
           ${PROJECT_NAME}_translate_plugin_test
           ${PROJECT_NAME}_translate_if_test
           ${PROJECT_NAME}_translate_do_test
+          ${PROJECT_NAME}_translate_lambda_test
           ${PROJECT_NAME}_interpret_function_test
           ${PROJECT_NAME}_interpret_binding_test
           ${PROJECT_NAME}_interpret_if_test
