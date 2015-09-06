@@ -1,0 +1,3 @@
+(bind concat ƒ : ((string string) (integer))
+  (λ (a string b string) (Ɐ)
+    (+ a b)))
