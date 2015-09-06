@@ -22,7 +22,6 @@ remove named function referencing
 
 test
   call from direct binding
-  deduce function return from indirect call
 
 start with cons and lambdas
   list
