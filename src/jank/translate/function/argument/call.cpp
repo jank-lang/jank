@@ -129,6 +129,7 @@ namespace jank
                   (environment::special::apply_definition(c, body));
                   if(special_opt)
                   {
+                    /* TODO: Do these need to be unique like lambda names? */
                     return detail::value<C>
                     {
                       "special", /* TODO: Better name? */
