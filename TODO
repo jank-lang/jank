@@ -5,6 +5,8 @@ allow keywords?
   each keyword is its own type
   useful in the case of policies?
 
+enable optimization on lexer regex
+
 REPL
   add repl trait and compile separate lib
     allow multiple definitions
