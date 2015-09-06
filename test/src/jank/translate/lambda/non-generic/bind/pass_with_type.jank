@@ -1,0 +1,7 @@
+(bind func ƒ : (() ())
+  (λ () ()
+    ))
+
+(bind another-func ƒ : ((integer integer) (integer))
+  (λ (a integer b integer) (Ɐ)
+    (+ a b)))

@@ -16,4 +16,11 @@ namespace jest
   template <> template <>
   void jank::bind_group::test<0>()
   { jank::common::translate("translate/lambda/non-generic/bind/pass_simple.jank"); }
+
+  template <> template <>
+  void jank::bind_group::test<1>()
+  { jank::common::translate("translate/lambda/non-generic/bind/pass_with_type.jank"); }
+
+  // fail
+  //  incorrect type
 }
