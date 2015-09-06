@@ -2,8 +2,12 @@
 
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/translate.hpp>
-#include <jank/translate/environment/scope.hpp>
+#include <jank/translate/type/generic/extract.hpp>
+#include <jank/translate/type/generic/parse.hpp>
+#include <jank/translate/type/generic/verify.hpp>
 #include <jank/translate/function/argument/resolve_type.hpp>
+#include <jank/translate/environment/scope.hpp>
+#include <jank/translate/environment/builtin/type/normalize.hpp>
 #include <jank/translate/expect/error/syntax/exception.hpp>
 
 namespace jank
@@ -85,8 +89,21 @@ namespace jank
               throw expect::error::type::exception<>
               { "unknown type in binding definition" };
             }
+            expected_type.data = environment::builtin::type::normalize
+            (type_opt.value().first.data, *outer_scope);
 
-            expected_type = type_opt.value().first;
+            /* Parse any generics along with this type. */
+            auto const &with_generics
+            (
+              type::generic::apply_genericity
+              (
+                std::move(expected_type.data),
+                std::next(data.begin(), 2), data.end(),
+                outer_scope
+              )
+            );
+            expected_type.data = std::get<0>(with_generics);
+
             if(value_type.data != expected_type.data)
             {
               throw expect::error::type::exception<>

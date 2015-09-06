@@ -2,13 +2,12 @@
 #include <vector>
 #include <ostream>
 
-#include <jank/translate/function/argument/definition.hpp>
-
 #include <jank/parse/expect/type.hpp>
 #include <jank/translate/cell/cell.hpp>
 #include <jank/translate/type/generic/extract.hpp>
 #include <jank/translate/type/generic/parse.hpp>
 #include <jank/translate/type/generic/verify.hpp>
+#include <jank/translate/function/argument/definition.hpp>
 #include <jank/translate/environment/scope.hpp>
 #include <jank/translate/environment/builtin/type/normalize.hpp>
 #include <jank/translate/expect/error/syntax/exception.hpp>
