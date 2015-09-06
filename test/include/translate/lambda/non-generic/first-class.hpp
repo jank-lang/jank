@@ -19,13 +19,17 @@ namespace jest
 
   template <> template <>
   void jank::first_class_group::test<1>()
+  { jank::common::translate("translate/lambda/non-generic/first-class/pass_with_params.jank"); }
+
+  template <> template <>
+  void jank::first_class_group::test<2>()
   {
     expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("translate/lambda/non-generic/first-class/fail_incorrect_return_type.jank"); });
   }
 
   template <> template <>
-  void jank::first_class_group::test<2>()
+  void jank::first_class_group::test<3>()
   {
     expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("translate/lambda/non-generic/first-class/fail_incorrect_param_type.jank"); });
