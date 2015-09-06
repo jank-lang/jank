@@ -10,6 +10,9 @@ REPL
     allow multiple definitions
   online repl sandbox
 
+test
+  interpret tests for new lambda stuff
+
 "falsey" is not a valid ident!!!
 
 auto deduction of null return is failing
