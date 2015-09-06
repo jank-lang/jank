@@ -30,7 +30,7 @@ namespace jank
           input.data.insert
           (
             std::next(input.data.begin()),
-            parse::cell::ident{ "lambda-" + std::to_string(unique_id) }
+            parse::cell::ident{ "lambda-" + std::to_string(unique_id++) }
           );
           return function(input, outer_scope);
         }
