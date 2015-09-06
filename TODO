@@ -33,7 +33,6 @@ test
     as a bind type
   generics
     type matching
-  Ɐ as auto
 
 start with cons and lambdas
   list
