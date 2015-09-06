@@ -12,6 +12,7 @@ addons:
       - llvm-toolchain-precise-3.6
     packages:
       - g++-5
+      - gcc-5
       - clang-3.6
       - libboost-all-dev
 
