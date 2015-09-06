@@ -76,24 +76,8 @@ namespace jank
                 environment::builtin::type::normalize
                 (type_def.value().first.data, *scope)
               );
-              /* TODO: Refactor into shared function? This is being used in
-               * a few places. */
-              auto const &extracted_generic
-              (type::generic::extract(it, l.data.end()));
-              it = std::get<1>(extracted_generic);
-              auto const &generic_list_opt(std::get<0>(extracted_generic));
-              if(generic_list_opt)
-              {
-                auto const &parsed_generics
-                (type::generic::parse(generic_list_opt.value(), scope));
-                type::generic::verify
-                (
-                  type.generics,
-                  parsed_generics
-                );
-
-                type.generics = parsed_generics;
-              }
+              std::tie(type, it) = type::generic::apply_genericity
+              (std::move(type), it, l.data.end(), scope);
 
               ret.push_back({ name, { type } });
             }
