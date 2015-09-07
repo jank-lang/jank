@@ -10,6 +10,10 @@ REPL
     allow multiple definitions
   online repl sandbox
 
+clean up the testing process in cmakelists
+
+add color to test failures
+
 test
   interpret tests for new lambda stuff
 
