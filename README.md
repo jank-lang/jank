@@ -338,8 +338,8 @@ $ make jank_test
 |arithmetic for primitives    |Complete and tested.                       |
 |if/do statements             |Complete and tested.                       |
 |if/do expressions            |Complete and tested.                       |
-|lambda expressions           |Complete; not yet tested.                  |
-|first-class functions        |Complete; not yet tested.                  |
+|lambda expressions           |Complete and tested.                       |
+|first-class functions        |Complete and tested.                       |
 
 ## Editor support
 There are syntax files for Vim available in the `vim` directory of the repository. You can add these to your runtime path using something like:
