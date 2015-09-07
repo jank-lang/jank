@@ -5,3 +5,6 @@
 (bind another-func ƒ : ((integer integer) (integer))
   (λ (a integer b integer) (Ɐ)
     (+ a b)))
+
+(func)
+(assert (= 3 (another-func 1 2)))
