@@ -71,23 +71,6 @@ namespace jank
                   };
                 }
 
-                auto const function(scope_->find_function(c.data));
-                if(function)
-                {
-                  auto const &overloads(function.value());
-                  if(overloads.size() != 1)
-                  {
-                    throw expect::error::type::overload
-                    { "ambiguous function reference" };
-                  }
-
-                  return detail::value<C>
-                  {
-                    c.data,
-                    { cell::function_reference{ { overloads[0].first.data } } }
-                  };
-                }
-
                 auto const native_function(scope_->find_native_function(c.data));
                 if(native_function)
                 {
