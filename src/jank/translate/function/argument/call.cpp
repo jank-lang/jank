@@ -13,7 +13,7 @@
 #include <jank/translate/function/match_overload.hpp>
 #include <jank/translate/function/match_indirect.hpp>
 #include <jank/translate/function/return/deduce.hpp>
-#include <jank/translate/function/return/validate.hpp>
+#include <jank/translate/function/return/add_implicit_returns.hpp>
 #include <jank/translate/expect/error/type/exception.hpp>
 #include <jank/translate/expect/error/syntax/exception.hpp>
 #include <jank/translate/expect/error/lookup/exception.hpp>

@@ -55,7 +55,7 @@ add_library(
   src/jank/translate/function/argument/call.cpp
   src/jank/translate/function/argument/resolve_type.cpp
   src/jank/translate/function/return/parse.cpp
-  src/jank/translate/function/return/validate.cpp
+  src/jank/translate/function/return/add_implicit_returns.cpp
   src/jank/translate/function/return/deduce.cpp
   src/jank/translate/function/return/make_implicit.cpp
   src/jank/translate/function/match_indirect.cpp
