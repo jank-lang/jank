@@ -1,5 +1,7 @@
 /bin
 /build
+/build_debug
+/build_release
 
 # Vim files
 /.ycm_extra_conf.py*
