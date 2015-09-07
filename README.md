@@ -327,8 +327,8 @@ $ make jank_test
 |non-generic native functions |Complete and tested.                       |
 |if/do statements             |Complete and tested.                       |
 |if/do expressions            |Complete and tested.                       |
-|lambda expressions           |Complete; not yet tested.                  |
-|first-class functions        |Complete; not yet tested.                  |
+|lambda expressions           |Complete and tested.                       |
+|first-class functions        |Complete and tested.                       |
 
 |Interpreter                  |Status                                     |
 |:----------------------------|:------------------------------------------|
