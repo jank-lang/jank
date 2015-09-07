@@ -1,0 +1,8 @@
+(ƒ higher-order (func ƒ : (() (string))) (ƒ : (() (string)))
+  func)
+
+(bind func (higher-order
+             (λ () (Ɐ)
+               "correct")))
+
+(assert (= (func) "correct"))
