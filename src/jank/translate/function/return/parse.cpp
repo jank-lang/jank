@@ -3,6 +3,9 @@
 #include <jank/translate/function/return/parse.hpp>
 #include <jank/parse/cell/trait.hpp>
 #include <jank/parse/expect/type.hpp>
+#include <jank/translate/type/generic/extract.hpp>
+#include <jank/translate/type/generic/parse.hpp>
+#include <jank/translate/type/generic/verify.hpp>
 #include <jank/translate/environment/scope.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/environment/builtin/type/normalize.hpp>
@@ -22,35 +25,37 @@ namespace jank
           std::shared_ptr<environment::scope> const &scope
         )
         {
-          if(list.data.size() > 1)
-          {
-            throw expect::error::internal::unimplemented
-            { "multiple return types" };
-          }
           /* No return type means null return type. */
-          else if(list.data.empty())
+          if(list.data.empty())
           { return { { { environment::builtin::type::null(*scope) } } }; }
 
           /* Resolve each type. */
           type_list types;
-          for(auto const &t : list.data)
+          for(auto it(list.data.begin()); it != list.data.end(); ++it)
           {
-            /* TODO: Extract generics properly. */
-            auto const &type_string
-            (parse::expect::type<parse::cell::type::ident>(t).data);
-            auto const type(scope->find_type(type_string));
-            if(!type)
+            auto const &type_name
+            (parse::expect::type<parse::cell::type::ident>(*it).data);
+            auto const &type_def(scope->find_type(type_name));
+            if(!type_def)
             {
               throw expect::error::type::exception<>
-              { "invalid return type: " + type_string };
+              { "unknown type " + type_name };
             }
-            types.push_back
+
+            auto type
             (
-              { {
-                environment::builtin::type::normalize
-                (type.value().first.data, *scope)
-              } }
+              environment::builtin::type::normalize
+              (type_def.value().first.data, *scope)
             );
+            std::tie(type, it) = type::generic::apply_genericity
+            (std::move(type), it, list.data.end(), scope);
+            types.push_back({ { type } });
+          }
+
+          if(types.size() > 1)
+          {
+            throw expect::error::internal::unimplemented
+            { "multiple return types" };
           }
 
           return types;
