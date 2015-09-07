@@ -19,9 +19,6 @@ add color to test failures
 closures
   explicitly copy from scope? this may be messy
 
-remove named function referencing
-  it's of limited use
-
 start with cons and lambdas
   list
   map
