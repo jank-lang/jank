@@ -25,8 +25,15 @@ before_install:
     fi
 
 script:
-  - cmake . && make -j2
-  - make jank_test
+  # Release build
+  - mkdir build_release ; cd build_release
+  - cmake .. -DCMAKE_BUILD_TYPE=RELEASE
+  - make -j2 && make jank_test
+  - cd ..
+  # Debug build
+  - mkdir build_debug ; cd build_debug
+  - cmake .. -DCMAKE_BUILD_TYPE=DEBUG
+  - make -j2 && make jank_test
 
 notifications:
   email:
