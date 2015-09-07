@@ -152,7 +152,7 @@ namespace jank
                   {
                     body.data.cells.push_back(special_opt.value());
                     body.data = function::ret::deduce
-                    (function::ret::validate(std::move(body.data)));
+                    (function::ret::add_implicit_returns(std::move(body.data)));
 
                     return detail::value<C>
                     {

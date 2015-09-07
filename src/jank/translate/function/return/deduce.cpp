@@ -50,77 +50,108 @@ namespace jank
             return body;
           }
 
-          for(auto &c : body.cells)
-          {
-            switch(cell::trait::to_enum(c))
+          /* We're answering two things:
+           *  1. What's the function's return type?
+           *  2. Do all bodies return compatible types?
+           */
+          bool all_paths_return = false;
+
+          /* Iterate from the bottom of the function to the top. */
+          std::for_each
+          (
+            body.cells.rbegin(), body.cells.rend(),
+            [&](auto &c)
             {
-              case cell::type::if_statement:
+              switch(cell::trait::to_enum(c))
               {
-                auto &statement(expect::type<cell::type::if_statement>(c).data);
-                statement.true_body = deduce(std::move(statement.true_body));
-                statement.false_body = deduce(std::move(statement.false_body));
-
-                if
-                (
-                  !detail::compatible
-                  (
-                    statement.true_body.return_type,
-                    statement.false_body.return_type,
-                    *body.scope
-                  ) ||
-                  !detail::compatible
-                  (
-                    statement.true_body.return_type,
-                    body.return_type,
-                    *body.scope
-                  )
-                )
-                { detail::fail(); }
-
-                body.return_type = statement.true_body.return_type;
-              } break;
-
-              case cell::type::do_statement:
-              {
-                auto &statement(expect::type<cell::type::do_statement>(c).data);
-                statement.body = deduce(std::move(statement.body));
-
-                if
-                (
-                  !detail::compatible
-                  (
-                    statement.body.return_type,
-                    body.return_type,
-                    *body.scope
-                  )
-                )
-                { detail::fail(); }
-
-                body.return_type = statement.body.return_type;
-              } break;
-
-              case cell::type::return_statement:
-              {
-                auto &statement(expect::type<cell::type::return_statement>(c));
-                auto const type
-                (argument::resolve_type(statement.data.cell, body.scope));
-
-                if(body.return_type == automatic)
+                case cell::type::if_statement:
                 {
-                  statement.data.expected_type = { type.data };
-                  body.return_type = { type.data };
-                }
-                else if(body.return_type.definition != type.data)
-                {
-                  throw expect::error::type::exception<>
-                  { "unable to deduce return type; mismatched types" };
-                }
-              } break;
+                  auto &statement(expect::type<cell::type::if_statement>(c).data);
+                  statement.true_body = deduce(std::move(statement.true_body));
+                  statement.false_body = deduce(std::move(statement.false_body));
 
-              default:
-                break;
+                  auto const compatible_branches
+                  (
+                    detail::compatible
+                    (
+                      statement.true_body.return_type,
+                      statement.false_body.return_type,
+                      *body.scope
+                    )
+                  );
+
+                  auto const compatible_if
+                  (
+                    detail::compatible
+                    (
+                      statement.true_body.return_type,
+                      body.return_type,
+                      *body.scope
+                    )
+                  );
+
+                  if(!compatible_if)
+                  { detail::fail(); }
+
+                  if(!all_paths_return)
+                  {
+                    if(!compatible_branches)
+                    { detail::fail(); }
+
+                    body.return_type = statement.true_body.return_type;
+                    all_paths_return = true;
+                  }
+                } break;
+
+                case cell::type::do_statement:
+                {
+                  auto &statement(expect::type<cell::type::do_statement>(c).data);
+                  statement.body = deduce(std::move(statement.body));
+
+                  auto const compatible_do
+                  (
+                    detail::compatible
+                    (
+                      statement.body.return_type,
+                      body.return_type,
+                      *body.scope
+                    )
+                  );
+
+                  if(!compatible_do)
+                  { detail::fail(); }
+
+                  if(!all_paths_return)
+                  {
+                    body.return_type = statement.body.return_type;
+                    all_paths_return = true;
+                  }
+                } break;
+
+                case cell::type::return_statement:
+                {
+                  auto &statement(expect::type<cell::type::return_statement>(c));
+                  auto const type
+                  (argument::resolve_type(statement.data.cell, body.scope));
+
+                  if(body.return_type == automatic)
+                  {
+                    statement.data.expected_type = { type.data };
+                    body.return_type = { type.data };
+                  }
+                  else if(body.return_type.definition != type.data)
+                  {
+                    throw expect::error::type::exception<>
+                    { "unable to deduce return type; mismatched types" };
+                  }
+                  all_paths_return = true;
+                } break;
+
+                default:
+                  break;
+              }
             }
-          }
+          );
 
           return body;
         }

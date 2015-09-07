@@ -26,7 +26,8 @@ namespace jank
           }
         }
 
-        cell::function_body::type validate
+        /* TODO: Adds implicit return calls; that's all. */
+        cell::function_body::type add_implicit_returns
         (cell::function_body::type body)
         {
           auto const it
@@ -80,10 +81,10 @@ namespace jank
             );
             if(if_opt)
             {
-              if_opt->data.true_body = validate
+              if_opt->data.true_body = add_implicit_returns
               (std::move(if_opt->data.true_body));
 
-              if_opt->data.false_body = validate
+              if_opt->data.false_body = add_implicit_returns
               (std::move(if_opt->data.false_body));
 
               return body;
@@ -97,7 +98,8 @@ namespace jank
             );
             if(do_opt)
             {
-              do_opt->data.body = validate(std::move(do_opt->data.body));
+              do_opt->data.body = add_implicit_returns
+              (std::move(do_opt->data.body));
               return body;
             }
 
