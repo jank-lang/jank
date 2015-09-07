@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 project(jank)
 
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE RELEASE)
+  set(CMAKE_BUILD_TYPE DEBUG)
 endif()
 
 # Shut up the warning about CMake policy CMP0042.
