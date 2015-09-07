@@ -12,7 +12,6 @@ REPL
 
 test
   interpret tests for new lambda stuff
-  nested bodies in a function which return null
 
 "falsey" is not a valid ident!!!
 
