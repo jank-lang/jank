@@ -1,0 +1,8 @@
+(ƒ my-test (s string) (boolean)
+  (do
+    (print "doesn't return anything")
+    (if (= s "meow")
+      (print "returns nothing")))
+  (if (= s "meow")
+    (print "nada"))
+  (= s "meow"))

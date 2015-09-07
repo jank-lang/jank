@@ -48,4 +48,8 @@ namespace jest
   template <> template <>
   void jank::deduce_group::test<7>()
   { jank::common::translate("translate/function/non-generic/deduce/pass_null_no_return.jank"); }
+
+  template <> template <>
+  void jank::deduce_group::test<8>()
+  { jank::common::translate("translate/function/non-generic/deduce/pass_null_bodies.jank"); }
 }
