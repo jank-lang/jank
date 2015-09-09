@@ -9,6 +9,7 @@ REPL
   add repl trait and compile separate lib
     allow multiple definitions
   online repl sandbox
+  irc bot for #jank
 
 clean up the testing process in cmakelists
 
