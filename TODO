@@ -2,6 +2,8 @@ allow keywords?
   each keyword is its own type
   useful in the case of policies?
 
+optional isn't available on osx
+
 REPL
   add repl trait and compile separate lib
     allow multiple definitions
