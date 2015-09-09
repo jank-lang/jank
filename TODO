@@ -1,6 +1,3 @@
-refactoring
-  expect state
-
 allow keywords?
   each keyword is its own type
   useful in the case of policies?
