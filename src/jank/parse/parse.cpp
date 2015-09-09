@@ -59,13 +59,13 @@ namespace jank
         {
           static std::regex inner_regex
           {
+            /* XXX: Only works in GCC 5.0+ and clang 3.6+. */
             R"((null))" /* null */
-            R"(|(true|false))" /* booleans */
+            R"(|(?:[\(\s]+(true|false)(?![^\s\(\)]+)))" /* booleans */
             R"(|(\-?\d+(?!\d*\.\d+)))" /* integers */
             R"(|(\-?\d+\.\d+))" /* reals */
             R"(|\"((?:\\.|[^\\\"])*)\")" /* strings */
             R"(|([^\s"']+))", /* idents */
-            /* XXX: Only works in GCC 5.0+ and clang 3.6+. */
             std::regex_constants::ECMAScript | std::regex_constants::optimize
           };
           auto const &outer_str(outer_match.str());
