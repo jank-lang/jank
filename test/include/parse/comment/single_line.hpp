@@ -33,11 +33,14 @@ namespace jest
 
   template <> template <>
   void jank::single_line_group::test<4>()
-  { jank::common::translate("parse/comment/single_line/pass_double_close.jank"); }
+  { jank::common::translate("parse/comment/single_line/pass_multiple_in_one_file.jank"); }
 
   template <> template <>
   void jank::single_line_group::test<5>()
-  { jank::common::translate("parse/comment/single_line/pass_multiple_in_one_file.jank"); }
+  {
+    expect_exception<jank::parse::expect::error::syntax::exception<>>
+    ([]{ jank::common::translate("parse/comment/single_line/fail_double_close.jank"); });
+  }
 
   template <> template <>
   void jank::single_line_group::test<6>()
