@@ -135,7 +135,7 @@ Generic functions and types can be variadic, allowing any number of parameters, 
 ```
 
 ## Comments
-Only multi-line comments are supported. Anything within `(;` and `;)` is considered a comment. Nested comments are allowed. Each closing `;)` matches the closest opening `(;`, even overpowering previous closing `;)` along the way. Thus, `(; foo ;) ;)` is a single comment.
+Only multi-line comments are supported. Anything within `(;` and `;)` is considered a comment. Nested comments are allowed.
 
 ## Resource management
 ```lisp
