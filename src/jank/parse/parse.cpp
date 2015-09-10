@@ -37,7 +37,9 @@ namespace jank
 
       static boost::regex outer_regex
       {
-        R"((\(;)((?:(?R)|[\s\S])*?)(;\))|(\(*)((?:\\.|[^\\\(\)])*)(\)*))"
+        R"((\(;)((?:(?R)|[\s\S])*?)(;\))|(\(*)((?:\\.|[^\\\(\)])*)(\)*))",
+        static_cast<boost::regex::flag_type>
+        (boost::regex::perl | boost::regex::optimize)
       };
       boost::sregex_iterator const outer_begin
       { contents.begin(), contents.end(), outer_regex };
@@ -64,6 +66,8 @@ namespace jank
             R"(|(\-?\d+\.\d+))" /* reals */
             R"(|\"((?:\\.|[^\\\"])*)\")" /* strings */
             R"(|([^\s"']+))", /* idents */
+            static_cast<boost::regex::flag_type>
+            (boost::regex::perl | boost::regex::optimize)
           };
           auto const &outer_str(outer_match.str());
           if(outer_str.empty())
