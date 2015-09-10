@@ -1,4 +1,4 @@
-#include <regex>
+#include <boost/regex.hpp>
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -35,19 +35,18 @@ namespace jank
       /* Remove all edge whitespace. */
       boost::algorithm::trim(contents);
 
-      static std::regex outer_regex
+      static boost::regex outer_regex
       {
-        R"((\(;)\s*([\s\S]*?)\s*(;\))|(\(*)((?:\\.|[^\\\(\)])*)(\)*))",
-        std::regex_constants::ECMAScript | std::regex_constants::optimize
+        R"((\(;)\s*((?:(?R)|[\s\S])*?)\s*(;\))|(\(*)((?:\\.|[^\\\(\)])*)(\)*))"
       };
-      std::sregex_iterator const outer_begin
+      boost::sregex_iterator const outer_begin
       { contents.begin(), contents.end(), outer_regex };
-      std::sregex_iterator const end{};
+      boost::sregex_iterator const end{};
 
       /* For each list in the file. */
       for(auto const &outer : jtl::it::make_range(outer_begin, end))
       {
-        std::smatch const &outer_matches{ outer };
+        boost::smatch const &outer_matches{ outer };
 
         /* For each atom within that list. */
         for
@@ -57,16 +56,14 @@ namespace jank
           (std::next(outer_matches.begin()), outer_matches.end())
         )
         {
-          static std::regex inner_regex
+          static boost::regex inner_regex
           {
-            /* XXX: Only works in GCC 5.0+ and clang 3.6+. */
             R"((null))" /* null */
             R"(|(?:[\(\s]+(true|false)(?![^\s\(\)]+)))" /* booleans */
             R"(|(\-?\d+(?!\d*\.\d+)))" /* integers */
             R"(|(\-?\d+\.\d+))" /* reals */
             R"(|\"((?:\\.|[^\\\"])*)\")" /* strings */
             R"(|([^\s"']+))", /* idents */
-            std::regex_constants::ECMAScript | std::regex_constants::optimize
           };
           auto const &outer_str(outer_match.str());
           if(outer_str.empty())
@@ -117,11 +114,11 @@ namespace jank
             continue;
           }
 
-          std::sregex_iterator const inner_begin
+          boost::sregex_iterator const inner_begin
           { outer_str.begin(), outer_str.end(), inner_regex };
           for(auto const &inner : jtl::it::make_range(inner_begin, end))
           {
-            std::smatch const &inner_matches{ inner };
+            boost::smatch const &inner_matches{ inner };
             if(inner_matches[match_group::null].matched) /* null */
             { active_list->data.push_back(cell::null{}); }
             else if(inner_matches[match_group::boolean].matched) /* boolean */

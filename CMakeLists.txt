@@ -30,7 +30,7 @@ execute_process(
 include(cmake/cxx14.cmake)
 
 # Boost
-find_package(Boost COMPONENTS system REQUIRED)
+find_package(Boost COMPONENTS system regex REQUIRED)
 
 # PThread
 find_package(Threads REQUIRED)
@@ -111,6 +111,7 @@ add_executable(${PROJECT_NAME} src/main.cpp)
 target_link_libraries(
   ${PROJECT_NAME}
   ${CMAKE_THREAD_LIBS_INIT}
+  ${Boost_LIBRARIES}
   ${PROJECT_NAME}_static
 )
 
@@ -131,6 +132,7 @@ set(
   ${CMAKE_THREAD_LIBS_INIT}
   ${PROJECT_NAME}_test_common_static
   ${PROJECT_NAME}_static
+  ${Boost_LIBRARIES}
 )
 
 add_executable(${PROJECT_NAME}_parse_test test/src/cpp/parse/main.cpp)
