@@ -33,7 +33,10 @@ namespace jest
 
   template <> template <>
   void jank::nested_group::test<4>()
-  { jank::common::translate("parse/comment/nested/pass_multi_line_multi_end.jank"); }
+  {
+    expect_exception<jank::parse::expect::error::syntax::exception<>>
+    ([]{ jank::common::translate("parse/comment/nested/fail_multi_line_multi_end.jank"); });
+  }
 
   template <> template <>
   void jank::nested_group::test<5>()
