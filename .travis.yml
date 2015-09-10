@@ -14,7 +14,8 @@ addons:
       - g++-5
       - gcc-5
       - clang-3.6
-      - libboost1.55-all-dev
+      - libboost-system1.55-dev
+      - libboost-regex1.55-dev
 
 before_install:
   - if [[ "$CXX" == "clang++" ]]; then
