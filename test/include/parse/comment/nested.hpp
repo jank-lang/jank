@@ -25,19 +25,22 @@ namespace jest
 
   template <> template <>
   void jank::nested_group::test<2>()
-  { jank::common::translate("parse/comment/nested/pass_single_line_multi_end.jank"); }
-
-  template <> template <>
-  void jank::nested_group::test<3>()
   { jank::common::translate("parse/comment/nested/pass_multi_line.jank"); }
 
   template <> template <>
-  void jank::nested_group::test<4>()
+  void jank::nested_group::test<3>()
   { jank::common::translate("parse/comment/nested/pass_multi_line_multi_start.jank"); }
 
   template <> template <>
-  void jank::nested_group::test<5>()
+  void jank::nested_group::test<4>()
   { jank::common::translate("parse/comment/nested/pass_multi_line_multi_end.jank"); }
+
+  template <> template <>
+  void jank::nested_group::test<5>()
+  {
+    expect_exception<jank::parse::expect::error::syntax::exception<>>
+    ([]{ jank::common::translate("parse/comment/nested/fail_single_line_multi_end.jank"); });
+  }
 
   template <> template <>
   void jank::nested_group::test<6>()
