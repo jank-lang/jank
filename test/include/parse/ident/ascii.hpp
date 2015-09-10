@@ -21,6 +21,10 @@ namespace jest
 
   template <> template <>
   void jank::ascii_group::test<1>()
+  { jank::common::translate("parse/ident/ascii/pass_true_false.jank"); }
+
+  template <> template <>
+  void jank::ascii_group::test<2>()
   {
     expect_exception<jank::translate::expect::error::type::exception<>>
     ([]{ jank::common::translate("parse/ident/ascii/fail_bad_chars.jank"); });
