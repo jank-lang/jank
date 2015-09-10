@@ -37,7 +37,7 @@ namespace jank
 
       static std::regex outer_regex
       {
-        R"((\(;)([\s\S]*)(;\)+)|(\(*)((?:\\.|[^\\\(\)])*)(\)*))",
+        R"((\(;)\s*([\s\S]*?)\s*(;\))|(\(*)((?:\\.|[^\\\(\)])*)(\)*))",
         std::regex_constants::ECMAScript | std::regex_constants::optimize
       };
       std::sregex_iterator const outer_begin
