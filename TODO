@@ -4,6 +4,9 @@ allow keywords?
 
 optional isn't available on osx
 
+crazy commenting bug
+  pass_true_false.jank shows it
+
 REPL
   add repl trait and compile separate lib
     allow multiple definitions
