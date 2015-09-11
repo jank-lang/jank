@@ -6,6 +6,10 @@ optional isn't available on osx
 
 fix vim highlighting of falsey
 
+basic list ops with ints
+  list : (integer)
+  cons
+
 REPL
   add repl trait and compile separate lib
     allow multiple definitions
@@ -18,12 +22,6 @@ add color to test failures
 
 closures
   explicitly copy from scope? this may be messy
-
-start with cons and lambdas
-  list
-  map
-  filter
-  reduce
 
 custom types are dynamically allocated by default
   traits to control allocation? (later)
