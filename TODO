@@ -4,6 +4,8 @@ allow keywords?
 
 optional isn't available on osx
 
+fix vim highlighting of falsey
+
 REPL
   add repl trait and compile separate lib
     allow multiple definitions
