@@ -23,6 +23,7 @@ namespace jank
       {
         namespace detail
         {
+          template <>
           bool operator ==(type_list<cell::cell> const &lhs, type_list<cell::cell> const &rhs)
           {
             return (lhs.size() == rhs.size()) &&
@@ -31,6 +32,7 @@ namespace jank
                                { return lhs.type == rhs.type; });
           }
 
+          template <>
           std::ostream& operator <<(std::ostream &os, type_list<cell::cell> const &args)
           {
             os << "( ";
@@ -43,6 +45,7 @@ namespace jank
 
         namespace definition
         {
+          template <>
           type_list<cell::cell> parse_types
           (
             parse::cell::list const &l,
