@@ -10,16 +10,20 @@ namespace jank
     {
       namespace detail
       {
+        template <typename C>
         struct type_reference
         {
-          type_definition definition;
+          type_definition<C> definition;
         };
 
-        inline bool operator ==
-        (type_reference const &lhs, type_reference const &rhs)
+        template <typename C>
+        bool operator ==
+        (type_reference<C> const &lhs, type_reference<C> const &rhs)
         { return lhs.definition == rhs.definition; }
-        inline bool operator !=
-        (type_reference const &lhs, type_reference const &rhs)
+
+        template <typename C>
+        bool operator !=
+        (type_reference<C> const &lhs, type_reference<C> const &rhs)
         { return lhs.definition != rhs.definition; }
       }
     }

@@ -30,7 +30,7 @@ namespace jank
         (
           boost::get
           <
-            type::generic::tuple<cell::detail::type_definition>
+            type::generic::tuple<cell::detail::type_definition<cell::cell>>
           >(generics.parameters[0])
         );
 

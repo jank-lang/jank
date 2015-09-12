@@ -24,8 +24,8 @@ namespace jank
         struct native_function_definition
         {
           std::string name;
-          function::argument::type_list arguments;
-          type_reference return_type;
+          function::argument::type_list<C> arguments;
+          type_reference<C> return_type;
           std::function
           <
             C

@@ -16,13 +16,13 @@ namespace jank
     {
       namespace generic
       {
-        genericity<cell::detail::type_definition> parse
+        genericity<cell::detail::type_definition<cell::cell>> parse
         (
           parse::cell::list const &l,
           std::shared_ptr<environment::scope> const &scope
         )
         {
-          genericity<cell::detail::type_definition> ret;
+          genericity<cell::detail::type_definition<cell::cell>> ret;
 
           for(auto it(l.data.begin()); it != l.data.end(); ++it)
           {
@@ -33,7 +33,7 @@ namespace jank
             )
             {
               auto const parsed(parse(list.value(), scope));
-              tuple<cell::detail::type_definition> tup{};
+              tuple<cell::detail::type_definition<cell::cell>> tup{};
               std::transform
               (
                 parsed.parameters.begin(), parsed.parameters.end(),
@@ -41,7 +41,7 @@ namespace jank
                 [](auto const &p)
                 {
                   return boost::get
-                  <single<cell::detail::type_definition>>(p).data;
+                  <single<cell::detail::type_definition<cell::cell>>>(p).data;
                 }
               );
               ret.parameters.push_back(tup);
@@ -68,7 +68,7 @@ namespace jank
 
             ret.parameters.push_back
             (
-              single<cell::detail::type_definition>
+              single<cell::detail::type_definition<cell::cell>>
               { type }
             );
           }
@@ -78,11 +78,11 @@ namespace jank
 
         std::tuple
         <
-          cell::detail::type_definition,
+          cell::detail::type_definition<cell::cell>,
           parse::cell::list::type::const_iterator
         > apply_genericity
         (
-          cell::detail::type_definition &&type,
+          cell::detail::type_definition<cell::cell> &&type,
           parse::cell::list::type::const_iterator const begin,
           parse::cell::list::type::const_iterator const end,
           std::shared_ptr<environment::scope> const &scope

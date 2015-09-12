@@ -11,8 +11,8 @@ namespace jank
       {
         void verify
         (
-          genericity<cell::detail::type_definition> const &expected,
-          genericity<cell::detail::type_definition> const &provided
+          genericity<cell::detail::type_definition<cell::cell>> const &expected,
+          genericity<cell::detail::type_definition<cell::cell>> const &provided
         )
         {
           if(expected.parameters.size() != provided.parameters.size())

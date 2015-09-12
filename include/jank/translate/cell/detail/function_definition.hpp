@@ -18,8 +18,8 @@ namespace jank
         struct function_definition
         {
           std::string name;
-          function::argument::type_list arguments;
-          type_reference return_type;
+          function::argument::type_list<C> arguments;
+          type_reference<C> return_type;
           function_body<C> body;
           std::shared_ptr<environment::scope> scope;
         };

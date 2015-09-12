@@ -14,7 +14,7 @@ namespace jank
       {
         /* Generates parameter names for types. */
         template <typename... Args, std::size_t... Indices>
-        function::argument::type_list
+        function::argument::type_list<cell::cell>
         make_args(std::index_sequence<Indices...> const&, Args &&...args)
         {
           return
@@ -28,7 +28,7 @@ namespace jank
           std::shared_ptr<environment::scope> const &scope,
           std::string const &name,
           F const &apply,
-          cell::detail::type_reference const &ret_type,
+          cell::detail::type_reference<cell::cell> const &ret_type,
           Args &&...args
         )
         {

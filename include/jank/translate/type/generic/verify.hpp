@@ -1,6 +1,6 @@
 #pragma once
 
-#include <jank/translate/cell/detail/type_definition.hpp>
+#include <jank/translate/cell/cell.hpp>
 #include <jank/translate/type/generic/genericity.hpp>
 
 namespace jank
@@ -13,8 +13,8 @@ namespace jank
       {
         void verify
         (
-          genericity<cell::detail::type_definition> const &expected,
-          genericity<cell::detail::type_definition> const &provided
+          genericity<cell::detail::type_definition<cell::cell>> const &expected,
+          genericity<cell::detail::type_definition<cell::cell>> const &provided
         );
       }
     }

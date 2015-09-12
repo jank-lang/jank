@@ -1,5 +1,5 @@
 #include <jank/translate/environment/scope.hpp>
-#include <jank/translate/cell/detail/type_reference.hpp>
+#include <jank/translate/cell/cell.hpp>
 
 namespace jank
 {
@@ -13,7 +13,7 @@ namespace jank
         {
           namespace detail
           {
-            inline cell::detail::type_reference find_type
+            inline cell::detail::type_reference<cell::cell> find_type
             (scope &s, std::string const &name)
             { return { s.find_type(name).value().first.data }; }
           }

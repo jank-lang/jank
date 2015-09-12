@@ -104,13 +104,13 @@ namespace jank
       template <>
       struct wrapper<type::type_definition>
       {
-        using type = detail::type_definition;
+        using type = detail::type_definition<cell>;
         type data;
       };
       template <>
       struct wrapper<type::type_reference>
       {
-        using type = detail::type_reference;
+        using type = detail::type_reference<cell>;
         type data;
       };
       template <>

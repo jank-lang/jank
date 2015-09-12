@@ -20,7 +20,7 @@ namespace jank
         struct function_body
         {
           std::vector<C> cells;
-          type_reference return_type;
+          type_reference<C> return_type;
           std::shared_ptr<environment::scope> scope;
         };
       }

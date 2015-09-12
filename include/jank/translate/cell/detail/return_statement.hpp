@@ -14,7 +14,7 @@ namespace jank
         struct return_statement
         {
           C cell;
-          type_reference expected_type;
+          type_reference<C> expected_type;
         };
       }
     }

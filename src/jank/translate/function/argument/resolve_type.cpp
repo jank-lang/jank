@@ -73,7 +73,7 @@ namespace jank
               auto const &ret_tuple
               (
                 boost::get
-                <type::generic::tuple<cell::detail::type_definition>>
+                <type::generic::tuple<cell::detail::type_definition<cell::cell>>>
                 (call.data.binding.type.definition.generics.parameters[1])
               );
               if(ret_tuple.data.empty())
@@ -92,7 +92,8 @@ namespace jank
               auto const &body(expect::type<cell::type::function_definition>(c));
               auto def(environment::builtin::type::function(*scope).definition);
 
-              type::generic::tuple<cell::detail::type_definition> args;
+              type::generic::tuple
+              <cell::detail::type_definition<cell::cell>> args;
               std::transform
               (
                 body.data.arguments.begin(), body.data.arguments.end(),
@@ -102,7 +103,8 @@ namespace jank
               );
 
               /* Null return types should be considered empty lists. */
-              type::generic::tuple<cell::detail::type_definition> returns;
+              type::generic::tuple
+              <cell::detail::type_definition<cell::cell>> returns;
               if
               (
                 body.data.return_type.definition !=

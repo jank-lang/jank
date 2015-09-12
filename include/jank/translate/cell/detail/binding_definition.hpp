@@ -17,7 +17,7 @@ namespace jank
         struct binding_definition
         {
           std::string name;
-          type_reference type;
+          type_reference<C> type;
           C cell;
         };
       }

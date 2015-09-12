@@ -25,17 +25,17 @@ namespace jank
             return s;
           }
 
-          cell::detail::type_reference automatic(scope &s)
+          cell::detail::type_reference<cell::cell> automatic(scope &s)
           { return detail::find_type(s, "auto"); }
-          cell::detail::type_reference null(scope &s)
+          cell::detail::type_reference<cell::cell> null(scope &s)
           { return detail::find_type(s, "null"); }
-          cell::detail::type_reference boolean(scope &s)
+          cell::detail::type_reference<cell::cell> boolean(scope &s)
           { return detail::find_type(s, "boolean"); }
-          cell::detail::type_reference integer(scope &s)
+          cell::detail::type_reference<cell::cell> integer(scope &s)
           { return detail::find_type(s, "integer"); }
-          cell::detail::type_reference real(scope &s)
+          cell::detail::type_reference<cell::cell> real(scope &s)
           { return detail::find_type(s, "real"); }
-          cell::detail::type_reference string(scope &s)
+          cell::detail::type_reference<cell::cell> string(scope &s)
           { return detail::find_type(s, "string"); }
         }
       }

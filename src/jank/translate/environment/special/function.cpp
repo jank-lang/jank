@@ -44,7 +44,10 @@ namespace jank
           auto const nested_scope
           (std::make_shared<scope>(outer_scope));
           auto const arg_definitions
-          (function::argument::definition::parse_types(args, nested_scope));
+          (
+            function::argument::definition::parse_types<cell::cell>
+            (args, nested_scope)
+          );
 
           /* Add args to function's scope. */
           std::transform

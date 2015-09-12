@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jank/translate/environment/scope.hpp>
-#include <jank/translate/cell/detail/type_reference.hpp>
+#include <jank/translate/cell/detail/type_definition.hpp>
 
 namespace jank
 {
@@ -13,8 +13,8 @@ namespace jank
       {
         namespace type
         {
-          cell::detail::type_definition normalize
-          (cell::detail::type_definition type, scope &s);
+          cell::detail::type_definition<cell::cell> normalize
+          (cell::detail::type_definition<cell::cell> type, scope &s);
         }
       }
     }

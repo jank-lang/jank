@@ -23,7 +23,7 @@ namespace jank
       {
         namespace detail
         {
-          bool operator ==(type_list const &lhs, type_list const &rhs)
+          bool operator ==(type_list<cell::cell> const &lhs, type_list<cell::cell> const &rhs)
           {
             return (lhs.size() == rhs.size()) &&
                     std::equal(lhs.begin(), lhs.end(), rhs.begin(),
@@ -31,7 +31,7 @@ namespace jank
                                { return lhs.type == rhs.type; });
           }
 
-          std::ostream& operator <<(std::ostream &os, type_list const &args)
+          std::ostream& operator <<(std::ostream &os, type_list<cell::cell> const &args)
           {
             os << "( ";
             for(auto const &a : args)
@@ -43,13 +43,13 @@ namespace jank
 
         namespace definition
         {
-          type_list parse_types
+          type_list<cell::cell> parse_types
           (
             parse::cell::list const &l,
             std::shared_ptr<environment::scope> const &scope
           )
           {
-            type_list ret;
+            type_list<cell::cell> ret;
 
             for(auto it(l.data.begin()); it != l.data.end(); ++it)
             {

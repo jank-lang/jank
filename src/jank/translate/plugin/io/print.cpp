@@ -16,7 +16,7 @@ namespace jank
         static void make_print
         (
           std::shared_ptr<environment::scope> const &scope,
-          cell::detail::type_reference const &type
+          cell::detail::type_reference<cell::cell> const &type
         )
         {
           auto const nested_scope(std::make_shared<environment::scope>());

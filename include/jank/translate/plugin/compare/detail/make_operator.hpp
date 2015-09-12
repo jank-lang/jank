@@ -17,7 +17,7 @@ namespace jank
           (
             std::shared_ptr<environment::scope> const &scope,
             std::string const &name,
-            cell::detail::type_reference const &type,
+            cell::detail::type_reference<cell::cell> const &type,
             F const &apply
           )
           {

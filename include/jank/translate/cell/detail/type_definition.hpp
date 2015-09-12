@@ -13,14 +13,17 @@ namespace jank
     {
       namespace detail
       {
+        template <typename C>
         struct type_definition
         {
           std::string name;
           translate::type::generic::genericity<type_definition> generics;
+          /* TODO: vector<member> */
         };
 
-        inline bool operator ==
-        (type_definition const &lhs, type_definition const &rhs)
+        template <typename C>
+        bool operator ==
+        (type_definition<C> const &lhs, type_definition<C> const &rhs)
         {
           return
           (
@@ -28,8 +31,10 @@ namespace jank
             lhs.generics == rhs.generics
           );
         }
-        inline bool operator !=
-        (type_definition const &lhs, type_definition const &rhs)
+
+        template <typename C>
+        bool operator !=
+        (type_definition<C> const &lhs, type_definition<C> const &rhs)
         {
           return
           (

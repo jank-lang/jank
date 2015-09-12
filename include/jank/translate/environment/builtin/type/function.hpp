@@ -1,7 +1,6 @@
 #pragma once
 
 #include <jank/translate/environment/scope.hpp>
-#include <jank/translate/cell/detail/type_reference.hpp>
 
 namespace jank
 {
@@ -15,7 +14,7 @@ namespace jank
         {
           scope& add_function(scope &s);
 
-          cell::detail::type_reference function(scope &s);
+          cell::detail::type_reference<cell::cell> function(scope &s);
         }
       }
     }

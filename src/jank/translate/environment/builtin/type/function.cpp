@@ -44,7 +44,7 @@ namespace jank
             return s;
           }
 
-          cell::detail::type_reference function(scope &s)
+          cell::detail::type_reference<cell::cell> function(scope &s)
           { return detail::find_type(s, "function"); }
         }
       }

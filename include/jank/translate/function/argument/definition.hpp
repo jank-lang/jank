@@ -25,21 +25,28 @@ namespace jank
       {
         namespace detail
         {
+          template <typename C>
           struct argument_type
           {
             std::string name;
-            cell::detail::type_reference type;
+            cell::detail::type_reference<C> type;
           };
-          using type_list = std::vector<argument_type>;
+          template <typename C>
+          using type_list = std::vector<argument_type<C>>;
 
-          bool operator ==(type_list const &lhs, type_list const &rhs);
-          std::ostream& operator <<(std::ostream &os, type_list const &args);
+          template <typename C>
+          bool operator ==(type_list<C> const &lhs, type_list<C> const &rhs);
+
+          template <typename C>
+          std::ostream& operator <<(std::ostream &os, type_list<C> const &args);
         }
-        using type_list = detail::type_list;
+        template <typename C>
+        using type_list = detail::type_list<C>;
 
         namespace definition
         {
-          type_list parse_types
+          template <typename C>
+          type_list<C> parse_types
           (
             parse::cell::list const &l,
             std::shared_ptr<environment::scope> const &scope
