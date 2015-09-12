@@ -18,7 +18,7 @@ namespace jank
               return std::make_pair
               (
                 name,
-                cell::type_definition{ { name, {} } }
+                cell::type_definition{ { name, {}, {} } }
               );
             }
 
@@ -32,7 +32,7 @@ namespace jank
               return std::make_pair
               (
                 name,
-                cell::type_definition{ { name, generics } }
+                cell::type_definition{ { name, generics, {} } }
               );
             }
           }
