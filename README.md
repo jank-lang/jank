@@ -328,6 +328,8 @@ $ make jank_test
 |if/do statements             |Complete and tested.                       |
 |lambda expressions           |Complete and tested.                       |
 |first-class functions        |Complete and tested.                       |
+|generic list collection      |Partially complete; not yet tested.        |
+|core functions               |Partially complete; not yet tested.        |
 
 |Interpreter                  |Status                                     |
 |:----------------------------|:------------------------------------------|
@@ -341,7 +343,7 @@ $ make jank_test
 
 |REPL                         |Status                                     |
 |:----------------------------|:------------------------------------------|
-|command-line                 |Partially complete; not yet tested.        |
+|command-line                 |Partially complete.                        |
 |irc-based                    |Not yet online.                            |
 |browser-based                |Not yet online.                            |
 
