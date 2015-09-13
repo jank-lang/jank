@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <jank/interpret/cell/stream.hpp>
 #include <jank/translate/plugin/collection/list/cons.hpp>
 #include <jank/translate/plugin/detail/make_function.hpp>
@@ -40,10 +42,25 @@ namespace jank
                   (interpret::environment::resolve_value(scope, args[1].cell)).data
                 );
                 coll.push_front(interpret::cell::integer{ elem });
-                //cell::literal_value lv{};
-                //lv.data = coll;
-                //return cell::cell{ lv };
-                return environment::builtin::value::integer(elem);
+                std::list<parse::cell::integer> ret_coll;
+                std::transform
+                (
+                  coll.begin(), coll.end(),
+                  std::back_inserter(ret_coll),
+                  [](auto const &int_cell)
+                  {
+                    auto i
+                    (
+                      interpret::expect::type<interpret::cell::type::integer>
+                      (int_cell).data
+                    );
+                    return parse::cell::integer{ i };
+                  }
+                );
+                cell::literal_value lv{};
+                lv.data = ret_coll;
+                return cell::cell{ lv };
+                //return environment::builtin::value::integer(elem);
               },
               col_type,
               elem_type, col_type

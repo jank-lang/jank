@@ -35,6 +35,7 @@ namespace jank
               auto const &literal(expect::type<cell::type::literal_value>(c));
               auto const name
               (
+                /* TODO: This is broken with lists now. */
                 parse::cell::trait::to_string
                 (parse::cell::trait::to_enum(literal.data))
               );
