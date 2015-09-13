@@ -93,6 +93,7 @@ add_library(
   src/jank/translate/plugin/compare/greater.cpp
   src/jank/translate/plugin/compare/greater_equal.cpp
   src/jank/translate/plugin/assertion/assertion.cpp
+  src/jank/translate/plugin/collection/list/cons.cpp
 
   src/jank/interpret/interpret.cpp
   src/jank/interpret/cell/stream.cpp
