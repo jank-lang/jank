@@ -34,7 +34,7 @@ namespace jank
       static std::ostream& operator <<(std::ostream &os, list const &l)
       {
         detail::stream::indenter const indent{ os, indent_level };
-        os << "(";
+        os << "( ";
         for(auto const &e : l.data)
         { os << e << " "; }
         return os << ")";
