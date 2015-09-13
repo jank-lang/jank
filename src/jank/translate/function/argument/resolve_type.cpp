@@ -4,6 +4,7 @@
 #include <jank/translate/cell/trait.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/environment/builtin/type/function.hpp>
+#include <jank/translate/environment/builtin/type/list.hpp>
 #include <jank/translate/function/argument/resolve_type.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/translate/expect/error/type/exception.hpp>
@@ -33,12 +34,37 @@ namespace jank
             case cell::type::literal_value:
             {
               auto const &literal(expect::type<cell::type::literal_value>(c));
-              auto const name
-              (
-                /* TODO: This is broken with lists now. */
-                parse::cell::trait::to_string
-                (parse::cell::trait::to_enum(literal.data))
-              );
+              std::string name;
+
+              /* TODO: Use a proper trait for this? The issue is that literals
+               * lie somewhere between parse, translate, and interpret. */
+              switch(static_cast<cell::literal_type>(literal.data.which()))
+              {
+                case cell::literal_type::null:
+                  name = parse::cell::trait::to_string<parse::cell::type::null>();
+                  break;
+                case cell::literal_type::boolean:
+                  name = parse::cell::trait::to_string<parse::cell::type::boolean>();
+                  break;
+                case cell::literal_type::integer:
+                  name = parse::cell::trait::to_string<parse::cell::type::integer>();
+                  break;
+                case cell::literal_type::real:
+                  name = parse::cell::trait::to_string<parse::cell::type::real>();
+                  break;
+                case cell::literal_type::string:
+                  name = parse::cell::trait::to_string<parse::cell::type::string>();
+                  break;
+                case cell::literal_type::list:
+                  return
+                  {
+                    environment::builtin::type::list
+                    (
+                      *scope,
+                      environment::builtin::type::integer(*scope)
+                    ).definition
+                  };
+              }
 
               auto const &def_opt(scope->find_type(name));
               if(!def_opt)

@@ -57,9 +57,7 @@ namespace jank
                     return parse::cell::integer{ i };
                   }
                 );
-                cell::literal_value lv{};
-                lv.data = ret_coll;
-                return cell::cell{ lv };
+                return cell::cell{ cell::literal_value{ ret_coll } };
               },
               col_type,
               elem_type, col_type
