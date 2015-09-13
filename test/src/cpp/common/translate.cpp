@@ -20,6 +20,7 @@
 #include <jank/translate/cell/stream.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/environment/builtin/type/function.hpp>
+#include <jank/translate/environment/builtin/type/list.hpp>
 #include <jank/translate/plugin/apply.hpp>
 
 namespace jank
@@ -50,6 +51,7 @@ namespace jank
       auto const scope(std::make_shared<translate::environment::scope>(nullptr));
       translate::environment::builtin::type::add_primitives(*scope);
       translate::environment::builtin::type::add_function(*scope);
+      translate::environment::builtin::type::add_list(*scope);
       translate::plugin::apply(scope);
       auto const translated_body
       (

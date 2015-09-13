@@ -18,6 +18,7 @@
 #include <jank/translate/cell/stream.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/environment/builtin/type/function.hpp>
+#include <jank/translate/environment/builtin/type/list.hpp>
 #include <jank/translate/plugin/apply.hpp>
 #include <jank/interpret/interpret.hpp>
 
@@ -68,6 +69,7 @@ int main(int const argc, char ** const argv)
   (std::make_shared<jank::translate::environment::scope>(nullptr));
   jank::translate::environment::builtin::type::add_primitives(*scope);
   jank::translate::environment::builtin::type::add_function(*scope);
+  jank::translate::environment::builtin::type::add_list(*scope);
   jank::translate::plugin::apply(scope);
 
   std::cout << "translating..." << std::endl;
