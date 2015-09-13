@@ -1,6 +1,7 @@
 #include <jank/interpret/cell/stream.hpp>
 #include <jank/translate/plugin/io/print.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
+#include <jank/translate/environment/builtin/type/list.hpp>
 #include <jank/translate/environment/builtin/value/primitive.hpp>
 #include <jank/translate/cell/stream.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
@@ -50,6 +51,15 @@ namespace jank
           make_print(scope, environment::builtin::type::integer(*scope));
           make_print(scope, environment::builtin::type::real(*scope));
           make_print(scope, environment::builtin::type::string(*scope));
+          make_print
+          (
+            scope,
+            environment::builtin::type::list
+            (
+              *scope,
+              environment::builtin::type::integer(*scope)
+            )
+          );
         }
       }
     }
