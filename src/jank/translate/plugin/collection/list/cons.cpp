@@ -80,7 +80,7 @@ namespace jank
                 );
                 return cell::cell{ cell::literal_value{ parse::cell::integer{ i } } };
               },
-              col_type,
+              elem_type,
               col_type
             );
 
