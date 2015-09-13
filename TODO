@@ -4,6 +4,8 @@ allow keywords?
 
 optional isn't available on osx
 
+translation plugin code is in an awful state right now
+
 fix vim highlighting of falsey
 
 basic list ops with ints
