@@ -11,6 +11,7 @@ namespace jank
   {
     namespace cell
     {
+      /* TODO: Rename literal_value to value? */
       enum class literal_type
       {
         null,
@@ -18,7 +19,7 @@ namespace jank
         integer,
         real,
         string,
-        ident
+        list
       };
 
       namespace detail
@@ -30,7 +31,7 @@ namespace jank
           parse::cell::integer,
           parse::cell::real,
           parse::cell::string,
-          parse::cell::ident /* TODO: Should this be here? */
+          parse::cell::list
         >;
       }
     }

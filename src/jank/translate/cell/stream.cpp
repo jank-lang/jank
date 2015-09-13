@@ -148,8 +148,11 @@ namespace jank
           case literal_type::string:
             os << "string ";
             break;
-          case literal_type::ident:
-            os << "ident ";
+          case literal_type::list:
+            os << "list ";
+            break;
+          default:
+            os << "??? ";
             break;
         }
         return os << c.data << std::endl;
