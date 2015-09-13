@@ -84,6 +84,38 @@ namespace jank
               col_type
             );
 
+            plugin::detail::make_function
+            (
+              scope, "rest",
+              [](auto const &scope, auto const &args)
+              {
+                auto coll
+                (
+                  interpret::expect::type<interpret::cell::type::list>
+                  (interpret::environment::resolve_value(scope, args[0].cell)).data
+                );
+                coll.pop_front();
+                std::list<parse::cell::integer> ret_coll;
+                std::transform
+                (
+                  coll.begin(), coll.end(),
+                  std::back_inserter(ret_coll),
+                  [](auto const &int_cell)
+                  {
+                    auto const i
+                    (
+                      interpret::expect::type<interpret::cell::type::integer>
+                      (int_cell).data
+                    );
+                    return parse::cell::integer{ i };
+                  }
+                );
+                return cell::cell{ cell::literal_value{ ret_coll } };
+              },
+              col_type,
+              col_type
+            );
+
             /* TODO: Remove */
             plugin::detail::make_function
             (
