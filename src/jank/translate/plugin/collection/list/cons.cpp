@@ -49,7 +49,7 @@ namespace jank
                   std::back_inserter(ret_coll),
                   [](auto const &int_cell)
                   {
-                    auto i
+                    auto const i
                     (
                       interpret::expect::type<interpret::cell::type::integer>
                       (int_cell).data

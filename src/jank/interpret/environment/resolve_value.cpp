@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <jank/translate/environment/scope.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/expect/type.hpp>
@@ -74,6 +76,20 @@ namespace jank
                   cell::string
                   { boost::get<parse::cell::string>(cell.data).data }
                 };
+              case translate::cell::literal_type::list:
+              {
+                auto trans_list
+                (boost::get<std::list<parse::cell::integer>>(cell.data));
+                cell::list int_list;
+                std::transform
+                (
+                  trans_list.begin(), trans_list.end(),
+                  std::back_inserter(int_list.data),
+                  [](auto const &trans_cell)
+                  { return cell::integer{ trans_cell.data }; }
+                );
+                return int_list;
+              }
               default:
                 throw expect::error::lookup::exception<>{ "invalid literal" };
             }
