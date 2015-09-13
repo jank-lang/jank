@@ -62,6 +62,18 @@ namespace jank
               col_type,
               elem_type, col_type
             );
+
+            /* TODO: Remove */
+            plugin::detail::make_function
+            (
+              scope, "cons",
+              [](auto const &, auto const &)
+              {
+                std::list<parse::cell::integer> ret_coll;
+                return cell::cell{ cell::literal_value{ ret_coll } };
+              },
+              col_type
+            );
           }
 
           void cons(std::shared_ptr<environment::scope> const &scope)
