@@ -31,10 +31,13 @@ namespace jank
         return os << "function";
       }
 
-      static std::ostream& operator <<(std::ostream &os, list const &)
+      static std::ostream& operator <<(std::ostream &os, list const &l)
       {
         detail::stream::indenter const indent{ os, indent_level };
-        return os << "list";
+        os << "(";
+        for(auto const &e : l.data)
+        { os << e << " "; }
+        return os << ")";
       }
 
       std::ostream& operator <<(std::ostream &os, cell const &c)
