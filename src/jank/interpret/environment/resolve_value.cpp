@@ -78,6 +78,8 @@ namespace jank
                 };
               case translate::cell::literal_type::list:
               {
+                /* TODO: This is so bad. We're marshalling back and forth between
+                 * translate and interpret. */
                 auto trans_list
                 (boost::get<std::list<parse::cell::integer>>(cell.data));
                 cell::list int_list;
