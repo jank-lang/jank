@@ -60,7 +60,6 @@ namespace jank
                 cell::literal_value lv{};
                 lv.data = ret_coll;
                 return cell::cell{ lv };
-                //return environment::builtin::value::integer(elem);
               },
               col_type,
               elem_type, col_type
@@ -73,7 +72,11 @@ namespace jank
             (
               scope,
               environment::builtin::type::integer(*scope),
-              environment::builtin::type::list(*scope)
+              environment::builtin::type::list
+              (
+                *scope,
+                environment::builtin::type::integer(*scope)
+              )
             );
           }
         }

@@ -30,8 +30,18 @@ namespace jank
             return s;
           }
 
-          cell::detail::type_reference<cell::cell> list(scope &s)
-          { return detail::find_type(s, "list"); }
+          cell::detail::type_reference<cell::cell> list
+          (
+            scope &s,
+            cell::detail::type_reference<cell::cell> elem_type
+          )
+          {
+            auto type(detail::find_type(s, "list"));
+            type.definition.generics.parameters.front() =
+              translate::type::generic::single<cell::type_definition::type>
+              { elem_type.definition };
+            return type;
+          }
         }
       }
     }

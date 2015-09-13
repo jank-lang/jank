@@ -14,7 +14,11 @@ namespace jank
         {
           scope& add_list(scope &s);
 
-          cell::detail::type_reference<cell::cell> list(scope &s);
+          cell::detail::type_reference<cell::cell> list
+          (
+            scope &s,
+            cell::detail::type_reference<cell::cell> elem_type
+          );
         }
       }
     }
