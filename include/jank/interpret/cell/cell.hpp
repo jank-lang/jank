@@ -1,8 +1,8 @@
 #pragma once
 
-#include <iostream>
 #include <string>
 #include <vector>
+#include <list>
 #include <functional>
 #include <sstream>
 #include <cstdint>
@@ -29,7 +29,8 @@ namespace jank
         boost::recursive_wrapper<wrapper<type::integer>>,
         boost::recursive_wrapper<wrapper<type::real>>,
         boost::recursive_wrapper<wrapper<type::string>>,
-        boost::recursive_wrapper<wrapper<type::function>>
+        boost::recursive_wrapper<wrapper<type::function>>,
+        boost::recursive_wrapper<wrapper<type::list>>
       >;
 
       template <>
@@ -68,6 +69,12 @@ namespace jank
         using type = translate::cell::function_definition::type;
         type data;
       };
+      template <>
+      struct wrapper<type::list>
+      {
+        using type = std::list<cell>;
+        type data;
+      };
 
       using null = wrapper<type::null>;
       using boolean = wrapper<type::boolean>;
@@ -75,6 +82,7 @@ namespace jank
       using real = wrapper<type::real>;
       using string = wrapper<type::string>;
       using function = wrapper<type::function>;
+      using list = wrapper<type::list>;
     }
   }
 }

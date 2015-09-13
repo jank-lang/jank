@@ -31,6 +31,12 @@ namespace jank
         return os << "function";
       }
 
+      static std::ostream& operator <<(std::ostream &os, list const &)
+      {
+        detail::stream::indenter const indent{ os, indent_level };
+        return os << "list";
+      }
+
       std::ostream& operator <<(std::ostream &os, cell const &c)
       {
         switch(trait::to_enum(c))
@@ -52,6 +58,9 @@ namespace jank
             break;
           case type::function:
             os << boost::get<function>(c);
+            break;
+          case type::list:
+            os << boost::get<list>(c);
             break;
           default:
             os << "??? ";

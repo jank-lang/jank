@@ -1,5 +1,7 @@
 #pragma once
 
+#include <list>
+
 #include <boost/variant.hpp>
 
 #include <jank/parse/cell/cell.hpp>
@@ -31,7 +33,7 @@ namespace jank
           parse::cell::integer,
           parse::cell::real,
           parse::cell::string,
-          parse::cell::list
+          std::list<parse::cell::integer> /* TODO */
         >;
       }
     }

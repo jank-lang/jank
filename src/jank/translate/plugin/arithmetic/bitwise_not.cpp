@@ -1,4 +1,5 @@
 #include <jank/translate/plugin/arithmetic/bitwise_not.hpp>
+/* TODO: Just include make_function in these? */
 #include <jank/translate/plugin/arithmetic/detail/make_operator.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
 #include <jank/interpret/expect/type.hpp>

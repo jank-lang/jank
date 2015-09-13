@@ -35,6 +35,9 @@ namespace jank
         template <>
         inline char constexpr const* to_string<type::function>()
         { return "function"; }
+        template <>
+        inline char constexpr const* to_string<type::list>()
+        { return "list"; }
 
         template <typename C>
         char constexpr const* to_string();
@@ -56,6 +59,9 @@ namespace jank
         template <>
         inline char constexpr const* to_string<function>()
         { return to_string<type::function>(); }
+        template <>
+        inline char constexpr const* to_string<list>()
+        { return to_string<type::list>(); }
 
         inline char constexpr const* to_string(type const c)
         {
@@ -73,6 +79,8 @@ namespace jank
               return to_string<type::string>();
             case type::function:
               return to_string<type::function>();
+            case type::list:
+              return to_string<type::list>();
             default:
               return "unknown";
           }
@@ -92,6 +100,8 @@ namespace jank
           { return type::string; }
           else if(str == to_string<function>())
           { return type::function; }
+          else if(str == to_string<list>())
+          { return type::list; }
           else
           {
             throw expect::error::type::exception<>
@@ -121,6 +131,9 @@ namespace jank
           template <>
           struct to_type<type::function>
           { using type = function; };
+          template <>
+          struct to_type<type::list>
+          { using type = list; };
         }
         template <type C>
         using to_type = typename detail::to_type<C>::type;
@@ -145,6 +158,9 @@ namespace jank
         template <>
         type constexpr to_enum<function>()
         { return type::function; }
+        template <>
+        type constexpr to_enum<list>()
+        { return type::list; }
       }
     }
   }

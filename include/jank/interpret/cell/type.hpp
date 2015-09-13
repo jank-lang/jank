@@ -13,7 +13,8 @@ namespace jank
         integer,
         real,
         string,
-        function
+        function,
+        list
       };
     }
   }

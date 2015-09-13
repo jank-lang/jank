@@ -11,6 +11,9 @@ namespace jank
     {
       namespace trait
       {
+        template <typename T>
+        type to_enum(T const &)
+        { return type::null; }
         inline type to_enum(cell const &c)
         { return static_cast<type>(c.which()); }
 

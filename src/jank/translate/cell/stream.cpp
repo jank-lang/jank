@@ -135,27 +135,30 @@ namespace jank
         switch(static_cast<literal_type>(c.data.which()))
         {
           case literal_type::null:
-            break;
+            return os << boost::get<parse::cell::null::type>(c.data)
+                      << std::endl;
           case literal_type::boolean:
-            os << "boolean ";
-            break;
+            return os << "boolean "
+                      << boost::get<parse::cell::boolean::type>(c.data)
+                      << std::endl;
           case literal_type::integer:
-            os << "integer ";
-            break;
+            return os << "integer "
+                      << boost::get<parse::cell::integer::type>(c.data)
+                      << std::endl;
           case literal_type::real:
-            os << "real ";
-            break;
+            return os << "real "
+                      << boost::get<parse::cell::real::type>(c.data)
+                      << std::endl;
           case literal_type::string:
-            os << "string ";
-            break;
+            return os << "string "
+                      << boost::get<parse::cell::string::type>(c.data)
+                      << std::endl;
           case literal_type::list:
-            os << "list ";
-            break;
+            return os << "list " << std::endl;
           default:
-            os << "??? ";
+            return os << "??? " << std::endl;
             break;
         }
-        return os << c.data << std::endl;
       }
 
       static std::ostream& operator <<(std::ostream &os, return_statement const &c)
