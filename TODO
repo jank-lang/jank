@@ -5,6 +5,10 @@ allow keywords?
 optional isn't available on osx
 
 translation plugin code is in an awful state right now
+  marshalling back and forth
+
+literal_value has list
+  should it be stored elsewhere?
 
 fix vim highlighting of falsey
 
