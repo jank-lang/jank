@@ -12,10 +12,6 @@ literal_value has list
 
 fix vim highlighting of falsey
 
-basic list ops with ints
-  list : (integer)
-  cons
-
 REPL
   add repl trait and compile separate lib
     allow multiple definitions
