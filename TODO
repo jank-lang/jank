@@ -12,6 +12,8 @@ literal_value has list
 
 fix vim highlighting of falsey
 
+recursing in auto-typed functions is broken
+
 REPL
   add repl trait and compile separate lib
     allow multiple definitions
