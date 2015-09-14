@@ -21,8 +21,6 @@
 
 namespace jank
 {
-  /* TODO: Native function definitions and all of this plugin shit
-   * should be in interpret. */
   namespace translate
   {
     namespace plugin
