@@ -106,6 +106,7 @@ add_library(
   src/jank/interpret/detail/if_statement.cpp
   src/jank/interpret/detail/return_statement.cpp
   src/jank/interpret/detail/do_statement.cpp
+  src/jank/interpret/plugin/apply.cpp
 )
 
 add_executable(${PROJECT_NAME} src/main.cpp)
