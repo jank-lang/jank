@@ -2,6 +2,8 @@ allow keywords?
   each keyword is its own type
   useful in the case of policies?
 
+static analysis on travis
+
 optional isn't available on osx
 
 translation plugin code is in an awful state right now
