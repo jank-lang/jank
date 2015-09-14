@@ -36,6 +36,27 @@ namespace jank
           > interpret;
           std::shared_ptr<environment::scope> scope;
         };
+
+        template <typename C>
+        bool operator <
+        (
+          native_function_definition<C> const &lhs,
+          native_function_definition<C> const &rhs
+        )
+        {
+          if(lhs.name < rhs.name)
+          { return true; }
+          else if(lhs.arguments.size() < rhs.arguments.size())
+          { return true; }
+
+          return std::lexicographical_compare
+          (
+            lhs.arguments.begin(), lhs.arguments.end(),
+            rhs.arguments.begin(), rhs.arguments.end(),
+            [](auto const &l, auto const &r)
+            { return l.name < r.name; }
+          );
+        }
       }
     }
   }

@@ -21,13 +21,17 @@ namespace jank
       }
 
       std::experimental::optional<plugin::detail::native_function_definition>
-      scope::find_native_function(std::string const &name) const
+      scope::find_native_function
+      (
+        translate::cell::detail::native_function_definition
+        <translate::cell::cell> const &def
+      ) const
       {
-        auto const it(native_function_definitions.find(name));
+        auto const it(native_function_definitions.find(def));
         if(it == native_function_definitions.end())
         {
           if(parent)
-          { return parent->find_native_function(name); }
+          { return parent->find_native_function(def); }
           else
           { return {}; }
         }

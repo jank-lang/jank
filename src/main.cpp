@@ -99,7 +99,7 @@ int main(int const argc, char ** const argv)
 
   auto const interpret_scope
   (std::make_shared<jank::interpret::environment::scope>());
-  jank::interpret::plugin::apply(interpret_scope);
+  jank::interpret::plugin::apply(scope, interpret_scope);
 
   jank::interpret::interpret
   (

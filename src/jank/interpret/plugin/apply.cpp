@@ -1,4 +1,5 @@
 #include <jank/interpret/plugin/apply.hpp>
+#include <jank/interpret/plugin/io/print.hpp>
 
 namespace jank
 {
@@ -7,19 +8,30 @@ namespace jank
     namespace plugin
     {
       std::shared_ptr<environment::scope> apply
-      (std::shared_ptr<environment::scope> const &scope)
+      (
+        std::shared_ptr<translate::environment::scope> const &trans_scope,
+        std::shared_ptr<environment::scope> const &int_scope
+      )
       {
         std::vector
         <
-          std::function<void (std::shared_ptr<environment::scope> const&)>
+          std::function
+          <
+            void
+            (
+              std::shared_ptr<translate::environment::scope> const&,
+              std::shared_ptr<environment::scope> const&
+            )
+          >
         > const plugins
         {
+          &io::print,
         };
 
         for(auto const &plugin : plugins)
-        { plugin(scope); }
+        { plugin(trans_scope, int_scope); }
 
-        return scope;
+        return int_scope;
       }
     }
   }

@@ -4,7 +4,6 @@
 #include <jank/translate/environment/builtin/type/list.hpp>
 #include <jank/translate/environment/builtin/value/primitive.hpp>
 #include <jank/translate/cell/stream.hpp>
-#include <jank/interpret/environment/resolve_value.hpp>
 
 namespace jank
 {
@@ -29,13 +28,7 @@ namespace jank
               "print",
               { { "data", type } },
               environment::builtin::type::null(*scope),
-              [](auto const &scope, auto const &args) -> cell::cell
-              {
-                for(auto const &arg : args)
-                { std::cout << interpret::environment::resolve_value(scope, arg.cell); }
-                std::cout << std::endl;
-                return environment::builtin::value::null();
-              },
+              {},
               nested_scope
             }
           };

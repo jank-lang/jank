@@ -126,12 +126,12 @@ namespace jank
               <translate::cell::type::native_function_call>(c)
             );
 
-            auto const &name(cell.data.definition.name);
-            auto const &definition(s->find_native_function(name));
+            auto const &declaration(cell.data.definition);
+            auto const &definition(s->find_native_function(declaration));
             if(!definition)
             {
               throw expect::error::lookup::exception<>
-              { "invalid native function: " + name };
+              { "invalid native function: " + declaration.name };
             }
 
             return definition.value().interpret(s, cell.data.arguments);
