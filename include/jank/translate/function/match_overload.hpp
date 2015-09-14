@@ -20,7 +20,7 @@ namespace jank
         struct call
         { using type = cell::function_call; };
         template <>
-        struct call<cell::native_function_definition>
+        struct call<cell::native_function_declaration>
         { using type = cell::native_function_call; };
 
         /* Handles native and non-native functions. */

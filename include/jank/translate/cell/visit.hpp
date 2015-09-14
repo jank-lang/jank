@@ -19,8 +19,8 @@ namespace jank
             return func(boost::get<function_body>(c));
           case type::function_definition:
             return func(boost::get<function_definition>(c));
-          case type::native_function_definition:
-            return func(boost::get<native_function_definition>(c));
+          case type::native_function_declaration:
+            return func(boost::get<native_function_declaration>(c));
           case type::function_call:
             return func(boost::get<function_call>(c));
           case type::indirect_function_call:

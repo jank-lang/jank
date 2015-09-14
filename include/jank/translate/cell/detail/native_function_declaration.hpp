@@ -21,7 +21,7 @@ namespace jank
       namespace detail
       {
         template <typename C>
-        struct native_function_definition
+        struct native_function_declaration
         {
           std::string name;
           function::argument::type_list<C> arguments;
@@ -40,8 +40,8 @@ namespace jank
         template <typename C>
         bool operator <
         (
-          native_function_definition<C> const &lhs,
-          native_function_definition<C> const &rhs
+          native_function_declaration<C> const &lhs,
+          native_function_declaration<C> const &rhs
         )
         {
           if(lhs.name < rhs.name)

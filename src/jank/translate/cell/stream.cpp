@@ -42,7 +42,7 @@ namespace jank
         return os;
       }
 
-      static std::ostream& operator <<(std::ostream &os, native_function_definition const &c)
+      static std::ostream& operator <<(std::ostream &os, native_function_declaration const &c)
       {
         indenter const indent{ os, indent_level };
 
@@ -192,8 +192,8 @@ namespace jank
           case type::function_definition:
             os << boost::get<function_definition>(c);
             break;
-          case type::native_function_definition:
-            os << boost::get<native_function_definition>(c);
+          case type::native_function_declaration:
+            os << boost::get<native_function_declaration>(c);
             break;
           case type::function_call:
             os << boost::get<function_call>(c);

@@ -26,14 +26,14 @@ namespace jank
         std::experimental::optional<plugin::detail::native_function_definition>
         find_native_function
         (
-          translate::cell::detail::native_function_definition
+          translate::cell::detail::native_function_declaration
           <translate::cell::cell> const &
         ) const;
 
         std::map<std::string, cell::cell> bindings;
         std::map
         <
-          translate::cell::detail::native_function_definition
+          translate::cell::detail::native_function_declaration
           <translate::cell::cell>,
           plugin::detail::native_function_definition
         > native_function_definitions;

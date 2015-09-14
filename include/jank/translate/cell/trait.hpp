@@ -22,8 +22,8 @@ namespace jank
         inline char constexpr const* to_string<type::function_definition>()
         { return "function_definition"; }
         template <>
-        inline char constexpr const* to_string<type::native_function_definition>()
-        { return "native_function_definition"; }
+        inline char constexpr const* to_string<type::native_function_declaration>()
+        { return "native_function_declaration"; }
         template <>
         inline char constexpr const* to_string<type::function_call>()
         { return "function_call"; }
@@ -73,8 +73,8 @@ namespace jank
         inline char constexpr const* to_string<function_definition>()
         { return to_string<type::function_definition>(); }
         template <>
-        inline char constexpr const* to_string<native_function_definition>()
-        { return to_string<type::native_function_definition>(); }
+        inline char constexpr const* to_string<native_function_declaration>()
+        { return to_string<type::native_function_declaration>(); }
         template <>
         inline char constexpr const* to_string<function_call>()
         { return to_string<type::function_call>(); }
@@ -123,8 +123,8 @@ namespace jank
               return to_string<type::function_body>();
             case type::function_definition:
               return to_string<type::function_definition>();
-            case type::native_function_definition:
-              return to_string<type::native_function_definition>();
+            case type::native_function_declaration:
+              return to_string<type::native_function_declaration>();
             case type::function_call:
               return to_string<type::function_call>();
             case type::indirect_function_call:
@@ -162,8 +162,8 @@ namespace jank
           { return type::function_body; }
           else if(str == to_string<function_definition>())
           { return type::function_definition; }
-          else if(str == to_string<native_function_definition>())
-          { return type::native_function_definition; }
+          else if(str == to_string<native_function_declaration>())
+          { return type::native_function_declaration; }
           else if(str == to_string<function_call>())
           { return type::function_call; }
           else if(str == to_string<indirect_function_call>())
@@ -208,8 +208,8 @@ namespace jank
           struct to_type<type::function_definition>
           { using type = function_definition; };
           template <>
-          struct to_type<type::native_function_definition>
-          { using type = native_function_definition; };
+          struct to_type<type::native_function_declaration>
+          { using type = native_function_declaration; };
           template <>
           struct to_type<type::function_call>
           { using type = function_call; };
@@ -262,8 +262,8 @@ namespace jank
         type constexpr to_enum<function_definition>()
         { return type::function_definition; }
         template <>
-        type constexpr to_enum<native_function_definition>()
-        { return type::native_function_definition; }
+        type constexpr to_enum<native_function_declaration>()
+        { return type::native_function_declaration; }
         template <>
         type constexpr to_enum<function_call>()
         { return type::function_call; }

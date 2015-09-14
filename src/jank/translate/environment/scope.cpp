@@ -101,14 +101,14 @@ namespace jank
       }
 
       std::experimental::optional
-      <std::vector<scope::result<cell::native_function_definition>>>
+      <std::vector<scope::result<cell::native_function_declaration>>>
       scope::find_native_function(std::string const &name) const
       {
         return find
         (
           name,
           shared_from_this(),
-          native_function_definitions,
+          native_function_declarations,
           &scope::find_native_function
         );
       }

@@ -10,7 +10,7 @@
 #include <jank/translate/cell/type.hpp>
 #include <jank/translate/cell/detail/function_body.hpp>
 #include <jank/translate/cell/detail/function_definition.hpp>
-#include <jank/translate/cell/detail/native_function_definition.hpp>
+#include <jank/translate/cell/detail/native_function_declaration.hpp>
 #include <jank/translate/cell/detail/function_reference.hpp>
 #include <jank/translate/cell/detail/native_function_reference.hpp>
 #include <jank/translate/cell/detail/function_call.hpp>
@@ -37,7 +37,7 @@ namespace jank
       <
         boost::recursive_wrapper<wrapper<type::function_body>>,
         boost::recursive_wrapper<wrapper<type::function_definition>>,
-        boost::recursive_wrapper<wrapper<type::native_function_definition>>,
+        boost::recursive_wrapper<wrapper<type::native_function_declaration>>,
         boost::recursive_wrapper<wrapper<type::function_call>>,
         boost::recursive_wrapper<wrapper<type::indirect_function_call>>,
         boost::recursive_wrapper<wrapper<type::native_function_call>>,
@@ -66,9 +66,9 @@ namespace jank
         type data;
       };
       template <>
-      struct wrapper<type::native_function_definition>
+      struct wrapper<type::native_function_declaration>
       {
-        using type = detail::native_function_definition<cell>;
+        using type = detail::native_function_declaration<cell>;
         type data;
       };
       template <>
@@ -86,7 +86,7 @@ namespace jank
       template <>
       struct wrapper<type::native_function_call>
       {
-        using type = detail::function_call<cell, detail::native_function_definition<cell>>;
+        using type = detail::function_call<cell, detail::native_function_declaration<cell>>;
         type data;
       };
       template <>
@@ -98,7 +98,7 @@ namespace jank
       template <>
       struct wrapper<type::native_function_reference>
       {
-        using type = detail::function_reference<detail::native_function_definition<cell>>;
+        using type = detail::function_reference<detail::native_function_declaration<cell>>;
         type data;
       };
       template <>
@@ -152,7 +152,7 @@ namespace jank
 
       using function_body = wrapper<type::function_body>;
       using function_definition = wrapper<type::function_definition>;
-      using native_function_definition = wrapper<type::native_function_definition>;
+      using native_function_declaration = wrapper<type::native_function_declaration>;
       using function_call = wrapper<type::function_call>;
       using indirect_function_call = wrapper<type::indirect_function_call>;
       using native_function_call = wrapper<type::native_function_call>;
