@@ -1,6 +1,7 @@
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/detail/native_function_call.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
+#include <jank/interpret/expect/error/lookup/exception.hpp>
 
 namespace jank
 {
@@ -14,8 +15,16 @@ namespace jank
         translate::cell::native_function_call const &cell
       )
       {
-        return environment::resolve_value
-        (scope, cell.data.definition.interpret(scope, cell.data.arguments));
+
+        auto const &declaration(cell.data.definition);
+        auto const &definition(scope->find_native_function(declaration));
+        if(!definition)
+        {
+          throw expect::error::lookup::exception<>
+          { "invalid native function: " + declaration.name };
+        }
+
+        return definition.value().interpret(scope, cell.data.arguments);
       }
     }
   }

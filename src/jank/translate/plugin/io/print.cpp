@@ -3,7 +3,6 @@
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/environment/builtin/type/list.hpp>
 #include <jank/translate/environment/builtin/value/primitive.hpp>
-#include <jank/translate/cell/stream.hpp>
 
 namespace jank
 {
