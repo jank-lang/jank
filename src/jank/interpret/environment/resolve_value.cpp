@@ -126,9 +126,15 @@ namespace jank
               <translate::cell::type::native_function_call>(c)
             );
 
-            /* Recurse. */
-            return environment::resolve_value
-            (s, cell.data.definition.interpret(s, cell.data.arguments));
+            auto const &name(cell.data.definition.name);
+            auto const &definition(s->find_native_function(name));
+            if(!definition)
+            {
+              throw expect::error::lookup::exception<>
+              { "invalid native function: " + name };
+            }
+
+            return definition.value().interpret(s, cell.data.arguments);
           } break;
 
           case translate::cell::type::indirect_function_call:
