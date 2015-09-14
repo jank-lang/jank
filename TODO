@@ -14,6 +14,8 @@ fix vim highlighting of falsey
 
 recursing in auto-typed functions is broken
 
+add a function to builtin which adds all
+
 REPL
   add repl trait and compile separate lib
     allow multiple definitions
