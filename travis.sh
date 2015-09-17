@@ -3,7 +3,7 @@
 set -e
 
 if [[ "$analyze" == "true" ]]; then
-  scan_build=scan-build --use-cxx --use-cxx=$CXX
+  scan_build="scan-build --use-cxx --use-cxx=$CXX"
   analyze_suffix=_analyze
 
   if [[ "$CXX" == "g++" ]]; then
