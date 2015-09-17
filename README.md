@@ -33,6 +33,7 @@ There are a few primitive types which are part of the language.
 |`integer`          |A 64bit signed integer                     |
 |`real`             |A 64bit float                              |
 |`string`           |An array of UTF-8 characters               |
+|`list`             |A generic, homogeneous, singly-linked list |
 
 ## Functions
 ```lisp
