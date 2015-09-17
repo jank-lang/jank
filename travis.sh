@@ -5,6 +5,11 @@ set -e
 if [[ "$analyze" == "true" ]]; then
   scan_build=scan-build
   analyze_suffix=_analyze
+
+  if [[ "$CXX" == "g++" ]]; then
+    # No need to analyze for both gcc and clang
+    exit 0
+  fi
 else
   scan_build=
   analyze_suffix=
