@@ -17,7 +17,9 @@ addons:
     packages:
       - g++-5
       - gcc-5
+      - clang
       - clang-3.6
+      - llvm-3.6
       - libboost-system1.55-dev
       - libboost-regex1.55-dev
 
