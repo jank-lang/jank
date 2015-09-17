@@ -4,7 +4,6 @@ compiler:
   - clang
 env:
   - analyze=false
-  - analyze=true
 
 sudo: false
 
