@@ -4,19 +4,23 @@ set -e
 
 if [[ "$analyze" == "true" ]]; then
   scan_build=scan-build
+  analyze_suffix=_analyze
 else
   scan_build=
+  analyze_suffix=
 fi
 
 # Release build
-mkdir build_release ; cd build_release
+dir=build_release$analyze_suffix
+mkdir $dir ; cd $dir
 $scan_build cmake .. -DCMAKE_BUILD_TYPE=RELEASE
 $scan_build make -j2
 $scan_build make jank_test
 cd ..
 
 # Debug build
-mkdir build_debug ; cd build_debug
+dir=build_debug$analyze_suffix
+mkdir $dir ; cd $dir
 $scan_build cmake .. -DCMAKE_BUILD_TYPE=DEBUG
 $scan_build make -j2
 $scan_build make jank_test
