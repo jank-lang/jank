@@ -1,9 +1,10 @@
 #/bin/bash
 
 set -e
+set -x
 
 if [[ "$analyze" == "true" ]]; then
-  scan_build="scan-build --use-c++ --use-c++=$CXX"
+  scan_build="scan-build --use-cc=$(which $CC) --use-c++ --use-c++=$(which $CXX)"
   analyze_suffix=_analyze
 
   if [[ "$CXX" == "g++" ]]; then
