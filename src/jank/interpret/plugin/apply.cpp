@@ -1,5 +1,6 @@
 #include <jank/interpret/plugin/apply.hpp>
 #include <jank/interpret/plugin/io/print.hpp>
+#include <jank/interpret/plugin/assertion/assertion.hpp>
 
 namespace jank
 {
@@ -26,6 +27,7 @@ namespace jank
         > const plugins
         {
           &io::print,
+          &assertion::assertion
         };
 
         for(auto const &plugin : plugins)
