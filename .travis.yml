@@ -2,6 +2,9 @@ language: cpp
 compiler:
   - gcc
   - clang
+env:
+  - analyze=false
+  - analyze=true
 
 sudo: false
 
@@ -27,15 +30,7 @@ before_install:
     fi
 
 script:
-  # Release build
-  - mkdir build_release ; cd build_release
-  - cmake .. -DCMAKE_BUILD_TYPE=RELEASE
-  - make -j2 && make jank_test
-  - cd ..
-  # Debug build
-  - mkdir build_debug ; cd build_debug
-  - cmake .. -DCMAKE_BUILD_TYPE=DEBUG
-  - make -j2 && make jank_test
+  - ./travis.sh
 
 notifications:
   email:
