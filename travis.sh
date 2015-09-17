@@ -1,9 +1,10 @@
 #/bin/bash
 
 set -e
-set -x
 
 if [[ "$analyze" == "true" ]]; then
+  # Analyzing isn't working right now
+  exit 0
   scan_build="scan-build --use-cc=$(which $CC) --use-c++ --use-c++=$(which $CXX)"
   analyze_suffix=_analyze
 
@@ -14,7 +15,6 @@ if [[ "$analyze" == "true" ]]; then
 else
   scan_build=
   analyze_suffix=
-  exit 0
 fi
 
 # Release build
