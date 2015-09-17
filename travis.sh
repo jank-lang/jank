@@ -13,6 +13,7 @@ if [[ "$analyze" == "true" ]]; then
 else
   scan_build=
   analyze_suffix=
+  exit 0
 fi
 
 # Release build
