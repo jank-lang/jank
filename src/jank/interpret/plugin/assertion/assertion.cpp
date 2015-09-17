@@ -13,7 +13,8 @@ namespace jank
       namespace assertion
       {
         template <typename... Args>
-        plugin::detail::native_function_definition find_definition
+        translate::cell::detail::native_function_declaration
+        <translate::cell::cell> find_declaration
         (
           std::shared_ptr<translate::environment::scope> const &trans_scope,
           std::string const &name,
@@ -35,7 +36,22 @@ namespace jank
 
             translate::cell::type_reference const arg_types[]
             { std::forward<Args>(args)... };
+
+            auto const equal
+            (
+              std::equal
+              (
+                def.arguments.begin(), def.arguments.end(),
+                arg_types.begin(), arg_types.end()
+              )
+            );
+
+            if(equal)
+            { return def; }
           }
+
+          throw expect::error::internal::exception<>
+          { "no matching native " + name + " declaration" };
         }
 
         void assertion
