@@ -22,6 +22,8 @@ addons:
       - llvm-3.6
       - libboost-system1.55-dev
       - libboost-regex1.55-dev
+cache:
+  -apt
 
 before_install:
   - if [[ "$CXX" == "clang++" ]]; then
