@@ -31,6 +31,8 @@ namespace jank
         template <typename C>
         using member = std::pair<type_definition<C>, member_cell<C>>;
 
+        /* TODO: op< */
+
         template <typename C>
         bool operator ==
         (type_definition<C> const &lhs, type_definition<C> const &rhs)

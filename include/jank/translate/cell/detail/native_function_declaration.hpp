@@ -46,15 +46,16 @@ namespace jank
         {
           if(lhs.name < rhs.name)
           { return true; }
-          else if(lhs.arguments.size() < rhs.arguments.size())
-          { return true; }
+          else if(rhs.name < lhs.name)
+          { return false; }
 
+          /* TODO: compare definitions directly. */
           return std::lexicographical_compare
           (
             lhs.arguments.begin(), lhs.arguments.end(),
             rhs.arguments.begin(), rhs.arguments.end(),
             [](auto const &l, auto const &r)
-            { return l.name < r.name; }
+            { return l.type.definition.name < r.type.definition.name; }
           );
         }
       }
