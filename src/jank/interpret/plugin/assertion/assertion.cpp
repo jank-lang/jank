@@ -62,6 +62,51 @@ namespace jank
             translate::environment::builtin::type::boolean(*trans_scope),
             translate::environment::builtin::type::string(*trans_scope)
           );
+
+          detail::make_function
+          (
+            trans_scope,
+            int_scope,
+            "assert-not",
+            [](auto const &scope, auto const &args)
+            {
+              auto const val
+              (
+                expect::type<cell::type::boolean>
+                (environment::resolve_value(scope, args[0].cell)).data
+              );
+              if(val)
+              { throw translate::expect::error::assertion::exception<>{}; }
+              return cell::null{};
+            },
+            translate::environment::builtin::type::boolean(*trans_scope)
+          );
+          detail::make_function
+          (
+            trans_scope,
+            int_scope,
+            "assert-not",
+            [](auto const &scope, auto const &args)
+            {
+              auto const val
+              (
+                expect::type<cell::type::boolean>
+                (environment::resolve_value(scope, args[0].cell)).data
+              );
+              if(val)
+              {
+                auto const err
+                (
+                  expect::type<cell::type::string>
+                  (environment::resolve_value(scope, args[1].cell)).data
+                );
+                throw translate::expect::error::assertion::exception<>{ err };
+              }
+              return cell::null{};
+            },
+            translate::environment::builtin::type::boolean(*trans_scope),
+            translate::environment::builtin::type::string(*trans_scope)
+          );
         }
       }
     }
