@@ -20,7 +20,6 @@ namespace jank
           std::shared_ptr<environment::scope> const &int_scope,
           std::string const &name,
           plugin::detail::native_function_definition::function_type const &apply,
-          translate::cell::detail::type_reference<translate::cell::cell> const &ret_type,
           Args &&...args
         )
         {
@@ -29,12 +28,22 @@ namespace jank
             detail::find_declaration
             (
               trans_scope, name,
-              ret_type,
               std::forward<Args>(args)...
             )
           );
           int_scope->native_function_definitions[decl] =
-          { name, apply };
+          {
+            name,
+            [apply](auto const &scope, auto const &args)
+            {
+              if(args.size() != sizeof...(Args))
+              {
+                throw expect::error::internal::exception<>
+                { "invalid function args" };
+              }
+              return apply(scope, args);
+            }
+          };
         }
       }
     }
