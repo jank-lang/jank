@@ -17,8 +17,7 @@ namespace jank
       {
         struct native_function_definition
         {
-          std::string name;
-          std::function
+          using function_type = std::function
           <
             cell::cell
             (
@@ -26,7 +25,10 @@ namespace jank
               translate::function::argument::value_list
               <translate::cell::cell> const&
             )
-          > interpret;
+          >;
+
+          std::string name;
+          function_type interpret;
         };
       }
     }

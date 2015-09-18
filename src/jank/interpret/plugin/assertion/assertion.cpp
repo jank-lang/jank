@@ -1,5 +1,5 @@
 #include <jank/translate/expect/error/assertion/exception.hpp>
-#include <jank/interpret/plugin/detail/find_declaration.hpp>
+#include <jank/interpret/plugin/detail/make_function.hpp>
 #include <jank/interpret/plugin/assertion/assertion.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
 #include <jank/interpret/expect/type.hpp>
@@ -18,18 +18,12 @@ namespace jank
           std::shared_ptr<environment::scope> const &int_scope
         )
         {
-          auto const &decl
+          detail::make_function
           (
-            detail::find_declaration
-            (
-              trans_scope, "assert",
-              translate::environment::builtin::type::boolean(*trans_scope)
-            )
-          );
-          int_scope->native_function_definitions[decl] =
-          {
+            trans_scope,
+            int_scope,
             "assert",
-            [](auto const &scope, auto const &args) -> cell::cell
+            [](auto const &scope, auto const &args)
             {
               auto const val
               (
@@ -39,8 +33,9 @@ namespace jank
               if(!val)
               { throw translate::expect::error::assertion::exception<>{}; }
               return cell::null{};
-            }
-          };
+            },
+            translate::environment::builtin::type::boolean(*trans_scope)
+          );
         }
       }
     }
