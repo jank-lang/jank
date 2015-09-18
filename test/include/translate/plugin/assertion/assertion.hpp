@@ -19,9 +19,20 @@ namespace jest
   { jank::common::interpret("translate/plugin/assertion/pass_true.jank"); }
 
   template <> template <>
+  void jank::assertion_group::test<1>()
+  { jank::common::interpret("translate/plugin/assertion/pass_true_message.jank"); }
+
+  template <> template <>
   void jank::assertion_group::test<2>()
   {
     expect_exception<jank::translate::expect::error::assertion::exception<>>
     ([]{ jank::common::interpret("translate/plugin/assertion/fail_false.jank"); });
+  }
+
+  template <> template <>
+  void jank::assertion_group::test<3>()
+  {
+    expect_exception<jank::translate::expect::error::assertion::exception<>>
+    ([]{ jank::common::interpret("translate/plugin/assertion/fail_false_message.jank"); });
   }
 }
