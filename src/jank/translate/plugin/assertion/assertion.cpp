@@ -17,19 +17,19 @@ namespace jank
           detail::make_function
           (
             scope, "assert",
-            [](auto const &scope, auto const &args)
-            {
-              auto const val
-              (
-                interpret::expect::type<interpret::cell::type::boolean>
-                (interpret::environment::resolve_value(scope, args[0].cell)).data
-              );
-              if(!val)
-              { throw expect::error::assertion::exception<>{}; }
-              return environment::builtin::value::null();
-            },
+            [](auto, auto)
+            { return environment::builtin::value::null(); },
             environment::builtin::type::null(*scope),
             environment::builtin::type::boolean(*scope)
+          );
+          detail::make_function
+          (
+            scope, "assert",
+            [](auto, auto)
+            { return environment::builtin::value::null(); },
+            environment::builtin::type::null(*scope),
+            environment::builtin::type::boolean(*scope),
+            environment::builtin::type::string(*scope)
           );
           detail::make_function
           (
