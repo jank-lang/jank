@@ -24,15 +24,37 @@ namespace jest
 
   template <> template <>
   void jank::assertion_group::test<2>()
+  { jank::common::interpret("translate/plugin/assertion/pass_not_true.jank"); }
+
+  template <> template <>
+  void jank::assertion_group::test<3>()
+  { jank::common::interpret("translate/plugin/assertion/pass_not_true_message.jank"); }
+
+  template <> template <>
+  void jank::assertion_group::test<4>()
   {
     expect_exception<jank::translate::expect::error::assertion::exception<>>
     ([]{ jank::common::interpret("translate/plugin/assertion/fail_false.jank"); });
   }
 
   template <> template <>
-  void jank::assertion_group::test<3>()
+  void jank::assertion_group::test<5>()
   {
     expect_exception<jank::translate::expect::error::assertion::exception<>>
     ([]{ jank::common::interpret("translate/plugin/assertion/fail_false_message.jank"); });
+  }
+
+  template <> template <>
+  void jank::assertion_group::test<6>()
+  {
+    expect_exception<jank::translate::expect::error::assertion::exception<>>
+    ([]{ jank::common::interpret("translate/plugin/assertion/fail_not_false.jank"); });
+  }
+
+  template <> template <>
+  void jank::assertion_group::test<7>()
+  {
+    expect_exception<jank::translate::expect::error::assertion::exception<>>
+    ([]{ jank::common::interpret("translate/plugin/assertion/fail_not_false_message.jank"); });
   }
 }
