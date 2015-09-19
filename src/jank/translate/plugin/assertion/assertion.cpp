@@ -31,6 +31,7 @@ namespace jank
             environment::builtin::type::boolean(*scope),
             environment::builtin::type::string(*scope)
           );
+
           detail::make_function
           (
             scope, "assert-not",
