@@ -18,6 +18,7 @@
 #include <jank/translate/plugin/compare/greater_equal.hpp>
 #include <jank/translate/plugin/assertion/assertion.hpp>
 #include <jank/translate/plugin/collection/list/cons.hpp>
+#include <jank/translate/plugin/collection/list/first.hpp>
 
 namespace jank
 {
@@ -47,13 +48,17 @@ namespace jank
           &arithmetic::bitwise_not,
           &arithmetic::bitwise_left_shift,
           &arithmetic::bitwise_right_shift,
+
           &compare::equal,
           &compare::less,
           &compare::less_equal,
           &compare::greater,
           &compare::greater_equal,
+
           &assertion::assertion,
+
           &collection::list::cons,
+          &collection::list::first
         };
 
         for(auto const &plugin : plugins)

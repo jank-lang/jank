@@ -94,6 +94,7 @@ add_library(
   src/jank/translate/plugin/compare/greater_equal.cpp
   src/jank/translate/plugin/assertion/assertion.cpp
   src/jank/translate/plugin/collection/list/cons.cpp
+  src/jank/translate/plugin/collection/list/first.cpp
 
   src/jank/interpret/interpret.cpp
   src/jank/interpret/cell/stream.cpp
@@ -126,6 +127,7 @@ add_library(
   src/jank/interpret/plugin/compare/greater_equal.cpp
   src/jank/interpret/plugin/assertion/assertion.cpp
   src/jank/interpret/plugin/collection/list/cons.cpp
+  src/jank/interpret/plugin/collection/list/first.cpp
 )
 
 add_executable(${PROJECT_NAME} src/main.cpp)

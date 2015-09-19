@@ -31,27 +31,6 @@ namespace jank
 
             //plugin::detail::make_function
             //(
-            //  scope, "first",
-            //  [](auto const &scope, auto const &args)
-            //  {
-            //    auto coll
-            //    (
-            //      interpret::expect::type<interpret::cell::type::list>
-            //      (interpret::environment::resolve_value(scope, args[0].cell)).data
-            //    );
-            //    auto const i
-            //    (
-            //      interpret::expect::type<interpret::cell::type::integer>
-            //      (coll.front()).data
-            //    );
-            //    return cell::cell{ cell::literal_value{ parse::cell::integer{ i } } };
-            //  },
-            //  elem_type,
-            //  col_type
-            //);
-
-            //plugin::detail::make_function
-            //(
             //  scope, "rest",
             //  [](auto const &scope, auto const &args)
             //  {

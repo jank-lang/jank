@@ -17,6 +17,8 @@
 #include <jank/interpret/plugin/compare/greater.hpp>
 #include <jank/interpret/plugin/compare/greater_equal.hpp>
 #include <jank/interpret/plugin/assertion/assertion.hpp>
+#include <jank/interpret/plugin/collection/list/cons.hpp>
+#include <jank/interpret/plugin/collection/list/first.hpp>
 
 namespace jank
 {
@@ -62,7 +64,10 @@ namespace jank
           &compare::greater,
           &compare::greater_equal,
 
-          &assertion::assertion
+          &assertion::assertion,
+
+          &collection::list::cons,
+          &collection::list::first
         };
 
         for(auto const &plugin : plugins)
