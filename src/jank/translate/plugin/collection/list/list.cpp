@@ -17,14 +17,12 @@ namespace jank
           static void make_list
           (
             std::shared_ptr<environment::scope> const &scope,
-            cell::detail::type_reference<cell::cell> const &elem_type,
             cell::detail::type_reference<cell::cell> const &col_type
           )
           {
             plugin::detail::make_function
             (
               scope, "list",
-              elem_type,
               col_type
             );
           }
@@ -34,7 +32,6 @@ namespace jank
             make_list
             (
               scope,
-              environment::builtin::type::integer(*scope),
               environment::builtin::type::list
               (
                 *scope,

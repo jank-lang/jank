@@ -17,14 +17,14 @@ namespace jank
           static void make_count
           (
             std::shared_ptr<environment::scope> const &scope,
-            cell::detail::type_reference<cell::cell> const &elem_type,
+            cell::detail::type_reference<cell::cell> const &ret_type,
             cell::detail::type_reference<cell::cell> const &col_type
           )
           {
             plugin::detail::make_function
             (
               scope, "count",
-              elem_type,
+              ret_type,
               col_type
             );
           }
