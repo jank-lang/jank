@@ -5,6 +5,7 @@
 #include <jank/interpret/plugin/arithmetic/multiply.hpp>
 #include <jank/interpret/plugin/arithmetic/divide.hpp>
 #include <jank/interpret/plugin/arithmetic/modulo.hpp>
+#include <jank/interpret/plugin/arithmetic/bitwise_and.hpp>
 #include <jank/interpret/plugin/assertion/assertion.hpp>
 
 namespace jank
@@ -38,6 +39,7 @@ namespace jank
           &arithmetic::multiply,
           &arithmetic::divide,
           &arithmetic::modulo,
+          &arithmetic::bitwise_and,
 
           &assertion::assertion
         };
