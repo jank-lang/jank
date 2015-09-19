@@ -121,6 +121,7 @@ add_library(
   src/jank/interpret/plugin/arithmetic/bitwise_right_shift.cpp
   src/jank/interpret/plugin/compare/equal.cpp
   src/jank/interpret/plugin/compare/less.cpp
+  src/jank/interpret/plugin/compare/less_equal.cpp
   src/jank/interpret/plugin/assertion/assertion.cpp
 )
 
