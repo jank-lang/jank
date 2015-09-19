@@ -20,6 +20,7 @@
 #include <jank/interpret/plugin/collection/list/cons.hpp>
 #include <jank/interpret/plugin/collection/list/first.hpp>
 #include <jank/interpret/plugin/collection/list/rest.hpp>
+#include <jank/interpret/plugin/collection/list/count.hpp>
 
 namespace jank
 {
@@ -69,7 +70,8 @@ namespace jank
 
           &collection::list::cons,
           &collection::list::first,
-          &collection::list::rest
+          &collection::list::rest,
+          &collection::list::count
         };
 
         for(auto const &plugin : plugins)
