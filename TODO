@@ -10,7 +10,7 @@ literal_value has list
   should it be stored elsewhere?
 
 tests for
-  cons, first, last, count
+  cons, first, last, count, list
 
 fix vim highlighting of falsey
 
