@@ -11,7 +11,6 @@ namespace jank
     {
       namespace arithmetic
       {
-        /* TODO: Handle modulo by zero. */
         void modulo(std::shared_ptr<environment::scope> const &scope)
         {
           detail::make_operator
