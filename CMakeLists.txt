@@ -110,6 +110,7 @@ add_library(
   src/jank/interpret/plugin/io/print.cpp
   src/jank/interpret/plugin/arithmetic/add.cpp
   src/jank/interpret/plugin/arithmetic/subtract.cpp
+  src/jank/interpret/plugin/arithmetic/multiply.cpp
   src/jank/interpret/plugin/assertion/assertion.cpp
 )
 

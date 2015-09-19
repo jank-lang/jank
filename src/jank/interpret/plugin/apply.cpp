@@ -2,6 +2,7 @@
 #include <jank/interpret/plugin/io/print.hpp>
 #include <jank/interpret/plugin/arithmetic/add.hpp>
 #include <jank/interpret/plugin/arithmetic/subtract.hpp>
+#include <jank/interpret/plugin/arithmetic/multiply.hpp>
 #include <jank/interpret/plugin/assertion/assertion.hpp>
 
 namespace jank
@@ -32,6 +33,7 @@ namespace jank
 
           &arithmetic::add,
           &arithmetic::subtract,
+          &arithmetic::multiply,
 
           &assertion::assertion
         };
