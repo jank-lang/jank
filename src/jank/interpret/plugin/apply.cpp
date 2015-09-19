@@ -15,6 +15,7 @@
 #include <jank/interpret/plugin/compare/less.hpp>
 #include <jank/interpret/plugin/compare/less_equal.hpp>
 #include <jank/interpret/plugin/compare/greater.hpp>
+#include <jank/interpret/plugin/compare/greater_equal.hpp>
 #include <jank/interpret/plugin/assertion/assertion.hpp>
 
 namespace jank
@@ -59,6 +60,7 @@ namespace jank
           &compare::less,
           &compare::less_equal,
           &compare::greater,
+          &compare::greater_equal,
 
           &assertion::assertion
         };
