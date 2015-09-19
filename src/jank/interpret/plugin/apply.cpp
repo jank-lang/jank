@@ -12,6 +12,7 @@
 #include <jank/interpret/plugin/arithmetic/bitwise_left_shift.hpp>
 #include <jank/interpret/plugin/arithmetic/bitwise_right_shift.hpp>
 #include <jank/interpret/plugin/compare/equal.hpp>
+#include <jank/interpret/plugin/compare/less.hpp>
 #include <jank/interpret/plugin/assertion/assertion.hpp>
 
 namespace jank
@@ -53,6 +54,7 @@ namespace jank
           &arithmetic::bitwise_right_shift,
 
           &compare::equal,
+          &compare::less,
 
           &assertion::assertion
         };
