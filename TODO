@@ -9,6 +9,9 @@ optional isn't available on osx
 literal_value has list
   should it be stored elsewhere?
 
+tests for
+  cons, first, last, count
+
 fix vim highlighting of falsey
 
 recursing in auto-typed functions is broken
