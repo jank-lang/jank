@@ -115,6 +115,7 @@ add_library(
   src/jank/interpret/plugin/arithmetic/modulo.cpp
   src/jank/interpret/plugin/arithmetic/bitwise_and.cpp
   src/jank/interpret/plugin/arithmetic/bitwise_or.cpp
+  src/jank/interpret/plugin/arithmetic/bitwise_xor.cpp
   src/jank/interpret/plugin/assertion/assertion.cpp
 )
 
