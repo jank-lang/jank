@@ -19,6 +19,7 @@
 #include <jank/interpret/plugin/assertion/assertion.hpp>
 #include <jank/interpret/plugin/collection/list/cons.hpp>
 #include <jank/interpret/plugin/collection/list/first.hpp>
+#include <jank/interpret/plugin/collection/list/rest.hpp>
 
 namespace jank
 {
@@ -67,7 +68,8 @@ namespace jank
           &assertion::assertion,
 
           &collection::list::cons,
-          &collection::list::first
+          &collection::list::first,
+          &collection::list::rest
         };
 
         for(auto const &plugin : plugins)
