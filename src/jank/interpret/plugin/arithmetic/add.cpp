@@ -32,6 +32,38 @@ namespace jank
             [](auto const &l, auto const &r)
             { return l + r; }
           );
+          detail::make_operator
+          (
+            trans_scope,
+            int_scope,
+            "+",
+            translate::environment::builtin::type::real(*trans_scope),
+            translate::environment::builtin::type::real(*trans_scope),
+            detail::binary_operator_wrapper
+            <
+              cell::type::real,
+              cell::type::real,
+              cell::type::real
+            >{},
+            [](auto const &l, auto const &r)
+            { return l + r; }
+          );
+          detail::make_operator
+          (
+            trans_scope,
+            int_scope,
+            "+",
+            translate::environment::builtin::type::string(*trans_scope),
+            translate::environment::builtin::type::string(*trans_scope),
+            detail::binary_operator_wrapper
+            <
+              cell::type::string,
+              cell::type::string,
+              cell::type::string
+            >{},
+            [](auto const &l, auto const &r)
+            { return l + r; }
+          );
         }
       }
     }
