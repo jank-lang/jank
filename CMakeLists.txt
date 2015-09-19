@@ -125,6 +125,7 @@ add_library(
   src/jank/interpret/plugin/compare/greater.cpp
   src/jank/interpret/plugin/compare/greater_equal.cpp
   src/jank/interpret/plugin/assertion/assertion.cpp
+  src/jank/interpret/plugin/collection/list/cons.cpp
 )
 
 add_executable(${PROJECT_NAME} src/main.cpp)

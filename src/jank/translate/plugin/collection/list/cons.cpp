@@ -26,45 +26,8 @@ namespace jank
             cell::detail::type_reference<cell::cell> const &col_type
           )
           {
-            (void)scope;
-            (void)elem_type;
-            (void)col_type;
-            //plugin::detail::make_function
-            //(
-            //  scope, "cons",
-            //  [](auto const &scope, auto const &args)
-            //  {
-            //    auto elem
-            //    (
-            //      interpret::expect::type<interpret::cell::type::integer>
-            //      (interpret::environment::resolve_value(scope, args[0].cell)).data
-            //    );
-            //    auto coll
-            //    (
-            //      interpret::expect::type<interpret::cell::type::list>
-            //      (interpret::environment::resolve_value(scope, args[1].cell)).data
-            //    );
-            //    coll.push_front(interpret::cell::integer{ elem });
-            //    std::list<parse::cell::integer> ret_coll;
-            //    std::transform
-            //    (
-            //      coll.begin(), coll.end(),
-            //      std::back_inserter(ret_coll),
-            //      [](auto const &int_cell)
-            //      {
-            //        auto const i
-            //        (
-            //          interpret::expect::type<interpret::cell::type::integer>
-            //          (int_cell).data
-            //        );
-            //        return parse::cell::integer{ i };
-            //      }
-            //    );
-            //    return cell::cell{ cell::literal_value{ ret_coll } };
-            //  },
-            //  col_type,
-            //  elem_type, col_type
-            //);
+            plugin::detail::make_function
+            (scope, "cons", col_type, elem_type, col_type);
 
             //plugin::detail::make_function
             //(
