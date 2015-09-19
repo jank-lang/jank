@@ -11,7 +11,6 @@ namespace jank
     {
       namespace arithmetic
       {
-        /* TODO: Handle division by zero. */
         void divide(std::shared_ptr<environment::scope> const &scope)
         {
           detail::make_operator
