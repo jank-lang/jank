@@ -8,6 +8,7 @@
 #include <jank/interpret/plugin/arithmetic/bitwise_and.hpp>
 #include <jank/interpret/plugin/arithmetic/bitwise_or.hpp>
 #include <jank/interpret/plugin/arithmetic/bitwise_xor.hpp>
+#include <jank/interpret/plugin/arithmetic/bitwise_not.hpp>
 #include <jank/interpret/plugin/assertion/assertion.hpp>
 
 namespace jank
@@ -44,6 +45,7 @@ namespace jank
           &arithmetic::bitwise_and,
           &arithmetic::bitwise_or,
           &arithmetic::bitwise_xor,
+          &arithmetic::bitwise_not,
 
           &assertion::assertion
         };
