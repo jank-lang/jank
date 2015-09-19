@@ -26,10 +26,6 @@ namespace jank
           {
             plugin::detail::make_function
             (scope, "cons", col_type, elem_type, col_type);
-
-            /* TODO: Remove */
-            plugin::detail::make_function
-            (scope, "list", col_type);
           }
 
           void cons(std::shared_ptr<environment::scope> const &scope)
