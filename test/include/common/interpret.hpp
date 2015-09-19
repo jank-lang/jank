@@ -2,6 +2,8 @@
 
 #include "common/translate.hpp"
 
+#include <jank/interpret/expect/error/type/exception.hpp>
+
 namespace jank
 {
   namespace common

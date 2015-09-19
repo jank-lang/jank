@@ -63,6 +63,12 @@ namespace jank
             >{},
             [](auto const &l, auto const &r)
             {
+              if(r < 0)
+              {
+                throw expect::error::type::exception<>
+                { "invalid string product" };
+              }
+
               interpret::cell::string::type ret{};
               for(auto i(0); i < r; ++i)
               { ret += l; }

@@ -29,7 +29,7 @@ namespace jest
   template <> template <>
   void jank::multiply_group::test<3>()
   {
-    expect_exception<jank::translate::expect::error::type::exception<>>
+    expect_exception<jank::interpret::expect::error::type::exception<>>
     ([]{ jank::common::interpret("translate/plugin/arithmetic/multiply/fail_negative_string.jank"); });
   }
 }
