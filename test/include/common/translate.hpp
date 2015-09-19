@@ -7,7 +7,6 @@
 #include <jank/translate/expect/error/syntax/exception.hpp>
 #include <jank/translate/expect/error/type/overload.hpp>
 #include <jank/translate/expect/error/lookup/exception.hpp>
-#include <jank/translate/expect/error/assertion/exception.hpp>
 
 namespace jank
 {

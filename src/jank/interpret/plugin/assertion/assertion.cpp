@@ -1,8 +1,8 @@
-#include <jank/translate/expect/error/assertion/exception.hpp>
 #include <jank/interpret/plugin/detail/make_function.hpp>
 #include <jank/interpret/plugin/assertion/assertion.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
 #include <jank/interpret/expect/type.hpp>
+#include <jank/interpret/expect/error/assertion/exception.hpp>
 
 namespace jank
 {
@@ -31,7 +31,7 @@ namespace jank
                 (environment::resolve_value(scope, args[0].cell)).data
               );
               if(!val)
-              { throw translate::expect::error::assertion::exception<>{}; }
+              { throw expect::error::assertion::exception<>{}; }
               return cell::null{};
             },
             translate::environment::builtin::type::boolean(*trans_scope)
@@ -55,7 +55,7 @@ namespace jank
                   expect::type<cell::type::string>
                   (environment::resolve_value(scope, args[1].cell)).data
                 );
-                throw translate::expect::error::assertion::exception<>{ err };
+                throw expect::error::assertion::exception<>{ err };
               }
               return cell::null{};
             },
@@ -76,7 +76,7 @@ namespace jank
                 (environment::resolve_value(scope, args[0].cell)).data
               );
               if(val)
-              { throw translate::expect::error::assertion::exception<>{}; }
+              { throw expect::error::assertion::exception<>{}; }
               return cell::null{};
             },
             translate::environment::builtin::type::boolean(*trans_scope)
@@ -100,7 +100,7 @@ namespace jank
                   expect::type<cell::type::string>
                   (environment::resolve_value(scope, args[1].cell)).data
                 );
-                throw translate::expect::error::assertion::exception<>{ err };
+                throw expect::error::assertion::exception<>{ err };
               }
               return cell::null{};
             },

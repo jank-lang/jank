@@ -3,10 +3,9 @@
 #include <stdexcept>
 #include <string>
 
-/* TODO: Move to interpret. */
 namespace jank
 {
-  namespace translate
+  namespace interpret
   {
     namespace expect
     {
