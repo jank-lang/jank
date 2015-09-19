@@ -22,12 +22,11 @@ namespace jank
         }
 
         /* Defines a native function in the specified scope. */
-        template <typename F, typename... Args>
+        template <typename... Args>
         void make_function
         (
           std::shared_ptr<environment::scope> const &scope,
           std::string const &name,
-          F const &apply,
           cell::detail::type_reference<cell::cell> const &ret_type,
           Args &&...args
         )
@@ -41,15 +40,6 @@ namespace jank
               name,
               make_args(std::index_sequence_for<Args...>{}, args...),
               ret_type,
-              [apply](auto const &scope, auto const &args) -> cell::cell
-              {
-                if(args.size() != sizeof...(Args))
-                {
-                  throw expect::error::internal::exception<>
-                  { "invalid function args" };
-                }
-                return apply(scope, args);
-              },
               nested_scope
             }
           };

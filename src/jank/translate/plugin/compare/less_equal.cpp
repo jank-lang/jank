@@ -14,47 +14,11 @@ namespace jank
         void less_equal(std::shared_ptr<environment::scope> const &scope)
         {
           detail::make_operator
-          (
-            scope, "<=", environment::builtin::type::integer(*scope),
-            [](auto const &scope, auto const &args)
-            {
-              return environment::builtin::value::boolean
-              (
-                interpret::expect::type<interpret::cell::type::integer>
-                (interpret::environment::resolve_value(scope, args[0].cell)).data <=
-                interpret::expect::type<interpret::cell::type::integer>
-                (interpret::environment::resolve_value(scope, args[1].cell)).data
-              );
-            }
-          );
+          (scope, "<=", environment::builtin::type::integer(*scope));
           detail::make_operator
-          (
-            scope, "<=", environment::builtin::type::real(*scope),
-            [](auto const &scope, auto const &args)
-            {
-              return environment::builtin::value::boolean
-              (
-                interpret::expect::type<interpret::cell::type::real>
-                (interpret::environment::resolve_value(scope, args[0].cell)).data <=
-                interpret::expect::type<interpret::cell::type::real>
-                (interpret::environment::resolve_value(scope, args[1].cell)).data
-              );
-            }
-          );
+          (scope, "<=", environment::builtin::type::real(*scope));
           detail::make_operator
-          (
-            scope, "<=", environment::builtin::type::string(*scope),
-            [](auto const &scope, auto const &args)
-            {
-              return environment::builtin::value::boolean
-              (
-                interpret::expect::type<interpret::cell::type::string>
-                (interpret::environment::resolve_value(scope, args[0].cell)).data <=
-                interpret::expect::type<interpret::cell::type::string>
-                (interpret::environment::resolve_value(scope, args[1].cell)).data
-              );
-            }
-          );
+          (scope, "<=", environment::builtin::type::string(*scope));
         }
       }
     }

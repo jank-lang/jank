@@ -14,23 +14,11 @@ namespace jank
         void add(std::shared_ptr<environment::scope> const &scope)
         {
           detail::make_operator
-          (
-            scope, "+", environment::builtin::type::integer(*scope),
-            [](auto, auto)
-            { return environment::builtin::value::null(); }
-          );
+          (scope, "+", environment::builtin::type::integer(*scope));
           detail::make_operator
-          (
-            scope, "+", environment::builtin::type::real(*scope),
-            [](auto, auto)
-            { return environment::builtin::value::null(); }
-          );
+          (scope, "+", environment::builtin::type::real(*scope));
           detail::make_operator
-          (
-            scope, "+", environment::builtin::type::string(*scope),
-            [](auto, auto)
-            { return environment::builtin::value::null(); }
-          );
+          (scope, "+", environment::builtin::type::string(*scope));
         }
       }
     }

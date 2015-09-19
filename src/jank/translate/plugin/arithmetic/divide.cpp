@@ -14,35 +14,9 @@ namespace jank
         void divide(std::shared_ptr<environment::scope> const &scope)
         {
           detail::make_operator
-          (
-            scope, "/", environment::builtin::type::integer(*scope),
-            [](auto const &scope, auto const &args)
-            {
-              auto ret
-              (
-                interpret::expect::type<interpret::cell::type::integer>
-                (interpret::environment::resolve_value(scope, args[0].cell)).data
-              );
-              ret /= interpret::expect::type<interpret::cell::type::integer>
-              (interpret::environment::resolve_value(scope, args[1].cell)).data;
-              return environment::builtin::value::integer(ret);
-            }
-          );
+          (scope, "/", environment::builtin::type::integer(*scope));
           detail::make_operator
-          (
-            scope, "/", environment::builtin::type::real(*scope),
-            [](auto const &scope, auto const &args)
-            {
-              auto ret
-              (
-                interpret::expect::type<interpret::cell::type::real>
-                (interpret::environment::resolve_value(scope, args[0].cell)).data
-              );
-              ret /= interpret::expect::type<interpret::cell::type::real>
-              (interpret::environment::resolve_value(scope, args[1].cell)).data;
-              return environment::builtin::value::real(ret);
-            }
-          );
+          (scope, "/", environment::builtin::type::real(*scope));
         }
       }
     }

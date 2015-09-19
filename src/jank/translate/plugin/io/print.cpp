@@ -27,7 +27,6 @@ namespace jank
               "print",
               { { "data", type } },
               environment::builtin::type::null(*scope),
-              {},
               nested_scope
             }
           };

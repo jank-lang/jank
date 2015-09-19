@@ -17,15 +17,6 @@ namespace jank
           plugin::detail::make_function
           (
             scope, "~",
-            [](auto const &scope, auto const &args)
-            {
-              auto ret
-              (
-                interpret::expect::type<interpret::cell::type::integer>
-                (interpret::environment::resolve_value(scope, args[0].cell)).data
-              );
-              return environment::builtin::value::integer(~ret);
-            },
             environment::builtin::type::integer(*scope),
             environment::builtin::type::integer(*scope)
           );

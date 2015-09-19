@@ -17,16 +17,12 @@ namespace jank
           detail::make_function
           (
             scope, "assert",
-            [](auto, auto)
-            { return environment::builtin::value::null(); },
             environment::builtin::type::null(*scope),
             environment::builtin::type::boolean(*scope)
           );
           detail::make_function
           (
             scope, "assert",
-            [](auto, auto)
-            { return environment::builtin::value::null(); },
             environment::builtin::type::null(*scope),
             environment::builtin::type::boolean(*scope),
             environment::builtin::type::string(*scope)
@@ -35,16 +31,12 @@ namespace jank
           detail::make_function
           (
             scope, "assert-not",
-            [](auto, auto)
-            { return environment::builtin::value::null(); },
             environment::builtin::type::null(*scope),
             environment::builtin::type::boolean(*scope)
           );
           detail::make_function
           (
             scope, "assert-not",
-            [](auto, auto)
-            { return environment::builtin::value::null(); },
             environment::builtin::type::null(*scope),
             environment::builtin::type::boolean(*scope),
             environment::builtin::type::string(*scope)
