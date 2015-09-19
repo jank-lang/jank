@@ -20,6 +20,9 @@ recursing in auto-typed functions is broken
 
 add a function to builtin which adds all
 
+unary - on integers and reals
+  plus tests
+
 REPL
   add repl trait and compile separate lib
     allow multiple definitions
