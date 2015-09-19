@@ -1,5 +1,3 @@
-#include <algorithm>
-
 #include <jank/interpret/cell/stream.hpp>
 #include <jank/translate/plugin/collection/list/cons.hpp>
 #include <jank/translate/plugin/detail/make_function.hpp>

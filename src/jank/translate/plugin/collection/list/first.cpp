@@ -1,5 +1,3 @@
-#include <algorithm>
-
 #include <jank/translate/plugin/collection/list/first.hpp>
 #include <jank/translate/plugin/detail/make_function.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
