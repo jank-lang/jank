@@ -16,44 +16,20 @@ namespace jank
           detail::make_operator
           (
             scope, "+", environment::builtin::type::integer(*scope),
-            [](auto const &scope, auto const &args)
-            {
-              interpret::cell::integer::type ret{};
-              for(auto const &arg : args)
-              {
-                ret += interpret::expect::type<interpret::cell::type::integer>
-                (interpret::environment::resolve_value(scope, arg.cell)).data;
-              }
-              return environment::builtin::value::integer(ret);
-            }
+            [](auto, auto)
+            { return environment::builtin::value::null(); }
           );
           detail::make_operator
           (
             scope, "+", environment::builtin::type::real(*scope),
-            [](auto const &scope, auto const &args)
-            {
-              interpret::cell::real::type ret{};
-              for(auto const &arg : args)
-              {
-                ret += interpret::expect::type<interpret::cell::type::real>
-                (interpret::environment::resolve_value(scope, arg.cell)).data;
-              }
-              return environment::builtin::value::real(ret);
-            }
+            [](auto, auto)
+            { return environment::builtin::value::null(); }
           );
           detail::make_operator
           (
             scope, "+", environment::builtin::type::string(*scope),
-            [](auto const &scope, auto const &args)
-            {
-              interpret::cell::string::type ret{};
-              for(auto const &arg : args)
-              {
-                ret += interpret::expect::type<interpret::cell::type::string>
-                (interpret::environment::resolve_value(scope, arg.cell)).data;
-              }
-              return environment::builtin::value::string(ret);
-            }
+            [](auto, auto)
+            { return environment::builtin::value::null(); }
           );
         }
       }
