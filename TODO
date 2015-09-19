@@ -6,11 +6,6 @@ static analysis on travis
 
 optional isn't available on osx
 
-translation plugin code is in an awful state right now
-  marshalling back and forth
-  native_function_declaration in translate
-  native_function_definition in interpret
-
 literal_value has list
   should it be stored elsewhere?
 
