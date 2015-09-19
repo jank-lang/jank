@@ -38,14 +38,19 @@ namespace jank
 
             translate::cell::detail::type_reference
             <translate::cell::cell> const arg_types[]
-            { std::forward<Args>(args)... };
+            {
+              std::forward<Args>(args)...,
+
+              /* XXX: Hack to allow zero-size args; this will be ignored. */
+              translate::environment::builtin::type::null(*trans_scope)
+            };
 
             auto const equal
             (
               std::equal
               (
                 def.arguments.begin(), def.arguments.end(),
-                std::begin(arg_types), std::end(arg_types),
+                std::begin(arg_types), std::next(std::end(arg_types), -1),
                 [](auto const &lhs, auto const &rhs)
                 { return lhs.type == rhs; }
               )

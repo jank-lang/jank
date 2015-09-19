@@ -21,6 +21,7 @@
 #include <jank/translate/plugin/collection/list/first.hpp>
 #include <jank/translate/plugin/collection/list/rest.hpp>
 #include <jank/translate/plugin/collection/list/count.hpp>
+#include <jank/translate/plugin/collection/list/list.hpp>
 
 namespace jank
 {
@@ -62,7 +63,8 @@ namespace jank
           &collection::list::cons,
           &collection::list::first,
           &collection::list::rest,
-          &collection::list::count
+          &collection::list::count,
+          &collection::list::list
         };
 
         for(auto const &plugin : plugins)

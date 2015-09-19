@@ -1,11 +1,8 @@
-#include <jank/interpret/cell/stream.hpp>
-#include <jank/translate/plugin/collection/list/cons.hpp>
+#include <jank/translate/plugin/collection/list/list.hpp>
 #include <jank/translate/plugin/detail/make_function.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/environment/builtin/type/list.hpp>
 #include <jank/translate/environment/builtin/value/primitive.hpp>
-#include <jank/interpret/environment/resolve_value.hpp>
-#include <jank/interpret/expect/type.hpp>
 
 namespace jank
 {
@@ -17,7 +14,7 @@ namespace jank
       {
         namespace list
         {
-          static void make_cons
+          static void make_list
           (
             std::shared_ptr<environment::scope> const &scope,
             cell::detail::type_reference<cell::cell> const &elem_type,
@@ -25,16 +22,16 @@ namespace jank
           )
           {
             plugin::detail::make_function
-            (scope, "cons", col_type, elem_type, col_type);
-
-            /* TODO: Remove */
-            plugin::detail::make_function
-            (scope, "list", col_type);
+            (
+              scope, "list",
+              elem_type,
+              col_type
+            );
           }
 
-          void cons(std::shared_ptr<environment::scope> const &scope)
+          void list(std::shared_ptr<environment::scope> const &scope)
           {
-            make_cons
+            make_list
             (
               scope,
               environment::builtin::type::integer(*scope),

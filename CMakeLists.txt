@@ -97,6 +97,7 @@ add_library(
   src/jank/translate/plugin/collection/list/first.cpp
   src/jank/translate/plugin/collection/list/rest.cpp
   src/jank/translate/plugin/collection/list/count.cpp
+  src/jank/translate/plugin/collection/list/list.cpp
 
   src/jank/interpret/interpret.cpp
   src/jank/interpret/cell/stream.cpp
@@ -132,6 +133,7 @@ add_library(
   src/jank/interpret/plugin/collection/list/first.cpp
   src/jank/interpret/plugin/collection/list/rest.cpp
   src/jank/interpret/plugin/collection/list/count.cpp
+  src/jank/interpret/plugin/collection/list/list.cpp
 )
 
 add_executable(${PROJECT_NAME} src/main.cpp)
