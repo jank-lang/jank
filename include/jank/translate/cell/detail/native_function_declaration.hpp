@@ -4,12 +4,6 @@
 
 namespace jank
 {
-  namespace interpret
-  {
-    namespace environment
-    { struct scope; }
-  }
-
   namespace translate
   {
     namespace environment

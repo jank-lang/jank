@@ -1,4 +1,3 @@
-#include <jank/interpret/cell/stream.hpp>
 #include <jank/translate/plugin/io/print.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/environment/builtin/type/list.hpp>

@@ -1,8 +1,6 @@
 #include <jank/translate/plugin/assertion/assertion.hpp>
 #include <jank/translate/plugin/detail/make_function.hpp>
 #include <jank/translate/expect/error/assertion/exception.hpp>
-#include <jank/interpret/environment/resolve_value.hpp>
-#include <jank/interpret/expect/type.hpp>
 
 namespace jank
 {

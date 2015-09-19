@@ -1,7 +1,5 @@
 #include <jank/translate/plugin/arithmetic/bitwise_and.hpp>
 #include <jank/translate/plugin/arithmetic/detail/make_operator.hpp>
-#include <jank/interpret/environment/resolve_value.hpp>
-#include <jank/interpret/expect/type.hpp>
 
 namespace jank
 {

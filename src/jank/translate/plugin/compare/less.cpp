@@ -1,7 +1,5 @@
 #include <jank/translate/plugin/compare/less.hpp>
 #include <jank/translate/plugin/compare/detail/make_operator.hpp>
-#include <jank/interpret/environment/resolve_value.hpp>
-#include <jank/interpret/expect/type.hpp>
 
 namespace jank
 {
