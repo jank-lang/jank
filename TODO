@@ -15,6 +15,7 @@ tests for
 fix vim highlighting of falsey
 
 recursing in auto-typed functions is broken
+  maybe just don't allow it?
 
 add a function to builtin which adds all
 
