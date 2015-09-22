@@ -24,7 +24,7 @@ namespace jank
 
         /* TODO: generics */
 
-        os << ")";
+        os << ") ";
         return os << ") ";
       }
 
@@ -41,7 +41,7 @@ namespace jank
       {
         os << "( " << trait::to_string<type::binding_definition>() << " "
            << "( name " << c.name << " ) "
-           //<< c.type << ") "
+           << "( type " << c.type << ") "
            << "( cell " << c.cell << ") ) ";
         return os;
       }
