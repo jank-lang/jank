@@ -18,7 +18,7 @@ namespace jank
            << "( cells ";
         for(auto const &cell : c.cells)
         { os << cell; }
-        return os << " ) ) ";
+        return os << ") ) ";
       }
 
       static std::ostream& operator <<
@@ -29,11 +29,26 @@ namespace jank
            << "( arguments ";
 
         for(auto const &arg : c.arguments)
-        { os << "( " << arg.name << " " /*<< arg.type*/ << " ) "; }
+        { os << "( " << arg.name << " " /*<< arg.type*/ << ") "; }
 
         os << ") "
-           << "( return-type " << /*c.return_type <<*/ " ) "
-           << "( body " << c.body << " ) ) ";
+           << "( return-type " << /*c.return_type <<*/ ") "
+           << "( body " << c.body << ") ) ";
+        return os;
+      }
+
+      static std::ostream& operator <<
+      (std::ostream &os, native_function_declaration::type const &c)
+      {
+        os << "( " << trait::to_string<type::native_function_declaration>() << " "
+           << "( name " << c.name << " ) "
+           << "( arguments ";
+
+        for(auto const &arg : c.arguments)
+        { os << "( " << arg.name << " " /*<< arg.type*/ << ") "; }
+
+        os << ") "
+           << "( return-type " << /*c.return_type <<*/ ") ) ";
         return os;
       }
 
@@ -48,7 +63,7 @@ namespace jank
             os << boost::get<function_definition>(c).data;
             break;
           case type::native_function_declaration:
-            //os << boost::get<native_function_declaration>(c).data;
+            os << boost::get<native_function_declaration>(c).data;
             break;
           case type::function_call:
             //os << boost::get<function_call>(c).data;
