@@ -29,7 +29,11 @@ namespace jank
            << "( arguments ";
 
         for(auto const &arg : c.arguments)
-        { os << "( " << arg.name << " " /*<< arg.type*/ << ") "; }
+        {
+          os << "( argument "
+             << "( name " << arg.name << " ) "
+             << "( type " /*<< arg.type*/ << ") ) ";
+        }
 
         os << ") "
            << "( return-type " << /*c.return_type <<*/ ") "
@@ -45,7 +49,11 @@ namespace jank
            << "( arguments ";
 
         for(auto const &arg : c.arguments)
-        { os << "( " << arg.name << " " /*<< arg.type*/ << ") "; }
+        {
+          os << "( argument "
+             << "( name " << arg.name << " ) "
+             << "( type " /*<< arg.type*/ << ") ) ";
+        }
 
         os << ") "
            << "( return-type " << /*c.return_type <<*/ ") ) ";
@@ -60,7 +68,11 @@ namespace jank
            << "( arguments ";
 
         for(auto const &arg : c.arguments)
-        { os << "( " << arg.name << " " /*<< arg.value*/ << ") "; }
+        {
+          os << "( argument "
+             << "( name " << arg.name << " ) "
+             << "( value " /*<< arg.value*/ << ") ) ";
+        }
 
         return os << ") ) ";
       }
@@ -73,7 +85,11 @@ namespace jank
            << "( arguments ";
 
         for(auto const &arg : c.arguments)
-        { os << "( " << arg.name << " " /*<< arg.value*/ << ") "; }
+        {
+          os << "( argument "
+             << "( name " << arg.name << " ) "
+             << "( value " /*<< arg.value*/ << ") ) ";
+        }
 
         return os << ") ) ";
       }
@@ -86,7 +102,11 @@ namespace jank
            << "( arguments ";
 
         for(auto const &arg : c.arguments)
-        { os << "( " << arg.name << " " /*<< arg.value*/ << ") "; }
+        {
+          os << "( argument "
+             << "( name " << arg.name << " ) "
+             << "( value " /*<< arg.value*/ << ") ) ";
+        }
 
         return os << ") ) ";
       }
