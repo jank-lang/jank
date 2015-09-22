@@ -115,7 +115,7 @@ namespace jank
         {
           os << "( argument "
              << "( name " << arg.name << " ) "
-             << "( value " /*<< arg.value*/ << ") ) ";
+             << "( cell " << arg.cell << ") ) ";
         }
 
         return os << ") ) ";
@@ -132,7 +132,7 @@ namespace jank
         {
           os << "( argument "
              << "( name " << arg.name << " ) "
-             << "( value " /*<< arg.value*/ << ") ) ";
+             << "( cell " << arg.cell << ") ) ";
         }
 
         return os << ") ) ";
@@ -149,7 +149,7 @@ namespace jank
         {
           os << "( argument "
              << "( name " << arg.name << " ) "
-             << "( value " /*<< arg.value*/ << ") ) ";
+             << "( cell " << arg.cell << ") ) ";
         }
 
         return os << ") ) ";
