@@ -52,6 +52,19 @@ namespace jank
         return os;
       }
 
+      static std::ostream& operator <<
+      (std::ostream &os, function_call::type const &c)
+      {
+        os << "( " << trait::to_string<type::function_call>() << " "
+           << "( name " << c.definition.name << " ) "
+           << "( arguments ";
+
+        for(auto const &arg : c.arguments)
+        { os << "( " << arg.name << " " /*<< arg.type*/ << ") "; }
+
+        return os << ") ) ";
+      }
+
       std::ostream& operator <<(std::ostream &os, cell const &c)
       {
         switch(trait::to_enum(c))
@@ -66,7 +79,7 @@ namespace jank
             os << boost::get<native_function_declaration>(c).data;
             break;
           case type::function_call:
-            //os << boost::get<function_call>(c).data;
+            os << boost::get<function_call>(c).data;
             break;
           case type::indirect_function_call:
             //os << boost::get<indirect_function_call>(c).data;
