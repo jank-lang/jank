@@ -29,6 +29,14 @@ namespace jank
       }
 
       static std::ostream& operator <<
+      (std::ostream &os, type_reference::type const &c)
+      {
+        os << "( " << trait::to_string<type::type_reference>() << " "
+           << "( definition " << c.definition << ") ) ";
+        return os;
+      }
+
+      static std::ostream& operator <<
       (std::ostream &os, function_body::type const &c)
       {
         os << "( " << trait::to_string<type::function_body>() << " "
@@ -161,6 +169,9 @@ namespace jank
         {
           case type::type_definition:
             os << boost::get<type_definition>(c).data;
+            break;
+          case type::type_reference:
+            os << boost::get<type_reference>(c).data;
             break;
           case type::function_body:
             os << boost::get<function_body>(c).data;
