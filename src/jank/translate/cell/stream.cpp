@@ -107,6 +107,16 @@ namespace jank
         return os << ") ";
       }
 
+      static std::ostream& operator <<
+      (std::ostream &os, binding_definition::type const &c)
+      {
+        os << "( " << trait::to_string<type::binding_definition>() << " "
+           << "( name " << c.name << " ) "
+           //<< c.type << ") "
+           << "( cell " << c.cell << ") ";
+        return os;
+      }
+
       std::ostream& operator <<(std::ostream &os, cell const &c)
       {
         switch(trait::to_enum(c))
@@ -136,7 +146,7 @@ namespace jank
             os << boost::get<native_function_reference>(c).data;
             break;
           case type::binding_definition:
-            //os << boost::get<binding_definition>(c).data;
+            os << boost::get<binding_definition>(c).data;
             break;
           case type::binding_reference:
             //os << boost::get<binding_reference>(c).data;
