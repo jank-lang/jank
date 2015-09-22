@@ -60,7 +60,20 @@ namespace jank
            << "( arguments ";
 
         for(auto const &arg : c.arguments)
-        { os << "( " << arg.name << " " /*<< arg.type*/ << ") "; }
+        { os << "( " << arg.name << " " /*<< arg.value*/ << ") "; }
+
+        return os << ") ) ";
+      }
+
+      static std::ostream& operator <<
+      (std::ostream &os, indirect_function_call::type const &c)
+      {
+        os << "( " << trait::to_string<type::indirect_function_call>() << " "
+           << "( binding " << /*c.binding <<*/ " ) "
+           << "( arguments ";
+
+        for(auto const &arg : c.arguments)
+        { os << "( " << arg.name << " " /*<< arg.value*/ << ") "; }
 
         return os << ") ) ";
       }
@@ -82,7 +95,7 @@ namespace jank
             os << boost::get<function_call>(c).data;
             break;
           case type::indirect_function_call:
-            //os << boost::get<indirect_function_call>(c).data;
+            os << boost::get<indirect_function_call>(c).data;
             break;
           case type::native_function_call:
             //os << boost::get<native_function_call>(c).data;
