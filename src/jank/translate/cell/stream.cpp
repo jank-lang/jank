@@ -13,12 +13,28 @@ namespace jank
       static std::ostream& operator <<
       (std::ostream &os, function_body::type const &c)
       {
-        os << "(" << trait::to_string<type::function_body>() << " "
-           << "(return-type " << /*c.return_type <<*/ ") "
-           << "(cells ";
+        os << "( " << trait::to_string<type::function_body>() << " "
+           << "( return-type " << /*c.return_type <<*/ " ) "
+           << "( cells ";
         for(auto const &cell : c.cells)
         { os << cell; }
-        return os << ")) ";
+        return os << " ) ) ";
+      }
+
+      static std::ostream& operator <<
+      (std::ostream &os, function_definition::type const &c)
+      {
+        os << "( " << trait::to_string<type::function_definition>() << " "
+           << "( name " << c.name << " ) "
+           << "( arguments ";
+
+        for(auto const &arg : c.arguments)
+        { os << "( " << arg.name << " " /*<< arg.type*/ << " ) "; }
+
+        os << ") "
+           << "( return-type " << /*c.return_type <<*/ " ) "
+           << "( body " << c.body << " ) ) ";
+        return os;
       }
 
       std::ostream& operator <<(std::ostream &os, cell const &c)
@@ -29,7 +45,7 @@ namespace jank
             os << boost::get<function_body>(c).data;
             break;
           case type::function_definition:
-            //os << boost::get<function_definition>(c).data;
+            os << boost::get<function_definition>(c).data;
             break;
           case type::native_function_declaration:
             //os << boost::get<native_function_declaration>(c).data;
