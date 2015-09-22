@@ -11,6 +11,24 @@ namespace jank
     namespace cell
     {
       static std::ostream& operator <<
+      (std::ostream &os, type_definition::type const &c)
+      {
+        os << "( " << trait::to_string<type::type_definition>() << " "
+           << "( name " << c.name << " ) "
+           << "( members ";
+
+        /* TODO: members */
+
+        os << ") "
+           << "( generics ";
+
+        /* TODO: generics */
+
+        os << ")";
+        return os << ") ";
+      }
+
+      static std::ostream& operator <<
       (std::ostream &os, function_body::type const &c)
       {
         os << "( " << trait::to_string<type::function_body>() << " "
@@ -141,6 +159,9 @@ namespace jank
       {
         switch(trait::to_enum(c))
         {
+          case type::type_definition:
+            os << boost::get<type_definition>(c).data;
+            break;
           case type::function_body:
             os << boost::get<function_body>(c).data;
             break;
