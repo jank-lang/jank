@@ -37,10 +37,20 @@ namespace jank
       }
 
       static std::ostream& operator <<
+      (std::ostream &os, binding_definition::type const &c)
+      {
+        os << "( " << trait::to_string<type::binding_definition>() << " "
+           << "( name " << c.name << " ) "
+           //<< c.type << ") "
+           << "( cell " << c.cell << ") ) ";
+        return os;
+      }
+
+      static std::ostream& operator <<
       (std::ostream &os, function_body::type const &c)
       {
         os << "( " << trait::to_string<type::function_body>() << " "
-           << "( return-type " << /*c.return_type <<*/ " ) "
+           << "( return-type " << c.return_type << " ) "
            << "( cells ";
         for(auto const &cell : c.cells)
         { os << cell; }
@@ -58,11 +68,11 @@ namespace jank
         {
           os << "( argument "
              << "( name " << arg.name << " ) "
-             << "( type " /*<< arg.type*/ << ") ) ";
+             << "( type " << arg.type << ") ) ";
         }
 
         os << ") "
-           << "( return-type " << /*c.return_type <<*/ ") "
+           << "( return-type " << c.return_type << ") "
            << "( body " << c.body << ") ) ";
         return os;
       }
@@ -78,11 +88,11 @@ namespace jank
         {
           os << "( argument "
              << "( name " << arg.name << " ) "
-             << "( type " /*<< arg.type*/ << ") ) ";
+             << "( type " << arg.type << ") ) ";
         }
 
         os << ") "
-           << "( return-type " << /*c.return_type <<*/ ") ) ";
+           << "( return-type " << c.return_type << ") ) ";
         return os;
       }
 
@@ -107,7 +117,7 @@ namespace jank
       (std::ostream &os, indirect_function_call::type const &c)
       {
         os << "( " << trait::to_string<type::indirect_function_call>() << " "
-           << "( binding " << /*c.binding <<*/ " ) "
+           << "( binding " << c.binding << " ) "
            << "( arguments ";
 
         for(auto const &arg : c.arguments)
@@ -151,16 +161,6 @@ namespace jank
         os << "( " << trait::to_string<type::native_function_reference>() << " "
            << "( name " << c.definition.name << " ) ";
         return os << ") ";
-      }
-
-      static std::ostream& operator <<
-      (std::ostream &os, binding_definition::type const &c)
-      {
-        os << "( " << trait::to_string<type::binding_definition>() << " "
-           << "( name " << c.name << " ) "
-           //<< c.type << ") "
-           << "( cell " << c.cell << ") ";
-        return os;
       }
 
       std::ostream& operator <<(std::ostream &os, cell const &c)
