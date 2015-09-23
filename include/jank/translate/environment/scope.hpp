@@ -3,7 +3,7 @@
 #include <map>
 #include <string>
 #include <memory>
-#include <experimental/optional>
+#include <boost/optional.hpp>
 
 #include <jank/translate/cell/cell.hpp>
 
@@ -24,13 +24,13 @@ namespace jank
           : parent{ p }
         { }
 
-        std::experimental::optional<result<cell::type_definition>> find_type
+        boost::optional<result<cell::type_definition>> find_type
         (std::string const &name) const;
-        std::experimental::optional<result<cell::binding_definition>> find_binding
+        boost::optional<result<cell::binding_definition>> find_binding
         (std::string const &name) const;
-        std::experimental::optional<std::vector<result<cell::function_definition>>> find_function
+        boost::optional<std::vector<result<cell::function_definition>>> find_function
         (std::string const &name) const;
-        std::experimental::optional<std::vector<result<cell::native_function_declaration>>> find_native_function
+        boost::optional<std::vector<result<cell::native_function_declaration>>> find_native_function
         (std::string const &name) const;
 
         cell::function_body::type expect_function(cell::function_definition::type const &def);

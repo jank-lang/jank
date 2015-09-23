@@ -40,6 +40,7 @@ include_directories(
   test/include
   lib/jtl/include
   lib/jest/include
+  ${Boost_INCLUDE_DIRS}
 )
 
 add_library(
@@ -141,8 +142,8 @@ add_executable(${PROJECT_NAME} src/main.cpp)
 target_link_libraries(
   ${PROJECT_NAME}
   ${CMAKE_THREAD_LIBS_INIT}
-  ${Boost_LIBRARIES}
   ${PROJECT_NAME}_static
+  ${Boost_LIBRARIES}
 )
 
 # Enable warnings

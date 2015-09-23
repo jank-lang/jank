@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdexcept>
-#include <experimental/optional>
+#include <boost/optional.hpp>
 
 #include <jank/interpret/cell/cell.hpp>
 #include <jank/interpret/cell/trait.hpp>
@@ -35,7 +35,7 @@ namespace jank
       }
 
       template <cell::type C, typename Cell>
-      std::experimental::optional<cell::trait::to_type<C>>
+      boost::optional<cell::trait::to_type<C>>
       optional_cast(Cell const &c)
       {
         if(is<C>(c))

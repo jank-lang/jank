@@ -2,7 +2,7 @@
 
 #include <map>
 #include <stdexcept>
-#include <experimental/optional>
+#include <boost/optional.hpp>
 
 #include <jank/translate/environment/special/function.hpp>
 #include <jank/translate/environment/special/lambda.hpp>
@@ -17,7 +17,7 @@ namespace jank
     {
       namespace special
       {
-        std::experimental::optional<cell::cell> apply_definition
+        boost::optional<cell::cell> apply_definition
         (
           parse::cell::list const &list,
           cell::function_body const &translated

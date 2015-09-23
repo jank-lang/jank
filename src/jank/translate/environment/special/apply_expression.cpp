@@ -9,7 +9,7 @@ namespace jank
     {
       namespace special
       {
-        std::experimental::optional<cell::cell> apply_expression
+        boost::optional<cell::cell> apply_expression
         (
           parse::cell::list const &list,
           cell::function_body const &outer_body

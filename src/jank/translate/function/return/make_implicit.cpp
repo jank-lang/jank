@@ -24,7 +24,7 @@ namespace jank
         }
 
         /* Builds an implicit return statement from the last function call. */
-        std::experimental::optional<cell::cell>
+        boost::optional<cell::cell>
         make_implicit_from_call(cell::function_body::type const &body)
         {
           auto const last_function
@@ -68,7 +68,7 @@ namespace jank
           );
           auto const match
           (
-            [&](auto const &opt) -> std::experimental::optional<cell::cell>
+            [&](auto const &opt) -> boost::optional<cell::cell>
             {
               if
               (
@@ -86,6 +86,7 @@ namespace jank
 
               /* Change the cell to be a return. */
               return
+              boost::optional<cell::cell>
               {
                 cell::return_statement
                 { { func, { func.data.definition.return_type.definition } } }

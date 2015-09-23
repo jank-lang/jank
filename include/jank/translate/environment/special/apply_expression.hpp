@@ -2,7 +2,7 @@
 
 #include <map>
 #include <stdexcept>
-#include <experimental/optional>
+#include <boost/optional.hpp>
 
 #include <jank/translate/environment/special/function.hpp>
 #include <jank/translate/environment/special/if_statement.hpp>
@@ -16,7 +16,7 @@ namespace jank
     {
       namespace special
       {
-        std::experimental::optional<cell::cell> apply_expression
+        boost::optional<cell::cell> apply_expression
         (
           parse::cell::list const &list,
           cell::function_body const &translated

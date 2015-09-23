@@ -10,7 +10,7 @@ namespace jank
   {
     namespace environment
     {
-      std::experimental::optional<scope::result<cell::type_definition>> scope::find_type
+      boost::optional<scope::result<cell::type_definition>> scope::find_type
       (std::string const &name) const
       {
         auto const it(type_definitions.find(name));
@@ -25,7 +25,7 @@ namespace jank
         return { { it->second, shared_from_this() } };
       }
 
-      std::experimental::optional<scope::result<cell::binding_definition>> scope::find_binding
+      boost::optional<scope::result<cell::binding_definition>> scope::find_binding
       (std::string const &name) const
       {
         auto const it(binding_definitions.find(name));
@@ -41,7 +41,7 @@ namespace jank
       }
 
       template <typename T, typename F>
-      static std::experimental::optional<std::vector<scope::result<T>>>
+      static boost::optional<std::vector<scope::result<T>>>
       find
       (
         std::string const &name,
@@ -83,11 +83,14 @@ namespace jank
         if(ret.empty())
         { return {}; }
         else
-        { return { ret }; }
+        {
+          return boost::optional<std::vector<scope::result<T>>>
+          { ret };
+        }
       }
 
       /* Build a vector of all function overloads in each scope, from this to the root. */
-      std::experimental::optional
+      boost::optional
       <std::vector<scope::result<cell::function_definition>>>
       scope::find_function(std::string const &name) const
       {
@@ -100,7 +103,7 @@ namespace jank
         );
       }
 
-      std::experimental::optional
+      boost::optional
       <std::vector<scope::result<cell::native_function_declaration>>>
       scope::find_native_function(std::string const &name) const
       {
