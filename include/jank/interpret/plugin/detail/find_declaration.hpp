@@ -30,7 +30,7 @@ namespace jank
             { "no native " + name + " declarations" };
           }
 
-          for(auto const &def_pair : defs.value())
+          for(auto const &def_pair : *defs)
           {
             auto const &def(def_pair.first.data);
             if(def.arguments.size() != sizeof...(Args))

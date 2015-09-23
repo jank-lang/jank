@@ -15,7 +15,7 @@ namespace jank
           {
             inline cell::detail::type_reference<cell::cell> find_type
             (scope &s, std::string const &name)
-            { return { s.find_type(name).value().first.data }; }
+            { return { s.find_type(name)->first.data }; }
           }
         }
       }

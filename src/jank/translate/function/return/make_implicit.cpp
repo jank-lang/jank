@@ -53,7 +53,7 @@ namespace jank
           )
           {
             return make_implicit_from_indirect_call
-            (indirect_opt.value(), body);
+            (*indirect_opt, body);
           }
 
           auto const native_opt
@@ -74,7 +74,7 @@ namespace jank
               (
                 !opt ||
                 (
-                  opt.value().data.definition.return_type !=
+                  opt->data.definition.return_type !=
                   body.return_type &&
                   body.return_type !=
                   environment::builtin::type::automatic(*body.scope)
@@ -82,7 +82,7 @@ namespace jank
               )
               { return {}; }
 
-              auto const &func(opt.value());
+              auto const &func(*opt);
 
               /* Change the cell to be a return. */
               return

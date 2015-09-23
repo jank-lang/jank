@@ -71,7 +71,7 @@ namespace jank
           auto const parent_ret((s->parent.get()->*recurse)(name));
           if(parent_ret)
           {
-            auto const &found(parent_ret.value());
+            auto const &found(*parent_ret);
             std::copy
             (
               found.begin(), found.end(),
@@ -132,7 +132,7 @@ namespace jank
         if(!funcs_opt)
         { fail(); }
 
-        auto const funcs(funcs_opt.value());
+        auto const funcs(*funcs_opt);
         auto const found
         (
           std::find_if

@@ -37,7 +37,7 @@ namespace jank
           (parse::expect::type<parse::cell::type::ident>(data[1]));
 
           auto const var_opt(outer_scope->find_binding(name.data));
-          if(var_opt && var_opt.value().second == outer_scope)
+          if(var_opt && var_opt->second == outer_scope)
           {
             throw expect::error::type::exception<>
             { "multiple definition of: " + name.data };
@@ -61,7 +61,7 @@ namespace jank
               { "unknown type in binding definition" };
             }
             expected_type.data = environment::builtin::type::normalize
-            (type_opt.value().first.data, *outer_scope);
+            (type_opt->first.data, *outer_scope);
 
             /* Parse any generics along with this type. */
             std::tie(expected_type.data, it) = type::generic::apply_genericity

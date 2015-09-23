@@ -83,9 +83,9 @@ namespace jank
             { return false; }
 
             auto const matched_opt
-            (detail::match_overload(arguments, scope, opt.value()));
+            (detail::match_overload(arguments, scope, *opt));
             if(matched_opt)
-            { callback(matched_opt.value()); }
+            { callback(*matched_opt); }
             return static_cast<bool>(matched_opt);
           }
         );

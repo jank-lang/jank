@@ -37,7 +37,7 @@ namespace jank
               throw expect::error::lookup::exception<>
               { "unknown binding: " + cell.data.definition.name };
             }
-            return opt.value();
+            return *opt;
           } break;
 
           case translate::cell::type::literal_value:
@@ -134,7 +134,7 @@ namespace jank
               { "invalid native function: " + declaration.name };
             }
 
-            return definition.value().interpret(s, cell.data.arguments);
+            return definition->interpret(s, cell.data.arguments);
           } break;
 
           case translate::cell::type::indirect_function_call:

@@ -67,14 +67,14 @@ namespace jank
                   return detail::value<C>
                   {
                     c.data,
-                    { cell::binding_reference{ { binding.value().first.data } } }
+                    { cell::binding_reference{ { binding->first.data } } }
                   };
                 }
 
                 auto const native_function(scope_->find_native_function(c.data));
                 if(native_function)
                 {
-                  auto const &overloads(native_function.value());
+                  auto const &overloads(*native_function);
                   if(overloads.size() != 1)
                   {
                     throw expect::error::type::overload
@@ -116,7 +116,7 @@ namespace jank
                     return detail::value<C>
                     {
                       "special", /* TODO: Better name? */
-                      { special_opt.value() }
+                      { *special_opt }
                     };
                   }
                 }
@@ -133,7 +133,7 @@ namespace jank
                   (environment::special::apply_expression(c, body));
                   if(special_opt)
                   {
-                    body.data.cells.push_back(special_opt.value());
+                    body.data.cells.push_back(*special_opt);
                     body.data = function::ret::deduce
                     (function::ret::add_implicit_returns(std::move(body.data)));
 
@@ -153,7 +153,7 @@ namespace jank
                 (scope_->find_binding(function_name));
                 if(function_binding)
                 {
-                  auto const &def(function_binding.value().first);
+                  auto const &def(function_binding->first);
                   auto const type(def.data.type);
                   if
                   (

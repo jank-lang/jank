@@ -73,7 +73,7 @@ namespace jank
                 { std::string{ "invalid literal type: " } + name };
               }
 
-              return def_opt.value().first;
+              return def_opt->first;
             }
             case cell::type::function_call:
             {

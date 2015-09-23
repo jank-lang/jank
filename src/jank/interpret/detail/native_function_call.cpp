@@ -24,7 +24,7 @@ namespace jank
           { "invalid native function: " + declaration.name };
         }
 
-        return definition.value().interpret(scope, cell.data.arguments);
+        return definition->interpret(scope, cell.data.arguments);
       }
     }
   }
