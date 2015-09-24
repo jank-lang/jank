@@ -17,52 +17,52 @@ namespace jank
         char constexpr const* to_string();
         template <>
         inline char constexpr const* to_string<type::function_body>()
-        { return "function_body"; }
+        { return "function-body"; }
         template <>
         inline char constexpr const* to_string<type::function_definition>()
-        { return "function_definition"; }
+        { return "function-definition"; }
         template <>
         inline char constexpr const* to_string<type::native_function_declaration>()
-        { return "native_function_declaration"; }
+        { return "native-function-declaration"; }
         template <>
         inline char constexpr const* to_string<type::function_call>()
-        { return "function_call"; }
+        { return "function-call"; }
         template <>
         inline char constexpr const* to_string<type::indirect_function_call>()
-        { return "indirect_function_call"; }
+        { return "indirect-function-call"; }
         template <>
         inline char constexpr const* to_string<type::native_function_call>()
-        { return "native_function_call"; }
+        { return "native-function-call"; }
         template <>
         inline char constexpr const* to_string<type::function_reference>()
-        { return "function_reference"; }
+        { return "function-reference"; }
         template <>
         inline char constexpr const* to_string<type::native_function_reference>()
-        { return "native_function_reference"; }
+        { return "native-function-reference"; }
         template <>
         inline char constexpr const* to_string<type::type_definition>()
-        { return "type_definition"; }
+        { return "type-definition"; }
         template <>
         inline char constexpr const* to_string<type::type_reference>()
-        { return "type_reference"; }
+        { return "type-reference"; }
         template <>
         inline char constexpr const* to_string<type::binding_definition>()
-        { return "binding_definition"; }
+        { return "binding-definition"; }
         template <>
         inline char constexpr const* to_string<type::binding_reference>()
-        { return "binding_reference"; }
+        { return "binding-reference"; }
         template <>
         inline char constexpr const* to_string<type::literal_value>()
-        { return "literal_value"; }
+        { return "literal-value"; }
         template <>
         inline char constexpr const* to_string<type::return_statement>()
-        { return "return_statement"; }
+        { return "return-statement"; }
         template <>
         inline char constexpr const* to_string<type::if_statement>()
-        { return "if_statement"; }
+        { return "if-statement"; }
         template <>
         inline char constexpr const* to_string<type::do_statement>()
-        { return "do_statement"; }
+        { return "do-statement"; }
 
         template <typename C>
         char constexpr const* to_string();
