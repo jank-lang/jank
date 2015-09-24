@@ -65,6 +65,7 @@ Members of struct are accessed with a `.foo` syntax, where `.foo` is a function 
   (first-name string)
   (last-name string))
 
+(bind john (new : (person) "john" "doe"))
 (print (.last-name john))
 ```
 
@@ -171,10 +172,10 @@ Since constructors are the functions to actually create objects, not something t
   (print "destructing coord"))
 
 (; Calls the constructor explicitly. ;)
-(bind c1 (construct : coord : (real real) 0.0 5.4))
+(bind c1 (construct : (coord : (real real)) 0.0 5.4))
 
 (; Calls the constructor via new. ;)
-(bind c2 (new : coord : (real real) 0.0 5.4))
+(bind c2 (new : (coord : (real real)) 0.0 5.4))
 ```
 
 ## Type aliasing
