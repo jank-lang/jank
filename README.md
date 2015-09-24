@@ -133,7 +133,9 @@ Generic functions and types can be variadic, allowing any number of parameters, 
   (y T-component))
 
 (; Builds a cartesian coordinate with an offset origin.
- ; All of this is built in to the coordinate's type. ;)
+ ; All of this is built in to the coordinate's type.
+ ; Assuming cartesian is a type and
+ ; origin : (77.0) is a specialization of a type. ;)
 (new : (coord : (real cartesian origin : (77.0))) 0.0 0.0)
 ```
 
