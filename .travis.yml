@@ -11,7 +11,7 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.7
+      - llvm-toolchain-precise
       - boost-latest
     packages:
       - g++-5
