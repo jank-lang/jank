@@ -11,10 +11,54 @@ namespace jank
     namespace cell
     {
       static std::ostream& operator <<
+      (std::ostream &os, type_definition::type const &c)
+      {
+        os << "( " << trait::to_string<type::type_definition>() << " "
+           << "( name " << c.name << " ) "
+           << "( members ";
+
+        /* TODO: members */
+
+        os << ") "
+           << "( generics ";
+
+        /* TODO: generics */
+
+        os << ") ";
+        return os << ") ";
+      }
+
+      static std::ostream& operator <<
+      (std::ostream &os, type_reference::type const &c)
+      {
+        os << "( " << trait::to_string<type::type_reference>() << " "
+           << "( definition " << c.definition << ") ) ";
+        return os;
+      }
+
+      static std::ostream& operator <<
+      (std::ostream &os, binding_definition::type const &c)
+      {
+        os << "( " << trait::to_string<type::binding_definition>() << " "
+           << "( name " << c.name << " ) "
+           << "( type " << c.type << ") "
+           << "( cell " << c.cell << ") ) ";
+        return os;
+      }
+
+      static std::ostream& operator <<
+      (std::ostream &os, binding_reference::type const &c)
+      {
+        os << "( " << trait::to_string<type::binding_reference>() << " "
+           << "( definition " << c.definition << ") ) ";
+        return os;
+      }
+
+      static std::ostream& operator <<
       (std::ostream &os, function_body::type const &c)
       {
         os << "( " << trait::to_string<type::function_body>() << " "
-           << "( return-type " << /*c.return_type <<*/ " ) "
+           << "( return-type " << c.return_type << " ) "
            << "( cells ";
         for(auto const &cell : c.cells)
         { os << cell; }
@@ -32,11 +76,11 @@ namespace jank
         {
           os << "( argument "
              << "( name " << arg.name << " ) "
-             << "( type " /*<< arg.type*/ << ") ) ";
+             << "( type " << arg.type << ") ) ";
         }
 
         os << ") "
-           << "( return-type " << /*c.return_type <<*/ ") "
+           << "( return-type " << c.return_type << ") "
            << "( body " << c.body << ") ) ";
         return os;
       }
@@ -52,11 +96,11 @@ namespace jank
         {
           os << "( argument "
              << "( name " << arg.name << " ) "
-             << "( type " /*<< arg.type*/ << ") ) ";
+             << "( type " << arg.type << ") ) ";
         }
 
         os << ") "
-           << "( return-type " << /*c.return_type <<*/ ") ) ";
+           << "( return-type " << c.return_type << ") ) ";
         return os;
       }
 
@@ -71,7 +115,7 @@ namespace jank
         {
           os << "( argument "
              << "( name " << arg.name << " ) "
-             << "( value " /*<< arg.value*/ << ") ) ";
+             << "( cell " << arg.cell << ") ) ";
         }
 
         return os << ") ) ";
@@ -81,14 +125,14 @@ namespace jank
       (std::ostream &os, indirect_function_call::type const &c)
       {
         os << "( " << trait::to_string<type::indirect_function_call>() << " "
-           << "( binding " << /*c.binding <<*/ " ) "
+           << "( binding " << c.binding << " ) "
            << "( arguments ";
 
         for(auto const &arg : c.arguments)
         {
           os << "( argument "
              << "( name " << arg.name << " ) "
-             << "( value " /*<< arg.value*/ << ") ) ";
+             << "( cell " << arg.cell << ") ) ";
         }
 
         return os << ") ) ";
@@ -105,7 +149,7 @@ namespace jank
         {
           os << "( argument "
              << "( name " << arg.name << " ) "
-             << "( value " /*<< arg.value*/ << ") ) ";
+             << "( cell " << arg.cell << ") ) ";
         }
 
         return os << ") ) ";
@@ -127,20 +171,16 @@ namespace jank
         return os << ") ";
       }
 
-      static std::ostream& operator <<
-      (std::ostream &os, binding_definition::type const &c)
-      {
-        os << "( " << trait::to_string<type::binding_definition>() << " "
-           << "( name " << c.name << " ) "
-           //<< c.type << ") "
-           << "( cell " << c.cell << ") ";
-        return os;
-      }
-
       std::ostream& operator <<(std::ostream &os, cell const &c)
       {
         switch(trait::to_enum(c))
         {
+          case type::type_definition:
+            os << boost::get<type_definition>(c).data;
+            break;
+          case type::type_reference:
+            os << boost::get<type_reference>(c).data;
+            break;
           case type::function_body:
             os << boost::get<function_body>(c).data;
             break;
@@ -169,7 +209,7 @@ namespace jank
             os << boost::get<binding_definition>(c).data;
             break;
           case type::binding_reference:
-            //os << boost::get<binding_reference>(c).data;
+            os << boost::get<binding_reference>(c).data;
             break;
           case type::literal_value:
             //os << boost::get<literal_value>(c).data;
