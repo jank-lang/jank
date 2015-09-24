@@ -11,14 +11,14 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.6
+      - llvm-toolchain-precise-3.7
       - boost-latest
     packages:
       - g++-5
       - gcc-5
       - clang
-      - clang-3.6
-      - llvm-3.6
+      - clang-3.7
+      - llvm-3.7
       - libboost-system1.55-dev
       - libboost-regex1.55-dev
 cache:
@@ -26,7 +26,7 @@ cache:
 
 before_install:
   - if [[ "$CXX" == "clang++" ]]; then
-      export CXX=clang++-3.6; export CC=clang-3.6;
+      export CXX=clang++-3.7; export CC=clang-3.7;
     fi
   - if [[ "$CXX" == "g++" ]]; then
       export CXX=g++-5; export CC=gcc-5;
