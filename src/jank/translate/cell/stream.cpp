@@ -55,6 +55,51 @@ namespace jank
       }
 
       static std::ostream& operator <<
+      (std::ostream &os, literal_value::type const &c)
+      {
+        os << "( " << trait::to_string<type::literal_value>() << " "
+           << "( type ";
+
+        switch(static_cast<literal_type>(c.which()))
+        {
+          case literal_type::null:
+            os << parse::cell::trait::to_string<parse::cell::type::null>()
+               << " ) "
+               << "( value null ) ";
+            break;
+          case literal_type::boolean:
+            os << parse::cell::trait::to_string<parse::cell::type::boolean>()
+               << " ) "
+               << "( value " << boost::get<parse::cell::boolean>(c).data
+               << " ) ";
+            break;
+          case literal_type::integer:
+            os << parse::cell::trait::to_string<parse::cell::type::integer>()
+               << " ) "
+               << "( value " << boost::get<parse::cell::integer>(c).data
+               << " ) ";
+            break;
+          case literal_type::real:
+            os << parse::cell::trait::to_string<parse::cell::type::real>()
+               << " ) "
+               << "( value " << boost::get<parse::cell::real>(c).data
+               << " ) ";
+            break;
+          case literal_type::string:
+            os << parse::cell::trait::to_string<parse::cell::type::string>()
+               << " ) "
+               << "( value " << boost::get<parse::cell::string>(c).data
+               << " ) ";
+            break;
+          case literal_type::list:
+            /* TODO */
+            os << "list ) ( value ) ";
+        }
+
+        return os << ") ";
+      }
+
+      static std::ostream& operator <<
       (std::ostream &os, function_body::type const &c)
       {
         os << "( " << trait::to_string<type::function_body>() << " "
@@ -212,7 +257,7 @@ namespace jank
             os << boost::get<binding_reference>(c).data;
             break;
           case type::literal_value:
-            //os << boost::get<literal_value>(c).data;
+            os << boost::get<literal_value>(c).data;
             break;
           case type::return_statement:
             //os << boost::get<return_statement>(c).data;
