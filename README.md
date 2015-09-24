@@ -35,6 +35,7 @@ There are a few primitive types which are part of the language.
 |`string`           |An array of UTF-8 characters               |
 |`list`             |A generic, homogeneous, singly-linked list |
 |`vector`           |A generic, homogeneous, dynamic array      |
+|`tuple`            |A generic, heterogenous, fixed array       |
 
 ## Functions
 ```lisp
