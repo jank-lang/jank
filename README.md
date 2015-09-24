@@ -134,7 +134,7 @@ Generic functions and types can be variadic, allowing any number of parameters, 
 
 (; Builds a cartesian coordinate with an offset origin.
  ; All of this is built in to the coordinate's type. ;)
-(coord : (real cartesian origin : (77.0)) 0.0 0.0)
+(new : (coord : (real cartesian origin : (77.0))) 0.0 0.0)
 ```
 
 ## Comments
