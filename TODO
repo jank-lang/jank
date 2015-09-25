@@ -6,8 +6,6 @@ static analysis on travis
 
 separate interpret binary and read AST
 
-switch to ctest
-
 literal_value has list
   should it be stored elsewhere?
 
