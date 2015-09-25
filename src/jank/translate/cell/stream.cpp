@@ -225,6 +225,16 @@ namespace jank
         return os;
       }
 
+      static std::ostream& operator <<
+      (std::ostream &os, if_statement::type const &c)
+      {
+        os << "( " << trait::to_string<type::if_statement>() << " "
+           << "( condition " << c.condition << ") "
+           << "( true-body " << c.true_body << ") "
+           << "( false-body " << c.false_body << ") ) ";
+        return os;
+      }
+
       std::ostream& operator <<(std::ostream &os, cell const &c)
       {
         switch(trait::to_enum(c))
@@ -272,7 +282,7 @@ namespace jank
             os << boost::get<return_statement>(c).data;
             break;
           case type::if_statement:
-            //os << boost::get<if_statement>(c).data;
+            os << boost::get<if_statement>(c).data;
             break;
           case type::do_statement:
             //os << boost::get<do_statement>(c).data;
