@@ -161,6 +161,9 @@ set_property(
   PROPERTY COMPILE_FLAGS "-Wall -Wextra -Werror -pedantic")
 
 # Testing
+enable_testing()
+set(CTEST_OUTPUT_ON_FAILURE 1)
+
 add_library(
   ${PROJECT_NAME}-test-common STATIC
   test/src/cpp/common/interpret.cpp
@@ -179,28 +182,22 @@ set(
 function(make_tests)
   set(TEST_NAME)
   set(TEST_NAMES_LIST)
-  set(TEST_COMMAND)
   foreach(ELEMENT ${ARGV})
     if(TEST_NAME)
       add_executable(${TEST_NAME} ${ELEMENT})
       target_link_libraries(${TEST_NAME} ${${PROJECT_NAME}-test-libs})
+      add_test(
+        NAME ${TEST_NAME}-impl
+        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}
+        DEPENDS ${TEST_NAME}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+      )
       set(TEST_NAME)
     else()
       set(TEST_NAME "${PROJECT_NAME}-${ELEMENT}-test")
       list(APPEND TEST_NAMES_LIST ${TEST_NAME})
-      list(APPEND
-        TEST_COMMAND
-        ${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME} || true && echo &&
-      )
     endif()
   endforeach()
-
-  add_custom_target(
-    ${PROJECT_NAME}-test
-    COMMAND ${TEST_COMMAND} true
-    DEPENDS ${TEST_NAMES_LIST}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-  )
 endfunction()
 
 make_tests(
