@@ -13,7 +13,7 @@ namespace jank
     {
       namespace ret
       {
-        std::experimental::optional<cell::cell>
+        boost::optional<cell::cell>
         make_implicit_from_indirect_call
         (
           cell::indirect_function_call const &call,
@@ -31,6 +31,7 @@ namespace jank
 
           /* Change the cell to be a return. */
           return
+          boost::optional<cell::cell>
           {
             cell::return_statement
             { { call, { type.data } } }

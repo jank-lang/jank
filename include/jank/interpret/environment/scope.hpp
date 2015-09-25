@@ -3,7 +3,7 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <experimental/optional>
+#include <boost/optional.hpp>
 
 #include <jank/translate/cell/cell.hpp>
 #include <jank/interpret/plugin/detail/native_function_definition.hpp>
@@ -21,9 +21,9 @@ namespace jank
           : parent{ p }
         { }
 
-        std::experimental::optional<cell::cell> find_binding
+        boost::optional<cell::cell> find_binding
         (std::string const &name) const;
-        std::experimental::optional<plugin::detail::native_function_definition>
+        boost::optional<plugin::detail::native_function_definition>
         find_native_function
         (
           translate::cell::detail::native_function_declaration

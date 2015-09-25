@@ -1,6 +1,6 @@
 #pragma once
 
-#include <experimental/optional>
+#include <boost/optional.hpp>
 
 #include <jank/parse/cell/cell.hpp>
 
@@ -16,7 +16,7 @@ namespace jank
          * element of used such that ++it is the next element you want. */
         std::tuple
         <
-          std::experimental::optional<parse::cell::list>,
+          boost::optional<parse::cell::list>,
           parse::cell::list::type::const_iterator
         > extract
         (

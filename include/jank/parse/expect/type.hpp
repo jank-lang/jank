@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 #include <cstdint>
-#include <experimental/optional>
+#include <boost/optional.hpp>
 
 #include <jank/parse/cell/cell.hpp>
 #include <jank/parse/cell/trait.hpp>
@@ -36,7 +36,7 @@ namespace jank
       }
 
       template <cell::type C, typename Cell>
-      std::experimental::optional<parse::cell::trait::to_type<C>>
+      boost::optional<parse::cell::trait::to_type<C>>
       optional_cast(Cell const &c)
       {
         if(is<C>(c))

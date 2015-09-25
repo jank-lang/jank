@@ -25,7 +25,7 @@ namespace jank
 
         /* Handles native and non-native functions. */
         template <typename Def>
-        std::experimental::optional<typename detail::call<Def>::type>
+        boost::optional<typename detail::call<Def>::type>
         match_overload
         (
           function::argument::value_list<cell::cell> arguments,
@@ -83,9 +83,9 @@ namespace jank
             { return false; }
 
             auto const matched_opt
-            (detail::match_overload(arguments, scope, opt.value()));
+            (detail::match_overload(arguments, scope, *opt));
             if(matched_opt)
-            { callback(matched_opt.value()); }
+            { callback(*matched_opt); }
             return static_cast<bool>(matched_opt);
           }
         );

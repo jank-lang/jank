@@ -12,7 +12,7 @@ namespace jank
       {
         std::tuple
         <
-          std::experimental::optional<parse::cell::list>,
+          boost::optional<parse::cell::list>,
           parse::cell::list::type::const_iterator
         > extract
         (
@@ -25,7 +25,7 @@ namespace jank
           {
             return std::make_tuple
             (
-              std::experimental::optional<parse::cell::list>{},
+              boost::optional<parse::cell::list>{},
               begin
             );
           }
@@ -35,7 +35,7 @@ namespace jank
             parse::expect::optional_cast<parse::cell::type::ident>
             (*colon_it)
           );
-          if(colon && colon.value().data == ":")
+          if(colon && colon->data == ":")
           {
             auto const list_it(std::next(colon_it));
             if(list_it == end)
@@ -45,7 +45,7 @@ namespace jank
             }
             return std::make_tuple
             (
-              std::experimental::optional<parse::cell::list>
+              boost::optional<parse::cell::list>
               { parse::expect::type<parse::cell::type::list>(*list_it) },
               list_it
             );
@@ -53,7 +53,7 @@ namespace jank
 
           return std::make_tuple
           (
-            std::experimental::optional<parse::cell::list>{},
+            boost::optional<parse::cell::list>{},
             begin
           );
         }

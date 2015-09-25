@@ -43,14 +43,14 @@ namespace jank
           <parse::cell::type::list>(c)
         )
         {
-          auto const &list(list_opt.value());
+          auto const &list(*list_opt);
 
           /* Handle specials. */
           auto const special_opt
           (environment::special::apply_all(list, translated));
           if(special_opt)
           {
-            translated.data.cells.push_back(special_opt.value());
+            translated.data.cells.push_back(*special_opt);
             continue;
           }
 
@@ -69,7 +69,7 @@ namespace jank
           /* Allow the binding to override the functions. */
           if(function_binding)
           {
-            auto const &def(function_binding.value().first);
+            auto const &def(function_binding->first);
             auto const type(def.data.type);
             if
             (

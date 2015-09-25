@@ -69,7 +69,7 @@ namespace jank
             auto const implicit(function::ret::make_implicit_from_call(body));
             if(implicit) /* Turn the last call into a return. */
             {
-              body.cells.back() = implicit.value();
+              body.cells.back() = *implicit;
               return body;
             }
 

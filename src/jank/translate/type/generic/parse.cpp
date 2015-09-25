@@ -32,7 +32,7 @@ namespace jank
               <parse::cell::type::list>(*it)
             )
             {
-              auto const parsed(parse(list.value(), scope));
+              auto const parsed(parse(*list, scope));
               tuple<cell::detail::type_definition<cell::cell>> tup{};
               std::transform
               (
@@ -61,7 +61,7 @@ namespace jank
             auto type
             (
               environment::builtin::type::normalize
-              (type_def.value().first.data, *scope)
+              (type_def->first.data, *scope)
             );
             std::tie(type, it) = apply_genericity
             (std::move(type), it, l.data.end(), scope);
@@ -94,7 +94,7 @@ namespace jank
           if(generic_list_opt)
           {
             auto const &parsed_generics
-            (type::generic::parse(generic_list_opt.value(), scope));
+            (type::generic::parse(*generic_list_opt, scope));
             type::generic::verify
             (
               type.generics,

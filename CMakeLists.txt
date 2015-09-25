@@ -30,6 +30,9 @@ execute_process(
 include(cmake/cxx14.cmake)
 
 # Boost
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC_RUNTIME ON)
 find_package(Boost COMPONENTS system regex REQUIRED)
 
 # PThread
@@ -40,6 +43,7 @@ include_directories(
   test/include
   lib/jtl/include
   lib/jest/include
+  ${Boost_INCLUDE_DIRS}
 )
 
 add_library(
@@ -136,13 +140,19 @@ add_library(
   src/jank/interpret/plugin/collection/list/list.cpp
 )
 
+target_link_libraries(
+  ${PROJECT_NAME}_static
+  ${CMAKE_THREAD_LIBS_INIT}
+  ${Boost_LIBRARIES}
+)
+
 add_executable(${PROJECT_NAME} src/main.cpp)
 
 target_link_libraries(
   ${PROJECT_NAME}
   ${CMAKE_THREAD_LIBS_INIT}
-  ${Boost_LIBRARIES}
   ${PROJECT_NAME}_static
+  ${Boost_LIBRARIES}
 )
 
 # Enable warnings

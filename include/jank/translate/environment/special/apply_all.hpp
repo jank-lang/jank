@@ -2,7 +2,7 @@
 
 #include <map>
 #include <stdexcept>
-#include <experimental/optional>
+#include <boost/optional.hpp>
 
 #include <jank/translate/environment/special/binding.hpp>
 #include <jank/translate/environment/special/return_statement.hpp>
@@ -17,7 +17,7 @@ namespace jank
     {
       namespace special
       {
-        std::experimental::optional<cell::cell> apply_all
+        boost::optional<cell::cell> apply_all
         (
           parse::cell::list const &list,
           cell::function_body const &translated

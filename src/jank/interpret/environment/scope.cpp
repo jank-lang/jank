@@ -6,7 +6,7 @@ namespace jank
   {
     namespace environment
     {
-      std::experimental::optional<cell::cell> scope::find_binding
+      boost::optional<cell::cell> scope::find_binding
       (std::string const &name) const
       {
         auto const it(bindings.find(name));
@@ -20,7 +20,7 @@ namespace jank
         return { it->second };
       }
 
-      std::experimental::optional<plugin::detail::native_function_definition>
+      boost::optional<plugin::detail::native_function_definition>
       scope::find_native_function
       (
         translate::cell::detail::native_function_declaration

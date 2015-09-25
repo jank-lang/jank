@@ -24,7 +24,7 @@ namespace jank
         }
 
         /* Builds an implicit return statement from the last function call. */
-        std::experimental::optional<cell::cell>
+        boost::optional<cell::cell>
         make_implicit_from_call(cell::function_body::type const &body)
         {
           auto const last_function
@@ -53,7 +53,7 @@ namespace jank
           )
           {
             return make_implicit_from_indirect_call
-            (indirect_opt.value(), body);
+            (*indirect_opt, body);
           }
 
           auto const native_opt
@@ -68,13 +68,13 @@ namespace jank
           );
           auto const match
           (
-            [&](auto const &opt) -> std::experimental::optional<cell::cell>
+            [&](auto const &opt) -> boost::optional<cell::cell>
             {
               if
               (
                 !opt ||
                 (
-                  opt.value().data.definition.return_type !=
+                  opt->data.definition.return_type !=
                   body.return_type &&
                   body.return_type !=
                   environment::builtin::type::automatic(*body.scope)
@@ -82,10 +82,11 @@ namespace jank
               )
               { return {}; }
 
-              auto const &func(opt.value());
+              auto const &func(*opt);
 
               /* Change the cell to be a return. */
               return
+              boost::optional<cell::cell>
               {
                 cell::return_statement
                 { { func, { func.data.definition.return_type.definition } } }

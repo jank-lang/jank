@@ -76,7 +76,7 @@ namespace jank
               auto type
               (
                 environment::builtin::type::normalize
-                (type_def.value().first.data, *scope)
+                (type_def->first.data, *scope)
               );
               std::tie(type, it) = type::generic::apply_genericity
               (std::move(type), it, l.data.end(), scope);

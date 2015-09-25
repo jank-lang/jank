@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 #include <cstdint>
-#include <experimental/optional>
+#include <boost/optional.hpp>
 
 #include <jank/translate/cell/trait.hpp>
 #include <jank/translate/expect/error/type/exception.hpp>
@@ -36,7 +36,7 @@ namespace jank
 
       /* Returns by copy. */
       template <cell::type C, typename Cell>
-      std::experimental::optional<cell::trait::to_type<C>>
+      boost::optional<cell::trait::to_type<C>>
       optional_cast(Cell const &c)
       {
         if(is<C>(c))
