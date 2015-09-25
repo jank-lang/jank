@@ -4,6 +4,8 @@ allow keywords?
 
 static analysis on travis
 
+separate interpret binary and read AST
+
 literal_value has list
   should it be stored elsewhere?
 
