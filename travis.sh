@@ -20,7 +20,7 @@ dir=build_release$analyze_suffix
 mkdir $dir ; cd $dir
 $scan_build cmake .. -DCMAKE_BUILD_TYPE=RELEASE
 $scan_build make -j2
-$scan_build make jank-test
+$scan_build make test
 cd ..
 
 # Debug build
@@ -28,4 +28,4 @@ dir=build_debug$analyze_suffix
 mkdir $dir ; cd $dir
 $scan_build cmake .. -DCMAKE_BUILD_TYPE=DEBUG
 $scan_build make -j2
-$scan_build make jank-test
+$scan_build make test
