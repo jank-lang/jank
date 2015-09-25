@@ -47,6 +47,10 @@ int main()
   (std::make_shared<jank::interpret::environment::scope>());
   jank::interpret::plugin::apply(translate_scope, interpret_scope);
 
+  /* TODO: Keep track of body; add a translate overload that takes
+   * an existing body and adds more. */
+  /* TODO: Interpret only the last expression. */
+  /* TODO: Show, without printing, the value of the last expression. */
   while(true)
   {
     auto const input(read());
