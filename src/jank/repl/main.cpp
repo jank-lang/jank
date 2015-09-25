@@ -43,6 +43,13 @@ int main()
   jank::translate::environment::builtin::type::add_list(*translate_scope);
   jank::translate::plugin::apply(translate_scope);
 
+  jank::translate::cell::function_body translate_body
+  { {
+    {},
+    jank::translate::environment::builtin::type::null(*translate_scope),
+    translate_scope
+  } };
+
   auto const interpret_scope
   (std::make_shared<jank::interpret::environment::scope>());
   jank::interpret::plugin::apply(translate_scope, interpret_scope);
@@ -60,26 +67,24 @@ int main()
     auto const parsed(jank::parse::parse(input));
     auto const parsed_body
     (jank::parse::expect::type<jank::parse::cell::type::list>(parsed));
-    auto const translated
+
+    /* Keep adding more and more to the body. */
+    translate_body = jank::translate::translate
     (
-      jank::translate::translate
+      jtl::it::make_range
       (
-        jtl::it::make_range
-        (
-          std::next(parsed_body.data.begin()),
-          parsed_body.data.end()
-        ),
-        translate_scope,
-        { /* The outermost body returns null. */
-          jank::translate::environment::builtin::type::null(*translate_scope)
-        }
-      )
+        std::next(parsed_body.data.begin()),
+        parsed_body.data.end()
+      ),
+      translate_scope,
+      translate_body
     );
 
+    /* TODO: Only interpet the last item. */
     jank::interpret::interpret
     (
       interpret_scope,
-      translated
+      translate_body
     );
   }
 
