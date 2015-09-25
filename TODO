@@ -4,8 +4,6 @@ allow keywords?
 
 static analysis on travis
 
-optional isn't available on osx
-
 literal_value has list
   should it be stored elsewhere?
 
