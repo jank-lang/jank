@@ -235,6 +235,14 @@ namespace jank
         return os;
       }
 
+      static std::ostream& operator <<
+      (std::ostream &os, do_statement::type const &c)
+      {
+        os << "( " << trait::to_string<type::do_statement>() << " "
+           << "( body " << c.body << ") ) ";
+        return os;
+      }
+
       std::ostream& operator <<(std::ostream &os, cell const &c)
       {
         switch(trait::to_enum(c))
@@ -285,7 +293,7 @@ namespace jank
             os << boost::get<if_statement>(c).data;
             break;
           case type::do_statement:
-            //os << boost::get<do_statement>(c).data;
+            os << boost::get<do_statement>(c).data;
             break;
           default:
             os << "??? ";
