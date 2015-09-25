@@ -47,7 +47,7 @@ include_directories(
 )
 
 add_library(
-  ${PROJECT_NAME}_static STATIC
+  ${PROJECT_NAME} STATIC
   src/jank/parse/parse.cpp
   src/jank/parse/cell/stream.cpp
 
@@ -141,171 +141,171 @@ add_library(
 )
 
 target_link_libraries(
-  ${PROJECT_NAME}_static
+  ${PROJECT_NAME}
   ${CMAKE_THREAD_LIBS_INIT}
   ${Boost_LIBRARIES}
 )
 
-add_executable(${PROJECT_NAME} src/main.cpp)
+add_executable(${PROJECT_NAME}-translate src/jank/translate/main.cpp)
 
 target_link_libraries(
-  ${PROJECT_NAME}
+  ${PROJECT_NAME}-translate
   ${CMAKE_THREAD_LIBS_INIT}
-  ${PROJECT_NAME}_static
+  ${PROJECT_NAME}
   ${Boost_LIBRARIES}
 )
 
 # Enable warnings
 set_property(
-  TARGET ${PROJECT_NAME} ${PROJECT_NAME}_static
+  TARGET ${PROJECT_NAME}-translate ${PROJECT_NAME}
   PROPERTY COMPILE_FLAGS "-Wall -Wextra -Werror -pedantic")
 
 # Testing
 add_library(
-  ${PROJECT_NAME}_test_common_static STATIC
+  ${PROJECT_NAME}-test-common STATIC
   test/src/cpp/common/interpret.cpp
   test/src/cpp/common/translate.cpp
 )
 
 set(
-  ${PROJECT_NAME}_test_libs
+  ${PROJECT_NAME}-test-libs
   ${CMAKE_THREAD_LIBS_INIT}
-  ${PROJECT_NAME}_test_common_static
-  ${PROJECT_NAME}_static
+  ${PROJECT_NAME}-test-common
+  ${PROJECT_NAME}
   ${Boost_LIBRARIES}
 )
 
-add_executable(${PROJECT_NAME}_parse_test test/src/cpp/parse/main.cpp)
-target_link_libraries(${PROJECT_NAME}_parse_test ${${PROJECT_NAME}_test_libs})
+add_executable(${PROJECT_NAME}-parse-test test/src/cpp/parse/main.cpp)
+target_link_libraries(${PROJECT_NAME}-parse-test ${${PROJECT_NAME}-test-libs})
 
 add_executable(
-  ${PROJECT_NAME}_translate_function_test
+  ${PROJECT_NAME}-translate-function-test
   test/src/cpp/translate/function/main.cpp
 )
 target_link_libraries(
-  ${PROJECT_NAME}_translate_function_test
-  ${${PROJECT_NAME}_test_libs}
+  ${PROJECT_NAME}-translate-function-test
+  ${${PROJECT_NAME}-test-libs}
 )
 
 add_executable(
-  ${PROJECT_NAME}_translate_binding_test
+  ${PROJECT_NAME}-translate-binding-test
   test/src/cpp/translate/binding/main.cpp
 )
 target_link_libraries(
-  ${PROJECT_NAME}_translate_binding_test
-  ${${PROJECT_NAME}_test_libs}
+  ${PROJECT_NAME}-translate-binding-test
+  ${${PROJECT_NAME}-test-libs}
 )
 
 add_executable(
-  ${PROJECT_NAME}_translate_plugin_test
+  ${PROJECT_NAME}-translate-plugin-test
   test/src/cpp/translate/plugin/main.cpp
 )
 target_link_libraries(
-  ${PROJECT_NAME}_translate_plugin_test
-  ${${PROJECT_NAME}_test_libs}
+  ${PROJECT_NAME}-translate-plugin-test
+  ${${PROJECT_NAME}-test-libs}
 )
 
 add_executable(
-  ${PROJECT_NAME}_translate_if_test
+  ${PROJECT_NAME}-translate-if-test
   test/src/cpp/translate/if/main.cpp
 )
 target_link_libraries(
-  ${PROJECT_NAME}_translate_if_test
-  ${${PROJECT_NAME}_test_libs}
+  ${PROJECT_NAME}-translate-if-test
+  ${${PROJECT_NAME}-test-libs}
 )
 
 add_executable(
-  ${PROJECT_NAME}_translate_do_test
+  ${PROJECT_NAME}-translate-do-test
   test/src/cpp/translate/do/main.cpp
 )
 target_link_libraries(
-  ${PROJECT_NAME}_translate_do_test
-  ${${PROJECT_NAME}_test_libs}
+  ${PROJECT_NAME}-translate-do-test
+  ${${PROJECT_NAME}-test-libs}
 )
 
 add_executable(
-  ${PROJECT_NAME}_translate_lambda_test
+  ${PROJECT_NAME}-translate-lambda-test
   test/src/cpp/translate/lambda/main.cpp
 )
 target_link_libraries(
-  ${PROJECT_NAME}_translate_lambda_test
-  ${${PROJECT_NAME}_test_libs}
+  ${PROJECT_NAME}-translate-lambda-test
+  ${${PROJECT_NAME}-test-libs}
 )
 
 add_executable(
-  ${PROJECT_NAME}_interpret_function_test
+  ${PROJECT_NAME}-interpret-function-test
   test/src/cpp/interpret/function/main.cpp
 )
 target_link_libraries(
-  ${PROJECT_NAME}_interpret_function_test
-  ${${PROJECT_NAME}_test_libs}
+  ${PROJECT_NAME}-interpret-function-test
+  ${${PROJECT_NAME}-test-libs}
 )
 
 add_executable(
-  ${PROJECT_NAME}_interpret_binding_test
+  ${PROJECT_NAME}-interpret-binding-test
   test/src/cpp/interpret/binding/main.cpp
 )
 target_link_libraries(
-  ${PROJECT_NAME}_interpret_binding_test
-  ${${PROJECT_NAME}_test_libs}
+  ${PROJECT_NAME}-interpret-binding-test
+  ${${PROJECT_NAME}-test-libs}
 )
 
 add_executable(
-  ${PROJECT_NAME}_interpret_if_test
+  ${PROJECT_NAME}-interpret-if-test
   test/src/cpp/interpret/if/main.cpp
 )
 target_link_libraries(
-  ${PROJECT_NAME}_interpret_if_test
-  ${${PROJECT_NAME}_test_libs}
+  ${PROJECT_NAME}-interpret-if-test
+  ${${PROJECT_NAME}-test-libs}
 )
 
 add_executable(
-  ${PROJECT_NAME}_interpret_do_test
+  ${PROJECT_NAME}-interpret-do-test
   test/src/cpp/interpret/do/main.cpp
 )
 target_link_libraries(
-  ${PROJECT_NAME}_interpret_do_test
-  ${${PROJECT_NAME}_test_libs}
+  ${PROJECT_NAME}-interpret-do-test
+  ${${PROJECT_NAME}-test-libs}
 )
 
 add_executable(
-  ${PROJECT_NAME}_interpret_lambda_test
+  ${PROJECT_NAME}-interpret-lambda-test
   test/src/cpp/interpret/lambda/main.cpp
 )
 target_link_libraries(
-  ${PROJECT_NAME}_interpret_lambda_test
-  ${${PROJECT_NAME}_test_libs}
+  ${PROJECT_NAME}-interpret-lambda-test
+  ${${PROJECT_NAME}-test-libs}
 )
 
 add_custom_target(
-  ${PROJECT_NAME}_test
-  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_parse_test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_function_test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_binding_test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_plugin_test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_if_test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_do_test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_translate_lambda_test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_function_test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_binding_test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_if_test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_do_test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_interpret_lambda_test || true
-  DEPENDS ${PROJECT_NAME}_parse_test
-          ${PROJECT_NAME}_translate_function_test
-          ${PROJECT_NAME}_translate_binding_test
-          ${PROJECT_NAME}_translate_plugin_test
-          ${PROJECT_NAME}_translate_if_test
-          ${PROJECT_NAME}_translate_do_test
-          ${PROJECT_NAME}_translate_lambda_test
-          ${PROJECT_NAME}_interpret_function_test
-          ${PROJECT_NAME}_interpret_binding_test
-          ${PROJECT_NAME}_interpret_if_test
-          ${PROJECT_NAME}_interpret_do_test
-          ${PROJECT_NAME}_interpret_lambda_test
+  ${PROJECT_NAME}-test
+  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-parse-test || true && echo &&
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-translate-function-test || true && echo &&
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-translate-binding-test || true && echo &&
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-translate-plugin-test || true && echo &&
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-translate-if-test || true && echo &&
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-translate-do-test || true && echo &&
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-translate-lambda-test || true && echo &&
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-interpret-function-test || true && echo &&
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-interpret-binding-test || true && echo &&
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-interpret-if-test || true && echo &&
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-interpret-do-test || true && echo &&
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-interpret-lambda-test || true
+  DEPENDS ${PROJECT_NAME}-parse-test
+          ${PROJECT_NAME}-translate-function-test
+          ${PROJECT_NAME}-translate-binding-test
+          ${PROJECT_NAME}-translate-plugin-test
+          ${PROJECT_NAME}-translate-if-test
+          ${PROJECT_NAME}-translate-do-test
+          ${PROJECT_NAME}-translate-lambda-test
+          ${PROJECT_NAME}-interpret-function-test
+          ${PROJECT_NAME}-interpret-binding-test
+          ${PROJECT_NAME}-interpret-if-test
+          ${PROJECT_NAME}-interpret-do-test
+          ${PROJECT_NAME}-interpret-lambda-test
   WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 )
 
 # Install locally
 set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_LIST_DIR})
-install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+install(TARGETS ${PROJECT_NAME}-translate DESTINATION bin)
