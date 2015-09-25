@@ -176,7 +176,7 @@ set(
 )
 
 # Takes pairs of [test name, test source]
-macro(make_tests)
+function(make_tests)
   set(TEST_NAME)
   set(TEST_NAMES_LIST)
   set(TEST_COMMAND)
@@ -201,7 +201,7 @@ macro(make_tests)
     DEPENDS ${TEST_NAMES_LIST}
     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
   )
-endmacro()
+endfunction()
 
 make_tests(
   ${PROJECT_NAME}-parse-test
