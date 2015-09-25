@@ -29,10 +29,9 @@ namespace jank
     (
       Range const &range,
       std::shared_ptr<environment::scope> const &scope,
-      cell::type_reference return_type
+      cell::function_body translated
     )
     {
-      cell::function_body translated{ { {}, return_type.data, scope } };
       for(auto const &c : range)
       {
         if(parse::expect::is<parse::cell::type::comment>(c))
@@ -118,6 +117,21 @@ namespace jank
       }
 
       return translated;
+    }
+
+    template <typename Range>
+    cell::function_body translate
+    (
+      Range const &range,
+      std::shared_ptr<environment::scope> const &scope,
+      cell::type_reference return_type
+    )
+    {
+      return translate
+      (
+        range, scope,
+        { { {}, return_type.data, scope } }
+      );
     }
   }
 }
