@@ -175,56 +175,53 @@ set(
   ${Boost_LIBRARIES}
 )
 
-macro(make_test name src)
-  add_executable(${name} ${src})
-  target_link_libraries(${name} ${${PROJECT_NAME}-test-libs})
+macro(make_tests)
+  set(TEST_NAME)
+  foreach(ELEMENT ${ARGV})
+    if(TEST_NAME)
+      add_executable(${TEST_NAME} ${ELEMENT})
+      target_link_libraries(${TEST_NAME} ${${PROJECT_NAME}-test-libs})
+      set(TEST_NAME)
+    else()
+      set(TEST_NAME "${ELEMENT}")
+    endif()
+  endforeach()
 endmacro()
 
-make_test(
+make_tests(
   ${PROJECT_NAME}-parse-test
   test/src/cpp/parse/main.cpp
-)
-make_test(
+
   ${PROJECT_NAME}-translate-function-test
   test/src/cpp/translate/function/main.cpp
-)
-make_test(
+
   ${PROJECT_NAME}-translate-binding-test
   test/src/cpp/translate/binding/main.cpp
-)
-make_test(
+
   ${PROJECT_NAME}-translate-plugin-test
   test/src/cpp/translate/plugin/main.cpp
-)
-make_test(
+
   ${PROJECT_NAME}-translate-if-test
   test/src/cpp/translate/if/main.cpp
-)
-make_test(
+
   ${PROJECT_NAME}-translate-do-test
   test/src/cpp/translate/do/main.cpp
-)
-make_test(
+
   ${PROJECT_NAME}-translate-lambda-test
   test/src/cpp/translate/lambda/main.cpp
-)
-make_test(
+
   ${PROJECT_NAME}-interpret-function-test
   test/src/cpp/interpret/function/main.cpp
-)
-make_test(
+
   ${PROJECT_NAME}-interpret-binding-test
   test/src/cpp/interpret/binding/main.cpp
-)
-make_test(
+
   ${PROJECT_NAME}-interpret-if-test
   test/src/cpp/interpret/if/main.cpp
-)
-make_test(
+
   ${PROJECT_NAME}-interpret-do-test
   test/src/cpp/interpret/do/main.cpp
-)
-make_test(
+
   ${PROJECT_NAME}-interpret-lambda-test
   test/src/cpp/interpret/lambda/main.cpp
 )
