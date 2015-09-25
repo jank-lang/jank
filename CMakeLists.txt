@@ -175,8 +175,11 @@ set(
   ${Boost_LIBRARIES}
 )
 
+# Takes pairs of [test name, test source]
 macro(make_tests)
   set(TEST_NAME)
+  set(TEST_NAMES_LIST)
+  set(TEST_COMMAND)
   foreach(ELEMENT ${ARGV})
     if(TEST_NAME)
       add_executable(${TEST_NAME} ${ELEMENT})
@@ -184,8 +187,20 @@ macro(make_tests)
       set(TEST_NAME)
     else()
       set(TEST_NAME "${ELEMENT}")
+      list(APPEND TEST_NAMES_LIST ${TEST_NAME})
+      list(APPEND
+        TEST_COMMAND
+        ${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME} || true && echo &&
+      )
     endif()
   endforeach()
+
+  add_custom_target(
+    ${PROJECT_NAME}-test
+    COMMAND ${TEST_COMMAND} true
+    DEPENDS ${TEST_NAMES_LIST}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+  )
 endmacro()
 
 make_tests(
@@ -224,35 +239,6 @@ make_tests(
 
   ${PROJECT_NAME}-interpret-lambda-test
   test/src/cpp/interpret/lambda/main.cpp
-)
-
-add_custom_target(
-  ${PROJECT_NAME}-test
-  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-parse-test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-translate-function-test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-translate-binding-test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-translate-plugin-test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-translate-if-test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-translate-do-test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-translate-lambda-test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-interpret-function-test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-interpret-binding-test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-interpret-if-test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-interpret-do-test || true && echo &&
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-interpret-lambda-test || true
-  DEPENDS ${PROJECT_NAME}-parse-test
-          ${PROJECT_NAME}-translate-function-test
-          ${PROJECT_NAME}-translate-binding-test
-          ${PROJECT_NAME}-translate-plugin-test
-          ${PROJECT_NAME}-translate-if-test
-          ${PROJECT_NAME}-translate-do-test
-          ${PROJECT_NAME}-translate-lambda-test
-          ${PROJECT_NAME}-interpret-function-test
-          ${PROJECT_NAME}-interpret-binding-test
-          ${PROJECT_NAME}-interpret-if-test
-          ${PROJECT_NAME}-interpret-do-test
-          ${PROJECT_NAME}-interpret-lambda-test
-  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 )
 
 # Install locally
