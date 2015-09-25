@@ -186,7 +186,7 @@ function(make_tests)
       target_link_libraries(${TEST_NAME} ${${PROJECT_NAME}-test-libs})
       set(TEST_NAME)
     else()
-      set(TEST_NAME "${ELEMENT}")
+      set(TEST_NAME "${PROJECT_NAME}-${ELEMENT}")
       list(APPEND TEST_NAMES_LIST ${TEST_NAME})
       list(APPEND
         TEST_COMMAND
@@ -204,40 +204,40 @@ function(make_tests)
 endfunction()
 
 make_tests(
-  ${PROJECT_NAME}-parse-test
+  parse-test
   test/src/cpp/parse/main.cpp
 
-  ${PROJECT_NAME}-translate-function-test
+  translate-function-test
   test/src/cpp/translate/function/main.cpp
 
-  ${PROJECT_NAME}-translate-binding-test
+  translate-binding-test
   test/src/cpp/translate/binding/main.cpp
 
-  ${PROJECT_NAME}-translate-plugin-test
+  translate-plugin-test
   test/src/cpp/translate/plugin/main.cpp
 
-  ${PROJECT_NAME}-translate-if-test
+  translate-if-test
   test/src/cpp/translate/if/main.cpp
 
-  ${PROJECT_NAME}-translate-do-test
+  translate-do-test
   test/src/cpp/translate/do/main.cpp
 
-  ${PROJECT_NAME}-translate-lambda-test
+  translate-lambda-test
   test/src/cpp/translate/lambda/main.cpp
 
-  ${PROJECT_NAME}-interpret-function-test
+  interpret-function-test
   test/src/cpp/interpret/function/main.cpp
 
-  ${PROJECT_NAME}-interpret-binding-test
+  interpret-binding-test
   test/src/cpp/interpret/binding/main.cpp
 
-  ${PROJECT_NAME}-interpret-if-test
+  interpret-if-test
   test/src/cpp/interpret/if/main.cpp
 
-  ${PROJECT_NAME}-interpret-do-test
+  interpret-do-test
   test/src/cpp/interpret/do/main.cpp
 
-  ${PROJECT_NAME}-interpret-lambda-test
+  interpret-lambda-test
   test/src/cpp/interpret/lambda/main.cpp
 )
 
