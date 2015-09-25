@@ -155,6 +155,15 @@ target_link_libraries(
   ${Boost_LIBRARIES}
 )
 
+add_executable(${PROJECT_NAME}-repl src/jank/repl/main.cpp)
+
+target_link_libraries(
+  ${PROJECT_NAME}-repl
+  ${CMAKE_THREAD_LIBS_INIT}
+  ${PROJECT_NAME}
+  ${Boost_LIBRARIES}
+)
+
 # Enable warnings
 set_property(
   TARGET ${PROJECT_NAME}-translate ${PROJECT_NAME}
