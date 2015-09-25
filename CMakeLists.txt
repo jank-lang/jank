@@ -175,106 +175,58 @@ set(
   ${Boost_LIBRARIES}
 )
 
-add_executable(${PROJECT_NAME}-parse-test test/src/cpp/parse/main.cpp)
-target_link_libraries(${PROJECT_NAME}-parse-test ${${PROJECT_NAME}-test-libs})
+macro(make_test name src)
+  add_executable(${name} ${src})
+  target_link_libraries(${name} ${${PROJECT_NAME}-test-libs})
+endmacro()
 
-add_executable(
+make_test(
+  ${PROJECT_NAME}-parse-test
+  test/src/cpp/parse/main.cpp
+)
+make_test(
   ${PROJECT_NAME}-translate-function-test
   test/src/cpp/translate/function/main.cpp
 )
-target_link_libraries(
-  ${PROJECT_NAME}-translate-function-test
-  ${${PROJECT_NAME}-test-libs}
-)
-
-add_executable(
+make_test(
   ${PROJECT_NAME}-translate-binding-test
   test/src/cpp/translate/binding/main.cpp
 )
-target_link_libraries(
-  ${PROJECT_NAME}-translate-binding-test
-  ${${PROJECT_NAME}-test-libs}
-)
-
-add_executable(
+make_test(
   ${PROJECT_NAME}-translate-plugin-test
   test/src/cpp/translate/plugin/main.cpp
 )
-target_link_libraries(
-  ${PROJECT_NAME}-translate-plugin-test
-  ${${PROJECT_NAME}-test-libs}
-)
-
-add_executable(
+make_test(
   ${PROJECT_NAME}-translate-if-test
   test/src/cpp/translate/if/main.cpp
 )
-target_link_libraries(
-  ${PROJECT_NAME}-translate-if-test
-  ${${PROJECT_NAME}-test-libs}
-)
-
-add_executable(
+make_test(
   ${PROJECT_NAME}-translate-do-test
   test/src/cpp/translate/do/main.cpp
 )
-target_link_libraries(
-  ${PROJECT_NAME}-translate-do-test
-  ${${PROJECT_NAME}-test-libs}
-)
-
-add_executable(
+make_test(
   ${PROJECT_NAME}-translate-lambda-test
   test/src/cpp/translate/lambda/main.cpp
 )
-target_link_libraries(
-  ${PROJECT_NAME}-translate-lambda-test
-  ${${PROJECT_NAME}-test-libs}
-)
-
-add_executable(
+make_test(
   ${PROJECT_NAME}-interpret-function-test
   test/src/cpp/interpret/function/main.cpp
 )
-target_link_libraries(
-  ${PROJECT_NAME}-interpret-function-test
-  ${${PROJECT_NAME}-test-libs}
-)
-
-add_executable(
+make_test(
   ${PROJECT_NAME}-interpret-binding-test
   test/src/cpp/interpret/binding/main.cpp
 )
-target_link_libraries(
-  ${PROJECT_NAME}-interpret-binding-test
-  ${${PROJECT_NAME}-test-libs}
-)
-
-add_executable(
+make_test(
   ${PROJECT_NAME}-interpret-if-test
   test/src/cpp/interpret/if/main.cpp
 )
-target_link_libraries(
-  ${PROJECT_NAME}-interpret-if-test
-  ${${PROJECT_NAME}-test-libs}
-)
-
-add_executable(
+make_test(
   ${PROJECT_NAME}-interpret-do-test
   test/src/cpp/interpret/do/main.cpp
 )
-target_link_libraries(
-  ${PROJECT_NAME}-interpret-do-test
-  ${${PROJECT_NAME}-test-libs}
-)
-
-add_executable(
+make_test(
   ${PROJECT_NAME}-interpret-lambda-test
   test/src/cpp/interpret/lambda/main.cpp
-)
-target_link_libraries(
-  ${PROJECT_NAME}-interpret-lambda-test
-  ${${PROJECT_NAME}-test-libs}
 )
 
 add_custom_target(
