@@ -19,6 +19,7 @@
 
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/plugin/apply.hpp>
+#include <jank/interpret/cell/stream.hpp>
 
 #include "common/translate.hpp"
 #include "common/interpret.hpp"
@@ -81,11 +82,16 @@ int main()
     );
 
     /* TODO: Only interpet the last item. */
-    jank::interpret::interpret
+    auto const &ret
     (
-      interpret_scope,
-      translate_body
+      jank::interpret::interpret
+      (
+        interpret_scope,
+        translate_body,
+        jank::interpret::consume_style::all
+      )
     );
+    std::cout << ret << std::endl;
   }
 
   std::cout << "bye!" << std::endl;
