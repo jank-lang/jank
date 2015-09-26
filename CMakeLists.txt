@@ -146,23 +146,17 @@ target_link_libraries(
   ${Boost_LIBRARIES}
 )
 
-add_executable(${PROJECT_NAME}-translate src/jank/translate/main.cpp)
-
-target_link_libraries(
-  ${PROJECT_NAME}-translate
+set(${PROJECT_NAME}-libs
   ${CMAKE_THREAD_LIBS_INIT}
   ${PROJECT_NAME}
   ${Boost_LIBRARIES}
 )
+
+add_executable(${PROJECT_NAME}-translate src/jank/translate/main.cpp)
+target_link_libraries(${PROJECT_NAME}-translate ${PROJECT_NAME}-libs)
 
 add_executable(${PROJECT_NAME}-repl src/jank/repl/main.cpp)
-
-target_link_libraries(
-  ${PROJECT_NAME}-repl
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${PROJECT_NAME}
-  ${Boost_LIBRARIES}
-)
+target_link_libraries(${PROJECT_NAME}-repl ${PROJECT_NAME}-libs)
 
 # Enable warnings
 set_property(
