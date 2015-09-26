@@ -84,7 +84,7 @@ int main()
     /* TODO: Only interpet the last item. */
     auto const &ret
     (
-      jank::interpret::interpret
+      jank::interpret::interpret_last
       (
         interpret_scope,
         translate_body,

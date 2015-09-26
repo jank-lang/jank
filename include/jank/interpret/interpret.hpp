@@ -11,6 +11,7 @@ namespace jank
 {
   namespace interpret
   {
+    /* TODO: Move to its own header? */
     /* Says whether or not values from function calls should be returned.
      * By default, any value that isn't from a return statement is ignored.
      * This is used when interpreting a parameter to a function, since the value
