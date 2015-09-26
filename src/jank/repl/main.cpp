@@ -26,7 +26,7 @@
 
 std::string read()
 {
-  std::cout << "> " << std::flush;
+  std::cout << "=> " << std::flush;
 
   std::string input;
   if(!std::getline(std::cin, input))
@@ -91,7 +91,7 @@ int main()
         jank::interpret::consume_style::all
       )
     );
-    std::cout << ret << std::endl;
+    std::cout << ":> " << ret << std::endl;
   }
 
   std::cout << "bye!" << std::endl;
