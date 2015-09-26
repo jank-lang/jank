@@ -11,7 +11,7 @@
 (defparameter *ajax-processor*
   (make-instance 'ajax-processor :server-uri "/repl-api"))
 
-(defun-ajax echo (data) (*ajax-processor* :callback-data :response-text)
+(defun-ajax submit (data) (*ajax-processor* :callback-data :response-text)
   (concatenate 'string "echo: " data))
 
 (define-easy-handler (main-page :uri "/") ()
@@ -23,13 +23,19 @@
       (:script :type "text/javascript" "
 function callback(response)
 { alert(response); }
-function do_echo()
-{ smackjack.echo(document.getElementById('name').value, callback); }
+function do_submit(e)
+{
+  if(e.keyCode === 13)
+  { smackjack.submit(document.getElementById('name').value, callback); }
+  else
+  { return false; }
+}
 "))
      (:body
-      (:p "Please enter your name: "
-          (:input :id "name" :type "text"))
-      (:p (:a :href (ps-inline (do_echo)) "Say Hi!"))))))
+       (:p "> "
+        (:input :id "name"
+         :type "text"
+         :onkeypress (ps-inline (do_submit event))))))))
 
 (defparameter *server*
   (start (make-instance 'easy-acceptor :address "localhost" :port 8080)))
