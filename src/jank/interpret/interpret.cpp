@@ -9,7 +9,6 @@
 #include <jank/interpret/detail/do_statement.hpp>
 #include <jank/interpret/expect/type.hpp>
 
-/* TODO: print with no newline. */
 namespace jank
 {
   namespace interpret
@@ -121,5 +120,20 @@ namespace jank
       translate::cell::function_body const &root
     )
     { return interpret(scope, root, consume_style::normal); }
+
+    cell::cell interpret_last
+    (
+      std::shared_ptr<environment::scope> const &scope,
+      translate::cell::function_body root,
+      consume_style const consume
+    )
+    {
+      if(root.data.cells.size())
+      {
+        root.data.cells.erase
+        (root.data.cells.begin(), std::next(root.data.cells.end(), -1));
+      }
+      return interpret(scope, root, consume);
+    }
   }
 }

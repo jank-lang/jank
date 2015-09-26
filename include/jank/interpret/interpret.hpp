@@ -21,6 +21,7 @@ namespace jank
       greedy,
       all
     };
+
     inline bool operator >(consume_style const lhs, consume_style const rhs)
     {
       using underlying = std::underlying_type_t<consume_style>;
@@ -33,10 +34,19 @@ namespace jank
       translate::cell::function_body const &root,
       consume_style const consume
     );
+
     cell::cell interpret
     (
       std::shared_ptr<environment::scope> const &env,
       translate::cell::function_body const &root
+    );
+
+    /* Used in the REPL. */
+    cell::cell interpret_last
+    (
+      std::shared_ptr<environment::scope> const &scope,
+      translate::cell::function_body root,
+      consume_style const consume
     );
   }
 }
