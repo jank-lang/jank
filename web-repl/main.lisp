@@ -11,7 +11,7 @@
 (defparameter *ajax-processor*
   (make-instance 'ajax-processor :server-uri "/repl-api"))
 
-(defun-ajax echo (data) (*ajax-processor*)
+(defun-ajax echo (data) (*ajax-processor* :callback-data :response-text)
   (concatenate 'string "echo: " data))
 
 (define-easy-handler (repl :uri "/repl") ()
@@ -19,6 +19,23 @@
     (:html
      (:body
       (:h2 "Jank REPL")))))
+
+(define-easy-handler (main-page :uri "/") ()
+  (with-html-output-to-string (*standard-output* nil :prologue t)
+    (:html :xmlns "http://www.w3.org/1999/xhtml"
+     (:head
+      (:title "Jank REPL")
+      (princ (generate-prologue *ajax-processor*))
+      (:script :type "text/javascript" "
+function callback(response)
+{ alert(response); }
+function do_echo()
+{ smackjack.echo(document.getElementById('name').value, callback); }
+"))
+     (:body
+      (:p "Please enter your name: "
+          (:input :id "name" :type "text"))
+      (:p (:a :href "javascript:do_echo()" "Say Hi!"))))))
 
 (defparameter *server*
   (start (make-instance 'easy-acceptor :address "localhost" :port 8080)))
