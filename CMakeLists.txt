@@ -153,10 +153,10 @@ set(${PROJECT_NAME}-libs
 )
 
 add_executable(${PROJECT_NAME}-translate src/jank/translate/main.cpp)
-target_link_libraries(${PROJECT_NAME}-translate ${PROJECT_NAME}-libs)
+target_link_libraries(${PROJECT_NAME}-translate ${${PROJECT_NAME}-libs})
 
 add_executable(${PROJECT_NAME}-repl src/jank/repl/main.cpp)
-target_link_libraries(${PROJECT_NAME}-repl ${PROJECT_NAME}-libs)
+target_link_libraries(${PROJECT_NAME}-repl ${${PROJECT_NAME}-libs})
 
 # Enable warnings
 set_property(
