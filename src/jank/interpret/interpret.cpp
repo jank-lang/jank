@@ -30,7 +30,7 @@ namespace jank
             auto const &cell
             (translate::expect::type<translate::cell::type::function_call>(c));
             auto const &ret(detail::function_call(scope, cell));
-            if(consume == consume_style::greedy)
+            if(consume > consume_style::normal)
             { return ret; }
           } break;
 
@@ -42,16 +42,19 @@ namespace jank
               <translate::cell::type::native_function_call>(c)
             );
             auto const &ret(detail::native_function_call(scope, cell));
-            if(consume == consume_style::greedy)
+            if(consume > consume_style::normal)
             { return ret; }
           } break;
 
           case translate::cell::type::indirect_function_call:
           {
             auto const &cell
-            (translate::expect::type<translate::cell::type::indirect_function_call>(c));
+            (
+              translate::expect::type
+              <translate::cell::type::indirect_function_call>(c)
+            );
             auto const &ret(detail::indirect_function_call(scope, cell));
-            if(consume == consume_style::greedy)
+            if(consume > consume_style::normal)
             { return ret; }
           } break;
 
@@ -70,7 +73,11 @@ namespace jank
             auto const &cell
             (translate::expect::type<translate::cell::type::if_statement>(c));
             auto const ret(detail::if_statement(scope, cell));
-            if(!expect::is<cell::type::null>(ret))
+            if
+            (
+              consume == consume_style::all ||
+              !expect::is<cell::type::null>(ret)
+            )
             { return ret; }
           } break;
 
@@ -79,7 +86,11 @@ namespace jank
             auto const &cell
             (translate::expect::type<translate::cell::type::do_statement>(c));
             auto const ret(detail::do_statement(scope, cell));
-            if(!expect::is<cell::type::null>(ret))
+            if
+            (
+              consume == consume_style::all ||
+              !expect::is<cell::type::null>(ret)
+            )
             { return ret; }
           } break;
 
@@ -91,7 +102,9 @@ namespace jank
               translate::expect::type
               <translate::cell::type::binding_definition>(c)
             );
-            detail::binding_definition(scope, cell);
+            auto const ret(detail::binding_definition(scope, cell));
+            if(consume == consume_style::all)
+            { return ret; }
           } break;
 
           default:

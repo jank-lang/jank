@@ -21,6 +21,11 @@ namespace jank
       greedy,
       all
     };
+    inline bool operator >(consume_style const lhs, consume_style const rhs)
+    {
+      using underlying = std::underlying_type_t<consume_style>;
+      return static_cast<underlying>(lhs) > static_cast<underlying>(rhs);
+    }
 
     cell::cell interpret
     (
