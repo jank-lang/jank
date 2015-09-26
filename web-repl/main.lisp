@@ -22,7 +22,12 @@
       (princ (generate-prologue *ajax-processor*))
       (:script :type "text/javascript" "
 function callback(response)
-{ alert(response); }
+{
+  var div = document.getElementById('log');
+  var content = document.createTextNode(response);
+  div.appendChild(content);
+  div.appendChild(document.createElement('br'));
+}
 function do_submit(e)
 {
   if(e.keyCode === 13)
@@ -32,6 +37,7 @@ function do_submit(e)
 }
 "))
      (:body
+       (:div :id "log")
        (:p "> "
         (:input :id "name"
          :type "text"
