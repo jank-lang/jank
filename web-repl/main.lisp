@@ -27,11 +27,13 @@ function callback(response)
   var content = document.createTextNode(response);
   div.appendChild(content);
   div.appendChild(document.createElement('br'));
+
+  document.getElementById('code').value = '';
 }
 function do_submit(e)
 {
   if(e.keyCode === 13)
-  { smackjack.submit(document.getElementById('name').value, callback); }
+  { smackjack.submit(document.getElementById('code').value, callback); }
   else
   { return false; }
 }
@@ -39,7 +41,7 @@ function do_submit(e)
      (:body
        (:div :id "log")
        (:p "> "
-        (:input :id "name"
+        (:input :id "code"
          :type "text"
          :onkeypress (ps-inline (do_submit event))))))))
 
