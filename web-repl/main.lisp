@@ -14,15 +14,9 @@
 (defun-ajax echo (data) (*ajax-processor* :callback-data :response-text)
   (concatenate 'string "echo: " data))
 
-(define-easy-handler (repl :uri "/repl") ()
-  (with-html-output-to-string (s)
-    (:html
-     (:body
-      (:h2 "Jank REPL")))))
-
 (define-easy-handler (main-page :uri "/") ()
   (with-html-output-to-string (*standard-output* nil :prologue t)
-    (:html :xmlns "http://www.w3.org/1999/xhtml"
+    (:html
      (:head
       (:title "Jank REPL")
       (princ (generate-prologue *ajax-processor*))
@@ -35,7 +29,7 @@ function do_echo()
      (:body
       (:p "Please enter your name: "
           (:input :id "name" :type "text"))
-      (:p (:a :href "javascript:do_echo()" "Say Hi!"))))))
+      (:p (:a :href (ps-inline (do_echo)) "Say Hi!"))))))
 
 (defparameter *server*
   (start (make-instance 'easy-acceptor :address "localhost" :port 8080)))
