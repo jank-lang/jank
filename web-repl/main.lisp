@@ -1,5 +1,4 @@
-(dolist (pack '(:hunchentoot :cl-who :parenscript :smackjack))
-  (ql:quickload pack))
+(ql:quickload '(:hunchentoot :cl-who :parenscript :smackjack))
 
 (defpackage :jank-repl
   (:use :cl :hunchentoot :cl-who :parenscript :smackjack))
