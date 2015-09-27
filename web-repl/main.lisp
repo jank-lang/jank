@@ -24,8 +24,7 @@
 function callback(response)
 {
   var div = document.getElementById('log');
-  var content = document.createTextNode(response);
-  div.appendChild(content);
+  div.appendChild(document.createTextNode(response));
   div.appendChild(document.createElement('br'));
 
   document.getElementById('code').value = '';
