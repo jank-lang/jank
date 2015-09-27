@@ -1,8 +1,14 @@
-(ql:quickload '(:hunchentoot :cl-who :parenscript :smackjack))
-
 (defpackage :jank-repl
-  (:use :cl :hunchentoot :cl-who :parenscript :smackjack))
+  (:use :cl :hunchentoot :cl-who :parenscript :smackjack)
+  (:export :start-server))
 (in-package :jank-repl)
+
+(defparameter *server* nil)
+
+(defun start-server ()
+  (when *server*
+    (stop *server*))
+  (start (make-instance 'easy-acceptor :address "localhost" :port 8080)))
 
 ; Allow cl-who and parenscript to work together
 (setf *js-string-delimiter* #\")
@@ -59,8 +65,6 @@
         (:input :id "code" :type "text"
          :onkeypress (ps-inline (on-key-press event))))))))
 
-(defparameter *server*
-  (start (make-instance 'easy-acceptor :address "localhost" :port 8080)))
-
 (setq *dispatch-table* (list 'dispatch-easy-handlers
                              (create-ajax-dispatcher *ajax-processor*)))
+
