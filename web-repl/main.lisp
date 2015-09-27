@@ -10,9 +10,22 @@
 (defparameter *ajax-processor*
   (make-instance 'ajax-processor :server-uri "/repl-api"))
 
+(defun program-stream (program &optional args)
+  (let ((process (sb-ext:run-program program args
+                                     :input :stream
+                                     :output :stream
+                                     :wait nil
+                                     :search t)))
+    (when process
+      (make-two-way-stream (sb-ext:process-output process)
+                           (sb-ext:process-input process)))))
+
+(defparameter *process-stream* (program-stream "../build_debug/jank-repl"))
+
 (defun-ajax submit (data) (*ajax-processor* :callback-data :response-text)
-  ; TODO: Write into jank process stream, return its stdout
-  (concatenate 'string "echo: " data))
+  (format *process-stream* "~a~%" data)
+  (finish-output *process-stream*)
+  (read-line *process-stream*))
 
 (define-easy-handler (main-page :uri "/") ()
   (with-html-output-to-string (*standard-output* nil :prologue t)
@@ -29,7 +42,6 @@
                         (+ (@ div inner-h-t-m-l)
                            (ps-html response (:br))))
                   (setf (@ code value) "")))
-
               (defun on-key-press (event)
                 (cond
                   ((= (@ event key-code) 13)
