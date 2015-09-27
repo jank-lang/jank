@@ -12,8 +12,8 @@
   (make-instance 'ajax-processor :server-uri "/repl-api"))
 
 (defun-ajax submit (data) (*ajax-processor* :callback-data :response-text)
+  ; TODO: Write into jank process stream, return its stdout
   (concatenate 'string "echo: " data))
-
 
 (define-easy-handler (main-page :uri "/") ()
   (with-html-output-to-string (*standard-output* nil :prologue t)
@@ -35,7 +35,9 @@
                 (cond
                   ((= (@ event key-code) 13)
                    (chain smackjack
-                          (submit (@ (chain document (get-element-by-id "code")) value)
+                          (submit (@ (chain document
+                                            (get-element-by-id "code"))
+                                     value)
                                   callback)))
                   (t (return false))))))))
      (:body
