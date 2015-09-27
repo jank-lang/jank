@@ -1,6 +1,6 @@
 (defpackage :jank-repl
   (:use :cl :hunchentoot :cl-who :parenscript :smackjack)
-  (:export :start-server))
+  (:export :start-server :stop-server))
 (in-package :jank-repl)
 
 (defparameter *server* nil)
@@ -71,4 +71,3 @@
 
 (setq *dispatch-table* (list 'dispatch-easy-handlers
                              (create-ajax-dispatcher *ajax-processor*)))
-
