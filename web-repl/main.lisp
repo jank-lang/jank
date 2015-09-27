@@ -28,25 +28,21 @@
                       (code (chain document (get-element-by-id "code"))))
                   (setf (@ div inner-h-t-m-l)
                         (+ (@ div inner-h-t-m-l)
-                           (ps-html
-                             response
-                             (:br))))
-                  (setf (@ code value) ""))))))
-      (:script :type "text/javascript" "
-function do_submit(e)
-{
-  if(e.keyCode === 13)
-  { smackjack.submit(document.getElementById('code').value, callback); }
-  else
-  { return false; }
-}
-"))
+                           (ps-html response (:br))))
+                  (setf (@ code value) "")))
+
+              (defun on-key-press (event)
+                (cond
+                  ((= (@ event key-code) 13)
+                   (chain smackjack
+                          (submit (@ (chain document (get-element-by-id "code")) value)
+                                  callback)))
+                  (t (return false))))))))
      (:body
        (:div :id "log")
        (:p "> "
-        (:input :id "code"
-         :type "text"
-         :onkeypress (ps-inline (do_submit event))))))))
+        (:input :id "code" :type "text"
+         :onkeypress (ps-inline (on-key-press event))))))))
 
 (defparameter *server*
   (start (make-instance 'easy-acceptor :address "localhost" :port 8080)))
