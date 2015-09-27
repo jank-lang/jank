@@ -45,11 +45,13 @@
               (defun on-key-press (event)
                 (cond
                   ((= (@ event key-code) 13)
-                   (chain smackjack
-                          (submit (@ (chain document
-                                            (get-element-by-id "code"))
-                                     value)
-                                  callback)))
+                    (let ((div (chain document (get-element-by-id "log")))
+                          (code (chain document
+                                       (get-element-by-id "code") value)))
+                      (setf (@ div inner-h-t-m-l)
+                            (+ (@ div inner-h-t-m-l)
+                               (ps-html "> " code (:br)))))
+                    (chain smackjack (submit code callback)))
                   (t (return false))))))))
      (:body
        (:div :id "log")
