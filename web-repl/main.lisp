@@ -24,21 +24,15 @@
       (:script :type "text/javascript"
        (str (ps
               (defun callback (response)
-                (let ((div (chain document (get-element-by-id "log"))))
+                (let ((div (chain document (get-element-by-id "log")))
+                      (code (chain document (get-element-by-id "code"))))
                   (setf (@ div inner-h-t-m-l)
                         (+ (@ div inner-h-t-m-l)
                            (ps-html
                              response
-                             (:br)))))))))
+                             (:br))))
+                  (setf (@ code value) ""))))))
       (:script :type "text/javascript" "
-//function callback(response)
-//{
-//  var div = document.getElementById('log');
-//  div.appendChild(document.createTextNode(response));
-//  div.appendChild(document.createElement('br'));
-//
-//  document.getElementById('code').value = '';
-//}
 function do_submit(e)
 {
   if(e.keyCode === 13)
