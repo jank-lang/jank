@@ -5,9 +5,13 @@
 
 (defparameter *server* nil)
 
-(defun start-server ()
+(defun stop-server ()
   (when *server*
-    (stop *server*))
+    (stop *server*)
+    (setq *server* nil)))
+
+(defun start-server ()
+  (stop-server)
   (start (make-instance 'easy-acceptor :address "localhost" :port 8080)))
 
 ; Allow cl-who and parenscript to work together
