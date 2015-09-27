@@ -14,21 +14,31 @@
 (defun-ajax submit (data) (*ajax-processor* :callback-data :response-text)
   (concatenate 'string "echo: " data))
 
+
 (define-easy-handler (main-page :uri "/") ()
   (with-html-output-to-string (*standard-output* nil :prologue t)
     (:html
      (:head
       (:title "Jank REPL")
       (princ (generate-prologue *ajax-processor*))
+      (:script :type "text/javascript"
+       (str (ps
+              (defun callback (response)
+                (let ((div (chain document (get-element-by-id "log"))))
+                  (setf (@ div inner-h-t-m-l)
+                        (+ (@ div inner-h-t-m-l)
+                           (ps-html
+                             response
+                             (:br)))))))))
       (:script :type "text/javascript" "
-function callback(response)
-{
-  var div = document.getElementById('log');
-  div.appendChild(document.createTextNode(response));
-  div.appendChild(document.createElement('br'));
-
-  document.getElementById('code').value = '';
-}
+//function callback(response)
+//{
+//  var div = document.getElementById('log');
+//  div.appendChild(document.createTextNode(response));
+//  div.appendChild(document.createElement('br'));
+//
+//  document.getElementById('code').value = '';
+//}
 function do_submit(e)
 {
   if(e.keyCode === 13)
