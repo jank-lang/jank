@@ -44,6 +44,9 @@ custom types are dynamically allocated by default
 
 allow comments anywhere in forms
 
+list destructuring
+  as macro params
+
 operators
   !=
   logical or, and, not, etc
