@@ -13,6 +13,9 @@ emacs major mode
 constraints on return types
   (ƒ foo () (Ɐ) where (^number? deduced-type)
     42)
+  Allow dependent types there
+  (ƒ foo () (:T-ret) where (^number? deduced-type)
+    42)
 
 literal_value has list
   should it be stored elsewhere?
