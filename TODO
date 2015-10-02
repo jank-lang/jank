@@ -23,6 +23,7 @@ tests for
 fix vim highlighting of falsey
 
 recursing in auto-typed functions is broken
+  only an issue when recursing as a param to another function
   skip it and find the next returning body
 
 add a function to builtin which adds all
