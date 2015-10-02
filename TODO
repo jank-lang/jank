@@ -8,6 +8,8 @@ separate interpret binary and read AST
 
 serialize AST strings with quotes
 
+emacs major mode
+
 constraints on return types
   (ƒ foo () (Ɐ) where (^number? deduced-type)
     42)
