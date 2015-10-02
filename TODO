@@ -6,8 +6,6 @@ static analysis on travis
 
 separate interpret binary and read AST
 
-serialize AST strings with quotes
-
 emacs major mode
 
 constraints on return types
