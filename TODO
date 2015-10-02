@@ -6,6 +6,8 @@ static analysis on travis
 
 separate interpret binary and read AST
 
+generic functions
+
 emacs major mode
 
 constraints on return types
@@ -45,6 +47,9 @@ custom types are dynamically allocated by default
   reference counted a la shared_ptr
   copied on mutation
   explicit copy function as well
+
+codegen from the AST s-expression
+  C++14 or LLVM IR?
 
 allow comments anywhere in forms
 
