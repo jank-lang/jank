@@ -11,10 +11,8 @@ serialize AST strings with quotes
 emacs major mode
 
 constraints on return types
-  (ƒ foo () (Ɐ) where (^number? deduced-type)
-    42)
   Allow dependent types there
-  (ƒ foo () (:T-ret) where (^number? deduced-type)
+  (ƒ foo () (:T-ret) where (^number? : (T-ret))
     42)
 
 literal_value has list
