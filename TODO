@@ -6,6 +6,8 @@ static analysis on travis
 
 separate interpret binary and read AST
 
+serialize AST strings with quotes
+
 constraints on return types
   (ƒ foo () (Ɐ) where (^number? deduced-type)
     42)
