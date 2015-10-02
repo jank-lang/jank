@@ -35,10 +35,6 @@ REPL
   irc bot for #jank
   tests for repl
 
-clean up the testing process in cmakelists
-
-add color to test failures
-
 closures
   explicitly copy from scope? this may be messy
 
