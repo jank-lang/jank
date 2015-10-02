@@ -88,8 +88,8 @@ namespace jank
           case literal_type::string:
             os << parse::cell::trait::to_string<parse::cell::type::string>()
                << " ) "
-               << "( value " << boost::get<parse::cell::string>(c).data
-               << " ) ";
+               << "( value \"" << boost::get<parse::cell::string>(c).data
+               << "\" ) ";
             break;
           case literal_type::list:
             /* TODO */
