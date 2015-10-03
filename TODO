@@ -6,7 +6,21 @@ static analysis on travis
 
 separate interpret binary and read AST
 
-generic functions
+remove ^ from macro name
+  define it without, use it with
+
+generic functions as macros
+  old way:
+    (ƒ show : (:T) (o T) ()
+      (print o))
+    (show : (integer) 0)
+    (show 0)
+
+  new way: 
+    (ƒ⊕ show (T Ɐ) (o T) ()
+      (print o))
+    (show : (integer) 0)
+    (show 0)
 
 emacs major mode
 
