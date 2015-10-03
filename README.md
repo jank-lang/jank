@@ -42,6 +42,7 @@ There are a few primitive types which are part of the language.
 (ƒ square (i integer) (Ɐ)
   (* i i))
 ```
+
 Functions are defined via the `function` (or `ƒ`) special identifier and require a `name` identifier, an argument list (which may be empty), and a return type list (which may be empty). Return type lists may also be `(auto)` or `(Ɐ)`, which forces the compiler to deduce the type.
 
 ## Structs
@@ -50,6 +51,7 @@ Functions are defined via the `function` (or `ƒ`) special identifier and requir
   (x float)
   (y float))
 ```
+
 User-defined data types are supported, in the form of structs. Structs may contain any number of members, all of which are public (as in C). Structs may also be generic. Structs may not have member functions. Instead, functions should be designed in a generic manner and may be overloaded/specialized for certain types. See [generics](#generics).
 
 ```lisp
@@ -57,6 +59,7 @@ User-defined data types are supported, in the form of structs. Structs may conta
   (first string "John")
   (last string "Doe"))
 ```
+
 Struct members may be given a default value. If a member doesn't have a default value, one must be provided at the time of initialization; the compiler will make sure no members are uninitialized.
 
 ### Members
@@ -74,6 +77,7 @@ Members of struct are accessed with a `.foo` syntax, where `.foo` is a function 
 ```lisp
 (bind name T value)
 ```
+
 Bindings are defined via the `bind` special identifier and require a `name` identifier, an optional type, and a value. The type may be left out and it will be deduced by the value.
 
 ## Generics
@@ -106,6 +110,7 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 (ƒ show : ((o coord : (real integer))) () ()
   (print "coord: " o))
 ```
+
 #### Struct
 ```lisp
 (struct coord : (:T-x :T-y)
@@ -114,7 +119,7 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 ```
 
 ### Variadics
-Generic functions and types can be variadic, allowing any number of parameters, both type and non-type. To accept arbitrary arguments into a tuple, the tuple must be prefixed with `&`; there may only be one such tuple per argument list.
+Generic functions and types can be variadic, allowing any number of parameters, both type and non-type. To accept arbitrary arguments into a tuple, the tuple must be prefixed with `&`; there may only be one such tuple per argument list. And it must be last.
 
 #### Function
 ```lisp
@@ -151,6 +156,7 @@ Only multi-line comments are supported. Anything within `(;` and `;)` is conside
 (ƒ destruct (o Ɐ) ()
   ...)
 ```
+
 Scope-based resource management ties resource ownership to object lifetimes. Types can take advantage of this by specializing `construct` and `destruct` to perform any custom logic.
 
 To construct an object using a constructor, `new` or `construct` must be called. To construct an object using aggregate initialization, the type of the object can be used as the function; all members which don't have defaults provided in the `struct` definition must be specified in aggregate initialization.
@@ -210,6 +216,7 @@ Constraints can be applied to various definitions, including functions and struc
 (ƒ square : (:T) (i T) (Ɐ) where (^number? : T)
   (* i i))
 ```
+
 #### Structs
 ```lisp
 (struct coord : (:T) where (^number? : T)
@@ -246,6 +253,7 @@ Enums function as variant sum types; each variant can have its own type or simpl
   (print "even")
   (print "not even"))
 ```
+
 Branching, using `if`, allows for specifying a single form for the true and false cases. All conditions must be of type `boolean` and the false case is optional. To have more than one line in a true or false case, introduce scope with a `do` statement.
 
 ```lisp
