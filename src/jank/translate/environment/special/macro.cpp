@@ -37,8 +37,10 @@ namespace jank
 
           auto const name
           (parse::expect::type<parse::cell::type::ident>(data[1]));
-          auto const args
+          auto const types
           (parse::expect::type<parse::cell::type::list>(data[2]));
+          auto const args
+          (parse::expect::type<parse::cell::type::list>(data[3]));
           auto const nested_scope
           (std::make_shared<scope>(outer_scope));
           auto const arg_definitions
@@ -94,7 +96,20 @@ namespace jank
             {
               name.data,
               arg_definitions,
-              { },
+              translate /* Recurse into translate for the body. */
+              (
+                jtl::it::make_range
+                (
+                  std::next
+                  (
+                    data.begin(),
+                    forms_required
+                  ),
+                  data.end()
+                ),
+                nested_scope,
+                { environment::builtin::type::automatic(*outer_scope) }
+              ).data,
               nested_scope
             }
           };
