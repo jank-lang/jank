@@ -22,6 +22,9 @@ generic functions as macros
     (show : (integer) 0)
     (show 0)
 
+    (generic-struct (T Ɐ)
+      (data T))
+
 emacs major mode
 
 constraints on return types

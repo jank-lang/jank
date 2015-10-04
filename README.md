@@ -344,6 +344,7 @@ $ make test
 |first-class functions        |Complete and tested.                       |
 |generic list collection      |Partially complete; not yet tested.        |
 |core functions               |Partially complete; not yet tested.        |
+|macros                       |Partially complete; not yet tested.        |
 
 |Interpreter                  |Status                                     |
 |:----------------------------|:------------------------------------------|
@@ -354,6 +355,7 @@ $ make test
 |if/do statements             |Complete and tested.                       |
 |lambda expressions           |Complete and tested.                       |
 |first-class functions        |Complete and tested.                       |
+|macros                       |Partially complete; not yet tested.        |
 
 |REPL                         |Status                                     |
 |:----------------------------|:------------------------------------------|
