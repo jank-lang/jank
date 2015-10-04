@@ -49,6 +49,8 @@ namespace jank
             return func(boost::get<do_statement>(c));
           case type::macro_definition:
             return func(boost::get<macro_definition>(c));
+          case type::macro_call:
+            return func(boost::get<macro_call>(c));
           default:
             throw std::runtime_error{ "invalid visit on translation cell" };
         }

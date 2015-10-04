@@ -257,8 +257,25 @@ namespace jank
              << "( type " << arg.type << ") ) ";
         }
 
+        return os << ") "
+                  << "( body " << c.body << ") ) ";
+      }
+
+      static std::ostream& operator <<
+      (std::ostream &os, macro_call::type const &c)
+      {
+        os << "( " << trait::to_string<type::macro_call>() << " "
+           << "( name " << c.definition.name << " ) "
+           << "( arguments ";
+
+        for(auto const &arg : c.arguments)
+        {
+          os << "( argument "
+             << "( name " << arg.name << " ) "
+             << "( cell " << arg.cell << ") ) ";
+        }
+
         os << ") "
-           << "( body " << c.body << ") "
            << "( result ";
 
         for(auto const &cell : c.result)
@@ -321,6 +338,9 @@ namespace jank
             break;
           case type::macro_definition:
             os << boost::get<macro_definition>(c).data;
+            break;
+          case type::macro_call:
+            os << boost::get<macro_call>(c).data;
             break;
           default:
             os << "??? ";

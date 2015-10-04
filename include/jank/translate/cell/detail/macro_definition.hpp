@@ -20,7 +20,6 @@ namespace jank
           std::string name;
           function::argument::type_list<C> arguments;
           function_body<C> body;
-          std::vector<C> result;
           std::shared_ptr<environment::scope> scope;
         };
       }

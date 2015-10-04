@@ -24,7 +24,8 @@ namespace jank
         return_statement,
         if_statement,
         do_statement,
-        macro_definition
+        macro_definition,
+        macro_call
       };
     }
   }

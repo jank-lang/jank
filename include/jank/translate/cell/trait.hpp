@@ -66,6 +66,9 @@ namespace jank
         template <>
         inline char constexpr const* to_string<type::macro_definition>()
         { return "macro-definition"; }
+        template <>
+        inline char constexpr const* to_string<type::macro_call>()
+        { return "macro-call"; }
 
         template <typename C>
         char constexpr const* to_string();
@@ -120,6 +123,9 @@ namespace jank
         template <>
         inline char constexpr const* to_string<macro_definition>()
         { return to_string<type::macro_definition>(); }
+        template <>
+        inline char constexpr const* to_string<macro_call>()
+        { return to_string<type::macro_call>(); }
 
         inline char constexpr const* to_string(type const c)
         {
@@ -159,6 +165,8 @@ namespace jank
               return to_string<type::do_statement>();
             case type::macro_definition:
               return to_string<type::macro_definition>();
+            case type::macro_call:
+              return to_string<type::macro_call>();
             default:
               return "unknown";
           }
@@ -200,6 +208,8 @@ namespace jank
           { return type::do_statement; }
           else if(str == to_string<macro_definition>())
           { return type::macro_definition; }
+          else if(str == to_string<macro_call>())
+          { return type::macro_call; }
           else
           {
             throw expect::error::type::exception<>
@@ -262,6 +272,9 @@ namespace jank
           template <>
           struct to_type<type::macro_definition>
           { using type = macro_definition; };
+          template <>
+          struct to_type<type::macro_call>
+          { using type = macro_call; };
         }
         template <type C>
         using to_type = typename detail::to_type<C>::type;
@@ -319,6 +332,9 @@ namespace jank
         template <>
         type constexpr to_enum<macro_definition>()
         { return type::macro_definition; }
+        template <>
+        type constexpr to_enum<macro_call>()
+        { return type::macro_call; }
       }
     }
   }
