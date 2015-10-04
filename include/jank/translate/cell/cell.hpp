@@ -23,6 +23,7 @@
 #include <jank/translate/cell/detail/return_statement.hpp>
 #include <jank/translate/cell/detail/if_statement.hpp>
 #include <jank/translate/cell/detail/do_statement.hpp>
+#include <jank/translate/cell/detail/macro_definition.hpp>
 
 namespace jank
 {
@@ -50,7 +51,8 @@ namespace jank
         boost::recursive_wrapper<wrapper<type::literal_value>>,
         boost::recursive_wrapper<wrapper<type::return_statement>>,
         boost::recursive_wrapper<wrapper<type::if_statement>>,
-        boost::recursive_wrapper<wrapper<type::do_statement>>
+        boost::recursive_wrapper<wrapper<type::do_statement>>,
+        boost::recursive_wrapper<wrapper<type::macro_definition>>
       >;
 
       template <>
@@ -149,6 +151,12 @@ namespace jank
         using type = detail::do_statement<cell>;
         type data;
       };
+      template <>
+      struct wrapper<type::macro_definition>
+      {
+        using type = detail::macro_definition<cell>;
+        type data;
+      };
 
       using function_body = wrapper<type::function_body>;
       using function_definition = wrapper<type::function_definition>;
@@ -166,6 +174,7 @@ namespace jank
       using return_statement = wrapper<type::return_statement>;
       using if_statement = wrapper<type::if_statement>;
       using do_statement = wrapper<type::do_statement>;
+      using macro_definition = wrapper<type::macro_definition>;
     }
   }
 }
