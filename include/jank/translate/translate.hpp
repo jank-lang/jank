@@ -89,6 +89,8 @@ namespace jank
              * Fall through and see if a function has the same name. */
           }
 
+          auto macro_opt
+          (scope->find_macro(function_name));
           auto native_function_opt
           (scope->find_native_function(function_name));
           auto function_opt
@@ -97,9 +99,12 @@ namespace jank
           /* Try to match native and non-native overloads. */
           function::match_overload
           (
-            list, scope, native_function_opt, function_opt,
+            list, scope, macro_opt, native_function_opt, function_opt,
             [&](auto const &match)
-            { translated.data.cells.push_back(match); }
+            {
+              /* TODO: Handle macros. */
+              translated.data.cells.push_back(match);
+            }
           );
           continue;
         }

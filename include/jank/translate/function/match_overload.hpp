@@ -20,12 +20,38 @@ namespace jank
         struct call
         { using type = cell::function_call; };
         template <>
-        struct call<cell::native_function_declaration>
+        struct call<cell::native_function_declaration::type>
         { using type = cell::native_function_call; };
+        template <>
+        struct call<cell::macro_definition::type>
+        { using type = cell::macro_call; };
+
+        template <typename Func>
+        auto make_call
+        (
+          Func const &func,
+          function::argument::value_list<cell::cell> arguments,
+          std::shared_ptr<environment::scope> const &scope
+        )
+        {
+          return boost::optional<typename detail::call<Func>::type>
+          { { { func, arguments, scope } } };
+        }
+        template <>
+        inline auto make_call<cell::macro_definition::type>
+        (
+          cell::macro_definition::type const &func,
+          function::argument::value_list<cell::cell> arguments,
+          std::shared_ptr<environment::scope> const&
+        )
+        {
+          return boost::optional<cell::macro_call>
+          { { { func, arguments, {} } } };
+        }
 
         /* Handles native and non-native functions. */
         template <typename Def>
-        boost::optional<typename detail::call<Def>::type>
+        boost::optional<typename detail::call<typename Def::type>::type>
         match_overload
         (
           function::argument::value_list<cell::cell> arguments,
@@ -56,17 +82,20 @@ namespace jank
                 }
               )
             )
-            { return { { { overload, arguments, scope } } }; }
+            { return make_call(overload, arguments, scope); }
           }
           return {};
         }
       }
 
-      template <typename Native, typename Non_Native, typename Callback>
+      template <typename Macro,
+                typename Native, typename Non_Native,
+                typename Callback>
       void match_overload
       (
         parse::cell::list const &list,
         std::shared_ptr<environment::scope> const &scope,
+        Macro const &macro,
         Native const &native,
         Non_Native const &non_native,
         Callback const &callback
@@ -90,19 +119,19 @@ namespace jank
           }
         );
 
-        if(!match(non_native) && !match(native))
+        if(!match(macro) && !match(non_native) && !match(native))
         {
           /* No matching overload found. */
           std::stringstream ss;
-          ss << "no matching function: "
+          ss << "no matching call: "
              << parse::expect::type<parse::cell::type::ident>(list.data[0]).data
              << " with arguments: ";
 
           for(auto const &arg : arguments)
           {
-            ss << arg.name << " : "
+            ss << "(" << arg.name << " "
                << function::argument::resolve_type(arg.cell, scope).data.name
-               << " ";
+               << ") ";
           }
           throw expect::error::type::overload
           { ss.str() };

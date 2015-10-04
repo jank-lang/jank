@@ -176,6 +176,8 @@ namespace jank
                   }
                 }
 
+                auto const macro_opt
+                (scope_->find_macro(function_name));
                 auto const native_function_opt
                 (scope_->find_native_function(function_name));
                 auto const function_opt(scope_->find_function(function_name));
@@ -184,9 +186,10 @@ namespace jank
                 detail::value<C> ret;
                 function::match_overload
                 (
-                  c, scope_, native_function_opt, function_opt,
+                 c, scope_, macro_opt, native_function_opt, function_opt,
                   [&](auto const &match)
                   {
+                    /* TODO: Handle macros. */
                     ret = detail::value<C>
                     {
                       function_name,
