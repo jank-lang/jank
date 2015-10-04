@@ -48,6 +48,11 @@ namespace jank
               [](auto const &input, auto const &body)
               { return lambda(input, body.data.scope); }
             },
+            {
+              "macro",
+              [](auto const &input, auto const &body)
+              { return macro(input, body.data.scope); }
+            },
           };
 
           auto &data(list.data);

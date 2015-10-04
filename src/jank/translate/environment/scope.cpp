@@ -40,6 +40,7 @@ namespace jank
         return { { it->second, shared_from_this() } };
       }
 
+      /* TODO: Move to detail. */
       template <typename T, typename F>
       static boost::optional<std::vector<scope::result<T>>>
       find
@@ -146,6 +147,19 @@ namespace jank
         { fail(); }
 
         return found->first.data.body;
+      }
+
+      boost::optional
+      <std::vector<scope::result<cell::macro_definition>>>
+      scope::find_macro(std::string const &name) const
+      {
+        return find
+        (
+          name,
+          shared_from_this(),
+          macro_definitions,
+          &scope::find_macro
+        );
       }
     }
   }

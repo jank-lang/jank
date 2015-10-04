@@ -32,6 +32,8 @@ namespace jank
         (std::string const &name) const;
         boost::optional<std::vector<result<cell::native_function_declaration>>> find_native_function
         (std::string const &name) const;
+        boost::optional<std::vector<result<cell::macro_definition>>> find_macro
+        (std::string const &name) const;
 
         cell::function_body::type expect_function(cell::function_definition::type const &def);
 
@@ -39,6 +41,7 @@ namespace jank
         std::map<std::string, cell::binding_definition> binding_definitions;
         std::map<std::string, std::vector<cell::function_definition>> function_definitions;
         std::map<std::string, std::vector<cell::native_function_declaration>> native_function_declarations;
+        std::map<std::string, std::vector<cell::macro_definition>> macro_definitions;
         std::shared_ptr<scope> parent;
       };
     }
