@@ -243,6 +243,30 @@ namespace jank
         return os;
       }
 
+      static std::ostream& operator <<
+      (std::ostream &os, macro_definition::type const &c)
+      {
+        os << "( " << trait::to_string<type::macro_definition>() << " "
+           << "( name " << c.name << " ) "
+           << "( arguments ";
+
+        for(auto const &arg : c.arguments)
+        {
+          os << "( argument "
+             << "( name " << arg.name << " ) "
+             << "( type " << arg.type << ") ) ";
+        }
+
+        os << ") "
+           << "( body " << c.body << ") "
+           << "( result ";
+
+        for(auto const &cell : c.result)
+        { os << cell; }
+
+        return os << ") ) ";
+      }
+
       std::ostream& operator <<(std::ostream &os, cell const &c)
       {
         switch(trait::to_enum(c))
@@ -294,6 +318,9 @@ namespace jank
             break;
           case type::do_statement:
             os << boost::get<do_statement>(c).data;
+            break;
+          case type::macro_definition:
+            os << boost::get<macro_definition>(c).data;
             break;
           default:
             os << "??? ";
