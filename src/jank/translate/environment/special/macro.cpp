@@ -114,7 +114,7 @@ namespace jank
                   data.end()
                 ),
                 nested_scope,
-                { environment::builtin::type::automatic(*outer_scope) }
+                { environment::builtin::type::null(*outer_scope) }
               ).data,
               nested_scope
             }
