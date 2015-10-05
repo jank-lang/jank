@@ -23,7 +23,7 @@ namespace jank
           cell::native_function_declaration def
           {
             {
-              "^emit",
+              "emit",
               { { "data", type } },
               environment::builtin::type::null(*scope),
               nested_scope

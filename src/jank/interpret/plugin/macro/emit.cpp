@@ -22,7 +22,7 @@ namespace jank
           detail::make_function
           (
             trans_scope, int_scope,
-            "^emit",
+            "emit",
             [](auto const &scope, auto const &args)
             {
               /* TODO: Reach out to some global state and give it the value. */
