@@ -16,7 +16,7 @@ namespace jank
         T &&call,
         std::shared_ptr<environment::scope> const&
       )
-      { return std::forward(call); }
+      { return std::forward<T>(call); }
       
       /* For macros, this interprets them in place and stores the results. */
       inline cell::macro_call evaluate
