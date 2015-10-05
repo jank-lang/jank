@@ -12,6 +12,8 @@ remove ^ from macro name
 ^type within macros for first class types
   maybe no need for generic syntax?
 
+allow proper lists as macro arguments without quoting
+
 generic functions as macros
   old way:
     (ƒ show : (:T) (o T) ()
