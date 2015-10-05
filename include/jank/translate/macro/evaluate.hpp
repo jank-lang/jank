@@ -13,10 +13,10 @@ namespace jank
       template <typename T>
       T evaluate
       (
-        T const &call,
+        T &&call,
         std::shared_ptr<environment::scope> const&
       )
-      { return call; }
+      { return std::forward(call); }
       
       /* For macros, this interprets them in place and stores the results. */
       inline cell::macro_call evaluate
