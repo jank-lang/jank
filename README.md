@@ -69,7 +69,7 @@ Members of struct are accessed with a `.foo` syntax, where `.foo` is a function 
   (first-name string)
   (last-name string))
 
-(bind john (new : (person) "john" "doe"))
+(bind john (^new : (person) "john" "doe"))
 (print (.last-name john))
 ```
 
@@ -142,7 +142,7 @@ Generic functions and types can be variadic, allowing any number of parameters, 
  ; All of this is built in to the coordinate's type.
  ; Assuming cartesian is a type and
  ; origin : (77.0) is a specialization of a type. ;)
-(new : (coord : (real cartesian origin : (77.0))) 0.0 0.0)
+(^new : (coord : (real cartesian origin : (77.0))) 0.0 0.0)
 ```
 
 ## Comments
@@ -159,9 +159,9 @@ Only multi-line comments are supported. Anything within `(;` and `;)` is conside
 
 Scope-based resource management ties resource ownership to object lifetimes. Types can take advantage of this by specializing `construct` and `destruct` to perform any custom logic.
 
-To construct an object using a constructor, `new` or `construct` must be called. To construct an object using aggregate initialization, the type of the object can be used as the function; all members which don't have defaults provided in the `struct` definition must be specified in aggregate initialization.
+To construct an object using a constructor, `^new` or `construct` must be called. To construct an object using aggregate initialization, the type of the object can be used as the function; all members which don't have defaults provided in the `struct` definition must be specified in aggregate initialization.
 
-`new` is a convenience macro which will first try to match constructors and will fall back on aggregate initialization. These checks are all done at compile-time. Since `new` allows types to intercept aggregate initialization with constructors, it's the preferred way of instantiating objects.
+`^new` is a convenience macro which will first try to match constructors and will fall back on aggregate initialization. These checks are all done at compile-time. Since `^new` allows types to intercept aggregate initialization with constructors, it's the preferred way of instantiating objects.
 
 Since constructors are the functions to actually create objects, not something that's called after creation, delegation to other constructors and other functions is very flexible.
 
@@ -183,8 +183,8 @@ Since constructors are the functions to actually create objects, not something t
 (; Calls the constructor explicitly. ;)
 (bind c1 (construct : (coord : (real real)) 0.0 5.4))
 
-(; Calls the constructor via new. ;)
-(bind c2 (new : (coord : (real real)) 0.0 5.4))
+(; Calls the constructor via ^new. ;)
+(bind c2 (^new : (coord : (real real)) 0.0 5.4))
 ```
 
 ## Type aliasing
