@@ -18,7 +18,7 @@ namespace jank
       )
       { return std::forward<T>(call); }
       
-      /* For macros, this interprets them in place and stores the results. */
+      /* For macros, this interprets in place and stores the results. */
       inline cell::macro_call evaluate
       (
         cell::macro_call &&call,

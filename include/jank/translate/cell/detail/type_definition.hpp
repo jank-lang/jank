@@ -37,6 +37,12 @@ namespace jank
         bool operator ==
         (type_definition<C> const &lhs, type_definition<C> const &rhs)
         {
+          /* TODO: This is hacked in shit. */
+          if(lhs.name == "^list")
+          { return rhs.name == "^list" || rhs.name == "list"; }
+          else if(lhs.name == "^atom")
+          { return (rhs.name != "^list" && rhs.name != "list"); }
+             
           return
           (
             lhs.name == rhs.name &&
@@ -47,13 +53,7 @@ namespace jank
         template <typename C>
         bool operator !=
         (type_definition<C> const &lhs, type_definition<C> const &rhs)
-        {
-          return
-          (
-            lhs.name != rhs.name ||
-            lhs.generics != rhs.generics
-          );
-        }
+        { return !(lhs == rhs); }
       }
     }
   }
