@@ -25,6 +25,7 @@ namespace jank
             "^emit",
             [](auto const &scope, auto const &args)
             {
+              /* TODO: Reach out to some global state and give it the value. */
               std::cout << environment::resolve_value(scope, args[0].cell)
                         << std::endl;
               return cell::null{};

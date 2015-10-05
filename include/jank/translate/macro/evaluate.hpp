@@ -29,6 +29,8 @@ namespace jank
         (std::make_shared<interpret::environment::scope>());
         interpret::plugin::apply(scope, interpret_scope);
 
+        /* TODO: Only allow ^emit in macros. */
+
         /* TODO: Native emit function which sets global state? */
         interpret::interpret
         (
