@@ -1,4 +1,5 @@
 #include <jank/translate/plugin/apply.hpp>
+#include <jank/translate/plugin/macro/emit.hpp>
 #include <jank/translate/plugin/io/print.hpp>
 #include <jank/translate/plugin/arithmetic/add.hpp>
 #include <jank/translate/plugin/arithmetic/subtract.hpp>
@@ -38,6 +39,8 @@ namespace jank
           std::function<void (std::shared_ptr<environment::scope> const&)>
         > const plugins
         {
+          &macro::emit,
+
           &io::print,
 
           &arithmetic::add,

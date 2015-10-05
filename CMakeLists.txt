@@ -81,6 +81,7 @@ add_library(
   src/jank/translate/environment/special/do_statement.cpp
   src/jank/translate/environment/special/macro.cpp
   src/jank/translate/plugin/apply.cpp
+  src/jank/translate/plugin/macro/emit.cpp
   src/jank/translate/plugin/io/print.cpp
   src/jank/translate/plugin/arithmetic/add.cpp
   src/jank/translate/plugin/arithmetic/subtract.cpp
