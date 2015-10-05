@@ -27,6 +27,9 @@ generic functions as macros
 
 emacs major mode
 
+remove expect_function
+  always look up definitions before calling?
+
 constraints on return types
   Allow dependent types there
   (ƒ foo () (:T-ret) where (^number? : (T-ret))
