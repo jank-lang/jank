@@ -29,6 +29,7 @@ namespace jank
         (std::make_shared<jank::interpret::environment::scope>());
         jank::interpret::plugin::apply(scope, interpret_scope);
 
+        /* TODO: Native emit function which sets global state? */
         jank::interpret::interpret
         (
           interpret_scope,
