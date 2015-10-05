@@ -26,11 +26,11 @@ namespace jank
       )
       {
         auto const interpret_scope
-        (std::make_shared<jank::interpret::environment::scope>());
-        jank::interpret::plugin::apply(scope, interpret_scope);
+        (std::make_shared<interpret::environment::scope>());
+        interpret::plugin::apply(scope, interpret_scope);
 
         /* TODO: Native emit function which sets global state? */
-        jank::interpret::interpret
+        interpret::interpret
         (
           interpret_scope,
           cell::function_body{ call.data.definition.body }
