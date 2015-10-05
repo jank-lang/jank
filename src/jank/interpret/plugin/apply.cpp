@@ -1,4 +1,5 @@
 #include <jank/interpret/plugin/apply.hpp>
+#include <jank/interpret/plugin/macro/emit.hpp>
 #include <jank/interpret/plugin/io/print.hpp>
 #include <jank/interpret/plugin/arithmetic/add.hpp>
 #include <jank/interpret/plugin/arithmetic/subtract.hpp>
@@ -47,6 +48,8 @@ namespace jank
           >
         > const plugins
         {
+          &macro::emit,
+
           &io::print,
 
           &arithmetic::add,

@@ -21,7 +21,7 @@ generic functions as macros
     (show : (integer) 0)
     (show 0)
 
-  new way: 
+  new way:
     (ƒ⊕ show (T Ɐ) (o T) ()
       (print o))
     (show : (integer) 0)

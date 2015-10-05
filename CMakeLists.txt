@@ -118,6 +118,7 @@ add_library(
   src/jank/interpret/detail/return_statement.cpp
   src/jank/interpret/detail/do_statement.cpp
   src/jank/interpret/plugin/apply.cpp
+  src/jank/interpret/plugin/macro/emit.cpp
   src/jank/interpret/plugin/io/print.cpp
   src/jank/interpret/plugin/arithmetic/add.cpp
   src/jank/interpret/plugin/arithmetic/subtract.cpp
