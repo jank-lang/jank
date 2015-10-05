@@ -35,8 +35,12 @@ namespace jank
             { "invalid macro definition" };
           }
 
-          auto const name
+          auto name
           (parse::expect::type<parse::cell::type::ident>(data[1]));
+
+          /* Prefix all macros with ^ */
+          name.data.insert(0, "^");
+
           auto const types
           (parse::expect::type<parse::cell::type::list>(data[2]));
           auto const args
