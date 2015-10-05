@@ -15,6 +15,7 @@
 #include <jank/translate/function/match_overload.hpp>
 #include <jank/translate/function/match_indirect.hpp>
 #include <jank/translate/function/return/add_implicit_returns.hpp>
+#include <jank/translate/macro/evaluate.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/translate/expect/error/syntax/exception.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
@@ -96,14 +97,17 @@ namespace jank
           auto function_opt
           (scope->find_function(function_name));
 
-          /* Try to match native and non-native overloads. */
+          /* Try to match macro, native, and non-native overloads. */
           function::match_overload
           (
-            list, scope, macro_opt, native_function_opt, function_opt,
-            [&](auto const &match)
+            list, scope,
+            macro_opt, native_function_opt, function_opt,
+            [&](auto match)
             {
               /* TODO: Handle macros. */
-              translated.data.cells.push_back(match);
+              if(std::is_same<cell::macro_call, decltype(match)>::value)
+              { match = macro::evaluate(std::move(match), scope); }
+              translated.data.cells.emplace_back(std::move(match));
             }
           );
           continue;
