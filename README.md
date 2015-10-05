@@ -91,7 +91,7 @@ Definitions may be dependent on types. Such definitions may be functions or stru
   (print o))
 
 (; Short-hand for above, where T isn't needed. ;)
-(ƒ show (o auto) ()
+(ƒ show (o Ɐ) ()
   (print o))
 
 (; Full specialization. ;)
