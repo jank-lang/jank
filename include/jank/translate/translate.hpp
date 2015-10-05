@@ -104,7 +104,6 @@ namespace jank
             macro_opt, native_function_opt, function_opt,
             [&](auto match)
             {
-              /* TODO: Handle macros. */
               if(std::is_same<cell::macro_call, decltype(match)>::value)
               { match = macro::evaluate(std::move(match), scope); }
               translated.data.cells.emplace_back(std::move(match));
