@@ -49,6 +49,12 @@ namespace jank
             (args, nested_scope)
           );
 
+          if(types.data.size())
+          {
+            throw expect::error::internal::unimplemented
+            { "generic macros" };
+          }
+
           /* Add args to macro's scope. */
           std::transform
           (
