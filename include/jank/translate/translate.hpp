@@ -90,11 +90,11 @@ namespace jank
              * Fall through and see if a function has the same name. */
           }
 
-          auto macro_opt
+          auto const &macro_opt
           (scope->find_macro(function_name));
-          auto native_function_opt
+          auto const &native_function_opt
           (scope->find_native_function(function_name));
-          auto function_opt
+          auto const &function_opt
           (scope->find_function(function_name));
 
           /* Try to match macro, native, and non-native overloads. */
