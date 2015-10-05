@@ -206,12 +206,12 @@ Constraints can be applied to various definitions, including functions and struc
 #### Functions
 ```lisp
 (; Specialize on generic macros as type traits. ;)
-(macro ^number? : (:T) ()
-  false)
-(macro ^number? : (integer) ()
-  true)
-(macro ^number? : (real) ()
-  true)
+(macro number? : (:T) ()
+  (emit false))
+(macro number? : (integer) ()
+  (emit true))
+(macro number? : (real) ()
+  (emit true))
 
 (ƒ square : (:T) (i T) (Ɐ) where (^number? : T)
   (* i i))
@@ -284,19 +284,21 @@ Branching, using `if`, allows for specifying a single form for the true and fals
 ## Macros
 Macros provide the ability for arbitrary code execution, including disk and network IO, and direct modification of the source code at compile-time. Macros, like functions, can be made generic and can be partially and fully specialized. Along with generics, macros use the same type-safety and overloading rules as normal functions. There are two added types, during macro definition, which can be used: `^list` and `^atom` which correspond to arbitrary lists of code and single code atoms respectively.
 
-The form of a macro definition is very similar to that of a function definition. Macros, however, have no specific return type; they emit whatever they return as replacement code for the call. As a convention, macros begin with `^`.
+The form of a macro definition is very similar to that of a function definition. Macros, however, have no specific return type; they emit as a side-effect by calling the native `emit` function.
 
 ### Non-generic
 ```lisp
-(macro ^reverse-args (args ^list)
-  (list (first args) (reverse (rest args))))
+(macro reverse-args (args ^list)
+  (emit (list (first args) (reverse (rest args)))))
 
 (^reverse-args (print 3 2 1))
 (; Becomes => (print 1 2 3) at compile-time. ;)
 
-(macro ^constructor (type ^list args ^list &body)
-  (ƒ construct : type args (Ɐ)
-    body))
+(macro constructor (type ^list args ^list &body)
+  (emit
+    (list
+      (ƒ construct : type args (Ɐ)
+        body))))
 
 (^constructor (person) (first-name Ɐ last-name Ɐ)
   (person first-name last-name))
@@ -305,12 +307,12 @@ The form of a macro definition is very similar to that of a function definition.
 ### Generic
 ```lisp
 (; Compile-time type traits using partial specialization. ;)
-(macro ^sequence? : (:T) ()
-  false)
-(macro ^sequence? : (list : (:T)) ()
-  true)
-(macro ^sequence? : (vector : (:T)) ()
-  true)
+(macro sequence? : (:T) ()
+  (emit false))
+(macro sequence? : (list : (:T)) ()
+  (emit true))
+(macro sequence? : (vector : (:T)) ()
+  (emit true))
 ```
 
 ## Strings
