@@ -42,7 +42,7 @@ namespace jank
           { return rhs.name == "^list" || rhs.name == "list"; }
           else if(lhs.name == "^atom")
           { return (rhs.name != "^list" && rhs.name != "list"); }
-             
+
           return
           (
             lhs.name == rhs.name &&

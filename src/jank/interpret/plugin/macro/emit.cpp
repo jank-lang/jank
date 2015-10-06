@@ -1,5 +1,6 @@
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/environment/builtin/type/macro_primitive.hpp>
+#include <jank/translate/macro/emit_state.hpp>
 #include <jank/interpret/environment/resolve_value.hpp>
 #include <jank/interpret/plugin/detail/make_function.hpp>
 #include <jank/interpret/cell/stream.hpp>
@@ -18,19 +19,32 @@ namespace jank
           std::shared_ptr<environment::scope> const &int_scope
         )
         {
-          /* TODO: list version */
+          /* TODO: Marshal the values before emitting. */
           detail::make_function
           (
             trans_scope, int_scope,
             "emit",
             [](auto const &scope, auto const &args)
             {
-              /* TODO: Reach out to some global state and give it the value. */
               std::cout << environment::resolve_value(scope, args[0].cell)
                         << std::endl;
+              translate::macro::emit(parse::cell::null{});
               return cell::null{};
             },
             translate::environment::builtin::type::macro_atom(*trans_scope)
+          );
+          detail::make_function
+          (
+            trans_scope, int_scope,
+            "emit",
+            [](auto const &scope, auto const &args)
+            {
+              std::cout << environment::resolve_value(scope, args[0].cell)
+                        << std::endl;
+              translate::macro::emit(parse::cell::list{});
+              return cell::null{};
+            },
+            translate::environment::builtin::type::macro_list(*trans_scope)
           );
         }
       }
