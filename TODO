@@ -6,9 +6,6 @@ static analysis on travis
 
 separate interpret binary and read AST
 
-remove ^ from macro name
-  define it without, use it with
-
 ^type within macros for first class types
   maybe no need for generic syntax?
 
