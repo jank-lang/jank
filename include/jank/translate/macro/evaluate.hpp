@@ -18,6 +18,7 @@ namespace jank
       )
       { return std::forward<T>(call); }
 
+      /* TODO: Move to cpp */
       /* For macros, this interprets in place and stores the results. */
       inline cell::macro_call evaluate
       (
@@ -29,7 +30,7 @@ namespace jank
         (std::make_shared<interpret::environment::scope>());
         interpret::plugin::apply(scope, interpret_scope);
 
-        /* TODO: Only allow ^emit in macros. */
+        /* TODO: Only allow emit in macros. */
 
         /* TODO: Native emit function which sets global state? */
         interpret::interpret
