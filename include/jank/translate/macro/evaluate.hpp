@@ -1,4 +1,5 @@
 #include <jank/translate/cell/cell.hpp>
+#include <jank/translate/macro/emit_state.hpp>
 #include <jank/translate/environment/scope.hpp>
 #include <jank/interpret/interpret.hpp>
 #include <jank/interpret/plugin/apply.hpp>
@@ -31,13 +32,18 @@ namespace jank
         interpret::plugin::apply(scope, interpret_scope);
 
         /* TODO: Only allow emit in macros. */
+        {
+          /* Calls to emit will populate this object. */
+          emit_state emissions;
 
-        /* TODO: Native emit function which sets global state? */
-        interpret::interpret
-        (
-          interpret_scope,
-          cell::function_body{ call.data.definition.body }
-        );
+          interpret::interpret
+          (
+            interpret_scope,
+            cell::function_body{ call.data.definition.body }
+          );
+
+          call.data.result = std::move(emissions.cells);
+        }
 
         return std::move(call);
       }
