@@ -14,7 +14,6 @@ namespace jank
       {
         void emit(std::shared_ptr<environment::scope> const &scope)
         {
-          /* TODO: If these are in the opposite order, shit doesn't work. */
           detail::make_function
           (
             scope, "emit",
