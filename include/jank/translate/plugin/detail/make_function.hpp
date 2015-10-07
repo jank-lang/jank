@@ -34,7 +34,7 @@ namespace jank
           auto const nested_scope(std::make_shared<environment::scope>());
           nested_scope->parent = scope;
 
-          cell::native_function_declaration def
+          cell::native_function_declaration decl
           {
             {
               name,
@@ -46,8 +46,8 @@ namespace jank
 
           /* TODO: It's easy to overwrite something here; provide an API to register
            * native functions. */
-          scope->native_function_declarations[def.data.name].emplace_back
-          (std::move(def));
+          scope->native_function_declarations[decl.data.name].emplace_back
+          (std::move(decl));
         }
       }
     }

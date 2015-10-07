@@ -30,6 +30,7 @@ namespace jank
             }
           };
 
+          /* TODO: Use make_function. */
           scope->native_function_declarations[def.data.name].emplace_back
           (std::move(def));
         }

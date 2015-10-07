@@ -31,6 +31,7 @@ namespace jank
               std::forward<Args>(args)...
             )
           );
+          /* TODO: emplace. */
           int_scope->native_function_definitions[decl] =
           {
             name,

@@ -31,8 +31,6 @@ namespace jank
         template <typename C>
         using member = std::pair<type_definition<C>, member_cell<C>>;
 
-        /* TODO: op< */
-
         template <typename C>
         bool operator <
         (type_definition<C> const &lhs, type_definition<C> const &rhs)
@@ -51,7 +49,7 @@ namespace jank
         {
           /* TODO: This is hacked in shit. */
           if(lhs.name == "^list")
-          { return rhs.name == "^list" || rhs.name == "list"; }
+          { return lhs.name == rhs.name || rhs.name == "list"; }
           else if(lhs.name == "^atom")
           { return (rhs.name != "^list" && rhs.name != "list"); }
 
