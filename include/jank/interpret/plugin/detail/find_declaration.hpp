@@ -30,20 +30,20 @@ namespace jank
             { "no native " + name + " declarations" };
           }
 
+          translate::cell::detail::type_reference
+          <translate::cell::cell> const arg_types[]
+          {
+            std::forward<Args>(args)...,
+
+            /* XXX: Hack to allow zero-size args; this will be ignored. */
+            translate::environment::builtin::type::null(*trans_scope)
+          };
+
           for(auto const &def_pair : *defs)
           {
             auto const &def(def_pair.first.data);
             if(def.arguments.size() != sizeof...(Args))
             { continue; }
-
-            translate::cell::detail::type_reference
-            <translate::cell::cell> const arg_types[]
-            {
-              std::forward<Args>(args)...,
-
-              /* XXX: Hack to allow zero-size args; this will be ignored. */
-              translate::environment::builtin::type::null(*trans_scope)
-            };
 
             auto const equal
             (
