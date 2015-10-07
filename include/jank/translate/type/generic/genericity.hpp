@@ -10,14 +10,25 @@ namespace jank
     {
       namespace generic
       {
-        template <typename T>
+        /* Def = detail::type_definition */
+        template <typename Def>
         struct genericity
         {
-          std::vector<parameter<T>> parameters;
+          std::vector<parameter<Def>> parameters;
         };
 
-        template <typename T>
-        bool operator ==(genericity<T> const &lhs, genericity<T> const &rhs)
+        template <typename Def>
+        bool operator <(genericity<Def> const &lhs, genericity<Def> const &rhs)
+        {
+          return std::lexicographical_compare
+          (
+            lhs.parameters.begin(), lhs.parameters.end(),
+            rhs.parameters.begin(), rhs.parameters.end()
+          );
+        }
+
+        template <typename Def>
+        bool operator ==(genericity<Def> const &lhs, genericity<Def> const &rhs)
         {
           return
           (
@@ -29,8 +40,8 @@ namespace jank
             )
           );
         }
-        template <typename T>
-        bool operator !=(genericity<T> const &lhs, genericity<T> const &rhs)
+        template <typename Def>
+        bool operator !=(genericity<Def> const &lhs, genericity<Def> const &rhs)
         { return !(lhs == rhs); }
       }
     }

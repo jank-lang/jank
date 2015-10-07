@@ -34,13 +34,12 @@ namespace jank
           else if(rhs.name < lhs.name)
           { return false; }
 
-          /* TODO: compare definitions directly. */
           return std::lexicographical_compare
           (
             lhs.arguments.begin(), lhs.arguments.end(),
             rhs.arguments.begin(), rhs.arguments.end(),
             [](auto const &l, auto const &r)
-            { return l.type.definition.name < r.type.definition.name; }
+            { return l.type.definition < r.type.definition; }
           );
         }
       }

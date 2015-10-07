@@ -34,6 +34,18 @@ namespace jank
         /* TODO: op< */
 
         template <typename C>
+        bool operator <
+        (type_definition<C> const &lhs, type_definition<C> const &rhs)
+        {
+          if(lhs.name < rhs.name)
+          { return true; }
+          else if(lhs.name > rhs.name)
+          { return false; }
+
+          return lhs.generics < rhs.generics;
+        }
+
+        template <typename C>
         bool operator ==
         (type_definition<C> const &lhs, type_definition<C> const &rhs)
         {

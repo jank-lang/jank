@@ -18,32 +18,42 @@ namespace jank
           tuple
         };
 
-        template <typename T>
+        template <typename Def>
         struct single
         {
-          using type = T;
+          using type = Def;
           type data;
         };
-        template <typename T>
-        bool operator ==(single<T> const &lhs, single<T> const &rhs)
+
+        template <typename Def>
+        bool operator <(single<Def> const &lhs, single<Def> const &rhs)
+        { return lhs.data < rhs.data; }
+
+        template <typename Def>
+        bool operator ==(single<Def> const &lhs, single<Def> const &rhs)
         { return lhs.data == rhs.data; }
 
-        template <typename T>
+        template <typename Def>
         struct tuple
         {
-          using type = std::vector<T>;
+          using type = std::vector<Def>;
           type data;
         };
-        template <typename T>
-        bool operator ==(tuple<T> const &lhs, tuple<T> const &rhs)
+
+        template <typename Def>
+        bool operator <(tuple<Def> const &lhs, tuple<Def> const &rhs)
+        { return lhs.data < rhs.data; }
+
+        template <typename Def>
+        bool operator ==(tuple<Def> const &lhs, tuple<Def> const &rhs)
         { return lhs.data == rhs.data; }
 
         /* Cells can be types or values. */
-        template <typename T> /* T = detail::type_definition */
+        template <typename Def> /* Def = detail::type_definition */
         using parameter = boost::variant
         <
-          single<T>,
-          tuple<T>
+          single<Def>,
+          tuple<Def>
         >;
       }
     }

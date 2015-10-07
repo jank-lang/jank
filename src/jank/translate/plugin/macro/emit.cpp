@@ -37,8 +37,8 @@ namespace jank
         void emit(std::shared_ptr<environment::scope> const &scope)
         {
           /* TODO: If these are in the opposite order, shit doesn't work. */
-          make_emit(scope, environment::builtin::type::macro_list(*scope));
           make_emit(scope, environment::builtin::type::macro_atom(*scope));
+          make_emit(scope, environment::builtin::type::macro_list(*scope));
         }
       }
     }
