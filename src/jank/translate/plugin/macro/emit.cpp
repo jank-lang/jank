@@ -1,7 +1,5 @@
-#include <jank/translate/plugin/macro/emit.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/environment/builtin/type/macro_primitive.hpp>
-#include <jank/translate/environment/builtin/value/primitive.hpp>
 #include <jank/translate/plugin/detail/make_function.hpp>
 
 namespace jank
