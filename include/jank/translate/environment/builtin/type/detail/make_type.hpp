@@ -1,3 +1,5 @@
+#pragma once
+
 #include <jank/translate/environment/scope.hpp>
 
 namespace jank

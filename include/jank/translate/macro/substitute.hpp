@@ -1,3 +1,5 @@
+#pragma once
+
 #include <jank/translate/translate.hpp>
 
 namespace jank
