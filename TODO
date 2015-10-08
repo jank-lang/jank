@@ -9,7 +9,10 @@ separate interpret binary and read AST
 ^type within macros for first class types
   maybe no need for generic syntax?
 
-allow proper lists as macro arguments without quoting
+macros
+  function arguments aren't visible
+  allow proper lists as macro arguments without quoting
+    for emit as well?
 
 update readme with new generic function/macro syntax
 
