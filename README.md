@@ -357,7 +357,6 @@ $ make test
 |if/do statements             |Complete and tested.                       |
 |lambda expressions           |Complete and tested.                       |
 |first-class functions        |Complete and tested.                       |
-|macros                       |Partially complete; not yet tested.        |
 
 |REPL                         |Status                                     |
 |:----------------------------|:------------------------------------------|
