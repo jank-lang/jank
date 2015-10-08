@@ -64,6 +64,7 @@ add_library(
   src/jank/translate/function/return/deduce.cpp
   src/jank/translate/function/return/make_implicit.cpp
   src/jank/translate/function/match_indirect.cpp
+  src/jank/translate/macro/evaluate.cpp
   src/jank/translate/macro/emit_state.cpp
   src/jank/translate/environment/scope.cpp
   src/jank/translate/environment/builtin/type/primitive.cpp
