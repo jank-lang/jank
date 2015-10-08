@@ -51,6 +51,7 @@ add_library(
   src/jank/parse/parse.cpp
   src/jank/parse/cell/stream.cpp
 
+  src/jank/translate/translate.cpp
   src/jank/translate/cell/stream.cpp
   src/jank/translate/type/generic/extract.cpp
   src/jank/translate/type/generic/parse.cpp

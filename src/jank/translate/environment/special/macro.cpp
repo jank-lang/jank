@@ -11,6 +11,7 @@
 #include <jank/translate/environment/builtin/type/primitive.hpp>
 #include <jank/translate/expect/error/syntax/exception.hpp>
 #include <jank/translate/expect/error/type/overload.hpp>
+#include <jank/translate/expect/error/internal/unimplemented.hpp>
 
 namespace jank
 {

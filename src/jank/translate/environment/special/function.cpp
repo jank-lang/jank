@@ -8,6 +8,7 @@
 #include <jank/translate/function/argument/definition.hpp>
 #include <jank/translate/function/return/parse.hpp>
 #include <jank/translate/function/return/deduce.hpp>
+#include <jank/translate/function/return/add_implicit_returns.hpp>
 #include <jank/translate/environment/scope.hpp>
 #include <jank/translate/environment/special/function.hpp>
 #include <jank/translate/environment/builtin/type/primitive.hpp>
