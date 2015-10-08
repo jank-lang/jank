@@ -14,6 +14,8 @@ macros
   allow proper lists as macro arguments without quoting
     for emit as well?
 
+tuple and variadic functions
+
 update readme with new generic function/macro syntax
 
 generic functions as macros
