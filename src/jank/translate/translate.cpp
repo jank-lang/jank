@@ -26,7 +26,7 @@ namespace jank
       jtl::it::range::indirect
       <parse::cell::list::type::const_iterator> const &range,
       std::shared_ptr<environment::scope> const &scope,
-      cell::function_body translated
+      cell::function_body &&translated
     )
     {
       for(auto const &c : range)
@@ -125,7 +125,7 @@ namespace jank
         );
       }
 
-      return translated;
+      return std::move(translated);
     }
 
     cell::function_body translate
