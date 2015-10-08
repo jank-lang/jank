@@ -78,7 +78,7 @@ int main()
         parsed_body.data.end()
       ),
       translate_scope,
-      translate_body
+      std::move(translate_body)
     );
 
     /* TODO: Only interpet the last item. */
