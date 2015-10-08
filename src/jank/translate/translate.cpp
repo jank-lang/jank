@@ -12,6 +12,7 @@
 #include <jank/translate/function/match_indirect.hpp>
 #include <jank/translate/function/return/add_implicit_returns.hpp>
 #include <jank/translate/macro/evaluate.hpp>
+#include <jank/translate/macro/substitute.hpp>
 #include <jank/translate/expect/type.hpp>
 #include <jank/translate/expect/error/syntax/exception.hpp>
 #include <jank/translate/expect/error/internal/unimplemented.hpp>
@@ -103,8 +104,8 @@ namespace jank
               if(std::is_same<cell::macro_call, decltype(match)>::value)
               {
                 match = macro::evaluate(std::move(match), scope);
-                //translated.data.cells = macro::substitute
-                //(match, std::move(translated.data.cells));
+                translated = macro::substitute
+                (match, scope, std::move(translated));
               }
               else
               { translated.data.cells.emplace_back(std::move(match)); }
