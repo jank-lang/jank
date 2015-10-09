@@ -49,6 +49,7 @@ literal_value has list
 
 tests for
   cons, first, last, count, list
+  macros, emit
 
 fix vim highlighting of falsey
 
