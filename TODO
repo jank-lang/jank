@@ -18,6 +18,10 @@ tuple and variadic functions
 
 update readme with new generic function/macro syntax
 
+remove function special
+  use bind and lambda
+  function can be a macro
+
 generic functions as macros
   old way:
     (ƒ show : (:T) (o T) ()
