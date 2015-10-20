@@ -1,4 +1,18 @@
-S = AB*
-AB = A B
-A = 'a'+
-B = 'b'+
+<whitespace> = <' '> | <'\t'> | <'\n'>
+
+<left-paren> = <'('>
+<right-paren> = <')'>
+
+integer = #'[+-]?\\d+'
+real = #'[+-]?\\d+\\.\\d*'
+<number> = (integer | real)
+
+<double-quote> = '\"'
+<not-double-quote> = #'[^\"]'
+string = <double-quote> not-double-quote* <double-quote>
+
+identifier = #'[^\s"\']+'
+keyword = <':'> identifier
+
+atom = string | identifier | number | keyword | list
+list = left-paren (atom | whitespace)* right-paren

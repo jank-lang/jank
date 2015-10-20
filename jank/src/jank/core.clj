@@ -2,10 +2,10 @@
   (:gen-class)
   (:require [instaparse.core :as insta]))
 
-(def as-and-bs
+(def grammar
   (insta/parser
     (clojure.java.io/resource "grammar")))
 
 (defn -main
   [& args]
-  (println (as-and-bs "aabb")))
+  (println (grammar "(print 42)")))
