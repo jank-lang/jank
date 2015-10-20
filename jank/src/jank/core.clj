@@ -4,10 +4,7 @@
 
 (def as-and-bs
   (insta/parser
-    "S = AB*
-     AB = A B
-     A = 'a'+
-     B = 'b'+"))
+    (clojure.java.io/resource "grammar")))
 
 (defn -main
   [& args]
