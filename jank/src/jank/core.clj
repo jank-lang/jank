@@ -10,7 +10,5 @@
   [& args]
   (println
     (grammar "
-(print 42)
-(print 3.14)
-(print \"this is a string\")
+(print 42.32.2)
 ")))
