@@ -8,4 +8,9 @@
 
 (defn -main
   [& args]
-  (println (grammar "(print 42)")))
+  (println
+    (grammar "
+(print 42)
+(print 3.14)
+(print \"this is a string\")
+")))
