@@ -4,11 +4,12 @@
 
 (def grammar
   (insta/parser
-    (clojure.java.io/resource "grammar")))
+    (clojure.java.io/resource "grammar")
+    :auto-whitespace :standard))
 
 (defn -main
   [& args]
   (println
     (grammar "
-(print 42.32.2)
+(print true)
 ")))

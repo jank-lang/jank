@@ -1,8 +1,5 @@
-<program> = whitespace* atoms whitespace*
-<atoms> = (atom whitespace+)* atom
-<atom> = string | number | identifier | keyword | list
-
-<whitespace> = <#'[ \t\n]+'>
+<program> = atom*
+<atom> = string / number / boolean / identifier / keyword / list
 
 integer = #'[+-]?\d+'
 real = #'[+-]?\d+\.\d*'
@@ -15,6 +12,8 @@ string = <double-quote> not-double-quote <double-quote>
 identifier = #'[^\s"\'()\d][^\s"\'()]+'
 keyword = <':'> identifier
 
+boolean = 'true' | 'false'
+
 <left-paren> = <'('>
 <right-paren> = <')'>
-list = whitespace* left-paren (atom | whitespace)* right-paren whitespace*
+list = left-paren atom* right-paren
