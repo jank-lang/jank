@@ -11,5 +11,6 @@
   [& args]
   (println
     (grammar "
-(print true)
+(ƒ ident (s string) (string)
+  s)
 ")))

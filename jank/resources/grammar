@@ -1,5 +1,5 @@
 <program> = atom*
-<atom> = string / number / boolean / identifier / keyword / list
+<atom> = string / number / boolean / identifier / keyword / function-definition / list
 
 integer = #'[+-]?\d+'
 real = #'[+-]?\d+\.\d*'
@@ -9,7 +9,7 @@ real = #'[+-]?\d+\.\d*'
 <not-double-quote> = #'[^\"]*'
 string = <double-quote> not-double-quote <double-quote>
 
-identifier = #'[^\s"\'()\d][^\s"\'()]+'
+identifier = #'[^\s"\'()\d][^\s"\'()]*'
 keyword = <':'> identifier
 
 boolean = 'true' | 'false'
@@ -17,3 +17,11 @@ boolean = 'true' | 'false'
 <left-paren> = <'('>
 <right-paren> = <')'>
 list = left-paren atom* right-paren
+
+<function-keyword> = <'function'> | <'ƒ'>
+<argument-list> = list
+<return-list> = list
+function-definition =
+  left-paren function-keyword identifier argument-list return-list
+    atom*
+  right-paren
