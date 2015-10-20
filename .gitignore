@@ -5,3 +5,16 @@
 
 # Vim files
 /.ycm_extra_conf.py*
+
+# lein
+/jank/target
+/jank/classes
+/jank/checkouts
+pom.xml
+pom.xml.asc
+*.jar
+*.class
+/jank/.lein-*
+/jank/.nrepl-port
+.hgignore
+.hg/
