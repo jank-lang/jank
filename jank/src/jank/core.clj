@@ -10,6 +10,4 @@
 (defn -main
   [& args]
   (println
-    (grammar "
-(print : (integer) 42)
-")))
+    (grammar (slurp (first args)))))

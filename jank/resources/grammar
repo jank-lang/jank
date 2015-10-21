@@ -3,6 +3,7 @@
          generic-specialization /
          identifier / keyword /
          function-definition /
+         macro-definition /
          binding-definition /
          list
 
@@ -32,6 +33,13 @@ function-definition =
   right-paren
 
 generic-specialization = <':'> list
+
+<macro-keyword> = <'macro'>
+<generic-list> = list
+macro-definition =
+  left-paren macro-keyword identifier generic-list argument-list
+    atom*
+  right-paren
 
 <bind-keyword> = <'bind'>
 binding-definition = left-paren bind-keyword identifier atom right-paren
