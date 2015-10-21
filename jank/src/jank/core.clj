@@ -7,19 +7,19 @@
     (clojure.java.io/resource "grammar")
     :auto-whitespace :standard))
 
-(defn handle-function [current ast]
+(defn handle-function [handlers current ast]
   (println "handling function")
   ast)
 
-(defn handle-macro [current ast]
+(defn handle-macro [handlers current ast]
   (println "handling macro")
   ast)
 
-(defn handle-binding [current ast]
+(defn handle-binding [handlers current ast]
   (println "handling binding")
   ast)
 
-(defn handle-call [current ast]
+(defn handle-call [handlers current ast]
   (println "handling call")
   ast)
 
@@ -30,8 +30,8 @@
 
 (defn handle [current ast]
   (let [handler (handlers (first current))]
-    (assert handler "invalid handler")
-    (handler current ast)
+    (assert handler (str "invalid handler for " current))
+    (handler handlers current ast)
   ))
 
 (defn -main
@@ -39,7 +39,7 @@
   (let [parsed (parse (slurp (first args)))]
     (when parsed
       (loop [current (first parsed) remaining (rest parsed)
-             ast '[]]
+             ast {}]
         (println current)
         (cond
           (nil? current) ast
