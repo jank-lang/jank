@@ -7,39 +7,38 @@
     (clojure.java.io/resource "grammar")
     :auto-whitespace :standard))
 
-(defn handle-lambda [handlers current ast]
-  (println "handling lambda")
-  ast)
+(defmulti handle
+  (fn [current ast]
+    (first current)))
 
-(defn handle-macro [handlers current ast]
+(defmethod handle :lambda-definition [current ast]
+  (println "handling lambda")
+  (conj (:cells ast) current))
+
+(defmethod handle :macro-definition [current ast]
   (println "handling macro")
   ast)
 
-(defn handle-binding [handlers current ast]
+(defmethod handle :binding-definition [current ast]
   (println "handling binding")
   ast)
 
-(defn handle-call [handlers current ast]
+(defmethod handle :function-call [current ast]
   (println "handling call")
   ast)
 
-(def handlers {:lambda-definition handle-lambda
-               :macro-definition handle-macro
-               :binding-definition handle-binding
-               :function-call handle-call})
+(defmethod handle :default [current ast]
+  (assert false (str "invalid handler for " current)))
 
-(defn handle [current ast]
-  (let [handler (handlers (first current))]
-    (assert handler (str "invalid handler for " current))
-    (handler handlers current ast)
-  ))
+(defn empty-ast []
+  {:cells []})
 
 (defn -main
   [& args]
   (let [parsed (parse (slurp (first args)))]
     (when parsed
       (loop [current (first parsed) remaining (rest parsed)
-             ast {}]
+             ast (empty-ast)]
         (println current)
         (cond
           (nil? current) ast
