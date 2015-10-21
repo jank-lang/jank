@@ -5,6 +5,7 @@
          function-definition /
          macro-definition /
          binding-definition /
+         function-call /
          list
 
 integer = #'[+-]?\d+'
@@ -33,6 +34,10 @@ function-definition =
   right-paren
 
 generic-specialization = <':'> list
+function-call =
+  left-paren identifier generic-specialization?
+    atom*
+  right-paren
 
 <macro-keyword> = <'macro'>
 <generic-list> = list

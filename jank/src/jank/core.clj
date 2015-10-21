@@ -19,6 +19,10 @@
   (println "handling binding")
   ast)
 
+(defn handle-call [current ast]
+  (println "handling call")
+  ast)
+
 (defn handle-list [current ast]
   (println "handling list")
   ast)
@@ -26,11 +30,14 @@
 (def handlers {:function-definition handle-function
                :macro-definition handle-macro
                :binding-definition handle-binding
+               :function-call handle-call
                :list handle-list})
 
 (defn handle [current ast]
-  ((handlers (first current)) current ast)
-  )
+  (let [handler (handlers (first current))]
+    (assert handler "invalid handler")
+    (handler current ast)
+  ))
 
 (defn -main
   [& args]
