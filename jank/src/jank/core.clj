@@ -7,7 +7,7 @@
     (clojure.java.io/resource "grammar")
     :auto-whitespace :standard))
 
-(defn map-after [index func coll]
+(defn map-from [index func coll]
   (vec (concat (take index coll)
                (map func (drop index coll)))))
 
@@ -16,16 +16,20 @@
     (first current)))
 
 (defmethod handle :lambda-definition [current ast]
-  (map-after 3 #(handle %1 ast) current))
+  ; (λ (args) (rets) ...)
+  (map-from 3 #(handle %1 ast) current))
 
 (defmethod handle :macro-definition [current ast]
-  current)
+  ; (macro name (types) (args) ...)
+  (map-from 4 #(handle %1 ast) current))
 
 (defmethod handle :binding-definition [current ast]
-  current)
+  ; (bind name value)
+  (map-from 2 #(handle %1 ast) current))
 
 (defmethod handle :function-call [current ast]
-  current)
+  ; (foo ...)
+  (map-from 1 #(handle %1 ast) current))
 
 (defmethod handle :default [current ast]
   current)
