@@ -12,19 +12,15 @@
     (first current)))
 
 (defmethod handle :lambda-definition [current ast]
-  (println "handling lambda")
   (conj (:cells ast) current))
 
 (defmethod handle :macro-definition [current ast]
-  (println "handling macro")
   ast)
 
 (defmethod handle :binding-definition [current ast]
-  (println "handling binding")
   ast)
 
 (defmethod handle :function-call [current ast]
-  (println "handling call")
   ast)
 
 (defmethod handle :default [current ast]
