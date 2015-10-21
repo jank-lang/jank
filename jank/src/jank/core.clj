@@ -45,6 +45,7 @@
     (when parsed
       (loop [current (first parsed) remaining (rest parsed)
              ast '[]]
+        (println current)
         (cond
           (nil? current) ast
           :else (recur (first remaining)

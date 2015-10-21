@@ -5,8 +5,7 @@
          function-definition /
          macro-definition /
          binding-definition /
-         function-call /
-         list
+         function-call
 
 integer = #'[+-]?\d+'
 real = #'[+-]?\d+\.\d*'
