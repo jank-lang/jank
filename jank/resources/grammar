@@ -1,5 +1,8 @@
 <program> = atom*
-<atom> = string / number / boolean / identifier / keyword / function-definition / list
+<atom> = string / number / boolean / identifier / keyword /
+         function-definition /
+         binding-definition /
+         list
 
 integer = #'[+-]?\d+'
 real = #'[+-]?\d+\.\d*'
@@ -25,3 +28,6 @@ function-definition =
   left-paren function-keyword identifier argument-list return-list
     atom*
   right-paren
+
+<bind-keyword> = <'bind'>
+binding-definition = left-paren bind-keyword identifier atom right-paren
