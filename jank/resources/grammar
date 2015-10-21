@@ -1,5 +1,7 @@
 <program> = atom*
-<atom> = string / number / boolean / identifier / keyword /
+<atom> = string / number / boolean /
+         generic-specialization /
+         identifier / keyword /
          function-definition /
          binding-definition /
          list
@@ -28,6 +30,8 @@ function-definition =
   left-paren function-keyword identifier argument-list return-list
     atom*
   right-paren
+
+generic-specialization = <':'> list
 
 <bind-keyword> = <'bind'>
 binding-definition = left-paren bind-keyword identifier atom right-paren

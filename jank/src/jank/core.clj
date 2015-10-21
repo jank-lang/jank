@@ -11,8 +11,5 @@
   [& args]
   (println
     (grammar "
-(bind kitty \"meow\")
-(bind four (+ 2 2))
-(ƒ ident (s string) (string)
-  s)
+(print : (integer) 42)
 ")))
