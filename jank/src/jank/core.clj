@@ -7,8 +7,8 @@
     (clojure.java.io/resource "grammar")
     :auto-whitespace :standard))
 
-(defn handle-function [handlers current ast]
-  (println "handling function")
+(defn handle-lambda [handlers current ast]
+  (println "handling lambda")
   ast)
 
 (defn handle-macro [handlers current ast]
@@ -23,7 +23,7 @@
   (println "handling call")
   ast)
 
-(def handlers {:function-definition handle-function
+(def handlers {:lambda-definition handle-lambda
                :macro-definition handle-macro
                :binding-definition handle-binding
                :function-call handle-call})

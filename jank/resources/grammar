@@ -2,7 +2,7 @@
 <atom> = string / number / boolean /
          generic-specialization /
          identifier / keyword /
-         function-definition /
+         lambda-definition /
          macro-definition /
          binding-definition /
          function-call
@@ -24,11 +24,11 @@ boolean = 'true' | 'false'
 <right-paren> = <')'>
 list = left-paren atom* right-paren
 
-<function-keyword> = <'function'> | <'ƒ'>
+<lambda-keyword> = <'lambda'> | <'λ'>
 <argument-list> = list
 <return-list> = list
-function-definition =
-  left-paren function-keyword identifier argument-list return-list
+lambda-definition =
+  left-paren lambda-keyword argument-list return-list
     atom*
   right-paren
 
