@@ -12,19 +12,19 @@
     (first current)))
 
 (defmethod handle :lambda-definition [current ast]
-  (conj (:cells ast) current))
+  current)
 
 (defmethod handle :macro-definition [current ast]
-  ast)
+  current)
 
 (defmethod handle :binding-definition [current ast]
-  ast)
+  current)
 
 (defmethod handle :function-call [current ast]
-  ast)
+  current)
 
 (defmethod handle :default [current ast]
-  (assert false (str "invalid handler for " current)))
+  current)
 
 (defn empty-ast []
   {:cells []})
@@ -40,5 +40,5 @@
           (nil? current) ast
           :else (recur (first remaining)
                        (rest remaining)
-                       (handle current ast))
+                       (update ast :cells conj (handle current ast)))
         )))))
