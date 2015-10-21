@@ -23,15 +23,10 @@
   (println "handling call")
   ast)
 
-(defn handle-list [current ast]
-  (println "handling list")
-  ast)
-
 (def handlers {:function-definition handle-function
                :macro-definition handle-macro
                :binding-definition handle-binding
-               :function-call handle-call
-               :list handle-list})
+               :function-call handle-call})
 
 (defn handle [current ast]
   (let [handler (handlers (first current))]
