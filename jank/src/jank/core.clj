@@ -78,8 +78,8 @@
 (defmethod codegen-impl :function-call [current]
   (str (codegen-impl (second current)) ; Name
        "("
-       (comma-separate-args (map codegen-impl (drop 2 current)))
-       ");")) ; Args
+       (comma-separate-args (map codegen-impl (drop 2 current))) ; Args
+       ");"))
 
 (defmethod codegen-impl :argument-list [current]
   (str "("
@@ -87,6 +87,19 @@
          (swap-params
            (map codegen-impl (rest (second current)))))
        ")"))
+
+(defmethod codegen-impl :if-statement [current]
+  (let [base (str "if("
+                  (codegen-impl (second (second current)))
+                  "){"
+                  (codegen-impl (second (nth current 2)))
+                  "}")]
+    (cond
+      (= (count current) 4) (str base
+                                 " else{"
+                                 (codegen-impl (second (nth current 3)))
+                                 "}")
+      :else base)))
 
 (defmethod codegen-impl :list [current]
   (str "("
