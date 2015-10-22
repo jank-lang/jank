@@ -69,7 +69,11 @@
        " }"))
 
 (defmethod codegen-impl :binding-definition [current]
-  "")
+  (str "auto "
+       (codegen-impl (second current))
+       " = "
+       (codegen-impl (nth current 2))
+       ";"))
 
 (defmethod codegen-impl :function-call [current]
   (str (codegen-impl (second current)) ; Name
