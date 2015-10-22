@@ -115,12 +115,15 @@
 (defmethod codegen-impl :real [current]
   (second current))
 
+(defmethod codegen-impl :boolean [current]
+  (second current))
+
 (defmethod codegen-impl :identifier [current]
   ; TODO Sanitize
   (second current))
 
 (defmethod codegen-impl :default [current]
-  (assert false (str "no codegen for " current)))
+  (assert false (str "no codegen for '" current "'")))
 
 (defn codegen [ast]
   (doseq [current (:cells ast)]
