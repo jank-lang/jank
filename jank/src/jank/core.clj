@@ -84,6 +84,9 @@
        (reduce #(str %1 " " %2) (map codegen-impl (rest current)))
        ")"))
 
+(defmethod codegen-impl :string [current]
+  (str "\"" (second current) "\""))
+
 (defmethod codegen-impl :identifier [current]
   ; Sanitize
   (second current))
