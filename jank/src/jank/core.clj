@@ -96,6 +96,12 @@
 (defmethod codegen-impl :string [current]
   (str "\"" (second current) "\""))
 
+(defmethod codegen-impl :integer [current]
+  (second current))
+
+(defmethod codegen-impl :real [current]
+  (second current))
+
 (defmethod codegen-impl :identifier [current]
   ; Sanitize
   (second current))
