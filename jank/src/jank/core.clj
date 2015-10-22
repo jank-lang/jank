@@ -63,7 +63,9 @@
   (str "[&]"
        (codegen-impl (second current)) ; Params
        " -> "
-       (codegen-impl (second (nth current 2))) ; Return
+       (if-let [ret (second (nth current 2))]
+         (codegen-impl ret)
+         "void")
        " { "
        (reduce-spaced-map codegen-impl (drop 3 current)) ; Body
        " }"))
