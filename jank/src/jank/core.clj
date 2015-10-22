@@ -107,7 +107,7 @@
   (second current))
 
 (defmethod codegen-impl :default [current]
-  "")
+  (assert false (str "no codegen for " current)))
 
 (defn codegen [ast]
   (doseq [current (:cells ast)]
