@@ -55,6 +55,10 @@
    space-separated string"
   (reduce #(str %1 " " %2) (map f coll)))
 
+(defn end-statement [statement]
+  "Ends a statement with a semi-colon"
+  (str statement ";"))
+
 (defmulti codegen-impl
   (fn [current]
     (first current)))
@@ -67,21 +71,22 @@
          (codegen-impl ret)
          "void")
        " { "
-       (reduce-spaced-map codegen-impl (drop 3 current)) ; Body
+       (reduce-spaced-map (comp end-statement codegen-impl)
+                          (drop 3 current))
        " }"))
 
 (defmethod codegen-impl :binding-definition [current]
-  (str "auto "
-       (codegen-impl (second current))
-       " = "
-       (codegen-impl (nth current 2))
-       ";"))
+  (end-statement
+    (str "auto "
+         (codegen-impl (second current))
+         " = "
+         (codegen-impl (nth current 2)))))
 
 (defmethod codegen-impl :function-call [current]
   (str (codegen-impl (second current)) ; Name
        "("
        (comma-separate-args (map codegen-impl (drop 2 current))) ; Args
-       ");"))
+       ")"))
 
 (defmethod codegen-impl :argument-list [current]
   (str "("
@@ -94,12 +99,13 @@
   (let [base (str "if("
                   (codegen-impl (second (second current)))
                   "){"
-                  (codegen-impl (second (nth current 2)))
+                  (end-statement (codegen-impl (second (nth current 2))))
                   "}")]
     (cond
       (= (count current) 4) (str base
                                  " else{"
-                                 (codegen-impl (second (nth current 3)))
+                                 (end-statement
+                                   (codegen-impl (second (nth current 3))))
                                  "}")
       :else base)))
 
