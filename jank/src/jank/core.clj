@@ -71,7 +71,7 @@
   (str "("
        (comma-separate
          (swap-args
-           (map second (rest (second current)))))
+           (map codegen-impl (rest (second current)))))
        ")"))
 
 (defmethod codegen-impl :list [current]
