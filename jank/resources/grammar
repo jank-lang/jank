@@ -25,7 +25,7 @@ boolean = 'true' | 'false'
 list = left-paren atom* right-paren
 
 <lambda-keyword> = <'lambda'> | <'λ'>
-<argument-list> = list
+argument-list = list
 <return-list> = list
 lambda-definition =
   left-paren lambda-keyword argument-list return-list
