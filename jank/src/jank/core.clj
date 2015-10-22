@@ -34,16 +34,21 @@
 (defmethod handle :default [current ast]
   current)
 
-(defn swap-args [args]
+(defn swap-params [params]
   "Takes the input (i integer b boolean) and gives the C-like
    representation: ((integer i) (boolean b))"
-  (map reverse (partition 2 args)))
+  (map reverse (partition 2 params)))
 
-(defn comma-separate [pairs]
+(defn comma-separate-params [pairs]
   "Turns ((integer i) (boolean b)) into a string like
    \"integer i, boolean b\""
   (clojure.string/join ", "
                        (map #(str (first %1) " " (second %1)) pairs)))
+
+(defn comma-separate-args [args]
+  "Turns (foo bar spam) into a string like
+   \"foo, bar, spam\""
+  (clojure.string/join ", " args))
 
 (defmulti codegen-impl
   (fn [current]
@@ -51,26 +56,26 @@
 
 (defmethod codegen-impl :lambda-definition [current]
   (str "[&]"
-       (codegen-impl (second current)) ; Args
+       (codegen-impl (second current)) ; Params
        " -> "
-       (codegen-impl (nth current 2)) ; Return
-       "{ "
-       (codegen-impl (drop 2 current)) ; Body
+       (codegen-impl (second (nth current 2))) ; Return
+       " { "
+       (reduce #(str %1 " " %2) (map codegen-impl (drop 3 current))) ; Body
        " }"))
-
-(defmethod codegen-impl :macro-definition [current]
-  "")
 
 (defmethod codegen-impl :binding-definition [current]
   "")
 
 (defmethod codegen-impl :function-call [current]
-  "")
+  (str (codegen-impl (second current)) ; Name
+       "("
+       (comma-separate-args (map codegen-impl (drop 2 current)))
+       ");")) ; Args
 
 (defmethod codegen-impl :argument-list [current]
   (str "("
-       (comma-separate
-         (swap-args
+       (comma-separate-params
+         (swap-params
            (map codegen-impl (rest (second current)))))
        ")"))
 
@@ -80,6 +85,7 @@
        ")"))
 
 (defmethod codegen-impl :identifier [current]
+  ; Sanitize
   (second current))
 
 (defmethod codegen-impl :default [current]
