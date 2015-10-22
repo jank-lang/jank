@@ -103,7 +103,7 @@
   (second current))
 
 (defmethod codegen-impl :identifier [current]
-  ; Sanitize
+  ; TODO Sanitize
   (second current))
 
 (defmethod codegen-impl :default [current]
