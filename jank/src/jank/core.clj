@@ -43,8 +43,8 @@
   "Turns ((integer i) (boolean b)) into a string like
    \"integer i, boolean b\""
   (clojure.string/join ", "
-                       (map #(str (first %1) " " (second %1))
-                            pairs)))
+                       (map #(str (first %1) " " (second %1)) pairs)))
+
 (defmulti codegen-impl
   (fn [current]
     (first current)))
@@ -52,7 +52,11 @@
 (defmethod codegen-impl :lambda-definition [current]
   (str "[&]"
        (codegen-impl (second current)) ; Args
-       ))
+       " -> "
+       (codegen-impl (nth current 2)) ; Return
+       "{ "
+       (codegen-impl (drop 2 current)) ; Body
+       " }"))
 
 (defmethod codegen-impl :macro-definition [current]
   "")
@@ -71,7 +75,12 @@
        ")"))
 
 (defmethod codegen-impl :list [current]
-  "")
+  (str "("
+       (reduce #(str %1 " " %2) (map codegen-impl (rest current)))
+       ")"))
+
+(defmethod codegen-impl :identifier [current]
+  (second current))
 
 (defmethod codegen-impl :default [current]
   "")
