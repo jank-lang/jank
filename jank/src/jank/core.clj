@@ -63,7 +63,7 @@
   (str "[&]"
        (codegen-impl (second current)) ; Params
        " -> "
-       (if-let [ret (second (nth current 2))]
+       (if-let [ret (second (nth current 2))] ; Return
          (codegen-impl ret)
          "void")
        " { "
