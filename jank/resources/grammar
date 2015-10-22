@@ -5,6 +5,7 @@
          lambda-definition /
          macro-definition /
          binding-definition /
+         if-statement /
          function-call
 
 integer = #'[+-]?\d+'
@@ -47,3 +48,12 @@ macro-definition =
 
 <bind-keyword> = <'bind'>
 binding-definition = left-paren bind-keyword identifier atom right-paren
+
+<if-keyword> = <'if'>
+condition = atom
+then = atom
+else = atom
+if-statement = left-paren if-keyword condition
+                 then
+                 else?
+               right-paren
