@@ -50,6 +50,11 @@
    \"foo, bar, spam\""
   (clojure.string/join ", " args))
 
+(defn reduce-spaced-map [f coll]
+  "Maps f over coll and collects the results together in a
+   space-separated string"
+  (reduce #(str %1 " " %2) (map f coll)))
+
 (defmulti codegen-impl
   (fn [current]
     (first current)))
@@ -60,7 +65,7 @@
        " -> "
        (codegen-impl (second (nth current 2))) ; Return
        " { "
-       (reduce #(str %1 " " %2) (map codegen-impl (drop 3 current))) ; Body
+       (reduce-spaced-map codegen-impl (drop 3 current)) ; Body
        " }"))
 
 (defmethod codegen-impl :binding-definition [current]
@@ -81,7 +86,7 @@
 
 (defmethod codegen-impl :list [current]
   (str "("
-       (reduce #(str %1 " " %2) (map codegen-impl (rest current)))
+       (reduce-spaced-map codegen-impl (rest current))
        ")"))
 
 (defmethod codegen-impl :string [current]
