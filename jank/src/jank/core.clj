@@ -16,4 +16,5 @@
             (nil? current) ast
             :else (recur (first remaining)
                          (rest remaining)
-                         (update ast :cells conj (parse/handle current ast)))))))))
+                         (update ast
+                                 :cells conj (parse/handle current ast)))))))))
