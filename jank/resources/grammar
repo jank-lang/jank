@@ -6,6 +6,7 @@
          macro-definition /
          binding-definition /
          if-statement /
+         do-statement /
          function-call
 
 integer = #'[+-]?\d+'
@@ -56,4 +57,9 @@ else = atom
 if-statement = left-paren if-keyword condition
                  then
                  else?
+               right-paren
+
+<do-keyword> = <'do'>
+do-statement = left-paren do-keyword
+                 atom+
                right-paren
