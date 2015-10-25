@@ -9,7 +9,7 @@
   "Turns ((integer i) (boolean b)) into a string like
    \"integer i, boolean b\""
   (clojure.string/join ", "
-                       (map #(str (first %1) " " (second %1)) pairs)))
+                       (map #(str (first %) " " (second %)) pairs)))
 
 (defn comma-separate-args [args]
   "Turns (foo bar spam) into a string like
@@ -24,6 +24,43 @@
 (defn end-statement [statement]
   "Ends a statement with a semi-colon"
   (str statement ";"))
+
+(def sanitized-symbols {"=" "equal"
+                        "!" "bang"
+                        "#" "pound"
+                        "$" "money"
+                        "&" "ampersand"
+                        "%" "percent"
+                        "´" "tick"
+                        "*" "asterisk"
+                        "+" "plus"
+                        "," "comma"
+                        "-" "minus"
+                        "." "dot"
+                        "/" "slash"
+                        ":" "colon"
+                        ";" "semicolon"
+                        "<" "less"
+                        ">" "greater"
+                        "?" "question"
+                        "@" "at"
+                        "\\" "backslash"
+                        "[" "left_square"
+                        "]" "right_square"
+                        "{" "left_curly"
+                        "}" "right_curly"
+                        "|" "pipe"
+                        "^" "caret"
+                        "`" "grave"
+                        "~" "tilde"})
+
+(defn sanitize [identifier-str]
+  "Sanitizes a char (as a str) of a jank identifier into
+   something which C-like languages will accept."
+  (let [named (sanitized-symbols identifier-str)]
+    (cond
+      named named
+      :else (vec identifier-str))))
 
 (defmulti codegen-impl
   (fn [current]
@@ -93,8 +130,7 @@
   (second current))
 
 (defmethod codegen-impl :identifier [current]
-  ; TODO Sanitize
-  (second current))
+  (apply str (mapcat (comp sanitize str) (second current))))
 
 (defmethod codegen-impl :default [current]
   (assert false (str "no codegen for '" current "'")))
