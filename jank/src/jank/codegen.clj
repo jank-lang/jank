@@ -61,7 +61,11 @@
     (cond
       named named
       (> 127 (int (nth identifier-str 0)) 32) identifier-str
-      :else (vec (str "_u" (Math/abs (hash identifier-str)))))))
+      :else (-> identifier-str
+                hash
+                Math/abs
+                ((partial str "_u"))
+                vec))))
 
 (defmulti codegen-impl
   (fn [current]
