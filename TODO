@@ -1,5 +1,6 @@
 clojure
   codegen formatter
+  type checking
 
 allow keywords?
   each keyword is its own type
