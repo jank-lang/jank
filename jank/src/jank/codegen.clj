@@ -71,6 +71,19 @@
   (fn [current]
     (first current)))
 
+(defmethod codegen-impl :function-definition [current]
+  (let [lambda (nth current 2)]
+    (str (if-let [ret (second (nth lambda 2))] ; Return
+           (codegen-impl ret)
+           "void")
+         " "
+         (codegen-impl (second current)) ; Name
+         (codegen-impl (second lambda)) ; Params
+         " { "
+         (reduce-spaced-map (comp end-statement codegen-impl)
+                            (drop 3 lambda))
+         " }")))
+
 (defmethod codegen-impl :lambda-definition [current]
   (str "[&]"
        (codegen-impl (second current)) ; Params
@@ -84,11 +97,15 @@
        " }"))
 
 (defmethod codegen-impl :binding-definition [current]
-  (end-statement
-    (str "auto "
-         (codegen-impl (second current))
-         " = "
-         (codegen-impl (nth current 2)))))
+  (cond
+    (= (first (nth current 2)) :lambda-definition)
+    (codegen-impl (update-in current [0] (fn [x] :function-definition)))
+    :else
+    (end-statement
+      (str "auto "
+           (codegen-impl (second current))
+           " = "
+           (codegen-impl (nth current 2))))))
 
 (defmethod codegen-impl :function-call [current]
   (str (codegen-impl (second current)) ; Name
