@@ -135,6 +135,12 @@
                                  "}")
       :else base)))
 
+(defmethod codegen-impl :do-statement [current]
+  (str "[&]{"
+       (reduce-spaced-map (comp end-statement codegen-impl)
+                          (drop 1 current))
+       "}"))
+
 (defmethod codegen-impl :list [current]
   (str "("
        (reduce-spaced-map codegen-impl (rest current))
