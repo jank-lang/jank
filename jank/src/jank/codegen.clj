@@ -139,7 +139,7 @@
   (str "[&]{"
        (reduce-spaced-map (comp end-statement codegen-impl)
                           (drop 1 current))
-       "}"))
+       "}()"))
 
 (defmethod codegen-impl :list [current]
   (str "("
