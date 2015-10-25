@@ -1,5 +1,4 @@
 clojure
-  sanitize identifiers
 
 allow keywords?
   each keyword is its own type
