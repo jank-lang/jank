@@ -42,7 +42,7 @@
                         ";" "semicolon"
                         "<" "less"
                         ">" "greater"
-                        "?" "question"
+                        "?" "predicate"
                         "@" "at"
                         "\\" "backslash"
                         "[" "left_square"
@@ -60,7 +60,8 @@
   (let [named (sanitized-symbols identifier-str)]
     (cond
       named named
-      :else (vec identifier-str))))
+      (> 127 (int (nth identifier-str 0)) 32) identifier-str
+      :else (vec (str "_u" (hash identifier-str))))))
 
 (defmulti codegen-impl
   (fn [current]
