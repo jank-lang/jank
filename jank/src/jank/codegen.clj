@@ -8,13 +8,13 @@
 (defn comma-separate-params [pairs]
   "Turns ((integer i) (boolean b)) into a string like
    \"integer i, boolean b\""
-  (clojure.string/join ", "
+  (clojure.string/join ","
                        (map #(str (first %) " " (second %)) pairs)))
 
 (defn comma-separate-args [args]
   "Turns (foo bar spam) into a string like
    \"foo, bar, spam\""
-  (clojure.string/join ", " args))
+  (clojure.string/join "," args))
 
 (defn reduce-spaced-map [f coll]
   "Maps f over coll and collects the results together in a
@@ -79,22 +79,22 @@
          " "
          (codegen-impl (second current)) ; Name
          (codegen-impl (second lambda)) ; Params
-         " { "
+         "{"
          (reduce-spaced-map (comp end-statement codegen-impl)
                             (drop 3 lambda))
-         " }")))
+         "}")))
 
 (defmethod codegen-impl :lambda-definition [current]
   (str "[&]"
        (codegen-impl (second current)) ; Params
-       " -> "
+       "->"
        (if-let [ret (second (nth current 2))] ; Return
          (codegen-impl ret)
          "void")
-       " { "
+       "{"
        (reduce-spaced-map (comp end-statement codegen-impl)
                           (drop 3 current))
-       " }"))
+       "}"))
 
 (defmethod codegen-impl :binding-definition [current]
   (cond
@@ -105,7 +105,7 @@
     (end-statement
       (str "auto "
            (codegen-impl (second current))
-           " = "
+           "="
            (codegen-impl (nth current 2))))))
 
 (defmethod codegen-impl :function-call [current]
@@ -129,7 +129,7 @@
                   "}")]
     (cond
       (= (count current) 4) (str base
-                                 " else{"
+                                 "else{"
                                  (end-statement
                                    (codegen-impl (second (nth current 3))))
                                  "}")
