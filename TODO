@@ -1,6 +1,8 @@
 clojure
   codegen formatter
   type checking
+  macros
+    do statement
 
 allow keywords?
   each keyword is its own type
