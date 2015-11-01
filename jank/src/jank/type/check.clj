@@ -8,7 +8,6 @@
       (empty? remaining)
       (conj checked item)
       :else
-      (do
-        (recur (first remaining)
-               (rest remaining)
-               (conj checked item))))))
+      (recur (first remaining)
+             (rest remaining)
+             (conj checked item)))))
