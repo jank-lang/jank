@@ -1,5 +1,9 @@
 (ns jank.type.check)
 
+; TODO
+; Add :type
+; Add :scope {:parent {}
+;             :bindings []}
 (defn check [parsed]
   (loop [item (first (:cells parsed))
          remaining (rest (:cells parsed))
