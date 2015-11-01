@@ -13,9 +13,7 @@
          scope {}]
     (cond
       (nil? item)
-      (do
-      (list (update parsed :cells (fn [x] checked))
-            scope))
+      (list (update parsed :cells (fn [_] checked)) scope)
       :else
       (recur (first remaining)
              (rest remaining)
