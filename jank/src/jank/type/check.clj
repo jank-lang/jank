@@ -21,14 +21,20 @@
                  " doesn't match previous declarations"))
     decl))
 
+(defn add-declaration [item scope]
+  (let [decl (validate-declaration (get-in item [1 1]) scope)]
+    ))
+
 (defmulti check-item
+  "Type checks the given expression. Returns a cons of the typed
+   expression and the updated scope."
   (fn [item scope]
     (first item)))
 
 (defmethod check-item :declare-statement [item scope]
   (let [decl (validate-declaration (get-in item [1 1]) scope)]
     (println decl)
-      (list item scope)))
+    (list item scope)))
 
 (defmethod check-item :function-definition [item scope]
   (list item scope))
