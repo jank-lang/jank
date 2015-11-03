@@ -9,17 +9,24 @@
         found
         (recur (:parent current-scope))))))
 
-(defn validate-declaration [decl-name scope]
+(defn validate-declaration [item scope]
   "Looks up a declaration, if any, and verifies that the provided
    declaration has a matching type."
-  nil)
+  (let [decl-name (get-in item [1 1])
+        decl-type (get-in item [2 1])
+        decl (lookup-declaration decl-name scope)]
+    (assert (= (:type decl) decl-type)
+            (str "Declaration of "
+                 decl-name
+                 " doesn't match previous declarations"))
+    decl))
 
 (defmulti check-item
   (fn [item scope]
     (first item)))
 
 (defmethod check-item :declare-statement [item scope]
-  (let [decl (lookup-declaration (get-in item [1 1]) scope)]
+  (let [decl (validate-declaration (get-in item [1 1]) scope)]
     (println decl)
       (list item scope)))
 
