@@ -13,6 +13,7 @@
                (map func (drop index coll)))))
 
 (defmulti handle
+  "This does nothing right now. TODO It should probably just be removed."
   (fn [current ast]
     (first current)))
 

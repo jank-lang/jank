@@ -10,7 +10,6 @@
     (first
       (check/check
         (let [parsed (parse/parse (slurp (first args)))]
-          (println "parsed:" parsed)
           (when parsed
             (loop [current (first parsed)
                    remaining (rest parsed)
