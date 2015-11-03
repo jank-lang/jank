@@ -1,0 +1,32 @@
+impl:
+  declarations first
+    prelude to setup types and functions
+    build from there
+
+  core.logic
+    type checking
+
+    use unification to determine the allowed types
+    (ƒ sum (a Ɐ b Ɐ) (Ɐ)
+      (+ a b))
+
+design:
+  functions
+    binding + lambda
+    declaration based
+      read the decl and keep a future to the definition
+      auto return types will need to block on the future
+    always generic
+      function can be a macro for not specifying generics
+      generic-function is the default
+
+  bindings
+    declaration based (with futures)
+
+  declarations of bindings and functions
+
+  no interpreter outside of macros
+    jump right into outputting C++14
+
+  RAII
+    shared_ptrs
