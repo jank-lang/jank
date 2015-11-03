@@ -3,6 +3,11 @@ impl:
     prelude to setup types and functions
     build from there
 
+  tests
+    decls
+    migrate old tests
+    per-commit performance?
+
   core.logic
     type checking
 
