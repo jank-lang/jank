@@ -71,6 +71,9 @@
   (fn [current]
     (first current)))
 
+(defmethod codegen-impl :declare-statement [current]
+  "")
+
 (defmethod codegen-impl :function-definition [current]
   (let [lambda (nth current 2)]
     (str (if-let [ret (second (nth lambda 2))] ; Return

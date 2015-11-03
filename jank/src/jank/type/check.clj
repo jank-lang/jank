@@ -4,6 +4,9 @@
   (fn [item scope]
     (first item)))
 
+(defmethod check-item :declare-statement [item scope]
+  (list item scope))
+
 (defmethod check-item :function-definition [item scope]
   (list item scope))
 
