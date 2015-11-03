@@ -7,6 +7,8 @@
     :auto-whitespace :standard))
 
 (defn map-from [index func coll]
+  "Maps from the specified index to the end of the collection.
+   The unmapped items are retained."
   (vec (concat (take index coll)
                (map func (drop index coll)))))
 
