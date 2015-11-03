@@ -9,21 +9,28 @@
         found
         (recur (:parent current-scope))))))
 
-(defn validate-declaration [item scope]
+(defn validate-declaration [decl-name decl-type scope]
   "Looks up a declaration, if any, and verifies that the provided
-   declaration has a matching type."
-  (let [decl-name (get-in item [1 1])
-        decl-type (get-in item [2 1])
-        decl (lookup-declaration decl-name scope)]
-    (assert (= (:type decl) decl-type)
-            (str "Declaration of "
-                 decl-name
-                 " doesn't match previous declarations"))
+   declaration has a matching type. Returns the decl or nil, if none is found."
+  (let [decl (lookup-declaration decl-name scope)]
+    (when (some? decl)
+      (assert (= (:type decl) decl-type)
+              (str "Declaration of "
+                   decl-name
+                   " doesn't match previous declarations")))
     decl))
 
 (defn add-declaration [item scope]
-  (let [decl (validate-declaration (get-in item [1 1]) scope)]
-    ))
+  "Finds, validates, and adds the provided declaration into the scope.
+   Returns the updated scope."
+  (let [decl-name (get-in item [1 1])
+        decl-type (get-in item [2 1])
+        decl (validate-declaration decl-name decl-type scope)]
+    (cond
+      (nil? decl)
+      (assoc (:declaration scope) decl-name {:type decl-type})
+      :else
+      scope)))
 
 (defmulti check-item
   "Type checks the given expression. Returns a cons of the typed
@@ -32,9 +39,7 @@
     (first item)))
 
 (defmethod check-item :declare-statement [item scope]
-  (let [decl (validate-declaration (get-in item [1 1]) scope)]
-    (println decl)
-    (list item scope)))
+  (list item (add-declaration item scope)))
 
 (defmethod check-item :function-definition [item scope]
   (list item scope))
@@ -86,6 +91,7 @@
          remaining (rest (:cells parsed))
          checked []
          scope {}]
+    (println "scope:" scope)
     (cond
       (nil? item)
       (list (update parsed :cells (fn [_] checked)) scope)
