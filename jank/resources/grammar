@@ -6,6 +6,7 @@
          macro-definition /
          binding-definition /
          if-statement /
+         declare-statement /
          function-call
 
 integer = #'[+-]?\d+'
@@ -57,3 +58,8 @@ if-statement = left-paren if-keyword condition
                  then
                  else?
                right-paren
+
+<declare-keyword> = <'declare'>
+declare-statement = left-paren declare-keyword
+                      identifier (atom | generic-specialization)
+                    right-paren
