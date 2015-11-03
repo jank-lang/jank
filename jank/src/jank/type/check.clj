@@ -18,7 +18,7 @@
               (str "Declaration of "
                    decl-name
                    " doesn't match previous declarations: "
-                   (:type decl)
+                   (:type (second decl))
                    " vs "
                    decl-type)))
     decl))
