@@ -28,7 +28,7 @@
         decl (validate-declaration decl-name decl-type scope)]
     (cond
       (nil? decl)
-      (assoc (:declaration scope) decl-name {:type decl-type})
+      (update scope :declarations assoc decl-name {:type decl-type})
       :else
       scope)))
 
