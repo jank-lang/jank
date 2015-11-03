@@ -1,46 +1,46 @@
 (ns jank.type.check)
 
 (defmulti check-item
-  (fn [item]
+  (fn [item scope]
     (first item)))
 
-(defmethod check-item :function-definition [item]
-  item)
+(defmethod check-item :function-definition [item scope]
+  (list item scope))
 
-(defmethod check-item :lambda-definition [item]
-  item)
+(defmethod check-item :lambda-definition [item scope]
+  (list item scope))
 
-(defmethod check-item :binding-definition [item]
-  item)
+(defmethod check-item :binding-definition [item scope]
+  (list item scope))
 
-(defmethod check-item :function-call [item]
-  item)
+(defmethod check-item :function-call [item scope]
+  (list item scope))
 
-(defmethod check-item :argument-list [item]
-  item)
+(defmethod check-item :argument-list [item scope]
+  (list item scope))
 
-(defmethod check-item :if-statement [item]
-  item)
+(defmethod check-item :if-statement [item scope]
+  (list item scope))
 
-(defmethod check-item :list [item]
-  item)
+(defmethod check-item :list [item scope]
+  (list item scope))
 
-(defmethod check-item :string [item]
-  item)
+(defmethod check-item :string [item scope]
+  (list item scope))
 
-(defmethod check-item :integer [item]
-  item)
+(defmethod check-item :integer [item scope]
+  (list item scope))
 
-(defmethod check-item :real [item]
-  item)
+(defmethod check-item :real [item scope]
+  (list item scope))
 
-(defmethod check-item :boolean [item]
-  item)
+(defmethod check-item :boolean [item scope]
+  (list item scope))
 
-(defmethod check-item :identifier [item]
-  item)
+(defmethod check-item :identifier [item scope]
+  (list item scope))
 
-(defmethod check-item :default [item]
+(defmethod check-item :default [item scope]
   (assert false (str "no type checking for '" item "'")))
 
 ; TODO
@@ -58,7 +58,9 @@
       (nil? item)
       (list (update parsed :cells (fn [_] checked)) scope)
       :else
-      (recur (first remaining)
-             (rest remaining)
-             (conj checked (check-item item))
-             scope))))
+      (do
+        (let [[checked-item new-scope] (check-item item scope)]
+          (recur (first remaining)
+                 (rest remaining)
+                 (conj checked checked-item)
+                 new-scope))))))
