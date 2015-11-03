@@ -1,11 +1,27 @@
 (ns jank.type.check)
 
+(defn lookup-declaration [decl-name scope]
+  "Recursively looks through the hierarchy of scopes for the declaration."
+  (loop [current-scope scope]
+    (when current-scope
+      ; TODO: Should be a vector of overloads
+      (if-let [found (find (:declarations current-scope) decl-name)]
+        found
+        (recur (:parent current-scope))))))
+
+(defn validate-declaration [decl-name scope]
+  "Looks up a declaration, if any, and verifies that the provided
+   declaration has a matching type."
+  nil)
+
 (defmulti check-item
   (fn [item scope]
     (first item)))
 
 (defmethod check-item :declare-statement [item scope]
-  (list item scope))
+  (let [decl (lookup-declaration (get-in item [1 1]) scope)]
+    (println decl)
+      (list item scope)))
 
 (defmethod check-item :function-definition [item scope]
   (list item scope))
