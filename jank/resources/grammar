@@ -1,6 +1,6 @@
 <program> = atom*
 <atom> = string / number / boolean /
-         generic-identifier / keyword /
+         identifier / keyword /
          lambda-definition /
          macro-definition /
          binding-definition /
@@ -16,7 +16,7 @@ real = #'[+-]?\d+\.\d*'
 <not-double-quote> = #'[^\"]*'
 string = <double-quote> not-double-quote <double-quote>
 
-identifier = #'[^\s"\'()\d][^\s"\'()]*'
+identifier = #'[^\s"\'()\d][^\s"\'()]*' generic-specialization?
 keyword = <':'> identifier
 
 boolean = 'true' | 'false'
@@ -34,12 +34,11 @@ lambda-definition =
   right-paren
 
 specialization-list = left-paren
-                        (generic-identifier | specialization-list)*
+                        (identifier | specialization-list)*
                       right-paren
 <generic-specialization> = <':'> specialization-list
-generic-identifier = identifier generic-specialization?
 function-call =
-  left-paren generic-identifier
+  left-paren identifier
     atom*
   right-paren
 
@@ -64,5 +63,5 @@ if-statement = left-paren if-keyword condition
 
 <declare-keyword> = <'declare'>
 declare-statement = left-paren declare-keyword
-                      identifier generic-identifier
+                      identifier identifier
                     right-paren
