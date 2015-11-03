@@ -33,7 +33,10 @@ lambda-definition =
     atom*
   right-paren
 
-generic-specialization = <':'> list
+specialization-list = left-paren
+                        (generic-identifier | specialization-list)*
+                      right-paren
+generic-specialization = <':'> specialization-list
 generic-identifier = identifier generic-specialization?
 function-call =
   left-paren generic-identifier
