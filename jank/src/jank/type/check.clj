@@ -14,10 +14,13 @@
    declaration has a matching type. Returns the decl or nil, if none is found."
   (let [decl (lookup-declaration decl-name scope)]
     (when (some? decl)
-      (assert (= (:type decl) decl-type)
+      (assert (= (:type (second decl)) decl-type)
               (str "Declaration of "
                    decl-name
-                   " doesn't match previous declarations")))
+                   " doesn't match previous declarations: "
+                   (:type decl)
+                   " vs "
+                   decl-type)))
     decl))
 
 (defn add-declaration [item scope]
