@@ -14,6 +14,7 @@
    declaration has a matching type. Returns the decl or nil, if none is found."
   (let [decl (lookup decl-name scope)]
     (when (some? decl)
+      ; TODO: Allow overloads
       (assert (= (:type (second decl)) decl-type)
               (str "Declaration of "
                    decl-name
