@@ -51,6 +51,7 @@
   (assert false (str "no type checking for '" item "'")))
 
 (defn empty-scope []
+  "Builds an empty type scope."
   {:binding-declarations {}
    :type-declarations #{}})
 
