@@ -1,6 +1,6 @@
 (ns jank.type.declaration)
 
-(defn lookup [decl-name scope]
+(defn lookup-binding [decl-name scope]
   "Recursively looks through the hierarchy of scopes for the declaration."
   (loop [current-scope scope]
     (when current-scope
@@ -9,10 +9,10 @@
         found
         (recur (:parent current-scope))))))
 
-(defn validate [decl-name decl-type scope]
+(defn validate-binding [decl-name decl-type scope]
   "Looks up a declaration, if any, and verifies that the provided
    declaration has a matching type. Returns the decl or nil, if none is found."
-  (let [decl (lookup decl-name scope)]
+  (let [decl (lookup-binding decl-name scope)]
     (when (some? decl)
       (let [expected-type (:type (second decl))]
         ; TODO: Allow overloads
@@ -24,6 +24,14 @@
                      " vs "
                      decl-type))))
     decl))
+
+(defn lookup-type [decl-name scope]
+  "Recursively looks through the hierarchy of scopes for the declaration."
+  (loop [current-scope scope]
+    (when current-scope
+      (if-let [found (contains? (:type-declarations current-scope) decl-name)]
+        found
+        (recur (:parent current-scope))))))
 
 (defmulti add-to-scope
   (fn [item scope]
@@ -42,7 +50,9 @@
    Returns the updated scope."
   (let [decl-name (get-in item [1 1])
         decl-type (get-in item [2 1])
-        decl (validate decl-name decl-type scope)]
-    (if (nil? decl)
+        found-decl (validate-binding decl-name decl-type scope)
+        found-type (lookup-type decl-type scope)]
+    (assert (some? found-type) (str "Unknown type: " decl-type))
+    (if (nil? found-decl)
       (update scope :binding-declarations assoc decl-name {:type decl-type})
       scope)))
