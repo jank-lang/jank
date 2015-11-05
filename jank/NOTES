@@ -1,9 +1,9 @@
 impl:
   declarations first
     prelude to setup types and functions
-    build from there
     macros
       declare-type declare-function declare-binding
+    read function types properly
   function calls
     determine type of each argument
 
