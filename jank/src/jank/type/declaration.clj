@@ -28,6 +28,7 @@
 (defn lookup-type [decl-name scope]
   "Recursively looks through the hierarchy of scopes for the declaration."
   (loop [current-scope scope]
+    ; TODO: Handle functions and other generic types properly
     (when current-scope
       (if-let [found (contains? (:type-declarations current-scope) decl-name)]
         found
