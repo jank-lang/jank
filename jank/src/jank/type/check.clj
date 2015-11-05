@@ -63,13 +63,10 @@
          checked []
          scope (empty-scope)]
     (println "scope:" scope)
-    (cond
-      (nil? item)
+    (if (nil? item)
       (list (update parsed :cells (fn [_] checked)) scope)
-      :else
-      (do
-        (let [[checked-item new-scope] (check-item item scope)]
-          (recur (first remaining)
-                 (rest remaining)
-                 (conj checked checked-item)
-                 new-scope))))))
+      (let [[checked-item new-scope] (check-item item scope)]
+        (recur (first remaining)
+               (rest remaining)
+               (conj checked checked-item)
+               new-scope)))))
