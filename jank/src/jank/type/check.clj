@@ -50,17 +50,17 @@
 (defmethod check-item :default [item scope]
   (assert false (str "no type checking for '" item "'")))
 
-; TODO
-; Add :type
-; Add :scope {:parent {}
-;             :bindings []}
+(defn empty-scope []
+  {:binding-declarations {}
+   :type-declarations #{}})
+
 (defn check [parsed]
   "Builds type information on the parsed source. Returns
    a cons of the typed source and the top-level scope."
   (loop [item (first (:cells parsed))
          remaining (rest (:cells parsed))
          checked []
-         scope {}]
+         scope (empty-scope)]
     (println "scope:" scope)
     (cond
       (nil? item)
