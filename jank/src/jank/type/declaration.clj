@@ -31,8 +31,6 @@
   (let [decl-name (get-in item [1 1])
         decl-type (get-in item [2 1])
         decl (validate decl-name decl-type scope)]
-    (cond
-      (nil? decl)
+    (if (nil? decl)
       (update scope :declarations assoc decl-name {:type decl-type})
-      :else
       scope)))
