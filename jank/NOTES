@@ -4,6 +4,8 @@ impl:
     build from there
     macros
       declare-type declare-function declare-binding
+  function calls
+    determine type of each argument
 
   tests
     decls
