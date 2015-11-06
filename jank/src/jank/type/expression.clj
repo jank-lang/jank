@@ -36,4 +36,5 @@
 
 ; Handles integer, string, etc
 (defmethod realize-type :default [item scope]
-  (name (first item)))
+  ; Lists are used to allow for specializations in more complex types
+  (-> item first name symbol list str))
