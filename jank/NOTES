@@ -4,6 +4,8 @@ impl:
     macros
       declare-type declare-function declare-binding
     read function types properly
+    don't pass declarations on to codegen
+      filter them out
   function calls
     determine type of each argument
 
