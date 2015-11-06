@@ -36,7 +36,7 @@ There are a few primitive types which are part of the language.
 |`string`           |An array of UTF-8 characters               |
 |`list`             |A generic, homogeneous, linked list        |
 |`vector`           |A generic, homogeneous, dynamic array      |
-|`tuple`            |A generic, heterogenous, fixed array       |
+|`tuple`            |A generic, heterogeneous, fixed array      |
 |`ƒ`, `function`    |A generic, first-class function            |
 
 ## Functions
