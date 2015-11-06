@@ -320,49 +320,6 @@ The form of a macro definition is very similar to that of a function definition.
 ## FFI
 It's possible to declare native C++ functions and types, in an opaque manner, within jank; the following jank code will then be type checked based on those declarations and the generated code will follow accordingly. This allows easy exposure of C and C++ libraries within jank without introducing explicitly unsafe blocks into the language.
 
-## Building
-To build, follow the normal steps:
-```bash
-$ mkdir build ; cd build
-$ cmake ..
-$ make -j8
-```
-
-## Tests
-There is currently a suite of tests outlining most functionality. The tests are implemented using [jest](https://github.com/jeaye/jest) - a sane and minimal C++14 testing framework. You can test with (from the build directory):
-```bash
-$ make test
-```
-
-## Progress
-|Compiler                     |Status                                     |
-|:----------------------------|:------------------------------------------|
-|non-generic functions        |Complete and tested.                       |
-|non-generic bindings         |Complete and tested.                       |
-|non-generic native functions |Complete and tested.                       |
-|if/do statements             |Complete and tested.                       |
-|lambda expressions           |Complete and tested.                       |
-|first-class functions        |Complete and tested.                       |
-|generic list collection      |Partially complete; not yet tested.        |
-|core functions               |Partially complete; not yet tested.        |
-|macros                       |Partially complete; not yet tested.        |
-
-|Interpreter                  |Status                                     |
-|:----------------------------|:------------------------------------------|
-|non-generic functions        |Complete and tested.                       |
-|non-generic bindings         |Complete and tested.                       |
-|non-generic native functions |Complete and tested.                       |
-|arithmetic for primitives    |Complete and tested.                       |
-|if/do statements             |Complete and tested.                       |
-|lambda expressions           |Complete and tested.                       |
-|first-class functions        |Complete and tested.                       |
-
-|REPL                         |Status                                     |
-|:----------------------------|:------------------------------------------|
-|command-line                 |Partially complete.                        |
-|irc-based                    |Not yet online.                            |
-|browser-based                |Not yet online.                            |
-
 ## Editor support
 There are syntax files for Vim available in the `vim` directory of the repository. You can add these to your runtime path using something like:
 
