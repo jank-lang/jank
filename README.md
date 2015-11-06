@@ -34,9 +34,10 @@ There are a few primitive types which are part of the language.
 |`integer`          |A 64bit signed integer                     |
 |`real`             |A 64bit float                              |
 |`string`           |An array of UTF-8 characters               |
-|`list`             |A generic, homogeneous, singly-linked list |
+|`list`             |A generic, homogeneous, linked list        |
 |`vector`           |A generic, homogeneous, dynamic array      |
 |`tuple`            |A generic, heterogenous, fixed array       |
+|`ƒ`, `function`    |A generic, first-class function            |
 
 ## Functions
 ```lisp
