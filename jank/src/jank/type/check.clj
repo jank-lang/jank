@@ -21,6 +21,7 @@
   (list item scope))
 
 (defmethod check-item :function-call [item scope]
+  (println "--" item)
   (list item scope))
 
 (defmethod check-item :argument-list [item scope]
