@@ -291,14 +291,14 @@ The form of a macro definition is very similar to that of a function definition.
 ### Non-generic
 ```lisp
 (macro reverse-args (args ^list)
-  (emit (list (first args) (reverse (rest args)))))
+  (emit (^list (first args) (reverse (rest args)))))
 
 (reverse-args (print 3 2 1))
 (; Becomes => (print 1 2 3) at compile-time. ;)
 
 (macro constructor (type ^list args ^list &body)
   (emit
-    (list
+    (^list
       (ƒ construct : type args (Ɐ)
         body))))
 
@@ -317,11 +317,8 @@ The form of a macro definition is very similar to that of a function definition.
   (emit true))
 ```
 
-## Strings
-For now, due to the simplicity of the parser, parentheses in strings need to be escaped. This will change, but it's very low priority.
-
-## Native API
-Native types and functions can be exposed through the native API, which is in C++14. Though currently only exposed in the compiler, there's planned support for loading dynamic libraries *at compile-time* which specify wrappers around native code. An example might be OpenGL, glfw, or other similar packages.
+## FFI
+It's possible to declare native C++ functions and types, in an opaque manner, within jank; the following jank code will then be type checked based on those declarations and the generated code will follow accordingly. This allows easy exposure of C and C++ libraries within jank without introducing explicitly unsafe blocks into the language.
 
 ## Building
 To build, follow the normal steps:
