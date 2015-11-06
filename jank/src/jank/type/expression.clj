@@ -16,7 +16,10 @@
 
 (defmethod realize-type :function-call [item scope]
   ; TODO: Recursively handle args
-  (let [arg-types (map #(realize-type % scope) (rest (rest item)))]
+  (let [func-name (get-in item [1 1])
+        func (declaration/lookup-binding func-name scope)
+        arg-types (map #(realize-type % scope) (rest (rest item)))]
+    (assert (some? func) (str "Unknown function: " func-name))
     (apply println "!!" arg-types)
     nil))
 
