@@ -1,5 +1,6 @@
 (ns jank.type.check
-  (:require [jank.type.declaration :as declaration :refer [add-to-scope]]))
+  (:require [jank.type.declaration :as declaration :refer [add-to-scope]]
+            [jank.type.expression :as expression :refer [realize-type]]))
 
 (defmulti check-item
   "Type checks the given expression. Returns a cons of the typed
@@ -18,10 +19,13 @@
   (list item scope))
 
 (defmethod check-item :binding-definition [item scope]
-  (list item scope))
+  ; Special case for function definitions
+  (if (= (first (nth item 2)) :lambda-definition)
+    (check-item (update-in item [0] (fn [x] :function-definition)))
+    (list item scope)))
 
 (defmethod check-item :function-call [item scope]
-  (println "--" item)
+  (expression/realize-type item scope)
   (list item scope))
 
 (defmethod check-item :argument-list [item scope]
@@ -63,7 +67,7 @@
          remaining (rest (:cells parsed))
          checked []
          scope (empty-scope)]
-    (println "scope:" scope)
+    ;(println "scope:" scope)
     (if (nil? item)
       (list (update parsed :cells (fn [_] checked)) scope)
       (let [[checked-item new-scope] (check-item item scope)]

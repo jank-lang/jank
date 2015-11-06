@@ -100,11 +100,9 @@
        "}"))
 
 (defmethod codegen-impl :binding-definition [current]
-  (cond
-    ; Special case for function definitions
-    (= (first (nth current 2)) :lambda-definition)
+  ; Special case for function definitions
+  (if (= (first (nth current 2)) :lambda-definition)
     (codegen-impl (update-in current [0] (fn [x] :function-definition)))
-    :else
     (end-statement
       (str "auto "
            (codegen-impl (second current))
