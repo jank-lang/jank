@@ -67,7 +67,7 @@
          remaining (rest (:cells parsed))
          checked []
          scope (empty-scope)]
-    ;(println "scope:" scope)
+    (println "scope:" scope)
     (if (nil? item)
       (list (update parsed :cells (fn [_] checked)) scope)
       (let [[checked-item new-scope] (check-item item scope)]

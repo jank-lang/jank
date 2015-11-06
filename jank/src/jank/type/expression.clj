@@ -29,10 +29,10 @@
   nil)
 
 (defmethod realize-type :identifier [item scope]
-  (let [ident (second name)
+  (let [ident (second item)
         decl (declaration/lookup-binding ident scope)]
     (assert (some? decl) (str "Unknown binding: " ident))
-    (:type decl)))
+    (:type (second decl))))
 
 ; Handles integer, string, etc
 (defmethod realize-type :default [item scope]
