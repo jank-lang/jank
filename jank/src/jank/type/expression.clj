@@ -16,9 +16,8 @@
 
 (defmethod realize-type :function-call [item scope]
   ; TODO: Recursively handle args
-  (println "FOOB")
-  (let [arg-types (map realize-type (rest (rest item)))]
-    (apply (partial println "!!") arg-types)
+  (let [arg-types (map #(realize-type % scope) (rest (rest item)))]
+    (apply println "!!" arg-types)
     nil))
 
 (defmethod realize-type :if-statement [item scope]
