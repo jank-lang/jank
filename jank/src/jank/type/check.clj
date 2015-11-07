@@ -1,6 +1,7 @@
 (ns jank.type.check
   (:require [jank.type.declaration :as declaration :refer [add-to-scope]]
-            [jank.type.expression :as expression :refer [realize-type]]))
+            [jank.type.expression :as expression :refer [realize-type]])
+  (:use clojure.pprint))
 
 (defmulti check-item
   "Type checks the given expression. Returns a cons of the typed
@@ -63,11 +64,12 @@
 (defn check [parsed]
   "Builds type information on the parsed source. Returns
    a cons of the typed source and the top-level scope."
+  (pprint (list "parsed:" parsed))
   (loop [item (first (:cells parsed))
          remaining (rest (:cells parsed))
          checked []
          scope (empty-scope)]
-    (println "scope:" scope)
+    (pprint (list "scope:" scope))
     (if (nil? item)
       (list (update parsed :cells (fn [_] checked)) scope)
       (let [[checked-item new-scope] (check-item item scope)]

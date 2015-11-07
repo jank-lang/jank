@@ -48,14 +48,14 @@
 (defmethod add-to-scope :type-declaration [item scope]
   "Adds the opaque type declaration to the scope.
    Returns the updated scope."
-  (let [decl-name (rest (nth item 1))]
+  (let [decl-name (rest (get-in item [1 1]))]
     (update scope :type-declarations conj decl-name)))
 
 (defmethod add-to-scope :binding-declaration [item scope]
   "Finds, validates, and adds the provided declaration into the scope.
    Returns the updated scope."
   (let [decl-name (get-in item [1 1])
-        decl-type (rest (nth item 2))
+        decl-type (rest (get-in item [2 1]))
         found-decl (validate-binding decl-name decl-type scope)
         found-type (lookup-type decl-type scope)]
     (assert (some? found-type) (str "Unknown type: " decl-type))

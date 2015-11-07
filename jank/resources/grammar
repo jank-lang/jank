@@ -48,7 +48,7 @@ function-return-type = left-paren type* right-paren
                          function-parameter-type
                          function-return-type
                        right-paren
-function-type = (<"ƒ"> | <"function">) <":"> function-signature
+function-type = ("ƒ" | "function") <":"> function-signature
 type = (identifier | function-type)
 
 <macro-keyword> = <'macro'>

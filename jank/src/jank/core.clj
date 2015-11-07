@@ -14,7 +14,6 @@
             (loop [current (first parsed)
                    remaining (rest parsed)
                    ast {:cells []}]
-              (println current)
               (cond
                 (nil? current) ast
                 :else (recur (first remaining)
