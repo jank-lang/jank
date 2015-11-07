@@ -36,9 +36,14 @@
 
 (defmulti add-to-scope
   (fn [item scope]
-    (if (= (count item) 2)
-      :type-declaration
-      :binding-declaration)))
+    (let [kind (first (second item))]
+      (cond
+        (= :type kind)
+        :type-declaration
+        (= :identifier kind)
+        :binding-declaration
+        :else
+        (assert false (str "Invalid binding: " item))))))
 
 (defmethod add-to-scope :type-declaration [item scope]
   "Adds the opaque type declaration to the scope.
