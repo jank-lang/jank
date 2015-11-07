@@ -1,5 +1,7 @@
 (ns jank.type.declaration)
 
+;; TODO: Shorten function param/return types from [:type ...]
+
 (defn lookup-binding [decl-name scope]
   "Recursively looks through the hierarchy of scopes for the declaration."
   (loop [current-scope scope]
