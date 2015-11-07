@@ -34,13 +34,22 @@ lambda-definition =
   right-paren
 
 specialization-list = left-paren
-                        (identifier | specialization-list)*
+                        (type | specialization-list)*
                       right-paren
 <generic-specialization> = <':'> specialization-list
 function-call =
   left-paren identifier
     atom*
   right-paren
+
+function-parameter-type = left-paren type* right-paren
+function-return-type = left-paren type* right-paren
+<function-signature> = left-paren
+                         function-parameter-type
+                         function-return-type
+                       right-paren
+function-type = (<"ƒ"> | <"function">) <":"> function-signature
+type = (identifier | function-type)
 
 <macro-keyword> = <'macro'>
 <generic-list> = list
@@ -63,5 +72,5 @@ if-statement = left-paren if-keyword condition
 
 <declare-keyword> = <'declare'>
 declare-statement = left-paren declare-keyword
-                      identifier identifier?
+                      (type / (identifier type))
                     right-paren
