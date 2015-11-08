@@ -19,11 +19,16 @@
   (let [func-name (get-in item [1 1])
         func (declaration/lookup-binding func-name scope)
         arg-types (map #(realize-type % scope) (rest (rest item)))
-        expected-types (rest (second (second (:type (second func)))))]
+        generics (second (:type (second func)))
+        expected-types (rest (second generics))
+        return-types (rest (nth generics 2))]
     (assert (some? func) (str "Unknown function: " func-name))
     (assert (= (apply list arg-types) (apply list expected-types))
             (str "Invalid function arguments: " func-name))
-    nil))
+
+    ; TODO: Multiple return types
+    (when-not (empty? return-types)
+      (first return-types))))
 
 (defmethod realize-type :if-statement [item scope]
   ; TODO: if expressions
