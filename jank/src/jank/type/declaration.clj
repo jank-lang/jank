@@ -1,6 +1,15 @@
 (ns jank.type.declaration)
 
-;; TODO: Shorten function param/return types from [:type ...]
+(defn shorten-types [item]
+  "Walks through the decl and replaces all [:type ...] instances with
+   their shorter type names. Example: [:type [:identifier \"string\"]]
+   becomes (\"string\")"
+  (clojure.walk/postwalk
+    (fn [x]
+      (if (and (vector? x) (= :type (first x)))
+        (rest (second x))
+        x))
+    item))
 
 (defn lookup-binding [decl-name scope]
   "Recursively looks through the hierarchy of scopes for the declaration."
@@ -50,14 +59,15 @@
 (defmethod add-to-scope :type-declaration [item scope]
   "Adds the opaque type declaration to the scope.
    Returns the updated scope."
-  (let [decl-name (rest (get-in item [1 1]))]
+  (let [decl-name (first (shorten-types (rest item)))]
     (update scope :type-declarations conj decl-name)))
 
 (defmethod add-to-scope :binding-declaration [item scope]
   "Finds, validates, and adds the provided declaration into the scope.
    Returns the updated scope."
-  (let [decl-name (get-in item [1 1])
-        decl-type (rest (get-in item [2 1]))
+  (let [shortened (shorten-types item)
+        decl-name (get-in shortened [1 1])
+        decl-type (get-in shortened [2])
         found-decl (validate-binding decl-name decl-type scope)
         found-type (lookup-type decl-type scope)]
     (assert (some? found-type) (str "Unknown type: " decl-type))
