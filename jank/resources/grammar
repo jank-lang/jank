@@ -42,14 +42,7 @@ function-call =
     atom*
   right-paren
 
-function-parameter-type = left-paren type* right-paren
-function-return-type = left-paren type* right-paren
-<function-signature> = left-paren
-                         function-parameter-type
-                         function-return-type
-                       right-paren
-function-type = ("ƒ" | "function") <":"> function-signature
-type = (identifier | function-type)
+type = identifier
 
 <macro-keyword> = <'macro'>
 <generic-list> = list

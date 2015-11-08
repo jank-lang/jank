@@ -1,10 +1,11 @@
-(ns jank.type.declaration)
+(ns jank.type.declaration
+  (:use clojure.walk))
 
 (defn shorten-types [item]
   "Walks through the decl and replaces all [:type ...] instances with
    their shorter type names. Example: [:type [:identifier \"string\"]]
    becomes (\"string\")"
-  (clojure.walk/postwalk
+  (postwalk
     (fn [x]
       (if (and (vector? x) (= :type (first x)))
         (rest (second x))
