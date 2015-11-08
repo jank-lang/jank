@@ -37,12 +37,31 @@
                      decl-type))))
     decl))
 
-(defn lookup-type [decl-name scope]
+(defmulti lookup-type
   "Recursively looks through the hierarchy of scopes for the declaration."
+  (fn [decl-type scope]
+    (let [name (first decl-type)]
+    (if (or (= "ƒ" name) (= "function" name))
+      :function
+      :default))))
+
+(defmethod lookup-type :function [decl-type scope]
+  (let [generics (second decl-type)]
+    (println "||" decl-type)
+    (assert (= (count generics) 3) "Invalid function type format")
+    (when (> (count (second generics)) 1)
+      (assert (some? (lookup-type (second (second generics)) scope))
+              "Invalid function parameter type"))
+    (when (> (count (nth generics 2)) 1)
+      (assert (some? (lookup-type (second (nth generics 2)) scope))
+              "Invalid function return type"))
+    decl-type))
+
+(defmethod lookup-type :default [decl-type scope]
   (loop [current-scope scope]
     ; TODO: Handle functions and other generic types properly
     (when current-scope
-      (if-let [found (contains? (:type-declarations current-scope) decl-name)]
+      (if-let [found (contains? (:type-declarations current-scope) decl-type)]
         found
         (recur (:parent current-scope))))))
 
