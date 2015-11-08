@@ -22,8 +22,10 @@
   (reduce #(str %1 " " %2) (map f coll)))
 
 (defn end-statement [statement]
-  "Ends a statement with a semi-colon"
-  (str statement ";"))
+  "Ends a statement with a semi-colon. Empty statements are unchanged."
+  (if (> (count statement) 0)
+    (str statement ";")
+    statement))
 
 (def sanitized-symbols {"=" "_gen_equal"
                         "!" "_gen_bang"
@@ -161,4 +163,4 @@
 
 (defn codegen [ast]
   (doseq [current (:cells ast)]
-    (println (codegen-impl current))))
+    (println (end-statement (codegen-impl current)))))
