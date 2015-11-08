@@ -16,7 +16,7 @@ real = #'[+-]?\d+\.\d*'
 <not-double-quote> = #'[^\"]*'
 string = <double-quote> not-double-quote <double-quote>
 
-identifier = #'[^\s"\'()\d][^\s"\'()]*' generic-specialization?
+identifier = #'[^\s"\'()\d:][^\s"\'()]*' generic-specialization?
 keyword = <':'> identifier
 
 boolean = 'true' | 'false'
