@@ -6,6 +6,8 @@ impl:
     don't pass declarations on to codegen
       filter them out
 
+  function definitions
+
   tests
     decls
     migrate old tests
