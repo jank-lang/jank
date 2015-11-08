@@ -3,12 +3,8 @@ impl:
     prelude to setup types and functions
     macros
       declare-type declare-function declare-binding
-    read function types properly
-      improve grammar to prevent bad ones: ƒ : (foo)
     don't pass declarations on to codegen
       filter them out
-  function calls
-    determine type of each argument
 
   tests
     decls
