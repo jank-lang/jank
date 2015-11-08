@@ -58,7 +58,7 @@
 
 (defmethod lookup-type :default [decl-type scope]
   (loop [current-scope scope]
-    ; TODO: Handle functions and other generic types properly
+    ; TODO: Handle generic types properly
     (when current-scope
       (if-let [found (contains? (:type-declarations current-scope) decl-type)]
         found

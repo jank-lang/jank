@@ -1,5 +1,6 @@
 (ns jank.type.expression
-  (:require [jank.type.declaration :as declaration :refer [lookup-binding]]))
+  (:require [jank.type.declaration :as declaration :refer [lookup-binding]])
+  (:use clojure.pprint))
 
 (defmulti realize-type
   "Calculates the type of the expression. All sub-expressions must be
@@ -15,12 +16,13 @@
   nil)
 
 (defmethod realize-type :function-call [item scope]
-  ; TODO: Recursively handle args
   (let [func-name (get-in item [1 1])
         func (declaration/lookup-binding func-name scope)
-        arg-types (map #(realize-type % scope) (rest (rest item)))]
+        arg-types (map #(realize-type % scope) (rest (rest item)))
+        expected-types (rest (second (second (:type (second func)))))]
     (assert (some? func) (str "Unknown function: " func-name))
-    (apply println "!!" arg-types)
+    (assert (= (apply list arg-types) (apply list expected-types))
+            (str "Invalid function arguments: " func-name))
     nil))
 
 (defmethod realize-type :if-statement [item scope]
@@ -39,5 +41,4 @@
 
 ; Handles integer, string, etc
 (defmethod realize-type :default [item scope]
-  ; Lists are used to allow for specializations in more complex types
-  (-> item first name symbol list str))
+  (-> item first name symbol str list))
