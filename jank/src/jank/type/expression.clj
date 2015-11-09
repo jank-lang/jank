@@ -1,5 +1,5 @@
 (ns jank.type.expression
-  (:require [jank.type.declaration :as declaration :refer [lookup-binding]])
+  (:require [jank.type.declaration :as declaration])
   (:use clojure.pprint))
 
 (defmulti realize-type

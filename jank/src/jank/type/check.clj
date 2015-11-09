@@ -1,6 +1,6 @@
 (ns jank.type.check
-  (:require [jank.type.declaration :as declaration :refer [add-to-scope]]
-            [jank.type.expression :as expression :refer [realize-type]])
+  (:require [jank.type.declaration :as declaration]
+            [jank.type.expression :as expression])
   (:use clojure.pprint))
 
 (defmulti check-item
@@ -60,6 +60,7 @@
 
 (defmethod check-item :function-call [item scope]
   (expression/realize-type item scope)
+  ; TODO: Call check-item on each arg?
   (list item scope))
 
 (defmethod check-item :argument-list [item scope]
