@@ -9,6 +9,35 @@
   (fn [item scope]
     (first item)))
 
+(defn empty-scope
+  "Builds an empty type scope."
+  ([]
+   (empty-scope nil))
+  ([parent]
+   {:parent parent
+    :binding-declarations {}
+    :type-declarations #{}}))
+
+(defn check
+  "Builds type information on the parsed source. Returns
+   a cons of the typed source and the top-level scope."
+  ([parsed]
+   (check parsed (empty-scope)))
+  ([parsed parent-scope]
+   (pprint (list "parsed:" parsed))
+   (loop [item (first (:cells parsed))
+          remaining (rest (:cells parsed))
+          checked []
+          scope parent-scope]
+     (pprint (list "scope:" scope))
+     (if (nil? item)
+       (list (update parsed :cells (fn [_] checked)) scope)
+       (let [[checked-item new-scope] (check-item item scope)]
+         (recur (first remaining)
+                (rest remaining)
+                (conj checked checked-item)
+                new-scope))))))
+
 (defmethod check-item :declare-statement [item scope]
   (list item (declaration/add-to-scope item scope)))
 
@@ -17,7 +46,9 @@
 
 (defmethod check-item :lambda-definition [item scope]
   ; TODO: Recurse into check with the new scope
-  (list item scope))
+  (check-item (second item) scope) ; Arguments
+  (check-item (nth item 2) scope) ; Returns
+  (check item (empty-scope scope)))
 
 (defmethod check-item :binding-definition [item scope]
   ; Special case for function definitions
@@ -30,6 +61,9 @@
   (list item scope))
 
 (defmethod check-item :argument-list [item scope]
+  (list item scope))
+
+(defmethod check-item :return-list [item scope]
   (list item scope))
 
 (defmethod check-item :if-statement [item scope]
@@ -55,28 +89,3 @@
 
 (defmethod check-item :default [item scope]
   (assert false (str "no type checking for '" item "'")))
-
-(defn empty-scope []
-  "Builds an empty type scope."
-  {:binding-declarations {}
-   :type-declarations #{}})
-
-(defn check
-  "Builds type information on the parsed source. Returns
-   a cons of the typed source and the top-level scope."
-  ([parsed]
-   (check parsed (empty-scope)))
-  ([parsed parent-scope]
-   (pprint (list "parsed:" parsed))
-   (loop [item (first (:cells parsed))
-          remaining (rest (:cells parsed))
-          checked []
-          scope parent-scope]
-     (pprint (list "scope:" scope))
-     (if (nil? item)
-       (list (update parsed :cells (fn [_] checked)) scope)
-       (let [[checked-item new-scope] (check-item item scope)]
-         (recur (first remaining)
-                (rest remaining)
-                (conj checked checked-item)
-                new-scope))))))
