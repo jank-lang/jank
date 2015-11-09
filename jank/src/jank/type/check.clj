@@ -29,6 +29,7 @@
           remaining (rest (:cells parsed))
           checked []
           scope parent-scope]
+     (println)
      (pprint (list "scope:" scope))
      (if (nil? item)
        (list (update parsed :cells (fn [_] checked)) scope)
