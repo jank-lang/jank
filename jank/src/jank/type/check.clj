@@ -45,10 +45,10 @@
   (list item scope))
 
 (defmethod check-item :lambda-definition [item scope]
-  ; TODO: Recurse into check with the new scope
   (check-item (second item) scope) ; Arguments
   (check-item (nth item 2) scope) ; Returns
-  (check item (empty-scope scope)))
+  (check {:cells (rest (rest (rest item)))} (empty-scope scope))
+  (list item scope))
 
 (defmethod check-item :binding-definition [item scope]
   ; Special case for function definitions
