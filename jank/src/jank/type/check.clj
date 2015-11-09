@@ -65,8 +65,15 @@
   (list item scope))
 
 (defmethod check-item :argument-list [item scope]
-  ; TODO: Add bindings to scope and type check
-  (list item scope))
+  (list item
+        (loop [args (partition 2 (rest item))
+               new-scope scope]
+          (if (empty? args)
+            new-scope
+            (recur (rest args)
+                   (declaration/add-to-scope
+                     (vec (cons :declare-statement (first args)))
+                     new-scope))))))
 
 (defmethod check-item :return-list [item scope]
   ; TODO: Type check
