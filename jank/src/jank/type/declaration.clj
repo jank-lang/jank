@@ -90,7 +90,6 @@
         decl-type (get-in shortened [2])
         found-decl (validate-binding decl-name decl-type scope)
         found-type (lookup-type decl-type scope)]
-    (pprint shortened)
     (assert (some? found-type) (str "unknown type: " decl-type))
     (if (nil? found-decl)
       (update scope :binding-declarations assoc decl-name {:type decl-type})
