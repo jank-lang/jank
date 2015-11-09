@@ -17,6 +17,7 @@
   (list item scope))
 
 (defmethod check-item :lambda-definition [item scope]
+  ; TODO: Recurse into check with the new scope
   (list item scope))
 
 (defmethod check-item :binding-definition [item scope]
@@ -61,19 +62,22 @@
   {:binding-declarations {}
    :type-declarations #{}})
 
-(defn check [parsed]
+(defn check
   "Builds type information on the parsed source. Returns
    a cons of the typed source and the top-level scope."
-  (pprint (list "parsed:" parsed))
-  (loop [item (first (:cells parsed))
-         remaining (rest (:cells parsed))
-         checked []
-         scope (empty-scope)]
-    (pprint (list "scope:" scope))
-    (if (nil? item)
-      (list (update parsed :cells (fn [_] checked)) scope)
-      (let [[checked-item new-scope] (check-item item scope)]
-        (recur (first remaining)
-               (rest remaining)
-               (conj checked checked-item)
-               new-scope)))))
+  ([parsed]
+   (check parsed (empty-scope)))
+  ([parsed parent-scope]
+   (pprint (list "parsed:" parsed))
+   (loop [item (first (:cells parsed))
+          remaining (rest (:cells parsed))
+          checked []
+          scope parent-scope]
+     (pprint (list "scope:" scope))
+     (if (nil? item)
+       (list (update parsed :cells (fn [_] checked)) scope)
+       (let [[checked-item new-scope] (check-item item scope)]
+         (recur (first remaining)
+                (rest remaining)
+                (conj checked checked-item)
+                new-scope))))))
