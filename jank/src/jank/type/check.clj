@@ -10,7 +10,6 @@
     (first item)))
 
 (defmethod check-item :declare-statement [item scope]
-  ; TODO: Add type information to the item
   (list item (declaration/add-to-scope item scope)))
 
 (defmethod check-item :function-definition [item scope]
