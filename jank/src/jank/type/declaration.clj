@@ -29,7 +29,7 @@
       (let [expected-type (:type (second decl))]
         ; TODO: Allow overloads
         (assert (= expected-type decl-type)
-                (str "Declaration of "
+                (str "declaration of "
                      decl-name
                      " doesn't match previous declarations: "
                      expected-type
@@ -47,13 +47,13 @@
 
 (defmethod lookup-type :function [decl-type scope]
   (let [generics (second decl-type)]
-    (assert (= (count generics) 3) "Invalid function type format")
+    (assert (= (count generics) 3) "invalid function type format")
     (when (> (count (second generics)) 1)
       (assert (some? (lookup-type (second (second generics)) scope))
-              "Invalid function parameter type"))
+              "invalid function parameter type"))
     (when (> (count (nth generics 2)) 1)
       (assert (some? (lookup-type (second (nth generics 2)) scope))
-              "Invalid function return type"))
+              "invalid function return type"))
     decl-type))
 
 (defmethod lookup-type :default [decl-type scope]
@@ -73,7 +73,7 @@
         (= :identifier kind)
         :binding-declaration
         :else
-        (assert false (str "Invalid binding: " item))))))
+        (assert false (str "invalid binding: " item))))))
 
 (defmethod add-to-scope :type-declaration [item scope]
   "Adds the opaque type declaration to the scope.
@@ -89,7 +89,7 @@
         decl-type (get-in shortened [2])
         found-decl (validate-binding decl-name decl-type scope)
         found-type (lookup-type decl-type scope)]
-    (assert (some? found-type) (str "Unknown type: " decl-type))
+    (assert (some? found-type) (str "unknown type: " decl-type))
     (if (nil? found-decl)
       (update scope :binding-declarations assoc decl-name {:type decl-type})
       scope)))

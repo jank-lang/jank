@@ -24,7 +24,7 @@
         return-types (rest (nth generics 2))]
     (assert (some? func) (str "Unknown function: " func-name))
     (assert (= (apply list arg-types) (apply list expected-types))
-            (str "Invalid function arguments: " func-name))
+            (str "invalid function arguments: " func-name))
 
     ; TODO: Multiple return types
     (when-not (empty? return-types)
@@ -41,7 +41,7 @@
 (defmethod realize-type :identifier [item scope]
   (let [ident (second item)
         decl (declaration/lookup-binding ident scope)]
-    (assert (some? decl) (str "Unknown binding: " ident))
+    (assert (some? decl) (str "unknown binding: " ident))
     (:type (second decl))))
 
 ; Handles integer, string, etc
