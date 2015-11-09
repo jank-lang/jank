@@ -29,8 +29,6 @@
           remaining (rest (:cells parsed))
           checked []
           scope parent-scope]
-     (println)
-     (pprint (list "scope:" scope))
      (if (nil? item)
        (list (update parsed :cells (fn [_] checked)) scope)
        (let [[checked-item new-scope] (check-item item scope)]
@@ -76,8 +74,14 @@
                      new-scope))))))
 
 (defmethod check-item :return-list [item scope]
-  ; TODO: Type check
-  (list item scope))
+  (let [returns (count (rest item))]
+    (assert (<= (count (rest item)) 1)
+            "unimplemented: multiple return types")
+    (when (> returns 0)
+      (assert (declaration/lookup-type
+                (first (declaration/shorten-types (rest item))) scope)
+              "invalid return type"))
+    (list item scope)))
 
 (defmethod check-item :if-statement [item scope]
   (list item scope))
