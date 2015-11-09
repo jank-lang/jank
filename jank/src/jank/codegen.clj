@@ -121,7 +121,7 @@
   (str "("
        (comma-separate-params
          (swap-params
-           (map codegen-impl (rest (second current)))))
+           (map codegen-impl (rest current))))
        ")"))
 
 (defmethod codegen-impl :if-statement [current]
@@ -157,6 +157,9 @@
 
 (defmethod codegen-impl :identifier [current]
   (apply str (mapcat (comp sanitize str) (second current))))
+
+(defmethod codegen-impl :type [current]
+  (codegen-impl (second current)))
 
 (defmethod codegen-impl :default [current]
   (assert false (str "no codegen for '" current "'")))
