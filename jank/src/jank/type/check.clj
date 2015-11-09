@@ -46,10 +46,13 @@
   (list item scope))
 
 (defmethod check-item :lambda-definition [item scope]
-  (check-item (second item) scope) ; Arguments
-  (check-item (nth item 2) scope) ; Returns
-  (check {:cells (rest (rest (rest item)))} (empty-scope scope))
-  (list item scope))
+  (let [args (second item)
+        returns (nth item 2)]
+    (check {:cells (drop 3 item)}
+           (empty-scope
+             (second (check-item returns
+                                 (second (check-item args scope))))))
+    (list item scope)))
 
 (defmethod check-item :binding-definition [item scope]
   ; Special case for function definitions
@@ -62,9 +65,11 @@
   (list item scope))
 
 (defmethod check-item :argument-list [item scope]
+  ; TODO: Add bindings to scope and type check
   (list item scope))
 
 (defmethod check-item :return-list [item scope]
+  ; TODO: Type check
   (list item scope))
 
 (defmethod check-item :if-statement [item scope]
