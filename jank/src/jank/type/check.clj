@@ -71,6 +71,8 @@
             new-scope
             (recur (rest args)
                    (declaration/add-to-scope
+                     ; TODO: Change to binding definition
+                     ; Declare allows duplicates; we don't want that here.
                      (vec (cons :declare-statement (first args)))
                      new-scope))))))
 
