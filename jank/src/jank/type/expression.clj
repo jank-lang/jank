@@ -9,8 +9,10 @@
     (first item)))
 
 (defmethod realize-type :lambda-definition [item scope]
-  ; TODO: function type
-  nil)
+  (list "ƒ"
+        [:specialization-list
+         (into [:specialization-list] (rest (nth item 1)))
+         (into [:specialization-list] (rest (nth item 2)))]))
 
 (defmethod realize-type :binding-definition [item scope]
   nil)
