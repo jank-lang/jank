@@ -12,7 +12,8 @@
         (recur (:parent current-scope))))))
 
 (defn add-to-scope [item scope]
-  (pprint scope)
+  "Adds the binding to the scope and performs type checking on the
+   initial value. Returns the updated scope."
   (let [name (second (second item))
         found (lookup name scope)
         type (expression/realize-type (nth item 2) scope)]
