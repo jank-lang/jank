@@ -31,6 +31,7 @@
           remaining (rest (:cells parsed))
           checked []
           scope parent-scope]
+     (pprint (list "scope:" scope))
      (if (nil? item)
        (list (update parsed :cells (fn [_] checked)) scope)
        (let [[checked-item new-scope] (check-item item scope)]
