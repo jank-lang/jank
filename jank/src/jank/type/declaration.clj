@@ -63,7 +63,7 @@
   (loop [current-scope scope]
     ; TODO: Handle generic types properly
     (when current-scope
-      (if-let [found (find (:type-declarations current-scope) name)]
+      (if-let [found ((:type-declarations current-scope) name)]
         found
         (recur (:parent current-scope))))))
 
