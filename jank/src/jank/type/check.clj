@@ -59,6 +59,8 @@
     (list item scope)))
 
 (defmethod check-item :function-call [item scope]
+  "Check the type of each argument and try to realize the resulting
+   function type."
   (loop [args (drop 2 item)
          checked-args []
          new-scope scope]
@@ -72,6 +74,7 @@
                checked-scope)))))
 
 (defmethod check-item :argument-list [item scope]
+  "Bring the arguments into scope and type check."
   (list item
         (loop [args (partition 2 (rest item))
                new-scope scope]
