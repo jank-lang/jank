@@ -6,7 +6,7 @@ impl:
     don't pass declarations on to codegen
       filter them out
 
-  function definitions
+  binding definitions
 
   tests
     decls
