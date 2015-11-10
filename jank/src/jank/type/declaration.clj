@@ -58,10 +58,12 @@
     decl-type))
 
 (defmethod lookup-type :default [decl-type scope]
+  "Recursively looks up a type by name.
+   Returns the type, if found, or nil."
   (loop [current-scope scope]
     ; TODO: Handle generic types properly
     (when current-scope
-      (if-let [found (contains? (:type-declarations current-scope) decl-type)]
+      (if-let [found (find (:type-declarations current-scope) name)]
         found
         (recur (:parent current-scope))))))
 

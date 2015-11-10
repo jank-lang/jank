@@ -1,5 +1,6 @@
 (ns jank.type.check
   (:require [jank.type.declaration :as declaration]
+            [jank.type.binding :as binding]
             [jank.type.expression :as expression])
   (:use clojure.pprint))
 
@@ -16,6 +17,7 @@
   ([parent]
    {:parent parent
     :binding-declarations {}
+    :binding-definitions {}
     :type-declarations #{}}))
 
 (defn check
@@ -40,9 +42,6 @@
 (defmethod check-item :declare-statement [item scope]
   (list item (declaration/add-to-scope item scope)))
 
-(defmethod check-item :function-definition [item scope]
-  (list item scope))
-
 (defmethod check-item :lambda-definition [item scope]
   (let [args (second item)
         returns (nth item 2)]
@@ -53,10 +52,7 @@
     (list item scope)))
 
 (defmethod check-item :binding-definition [item scope]
-  ; Special case for function definitions
-  (if (= (first (nth item 2)) :lambda-definition)
-    (check-item (update-in item [0] (fn [x] :function-definition)))
-    (list item scope)))
+  (list item (binding/add-to-scope item scope)))
 
 (defmethod check-item :function-call [item scope]
   "Check the type of each argument and try to realize the resulting
