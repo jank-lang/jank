@@ -59,11 +59,17 @@
     (list item scope)))
 
 (defmethod check-item :function-call [item scope]
-  (expression/realize-type item scope)
-  ; Arguments may need recursive type checking (lambdas, for example)
-  (doseq [i (drop 2 item)]
-    (check-item i scope))
-  (list item scope))
+  (loop [args (drop 2 item)
+         checked-args []
+         new-scope scope]
+    (if (empty? args)
+      (let [checked-item (into [(first item) (second item)] checked-args)]
+        (expression/realize-type checked-item scope)
+        (list checked-item new-scope))
+      (let [[checked-arg checked-scope] (check-item (first args) new-scope)]
+        (recur (rest args)
+               (conj checked-args checked-arg)
+               checked-scope)))))
 
 (defmethod check-item :argument-list [item scope]
   (list item

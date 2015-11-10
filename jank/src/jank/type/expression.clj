@@ -22,7 +22,7 @@
         generics (second (:type (second func)))
         expected-types (rest (second generics))
         return-types (rest (nth generics 2))]
-    (assert (some? func) (str "Unknown function: " func-name))
+    (assert (some? func) (str "unknown function: " func-name))
     (assert (= (apply list arg-types) (apply list expected-types))
             (str "invalid function arguments: " func-name))
 
