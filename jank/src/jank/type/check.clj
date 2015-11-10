@@ -60,7 +60,9 @@
 
 (defmethod check-item :function-call [item scope]
   (expression/realize-type item scope)
-  ; TODO: Call check-item on each arg?
+  ; Arguments may need recursive type checking (lambdas, for example)
+  (doseq [i (drop 2 item)]
+    (check-item i scope))
   (list item scope))
 
 (defmethod check-item :argument-list [item scope]
