@@ -9,7 +9,6 @@
     (first item)))
 
 (defmethod realize-type :lambda-definition [item scope]
-  ; TODO: Filter out identifiers from resulting type
   (letfn [(remove-identifiers [item]
             (filter #(not= :identifier (first %)) item))]
     (list "ƒ"

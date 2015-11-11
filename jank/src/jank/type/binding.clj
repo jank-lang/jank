@@ -24,9 +24,6 @@
                      (= -1 (.indexOf found type))))
             (str "binding already exists: " name))
 
-    (pprint [:declare-statement
-                             [:identifier name]
-                             [:type (into [:identifier] type)]])
     (let [scope-with-decl (declaration/add-to-scope
                             [:declare-statement
                              [:identifier name]

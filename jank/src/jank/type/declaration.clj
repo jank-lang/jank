@@ -54,8 +54,6 @@
 
 (defmethod lookup-type :function [decl-type scope]
   (let [generics (second decl-type)]
-  (pprint decl-type)
-  (pprint generics)
     (assert (= (count generics) 3) "invalid function type format")
     (when (> (count (second generics)) 1)
       (assert (some? (lookup-type (second (second generics)) scope))
