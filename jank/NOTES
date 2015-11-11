@@ -6,7 +6,6 @@ impl:
     don't pass declarations on to codegen
       filter them out
 
-  lambda bindings aren't being checked thoroughly?
   function type deduction
   implicit function returns
   empty functions + codegen
