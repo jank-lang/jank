@@ -74,15 +74,19 @@
 
 (defmethod check-item :argument-list [item scope]
   "Bring the arguments into scope and type check."
-  (list item
-        (loop [args (partition 2 (rest item))
-               new-scope scope]
-          (if (empty? args)
-            new-scope
-            (recur (rest args)
-                   (declaration/add-to-scope
-                     (vec (cons :binding-declaration (first args)))
-                     new-scope))))))
+  (let [args (partition 2 (rest item))]
+    (when (not-empty args)
+      (assert (distinct (map first args))
+              "not all parameter names are distinct"))
+    (list item
+          (loop [remaining args
+                 new-scope scope]
+            (if (empty? remaining)
+              new-scope
+              (recur (rest remaining)
+                     (declaration/add-to-scope
+                       (vec (cons :binding-declaration (first remaining)))
+                       new-scope)))))))
 
 (defmethod check-item :return-list [item scope]
   (let [returns (count (rest item))]
