@@ -79,9 +79,7 @@
             new-scope
             (recur (rest args)
                    (declaration/add-to-scope
-                     ; TODO: Change to binding definition
-                     ; Declare allows duplicates; we don't want that here.
-                     (vec (cons :declare-statement (first args)))
+                     (vec (cons :binding-definition (first args)))
                      new-scope))))))
 
 (defmethod check-item :return-list [item scope]
