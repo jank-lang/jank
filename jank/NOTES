@@ -8,7 +8,6 @@ impl:
 
   function type deduction
   implicit function returns
-  empty functions + codegen
 
   tests
     decls
