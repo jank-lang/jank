@@ -9,6 +9,7 @@ impl:
   overloaded bindings
   function type deduction
   implicit function returns
+  empty functions + codegen
 
   tests
     decls

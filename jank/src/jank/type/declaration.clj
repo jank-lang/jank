@@ -38,10 +38,10 @@
                          (every? (comp function? :type) expected-types)))
                 (str "declaration of "
                      decl-name
+                     " as: "
+                     decl-type
                      " doesn't match previous declarations: "
-                     expected-types
-                     " vs "
-                     decl-type))))
+                     expected-types))))
     decl))
 
 (defmulti lookup-type
@@ -54,6 +54,8 @@
 
 (defmethod lookup-type :function [decl-type scope]
   (let [generics (second decl-type)]
+  (pprint decl-type)
+  (pprint generics)
     (assert (= (count generics) 3) "invalid function type format")
     (when (> (count (second generics)) 1)
       (assert (some? (lookup-type (second (second generics)) scope))
@@ -102,8 +104,8 @@
     (cond
       (nil? found-decl)
       (update scope :binding-declarations assoc decl-name [{:type decl-type}])
-      (and (= -1 (.indexOf found-decl {:type decl-type}))
+      (and (= -1 (.indexOf (second found-decl) {:type decl-type}))
            (function? decl-type))
-      (update scope [:binding-declarations decl-name] conj {:type decl-type})
+      (update-in scope [:binding-declarations decl-name] conj {:type decl-type})
       :else
       scope)))
