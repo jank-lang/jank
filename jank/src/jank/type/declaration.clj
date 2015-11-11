@@ -13,11 +13,14 @@
         x))
     item))
 
+(defn function? [decl-type]
+  "Returns whether or not the provided type is that of a function."
+  (= "ƒ" (first decl-type)))
+
 (defn lookup-binding [decl-name scope]
   "Recursively looks through the hierarchy of scopes for the declaration."
   (loop [current-scope scope]
     (when current-scope
-      ; TODO: Should be a vector of overloads
       (if-let [found (find (:binding-declarations current-scope) decl-name)]
         found
         (recur (:parent current-scope))))))
@@ -27,13 +30,15 @@
    declaration has a matching type. Returns the decl or nil, if none is found."
   (let [decl (lookup-binding decl-name scope)]
     (when (some? decl)
-      (let [expected-type (:type (second decl))]
-        ; TODO: Allow overloads
-        (assert (= expected-type decl-type)
+      (let [expected-types (second decl)]
+        ; TODO: New functions can only overload if all existing bindings
+        ; are also functions
+        (assert (or (not= -1 (.indexOf expected-types decl-type))
+                    (function? decl-type))
                 (str "declaration of "
                      decl-name
                      " doesn't match previous declarations: "
-                     expected-type
+                     expected-types
                      " vs "
                      decl-type))))
     decl))
@@ -93,6 +98,11 @@
         found-decl (validate-binding decl-name decl-type scope)
         found-type (lookup-type decl-type scope)]
     (assert (some? found-type) (str "unknown type: " decl-type))
-    (if (nil? found-decl)
-      (update scope :binding-declarations assoc decl-name {:type decl-type})
+    (cond
+      (nil? found-decl)
+      (update scope :binding-declarations assoc decl-name [{:type decl-type}])
+      (and (= -1 (.indexOf found-decl {:type decl-type}))
+           (function? decl-type))
+      (update scope [:binding-declarations decl-name] conj {:type decl-type})
+      :else
       scope)))
