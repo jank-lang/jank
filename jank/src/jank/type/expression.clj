@@ -10,10 +10,12 @@
 
 (defmethod realize-type :lambda-definition [item scope]
   ; TODO: Filter out identifiers from resulting type
-  (list "ƒ"
-        [:specialization-list
-         (into [:specialization-list] (rest (nth item 1)))
-         (into [:specialization-list] (rest (nth item 2)))]))
+  (letfn [(remove-identifiers [item]
+            (filter #(not= :identifier (first %)) item))]
+    (list "ƒ"
+      [:specialization-list
+       (into [:specialization-list] (remove-identifiers (rest (nth item 1))))
+       (into [:specialization-list] (remove-identifiers (rest (nth item 2))))])))
 
 (defmethod realize-type :binding-definition [item scope]
   nil)
