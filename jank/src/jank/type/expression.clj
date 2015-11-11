@@ -20,20 +20,33 @@
   nil)
 
 (defmethod realize-type :function-call [item scope]
-  ; TODO: Consider overloads properly
   (let [func-name (get-in item [1 1])
-        func (declaration/lookup-binding func-name scope)
-        arg-types (map #(realize-type % scope) (rest (rest item)))
-        generics (second (:type (second func)))
-        expected-types (rest (second generics))
-        return-types (rest (nth generics 2))]
-    (assert (some? func) (str "unknown function: " func-name))
-    (assert (= (apply list arg-types) (apply list expected-types))
-            (str "invalid function arguments: " func-name))
+        overloads (second (declaration/lookup-binding func-name scope))
+        arg-types (apply list (map #(realize-type % scope) (rest (rest item))))]
+    (assert (some? overloads) (str "unknown function: " func-name))
 
-    ; TODO: Multiple return types
-    (when-not (empty? return-types)
-      (first return-types))))
+    ; Test all overloads; matches comes back as a vector of the return types
+    ; for the matched functions.
+    (let [matches (reduce
+                    (fn [matched func]
+                      (let [generics (second (:type func))
+                            expected-types (apply list (rest (second generics)))
+                            return-types (rest (nth generics 2))]
+                        (if (= arg-types expected-types)
+                          (conj matched return-types)
+                          matched)))
+                    []
+                    overloads)]
+      (assert (not-empty matches)
+              (str "no matching function call to: " func-name
+                   " with argument types: " arg-types))
+      (assert (= 1 (count matches))
+              (str "ambiguous function call to: " func-name
+                   " with argument types: " arg-types))
+
+      ; TODO: Multiple return types
+      (when-not (empty? (first matches))
+        (ffirst matches)))))
 
 (defmethod realize-type :if-statement [item scope]
   ; TODO: if expressions
