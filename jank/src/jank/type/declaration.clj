@@ -31,6 +31,8 @@
   (let [decl (lookup-binding decl-name scope)]
     (when (some? decl)
       (let [expected-types (second decl)]
+        ; All binding declarations must be the same type unless they're for
+        ; function overloads. In that case, all declarations must be functions.
         (assert (or (not= -1 (.indexOf expected-types decl-type))
                     (and (function? decl-type)
                          (every? (comp function? :type) expected-types)))
