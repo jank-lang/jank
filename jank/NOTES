@@ -6,7 +6,9 @@ impl:
     don't pass declarations on to codegen
       filter them out
 
-  binding definitions
+  overloaded bindings
+  function type deduction
+  implicit function returns
 
   tests
     decls

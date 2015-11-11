@@ -22,7 +22,7 @@
 
 (defn check
   "Builds type information on the parsed source. Returns
-   a cons of the typed source and the top-level scope."
+   a list of the typed source and the top-level scope."
   ([parsed]
    (check parsed (empty-scope)))
   ([parsed parent-scope]
