@@ -53,7 +53,9 @@
     (list item scope)))
 
 (defmethod check-item :binding-definition [item scope]
-  (list item (binding/add-to-scope item scope)))
+  (let [[checked-val checked-scope] (check-item (nth item 2) scope)]
+    (list item (binding/add-to-scope
+                 (update-in item [2] (fn [_] checked-val)) checked-scope))))
 
 (defmethod check-item :function-call [item scope]
   "Check the type of each argument and try to realize the resulting
@@ -78,7 +80,7 @@
           (if (empty? args)
             new-scope
             (recur (rest args)
-                   (declaration/add-to-scope
+                   (binding/add-to-scope
                      (vec (cons :binding-definition (first args)))
                      new-scope))))))
 

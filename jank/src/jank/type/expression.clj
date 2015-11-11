@@ -45,6 +45,7 @@
                    " with argument types: " arg-types))
 
       ; TODO: Multiple return types
+      (pprint matches)
       (when-not (empty? (first matches))
         (ffirst matches)))))
 
