@@ -15,24 +15,24 @@
 (defn add-to-scope [item scope]
   "Adds the binding to the scope and performs type checking on the
    initial value. Returns the updated scope."
-  (let [name (second (second item))
-        found (lookup name scope)
-        type (expression/realize-type (nth item 2) scope)
-        function (declaration/function? type)]
+  (let [item-name (second (second item))
+        found (lookup item-name scope)
+        item-type (expression/realize-type (nth item 2) scope)
+        function (declaration/function? item-type)]
     (assert (or (nil? found)
                 (and function
-                     (= -1 (.indexOf found type))))
-            (str "binding already exists: " name))
+                     (= -1 (.indexOf found item-type))))
+            (str "binding already exists: " item-name))
 
     (let [scope-with-decl (declaration/add-to-scope
                             [:declare-statement
-                             [:identifier name]
-                             [:type (into [:identifier] type)]]
+                             [:identifier item-name]
+                             [:type (into [:identifier] item-type)]]
                             scope)]
       (if (nil? found)
         (update
           scope-with-decl
-          :binding-definitions assoc name [{:type type}])
+          :binding-definitions assoc item-name [{:type item-type}])
         (update-in
           scope-with-decl
-          [:binding-definitions name] conj {:type type})))))
+          [:binding-definitions item-name] conj {:type item-type})))))

@@ -80,8 +80,8 @@
           (if (empty? args)
             new-scope
             (recur (rest args)
-                   (binding/add-to-scope
-                     (vec (cons :binding-definition (first args)))
+                   (declaration/add-to-scope
+                     (vec (cons :binding-declaration (first args)))
                      new-scope))))))
 
 (defmethod check-item :return-list [item scope]
