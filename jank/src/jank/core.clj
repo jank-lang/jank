@@ -1,12 +1,12 @@
 (ns jank.core
   (:gen-class)
-  (:require [jank.parse :as parse :refer [parse]]
-            [jank.codegen :as codegen :refer [codegen]]
-            [jank.type.check :as check :refer [check]]))
+  (:require [jank.parse :as parse]
+            [jank.codegen :as codegen]
+            [jank.type.check :as type]))
 
 (defn -main
   [& args]
   (-> {:cells (parse/parse (slurp (first args)))}
-      check/check
+      type/check
       first
       codegen/codegen))
