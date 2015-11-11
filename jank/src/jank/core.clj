@@ -6,9 +6,7 @@
 
 (defn -main
   [& args]
-  (codegen/codegen
-    (first
-      (check/check
-        (let [parsed (parse/parse (slurp (first args)))]
-          (when parsed
-            {:cells parsed}))))))
+  (-> {:cells (parse/parse (slurp (first args)))}
+      check/check
+      first
+      codegen/codegen))
