@@ -20,6 +20,7 @@
   nil)
 
 (defmethod realize-type :function-call [item scope]
+  ; TODO: Consider overloads properly
   (let [func-name (get-in item [1 1])
         func (declaration/lookup-binding func-name scope)
         arg-types (map #(realize-type % scope) (rest (rest item)))
