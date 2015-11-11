@@ -9,6 +9,7 @@
     (first item)))
 
 (defmethod realize-type :lambda-definition [item scope]
+  ; TODO: Filter out identifiers from resulting type
   (list "ƒ"
         [:specialization-list
          (into [:specialization-list] (rest (nth item 1)))
