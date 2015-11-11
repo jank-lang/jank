@@ -18,6 +18,7 @@
         found (lookup name scope)
         type (expression/realize-type (nth item 2) scope)]
     (assert (nil? found) (str "binding already exists: " name))
+    ; TODO: Allow overloads
     (update
       (update scope :binding-declarations assoc name {:type type})
       :binding-definitions assoc name {:type type})))

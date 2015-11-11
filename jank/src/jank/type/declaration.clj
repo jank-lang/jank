@@ -31,10 +31,9 @@
   (let [decl (lookup-binding decl-name scope)]
     (when (some? decl)
       (let [expected-types (second decl)]
-        ; TODO: New functions can only overload if all existing bindings
-        ; are also functions
         (assert (or (not= -1 (.indexOf expected-types decl-type))
-                    (function? decl-type))
+                    (and (function? decl-type)
+                         (every? (comp function? :type) expected-types)))
                 (str "declaration of "
                      decl-name
                      " doesn't match previous declarations: "
