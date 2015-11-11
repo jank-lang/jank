@@ -19,7 +19,8 @@
 (defn reduce-spaced-map [f coll]
   "Maps f over coll and collects the results together in a
    space-separated string"
-  (reduce #(str %1 " " %2) (map f coll)))
+  (when (not-empty coll)
+    (reduce #(str %1 " " %2) (map f coll))))
 
 (defn end-statement [statement]
   "Ends a statement with a semi-colon. Empty statements are unchanged."
