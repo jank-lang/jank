@@ -46,6 +46,7 @@
 (defmethod check-item :lambda-definition [item scope]
   (let [args (second item)
         returns (nth item 2)]
+    ; TODO: Update item with checked return
     (check {:cells (drop 3 item)}
            (empty-scope
              (second (check-item returns
@@ -102,7 +103,14 @@
   (let [cond-type (expression/realize-type (get-in item [1 1]) scope)]
     (assert (= cond-type '("boolean"))
             (str "if statement condition must be boolean, not: " cond-type))
-    (list item scope)))
+    (let [[checked-then then-scope] (check {:cells (rest (get-in item [2]))}
+                                           scope)
+          updated-item (update-in item [2] (fn [_] checked-then))]
+      (if (> (count item) 3) ; There's an else
+        (let [[checked-else else-scope] (check {:cells (rest (get-in item [3]))}
+                                               scope)]
+          (list (update-in item [3] (fn [_] checked-else)) scope))
+        (list updated-item scope)))))
 
 (defmethod check-item :list [item scope]
   (list item scope))
