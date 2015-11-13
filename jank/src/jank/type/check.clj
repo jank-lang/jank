@@ -99,7 +99,10 @@
     (list item scope)))
 
 (defmethod check-item :if-statement [item scope]
-  (list item scope))
+  (let [cond-type (expression/realize-type (get-in item [1 1]) scope)]
+    (assert (= cond-type '("boolean"))
+            (str "if statement condition must be boolean, not: " cond-type))
+    (list item scope)))
 
 (defmethod check-item :list [item scope]
   (list item scope))
