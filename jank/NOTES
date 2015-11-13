@@ -8,7 +8,6 @@ impl:
 
   function type deduction
   implicit function returns
-  if statements
 
   tests
     decls
