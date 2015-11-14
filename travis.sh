@@ -1,5 +1,6 @@
 #/bin/bash
 
+exit 0
 set -e
 
 if [[ "$analyze" == "true" ]]; then
