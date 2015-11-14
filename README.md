@@ -284,23 +284,23 @@ Branching, using `if`, allows for specifying a single form for the true and fals
 ```
 
 ## Macros
-Macros provide the ability for arbitrary code execution, including disk and network IO, and direct modification of the source code at compile-time. Macros, like functions, can be made generic and can be partially and fully specialized. Along with generics, macros use the same type-safety and overloading rules as normal functions. There are two added types, during macro definition, which can be used: `^list` and `^atom` which correspond to arbitrary lists of code and single code atoms respectively.
+Macros provide the ability for arbitrary code execution and direct modification of the source code at compile-time. Macros, like functions, can be made generic and can be partially and fully specialized. Along with generics, macros use the same type-safety and overloading rules as normal functions. There are two added types, during macro definition, which can be used: `^list` and `^atom` which correspond to arbitrary lists of code and single code atoms respectively.
 
-The form of a macro definition is very similar to that of a function definition. Macros, however, have no specific return type; they emit as a side-effect by calling the native `emit` function.
+The form of a macro definition is very similar to that of a function definition. Macros, however, have no specific return type; they emit as a side-effect by calling the native `emit` macro. Everything passed to an `emit` macro is emitted literally, by default, unless specified by a call to the `eval` macro. The `eval` macro will only expand the passed values one level.
 
 ### Non-generic
 ```lisp
 (macro reverse-args (args ^list)
-  (emit (^list (first args) (reverse (rest args)))))
+  (emit (eval (first args))
+        (eval (reverse (rest args)))))
 
 (reverse-args (print 3 2 1))
 (; Becomes => (print 1 2 3) at compile-time. ;)
 
 (macro constructor (type ^list args ^list &body)
   (emit
-    (^list
-      (ƒ construct : type args (Ɐ)
-        body))))
+    (ƒ construct : (eval type) (eval args) (Ɐ)
+      (eval body))))
 
 (constructor (person) (first-name Ɐ last-name Ɐ)
   (person first-name last-name))
