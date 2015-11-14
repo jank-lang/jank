@@ -7,8 +7,8 @@ impl:
       filter them out
 
   function type deduction
-    if statements, too
   implicit function returns
+    if statements, too
   remove return statement entirely
 
   tests
