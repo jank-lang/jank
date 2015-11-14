@@ -105,11 +105,13 @@
             (str "if statement condition must be boolean, not: " cond-type))
     (let [[checked-then then-scope] (check {:cells (rest (get-in item [2]))}
                                            scope)
-          updated-item (update-in item [2] (fn [_] checked-then))]
+          updated-item (update-in item [2]
+                                  (fn [_] (into [:then] (:cells checked-then))))]
       (if (> (count item) 3) ; There's an else
         (let [[checked-else else-scope] (check {:cells (rest (get-in item [3]))}
                                                scope)]
-          (list (update-in item [3] (fn [_] checked-else)) scope))
+          (list (update-in updated-item [3]
+                           (fn [_] (into [:else] (:cells checked-else)))) scope))
         (list updated-item scope)))))
 
 (defmethod check-item :list [item scope]

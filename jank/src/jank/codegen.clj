@@ -1,4 +1,5 @@
-(ns jank.codegen)
+(ns jank.codegen
+  (:use clojure.pprint))
 
 (defn swap-params [params]
   "Takes the input (i integer b boolean) and gives the C-like
