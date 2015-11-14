@@ -121,7 +121,7 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 ```
 
 ### Variadics
-Generic functions and types can be variadic, allowing any number of parameters, both type and non-type. To accept arbitrary arguments into a tuple, the tuple must be prefixed with `&`; there may only be one such tuple per argument list. And it must be last.
+Generic functions and types can be variadic, allowing any number of parameters, both type and non-type. To accept arbitrary arguments into a tuple, the tuple must be prefixed with `&`; there may only be one such tuple per argument list and it must be last.
 
 #### Function
 ```lisp
