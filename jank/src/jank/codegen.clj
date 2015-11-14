@@ -127,18 +127,20 @@
        ")"))
 
 (defmethod codegen-impl :if-statement [current]
-  (let [base (str "if("
+  (let [base (str "[&]{if("
                   (codegen-impl (second (second current)))
                   "){"
                   (end-statement (codegen-impl (second (nth current 2))))
                   "}")]
-    (cond
-      (= (count current) 4) (str base
-                                 "else{"
-                                 (end-statement
-                                   (codegen-impl (second (nth current 3))))
-                                 "}")
-      :else base)))
+    (str
+      (cond
+        (= (count current) 4) (str base
+                                   "else{"
+                                   (end-statement
+                                     (codegen-impl (second (nth current 3))))
+                                   "}")
+        :else base)
+      "}()")))
 
 (defmethod codegen-impl :list [current]
   (str "("
