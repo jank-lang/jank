@@ -291,8 +291,8 @@ The form of a macro definition is very similar to that of a function definition.
 ### Non-generic
 ```lisp
 (macro reverse-args (args ^list)
-  (emit (eval (first args))
-        (eval (reverse (rest args)))))
+  (emit ((eval (first args))
+         (eval (reverse (rest args))))))
 
 (reverse-args (print 3 2 1))
 (; Becomes => (print 1 2 3) at compile-time. ;)
