@@ -8,7 +8,6 @@ impl:
 
   function type deduction
   implicit function returns
-  if statement expressions need to be lambdas
   remove return statement entirely
 
   tests
