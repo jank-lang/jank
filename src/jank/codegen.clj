@@ -126,7 +126,7 @@
            (map codegen-impl (rest current))))
        ")"))
 
-(defmethod codegen-impl :if-statement [current]
+(defmethod codegen-impl :if-expression [current]
   (let [base (str "[&]{if("
                   (codegen-impl (second (second current)))
                   "){"

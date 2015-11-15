@@ -48,7 +48,7 @@
       (when-not (empty? (first matches))
         (ffirst matches)))))
 
-(defmethod realize-type :if-statement [item scope]
+(defmethod realize-type :if-expression [item scope]
   ; TODO: if expressions
   ; Realizing the type of an if expression means that we need
   ; it for a value; in this case, we require both then and else clauses

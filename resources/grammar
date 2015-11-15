@@ -4,7 +4,7 @@
          lambda-definition /
          macro-definition /
          binding-definition /
-         if-statement /
+         if-expression /
          declare-statement /
          function-call
 
@@ -58,10 +58,10 @@ binding-definition = left-paren bind-keyword identifier atom right-paren
 condition = atom
 then = atom
 else = atom
-if-statement = left-paren if-keyword condition
-                 then
-                 else?
-               right-paren
+if-expression = left-paren if-keyword condition
+                  then
+                  else?
+                right-paren
 
 <declare-keyword> = <'declare'>
 declare-statement = left-paren declare-keyword
