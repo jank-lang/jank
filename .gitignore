@@ -7,14 +7,14 @@
 /.ycm_extra_conf.py*
 
 # lein
-/jank/target
-/jank/classes
-/jank/checkouts
+/target
+/classes
+/checkouts
 pom.xml
 pom.xml.asc
 *.jar
 *.class
-/jank/.lein-*
-/jank/.nrepl-port
+/.lein-*
+/.nrepl-port
 .hgignore
 .hg/
