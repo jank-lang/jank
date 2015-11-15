@@ -3,8 +3,6 @@ impl:
     prelude to setup types and functions
     macros
       declare-type declare-function declare-binding
-    don't pass declarations on to codegen
-      filter them out
 
   function type deduction
   implicit function returns
