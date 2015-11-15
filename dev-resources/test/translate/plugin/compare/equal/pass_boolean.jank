@@ -1,5 +1,0 @@
-(assert (= true true))
-(assert (= false false))
-
-(assert-not (= true false))
-(assert-not (= false true))

@@ -1,6 +1,0 @@
-(assert (>= "FOO" "FOO"))
-(assert (>= "foo" "FOO"))
-(assert (>= "acb" "abc"))
-
-(assert-not (>= "FOO" "foo"))
-(assert-not (>= "abc" "abcd"))

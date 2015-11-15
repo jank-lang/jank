@@ -1,7 +1,0 @@
-(ƒ foo () ()
-  (assert false))
-
-(do
-  (ƒ foo () ()
-    (assert true))
-  (foo))

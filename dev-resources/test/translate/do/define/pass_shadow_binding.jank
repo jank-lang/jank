@@ -1,5 +1,0 @@
-(bind foo 0.0)
-
-(do
-  (bind foo 1.0)
-  (assert (= 1.0 foo)))

@@ -1,8 +1,0 @@
-(ƒ foo (cond boolean) (real)
-  (if cond
-    (do
-      0.0))
-  (foo true)) (; recurse ;)
-
-(assert (= 0.0 (foo true)))
-(assert (= 0.0 (foo false)))

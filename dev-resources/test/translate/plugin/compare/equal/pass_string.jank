@@ -1,5 +1,0 @@
-(assert (= "foo" "foo"))
-(assert (= "bar spam" "bar spam"))
-
-(assert-not (= "foo" "FOO"))
-(assert-not (= "abc" " abc"))

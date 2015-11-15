@@ -1,2 +1,0 @@
-(; This will throw. ;)
-(assert (= (* "" -1) ""))

@@ -1,5 +1,0 @@
-(assert
-  (=
-    (do
-      null)
-    null))

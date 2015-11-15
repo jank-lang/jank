@@ -1,7 +1,0 @@
-(ƒ foo () (real)
-  (do
-    (do
-      (do
-        -55.0))))
-
-(assert (= -55.0 (foo)))
