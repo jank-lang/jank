@@ -1,36 +1,9 @@
-language: cpp
-compiler:
-  - gcc
-  - clang
-env:
-  - analyze=false
+language: clojure
 
 sudo: false
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.6
-      - boost-latest
-    packages:
-      - g++-5
-      - gcc-5
-      - clang
-      - clang-3.6
-      - llvm-3.6
-      - libboost-system1.55-dev
-      - libboost-regex1.55-dev
 cache:
   -apt
-
-before_install:
-  - if [[ "$CXX" == "clang++" ]]; then
-      export CXX=clang++-3.6; export CC=clang-3.6;
-    fi
-  - if [[ "$CXX" == "g++" ]]; then
-      export CXX=g++-5; export CC=gcc-5;
-    fi
 
 script:
   - ./travis.sh
