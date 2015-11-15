@@ -4,4 +4,4 @@ set -e
 
 lein uberjar
 
-# lein test
+lein test
