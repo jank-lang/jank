@@ -5,6 +5,7 @@
 (def parse-error #"parse error:")
 
 (defn test-file [file]
+  (println "testing" file)
   (if (should-fail? file)
     (is (thrown-with-msg? AssertionError
                           parse-error
@@ -32,7 +33,6 @@
                 "test/parse/comment/single_line/pass_parens.jank"
                 "test/parse/comment/single_line/pass_quotes.jank"
                 "test/parse/comment/single_line/pass_unicode.jank"]]
-    (println "testing" file)
     (test-file file)))
 
 ;test/parse/ident/ascii/fail_bad_chars.jank
