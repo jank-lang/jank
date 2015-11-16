@@ -11,5 +11,5 @@
    then generated syntax tree."
   (let [parsed (parser resource)]
     (assert (not (insta/failure? parsed))
-            (str "failed to parse"))
+            (str "parse error:"))
     parsed))
