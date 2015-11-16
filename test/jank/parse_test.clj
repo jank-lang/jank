@@ -32,7 +32,8 @@
                 "test/parse/comment/single_line/pass_parens.jank"
                 "test/parse/comment/single_line/pass_quotes.jank"
                 "test/parse/comment/single_line/pass_unicode.jank"]]
-          (test-file file)))
+    (println "testing" file)
+    (test-file file)))
 
 ;test/parse/ident/ascii/fail_bad_chars.jank
 ;test/parse/ident/ascii/pass_good_chars.jank
