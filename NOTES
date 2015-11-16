@@ -8,6 +8,9 @@ impl:
   implicit function returns
     if statements, too
   remove return statement entirely
+  change all asserts to throw better types
+    parse-assert
+    type-assert
 
   tests
     decls
