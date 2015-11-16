@@ -1,14 +1,17 @@
 (ns jank.bootstrap
   (:require [clojure.test :refer :all]
-            [jank.parse]
+            [jank.parse :as parse]
             [jank.type.check :as type]
             [jank.codegen :as codegen]))
 
 (defn slurp-resource [file]
   (slurp (clojure.java.io/resource file)))
 
-(defn- parse [file]
-  (jank.parse/parse (slurp-resource file)))
+(defn parse [file]
+  (parse/parse (slurp-resource file)))
+
+(defn should-fail? [file]
+  (some? (re-matches #".*/fail_.*" file)))
 
 (defn valid-parse? [file]
   (parse file)
