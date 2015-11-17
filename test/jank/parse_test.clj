@@ -49,10 +49,12 @@
                 "match/fail_open_nothing_else.jank"]]
     (test-file (str "test/parse/paren/" file))))
 
-;test/parse/string/escape/fail_lots_of_unescaped_closes.jank
-;test/parse/string/escape/fail_unescaped_both.jank
-;test/parse/string/escape/fail_unescaped_close.jank
-;test/parse/string/escape/fail_unescaped_open.jank
-;test/parse/string/escape/pass_escape_both.jank
-;test/parse/string/escape/pass_escape_close.jank
-;test/parse/string/escape/pass_escape_open.jank
+(deftest parse-strings
+  (doseq [file ["escape/fail_lots_of_unescaped_closes.jank"
+                "escape/fail_unescaped_both.jank"
+                "escape/fail_unescaped_close.jank"
+                "escape/fail_unescaped_open.jank"
+                "escape/pass_escape_both.jank"
+                "escape/pass_escape_close.jank"
+                "escape/pass_escape_open.jank"]]
+    (test-file (str "test/parse/string/" file))))
