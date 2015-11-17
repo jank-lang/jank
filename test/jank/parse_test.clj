@@ -13,27 +13,27 @@
     (is (valid-parse? file))))
 
 (deftest parse-comments
-  (doseq [file ["test/parse/comment/multi_line/fail_double_close.jank"
-                "test/parse/comment/multi_line/fail_no_close.jank"
-                "test/parse/comment/multi_line/pass_normal.jank"
-                "test/parse/comment/multi_line/pass_parens.jank"
-                "test/parse/comment/multi_line/pass_quotes.jank"
-                "test/parse/comment/multi_line/pass_unicode.jank"
-                "test/parse/comment/nested/fail_multi_line_multi_end.jank"
-                "test/parse/comment/nested/fail_no_close.jank"
-                "test/parse/comment/nested/fail_single_line_multi_end.jank"
-                "test/parse/comment/nested/pass_multi_line.jank"
-                "test/parse/comment/nested/pass_multi_line_multi_start.jank"
-                "test/parse/comment/nested/pass_single_line.jank"
-                "test/parse/comment/nested/pass_single_line_multi_start.jank"
-                "test/parse/comment/single_line/fail_double_close.jank"
-                "test/parse/comment/single_line/fail_no_close.jank"
-                "test/parse/comment/single_line/pass_multiple_in_one_file.jank"
-                "test/parse/comment/single_line/pass_normal.jank"
-                "test/parse/comment/single_line/pass_parens.jank"
-                "test/parse/comment/single_line/pass_quotes.jank"
-                "test/parse/comment/single_line/pass_unicode.jank"]]
-    (test-file file)))
+  (doseq [file ["multi_line/fail_double_close.jank"
+                "multi_line/fail_no_close.jank"
+                "multi_line/pass_normal.jank"
+                "multi_line/pass_parens.jank"
+                "multi_line/pass_quotes.jank"
+                "multi_line/pass_unicode.jank"
+                "nested/fail_multi_line_multi_end.jank"
+                "nested/fail_no_close.jank"
+                "nested/fail_single_line_multi_end.jank"
+                "nested/pass_multi_line.jank"
+                "nested/pass_multi_line_multi_start.jank"
+                "nested/pass_single_line.jank"
+                "nested/pass_single_line_multi_start.jank"
+                "single_line/fail_double_close.jank"
+                "single_line/fail_no_close.jank"
+                "single_line/pass_multiple_in_one_file.jank"
+                "single_line/pass_normal.jank"
+                "single_line/pass_parens.jank"
+                "single_line/pass_quotes.jank"
+                "single_line/pass_unicode.jank"]]
+    (test-file (str "test/parse/comment/" file))))
 
 ;test/parse/ident/ascii/fail_bad_chars.jank
 ;test/parse/ident/ascii/pass_good_chars.jank

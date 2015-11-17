@@ -10,6 +10,6 @@
   "Runs the provided resource file through instaparse. Returns
    then generated syntax tree."
   (let [parsed (parser resource)]
-    (assert (not (insta/failure? parsed))
-            (str "parse error:"))
+    (when (insta/failure? parsed)
+      (assert false (str "parse error:")))
     parsed))
