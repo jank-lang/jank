@@ -6,7 +6,8 @@
          binding-definition /
          if-expression /
          declare-statement /
-         function-call
+         function-call /
+         list
 
 integer = #'[+-]?\d+'
 real = #'[+-]?\d+\.\d*'
