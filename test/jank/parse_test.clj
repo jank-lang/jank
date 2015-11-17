@@ -50,10 +50,10 @@
     (test-file (str "test/parse/paren/" file))))
 
 (deftest parse-strings
-  (doseq [file ["escape/fail_lots_of_unescaped_closes.jank"
-                "escape/fail_unescaped_both.jank"
-                "escape/fail_unescaped_close.jank"
-                "escape/fail_unescaped_open.jank"
+  (doseq [file ["escape/pass_lots_of_unescaped_closes.jank"
+                "escape/pass_unescaped_both.jank"
+                "escape/pass_unescaped_close.jank"
+                "escape/pass_unescaped_open.jank"
                 "escape/pass_escape_both.jank"
                 "escape/pass_escape_close.jank"
                 "escape/pass_escape_open.jank"]]
