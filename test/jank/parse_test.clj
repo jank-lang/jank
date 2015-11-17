@@ -42,10 +42,13 @@
                 "unicode/pass_all_good.jank"]]
     (test-file (str "test/parse/ident/" file))))
 
-;test/parse/paren/match/fail_close_nothing_else.jank
-;test/parse/paren/match/fail_multiple_close_nothing_else.jank
-;test/parse/paren/match/fail_multiple_open_nothing_else.jank
-;test/parse/paren/match/fail_open_nothing_else.jank
+(deftest parse-parens
+  (doseq [file ["match/fail_close_nothing_else.jank"
+                "match/fail_multiple_close_nothing_else.jank"
+                "match/fail_multiple_open_nothing_else.jank"
+                "match/fail_open_nothing_else.jank"]]
+    (test-file (str "test/parse/paren/" file))))
+
 ;test/parse/string/escape/fail_lots_of_unescaped_closes.jank
 ;test/parse/string/escape/fail_unescaped_both.jank
 ;test/parse/string/escape/fail_unescaped_close.jank
