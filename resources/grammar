@@ -68,4 +68,4 @@ declare-statement = left-paren declare-keyword
                       (type / (identifier type))
                     right-paren
 
-comment = <'(;'> #'[\s\S]'* &';)' <';)'>
+comment = #'\(;[\s\S]*;\)'
