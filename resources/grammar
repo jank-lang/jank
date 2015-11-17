@@ -1,4 +1,4 @@
-<program> = atom*
+<program> = (<comment> / atom / <#'\s'>)*
 <atom> = string / number / boolean /
          identifier / keyword /
          lambda-definition /
@@ -67,3 +67,5 @@ if-expression = left-paren if-keyword condition
 declare-statement = left-paren declare-keyword
                       (type / (identifier type))
                     right-paren
+
+comment = <'(;'> #'[\s\S]'* &';)' <';)'>
