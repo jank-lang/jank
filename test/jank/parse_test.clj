@@ -35,10 +35,13 @@
                 "single_line/pass_unicode.jank"]]
     (test-file (str "test/parse/comment/" file))))
 
-;test/parse/ident/ascii/fail_bad_chars.jank
-;test/parse/ident/ascii/pass_good_chars.jank
-;test/parse/ident/ascii/pass_true_false.jank
-;test/parse/ident/unicode/pass_all_good.jank
+(deftest parse-idents
+  (doseq [file ["ascii/fail_bad_chars.jank"
+                "ascii/pass_good_chars.jank"
+                "ascii/pass_true_false.jank"
+                "unicode/pass_all_good.jank"]]
+    (test-file (str "test/parse/ident/" file))))
+
 ;test/parse/paren/match/fail_close_nothing_else.jank
 ;test/parse/paren/match/fail_multiple_close_nothing_else.jank
 ;test/parse/paren/match/fail_multiple_open_nothing_else.jank
