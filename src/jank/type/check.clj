@@ -55,12 +55,16 @@
 
 (defmethod check-item :binding-definition [item scope]
   ; There is an optional type specifier which may be before the value
-  (let [value-index (if (= 4 (count item)) 3 2)
-        [checked-val checked-scope] (check-item (nth item value-index) scope)]
-    (list item
-          (binding/add-to-scope
-            (update-in item [value-index] (fn [_] checked-val))
-            checked-scope))))
+  (let [has-type (= 4 (count item))
+        value-index (if has-type 3 2)
+        [checked-val checked-scope] (check-item (nth item value-index) scope)
+        updated-item (update-in item [value-index] (fn [_] checked-val))
+        item-without-type (if has-type
+                            (remove #(= % (nth updated-item 2)) updated-item)
+                            updated-item)]
+    ; Remove the optional type before it gets sent to codegen
+    (list (apply vector item-without-type)
+          (binding/add-to-scope updated-item checked-scope))))
 
 (defmethod check-item :function-call [item scope]
   "Check the type of each argument and try to realize the resulting

@@ -45,17 +45,17 @@
     decl))
 
 (defmulti lookup-type
-  "Recursively looks through the hierarchy of scopes for the declaration."
+  "Recursively looks through the hierarchy of scopes for the declaration.
+   Expects the *shortened* type. See shorten-types."
   (fn [decl-type scope]
     (let [name (first decl-type)]
-    (if (or (= "ƒ" name) (= "function" name))
-      :function
-      :default))))
+      (if (or (= "ƒ" name) (= "function" name))
+        :function
+        :default))))
 
 (defmethod lookup-type :function [decl-type scope]
   ; Function types always "exist" as long as they're well-formed
-  (let [shortened (shorten-types decl-type)
-        generics (second shortened)]
+  (let [generics (second decl-type)]
     (assert (= (count generics) 3) "invalid function type format")
     (when (> (count (second generics)) 1)
       (assert (some? (lookup-type (second (second generics)) scope))
@@ -66,15 +66,14 @@
     decl-type))
 
 (defmethod lookup-type :default [decl-type scope]
-  "Recursively looks up a type by name.
+  "Recursively looks up a type by name. Expects the *shortened* type.
    Returns the type, if found, or nil."
-  (let [shortened (shorten-types decl-type)]
-    (loop [current-scope scope]
-      ; TODO: Handle generic types properly
-      (when current-scope
-        (if-let [found ((:type-declarations current-scope) shortened)]
-          found
-          (recur (:parent current-scope)))))))
+  (loop [current-scope scope]
+    ; TODO: Handle generic types properly
+    (when current-scope
+      (if-let [found ((:type-declarations current-scope) decl-type)]
+        found
+        (recur (:parent current-scope))))))
 
 (defmulti add-to-scope
   (fn [item scope]

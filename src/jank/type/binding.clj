@@ -20,7 +20,9 @@
         has-type (= 4 (count item))
         item-type (expression/realize-type (last item) scope)
         expected-type (if has-type
-                        (declaration/lookup-type (nth item 2) scope)
+                        (declaration/lookup-type
+                          (declaration/shorten-types (nth item 2))
+                          scope)
                         item-type)
         function (declaration/function? item-type)]
     (assert (or (nil? found)

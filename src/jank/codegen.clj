@@ -105,14 +105,13 @@
 
 (defmethod codegen-impl :binding-definition [current]
   ; Special case for function definitions
-  (let [value-index (if (= 4 (count current)) 3 2)]
-    (if (= (first (nth current value-index)) :lambda-definition)
-      (codegen-impl (update-in current [0] (fn [x] :function-definition)))
-      (end-statement
-        (str "auto "
-             (codegen-impl (second current))
-             "="
-             (codegen-impl (nth current value-index)))))))
+  (if (= (first (nth current 2)) :lambda-definition)
+    (codegen-impl (update-in current [0] (fn [x] :function-definition)))
+    (end-statement
+      (str "auto "
+           (codegen-impl (second current))
+           "="
+           (codegen-impl (nth current 2))))))
 
 (defmethod codegen-impl :function-call [current]
   (str (codegen-impl (second current)) ; Name
