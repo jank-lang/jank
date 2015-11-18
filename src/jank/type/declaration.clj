@@ -53,7 +53,9 @@
       :default))))
 
 (defmethod lookup-type :function [decl-type scope]
-  (let [generics (second decl-type)]
+  ; Function types always "exist" as long as they're well-formed
+  (let [shortened (shorten-types decl-type)
+        generics (second shortened)]
     (assert (= (count generics) 3) "invalid function type format")
     (when (> (count (second generics)) 1)
       (assert (some? (lookup-type (second (second generics)) scope))
@@ -66,12 +68,13 @@
 (defmethod lookup-type :default [decl-type scope]
   "Recursively looks up a type by name.
    Returns the type, if found, or nil."
-  (loop [current-scope scope]
-    ; TODO: Handle generic types properly
-    (when current-scope
-      (if-let [found ((:type-declarations current-scope) decl-type)]
-        found
-        (recur (:parent current-scope))))))
+  (let [shortened (shorten-types decl-type)]
+    (loop [current-scope scope]
+      ; TODO: Handle generic types properly
+      (when current-scope
+        (if-let [found ((:type-declarations current-scope) shortened)]
+          found
+          (recur (:parent current-scope)))))))
 
 (defmulti add-to-scope
   (fn [item scope]

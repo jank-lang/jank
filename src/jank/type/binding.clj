@@ -17,12 +17,21 @@
    initial value. Returns the updated scope."
   (let [item-name (second (second item))
         found (lookup item-name scope)
-        item-type (expression/realize-type (nth item 2) scope)
+        has-type (= 4 (count item))
+        item-type (expression/realize-type (last item) scope)
+        expected-type (if has-type
+                        (declaration/lookup-type (nth item 2) scope)
+                        item-type)
         function (declaration/function? item-type)]
     (assert (or (nil? found)
                 (and function
                      (= -1 (.indexOf found item-type))))
             (str "binding already exists: " item-name))
+    (assert (= expected-type item-type)
+            (str "type error: expected binding type "
+                 expected-type
+                 ", found type "
+                 item-type))
 
     (let [scope-with-decl (declaration/add-to-scope
                             [:declare-statement

@@ -54,9 +54,13 @@
     (list item scope)))
 
 (defmethod check-item :binding-definition [item scope]
-  (let [[checked-val checked-scope] (check-item (nth item 2) scope)]
-    (list item (binding/add-to-scope
-                 (update-in item [2] (fn [_] checked-val)) checked-scope))))
+  ; There is an optional type specifier which may be before the value
+  (let [value-index (if (= 4 (count item)) 3 2)
+        [checked-val checked-scope] (check-item (nth item value-index) scope)]
+    (list item
+          (binding/add-to-scope
+            (update-in item [value-index] (fn [_] checked-val))
+            checked-scope))))
 
 (defmethod check-item :function-call [item scope]
   "Check the type of each argument and try to realize the resulting
