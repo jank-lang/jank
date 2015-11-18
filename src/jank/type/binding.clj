@@ -18,7 +18,8 @@
   (let [item-name (second (second item))
         found (lookup item-name scope)
         has-type (= 4 (count item))
-        item-type (expression/realize-type (last item) scope)
+        item-type (declaration/shorten-types
+                    (expression/realize-type (last item) scope))
         expected-type (if has-type
                         (declaration/lookup-type
                           (declaration/shorten-types (nth item 2))
