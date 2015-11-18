@@ -53,7 +53,7 @@ macro-definition =
   right-paren
 
 <bind-keyword> = <'bind'>
-binding-definition = left-paren bind-keyword identifier atom right-paren
+binding-definition = left-paren bind-keyword identifier type? atom right-paren
 
 <if-keyword> = <'if'>
 condition = atom
