@@ -18,6 +18,7 @@ impl:
     migrate old tests
     per-commit performance?
     move parsing tests in old "translate" into parse/
+    seperate 'lookup' tests
 
   core.logic
     type checking
