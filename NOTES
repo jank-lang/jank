@@ -18,6 +18,8 @@ impl:
     migrate old tests
     per-commit performance?
     move parsing tests in old "translate" into parse/
+    change typed tests to use declare instead of ƒ
+      the ƒ macro does nothing right now
     seperate 'lookup' tests
 
   core.logic
