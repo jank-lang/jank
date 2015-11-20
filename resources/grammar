@@ -19,12 +19,13 @@ string = <double-quote> not-double-quote <double-quote>
 
 identifier = #'[^\s"\'()\d:][^\s"\'()]*' generic-specialization?
 keyword = <':'> identifier
+special-identifier = declare-keyword | bind-keyword | macro-keyword | if-keyword | lambda-keyword
 
 boolean = 'true' | 'false'
 
 <left-paren> = <'('>
 <right-paren> = <')'>
-list = left-paren atom* right-paren
+list = left-paren !special-identifier atom* right-paren
 
 <lambda-keyword> = <'lambda'> | <'λ'>
 argument-list = left-paren (identifier type)* right-paren
@@ -39,7 +40,7 @@ specialization-list = left-paren
                       right-paren
 <generic-specialization> = <':'> specialization-list
 function-call =
-  left-paren identifier
+  left-paren !special-identifier identifier
     atom*
   right-paren
 
