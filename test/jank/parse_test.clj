@@ -61,7 +61,6 @@
 
 (deftest parse-bindings
   (doseq [file ["fail_missing_value.jank"
-                "fail_multiple_values.jank"
                 "pass_builtin_function.jank"
                 "pass_builtin_identifier.jank"
                 "pass_builtin_literal.jank"

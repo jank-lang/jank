@@ -1,2 +1,0 @@
-(bind bar boolean
-  true false)

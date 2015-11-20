@@ -1,2 +1,1 @@
-(bind foo real
-  )
+(bind foo )
