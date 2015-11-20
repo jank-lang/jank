@@ -58,3 +58,12 @@
                 "escape/pass_escape_close.jank"
                 "escape/pass_escape_open.jank"]]
     (test-file (str "test/parse/string/" file))))
+
+(deftest parse-bindings
+  (doseq [file ["fail_missing_value.jank"
+                "fail_multiple_values.jank"
+                "pass_builtin_function.jank"
+                "pass_builtin_identifier.jank"
+                "pass_builtin_literal.jank"
+                "pass_builtin_parameter.jank"]]
+    (test-file (str "test/parse/binding/" file))))
