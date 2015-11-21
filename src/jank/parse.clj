@@ -2,6 +2,8 @@
   (:require [instaparse.core :as insta])
   (:use jank.assert))
 
+(def prelude (slurp (clojure.java.io/resource "prelude.jank")))
+
 (def parser
   (insta/parser
     (clojure.java.io/resource "grammar")
@@ -10,7 +12,7 @@
 (defn parse [resource]
   "Runs the provided resource file through instaparse. Returns
    then generated syntax tree."
-  (let [parsed (parser resource)]
+  (let [parsed (parser (str prelude resource))]
     (when (insta/failure? parsed)
       (parse-assert false))
     parsed))
