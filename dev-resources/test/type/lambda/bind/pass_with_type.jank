@@ -5,5 +5,5 @@
 
 (bind another-func ƒ : ((integer integer) (integer))
   (λ (a integer b integer) (integer)
-    (+ a b)))
+    a))
 (another-func 1 2)
