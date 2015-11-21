@@ -30,7 +30,7 @@
     (type-assert (or (nil? found)
                      (and function
                           (= -1 (.indexOf found item-type))))
-                 (str "binding already exists: " item-name))
+                 (str "binding already exists " item-name))
     (type-assert (= expected-type item-type)
                  (str "expected binding type "
                       expected-type

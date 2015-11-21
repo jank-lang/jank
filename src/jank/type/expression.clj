@@ -24,7 +24,7 @@
   (let [func-name (get-in item [1 1])
         overloads (second (declaration/lookup-binding func-name scope))
         arg-types (apply list (map #(realize-type % scope) (rest (rest item))))]
-    (type-assert (some? overloads) (str "unknown function: " func-name))
+    (type-assert (some? overloads) (str "unknown function " func-name))
 
     ; Test all overloads; matches comes back as a vector of the return types
     ; for the matched functions.
@@ -39,11 +39,11 @@
                     []
                     overloads)]
       (type-assert (not-empty matches)
-                   (str "no matching function call to: " func-name
-                        " with argument types: " arg-types))
+                   (str "no matching function call to " func-name
+                        " with argument types " arg-types))
       (type-assert (= 1 (count matches))
-                   (str "ambiguous function call to: " func-name
-                        " with argument types: " arg-types))
+                   (str "ambiguous function call to " func-name
+                        " with argument types " arg-types))
 
       ; TODO: Multiple return types
       (when-not (empty? (first matches))
@@ -63,7 +63,7 @@
 (defmethod realize-type :identifier [item scope]
   (let [ident (second item)
         decl (declaration/lookup-binding ident scope)]
-    (type-assert (some? decl) (str "unknown binding: " ident))
+    (type-assert (some? decl) (str "unknown binding " ident))
     (:type (get-in decl [1 0]))))
 
 ; Handles integer, string, etc

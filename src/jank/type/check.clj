@@ -111,7 +111,7 @@
 (defmethod check-item :if-expression [item scope]
   (let [cond-type (expression/realize-type (get-in item [1 1]) scope)]
     (type-assert (= cond-type '("boolean"))
-                 (str "if expression condition must be boolean, not: " cond-type))
+                 (str "if expression condition must be boolean, not " cond-type))
     (let [[checked-then then-scope] (check {:cells (rest (get-in item [2]))}
                                            (empty-scope scope))
           updated-item (update-in item [2]

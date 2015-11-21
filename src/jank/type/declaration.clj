@@ -39,9 +39,9 @@
                               (every? (comp function? :type) expected-types)))
                      (str "declaration of "
                           decl-name
-                          " as: "
+                          " as "
                           decl-type
-                          " doesn't match previous declarations: "
+                          " doesn't match previous declarations "
                           expected-types))))
     decl))
 
@@ -85,7 +85,7 @@
         (= :identifier kind)
         :binding-declaration
         :else
-        (type-assert false (str "invalid binding: " item))))))
+        (type-assert false (str "invalid binding " item))))))
 
 (defmethod add-to-scope :type-declaration [item scope]
   "Adds the opaque type declaration to the scope.
@@ -101,7 +101,7 @@
         decl-type (get-in shortened [2])
         found-decl (validate-binding decl-name decl-type scope)
         found-type (lookup-type decl-type scope)]
-    (type-assert (some? found-type) (str "unknown type: " decl-type))
+    (type-assert (some? found-type) (str "unknown type " decl-type))
     (cond
       (nil? found-decl)
       (update scope :binding-declarations assoc decl-name [{:type decl-type}])
