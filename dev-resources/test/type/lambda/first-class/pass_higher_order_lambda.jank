@@ -1,5 +1,5 @@
 (bind higher-order
-  (λ (func ƒ : ((ƒ : ((string) (string))) (string))) ()
+  (λ (func ƒ : ((ƒ : ((string) (string))) (string))) (string)
    (func
     (λ (s string) (string)
       s))))
