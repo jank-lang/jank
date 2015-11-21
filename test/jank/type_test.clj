@@ -23,3 +23,17 @@
                 "pass_deduce_type.jank"
                 "pass_proper_types.jank"]]
     (test-file (str "test/type/binding/" file))))
+
+(deftest type-lambdas
+  (doseq [file ["first-class/pass_as_param.jank"
+                "first-class/fail_incorrect_return_type.jank"
+                "first-class/fail_incorrect_param_type.jank"
+                "first-class/pass_simple.jank"
+                "first-class/pass_return_lambda.jank"
+                "first-class/pass_with_params.jank"
+                "first-class/pass_higher_order_lambda.jank"
+                "bind/fail_incorrect_type.jank"
+                "bind/pass_with_type.jank"
+                "bind/pass_simple.jank"
+                "bind/pass_call.jank"]]
+    (test-file (str "test/type/lambda/" file))))
