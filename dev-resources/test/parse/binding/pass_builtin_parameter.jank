@@ -1,4 +1,4 @@
-(ƒ test (i integer b boolean s string r real) ()
+(λ (i integer b boolean s string r real) ()
   (bind foo integer
     i)
   (bind boo boolean

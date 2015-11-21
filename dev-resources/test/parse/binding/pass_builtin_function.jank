@@ -1,5 +1,4 @@
-(ƒ func (i integer) (integer)
-  i)
+(declare func ƒ : (() (integer)))
 
 (bind foo integer
-  (func -100))
+  (func))
