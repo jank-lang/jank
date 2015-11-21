@@ -18,9 +18,9 @@
   true)
 
 (defn valid-type? [file]
-  (type/check (parse file))
+  (type/check {:cells (parse file)})
   true)
 
 (defn valid-codegen? [file]
-  (codegen/codegen (first (type/check (parse file))))
+  (codegen/codegen (first (type/check {:cells (parse file)})))
   true)
