@@ -3,5 +3,5 @@
     true))
 
 (func)
-(bind val (func))
-(assert (func))
+(bind val boolean (func))
+(bind deduced (func))

@@ -1,10 +1,9 @@
 (bind func ƒ : (() ())
   (λ () ()
     ))
+(func)
 
 (bind another-func ƒ : ((integer integer) (integer))
-  (λ (a integer b integer) (Ɐ)
+  (λ (a integer b integer) (integer)
     (+ a b)))
-
-(func)
-(assert (= 3 (another-func 1 2)))
+(another-func 1 2)
