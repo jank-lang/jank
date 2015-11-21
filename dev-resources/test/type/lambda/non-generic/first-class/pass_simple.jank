@@ -1,6 +1,5 @@
-(ƒ higher-order (func ƒ : (() (string))) ()
-  (assert (= (func) "correct")))
+(declare higher-order ƒ : ((ƒ : (() (string))) ()))
 
 (higher-order
-  (λ () (Ɐ)
+  (λ () (string)
     "correct"))

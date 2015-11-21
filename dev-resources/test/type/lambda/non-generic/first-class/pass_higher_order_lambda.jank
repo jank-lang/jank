@@ -1,9 +1,10 @@
-(ƒ higher-order (func ƒ : ((ƒ : ((string) (string))) (string))) ()
-  (assert (= (func
-               (λ (s string) (Ɐ)
-                 (+ "inner " s)))
-             "outer inner meow")))
+(bind higher-order
+  (λ (func ƒ : ((ƒ : ((string) (string))) (string))) ()
+   (func
+    (λ (s string) (string)
+      s))))
 
-(higher-order
-  (λ (func ƒ : ((string) (string))) (Ɐ)
-    (+ "outer " (func "meow"))))
+(bind meow string
+  (higher-order
+    (λ (func ƒ : ((string) (string))) (string)
+      (func "meow"))))

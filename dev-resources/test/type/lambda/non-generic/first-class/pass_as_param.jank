@@ -1,9 +1,11 @@
-(ƒ higher-order (func-a ƒ : ((string) (string))
-                 func-b ƒ : ((string) (string))) ()
-  (assert (= (+ (func-a "Hell") (func-b " Worl")) "Hello World")))
+(bind higher-order
+  (λ (func-a ƒ : ((string) (string))
+      func-b ƒ : ((string) (string))) ()
+    (func-a "test1")
+    (func-b " test2")))
 
 (higher-order
-  (λ (s string) (Ɐ)
-    (+ s "o"))
-  (λ (s string) (Ɐ)
-    (+ s "d")))
+  (λ (s string) ()
+    (print s))
+  (λ (s string) ()
+    (print s)))
