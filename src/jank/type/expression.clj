@@ -23,7 +23,9 @@
 (defmethod realize-type :function-call [item scope]
   (let [func-name (get-in item [1 1])
         overloads (second (declaration/lookup-binding func-name scope))
-        arg-types (apply list (map #(realize-type % scope) (rest (rest item))))]
+        arg-types (apply list
+                         (declaration/shorten-types
+                           (map #(realize-type % scope) (rest (rest item)))))]
     (type-assert (some? overloads) (str "unknown function " func-name))
 
     ; Test all overloads; matches comes back as a vector of the return types

@@ -5,7 +5,7 @@
     (func-b " test2")))
 
 (higher-order
-  (λ (s string) ()
+  (λ (s string) (string)
     (print s))
-  (λ (s string) ()
+  (λ (s string) (string)
     (print s)))
