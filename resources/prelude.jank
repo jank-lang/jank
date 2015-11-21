@@ -7,3 +7,9 @@
 (; -- Assertions -- ;)
 (declare assert ƒ : ((boolean string) ()))
 (declare assert-not ƒ : ((boolean string) ()))
+
+(; -- Output -- ;)
+(declare print ƒ : ((string) (string)))
+(declare print ƒ : ((real) (string)))
+(declare print ƒ : ((integer) (string)))
+(declare print ƒ : ((boolean) (string)))
