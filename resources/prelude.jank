@@ -3,3 +3,7 @@
 (declare real)
 (declare boolean)
 (declare string)
+
+(; -- Assertions -- ;)
+(declare assert ƒ : ((boolean string) ()))
+(declare assert-not ƒ : ((boolean string) ()))
