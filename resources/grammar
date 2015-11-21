@@ -1,4 +1,4 @@
-<program> = (comment / atom)*
+<program> = (<comment> / atom)*
 <atom> = string / number / boolean /
          identifier / keyword /
          lambda-definition /
