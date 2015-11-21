@@ -20,5 +20,6 @@
                 "fail_multiple_definition_same_type.jank"
                 "fail_unknown_type.jank"
                 "fail_unknown_value_identifier.jank"
-                "pass_deduce_type.jank"]]
+                "pass_deduce_type.jank"
+                "pass_proper_types.jank"]]
     (test-file (str "test/type/binding/" file))))
