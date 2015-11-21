@@ -1,4 +1,4 @@
-(declare higher-order ƒ : ((func ƒ : ((string) (string))) ()))
+(declare higher-order ƒ : ((ƒ : ((string) (string))) ()))
 
 (higher-order
   (λ (s string) (string)
