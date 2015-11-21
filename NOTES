@@ -8,9 +8,6 @@ impl:
   implicit function returns
     if statements, too
   remove return statement entirely
-  change all asserts to throw better types
-    parse-assert
-    type-assert
 
   tests
     decls
@@ -20,7 +17,6 @@ impl:
     move parsing tests in old "translate" into parse/
     change typed tests to use declare instead of ƒ
       the ƒ macro does nothing right now
-    seperate 'lookup' tests
 
   core.logic
     type checking
