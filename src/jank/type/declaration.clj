@@ -1,6 +1,7 @@
 (ns jank.type.declaration
   (:use clojure.walk
-        clojure.pprint))
+        clojure.pprint
+        jank.assert))
 
 (defn shorten-types [item]
   "Walks through the decl and replaces all [:type ...] instances with
@@ -33,15 +34,15 @@
       (let [expected-types (second decl)]
         ; All binding declarations must be the same type unless they're for
         ; function overloads. In that case, all declarations must be functions.
-        (assert (or (not= -1 (.indexOf expected-types decl-type))
-                    (and (function? decl-type)
-                         (every? (comp function? :type) expected-types)))
-                (str "declaration of "
-                     decl-name
-                     " as: "
-                     decl-type
-                     " doesn't match previous declarations: "
-                     expected-types))))
+        (type-assert (or (not= -1 (.indexOf expected-types decl-type))
+                         (and (function? decl-type)
+                              (every? (comp function? :type) expected-types)))
+                     (str "declaration of "
+                          decl-name
+                          " as: "
+                          decl-type
+                          " doesn't match previous declarations: "
+                          expected-types))))
     decl))
 
 (defmulti lookup-type
@@ -56,13 +57,13 @@
 (defmethod lookup-type :function [decl-type scope]
   ; Function types always "exist" as long as they're well-formed
   (let [generics (second decl-type)]
-    (assert (= (count generics) 3) "invalid function type format")
+    (type-assert (= (count generics) 3) "invalid function type format")
     (when (> (count (second generics)) 1)
-      (assert (some? (lookup-type (second (second generics)) scope))
-              "invalid function parameter type"))
+      (type-assert (some? (lookup-type (second (second generics)) scope))
+                   "invalid function parameter type"))
     (when (> (count (nth generics 2)) 1)
-      (assert (some? (lookup-type (second (nth generics 2)) scope))
-              "invalid function return type"))
+      (type-assert (some? (lookup-type (second (nth generics 2)) scope))
+                   "invalid function return type"))
     decl-type))
 
 (defmethod lookup-type :default [decl-type scope]
@@ -84,7 +85,7 @@
         (= :identifier kind)
         :binding-declaration
         :else
-        (assert false (str "invalid binding: " item))))))
+        (type-assert false (str "invalid binding: " item))))))
 
 (defmethod add-to-scope :type-declaration [item scope]
   "Adds the opaque type declaration to the scope.
@@ -100,7 +101,7 @@
         decl-type (get-in shortened [2])
         found-decl (validate-binding decl-name decl-type scope)
         found-type (lookup-type decl-type scope)]
-    (assert (some? found-type) (str "unknown type: " decl-type))
+    (type-assert (some? found-type) (str "unknown type: " decl-type))
     (cond
       (nil? found-decl)
       (update scope :binding-declarations assoc decl-name [{:type decl-type}])

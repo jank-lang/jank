@@ -8,3 +8,6 @@
 
 (defn codegen-assert [condition & msg]
   (assert condition (apply str "codegen error: " msg)))
+
+(defn internal-assert [condition & msg]
+  (assert condition (apply str "internal error: " msg)))

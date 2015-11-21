@@ -1,5 +1,6 @@
 (ns jank.codegen
-  (:use clojure.pprint))
+  (:use clojure.pprint
+        jank.assert))
 
 (defn swap-params [params]
   "Takes the input (i integer b boolean) and gives the C-like
@@ -166,7 +167,7 @@
   (codegen-impl (second current)))
 
 (defmethod codegen-impl :default [current]
-  (assert false (str "no codegen for '" current "'")))
+  (codegen-assert false (str "no codegen for '" current "'")))
 
 (defn codegen [ast]
   (doseq [current (:cells ast)]

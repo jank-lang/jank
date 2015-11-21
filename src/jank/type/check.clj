@@ -2,7 +2,8 @@
   (:require [jank.type.declaration :as declaration]
             [jank.type.binding :as binding]
             [jank.type.expression :as expression])
-  (:use clojure.pprint))
+  (:use clojure.pprint
+        jank.assert))
 
 (defmulti check-item
   "Type checks the given expression. Returns a cons of the typed
@@ -85,8 +86,8 @@
   "Bring the arguments into scope and type check."
   (let [args (partition 2 (rest item))]
     (when (not-empty args)
-      (assert (distinct (map first args))
-              "not all parameter names are distinct"))
+      (type-assert (distinct (map first args))
+                   "not all parameter names are distinct"))
     (list item
           (loop [remaining args
                  new-scope scope]
@@ -99,18 +100,18 @@
 
 (defmethod check-item :return-list [item scope]
   (let [returns (count (rest item))]
-    (assert (<= (count (rest item)) 1)
-            "unimplemented: multiple return types")
+    (internal-assert (<= (count (rest item)) 1)
+                     "unimplemented: multiple return types")
     (when (> returns 0)
-      (assert (declaration/lookup-type
-                (first (declaration/shorten-types (rest item))) scope)
-              "invalid return type"))
+      (type-assert (declaration/lookup-type
+                     (first (declaration/shorten-types (rest item))) scope)
+                   "invalid return type"))
     (list item scope)))
 
 (defmethod check-item :if-expression [item scope]
   (let [cond-type (expression/realize-type (get-in item [1 1]) scope)]
-    (assert (= cond-type '("boolean"))
-            (str "if expression condition must be boolean, not: " cond-type))
+    (type-assert (= cond-type '("boolean"))
+                 (str "if expression condition must be boolean, not: " cond-type))
     (let [[checked-then then-scope] (check {:cells (rest (get-in item [2]))}
                                            (empty-scope scope))
           updated-item (update-in item [2]
@@ -141,4 +142,4 @@
   (list item scope))
 
 (defmethod check-item :default [item scope]
-  (assert false (str "no type checking for '" item "'")))
+  (type-assert false (str "no type checking for '" item "'")))

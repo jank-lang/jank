@@ -1,7 +1,8 @@
 (ns jank.type.binding
   (:require [jank.type.expression :as expression]
             [jank.type.declaration :as declaration])
-  (:use clojure.pprint))
+  (:use clojure.pprint
+        jank.assert))
 
 (defn lookup [name scope]
   "Recursively looks up a binding by name.
@@ -26,15 +27,15 @@
                           scope)
                         item-type)
         function (declaration/function? item-type)]
-    (assert (or (nil? found)
-                (and function
-                     (= -1 (.indexOf found item-type))))
-            (str "binding already exists: " item-name))
-    (assert (= expected-type item-type)
-            (str "type error: expected binding type "
-                 expected-type
-                 ", found type "
-                 item-type))
+    (type-assert (or (nil? found)
+                     (and function
+                          (= -1 (.indexOf found item-type))))
+                 (str "binding already exists: " item-name))
+    (type-assert (= expected-type item-type)
+                 (str "expected binding type "
+                      expected-type
+                      ", found type "
+                      item-type))
 
     (let [scope-with-decl (declaration/add-to-scope
                             [:declare-statement

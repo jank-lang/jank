@@ -1,5 +1,6 @@
 (ns jank.parse
-  (:require [instaparse.core :as insta]))
+  (:require [instaparse.core :as insta])
+  (:use jank.assert))
 
 (def parser
   (insta/parser
@@ -11,5 +12,5 @@
    then generated syntax tree."
   (let [parsed (parser resource)]
     (when (insta/failure? parsed)
-      (assert false (str "parse error:")))
+      (parse-assert false))
     parsed))
