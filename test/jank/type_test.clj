@@ -40,3 +40,23 @@
                 "pass_simple.jank"
                 "pass_call.jank"]]
     (test-file (str "test/type/lambda/bind/" file))))
+
+(deftest type-if-definitions
+  (doseq [file ["fail_integer_condition.jank"
+                "fail_nested_missing_return.jank"
+                "fail_null_condition.jank"
+                "fail_with_return_missing_outer.jank"
+                "pass_nested.jank"
+                "pass_with_else.jank"
+                "pass_with_native_call_and_return.jank"
+                "pass_with_return_and_else.jank"
+                "pass_with_return.jank"]]
+    (test-file (str "test/type/if/define/" file))))
+
+(deftest type-if-expressions
+  (doseq [file ["fail_different_types.jank"
+                "fail_invalid_param_type.jank"
+                "fail_without_else.jank"
+                "pass_integer.jank"
+                "pass_null.jank"]]
+    (test-file (str "test/type/if/expression/" file))))
