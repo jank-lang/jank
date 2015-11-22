@@ -5,5 +5,5 @@
   (assert false))
 
 (if (= truth false)
-  (print "not true")
-  (assert false))
+  (assert false)
+  (print "not true"))
