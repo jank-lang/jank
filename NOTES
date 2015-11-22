@@ -9,6 +9,11 @@ impl:
     if statements, too
   remove return statement entirely
 
+  when type checking
+    keep track of whether or not the expression is an argument
+    if expressions need extra type checking as arguments
+      both then and else are needed and must be of the same type
+
   tests
     decls
     keywords
