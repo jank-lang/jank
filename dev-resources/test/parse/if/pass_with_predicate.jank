@@ -1,0 +1,8 @@
+(declare true? ƒ : (() (boolean)))
+
+(if (true?)
+  (print "then"))
+
+(if (true?)
+  (print "then")
+  (print "else"))
