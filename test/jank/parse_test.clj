@@ -66,3 +66,10 @@
                 "pass_builtin_literal.jank"
                 "pass_builtin_parameter.jank"]]
     (test-file (str "test/parse/binding/" file))))
+
+(deftest parse-ifs
+  (doseq [file ["fail_without_both.jank"
+                "pass_with_literal.jank"
+                "pass_without_else.jank"
+                "pass_with_predicate.jank"]]
+    (test-file (str "test/parse/if/" file))))
