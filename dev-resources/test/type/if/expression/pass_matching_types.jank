@@ -1,0 +1,14 @@
+(assert
+  (if true
+    true
+    false))
+
+(print
+  (if true
+    52
+    30))
+
+(print
+  (if false
+    "bad"
+    "good"))

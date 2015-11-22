@@ -1,4 +1,0 @@
-(declare nil ƒ : (() ()))
-
-(if (nil)
-  (print "not good"))

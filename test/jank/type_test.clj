@@ -43,7 +43,6 @@
 
 (deftest type-if-definitions
   (doseq [file ["fail_integer_condition.jank"
-                "fail_null_condition.jank"
                 "pass_boolean_condition.jank"
                 "pass_with_else.jank"]]
     (test-file (str "test/type/if/define/" file))))
@@ -52,6 +51,5 @@
   (doseq [file ["fail_different_types.jank"
                 "fail_invalid_param_type.jank"
                 "fail_without_else.jank"
-                "pass_integer.jank"
-                "pass_null.jank"]]
+                "pass_matching_types.jank"]]
     (test-file (str "test/type/if/expression/" file))))

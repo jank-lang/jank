@@ -1,5 +1,4 @@
-(ƒ foo (i integer) ()
-  )
+(declare foo ƒ : ((integer) ()))
 
 (foo
   (if true
