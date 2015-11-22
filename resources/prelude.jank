@@ -5,8 +5,10 @@
 (declare string)
 
 (; -- Assertions -- ;)
+(declare assert ƒ : ((boolean) ()))
 (declare assert ƒ : ((boolean string) ()))
 (declare assert-not ƒ : ((boolean string) ()))
+(declare assert-unreachable ƒ : (() ()))
 
 (; -- Output -- ;)
 (declare print ƒ : ((string) (string)))
