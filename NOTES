@@ -14,6 +14,9 @@ impl:
     if expressions need extra type checking as arguments
       both then and else are needed and must be of the same type
 
+  remove null entirely
+    from existing tests, too
+
   tests
     decls
     keywords
