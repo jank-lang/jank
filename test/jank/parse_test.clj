@@ -69,6 +69,7 @@
 
 (deftest parse-ifs
   (doseq [file ["fail_without_both.jank"
+                "fail_too_many_branches.jank"
                 "pass_with_literal.jank"
                 "pass_without_else.jank"
                 "pass_with_predicate.jank"]]
