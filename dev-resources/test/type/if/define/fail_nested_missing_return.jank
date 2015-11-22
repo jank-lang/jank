@@ -1,5 +1,0 @@
-(ƒ foo (i integer) (integer)
-  (if (> i 10)
-    (if (= 1 (& i 1))
-      0)
-    2))

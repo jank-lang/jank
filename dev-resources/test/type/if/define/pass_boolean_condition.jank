@@ -1,0 +1,8 @@
+(declare some-bool ƒ : (() (boolean)))
+
+(if (some-bool)
+  (print "good"))
+
+(if (some-bool)
+  (print "good")
+  (print "also good"))

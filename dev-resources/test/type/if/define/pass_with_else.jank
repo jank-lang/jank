@@ -2,8 +2,8 @@
 
 (if truth
   (print "so true")
-  (assert false))
+  (assert-unreachable))
 
 (if (= truth false)
-  (assert false)
+  (assert-unreachable)
   (print "not true"))

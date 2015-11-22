@@ -1,3 +1,0 @@
-(ƒ foo () (integer)
-  (if true
-    42))
