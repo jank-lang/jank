@@ -74,3 +74,13 @@
                 "pass_without_else.jank"
                 "pass_with_predicate.jank"]]
     (test-file (str "test/parse/if/" file))))
+
+(deftest parse-lambda-definitions
+  (doseq [file ["fail_missing_param_name.jank"
+                "fail_no_param_list.jank"
+                "fail_no_return_type.jank"
+                "pass_body.jank"
+                "pass_empty.jank"
+                "pass_primitive.jank"
+                "pass_unicode_short_form.jank"]]
+    (test-file (str "test/parse/lambda/define/" file))))
