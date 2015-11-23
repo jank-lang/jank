@@ -36,6 +36,8 @@
 
 (deftest type-lambda-bindings
   (doseq [file ["fail_incorrect_type.jank"
+                "fail_invalid_param_type.jank"
+                "fail_invalid_return_type.jank"
                 "pass_with_type.jank"
                 "pass_simple.jank"
                 "pass_call.jank"]]
