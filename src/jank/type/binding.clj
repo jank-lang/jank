@@ -4,20 +4,30 @@
   (:use clojure.pprint
         jank.assert))
 
+(defn find-overload [item-type overloads]
+  "Looks through all overloads for one matchin the provided type. Functions
+   can't be overloaded by only return types. Returns a list of indices into
+   the overloads sequence representing each match."
+  (keep-indexed
+    #(when (= (second (second (:type %2)))
+              (second (second item-type)))
+       %1)
+    overloads))
+
 (defn lookup [name scope]
   "Recursively looks up a binding by name.
    Returns the binding, if found, or nil."
   (loop [current-scope scope]
     (when current-scope
-      (if-let [found (find (:binding-definitions current-scope) name)]
-        found
+      (if-let [overloads (find (:binding-definitions current-scope) name)]
+        overloads
         (recur (:parent current-scope))))))
 
 (defn add-to-scope [item scope]
   "Adds the binding to the scope and performs type checking on the
    initial value. Returns the updated scope."
   (let [item-name (second (second item))
-        found (lookup item-name scope)
+        overloads (lookup item-name scope)
         has-type (= 4 (count item))
         item-type (declaration/shorten-types
                     (expression/realize-type (last item) scope))
@@ -26,10 +36,12 @@
                           (declaration/shorten-types (nth item 2))
                           scope)
                         item-type)
-        function (declaration/function? item-type)]
-    (type-assert (or (nil? found)
-                     (and function
-                          (= -1 (.indexOf (second found) {:type item-type}))))
+        function (declaration/function? item-type)
+        overload-matches (if function
+                           (find-overload item-type (second overloads))
+                           nil)]
+    (type-assert (or (nil? overloads)
+                     (and function (empty? overload-matches)))
                  (str "binding already exists " item-name))
     (type-assert (= expected-type item-type)
                  (str "expected binding type "
@@ -42,7 +54,7 @@
                              [:identifier item-name]
                              [:type (into [:identifier] item-type)]]
                             scope)]
-      (if (nil? found)
+      (if (nil? overloads)
         (update
           scope-with-decl
           :binding-definitions assoc item-name [{:type item-type}])
