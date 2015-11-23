@@ -1,11 +1,14 @@
-(ƒ overloaded () ()
-  (print "nullary"))
+(bind overloaded
+  (λ () ()
+    (print "nullary")))
 
-(ƒ overloaded (d integer) ()
-  (print "integer"))
+(bind overloaded
+  (λ (d integer) ()
+    (print "integer")))
 
-(ƒ overloaded (d integer dd real) ()
-  (print "integer and real"))
+(bind overloaded
+  (λ (d integer dd real) ()
+    (print "integer and real")))
 
 (overloaded 42 3.14)
 (overloaded -77)

@@ -1,8 +1,11 @@
-(ƒ overloaded () ()
-  (print "nullary"))
+(bind overloaded
+  (λ () ()
+    (print "nullary")))
 
-(ƒ overloaded (d integer) ()
-  (print "integer"))
+(bind overloaded
+  (λ (d integer) ()
+    (print "integer")))
 
-(ƒ overloaded (d integer) ()
-  (print "integer"))
+(bind overloaded
+  (λ (d integer) ()
+    (print "integer")))

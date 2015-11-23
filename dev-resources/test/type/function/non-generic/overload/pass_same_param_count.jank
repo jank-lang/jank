@@ -1,14 +1,18 @@
-(ƒ overloaded (d integer) ()
-  (print "integer"))
+(bind overloaded
+  (λ (d integer) ()
+    (print "integer")))
 
-(ƒ overloaded (d real) ()
-  (print "real"))
+(bind overloaded
+  (λ (d real) ()
+    (print "real")))
 
-(ƒ overloaded (d string dd boolean) ()
-  (print "string and boolean"))
+(bind overloaded
+  (λ (d string dd boolean) ()
+    (print "string and boolean")))
 
-(ƒ overloaded (d boolean dd string) ()
-  (print "boolean and string"))
+(bind overloaded
+  (λ (d boolean dd string) ()
+    (print "boolean and string")))
 
 (overloaded 42)
 (overloaded 42.0)

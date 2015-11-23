@@ -1,5 +1,7 @@
-(ƒ overloaded () (real)
-  3.14)
+(bind overloaded
+  (λ () (real)
+    3.14))
 
-(ƒ overloaded () (integer)
-  42)
+(bind overloaded
+  (λ () (integer)
+    42))
