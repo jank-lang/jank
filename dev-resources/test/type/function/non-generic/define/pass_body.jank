@@ -1,3 +1,4 @@
-(ƒ test (d integer) (boolean)
-  (print (* d d))
-  true)
+(bind test
+  (λ (d integer) (boolean)
+    (print d)
+    true))

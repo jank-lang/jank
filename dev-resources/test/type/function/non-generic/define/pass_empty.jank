@@ -1,5 +1,7 @@
-(ƒ empty () ()
-  )
+(bind empty
+  (λ () ()
+    ))
 
-(ƒ also-empty () ()
-  )
+(bind also-empty
+  (λ () ()
+    ))

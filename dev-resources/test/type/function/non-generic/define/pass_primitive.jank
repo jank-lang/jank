@@ -1,11 +1,15 @@
-(ƒ test-boolean (d boolean) ()
-  )
+(bind test-boolean
+  (λ (d boolean) ()
+    ))
 
-(ƒ test-integer (d integer) ()
-  )
+(bind test-integer
+  (λ (d integer) ()
+    ))
 
-(ƒ test-real (d real) ()
-  )
+(bind test-real
+  (λ (d real) ()
+    ))
 
-(ƒ test-string (d string) ()
-  )
+(bind test-string
+  (λ (d string) ()
+    ))
