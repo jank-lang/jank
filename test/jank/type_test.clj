@@ -73,3 +73,10 @@
                 ;"pass_recursion.jank"
                 ]]
     (test-file (str "test/type/function/call/" file))))
+
+(deftest type-function-overloads
+  (doseq [file ["fail_multiple_definition.jank"
+                "fail_return_type.jank"
+                "pass_different_param_count.jank"
+                "pass_same_param_count.jank"]]
+    (test-file (str "test/type/function/overload/" file))))
