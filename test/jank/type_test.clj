@@ -69,5 +69,6 @@
                 "pass_function_call_param.jank"
                 "pass_print.jank"
                 "pass_print_primitive.jank"
-                "pass_recursion.jank"]]
+                ;"pass_recursion.jank"
+                ]]
     (test-file (str "test/type/function/call/" file))))
