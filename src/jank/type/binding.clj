@@ -29,7 +29,7 @@
         function (declaration/function? item-type)]
     (type-assert (or (nil? found)
                      (and function
-                          (= -1 (.indexOf found item-type))))
+                          (= -1 (.indexOf (second found) {:type item-type}))))
                  (str "binding already exists " item-name))
     (type-assert (= expected-type item-type)
                  (str "expected binding type "
