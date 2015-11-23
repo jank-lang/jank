@@ -82,5 +82,6 @@
                 "pass_body.jank"
                 "pass_empty.jank"
                 "pass_primitive.jank"
+                "pass_long_form.jank"
                 "pass_unicode_short_form.jank"]]
     (test-file (str "test/parse/lambda/define/" file))))

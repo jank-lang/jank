@@ -1,0 +1,3 @@
+(bind foo
+  (lambda () ()
+    ))
