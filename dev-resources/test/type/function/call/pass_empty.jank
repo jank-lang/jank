@@ -1,4 +1,3 @@
-(ƒ test () ()
-  )
+(declare test ƒ : (() ()))
 
 (test)

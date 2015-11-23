@@ -1,15 +1,13 @@
-(ƒ test-integer (d integer) ()
-  (print d))
+(declare test-integer ƒ : ((integer) ()))
 
-(ƒ test-real (d real) ()
-  (print d))
+(declare test-real ƒ : ((real) ()))
 
-(ƒ test-string (d string) ()
-  (print d))
+(declare test-string ƒ : ((string) ()))
 
-(ƒ test (a integer b real c string) ()
-  (test-integer a)
-  (test-real b)
-  (test-string c))
+(bind test
+  (λ (a integer b real c string) ()
+    (test-integer a)
+    (test-real b)
+    (test-string c)))
 
 (test 77 -5.05 "good")

@@ -1,2 +1,3 @@
-(ƒ recurse! () ()
-  (recurse!))
+(bind recurse
+  (λ () ()
+    (recurse)))

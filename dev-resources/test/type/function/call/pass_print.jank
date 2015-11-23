@@ -1,4 +1,5 @@
-(ƒ test () ()
-  (print "all good"))
+(bind
+  (λ test () ()
+    (print "all good")))
 
 (test)

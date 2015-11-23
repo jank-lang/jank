@@ -58,3 +58,16 @@
                 ;"pass_if_as_condition.jank"
                 ]]
     (test-file (str "test/type/if/expression/" file))))
+
+(deftest type-function-calls
+  (doseq [file ["fail_invalid_function.jank"
+                "fail_invalid_param_type.jank"
+                "fail_too_few_params.jank"
+                "fail_too_many_params.jank"
+                "pass_chain.jank"
+                "pass_empty.jank"
+                "pass_function_call_param.jank"
+                "pass_print.jank"
+                "pass_print_primitive.jank"
+                "pass_recursion.jank"]]
+    (test-file (str "test/type/function/call/" file))))

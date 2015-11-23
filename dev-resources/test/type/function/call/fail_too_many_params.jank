@@ -1,6 +1,3 @@
-(ƒ test (a integer b real c string) ()
-  (print a)
-  (print b)
-  (print c))
+(declare test ƒ : ((integer real string) ()))
 
 (test true 3.14 "ok" false)
