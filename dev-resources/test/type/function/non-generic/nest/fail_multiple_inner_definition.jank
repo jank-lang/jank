@@ -1,8 +1,11 @@
-(ƒ outer (d boolean) ()
-  (ƒ outer (d boolean) ()
-    (print d))
-  (ƒ outer (d boolean) ()
-    (print d))
-  (outer d))
+(bind outer
+  (λ (d boolean) ()
+    (bind outer
+      (λ (d boolean) ()
+        (print d)))
+    (bind outer
+      (λ (d boolean) ()
+        (print d)))
+    (outer d)))
 
 (outer false)

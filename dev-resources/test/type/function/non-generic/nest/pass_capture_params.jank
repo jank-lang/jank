@@ -1,6 +1,8 @@
-(ƒ outer (d boolean) ()
-  (ƒ show-boolean () ()
-    (print d))
-  (show-boolean))
+(bind outer
+  (λ (d boolean) ()
+    (bind show-boolean
+      (λ () ()
+        (print d)))
+    (show-boolean)))
 
 (outer true)

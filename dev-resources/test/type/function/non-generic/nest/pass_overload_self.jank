@@ -1,6 +1,8 @@
-(ƒ outer () ()
-  (ƒ outer (d string) ()
-    (print d))
-  (outer "all good"))
+(bind outer
+  (λ () ()
+    (bind outer
+      (λ (d string) ()
+        (print d)))
+    (outer "all good")))
 
 (outer)

@@ -1,9 +1,12 @@
-(ƒ show (d integer) ()
-  (print d))
+(bind show
+  (λ (d integer) ()
+    (print d)))
 
-(ƒ outer () ()
-  (ƒ show (d real) ()
-    (print d))
-  (show 42.7))
+(bind outer
+  (λ () ()
+    (bind show
+      (λ (d real) ()
+        (print d)))
+    (show 42.7)))
 
 (outer)
