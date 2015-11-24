@@ -74,9 +74,14 @@
                 ]]
     (test-file (str "test/type/function/call/" file))))
 
-(deftest type-function-overloads
-  (doseq [file ["fail_multiple_definition.jank"
-                "fail_return_type.jank"
-                "pass_different_param_count.jank"
-                "pass_same_param_count.jank"]]
-    (test-file (str "test/type/function/overload/" file))))
+(deftest type-nested-functions
+  (doseq [file ["fail_multiple_inner_definition.jank"
+                "pass_capture_params.jank"
+                "pass_define.jank"
+                "pass_overload_inner.jank"
+                "pass_overload_outer_call_outer.jank"
+                "pass_overload_outer.jank"
+                "pass_overload_self.jank"
+                "pass_redefine_outer.jank"
+                "pass_redefine_self.jank"]]
+    (test-file (str "test/type/function/nest/" file))))
