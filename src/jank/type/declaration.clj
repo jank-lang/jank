@@ -20,6 +20,7 @@
 
 (defn lookup-binding [decl-name scope]
   "Recursively looks through the hierarchy of scopes for the declaration."
+  ; TODO: This doesn't accrue all overloads from parent scopes
   (loop [current-scope scope]
     (when current-scope
       (if-let [found (find (:binding-declarations current-scope) decl-name)]
