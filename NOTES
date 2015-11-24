@@ -17,6 +17,8 @@ impl:
   remove null entirely
     from existing tests, too
 
+  nested functions need to be lambdas in codegen
+
   tests
     decls
     keywords
