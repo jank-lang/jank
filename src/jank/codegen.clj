@@ -30,6 +30,12 @@
     (str statement ";")
     statement))
 
+(defn print-statement [statement]
+  "Prints the statement to stdout, followed by a new line.
+   Empty statements are ignored."
+  (when-not (empty? statement)
+    (println statement)))
+
 (def sanitized-symbols {"=" "_gen_equal_"
                         "!" "_gen_bang_"
                         "#" "_gen_pound_"
@@ -170,5 +176,6 @@
   (codegen-assert false (str "no codegen for '" current "'")))
 
 (defn codegen [ast]
+  (println)
   (doseq [current (:cells ast)]
-    (println (end-statement (codegen-impl current)))))
+    (print-statement (end-statement (codegen-impl current)))))
