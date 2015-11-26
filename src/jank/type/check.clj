@@ -27,12 +27,12 @@
   ([parsed]
    (check parsed (empty-scope)))
   ([parsed parent-scope]
-   (pprint (list "parsed:" parsed))
+   ;(pprint (list "parsed:" parsed))
    (loop [item (first (:cells parsed))
           remaining (rest (:cells parsed))
           checked []
           scope parent-scope]
-     (pprint (list "scope:" scope))
+     ;(pprint (list "scope:" scope))
      (if (nil? item)
        (list (update parsed :cells (fn [_] checked)) scope)
        (let [[checked-item new-scope] (check-item item scope)]
