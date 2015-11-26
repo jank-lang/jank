@@ -15,19 +15,18 @@ let b:current_syntax = "jank"
 
 syntax keyword jank_todo TODO XXX FIXME NOTE
 syntax keyword jank_special
+             \ declare
              \ function ƒ
              \ lambda λ
              \ bind
              \ alias
-             \ return
              \ if
-             \ do
 syntax keyword jank_builtin_type
              \ boolean
              \ integer real
              \ string
              \ list vector
-             \ auto
+             \ auto Ɐ
 syntax region	jank_string start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=jank_todo extend
 syntax region jank_comment start="(;" skipnl end=";)" contains=jank_comment,jank_todo
 syntax match jank_boolean "true\|false"
