@@ -34,7 +34,7 @@
   "Prints the statement to stdout, followed by a new line.
    Empty statements are ignored."
   (when-not (empty? statement)
-    (println statement)))
+    (comment println statement)))
 
 (def sanitized-symbols {"=" "_gen_equal_"
                         "!" "_gen_bang_"
@@ -176,6 +176,6 @@
   (codegen-assert false (str "no codegen for '" current "'")))
 
 (defn codegen [ast]
-  (println)
+  ;(println)
   (doseq [current (:cells ast)]
     (print-statement (end-statement (codegen-impl current)))))

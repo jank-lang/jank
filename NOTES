@@ -16,6 +16,9 @@ impl:
 
   nested functions need to be lambdas in codegen
 
+  better logging
+    timbre (allows profiling, too)
+
   tests
     decls
     comments within forms
