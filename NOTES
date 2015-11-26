@@ -18,6 +18,7 @@ impl:
 
   tests
     decls
+    comments within forms
     keywords
     per-commit performance?
     migrate old tests
