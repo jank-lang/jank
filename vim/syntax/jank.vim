@@ -23,7 +23,7 @@ syntax keyword jank_special
              \ if
              \ do
 syntax keyword jank_builtin_type
-             \ null boolean
+             \ boolean
              \ integer real
              \ string
              \ list vector

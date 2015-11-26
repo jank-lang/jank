@@ -110,9 +110,6 @@ stdlib
   map
   tuple
 
-null
-  allow null-typed bindings
-
 syntax errors...?
   will the regex remain?
     need to map s-exprs to file positions
