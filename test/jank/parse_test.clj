@@ -2,17 +2,17 @@
   (:require [clojure.test :refer :all]
             [jank.bootstrap :refer :all :refer-macros :all]))
 
-(def parse-error #"parse error:")
+(def error #"parse error:")
 
 (defn test-file [file]
   (println "testing" file)
   (if (should-fail? file)
     (is (thrown-with-msg? AssertionError
-                          parse-error
+                          error
                           (valid-parse? file)))
     (is (valid-parse? file))))
 
-(deftest parse-comments
+(deftest comments
   (doseq [file ["multi_line/fail_double_close.jank"
                 "multi_line/fail_no_close.jank"
                 "multi_line/pass_normal.jank"
@@ -35,21 +35,21 @@
                 "single_line/pass_unicode.jank"]]
     (test-file (str "test/parse/comment/" file))))
 
-(deftest parse-idents
+(deftest idents
   (doseq [file ["ascii/fail_bad_chars.jank"
                 "ascii/pass_good_chars.jank"
                 "ascii/pass_true_false.jank"
                 "unicode/pass_all_good.jank"]]
     (test-file (str "test/parse/ident/" file))))
 
-(deftest parse-parens
+(deftest parens
   (doseq [file ["match/fail_close_nothing_else.jank"
                 "match/fail_multiple_close_nothing_else.jank"
                 "match/fail_multiple_open_nothing_else.jank"
                 "match/fail_open_nothing_else.jank"]]
     (test-file (str "test/parse/paren/" file))))
 
-(deftest parse-strings
+(deftest strings
   (doseq [file ["escape/pass_lots_of_unescaped_closes.jank"
                 "escape/pass_unescaped_both.jank"
                 "escape/pass_unescaped_close.jank"
@@ -59,7 +59,7 @@
                 "escape/pass_escape_open.jank"]]
     (test-file (str "test/parse/string/" file))))
 
-(deftest parse-bindings
+(deftest bindings
   (doseq [file ["fail_missing_value.jank"
                 "pass_builtin_function.jank"
                 "pass_builtin_identifier.jank"
@@ -67,7 +67,7 @@
                 "pass_builtin_parameter.jank"]]
     (test-file (str "test/parse/binding/" file))))
 
-(deftest parse-ifs
+(deftest ifs
   (doseq [file ["fail_without_both.jank"
                 "fail_too_many_branches.jank"
                 "pass_with_literal.jank"
@@ -75,7 +75,7 @@
                 "pass_with_predicate.jank"]]
     (test-file (str "test/parse/if/" file))))
 
-(deftest parse-lambda-definitions
+(deftest lambda-definitions
   (doseq [file ["fail_missing_param_name.jank"
                 "fail_no_param_list.jank"
                 "fail_no_return_type.jank"
