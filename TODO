@@ -1,16 +1,6 @@
-clojure
-  codegen formatter
-  type checking
-  macros
-    do statement
-
 allow keywords?
   each keyword is its own type
   useful in the case of policies?
-
-static analysis on travis
-
-separate interpret binary and read AST
 
 ^type within macros for first class types
   maybe no need for generic syntax?
@@ -23,10 +13,6 @@ macros
 tuple and variadic functions
 
 update readme with new generic function/macro syntax
-
-remove function special
-  use bind and lambda
-  function can be a macro
 
 generic functions as macros
   old way:
@@ -44,33 +30,12 @@ generic functions as macros
     (generic-struct (T Ɐ)
       (data T))
 
-emacs major mode
-
-remove expect_function
-  always look up definitions before calling?
-
 constraints on return types
   Allow dependent types there
   (ƒ foo () (:T-ret) where (^number? : (T-ret))
     42)
 
-literal_value has list
-  should it be stored elsewhere?
-
-tests for
-  cons, first, last, count, list
-  macros, emit
-
 fix vim highlighting of falsey
-
-recursing in auto-typed functions is broken
-  only an issue when recursing as a param to another function
-  skip it and find the next returning body
-
-add a function to builtin which adds all
-
-unary - on integers and reals
-  plus tests
 
 REPL
   add repl trait and compile separate lib
@@ -79,37 +44,8 @@ REPL
   irc bot for #jank
   tests for repl
 
-closures
-  explicitly copy from scope? this may be messy
-
 custom types are dynamically allocated by default
   traits to control allocation? (later)
   reference counted a la shared_ptr
   copied on mutation
   explicit copy function as well
-
-codegen from the AST s-expression
-  C++14 or LLVM IR?
-
-allow comments anywhere in forms
-
-list destructuring
-  as macro params
-
-operators
-  !=
-  logical or, and, not, etc
-
-stdlib
-  print print-line format
-  not and or
-  even? odd?
-  map, reduce, filter
-  vector
-  list
-  map
-  tuple
-
-syntax errors...?
-  will the regex remain?
-    need to map s-exprs to file positions
