@@ -79,10 +79,10 @@
                 "pass_capture_params.jank"
                 "pass_define.jank"
                 "pass_overload_inner.jank"
-                ; TODO: Fix
-                ;"pass_overload_outer_call_outer.jank"
+                "pass_overload_outer_call_outer.jank"
                 "pass_overload_outer.jank"
                 "pass_overload_self.jank"
+                ; TODO: Fix
                 ;"pass_redefine_outer.jank"
                 ;"pass_redefine_self.jank"
                 ]]
