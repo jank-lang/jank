@@ -13,12 +13,12 @@
     (is (valid-parse? file))))
 
 (deftest comments
-  (doseq [file ["multi_line/fail_double_close.jank"
-                "multi_line/fail_no_close.jank"
-                "multi_line/pass_normal.jank"
-                "multi_line/pass_parens.jank"
-                "multi_line/pass_quotes.jank"
-                "multi_line/pass_unicode.jank"
+  (doseq [file ["multi-line/fail_double_close.jank"
+                "multi-line/fail_no_close.jank"
+                "multi-line/pass_normal.jank"
+                "multi-line/pass_parens.jank"
+                "multi-line/pass_quotes.jank"
+                "multi-line/pass_unicode.jank"
                 "nested/fail_multi_line_multi_end.jank"
                 "nested/fail_no_close.jank"
                 "nested/fail_single_line_multi_end.jank"
