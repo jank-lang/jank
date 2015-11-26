@@ -13,77 +13,77 @@
     (is (valid-type? file))))
 
 (deftest bindings
-  (doseq [file ["fail_function_with_incompatible_type.jank"
-                "fail_identifier_with_incompatible_type.jank"
-                "fail_incompatible_value.jank"
-                "fail_multiple_definition_different_type.jank"
-                "fail_multiple_definition_same_type.jank"
-                "fail_unknown_type.jank"
-                "fail_unknown_value_identifier.jank"
-                "pass_deduce_type.jank"
-                "pass_proper_types.jank"]]
+  (doseq [file ["fail-function-with-incompatible-type.jank"
+                "fail-identifier-with-incompatible-type.jank"
+                "fail-incompatible-value.jank"
+                "fail-multiple-definition-different-type.jank"
+                "fail-multiple-definition-same-type.jank"
+                "fail-unknown-type.jank"
+                "fail-unknown-value-identifier.jank"
+                "pass-deduce-type.jank"
+                "pass-proper-types.jank"]]
     (test-file (str "test/type/binding/" file))))
 
 (deftest first-class-lambdas
-  (doseq [file ["pass_as_param.jank"
-                "fail_incorrect_return_type.jank"
-                "fail_incorrect_param_type.jank"
-                "pass_simple.jank"
-                "pass_return_lambda.jank"
-                "pass_with_params.jank"
-                "pass_higher_order_lambda.jank"]]
+  (doseq [file ["pass-as-param.jank"
+                "fail-incorrect-return-type.jank"
+                "fail-incorrect-param-type.jank"
+                "pass-simple.jank"
+                "pass-return-lambda.jank"
+                "pass-with-params.jank"
+                "pass-higher-order-lambda.jank"]]
     (test-file (str "test/type/lambda/first-class/" file))))
 
 (deftest lambda-bindings
-  (doseq [file ["fail_incorrect_type.jank"
-                "fail_invalid_param_type.jank"
-                "fail_invalid_return_type.jank"
-                "pass_with_type.jank"
-                "pass_simple.jank"
-                "pass_call.jank"]]
+  (doseq [file ["fail-incorrect-type.jank"
+                "fail-invalid-param-type.jank"
+                "fail-invalid-return-type.jank"
+                "pass-with-type.jank"
+                "pass-simple.jank"
+                "pass-call.jank"]]
     (test-file (str "test/type/lambda/bind/" file))))
 
 (deftest if-definitions
-  (doseq [file ["fail_integer_condition.jank"
-                "pass_boolean_condition.jank"
-                "pass_with_else.jank"]]
+  (doseq [file ["fail-integer-condition.jank"
+                "pass-boolean-condition.jank"
+                "pass-with-else.jank"]]
     (test-file (str "test/type/if/define/" file))))
 
 (deftest if-expressions
-  (doseq [file ["fail_different_types.jank"
-                "fail_invalid_param_type.jank"
-                "fail_without_else.jank"
+  (doseq [file ["fail-different-types.jank"
+                "fail-invalid-param-type.jank"
+                "fail-without-else.jank"
                 ; TODO: Fix these
-                ;"pass_matching_types.jank"
-                ;"pass_if_as_condition.jank"
+                ;"pass-matching-types.jank"
+                ;"pass-if-as-condition.jank"
                 ]]
     (test-file (str "test/type/if/expression/" file))))
 
 (deftest function-calls
-  (doseq [file ["fail_invalid_function.jank"
-                "fail_invalid_param_type.jank"
-                "fail_too_few_params.jank"
-                "fail_too_many_params.jank"
-                "pass_chain.jank"
-                "pass_empty.jank"
-                "pass_function_call_param.jank"
-                "pass_print.jank"
-                "pass_print_primitive.jank"
+  (doseq [file ["fail-invalid-function.jank"
+                "fail-invalid-param-type.jank"
+                "fail-too-few-params.jank"
+                "fail-too-many-params.jank"
+                "pass-chain.jank"
+                "pass-empty.jank"
+                "pass-function-call-param.jank"
+                "pass-print.jank"
+                "pass-print-primitive.jank"
                 ; TODO: Fix
-                ;"pass_recursion.jank"
+                ;"pass-recursion.jank"
                 ]]
     (test-file (str "test/type/function/call/" file))))
 
 (deftest nested-functions
-  (doseq [file ["fail_multiple_inner_definition.jank"
-                "pass_capture_params.jank"
-                "pass_define.jank"
-                "pass_overload_inner.jank"
-                "pass_overload_outer_call_outer.jank"
-                "pass_overload_outer.jank"
-                "pass_overload_self.jank"
+  (doseq [file ["fail-multiple-inner-definition.jank"
+                "pass-capture-params.jank"
+                "pass-define.jank"
+                "pass-overload-inner.jank"
+                "pass-overload-outer-call-outer.jank"
+                "pass-overload-outer.jank"
+                "pass-overload-self.jank"
                 ; TODO: Fix
-                ;"pass_redefine_outer.jank"
-                ;"pass_redefine_self.jank"
+                ;"pass-redefine-outer.jank"
+                ;"pass-redefine-self.jank"
                 ]]
     (test-file (str "test/type/function/nest/" file))))
