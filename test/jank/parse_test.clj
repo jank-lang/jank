@@ -12,6 +12,7 @@
                           (valid-parse? file)))
     (is (valid-parse? file))))
 
+; TODO: Split into multiple tests
 (deftest comments
   (doseq [file ["multi-line/fail_double_close.jank"
                 "multi-line/fail_no_close.jank"
@@ -26,13 +27,13 @@
                 "nested/fail_multi_line_multi_start.jank"
                 "nested/pass_single_line.jank"
                 "nested/fail_single_line_multi_start.jank"
-                "single_line/fail_double_close.jank"
-                "single_line/fail_no_close.jank"
-                "single_line/pass_multiple_in_one_file.jank"
-                "single_line/pass_normal.jank"
-                "single_line/pass_parens.jank"
-                "single_line/pass_quotes.jank"
-                "single_line/pass_unicode.jank"]]
+                "single-line/fail_double_close.jank"
+                "single-line/fail_no_close.jank"
+                "single-line/pass_multiple_in_one_file.jank"
+                "single-line/pass_normal.jank"
+                "single-line/pass_parens.jank"
+                "single-line/pass_quotes.jank"
+                "single-line/pass_unicode.jank"]]
     (test-file (str "test/parse/comment/" file))))
 
 (deftest idents
