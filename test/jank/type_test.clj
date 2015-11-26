@@ -2,17 +2,17 @@
   (:require [clojure.test :refer :all]
             [jank.bootstrap :refer :all :refer-macros :all]))
 
-(def type-error #"type error:")
+(def error #"type error:")
 
 (defn test-file [file]
   (println "testing" file)
   (if (should-fail? file)
     (is (thrown-with-msg? AssertionError
-                          type-error
+                          error
                           (valid-type? file)))
     (is (valid-type? file))))
 
-(deftest type-bindings
+(deftest bindings
   (doseq [file ["fail_function_with_incompatible_type.jank"
                 "fail_identifier_with_incompatible_type.jank"
                 "fail_incompatible_value.jank"
@@ -24,7 +24,7 @@
                 "pass_proper_types.jank"]]
     (test-file (str "test/type/binding/" file))))
 
-(deftest type-first-class-lambdas
+(deftest first-class-lambdas
   (doseq [file ["pass_as_param.jank"
                 "fail_incorrect_return_type.jank"
                 "fail_incorrect_param_type.jank"
@@ -34,7 +34,7 @@
                 "pass_higher_order_lambda.jank"]]
     (test-file (str "test/type/lambda/first-class/" file))))
 
-(deftest type-lambda-bindings
+(deftest lambda-bindings
   (doseq [file ["fail_incorrect_type.jank"
                 "fail_invalid_param_type.jank"
                 "fail_invalid_return_type.jank"
@@ -43,13 +43,13 @@
                 "pass_call.jank"]]
     (test-file (str "test/type/lambda/bind/" file))))
 
-(deftest type-if-definitions
+(deftest if-definitions
   (doseq [file ["fail_integer_condition.jank"
                 "pass_boolean_condition.jank"
                 "pass_with_else.jank"]]
     (test-file (str "test/type/if/define/" file))))
 
-(deftest type-if-expressions
+(deftest if-expressions
   (doseq [file ["fail_different_types.jank"
                 "fail_invalid_param_type.jank"
                 "fail_without_else.jank"
@@ -59,7 +59,7 @@
                 ]]
     (test-file (str "test/type/if/expression/" file))))
 
-(deftest type-function-calls
+(deftest function-calls
   (doseq [file ["fail_invalid_function.jank"
                 "fail_invalid_param_type.jank"
                 "fail_too_few_params.jank"
@@ -74,7 +74,7 @@
                 ]]
     (test-file (str "test/type/function/call/" file))))
 
-(deftest type-nested-functions
+(deftest nested-functions
   (doseq [file ["fail_multiple_inner_definition.jank"
                 "pass_capture_params.jank"
                 "pass_define.jank"
