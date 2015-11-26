@@ -28,13 +28,6 @@ impl:
       change typed tests to use declare instead of ƒ
         the ƒ macro does nothing right now
 
-  core.logic
-    type checking
-
-    use unification to determine the allowed types
-    (ƒ sum (a Ɐ b Ɐ) (Ɐ)
-      (+ a b))
-
 design:
   functions
     binding + lambda
