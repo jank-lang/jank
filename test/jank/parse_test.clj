@@ -14,75 +14,75 @@
 
 ; TODO: Split into multiple tests
 (deftest comments
-  (doseq [file ["multi-line/fail_double_close.jank"
-                "multi-line/fail_no_close.jank"
-                "multi-line/pass_normal.jank"
-                "multi-line/pass_parens.jank"
-                "multi-line/pass_quotes.jank"
-                "multi-line/pass_unicode.jank"
-                "nested/fail_multi_line_multi_end.jank"
-                "nested/fail_no_close.jank"
-                "nested/fail_single_line_multi_end.jank"
-                "nested/pass_multi_line.jank"
-                "nested/fail_multi_line_multi_start.jank"
-                "nested/pass_single_line.jank"
-                "nested/fail_single_line_multi_start.jank"
-                "single-line/fail_double_close.jank"
-                "single-line/fail_no_close.jank"
-                "single-line/pass_multiple_in_one_file.jank"
-                "single-line/pass_normal.jank"
-                "single-line/pass_parens.jank"
-                "single-line/pass_quotes.jank"
-                "single-line/pass_unicode.jank"]]
+  (doseq [file ["multi-line/fail-double-close.jank"
+                "multi-line/fail-no-close.jank"
+                "multi-line/pass-normal.jank"
+                "multi-line/pass-parens.jank"
+                "multi-line/pass-quotes.jank"
+                "multi-line/pass-unicode.jank"
+                "nested/fail-multi-line-multi-end.jank"
+                "nested/fail-no-close.jank"
+                "nested/fail-single-line-multi-end.jank"
+                "nested/pass-multi-line.jank"
+                "nested/fail-multi-line-multi-start.jank"
+                "nested/pass-single-line.jank"
+                "nested/fail-single-line-multi-start.jank"
+                "single-line/fail-double-close.jank"
+                "single-line/fail-no-close.jank"
+                "single-line/pass-multiple-in-one-file.jank"
+                "single-line/pass-normal.jank"
+                "single-line/pass-parens.jank"
+                "single-line/pass-quotes.jank"
+                "single-line/pass-unicode.jank"]]
     (test-file (str "test/parse/comment/" file))))
 
 (deftest idents
-  (doseq [file ["ascii/fail_bad_chars.jank"
-                "ascii/pass_good_chars.jank"
-                "ascii/pass_true_false.jank"
-                "unicode/pass_all_good.jank"]]
+  (doseq [file ["ascii/fail-bad-chars.jank"
+                "ascii/pass-good-chars.jank"
+                "ascii/pass-true-false.jank"
+                "unicode/pass-all-good.jank"]]
     (test-file (str "test/parse/ident/" file))))
 
 (deftest parens
-  (doseq [file ["match/fail_close_nothing_else.jank"
-                "match/fail_multiple_close_nothing_else.jank"
-                "match/fail_multiple_open_nothing_else.jank"
-                "match/fail_open_nothing_else.jank"]]
+  (doseq [file ["match/fail-close-nothing-else.jank"
+                "match/fail-multiple-close-nothing-else.jank"
+                "match/fail-multiple-open-nothing-else.jank"
+                "match/fail-open-nothing-else.jank"]]
     (test-file (str "test/parse/paren/" file))))
 
 (deftest strings
-  (doseq [file ["escape/pass_lots_of_unescaped_closes.jank"
-                "escape/pass_unescaped_both.jank"
-                "escape/pass_unescaped_close.jank"
-                "escape/pass_unescaped_open.jank"
-                "escape/pass_escape_both.jank"
-                "escape/pass_escape_close.jank"
-                "escape/pass_escape_open.jank"]]
+  (doseq [file ["escape/pass-lots-of-unescaped-closes.jank"
+                "escape/pass-unescaped-both.jank"
+                "escape/pass-unescaped-close.jank"
+                "escape/pass-unescaped-open.jank"
+                "escape/pass-escape-both.jank"
+                "escape/pass-escape-close.jank"
+                "escape/pass-escape-open.jank"]]
     (test-file (str "test/parse/string/" file))))
 
 (deftest bindings
-  (doseq [file ["fail_missing_value.jank"
-                "pass_builtin_function.jank"
-                "pass_builtin_identifier.jank"
-                "pass_builtin_literal.jank"
-                "pass_builtin_parameter.jank"]]
+  (doseq [file ["fail-missing-value.jank"
+                "pass-builtin-function.jank"
+                "pass-builtin-identifier.jank"
+                "pass-builtin-literal.jank"
+                "pass-builtin-parameter.jank"]]
     (test-file (str "test/parse/binding/" file))))
 
 (deftest ifs
-  (doseq [file ["fail_without_both.jank"
-                "fail_too_many_branches.jank"
-                "pass_with_literal.jank"
-                "pass_without_else.jank"
-                "pass_with_predicate.jank"]]
+  (doseq [file ["fail-without-both.jank"
+                "fail-too-many-branches.jank"
+                "pass-with-literal.jank"
+                "pass-without-else.jank"
+                "pass-with-predicate.jank"]]
     (test-file (str "test/parse/if/" file))))
 
 (deftest lambda-definitions
-  (doseq [file ["fail_missing_param_name.jank"
-                "fail_no_param_list.jank"
-                "fail_no_return_type.jank"
-                "pass_body.jank"
-                "pass_empty.jank"
-                "pass_primitive.jank"
-                "pass_long_form.jank"
-                "pass_unicode_short_form.jank"]]
+  (doseq [file ["fail-missing-param-name.jank"
+                "fail-no-param-list.jank"
+                "fail-no-return-type.jank"
+                "pass-body.jank"
+                "pass-empty.jank"
+                "pass-primitive.jank"
+                "pass-long-form.jank"
+                "pass-unicode-short-form.jank"]]
     (test-file (str "test/parse/lambda/define/" file))))

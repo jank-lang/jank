@@ -18,7 +18,7 @@
     (parse/parse (slurp-resource file))))
 
 (defn should-fail? [file]
-  (some? (re-matches #".*/fail_.*" file)))
+  (some? (re-matches #".*/fail-.*" file)))
 
 (defn valid-parse? [file]
   (parse file)
