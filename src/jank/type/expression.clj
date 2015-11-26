@@ -22,7 +22,7 @@
 
 (defmethod realize-type :function-call [item scope]
   (let [func-name (get-in item [1 1])
-        overloads (second (declaration/lookup-binding func-name scope))
+        overloads (declaration/lookup-overloads func-name scope)
         arg-types (apply list
                          (declaration/shorten-types
                            (map #(realize-type % scope) (rest (rest item)))))]

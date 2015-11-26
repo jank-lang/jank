@@ -4,8 +4,8 @@
   (:use clojure.pprint
         jank.assert))
 
-(defn find-overload [item-type overloads]
-  "Looks through all overloads for one matchin the provided type. Functions
+(defn match-overload [item-type overloads]
+  "Looks through all overloads for one matching the provided type. Functions
    can't be overloaded by only return types. Returns a list of indices into
    the overloads sequence representing each match."
   (keep-indexed
@@ -38,7 +38,7 @@
                         item-type)
         function (declaration/function? item-type)
         overload-matches (if function
-                           (find-overload item-type (second overloads))
+                           (match-overload item-type (second overloads))
                            nil)]
     (type-assert (or (nil? overloads)
                      (and function (empty? overload-matches)))

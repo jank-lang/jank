@@ -18,9 +18,21 @@
   "Returns whether or not the provided type is that of a function."
   (= "ƒ" (first decl-type)))
 
+(defn lookup-overloads [decl-name scope]
+  "Recursively looks through the hierarchy of scopes for the declaration.
+   Returns all overloads in all scopes, from closest to furthest."
+  (loop [current-scope scope
+         overloads []]
+    (if current-scope
+      (if-let [found (find (:binding-declarations current-scope) decl-name)]
+        (recur (:parent current-scope) (into overloads (second found)))
+        (recur (:parent current-scope) overloads))
+      overloads)))
+
 (defn lookup-binding [decl-name scope]
-  "Recursively looks through the hierarchy of scopes for the declaration."
-  ; TODO: This doesn't accrue all overloads from parent scopes
+  "Recursively looks through the hierarchy of scopes for the declaration.
+   Returns the first set of overloads found in the closest scope, not all.
+   See lookup-overloads for getting all."
   (loop [current-scope scope]
     (when current-scope
       (if-let [found (find (:binding-declarations current-scope) decl-name)]
