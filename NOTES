@@ -21,6 +21,7 @@ impl:
     comments within forms
     keywords
     per-commit performance?
+      criterium benchmarking
     migrate old tests
       move parsing tests in old "translate" into parse/
       change typed tests to use declare instead of ƒ
