@@ -14,6 +14,8 @@ impl:
     if expressions need extra type checking as arguments
       both then and else are needed and must be of the same type
 
+    anything going through realize-type will be expected to have matching types for all branches
+
   nested functions need to be lambdas in codegen
 
   better logging
