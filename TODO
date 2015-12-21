@@ -35,8 +35,6 @@ constraints on return types
   (ƒ foo () (:T-ret) where (^number? : (T-ret))
     42)
 
-fix vim highlighting of falsey
-
 REPL
   add repl trait and compile separate lib
     allow multiple definitions
