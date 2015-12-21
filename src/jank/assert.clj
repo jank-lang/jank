@@ -9,8 +9,8 @@
 (defn codegen-assert [condition & msg]
   (assert condition (apply str "codegen error: " msg)))
 
-(defn not-implemented [& msg]
-  (assert false (apply str "not implemented: " msg)))
+(defn not-yet-implemented [& msg]
+  (assert false (apply str "not yet implemented: " msg)))
 
 (defn internal-assert [condition & msg]
   (assert condition (apply str "internal error: " msg)))
