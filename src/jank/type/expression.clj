@@ -60,7 +60,7 @@
 
 (defmethod realize-type :list [item scope]
   ; TODO
-  nil)
+  (not-implemented "list type realization"))
 
 (defmethod realize-type :identifier [item scope]
   (let [ident (second item)
