@@ -18,7 +18,7 @@
        (into [:specialization-list] (remove-identifiers (rest (nth item 2))))])))
 
 (defmethod realize-type :binding-definition [item scope]
-  nil)
+  (type-assert "binding definitions are not expressions"))
 
 (defmethod realize-type :function-call [item scope]
   (let [func-name (get-in item [1 1])
