@@ -75,7 +75,8 @@
          new-scope scope]
     (if (empty? args)
       (let [checked-item (into [(first item) (second item)] checked-args)]
-        (expression/realize-type checked-item scope)
+        (internal-assert (some? (expression/realize-type checked-item scope))
+                         "invalid function type")
         (list checked-item new-scope))
       (let [[checked-arg checked-scope] (check-item (first args) new-scope)]
         (recur (rest args)
