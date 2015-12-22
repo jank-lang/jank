@@ -6,7 +6,10 @@
 
 (defn -main
   [& args]
-  (-> {:cells (parse/parse (slurp (first args)))}
+  (-> {:cells (parse/parse
+                (if (not-any? #(= "--bare" %) args)
+                  parse/prelude)
+                (slurp (first args)))}
       type/check
       first
       codegen/codegen))
