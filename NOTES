@@ -33,9 +33,11 @@ impl:
         the ƒ macro does nothing right now
 
   targets
+    each target has its own prelude
+
     (#target c++
              (#dependencies "gl/gl.h")
-             (#command-line "-ggdb -Og"))
+             (#command-line "-ggdb -Og -lGL"))
 
 design:
   functions
