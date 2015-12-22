@@ -1,7 +1,8 @@
 (ns jank.type.check
   (:require [jank.type.declaration :as declaration]
             [jank.type.binding :as binding]
-            [jank.type.expression :as expression])
+            [jank.type.expression :as expression]
+            [jank.type.return :as return])
   (:use clojure.pprint
         jank.assert))
 
@@ -74,8 +75,11 @@
          checked-args []
          new-scope scope]
     (if (empty? args)
-      (let [checked-item (into [(first item) (second item)] checked-args)]
-        (expression/realize-type checked-item scope)
+      (let [checked-item (into [(first item) (second item)]
+                               (map return/add-explicit-returns
+                                    checked-args
+                                    new-scope))]
+        (expression/realize-type checked-item new-scope)
         (list checked-item new-scope))
       (let [[checked-arg checked-scope] (check-item (first args) new-scope)]
         (recur (rest args)
