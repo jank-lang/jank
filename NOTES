@@ -34,7 +34,7 @@ impl:
 
   targets
     (#target c++
-             (#dependencies "<gl/gl.h>")
+             (#dependencies "gl/gl.h")
              (#command-line "-ggdb -Og"))
 
 design:
