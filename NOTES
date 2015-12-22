@@ -32,6 +32,11 @@ impl:
       change typed tests to use declare instead of ƒ
         the ƒ macro does nothing right now
 
+  targets
+    (#target c++
+             (#dependencies "<gl/gl.h>")
+             (#command-line "-ggdb -Og"))
+
 design:
   functions
     binding + lambda
