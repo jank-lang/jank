@@ -56,11 +56,11 @@
   ; Realizing the type of an if expression means that we need
   ; it for a value; in this case, we require both then and else clauses
   ; and they must evaluate to the same type.
-  (not-yet-implemented "if expression type realization"))
+  (not-yet-implemented type-assert false "if expression type realization"))
 
 (defmethod realize-type :list [item scope]
   ; TODO
-  (not-yet-implemented "list type realization"))
+  (not-yet-implemented type-assert false "list type realization"))
 
 (defmethod realize-type :identifier [item scope]
   (let [ident (second item)

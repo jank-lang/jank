@@ -100,8 +100,8 @@
 
 (defmethod check-item :return-list [item scope]
   (let [returns (count (rest item))]
-    (internal-assert (<= (count (rest item)) 1)
-                     "unimplemented: multiple return types")
+    (not-yet-implemented type-assert (<= (count (rest item)) 1)
+                         "multiple return types")
     (when (> returns 0)
       (type-assert (declaration/lookup-type
                      (first (declaration/shorten-types (rest item))) scope)
