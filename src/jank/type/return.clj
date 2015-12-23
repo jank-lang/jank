@@ -17,8 +17,12 @@
     (type-assert (not-empty then-body) "no return value in if/then expression")
     (type-assert (not-empty else-body) "no return value in if/else expression")
 
-    (let [then-type (expression/realize-type (last then-body) scope)
-          else-type (expression/realize-type (last else-body) scope)]
+    (let [then-type (expression/realize-type
+                      (add-explicit-returns (last then-body) scope)
+                      scope)
+          else-type (expression/realize-type
+                      (add-explicit-returns (last else-body) scope)
+                      scope)]
       (type-assert (= then-body else-body)
                    "incompatible if then/else types")
       item)))
