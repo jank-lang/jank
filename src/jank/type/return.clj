@@ -1,6 +1,7 @@
 (ns jank.type.return
   (:require [jank.type.expression :as expression])
-  (:use jank.assert))
+  (:use clojure.pprint
+        jank.assert))
 
 (defmulti add-explicit-returns
   "Adds explicit returns to if statements, lambdas, etc.
@@ -12,8 +13,8 @@
 ;  item)
 ;
 (defmethod add-explicit-returns :if-expression [item scope]
-  (let [then-body (add-explicit-returns [:body (rest (nth item 2))] scope)
-        else-body (add-explicit-returns [:body (rest (nth item 3))] scope)]
+  (let [then-body (second (add-explicit-returns [:body (rest (nth item 2))] scope))
+        else-body (second (add-explicit-returns [:body (rest (nth item 3))] scope))]
     (type-assert (not-empty then-body) "no return value in if/then expression")
     (type-assert (not-empty else-body) "no return value in if/else expression")
 
@@ -23,7 +24,7 @@
           else-type (expression/realize-type
                       (add-explicit-returns (last else-body) scope)
                       scope)]
-      (type-assert (= then-body else-body)
+      (type-assert (= then-type else-type)
                    "incompatible if then/else types")
       item)))
 
@@ -31,5 +32,4 @@
   item)
 
 (defmethod add-explicit-returns :default [item scope]
-  (println item)
   item)
