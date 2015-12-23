@@ -13,6 +13,7 @@
 ;  item)
 ;
 (defmethod add-explicit-returns :if-expression [item scope]
+  ; TODO: Assert there's an else
   (let [then-body (second (add-explicit-returns [:body (rest (nth item 2))] scope))
         else-body (second (add-explicit-returns [:body (rest (nth item 3))] scope))]
     (type-assert (not-empty then-body) "no return value in if/then expression")
@@ -26,7 +27,12 @@
                       scope)]
       (type-assert (= then-type else-type)
                    "incompatible if then/else types")
-      item)))
+      ; TODO: Actually add in returns and update item
+      (let [updated-then-body (concat (butlast then-body)
+                                      [[:return (last then-body)]])
+            updated-else-body (concat (butlast else-body)
+                                      [[:return (last else-body)]])]
+        item))))
 
 (defmethod add-explicit-returns :body [item scope]
   item)
