@@ -13,7 +13,8 @@
 ;  item)
 ;
 (defmethod add-explicit-returns :if-expression [item scope]
-  ; TODO: Assert there's an else
+  (type-assert (= 4 (count item)) "no else statement")
+
   (let [then-body (second (add-explicit-returns [:body (rest (nth item 2))] scope))
         else-body (second (add-explicit-returns [:body (rest (nth item 3))] scope))]
     (type-assert (not-empty then-body) "no return value in if/then expression")
