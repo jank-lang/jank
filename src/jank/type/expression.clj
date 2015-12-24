@@ -76,3 +76,7 @@
 ; Handles integer, string, etc
 (defmethod realize-type :default [item scope]
   (-> item first name symbol str list))
+
+; Empty bodies will realize to nil
+(defmethod realize-type nil [item scope]
+  nil)
