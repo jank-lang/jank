@@ -29,11 +29,10 @@
                                                 scope))
         else-body (second (add-explicit-returns [:body (rest (nth item 3))]
                                                 scope))]
-    ; TODO: Add tests for this
-    (type-assert (not-empty then-body)
-                 "no return value in if/then expression")
-    (type-assert (not-empty else-body)
-                 "no return value in if/else expression")
+    (internal-assert (not-empty then-body)
+                     "no return value in if/then expression")
+    (internal-assert (not-empty else-body)
+                     "no return value in if/else expression")
 
     (let [then-type (expression/realize-type (last then-body) scope)
           else-type (expression/realize-type (last else-body) scope)]
