@@ -53,9 +53,8 @@
   (doseq [file ["fail-different-types.jank"
                 "fail-invalid-param-type.jank"
                 "fail-without-else.jank"
-                ; TODO: Fix these
-                ;"pass-matching-types.jank"
-                ;"pass-if-as-condition.jank"
+                "pass-matching-types.jank"
+                "pass-if-as-condition.jank"
                 ]]
     (test-file (str "test/type/if/expression/" file))))
 
