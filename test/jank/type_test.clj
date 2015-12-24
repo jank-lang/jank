@@ -101,11 +101,12 @@
                 "fail-no-return.jank"
                 "fail-unknown-type.jank"
                 "fail-unknown-value.jank"
-                "fail-void-wrong-type.jank"
                 "fail-wrong-param-type.jank"
                 "fail-wrong-type.jank"
                 "pass-function.jank"
                 "pass-normal.jank"
                 "pass-param.jank"
-                "pass-void-no-return.jank"]]
+                "pass-void-no-return.jank"
+                "pass-void-incomplete-if.jank"
+                "pass-void-wrong-type.jank"]]
     (test-file (str "test/type/function/return/" file))))
