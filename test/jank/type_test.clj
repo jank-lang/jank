@@ -88,3 +88,10 @@
                 ;"pass-redefine-self.jank"
                 ]]
     (test-file (str "test/type/function/nest/" file))))
+
+(deftest overloaded-functions
+  (doseq [file ["fail-multiple-definition.jank"
+                "fail-return-type.jank"
+                "pass-different-param-count.jank"
+                "pass-same-param-count.jank"]]
+    (test-file (str "test/type/function/overload/" file))))
