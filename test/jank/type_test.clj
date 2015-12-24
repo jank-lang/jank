@@ -55,6 +55,7 @@
                 "fail-without-else.jank"
                 "pass-matching-types.jank"
                 "pass-if-as-condition.jank"
+                "pass-nested.jank"
                 ]]
     (test-file (str "test/type/if/expression/" file))))
 
