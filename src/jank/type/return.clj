@@ -10,7 +10,6 @@
     (first item)))
 
 (defmethod add-explicit-returns :lambda-definition [item scope]
-  (println item)
   item)
 
 (defmethod add-explicit-returns :if-expression [item scope]

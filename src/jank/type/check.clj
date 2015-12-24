@@ -51,10 +51,10 @@
         [checked-args args-scope] (check-item args scope)
         [checked-returns returns-scope] (check-item returns args-scope)
         [checked-body checked-scope] (check {:cells (drop 3 item)}
-                                            (empty-scope returns-scope))]
-    ; TODO: Add explicit return
-    (list (into [] (concat (take 3 item) (:cells checked-body)))
-          scope)))
+                                            (empty-scope returns-scope))
+        updated-item (into [] (concat (take 3 item) (:cells checked-body)))
+        body-with-return (return/add-explicit-returns updated-item scope)]
+    (list body-with-return scope)))
 
 (defmethod check-item :binding-definition [item scope]
   ; There is an optional type specifier which may be before the value
