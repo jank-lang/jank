@@ -1,5 +1,7 @@
-(ƒ bar () (string)
-  "blah")
+(bind bar
+  (λ () (string)
+    "blah"))
 
-(ƒ truth () (boolean)
-  true)
+(bind truth
+  (λ () (boolean)
+    true))

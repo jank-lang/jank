@@ -95,3 +95,17 @@
                 "pass-different-param-count.jank"
                 "pass-same-param-count.jank"]]
     (test-file (str "test/type/function/overload/" file))))
+
+(deftest implicit-function-returns
+  (doseq [file ["fail-function-wrong-type.jank"
+                "fail-no-return.jank"
+                "fail-unknown-type.jank"
+                "fail-unknown-value.jank"
+                "fail-void-wrong-type.jank"
+                "fail-wrong-param-type.jank"
+                "fail-wrong-type.jank"
+                "pass-function.jank"
+                "pass-normal.jank"
+                "pass-param.jank"
+                "pass-void-no-return.jank"]]
+    (test-file (str "test/type/function/return/" file))))

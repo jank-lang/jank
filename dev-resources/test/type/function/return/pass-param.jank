@@ -1,5 +1,7 @@
-(ƒ bar (s string) (string)
-  s)
+(bind bar
+  (λ (s string) (string)
+    s))
 
-(ƒ identity (b boolean) (boolean)
-  b)
+(bind identity
+  (λ (b boolean) (boolean)
+    b))
