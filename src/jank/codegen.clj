@@ -78,6 +78,7 @@
                 ((partial str "_u"))
                 vec))))
 
+; TODO: Handle :return
 (defmulti codegen-impl
   (fn [current]
     (first current)))
