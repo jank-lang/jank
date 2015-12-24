@@ -13,7 +13,7 @@ impl:
     timbre (allows profiling, too)
 
   tests
-    decls
+    declarations
     comments within forms
     keywords
     per-commit performance?
