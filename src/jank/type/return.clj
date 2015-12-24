@@ -1,5 +1,6 @@
 (ns jank.type.return
-  (:require [jank.type.expression :as expression])
+  (:require [jank.type.expression :as expression]
+            [jank.type.declaration :as declaration])
   (:use clojure.pprint
         jank.assert))
 
@@ -18,9 +19,19 @@
     (first item)))
 
 (defmethod add-explicit-returns :lambda-definition [item scope]
-  (let [updated-body (add-explicit-returns [:body (drop 3 item)] scope)]
-    ; TODO: Verify the type is correct
-    (into [] (concat (take 3 item) (second updated-body)))))
+  (let [expected-type (declaration/shorten-types (second (nth item 2)))]
+    ; No return type means no implicit returns are generates
+    (if (nil? expected-type)
+      item
+      (let [updated-body (add-explicit-returns [:body (drop 3 item)] scope)
+            body-type (expression/realize-type (last (second updated-body))
+                                               scope)]
+        (type-assert (= expected-type body-type)
+                     (str "expected function return type of "
+                          expected-type
+                          ", found "
+                          body-type))
+        (into [] (concat (take 3 item) (second updated-body)))))))
 
 (defmethod add-explicit-returns :if-expression [item scope]
   (type-assert (= 4 (count item)) "no else statement")
