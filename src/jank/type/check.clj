@@ -28,7 +28,7 @@
   ([parsed]
    (check parsed (empty-scope)))
   ([parsed parent-scope]
-   (pprint (list "parsed:" parsed))
+   ;(pprint (list "parsed:" parsed))
    (loop [item (first (:cells parsed))
           remaining (rest (:cells parsed))
           checked []

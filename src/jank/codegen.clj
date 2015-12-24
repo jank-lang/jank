@@ -78,7 +78,6 @@
                 ((partial str "_u"))
                 vec))))
 
-; TODO: Handle :return
 (defmulti codegen-impl
   (fn [current]
     (first current)))
@@ -149,6 +148,9 @@
                                    "}")
         :else base)
       "}()")))
+
+(defmethod codegen-impl :return [current]
+  (str "return " (codegen-impl (second current))))
 
 (defmethod codegen-impl :list [current]
   (str "("
