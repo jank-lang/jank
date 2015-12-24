@@ -53,7 +53,7 @@
         [checked-body checked-scope] (check {:cells (drop 3 item)}
                                             (empty-scope returns-scope))
         updated-item (into [] (concat (take 3 item) (:cells checked-body)))
-        body-with-return (return/add-explicit-returns updated-item scope)]
+        body-with-return (return/add-explicit-returns updated-item checked-scope)]
     (list body-with-return scope)))
 
 (defmethod check-item :binding-definition [item scope]

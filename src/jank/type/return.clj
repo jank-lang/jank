@@ -10,7 +10,8 @@
     (first item)))
 
 (defmethod add-explicit-returns :lambda-definition [item scope]
-  item)
+  (let [updated-body (add-explicit-returns [:body (drop 3 item)] scope)]
+    (into [] (concat (take 3 item) (second updated-body)))))
 
 (defmethod add-explicit-returns :if-expression [item scope]
   (type-assert (= 4 (count item)) "no else statement")
