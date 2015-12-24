@@ -52,6 +52,7 @@
         [checked-returns returns-scope] (check-item returns args-scope)
         [checked-body checked-scope] (check {:cells (drop 3 item)}
                                             (empty-scope returns-scope))]
+    ; TODO: Add explicit return
     (list (into [] (concat (take 3 item) (:cells checked-body)))
           scope)))
 
