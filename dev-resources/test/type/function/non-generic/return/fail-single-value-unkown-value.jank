@@ -1,2 +1,3 @@
-(ƒ foo () (integer)
-  (return unknown))
+(bind foo
+  (λ () (integer)
+    unknown))

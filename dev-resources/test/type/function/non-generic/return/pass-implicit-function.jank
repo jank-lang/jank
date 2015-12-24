@@ -1,7 +1,9 @@
-(ƒ bar-foo () (string)
-  "good")
+(bind bar-foo
+  (λ () (string)
+    "good"))
 
-(ƒ foo-bar () (string)
-  (bar-foo))
+(bind foo-bar
+  (λ () (string)
+    (bar-foo)))
 
 (print (foo-bar))
