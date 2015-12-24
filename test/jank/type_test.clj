@@ -53,6 +53,7 @@
   (doseq [file ["fail-different-types.jank"
                 "fail-invalid-param-type.jank"
                 "fail-without-else.jank"
+                "fail-nested-without-else.jank"
                 "pass-matching-types.jank"
                 "pass-if-as-condition.jank"
                 "pass-nested.jank"
