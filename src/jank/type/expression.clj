@@ -68,6 +68,10 @@
     (type-assert (some? decl) (str "unknown binding " ident))
     (:type (get-in decl [1 0]))))
 
+(defmethod realize-type :return [item scope]
+  ; Realize that which is being returned
+  (realize-type (second item) scope))
+
 ; Handles integer, string, etc
 (defmethod realize-type :default [item scope]
   (-> item first name symbol str list))
