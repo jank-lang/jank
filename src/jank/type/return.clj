@@ -9,9 +9,10 @@
   (fn [item scope]
     (first item)))
 
-;(defmethod add-explicit-returns :lambda-definition [item scope]
-;  item)
-;
+(defmethod add-explicit-returns :lambda-definition [item scope]
+  (println item)
+  item)
+
 (defmethod add-explicit-returns :if-expression [item scope]
   (type-assert (= 4 (count item)) "no else statement")
 

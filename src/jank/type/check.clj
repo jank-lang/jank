@@ -47,16 +47,16 @@
 
 (defmethod check-item :lambda-definition [item scope]
   (let [args (second item)
-        returns (nth item 2)]
-    (let [[checked-args args-scope] (check-item args scope)
-          [checked-returns returns-scope] (check-item returns args-scope)
-          [checked-body checked-scope] (check {:cells (drop 3 item)}
-                                              (empty-scope returns-scope))]
-      (list (into [(nth item 0)
-                   (nth item 1)
-                   (nth item 2)]
-                  (:cells checked-body))
-            scope))))
+        returns (nth item 2)
+        [checked-args args-scope] (check-item args scope)
+        [checked-returns returns-scope] (check-item returns args-scope)
+        [checked-body checked-scope] (check {:cells (drop 3 item)}
+                                            (empty-scope returns-scope))]
+    (list (into [(nth item 0)
+                 (nth item 1)
+                 (nth item 2)]
+                (:cells checked-body))
+          scope)))
 
 (defmethod check-item :binding-definition [item scope]
   ; There is an optional type specifier which may be before the value
