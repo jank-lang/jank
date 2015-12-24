@@ -19,24 +19,30 @@
                                                 scope))
         else-body (second (add-explicit-returns [:body (rest (nth item 3))]
                                                 scope))]
-    (type-assert (not-empty then-body) "no return value in if/then expression")
-    (type-assert (not-empty else-body) "no return value in if/else expression")
+    (internal-assert (not-empty then-body)
+                     "no return value in if/then expression")
+    (internal-assert (not-empty else-body)
+                     "no return value in if/else expression")
 
-    (let [then-type (expression/realize-type
-                      (add-explicit-returns (last then-body) scope)
-                      scope)
-          else-type (expression/realize-type
-                      (add-explicit-returns (last else-body) scope)
-                      scope)]
+    (let [then-type (expression/realize-type (last then-body) scope)
+          else-type (expression/realize-type (last else-body) scope)]
       (type-assert (= then-type else-type)
                    "incompatible if then/else types")
       (update-in
-        (update-in item [2] (fn [_] [:then [:return (last then-body)]]))
+        (update-in item [2] (fn [_] [:then (last then-body)]))
         [3]
-        (fn [_] [:else [:return (last else-body)]])))))
+        (fn [_] [:else (last else-body)])))))
 
 (defmethod add-explicit-returns :body [item scope]
-  item)
+  (let [body (second item)]
+    (type-assert (not-empty body)
+                 "expression body is empty and without return")
+
+    (let [body-type (expression/realize-type
+                      (add-explicit-returns (last body) scope)
+                      scope)]
+      (update-in item [1] (fn [_] (concat (butlast body)
+                                          [[:return (last body)]]))))))
 
 (defmethod add-explicit-returns :default [item scope]
   item)
