@@ -1,2 +1,0 @@
-(ƒ foo () (integer)
-  (return 42 3.14))

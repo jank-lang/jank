@@ -1,5 +1,0 @@
-(ƒ foo () (integer)
-  (return 42))
-
-(ƒ bar () (string)
-  (return "blah"))

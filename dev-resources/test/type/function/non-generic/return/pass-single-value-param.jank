@@ -1,2 +1,0 @@
-(ƒ foo (i integer) (integer)
-  (return i))

@@ -1,6 +1,0 @@
-(ƒ useless (b boolean) (boolean)
-  b)
-
-(ƒ foo (b boolean) (boolean)
-  b
-  (useless b)) (; unreachable ;)

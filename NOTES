@@ -12,6 +12,10 @@ impl:
   better logging
     timbre (allows profiling, too)
 
+  only allow one return type
+    simplify the grammar, tests, etc
+    tuples, lists, structs, etc can work
+
   tests
     declarations
     comments within forms
