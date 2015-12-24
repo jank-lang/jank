@@ -52,10 +52,7 @@
         [checked-returns returns-scope] (check-item returns args-scope)
         [checked-body checked-scope] (check {:cells (drop 3 item)}
                                             (empty-scope returns-scope))]
-    (list (into [(nth item 0)
-                 (nth item 1)
-                 (nth item 2)]
-                (:cells checked-body))
+    (list (into [] (concat (take 3 item) (:cells checked-body)))
           scope)))
 
 (defmethod check-item :binding-definition [item scope]
