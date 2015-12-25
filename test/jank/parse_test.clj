@@ -80,6 +80,7 @@
   (doseq [file ["fail-missing-param-name.jank"
                 "fail-no-param-list.jank"
                 "fail-no-return-type.jank"
+                "fail-multiple-return-types.jank"
                 "pass-body.jank"
                 "pass-empty.jank"
                 "pass-primitive.jank"
