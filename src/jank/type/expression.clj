@@ -47,7 +47,6 @@
                    (str "ambiguous function call to " func-name
                         " with argument types " arg-types))
 
-      ; TODO: Multiple return types
       (when-not (empty? (first matches))
         (ffirst matches)))))
 

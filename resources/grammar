@@ -29,7 +29,7 @@ list = left-paren !special-identifier atom* right-paren
 
 <lambda-keyword> = <'lambda'> | <'λ'>
 argument-list = left-paren (identifier type)* right-paren
-return-list = left-paren type* right-paren
+return-list = left-paren type? right-paren
 lambda-definition =
   left-paren lambda-keyword argument-list return-list
     atom*
