@@ -12,8 +12,6 @@ macros
 
 tuple and variadic functions
 
-update readme with new generic function/macro syntax
-
 constraints on return types
   Allow dependent types there
   (ƒ foo () (:T-ret) where (^number? : (T-ret))

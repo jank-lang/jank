@@ -39,10 +39,5 @@ design:
   bindings
     declaration based (with futures)
 
-  declarations of bindings and functions
-
-  no interpreter outside of macros
-    jump right into outputting C++14
-
   RAII
     shared_ptrs
