@@ -22,10 +22,7 @@ syntax keyword jank_special
              \ alias
              \ if
 syntax keyword jank_builtin_type
-             \ boolean
-             \ integer real
-             \ string
-             \ list vector
+             \ boolean integer real string list
              \ auto Ɐ
 syntax region	jank_string start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=jank_todo extend
 syntax region jank_comment start="(;" skipnl end=";)" contains=jank_comment,jank_todo

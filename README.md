@@ -8,16 +8,16 @@ structures.
 ## Appetizer
 ```lisp
 (; Update all entities. ;)
-(ƒ update (delta real entities vector : (entity)) (Ɐ)
+(ƒ update (delta real entities list : (entity)) (Ɐ)
   (map (partial update delta) entities))
 
 (; Damage nearby entities. ;)
-(ƒ cast-aoe (area real entities vector : (entity)) (Ɐ)
+(ƒ cast-aoe (area real entities list : (entity)) (Ɐ)
   (map damage
        (filter (partial within-distance area) (entity))))
 
 (; Find a winner, based on score. ;)
-(ƒ find-winner (entities vector : (entity)) (Ɐ)
+(ƒ find-winner (entities list : (entity)) (Ɐ)
   (reduce
     (λ (a Ɐ b Ɐ) (Ɐ)
       (if (> (.score a) (.score b))
@@ -34,8 +34,8 @@ There are a few primitive types which are part of the language.
 |`integer`          |A 64bit signed integer                     |
 |`real`             |A 64bit float                              |
 |`string`           |An array of UTF-8 characters               |
-|`list`             |A generic, homogeneous, linked list        |
-|`vector`           |A generic, homogeneous, dynamic array      |
+|`list`             |A generic, homogeneous, sequence           |
+|`map`              |A generic, sorted, associative sequence    |
 |`tuple`            |A generic, heterogeneous, fixed array      |
 |`ƒ`, `function`    |A generic, first-class function            |
 
@@ -312,8 +312,6 @@ The form of a macro definition is very similar to that of a function definition.
 (macro sequence? : (:T) ()
   (emit false))
 (macro sequence? : (list : (:T)) ()
-  (emit true))
-(macro sequence? : (vector : (:T)) ()
   (emit true))
 ```
 
