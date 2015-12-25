@@ -8,8 +8,6 @@ impl:
 
   nested functions need to be lambdas in codegen
 
-  don't separate list and vector?
-
   better logging
     timbre (allows profiling, too)
 
