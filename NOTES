@@ -5,7 +5,6 @@ impl:
       declare-type declare-function declare-binding
 
   function type deduction
-  implicit function returns
 
   nested functions need to be lambdas in codegen
 
