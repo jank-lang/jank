@@ -14,22 +14,6 @@ tuple and variadic functions
 
 update readme with new generic function/macro syntax
 
-generic functions as macros
-  old way:
-    (ƒ show : (:T) (o T) ()
-      (print o))
-    (show : (integer) 0)
-    (show 0)
-
-  new way:
-    (ƒ⊕ show (T Ɐ) (o T) ()
-      (print o))
-    (show : (integer) 0)
-    (show 0)
-
-    (generic-struct (T Ɐ)
-      (data T))
-
 constraints on return types
   Allow dependent types there
   (ƒ foo () (:T-ret) where (^number? : (T-ret))
