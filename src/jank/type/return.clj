@@ -37,12 +37,8 @@
                           ", found "
                           body-type))
 
-        ; Update the return type, if we've done deduction
-        (if (declaration/auto? expected-type)
-          (update-in updated-item
-                     [2 1]
-                     (fn [_] [:type [:identifier "auto"]]))
-          updated-item)))))
+        ; Update the return type
+        (update-in updated-item [2 1] (fn [_] deduced-type))))))
 
 (defmethod add-explicit-returns :if-expression [item scope]
   (type-assert (= 4 (count item)) "no else statement")

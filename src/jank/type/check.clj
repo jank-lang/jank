@@ -106,11 +106,14 @@
 (defmethod check-item :return-list [item scope]
   (let [returns (count (rest item))]
     (type-assert (<= (count (rest item)) 1) "multiple return types")
-    (when (> returns 0)
-      (type-assert (declaration/lookup-type
-                     (first (declaration/shorten-types (rest item))) scope)
-                   "invalid return type"))
-    (list item scope)))
+    (if (> returns 0)
+      (let [expected-type (declaration/lookup-type
+                            (first (declaration/shorten-types (rest item)))
+                            scope)]
+        (type-assert expected-type "invalid return type")
+        (list (update-in item [1] (fn [_] expected-type)) scope))
+      (list item scope))))
+
 
 (defmethod check-item :if-expression [item scope]
   (let [cond-type (expression/realize-type (get-in item [1 1]) scope)]
