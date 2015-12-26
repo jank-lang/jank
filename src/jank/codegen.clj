@@ -87,9 +87,7 @@
 
 (defmethod codegen-impl :function-definition [current]
   (let [lambda (nth current 2)]
-    (str (if-let [ret (second (nth lambda 2))] ; Return
-           (codegen-impl ret)
-           "void")
+    (str (codegen-impl (nth lambda 2)) ; Return
          " "
          (codegen-impl (second current)) ; Name
          (codegen-impl (second lambda)) ; Params
@@ -102,9 +100,7 @@
   (str "[&]"
        (codegen-impl (second current)) ; Params
        "->"
-       (if-let [ret (second (nth current 2))] ; Return
-         (codegen-impl ret)
-         "void")
+       (codegen-impl (nth current 2)) ; Return
        "{"
        (reduce-spaced-map (comp end-statement codegen-impl)
                           (drop 3 current))
@@ -132,6 +128,12 @@
          (swap-params
            (map codegen-impl (rest current))))
        ")"))
+
+(defmethod codegen-impl :return-list [current]
+  (if-let [ret (second current)]
+    ; TODO: shortened types -> c++
+    (first ret)
+    "void"))
 
 (defmethod codegen-impl :if-expression [current]
   (let [base (str "[&]{if("
