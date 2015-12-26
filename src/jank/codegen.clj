@@ -131,7 +131,7 @@
 
 (defmethod codegen-impl :return-list [current]
   (if-let [ret (second current)]
-    ; TODO: shortened types -> c++
+    ; TODO: Support generic types
     (first ret)
     "void"))
 
