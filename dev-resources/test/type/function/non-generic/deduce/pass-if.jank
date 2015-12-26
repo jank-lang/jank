@@ -1,15 +1,17 @@
-(ƒ switch (b boolean) (auto)
-  (if b
-    1
-    0))
+(bind switch
+  (λ (b boolean) (auto)
+    (if b
+      1
+      0)))
 
-(assert (= (switch true) 1))
-(assert (= (switch false) 0))
+(bind kitty integer (switch false))
 
-(ƒ switch-func (b boolean) (auto)
-  (if b
-    (+ 1 0)
-    (+ 0 0)))
+(bind switch-func
+  (λ (b boolean) (auto)
+    (if b
+      (if b
+        false
+        b)
+      b)))
 
-(assert (= (switch-func true) 1))
-(assert (= (switch-func false) 0))
+(bind meow boolean (switch-func false))

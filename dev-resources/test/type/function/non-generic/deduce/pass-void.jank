@@ -1,5 +1,9 @@
-(ƒ meow () (Ɐ)
-  (print "meow"))
+(bind silent
+  (λ () (Ɐ)
+    ))
 
-(ƒ silent () (Ɐ)
-  )
+(bind also-silent
+  (λ () (Ɐ)
+    (silent)))
+
+(also-silent)

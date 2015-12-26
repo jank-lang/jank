@@ -1,5 +1,5 @@
-(ƒ even? (i integer) (Ɐ)
-  (= (% i 2) 0))
+(bind identity
+  (λ (f ƒ : (() ())) (Ɐ)
+    f))
 
-(assert (even? 0))
-(assert-not (even? 1))
+(bind func ƒ : (() ()) (identity (λ () ())))
