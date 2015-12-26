@@ -8,6 +8,9 @@ impl:
 
   nested functions need to be lambdas in codegen
 
+  verify all types going to codegen are shortened
+    support generic shortened types
+
   better logging
     timbre (allows profiling, too)
 
