@@ -52,7 +52,10 @@
         [checked-returns returns-scope] (check-item returns args-scope)
         [checked-body checked-scope] (check {:cells (drop 3 item)}
                                             (empty-scope returns-scope))
-        updated-item (into [] (concat (take 3 item) (:cells checked-body)))
+        updated-item (update-in
+                       (into [] (concat (take 3 item) (:cells checked-body)))
+                       [2]
+                       (fn [_] checked-returns))
         body-with-return (return/add-explicit-returns updated-item
                                                       checked-scope)]
     (list body-with-return scope)))
