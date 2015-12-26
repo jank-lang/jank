@@ -110,3 +110,11 @@
                 "pass-void-incomplete-if.jank"
                 "pass-void-wrong-type.jank"]]
     (test-file (str "test/type/function/return/" file))))
+
+(deftest function-type-deduction
+  (doseq [file ["fail-mismatched-types.jank"
+                "pass-if.jank"
+                "pass-void.jank"
+                "pass-with-normal-return.jank"
+                "pass-with-unicode.jank"]]
+    (test-file (str "test/type/function/deduce/" file))))
