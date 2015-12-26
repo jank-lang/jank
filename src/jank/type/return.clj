@@ -38,7 +38,9 @@
                           body-type))
 
         ; Update the return type
-        (update-in updated-item [2 1] (fn [_] deduced-type))))))
+        (if (some? deduced-type)
+          (update-in updated-item [2 1] (fn [_] deduced-type))
+          (update-in updated-item [2] (fn [_] [:return-list])))))))
 
 (defmethod add-explicit-returns :if-expression [item scope]
   (type-assert (= 4 (count item)) "no else statement")

@@ -110,11 +110,10 @@
   ; Special case for function definitions
   (if (= (first (nth current 2)) :lambda-definition)
     (codegen-impl (update-in current [0] (fn [x] :function-definition)))
-    (end-statement
-      (str "auto "
-           (codegen-impl (second current))
-           "="
-           (codegen-impl (nth current 2))))))
+    (str "auto "
+         (codegen-impl (second current))
+         "="
+         (codegen-impl (nth current 2)))))
 
 (defmethod codegen-impl :function-call [current]
   (str (codegen-impl (second current)) ; Name
@@ -152,7 +151,9 @@
       "}()")))
 
 (defmethod codegen-impl :return [current]
-  (str "return " (codegen-impl (second current))))
+  (str "return "
+       (when (some? (second current))
+         (codegen-impl (second current)))))
 
 (defmethod codegen-impl :list [current]
   (str "("
