@@ -63,8 +63,12 @@
    Expects the *shortened* type. See shorten-types."
   (fn [decl-type scope]
     (let [name (first decl-type)]
-      (if (or (= "ƒ" name) (= "function" name))
+      (cond
+        (or (= "ƒ" name) (= "function" name))
         :function
+        (or (= "Ɐ" name) (= "auto" name))
+        :auto
+        :else
         :default))))
 
 (defmethod lookup-type :function [decl-type scope]
@@ -78,6 +82,9 @@
       (type-assert (some? (lookup-type (second (nth generics 2)) scope))
                    "invalid function return type"))
     decl-type))
+
+(defmethod lookup-type :auto [decl-type scope]
+  (list "auto"))
 
 (defmethod lookup-type :default [decl-type scope]
   "Recursively looks up a type by name. Expects the *shortened* type.
