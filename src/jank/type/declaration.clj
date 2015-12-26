@@ -18,6 +18,10 @@
   "Returns whether or not the provided type is that of a function."
   (= "ƒ" (first decl-type)))
 
+(defn auto? [decl-type]
+  "Returns whether or not the provided type is to be deduced."
+  (or (= "Ɐ" (first decl-type)) (= "auto" (first decl-type))))
+
 (defn lookup-overloads [decl-name scope]
   "Recursively looks through the hierarchy of scopes for the declaration.
    Returns all overloads in all scopes, from closest to furthest."

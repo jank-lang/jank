@@ -25,13 +25,21 @@
       item
       (let [updated-body (add-explicit-returns [:body (drop 3 item)] scope)
             body-type (expression/realize-type (last (second updated-body))
-                                               scope)]
-        (type-assert (= expected-type body-type)
+                                               scope)
+            deduced-type (if (declaration/auto? expected-type)
+                           body-type
+                           expected-type)
+            updated-item (into [] (concat (take 3 item) (second updated-body)))]
+        (type-assert (= deduced-type body-type)
                      (str "expected function return type of "
-                          expected-type
+                          deduced-type
                           ", found "
                           body-type))
-        (into [] (concat (take 3 item) (second updated-body)))))))
+        (if (declaration/auto? expected-type)
+          (update-in updated-item
+                     [2 1]
+                     (fn [_] [:type [:identifier "auto"]]))
+          updated-item)))))
 
 (defmethod add-explicit-returns :if-expression [item scope]
   (type-assert (= 4 (count item)) "no else statement")

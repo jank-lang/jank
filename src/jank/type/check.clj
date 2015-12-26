@@ -52,10 +52,7 @@
         [checked-returns returns-scope] (check-item returns args-scope)
         [checked-body checked-scope] (check {:cells (drop 3 item)}
                                             (empty-scope returns-scope))
-        updated-item (update-in
-                       (into [] (concat (take 3 item) (:cells checked-body)))
-                       [2]
-                       (fn [_] checked-returns))
+        updated-item (into [] (concat (take 3 item) (:cells checked-body)))
         body-with-return (return/add-explicit-returns updated-item
                                                       checked-scope)]
     (list body-with-return scope)))
@@ -109,13 +106,11 @@
 (defmethod check-item :return-list [item scope]
   (let [returns (count (rest item))]
     (type-assert (<= (count (rest item)) 1) "multiple return types")
-    (if (> returns 0)
-      (let [expected-type (declaration/lookup-type
-                            (first (declaration/shorten-types (rest item)))
-                            scope)]
-        (type-assert expected-type "invalid return type")
-        (list (update-in item [1] (fn [_] expected-type)) scope))
-      (list item scope))))
+    (when (> returns 0)
+      (type-assert (declaration/lookup-type
+                     (first (declaration/shorten-types (rest item))) scope)
+                   "invalid return type"))
+    (list item scope)))
 
 (defmethod check-item :if-expression [item scope]
   (let [cond-type (expression/realize-type (get-in item [1 1]) scope)]
