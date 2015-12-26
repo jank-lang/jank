@@ -26,6 +26,7 @@
       (let [updated-body (add-explicit-returns [:body (drop 3 item)] scope)
             body-type (expression/realize-type (last (second updated-body))
                                                scope)
+            ; Allow deduction
             deduced-type (if (declaration/auto? expected-type)
                            body-type
                            expected-type)
@@ -35,6 +36,8 @@
                           deduced-type
                           ", found "
                           body-type))
+
+        ; Update the return type, if we've done deduction
         (if (declaration/auto? expected-type)
           (update-in updated-item
                      [2 1]
