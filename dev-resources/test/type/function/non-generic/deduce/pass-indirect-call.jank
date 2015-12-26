@@ -1,9 +1,0 @@
-(ƒ pred? (func ƒ :((integer) (boolean)) i integer) (Ɐ)
-  (func i))
-
-(bind even?
-  (λ (i integer) (Ɐ)
-    (= (% i 2) 0)))
-
-(assert (pred? even? 0))
-(assert-not (pred? even? 1))
