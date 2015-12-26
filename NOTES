@@ -5,6 +5,7 @@ impl:
       declare-type declare-function declare-binding
 
   function type deduction
+    support empty/void functions
 
   nested functions need to be lambdas in codegen
 
