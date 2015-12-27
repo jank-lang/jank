@@ -6,6 +6,10 @@ impl:
 
   nested functions need to be lambdas in codegen
 
+  lambdas may close over variables
+    reordering will not be allowed
+    should everything just be in #main?
+
   verify all types going to codegen are shortened
     support generic shortened types
 
