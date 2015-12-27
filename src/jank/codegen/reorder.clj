@@ -1,6 +1,7 @@
 (ns jank.codegen.reorder
   (:use clojure.pprint))
 
+; TODO: Rename?
 (defn reorder [cells]
   "Partitions unsorted cells and returns two sequences.
    The first sequence contains the top-level definitions; the second

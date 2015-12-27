@@ -183,5 +183,18 @@
   (codegen-assert false (str "no codegen for '" current "'")))
 
 (defn codegen [ast]
-  (doseq [current (reorder/reorder (:cells ast))]
-    (print-statement (end-statement (codegen-impl current)))))
+  (let [[definitions expressions] (reorder/reorder (:cells ast))]
+    ; Generate all top-level definitions
+    (doseq [current definitions]
+      (print-statement (end-statement (codegen-impl current))))
+
+    ; Build the main function
+    (print-statement
+      (codegen-impl
+        [:binding-definition
+         [:identifier "#main"]
+         (apply (partial vector
+                         :lambda-definition
+                         [:argument-list]
+                         [:return-list])
+                expressions)]))))
