@@ -1,7 +1,7 @@
 (ns jank.core
   (:gen-class)
   (:require [jank.parse :as parse]
-            [jank.codegen :as codegen]
+            [jank.codegen.c++ :as c++]
             [jank.type.check :as type]))
 
 (defn -main
@@ -12,4 +12,4 @@
                 (slurp (first args)))}
       type/check
       first
-      codegen/codegen))
+      c++/codegen))

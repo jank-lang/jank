@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [jank.parse :as parse]
             [jank.type.check :as type]
-            [jank.codegen :as codegen]))
+            [jank.codegen.c++ :as c++]))
 
 (defmacro consume-output
   [& body]
@@ -31,5 +31,5 @@
 
 (defn valid-codegen? [file]
   (consume-output
-    (codegen/codegen (first (type/check {:cells (parse file)}))))
+    (c++/codegen (first (type/check {:cells (parse file)}))))
   true)

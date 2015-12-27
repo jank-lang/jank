@@ -1,4 +1,4 @@
-(ns jank.codegen
+(ns jank.codegen.c++
   (:use clojure.pprint
         jank.assert))
 
@@ -182,6 +182,5 @@
   (codegen-assert false (str "no codegen for '" current "'")))
 
 (defn codegen [ast]
-  ;(println)
   (doseq [current (:cells ast)]
     (print-statement (end-statement (codegen-impl current)))))
