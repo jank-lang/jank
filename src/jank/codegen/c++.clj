@@ -1,4 +1,5 @@
 (ns jank.codegen.c++
+  (:require [jank.codegen.reorder :as reorder])
   (:use clojure.pprint
         jank.assert))
 
@@ -182,5 +183,5 @@
   (codegen-assert false (str "no codegen for '" current "'")))
 
 (defn codegen [ast]
-  (doseq [current (:cells ast)]
+  (doseq [current (reorder/reorder (:cells ast))]
     (print-statement (end-statement (codegen-impl current)))))
