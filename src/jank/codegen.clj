@@ -26,7 +26,7 @@
 
 (defn end-statement [statement]
   "Ends a statement with a semi-colon. Empty statements are unchanged."
-  (if (> (count statement) 0)
+  (if (not-empty statement)
     (str statement ";")
     statement))
 
