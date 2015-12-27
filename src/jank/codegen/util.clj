@@ -33,7 +33,7 @@
   "Prints the statement to stdout, followed by a new line.
    Empty statements are ignored."
   (when-not (empty? statement)
-    (comment println statement)))
+    (println statement)))
 
 (defn partition-definitions [cells]
   "Partitions unsorted cells and returns two sequences.
