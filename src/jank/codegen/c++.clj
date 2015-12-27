@@ -1,41 +1,7 @@
 (ns jank.codegen.c++
-  (:require [jank.codegen.reorder :as reorder])
+  (:require [jank.codegen.util :as util])
   (:use clojure.pprint
         jank.assert))
-
-(defn swap-params [params]
-  "Takes the input (i integer b boolean) and gives the C-like
-   representation: ((integer i) (boolean b))"
-  (map reverse (partition 2 params)))
-
-(defn comma-separate-params [pairs]
-  "Turns ((integer i) (boolean b)) into a string like
-   \"integer i, boolean b\""
-  (clojure.string/join ","
-                       (map #(str (first %) " " (second %)) pairs)))
-
-(defn comma-separate-args [args]
-  "Turns (foo bar spam) into a string like
-   \"foo, bar, spam\""
-  (clojure.string/join "," args))
-
-(defn reduce-spaced-map [f coll]
-  "Maps f over coll and collects the results together in a
-   space-separated string"
-  (when (not-empty coll)
-    (reduce #(str %1 " " %2) (map f coll))))
-
-(defn end-statement [statement]
-  "Ends a statement with a semi-colon. Empty statements are unchanged."
-  (if (not-empty statement)
-    (str statement ";")
-    statement))
-
-(defn print-statement [statement]
-  "Prints the statement to stdout, followed by a new line.
-   Empty statements are ignored."
-  (when-not (empty? statement)
-    (comment println statement)))
 
 (def sanitized-symbols {"=" "_gen_equal_"
                         "!" "_gen_bang_"
@@ -93,7 +59,7 @@
          (codegen-impl (second current)) ; Name
          (codegen-impl (second lambda)) ; Params
          "{"
-         (reduce-spaced-map (comp end-statement codegen-impl)
+         (util/reduce-spaced-map (comp util/end-statement codegen-impl)
                             (drop 3 lambda))
          "}")))
 
@@ -103,8 +69,8 @@
        "->"
        (codegen-impl (nth current 2)) ; Return
        "{"
-       (reduce-spaced-map (comp end-statement codegen-impl)
-                          (drop 3 current))
+       (util/reduce-spaced-map (comp util/end-statement codegen-impl)
+                               (drop 3 current))
        "}"))
 
 (defmethod codegen-impl :binding-definition [current]
@@ -119,13 +85,13 @@
 (defmethod codegen-impl :function-call [current]
   (str (codegen-impl (second current)) ; Name
        "("
-       (comma-separate-args (map codegen-impl (drop 2 current))) ; Args
+       (util/comma-separate-args (map codegen-impl (drop 2 current))) ; Args
        ")"))
 
 (defmethod codegen-impl :argument-list [current]
   (str "("
-       (comma-separate-params
-         (swap-params
+       (util/comma-separate-params
+         (util/swap-params
            (map codegen-impl (rest current))))
        ")"))
 
@@ -139,16 +105,18 @@
   (let [base (str "[&]{if("
                   (codegen-impl (second (second current)))
                   "){"
-                  (end-statement (codegen-impl (second (nth current 2))))
+                  (util/end-statement (codegen-impl (second (nth current 2))))
                   "}")]
     (str
       (cond
-        (= (count current) 4) (str base
-                                   "else{"
-                                   (end-statement
-                                     (codegen-impl (second (nth current 3))))
-                                   "}")
-        :else base)
+        (= (count current) 4)
+        (str base
+             "else{"
+             (util/end-statement
+               (codegen-impl (second (nth current 3))))
+             "}")
+        :else
+        base)
       "}()")))
 
 (defmethod codegen-impl :return [current]
@@ -158,7 +126,7 @@
 
 (defmethod codegen-impl :list [current]
   (str "("
-       (reduce-spaced-map codegen-impl (rest current))
+       (util/reduce-spaced-map codegen-impl (rest current))
        ")"))
 
 (defmethod codegen-impl :string [current]
@@ -183,13 +151,13 @@
   (codegen-assert false (str "no codegen for '" current "'")))
 
 (defn codegen [ast]
-  (let [[definitions expressions] (reorder/reorder (:cells ast))]
+  (let [[definitions expressions] (util/partition-definitions (:cells ast))]
     ; Generate all top-level definitions
     (doseq [current definitions]
-      (print-statement (end-statement (codegen-impl current))))
+      (util/print-statement (util/end-statement (codegen-impl current))))
 
     ; Build the main function
-    (print-statement
+    (util/print-statement
       (codegen-impl
         [:binding-definition
          [:identifier "#main"]
