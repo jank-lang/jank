@@ -2,11 +2,9 @@
   (:use clojure.pprint))
 
 (defn reorder [cells]
-  "Performs a stable sort on all cells, moving function definitions before
-   all other statements and expressions."
-  (sort
-    (fn [a b]
-      (and (and (= :binding-definition (first a))
-                (= (first (nth a 2)) :lambda-definition))
-           (not= :binding-definition (first b))))
-    cells))
+  "Partitions unsorted cells and returns two sequences.
+   The first sequence contains the top-level definitions; the second
+   contains all top-level expressions."
+  ((juxt filter remove) #(and (= :binding-definition (first %))
+                              (= (first (nth % 2)) :lambda-definition))
+   cells))
