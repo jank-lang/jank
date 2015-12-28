@@ -15,3 +15,21 @@
 (declare print ƒ : ((real) (string)))
 (declare print ƒ : ((integer) (string)))
 (declare print ƒ : ((boolean) (string)))
+
+(; -- Input -- ;)
+(declare input ƒ : (() (string)))
+
+(; -- Arithmetic -- ;)
+(declare + ƒ : ((integer integer) (integer)))
+(declare + ƒ : ((real real) (real)))
+(declare + ƒ : ((string string) (string)))
+
+(declare - ƒ : ((integer integer) (integer)))
+(declare - ƒ : ((real real) (real)))
+
+(declare * ƒ : ((integer integer) (integer)))
+(declare * ƒ : ((real real) (real)))
+(declare * ƒ : ((string integer) (string)))
+
+(declare / ƒ : ((integer integer) (integer)))
+(declare / ƒ : ((real real) (real)))
