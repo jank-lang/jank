@@ -14,7 +14,7 @@ structures.
 (; Damage nearby entities. ;)
 (ƒ cast-aoe (area real entities list : (entity)) (Ɐ)
   (map damage
-       (filter (partial within-distance area) (entity))))
+       (filter (partial within-distance area) entities)))
 
 (; Find a winner, based on score. ;)
 (ƒ find-winner (entities list : (entity)) (Ɐ)
