@@ -34,11 +34,3 @@
    Empty statements are ignored."
   (when-not (empty? statement)
     (println statement)))
-
-(defn partition-definitions [cells]
-  "Partitions unsorted cells and returns two sequences.
-   The first sequence contains the top-level definitions; the second
-   contains all top-level expressions."
-  ((juxt filter remove) #(and (= :binding-definition (first %))
-                              (= (first (nth % 2)) :lambda-definition))
-   cells))
