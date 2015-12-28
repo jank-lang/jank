@@ -55,7 +55,7 @@ namespace jank
 
   auto operator *(string s, integer const n)
   {
-    assert_gen_bang_(n > 0, "invalid scalar for string repitition");
+    assert_gen_bang_(n > 0, "invalid scalar for string repetition");
     auto const original_size(s.size());
     s.reserve(s.size() * n);
 
