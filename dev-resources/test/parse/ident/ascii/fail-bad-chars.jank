@@ -1,6 +1,6 @@
 (ƒ --func-- (a'b integer) ()
-  (print a'b))
+  (print! a'b))
 (ƒ --func-- (a\b integer) ()
-  (print a\b))
+  (print! a\b))
 
 (--func-- 42)

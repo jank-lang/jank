@@ -1,6 +1,6 @@
 (bind truth true)
 
 (if truth
-  (print "then")
-  (print "else")
-  (print "invalid"))
+  (print! "then")
+  (print! "else")
+  (print! "invalid"))

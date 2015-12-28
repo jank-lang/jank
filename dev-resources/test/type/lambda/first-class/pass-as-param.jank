@@ -6,6 +6,6 @@
 
 (higher-order
   (λ (s string) (string)
-    (print s))
+    (print! s))
   (λ (s string) (string)
-    (print s)))
+    (print! s)))

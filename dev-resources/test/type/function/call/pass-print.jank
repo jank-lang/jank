@@ -1,5 +1,5 @@
 (bind test
   (λ () ()
-    (print "all good")))
+    (print! "all good")))
 
 (test)

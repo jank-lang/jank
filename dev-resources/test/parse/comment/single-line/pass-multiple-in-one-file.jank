@@ -1,10 +1,10 @@
 (; prints foo. ;)
 (ƒ foo () ()
-  (print "foo"))
+  (print! "foo"))
 
 (; prints bar. ;)
 (ƒ bar () ()
-  (print "bar"))
+  (print! "bar"))
 
 (foo)
 (bar)

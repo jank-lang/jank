@@ -1,6 +1,6 @@
 (bind meow true)
 
-(print
+(print!
   (if true
     (if meow
       32)

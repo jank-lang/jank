@@ -1,2 +1,2 @@
-(print "bar \( \)")
-(print "spam \) \(")
+(print! "bar \( \)")
+(print! "spam \) \(")

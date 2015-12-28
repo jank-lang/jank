@@ -2,10 +2,10 @@
   (λ (d boolean) ()
     (bind outer
       (λ (d boolean) ()
-        (print d)))
+        (print! d)))
     (bind outer
       (λ (d boolean) ()
-        (print d)))
+        (print! d)))
     (outer d)))
 
 (outer false)

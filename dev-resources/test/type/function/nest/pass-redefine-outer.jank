@@ -1,12 +1,12 @@
 (bind show
   (λ (d integer) ()
-    (print d)))
+    (print! d)))
 
 (bind outer
   (λ () ()
     (bind show
       (λ (d integer) ()
-        (print "redefined")))
+        (print! "redefined")))
     (show 42)))
 
 (outer)

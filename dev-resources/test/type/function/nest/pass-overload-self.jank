@@ -2,7 +2,7 @@
   (λ () ()
     (bind outer
       (λ (d string) ()
-        (print d)))
+        (print! d)))
     (outer "all good")))
 
 (outer)

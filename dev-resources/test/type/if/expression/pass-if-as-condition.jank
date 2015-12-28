@@ -4,5 +4,5 @@
   (if meow
     true
     false)
-  (assert-unreachable)
-  (print "meow"))
+  (assert-unreachable!)
+  (print! "meow"))

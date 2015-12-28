@@ -1,4 +1,4 @@
 (ƒ --func-- ([~abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-+*/^?!:;%.`@_|] integer) ()
-  (print [~abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-+*/^?!:;%.`@_|]))
+  (print! [~abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-+*/^?!:;%.`@_|]))
 
 (--func-- 42)

@@ -1,7 +1,7 @@
 (bind truth true)
 
 (if truth
-  (print "so true"))
+  (print! "so true"))
 
 (if (= truth false)
-  (assert false))
+  (assert! false))

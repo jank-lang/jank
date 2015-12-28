@@ -1,14 +1,14 @@
-(assert
+(assert!
   (if true
     true
     false))
 
-(print
+(print!
   (if true
     52
     30))
 
-(print
+(print!
   (if false
     "bad"
     "good"))

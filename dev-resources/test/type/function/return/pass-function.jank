@@ -6,4 +6,4 @@
   (λ () (string)
     (bar-foo)))
 
-(print (foo-bar))
+(print! (foo-bar))

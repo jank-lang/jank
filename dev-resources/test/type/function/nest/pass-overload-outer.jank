@@ -1,12 +1,12 @@
 (bind show
   (λ (d integer) ()
-    (print d)))
+    (print! d)))
 
 (bind outer
   (λ () ()
     (bind show
       (λ (d real) ()
-        (print d)))
+        (print! d)))
     (show 42.7)))
 
 (outer)

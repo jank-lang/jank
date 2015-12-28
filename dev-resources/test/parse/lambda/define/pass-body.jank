@@ -1,4 +1,4 @@
 (bind test
   (λ (d integer) (boolean)
-    (print d)
+    (print! d)
     true))

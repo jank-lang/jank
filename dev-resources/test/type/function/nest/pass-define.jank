@@ -2,7 +2,7 @@
   (λ () ()
     (bind inner
       (λ () ()
-        (print "all good")))
+        (print! "all good")))
     (inner)))
 
 (outer)
