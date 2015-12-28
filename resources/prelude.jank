@@ -5,19 +5,19 @@
 (declare string)
 
 (; -- Assertions -- ;)
-(declare assert ƒ : ((boolean) ()))
-(declare assert ƒ : ((boolean string) ()))
-(declare assert-not ƒ : ((boolean string) ()))
-(declare assert-unreachable ƒ : (() ()))
+(declare assert! ƒ : ((boolean) ()))
+(declare assert! ƒ : ((boolean string) ()))
+(declare assert-not! ƒ : ((boolean string) ()))
+(declare assert-unreachable! ƒ : (() ()))
 
 (; -- Output -- ;)
-(declare print ƒ : ((string) (string)))
-(declare print ƒ : ((real) (string)))
-(declare print ƒ : ((integer) (string)))
-(declare print ƒ : ((boolean) (string)))
+(declare print! ƒ : ((string) (string)))
+(declare print! ƒ : ((real) (string)))
+(declare print! ƒ : ((integer) (string)))
+(declare print! ƒ : ((boolean) (string)))
 
 (; -- Input -- ;)
-(declare input ƒ : (() (string)))
+(declare input! ƒ : (() (string)))
 
 (; -- Arithmetic -- ;)
 (declare + ƒ : ((integer integer) (integer)))
