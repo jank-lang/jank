@@ -72,7 +72,7 @@ Members of structs are accessed with a `.foo` syntax, where `.foo` is a function
   (last-name string))
 
 (bind john (new : (person) "john" "doe"))
-(print (.last-name john))
+(print! (.last-name john))
 ```
 
 ## Bindings (constant values)
@@ -90,27 +90,27 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 ```lisp
 (; Generic. ;)
 (ƒ show : (:T) (o T) ()
-  (print o))
+  (print! o))
 
 (; Short-hand for above, where T isn't needed. ;)
 (ƒ show (o Ɐ) ()
-  (print o))
+  (print! o))
 
 (; Full specialization. ;)
 (ƒ show : (real) (o real) ()
-  (print "real: " o))
+  (print! "real: " o))
 
 (; Partial specialization. ;)
 (ƒ show : (coord : (:T-x :T-y)) (o coord : (T-x T-y)) ()
-  (print "coord: " o))
+  (print! "coord: " o))
 
 (; Non-type parameter partial specialization. ;)
 (ƒ show : ((o coord : (:T-x :T-y))) () ()
-  (print "coord: " o))
+  (print! "coord: " o))
 
 (; Non-type parameter full specialization. ;)
 (ƒ show : ((o coord : (real integer))) () ()
-  (print "coord: " o))
+  (print! "coord: " o))
 ```
 
 #### Struct
@@ -127,7 +127,7 @@ Generic functions and types can be variadic, allowing any number of parameters, 
 ```lisp
 (ƒ shout (&noises) ()
   (for ((noise noises))
-    (print (upper noise))))
+    (print! (upper noise))))
 
 (shout "fus" " ro" " dah")
 (; Prints => FUS RO DAH ;)
@@ -176,11 +176,11 @@ Since constructors are the functions to actually create objects, not something t
 (; Defines a constructor which has a side effect and then uses
  ; aggregate initialization to build the coord. ;)
 (ƒ construct : (coord : (:T-x :T-y)) (x T-x y T-y) (Ɐ)
-  (print "constructing object")
+  (print! "constructing object")
   (coord : (T-x T-y) x y))
 
 (ƒ destruct : (:T-x :T-y) (c coord : (T-x T-y)) ()
-  (print "destructing coord"))
+  (print! "destructing coord"))
 
 (; Calls the constructor explicitly. ;)
 (bind c1 (construct : (coord : (real real)) 0.0 5.4))
@@ -252,8 +252,8 @@ Enums function as variant sum types; each variant can have its own type or simpl
 (bind num 42)
 
 (if (even? num)
-  (print "even")
-  (print "not even"))
+  (print! "even")
+  (print! "not even"))
 ```
 
 Branching, using `if`, allows for specifying a single form for the true and false cases. All conditions must be of type `boolean` and the false case is optional. To have more than one line in a true or false case, introduce scope with a `do` statement.
@@ -262,10 +262,10 @@ Branching, using `if`, allows for specifying a single form for the true and fals
 (ƒ next-even (i integer) (Ɐ)
   (if (even? i)
     (do
-      (print "even")
+      (print! "even")
       (+ 2 i))
     (do
-      (print "not even")
+      (print! "not even")
       (+ 1 i))))
 ```
 
@@ -273,12 +273,12 @@ Branching, using `if`, allows for specifying a single form for the true and fals
 `if` and `do` statements can be used as expressions in function calls, allowing arbitrary code bodies to be used as parameters.
 
 ```lisp
-(print
+(print!
   (if (even? 3)
     "even"
     "odd"))
 
-(print
+(print!
   (do
     "always true"))
 ```
@@ -294,8 +294,8 @@ The form of a macro definition is very similar to that of a function definition.
   (emit ((eval (first args))
          (eval (reverse (rest args))))))
 
-(reverse-args (print 3 2 1))
-(; Becomes => (print 1 2 3) at compile-time. ;)
+(reverse-args (print! 3 2 1))
+(; Becomes => (print! 1 2 3) at compile-time. ;)
 
 (macro constructor (type ^list args ^list &body)
   (emit
