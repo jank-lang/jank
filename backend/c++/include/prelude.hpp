@@ -3,12 +3,28 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <stdexcept>
 
 namespace jank
 {
   /* -- Primitives -- */
   using integer = int64_t;
+  using real = double;
+  using boolean = bool;
   using string = std::string;
+
+  /* -- Assertions -- */
+  void assert_gen_bang_(boolean const b, string const &s)
+  {
+    if(!b)
+    { throw std::runtime_error{ "(assertion failure) " + s }; }
+  }
+  void assert_gen_minus_not_gen_bang_(boolean const b)
+  { assert_gen_bang_(!b, ""); }
+  void assert_gen_minus_not_gen_bang_(boolean const b, string const &s)
+  { assert_gen_bang_(!b, s); }
+  void assert_gen_minus_unreachable_gen_bang_()
+  { assert_gen_bang_(false, "unreachable code reached"); }
 
   /* -- Output -- */
   template <typename T>
@@ -16,7 +32,7 @@ namespace jank
   {
     std::stringstream ss;
     ss << t;
-    std::cout << t.rdbuf() << std::endl;
+    std::cout << ss.rdbuf() << std::endl;
     return ss.str();
   }
 
@@ -37,13 +53,9 @@ namespace jank
   auto _gen_minus_(A const &a, B const &b)
   { return a - b; }
 
-  template <typename A, typename B>
-  auto _gen_asterisk_(A const &a, B const &b)
-  { return a * b; }
-
-  auto _gen_asterisk_(string s, integer const n)
+  auto operator *(string s, integer const n)
   {
-    // TODO: Assert n > 0
+    assert_gen_bang_(n > 0, "invalid scalar for string repitition");
     auto const original_size(s.size());
     s.reserve(s.size() * n);
 
@@ -52,6 +64,10 @@ namespace jank
 
     return s;
   }
+
+  template <typename A, typename B>
+  auto _gen_asterisk_(A const &a, B const &b)
+  { return a * b; }
 
   template <typename A, typename B>
   auto _gen_slash_(A const &a, B const &b)

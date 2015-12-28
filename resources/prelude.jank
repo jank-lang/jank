@@ -7,6 +7,7 @@
 (; -- Assertions -- ;)
 (declare assert! ƒ : ((boolean) ()))
 (declare assert! ƒ : ((boolean string) ()))
+(declare assert-not! ƒ : ((boolean) ()))
 (declare assert-not! ƒ : ((boolean string) ()))
 (declare assert-unreachable! ƒ : (() ()))
 

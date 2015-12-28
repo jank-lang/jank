@@ -10,7 +10,7 @@ lein run $@ > $tmp/jank-generated.hpp 2>&1
 ret=$?
 if [ $ret -eq 0 ];
 then
-  g++ -std=c++14 -I$tmp $here/../backend/c++/src/main.cpp
+  g++ -std=c++14 -I$here/../backend/c++/include -I$tmp $here/../backend/c++/src/main.cpp
   ret=$?
 else
   cat $tmp/jank-generated.hpp
