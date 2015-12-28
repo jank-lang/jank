@@ -33,13 +33,10 @@
        "}"))
 
 (defmethod codegen-impl :binding-definition [current]
-  ; Special case for function definitions
-  (if (= (first (nth current 2)) :lambda-definition)
-    (codegen-impl (update-in current [0] (fn [x] :function-definition)))
-    (str "auto "
-         (codegen-impl (second current))
-         "="
-         (codegen-impl (nth current 2)))))
+  (str "auto "
+       (codegen-impl (second current))
+       "="
+       (codegen-impl (nth current 2))))
 
 (defmethod codegen-impl :function-call [current]
   (str (codegen-impl (second current)) ; Name
@@ -110,18 +107,12 @@
   (codegen-assert false (str "no codegen for '" current "'")))
 
 (defn codegen [ast]
-  (let [[definitions expressions] (util/partition-definitions (:cells ast))]
-    ; Generate all top-level definitions
-    (doseq [current definitions]
-      (util/print-statement (util/end-statement (codegen-impl current))))
-
-    ; Build the main function
-    (util/print-statement
-      (codegen-impl
-        [:binding-definition
-         [:identifier "#main"]
-         (apply (partial vector
-                         :lambda-definition
-                         [:argument-list]
-                         [:return-list])
-                expressions)]))))
+  (util/print-statement
+    (codegen-impl
+      [:function-definition
+       [:identifier "#main"]
+       (apply (partial vector
+                       :lambda-definition
+                       [:argument-list]
+                       [:return-list])
+              (:cells ast))])))

@@ -1,5 +1,2 @@
 -std=c++1y
--Itest/include
--Iinclude
--Ilib/jtl/include
--Ilib/jest/include
+-Ibackend/c++/include
