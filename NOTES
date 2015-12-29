@@ -4,8 +4,6 @@ impl:
     macros
       declare-type declare-function declare-binding
 
-  nested functions need to be lambdas in codegen
-
   write the extra compilation args to a file
 
   verify all types going to codegen are shortened
