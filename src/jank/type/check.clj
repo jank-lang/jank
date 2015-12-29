@@ -61,6 +61,9 @@
   ; There is an optional type specifier which may be before the value
   (let [has-type (= 4 (count item))
         value-index (if has-type 3 2)
+        ; TODO: If it's a lambda, add a declaration before checking it
+        ; When calling functions, check for auto return type; it indicates
+        ; the recursive call of an undeduced function.
         [checked-val checked-scope] (check-item (nth item value-index) scope)
         updated-item (update-in item [value-index] (fn [_] checked-val))
         item-without-type (if has-type
