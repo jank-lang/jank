@@ -1,4 +1,4 @@
-(defproject jank "0.1.0"
+(defproject jank "0.1.0-SNAPSHOT"
   :description "A statically typed functional programming language"
   :url "https://github.com/jeaye/jank"
   :license {:name "MIT"
