@@ -1,9 +1,4 @@
 impl:
-  declarations first
-    prelude to setup types and functions
-    macros
-      declare-type declare-function declare-binding
-
   write the extra compilation args to a file
 
   verify all types going to codegen are shortened
@@ -18,10 +13,6 @@ impl:
     keywords
     per-commit performance?
       criterium benchmarking
-    migrate old tests
-      move parsing tests in old "translate" into parse/
-      change typed tests to use declare instead of ƒ
-        the ƒ macro does nothing right now
 
   targets
     each target has its own prelude
@@ -29,16 +20,3 @@ impl:
     (#target c++
              (#dependencies "gl/gl.h")
              (#command-line "-ggdb -Og -lGL"))
-
-design:
-  functions
-    binding + lambda
-    declaration based
-      read the decl and keep a future to the definition
-      auto return types will need to block on the future
-
-  bindings
-    declaration based (with futures)
-
-  RAII
-    shared_ptrs
