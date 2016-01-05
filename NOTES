@@ -12,6 +12,8 @@ impl:
 
   sanitize idents which are keywords in backend language
 
+  codegen for functions returning if statements is broken
+
   tests
     declarations
     comments within forms
