@@ -33,6 +33,7 @@
         (recur (:parent current-scope) overloads))
       overloads)))
 
+; TODO: remove -binding
 (defn lookup-binding [decl-name scope]
   "Recursively looks through the hierarchy of scopes for the declaration.
    Returns the first set of overloads found in the closest scope, not all.
@@ -43,21 +44,23 @@
         found
         (recur (:parent current-scope))))))
 
+; TODO: remove -binding
 (defn validate-binding [decl-name decl-type scope]
   "Looks up a declaration, if any, and verifies that the provided
    declaration has a matching type. Returns the decl or nil, if none is found."
-  (let [decl (lookup-binding decl-name scope)]
+  (let [decl (lookup-binding decl-name scope)
+        wrapped-type {:type decl-type}]
     (when (some? decl)
       (let [expected-types (second decl)]
         ; All binding declarations must be the same type unless they're for
         ; function overloads. In that case, all declarations must be functions.
-        (type-assert (or (not= -1 (.indexOf expected-types decl-type))
-                         (and (function? decl-type)
+        (type-assert (or (not= -1 (.indexOf expected-types wrapped-type))
+                         (and (function? (:type wrapped-type))
                               (every? (comp function? :type) expected-types)))
                      (str "declaration of "
                           decl-name
                           " as "
-                          decl-type
+                          wrapped-type
                           " doesn't match previous declarations "
                           expected-types))))
     decl))
@@ -108,6 +111,8 @@
         :type-declaration
         (= :identifier kind)
         :binding-declaration
+        (= :implicit-declaration kind)
+        :implicit-declaration
         :else
         (type-assert false (str "invalid binding " item))))))
 
@@ -126,11 +131,18 @@
         found-decl (validate-binding decl-name decl-type scope)
         found-type (lookup-type decl-type scope)]
     (type-assert (some? found-type) (str "unknown type " decl-type))
+
     (cond
+      ; If we're seeing this binding for the first time
       (nil? found-decl)
       (update scope :binding-declarations assoc decl-name [{:type decl-type}])
+
+      ; If we're adding an overload
       (and (= -1 (.indexOf (second found-decl) {:type decl-type}))
            (function? decl-type))
+      ; TODO: Replace any matching overloads with auto return types
       (update-in scope [:binding-declarations decl-name] conj {:type decl-type})
+
+      ; Multiple declaration; nothing changes
       :else
       scope)))

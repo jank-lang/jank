@@ -33,7 +33,7 @@
           remaining (rest (:cells parsed))
           checked []
           scope parent-scope]
-     ;(pprint (list "scope:" scope))
+     (pprint (list "scope:" scope))
      (if (nil? item)
        (list (update parsed :cells (fn [_] checked)) scope)
        (let [[checked-item new-scope] (check-item item scope)]
@@ -62,7 +62,16 @@
   (let [has-type (= 4 (count item))
         value-index (if has-type 3 2)
         ; TODO: Add a declaration before checking it
-        [checked-val checked-scope] (check-item (nth item value-index) scope)
+        [checked-val checked-scope] (check-item
+                                      (nth item value-index)
+                                      (declaration/add-to-scope
+                                        [:bind
+                                          (second item)
+                                         (declaration/shorten-types
+                                           (expression/realize-type
+                                           (nth item value-index)
+                                           scope))]
+                                         scope))
         updated-item (update-in item [value-index] (fn [_] checked-val))
         item-without-type (if has-type
                             (remove #(= % (nth updated-item 2)) updated-item)
@@ -100,6 +109,7 @@
             (if (empty? remaining)
               new-scope
               (recur (rest remaining)
+                     ; TODO: Shorten types?
                      (declaration/add-to-scope
                        (vec (cons :binding-declaration (first remaining)))
                        new-scope)))))))

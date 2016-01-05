@@ -52,7 +52,7 @@
     (let [scope-with-decl (declaration/add-to-scope
                             [:declare-statement
                              [:identifier item-name]
-                             [:type (into [:identifier] item-type)]]
+                             item-type]
                             scope)]
       (if (nil? overloads)
         (update

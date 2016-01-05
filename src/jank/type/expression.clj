@@ -29,6 +29,7 @@
     (type-assert (some? overloads) (str "unknown function " func-name))
 
     ; TODO: Verify no overloads have auto return types
+    (println "overloads" overloads)
 
     ; Test all overloads; matches comes back as a vector of the return types
     ; for the matched functions.
