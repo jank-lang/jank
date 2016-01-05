@@ -10,6 +10,8 @@ impl:
   recursion + codegen
     need to define function first to capture?
 
+  sanitize idents which are keywords in backend language
+
   tests
     declarations
     comments within forms
