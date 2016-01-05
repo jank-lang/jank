@@ -70,8 +70,7 @@
                 "pass-function-call-param.jank"
                 "pass-print.jank"
                 "pass-print-primitive.jank"
-                ; TODO: Fix
-                ;"pass-recursion.jank"
+                "pass-recursion.jank"
                 ]]
     (test-file (str "test/type/function/call/" file))))
 
