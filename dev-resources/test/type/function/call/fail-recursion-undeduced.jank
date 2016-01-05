@@ -1,0 +1,5 @@
+(bind recurse
+  (λ (b boolean) (Ɐ)
+    (if b
+      (recurse false)
+      0)))

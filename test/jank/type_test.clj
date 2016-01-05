@@ -65,13 +65,14 @@
                 "fail-invalid-param-type.jank"
                 "fail-too-few-params.jank"
                 "fail-too-many-params.jank"
+                "fail-recursion-undeduced.jank"
                 "pass-chain.jank"
                 "pass-empty.jank"
                 "pass-function-call-param.jank"
                 "pass-print.jank"
                 "pass-print-primitive.jank"
                 "pass-recursion.jank"
-                ]]
+                "pass-recursion-undeduced-call-overload.jank"]]
     (test-file (str "test/type/function/call/" file))))
 
 (deftest nested-functions

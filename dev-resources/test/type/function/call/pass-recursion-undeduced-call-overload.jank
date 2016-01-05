@@ -1,0 +1,9 @@
+(bind recurse
+  (λ (s string) (Ɐ)
+    42))
+
+(bind recurse
+  (λ (b boolean) (Ɐ)
+    (if b
+      (recurse "ok")
+      0)))
