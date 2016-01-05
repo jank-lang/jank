@@ -28,8 +28,6 @@
                            (map #(realize-type % scope) (rest (rest item)))))]
     (type-assert (some? overloads) (str "unknown function " func-name))
 
-    ; TODO: Verify no overloads have auto return types
-
     ; Test all overloads; matches comes back as a vector of the return types
     ; for the matched functions.
     (let [matches (reduce
@@ -48,6 +46,10 @@
       (type-assert (= 1 (count matches))
                    (str "ambiguous function call to " func-name
                         " with argument types " arg-types))
+      ; TODO: Test this
+      (type-assert (not= '(("auto")) (first matches))
+                   (str "call to function " func-name
+                        " before its type is deduced"))
 
       (when-not (empty? (first matches))
         (ffirst matches)))))
