@@ -140,8 +140,19 @@
       ; If we're adding an overload
       (and (= -1 (.indexOf (second found-decl) {:type decl-type}))
            (function? decl-type))
-      ; TODO: Replace any matching overloads with auto return types
-      (update-in scope [:binding-declarations decl-name] conj {:type decl-type})
+      ; First remove any matching overloads with auto return types. This allows
+      ; defined functions to replace previous declarations where the return
+      ; type wasn't yet deduced.
+      (let [without-auto (update-in scope
+                                    [:binding-declarations decl-name]
+                                    (partial
+                                      remove
+                                      #(= (second (second decl-type))
+                                          (second (second (:type %))))))]
+        (update-in without-auto
+                   [:binding-declarations decl-name]
+                   conj
+                   {:type decl-type}))
 
       ; Multiple declaration; nothing changes
       :else

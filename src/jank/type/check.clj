@@ -33,7 +33,7 @@
           remaining (rest (:cells parsed))
           checked []
           scope parent-scope]
-     (pprint (list "scope:" scope))
+     ;(pprint (list "scope:" scope))
      (if (nil? item)
        (list (update parsed :cells (fn [_] checked)) scope)
        (let [[checked-item new-scope] (check-item item scope)]
@@ -61,17 +61,18 @@
   ; There is an optional type specifier which may be before the value
   (let [has-type (= 4 (count item))
         value-index (if has-type 3 2)
-        ; TODO: Add a declaration before checking it
+        ; Add a declaration before checking it. This allows recursive
+        ; functions to have a declaration of themselves.
         [checked-val checked-scope] (check-item
                                       (nth item value-index)
                                       (declaration/add-to-scope
                                         [:bind
-                                          (second item)
+                                         (second item)
                                          (declaration/shorten-types
                                            (expression/realize-type
-                                           (nth item value-index)
-                                           scope))]
-                                         scope))
+                                             (nth item value-index)
+                                             scope))]
+                                        scope))
         updated-item (update-in item [value-index] (fn [_] checked-val))
         item-without-type (if has-type
                             (remove #(= % (nth updated-item 2)) updated-item)
