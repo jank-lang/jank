@@ -110,7 +110,6 @@
             (if (empty? remaining)
               new-scope
               (recur (rest remaining)
-                     ; TODO: Shorten types?
                      (declaration/add-to-scope
                        (vec (cons :binding-declaration (first remaining)))
                        new-scope)))))))
