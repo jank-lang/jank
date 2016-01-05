@@ -8,7 +8,7 @@ impl:
     timbre (allows profiling, too)
 
   recursion + codegen
-    need to define function first to capture?
+    need to use std::function, not auto
 
   sanitize idents which are keywords in backend language
 
