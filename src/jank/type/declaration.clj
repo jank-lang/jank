@@ -33,8 +33,7 @@
         (recur (:parent current-scope) overloads))
       overloads)))
 
-; TODO: remove -binding
-(defn lookup-binding [decl-name scope]
+(defn lookup [decl-name scope]
   "Recursively looks through the hierarchy of scopes for the declaration.
    Returns the first set of overloads found in the closest scope, not all.
    See lookup-overloads for getting all."
@@ -44,11 +43,10 @@
         found
         (recur (:parent current-scope))))))
 
-; TODO: remove -binding
-(defn validate-binding [decl-name decl-type scope]
+(defn validate [decl-name decl-type scope]
   "Looks up a declaration, if any, and verifies that the provided
    declaration has a matching type. Returns the decl or nil, if none is found."
-  (let [decl (lookup-binding decl-name scope)
+  (let [decl (lookup decl-name scope)
         wrapped-type {:type decl-type}]
     (when (some? decl)
       (let [expected-types (second decl)]
@@ -128,7 +126,7 @@
   (let [shortened (shorten-types item)
         decl-name (get-in shortened [1 1])
         decl-type (get-in shortened [2])
-        found-decl (validate-binding decl-name decl-type scope)
+        found-decl (validate decl-name decl-type scope)
         found-type (lookup-type decl-type scope)]
     (type-assert (some? found-type) (str "unknown type " decl-type))
 

@@ -68,7 +68,7 @@
 
 (defmethod realize-type :identifier [item scope]
   (let [ident (second item)
-        decl (declaration/lookup-binding ident scope)]
+        decl (declaration/lookup ident scope)]
     (type-assert (some? decl) (str "unknown binding " ident))
     (:type (get-in decl [1 0]))))
 
