@@ -65,12 +65,10 @@
 
 (defmethod add-explicit-returns :body [item scope]
   (let [body (second item)]
-    (let [body-type (expression/realize-type
-                      ; TODO: Update the item with this, too!
-                      (add-explicit-returns (last body) scope)
-                      scope)]
+    (let [updated-last (add-explicit-returns (last body) scope)
+          body-type (expression/realize-type updated-last scope)]
       (update-in item [1] (fn [_] (concat (butlast body)
-                                          [[:return (last body)]]))))))
+                                          [[:return updated-last]]))))))
 
 (defmethod add-explicit-returns :default [item scope]
   item)
