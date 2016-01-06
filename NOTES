@@ -9,8 +9,6 @@ impl:
 
   sanitize idents which are keywords in backend language
 
-  make bindings and params const in codegen
-
   returning an integer literal and a jank integer is conflicting
     specify types for if statement returns
 
