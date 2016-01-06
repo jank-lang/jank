@@ -5,27 +5,12 @@ allow keywords?
 ^type within macros for first class types
   maybe no need for generic syntax?
 
-macros
-  function arguments aren't visible
-  allow proper lists as macro arguments without quoting
-    for emit as well?
-
-tuple and variadic functions
-
 constraints on return types
   Allow dependent types there
   (ƒ foo () (:T-ret) where (^number? : (T-ret))
     42)
 
 REPL
-  add repl trait and compile separate lib
-    allow multiple definitions
   online repl sandbox
   irc bot for #jank
   tests for repl
-
-custom types are dynamically allocated by default
-  traits to control allocation? (later)
-  reference counted a la shared_ptr
-  copied on mutation
-  explicit copy function as well
