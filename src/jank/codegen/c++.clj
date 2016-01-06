@@ -74,6 +74,8 @@
     "void"))
 
 (defmethod codegen-impl :if-expression [current]
+  ; TODO: Not specifying the type here can cause deduction issues when
+  ; returning jank's integer and C++'s int literal
   (let [base (str "[&]{if("
                   (codegen-impl (second (second current)))
                   "){"
