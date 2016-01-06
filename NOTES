@@ -18,6 +18,7 @@ impl:
     keywords
     per-commit performance?
       criterium benchmarking
+    codegen
 
   targets
     each target has its own prelude
