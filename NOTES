@@ -7,9 +7,6 @@ impl:
   better logging
     timbre (allows profiling, too)
 
-  recursion + codegen
-    need to use std::function, not auto
-
   sanitize idents which are keywords in backend language
 
   make bindings and params const in codegen
