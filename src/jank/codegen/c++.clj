@@ -11,6 +11,8 @@
 (defmethod codegen-impl :declare-statement [current]
   "")
 
+; Only used for the main functions; all other functions
+; are just local lambdas within main
 (defmethod codegen-impl :function-definition [current]
   (let [lambda (nth current 2)]
     (str (codegen-impl (nth lambda 2)) ; Return
@@ -32,9 +34,23 @@
                                (drop 3 current))
        "}"))
 
+(defmethod codegen-impl :binding-type [current]
+  (let [value (nth current 2)]
+    (cond
+      ; Lambdas can be recursive, so their type needs to be specified
+      (= (first value) :lambda-definition)
+      (str "std::function<"
+           (codegen-impl (nth value 2)) ; Return
+           (codegen-impl (second value)) ; Params
+           "> ")
+
+      ; Typically, we just want auto
+      :else
+      "auto ")))
+
 (defmethod codegen-impl :binding-definition [current]
-  (str "auto "
-       (codegen-impl (second current))
+  (str (codegen-impl (update-in current [0] (fn [_] :binding-type)))
+       (codegen-impl (second current)) ; Name
        "="
        (codegen-impl (nth current 2))))
 
