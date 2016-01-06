@@ -12,6 +12,8 @@ impl:
 
   sanitize idents which are keywords in backend language
 
+  make bindings and params const in codegen
+
   tests
     declarations
     comments within forms
