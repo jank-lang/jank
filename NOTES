@@ -26,6 +26,9 @@ impl:
 
   targets
     each target has its own prelude
+      c++
+      bash
+      opencl
 
     (#target c++
              (#dependencies "gl/gl.h")
