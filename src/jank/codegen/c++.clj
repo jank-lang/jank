@@ -42,11 +42,11 @@
       (str "std::function<"
            (codegen-impl (nth value 2)) ; Return
            (codegen-impl (second value)) ; Params
-           "> ")
+           "> const ")
 
       ; Typically, we just want auto
       :else
-      "auto ")))
+      "auto const ")))
 
 (defmethod codegen-impl :binding-definition [current]
   (str (codegen-impl (update-in current [0] (fn [_] :binding-type)))
@@ -117,7 +117,7 @@
   (apply str (mapcat (comp sanitize/sanitize str) (second current))))
 
 (defmethod codegen-impl :type [current]
-  (codegen-impl (second current)))
+  (str (codegen-impl (second current)) " const"))
 
 (defmethod codegen-impl :default [current]
   (codegen-assert false (str "no codegen for '" current "'")))
