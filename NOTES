@@ -14,6 +14,8 @@ impl:
 
   allow first form of function calls to be a function call
 
+  code within comments is being compiled?!
+
   tests
     declarations
     comments within forms
