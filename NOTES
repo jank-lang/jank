@@ -17,6 +17,8 @@ impl:
   returning an integer literal and a jank integer is conflicting
     specify types for if statement returns
 
+  allow first form of function calls to be a function call
+
   tests
     declarations
     comments within forms
