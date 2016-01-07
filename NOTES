@@ -16,6 +16,8 @@ impl:
 
   code within comments is being compiled?!
 
+  look into closures in a detailed fashion
+
   tests
     declarations
     comments within forms
