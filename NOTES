@@ -27,6 +27,7 @@ impl:
           (print! s)
           b)))
 
+  also, function return types aren't being shortened?
 
   tests
     declarations
