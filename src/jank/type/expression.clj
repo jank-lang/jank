@@ -21,8 +21,14 @@
   (type-assert "binding definitions are not expressions"))
 
 (defmethod realize-type :function-call [item scope]
-  (let [func-name (get-in item [1 1])
-        overloads (declaration/lookup-overloads func-name scope)
+  ; The value/name of the function might be a function call which returns a
+  ; function or a lambda definition directly; we special case for identifiers
+  ; so we can lookup overloads. Otherwise, we use the function directly.
+  (let [identifier? (= :identifier (get-in item [1 0]))
+        func-name (when identifier? (get-in item [1 1]))
+        overloads (if identifier?
+                    (declaration/lookup-overloads func-name scope)
+                    [{:type (realize-type (nth item 1) scope)}])
         arg-types (apply list
                          (declaration/shorten-types
                            (map #(realize-type % scope) (rest (rest item)))))]
