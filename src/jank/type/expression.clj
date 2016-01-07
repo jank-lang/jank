@@ -25,10 +25,13 @@
   ; function or a lambda definition directly; we special case for identifiers
   ; so we can lookup overloads. Otherwise, we use the function directly.
   (let [identifier? (= :identifier (get-in item [1 0]))
-        func-name (when identifier? (get-in item [1 1]))
+        func-name (if identifier?
+                    (get-in item [1 1])
+                    "anonymous-function")
         overloads (if identifier?
                     (declaration/lookup-overloads func-name scope)
-                    [{:type (realize-type (nth item 1) scope)}])
+                    [{:type (declaration/shorten-types
+                              (realize-type (nth item 1) scope))}])
         arg-types (apply list
                          (declaration/shorten-types
                            (map #(realize-type % scope) (rest (rest item)))))]
