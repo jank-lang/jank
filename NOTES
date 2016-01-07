@@ -18,6 +18,8 @@ impl:
 
   look into closures in a detailed fashion
 
+  test returning a function of the wrong type
+
   tests
     declarations
     comments within forms
