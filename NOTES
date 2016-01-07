@@ -20,6 +20,14 @@ impl:
 
   test returning a function of the wrong type
 
+  b is not found here... scoping error?
+    (bind make-func
+      (λ () (ƒ : ((boolean string) (boolean)))
+        (λ (b boolean s string) (boolean)
+          (print! s)
+          b)))
+
+
   tests
     declarations
     comments within forms
