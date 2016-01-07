@@ -40,7 +40,7 @@ specialization-list = left-paren
                       right-paren
 <generic-specialization> = <':'> specialization-list
 function-call =
-  left-paren !special-identifier identifier
+  left-paren !special-identifier (identifier | function-call | lambda-definition)
     atom*
   right-paren
 
