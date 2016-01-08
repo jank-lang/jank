@@ -15,8 +15,6 @@ impl:
 
   look into closures in a detailed fashion
 
-  test returning a function of the wrong type
-
   b is not found here... scoping error?
     (bind make-func
       (λ () (ƒ : ((boolean string) (boolean)))
