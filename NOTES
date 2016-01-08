@@ -9,8 +9,6 @@ impl:
   returning an integer literal and a jank integer is conflicting
     specify types for if statement returns
 
-  code within comments is being compiled?!
-
   look into closures in a detailed fashion
 
   b is not found here... scoping error?
@@ -26,6 +24,7 @@ impl:
   tests
     declarations
     comments within forms
+      including functions
     keywords
     per-commit performance?
       criterium benchmarking
