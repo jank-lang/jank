@@ -109,6 +109,8 @@
                 "fail-unknown-value.jank"
                 "fail-wrong-param-type.jank"
                 "fail-wrong-type.jank"
+                "fail-first-class-function-wrong-return-type.jank"
+                "fail-first-class-function-wrong-parameter-type.jank"
                 "pass-function.jank"
                 "pass-normal.jank"
                 "pass-param.jank"
