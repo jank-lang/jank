@@ -14,10 +14,11 @@
 
 (defn empty-scope
   "Builds an empty type scope."
-  ([]
-   (empty-scope nil))
-  ([parent]
-   {:parent parent
+  ([name]
+   (empty-scope name nil))
+  ([name parent]
+   {:name name
+    :parent parent
     :binding-declarations {}
     :binding-definitions {}
     :type-declarations #{}}))
@@ -26,7 +27,7 @@
   "Builds type information on the parsed source. Returns
    a list of the typed source and the top-level scope."
   ([parsed]
-   (check parsed (empty-scope)))
+   (check parsed (empty-scope "root")))
   ([parsed parent-scope]
    ;(pprint (list "parsed:" parsed))
    (loop [item (first (:cells parsed))
@@ -51,7 +52,8 @@
         [checked-args args-scope] (check-item args scope)
         [checked-returns returns-scope] (check-item returns args-scope)
         [checked-body checked-scope] (check {:cells (drop 3 item)}
-                                            (empty-scope returns-scope))
+                                            (empty-scope "lambda"
+                                                         returns-scope))
         updated-item (into [] (concat (take 3 item) (:cells checked-body)))
         body-with-return (return/add-explicit-returns updated-item
                                                       checked-scope)]
@@ -130,12 +132,12 @@
     (type-assert (= cond-type '("boolean"))
                  (str "if expression condition must be boolean, not " cond-type))
     (let [[checked-then then-scope] (check {:cells (rest (get-in item [2]))}
-                                           (empty-scope scope))
+                                           (empty-scope "if-then" scope))
           updated-item (update-in item [2]
                                   (fn [_] (into [:then] (:cells checked-then))))]
       (if (> (count item) 3) ; There's an else
         (let [[checked-else else-scope] (check {:cells (rest (get-in item [3]))}
-                                               (empty-scope scope))]
+                                               (empty-scope "if-else" scope))]
           (list (update-in updated-item [3]
                            (fn [_] (into [:else] (:cells checked-else)))) scope))
         (list updated-item scope)))))
