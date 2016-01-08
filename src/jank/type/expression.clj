@@ -36,6 +36,8 @@
                     [{:type (realize-type (nth item 1) scope)}])
         arg-types (apply list (map #(realize-type % scope) (rest (rest item))))]
     (type-assert (some? overloads) (str "unknown function " func-name))
+    (type-assert (every? (comp declaration/function? :type) overloads)
+                 (str "not a function " func-name))
 
     ; Test all overloads; matches comes back as a vector of the return types
     ; for the matched functions.
