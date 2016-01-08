@@ -326,6 +326,12 @@ set runtimepath^=~/projects/jank/vim
 set runtimepath^=~/projects/jank/vim/after
 ```
 
+## Donate
+Feel free to shoot Bitcoins my way: **1HaMvpDjy7QJBDkcZALJr3s26FxLpv5WtJ**
+
+For more information regarding how I use donations, see
+[here](http://jeaye.com/donate/).
+
 ## License
 jank is under the MIT open-source license.  
 See the `LICENSE` file or http://opensource.org/licenses/MIT
