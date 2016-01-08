@@ -9,8 +9,6 @@ impl:
   returning an integer literal and a jank integer is conflicting
     specify types for if statement returns
 
-  allow first form of function calls to be a function call
-
   code within comments is being compiled?!
 
   look into closures in a detailed fashion
