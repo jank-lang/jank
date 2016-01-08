@@ -66,7 +66,6 @@
                 "fail-too-few-params.jank"
                 "fail-too-many-params.jank"
                 "fail-recursion-undeduced.jank"
-                "fail-call-non-function-literal.jank"
                 "fail-call-non-function-from-return.jank"
                 "pass-chain.jank"
                 "pass-empty.jank"

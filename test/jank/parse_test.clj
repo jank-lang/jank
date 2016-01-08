@@ -87,3 +87,7 @@
                 "pass-long-form.jank"
                 "pass-unicode-short-form.jank"]]
     (test-file (str "test/parse/lambda/define/" file))))
+
+(deftest function-calls
+  (doseq [file ["fail-non-function-literal.jank"]]
+    (test-file (str "test/parse/function/call/" file))))
