@@ -1,9 +1,6 @@
 impl:
   write the extra compilation args to a file
 
-  verify all types going to codegen are shortened
-    support generic shortened types
-
   better logging
     timbre (allows profiling, too)
 
@@ -26,8 +23,6 @@ impl:
         (λ (b boolean s string) (boolean)
           (print! s)
           b)))
-
-  also, function return types aren't being shortened?
 
   tests
     declarations
