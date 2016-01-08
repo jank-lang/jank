@@ -24,6 +24,9 @@ impl:
           (print! s)
           b)))
 
+  remove function-call from grammar; just use lists
+    it becomes unhelpful with macros
+
   tests
     declarations
     comments within forms
