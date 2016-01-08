@@ -102,7 +102,7 @@
                 "pass-same-param-count.jank"]]
     (test-file (str "test/type/function/overload/" file))))
 
-(deftest implicit-function-returns
+(deftest function-returns
   (doseq [file ["fail-function-wrong-type.jank"
                 "fail-no-return.jank"
                 "fail-unknown-type.jank"
