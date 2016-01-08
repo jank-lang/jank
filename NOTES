@@ -11,6 +11,8 @@ impl:
 
   look into closures in a detailed fashion
 
+  give scopes a name
+
   b is not found here... scoping error?
     (bind make-func
       (λ () (ƒ : ((boolean string) (boolean)))
