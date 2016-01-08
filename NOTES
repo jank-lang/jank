@@ -19,6 +19,8 @@ impl:
         (λ (b boolean s string) (boolean)
           (print! s)
           b)))
+    looks like params are added to the scope above
+    also looks like lambdas don't look in parent lambda scopes
 
   remove function-call from grammar; just use lists
     it becomes unhelpful with macros
