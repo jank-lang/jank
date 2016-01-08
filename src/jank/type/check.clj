@@ -68,10 +68,9 @@
                                       (declaration/add-to-scope
                                         [:bind
                                          (second item)
-                                         (declaration/shorten-types
-                                           (expression/realize-type
-                                             (nth item value-index)
-                                             scope))]
+                                         (expression/realize-type
+                                           (nth item value-index)
+                                           scope)]
                                         scope))
         updated-item (update-in item [value-index] (fn [_] checked-val))
         item-without-type (if has-type

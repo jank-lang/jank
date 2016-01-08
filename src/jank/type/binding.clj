@@ -29,8 +29,7 @@
   (let [item-name (second (second item))
         overloads (lookup item-name scope)
         has-type (= 4 (count item))
-        item-type (declaration/shorten-types
-                    (expression/realize-type (last item) scope))
+        item-type (expression/realize-type (last item) scope)
         expected-type (if has-type
                         (declaration/lookup-type
                           (declaration/shorten-types (nth item 2))

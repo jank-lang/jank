@@ -12,10 +12,13 @@
 (defmethod realize-type :lambda-definition [item scope]
   (letfn [(remove-identifiers [item]
             (filter #(not= :identifier (first %)) item))]
-    (list "ƒ"
-      [:specialization-list
-       (into [:specialization-list] (remove-identifiers (rest (nth item 1))))
-       (into [:specialization-list] (remove-identifiers (rest (nth item 2))))])))
+    (declaration/shorten-types
+      (list "ƒ"
+            [:specialization-list
+             (into [:specialization-list]
+                   (remove-identifiers (rest (nth item 1))))
+             (into [:specialization-list]
+                   (remove-identifiers (rest (nth item 2))))]))))
 
 (defmethod realize-type :binding-definition [item scope]
   (type-assert "binding definitions are not expressions"))
@@ -30,11 +33,8 @@
                     "anonymous-function")
         overloads (if identifier?
                     (declaration/lookup-overloads func-name scope)
-                    [{:type (declaration/shorten-types
-                              (realize-type (nth item 1) scope))}])
-        arg-types (apply list
-                         (declaration/shorten-types
-                           (map #(realize-type % scope) (rest (rest item)))))]
+                    [{:type (realize-type (nth item 1) scope)}])
+        arg-types (apply list (map #(realize-type % scope) (rest (rest item))))]
     (type-assert (some? overloads) (str "unknown function " func-name))
 
     ; Test all overloads; matches comes back as a vector of the return types
@@ -60,7 +60,8 @@
                         " before its type is deduced"))
 
       (when-not (empty? (first matches))
-        (ffirst matches)))))
+        (declaration/shorten-types
+          (ffirst matches))))))
 
 (defmethod realize-type :if-expression [item scope]
   (type-assert (= 4 (count item)) "no else statement")
@@ -68,7 +69,7 @@
         else-type (realize-type (second (nth item 3)) scope)]
     (internal-assert (= then-type else-type)
                      "incompatible if then/else types")
-    then-type))
+    (declaration/shorten-types then-type)))
 
 (defmethod realize-type :list [item scope]
   ; TODO
@@ -78,7 +79,7 @@
   (let [ident (second item)
         decl (declaration/lookup ident scope)]
     (type-assert (some? decl) (str "unknown binding " ident))
-    (:type (get-in decl [1 0]))))
+    (declaration/shorten-types (:type (get-in decl [1 0])))))
 
 (defmethod realize-type :return [item scope]
   ; Realize that which is being returned
@@ -86,7 +87,7 @@
 
 ; Handles integer, string, etc
 (defmethod realize-type :default [item scope]
-  (-> item first name symbol str list))
+  (declaration/shorten-types (-> item first name symbol str list)))
 
 ; Empty bodies will realize to nil
 (defmethod realize-type nil [item scope]
