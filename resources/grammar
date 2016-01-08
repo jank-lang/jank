@@ -1,12 +1,13 @@
-<program> = (<comment> / atom)*
-<atom> = string / number / boolean /
-         identifier / keyword /
-         lambda-definition /
-         macro-definition /
-         binding-definition /
-         if-expression /
-         declare-statement /
-         function-call /
+<program> = (<comment> / statement)*
+<statement> = string / number / boolean /
+              identifier / keyword /
+              lambda-definition /
+              macro-definition /
+              binding-definition /
+              if-expression /
+              declare-statement /
+              function-call
+<atom> = statement /
          list
 
 integer = #'[+-]?\d+'
