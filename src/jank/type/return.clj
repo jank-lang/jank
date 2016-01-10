@@ -19,8 +19,8 @@
     (first item)))
 
 (defmethod add-explicit-returns :lambda-definition [item scope]
-  (if (= :return (first (last (nth item 3))))
-    ; Don't bother redoing the work if we've already done it.
+  ; Don't bother redoing the work if we've already done it.
+  (if (= :return (first (last item)))
     item
     (let [expected-type (declaration/shorten-types (second (nth item 2)))]
       ; No return type means no implicit returns are generates
