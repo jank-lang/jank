@@ -49,11 +49,11 @@
 (defmethod check-item :lambda-definition [item scope]
   (let [args (second item)
         returns (nth item 2)
-        [checked-args args-scope] (check-item args scope)
+        new-scope (empty-scope "lambda" scope)
+        [checked-args args-scope] (check-item args new-scope)
         [checked-returns returns-scope] (check-item returns args-scope)
         [checked-body checked-scope] (check {:cells (drop 3 item)}
-                                            (empty-scope "lambda"
-                                                         returns-scope))
+                                            returns-scope)
         updated-item (into [] (concat (take 3 item) (:cells checked-body)))
         body-with-return (return/add-explicit-returns updated-item
                                                       checked-scope)]
