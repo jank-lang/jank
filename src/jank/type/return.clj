@@ -19,28 +19,31 @@
     (first item)))
 
 (defmethod add-explicit-returns :lambda-definition [item scope]
-  (let [expected-type (declaration/shorten-types (second (nth item 2)))]
-    ; No return type means no implicit returns are generates
-    (if (nil? expected-type)
-      item
-      (let [updated-body (add-explicit-returns [:body (drop 3 item)] scope)
-            body-type (expression/realize-type (last (second updated-body))
-                                               scope)
-            ; Allow deduction
-            deduced-type (if (declaration/auto? expected-type)
-                           body-type
-                           expected-type)
-            updated-item (into [] (concat (take 3 item) (second updated-body)))]
-        (type-assert (= deduced-type body-type)
-                     (str "expected function return type of "
-                          deduced-type
-                          ", found "
-                          body-type))
+  (if (= :return (first (last (nth item 3))))
+    ; Don't bother redoing the work if we've already done it.
+    item
+    (let [expected-type (declaration/shorten-types (second (nth item 2)))]
+      ; No return type means no implicit returns are generates
+      (if (nil? expected-type)
+        item
+        (let [updated-body (add-explicit-returns [:body (drop 3 item)] scope)
+              body-type (expression/realize-type (last (second updated-body))
+                                                 scope)
+              ; Allow deduction
+              deduced-type (if (declaration/auto? expected-type)
+                             body-type
+                             expected-type)
+              updated-item (into [] (concat (take 3 item) (second updated-body)))]
+          (type-assert (= deduced-type body-type)
+                       (str "expected function return type of "
+                            deduced-type
+                            ", found "
+                            body-type))
 
-        ; Update the return type
-        (if (some? deduced-type)
-          (update-in updated-item [2 1] (fn [_] deduced-type))
-          (update-in updated-item [2] (fn [_] [:return-list])))))))
+          ; Update the return type
+          (if (some? deduced-type)
+            (update-in updated-item [2 1] (fn [_] deduced-type))
+            (update-in updated-item [2] (fn [_] [:return-list]))))))))
 
 (defmethod add-explicit-returns :if-expression [item scope]
   (type-assert (= 4 (count item)) "no else statement")
