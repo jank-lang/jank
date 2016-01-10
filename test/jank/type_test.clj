@@ -40,7 +40,8 @@
                 "fail-invalid-return-type.jank"
                 "pass-with-type.jank"
                 "pass-simple.jank"
-                "pass-call.jank"]]
+                "pass-call.jank"
+                "pass-nested.jank"]]
     (test-file (str "test/type/lambda/bind/" file))))
 
 (deftest if-definitions
