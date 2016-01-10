@@ -11,8 +11,6 @@ impl:
 
   look into closures in a detailed fashion
 
-  give scopes a name
-
   handle ƒ and other generic types in codegen
 
   remove function-call from grammar; just use lists
