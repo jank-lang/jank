@@ -25,7 +25,7 @@
          "}")))
 
 (defmethod codegen-impl :lambda-definition [current]
-  (str "[&]"
+  (str "[=]"
        (codegen-impl (second current)) ; Params
        "->"
        (codegen-impl (nth current 2)) ; Return
@@ -76,7 +76,7 @@
 (defmethod codegen-impl :if-expression [current]
   ; TODO: Not specifying the type here can cause deduction issues when
   ; returning jank's integer and C++'s int literal
-  (let [base (str "[&]{if("
+  (let [base (str "[=]{if("
                   (codegen-impl (second (second current)))
                   "){"
                   (util/end-statement (codegen-impl (second (nth current 2))))
