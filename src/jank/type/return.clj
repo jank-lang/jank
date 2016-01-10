@@ -20,6 +20,10 @@
 
 (defmethod add-explicit-returns :lambda-definition [item scope]
   ; Don't bother redoing the work if we've already done it.
+  ; The real reason we care is that this should only be done once per lambda,
+  ; since the lambda only has access to its full scope once. If another item
+  ; tries to do this again, with a lambda return, the appropriate scope will
+  ; no longer be available.
   (if (= :return (first (last item)))
     item
     (let [expected-type (declaration/shorten-types (second (nth item 2)))]
