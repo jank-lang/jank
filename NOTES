@@ -13,14 +13,7 @@ impl:
 
   give scopes a name
 
-  b is not found here... scoping error?
-    (bind make-func
-      (λ () (ƒ : ((boolean string) (boolean)))
-        (λ (b boolean s string) (boolean)
-          (print! s)
-          b)))
-    looks like params are added to the scope above
-    also looks like lambdas don't look in parent lambda scopes
+  handle ƒ and other generic types in codegen
 
   remove function-call from grammar; just use lists
     it becomes unhelpful with macros
