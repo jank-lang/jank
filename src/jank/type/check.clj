@@ -14,11 +14,10 @@
 
 (defn empty-scope
   "Builds an empty type scope."
-  ([name]
-   (empty-scope name nil))
-  ([name parent]
-   {:name name
-    :parent parent
+  ([]
+   (empty-scope nil))
+  ([parent]
+   {:parent parent
     :binding-declarations {}
     :binding-definitions {}
     :type-declarations #{}}))
@@ -27,7 +26,7 @@
   "Builds type information on the parsed source. Returns
    a list of the typed source and the top-level scope."
   ([parsed]
-   (check parsed (empty-scope "root")))
+   (check parsed (empty-scope)))
   ([parsed parent-scope]
    ;(pprint (list "parsed:" parsed))
    (loop [item (first (:cells parsed))
@@ -49,7 +48,7 @@
 (defmethod check-item :lambda-definition [item scope]
   (let [args (second item)
         returns (nth item 2)
-        new-scope (empty-scope "lambda" scope)
+        new-scope (empty-scope scope)
         [checked-args args-scope] (check-item args new-scope)
         [checked-returns returns-scope] (check-item returns args-scope)
         [checked-body checked-scope] (check {:cells (drop 3 item)}
@@ -132,12 +131,12 @@
     (type-assert (= cond-type '("boolean"))
                  (str "if expression condition must be boolean, not " cond-type))
     (let [[checked-then then-scope] (check {:cells (rest (get-in item [2]))}
-                                           (empty-scope "if-then" scope))
+                                           (empty-scope scope))
           updated-item (update-in item [2]
                                   (fn [_] (into [:then] (:cells checked-then))))]
       (if (> (count item) 3) ; There's an else
         (let [[checked-else else-scope] (check {:cells (rest (get-in item [3]))}
-                                               (empty-scope "if-else" scope))]
+                                               (empty-scope scope))]
           (list (update-in updated-item [3]
                            (fn [_] (into [:else] (:cells checked-else)))) scope))
         (list updated-item scope)))))
