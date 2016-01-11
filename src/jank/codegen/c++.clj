@@ -116,10 +116,24 @@
   (second current))
 
 (defmethod codegen-impl :identifier [current]
-  (str (apply str (mapcat (comp sanitize/sanitize str) (second current)))
-       ; Handle generic specializations
-       (when (= 3 (count current))
-         (codegen-impl (nth current 2)))))
+  ; Special case for function types
+  (if (= "ƒ" (second current))
+    (codegen-impl (update-in current [0] (fn [_] :function-type)))
+    (str (apply str (mapcat (comp sanitize/sanitize str) (second current)))
+         ; Handle generic specializations
+         (when (= 3 (count current))
+           (codegen-impl (nth current 2))))))
+
+(defmethod codegen-impl :function-type [current]
+  (str "std::function<"
+       (let [return (second (nth (nth current 2) 2))]
+         (if-not (nil? return)
+           (codegen-impl return)
+           "void"))
+       "("
+       (util/comma-separate-args
+         (map codegen-impl (rest (second (nth current 2)))))
+       ")>"))
 
 (defmethod codegen-impl :type [current]
   (str (codegen-impl (second current)) " const"))
