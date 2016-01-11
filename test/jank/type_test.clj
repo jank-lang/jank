@@ -61,6 +61,7 @@
                 ]]
     (test-file (str "test/type/if/expression/" file))))
 
+; TODO: Rename function directory to lambda
 (deftest function-calls
   (doseq [file ["fail-invalid-function.jank"
                 "fail-invalid-param-type.jank"
@@ -126,3 +127,11 @@
                 "pass-with-normal-return.jank"
                 "pass-with-unicode.jank"]]
     (test-file (str "test/type/function/deduce/" file))))
+
+(deftest closures
+  (doseq [file ["pass-global-from-nested.jank"
+                "pass-global.jank"
+                "pass-local-from-nested.jank"
+                "pass-parameter-from-nested.jank"
+                "pass-partial.jank"]]
+    (test-file (str "test/type/lambda/closure/" file))))
