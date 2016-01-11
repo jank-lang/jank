@@ -13,6 +13,8 @@ impl:
 
   handle ƒ and other generic types in codegen
 
+  test bindings within lambdas
+
   test for returning a deduced lambda from a lambda
 
   remove function-call from grammar; just use lists
