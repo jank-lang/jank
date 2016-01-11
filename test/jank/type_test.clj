@@ -61,7 +61,6 @@
                 ]]
     (test-file (str "test/type/if/expression/" file))))
 
-; TODO: Rename function directory to lambda
 (deftest function-calls
   (doseq [file ["fail-invalid-function.jank"
                 "fail-invalid-param-type.jank"
@@ -80,7 +79,7 @@
                 "pass-function-return-with-arguments.jank"
                 "pass-recursion.jank"
                 "pass-recursion-undeduced-call-overload.jank"]]
-    (test-file (str "test/type/function/call/" file))))
+    (test-file (str "test/type/lambda/call/" file))))
 
 (deftest nested-functions
   (doseq [file ["fail-multiple-inner-definition.jank"
@@ -94,14 +93,14 @@
                 ;"pass-redefine-outer.jank"
                 ;"pass-redefine-self.jank"
                 ]]
-    (test-file (str "test/type/function/nest/" file))))
+    (test-file (str "test/type/lambda/nest/" file))))
 
 (deftest overloaded-functions
   (doseq [file ["fail-multiple-definition.jank"
                 "fail-return-type.jank"
                 "pass-different-param-count.jank"
                 "pass-same-param-count.jank"]]
-    (test-file (str "test/type/function/overload/" file))))
+    (test-file (str "test/type/lambda/overload/" file))))
 
 (deftest function-returns
   (doseq [file ["fail-function-wrong-type.jank"
@@ -118,7 +117,7 @@
                 "pass-void-no-return.jank"
                 "pass-void-incomplete-if.jank"
                 "pass-void-wrong-type.jank"]]
-    (test-file (str "test/type/function/return/" file))))
+    (test-file (str "test/type/lambda/return/" file))))
 
 (deftest function-type-deduction
   (doseq [file ["fail-mismatched-types.jank"
@@ -126,7 +125,7 @@
                 "pass-void.jank"
                 "pass-with-normal-return.jank"
                 "pass-with-unicode.jank"]]
-    (test-file (str "test/type/function/deduce/" file))))
+    (test-file (str "test/type/lambda/deduce/" file))))
 
 (deftest closures
   (doseq [file ["pass-global-from-nested.jank"
