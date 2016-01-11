@@ -9,8 +9,6 @@ impl:
   returning an integer literal and a jank integer is conflicting
     specify types for if statement returns
 
-  look into closures in a detailed fashion
-
   handle ƒ and other generic types in codegen
 
   test bindings within lambdas
