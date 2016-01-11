@@ -27,7 +27,8 @@
                         "|" "_gen_pipe_"
                         "^" "_gen_caret_"
                         "`" "_gen_grave_"
-                        "~" "_gen_tilde_"})
+                        "~" "_gen_tilde_"
+                        "ƒ" "_gen_function_"})
 
 (defn sanitize [identifier-str]
   "Sanitizes a char (as a str) of a jank identifier into

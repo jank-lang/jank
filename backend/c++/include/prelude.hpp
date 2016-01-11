@@ -13,6 +13,8 @@ namespace jank
   using real = double;
   using boolean = bool;
   using string = std::string;
+  template <typename T>
+  using _gen_function_ = std::function<T>;
 
   /* -- Assertions -- */
   void assert_gen_bang_(boolean const b, string const &s)
