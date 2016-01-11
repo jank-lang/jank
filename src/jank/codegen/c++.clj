@@ -6,7 +6,10 @@
 
 (defmulti codegen-impl
   (fn [current]
-    (first current)))
+    ; Types come in from the type checker in a different form
+    (if (keyword? (first current))
+      (first current)
+      :shortened-type)))
 
 (defmethod codegen-impl :declare-statement [current]
   "")
@@ -69,8 +72,7 @@
 
 (defmethod codegen-impl :return-list [current]
   (if-let [ret (second current)]
-    ; TODO: Support generic types
-    (first ret)
+    (codegen-impl ret)
     "void"))
 
 (defmethod codegen-impl :if-expression [current]
@@ -137,6 +139,9 @@
 
 (defmethod codegen-impl :type [current]
   (str (codegen-impl (second current)) " const"))
+
+(defmethod codegen-impl :shortened-type [current]
+  (str (codegen-impl (into [:identifier] current)) " const"))
 
 (defmethod codegen-impl :specialization-list [current]
   (str "<" (codegen-impl (second current)) ">"))
