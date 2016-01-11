@@ -116,10 +116,16 @@
   (second current))
 
 (defmethod codegen-impl :identifier [current]
-  (apply str (mapcat (comp sanitize/sanitize str) (second current))))
+  (str (apply str (mapcat (comp sanitize/sanitize str) (second current)))
+       ; Handle generic specializations
+       (when (= 3 (count current))
+         (codegen-impl (nth current 2)))))
 
 (defmethod codegen-impl :type [current]
   (str (codegen-impl (second current)) " const"))
+
+(defmethod codegen-impl :specialization-list [current]
+  (str "<" (codegen-impl (second current)) ">"))
 
 (defmethod codegen-impl :default [current]
   (codegen-assert false (str "no codegen for '" current "'")))
