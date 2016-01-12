@@ -20,8 +20,10 @@
                 "fail-multiple-definition-same-type.jank"
                 "fail-unknown-type.jank"
                 "fail-unknown-value-identifier.jank"
+                "fail-outside-lambda.jank"
                 "pass-deduce-type.jank"
-                "pass-proper-types.jank"]]
+                "pass-proper-types.jank"
+                "pass-within-lambda.jank"]]
     (test-file (str "test/type/binding/" file))))
 
 (deftest first-class-lambdas
