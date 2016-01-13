@@ -24,6 +24,7 @@ impl:
     per-commit performance?
       criterium benchmarking
     codegen
+    code execution (functional tests)
 
   targets
     each target has its own prelude
