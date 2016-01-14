@@ -50,7 +50,8 @@
             (update-in updated-item [2] (fn [_] [:return-list]))))))))
 
 (defmethod add-explicit-returns :if-expression [item scope]
-  (type-assert (= 4 (count item)) "no else statement")
+  (type-assert (some #(and (vector? %) (= (first %) :else)) item)
+               "no else statement")
 
   (let [then-body (second (add-explicit-returns [:body (rest (nth item 2))]
                                                 scope))
@@ -65,10 +66,12 @@
           else-type (expression/realize-type (last else-body) scope)]
       (type-assert (= then-type else-type)
                    "incompatible if then/else types")
-      (update-in
-        (update-in item [2] (fn [_] [:then (last then-body)]))
-        [3]
-        (fn [_] [:else (last else-body)])))))
+      (conj
+        (update-in
+          (update-in item [2] (fn [_] [:then (last then-body)]))
+          [3]
+          (fn [_] [:else (last else-body)]))
+        [:type then-type]))))
 
 (defmethod add-explicit-returns :body [item scope]
   (let [body (second item)]

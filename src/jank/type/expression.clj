@@ -66,7 +66,8 @@
           (ffirst matches))))))
 
 (defmethod realize-type :if-expression [item scope]
-  (type-assert (= 4 (count item)) "no else statement")
+  (type-assert (some #(and (vector? %) (= (first %) :else)) item)
+               "no else statement")
   (let [then-type (realize-type (second (nth item 2)) scope)
         else-type (realize-type (second (nth item 3)) scope)]
     (internal-assert (= then-type else-type)
