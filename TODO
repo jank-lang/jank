@@ -34,6 +34,8 @@ targets
            (#dependencies "gl/gl.h")
            (#command-line "-ggdb -Og -lGL"))
 
+  prelude isn't included until #target macro is used
+
 allow keywords?
   each keyword is its own type
   useful in the case of policies?
