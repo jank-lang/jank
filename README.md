@@ -8,18 +8,18 @@ structures.
 ## Appetizer
 ```lisp
 (; Update all entities. ;)
-(ƒ update (delta real entities list : (entity)) (Ɐ)
+(ƒ update (delta real entities list : (entity)) (∀)
   (map (partial update delta) entities))
 
 (; Damage nearby entities. ;)
-(ƒ cast-aoe (area real entities list : (entity)) (Ɐ)
+(ƒ cast-aoe (area real entities list : (entity)) (∀)
   (map damage
        (filter (partial within-distance area) entities)))
 
 (; Find a winner, based on score. ;)
-(ƒ find-winner (entities list : (entity)) (Ɐ)
+(ƒ find-winner (entities list : (entity)) (∀)
   (reduce
-    (λ (a Ɐ b Ɐ) (Ɐ)
+    (λ (a ∀ b ∀) (∀)
       (if (> (.score a) (.score b))
         a b))
     entities))
@@ -41,11 +41,11 @@ There are a few primitive types which are part of the language.
 
 ## Functions
 ```lisp
-(ƒ square (i integer) (Ɐ)
+(ƒ square (i integer) (∀)
   (* i i))
 ```
 
-Functions are defined via the `function` (or `ƒ`) special identifier and require a `name` identifier, an argument list (which may be empty), and a return type list (which may be empty). Return type lists may also be `(auto)` or `(Ɐ)`, which forces the compiler to deduce the type.
+Functions are defined via the `function` (or `ƒ`) special identifier and require a `name` identifier, an argument list (which may be empty), and a return type list (which may be empty). Return type lists may also be `(auto)` or `(∀)`, which forces the compiler to deduce the type.
 
 ## Structs
 ```lisp
@@ -83,7 +83,7 @@ Members of structs are accessed with a `.foo` syntax, where `.foo` is a function
 Bindings are defined via the `bind` special identifier and require a `name` identifier, an optional type, and a value. The type may be left out and it will be deduced by the value.
 
 ## Generics
-Definitions may be dependent on types. Such definitions may be functions or structs. The type list must never be empty. Dependent (incomplete) types of a generic item must be prefixed with `:` to disambiguate from full specializations. To aid in cleanliness, function parameters and return types may be set to `auto` or `Ɐ`, implicitly making them generic.
+Definitions may be dependent on types. Such definitions may be functions or structs. The type list must never be empty. Dependent (incomplete) types of a generic item must be prefixed with `:` to disambiguate from full specializations. To aid in cleanliness, function parameters and return types may be set to `auto` or `∀`, implicitly making them generic.
 
 ### Examples
 #### Function
@@ -93,7 +93,7 @@ Definitions may be dependent on types. Such definitions may be functions or stru
   (print! o))
 
 (; Short-hand for above, where T isn't needed. ;)
-(ƒ show (o Ɐ) ()
+(ƒ show (o ∀) ()
   (print! o))
 
 (; Full specialization. ;)
@@ -152,10 +152,10 @@ Anything within `(;` and `;)` is considered a comment and treated as whitespace.
 
 ## Resource management
 ```lisp
-(ƒ construct (...) (Ɐ)
+(ƒ construct (...) (∀)
   ...)
 
-(ƒ destruct (o Ɐ) ()
+(ƒ destruct (o ∀) ()
   ...)
 ```
 
@@ -175,7 +175,7 @@ Since constructors are the functions to actually create objects, not something t
 
 (; Defines a constructor which has a side effect and then uses
  ; aggregate initialization to build the coord. ;)
-(ƒ construct : (coord : (:T-x :T-y)) (x T-x y T-y) (Ɐ)
+(ƒ construct : (coord : (:T-x :T-y)) (x T-x y T-y) (∀)
   (print! "constructing object")
   (coord : (T-x T-y) x y))
 
@@ -215,7 +215,7 @@ Constraints can be applied to various definitions, including functions and struc
 (macro number? : (real) ()
   (emit true))
 
-(ƒ square : (:T) (i T) (Ɐ) where (number? : T)
+(ƒ square : (:T) (i T) (∀) where (number? : T)
   (* i i))
 ```
 
@@ -259,7 +259,7 @@ Enums function as variant sum types; each variant can have its own type or simpl
 Branching, using `if`, allows for specifying a single form for the true and false cases. All conditions must be of type `boolean` and the false case is optional. To have more than one line in a true or false case, introduce scope with a `do` statement.
 
 ```lisp
-(ƒ next-even (i integer) (Ɐ)
+(ƒ next-even (i integer) (∀)
   (if (even? i)
     (do
       (print! "even")
@@ -299,10 +299,10 @@ The form of a macro definition is very similar to that of a function definition.
 
 (macro constructor (type ^list args ^list &body)
   (emit
-    (ƒ construct : (eval type) (eval args) (Ɐ)
+    (ƒ construct : (eval type) (eval args) (∀)
       (eval body))))
 
-(constructor (person) (first-name Ɐ last-name Ɐ)
+(constructor (person) (first-name ∀ last-name ∀)
   (person first-name last-name))
 ```
 

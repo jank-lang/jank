@@ -1,9 +1,9 @@
 (bind silent
-  (λ () (Ɐ)
+  (λ () (∀)
     ))
 
 (bind also-silent
-  (λ () (Ɐ)
+  (λ () (∀)
     (silent)))
 
 (also-silent)
