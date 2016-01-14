@@ -23,7 +23,7 @@ syntax keyword jank_special
              \ if
 syntax keyword jank_builtin_type
              \ boolean integer real string list
-             \ auto Ɐ
+             \ auto ∀
 syntax region	jank_string start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=jank_todo extend
 syntax region jank_comment start="(;" skipnl end=";)" contains=jank_comment,jank_todo
 syntax match jank_boolean "\<true\>\|\<false\>"
