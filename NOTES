@@ -11,8 +11,6 @@ impl:
 
   test passing first class overloaded declared functions
 
-  test for returning a deduced lambda from a lambda
-
   remove function-call from grammar; just use lists
     it becomes unhelpful with macros
 
