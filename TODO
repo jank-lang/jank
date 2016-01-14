@@ -10,6 +10,9 @@ returning an integer literal and a jank integer is conflicting
 
 test passing first class overloaded declared functions
 
+this should work, but print! doesn't like the ∀
+  (print! ((λ (i integer) (∀) i) 77))
+
 remove function-call from grammar; just use lists
   it becomes unhelpful with macros
 
