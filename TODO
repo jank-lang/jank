@@ -28,6 +28,7 @@ targets
     c++
     bash
     opencl
+    nix
 
   (#target c++
            (#dependencies "gl/gl.h")
