@@ -5,9 +5,6 @@ better logging
 
 sanitize idents which are keywords in backend language
 
-returning an integer literal and a jank integer is conflicting
-  specify types for if statement returns
-
 test passing first class overloaded declared functions
 
 this should work, but print! doesn't like the ∀
@@ -24,6 +21,7 @@ tests
   per-commit performance?
     criterium benchmarking
   codegen
+    returning an integer literal and a jank integer from an if should work
   code execution (functional tests)
 
 targets
