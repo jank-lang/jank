@@ -126,7 +126,10 @@
                 "pass-if.jank"
                 "pass-void.jank"
                 "pass-with-normal-return.jank"
-                "pass-with-unicode.jank"]]
+                "pass-with-unicode.jank"
+                "pass-void-lambda.jank"
+                "pass-non-void-lambda.jank"
+                "pass-deduced-lambda.jank"]]
     (test-file (str "test/type/lambda/deduce/" file))))
 
 (deftest closures
