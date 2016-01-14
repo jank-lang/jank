@@ -20,7 +20,7 @@
 
 (defn auto? [decl-type]
   "Returns whether or not the provided type is to be deduced."
-  (or (= "Ɐ" (first decl-type)) (= "auto" (first decl-type))))
+  (or (= "∀" (first decl-type)) (= "auto" (first decl-type))))
 
 (defn lookup-overloads [decl-name scope]
   "Recursively looks through the hierarchy of scopes for the declaration.
@@ -71,7 +71,7 @@
       (cond
         (or (= "ƒ" name) (= "function" name))
         :function
-        (or (= "Ɐ" name) (= "auto" name))
+        (or (= "∀" name) (= "auto" name))
         :auto
         :else
         :default))))
