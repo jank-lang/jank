@@ -12,6 +12,7 @@
                           (valid-type? file)))
     (is (valid-type? file))))
 
+; TODO: s/function/lambda/g
 (deftest bindings
   (doseq [file ["fail-function-with-incompatible-type.jank"
                 "fail-identifier-with-incompatible-type.jank"
@@ -63,7 +64,7 @@
                 ]]
     (test-file (str "test/type/if/expression/" file))))
 
-(deftest function-calls
+(deftest lambda-calls
   (doseq [file ["fail-invalid-function.jank"
                 "fail-invalid-param-type.jank"
                 "fail-too-few-params.jank"
@@ -79,11 +80,13 @@
                 "pass-lambda-directly-with-arguments.jank"
                 "pass-function-return.jank"
                 "pass-function-return-with-arguments.jank"
+                "pass-deduced-direct-as-parameter.jank"
+                "pass-deduced-direct-as-binding.jank"
                 "pass-recursion.jank"
                 "pass-recursion-undeduced-call-overload.jank"]]
     (test-file (str "test/type/lambda/call/" file))))
 
-(deftest nested-functions
+(deftest nested-lambdas
   (doseq [file ["fail-multiple-inner-definition.jank"
                 "pass-capture-params.jank"
                 "pass-define.jank"
@@ -97,14 +100,14 @@
                 ]]
     (test-file (str "test/type/lambda/nest/" file))))
 
-(deftest overloaded-functions
+(deftest overloaded-lambdas
   (doseq [file ["fail-multiple-definition.jank"
                 "fail-return-type.jank"
                 "pass-different-param-count.jank"
                 "pass-same-param-count.jank"]]
     (test-file (str "test/type/lambda/overload/" file))))
 
-(deftest function-returns
+(deftest lambda-returns
   (doseq [file ["fail-function-wrong-type.jank"
                 "fail-no-return.jank"
                 "fail-unknown-type.jank"
@@ -121,7 +124,7 @@
                 "pass-void-wrong-type.jank"]]
     (test-file (str "test/type/lambda/return/" file))))
 
-(deftest function-type-deduction
+(deftest lambda-type-deduction
   (doseq [file ["fail-mismatched-types.jank"
                 "pass-if.jank"
                 "pass-void.jank"
