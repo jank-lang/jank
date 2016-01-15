@@ -55,7 +55,7 @@
         ; The only exception is matching an auto declaration against a complete
         ; type.
         (type-assert (or (not= -1 (.indexOf expected-types wrapped-type))
-                         (not= -1 (.indexOf expected-types {:type '("∀")}))
+                         (some (comp auto? :type) expected-types)
                          (and (function? (:type wrapped-type))
                               (every? (comp function? :type) expected-types)))
                      (str "declaration of "
