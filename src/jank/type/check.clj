@@ -88,7 +88,8 @@
          checked-args []
          new-scope scope]
     (if (empty? args)
-      (let [checked-item (into [(first item) (second item)]
+      (let [checked-item (into [(first item)
+                                (first (check-item (second item) scope))]
                                (map #(return/add-parameter-returns % new-scope)
                                     checked-args))]
         (expression/realize-type checked-item new-scope)
