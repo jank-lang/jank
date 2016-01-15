@@ -52,7 +52,10 @@
       (let [expected-types (second decl)]
         ; All binding declarations must be the same type unless they're for
         ; function overloads. In that case, all declarations must be functions.
+        ; The only exception is matching an auto declaration against a complete
+        ; type.
         (type-assert (or (not= -1 (.indexOf expected-types wrapped-type))
+                         (not= -1 (.indexOf expected-types {:type '("∀")}))
                          (and (function? (:type wrapped-type))
                               (every? (comp function? :type) expected-types)))
                      (str "declaration of "
