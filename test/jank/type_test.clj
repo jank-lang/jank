@@ -82,6 +82,7 @@
                 "pass-function-return-with-arguments.jank"
                 "pass-deduced-direct-as-parameter.jank"
                 "pass-deduced-direct-as-binding.jank"
+                "pass-deduced-auto-direct-as-binding.jank"
                 "pass-recursion.jank"
                 "pass-recursion-undeduced-call-overload.jank"]]
     (test-file (str "test/type/lambda/call/" file))))
