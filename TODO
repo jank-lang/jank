@@ -7,7 +7,7 @@ sanitize idents which are keywords in backend language
 
 test passing first class overloaded declared functions
 
-∀ works, auto doesn't
+type matchin fails here, since the original declaration is auto
   (bind num string ((λ (s string) (auto) s) "meow"))
 
 remove function-call from grammar; just use lists
