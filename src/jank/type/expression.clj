@@ -53,10 +53,12 @@
                     overloads)]
       (type-assert (not-empty matches)
                    (str "no matching function call to " func-name
-                        " with argument types " arg-types))
+                        " with argument types " arg-types
+                        " expected one of " matches))
       (type-assert (= 1 (count matches))
                    (str "ambiguous function call to " func-name
-                        " with argument types " arg-types))
+                        " with argument types " arg-types
+                        " expected one of " matches))
       (type-assert (not (declaration/auto? (ffirst matches)))
                    (str "call to function " func-name
                         " before its type is deduced"))
