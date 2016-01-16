@@ -30,6 +30,7 @@ targets
     bash
     opencl
     nix
+    forth
 
   (#target c++
            (#dependencies "gl/gl.h")
