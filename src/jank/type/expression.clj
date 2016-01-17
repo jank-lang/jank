@@ -46,6 +46,7 @@
                       (let [generics (second (:type func))
                             expected-types (apply list (rest (second generics)))
                             return-types (rest (nth generics 2))]
+                        ; TODO: Allow comparison of overload superpositions
                         (if (= arg-types expected-types)
                           (conj matched return-types)
                           matched)))
@@ -81,6 +82,7 @@
   (not-yet-implemented type-assert false "list type realization"))
 
 (defmethod realize-type :identifier [item scope]
+  ; TODO: Check for function type and construct a superposition of overloads
   (let [ident (second item)
         decl (declaration/lookup ident scope)]
     (type-assert (some? decl) (str "unknown binding " ident))
