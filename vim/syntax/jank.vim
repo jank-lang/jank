@@ -30,9 +30,14 @@ syntax match jank_boolean "\<true\>\|\<false\>"
 syntax match jank_integer "\v\-?\d+"
 syntax match jank_real "\v\-?\d+\.\d+"
 
+" Some vims don't recognize non-alphanumeric characters for keyword matching,
+" and :iskeyword doesn't allow addition of non-ASCII characters
+syntax match jank_non_alpha_type "∀"
+
 highlight link jank_todo Todo
 highlight link jank_special Keyword
 highlight link jank_builtin_type Type
+highlight link jank_non_alpha_type Type
 highlight link jank_string String
 highlight link jank_comment Comment
 highlight link jank_boolean Underlined
