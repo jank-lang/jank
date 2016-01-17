@@ -5,10 +5,13 @@ better logging
 
 sanitize idents which are keywords in backend language
 
-test passing first class overloaded declared functions
-  allow superposition of all overloads when passing named functions
+passing first class overloaded declared functions
+  implicitly wrap every function identifier in a lambda
+    (λ (& args) (∀)
+      (apply func args))
 
 codegen won't allow overloading
+  encode signatures in function names
 
 remove function-call from grammar; just use lists
   it becomes unhelpful with macros
