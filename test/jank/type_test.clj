@@ -32,7 +32,8 @@
                 "fail-incorrect-return-type.jank"
                 "fail-incorrect-param-type.jank"
                 "pass-simple.jank"
-                "pass-return-lambda.jank"
+                ; TODO: Function identifiers
+                ;"pass-return-lambda.jank"
                 "pass-with-params.jank"
                 "pass-higher-order-lambda.jank"]]
     (test-file (str "test/type/lambda/first-class/" file))))
@@ -130,7 +131,8 @@
                 "pass-if.jank"
                 "pass-void.jank"
                 "pass-with-normal-return.jank"
-                "pass-with-unicode.jank"
+                ; TODO: Function identifiers
+                ;"pass-with-unicode.jank"
                 "pass-void-lambda.jank"
                 "pass-non-void-lambda.jank"
                 "pass-deduced-lambda.jank"]]

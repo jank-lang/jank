@@ -82,11 +82,19 @@
   (not-yet-implemented type-assert false "list type realization"))
 
 (defmethod realize-type :identifier [item scope]
-  ; TODO: Check for function type and construct a superposition of overloads
   (let [ident (second item)
         decl (declaration/lookup ident scope)]
     (type-assert (some? decl) (str "unknown binding " ident))
-    (declaration/shorten-types (:type (get-in decl [1 0])))))
+
+    ; Function identifiers yield a superposition of all possible overloads
+    (let [first-decl (declaration/shorten-types (:type (first (nth decl 1))))]
+      (if (declaration/function? first-decl)
+        (realize-type (update-in item [0] (fn [_] :function-identifier)) scope)
+        first-decl))))
+
+(defmethod realize-type :function-identifier [item scope]
+  ; TODO: Wrap in generic variadic lambda
+  (not-yet-implemented type-assert false "function identifiers"))
 
 (defmethod realize-type :return [item scope]
   ; Realize that which is being returned
