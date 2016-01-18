@@ -4,7 +4,6 @@ sudo: false
 
 os:
   - linux
-  - osx
 
 cache:
   -apt
