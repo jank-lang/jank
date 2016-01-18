@@ -145,3 +145,12 @@
                 "pass-parameter-from-nested.jank"
                 "pass-partial.jank"]]
     (test-file (str "test/type/lambda/closure/" file))))
+
+(deftest superpositions
+  ; TODO
+  (doseq [file [;"pass-lazy.jank"
+                ;"pass-outer-and-inner.jank"
+                ;"pass-outer.jank"
+                ;"pass-parameter.jank"
+                ]]
+    (test-file (str "test/type/lambda/superposition/" file))))
