@@ -91,3 +91,13 @@
 (deftest function-calls
   (doseq [file ["fail-non-function-literal.jank"]]
     (test-file (str "test/parse/function/call/" file))))
+
+(deftest declarations
+  (doseq [file ["fail-missing-idenfitier.jank"
+                "fail-non-identifier-integer.jank"
+                "fail-non-identifier-string.jank"
+                ; TODO: Generics
+                ;"pass-generic-type.jank"
+                ;"pass-generic-type-with-parameters.jank"
+                "pass-type.jank"]]
+    (test-file (str "test/parse/declaration/" file))))
