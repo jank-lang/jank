@@ -18,6 +18,7 @@ remove function-call from grammar; just use lists
 
 tests
   declarations
+    parse tests done; need type tests
   comments within forms
     including functions
   keywords
