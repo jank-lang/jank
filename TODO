@@ -46,7 +46,7 @@ allow keywords?
   useful in the case of policies?
 
 ^type within macros for first class types
-  maybe no need for generic syntax?
+  maybe no need for generic syntax for macros?
 
 constraints on return types
   Allow dependent types there
