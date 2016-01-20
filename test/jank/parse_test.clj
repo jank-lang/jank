@@ -99,5 +99,7 @@
                 ; TODO: Generics
                 ;"pass-generic-type.jank"
                 ;"pass-generic-type-with-parameters.jank"
-                "pass-type.jank"]]
+                "pass-type.jank"
+                "pass-binding.jank"
+                "pass-generic-binding.jank"]]
     (test-file (str "test/parse/declaration/" file))))
