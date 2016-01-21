@@ -163,3 +163,12 @@
                 "pass-multiple.jank"
                 "pass-normal.jank"]]
     (test-file (str "test/type/declaration/type/" file))))
+
+(deftest binding-declarations
+  ; TODO
+  (doseq [file ["fail-mismatched-types.jank"
+                "fail-unknown-type.jank"
+                "pass-function.jank"
+                "pass-multiple.jank"
+                "pass-normal.jank"]]
+    (test-file (str "test/type/declaration/binding/" file))))
