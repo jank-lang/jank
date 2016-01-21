@@ -154,3 +154,12 @@
                 ;"pass-parameter.jank"
                 ]]
     (test-file (str "test/type/lambda/superposition/" file))))
+
+(deftest type-declarations
+  ; TODO
+  (doseq [file [;"fail-invalid-generic.jank"
+                ;"pass-generic.jank"
+                ;"pass-generic-multiple.jank"
+                "pass-multiple.jank"
+                "pass-normal.jank"]]
+    (test-file (str "test/type/declaration/type/" file))))
