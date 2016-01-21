@@ -16,6 +16,8 @@ codegen won't allow overloading
 remove function-call from grammar; just use lists
   it becomes unhelpful with macros
 
+use bind and declare as expressions
+
 tests
   declarations
     parse tests done; need type tests
