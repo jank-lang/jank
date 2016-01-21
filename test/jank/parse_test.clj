@@ -92,6 +92,7 @@
   (doseq [file ["fail-non-function-literal.jank"]]
     (test-file (str "test/parse/function/call/" file))))
 
+; TODO: Split these into type/binding directories
 (deftest declarations
   (doseq [file ["fail-missing-idenfitier.jank"
                 "fail-non-identifier-integer.jank"
