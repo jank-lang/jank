@@ -97,7 +97,7 @@
                 "fail-non-identifier-integer.jank"
                 "fail-non-identifier-string.jank"
                 ; TODO: Generics
-                ;"pass-generic-type.jank"
+                ;"fail-empty-generic-type.jank"
                 ;"pass-generic-type-with-parameters.jank"
                 "pass-type.jank"
                 "pass-binding.jank"
