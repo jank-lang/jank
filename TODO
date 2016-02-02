@@ -5,6 +5,8 @@ better logging
 
 sanitize idents which are keywords in backend language
 
+doc strings are wrong; they go before the params
+
 passing first class overloaded declared functions
   implicitly wrap every function identifier in a lambda
     (λ (& args) (∀)
