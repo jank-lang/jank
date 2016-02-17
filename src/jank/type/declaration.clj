@@ -100,10 +100,9 @@
 (defmethod lookup-type :auto [decl-type scope]
   (list "auto"))
 
-(defmethod lookup-type
-  "Recursively looks up a type by name. Expects the *shortened* type.
-   Returns the type, if found, or nil."
-  :default [decl-type scope]
+; Recursively looks up a type by name. Expects the *shortened* type.
+; Returns the type, if found, or nil.
+(defmethod lookup-type :default [decl-type scope]
   (loop [current-scope scope]
     ; TODO: Handle generic types properly
     (when current-scope
@@ -124,17 +123,15 @@
         :else
         (type-assert false (str "invalid binding " item))))))
 
-(defmethod add-to-scope
-  "Adds the opaque type declaration to the scope.
-   Returns the updated scope."
-  :type-declaration [item scope]
+; Adds the opaque type declaration to the scope.
+; Returns the updated scope.
+(defmethod add-to-scope :type-declaration [item scope]
   (let [decl-name (first (shorten-types (rest item)))]
     (update scope :type-declarations conj decl-name)))
 
-(defmethod add-to-scope
-  "Finds, validates, and adds the provided declaration into the scope.
-   Returns the updated scope."
-  :binding-declaration [item scope]
+; Finds, validates, and adds the provided declaration into the scope.
+; Returns the updated scope.
+(defmethod add-to-scope :binding-declaration [item scope]
   (let [shortened (shorten-types item)
         decl-name (get-in shortened [1 1])
         decl-type (get-in shortened [2])
