@@ -30,9 +30,10 @@
                         "~" "_gen_tilde_"
                         "ƒ" "_gen_function_"})
 
-(defn sanitize [identifier-str]
+(defn sanitize
   "Sanitizes a char (as a str) of a jank identifier into
    something which C-like languages will accept."
+  [identifier-str]
   (let [named (sanitized-symbols identifier-str)]
     (cond
       named named

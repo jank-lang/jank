@@ -4,19 +4,21 @@
   (:use clojure.pprint
         jank.assert))
 
-(defn match-overload [item-type overloads]
+(defn match-overload
   "Looks through all overloads for one matching the provided type. Functions
    can't be overloaded by only return types. Returns a list of indices into
    the overloads sequence representing each match."
+  [item-type overloads]
   (keep-indexed
     #(when (= (second (second (:type %2)))
               (second (second item-type)))
        %1)
     overloads))
 
-(defn lookup [name scope]
+(defn lookup
   "Recursively looks up a binding by name.
    Returns the binding, if found, or nil."
+  [name scope]
   (loop [current-scope scope]
     (when current-scope
       (if-let [overloads (find (:binding-definitions current-scope) name)]

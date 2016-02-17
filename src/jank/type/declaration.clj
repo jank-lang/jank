@@ -3,10 +3,11 @@
         clojure.pprint
         jank.assert))
 
-(defn shorten-types [item]
+(defn shorten-types
   "Walks through the decl and replaces all [:type ...] instances with
    their shorter type names. Example: [:type [:identifier \"string\"]]
    becomes (\"string\")"
+  [item]
   (postwalk
     (fn [x]
       (if (and (vector? x) (= :type (first x)))
@@ -14,17 +15,20 @@
         x))
     item))
 
-(defn function? [decl-type]
+(defn function?
   "Returns whether or not the provided type is that of a function."
+  [decl-type]
   (= "ƒ" (first decl-type)))
 
-(defn auto? [decl-type]
+(defn auto?
   "Returns whether or not the provided type is to be deduced."
+  [decl-type]
   (or (= "∀" (first decl-type)) (= "auto" (first decl-type))))
 
-(defn lookup-overloads [decl-name scope]
+(defn lookup-overloads
   "Recursively looks through the hierarchy of scopes for the declaration.
    Returns all overloads in all scopes, from closest to furthest."
+  [decl-name scope]
   (loop [current-scope scope
          overloads []]
     (if current-scope
@@ -33,19 +37,21 @@
         (recur (:parent current-scope) overloads))
       overloads)))
 
-(defn lookup [decl-name scope]
+(defn lookup
   "Recursively looks through the hierarchy of scopes for the declaration.
    Returns the first set of overloads found in the closest scope, not all.
    See lookup-overloads for getting all."
+  [decl-name scope]
   (loop [current-scope scope]
     (when current-scope
       (if-let [found (find (:binding-declarations current-scope) decl-name)]
         found
         (recur (:parent current-scope))))))
 
-(defn validate [decl-name decl-type scope]
+(defn validate
   "Looks up a declaration, if any, and verifies that the provided
    declaration has a matching type. Returns the decl or nil, if none is found."
+  [decl-name decl-type scope]
   (let [decl (lookup decl-name scope)
         wrapped-type {:type decl-type}]
     (when (some? decl)
@@ -94,9 +100,10 @@
 (defmethod lookup-type :auto [decl-type scope]
   (list "auto"))
 
-(defmethod lookup-type :default [decl-type scope]
+(defmethod lookup-type
   "Recursively looks up a type by name. Expects the *shortened* type.
    Returns the type, if found, or nil."
+  :default [decl-type scope]
   (loop [current-scope scope]
     ; TODO: Handle generic types properly
     (when current-scope
@@ -117,15 +124,17 @@
         :else
         (type-assert false (str "invalid binding " item))))))
 
-(defmethod add-to-scope :type-declaration [item scope]
+(defmethod add-to-scope
   "Adds the opaque type declaration to the scope.
    Returns the updated scope."
+  :type-declaration [item scope]
   (let [decl-name (first (shorten-types (rest item)))]
     (update scope :type-declarations conj decl-name)))
 
-(defmethod add-to-scope :binding-declaration [item scope]
+(defmethod add-to-scope
   "Finds, validates, and adds the provided declaration into the scope.
    Returns the updated scope."
+  :binding-declaration [item scope]
   (let [shortened (shorten-types item)
         decl-name (get-in shortened [1 1])
         decl-type (get-in shortened [2])

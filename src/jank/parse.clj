@@ -11,10 +11,10 @@
     :auto-whitespace :standard))
 
 (defn parse
+  "Runs the provided resource file through instaparse. Returns
+   then generated syntax tree."
   ([resource] (parse prelude resource))
   ([pre resource]
-   "Runs the provided resource file through instaparse. Returns
-    then generated syntax tree."
    (let [parsed (parser (str pre resource))
          error (pr-str (insta/get-failure parsed))]
      (parse-assert (not (insta/failure? parsed))

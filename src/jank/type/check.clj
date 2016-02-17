@@ -84,9 +84,10 @@
     (list (apply vector item-without-type)
           (binding/add-to-scope updated-item checked-scope))))
 
-(defmethod check-item :function-call [item scope]
+(defmethod check-item :function-call
   "Check the type of each argument and try to realize the resulting
    function type."
+  [item scope]
   (loop [args (drop 2 item)
          checked-args []
          new-scope scope]
@@ -102,8 +103,9 @@
                (conj checked-args checked-arg)
                checked-scope)))))
 
-(defmethod check-item :argument-list [item scope]
+(defmethod check-item :argument-list
   "Bring the arguments into scope and type check."
+  [item scope]
   (let [args (partition 2 (rest item))]
     (when (not-empty args)
       (type-assert (distinct (map first args))
