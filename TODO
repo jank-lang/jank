@@ -1,3 +1,13 @@
+**** what's needed to make jank usable: ****
+
+codegen won't allow overloading
+  encode signatures in function names
+
+basic stdlib
+  persistent immutable data structures
+  higher-order functions
+
+** everything else **
 write the extra compilation args to a file
 
 better logging
@@ -11,9 +21,6 @@ passing first class overloaded declared functions
   implicitly wrap every function identifier in a lambda
     (λ (& args) (∀)
       (apply func args))
-
-codegen won't allow overloading
-  encode signatures in function names
 
 remove function-call from grammar; just use lists
   it becomes unhelpful with macros
