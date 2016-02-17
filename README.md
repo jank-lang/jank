@@ -333,5 +333,4 @@ For more information regarding how I use donations, see
 [here](http://jeaye.com/donate/).
 
 ## License
-jank is under the MIT open-source license.  
-See the `LICENSE` file or http://opensource.org/licenses/MIT
+jank is under a strict copyleft license; see the `LICENSE` file.
