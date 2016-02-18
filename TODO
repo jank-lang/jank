@@ -7,6 +7,9 @@ basic stdlib
   persistent immutable data structures
   higher-order functions
 
+read command-line arguments from a separate file
+  don't bothwe with the target macro yet
+
 ** everything else **
 write the extra compilation args to a file
 
