@@ -10,7 +10,7 @@ basic stdlib
 read command-line arguments from a separate file
   don't bother with the target macro yet
 
-** everything else **
+** everything else: **
 write the extra compilation args to a file
 
 better logging
