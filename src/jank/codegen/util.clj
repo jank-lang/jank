@@ -27,6 +27,12 @@
   (when (not-empty coll)
     (reduce #(str %1 " " %2) (map f coll))))
 
+(defn serialize-type
+  "Takes a type in the [:type [:identifier ...] ...] form and flattens it
+   into a string for use with name serialization."
+  [type]
+  (get-in type [1 1]))
+
 (defn serialize-binding-name
   "Takes a lambda binding definition and updates the name to reflect
    the type signature of the lambda. This is needed to work around the lack of
@@ -36,13 +42,12 @@
         args (second (nth item 2))
         arg-pairs (partition 2 (rest args))
         serialized-name (if (not-empty arg-pairs)
-                          (apply str name
-                                 "_gen"
+                          (apply str name "_gen"
                                  (reduce (fn [result pair]
-                                           (str result
-                                                "_"
-                                                ; TODO: serialize-type
-                                                (get-in (into [] pair) [1 1 1])))
+                                           (str result "_"
+                                                (-> pair
+                                                    second
+                                                    serialize-type)))
                                          ""
                                          arg-pairs))
                           (str name "_gen_nullary"))]
