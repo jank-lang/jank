@@ -53,6 +53,7 @@
 
 (defmethod codegen-impl :binding-definition [current]
   (str (codegen-impl (update-in current [0] (fn [_] :binding-type)))
+       ; TODO: Check for lambdas and serialize type into name
        (codegen-impl (second current)) ; Name
        "="
        (codegen-impl (nth current 2))))
