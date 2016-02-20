@@ -1,4 +1,6 @@
 (ns jank.codegen.util
+  (:require [jank.type.declaration :as declaration]
+            [jank.codegen.sanitize :as sanitize])
   (:use clojure.pprint))
 
 (defn swap-params
@@ -22,16 +24,26 @@
 
 (defn reduce-spaced-map
   "Maps f over coll and collects the results together in a
-   space-separated string"
-  [f coll]
-  (when (not-empty coll)
-    (reduce #(str %1 " " %2) (map f coll))))
+   delim-separated string. The delim defaults to a space."
+  ([f coll]
+   (reduce-spaced-map f coll " "))
+  ([f coll delim]
+   (when (not-empty coll)
+     (reduce #(str %1 delim %2) (map f coll)))))
 
 (defn serialize-type
   "Takes a type in the [:type [:identifier ...] ...] form and flattens it
    into a string for use with name serialization."
   [type]
-  (get-in type [1 1]))
+  (apply str
+         (map (comp sanitize/sanitize str)
+              (reduce
+                #(str %1 "_t" %2)
+                ""
+                (->> type
+                     flatten
+                     (filter (fn [x]
+                               (not-any? #(= x %) [:type :identifier]))))))))
 
 (defn serialize-binding-name
   "Takes a lambda binding definition and updates the name to reflect
@@ -42,9 +54,9 @@
         args (second (nth item 2))
         arg-pairs (partition 2 (rest args))
         serialized-name (if (not-empty arg-pairs)
-                          (apply str name "_gen"
+                          (apply str name
                                  (reduce (fn [result pair]
-                                           (str result "_"
+                                           (str result
                                                 (-> pair
                                                     second
                                                     serialize-type)))

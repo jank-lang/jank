@@ -9,7 +9,7 @@ namespace jank
 int main(int const argc, char ** const argv)
 try
 {
-  jank::_gen_pound_main();
+  jank::_gen_poundmain();
 }
 catch(std::exception const &e)
 { std::cout << "exception: " << e.what() << std::endl; }
