@@ -13,6 +13,8 @@ read command-line arguments from a separate file
 ** everything else: **
 write the extra compilation args to a file
 
+port to boot?
+
 better logging
   timbre (allows profiling, too)
 
