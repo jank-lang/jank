@@ -7,7 +7,7 @@
 (defn -main
   [& args]
   (-> {:cells (parse/parse
-                (if (not-any? #(= "--bare" %) args)
+                (when (not-any? #(= "--bare" %) args)
                   parse/prelude)
                 (slurp (first args)))}
       type/check
