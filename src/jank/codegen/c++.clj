@@ -51,10 +51,20 @@
       :else
       "auto const ")))
 
+(defmethod codegen-impl :binding-name [current]
+  (let [type (nth current 2)]
+    (cond
+      ; Lambda bindings contain type info in the name, to work around
+      ; the lack of overloading in the target
+      (= (first type) :lambda-definition)
+      (second (second (util/serialize-binding-name current)))
+
+      :else
+      name)))
+
 (defmethod codegen-impl :binding-definition [current]
   (str (codegen-impl (update-in current [0] (fn [_] :binding-type)))
-       ; TODO: Check for lambdas and serialize type into name
-       (codegen-impl (second current)) ; Name
+       (codegen-impl (update-in current [0] (fn [_] :binding-name))) ; Name
        "="
        (codegen-impl (nth current 2))))
 

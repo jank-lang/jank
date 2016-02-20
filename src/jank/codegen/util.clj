@@ -20,11 +20,33 @@
   [args]
   (clojure.string/join "," args))
 
-(defn reduce-spaced-map [f coll]
+(defn reduce-spaced-map
   "Maps f over coll and collects the results together in a
    space-separated string"
+  [f coll]
   (when (not-empty coll)
     (reduce #(str %1 " " %2) (map f coll))))
+
+(defn serialize-binding-name
+  "Takes a lambda binding definition and updates the name to reflect
+   the type signature of the lambda. This is needed to work around the lack of
+   overloading in certain targets. Returns the full lambda binding definition."
+  [item]
+  (let [name (second (second item))
+        args (second (nth item 2))
+        arg-pairs (partition 2 (rest args))
+        serialized-name (if (not-empty arg-pairs)
+                          (apply str name
+                                 "_gen"
+                                 (reduce (fn [result pair]
+                                           (str result
+                                                "_"
+                                                ; TODO: serialize-type
+                                                (get-in (into [] pair) [1 1 1])))
+                                         ""
+                                         arg-pairs))
+                          (str name "_gen_nullary"))]
+    (update-in item [1 1] (fn [_] serialized-name))))
 
 (defn end-statement
   "Ends a statement with a semi-colon. Empty statements are unchanged."
