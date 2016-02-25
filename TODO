@@ -6,6 +6,7 @@ codegen won't allow overloading
 basic stdlib
   persistent immutable data structures
   higher-order functions
+  generics are the big issue
 
 structs
   type declaration for struct
