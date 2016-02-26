@@ -1,0 +1,10 @@
+immutability
+  thread safety
+    improve load times and responsiveness
+
+  hacker detection
+    integrity checks of the previous game state
+    hashing can happen in parallel
+
+  easier serialization
+    the game state is a big, immutable, map
