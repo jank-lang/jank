@@ -8,3 +8,10 @@ immutability
 
   easier serialization
     the game state is a big, immutable, map
+
+c++
+  seamless integration with C and C++ libs
+
+  decades of optimization work already done
+
+  deterministic object lifetimes
