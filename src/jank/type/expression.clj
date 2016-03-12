@@ -23,6 +23,7 @@
 (defmethod realize-type :binding-definition [item scope]
   (type-assert "binding definitions are not expressions"))
 
+; TODO: Refactor out to call-signature function
 (defmethod realize-type :function-call [item scope]
   ; The value/name of the function might be a function call which returns a
   ; function or a lambda definition directly; we special case for identifiers
