@@ -9,22 +9,9 @@
   (fn [item scope]
     (first item)))
 
-(defmethod realize-type :lambda-definition [item scope]
-  (letfn [(remove-identifiers [item]
-            (filter #(not= :identifier (first %)) item))]
-    (declaration/shorten-types
-      (list "ƒ"
-            [:specialization-list
-             (into [:specialization-list]
-                   (remove-identifiers (rest (nth item 1))))
-             (into [:specialization-list]
-                   (remove-identifiers (rest (nth item 2))))]))))
-
-(defmethod realize-type :binding-definition [item scope]
-  (type-assert "binding definitions are not expressions"))
-
-; TODO: Refactor out to call-signature function
-(defmethod realize-type :function-call [item scope]
+(defn call-signature
+  "TODO"
+  [item scope]
   ; The value/name of the function might be a function call which returns a
   ; function or a lambda definition directly; we special case for identifiers
   ; so we can lookup overloads. Otherwise, we use the function directly.
@@ -40,19 +27,19 @@
     (type-assert (every? (comp declaration/function? :type) overloads)
                  (str "not a function " func-name))
 
-    ; Test all overloads; matches comes back as a vector of the return types
+    ; Test all overloads; matches comes back as a vector of declarations
     ; for the matched functions.
     (let [matches (reduce
                     (fn [matched func]
                       (let [generics (second (:type func))
-                            expected-types (apply list (rest (second generics)))
-                            return-types (rest (nth generics 2))]
+                            expected-types (apply list (rest (second generics)))]
                         ; TODO: Allow comparison of overload superpositions
                         (if (= arg-types expected-types)
-                          (conj matched return-types)
+                          (conj matched func)
                           matched)))
                     []
                     overloads)]
+      (pprint (list "matches" matches))
       (type-assert (not-empty matches)
                    (str "no matching function call to " func-name
                         " with argument types " arg-types
@@ -61,13 +48,33 @@
                    (str "ambiguous function call to " func-name
                         " with argument types " arg-types
                         " expected one of " overloads))
-      (type-assert (not (declaration/auto? (ffirst matches)))
-                   (str "call to function " func-name
-                        " before its type is deduced"))
 
-      (when-not (empty? (first matches))
-        (declaration/shorten-types
-          (ffirst matches))))))
+      (let [match (:type (first matches))
+            generics (second match)
+            return-types (rest (nth generics 2))]
+        (type-assert (not (declaration/auto? (first return-types)))
+                     (str "call to function " func-name
+                          " before its type is deduced"))
+        match))))
+
+(defmethod realize-type :lambda-definition [item scope]
+  (letfn [(remove-identifiers [item]
+            (filter #(not= :identifier (first %)) item))]
+    (declaration/shorten-types
+      (list "ƒ"
+            [:specialization-list
+             (into [:specialization-list]
+                   (remove-identifiers (rest (nth item 1))))
+             (into [:specialization-list]
+                   (remove-identifiers (rest (nth item 2))))]))))
+
+(defmethod realize-type :binding-definition [item scope]
+  (type-assert "binding definitions are not expressions"))
+
+(defmethod realize-type :function-call [item scope]
+  (let [signature (call-signature item scope)
+        return-type (second (nth (second signature) 2))]
+    (declaration/shorten-types return-type)))
 
 (defmethod realize-type :if-expression [item scope]
   (type-assert (some #(and (vector? %) (= (first %) :else)) item)
