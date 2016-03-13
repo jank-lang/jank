@@ -10,7 +10,7 @@
     (first item)))
 
 (defn call-signature
-  "TODO"
+  "Calculates the shortened signature of a given function call."
   [item scope]
   ; The value/name of the function might be a function call which returns a
   ; function or a lambda definition directly; we special case for identifiers
