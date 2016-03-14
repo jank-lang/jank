@@ -98,7 +98,9 @@
                                (map #(return/add-parameter-returns % new-scope)
                                     checked-args))
             signature (expression/call-signature checked-item new-scope)]
-        (list (conj checked-item signature) new-scope))
+        ;(list (conj checked-item signature) new-scope))
+        ; TODO: mangling
+        (list checked-item new-scope))
       (let [[checked-arg checked-scope] (check-item (first args) new-scope)]
         (recur (rest args)
                (conj checked-args checked-arg)

@@ -57,7 +57,8 @@
       ; Lambda bindings contain type info in the name, to work around
       ; the lack of overloading in the target
       (= (first type) :lambda-definition)
-      (second (second (util/serialize-binding-name current)))
+      ;(second (second (util/serialize-binding-name current)))
+      (second (second current)) ; TODO: mangling
 
       :else
       name)))
@@ -69,9 +70,9 @@
        (codegen-impl (nth current 2))))
 
 (defmethod codegen-impl :function-call [current]
-  (str (util/serialize-function-call
+  (str ;(util/serialize-function-call ; TODO: mangling
          (codegen-impl (second current)) ; Name
-         (nth current 3)) ; Signature
+         ;(nth current 3)) ; Signature
        "("
        (util/comma-separate-args
          (map codegen-impl (butlast (drop 2 current))))
