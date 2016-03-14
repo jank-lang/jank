@@ -43,7 +43,10 @@
                 (->> type
                      flatten
                      (filter (fn [x]
-                               (not-any? #(= x %) [:type :identifier]))))))))
+                               (not-any? #(= x %)
+                                         [:type
+                                          :identifier
+                                          :specialization-list]))))))))
 
 (defn serialize-binding-name
   "Takes a lambda binding definition and updates the name to reflect
@@ -64,6 +67,11 @@
                                          arg-pairs))
                           (str name "_gen_nullary"))]
     (update-in item [1 1] (fn [_] serialized-name))))
+
+(defn serialize-function-call
+  "TODO"
+  [function-name signature]
+  (str function-name (serialize-type (second (second signature)))))
 
 (defn end-statement
   "Ends a statement with a semi-colon. Empty statements are unchanged."

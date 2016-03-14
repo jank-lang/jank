@@ -39,7 +39,6 @@
                           matched)))
                     []
                     overloads)]
-      (pprint (list "matches" matches))
       (type-assert (not-empty matches)
                    (str "no matching function call to " func-name
                         " with argument types " arg-types

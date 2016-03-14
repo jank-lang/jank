@@ -69,9 +69,12 @@
        (codegen-impl (nth current 2))))
 
 (defmethod codegen-impl :function-call [current]
-  (str (codegen-impl (second current)) ; Name
+  (str (util/serialize-function-call
+         (codegen-impl (second current)) ; Name
+         (nth current 3)) ; Signature
        "("
-       (util/comma-separate-args (map codegen-impl (drop 2 current))) ; Args
+       (util/comma-separate-args
+         (map codegen-impl (butlast (drop 2 current))))
        ")"))
 
 (defmethod codegen-impl :argument-list [current]

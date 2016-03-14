@@ -95,9 +95,9 @@
       (let [checked-item (into [(first item)
                                 (first (check-item (second item) scope))]
                                (map #(return/add-parameter-returns % new-scope)
-                                    checked-args))]
-        (expression/realize-type checked-item new-scope)
-        (list checked-item new-scope))
+                                    checked-args))
+            signature (expression/call-signature checked-item new-scope)]
+        (list (conj checked-item signature) new-scope))
       (let [[checked-arg checked-scope] (check-item (first args) new-scope)]
         (recur (rest args)
                (conj checked-args checked-arg)
