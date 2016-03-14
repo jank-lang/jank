@@ -88,6 +88,7 @@
 ; function type.
 (defmethod check-item :function-call
   [item scope]
+  ; TODO: Should be refactored into a reduce
   (loop [args (drop 2 item)
          checked-args []
          new-scope scope]
