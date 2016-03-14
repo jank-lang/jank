@@ -4,6 +4,7 @@ codegen won't allow overloading
   encode signatures in function names
     [x] function definitions in codegen
     [ ] send function call types to codegen
+    [ ] don't do it for foriegn functions (without impl)
 
 basic stdlib
   persistent immutable data structures
