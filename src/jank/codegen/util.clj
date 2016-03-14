@@ -31,6 +31,7 @@
    (when (not-empty coll)
      (reduce #(str %1 delim %2) (map f coll)))))
 
+; TODO: Rename to mangle
 (defn serialize-type
   "Takes a type in the [:type [:identifier ...] ...] form and flattens it
    into a string for use with name serialization."
