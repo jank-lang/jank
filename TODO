@@ -1,7 +1,7 @@
 **** what's needed to make jank usable: ****
 
 adopt core.typed
-  switch to a record-based api
+  switch to a map-based api first
 
 codegen won't allow overloading
   encode signatures in function names
