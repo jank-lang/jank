@@ -17,8 +17,17 @@
   (let [base {:kind :declare-statement
               :type (last args)}
         size (count args)]
-    (if (= 2 size) ; Has identifier and type
+    (if (= 2 size) ; Has identifier (declaring a binding)
       (assoc base :name (first args))
+      base)))
+
+(defn transform-bind [& args]
+  (let [base {:kind :binding-definition
+              :name (first args)
+              :value (last args)}
+        size (count args)]
+    (if (= 3 size) ; Has type
+      (assoc base :type (second args))
       base)))
 
 (defn parse
@@ -39,9 +48,9 @@
                        :identifier (partial transform-single :identifier)
                        :keyword (partial transform-single :keyword)
                        :declare-statement transform-declare
+                       :binding-definition transform-bind
                        ;:lambda-definition pass
                        ;:macro-definition pass
-                       ;:binding-definition pass
                        ;:if-expression pass
                        ;:function-call pass
                        }
