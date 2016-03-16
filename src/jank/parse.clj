@@ -47,6 +47,7 @@
                        :boolean (partial transform-single :boolean)
                        :identifier (partial transform-single :identifier)
                        :keyword (partial transform-single :keyword)
+                       :type (partial transform-single :type)
                        :declare-statement transform-declare
                        :binding-definition transform-bind
                        ;:lambda-definition pass
