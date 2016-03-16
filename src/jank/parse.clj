@@ -32,6 +32,7 @@
                    "invalid syntax\n" error)
      (pprint parsed)
      (pprint
+       ; TODO: Convert numbers from strings
      (insta/transform {:integer (partial transform-single :integer)
                        :real (partial transform-single :real)
                        :boolean (partial transform-single :boolean)
