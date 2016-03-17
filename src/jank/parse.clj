@@ -30,6 +30,11 @@
       (assoc base :type (second args))
       base)))
 
+(defn transform-function-call [& args]
+  {:kind :function-call
+   :name (first args)
+   :arguments (rest args)})
+
 (defn parse
   "Runs the provided resource file through instaparse. Returns
    then generated syntax tree."
@@ -50,10 +55,10 @@
                        :type (partial transform-single :type)
                        :declare-statement transform-declare
                        :binding-definition transform-bind
+                       :function-call transform-function-call
                        ;:lambda-definition pass
                        ;:macro-definition pass
                        ;:if-expression pass
-                       ;:function-call pass
                        }
                       parsed)
        )
