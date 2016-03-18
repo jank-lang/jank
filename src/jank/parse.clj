@@ -13,6 +13,17 @@
 (defn transform-single [kind value]
   {:kind kind :value value})
 
+(defn transform-identifier [& args]
+  (let [base {:kind :identifier
+              :name (first args)}]
+    (if (= 1 (count args))
+      base
+      (assoc base :generics (second args)))))
+
+(defn transform-specialization-list [& args]
+  {:kind :specialization-list
+   :values args})
+
 (defn transform-declare [& args]
   (let [base {:kind :declare-statement
               :type (last args)}
@@ -72,9 +83,10 @@
      (insta/transform {:integer (partial transform-single :integer)
                        :real (partial transform-single :real)
                        :boolean (partial transform-single :boolean)
-                       :identifier (partial transform-single :identifier)
                        :keyword (partial transform-single :keyword)
                        :type (partial transform-single :type)
+                       :identifier transform-identifier
+                       :specialization-list transform-specialization-list
                        :declare-statement transform-declare
                        :binding-definition transform-bind
                        :function-call transform-function-call
