@@ -13,60 +13,60 @@
 (defn transform-single [kind value]
   {:kind kind :value value})
 
-(defn transform-identifier [& args]
+(defn transform-identifier [& more]
   (let [base {:kind :identifier
-              :name (first args)}]
-    (if (= 1 (count args))
+              :name (first more)}]
+    (if (= 1 (count more))
       base
-      (assoc base :generics (second args)))))
+      (assoc base :generics (second more)))))
 
-(defn transform-specialization-list [& args]
+(defn transform-specialization-list [& more]
   {:kind :specialization-list
-   :values args})
+   :values more})
 
-(defn transform-declare [& args]
+(defn transform-declare [& more]
   (let [base {:kind :declare-statement
-              :type (last args)}
-        size (count args)]
+              :type (last more)}
+        size (count more)]
     (if (= 2 size) ; Has identifier (declaring a binding)
-      (assoc base :name (first args))
+      (assoc base :name (first more))
       base)))
 
-(defn transform-bind [& args]
+(defn transform-bind [& more]
   (let [base {:kind :binding-definition
-              :name (first args)
-              :value (last args)}
-        size (count args)]
+              :name (first more)
+              :value (last more)}
+        size (count more)]
     (if (= 3 size) ; Has type
-      (assoc base :type (second args))
+      (assoc base :type (second more))
       base)))
 
-(defn transform-function-call [& args]
+(defn transform-function-call [& more]
   {:kind :function-call
-   :name (first args)
-   :arguments (rest args)})
+   :name (first more)
+   :arguments (rest more)})
 
-(defn transform-lambda-definition [& args]
+(defn transform-lambda-definition [& more]
   {:kind :lambda-definition
-   :arguments (first args)
-   :return (second args)
-   :body (drop 2 args)})
+   :arguments (first more)
+   :return (second more)
+   :body (drop 2 more)})
 
-(defn transform-argument-list [& args]
+(defn transform-argument-list [& more]
   {:kind :argument-list
-   :values args})
+   :values more})
 
-(defn transform-return-list [& args]
+(defn transform-return-list [& more]
   {:kind :return-list
-   :values args})
+   :values more})
 
-(defn transform-if-expression [& args]
+(defn transform-if-expression [& more]
   (let [base {:kind :if-expression
-              :condition (first args)
-              :then (second args)}]
-    (if (= 2 (count args))
+              :condition (first more)
+              :then (second more)}]
+    (if (= 2 (count more))
       base
-      (assoc base :else (nth args 2)))))
+      (assoc base :else (nth more 2)))))
 
 (defn parse
   "Runs the provided resource file through instaparse. Returns
