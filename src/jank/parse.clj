@@ -45,6 +45,10 @@
   {:kind :argument-list
    :values args})
 
+(defn transform-return-list [& args]
+  {:kind :return-list
+   :values args})
+
 (defn transform-if-expression [& args]
   (let [base {:kind :if-expression
               :condition (first args)
@@ -76,6 +80,7 @@
                        :function-call transform-function-call
                        :lambda-definition transform-lambda-definition
                        :argument-list transform-argument-list
+                       :return-list transform-return-list
                        :if-expression transform-if-expression
                        ;:macro-definition pass
                        }
