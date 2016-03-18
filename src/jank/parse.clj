@@ -42,6 +42,14 @@
    :return (second args)
    :body (drop 2 args)})
 
+(defn transform-if-expression [& args]
+  (let [base {:kind :if-expression
+              :condition (first args)
+              :then (second args)}]
+    (if (= 2 (count args))
+      base
+      (assoc base :else (nth args 2)))))
+
 (defn parse
   "Runs the provided resource file through instaparse. Returns
    then generated syntax tree."
@@ -64,8 +72,8 @@
                        :binding-definition transform-bind
                        :function-call transform-function-call
                        :lambda-definition transform-lambda-definition
+                       :if-expression transform-if-expression
                        ;:macro-definition pass
-                       ;:if-expression pass
                        }
                       parsed)
        )
