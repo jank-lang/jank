@@ -36,11 +36,14 @@
    :arguments (rest args)})
 
 (defn transform-lambda-definition [& args]
-  (pprint args)
   {:kind :lambda-definition
    :arguments (first args)
    :return (second args)
    :body (drop 2 args)})
+
+(defn transform-argument-list [& args]
+  {:kind :argument-list
+   :values args})
 
 (defn transform-if-expression [& args]
   (let [base {:kind :if-expression
@@ -72,6 +75,7 @@
                        :binding-definition transform-bind
                        :function-call transform-function-call
                        :lambda-definition transform-lambda-definition
+                       :argument-list transform-argument-list
                        :if-expression transform-if-expression
                        ;:macro-definition pass
                        }
