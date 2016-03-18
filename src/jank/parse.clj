@@ -35,6 +35,13 @@
    :name (first args)
    :arguments (rest args)})
 
+(defn transform-lambda-definition [& args]
+  (pprint args)
+  {:kind :lambda-definition
+   :arguments (first args)
+   :return (second args)
+   :body (drop 2 args)})
+
 (defn parse
   "Runs the provided resource file through instaparse. Returns
    then generated syntax tree."
@@ -56,7 +63,7 @@
                        :declare-statement transform-declare
                        :binding-definition transform-bind
                        :function-call transform-function-call
-                       ;:lambda-definition pass
+                       :lambda-definition transform-lambda-definition
                        ;:macro-definition pass
                        ;:if-expression pass
                        }
