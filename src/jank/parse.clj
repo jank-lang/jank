@@ -17,27 +17,25 @@
   ([resource] (parse prelude resource))
   ([pre resource]
    (let [parsed (parser (str pre resource))
-         error (pr-str (insta/get-failure parsed))]
-     (parse-assert (not (insta/failure? parsed))
-                   "invalid syntax\n" error)
+         error (pr-str (insta/get-failure parsed))
+         _ (parse-assert (not (insta/failure? parsed))
+                         "invalid syntax\n" error)
+         transformed (insta/transform
+                       {:integer (partial transform/read-single :integer)
+                        :real (partial transform/read-single :real)
+                        :boolean (partial transform/read-single :boolean)
+                        :keyword (partial transform/single :keyword)
+                        :type (partial transform/single :type)
+                        :identifier transform/identifier
+                        :specialization-list transform/specialization-list
+                        :declare-statement transform/declare-statement
+                        :binding-definition transform/binding-definition
+                        :function-call transform/function-call
+                        :lambda-definition transform/lambda-definition
+                        :argument-list transform/argument-list
+                        :return-list transform/return-list
+                        :if-expression transform/if-expression}
+                       parsed)]
      (pprint parsed)
-     (pprint
-     (insta/transform {:integer (partial transform/read-single :integer)
-                       :real (partial transform/read-single :real)
-                       :boolean (partial transform/read-single :boolean)
-                       :keyword (partial transform/single :keyword)
-                       :type (partial transform/single :type)
-                       :identifier transform/identifier
-                       :specialization-list transform/specialization-list
-                       :declare-statement transform/declare-statement
-                       :binding-definition transform/binding-definition
-                       :function-call transform/function-call
-                       :lambda-definition transform/lambda-definition
-                       :argument-list transform/argument-list
-                       :return-list transform/return-list
-                       :if-expression transform/if-expression
-                       ;:macro-definition pass
-                       }
-                      parsed)
-       )
+     (pprint transformed)
      parsed)))
