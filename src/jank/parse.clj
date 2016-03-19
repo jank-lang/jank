@@ -26,6 +26,8 @@
                         :boolean (partial transform/read-single :boolean)
                         :keyword (partial transform/single :keyword)
                         :type (partial transform/single :type)
+                        :then (partial transform/single :then)
+                        :else (partial transform/single :else)
                         :identifier transform/identifier
                         :specialization-list transform/specialization-list
                         :declare-statement transform/declare-statement
