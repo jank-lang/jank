@@ -147,6 +147,7 @@
                :scope scope))
       (assoc item :scope scope))))
 
+; TODO: migrate
 (defmethod check-item :if-expression
   [item scope]
   (let [cond-type (expression/realize-type (second (:condition item)) scope)]
