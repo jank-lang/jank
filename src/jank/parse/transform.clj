@@ -5,6 +5,9 @@
 (defn single [kind value]
   {:kind kind :value value})
 
+(defn read-single [kind value]
+  {:kind kind :value (read-string value)})
+
 (defn identifier [& more]
   (let [base {:kind :identifier
               :name (first more)}]

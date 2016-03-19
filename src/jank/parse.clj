@@ -23,9 +23,9 @@
      (pprint parsed)
      (pprint
        ; TODO: Convert numbers from strings
-     (insta/transform {:integer (partial transform/single :integer)
-                       :real (partial transform/single :real)
-                       :boolean (partial transform/single :boolean)
+     (insta/transform {:integer (partial transform/read-single :integer)
+                       :real (partial transform/read-single :real)
+                       :boolean (partial transform/read-single :boolean)
                        :keyword (partial transform/single :keyword)
                        :type (partial transform/single :type)
                        :identifier transform/identifier
