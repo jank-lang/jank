@@ -3,17 +3,10 @@
         clojure.pprint
         jank.assert))
 
+; TODO: Remove; no longer does anything
 (defn shorten-types
-  "Walks through the decl and replaces all [:type ...] instances with
-   their shorter type names. Example: [:type [:identifier \"string\"]]
-   becomes (\"string\")"
   [item]
-  (postwalk
-    (fn [x]
-      (if (and (vector? x) (= :type (first x)))
-        (rest (second x))
-        x))
-    item))
+  item)
 
 (defn function?
   "Returns whether or not the provided type is that of a function."
@@ -110,9 +103,10 @@
         found
         (recur (:parent current-scope))))))
 
+; XXX: migrated
 (defmulti add-to-scope
   (fn [item scope]
-    (let [kind (first (second item))]
+    (let [kind (:kind item)]
       (cond
         (= :type kind)
         :type-declaration
@@ -121,17 +115,20 @@
         (= :implicit-declaration kind)
         :implicit-declaration
         :else
-        (type-assert false (str "invalid binding " item))))))
+        (type-assert false (str "invalid declaration " item))))))
 
 ; Adds the opaque type declaration to the scope.
 ; Returns the updated scope.
-(defmethod add-to-scope :type-declaration [item scope]
-  (let [decl-name (first (shorten-types (rest item)))]
+; XXX: migrated
+(defmethod add-to-scope :type-declaration
+  [item scope]
+  (let [decl-name (shorten-types (:type item))]
     (update scope :type-declarations conj decl-name)))
 
 ; Finds, validates, and adds the provided declaration into the scope.
 ; Returns the updated scope.
-(defmethod add-to-scope :binding-declaration [item scope]
+(defmethod add-to-scope :binding-declaration
+  [item scope]
   (let [shortened (shorten-types item)
         decl-name (get-in shortened [1 1])
         decl-type (get-in shortened [2])

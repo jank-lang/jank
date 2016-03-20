@@ -34,21 +34,23 @@
    ;(pprint (list "parsed:" parsed))
    (loop [item (first (:cells parsed))
           remaining (rest (:cells parsed))
-          checked []
+          checked-cells []
           scope parent-scope]
      ;(pprint (list "scope:" scope))
      (if (nil? item)
-       (assoc checked :scope scope)
+       (assoc parsed
+              :cells checked-cells
+              :scope scope)
        (let [checked-item (check-item item scope)]
          (recur (first remaining)
                 (rest remaining)
-                (conj checked checked-item)
+                (conj checked-cells checked-item)
                 (:scope checked-item)))))))
 
 ; XXX: migrated
 (defmethod check-item :declare-statement
   [item scope]
-  (assoc item :scope (declaration/add-to-scope item scope)))
+  (assoc item :scope (declaration/add-to-scope (:type item) scope)))
 
 ; XXX: migrated
 (defmethod check-item :lambda-definition
