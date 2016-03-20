@@ -47,10 +47,10 @@
                 (conj checked-cells checked-item)
                 (:scope checked-item)))))))
 
-; XXX: migrated
+; XXX: migrated | tested
 (defmethod check-item :declare-statement
   [item scope]
-  (assoc item :scope (declaration/add-to-scope (:type item) scope)))
+  (assoc item :scope (declaration/add-to-scope item scope)))
 
 ; XXX: migrated
 (defmethod check-item :lambda-definition

@@ -11,12 +11,13 @@
 (defn function?
   "Returns whether or not the provided type is that of a function."
   [decl-type]
-  (= "ƒ" (first decl-type)))
+  (= "ƒ" (:name (:value decl-type))))
 
 (defn auto?
   "Returns whether or not the provided type is to be deduced."
   [decl-type]
-  (or (= "∀" (first decl-type)) (= "auto" (first decl-type))))
+  (let [type-name (:name (:value decl-type))]
+    (or (= "∀" type-name) (= "auto" type-name))))
 
 (defn lookup-overloads
   "Recursively looks through the hierarchy of scopes for the declaration.
@@ -46,7 +47,7 @@
    declaration has a matching type. Returns the decl or nil, if none is found."
   [decl-name decl-type scope]
   (let [decl (lookup decl-name scope)
-        wrapped-type {:type decl-type}]
+        wrapped-type decl-type]
     (when (some? decl)
       (let [expected-types (second decl)]
         ; All binding declarations must be the same type unless they're for
@@ -54,9 +55,9 @@
         ; The only exception is matching an auto declaration against a complete
         ; type.
         (type-assert (or (some #(= wrapped-type %) expected-types)
-                         (some (comp auto? :type) expected-types)
-                         (and (function? (:type wrapped-type))
-                              (every? (comp function? :type) expected-types)))
+                         (some auto? expected-types)
+                         (and (function? wrapped-type)
+                              (every? function? expected-types)))
                      (str "declaration of "
                           decl-name
                           " as "
@@ -106,32 +107,25 @@
 ; XXX: migrated
 (defmulti add-to-scope
   (fn [item scope]
-    (let [kind (:kind item)]
-      (cond
-        (= :type kind)
-        :type-declaration
-        (= :identifier kind)
+    (let [valid-kind (contains? item :type)]
+      (type-assert valid-kind (str "invalid declaration " item))
+      (if (contains? item :name)
         :binding-declaration
-        (= :implicit-declaration kind)
-        :implicit-declaration
-        :else
-        (type-assert false (str "invalid declaration " item))))))
+        :type-declaration))))
 
 ; Adds the opaque type declaration to the scope.
 ; Returns the updated scope.
-; XXX: migrated
+; XXX: migrated | tested
 (defmethod add-to-scope :type-declaration
   [item scope]
-  (let [decl-name (shorten-types (:type item))]
-    (update scope :type-declarations conj decl-name)))
+  (update scope :type-declarations conj (:type item)))
 
 ; Finds, validates, and adds the provided declaration into the scope.
 ; Returns the updated scope.
 (defmethod add-to-scope :binding-declaration
   [item scope]
-  (let [shortened (shorten-types item)
-        decl-name (get-in shortened [1 1])
-        decl-type (get-in shortened [2])
+  (let [decl-name (:name (:name item))
+        decl-type (:type item)
         found-decl (validate decl-name decl-type scope)
         found-type (lookup-type decl-type scope)]
     (type-assert (some? found-type) (str "unknown type " decl-type))
@@ -139,10 +133,11 @@
     (cond
       ; If we're seeing this binding for the first time
       (nil? found-decl)
-      (update scope :binding-declarations assoc decl-name [{:type decl-type}])
+      (update scope :binding-declarations assoc decl-name [decl-type])
 
       ; If we're adding an overload
-      (and (= -1 (.indexOf (second found-decl) {:type decl-type}))
+      ; TODO: Use a set
+      (and (= -1 (.indexOf (second found-decl) decl-type))
            (function? decl-type))
       ; First remove any matching overloads with auto return types. This allows
       ; defined functions to replace previous declarations where the return
@@ -152,11 +147,11 @@
                                     (partial
                                       remove
                                       #(= (second (second decl-type))
-                                          (second (second (:type %))))))]
+                                          (second (second %)))))]
         (update-in without-auto
                    [:binding-declarations decl-name]
                    conj
-                   {:type decl-type}))
+                   decl-type))
 
       ; Multiple declaration; nothing changes
       :else
