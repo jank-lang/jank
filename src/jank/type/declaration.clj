@@ -122,6 +122,7 @@
 
 ; Finds, validates, and adds the provided declaration into the scope.
 ; Returns the updated scope.
+; XXX: migrated | tested
 (defmethod add-to-scope :binding-declaration
   [item scope]
   (let [decl-name (:name (:name item))
