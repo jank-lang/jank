@@ -4,14 +4,15 @@
   (:use clojure.pprint
         jank.assert))
 
+; XXX: migrated
 (defn match-overload
   "Looks through all overloads for one matching the provided type. Functions
    can't be overloaded by only return types. Returns a list of indices into
    the overloads sequence representing each match."
   [item-type overloads]
   (keep-indexed
-    #(when (= (second (second (:type %2)))
-              (second (second item-type)))
+    #(when (= (-> %2 :value :generics :values first)
+              (-> item-type :value :generics :values first))
        %1)
     overloads))
 
