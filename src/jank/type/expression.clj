@@ -3,11 +3,12 @@
   (:use clojure.pprint
         jank.assert))
 
+; XXX: migrated
 (defmulti realize-type
   "Calculates the type of the expression. All sub-expressions must be
    recursively realized."
   (fn [item scope]
-    (first item)))
+    (:kind item)))
 
 (defn call-signature
   "Calculates the shortened signature of a given function call."
@@ -56,7 +57,8 @@
                           " before its type is deduced"))
         match))))
 
-(defmethod realize-type :lambda-definition [item scope]
+(defmethod realize-type :lambda-definition
+  [item scope]
   (letfn [(remove-identifiers [item]
             (filter #(not= :identifier (first %)) item))]
     (declaration/shorten-types
@@ -67,15 +69,18 @@
              (into [:specialization-list]
                    (remove-identifiers (rest (nth item 2))))]))))
 
-(defmethod realize-type :binding-definition [item scope]
+(defmethod realize-type :binding-definition
+  [item scope]
   (type-assert "binding definitions are not expressions"))
 
-(defmethod realize-type :function-call [item scope]
+(defmethod realize-type :function-call
+  [item scope]
   (let [signature (call-signature item scope)
         return-type (second (nth (second signature) 2))]
     (declaration/shorten-types return-type)))
 
-(defmethod realize-type :if-expression [item scope]
+(defmethod realize-type :if-expression
+  [item scope]
   (type-assert (some #(and (vector? %) (= (first %) :else)) item)
                "no else statement")
   (let [then-type (realize-type (second (nth item 2)) scope)
@@ -84,11 +89,13 @@
                      "incompatible if then/else types")
     (declaration/shorten-types then-type)))
 
-(defmethod realize-type :list [item scope]
+(defmethod realize-type :list
+  [item scope]
   ; TODO
   (not-yet-implemented type-assert false "list type realization"))
 
-(defmethod realize-type :identifier [item scope]
+(defmethod realize-type :identifier
+  [item scope]
   (let [ident (second item)
         decl (declaration/lookup ident scope)]
     (type-assert (some? decl) (str "unknown binding " ident))
@@ -99,18 +106,24 @@
         (realize-type (update-in item [0] (fn [_] :function-identifier)) scope)
         first-decl))))
 
-(defmethod realize-type :function-identifier [item scope]
+(defmethod realize-type :function-identifier
+  [item scope]
   ; TODO: Wrap in generic variadic lambda
   (not-yet-implemented type-assert false "function identifiers"))
 
-(defmethod realize-type :return [item scope]
+(defmethod realize-type :return
+  [item scope]
   ; Realize that which is being returned
   (realize-type (second item) scope))
 
 ; Handles integer, string, etc
-(defmethod realize-type :default [item scope]
-  (declaration/shorten-types (-> item first name symbol str list)))
+(defmethod realize-type :default
+  [item scope]
+  (pprint item)
+  {:kind :type
+   :value (declaration/shorten-types (-> item :kind name symbol str))})
 
 ; Empty bodies will realize to nil
-(defmethod realize-type nil [item scope]
+(defmethod realize-type nil
+  [item scope]
   nil)

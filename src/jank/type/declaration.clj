@@ -67,21 +67,21 @@
     decl))
 
 (defmulti lookup-type
-  "Recursively looks through the hierarchy of scopes for the declaration.
-   Expects the *shortened* type. See shorten-types."
+  "Recursively looks through the hierarchy of scopes for the declaration."
   (fn [decl-type scope]
-    (let [name (first decl-type)]
-      (cond
-        (or (= "ƒ" name) (= "function" name))
-        :function
-        (or (= "∀" name) (= "auto" name))
-        :auto
-        :else
-        :default))))
+    (cond
+      (function? decl-type)
+      :function
+      (auto? decl-type)
+      :auto
+      :else
+      :default)))
 
-(defmethod lookup-type :function [decl-type scope]
+(defmethod lookup-type :function
+  [decl-type scope]
+  (pprint (list "lookup-type" decl-type))
   ; Function types always "exist" as long as they're well-formed
-  (let [generics (second decl-type)]
+  (let [generics (:generics (:value decl-type))]
     (type-assert (= (count generics) 3) "invalid function type format")
     (when (> (count (second generics)) 1)
       (type-assert (some? (lookup-type (second (second generics)) scope))
@@ -91,12 +91,16 @@
                    "invalid function return type"))
     decl-type))
 
-(defmethod lookup-type :auto [decl-type scope]
-  (list "auto"))
+(defmethod lookup-type :auto
+  [decl-type scope]
+  {:kind :type
+   :value {:kind :identifier
+           :value "auto"}})
 
-; Recursively looks up a type by name. Expects the *shortened* type.
+; Recursively looks up a type by name.
 ; Returns the type, if found, or nil.
-(defmethod lookup-type :default [decl-type scope]
+(defmethod lookup-type :default
+  [decl-type scope]
   (loop [current-scope scope]
     ; TODO: Handle generic types properly
     (when current-scope

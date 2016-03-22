@@ -83,7 +83,7 @@
                       ; themselves.
                       (if (= :lambda-definition (:kind value))
                         (declaration/add-to-scope
-                          [:bind (:name item) value-type]
+                          (assoc item :type value-type)
                           scope)
                         scope))]
     (assoc item

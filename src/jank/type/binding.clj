@@ -28,19 +28,19 @@
 (defn add-to-scope [item scope]
   "Adds the binding to the scope and performs type checking on the
    initial value. Returns the updated scope."
-  (let [item-name (second (second item))
+  (let [item-name (:value (:name item))
         overloads (lookup item-name scope)
-        has-type (= 4 (count item))
-        item-type (expression/realize-type (last item) scope)
+        has-type (contains? item :type)
+        item-type (expression/realize-type (:value item) scope)
         expected-type (if has-type
-                        (declaration/lookup-type
-                          (declaration/shorten-types (nth item 2))
-                          scope)
+                        (declaration/lookup-type (:type item) scope)
                         item-type)
         function (declaration/function? item-type)
         overload-matches (if function
                            (match-overload item-type (second overloads))
                            nil)]
+    (pprint (list "item-type" item-type))
+    (pprint (list "expected-type" expected-type))
     (type-assert (or (nil? overloads)
                      (and function (empty? overload-matches)))
                  (str "binding already exists " item-name))
