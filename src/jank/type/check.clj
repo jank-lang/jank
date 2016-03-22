@@ -165,22 +165,22 @@
         (assoc item :scope scope)))))
 
 (defmethod check-item :list [item scope]
-  item)
+  (assoc item :scope scope))
 
 (defmethod check-item :string [item scope]
-  item)
+  (assoc item :scope scope))
 
 (defmethod check-item :integer [item scope]
-  item)
+  (assoc item :scope scope))
 
 (defmethod check-item :real [item scope]
-  item)
+  (assoc item :scope scope))
 
 (defmethod check-item :boolean [item scope]
-  item)
+  (assoc item :scope scope))
 
 (defmethod check-item :identifier [item scope]
-  item)
+  (assoc item :scope scope))
 
 (defmethod check-item :default [item scope]
   (type-assert false (str "no type checking for '" item "'")))

@@ -79,7 +79,6 @@
 
 (defmethod lookup-type :function
   [decl-type scope]
-  (pprint (list "lookup-type" decl-type))
   ; Function types always "exist" as long as they're well-formed
   (let [generics (:generics (:value decl-type))]
     (type-assert (= (count generics) 3) "invalid function type format")

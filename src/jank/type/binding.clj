@@ -39,8 +39,6 @@
         overload-matches (if function
                            (match-overload item-type (second overloads))
                            nil)]
-    (pprint (list "item-type" item-type))
-    (pprint (list "expected-type" expected-type))
     (type-assert (or (nil? overloads)
                      (and function (empty? overload-matches)))
                  (str "binding already exists " item-name))
@@ -51,14 +49,15 @@
                       item-type))
 
     (let [scope-with-decl (declaration/add-to-scope
-                            [:declare-statement
-                             [:identifier item-name]
-                             item-type]
+                            {:kind :declare-statement
+                             :value {:kind :identifier
+                                     :name item-name}
+                             :type item-type}
                             scope)]
       (if (nil? overloads)
         (update
           scope-with-decl
-          :binding-definitions assoc item-name [{:type item-type}])
+          :binding-definitions assoc item-name [item-type])
         (update-in
           scope-with-decl
-          [:binding-definitions item-name] conj {:type item-type})))))
+          [:binding-definitions item-name] conj item-type)))))

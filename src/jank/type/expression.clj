@@ -119,9 +119,10 @@
 ; Handles integer, string, etc
 (defmethod realize-type :default
   [item scope]
-  (pprint item)
   {:kind :type
-   :value (declaration/shorten-types (-> item :kind name symbol str))})
+   :value {:kind :identifier
+           :name (declaration/shorten-types
+                   (-> item :kind name symbol str))}})
 
 ; Empty bodies will realize to nil
 (defmethod realize-type nil
