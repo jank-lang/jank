@@ -164,23 +164,30 @@
                  :scope scope))
         (assoc item :scope scope)))))
 
+; XXX: migrated
 (defmethod check-item :list [item scope]
   (assoc item :scope scope))
 
+; XXX: migrated
 (defmethod check-item :string [item scope]
   (assoc item :scope scope))
 
+; XXX: migrated
 (defmethod check-item :integer [item scope]
   (assoc item :scope scope))
 
+; XXX: migrated
 (defmethod check-item :real [item scope]
   (assoc item :scope scope))
 
+; XXX: migrated
 (defmethod check-item :boolean [item scope]
   (assoc item :scope scope))
 
+; XXX: migrated
 (defmethod check-item :identifier [item scope]
   (assoc item :scope scope))
 
+; XXX: migrated
 (defmethod check-item :default [item scope]
   (type-assert false (str "no type checking for '" item "'")))

@@ -15,6 +15,7 @@
        %1)
     overloads))
 
+; XXX: migrated
 (defn lookup
   "Recursively looks up a binding by name.
    Returns the binding, if found, or nil."
@@ -25,6 +26,7 @@
         overloads
         (recur (:parent current-scope))))))
 
+; XXX: migrated
 (defn add-to-scope [item scope]
   "Adds the binding to the scope and performs type checking on the
    initial value. Returns the updated scope."
