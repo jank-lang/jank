@@ -106,17 +106,20 @@
         (realize-type (update-in item [0] (fn [_] :function-identifier)) scope)
         first-decl))))
 
+; XXX: migrated
 (defmethod realize-type :function-identifier
   [item scope]
   ; TODO: Wrap in generic variadic lambda
   (not-yet-implemented type-assert false "function identifiers"))
 
+; XXX: migrated
 (defmethod realize-type :return
   [item scope]
   ; Realize that which is being returned
-  (realize-type (second item) scope))
+  (realize-type (:value item) scope))
 
 ; Handles integer, string, etc
+; XXX: migrated
 (defmethod realize-type :default
   [item scope]
   {:kind :type

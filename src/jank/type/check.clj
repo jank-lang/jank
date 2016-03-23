@@ -4,6 +4,7 @@
             [jank.type.expression :as expression]
             [jank.type.return :as return])
   (:use clojure.pprint
+        clojure.tools.trace
         jank.assert))
 
 ; XXX: migrated
@@ -53,6 +54,7 @@
   (assoc item :scope (declaration/add-to-scope item scope)))
 
 ; XXX: migrated
+; TODO: test ; migrate return code
 (defmethod check-item :lambda-definition
   [item scope]
   (let [args (:arguments item)
@@ -61,16 +63,16 @@
         checked-args (check-item args new-scope)
         checked-return (check-item return (:scope checked-args))
         checked-body (check {:cells (:body item)} (:scope checked-return))
-        updated-item (assoc item :body checked-body)
+        updated-item (assoc item :body (:cells checked-body))
         body-with-return (return/add-explicit-returns updated-item
                                                       (:scope checked-body))]
-    (assoc item
+    (assoc updated-item
            :arguments checked-args
            :return checked-return
-           :body checked-body
-           :scope new-scope)))
+           :body body-with-return
+           :scope scope)))
 
-; XXX: migrated
+; XXX: migrated | tested
 (defmethod check-item :binding-definition
   [item scope]
   ; There is an optional type specifier which may be before the value
@@ -141,7 +143,7 @@
     (type-assert (<= returns 1) "multiple return types")
     (if (> returns 0)
       (let [expected-type (declaration/lookup-type
-                            (first (declaration/shorten-types (:values item)))
+                            (first (:values item))
                             scope)]
         (type-assert expected-type "invalid return type")
         (assoc item
