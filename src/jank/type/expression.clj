@@ -59,15 +59,16 @@
 
 (defmethod realize-type :lambda-definition
   [item scope]
-  (letfn [(remove-identifiers [item]
-            (filter #(not= :identifier (first %)) item))]
-    (declaration/shorten-types
-      (list "ƒ"
-            [:specialization-list
-             (into [:specialization-list]
-                   (remove-identifiers (rest (nth item 1))))
-             (into [:specialization-list]
-                   (remove-identifiers (rest (nth item 2))))]))))
+  {:kind :type
+   :value {:kind :identifier
+           :name "ƒ",
+           :generics {:kind :specialization-list
+                      :values [{:kind :specialization-list
+                                :values (filter #(= :type (:kind %))
+                                                (:values (:arguments item)))}
+                               {:kind :specialization-list
+                                :values (filter #(= :type (:kind %))
+                                                (:values (:return item)))}]}}})
 
 (defmethod realize-type :binding-definition
   [item scope]

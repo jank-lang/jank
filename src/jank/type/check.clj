@@ -95,6 +95,7 @@
 ; Check the type of each argument and try to realize the resulting
 ; function type.
 ; XXX: migrated
+; TODO: test migration
 (defmethod check-item :function-call
   [item scope]
   (loop [args (:arguments item)
@@ -115,7 +116,7 @@
                (:scope checked-arg))))))
 
 ; Bring the arguments into scope and type check.
-; XXX: migrated
+; XXX: migrated | tested
 (defmethod check-item :argument-list
   [item scope]
   (let [args (partition 2 (:values item))]
@@ -135,7 +136,7 @@
                          :type (second (first remaining))}
                         new-scope)))))))
 
-; XXX: migrated
+; XXX: migrated | tested
 (defmethod check-item :return-list
   [item scope]
   (let [returns (count (:values item))]
