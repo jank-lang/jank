@@ -19,7 +19,7 @@
   (fn [item scope]
     (:kind item)))
 
-; XXX: migrated
+; XXX: migrated | tested
 (defmethod add-explicit-returns :lambda-definition
   [item scope]
   ; Don't bother redoing the work if we've already done it.

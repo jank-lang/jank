@@ -53,8 +53,7 @@
   [item scope]
   (assoc item :scope (declaration/add-to-scope item scope)))
 
-; XXX: migrated
-; TODO: test ; migrate return code
+; XXX: migrated | tested
 (defmethod check-item :lambda-definition
   [item scope]
   (let [args (:arguments item)
