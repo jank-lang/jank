@@ -10,30 +10,31 @@
   (fn [item scope]
     (:kind item)))
 
+; XXX: migrated
 (defn call-signature
   "Calculates the shortened signature of a given function call."
   [item scope]
   ; The value/name of the function might be a function call which returns a
   ; function or a lambda definition directly; we special case for identifiers
   ; so we can lookup overloads. Otherwise, we use the function directly.
-  (let [identifier? (= :identifier (get-in item [1 0]))
+  (let [identifier? (= :identifier (:kind (:name item)))
         func-name (if identifier?
-                    (get-in item [1 1])
+                    (:name (:name item))
                     "anonymous-function")
         overloads (if identifier?
                     (declaration/lookup-overloads func-name scope)
-                    [{:type (realize-type (nth item 1) scope)}])
-        arg-types (apply list (map #(realize-type % scope) (rest (rest item))))]
+                    [{:type (realize-type (:value (:name item)) scope)}])
+        arg-types (apply list (map #(realize-type % scope) (:arguments item)))]
     (type-assert (some? overloads) (str "unknown function " func-name))
-    (type-assert (every? (comp declaration/function? :type) overloads)
+    (type-assert (every? declaration/function? overloads)
                  (str "not a function " func-name))
 
     ; Test all overloads; matches comes back as a vector of declarations
     ; for the matched functions.
     (let [matches (reduce
                     (fn [matched func]
-                      (let [generics (second (:type func))
-                            expected-types (apply list (rest (second generics)))]
+                      (let [generics (:generics (:value func))
+                            expected-types (-> generics :values first :values)]
                         ; TODO: Allow comparison of overload superpositions
                         (if (= arg-types expected-types)
                           (conj matched func)
@@ -49,13 +50,12 @@
                         " with argument types " arg-types
                         " expected one of " overloads))
 
-      (let [match (:type (first matches))
-            generics (second match)
-            return-types (rest (nth generics 2))]
+      (let [generics (:generics (:value (first matches)))
+            return-types (-> generics :values second :values)]
         (type-assert (not (declaration/auto? (first return-types)))
                      (str "call to function " func-name
                           " before its type is deduced"))
-        match))))
+        (first matches)))))
 
 (defmethod realize-type :lambda-definition
   [item scope]
