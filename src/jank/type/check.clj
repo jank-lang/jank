@@ -95,7 +95,6 @@
 ; Check the type of each argument and try to realize the resulting
 ; function type.
 ; XXX: migrated
-; TODO: test migration
 (defmethod check-item :function-call
   [item scope]
   (loop [args (:arguments item)
