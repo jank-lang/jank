@@ -3,11 +3,6 @@
         clojure.pprint
         jank.assert))
 
-; TODO: Remove; no longer does anything
-(defn shorten-types
-  [item]
-  item)
-
 (defn function?
   "Returns whether or not the provided type is that of a function."
   [decl-type]

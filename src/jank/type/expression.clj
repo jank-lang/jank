@@ -78,7 +78,7 @@
   [item scope]
   (let [signature (call-signature item scope)
         return-type (second (nth (second signature) 2))]
-    (declaration/shorten-types return-type)))
+    return-type))
 
 (defmethod realize-type :if-expression
   [item scope]
@@ -88,7 +88,7 @@
         else-type (realize-type (second (nth item 3)) scope)]
     (internal-assert (= then-type else-type)
                      "incompatible if then/else types")
-    (declaration/shorten-types then-type)))
+    then-type))
 
 (defmethod realize-type :list
   [item scope]
@@ -102,7 +102,7 @@
     (type-assert (some? decl) (str "unknown binding " ident))
 
     ; Function identifiers yield a superposition of all possible overloads
-    (let [first-decl (declaration/shorten-types (:type (first (nth decl 1))))]
+    (let [first-decl (:type (first (nth decl 1)))]
       (if (declaration/function? first-decl)
         (realize-type (update-in item [0] (fn [_] :function-identifier)) scope)
         first-decl))))
@@ -125,8 +125,7 @@
   [item scope]
   {:kind :type
    :value {:kind :identifier
-           :name (declaration/shorten-types
-                   (-> item :kind name symbol str))}})
+           :name (-> item :kind name symbol str)}})
 
 ; Empty bodies will realize to nil
 (defmethod realize-type nil
