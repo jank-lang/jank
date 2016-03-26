@@ -95,16 +95,17 @@
   ; TODO
   (not-yet-implemented type-assert false "list type realization"))
 
+; XXX: migrated
 (defmethod realize-type :identifier
   [item scope]
-  (let [ident (second item)
+  (let [ident (:name item)
         decl (declaration/lookup ident scope)]
     (type-assert (some? decl) (str "unknown binding " ident))
 
     ; Function identifiers yield a superposition of all possible overloads
-    (let [first-decl (:type (first (nth decl 1)))]
+    (let [first-decl (first (second decl))]
       (if (declaration/function? first-decl)
-        (realize-type (update-in item [0] (fn [_] :function-identifier)) scope)
+        (realize-type (assoc item :kind :function-identifier) scope)
         first-decl))))
 
 ; XXX: migrated
