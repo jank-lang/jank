@@ -118,6 +118,8 @@
 ; XXX: migrated | tested
 (defmethod check-item :argument-list
   [item scope]
+  ; Group arg names and types; pull out only the names and verify
+  ; they're all distinct.
   (let [args (partition 2 (:values item))]
     (when (not-empty args)
       (type-assert (distinct (map first args))
