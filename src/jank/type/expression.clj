@@ -102,9 +102,9 @@
         decl (declaration/lookup ident scope)]
     (type-assert (some? decl) (str "unknown binding " ident))
 
-    ; Function identifiers yield a superposition of all possible overloads
     (let [first-decl (first (second decl))]
       (if (declaration/function? first-decl)
+        ; Function identifiers yield a superposition of all possible overloads
         (realize-type (assoc item :kind :function-identifier) scope)
         first-decl))))
 
