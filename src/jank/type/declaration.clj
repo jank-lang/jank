@@ -118,6 +118,8 @@
 ; XXX: migrated | tested
 (defmethod add-to-scope :type-declaration
   [item scope]
+  ; TODO: Validate the type is correct
+  ; TODO: Add some tests for this
   (update scope :type-declarations conj (:type item)))
 
 ; Finds, validates, and adds the provided declaration into the scope.
