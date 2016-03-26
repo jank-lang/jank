@@ -75,15 +75,19 @@
 ; XXX: migrated
 (defmethod lookup-type :function
   [decl-type scope]
-  ; TODO: Type lookup isn't fully migrated; doesn't fail when it should
   ; Function types always "exist" as long as they're well-formed
   (let [generics (:values (:generics (:value decl-type)))]
+    ; TODO: Add more tests for this
     (type-assert (= (count generics) 2) "invalid function type format")
-    (when (> (count (first generics)) 1)
-      (type-assert (some? (lookup-type (-> generics first :values first) scope))
+    (when (> (count (:values (first generics))) 0)
+      (type-assert (every? (comp some?
+                                 #(lookup-type % scope))
+                           (-> generics first :values))
                    "invalid function parameter type"))
-    (when (> (count (second generics)) 1)
-      (type-assert (some? (lookup-type (-> generics second :values first) scope))
+    (when (> (count (:values (second generics))) 0)
+      (type-assert (every? (comp some?
+                                 #(lookup-type % scope))
+                           (-> generics second :values))
                    "invalid function return type"))
     decl-type))
 
