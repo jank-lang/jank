@@ -4,5 +4,4 @@ set -e
 
 lein uberjar
 
-# TODO: Enable after refactor
-#lein test
+lein test
