@@ -3,14 +3,12 @@
   (:use clojure.pprint
         jank.assert))
 
-; XXX: migrated
 (defmulti realize-type
   "Calculates the type of the expression. All sub-expressions must be
    recursively realized."
   (fn [item scope]
     (:kind item)))
 
-; XXX: migrated
 (defn call-signature
   "Calculates the shortened signature of a given function call."
   [item scope]
@@ -74,14 +72,12 @@
   [item scope]
   (type-assert "binding definitions are not expressions"))
 
-; XXX: migrated
 (defmethod realize-type :function-call
   [item scope]
   (let [signature (call-signature item scope)
         return (-> signature :value :generics :values second :values first)]
     return))
 
-; XXX: migrated
 (defmethod realize-type :if-expression
   [item scope]
   (type-assert (contains? item :else) "no else statement")
@@ -101,7 +97,6 @@
   ; TODO
   (not-yet-implemented type-assert false "list type realization"))
 
-; XXX: migrated
 (defmethod realize-type :identifier
   [item scope]
   (let [ident (:name item)
@@ -114,20 +109,17 @@
         (realize-type (assoc item :kind :function-identifier) scope)
         first-decl))))
 
-; XXX: migrated
 (defmethod realize-type :function-identifier
   [item scope]
   ; TODO: Wrap in generic variadic lambda
   (not-yet-implemented type-assert false "function identifiers"))
 
-; XXX: migrated
 (defmethod realize-type :return
   [item scope]
   ; Realize that which is being returned
   (realize-type (:value item) scope))
 
 ; Handles integer, string, etc
-; XXX: migrated
 (defmethod realize-type :default
   [item scope]
   {:kind :type

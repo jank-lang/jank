@@ -7,14 +7,12 @@
         clojure.tools.trace
         jank.assert))
 
-; XXX: migrated
 (defmulti check-item
   "Type checks the given expression. Returns a cons of the typed
    expression and the updated scope."
   (fn [item scope]
     (:kind item)))
 
-; XXX: migrated
 (defn empty-scope
   "Builds an empty type scope."
   ([]
@@ -25,7 +23,6 @@
     :binding-definitions {}
     :type-declarations #{}}))
 
-; XXX: migrated
 (defn check
   "Builds type information on the parsed source. Returns
    a list of the typed source and the top-level scope."
@@ -48,12 +45,10 @@
                 (conj checked-cells checked-item)
                 (:scope checked-item)))))))
 
-; XXX: migrated | tested
 (defmethod check-item :declare-statement
   [item scope]
   (assoc item :scope (declaration/add-to-scope item scope)))
 
-; XXX: migrated | tested
 (defmethod check-item :lambda-definition
   [item scope]
   (let [args (:arguments item)
@@ -69,7 +64,6 @@
            :arguments checked-args
            :scope scope)))
 
-; XXX: migrated | tested
 (defmethod check-item :binding-definition
   [item scope]
   ; There is an optional type specifier which may be before the value
@@ -96,7 +90,6 @@
 
 ; Check the type of each argument and try to realize the resulting
 ; function type.
-; XXX: migrated
 (defmethod check-item :function-call
   [item scope]
   (loop [args (:arguments item)
@@ -119,7 +112,6 @@
                (:scope checked-arg))))))
 
 ; Bring the arguments into scope and type check.
-; XXX: migrated | tested
 (defmethod check-item :argument-list
   [item scope]
   ; Group arg names and types; pull out only the names and verify
@@ -141,7 +133,6 @@
                          :type (second (first remaining))}
                         new-scope)))))))
 
-; XXX: migrated | tested
 (defmethod check-item :return-list
   [item scope]
   (let [returns (count (:values item))]
@@ -156,7 +147,6 @@
                :scope scope))
       (assoc item :scope scope))))
 
-; XXX: migrated
 (defmethod check-item :if-expression
   [item scope]
   (let [cond-type (expression/realize-type (:value (:condition item)) scope)]
@@ -180,30 +170,23 @@
           updated-item)
         scoped-item))))
 
-; XXX: migrated
 (defmethod check-item :list [item scope]
   (assoc item :scope scope))
 
-; XXX: migrated
 (defmethod check-item :string [item scope]
   (assoc item :scope scope))
 
-; XXX: migrated
 (defmethod check-item :integer [item scope]
   (assoc item :scope scope))
 
-; XXX: migrated
 (defmethod check-item :real [item scope]
   (assoc item :scope scope))
 
-; XXX: migrated
 (defmethod check-item :boolean [item scope]
   (assoc item :scope scope))
 
-; XXX: migrated
 (defmethod check-item :identifier [item scope]
   (assoc item :scope scope))
 
-; XXX: migrated
 (defmethod check-item :default [item scope]
   (type-assert false (str "no type checking for '" item "'")))

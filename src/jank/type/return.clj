@@ -19,7 +19,6 @@
   (fn [item scope]
     (:kind item)))
 
-; XXX: migrated | tested
 (defmethod add-explicit-returns :lambda-definition
   [item scope]
   ; Don't bother redoing the work if we've already done it.
@@ -81,7 +80,6 @@
                        [:else :values] else-body)
              :type then-type))))
 
-; XXX: migrated
 (defmethod add-explicit-returns :body
   [item scope]
   (let [body (:values item)]

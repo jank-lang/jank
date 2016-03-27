@@ -4,7 +4,6 @@
   (:use clojure.pprint
         jank.assert))
 
-; XXX: migrated
 (defn match-overload
   "Looks through all overloads for one matching the provided type. Functions
    can't be overloaded by only return types. Returns a list of indices into
@@ -16,7 +15,6 @@
        %1)
     overloads))
 
-; XXX: migrated
 (defn lookup
   "Recursively looks up a binding by name.
    Returns the binding, if found, or nil."
@@ -27,7 +25,6 @@
         overloads
         (recur (:parent current-scope))))))
 
-; XXX: migrated
 (defn add-to-scope [item scope]
   "Adds the binding to the scope and performs type checking on the
    initial value. Returns the updated scope."
