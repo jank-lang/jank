@@ -29,7 +29,7 @@
   ; no longer be available.
   (if (= :return (-> item :body last :kind))
     item
-    (let [expected-type (first (:values (:return item)))]
+    (let [expected-type (-> item :return :values first)]
       ; No return type means no implicit returns are generated. Nice.
       (if (nil? expected-type)
         item
@@ -50,9 +50,7 @@
                             body-type))
 
           ; Update the return type
-          (if (some? deduced-type)
-            (assoc updated-item :return deduced-type)
-            (assoc updated-item :return nil)))))))
+          (assoc-in updated-item [:return :values] [deduced-type]))))))
 
 (defmethod add-explicit-returns :if-expression
   [item scope]

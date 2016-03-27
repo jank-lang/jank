@@ -67,7 +67,6 @@
                                                       (:scope checked-body))]
     (assoc item-with-return
            :arguments checked-args
-           :return checked-return
            :scope scope)))
 
 ; XXX: migrated | tested
@@ -103,9 +102,11 @@
       (let [checked-name (check-item (:name item) scope)
             args-with-returns (map #(return/add-parameter-returns % new-scope)
                                    checked-args)
-            signature (expression/call-signature item new-scope)]
-        (assoc item
-               :arguments args-with-returns
+            updated-item (assoc item
+                               :name checked-name
+                               :arguments args-with-returns)
+            signature (expression/call-signature updated-item new-scope)]
+        (assoc updated-item
                :scope new-scope
                :signature signature))
       (let [checked-arg (check-item (first args) new-scope)]
