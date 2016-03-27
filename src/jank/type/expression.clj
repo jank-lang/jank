@@ -74,11 +74,12 @@
   [item scope]
   (type-assert "binding definitions are not expressions"))
 
+; XXX: migrated
 (defmethod realize-type :function-call
   [item scope]
   (let [signature (call-signature item scope)
-        return-type (second (nth (second signature) 2))]
-    return-type))
+        return (-> signature :value :generics :values second :values first)]
+    return))
 
 (defmethod realize-type :if-expression
   [item scope]
