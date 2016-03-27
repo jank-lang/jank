@@ -72,6 +72,7 @@
       (type-assert (= then-type else-type)
                    "incompatible if then/else types")
 
+      (pprint (list "item" item))
       (assoc (assoc-in (assoc-in item [:then :values] then-body)
                        [:else :values] else-body)
              :type then-type))))

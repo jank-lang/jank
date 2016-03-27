@@ -87,6 +87,8 @@
   (type-assert (contains? item :else) "no else statement")
   (let [then-type (realize-type (:then item) scope)
         else-type (realize-type (:else item) scope)]
+    (internal-assert (some? then-type) "invalid then type")
+    (internal-assert (some? else-type) "invalid else type")
     (internal-assert (= then-type else-type)
                      "incompatible if then/else types")
     then-type))
