@@ -81,12 +81,12 @@
         return (-> signature :value :generics :values second :values first)]
     return))
 
+; XXX: migrated
 (defmethod realize-type :if-expression
   [item scope]
-  (type-assert (some #(and (vector? %) (= (first %) :else)) item)
-               "no else statement")
-  (let [then-type (realize-type (second (nth item 2)) scope)
-        else-type (realize-type (second (nth item 3)) scope)]
+  (type-assert (contains? item :else) "no else statement")
+  (let [then-type (realize-type (:then item) scope)
+        else-type (realize-type (:else item) scope)]
     (internal-assert (= then-type else-type)
                      "incompatible if then/else types")
     then-type))

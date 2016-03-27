@@ -160,17 +160,20 @@
 ; XXX: migrated
 (defmethod check-item :if-expression
   [item scope]
-  (let [cond-type (expression/realize-type (:condition item) scope)]
-    (type-assert (= cond-type '("boolean"))
+  (let [cond-type (expression/realize-type (:value (:condition item)) scope)]
+    (type-assert (= cond-type {:kind :type
+                               :value {:kind :identifier :name "boolean"}})
                  (str "if expression condition must be boolean, not " cond-type))
-    (let [checked-then (check {:cells (:then item)} (empty-scope scope))
+    (let [checked-then (check {:cells [(:value (:then item))]}
+                              (empty-scope scope))
           updated-item (assoc item :then checked-then)]
       (if (contains? item :else)
-        (let [checked-else (check {:cells (:else item)} (empty-scope scope))]
-          (assoc item
+        (let [checked-else (check {:cells [(:value (:else updated-item))]}
+                                  (empty-scope scope))]
+          (assoc updated-item
                  :else checked-else
                  :scope scope))
-        (assoc item :scope scope)))))
+        (assoc updated-item :scope scope)))))
 
 ; XXX: migrated
 (defmethod check-item :list [item scope]

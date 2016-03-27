@@ -153,8 +153,10 @@
                                     [:binding-declarations decl-name]
                                     (partial
                                       remove
-                                      #(= (second (second decl-type))
-                                          (second (second %)))))]
+                                      #(= (-> decl-type
+                                              :value :generics :values first)
+                                          (-> %
+                                              :value :generics :values first))))]
         (update-in without-auto
                    [:binding-declarations decl-name]
                    conj

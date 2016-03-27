@@ -54,13 +54,14 @@
 
 (defmethod add-explicit-returns :if-expression
   [item scope]
-  (type-assert (some #(and (vector? %) (= (first %) :else)) item)
-               "no else statement")
+  (type-assert (contains? item :else) "no else statement")
 
-  (let [then-body (second (add-explicit-returns [:body (rest (nth item 2))]
-                                                scope))
-        else-body (second (add-explicit-returns [:body (rest (nth item 3))]
-                                                scope))]
+  (let [then-body (:values (add-explicit-returns {:kind :body
+                                                  :values [(:then item)]}
+                                                 scope))
+        else-body (:values (add-explicit-returns {:kind :body
+                                                  :values [(:else item)]}
+                                                 scope))]
     (internal-assert (not-empty then-body)
                      "no return value in if/then expression")
     (internal-assert (not-empty else-body)
@@ -70,12 +71,10 @@
           else-type (expression/realize-type (last else-body) scope)]
       (type-assert (= then-type else-type)
                    "incompatible if then/else types")
-      (conj
-        (update-in
-          (update-in item [2] (fn [_] [:then (last then-body)]))
-          [3]
-          (fn [_] [:else (last else-body)]))
-        [:type then-type]))))
+
+      (assoc (assoc-in (assoc-in item [:then :values] then-body)
+                       [:else :values] else-body)
+             :type then-type))))
 
 ; XXX: migrated
 (defmethod add-explicit-returns :body
