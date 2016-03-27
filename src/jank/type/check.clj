@@ -73,8 +73,8 @@
 (defmethod check-item :binding-definition
   [item scope]
   ; There is an optional type specifier which may be before the value
-  (let [value (:value item)
-        value-type (expression/realize-type value scope)
+  (let [checked-name (check-item (:name item) scope)
+        value (:value item)
         checked-val (check-item
                       value
                       ; Add a declaration before checking it. This allows
@@ -82,13 +82,18 @@
                       ; themselves.
                       (if (= :lambda-definition (:kind value))
                         (declaration/add-to-scope
-                          (assoc item :type value-type)
+                          (assoc item
+                                 :type (expression/realize-type value scope))
                           scope)
-                        scope))]
-    (assoc item
-           :value checked-val
-           :type value-type
-           :scope (binding/add-to-scope item (:scope checked-val)))))
+                        scope))
+        updated-item (assoc item
+                            :name checked-name
+                            :value checked-val
+                            :type (expression/realize-type
+                                    checked-val
+                                    (:scope checked-val)))]
+    (assoc updated-item
+           :scope (binding/add-to-scope updated-item (:scope checked-val)))))
 
 ; Check the type of each argument and try to realize the resulting
 ; function type.
