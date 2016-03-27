@@ -63,12 +63,11 @@
         checked-return (check-item return (:scope checked-args))
         checked-body (check {:cells (:body item)} (:scope checked-return))
         updated-item (assoc item :body (:cells checked-body))
-        body-with-return (return/add-explicit-returns updated-item
+        item-with-return (return/add-explicit-returns updated-item
                                                       (:scope checked-body))]
-    (assoc updated-item
+    (assoc item-with-return
            :arguments checked-args
            :return checked-return
-           :body body-with-return
            :scope scope)))
 
 ; XXX: migrated | tested
