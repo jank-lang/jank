@@ -17,7 +17,7 @@
 
 (defn specialization-list [& more]
   {:kind :specialization-list
-   :values more})
+   :values (or more '())})
 
 (defn declare-statement [& more]
   (let [base {:kind :declare-statement
