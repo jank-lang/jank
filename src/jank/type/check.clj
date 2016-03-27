@@ -88,11 +88,10 @@
                         scope))
         updated-item (assoc item
                             :name checked-name
-                            :value checked-val
-                            :type (expression/realize-type
-                                    checked-val
-                                    (:scope checked-val)))]
+                            :value checked-val)
+        value-type (expression/realize-type checked-val (:scope checked-val))]
     (assoc updated-item
+           :type value-type
            :scope (binding/add-to-scope updated-item (:scope checked-val)))))
 
 ; Check the type of each argument and try to realize the resulting
