@@ -23,7 +23,7 @@
                     "anonymous-function")
         overloads (if identifier?
                     (declaration/lookup-overloads func-name scope)
-                    [{:type (realize-type (:value (:name item)) scope)}])
+                    [(realize-type (:name item) scope)])
         arg-types (apply list (map #(realize-type % scope) (:arguments item)))]
     (type-assert (some? overloads) (str "unknown function " func-name))
     (type-assert (every? declaration/function? overloads)
