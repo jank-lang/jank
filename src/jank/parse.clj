@@ -25,6 +25,7 @@
                         :real (partial transform/read-single :real)
                         :boolean (partial transform/read-single :boolean)
                         :keyword (partial transform/single :keyword)
+                        :string (partial transform/single :string)
                         :type (partial transform/single :type)
                         :condition (partial transform/single :condition)
                         :then (partial transform/single :then)
