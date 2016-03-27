@@ -56,12 +56,14 @@
   [item scope]
   (type-assert (contains? item :else) "no else statement")
 
-  (let [then-body (:values (add-explicit-returns {:kind :body
-                                                  :values [(:then item)]}
-                                                 scope))
-        else-body (:values (add-explicit-returns {:kind :body
-                                                  :values [(:else item)]}
-                                                 scope))]
+  (let [then-body (:values (add-explicit-returns
+                             {:kind :body
+                              :values [(:value (:then item))]}
+                             scope))
+        else-body (:values (add-explicit-returns
+                             {:kind :body
+                              :values [(:value (:else item))]}
+                             scope))]
     (internal-assert (not-empty then-body)
                      "no return value in if/then expression")
     (internal-assert (not-empty else-body)
@@ -70,9 +72,11 @@
     (let [then-type (expression/realize-type (last then-body) scope)
           else-type (expression/realize-type (last else-body) scope)]
       (type-assert (= then-type else-type)
-                   "incompatible if then/else types")
+                   (str "incompatible if then/else types "
+                        then-type
+                        " and "
+                        else-type))
 
-      (pprint (list "item" item))
       (assoc (assoc-in (assoc-in item [:then :values] then-body)
                        [:else :values] else-body)
              :type then-type))))

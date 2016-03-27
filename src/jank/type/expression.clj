@@ -85,12 +85,15 @@
 (defmethod realize-type :if-expression
   [item scope]
   (type-assert (contains? item :else) "no else statement")
-  (let [then-type (realize-type (:then item) scope)
-        else-type (realize-type (:else item) scope)]
+  (let [then-type (realize-type (:value (:then item)) scope)
+        else-type (realize-type (:value (:else item)) scope)]
     (internal-assert (some? then-type) "invalid then type")
     (internal-assert (some? else-type) "invalid else type")
     (internal-assert (= then-type else-type)
-                     "incompatible if then/else types")
+                     (str "incompatible if then/else types "
+                          then-type
+                          " and "
+                          else-type))
     then-type))
 
 (defmethod realize-type :list

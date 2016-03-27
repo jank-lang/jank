@@ -174,7 +174,7 @@
       (if (contains? item :else)
         (let [checked-else (check {:cells [(:value (:else scoped-item))]}
                                   (empty-scope scope))
-              updated-item (assoc-in item
+              updated-item (assoc-in scoped-item
                                      [:else :values]
                                      (:cells checked-else))]
           updated-item)
