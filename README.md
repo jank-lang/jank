@@ -5,6 +5,11 @@ jank is a compiled functional programming language with a strong, static type sy
 With a focus on safe parallelism, jank has immutable, persistent data
 structures.
 
+Currently, jank aims to provide:
+
+* A compiler targeting C++14
+* An interactive REPL (command line and web-based)
+
 ## Appetizer
 ```lisp
 (; Update all entities. ;)
