@@ -4,6 +4,8 @@
         jank.assert))
 
 (defn clean-scope
+  "Removes all :scope values recursively. This makes it
+   much easier to print AST nodes."
   [item]
   (postwalk
     #(if (map? %)
