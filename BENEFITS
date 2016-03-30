@@ -1,4 +1,7 @@
 immutability
+  modularity and debuggability
+    only focus on a single function (inputs and outputs)
+
   thread safety
     improve load times and responsiveness
 
