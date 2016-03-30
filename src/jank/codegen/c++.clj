@@ -11,13 +11,15 @@
     (:kind current)))
 
 ; XXX: migrated
-(defmethod codegen-impl :declare-statement [current]
+(defmethod codegen-impl :declare-statement
+  [current]
   "")
 
 ; Only used for the main functions; all other functions
 ; are just local lambdas within main
 ; XXX: migrated
-(defmethod codegen-impl :function-definition [current]
+(defmethod codegen-impl :function-definition
+  [current]
   (let [lambda (:value current)]
     (str (codegen-impl (:return lambda))
          " "
@@ -28,7 +30,8 @@
                                  (:body lambda))
          "}")))
 
-(defmethod codegen-impl :lambda-definition [current]
+(defmethod codegen-impl :lambda-definition
+  [current]
   (str "[=]"
        (codegen-impl (second current)) ; Params
        "->"
@@ -38,7 +41,8 @@
                                (drop 3 current))
        "}"))
 
-(defmethod codegen-impl :binding-type [current]
+(defmethod codegen-impl :binding-type
+  [current]
   (let [value (nth current 2)]
     (cond
       ; Lambdas can be recursive, so their type needs to be specified
@@ -52,7 +56,8 @@
       :else
       "auto const ")))
 
-(defmethod codegen-impl :binding-name [current]
+(defmethod codegen-impl :binding-name
+  [current]
   (let [type (nth current 2)]
     (cond
       ; Lambda bindings contain type info in the name, to work around
@@ -64,13 +69,15 @@
       :else
       name)))
 
-(defmethod codegen-impl :binding-definition [current]
-  (str (codegen-impl (update-in current [0] (fn [_] :binding-type)))
+(defmethod codegen-impl :binding-definition
+  [current]
+  (str (codegen-impl (assoc (:type current) :kind :binding-type))
        (codegen-impl (update-in current [0] (fn [_] :binding-name))) ; Name
        "="
        (codegen-impl (nth current 2))))
 
-(defmethod codegen-impl :function-call [current]
+(defmethod codegen-impl :function-call
+  [current]
   (str ;(util/serialize-function-call ; TODO: mangling
          (codegen-impl (second current)) ; Name
          ;(nth current 3)) ; Signature
@@ -80,7 +87,8 @@
        ")"))
 
 ; XXX: migrated
-(defmethod codegen-impl :argument-list [current]
+(defmethod codegen-impl :argument-list
+  [current]
   (str "("
        (util/comma-separate-params
          (util/swap-params
@@ -88,12 +96,14 @@
        ")"))
 
 ; XXX: migrated
-(defmethod codegen-impl :return-list [current]
+(defmethod codegen-impl :return-list
+  [current]
   (if-let [ret (first (:values current))]
     (codegen-impl ret)
     "void"))
 
-(defmethod codegen-impl :if-expression [current]
+(defmethod codegen-impl :if-expression
+  [current]
   (let [base (str "[=]()->"
                   ; If expressions used as returns need a type to be specified
                   (if (some #(and (vector? %) (= (first %) :type)) current)
@@ -116,29 +126,36 @@
         base)
       "}()")))
 
-(defmethod codegen-impl :return [current]
+(defmethod codegen-impl :return
+  [current]
   (str "return "
        (when (some? (second current))
          (codegen-impl (second current)))))
 
-(defmethod codegen-impl :list [current]
+(defmethod codegen-impl :list
+  [current]
   (str "("
        (util/reduce-spaced-map codegen-impl (rest current))
        ")"))
 
-(defmethod codegen-impl :string [current]
+(defmethod codegen-impl :string
+  [current]
   (str "\"" (second current) "\""))
 
-(defmethod codegen-impl :integer [current]
+(defmethod codegen-impl :integer
+  [current]
   (second current))
 
-(defmethod codegen-impl :real [current]
+(defmethod codegen-impl :real
+  [current]
   (second current))
 
-(defmethod codegen-impl :boolean [current]
+(defmethod codegen-impl :boolean
+  [current]
   (second current))
 
-(defmethod codegen-impl :identifier [current]
+(defmethod codegen-impl :identifier
+  [current]
   ; Special case for function types
   (if (= "ƒ" (second current))
     (codegen-impl (update-in current [0] (fn [_] :function-type)))
@@ -147,7 +164,8 @@
          (when (= 3 (count current))
            (codegen-impl (nth current 2))))))
 
-(defmethod codegen-impl :function-type [current]
+(defmethod codegen-impl :function-type
+  [current]
   (str "std::function<"
        (let [return (second (nth (nth current 2) 2))]
          (if-not (nil? return)
@@ -158,16 +176,20 @@
          (map codegen-impl (rest (second (nth current 2)))))
        ")>"))
 
-(defmethod codegen-impl :type [current]
+(defmethod codegen-impl :type
+  [current]
   (str (codegen-impl (second current)) " const"))
 
-(defmethod codegen-impl :shortened-type [current]
+(defmethod codegen-impl :shortened-type
+  [current]
   (str (codegen-impl (into [:identifier] current)) " const"))
 
-(defmethod codegen-impl :specialization-list [current]
+(defmethod codegen-impl :specialization-list
+  [current]
   (str "<" (codegen-impl (second current)) ">"))
 
-(defmethod codegen-impl :default [current]
+(defmethod codegen-impl :default
+  [current]
   (codegen-assert false (str "no codegen for '" current "'")))
 
 (defn codegen [ast]
