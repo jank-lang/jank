@@ -33,12 +33,12 @@
 (defmethod codegen-impl :lambda-definition
   [current]
   (str "[=]"
-       (codegen-impl (second current)) ; Params
+       (codegen-impl (:arguments current))
        "->"
-       (codegen-impl (nth current 2)) ; Return
+       (codegen-impl (:return current))
        "{"
        (util/reduce-spaced-map (comp util/end-statement codegen-impl)
-                               (drop 3 current))
+                               (:body current))
        "}"))
 
 ; XXX: migrated
@@ -102,7 +102,6 @@
 ; XXX: migrated
 (defmethod codegen-impl :return-list
   [current]
-  (pprint (clean-scope current))
   (if-let [ret (first (:values current))]
     (codegen-impl ret)
     "void"))
@@ -134,8 +133,8 @@
 (defmethod codegen-impl :return
   [current]
   (str "return "
-       (when (some? (second current))
-         (codegen-impl (second current)))))
+       (when (some? (:value current))
+         (codegen-impl (:value current)))))
 
 (defmethod codegen-impl :list
   [current]
