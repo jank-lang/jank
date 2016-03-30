@@ -11,6 +11,7 @@ immutability
 
 c++
   seamless integration with C and C++ libs
+    calls to foreign libs can be inlined or elided
 
   decades of optimization work already done
 
