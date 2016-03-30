@@ -2,29 +2,30 @@
   (:require [jank.codegen.sanitize :as sanitize]
             [jank.codegen.util :as util])
   (:use clojure.pprint
-        jank.assert))
+        jank.assert
+        jank.debug.log))
 
+; XXX: migrated
 (defmulti codegen-impl
   (fn [current]
-    ; Types come in from the type checker in a different form
-    (if (keyword? (first current))
-      (first current)
-      :shortened-type)))
+    (:kind current)))
 
+; XXX: migrated
 (defmethod codegen-impl :declare-statement [current]
   "")
 
 ; Only used for the main functions; all other functions
 ; are just local lambdas within main
+; XXX: migrated
 (defmethod codegen-impl :function-definition [current]
-  (let [lambda (nth current 2)]
-    (str (codegen-impl (nth lambda 2)) ; Return
+  (let [lambda (:value current)]
+    (str (codegen-impl (:return lambda))
          " "
-         (codegen-impl (second current)) ; Name
-         (codegen-impl (second lambda)) ; Params
+         (codegen-impl (:name current))
+         (codegen-impl (:arguments lambda))
          "{"
          (util/reduce-spaced-map (comp util/end-statement codegen-impl)
-                                 (drop 3 lambda))
+                                 (:body lambda))
          "}")))
 
 (defmethod codegen-impl :lambda-definition [current]
@@ -78,15 +79,17 @@
          (map codegen-impl (butlast (drop 2 current))))
        ")"))
 
+; XXX: migrated
 (defmethod codegen-impl :argument-list [current]
   (str "("
        (util/comma-separate-params
          (util/swap-params
-           (map codegen-impl (rest current))))
+           (map codegen-impl (:values current))))
        ")"))
 
+; XXX: migrated
 (defmethod codegen-impl :return-list [current]
-  (if-let [ret (second current)]
+  (if-let [ret (first (:values current))]
     (codegen-impl ret)
     "void"))
 
@@ -170,10 +173,12 @@
 (defn codegen [ast]
   (util/print-statement
     (codegen-impl
-      [:function-definition
-       [:identifier "#main"]
-       (apply (partial vector
-                       :lambda-definition
-                       [:argument-list]
-                       [:return-list])
-              (:cells ast))])))
+      {:kind :function-definition
+       :name {:kind :identifier
+              :name "#main"}
+       :value {:kind :lambda-definition
+               :arguments {:kind :argument-list
+                           :values []}
+               :return {:kind :return-list
+                        :values []}
+               :body (:cells ast)}})))

@@ -7,6 +7,7 @@
   "Takes the input (i integer b boolean) and gives the C-like
    representation: ((integer i) (boolean b))"
   [params]
+  (pprint params)
   (map reverse (partition 2 params)))
 
 (defn comma-separate-params
