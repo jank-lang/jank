@@ -30,6 +30,7 @@
                                  (:body lambda))
          "}")))
 
+; XXX: migrated
 (defmethod codegen-impl :lambda-definition
   [current]
   (str "[=]"
@@ -80,14 +81,15 @@
        "="
        (codegen-impl (:value current))))
 
+; XXX: migrated
 (defmethod codegen-impl :function-call
   [current]
   (str ;(util/serialize-function-call ; TODO: mangling
-         (codegen-impl (second current)) ; Name
+         (codegen-impl (:name current))
          ;(nth current 3)) ; Signature
        "("
        (util/comma-separate-args
-         (map codegen-impl (butlast (drop 2 current))))
+         (map codegen-impl (:arguments current)))
        ")"))
 
 ; XXX: migrated
@@ -130,6 +132,7 @@
         base)
       "}()")))
 
+; XXX: migrated
 (defmethod codegen-impl :return
   [current]
   (str "return "
@@ -172,18 +175,19 @@
          (when (contains? current :generics)
            (codegen-impl (:generics current))))))
 
+; XXX: migrated
 (defmethod codegen-impl :function-type
   [current]
   (str "std::function<"
-       (let [return (second (nth (nth current 2) 2))]
-         (if-not (nil? return)
-           (codegen-impl return)
-           "void"))
+       (if-let [return (-> current :generics :values first :values first)]
+         (codegen-impl return)
+         "void")
        "("
        (util/comma-separate-args
-         (map codegen-impl (rest (second (nth current 2)))))
+         (map codegen-impl (-> current :generics :values second :values)))
        ")>"))
 
+; XXX: migrated
 (defmethod codegen-impl :type
   [current]
   (str (codegen-impl (:value current)) " const"))
@@ -192,10 +196,12 @@
   [current]
   (str "<" (codegen-impl (second current)) ">"))
 
+; XXX: migrated
 (defmethod codegen-impl :default
   [current]
   (codegen-assert false (str "no codegen for '" current "'")))
 
+; XXX: migrated
 (defn codegen [ast]
   (util/print-statement
     (codegen-impl
