@@ -2,12 +2,13 @@
 
 adopt core.typed
 
+add extern functions
+
 codegen won't allow overloading
   encode signatures in function names
     [x] function definitions in codegen
     [x] send function call types to codegen
-    [ ] don't do it for foriegn functions (without impl)
-          separate these decls into "externs?"
+    [ ] don't do it for extern functions
 
 basic stdlib
   persistent immutable data structures
