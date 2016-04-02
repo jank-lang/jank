@@ -165,6 +165,7 @@
   [current]
   (:value current))
 
+; XXX: migrated
 (defmethod codegen-impl :identifier
   [current]
   ; Special case for function types
@@ -172,7 +173,7 @@
     (codegen-impl (assoc current :kind :function-type))
     (str (apply str (mapcat (comp sanitize/sanitize str) (:name current)))
          ; Handle generic specializations
-         (when (contains? current :generics)
+         (when (contains? current :generics) ; TODO: migrate
            (codegen-impl (:generics current))))))
 
 ; XXX: migrated
