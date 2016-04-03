@@ -141,6 +141,7 @@
 
 (defmethod codegen-impl :list
   [current]
+  (not-yet-implemented codegen-assert "lists")
   (str "("
        (util/reduce-spaced-map codegen-impl (rest current))
        ")"))
