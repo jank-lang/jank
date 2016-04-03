@@ -16,12 +16,14 @@
   (clojure.string/join ","
                        (map #(str (first %) " " (second %)) pairs)))
 
+; XXX: migrated
 (defn comma-separate-args
   "Turns (foo bar spam) into a string like
    \"foo, bar, spam\""
   [args]
   (clojure.string/join "," args))
 
+; XXX: migrated
 (defn reduce-spaced-map
   "Maps f over coll and collects the results together in a
    delim-separated string. The delim defaults to a space."
@@ -74,6 +76,7 @@
   [function-name signature]
   (str function-name (serialize-type (second (second signature)))))
 
+; XXX: migrated
 (defn end-statement
   "Ends a statement with a semi-colon. Empty statements are unchanged."
   [statement]
@@ -81,6 +84,7 @@
     (str statement ";")
     statement))
 
+; XXX: migrated
 (defn print-statement
   "Prints the statement to stdout, followed by a new line.
    Empty statements are ignored."
