@@ -193,9 +193,13 @@
   [current]
   (str (codegen-impl (:value current)) " const"))
 
+; XXX: migrated
 (defmethod codegen-impl :specialization-list
   [current]
-  (str "<" (codegen-impl (second current)) ">"))
+  (str "<"
+       (util/comma-separate-args
+         (map codegen-impl (:values current)))
+       ">"))
 
 ; XXX: migrated
 (defmethod codegen-impl :default
