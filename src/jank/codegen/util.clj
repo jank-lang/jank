@@ -3,12 +3,14 @@
             [jank.codegen.sanitize :as sanitize])
   (:use clojure.pprint))
 
+; XXX: migrated
 (defn swap-params
   "Takes the input (i integer b boolean) and gives the C-like
    representation: ((integer i) (boolean b))"
   [params]
   (map reverse (partition 2 params)))
 
+; XXX: migrated
 (defn comma-separate-params
   "Turns ((integer i) (boolean b)) into a string like
    \"integer i, boolean b\""
