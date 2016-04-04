@@ -1,5 +1,6 @@
 (ns jank.codegen.sanitize)
 
+; XXX: migrated
 (def sanitized-symbols {"=" "_gen_equal"
                         "!" "_gen_bang"
                         "#" "_gen_pound"
@@ -30,16 +31,26 @@
                         "~" "_gen_tilde"
                         "ƒ" "_gen_function"})
 
+; XXX: migrated
 (defn sanitize
   "Sanitizes a char (as a str) of a jank identifier into
    something which C-like languages will accept."
   [identifier-str]
-  (let [named (sanitized-symbols identifier-str)]
-    (cond
-      named named
-      (> 127 (int (nth identifier-str 0)) 32) identifier-str
-      :else (-> identifier-str
-                hash
-                Math/abs
-                ((partial str "_u"))
-                vec))))
+  (if (empty? identifier-str)
+    identifier-str
+    (let [named (sanitized-symbols identifier-str)]
+      (cond
+        named named
+        (> 127 (int (nth identifier-str 0)) 32) identifier-str
+        :else (-> identifier-str
+                  hash
+                  Math/abs
+                  ((partial str "_u"))
+                  vec)))))
+
+; XXX: migrated
+(defn sanitize-str
+  "Sanitizes a string of a jank identifier into
+   something which C-like languages will accept."
+  [identifier-str]
+  (apply str (map (comp sanitize str) identifier-str)))

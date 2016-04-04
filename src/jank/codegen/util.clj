@@ -1,7 +1,9 @@
 (ns jank.codegen.util
   (:require [jank.type.declaration :as declaration]
             [jank.codegen.sanitize :as sanitize])
-  (:use clojure.pprint))
+  (:use jank.assert
+        jank.debug.log
+        clojure.pprint))
 
 ; XXX: migrated
 (defn swap-params
@@ -35,25 +37,39 @@
    (when (not-empty coll)
      (reduce #(str %1 delim %2) (map f coll)))))
 
-; TODO: Rename to mangle
-(defn serialize-type
-  "Takes a type in the [:type [:identifier ...] ...] form and flattens it
-   into a string for use with name serialization."
-  [type]
-  (apply str
-         (map (comp sanitize/sanitize str)
-              (reduce
-                #(str %1 "_t" %2)
-                ""
-                (->> type
-                     flatten
-                     (filter (fn [x]
-                               (not-any? #(= x %)
-                                         [:type
-                                          :identifier
-                                          :specialization-list]))))))))
+; XXX: migrated
+(defmulti mangle
+  "Flattens the item into a string for use with name serialization."
+  (fn [item]
+    (:kind item)))
 
-(defn serialize-binding-name
+; TODO: Move to mangle namespace
+; TODO: Hash mangled type
+(defmethod mangle :type
+  [item]
+  (sanitize/sanitize-str (mangle (:value item))))
+
+; XXX: migrated
+(defmethod mangle :identifier
+  [item]
+  (sanitize/sanitize-str
+    (let [ret (str (:name item) "_t")]
+      (if (contains? item :generics)
+        (apply str ret (map mangle (-> item :generics :values)))
+        ret))))
+
+; XXX: migrated
+(defmethod mangle :specialization-list
+  [item]
+  (sanitize/sanitize-str
+    (apply str (map mangle (:values item)))))
+
+; XXX: migrated
+(defmethod mangle :default
+  [item]
+  (codegen-assert false (str "invalid item to mangle " item)))
+
+(defn mangle-binding-name
   "Takes a lambda binding definition and updates the name to reflect
    the type signature of the lambda. This is needed to work around the lack of
    overloading in certain targets. Returns the full lambda binding definition."
@@ -61,22 +77,23 @@
   (let [name (second (second item))
         args (second (nth item 2))
         arg-pairs (partition 2 (rest args))
-        serialized-name (if (not-empty arg-pairs)
-                          (apply str name
-                                 (reduce (fn [result pair]
-                                           (str result
-                                                (-> pair
-                                                    second
-                                                    serialize-type)))
-                                         ""
-                                         arg-pairs))
-                          (str name "_gen_nullary"))]
-    (update-in item [1 1] (fn [_] serialized-name))))
+        mangled-name (if (not-empty arg-pairs)
+                       (apply str name
+                              (reduce (fn [result pair]
+                                        (str result
+                                             (-> pair
+                                                 second
+                                                 mangle)))
+                                      ""
+                                      arg-pairs))
+                       (str name "_gen_nullary"))]
+    (update-in item [1 1] (fn [_] mangled-name))))
 
-(defn serialize-function-call
-  "TODO"
-  [function-name signature]
-  (str function-name (serialize-type (second (second signature)))))
+; XXX: migrated
+(defmethod mangle :function-call
+  [item]
+  (sanitize/sanitize-str (str (:name (:name item))
+                              (mangle (:signature item)))))
 
 ; XXX: migrated
 (defn end-statement

@@ -66,7 +66,7 @@
       ; Lambda bindings contain type info in the name, to work around
       ; the lack of overloading in the target
       (= (:kind value) :lambda-definition)
-      ;(second (second (util/serialize-binding-name current)))
+      ;(second (second (util/mangle-binding-name current)))
       (codegen-impl (:name current)) ; TODO: mangling
 
       ; A non-function binding, so normal identifier codegen
@@ -84,9 +84,7 @@
 ; XXX: migrated
 (defmethod codegen-impl :function-call
   [current]
-  (str ;(util/serialize-function-call ; TODO: mangling
-         (codegen-impl (:name current))
-         ;(nth current 3)) ; Signature
+  (str (util/mangle current)
        "("
        (util/comma-separate-args
          (map codegen-impl (:arguments current)))
