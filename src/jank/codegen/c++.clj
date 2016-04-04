@@ -66,8 +66,7 @@
       ; Lambda bindings contain type info in the name, to work around
       ; the lack of overloading in the target
       (= (:kind value) :lambda-definition)
-      ;(second (second (util/mangle-binding-name current)))
-      (codegen-impl (:name current)) ; TODO: mangling
+      (util/mangle current)
 
       ; A non-function binding, so normal identifier codegen
       :else

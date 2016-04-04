@@ -69,25 +69,11 @@
   [item]
   (codegen-assert false (str "invalid item to mangle " item)))
 
-(defn mangle-binding-name
-  "Takes a lambda binding definition and updates the name to reflect
-   the type signature of the lambda. This is needed to work around the lack of
-   overloading in certain targets. Returns the full lambda binding definition."
+; XXX: migrated
+(defmethod mangle :binding-name
   [item]
-  (let [name (second (second item))
-        args (second (nth item 2))
-        arg-pairs (partition 2 (rest args))
-        mangled-name (if (not-empty arg-pairs)
-                       (apply str name
-                              (reduce (fn [result pair]
-                                        (str result
-                                             (-> pair
-                                                 second
-                                                 mangle)))
-                                      ""
-                                      arg-pairs))
-                       (str name "_gen_nullary"))]
-    (update-in item [1 1] (fn [_] mangled-name))))
+  (sanitize/sanitize-str (str (:name (:name item))
+                              (mangle (:type item)))))
 
 ; XXX: migrated
 (defmethod mangle :function-call
