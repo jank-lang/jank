@@ -6,19 +6,16 @@
         jank.assert
         jank.debug.log))
 
-; XXX: migrated
 (defmulti codegen-impl
   (fn [current]
     (:kind current)))
 
-; XXX: migrated
 (defmethod codegen-impl :declare-statement
   [current]
   "")
 
 ; Only used for the main functions; all other functions
 ; are just local lambdas within main
-; XXX: migrated
 (defmethod codegen-impl :function-definition
   [current]
   (let [lambda (:value current)]
@@ -31,7 +28,6 @@
                                  (:body lambda))
          "}")))
 
-; XXX: migrated
 (defmethod codegen-impl :lambda-definition
   [current]
   (str "[=]"
@@ -43,7 +39,6 @@
                                (:body current))
        "}"))
 
-; XXX: migrated
 (defmethod codegen-impl :binding-type
   [current]
   (let [value (:value current)]
@@ -59,7 +54,6 @@
       :else
       "auto const ")))
 
-; XXX: migrated
 (defmethod codegen-impl :binding-name
   [current]
   (let [value (:value current)]
@@ -73,7 +67,6 @@
       :else
       (codegen-impl (:name current)))))
 
-; XXX: migrated
 (defmethod codegen-impl :binding-definition
   [current]
   (str (codegen-impl (assoc current :kind :binding-type))
@@ -81,7 +74,6 @@
        "="
        (codegen-impl (:value current))))
 
-; XXX: migrated
 (defmethod codegen-impl :function-call
   [current]
   (str (mangle/mangle current)
@@ -90,7 +82,6 @@
          (map codegen-impl (:arguments current)))
        ")"))
 
-; XXX: migrated
 (defmethod codegen-impl :argument-list
   [current]
   (str "("
@@ -99,14 +90,12 @@
            (map codegen-impl (:values current))))
        ")"))
 
-; XXX: migrated
 (defmethod codegen-impl :return-list
   [current]
   (if-let [ret (first (:values current))]
     (codegen-impl ret)
     "void"))
 
-; XXX: migrated
 (defmethod codegen-impl :if-expression
   [current]
   (let [base (str "[=]()->"
@@ -131,7 +120,6 @@
         base)
       "}()")))
 
-; XXX: migrated
 (defmethod codegen-impl :return
   [current]
   (str "return "
@@ -142,27 +130,22 @@
   [current]
   (not-yet-implemented codegen-assert "lists"))
 
-; XXX: migrated
 (defmethod codegen-impl :string
   [current]
   (str "\"" (:value current) "\""))
 
-; XXX: migrated
 (defmethod codegen-impl :integer
   [current]
   (:value current))
 
-; XXX: migrated
 (defmethod codegen-impl :real
   [current]
   (:value current))
 
-; XXX: migrated
 (defmethod codegen-impl :boolean
   [current]
   (:value current))
 
-; XXX: migrated
 (defmethod codegen-impl :identifier
   [current]
   ; Special case for function types
@@ -173,7 +156,6 @@
          (when (contains? current :generics) ; TODO: migrate
            (codegen-impl (:generics current))))))
 
-; XXX: migrated
 (defmethod codegen-impl :function-type
   [current]
   (str "std::function<"
@@ -185,12 +167,10 @@
          (map codegen-impl (-> current :generics :values second :values)))
        ")>"))
 
-; XXX: migrated
 (defmethod codegen-impl :type
   [current]
   (str (codegen-impl (:value current)) " const"))
 
-; XXX: migrated
 (defmethod codegen-impl :specialization-list
   [current]
   (str "<"
@@ -198,12 +178,10 @@
          (map codegen-impl (:values current)))
        ">"))
 
-; XXX: migrated
 (defmethod codegen-impl :default
   [current]
   (codegen-assert false (str "no codegen for '" current "'")))
 
-; XXX: migrated
 (defn codegen [ast]
   (util/print-statement
     (codegen-impl
