@@ -1,6 +1,7 @@
 (ns jank.codegen.c++
   (:require [jank.codegen.sanitize :as sanitize]
-            [jank.codegen.util :as util])
+            [jank.codegen.util :as util]
+            [jank.codegen.mangle :as mangle])
   (:use clojure.pprint
         jank.assert
         jank.debug.log))
@@ -66,7 +67,7 @@
       ; Lambda bindings contain type info in the name, to work around
       ; the lack of overloading in the target
       (= (:kind value) :lambda-definition)
-      (util/mangle current)
+      (mangle/mangle current)
 
       ; A non-function binding, so normal identifier codegen
       :else
@@ -83,7 +84,7 @@
 ; XXX: migrated
 (defmethod codegen-impl :function-call
   [current]
-  (str (util/mangle current)
+  (str (mangle/mangle current)
        "("
        (util/comma-separate-args
          (map codegen-impl (:arguments current)))

@@ -38,50 +38,6 @@
      (reduce #(str %1 delim %2) (map f coll)))))
 
 ; XXX: migrated
-(defmulti mangle
-  "Flattens the item into a string for use with name serialization."
-  (fn [item]
-    (:kind item)))
-
-; TODO: Move to mangle namespace
-; TODO: Hash mangled type
-(defmethod mangle :type
-  [item]
-  (sanitize/sanitize-str (mangle (:value item))))
-
-; XXX: migrated
-(defmethod mangle :identifier
-  [item]
-  (sanitize/sanitize-str
-    (let [ret (str (:name item) "_t")]
-      (if (contains? item :generics)
-        (apply str ret (map mangle (-> item :generics :values)))
-        ret))))
-
-; XXX: migrated
-(defmethod mangle :specialization-list
-  [item]
-  (sanitize/sanitize-str
-    (apply str (map mangle (:values item)))))
-
-; XXX: migrated
-(defmethod mangle :default
-  [item]
-  (codegen-assert false (str "invalid item to mangle " item)))
-
-; XXX: migrated
-(defmethod mangle :binding-name
-  [item]
-  (sanitize/sanitize-str (str (:name (:name item))
-                              (mangle (:type item)))))
-
-; XXX: migrated
-(defmethod mangle :function-call
-  [item]
-  (sanitize/sanitize-str (str (:name (:name item))
-                              (mangle (:signature item)))))
-
-; XXX: migrated
 (defn end-statement
   "Ends a statement with a semi-colon. Empty statements are unchanged."
   [statement]
