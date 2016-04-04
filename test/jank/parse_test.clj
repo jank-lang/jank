@@ -5,7 +5,7 @@
 (def error #"parse error:")
 
 (defn test-file [file]
-  (println "testing" file)
+  (println "[parse] testing" file)
   (if (should-fail? file)
     (is (thrown-with-msg? AssertionError
                           error

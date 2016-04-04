@@ -5,7 +5,7 @@
 (def error #"type error:")
 
 (defn test-file [file]
-  (println "testing" file)
+  (println "[type] testing" file)
   (if (should-fail? file)
     (is (thrown-with-msg? AssertionError
                           error
