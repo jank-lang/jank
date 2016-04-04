@@ -105,25 +105,26 @@
     (codegen-impl ret)
     "void"))
 
+; XXX: migrated
 (defmethod codegen-impl :if-expression
   [current]
   (let [base (str "[=]()->"
                   ; If expressions used as returns need a type to be specified
-                  (if (some #(and (vector? %) (= (first %) :type)) current)
-                    (codegen-impl (second (nth current 4)))
+                  (if-let [if-type (:type current)]
+                    (codegen-impl if-type)
                     "void")
                   "{if("
-                  (codegen-impl (second (second current)))
+                  (codegen-impl (:value (:condition current)))
                   "){"
-                  (util/end-statement (codegen-impl (second (nth current 2))))
+                  (util/end-statement (codegen-impl (:value (:then current))))
                   "}")]
     (str
       (cond
-        (some #(and (vector? %) (= (first %) :else)) current)
+        (contains? current :else)
         (str base
              "else{"
              (util/end-statement
-               (codegen-impl (second (nth current 3))))
+               (codegen-impl (:value (:else current))))
              "}")
         :else
         base)
