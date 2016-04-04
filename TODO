@@ -4,6 +4,8 @@ adopt core.typed
 
 add extern functions
 
+bug if if/then return calculation using :values instead of :value
+
 codegen won't allow overloading
   encode signatures in function names
     [x] function definitions in codegen
