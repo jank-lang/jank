@@ -67,6 +67,10 @@
                      "no return value in if/then expression")
     (internal-assert (not-empty else-body)
                      "no return value in if/else expression")
+    (internal-assert (= 1 (count then-body))
+                     "malformed if/then body")
+    (internal-assert (= 1 (count else-body))
+                     "malformed if/else body")
 
     (let [then-type (expression/realize-type (last then-body) scope)
           else-type (expression/realize-type (last else-body) scope)]
@@ -76,8 +80,8 @@
                         " and "
                         else-type))
 
-      (assoc (assoc-in (assoc-in item [:then :values] then-body)
-                       [:else :values] else-body)
+      (assoc (assoc-in (assoc-in item [:then :value] (first then-body))
+                       [:else :value] (first else-body))
              :type then-type))))
 
 (defmethod add-explicit-returns :body
