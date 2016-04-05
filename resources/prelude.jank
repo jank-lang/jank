@@ -34,3 +34,7 @@
 
 (declare / ƒ : ((integer integer) (integer)))
 (declare / ƒ : ((real real) (real)))
+
+(declare = ƒ : ((integer integer) (boolean)))
+(declare = ƒ : ((real real) (boolean)))
+(declare = ƒ : ((string string) (boolean)))
