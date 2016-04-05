@@ -28,8 +28,3 @@
   (consume-output
     (type/check {:cells (parse file)}))
   true)
-
-(defn valid-codegen? [file]
-  (consume-output
-    (c++/codegen (first (type/check {:cells (parse file)}))))
-  true)
