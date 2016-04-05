@@ -1,0 +1,9 @@
+(bind bar real -77.77)
+
+(assert (= bar -77.77))
+
+(bind some-func
+  (λ () ()
+    (assert (= bar -77.77))))
+
+(some-func)

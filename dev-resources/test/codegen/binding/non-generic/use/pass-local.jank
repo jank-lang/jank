@@ -1,0 +1,9 @@
+(bind some-func
+  (λ () ()
+    (bind local string "nice")
+    (assert (= local "nice"))
+
+    (bind blarb boolean true)
+    (assert blarb)))
+
+(some-func)
