@@ -30,12 +30,14 @@
 (defmethod mangle :binding-name
   [item]
   (sanitize/sanitize-str (str (:name (:name item))
-                              (mangle (:type item)))))
+                              "_"
+                              (hash (mangle (:type item))))))
 
 (defmethod mangle :function-call
   [item]
   (sanitize/sanitize-str (str (:name (:name item))
-                              (mangle (:signature item)))))
+                              "_"
+                              (hash (mangle (:signature item))))))
 
 (defmethod mangle :default
   [item]
