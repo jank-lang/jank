@@ -5,17 +5,10 @@
 #include "prelude/primitive.hpp"
 #include "prelude/assert.hpp"
 #include "prelude/output.hpp"
+#include "prelude/input.hpp"
 
 namespace jank
 {
-  /* -- Input -- */
-  string input_gen_bang()
-  {
-    string s;
-    std::getline(std::cin, s);
-    return s;
-  }
-
   /* -- Primitive arithmetic -- */
   template <typename A, typename B>
   auto _gen_plus(A const &a, B const &b)

@@ -20,5 +20,5 @@ namespace jank
 namespace jank_gen
 {
   string print_gen_bang1925837317(string s)
-  { return print(s); }
+  { return jank::print(s); }
 }
