@@ -1,28 +1,20 @@
 #pragma once
 
 #include <iostream>
-#include <string>
 #include <sstream>
 #include <stdexcept>
-#include <functional>
+
+#include <prelude/primitive.hpp>
 
 namespace jank
 {
-  /* -- Primitives -- */
-  using integer = int64_t;
-  using real = double;
-  using boolean = bool;
-  using string = std::string;
-  template <typename T>
-  using _gen_function = std::function<T>;
-
   /* -- Assertions -- */
   void assert_gen_bang(boolean const b, string const &s)
   {
     if(!b)
     { throw std::runtime_error{ "(assertion failure) " + s }; }
   }
-  void assert_gen_minus_not_gen_bang(boolean const b)
+  void assert_gen_bang__gen_minus1906603266(boolean const b)
   { assert_gen_bang(!b, ""); }
   void assert_gen_minus_not_gen_bang(boolean const b, string const &s)
   { assert_gen_bang(!b, s); }
