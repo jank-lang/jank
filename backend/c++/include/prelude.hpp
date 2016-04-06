@@ -1,24 +1,13 @@
 #pragma once
 
-#include <iostream>
-#include <sstream>
 #include <stdexcept>
 
 #include "prelude/primitive.hpp"
 #include "prelude/assert.hpp"
+#include "prelude/output.hpp"
 
 namespace jank
 {
-  /* -- Output -- */
-  template <typename T>
-  string print_gen_bang(T const &t)
-  {
-    std::stringstream ss;
-    ss << t;
-    std::cout << ss.rdbuf() << std::endl;
-    return ss.str();
-  }
-
   /* -- Input -- */
   string input_gen_bang()
   {
