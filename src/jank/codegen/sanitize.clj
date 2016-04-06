@@ -1,6 +1,5 @@
 (ns jank.codegen.sanitize)
 
-; XXX: migrated
 (def sanitized-symbols {"=" "_gen_equal"
                         "!" "_gen_bang"
                         "#" "_gen_pound"
@@ -31,7 +30,6 @@
                         "~" "_gen_tilde"
                         "ƒ" "_gen_function"})
 
-; XXX: migrated
 (defn sanitize
   "Sanitizes a char (as a str) of a jank identifier into
    something which C-like languages will accept."
@@ -48,7 +46,6 @@
                   ((partial str "_u"))
                   vec)))))
 
-; XXX: migrated
 (defn sanitize-str
   "Sanitizes a string of a jank identifier into
    something which C-like languages will accept."
