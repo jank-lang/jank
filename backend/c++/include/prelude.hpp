@@ -4,23 +4,11 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <prelude/primitive.hpp>
+#include "prelude/primitive.hpp"
+#include "prelude/assert.hpp"
 
 namespace jank
 {
-  /* -- Assertions -- */
-  void assert_gen_bang(boolean const b, string const &s)
-  {
-    if(!b)
-    { throw std::runtime_error{ "(assertion failure) " + s }; }
-  }
-  void assert_gen_bang__gen_minus1906603266(boolean const b)
-  { assert_gen_bang(!b, ""); }
-  void assert_gen_minus_not_gen_bang(boolean const b, string const &s)
-  { assert_gen_bang(!b, s); }
-  void assert_gen_minus_unreachable_gen_bang()
-  { assert_gen_bang(false, "unreachable code reached"); }
-
   /* -- Output -- */
   template <typename T>
   string print_gen_bang(T const &t)
@@ -50,7 +38,7 @@ namespace jank
 
   auto operator *(string s, integer const n)
   {
-    assert_gen_bang(n > 0, "invalid scalar for string repetition");
+    assert_bang(n > 0, "invalid scalar for string repetition");
     auto const original_size(s.size());
     s.reserve(s.size() * n);
 
