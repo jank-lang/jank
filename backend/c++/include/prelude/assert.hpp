@@ -11,7 +11,8 @@ namespace jank
   }
   void assert_bang(boolean const b)
   { assert_bang(b, ""); }
-  /* TODO: Add overload without string. */
+  void assert_not_bang(boolean const b)
+  { assert_bang(!b); }
   void assert_not_bang(boolean const b, string const &s)
   { assert_bang(!b, s); }
   void assert_unreachable_bang()
@@ -24,6 +25,8 @@ namespace jank_gen
   { jank::assert_bang(b, s); }
   void assert_gen_bang_gen_minus1906603266(boolean const b)
   { jank::assert_bang(b, ""); }
+  void assert_gen_minusnot_gen_bang_gen_minus1906603266(boolean const b, string const &s)
+  { jank::assert_not_bang(b, s); }
   void assert_gen_minusnot_gen_bang_gen_minus1906603266(boolean const b, string const &s)
   { jank::assert_not_bang(b, s); }
   void assert_gen_minusunreachable_gen_bang2018684456()
