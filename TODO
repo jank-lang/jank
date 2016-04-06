@@ -4,6 +4,8 @@ adopt core.typed
 
 add extern functions
 
+generate mangled prelude wrappers with a script
+
 codegen won't allow overloading
   encode signatures in function names
     [x] function definitions in codegen
