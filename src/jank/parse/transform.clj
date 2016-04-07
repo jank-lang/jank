@@ -21,10 +21,11 @@
 
 (defn declare-statement [& more]
   (let [base {:kind :declare-statement
+              :external (= "declare-extern" (first more))
               :type (last more)}
         size (count more)]
-    (if (= 2 size) ; Has identifier (declaring a binding)
-      (assoc base :name (first more))
+    (if (= 3 size) ; Has identifier (declaring a binding)
+      (assoc base :name (second more))
       base)))
 
 (defn binding-definition [& more]
