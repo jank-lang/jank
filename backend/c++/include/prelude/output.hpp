@@ -16,9 +16,3 @@ namespace jank
     return ss.str();
   }
 }
-
-namespace jank_gen
-{
-  string print_gen_bang1925837317(string s)
-  { return jank::print(s); }
-}
