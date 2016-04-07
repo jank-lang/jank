@@ -3,8 +3,7 @@
 adopt core.typed
 
 add extern functions
-
-generate mangled prelude wrappers with a script
+  make prelude functions extern to avoi mangling
 
 codegen won't allow overloading
   encode signatures in function names
