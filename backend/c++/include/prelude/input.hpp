@@ -14,9 +14,3 @@ namespace jank
     return s;
   }
 }
-
-namespace jank_gen
-{
-  string input_gen_bang_gen_minus639422135()
-  { return jank::input(); }
-}
