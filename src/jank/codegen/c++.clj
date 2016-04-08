@@ -76,7 +76,10 @@
 
 (defmethod codegen-impl :function-call
   [current]
-  (str (mangle/mangle current)
+  ; External calls don't get mangled
+  (str (if (:external? (:signature current))
+         (codegen-impl (:name current))
+         (mangle/mangle current))
        "("
        (util/comma-separate-args
          (map codegen-impl (:arguments current)))
