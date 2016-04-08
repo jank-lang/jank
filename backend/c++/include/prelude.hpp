@@ -6,4 +6,5 @@
 #include "prelude/assert.hpp"
 #include "prelude/output.hpp"
 #include "prelude/input.hpp"
+#include "prelude/equality.hpp"
 #include "prelude/arithmetic.hpp"

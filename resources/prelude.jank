@@ -21,6 +21,12 @@
 (; -- Input -- ;)
 (declare-extern input! ƒ : (() (string)))
 
+(; -- Equality -- ;)
+(declare-extern = ƒ : ((string string) (boolean)))
+(declare-extern = ƒ : ((real real) (boolean)))
+(declare-extern = ƒ : ((integer integer) (boolean)))
+(declare-extern = ƒ : ((boolean boolean) (boolean)))
+
 (; -- Arithmetic -- ;)
 (declare-extern + ƒ : ((integer integer) (integer)))
 (declare-extern + ƒ : ((real real) (real)))
