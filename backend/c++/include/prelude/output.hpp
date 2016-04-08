@@ -8,7 +8,7 @@
 namespace jank
 {
   template <typename T>
-  string print(T const &t)
+  string print_gen_bang(T const &t)
   {
     std::stringstream ss;
     ss << t;

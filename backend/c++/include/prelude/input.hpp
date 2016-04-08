@@ -7,7 +7,7 @@
 
 namespace jank
 {
-  string input()
+  string input_gen_bang()
   {
     string s;
     std::getline(std::cin, s);

@@ -1,6 +1,6 @@
 #include "prelude.hpp"
 
-namespace jank_gen
+namespace jank
 {
 /* This is the generated source. */
 #include "jank-generated.hpp"
@@ -9,7 +9,7 @@ namespace jank_gen
 int main(int const argc, char ** const argv)
 try
 {
-  jank_gen::_gen_poundmain();
+  jank::_gen_poundmain();
 }
 catch(std::exception const &e)
 { std::cout << "exception: " << e.what() << std::endl; }

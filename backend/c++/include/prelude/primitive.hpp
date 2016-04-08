@@ -12,12 +12,3 @@ namespace jank
   template <typename T>
   using function = std::function<T>;
 }
-
-namespace jank_gen
-{
-  using jank::integer;
-  using jank::real;
-  using jank::boolean;
-  using jank::string;
-  using jank::function;
-}

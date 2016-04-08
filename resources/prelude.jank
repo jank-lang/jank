@@ -10,6 +10,7 @@
 (declare-extern assert-not! ƒ : ((boolean) ()))
 (declare-extern assert-not! ƒ : ((boolean string) ()))
 (declare-extern assert-unreachable! ƒ : (() ()))
+(; TODO: overload with a string. ;)
 
 (; -- Output -- ;)
 (declare-extern print! ƒ : ((string) (string)))
