@@ -3,7 +3,7 @@
 adopt core.typed
 
 add extern functions
-  make prelude functions extern to avoi mangling
+  make prelude functions extern to avoid mangling
 
 codegen won't allow overloading
   encode signatures in function names
