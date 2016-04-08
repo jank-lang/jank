@@ -21,7 +21,7 @@
 
 (defn declare-statement [& more]
   (let [base {:kind :declare-statement
-              :external (= "declare-extern" (first more))
+              :external? (= "declare-extern" (first more))
               :type (last more)}
         size (count more)]
     (if (= 3 size) ; Has identifier (declaring a binding)

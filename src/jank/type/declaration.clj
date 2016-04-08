@@ -130,13 +130,14 @@
   (let [decl-name (:name (:name item))
         decl-type (:type item)
         found-decl (validate decl-name decl-type scope)
-        found-type (lookup-type decl-type scope)]
+        found-type (lookup-type decl-type scope)
+        stored-type (assoc decl-type :external? (:external? item))]
     (type-assert (some? found-type) (str "unknown type " decl-type))
 
     (cond
       ; If we're seeing this binding for the first time
       (nil? found-decl)
-      (update scope :binding-declarations assoc decl-name [decl-type])
+      (update scope :binding-declarations assoc decl-name [stored-type])
 
       ; If we're adding an overload
       ; TODO: Use a set
@@ -156,7 +157,7 @@
         (update-in without-auto
                    [:binding-declarations decl-name]
                    conj
-                   decl-type))
+                   stored-type))
 
       ; Multiple declaration; nothing changes
       :else
