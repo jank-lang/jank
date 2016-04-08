@@ -10,7 +10,7 @@
     (:kind item)))
 
 (defn call-signature
-  "Calculates the shortened signature of a given function call."
+  "Calculates the signature of a given function call."
   [item scope]
   ; The value/name of the function might be a function call which returns a
   ; function or a lambda definition directly; we special case for identifiers
@@ -27,17 +27,12 @@
     (type-assert (every? declaration/function? overloads)
                  (str "not a function " func-name))
 
-    ; Test all overloads; matches comes back as a vector of declarations
-    ; for the matched functions.
-    (let [matches (reduce
-                    (fn [matched func]
-                      (let [generics (:generics (:value func))
-                            expected-types (-> generics :values first :values)]
-                        ; TODO: Allow comparison of overload superpositions
-                        (if (= arg-types expected-types)
-                          (conj matched func)
-                          matched)))
-                    []
+    ; Test all overloads
+    (let [matches (filter
+                    #(let [generics (:generics (:value %))
+                           expected-types (-> generics :values first :values)]
+                       ; TODO: Allow comparison of overload superpositions
+                       (= arg-types expected-types))
                     overloads)]
       (type-assert (not-empty matches)
                    (str "no matching function call to " func-name
