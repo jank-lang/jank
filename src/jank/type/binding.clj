@@ -42,7 +42,8 @@
     (type-assert (or (nil? overloads)
                      (and function? (empty? overload-matches)))
                  (str "binding already exists " item-name))
-    (type-assert (= expected-type item-type)
+    (type-assert (= (declaration/strip-type expected-type)
+                    (declaration/strip-type item-type))
                  (str "expected binding type "
                       expected-type
                       ", found type "
@@ -52,7 +53,8 @@
                             {:kind :binding-declaration
                              :name {:kind :identifier
                                     :name item-name}
-                             :type item-type}
+                             :type item-type
+                             :external? false}
                             scope)]
       (if (nil? overloads)
         (update

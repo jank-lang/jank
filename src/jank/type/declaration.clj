@@ -14,6 +14,12 @@
   (let [type-name (:name (:value decl-type))]
     (or (= "∀" type-name) (= "auto" type-name))))
 
+(defn strip-type
+  "Removes additional information from types which isn't
+   needed during comparison."
+  [decl-type]
+  (dissoc decl-type :external?))
+
 (defn lookup-overloads
   "Recursively looks through the hierarchy of scopes for the declaration.
    Returns all overloads in all scopes, from closest to furthest."
@@ -49,7 +55,9 @@
         ; function overloads. In that case, all declarations must be functions.
         ; The only exception is matching an auto declaration against a complete
         ; type.
-        (type-assert (or (some #(= wrapped-type %) expected-types)
+        (type-assert (or (some #(= (strip-type wrapped-type)
+                                   (strip-type %))
+                               expected-types)
                          (some auto? expected-types)
                          (and (function? wrapped-type)
                               (every? function? expected-types)))
@@ -130,7 +138,7 @@
   (let [decl-name (:name (:name item))
         decl-type (:type item)
         found-decl (validate decl-name decl-type scope)
-        found-type (lookup-type decl-type scope)
+        found-type (lookup-type (strip-type decl-type) scope)
         stored-type (assoc decl-type :external? (:external? item))]
     (type-assert (some? found-type) (str "unknown type " decl-type))
 

@@ -32,7 +32,8 @@
                     #(let [generics (:generics (:value %))
                            expected-types (-> generics :values first :values)]
                        ; TODO: Allow comparison of overload superpositions
-                       (= arg-types expected-types))
+                       (= (map declaration/strip-type arg-types)
+                          (map declaration/strip-type expected-types)))
                     overloads)]
       (type-assert (not-empty matches)
                    (str "no matching function call to " func-name
@@ -80,7 +81,8 @@
         else-type (realize-type (:value (:else item)) scope)]
     (internal-assert (some? then-type) "invalid then type")
     (internal-assert (some? else-type) "invalid else type")
-    (internal-assert (= then-type else-type)
+    (internal-assert (= (declaration/strip-type then-type)
+                        (declaration/strip-type else-type))
                      (str "incompatible if then/else types "
                           then-type
                           " and "

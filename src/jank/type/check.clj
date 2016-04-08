@@ -150,9 +150,10 @@
 (defmethod check-item :if-expression
   [item scope]
   (let [cond-type (expression/realize-type (:value (:condition item)) scope)]
-    (type-assert (= cond-type {:kind :type
-                               :value {:kind :identifier
-                                       :name "boolean"}})
+    (type-assert (= (declaration/strip-type cond-type)
+                    {:kind :type
+                     :value {:kind :identifier
+                             :name "boolean"}})
                  (str "if expression condition must be boolean, not " cond-type))
 
     (let [checked-then (check {:cells [(:value (:then item))]}

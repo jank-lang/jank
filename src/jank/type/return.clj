@@ -42,7 +42,8 @@
                              body-type
                              expected-type)
               updated-item (assoc item :body (:values updated-body))]
-          (type-assert (= deduced-type body-type)
+          (type-assert (= (declaration/strip-type deduced-type)
+                          (declaration/strip-type body-type))
                        (str "expected function return type of "
                             deduced-type
                             ", found "
@@ -74,7 +75,8 @@
 
     (let [then-type (expression/realize-type (last then-body) scope)
           else-type (expression/realize-type (last else-body) scope)]
-      (type-assert (= then-type else-type)
+      (type-assert (= (declaration/strip-type then-type)
+                      (declaration/strip-type else-type))
                    (str "incompatible if then/else types "
                         then-type
                         " and "
