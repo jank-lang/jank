@@ -17,4 +17,6 @@ namespace jank
   { assert_gen_bang(!b, s); }
   void assert_gen_minusunreachable_gen_bang()
   { assert_gen_bang(false, "unreachable code reached"); }
+  void assert_gen_minusunreachable_gen_bang(string const &s)
+  { assert_gen_bang(false, s); }
 }
