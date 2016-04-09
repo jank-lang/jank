@@ -37,6 +37,20 @@
       (assoc base :type (second more))
       base)))
 
+(defn struct-definition [& more]
+  {:kind :struct-definition
+   :name (first more)
+   :members (rest more)})
+
+(defn struct-member [& more]
+  (let [base {:kind :struct-member
+              :name (first more)
+              :type (second more)}
+        size (count more)]
+    (if (= 3 size) ; Has value
+      (assoc base :value (nth more 2))
+      base)))
+
 (defn function-call [& more]
   {:kind :function-call
    :name (first more)

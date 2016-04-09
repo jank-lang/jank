@@ -34,6 +34,8 @@
                         :specialization-list transform/specialization-list
                         :declare-statement transform/declare-statement
                         :binding-definition transform/binding-definition
+                        :struct-definition transform/struct-definition
+                        :struct-member transform/struct-member
                         :function-call transform/function-call
                         :lambda-definition transform/lambda-definition
                         :argument-list transform/argument-list

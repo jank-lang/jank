@@ -6,6 +6,7 @@
               binding-definition /
               if-expression /
               declare-statement /
+              struct-definition /
               function-call
 <atom> = statement /
          list
@@ -20,7 +21,7 @@ string = <double-quote> not-double-quote <double-quote>
 
 identifier = #'[^\s"\'()\d:][^\s"\'()]*' generic-specialization?
 keyword = <':'> identifier
-special-identifier = declare-keyword | bind-keyword | macro-keyword | if-keyword | lambda-keyword
+special-identifier = declare-keyword | bind-keyword | macro-keyword | if-keyword | lambda-keyword | struct-keyword
 
 boolean = 'true' | 'false'
 
@@ -69,6 +70,12 @@ if-expression = left-paren if-keyword condition
 <declare-keyword> = 'declare' | 'declare-extern'
 declare-statement = left-paren declare-keyword
                       (type / (identifier type))
+                    right-paren
+
+<struct-keyword> = <'struct'>
+struct-member = left-paren identifier type atom? right-paren
+struct-definition = left-paren struct-keyword identifier
+                      struct-member*
                     right-paren
 
 comment = <'(;'> inside-comment* <';)'>
