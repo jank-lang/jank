@@ -11,6 +11,7 @@ structs
   type declaration for struct
   function declaration for each member
   codegen is a bit more involved
+  tests!
 
 read command-line arguments from a separate file
   don't bother with the target macro yet
