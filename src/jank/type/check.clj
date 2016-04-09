@@ -1,5 +1,6 @@
 (ns jank.type.check
-  (:require [jank.type.declaration :as declaration]
+  (:require [jank.parse.fabricate :as fabricate]
+            [jank.type.declaration :as declaration]
             [jank.type.binding :as binding]
             [jank.type.expression :as expression]
             [jank.type.return :as return])
@@ -128,9 +129,9 @@
                new-scope
                (recur (rest remaining)
                       (declaration/add-to-scope
-                        {:kind :binding-declaration
-                         :name (ffirst remaining)
-                         :type (second (first remaining))}
+                        (fabricate/binding-declaration
+                          (ffirst remaining)
+                          (-> remaining first second))
                         new-scope)))))))
 
 (defmethod check-item :return-list

@@ -27,3 +27,9 @@
         :values (map type fn-args)}
        {:kind :specialization-list
         :values [(type fn-ret)]}]}}}})
+
+(defn binding-declaration
+  [decl-name decl-type]
+  {:kind :binding-declaration
+   :name decl-name
+   :type decl-type})
