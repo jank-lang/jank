@@ -75,7 +75,7 @@ declare-statement = left-paren declare-keyword
 <struct-keyword> = <'struct'>
 struct-member = left-paren identifier type atom? right-paren
 struct-definition = left-paren struct-keyword identifier
-                      struct-member*
+                      struct-member+
                     right-paren
 
 comment = <'(;'> inside-comment* <';)'>
