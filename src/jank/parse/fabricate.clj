@@ -5,12 +5,14 @@
 
 (defn type
   [name]
+  ; TODO: Check for string or map
   {:kind :type
    :value {:kind :identifier
            :name name}})
 
 (defn function-declaration
   [fn-name fn-args fn-ret]
+  ; TODO: Check for string or map
   {:kind :declare-statement
    :external? false
    :name {:kind :identifier
@@ -34,3 +36,11 @@
   {:kind :binding-declaration
    :name decl-name
    :type decl-type})
+
+(defn type-declaration
+  [decl-name]
+  ; TODO: Check for string or map
+  {:kind :binding-declaration
+   :type {:kind :type
+          :value {:kind :identifier
+                  :name decl-name}}})
