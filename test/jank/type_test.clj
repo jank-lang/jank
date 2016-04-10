@@ -42,6 +42,7 @@
   (doseq [file ["fail-incorrect-type.jank"
                 "fail-invalid-param-type.jank"
                 "fail-invalid-return-type.jank"
+                "fail-same-param-name.jank"
                 "pass-with-type.jank"
                 "pass-simple.jank"
                 "pass-call.jank"
