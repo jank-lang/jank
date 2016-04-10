@@ -65,6 +65,38 @@
            :arguments checked-args
            :scope scope)))
 
+; TODO: tests
+(defmethod check-item :struct-definition
+  [item scope]
+  ; TODO: Check for duplicate struct
+  (let [item-name (:name item)
+        ; TODO: Check all member names are unique
+        checked-members (map #(check-item % scope) (:members item))
+        ; Add the struct type into scope
+        scope-with-struct (declaration/add-to-scope
+                            (fabricate/type-declaration (:name item-name))
+                            scope)
+        ; Add a member function for each member
+        checked-scope (loop [members checked-members
+                             new-scope scope-with-struct]
+                        (if (empty? members)
+                          new-scope
+                          (recur (rest members)
+                                 (declaration/add-to-scope
+                                   (fabricate/function-declaration
+                                     (-> members first :name :name)
+                                     [(:name item-name)]
+                                     (-> members first :type :value :name))
+                                   new-scope))))]
+    (assoc item
+           :members checked-members
+           :scope checked-scope)))
+
+(defmethod check-item :struct-member
+  [item scope]
+  (assoc item
+         :scope scope))
+
 (defmethod check-item :binding-definition
   [item scope]
   ; There is an optional type specifier which may be before the value
