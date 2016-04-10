@@ -30,6 +30,7 @@
 
 (defn binding-declaration
   [decl-name decl-type]
+  ; TODO: Check for string or map
   {:kind :binding-declaration
    :name decl-name
    :type decl-type})
