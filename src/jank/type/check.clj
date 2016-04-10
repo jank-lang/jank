@@ -69,8 +69,9 @@
 (defmethod check-item :struct-definition
   [item scope]
   ; TODO: Check for duplicate struct
+  (type-assert (apply distinct? (map :name (:members item)))
+               "not all struct member names are distinct")
   (let [item-name (:name item)
-        ; TODO: Check all member names are unique
         checked-members (map #(check-item % scope) (:members item))
         ; Add the struct type into scope
         scope-with-struct (declaration/add-to-scope
@@ -151,7 +152,7 @@
   ; they're all distinct.
   (let [args (partition 2 (:values item))]
     (when (not-empty args)
-      (type-assert (distinct (map first args))
+      (type-assert (apply distinct? (map first args))
                    "not all parameter names are distinct"))
     (assoc item
            :scope
