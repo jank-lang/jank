@@ -6,6 +6,7 @@ basic stdlib
   persistent immutable data structures
   higher-order functions
   generics are the big issue
+    use core.logic
 
 structs
   type declaration for struct
