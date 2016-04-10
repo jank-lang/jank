@@ -1,5 +1,6 @@
 (;
   Parens (like quotes) can span multiple lines.
-  (ƒ blarg () ()
-    )
+  (bing blarg
+    (λ () ()
+      ))
 ;)

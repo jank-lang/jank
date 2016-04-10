@@ -1,2 +1,3 @@
-(ƒ test (d something-bad) ()
-  )
+(bind test
+  (λ (d something-bad) ()
+    ))

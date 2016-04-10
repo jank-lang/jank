@@ -1,10 +1,12 @@
 (; prints foo. ;)
-(ƒ foo () ()
-  (print! "foo"))
+(bind foo
+  (λ () ()
+    (print! "foo")))
 
 (; prints bar. ;)
-(ƒ bar () ()
-  (print! "bar"))
+(bind bar
+  (λ () ()
+    (print! "bar")))
 
 (foo)
 (bar)
