@@ -54,6 +54,22 @@
       :else
       "auto const ")))
 
+(defmethod codegen-impl :struct-definition
+  [current]
+  ; TODO: member functions
+  (str "struct "
+       (codegen-impl (:name current))
+       " final {"
+       (apply str (map codegen-impl (:members current)))
+       "}"))
+
+(defmethod codegen-impl :struct-member
+  [current]
+  (util/end-statement
+    (str (codegen-impl (:type current))
+         " "
+         (codegen-impl (:name current)))))
+
 (defmethod codegen-impl :binding-name
   [current]
   (let [value (:value current)]
