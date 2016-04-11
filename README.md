@@ -55,8 +55,8 @@ Functions are defined via the `function` (or `ƒ`) special identifier and requir
 ## Structs
 ```lisp
 (struct coord
-  (x float)
-  (y float))
+  (x real)
+  (y real))
 ```
 
 User-defined data types are supported, in the form of structs. Structs may contain any number of members, all of which are public (as in C). Structs may also be generic. Structs may not have member functions. Instead, functions should be designed in a generic manner and may be overloaded/specialized for certain types. See [generics](#generics).
