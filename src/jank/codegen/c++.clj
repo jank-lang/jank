@@ -61,7 +61,12 @@
        (codegen-impl (:name current))
        " final {"
        (apply str (map codegen-impl (:members current)))
-       "}"))
+       "};"
+       (apply str (map (comp codegen-impl
+                             #(assoc %
+                                     :kind :struct-member-function
+                                     :struct current))
+                       (:members current)))))
 
 (defmethod codegen-impl :struct-member
   [current]
@@ -69,6 +74,10 @@
     (str (codegen-impl (:type current))
          " "
          (codegen-impl (:name current)))))
+
+(defmethod codegen-impl :struct-member-function
+  [current]
+  ) ; TODO
 
 (defmethod codegen-impl :binding-name
   [current]
