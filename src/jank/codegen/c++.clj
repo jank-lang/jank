@@ -77,7 +77,15 @@
 
 (defmethod codegen-impl :struct-member-function
   [current]
-  ) ; TODO
+  (str "auto const "
+       (codegen-impl (update-in (:name current)
+                                [:name]
+                                #(str "." %)))
+       "=[=]("
+       (codegen-impl (:name (:struct current)))
+       " const obj){return obj."
+       (codegen-impl (:name current))
+       ";}"))
 
 (defmethod codegen-impl :binding-name
   [current]
