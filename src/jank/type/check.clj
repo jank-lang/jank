@@ -85,7 +85,7 @@
                           (recur (rest members)
                                  (declaration/add-to-scope
                                    (fabricate/function-declaration
-                                     (-> members first :name :name)
+                                     (str "." (-> members first :name :name))
                                      [(:name item-name)]
                                      (-> members first :type :value :name))
                                    new-scope))))]
