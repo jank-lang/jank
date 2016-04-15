@@ -77,6 +77,8 @@
 
 (defmethod codegen-impl :struct-member-function
   [current]
+  ; TODO: This isn't sufficient; mangling needs to be done
+  ; Fabricate a proper definition!
   (str "auto const "
        (codegen-impl (update-in (:name current)
                                 [:name]
@@ -85,7 +87,7 @@
        (codegen-impl (:name (:struct current)))
        " const obj){return obj."
        (codegen-impl (:name current))
-       ";}"))
+       ";};"))
 
 (defmethod codegen-impl :binding-name
   [current]
