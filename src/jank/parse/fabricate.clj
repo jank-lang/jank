@@ -19,6 +19,7 @@
           :name fn-name}
    :type
    {:kind :type
+    :external? false
     :value
     {:kind :identifier
      :name "ƒ"
@@ -28,7 +29,7 @@
       [{:kind :specialization-list
         :values (map type fn-args)}
        {:kind :specialization-list
-        :values [(type fn-ret)]}]}}}})
+        :values (list (type fn-ret))}]}}}})
 
 (defn binding-declaration
   [decl-name decl-type]

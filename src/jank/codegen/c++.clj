@@ -1,5 +1,6 @@
 (ns jank.codegen.c++
-  (:require [jank.codegen.sanitize :as sanitize]
+  (:require [jank.parse.fabricate :as fabricate]
+            [jank.codegen.sanitize :as sanitize]
             [jank.codegen.util :as util]
             [jank.codegen.mangle :as mangle])
   (:use clojure.pprint
@@ -77,12 +78,14 @@
 
 (defmethod codegen-impl :struct-member-function
   [current]
-  ; TODO: This isn't sufficient; mangling needs to be done
-  ; Fabricate a proper definition!
   (str "auto const "
-       (codegen-impl (update-in (:name current)
-                                [:name]
-                                #(str "." %)))
+       ; We need type info for mangling, so we'll cheat
+       (mangle/mangle
+         (assoc
+           (fabricate/function-declaration (str "." (:name (:name current)))
+                                           ["person"]
+                                           (-> current :type :value :name))
+           :kind :binding-name))
        "=[=]("
        (codegen-impl (:name (:struct current)))
        " const obj){return obj."
@@ -104,6 +107,7 @@
 
 (defmethod codegen-impl :binding-definition
   [current]
+  ;(pprint (clean-scope current))
   (str (codegen-impl (assoc current :kind :binding-type))
        (codegen-impl (assoc current :kind :binding-name))
        "="
@@ -111,6 +115,7 @@
 
 (defmethod codegen-impl :function-call
   [current]
+  ;(pprint (clean-scope current))
   ; External calls don't get mangled
   (str (if (:external? (:signature current))
          (codegen-impl (:name current))
