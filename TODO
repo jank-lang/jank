@@ -9,9 +9,7 @@ basic stdlib
     use core.logic
 
 structs
-  type declaration for struct
-  function declaration for each member
-  codegen is a bit more involved
+  member fn codegen
   tests!
 
 read command-line arguments from a separate file
