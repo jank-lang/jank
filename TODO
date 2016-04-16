@@ -9,6 +9,7 @@ basic stdlib
     use core.logic
 
 structs
+  constructors
   member fn codegen
   tests!
 
