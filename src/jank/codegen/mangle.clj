@@ -4,7 +4,6 @@
         jank.debug.log
         clojure.pprint))
 
-; TODO: Hash mangled type
 (defmulti mangle
   "Flattens the item into a string for use with name serialization."
   (fn [item]
