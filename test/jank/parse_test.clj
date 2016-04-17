@@ -104,3 +104,13 @@
                 "pass-binding.jank"
                 "pass-generic-binding.jank"]]
     (test-file (str "test/parse/declaration/" file))))
+
+(deftest structs
+  (doseq [file ["fail-no-members.jank"
+                "fail-empty-member.jank"
+                "fail-member-too-many-fields.jank"
+                "fail-no-name.jank"
+                "fail-no-name-some-members.jank"
+                "fail-too-many-names.jank"
+                "fail-non-list-member.jank"]]
+    (test-file (str "test/parse/struct/" file))))

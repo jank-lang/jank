@@ -1,0 +1,2 @@
+(struct kitty
+  bad-member)
