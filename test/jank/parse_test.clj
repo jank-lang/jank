@@ -116,7 +116,7 @@
                 "fail-non-list-member.jank"
                 "pass-one-member-no-value.jank"
                 "pass-one-member-with-value.jank"
-                ; "pass-uniode-name.jank" ; TODO
+                "pass-unicode-name.jank"
                 "pass-multiple-members-no-values.jank"
                 "pass-multiple-members-all-values.jank"
                 "pass-multiple-members-mixed-values.jank"]]
