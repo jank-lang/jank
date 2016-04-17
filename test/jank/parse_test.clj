@@ -4,6 +4,7 @@
 
 (def error #"parse error:")
 
+; TODO: Remove .jank from each and add it automatically
 (defn test-file [file]
   (println "[parse] testing" file)
   (if (should-fail? file)
@@ -112,5 +113,11 @@
                 "fail-no-name.jank"
                 "fail-no-name-some-members.jank"
                 "fail-too-many-names.jank"
-                "fail-non-list-member.jank"]]
+                "fail-non-list-member.jank"
+                "pass-one-member-no-value.jank"
+                "pass-one-member-with-value.jank"
+                ; "pass-uniode-name.jank" ; TODO
+                "pass-multiple-members-no-values.jank"
+                "pass-multiple-members-all-values.jank"
+                "pass-multiple-members-mixed-values.jank"]]
     (test-file (str "test/parse/struct/" file))))

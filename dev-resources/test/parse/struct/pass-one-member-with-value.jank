@@ -1,0 +1,2 @@
+(struct kitty
+  (hungry? boolean true))
