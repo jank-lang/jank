@@ -53,6 +53,7 @@ targets
     opencl
     nix
     forth
+    vimscript
 
   (#target c++
            (#dependencies "gl/gl.h")
