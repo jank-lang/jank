@@ -11,7 +11,11 @@ basic stdlib (two layers: core and aux) -- core can run in kernel
     use core.logic
 
 structs
+  remove member value support (they're immutable, make them count)
   constructors
+    return a tuple of all member values
+    remove aggregate initialization and new macro
+    ctors are the only way
   recursive types
   tests! -- parse done
 
