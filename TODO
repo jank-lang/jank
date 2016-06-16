@@ -2,7 +2,9 @@
 
 adopt core.typed
 
-basic stdlib
+basic stdlib (two layers: core and aux) -- core can run in kernel
+  arithmetic, logic, bit ops
+  basic IO
   persistent immutable data structures
   higher-order functions
   generics are the big issue
