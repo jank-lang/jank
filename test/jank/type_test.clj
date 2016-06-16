@@ -174,3 +174,9 @@
                 "pass-multiple"
                 "pass-normal"]]
     (test-file (str "test/type/declaration/binding/" file))))
+
+; TODO: Test for: declare foo, define (.bar foo), define (struct foo (bar T))
+(deftest structs
+  ; TODO
+  (doseq [file []]
+    (test-file (str "test/type/declaration/struct/" file))))
