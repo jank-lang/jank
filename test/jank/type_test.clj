@@ -175,7 +175,13 @@
                 "pass-normal"]]
     (test-file (str "test/type/declaration/binding/" file))))
 
-; TODO: Test for: declare foo, define (.bar foo), define (struct foo (bar T))
+; TODO: Test for:
+; declare foo, define (.bar foo), define (struct foo (bar T))
+; invalid type name: (struct real ...) -- intrinsic and other structs
+; invalid member type
+; members with same name
+; invalid member value
+; referencing other members as values
 (deftest structs
   ; TODO
   (doseq [file []]
