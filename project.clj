@@ -3,7 +3,7 @@
   :url "https://github.com/jeaye/jank"
   :license {:name "MIT"
             :url "http://opensource.org/licenses/MIT"}
-  :dependencies [[org.clojure/clojure "1.8.0"]
+  :dependencies [[org.clojure/clojure "1.9.0-alpha7"]
                  [instaparse "1.4.2"]
                  [org.clojure/tools.trace "0.7.9"]
                  [me.raynes/fs "1.4.6"]]
