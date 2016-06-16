@@ -13,9 +13,9 @@ basic stdlib (two layers: core and aux) -- core can run in kernel
 structs
   remove member value support (they're immutable, make them count)
   constructors
-    return a tuple of all member values
-    remove aggregate initialization and new macro
-    ctors are the only way
+    use 'new' to do aggregate initialization
+  destructors
+    specialize /std/destroy
   recursive types
   tests! -- parse done
 
