@@ -59,15 +59,7 @@ Functions are defined via the `function` (or `ƒ`) special identifier and requir
   (y real))
 ```
 
-User-defined data types are supported, in the form of structs. Structs may contain any number of members, all of which are public (as in C). Structs may also be generic. Structs may not have member functions. Instead, functions should be designed in a generic manner and may be overloaded/specialized for certain types. See [generics](#generics).
-
-```lisp
-(struct name
-  (first string "John")
-  (last string "Doe"))
-```
-
-Struct members may be given a default value. If a member doesn't have a default value, one must be provided at the time of initialization; the compiler will make sure no members are uninitialized.
+User-defined data types are supported, in the form of structs. Structs may contain any number of members, all of which are public (as in C). Structs may also be generic. Structs may not have member functions. Instead, functions should be designed in a generic manner and may be overloaded/specialized for certain types. See [generics](#generics). The compiler will make sure no members are uninitialized.
 
 ### Members
 Members of structs are accessed with a `.foo` syntax, where `.foo` is a function and `foo` is the field. An example:
