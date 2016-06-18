@@ -149,42 +149,26 @@ Generic functions and types can be variadic, allowing any number of parameters, 
 Anything within `(;` and `;)` is considered a comment and treated as whitespace.
 
 ## Resource management
-```lisp
-(ƒ construct (...) (∀)
-  ...)
+Scope-based resource management ties resource ownership to object lifetimes. Types can take advantage of this by specializing `destruct` to perform any custom logic upon destruction.
 
-(ƒ destruct (o ∀) ()
-  ...)
-```
-
-Scope-based resource management ties resource ownership to object lifetimes. Types can take advantage of this by specializing `construct` and `destruct` to perform any custom logic.
-
-To construct an object using a constructor, `new` or `construct` must be called. To construct an object using aggregate initialization, the type of the object can be used as the function; all members which don't have defaults provided in the `struct` definition must be specified in aggregate initialization.
-
-`new` is a convenience macro which will first try to match constructors and will fall back on aggregate initialization. These checks are all done at compile-time. Since `new` allows types to intercept aggregate initialization with constructors, it's the preferred way of instantiating objects.
+Constructors are just normal functions, idiomatically named the same as the type. Aggregate initialization is also possible, using `new`, and all members must be specified.
 
 Since constructors are the functions to actually create objects, not something that's called after creation, delegation to other constructors and other functions is very flexible.
 
 #### Example
 ```lisp
-(struct coord : (:T-x :T-y)
-  (x T-x)
-  (y T-y))
+(struct score
+  (value integer))
 
-(; Defines a constructor which has a side effect and then uses
- ; aggregate initialization to build the coord. ;)
-(ƒ construct : (coord : (:T-x :T-y)) (x T-x y T-y) (∀)
-  (print! "constructing object")
-  (coord : (T-x T-y) x y))
+(ƒ score (value integer) (∀)
+  (print! "creating score: " value)
 
-(ƒ destruct : (:T-x :T-y) (c coord : (T-x T-y)) ()
-  (print! "destructing coord"))
+  (; Pass on to aggregate initialization. ;)
+  (new : (score) value))
 
-(; Calls the constructor explicitly. ;)
-(bind c1 (construct : (coord : (real real)) 0.0 5.4))
-
-(; Calls the constructor via new. ;)
-(bind c2 (new : (coord : (real real)) 0.0 5.4))
+(; Called only once per object, when it dies. ;)
+(ƒ /std/destruct (s score) ()
+  (print! "destroying score: " (.value s)))
 ```
 
 ## Type aliasing
