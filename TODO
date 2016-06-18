@@ -40,6 +40,11 @@ passing first class overloaded declared functions
 remove function-call from grammar; just use lists
   it becomes unhelpful with macros
 
+consider allowing param packs to not be last
+  perform matching as needed
+  (ƒ shout (s string &strings i int &ints) () ...)
+
+
 use bind and declare as expressions
 
 tests
