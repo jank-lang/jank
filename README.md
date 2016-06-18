@@ -190,13 +190,6 @@ Constraints can be applied to various definitions, including functions and struc
 #### Functions
 ```lisp
 (; Specialize on generic macros as type traits. ;)
-(macro number? : (:T) ()
-  (emit false))
-(macro number? : (integer) ()
-  (emit true))
-(macro number? : (real) ()
-  (emit true))
-
 (ƒ square : (:T) (i T) (∀) where (number? : T)
   (* i i))
 ```
