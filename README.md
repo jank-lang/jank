@@ -266,36 +266,8 @@ Branching, using `if`, allows for specifying a single form for the true and fals
 ```
 
 ## Macros
-Macros provide the ability for arbitrary code execution and direct modification of the source code at compile-time. Macros, like functions, can be made generic and can be partially and fully specialized. Along with generics, macros use the same type-safety and overloading rules as normal functions. There are two added types, during macro definition, which can be used: `^list` and `^atom` which correspond to arbitrary lists of code and single code atoms respectively.
-
-The form of a macro definition is very similar to that of a function definition. Macros, however, have no specific return type; they emit as a side-effect by calling the native `emit` macro. Everything passed to an `emit` macro is emitted literally, by default, unless specified by a call to the `eval` macro. The `eval` macro will only expand the passed values one level.
-
-### Non-generic
-```lisp
-(macro reverse-args (args ^list)
-  (emit ((eval (first args))
-         (eval (reverse (rest args))))))
-
-(reverse-args (print! 3 2 1))
-(; Becomes => (print! 1 2 3) at compile-time. ;)
-
-(macro constructor (type ^list args ^list &body)
-  (emit
-    (ƒ construct : (eval type) (eval args) (∀)
-      (eval body))))
-
-(constructor (person) (first-name ∀ last-name ∀)
-  (person first-name last-name))
-```
-
-### Generic
-```lisp
-(; Compile-time type traits using partial specialization. ;)
-(macro sequence? : (:T) ()
-  (emit false))
-(macro sequence? : (list : (:T)) ()
-  (emit true))
-```
+Macros are hygenic and type-safe, allowing for overloading and generics, just as
+normal functions. Racket's macro system is a key inspiration. More info to come.
 
 ## FFI
 It's possible to declare native C++ functions and types, in an opaque manner, within jank; the following jank code will then be type checked based on those declarations and the generated code will follow accordingly. This allows easy exposure of C and C++ libraries within jank without introducing explicitly unsafe blocks into the language.
