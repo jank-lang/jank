@@ -33,16 +33,16 @@ Currently, jank aims to provide:
 ## Built-in types
 There are a few primitive types which are part of the language.
 
-|Name               |Description                                |
-|:------------------|:------------------------------------------|
-|`boolean`          |A variant of true or false                 |
-|`integer`          |A 64bit signed integer                     |
-|`real`             |A 64bit float                              |
-|`string`           |An array of UTF-8 characters               |
-|`list`             |A generic, homogeneous, sequence           |
-|`map`              |A generic, sorted, associative sequence    |
-|`tuple`            |A generic, heterogeneous, fixed array      |
-|`ƒ`, `function`    |A generic, first-class function            |
+|Name               |Description                                        |
+|:------------------|:--------------------------------------------------|
+|`boolean`          |A variant of true or false                         |
+|`integer`          |A 64bit signed integer                             |
+|`real`             |A 64bit float                                      |
+|`string`           |An array of UTF-8 characters                       |
+|`list`             |A generic, homogeneous, sequence                   |
+|`map`              |A generic, sorted, associative sequence            |
+|`tuple`            |A generic, heterogeneous, fixed-sized sequence     |
+|`ƒ`, `function`    |A generic, first-class function                    |
 
 ## Functions
 ```lisp
