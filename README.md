@@ -41,7 +41,7 @@ There are a few primitive types which are part of the language.
 |`string`           |An array of UTF-8 characters                       |
 |`list`             |A generic, homogeneous, sequence                   |
 |`map`              |A generic, sorted, associative sequence            |
-|`tuple`            |A generic, heterogeneous, fixed-sized sequence     |
+|`tuple`            |A generic, heterogeneous, fixed-size sequence      |
 |`ƒ`, `function`    |A generic, first-class function                    |
 
 ## Functions
