@@ -13,9 +13,8 @@
                             (valid-type? full-file)))
       (is (valid-type? full-file)))))
 
-; TODO: s/function/lambda/g
 (deftest bindings
-  (doseq [file ["fail-function-with-incompatible-type"
+  (doseq [file ["fail-lambda-with-incompatible-type"
                 "fail-identifier-with-incompatible-type"
                 "fail-incompatible-value"
                 "fail-multiple-definition-different-type"
@@ -33,7 +32,7 @@
                 "fail-incorrect-return-type"
                 "fail-incorrect-param-type"
                 "pass-simple"
-                ; TODO: Function identifiers
+                ; TODO: lambda identifiers
                 ;"pass-return-lambda"
                 "pass-with-params"
                 "pass-higher-order-lambda"]]
@@ -68,21 +67,21 @@
     (test-file (str "test/type/if/expression/" file))))
 
 (deftest lambda-calls
-  (doseq [file ["fail-invalid-function"
+  (doseq [file ["fail-invalid-lambda"
                 "fail-invalid-param-type"
                 "fail-too-few-params"
                 "fail-too-many-params"
                 "fail-recursion-undeduced"
-                "fail-call-non-function-from-return"
+                "fail-call-non-lambda-from-return"
                 "pass-chain"
                 "pass-empty"
-                "pass-function-call-param"
+                "pass-lambda-call-param"
                 "pass-print"
                 "pass-print-primitive"
                 "pass-lambda-directly"
                 "pass-lambda-directly-with-arguments"
-                "pass-function-return"
-                "pass-function-return-with-arguments"
+                "pass-lambda-return"
+                "pass-lambda-return-with-arguments"
                 "pass-deduced-direct-as-parameter"
                 "pass-deduced-direct-as-binding"
                 "pass-deduced-auto-direct-as-binding"
@@ -112,15 +111,15 @@
     (test-file (str "test/type/lambda/overload/" file))))
 
 (deftest lambda-returns
-  (doseq [file ["fail-function-wrong-type"
+  (doseq [file ["fail-lambda-wrong-type"
                 "fail-no-return"
                 "fail-unknown-type"
                 "fail-unknown-value"
                 "fail-wrong-param-type"
                 "fail-wrong-type"
-                "fail-first-class-function-wrong-return-type"
-                "fail-first-class-function-wrong-parameter-type"
-                "pass-function"
+                "fail-first-class-lambda-wrong-return-type"
+                "fail-first-class-lambda-wrong-parameter-type"
+                "pass-lambda"
                 "pass-normal"
                 "pass-param"
                 "pass-void-no-return"
@@ -133,7 +132,7 @@
                 "pass-if"
                 "pass-void"
                 "pass-with-normal-return"
-                ; TODO: Function identifiers
+                ; TODO: lambda identifiers
                 ;"pass-with-unicode"
                 "pass-void-lambda"
                 "pass-non-void-lambda"
@@ -170,7 +169,7 @@
   ; TODO
   (doseq [file ["fail-mismatched-types"
                 "fail-unknown-type"
-                "pass-function"
+                "pass-lambda"
                 "pass-multiple"
                 "pass-normal"]]
     (test-file (str "test/type/declaration/binding/" file))))
