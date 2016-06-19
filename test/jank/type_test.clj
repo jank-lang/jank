@@ -174,13 +174,13 @@
                 "pass-normal"]]
     (test-file (str "test/type/declaration/binding/" file))))
 
-; TODO: Test for:
-; declare foo, define (.bar foo), define (struct foo (bar T))
 (deftest structs
   (doseq [file ["fail-name-used"
                 "fail-multiple-definition"
                 "fail-invalid-member-type"
                 "fail-members-same-name"
+                "fail-member-function-redefinition"
+                "fail-member-function-declaration-incorrect"
                 "pass-recursive"
                 "pass-declaration"
                 "pass-member-declaration"]]
