@@ -181,6 +181,10 @@
                 "fail-members-same-name"
                 "fail-member-function-redefinition"
                 "fail-member-function-declaration-incorrect"
+                "pass-single-member"
+                "pass-multiple-members"
+                "pass-extern-type-member"
+                "pass-struct-member"
                 "pass-recursive"
                 "pass-declaration"
                 "pass-member-declaration"]]
