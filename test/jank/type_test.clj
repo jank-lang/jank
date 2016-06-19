@@ -178,6 +178,7 @@
 ; declare foo, define (.bar foo), define (struct foo (bar T))
 (deftest structs
   (doseq [file ["fail-name-used"
+                "fail-multiple-definition"
                 "fail-invalid-member-type"
                 "fail-members-same-name"
                 "pass-recursive"
