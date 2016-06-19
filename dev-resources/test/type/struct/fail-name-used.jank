@@ -1,0 +1,2 @@
+(struct integer
+  (value string))

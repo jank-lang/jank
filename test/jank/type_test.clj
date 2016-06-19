@@ -176,12 +176,11 @@
 
 ; TODO: Test for:
 ; declare foo, define (.bar foo), define (struct foo (bar T))
-; invalid type name: (struct real ...) -- intrinsic and other structs
-; invalid member type
-; members with same name
-; invalid member value
-; referencing other members as values
 (deftest structs
-  ; TODO
-  (doseq [file []]
-    (test-file (str "test/type/declaration/struct/" file))))
+  (doseq [file ["fail-name-used"
+                "fail-invalid-member-type"
+                "fail-members-same-name"
+                "pass-recursive"
+                "pass-declaration"
+                "pass-member-declaration"]]
+    (test-file (str "test/type/struct/" file))))
