@@ -149,9 +149,9 @@ Generic functions and types can be variadic, allowing any number of parameters, 
 Anything within `(;` and `;)` is considered a comment and treated as whitespace.
 
 ## Resource management
-Scope-based resource management ties resource ownership to object lifetimes. Types can take advantage of this by specializing `destruct` to perform any custom logic upon destruction.
+Scope-based resource management ties resource ownership to object lifetimes. Types can take advantage of this by overloading `destruct` to perform any custom logic upon destruction.
 
-Constructors are just normal functions, idiomatically named the same as the type. Aggregate initialization is also possible, using `new`, and all members must be specified.
+Constructors are just normal functions, idiomatically named the same as the type. Aggregate initialization is used in constructors, or to initialize without using constructors, using `new`; all members must be specified.
 
 Since constructors are the functions to actually create objects, not something that's called after creation, delegation to other constructors and other functions is very flexible.
 
