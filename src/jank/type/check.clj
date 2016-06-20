@@ -65,7 +65,6 @@
            :arguments checked-args
            :scope scope)))
 
-; TODO: tests
 (defmethod check-item :struct-definition
   [item scope]
   ; TODO: Check for duplicate struct
