@@ -20,29 +20,6 @@
   [decl-type]
   (dissoc decl-type :external?))
 
-(defn lookup-overloads
-  "Recursively looks through the hierarchy of scopes for the declaration.
-   Returns all overloads in all scopes, from closest to furthest."
-  [decl-name scope]
-  (loop [current-scope scope
-         overloads []]
-    (if current-scope
-      (if-let [found (find (:binding-declarations current-scope) decl-name)]
-        (recur (:parent current-scope) (into overloads (second found)))
-        (recur (:parent current-scope) overloads))
-      overloads)))
-
-(defn lookup
-  "Recursively looks through the hierarchy of scopes for the declaration.
-   Returns the first set of overloads found in the closest scope, not all.
-   See lookup-overloads for getting all."
-  [decl-name scope]
-  (loop [current-scope scope]
-    (when current-scope
-      (if-let [found (find (:binding-declarations current-scope) decl-name)]
-        found
-        (recur (:parent current-scope))))))
-
 (defn validate
   "Looks up a declaration, if any, and verifies that the provided
    declaration has a matching type. Returns the decl or nil, if none is found."
