@@ -182,7 +182,7 @@
                 "fail-members-same-name"
                 ;"fail-member-function-redefinition"
                 ;"fail-member-function-declaration-incorrect"
-                "fail-exten-declaration"
+                "fail-extern-declaration"
                 "pass-single-member"
                 "pass-multiple-members"
                 "pass-extern-type-member"
