@@ -1,7 +1,7 @@
 (ns jank.type.check
   (:require [jank.parse.fabricate :as fabricate]
-            [jank.type.declaration :as declaration]
-            [jank.type.binding :as binding]
+            [jank.type.scope.declaration :as declaration]
+            [jank.type.scope.binding :as binding]
             [jank.type.expression :as expression]
             [jank.type.return :as return])
   (:use clojure.pprint
@@ -68,6 +68,8 @@
 (defmethod check-item :struct-definition
   [item scope]
   ; TODO: Check for duplicate struct
+  (type-assert (nil? (binding/lookup (:name item) scope))
+               (str "type " (:name item) " already exists in scope"))
   (type-assert (apply distinct? (map :name (:members item)))
                "not all struct member names are distinct")
   (let [item-name (:name item)

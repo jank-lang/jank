@@ -1,7 +1,11 @@
-(ns jank.type.declaration
+(ns jank.type.scope.declaration
+  (:require [jank.type.scope.util :as util])
   (:use clojure.walk
         clojure.pprint
         jank.assert))
+
+(def lookup (partial util/lookup :binding-declarations))
+(def lookup-overloads (partial util/lookup-all :binding-declarations))
 
 (defn function?
   "Returns whether or not the provided type is that of a function."

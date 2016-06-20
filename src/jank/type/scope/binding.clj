@@ -1,8 +1,11 @@
-(ns jank.type.binding
+(ns jank.type.scope.binding
   (:require [jank.type.expression :as expression]
-            [jank.type.declaration :as declaration])
+            [jank.type.scope.declaration :as declaration]
+            [jank.type.scope.util :as util])
   (:use clojure.pprint
         jank.assert))
+
+(def lookup (partial util/lookup :binding-definitions))
 
 (defn match-overload
   "Looks through all overloads for one matching the provided type. Functions
@@ -14,16 +17,6 @@
               (-> item-type :value :generics :values first))
        %1)
     overloads))
-
-(defn lookup
-  "Recursively looks up a binding by name.
-   Returns the binding, if found, or nil."
-  [name scope]
-  (loop [current-scope scope]
-    (when current-scope
-      (if-let [overloads (find (:binding-definitions current-scope) name)]
-        overloads
-        (recur (:parent current-scope))))))
 
 (defn add-to-scope [item scope]
   "Adds the binding to the scope and performs type checking on the

@@ -1,5 +1,5 @@
 (ns jank.type.expression
-  (:require [jank.type.declaration :as declaration])
+  (:require [jank.type.scope.declaration :as declaration])
   (:use clojure.pprint
         jank.assert))
 

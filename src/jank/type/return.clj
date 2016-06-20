@@ -1,6 +1,6 @@
 (ns jank.type.return
   (:require [jank.type.expression :as expression]
-            [jank.type.declaration :as declaration])
+            [jank.type.scope.declaration :as declaration])
   (:use clojure.pprint
         clojure.tools.trace
         jank.assert))

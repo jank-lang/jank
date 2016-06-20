@@ -1,5 +1,5 @@
 (ns jank.codegen.util
-  (:require [jank.type.declaration :as declaration]
+  (:require [jank.type.scope.declaration :as declaration]
             [jank.codegen.sanitize :as sanitize])
   (:use jank.assert
         jank.debug.log
