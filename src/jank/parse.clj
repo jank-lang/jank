@@ -32,7 +32,8 @@
                         :else (partial transform/single :else)
                         :identifier transform/identifier
                         :specialization-list transform/specialization-list
-                        :declare-statement transform/declare-statement
+                        :type-declaration (partial transform/declaration :type)
+                        :binding-declaration (partial transform/declaration :binding)
                         :binding-definition transform/binding-definition
                         :struct-definition transform/struct-definition
                         :struct-member transform/struct-member

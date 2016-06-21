@@ -19,12 +19,17 @@
   {:kind :specialization-list
    :values (or more '())})
 
-(defn declare-statement [& more]
-  (let [base {:kind :declare-statement
+(defn declaration [kind & more]
+  (let [base {:kind (if (= kind :type)
+                      :type-declaration
+                      :binding-declaration)
               :external? (= "declare-extern" (first more))
               :type (last more)}
         size (count more)]
-    (if (= 3 size) ; Has identifier (declaring a binding)
+    (parse-assert (or (= kind :type)
+                      (= 3 size))
+                  "invalid declaration")
+    (if (not= kind :type) ; Has identifier (declaring a binding)
       (assoc base :name (second more))
       base)))
 
