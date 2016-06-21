@@ -1,7 +1,8 @@
 (ns jank.type.check
   (:require [jank.parse.fabricate :as fabricate]
-            [jank.type.scope.declaration :as declaration]
-            [jank.type.scope.binding :as binding]
+            [jank.type.scope.type :as type]
+            [jank.type.scope.binding-declaration :as binding-declaration]
+            [jank.type.scope.binding-definition :as binding-definition]
             [jank.type.expression :as expression]
             [jank.type.return :as return])
   (:use clojure.pprint
@@ -48,7 +49,7 @@
 
 (defmethod check-item :declare-statement
   [item scope]
-  (assoc item :scope (declaration/add-to-scope item scope)))
+  (assoc item :scope (binding-declaration/add-to-scope item scope)))
 
 (defmethod check-item :lambda-definition
   [item scope]
@@ -68,14 +69,14 @@
 (defmethod check-item :struct-definition
   [item scope]
   ; TODO: Check for duplicate struct
-  (type-assert (nil? (binding/lookup (:name item) scope))
-               (str "type " (:name item) " already exists in scope"))
+  ;(type-assert (nil? (type/lookup (:name item) scope))
+  ;             (str "type " (:name item) " already exists in scope"))
   (type-assert (apply distinct? (map :name (:members item)))
                "not all struct member names are distinct")
   (let [item-name (:name item)
         checked-members (map #(check-item % scope) (:members item))
         ; Add the struct type into scope
-        scope-with-struct (declaration/add-to-scope
+        scope-with-struct (type/add-to-scope
                             (fabricate/type-declaration (:name item-name))
                             scope)
         ; Add a member function for each member
@@ -84,7 +85,7 @@
                         (if (empty? members)
                           new-scope
                           (recur (rest members)
-                                 (declaration/add-to-scope
+                                 (binding-declaration/add-to-scope
                                    (fabricate/function-declaration
                                      (str "." (-> members first :name :name))
                                      [(:name item-name)]
@@ -110,7 +111,7 @@
                       ; recursive functions to have a declaration of
                       ; themselves.
                       (if (= :lambda-definition (:kind value))
-                        (declaration/add-to-scope
+                        (binding-declaration/add-to-scope
                           (assoc item
                                  :type (expression/realize-type value scope))
                           scope)
@@ -121,7 +122,9 @@
         value-type (expression/realize-type checked-val (:scope checked-val))]
     (assoc updated-item
            :type value-type
-           :scope (binding/add-to-scope updated-item (:scope checked-val)))))
+           :scope (binding-definition/add-to-scope
+                    updated-item
+                    (:scope checked-val)))))
 
 ; Check the type of each argument and try to realize the resulting
 ; function type.
@@ -162,7 +165,7 @@
              (if (empty? remaining)
                new-scope
                (recur (rest remaining)
-                      (declaration/add-to-scope
+                      (binding-declaration/add-to-scope
                         (fabricate/binding-declaration
                           (ffirst remaining)
                           (-> remaining first second))
@@ -173,7 +176,7 @@
   (let [returns (count (:values item))]
     (type-assert (<= returns 1) "multiple return types")
     (if (> returns 0)
-      (let [expected-type (declaration/lookup-type
+      (let [expected-type (type/lookup
                             (first (:values item))
                             scope)]
         (type-assert expected-type "invalid return type")
@@ -185,7 +188,7 @@
 (defmethod check-item :if-expression
   [item scope]
   (let [cond-type (expression/realize-type (:value (:condition item)) scope)]
-    (type-assert (= (declaration/strip-type cond-type)
+    (type-assert (= (type/strip cond-type)
                     {:kind :type
                      :value {:kind :identifier
                              :name "boolean"}})

@@ -1,6 +1,6 @@
 (ns jank.type.return
   (:require [jank.type.expression :as expression]
-            [jank.type.scope.declaration :as declaration])
+            [jank.type.scope.type :as type])
   (:use clojure.pprint
         clojure.tools.trace
         jank.assert))
@@ -38,12 +38,12 @@
               body-type (expression/realize-type (last (:values updated-body))
                                                  scope)
               ; Allow deduction
-              deduced-type (if (declaration/auto? expected-type)
+              deduced-type (if (type/auto? expected-type)
                              body-type
                              expected-type)
               updated-item (assoc item :body (:values updated-body))]
-          (type-assert (= (declaration/strip-type deduced-type)
-                          (declaration/strip-type body-type))
+          (type-assert (= (type/strip deduced-type)
+                          (type/strip body-type))
                        (str "expected function return type of "
                             deduced-type
                             ", found "
@@ -75,8 +75,8 @@
 
     (let [then-type (expression/realize-type (last then-body) scope)
           else-type (expression/realize-type (last else-body) scope)]
-      (type-assert (= (declaration/strip-type then-type)
-                      (declaration/strip-type else-type))
+      (type-assert (= (type/strip then-type)
+                      (type/strip else-type))
                    (str "incompatible if then/else types "
                         then-type
                         " and "

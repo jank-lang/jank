@@ -36,7 +36,7 @@
   ; TODO: Check for string or map
   {:kind :binding-declaration
    :name decl-name
-   :type decl-type})
+   :type decl-type}) ; TODO: external?
 
 (defn type-declaration
   [decl-name]

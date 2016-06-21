@@ -1,5 +1,6 @@
 (ns jank.type.expression
-  (:require [jank.type.scope.declaration :as declaration])
+  (:require [jank.type.scope.type :as type]
+            [jank.type.scope.binding-declaration :as binding-declaration])
   (:use clojure.pprint
         jank.assert))
 
@@ -20,11 +21,11 @@
                     (:name (:name item))
                     "anonymous-function")
         overloads (if identifier?
-                    (declaration/lookup-overloads func-name scope)
+                    (binding-declaration/lookup-overloads func-name scope)
                     [(realize-type (:name item) scope)])
         arg-types (apply list (map #(realize-type % scope) (:arguments item)))]
     (type-assert (some? overloads) (str "unknown function " func-name))
-    (type-assert (every? declaration/function? overloads)
+    (type-assert (every? type/function? overloads)
                  (str "not a function " func-name))
 
     ; Test all overloads
@@ -32,8 +33,8 @@
                     #(let [generics (:generics (:value %))
                            expected-types (-> generics :values first :values)]
                        ; TODO: Allow comparison of overload superpositions
-                       (= (map declaration/strip-type arg-types)
-                          (map declaration/strip-type expected-types)))
+                       (= (map type/strip arg-types)
+                          (map type/strip expected-types)))
                     overloads)]
       (type-assert (not-empty matches)
                    (str "no matching function call to " func-name
@@ -46,7 +47,7 @@
 
       (let [generics (:generics (:value (first matches)))
             return-types (-> generics :values second :values)]
-        (type-assert (not (declaration/auto? (first return-types)))
+        (type-assert (not (type/auto? (first return-types)))
                      (str "call to function " func-name
                           " before its type is deduced"))
         (first matches)))))
@@ -81,8 +82,8 @@
         else-type (realize-type (:value (:else item)) scope)]
     (internal-assert (some? then-type) "invalid then type")
     (internal-assert (some? else-type) "invalid else type")
-    (internal-assert (= (declaration/strip-type then-type)
-                        (declaration/strip-type else-type))
+    (internal-assert (= (type/strip then-type)
+                        (type/strip else-type))
                      (str "incompatible if then/else types "
                           then-type
                           " and "
@@ -97,11 +98,11 @@
 (defmethod realize-type :identifier
   [item scope]
   (let [ident (:name item)
-        decl (declaration/lookup ident scope)]
+        decl (binding-declaration/lookup ident scope)]
     (type-assert (some? decl) (str "unknown binding " ident))
 
     (let [first-decl (first (second decl))]
-      (if (declaration/function? first-decl)
+      (if (type/function? first-decl)
         ; Function identifiers yield a superposition of all possible overloads
         (realize-type (assoc item :kind :function-identifier) scope)
         first-decl))))
