@@ -11,7 +11,11 @@
   (fn [current]
     (:kind current)))
 
-(defmethod codegen-impl :declare-statement
+(defmethod codegen-impl :type-declaration
+  [current]
+  "")
+
+(defmethod codegen-impl :binding-declaration
   [current]
   "")
 
