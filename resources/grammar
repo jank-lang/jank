@@ -5,8 +5,8 @@
               macro-definition /
               binding-definition /
               if-expression /
-              binding-declaration /
               type-declaration /
+              binding-declaration /
               struct-definition /
               function-call
 <atom> = statement /
@@ -69,12 +69,12 @@ if-expression = left-paren if-keyword condition
                 right-paren
 
 <declare-keyword> = 'declare' | 'declare-extern'
-binding-declaration = left-paren declare-keyword
-                        identifier type
-                      right-paren
 type-declaration = left-paren declare-keyword
                     type
                    right-paren
+binding-declaration = left-paren declare-keyword
+                        identifier type
+                      right-paren
 
 <struct-keyword> = <'struct'>
 struct-member = left-paren identifier type atom? right-paren
