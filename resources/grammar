@@ -70,7 +70,7 @@ if-expression = left-paren if-keyword condition
 
 <declare-keyword> = 'declare' | 'declare-extern'
 binding-declaration = left-paren declare-keyword
-                        (identifier type)
+                        identifier type
                       right-paren
 type-declaration = left-paren declare-keyword
                     type
