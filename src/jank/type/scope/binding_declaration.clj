@@ -52,8 +52,7 @@
   (let [decl-name (:name (:name item))
         decl-type (:type item)
         found-decl (validate decl-name decl-type scope)
-        ; TODO: type/lookup
-        found-type (lookup (type/strip decl-type) scope)
+        found-type (type/lookup (type/strip decl-type) scope)
         stored-type (assoc decl-type :external? (:external? item))]
     (type-assert (some? found-type) (str "unknown type " decl-type))
 

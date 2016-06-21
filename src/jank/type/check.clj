@@ -7,7 +7,8 @@
             [jank.type.return :as return])
   (:use clojure.pprint
         clojure.tools.trace
-        jank.assert))
+        jank.assert
+        jank.debug.log))
 
 (defmulti check-item
   "Type checks the given expression. Returns a cons of the typed
