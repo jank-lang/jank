@@ -1,6 +1,7 @@
 (ns jank.type.scope.util
   (:use clojure.pprint
-        jank.assert))
+        jank.assert
+        jank.debug.log))
 
 (defn lookup
   "Recursively looks through the hierarchy of scopes for the item.

@@ -4,7 +4,8 @@
             [jank.type.scope.binding-declaration :as binding-declaration]
             [jank.type.scope.util :as util])
   (:use clojure.pprint
-        jank.assert))
+        jank.assert
+        jank.debug.log))
 
 (def lookup (partial util/lookup :binding-definitions))
 
@@ -24,7 +25,7 @@
                            (binding-declaration/match-overload item-type (second overloads))
                            nil)]
     (type-assert (or (nil? overloads)
-                     (and type/function? (empty? overload-matches)))
+                     (and function? (empty? overload-matches)))
                  (str "binding already exists " item-name))
     (type-assert (= (type/strip expected-type)
                     (type/strip item-type))
