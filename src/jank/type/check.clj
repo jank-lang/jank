@@ -47,9 +47,13 @@
                 (conj checked-cells checked-item)
                 (:scope checked-item)))))))
 
-(defmethod check-item :declare-statement
+(defmethod check-item :binding-declaration
   [item scope]
   (assoc item :scope (binding-declaration/add-to-scope item scope)))
+
+(defmethod check-item :type-declaration
+  [item scope]
+  (assoc item :scope (type/add-to-scope item scope)))
 
 (defmethod check-item :lambda-definition
   [item scope]

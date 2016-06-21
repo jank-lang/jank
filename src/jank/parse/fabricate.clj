@@ -13,7 +13,7 @@
 (defn function-declaration
   [fn-name fn-args fn-ret]
   ; TODO: Check for string or map
-  {:kind :declare-statement
+  {:kind :binding-declaration
    :external? false
    :name {:kind :identifier
           :name fn-name}
