@@ -8,9 +8,6 @@ refactor scope code ({declaration,binding}.clj) into scope ns
   move type declarations out of binding-declarations
   add type definitions to scope
 
-grammar
-  split declare-statement for types and bindings
-
 basic stdlib (two layers: core and aux) -- core can run in kernel
   arithmetic, logic, bit ops
   basic IO
