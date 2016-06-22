@@ -73,9 +73,8 @@
 
 (defmethod check-item :struct-definition
   [item scope]
-  ; TODO: Check for duplicate struct
-  ;(type-assert (nil? (type/lookup (:name item) scope))
-  ;             (str "type " (:name item) " already exists in scope"))
+  (type-assert (nil? (type/lookup (:type item) scope))
+               (str "type " (:name item) " already exists in scope"))
   (type-assert (apply distinct? (map :name (:members item)))
                "not all struct member names are distinct")
   (let [item-name (:name item)
