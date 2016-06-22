@@ -1,6 +1,7 @@
 (ns jank.type.check
   (:require [jank.parse.fabricate :as fabricate]
             [jank.type.scope.type :as type]
+            [jank.type.scope.type-definition :as type-definition]
             [jank.type.scope.binding-declaration :as binding-declaration]
             [jank.type.scope.binding-definition :as binding-definition]
             [jank.type.expression :as expression]
@@ -24,7 +25,8 @@
    {:parent parent
     :binding-declarations {}
     :binding-definitions {}
-    :type-declarations #{}}))
+    :type-declarations #{}
+    :type-definitions #{}}))
 
 (defn check
   "Builds type information on the parsed source. Returns
@@ -73,14 +75,14 @@
 
 (defmethod check-item :struct-definition
   [item scope]
-  (type-assert (nil? (type/lookup (:type item) scope))
+  (type-assert (nil? (type-definition/lookup (:type item) scope))
                (str "type " (:name item) " already exists in scope"))
   (type-assert (apply distinct? (map :name (:members item)))
                "not all struct member names are distinct")
   (let [item-name (:name item)
         checked-members (map #(check-item % scope) (:members item))
         ; Add the struct type into scope
-        scope-with-struct (type/add-to-scope
+        scope-with-struct (type-definition/add-to-scope
                             (fabricate/type-declaration (:name item-name))
                             scope)
         ; Add a member function for each member

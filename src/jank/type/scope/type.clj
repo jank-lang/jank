@@ -62,11 +62,11 @@
   [decl-type scope]
   (util/lookup #((:type-declarations %2) %1) decl-type scope))
 
+; TODO: No need for multi here
 (defmulti add-to-scope
   (fn [item scope]
     (let [valid-kind (contains? item :type)]
       (type-assert valid-kind (str "invalid type declaration " item))
-      ; TODO: type-definition
       (cond
         :else
         :type-declaration))))
@@ -76,5 +76,6 @@
 (defmethod add-to-scope :type-declaration
   [item scope]
   ; TODO: Validate the type is correct
-  ; TODO: Add some tests for this
+  (internal-assert (some? (:type item))
+                   (str "item has no type " item))
   (update scope :type-declarations conj (:type item)))
