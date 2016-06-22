@@ -60,13 +60,7 @@
 ; Returns the type, if found, or nil.
 (defmethod lookup :default
   [decl-type scope]
-  (loop [current-scope scope]
-    ; TODO: Handle generic types properly
-    ; TODO: Merge this with util/lookup?
-    (when current-scope
-      (if-let [found ((:type-declarations current-scope) decl-type)]
-        found
-        (recur (:parent current-scope))))))
+  (util/lookup #((:type-declarations %2) %1) decl-type scope))
 
 (defmulti add-to-scope
   (fn [item scope]

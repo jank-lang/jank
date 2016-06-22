@@ -5,8 +5,9 @@
         jank.assert
         jank.debug.log))
 
-(def lookup (partial util/lookup :binding-declarations))
-(def lookup-overloads (partial util/lookup-all :binding-declarations))
+(def lookup (partial util/lookup #(find (:binding-declarations %2) %1)))
+(def lookup-overloads (partial util/lookup-all
+                               #(find (:binding-declarations %2) %1)))
 
 (defn match-overload
   "Looks through all overloads for one matching the provided type. Functions

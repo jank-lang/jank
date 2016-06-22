@@ -7,7 +7,7 @@
         jank.assert
         jank.debug.log))
 
-(def lookup (partial util/lookup :binding-definitions))
+(def lookup (partial util/lookup #(find (:binding-definitions %2) %1)))
 
 (defn add-to-scope
   [item scope]
