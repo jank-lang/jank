@@ -4,6 +4,8 @@ adopt core.typed
 
 investigate clojure.spec
 
+tweak grammar to handle whitespace/comments properly
+
 basic stdlib (two layers: core and aux) -- core can run in kernel
   arithmetic, logic, bit ops
   basic IO
