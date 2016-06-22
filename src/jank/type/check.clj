@@ -1,6 +1,6 @@
 (ns jank.type.check
   (:require [jank.parse.fabricate :as fabricate]
-            [jank.type.scope.type :as type]
+            [jank.type.scope.type-declaration :as type-declaration]
             [jank.type.scope.type-definition :as type-definition]
             [jank.type.scope.binding-declaration :as binding-declaration]
             [jank.type.scope.binding-definition :as binding-definition]
@@ -56,7 +56,7 @@
 
 (defmethod check-item :type-declaration
   [item scope]
-  (assoc item :scope (type/add-to-scope item scope)))
+  (assoc item :scope (type-declaration/add-to-scope item scope)))
 
 (defmethod check-item :lambda-definition
   [item scope]
@@ -182,7 +182,7 @@
   (let [returns (count (:values item))]
     (type-assert (<= returns 1) "multiple return types")
     (if (> returns 0)
-      (let [expected-type (type/lookup
+      (let [expected-type (type-declaration/lookup
                             (first (:values item))
                             scope)]
         (type-assert expected-type "invalid return type")
@@ -194,7 +194,7 @@
 (defmethod check-item :if-expression
   [item scope]
   (let [cond-type (expression/realize-type (:value (:condition item)) scope)]
-    (type-assert (= (type/strip cond-type)
+    (type-assert (= (type-declaration/strip cond-type)
                     {:kind :type
                      :value {:kind :identifier
                              :name "boolean"}})

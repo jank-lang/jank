@@ -1,5 +1,5 @@
 (ns jank.type.scope.binding-declaration
-  (:require [jank.type.scope.type :as type]
+  (:require [jank.type.scope.type-declaration :as type-declaration]
             [jank.type.scope.util :as util])
   (:use clojure.pprint
         jank.assert
@@ -32,12 +32,13 @@
         ; function overloads. In that case, all declarations must be functions.
         ; The only exception is matching an auto declaration against a complete
         ; type.
-        (type-assert (or (some #(= (type/strip wrapped-type)
-                                   (type/strip %))
+        (type-assert (or (some #(= (type-declaration/strip wrapped-type)
+                                   (type-declaration/strip %))
                                expected-types)
-                         (some type/auto? expected-types)
-                         (and (type/function? wrapped-type)
-                              (every? type/function? expected-types)))
+                         (some type-declaration/auto? expected-types)
+                         (and (type-declaration/function? wrapped-type)
+                              (every? type-declaration/function?
+                                      expected-types)))
                      (str "declaration of "
                           decl-name
                           " as "
@@ -53,7 +54,8 @@
   (let [decl-name (:name (:name item))
         decl-type (:type item)
         found-decl (validate decl-name decl-type scope)
-        found-type (type/lookup (type/strip decl-type) scope)
+        found-type (type-declaration/lookup (type-declaration/strip decl-type)
+                                            scope)
         stored-type (assoc decl-type :external? (:external? item))]
     (type-assert (some? found-type) (str "unknown type " decl-type))
 
@@ -65,7 +67,7 @@
       ; If we're adding an overload
       ; TODO: Use a set
       (and (= -1 (.indexOf (second found-decl) decl-type))
-           (type/function? decl-type))
+           (type-declaration/function? decl-type))
       ; First remove any matching overloads with auto return types. This allows
       ; defined functions to replace previous declarations where the return
       ; type wasn't yet deduced.

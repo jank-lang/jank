@@ -1,6 +1,6 @@
 (ns jank.type.scope.binding-definition
   (:require [jank.type.expression :as expression]
-            [jank.type.scope.type :as type]
+            [jank.type.scope.type-declaration :as type-declaration]
             [jank.type.scope.binding-declaration :as binding-declaration]
             [jank.type.scope.util :as util])
   (:use clojure.pprint
@@ -18,17 +18,17 @@
         has-type (contains? item :type)
         item-type (expression/realize-type (:value item) scope)
         expected-type (if has-type
-                        (type/lookup (:type item) scope)
+                        (type-declaration/lookup (:type item) scope)
                         item-type)
-        function? (type/function? item-type)
+        function? (type-declaration/function? item-type)
         overload-matches (if function?
                            (binding-declaration/match-overload item-type (second overloads))
                            nil)]
     (type-assert (or (nil? overloads)
                      (and function? (empty? overload-matches)))
                  (str "binding already exists " item-name))
-    (type-assert (= (type/strip expected-type)
-                    (type/strip item-type))
+    (type-assert (= (type-declaration/strip expected-type)
+                    (type-declaration/strip item-type))
                  (str "expected binding type "
                       expected-type
                       ", found type "

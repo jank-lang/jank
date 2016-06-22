@@ -1,4 +1,4 @@
-(ns jank.type.scope.type
+(ns jank.type.scope.type-declaration
   (:require [jank.type.scope.util :as util])
   (:use clojure.walk
         clojure.pprint

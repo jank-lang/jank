@@ -1,5 +1,5 @@
 (ns jank.type.scope.type-definition
-  (:require [jank.type.scope.type :as type-declaration]
+  (:require [jank.type.scope.type-declaration :as type-declaration]
             [jank.type.scope.util :as util])
   (:use clojure.walk
         clojure.pprint
