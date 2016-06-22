@@ -177,7 +177,7 @@
 (deftest structs
   ; TODO: Fix these
   (doseq [file [;"fail-name-used"
-                ;"fail-multiple-definition"
+                "fail-multiple-definition"
                 "fail-invalid-member-type"
                 "fail-members-same-name"
                 ;"fail-member-function-redefinition"
