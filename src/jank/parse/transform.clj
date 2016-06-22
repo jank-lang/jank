@@ -2,6 +2,8 @@
   (:use clojure.pprint
         jank.assert))
 
+; TODO: Use fabricate for all of these?
+
 (defn single [kind value]
   {:kind kind :value value})
 
@@ -45,7 +47,9 @@
 (defn struct-definition [& more]
   {:kind :struct-definition
    :name (first more)
-   :members (rest more)})
+   :members (rest more)
+   :type {:kind :type
+          :value (first more)}})
 
 (defn struct-member [& more]
   (let [base {:kind :struct-member
