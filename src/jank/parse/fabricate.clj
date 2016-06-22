@@ -41,7 +41,5 @@
 (defn type-declaration
   [decl-name]
   ; TODO: Check for string or map
-  {:kind :binding-declaration
-   :type {:kind :type
-          :value {:kind :identifier
-                  :name decl-name}}})
+  {:kind :type-declaration
+   :type (type decl-name)})
