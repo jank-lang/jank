@@ -114,7 +114,14 @@
                  (str "invalid number of types in new expression" types))
     (type-assert (some? expected-type)
                  (str "unknown type for new expression " new-type))
-    (pprint expected-type)
+    (type-assert (= (count values)
+                    (count (:members expected-type)))
+                 (str "invalid number of specifiers for new "
+                      "(expected "
+                      (count (:members expected-type))
+                      " found "
+                      (count values)
+                      ")"))
     (assoc item :scope scope)))
 
 (defmethod check-item :binding-definition
