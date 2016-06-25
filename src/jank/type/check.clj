@@ -82,9 +82,7 @@
   (let [item-name (:name item)
         checked-members (map #(check-item % scope) (:members item))
         ; Add the struct type into scope
-        scope-with-struct (type-definition/add-to-scope
-                            (fabricate/type-declaration (:name item-name))
-                            scope)
+        scope-with-struct (type-definition/add-to-scope item scope)
         ; Add a member function for each member
         checked-scope (loop [members checked-members
                              new-scope scope-with-struct]
@@ -110,7 +108,8 @@
   ; TODO: Tests
   (let [types (:values (:specialization-list item))
         new-type (first types)
-        expected-type (type-declaration/lookup new-type scope)]
+        expected-type (type-definition/lookup new-type scope)
+        values (:values item)]
     (type-assert (= 1 (count types))
                  (str "invalid number of types in new expression" types))
     (type-assert (some? expected-type)
