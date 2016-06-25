@@ -5,11 +5,16 @@
         clojure.pprint
         jank.assert))
 
-(def lookup (partial util/lookup #((:type-definitions %2) %1)))
+; Look up based on type, returning full definition
+(def lookup (partial util/lookup
+                     (fn [v m]
+                       (some #(when (= (:type %) v)
+                                %)
+                             (:type-definitions m)))))
 
 (defn add-to-scope
   [item scope]
   (internal-assert (some? (:type item))
                    (str "item has no type " item))
   (let [with-decl (type-declaration/add-to-scope item scope)]
-    (update with-decl :type-definitions conj (:type item))))
+    (update with-decl :type-definitions conj item)))
