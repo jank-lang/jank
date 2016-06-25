@@ -109,7 +109,9 @@
   (let [types (:values (:specialization-list item))
         new-type (first types)
         expected-type (type-definition/lookup new-type scope)
-        values (:values item)]
+        values (:values item)
+        expected-value-types (apply list (map :type (:members expected-type)))
+        value-types (apply list (map #(expression/realize-type % scope) values))]
     (type-assert (= 1 (count types))
                  (str "invalid number of types in new expression" types))
     (type-assert (some? expected-type)
@@ -121,6 +123,13 @@
                       (count (:members expected-type))
                       " found "
                       (count values)
+                      ")"))
+    (type-assert (= value-types expected-value-types)
+                 (str "invalid types specified to new expression "
+                      "(expected "
+                      expected-value-types
+                      " found "
+                      value-types
                       ")"))
     (assoc item :scope scope)))
 
