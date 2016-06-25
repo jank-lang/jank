@@ -20,6 +20,7 @@ structs
   destructors
     specialize /std/destroy
   recursive types
+  more tests!
 
 read command-line arguments from a separate file
   don't bother with the target macro yet
