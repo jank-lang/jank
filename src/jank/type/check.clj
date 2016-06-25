@@ -107,7 +107,11 @@
 
 (defmethod check-item :new-expression
   [item scope]
-  (assoc item :scope scope))
+  ; TODO: Tests
+  (type-assert (= 1 (count (:values (:specialization-list item))))
+               "invalid number of types in new expression")
+  (let [new-type ""]
+    (assoc item :scope scope)))
 
 (defmethod check-item :binding-definition
   [item scope]
