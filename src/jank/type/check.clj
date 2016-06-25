@@ -103,8 +103,11 @@
 
 (defmethod check-item :struct-member
   [item scope]
-  (assoc item
-         :scope scope))
+  (assoc item :scope scope))
+
+(defmethod check-item :new-expression
+  [item scope]
+  (assoc item :scope scope))
 
 (defmethod check-item :binding-definition
   [item scope]

@@ -8,6 +8,7 @@
               type-declaration /
               binding-declaration /
               struct-definition /
+              new-expression /
               function-call
 <atom> = statement /
          list
@@ -20,7 +21,8 @@ real = #'[+-]?\d+\.\d*'
 <not-double-quote> = #'[^\"]*'
 string = <double-quote> not-double-quote <double-quote>
 
-identifier = #'[^\s"\'()\d:][^\s"\'()]*' generic-specialization?
+<identifier-text> = #'[^\s"\'()\d:][^\s"\'()]*'
+identifier = identifier-text generic-specialization?
 keyword = <':'> identifier
 special-identifier = declare-keyword | bind-keyword | macro-keyword | if-keyword | lambda-keyword | struct-keyword
 
@@ -81,6 +83,11 @@ struct-member = left-paren identifier type right-paren
 struct-definition = left-paren struct-keyword identifier
                       struct-member+
                     right-paren
+
+<new-keyword> = <'new'>
+new-expression = left-paren
+                   new-keyword generic-specialization atom+
+                 right-paren
 
 comment = <'(;'> inside-comment* <';)'>
 <inside-comment> = !(';)' | '(;') #'[\s\S]\s*' | comment

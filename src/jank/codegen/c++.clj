@@ -80,6 +80,10 @@
          " "
          (codegen-impl (:name current)))))
 
+(defmethod codegen-impl :new-expression
+  [current]
+  "")
+
 (defmethod codegen-impl :struct-member-function
   [current]
   (str "auto const "

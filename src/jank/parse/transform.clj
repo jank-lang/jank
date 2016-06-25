@@ -60,6 +60,11 @@
       (assoc base :value (nth more 2))
       base)))
 
+(defn new-expression [& more]
+  {:kind :new-expression
+   :type (first more)
+   :values (rest more)})
+
 (defn function-call [& more]
   {:kind :function-call
    :name (first more)
