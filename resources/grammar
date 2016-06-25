@@ -77,7 +77,7 @@ binding-declaration = left-paren declare-keyword
                       right-paren
 
 <struct-keyword> = <'struct'>
-struct-member = left-paren identifier type atom? right-paren
+struct-member = left-paren identifier type right-paren
 struct-definition = left-paren struct-keyword identifier
                       struct-member+
                     right-paren

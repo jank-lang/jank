@@ -1,2 +1,2 @@
 (struct meow
-  (this has four fields))
+  (this three fields))

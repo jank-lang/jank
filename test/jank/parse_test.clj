@@ -114,10 +114,9 @@
                 "fail-no-name-some-members"
                 "fail-too-many-names"
                 "fail-non-list-member"
+                "fail-multiple-members-all-values"
+                "fail-multiple-members-mixed-values"
                 "pass-one-member-no-value"
-                "pass-one-member-with-value"
                 "pass-unicode-name"
-                "pass-multiple-members-no-values"
-                "pass-multiple-members-all-values"
-                "pass-multiple-members-mixed-values"]]
+                "pass-multiple-members-no-values"]]
     (test-file (str "test/parse/struct/" file))))

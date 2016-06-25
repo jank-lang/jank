@@ -1,2 +1,2 @@
 (struct ˚œ¬
-  (unicode? boolean true))
+  (unicode? boolean))
