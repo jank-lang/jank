@@ -15,7 +15,6 @@ basic stdlib (two layers: core and aux) -- core can run in kernel
     use core.logic
 
 structs
-  remove member value support (they're immutable, make them count)
   constructors
     use 'new' to do aggregate initialization
   destructors
