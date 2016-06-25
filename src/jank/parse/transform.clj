@@ -62,7 +62,7 @@
 
 (defn new-expression [& more]
   {:kind :new-expression
-   :type (first more)
+   :specialization-list (first more)
    :values (rest more)})
 
 (defn function-call [& more]
