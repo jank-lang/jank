@@ -191,3 +191,7 @@
                 "pass-declaration"
                 "pass-member-declaration"]]
     (test-file (str "test/type/struct/" file))))
+
+(deftest new-expressions
+  (doseq [file []]
+    (test-file (str "test/type/new/" file))))
