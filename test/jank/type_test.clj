@@ -202,5 +202,7 @@
                 "pass-as-parameter"
                 "pass-constructor"
                 "pass-correct-values"
-                "pass-value-expressions"]]
+                "pass-value-expressions"
+                "pass-binding-explicit"
+                "pass-binding-implicit"]]
     (test-file (str "test/type/new/" file))))
