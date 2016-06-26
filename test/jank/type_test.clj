@@ -193,5 +193,14 @@
     (test-file (str "test/type/struct/" file))))
 
 (deftest new-expressions
-  (doseq [file []]
+  (doseq [file ["fail-incorrect-value-types"
+                "fail-no-values"
+                "fail-not-enough-values"
+                "fail-too-many-types"
+                "fail-too-many-values"
+                "fail-unknown-type"
+                "pass-as-parameter"
+                "pass-constructor"
+                "pass-correct-values"
+                "pass-value-expressions"]]
     (test-file (str "test/type/new/" file))))
