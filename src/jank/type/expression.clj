@@ -2,6 +2,7 @@
   (:require [jank.type.scope.type-declaration :as type-declaration]
             [jank.type.scope.binding-declaration :as binding-declaration])
   (:use clojure.pprint
+        jank.debug.log
         jank.assert))
 
 (defmulti realize-type
@@ -116,6 +117,13 @@
   [item scope]
   ; Realize that which is being returned
   (realize-type (:value item) scope))
+
+(defmethod realize-type :new-expression
+  [item scope]
+  (-> item
+      :specialization-list
+      :values
+      first))
 
 ; Handles integer, string, etc
 (defmethod realize-type :default
