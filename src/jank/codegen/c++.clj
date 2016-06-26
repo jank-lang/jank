@@ -88,12 +88,11 @@
                       first
                       :value
                       :name)]
-        (util/end-statement
-          (str type-name
-               "{"
-               (util/comma-separate-args
-                 (map codegen-impl (:values current)))
-               "}"))))
+    (str type-name
+         "{"
+         (util/comma-separate-args
+           (map codegen-impl (:values current)))
+         "}")))
 
 (defmethod codegen-impl :struct-member-function
   [current]
@@ -102,7 +101,7 @@
        (mangle/mangle
          (assoc
            (fabricate/function-declaration (str "." (:name (:name current)))
-                                           ["person"]
+                                           [(:name (:name (:struct current)))]
                                            (-> current :type :value :name))
            :kind :binding-name))
        "=[=]("
