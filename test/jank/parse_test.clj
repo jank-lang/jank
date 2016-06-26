@@ -120,3 +120,12 @@
                 "pass-unicode-name"
                 "pass-multiple-members-no-values"]]
     (test-file (str "test/parse/struct/" file))))
+
+(deftest new-expressions
+  (doseq [file ["pass-multiple-types"
+                "pass-no-values"
+                "pass-function-parameter"
+                "pass-generic-type"
+                "pass-no-type"
+                "pass-one-value"]]
+    (test-file (str "test/parse/new/" file))))
