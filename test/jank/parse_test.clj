@@ -127,5 +127,6 @@
                 "pass-function-parameter"
                 "pass-generic-type"
                 "pass-no-type"
-                "pass-one-value"]]
+                "pass-one-value"
+                "pass-value-expressions"]]
     (test-file (str "test/parse/new/" file))))
