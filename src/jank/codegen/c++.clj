@@ -82,7 +82,18 @@
 
 (defmethod codegen-impl :new-expression
   [current]
-  "")
+  (let [type-name (-> current
+                      :specialization-list
+                      :values
+                      first
+                      :value
+                      :name)]
+        (util/end-statement
+          (str type-name
+               "{"
+               (util/comma-separate-args
+                 (map codegen-impl (:values current)))
+               "}"))))
 
 (defmethod codegen-impl :struct-member-function
   [current]
