@@ -124,7 +124,8 @@
                       " found "
                       (count values)
                       ")"))
-    (type-assert (= value-types expected-value-types)
+    (type-assert (= (map type-declaration/strip value-types)
+                    (map type-declaration/strip expected-value-types))
                  (str "invalid types specified to new expression "
                       "(expected "
                       expected-value-types
