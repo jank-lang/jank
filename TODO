@@ -15,8 +15,6 @@ basic stdlib (two layers: core and aux) -- core can run in kernel
     use core.logic
 
 structs
-  constructors
-    use 'new' to do aggregate initialization
   destructors
     specialize /std/destroy
   more tests!
