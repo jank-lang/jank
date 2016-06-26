@@ -86,7 +86,7 @@ struct-definition = left-paren struct-keyword identifier
 
 <new-keyword> = <'new'>
 new-expression = left-paren
-                   new-keyword generic-specialization atom+
+                   new-keyword generic-specialization atom?
                  right-paren
 
 comment = <'(;'> inside-comment* <';)'>
