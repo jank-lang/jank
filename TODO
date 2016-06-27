@@ -67,8 +67,8 @@ targets
     vimscript
 
   (#target c++
-           (#dependencies "gl/gl.h")
-           (#command-line "-ggdb -Og -lGL"))
+           (dependencies "gl/gl.h")
+           (command-line "-ggdb -Og -lGL"))
 
   prelude isn't included until #target macro is used
 
@@ -87,4 +87,4 @@ constraints on return types
 REPL
   online repl sandbox
   irc bot for #jank
-  tests for repl
+  tests
