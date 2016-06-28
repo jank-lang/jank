@@ -7,7 +7,6 @@
             [jank.type.expression :as expression]
             [jank.type.return :as return])
   (:use clojure.pprint
-        clojure.tools.trace
         jank.assert
         jank.debug.log))
 

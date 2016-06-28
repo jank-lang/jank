@@ -2,7 +2,6 @@
   (:require [jank.type.expression :as expression]
             [jank.type.scope.type-declaration :as type-declaration])
   (:use clojure.pprint
-        clojure.tools.trace
         jank.assert))
 
 (defmulti add-explicit-returns
