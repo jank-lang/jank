@@ -5,6 +5,7 @@
             :url "http://opensource.org/licenses/MIT"}
   :dependencies [[org.clojure/clojure "1.9.0-alpha7"]
                  [instaparse "1.4.2"]
+                 [org.clojure/core.logic "0.8.10"]
                  [org.clojure/tools.trace "0.7.9"]
                  [me.raynes/fs "1.4.6"]]
   :main ^:skip-aot jank.core
