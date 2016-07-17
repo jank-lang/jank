@@ -87,27 +87,27 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 #### Function
 ```lisp
 (; Generic. ;)
-(ƒ show : (:T) (o T) ()
+(ƒ show! : (:T) (o T) ()
   (print! o))
 
 (; Short-hand for above, where T isn't needed. ;)
-(ƒ show (o ∀) ()
+(ƒ show! (o ∀) ()
   (print! o))
 
 (; Full specialization. ;)
-(ƒ show : (real) (o real) ()
+(ƒ show! : (real) (o real) ()
   (print! "real: " o))
 
 (; Partial specialization. ;)
-(ƒ show : (coord : (:T-x :T-y)) (o coord : (T-x T-y)) ()
+(ƒ show! : (coord : (:T-x :T-y)) (o coord : (T-x T-y)) ()
   (print! "coord: " o))
 
 (; Non-type parameter partial specialization. ;)
-(ƒ show : ((o coord : (:T-x :T-y))) () ()
+(ƒ show! : ((o coord : (:T-x :T-y))) () ()
   (print! "coord: " o))
 
 (; Non-type parameter full specialization. ;)
-(ƒ show : ((o coord : (real integer))) () ()
+(ƒ show! : ((o coord : (real integer))) () ()
   (print! "coord: " o))
 ```
 
