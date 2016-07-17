@@ -1,6 +1,7 @@
 <program> = (<comment> / statement)*
 <statement> = string / number / boolean /
               identifier / keyword /
+              generic-lambda-definition /
               lambda-definition /
               macro-definition /
               binding-definition /
@@ -37,6 +38,17 @@ argument-list = left-paren (identifier type)* right-paren
 return-list = left-paren type? right-paren
 lambda-definition =
   left-paren lambda-keyword argument-list return-list
+    atom*
+  right-paren
+
+
+generic-specialization-list = left-paren
+                                keyword+
+                              right-paren
+<generic-lambda-specialization> = <':'> generic-specialization-list
+generic-lambda-definition =
+  left-paren lambda-keyword generic-lambda-specialization
+             argument-list return-list
     atom*
   right-paren
 
