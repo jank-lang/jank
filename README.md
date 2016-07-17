@@ -280,4 +280,5 @@ For more information regarding how I use donations, see
 [here](http://jeaye.com/donate/).
 
 ## License
-jank is under a strict copyleft license; see the `LICENSE` file.
+jank is under a strict copyleft license; see the
+[LICENSE](https://github.com/jeaye/jank/blob/master/LICENSE) file.
