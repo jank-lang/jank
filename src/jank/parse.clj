@@ -32,6 +32,7 @@
                         :else (partial transform/single :else)
                         :identifier transform/identifier
                         :specialization-list transform/specialization-list
+                        :generic-specialization-list transform/generic-specialization-list
                         :type-declaration (partial transform/declaration :type)
                         :binding-declaration (partial transform/declaration :binding)
                         :binding-definition transform/binding-definition
@@ -40,6 +41,7 @@
                         :new-expression transform/new-expression
                         :function-call transform/function-call
                         :lambda-definition transform/lambda-definition
+                        :generic-lambda-definition transform/generic-lambda-definition
                         :argument-list transform/argument-list
                         :return-list transform/return-list
                         :if-expression transform/if-expression}

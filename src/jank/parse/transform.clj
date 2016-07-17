@@ -21,6 +21,10 @@
   {:kind :specialization-list
    :values (or more '())})
 
+(defn generic-specialization-list [& more]
+  {:kind :generic-specialization-list
+   :values (or more '())})
+
 (defn declaration [kind & more]
   (let [base {:kind (if (= kind :type)
                       :type-declaration
@@ -75,6 +79,13 @@
    :arguments (first more)
    :return (second more)
    :body (drop 2 more)})
+
+(defn generic-lambda-definition [& more]
+  {:kind :generic-lambda-definition
+   :generics (first more)
+   :arguments (second more)
+   :return (nth more 2)
+   :body (drop 3 more)})
 
 (defn argument-list [& more]
   {:kind :argument-list
