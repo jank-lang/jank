@@ -123,11 +123,11 @@ Generic functions and types can be variadic, allowing any number of parameters, 
 
 #### Function
 ```lisp
-(ƒ shout (&noises) ()
+(ƒ shout! (&noises) ()
   (for ((noise noises))
     (print! (upper noise))))
 
-(shout "fus" " ro" " dah")
+(shout! "fus" " ro" " dah")
 (; Prints => FUS RO DAH ;)
 ```
 
