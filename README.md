@@ -148,6 +148,22 @@ Generic functions and types can be variadic, allowing any number of parameters, 
 ## Comments
 Anything within `(;` and `;)` is considered a comment and treated as whitespace.
 
+## Namespaces
+Namespaces can be entered using the `ns` special form, which takes the namespace
+name and then the body of the namespace. Namespace names can be relative to the
+current namespace or absolute, if prefixed by a `/`, just like directories on
+UNIX-like systems. There is no ADL, since overloads and specializations can
+easily be placed into the right namespace from any other namespace.
+
+```lisp
+(ns foo/bar
+  (struct score
+    (value integer)))
+
+(ns /bar/spam
+  (bind val -98.1))
+```
+
 ## Resource management
 Scope-based resource management ties resource ownership to object lifetimes. Types can take advantage of this by overloading `destruct` to perform any custom logic upon destruction.
 
