@@ -72,6 +72,12 @@
            :arguments checked-args
            :scope scope)))
 
+(defmethod check-item :generic-lambda-definition
+  [item scope]
+  (let [generics (:generics item)]
+    (assoc item
+           :scope scope)))
+
 (defmethod check-item :struct-definition
   [item scope]
   (type-assert (nil? (type-definition/lookup (:type item) scope))
