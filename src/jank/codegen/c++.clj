@@ -44,6 +44,10 @@
                                (:body current))
        "}"))
 
+(defmethod codegen-impl :generic-lambda-definition
+  [current]
+  "")
+
 (defmethod codegen-impl :binding-type
   [current]
   (let [value (:value current)]
