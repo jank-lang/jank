@@ -20,6 +20,7 @@ basic stdlib (two layers: core and aux) -- core can run in kernel
 structs
   destructors
     specialize /std/destroy
+      requires generics? just overloading?
   more tests!
 
 read command-line arguments from a separate file
