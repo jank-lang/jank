@@ -79,6 +79,7 @@ targets
 allow keywords?
   each keyword is its own type
   useful in the case of policies?
+  just resolved to integers? hash of key name?
 
 ^type within macros for first class types
   maybe no need for generic syntax for macros?
