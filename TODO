@@ -15,6 +15,7 @@ basic stdlib (two layers: core and aux) -- core can run in kernel
   higher-order functions
   generics are the big issue
     use core.logic
+      first use it for overload resolution
 
 structs
   destructors
