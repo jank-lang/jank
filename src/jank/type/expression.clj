@@ -66,6 +66,12 @@
                                 :values (filter #(= :type (:kind %))
                                                 (:values (:return item)))}]}}})
 
+(defmethod realize-type :generic-lambda-definition
+  [item scope]
+  (let [lamdef (realize-type (update item :kind (fn [_] :lambda-definition))
+                             scope)]
+    (assoc lamdef :generics (:generics item))))
+
 (defmethod realize-type :binding-definition
   [item scope]
   (type-assert "binding definitions are not expressions"))
