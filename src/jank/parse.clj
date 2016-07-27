@@ -24,6 +24,7 @@
                        {:integer (partial transform/read-single :integer)
                         :real (partial transform/read-single :real)
                         :boolean (partial transform/read-single :boolean)
+                        ; TODO: Have this produce a type in the grammar
                         :keyword (partial transform/single :type)
                         :string (partial transform/single :string)
                         :type (partial transform/single :type)
