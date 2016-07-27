@@ -29,6 +29,7 @@
     (type-assert (every? type-declaration/function? overloads)
                  (str "not a function " func-name))
 
+    ; TODO: Handle generic calls; match generics explicitly
     ; Test all overloads
     (let [matches (filter
                     #(let [generics (:generics (:value %))
