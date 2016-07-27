@@ -35,18 +35,18 @@
 (defmethod lookup :function
   [decl-type scope]
   ; Function types always "exist" as long as they're well-formed
-  (let [generics (:values (:generics (:value decl-type)))]
+  (let [signature (:values (:generics (:value decl-type)))
+        generics (:values (:generics decl-type))
+        generic? (fn [t] (some #(= % t) generics))
+        valid? (fn [t] (or (some? (lookup t scope))
+                           (generic? t)))]
     ; TODO: Add more tests for this
-    (type-assert (= (count generics) 2) "invalid function type format")
-    (when (> (count (:values (first generics))) 0)
-      (type-assert (every? (comp some?
-                                 #(lookup % scope))
-                           (-> generics first :values))
+    (type-assert (= (count signature) 2) "invalid function type format")
+    (when (> (count (:values (first signature))) 0)
+      (type-assert (every? valid? (-> signature first :values))
                    "invalid function parameter type"))
-    (when (> (count (:values (second generics))) 0)
-      (type-assert (every? (comp some?
-                                 #(lookup % scope))
-                           (-> generics second :values))
+    (when (> (count (:values (second signature))) 0)
+      (type-assert (every? valid? (-> signature second :values))
                    "invalid function return type"))
     decl-type))
 
