@@ -63,6 +63,7 @@ tests
   codegen
     returning an integer literal and a jank integer from an if should work
   code execution (functional tests)
+  static analysis of generated code
 
 targets
   each target has its own prelude
