@@ -281,6 +281,17 @@ normal functions. Racket's macro system is a key inspiration. More info to come.
 ## FFI
 It's possible to declare native C++ functions and types, in an opaque manner, within jank; the following jank code will then be type checked based on those declarations and the generated code will follow accordingly. This allows easy exposure of C and C++ libraries within jank without introducing explicitly unsafe blocks into the language.
 
+```lisp
+(#target c++
+         (dependencies "gl/gl.h")
+         (command-line "-lGL"))
+
+(declare-extern GLenum)
+(declare-extern glError ƒ : (() (GLenum)))
+
+(bind last-error (glError))
+```
+
 ## Editor support
 There are syntax files for Vim available in the `vim` directory of the repository. You can add these to your runtime path using something like:
 
