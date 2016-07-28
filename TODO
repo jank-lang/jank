@@ -16,7 +16,6 @@ basic stdlib (two layers: core and aux) -- core can run in kernel
   generics are the big issue
     use core.logic
       first use it for overload resolution
-    add type realization for binding
     integrate with function calls; require explicit types
     ensure returns work
     add type deduction
