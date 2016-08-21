@@ -14,6 +14,7 @@ basic stdlib (two layers: core and aux) -- core can run in kernel
   persistent immutable data structures
   higher-order functions
   generics are the big issue
+    use macros entirely? functions, structs, enums, macros, all generic
     use core.logic
       first use it for overload resolution
     integrate with function calls; require explicit types

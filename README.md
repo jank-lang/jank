@@ -13,16 +13,16 @@ Currently, jank aims to provide:
 ## Appetizer
 ```lisp
 (; Update all entities. ;)
-(ƒ update (delta real entities list : (entity)) (∀)
+(ƒ update (delta real entities vector : (entity)) (∀)
   (map (partial update delta) entities))
 
 (; Damage nearby entities. ;)
-(ƒ cast-aoe (area real entities list : (entity)) (∀)
+(ƒ cast-aoe (area real entities vector : (entity)) (∀)
   (map damage
        (filter (partial within-distance area) entities)))
 
 (; Find a winner, based on score. ;)
-(ƒ find-winner (entities list : (entity)) (∀)
+(ƒ find-winner (entities vector : (entity)) (∀)
   (reduce
     (λ (a ∀ b ∀) (∀)
       (if (> (.score a) (.score b))
