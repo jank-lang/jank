@@ -15,6 +15,9 @@ basic stdlib (two layers: core and aux) -- core can run in kernel
   higher-order functions
   generics are the big issue
     use macros entirely? functions, structs, enums, macros, all generic
+      yes, absolutely
+      put instantiations in secret namespace
+      have the function macro handle generics and check for current instantiations
     use core.logic
       first use it for overload resolution
     integrate with function calls; require explicit types
