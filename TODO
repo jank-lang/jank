@@ -18,6 +18,8 @@ basic stdlib (two layers: core and aux) -- core can run in kernel
       yes, absolutely
       put instantiations in secret namespace
       have the function macro handle generics and check for current instantiations
+      once implemented, remove normal functions entirely
+        everything is generic by default and type specification is optional
     use core.logic
       first use it for overload resolution
     integrate with function calls; require explicit types
