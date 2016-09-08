@@ -26,6 +26,9 @@ basic stdlib (two layers: core and aux) -- core can run in kernel
     ensure returns work
     add type deduction
 
+compile-time type for string literals
+  "foo" => static-string : (3)
+
 structs
   destructors
     specialize /std/destroy
