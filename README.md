@@ -38,7 +38,8 @@ There are a few primitive types which are part of the language.
 |`boolean`          |A variant of true or false                         |
 |`integer`          |A 64bit signed integer                             |
 |`real`             |A 64bit float                                      |
-|`string`           |An array of UTF-8 characters                       |
+|`string`           |A dynamic array of UTF-8 characters                |
+|`static-string`    |A static (compile-time) array of UTF-8 characters  |
 |`list`             |A generic, homogeneous, sequence                   |
 |`map`              |A generic, sorted, associative sequence            |
 |`tuple`            |A generic, heterogeneous, fixed-size sequence      |
