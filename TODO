@@ -30,6 +30,9 @@ compile-time type for string literals
   "foo" => static-string : (3)
   allows for easier string usage without dynamic allocations, a la string_view
 
+all functions are generic by default
+  type specifiers are optional and not preferred
+
 structs
   destructors
     specialize /std/destroy
