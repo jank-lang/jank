@@ -277,7 +277,24 @@ Branching, using `if`, allows for specifying a single form for the true and fals
 
 ## Macros
 Macros are hygenic and type-safe, allowing for overloading and generics, just as
-normal functions. Racket's macro system is a key inspiration. More info to come.
+normal functions. Racket's macro system is a key inspiration. Each macro is a
+function of some number of typed inputs to an optional `syntax` element. The
+`syntax` element is only available in macros and it represents any bit of jank
+code.
+
+```lisp
+(macro debug (label body :: syntax) where (string? label)
+  (if (/build/debug?)
+    none
+    (syntax
+      (print-line (str "begin " label))
+      body
+      (print-line (str "end " label)))))
+
+(; Applies debug to a static-string : (9) and a syntax element. ;)
+(debug "test code"
+  (do-some-debug-work))
+```
 
 ## FFI
 It's possible to declare native C++ functions and types, in an opaque manner, within jank; the following jank code will then be type checked based on those declarations and the generated code will follow accordingly. This allows easy exposure of C and C++ libraries within jank without introducing explicitly unsafe blocks into the language.
