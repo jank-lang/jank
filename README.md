@@ -286,7 +286,7 @@ code.
 (; The string? predicate handles any size static-string or dynamic string. ;)
 (macro debug (label body :: syntax) where (string? label)
   (if (/build/debug?)
-    none
+    syntax/none
     (syntax
       (print-line (str "begin " label))
       body
