@@ -276,20 +276,21 @@ Branching, using `if`, allows for specifying a single form for the true and fals
 
 ## Macros
 Macros are hygenic and type-safe, allowing for overloading and generics, just as
-normal functions. Racket's macro system is a key inspiration. Each macro is a
-function of some number of typed inputs to an optional `syntax` element. The
-`syntax` element is only available in macros and it represents any bit of jank
-code.
+normal functions. Racket's macro system is a key inspiration.  Each macro is a
+function of an AST element and some number of typed inputs to a pair of the new
+AST element and the new `syntax` element, which replaces the macro invocation.
+More details to come.
 
 ```lisp
 (; The string? predicate handles any size static-string or dynamic string. ;)
-(macro debug (label body :: syntax) where (string? label)
-  (if (/build/debug?)
-    syntax/none
-    (syntax
-      (print-line (str "begin " label))
-      body
-      (print-line (str "end " label)))))
+(macro debug (ast label body :: syntax) where (string? label)
+  (tuple ast
+         (if (/build/debug?)
+           syntax/none
+           (syntax
+             (print-line (str "begin " label))
+             body
+             (print-line (str "end " label))))))
 
 (; Applies debug to a static-string : ("test code") and a syntax element. ;)
 (debug "test code"
