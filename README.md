@@ -39,7 +39,6 @@ There are a few primitive types which are part of the language.
 |`integer`          |A 64bit signed integer                             |
 |`real`             |A 64bit float                                      |
 |`string`           |A dynamic array of UTF-8 characters                |
-|`static-string`    |A static (compile-time) array of UTF-8 characters  |
 |`list`             |A generic, homogeneous, sequence                   |
 |`map`              |A generic, sorted, associative sequence            |
 |`tuple`            |A generic, heterogeneous, fixed-size sequence      |
@@ -292,9 +291,23 @@ code.
       body
       (print-line (str "end " label)))))
 
-(; Applies debug to a static-string : (9) and a syntax element. ;)
+(; Applies debug to a static-string : ("test code") and a syntax element. ;)
 (debug "test code"
   (do-some-debug-work))
+```
+
+## Compile-time evaluation
+Aside from macros, jank makes heavy use of type meta-programming which can
+help the compiler elide run-time code. For example, a string literal `"foo"` has
+the type of `static-string : ("foo")`. In a generic function that just operates
+on strings, concatenation of another string literal will yield a resultant type
+which is still compile-time, thus allowing the elision of run-time concatenation
+entirely. jank does this with all literals, including literal sequences.
+
+```lisp
+(ƒ log (msg ∀) (∀) where (string? msg)
+  (; This is known at compile-time if msg is a static-string. ;)
+  (print-line (count (+ "logging: " msg))))
 ```
 
 ## FFI
