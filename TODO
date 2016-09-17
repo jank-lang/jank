@@ -36,6 +36,7 @@ all functions are generic by default
   type specifiers are optional and not preferred
     specified with :: to disambiguate from generics
   return types need to be specified; ∀ will remain the most common
+  functions may return multiple types; compiler should automatically use sum
 
 structs
   destructors
