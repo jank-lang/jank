@@ -41,9 +41,11 @@
                         :struct-member transform/struct-member
                         :new-expression transform/new-expression
                         :macro-function-call transform/function-call
+                        :macro-definition transform/macro-definition
                         :lambda-definition transform/lambda-definition
                         :generic-lambda-definition transform/generic-lambda-definition
                         :argument-list transform/argument-list
+                        :macro-argument-list transform/argument-list
                         :return-list transform/return-list
                         :if-expression transform/if-expression}
                        parsed)]

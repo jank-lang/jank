@@ -74,6 +74,12 @@
    :name (first more)
    :arguments (rest more)})
 
+(defn macro-definition [& more]
+  {:kind :macro-definition
+   :name (first more)
+   :arguments (second more)
+   :body (drop 2 more)})
+
 (defn lambda-definition [& more]
   {:kind :lambda-definition
    :arguments (first more)
