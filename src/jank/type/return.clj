@@ -1,8 +1,9 @@
 (ns jank.type.return
-  (:require [jank.type.expression :as expression]
+  (:require [jank.parse.fabricate :as fabricate]
+            [jank.type.expression :as expression]
             [jank.type.scope.type-declaration :as type-declaration])
-  (:use clojure.pprint
-        jank.assert))
+  (:use jank.assert
+        jank.debug.log))
 
 (defmulti add-explicit-returns
   "Adds explicit returns to if statements, lambdas, etc.
@@ -18,8 +19,7 @@
   (fn [item scope]
     (:kind item)))
 
-(defmethod add-explicit-returns :lambda-definition
-  [item scope]
+(defn lambda-macro-helper [item expected-type scope]
   ; Don't bother redoing the work if we've already done it.
   ; The real reason we care is that this should only be done once per lambda,
   ; since the lambda only has access to its full scope once. If another item
@@ -27,29 +27,40 @@
   ; no longer be available.
   (if (= :return (-> item :body last :kind))
     item
-    (let [expected-type (-> item :return :values first)]
-      ; No return type means no implicit returns are generated. Nice.
-      (if (nil? expected-type)
-        item
-        (let [updated-body (add-explicit-returns {:kind :body
-                                                  :values (:body item)}
-                                                 scope)
-              body-type (expression/realize-type (last (:values updated-body))
-                                                 scope)
-              ; Allow deduction
-              deduced-type (if (type-declaration/auto? expected-type)
-                             body-type
-                             expected-type)
-              updated-item (assoc item :body (:values updated-body))]
-          (type-assert (= (type-declaration/strip deduced-type)
-                          (type-declaration/strip body-type))
-                       (str "expected function return type of "
-                            deduced-type
-                            ", found "
-                            body-type))
+    ; No return type means no implicit returns are generated. Nice.
+    (if (nil? expected-type)
+      item
+      (let [updated-body (add-explicit-returns {:kind :body
+                                                :values (:body item)}
+                                               scope)
+            body-type (expression/realize-type (last (:values updated-body))
+                                               scope)
+            ; Allow deduction
+            deduced-type (if (type-declaration/auto? expected-type)
+                           body-type
+                           expected-type)
+            updated-item (assoc item :body (:values updated-body))]
+        (type-assert (= (type-declaration/strip deduced-type)
+                        (type-declaration/strip body-type))
+                     (str "expected return type of "
+                          deduced-type
+                          ", found "
+                          body-type))
+        [updated-item deduced-type]))))
 
-          ; Update the return type
-          (assoc-in updated-item [:return :values] [deduced-type]))))))
+(defmethod add-explicit-returns :lambda-definition
+  [item scope]
+  (let [[updated-item
+         deduced-type] (lambda-macro-helper item
+                                            (-> item :return :values first)
+                                            scope)]
+    (assoc-in updated-item
+              [:return :values] [deduced-type])))
+
+(defmethod add-explicit-returns :macro-definition
+  [item scope]
+  (-> (lambda-macro-helper item (fabricate/type "auto") scope)
+      first))
 
 (defmethod add-explicit-returns :if-expression
   [item scope]
