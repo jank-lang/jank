@@ -34,6 +34,8 @@
       :function
       (auto? decl-type)
       :auto
+      (syntax? decl-type)
+      :syntax
       :else
       :default)))
 
@@ -60,6 +62,12 @@
   {:kind :type
    :value {:kind :identifier
            :value "auto"}})
+
+(defmethod lookup :syntax
+  [decl-type scope]
+  {:kind :type
+   :value {:kind :identifier
+           :value "syntax"}})
 
 ; Recursively looks up a type by name.
 ; Returns the type, if found, or nil.
