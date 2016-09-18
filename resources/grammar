@@ -65,8 +65,9 @@ type = identifier
 
 <macro-keyword> = <'ast-macro'>
 <generic-list> = list
+macro-argument-list = left-paren identifier+ right-paren
 macro-definition =
-  left-paren macro-keyword identifier argument-list
+  left-paren macro-keyword identifier macro-argument-list
     atom*
   right-paren
 
