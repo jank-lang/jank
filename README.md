@@ -283,7 +283,7 @@ More details to come.
 
 ```lisp
 (; The string? predicate handles any size static-string or dynamic string. ;)
-(macro debug (ast label body :: syntax) where (string? label)
+(macro when-debug (ast label body :: syntax) where (string? label)
   (tuple ast
          (if (/build/debug?)
            syntax/none
@@ -293,7 +293,7 @@ More details to come.
              (print-line (str "end " label))))))
 
 (; Applies debug to a static-string : ("test code") and a syntax element. ;)
-(debug "test code"
+(when-debug "test code"
   (do-some-debug-work))
 ```
 
