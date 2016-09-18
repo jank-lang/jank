@@ -1,6 +1,6 @@
 (ns jank.parse.transform
-  (:use clojure.pprint
-        jank.assert))
+  (:use jank.assert
+        jank.debug.log))
 
 ; TODO: Use fabricate for all of these?
 

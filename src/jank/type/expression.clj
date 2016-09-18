@@ -1,8 +1,7 @@
 (ns jank.type.expression
   (:require [jank.type.scope.type-declaration :as type-declaration]
             [jank.type.scope.binding-declaration :as binding-declaration])
-  (:use clojure.pprint
-        jank.debug.log
+  (:use jank.debug.log
         jank.assert))
 
 (defmulti realize-type

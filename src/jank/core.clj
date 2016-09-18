@@ -2,7 +2,8 @@
   (:gen-class)
   (:require [jank.parse :as parse]
             [jank.codegen.c++ :as c++]
-            [jank.type.check :as type]))
+            [jank.type.check :as type])
+  (:use jank.debug.log))
 
 (defn -main
   [& args]
@@ -11,5 +12,7 @@
                   parse/prelude)
                 (slurp (first args)))}
       type/check
+      clean-scope
+      pprint
       ;c++/codegen
       ))

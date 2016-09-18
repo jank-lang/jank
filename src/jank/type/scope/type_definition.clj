@@ -2,8 +2,8 @@
   (:require [jank.type.scope.type-declaration :as type-declaration]
             [jank.type.scope.util :as util])
   (:use clojure.walk
-        clojure.pprint
-        jank.assert))
+        jank.assert
+        jank.debug.log))
 
 ; Look up based on type, returning full definition
 (def lookup (partial util/lookup

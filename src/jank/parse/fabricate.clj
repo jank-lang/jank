@@ -1,7 +1,7 @@
 (ns jank.parse.fabricate
   (:refer-clojure :exclude [type])
-  (:use clojure.pprint
-        jank.assert))
+  (:use jank.assert
+        jank.debug.log))
 
 (defn type
   [name]

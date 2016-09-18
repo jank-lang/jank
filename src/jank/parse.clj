@@ -1,8 +1,8 @@
 (ns jank.parse
   (:require [instaparse.core :as insta]
             [jank.parse.transform :as transform])
-  (:use clojure.pprint
-        jank.assert))
+  (:use jank.assert
+        jank.debug.log))
 
 (def prelude (slurp (clojure.java.io/resource "prelude.jank")))
 

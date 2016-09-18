@@ -3,8 +3,7 @@
             [jank.codegen.sanitize :as sanitize]
             [jank.codegen.util :as util]
             [jank.codegen.mangle :as mangle])
-  (:use clojure.pprint
-        jank.assert
+  (:use jank.assert
         jank.debug.log))
 
 (defmulti codegen-impl

@@ -1,8 +1,7 @@
 (ns jank.codegen.util
   (:require [jank.codegen.sanitize :as sanitize])
   (:use jank.assert
-        jank.debug.log
-        clojure.pprint))
+        jank.debug.log))
 
 (defn swap-params
   "Takes the input (i integer b boolean) and gives the C-like

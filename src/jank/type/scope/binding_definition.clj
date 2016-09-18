@@ -3,8 +3,7 @@
             [jank.type.scope.type-declaration :as type-declaration]
             [jank.type.scope.binding-declaration :as binding-declaration]
             [jank.type.scope.util :as util])
-  (:use clojure.pprint
-        jank.assert
+  (:use jank.assert
         jank.debug.log))
 
 (def lookup (partial util/lookup #(find (:binding-definitions %2) %1)))

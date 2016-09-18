@@ -1,6 +1,5 @@
 (ns jank.type.scope.util
-  (:use clojure.pprint
-        jank.assert
+  (:use jank.assert
         jank.debug.log))
 
 (defn lookup

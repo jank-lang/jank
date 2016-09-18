@@ -1,8 +1,7 @@
 (ns jank.codegen.mangle
   (:require [jank.codegen.sanitize :as sanitize])
   (:use jank.assert
-        jank.debug.log
-        clojure.pprint))
+        jank.debug.log))
 
 (defmulti mangle
   "Flattens the item into a string for use with name serialization."
