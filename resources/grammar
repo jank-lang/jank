@@ -63,10 +63,10 @@ macro-function-call =
 
 type = identifier
 
-<macro-keyword> = <'macro'>
+<macro-keyword> = <'ast-macro'>
 <generic-list> = list
 macro-definition =
-  left-paren macro-keyword identifier generic-list argument-list
+  left-paren macro-keyword identifier argument-list
     atom*
   right-paren
 
