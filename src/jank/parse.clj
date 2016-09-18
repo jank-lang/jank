@@ -40,7 +40,7 @@
                         :struct-definition transform/struct-definition
                         :struct-member transform/struct-member
                         :new-expression transform/new-expression
-                        :function-call transform/function-call
+                        :macro-function-call transform/function-call
                         :lambda-definition transform/lambda-definition
                         :generic-lambda-definition transform/generic-lambda-definition
                         :argument-list transform/argument-list

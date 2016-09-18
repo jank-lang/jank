@@ -135,7 +135,7 @@
        "="
        (codegen-impl (:value current))))
 
-(defmethod codegen-impl :function-call
+(defmethod codegen-impl :macro-function-call
   [current]
   ;(pprint (clean-scope current))
   ; External calls don't get mangled

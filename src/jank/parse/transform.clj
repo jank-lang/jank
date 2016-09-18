@@ -70,7 +70,7 @@
    :values (rest more)})
 
 (defn function-call [& more]
-  {:kind :function-call
+  {:kind :macro-function-call
    :name (first more)
    :arguments (rest more)})
 

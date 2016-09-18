@@ -167,7 +167,7 @@
 
 ; Check the type of each argument and try to realize the resulting
 ; function type.
-(defmethod check-item :function-call
+(defmethod check-item :macro-function-call
   [item scope]
   (loop [args (:arguments item)
          checked-args []
