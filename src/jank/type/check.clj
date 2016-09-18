@@ -4,10 +4,10 @@
             [jank.type.scope.type-definition :as type-definition]
             [jank.type.scope.binding-declaration :as binding-declaration]
             [jank.type.scope.binding-definition :as binding-definition]
+            [jank.type.scope.macro-definition :as macro-definition]
             [jank.type.expression :as expression]
             [jank.type.return :as return])
-  (:use clojure.pprint
-        jank.assert
+  (:use jank.assert
         jank.debug.log))
 
 (defmulti check-item
@@ -22,6 +22,7 @@
    (empty-scope nil))
   ([parent]
    {:parent parent
+    :macro-definitions #{}
     :binding-declarations {}
     :binding-definitions {}
     :type-declarations #{}
@@ -165,6 +166,20 @@
                     updated-item
                     (:scope checked-val)))))
 
+(defmethod check-item :macro-definition
+  [item scope]
+  (let [checked-name (check-item (:name item) scope)
+        new-scope (empty-scope scope)
+        checked-args (check-item (:arguments item) new-scope)
+        checked-body (check {:cells (:body item)} (:scope checked-args))
+        updated-item (assoc item :body (:cells checked-body))
+        item-with-return (return/add-explicit-returns updated-item
+                                                      (:scope checked-body))]
+    (assoc item-with-return
+           :name checked-name
+           :arguments checked-args
+           :scope (macro-definition/add-to-scope updated-item scope))))
+
 ; Check the type of each argument and try to realize the resulting
 ; function type.
 (defmethod check-item :macro-function-call
@@ -209,6 +224,21 @@
                           (ffirst remaining)
                           (-> remaining first second))
                         new-scope)))))))
+
+(defmethod check-item :macro-argument-list
+  [item scope]
+  (let [args (:values item)]
+    (when (not-empty args)
+      (type-assert (apply distinct? (map first args))
+                   "not all parameter names are distinct"))
+    (assoc item
+           :scope
+           (reduce #(binding-declaration/add-to-scope
+                      (fabricate/binding-declaration (first %2)
+                                                     (fabricate/type "auto"))
+                      %1)
+                   scope
+                   args))))
 
 (defmethod check-item :return-list
   [item scope]
