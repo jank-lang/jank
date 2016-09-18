@@ -97,6 +97,10 @@
   {:kind :argument-list
    :values more})
 
+(defn macro-argument-list [& more]
+  {:kind :macro-argument-list
+   :values more})
+
 (defn return-list [& more]
   {:kind :return-list
    :values more})

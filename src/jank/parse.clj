@@ -45,7 +45,7 @@
                         :lambda-definition transform/lambda-definition
                         :generic-lambda-definition transform/generic-lambda-definition
                         :argument-list transform/argument-list
-                        :macro-argument-list transform/argument-list
+                        :macro-argument-list transform/macro-argument-list
                         :return-list transform/return-list
                         :if-expression transform/if-expression}
                        parsed)]
