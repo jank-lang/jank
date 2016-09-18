@@ -31,12 +31,18 @@
 
     ; TODO: Handle generic calls; match generics explicitly
     ; Test all overloads
-    (let [matches (filter
+    (let [stripped-arg-types (map type-declaration/strip arg-types)
+          matches (filter
                     #(let [generics (:generics (:value %))
-                           expected-types (-> generics :values first :values)]
+                           expected-types (-> generics :values first :values)
+                           stripped-expected (map type-declaration/strip expected-types)
+                           pairs (map vector stripped-arg-types stripped-expected)]
                        ; TODO: Allow comparison of overload superpositions
-                       (= (map type-declaration/strip arg-types)
-                          (map type-declaration/strip expected-types)))
+                       (and (= (count stripped-arg-types) (count stripped-expected))
+                            (every? (fn [[arg expected]]
+                                      (or (= arg expected)
+                                          (type-declaration/auto? expected)))
+                                    pairs)))
                     overloads)]
       (type-assert (not-empty matches)
                    (str "no matching function call to " func-name
