@@ -26,10 +26,10 @@
   ; tries to do this again, with a lambda return, the appropriate scope will
   ; no longer be available.
   (if (= :return (-> item :body last :kind))
-    item
+    [item expected-type]
     ; No return type means no implicit returns are generated. Nice.
     (if (nil? expected-type)
-      item
+      [item expected-type]
       (let [updated-body (add-explicit-returns {:kind :body
                                                 :values (:body item)}
                                                scope)
