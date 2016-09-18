@@ -1,8 +1,8 @@
 (ns jank.type.scope.type-declaration
   (:require [jank.type.scope.util :as util])
   (:use clojure.walk
-        clojure.pprint
-        jank.assert))
+        jank.assert
+        jank.debug.log))
 
 (defn function?
   "Returns whether or not the provided type is that of a function."
@@ -14,6 +14,11 @@
   [decl-type]
   (let [type-name (:name (:value decl-type))]
     (or (= "∀" type-name) (= "auto" type-name))))
+
+(defn syntax?
+  [decl-type]
+  (let [type-name (:name (:value decl-type))]
+    (= "syntax" type-name)))
 
 (defn strip
   "Removes additional information from types which isn't
