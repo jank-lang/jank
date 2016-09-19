@@ -22,7 +22,7 @@
    (empty-scope nil))
   ([parent]
    {:parent parent
-    :macro-definitions #{}
+    :macro-definitions {}
     :binding-declarations {}
     :binding-definitions {}
     :type-declarations #{}
@@ -184,7 +184,9 @@
 ; function type.
 (defmethod check-item :macro-function-call
   [item scope]
-  (loop [args (:arguments item)
+  (if-let [macro-definition (macro-definition/lookup (:name item) scope)]
+    (comment macro/call item macro-definition)
+    (loop [args (:arguments item)
          checked-args []
          new-scope scope]
     (if (empty? args)
@@ -201,7 +203,7 @@
       (let [checked-arg (check-item (first args) new-scope)]
         (recur (rest args)
                (conj checked-args checked-arg)
-               (:scope checked-arg))))))
+               (:scope checked-arg)))))))
 
 ; Bring the arguments into scope and type check.
 (defmethod check-item :argument-list
