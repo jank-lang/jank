@@ -15,9 +15,9 @@
    initial value. Returns the updated scope."
   (let [item-name (:name (:name item))
         overloads (lookup item-name scope)
-        item-type (expression/realize-type (:value item) scope)
+        item-type (expression/realize-type item scope)
         expected-type (fabricate/type-declaration "syntax")]
     (type-assert (nil? overloads)
                  (str "macro already exists " item-name))
     (update scope
-            :macro-definitions assoc item-name (:value item))))
+            :macro-definitions assoc item-name item)))
