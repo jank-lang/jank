@@ -184,9 +184,9 @@
 ; function type.
 (defmethod check-item :macro-function-call
   [item scope]
-  (if-let [macro-definition (macro-definition/lookup (:name item) scope)]
-    (comment macro/call item macro-definition)
-    (loop [args (:arguments item)
+  (if-let [macro-definition (macro-definition/lookup (-> item :name :name) scope)]
+    item ; TODO: Run the macro
+    (loop [args (:arguments item) ; TODO: Refactor into :function-call
          checked-args []
          new-scope scope]
     (if (empty? args)
