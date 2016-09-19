@@ -20,4 +20,4 @@
     (type-assert (nil? overloads)
                  (str "macro already exists " item-name))
     (update scope
-            :macro-definitions conj item-name)))
+            :macro-definitions assoc item-name (:value item))))
