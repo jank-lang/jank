@@ -38,6 +38,12 @@ all functions are generic by default
   return types need to be specified; ∀ will remain the most common
   functions may return multiple types; compiler should automatically use sum
 
+type-safe heterogenous maps
+  conjoining may return a different type
+  generic type has possible key->value types, using sum where needed
+  map<string, int> conj string:float yields map<string, sum<int, float>>
+  map<string, int> conj foo:bar yields map<string, int, foo, bar>
+
 structs
   destructors
     specialize /std/destroy
