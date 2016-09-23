@@ -59,7 +59,7 @@
 
 (defmethod add-explicit-returns :macro-definition
   [item scope]
-  (-> (lambda-macro-helper item (fabricate/type "auto") scope)
+  (-> (lambda-macro-helper item (fabricate/type "syntax") scope)
       first))
 
 (defmethod add-explicit-returns :if-expression
