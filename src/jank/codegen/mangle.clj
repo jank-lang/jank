@@ -30,7 +30,7 @@
   (sanitize/sanitize-str (str (:name (:name item))
                               (hash (mangle (:type item))))))
 
-(defmethod mangle :macro-function-call
+(defmethod mangle :function-call
   [item]
   (sanitize/sanitize-str (str (:name (:name item))
                               (hash (mangle (:signature item))))))

@@ -84,6 +84,10 @@
 
 (defmethod realize-type :macro-function-call
   [item scope]
+  (realize-type (assoc item :kind :function-call) scope))
+
+(defmethod realize-type :function-call
+  [item scope]
   (let [signature (call-signature item scope)
         return (-> signature :value :generics :values second :values first)]
     return))
