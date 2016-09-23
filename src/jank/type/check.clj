@@ -180,13 +180,24 @@
            :arguments checked-args
            :scope (macro-definition/add-to-scope updated-item scope))))
 
-; Check the type of each argument and try to realize the resulting
-; function type.
 (defmethod check-item :macro-function-call
   [item scope]
-  (if-let [macro-definition (macro-definition/lookup (-> item :name :name) scope)]
-    item ; TODO: Run the macro
-    (loop [args (:arguments item) ; TODO: Refactor into :function-call
+  (check-item
+    (if-let [macro-definition (macro-definition/lookup (-> item :name :name) scope)]
+      (assoc item
+             :kind :macro-call
+             :definition macro-definition)
+      (assoc item :kind :function-call))
+    scope))
+
+(defmethod check-item :macro-call
+  [item scope]
+  ; TODO
+  (assoc item :scope scope))
+
+(defmethod check-item :function-call
+  [item scope]
+  (loop [args (:arguments item)
          checked-args []
          new-scope scope]
     (if (empty? args)
@@ -194,8 +205,8 @@
             args-with-returns (map #(return/add-parameter-returns % new-scope)
                                    checked-args)
             updated-item (assoc item
-                               :name checked-name
-                               :arguments args-with-returns)
+                                :name checked-name
+                                :arguments args-with-returns)
             signature (expression/call-signature updated-item new-scope)]
         (assoc updated-item
                :scope new-scope
@@ -203,7 +214,7 @@
       (let [checked-arg (check-item (first args) new-scope)]
         (recur (rest args)
                (conj checked-args checked-arg)
-               (:scope checked-arg)))))))
+               (:scope checked-arg))))))
 
 ; Bring the arguments into scope and type check.
 (defmethod check-item :argument-list
