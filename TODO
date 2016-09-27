@@ -41,6 +41,7 @@ all functions are generic by default
 type-safe heterogenous maps
   conjoining may return a different type
   generic type has possible key->value types, using sum where needed
+    requires matching all possible variants; maybe too cumbersome
   map<string, int> conj string:float yields map<string, sum<int, float>>
   map<string, int> conj foo:bar yields map<string, int, foo, bar>
 
