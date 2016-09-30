@@ -101,6 +101,10 @@
   {:kind :macro-argument-list
    :values more})
 
+(defn syntax-definition [& more]
+  {:kind :syntax-definition
+   :body more})
+
 (defn return-list [& more]
   {:kind :return-list
    :values more})
