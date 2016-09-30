@@ -10,6 +10,7 @@
               binding-declaration /
               struct-definition /
               new-expression /
+              syntax-definition /
               macro-function-call
 <atom> = statement /
          list
