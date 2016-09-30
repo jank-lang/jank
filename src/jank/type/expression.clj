@@ -1,5 +1,6 @@
 (ns jank.type.expression
-  (:require [jank.type.scope.type-declaration :as type-declaration]
+  (:require [jank.parse.fabricate :as fabricate]
+            [jank.type.scope.type-declaration :as type-declaration]
             [jank.type.scope.binding-declaration :as binding-declaration])
   (:use jank.debug.log
         jank.assert))
@@ -86,6 +87,10 @@
   [item scope]
   (realize-type (assoc item :kind :function-call) scope))
 
+(defmethod realize-type :syntax-definition
+  [item scope]
+  (fabricate/type "syntax"))
+
 (defmethod realize-type :function-call
   [item scope]
   (let [signature (call-signature item scope)
@@ -144,9 +149,7 @@
 ; Handles integer, string, etc
 (defmethod realize-type :default
   [item scope]
-  {:kind :type
-   :value {:kind :identifier
-           :name (-> item :kind name symbol str)}})
+  (fabricate/type (-> item :kind name symbol str)))
 
 ; Empty bodies will realize to nil
 (defmethod realize-type nil

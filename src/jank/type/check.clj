@@ -195,6 +195,11 @@
   ; TODO
   (assoc item :scope scope))
 
+(defmethod check-item :syntax-definition
+  [item scope]
+  ; TODO
+  (assoc item :scope scope))
+
 (defmethod check-item :function-call
   [item scope]
   (loop [args (:arguments item)
