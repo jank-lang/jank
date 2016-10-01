@@ -1,5 +1,6 @@
 (ns jank.type.scope.type-declaration
-  (:require [jank.type.scope.util :as util])
+  (:require [jank.parse.fabricate :as fabricate]
+            [jank.type.scope.util :as util])
   (:use clojure.walk
         jank.assert
         jank.debug.log))
@@ -66,21 +67,15 @@
 
 (defmethod lookup :auto
   [decl-type scope]
-  {:kind :type
-   :value {:kind :identifier
-           :value "auto"}})
+  (fabricate/type "auto"))
 
 (defmethod lookup :syntax
   [decl-type scope]
-  {:kind :type
-   :value {:kind :identifier
-           :value "syntax"}})
+  (fabricate/type "syntax"))
 
 (defmethod lookup :ast
   [decl-type scope]
-  {:kind :type
-   :value {:kind :identifier
-           :value "ast"}})
+  (fabricate/type "ast"))
 
 ; Recursively looks up a type by name.
 ; Returns the type, if found, or nil.
