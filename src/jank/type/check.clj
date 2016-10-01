@@ -247,15 +247,19 @@
   [item scope]
   (let [args (:values item)]
     (when (not-empty args)
-      (type-assert (apply distinct? (map first args))
+      (type-assert (apply distinct? args)
                    "not all parameter names are distinct"))
-    (assoc item
-           :scope
-           (reduce #(binding-declaration/add-to-scope
-                      (fabricate/binding-declaration %2 (fabricate/type "auto"))
-                      %1)
-                   scope
-                   args))))
+    ; TODO: Check for explicit type and make sure the first is ast
+    (let [types (cons "ast" (repeat "auto"))]
+      (assoc item
+             :scope
+             (reduce #(binding-declaration/add-to-scope
+                        (fabricate/binding-declaration
+                          (first %2)
+                          (fabricate/type (second %2)))
+                        %1)
+                     scope
+                     (map #(vector %1 %2) args types))))))
 
 (defmethod check-item :return-list
   [item scope]
