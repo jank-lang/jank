@@ -20,6 +20,11 @@
   (let [type-name (:name (:value decl-type))]
     (= "syntax" type-name)))
 
+(defn ast?
+  [decl-type]
+  (let [type-name (:name (:value decl-type))]
+    (= "ast" type-name)))
+
 (defn strip
   "Removes additional information from types which isn't
    needed during comparison."
@@ -36,6 +41,8 @@
       :auto
       (syntax? decl-type)
       :syntax
+      (ast? decl-type)
+      :ast
       :else
       :default)))
 
@@ -68,6 +75,12 @@
   {:kind :type
    :value {:kind :identifier
            :value "syntax"}})
+
+(defmethod lookup :ast
+  [decl-type scope]
+  {:kind :type
+   :value {:kind :identifier
+           :value "ast"}})
 
 ; Recursively looks up a type by name.
 ; Returns the type, if found, or nil.
