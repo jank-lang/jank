@@ -252,8 +252,7 @@
     (assoc item
            :scope
            (reduce #(binding-declaration/add-to-scope
-                      (fabricate/binding-declaration (first %2)
-                                                     (fabricate/type "auto"))
+                      (fabricate/binding-declaration %2 (fabricate/type "auto"))
                       %1)
                    scope
                    args))))
