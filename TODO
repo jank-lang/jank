@@ -57,6 +57,15 @@ read command-line arguments from a separate file
 ** everything else: **
 write the extra compilation args to a file
 
+long-term macros should be predicative pattern matching
+  defining a syntax allows arbitrary nesting of predicates
+  maybe with regex-like specifiers?
+
+  (bind-syntax (let ((identifer? expression?)+)
+                 expression?+))
+
+  how can I distinguish 'let' from a predicate? see racket's macros
+
 port to boot?
 
 better logging
