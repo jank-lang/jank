@@ -13,18 +13,18 @@ Currently, jank aims to provide:
 ## Appetizer
 ```lisp
 (; Update all entities. ;)
-(ƒ update (delta real entities vector : (entity)) (∀)
+(ƒ update (delta entities) (∀)
   (map (partial update delta) entities))
 
 (; Damage nearby entities. ;)
-(ƒ cast-aoe (area real entities vector : (entity)) (∀)
+(ƒ cast-aoe (area entities) (∀)
   (map damage
        (filter (partial within-distance area) entities)))
 
 (; Find a winner, based on score. ;)
-(ƒ find-winner (entities vector : (entity)) (∀)
+(ƒ find-winner (entities) (∀)
   (reduce
-    (λ (a ∀ b ∀) (∀)
+    (λ (a b) (∀)
       (if (> (.score a) (.score b))
         a b))
     entities))
@@ -46,11 +46,14 @@ There are a few primitive types which are part of the language.
 
 ## Functions
 ```lisp
-(ƒ square (i integer) (∀)
+(ƒ square (i) (∀)
+  (* i i))
+
+(ƒ square (i :: integer) (∀) (; Explicit type for i ;)
   (* i i))
 ```
 
-Functions are defined via the `function` (or `ƒ`) special identifier and require a `name` identifier, an argument list (which may be empty), and a return type list (which may be empty). Return type lists may also be `(auto)` or `(∀)`, which forces the compiler to deduce the type.
+Functions are defined via the `function` (or `ƒ`) special identifier and require a `name` identifier, an argument list (which may be empty), and a return type list (which may be empty). Arguments may optionally specify a type; by default, all functions are generic (though still statically typed). Return type lists may also be `(auto)` or `(∀)`, which forces the compiler to deduce the type.
 
 ## Structs
 ```lisp
@@ -87,19 +90,19 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 #### Function
 ```lisp
 (; Generic. ;)
-(ƒ show! : (:T) (o T) ()
+(ƒ show! : (:T) (o :: T) ()
   (print! o))
 
 (; Short-hand for above, where T isn't needed. ;)
-(ƒ show! (o ∀) ()
+(ƒ show! (o) ()
   (print! o))
 
 (; Full specialization. ;)
-(ƒ show! : (real) (o real) ()
+(ƒ show! : (real) (o :: real) ()
   (print! "real: " o))
 
 (; Partial specialization. ;)
-(ƒ show! : (coord : (:T-x :T-y)) (o coord : (T-x T-y)) ()
+(ƒ show! : (coord : (:T-x :T-y)) (o :: coord : (T-x T-y)) ()
   (print! "coord: " o))
 
 (; Non-type parameter partial specialization. ;)
@@ -176,14 +179,14 @@ Since constructors are the functions to actually create objects, not something t
 (struct score
   (value integer))
 
-(ƒ score (value integer) (∀)
+(ƒ score (value) (∀)
   (print! "creating score: " value)
 
   (; Pass on to aggregate initialization. ;)
   (new : (score) value))
 
 (; Called only once per object, when it dies. ;)
-(ƒ /std/destruct! (s score) ()
+(ƒ /std/destruct! (s :: score) ()
   (print! "destroying score: " (.value s)))
 ```
 
@@ -206,7 +209,7 @@ Constraints can be applied to various definitions, including functions and struc
 #### Functions
 ```lisp
 (; Specialize on generic macros as type traits. ;)
-(ƒ square : (:T) (i T) (∀) where (number? : T)
+(ƒ square (i) (∀) where (number? i)
   (* i i))
 ```
 
@@ -250,7 +253,7 @@ Enums function as variant sum types; each variant can have its own type or simpl
 Branching, using `if`, allows for specifying a single form for the true and false cases. All conditions must be of type `boolean` and the false case is optional. To have more than one line in a true or false case, introduce scope with a `do` statement.
 
 ```lisp
-(ƒ next-even (i integer) (∀)
+(ƒ next-even (i) (∀)
   (if (even? i)
     (do
       (print! "even")
@@ -303,10 +306,11 @@ help the compiler elide run-time code. For example, a string literal `"foo"` has
 the type of `static-string : ("foo")`. In a generic function that just operates
 on strings, concatenation of another string literal will yield a resultant type
 which is still compile-time, thus allowing the elision of run-time concatenation
-entirely. jank does this with all literals, including literal sequences.
+entirely. jank does this with all literals, including literal sequences, such as
+vectors.
 
 ```lisp
-(ƒ log (msg ∀) (∀) where (string? msg)
+(ƒ log (msg) (∀) where (string? msg)
   (; This is known at compile-time if msg is a static-string. ;)
   (print-line (count (+ "logging: " msg))))
 ```
