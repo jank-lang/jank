@@ -3,7 +3,13 @@
         jank.debug.log))
 
 (def prelude {:functions {{:name "print!"
-                           :argument-types [:string]} #(println %)}})
+                           :argument-types [:string]} pprint
+                          {:name "print!"
+                           :argument-types [:integer]} pprint
+                          {:name "print!"
+                           :argument-types [:real]} pprint
+                          {:name "print!"
+                           :argument-types [:boolean]} pprint}})
 
 (defmulti evaluate-item
   (fn [item env]
@@ -22,7 +28,7 @@
 
 (defmethod evaluate-item :macro-call
   [item env]
-  (pprint "evaluating macro " (clean-scope item) env)
+  ;(pprint "evaluating macro " (clean-scope item) env)
   ; TODO: if external, the function must be in prelude
   ; TODO: Add arguments to env
   ; TODO: (assoc item [:interpreted :value] ...)
@@ -32,7 +38,7 @@
 
 (defmethod evaluate-item :function-call
   [item env]
-  (pprint "evaluating function " (clean-scope item) env)
+  ;(pprint "evaluating function " (clean-scope item) env)
   (let [signature {:name (-> item :name :name)
                    :argument-types (map :kind (:arguments item))}
         arguments (map #(evaluate-item % env) (:arguments item))
@@ -42,6 +48,18 @@
     (assoc item :env env)))
 
 (defmethod evaluate-item :string
+  [item env]
+  (assoc item :env env))
+
+(defmethod evaluate-item :integer
+  [item env]
+  (assoc item :env env))
+
+(defmethod evaluate-item :real
+  [item env]
+  (assoc item :env env))
+
+(defmethod evaluate-item :boolean
   [item env]
   (assoc item :env env))
 
