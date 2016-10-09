@@ -13,6 +13,8 @@
        %)
     item))
 
-(defn pprint [item]
-  (clojure.pprint/pprint item)
-  item)
+(defn pprint [arg & args]
+  (clojure.pprint/pprint (if (not-empty args)
+                           (apply vector arg args)
+                           arg))
+  arg)
