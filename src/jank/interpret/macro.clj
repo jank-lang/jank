@@ -2,8 +2,10 @@
   (:use jank.assert
         jank.debug.log))
 
-(def prelude {{:name "print!"
-               :argument-types [:string]} #(println %)})
+(def prelude {:functions {{:name "print!"
+                            :argument-types []} #(println "MEOW")
+                          {:name "print!"
+                           :argument-types [:string]} #(println %)}})
 
 (defmulti evaluate-item
   (fn [item env]
@@ -22,13 +24,28 @@
 
 (defmethod evaluate-item :macro-call
   [item env]
-  (pprint "evaluating " (clean-scope item) env)
+  (pprint "evaluating macro " (clean-scope item) env)
   ; TODO: if external, the function must be in prelude
   ; TODO: Add arguments to env
   ; TODO: (assoc item [:interpreted :value] ...)
   (let [body (evaluate (get-in item [:definition :body]) env)]
     (-> (assoc-in item [:definition :body] (:cells body))
         (assoc :env (:env body)))))
+
+(defmethod evaluate-item :function-call
+  [item env]
+  (pprint "evaluating function " (clean-scope item) env)
+  (let [signature {:name (-> item :name :name)
+                   :argument-types (map :kind (:arguments item))}
+        func (get (:functions env) signature)]
+    (interpret-assert func (str "unknown function " signature))
+    (func "KITTY") ; TODO: Evaluate arguments
+    (assoc item :env env)))
+
+(defmethod evaluate-item :identifier
+  [item env]
+  ; TODO
+  (assoc item :env env))
 
 (defmethod evaluate-item :default
   [item env]
