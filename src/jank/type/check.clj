@@ -6,7 +6,8 @@
             [jank.type.scope.binding-definition :as binding-definition]
             [jank.type.scope.macro-definition :as macro-definition]
             [jank.type.expression :as expression]
-            [jank.type.return :as return])
+            [jank.type.return :as return]
+            [jank.interpret.macro :as macro])
   (:use jank.assert
         jank.debug.log))
 
@@ -193,7 +194,11 @@
 (defmethod check-item :macro-call
   [item scope]
   ; TODO
-  (assoc item :scope scope))
+  (-> (assoc item :scope scope)
+      vector
+      macro/evaluate
+      :cells
+      first))
 
 (defmethod check-item :syntax-definition
   [item scope]
