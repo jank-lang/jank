@@ -3,8 +3,6 @@
         jank.debug.log))
 
 (def prelude {:functions {{:name "print!"
-                            :argument-types []} #(println "MEOW")
-                          {:name "print!"
                            :argument-types [:string]} #(println %)}})
 
 (defmulti evaluate-item
@@ -37,10 +35,15 @@
   (pprint "evaluating function " (clean-scope item) env)
   (let [signature {:name (-> item :name :name)
                    :argument-types (map :kind (:arguments item))}
+        arguments (map #(evaluate-item % env) (:arguments item))
         func (get (:functions env) signature)]
     (interpret-assert func (str "unknown function " signature))
-    (func "KITTY") ; TODO: Evaluate arguments
+    (apply func (map :value arguments))
     (assoc item :env env)))
+
+(defmethod evaluate-item :string
+  [item env]
+  (assoc item :env env))
 
 (defmethod evaluate-item :identifier
   [item env]
