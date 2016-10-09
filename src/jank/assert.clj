@@ -6,6 +6,9 @@
 (defn type-assert [condition & msg]
   (assert condition (apply str "type error: " msg)))
 
+(defn interpret-assert [condition & msg]
+  (assert condition (apply str "interpret error: " msg)))
+
 (defn codegen-assert [condition & msg]
   (assert condition (apply str "codegen error: " msg)))
 
