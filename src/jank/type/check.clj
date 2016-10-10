@@ -185,6 +185,7 @@
 (defmethod check-item :macro-function-call
   [item scope]
   (check-item
+    ; TODO: lookup macro based on name *and* signature
     (if-let [macro-definition (macro-definition/lookup (-> item :name :name) scope)]
       (assoc item
              :kind :macro-call
