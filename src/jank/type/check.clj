@@ -171,11 +171,7 @@
 (defmethod check-item :macro-definition
   [item scope]
   (let [checked-name (check-item (:name item) scope)
-        new-scope (empty-scope scope)
-        checked-args (check-item (:arguments item) new-scope)
-        checked-item (assoc item
-                            :name checked-name
-                            :arguments checked-args)]
+        checked-item (assoc item :name checked-name)]
     (assoc checked-item
            :scope (macro-definition/add-to-scope checked-item scope))))
 
@@ -193,11 +189,21 @@
 (defmethod check-item :macro-call
   [item scope]
   ; TODO
-  (-> (assoc item :scope scope)
-      vector
-      macro/evaluate
-      :cells
-      first))
+  (let [definition (:definition item)
+        new-scope (empty-scope scope) ; XXX: Scope from call site, not definition
+        checked-args (check-item (assoc (:arguments definition)
+                                        :actual-arguments (:arguments item))
+                                 new-scope)
+        checked-body (check {:cells (:body definition)}
+                            (:scope checked-args))
+        updated-def (assoc definition :body (:cells checked-body))
+        with-return (return/add-explicit-returns updated-def
+                                                 (:scope checked-body))]
+    (-> (assoc item :scope (:scope checked-body))
+        vector
+        macro/evaluate
+        :cells
+        first)))
 
 (defmethod check-item :syntax-definition
   [item scope]
@@ -249,21 +255,21 @@
 
 (defmethod check-item :macro-argument-list
   [item scope]
-  (let [args (:values item)]
+  (let [args (:values item)
+        actuals (:actual-arguments item)]
     (when (not-empty args)
       (type-assert (apply distinct? args)
                    "not all parameter names are distinct"))
     ; TODO: Check for explicit type and make sure the first is ast
-    (let [types (cons "ast" (repeat "auto"))]
+    (let [types (cons (fabricate/type "ast")
+                      (map #(expression/realize-type % scope) actuals))]
       (assoc item
              :scope
              (reduce #(binding-declaration/add-to-scope
-                        (fabricate/binding-declaration
-                          (first %2)
-                          (fabricate/type (second %2)))
+                        (apply fabricate/binding-declaration %2)
                         %1)
                      scope
-                     (map #(vector %1 %2) args types))))))
+                     (map vector args types))))))
 
 (defmethod check-item :return-list
   [item scope]
