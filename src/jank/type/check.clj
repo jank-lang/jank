@@ -199,7 +199,7 @@
         updated-def (assoc definition :body (:cells checked-body))
         with-return (return/add-explicit-returns updated-def
                                                  (:scope checked-body))]
-    (-> (assoc item :scope (:scope checked-body))
+    (-> (assoc with-return :scope (:scope checked-body))
         vector
         macro/evaluate
         :cells
