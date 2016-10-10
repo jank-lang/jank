@@ -176,11 +176,12 @@
         checked-body (check {:cells (:body item)} (:scope checked-args))
         updated-item (assoc item :body (:cells checked-body))
         item-with-return (return/add-explicit-returns updated-item
-                                                      (:scope checked-body))]
-    (assoc item-with-return
-           :name checked-name
-           :arguments checked-args
-           :scope (macro-definition/add-to-scope updated-item scope))))
+                                                      (:scope checked-body))
+        checked-item (assoc item-with-return
+                            :name checked-name
+                            :arguments checked-args)]
+    (assoc checked-item
+           :scope (macro-definition/add-to-scope checked-item scope))))
 
 (defmethod check-item :macro-function-call
   [item scope]
