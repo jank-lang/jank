@@ -173,11 +173,7 @@
   (let [checked-name (check-item (:name item) scope)
         new-scope (empty-scope scope)
         checked-args (check-item (:arguments item) new-scope)
-        checked-body (check {:cells (:body item)} (:scope checked-args))
-        updated-item (assoc item :body (:cells checked-body))
-        item-with-return (return/add-explicit-returns updated-item
-                                                      (:scope checked-body))
-        checked-item (assoc item-with-return
+        checked-item (assoc item
                             :name checked-name
                             :arguments checked-args)]
     (assoc checked-item
