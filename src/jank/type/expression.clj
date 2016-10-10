@@ -32,33 +32,47 @@
     ; TODO: Handle generic calls; match generics explicitly
     ; Test all overloads
     (let [stripped-arg-types (map type-declaration/strip arg-types)
-          matches (filter
-                    #(let [generics (:generics (:value %))
-                           expected-types (-> generics :values first :values)
-                           stripped-expected (map type-declaration/strip expected-types)
-                           pairs (map vector stripped-arg-types stripped-expected)]
-                       ; TODO: Allow comparison of overload superpositions
-                       (and (= (count stripped-arg-types) (count stripped-expected))
+          match-info (map
+                       #(let [generics (:generics (:value %))
+                              expected-types (-> generics :values first :values)
+                              stripped-expected (map type-declaration/strip expected-types)
+                              pairs (map vector stripped-arg-types stripped-expected)]
+                          ; TODO: Allow comparison of overload superpositions
+                          (cond
+                            (not= (count stripped-arg-types) (count stripped-expected))
+                            nil
+
+                            (every? (fn [[l r]] (= l r)) pairs)
+                            [% :full]
+
                             (every? (fn [[arg expected]]
                                       (or (= arg expected)
-                                          (type-declaration/auto? expected)))
-                                    pairs)))
-                    overloads)]
+                                          (some type-declaration/auto? [arg expected])))
+                                    pairs)
+                            [% :partial]
+
+                            :else
+                            nil))
+                       overloads)
+          matches (filter some? match-info)
+          full-matches (filter #(= :full (second %))
+                               matches)]
       (type-assert (not-empty matches)
                    (str "no matching function call to " func-name
                         " with argument types " arg-types
                         " expected one of " overloads))
-      (type-assert (= 1 (count matches))
+      (type-assert (>= 1 (count full-matches))
                    (str "ambiguous function call to " func-name
                         " with argument types " arg-types
                         " expected one of " overloads))
 
-      (let [generics (:generics (:value (first matches)))
+      (let [match (ffirst full-matches)
+            generics (:generics (:value match))
             return-types (-> generics :values second :values)]
         (type-assert (not (type-declaration/auto? (first return-types)))
                      (str "call to function " func-name
                           " before its type is deduced"))
-        (first matches)))))
+        match))))
 
 (defmethod realize-type :lambda-definition
   [item scope]
