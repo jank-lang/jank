@@ -200,7 +200,7 @@
         with-return (return/add-explicit-returns updated-def
                                                  (:scope checked-body))]
     (-> (assoc with-return :scope (:scope checked-body))
-        vector
+        :body
         macro/evaluate
         :cells
         first)))
