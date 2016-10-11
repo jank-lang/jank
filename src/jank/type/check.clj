@@ -196,7 +196,9 @@
                                  new-scope)
         checked-body (check {:cells (:body definition)}
                             (:scope checked-args))
-        updated-def (assoc definition :body (:cells checked-body))
+        updated-def (assoc definition
+                           :arguments checked-args
+                           :body (:cells checked-body))
         with-return (return/add-explicit-returns updated-def
                                                  (:scope checked-body))]
     (-> (assoc item
