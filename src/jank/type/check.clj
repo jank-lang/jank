@@ -266,6 +266,7 @@
     ; TODO: Check for explicit type and make sure the first is ast
     (let [types (cons (fabricate/type "ast")
                       (map #(expression/realize-type % scope) actuals))]
+      ; TODO: Type check each non-syntax argument
       (assoc item
              :scope
              (reduce #(binding-declaration/add-to-scope
