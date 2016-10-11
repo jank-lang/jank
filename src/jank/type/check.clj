@@ -264,10 +264,12 @@
       (type-assert (apply distinct? args)
                    "not all parameter names are distinct"))
     ; TODO: Check for explicit type and make sure the first is ast
-    (let [types (cons (fabricate/type "ast")
-                      (map #(expression/realize-type % scope) actuals))]
-      ; TODO: Type check each non-syntax argument
+    ; TODO: Type check each non-syntax argument
+    (let [checked-actuals (map #(check-item % scope) actuals)
+          types (cons (fabricate/type "ast")
+                      (map #(expression/realize-type % scope) checked-actuals))]
       (assoc item
+             :actual-arguments checked-actuals
              :scope
              (reduce #(binding-declaration/add-to-scope
                         (apply fabricate/binding-declaration %2)
