@@ -58,6 +58,7 @@
     (apply func (map :value arguments))
     (assoc item :env env)))
 
+; TODO: Assoc values onto each of these items
 (defmethod evaluate-item :string
   [item env]
   (assoc item :env env))
