@@ -1,15 +1,18 @@
 (ns jank.interpret.macro
+  (:require [jank.parse.fabricate :as fabricate]
+            [jank.type.scope.type-declaration :as type-declaration]
+            [jank.type.expression :as expression])
   (:use jank.assert
         jank.debug.log))
 
 (def prelude {{:name "print!"
-                :argument-types [:string]} pprint
+                :argument-types [(fabricate/type "string")]} pprint
                {:name "print!"
-                :argument-types [:integer]} pprint
+                :argument-types [(fabricate/type "integer")]} pprint
                {:name "print!"
-                :argument-types [:real]} pprint
+                :argument-types [(fabricate/type "real")]} pprint
                {:name "print!"
-                :argument-types [:boolean]} pprint})
+                :argument-types [(fabricate/type "boolean")]} pprint})
 
 (defmulti evaluate-item
   (fn [item env]
@@ -46,7 +49,9 @@
   [item env]
   ;(pprint "evaluating function " (clean-scope item) env)
   (let [signature {:name (-> item :name :name)
-                   :argument-types (map :kind (:arguments item))}
+                   :argument-types (map (comp type-declaration/strip
+                                              #(expression/realize-type % (:scope item)))
+                                        (:arguments item))}
         arguments (map #(evaluate-item % env) (:arguments item))
         func (get env signature)]
     (interpret-assert func (str "unknown function " signature))
