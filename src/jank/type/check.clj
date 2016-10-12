@@ -265,6 +265,7 @@
                    "not all parameter names are distinct"))
     ; TODO: Check for explicit type and make sure the first is ast
     ; TODO: Type check each non-syntax argument
+    ; TODO: Add param returns, if needed
     (let [checked-actuals (map #(check-item % scope) actuals)
           types (cons (fabricate/type "ast")
                       (map #(expression/realize-type % scope) checked-actuals))]
