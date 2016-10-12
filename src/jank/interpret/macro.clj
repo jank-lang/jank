@@ -21,7 +21,7 @@
 (defn evaluate
   ([item] (evaluate [item] prelude))
   ([body env]
-   (pprint (clean-scope body))
+   ;(pprint (clean-scope body))
    (reduce #(let [item (evaluate-item %2 (:env %1))]
               (assoc %1
                      :cells (conj (:cells %1) item)
@@ -32,12 +32,12 @@
 
 (defmethod evaluate-item :macro-call
   [item env]
-  (pprint "evaluating macro " (clean-scope item) env)
-  ; TODO: if external, the function must be in prelude
-  ; TODO: Add arguments to env
-  ; TODO: (assoc item [:interpreted :value] ...)
+  ; TODO: If external, the function must be in prelude
+  ; TODO: Bring arguments into env
   (let [;arg-types (map #(expression/realize-type % (:scope item))
         ;               (:arguments))
+        argument-values (map (comp #(evaluate-item % env) :value)
+                             (:actual-arguments item))
         ;env-with-args (reduce #(assoc %1 )
         ;                      env
         ;                      (:arguments item))
@@ -52,6 +52,7 @@
                    :argument-types (map (comp type-declaration/strip
                                               #(expression/realize-type % (:scope item)))
                                         (:arguments item))}
+        ; TODO: look up arguments
         arguments (map #(evaluate-item % env) (:arguments item))
         func (get env signature)]
     (interpret-assert func (str "unknown function " signature))
