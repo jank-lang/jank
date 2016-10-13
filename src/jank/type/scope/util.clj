@@ -23,3 +23,18 @@
         (recur (:parent current-scope) (into all (second found)))
         (recur (:parent current-scope) all))
       all)))
+
+(defn path
+  [finder item-name scope]
+  (loop [current-scope scope
+         path []]
+    (if current-scope
+      (if (finder item-name current-scope)
+        path
+        (recur (:parent current-scope)
+               (conj path :parent)))
+      path)))
+
+(defn combine
+  [& maps]
+  (apply merge-with combine maps))
