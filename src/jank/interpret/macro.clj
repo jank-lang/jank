@@ -1,10 +1,12 @@
 (ns jank.interpret.macro
   (:require [jank.parse.fabricate :as fabricate]
             [jank.type.scope.type-declaration :as type-declaration]
-            [jank.type.expression :as expression])
+            [jank.type.expression :as expression]
+            [jank.interpret.scope.value :as value])
   (:use jank.assert
         jank.debug.log))
 
+; TODO: Merge this into the scope
 (def prelude {{:name "print!"
                 :argument-types [(fabricate/type "string")]} pprint
                {:name "print!"
