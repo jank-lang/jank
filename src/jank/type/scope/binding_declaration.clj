@@ -61,23 +61,24 @@
     (cond
       ; If we're seeing this binding for the first time
       (nil? found-decl)
-      (update scope :binding-declarations assoc decl-name [stored-type])
+      (update scope :binding-declarations assoc decl-name #{stored-type})
 
       ; If we're adding an overload
-      ; TODO: Use a set
-      (and (= -1 (.indexOf (second found-decl) decl-type))
+      (and (nil? ((second found-decl) decl-type))
            (type-declaration/function? decl-type))
       ; First remove any matching overloads with auto return types. This allows
       ; defined functions to replace previous declarations where the return
       ; type wasn't yet deduced.
       (let [without-auto (update-in scope
                                     [:binding-declarations decl-name]
-                                    (partial
-                                      remove
-                                      #(= (-> decl-type
-                                              :value :generics :values first)
-                                          (-> %
-                                              :value :generics :values first))))]
+                                    (comp
+                                      (partial into #{})
+                                      (partial
+                                        remove
+                                        #(= (-> decl-type
+                                                :value :generics :values first)
+                                            (-> %
+                                                :value :generics :values first)))))]
         (update-in without-auto
                    [:binding-declarations decl-name]
                    conj
