@@ -37,4 +37,6 @@
 
 (defn combine
   [& maps]
-  (apply merge-with combine maps))
+  (if (set? (first maps))
+    (apply clojure.set/union maps)
+    (apply merge-with combine maps)))
