@@ -43,7 +43,7 @@
       (if (nil? overloads)
         (update
           scope-with-decl
-          :binding-definitions assoc item-name [item-type])
+          :binding-definitions assoc item-name #{item-type})
         (update-in
           scope-with-decl
           [:binding-definitions item-name] conj item-type)))))
