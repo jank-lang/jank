@@ -39,5 +39,5 @@
 (defn combine
   [& maps]
   (if (set? (first maps))
-    (apply clojure.set/union maps) ; TODO: Doesn't combine maps inside sets
+    (apply clojure.set/union maps) ; TODO: Doesn't combine maps inside sets? Can't work...
     (apply merge-with combine maps)))

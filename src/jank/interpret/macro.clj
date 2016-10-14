@@ -6,7 +6,7 @@
   (:use jank.assert
         jank.debug.log))
 
-; TODO: Merge this into the scope
+; TODO: Check first, then check scope
 (def prelude {{:name "print!"
                 :argument-types [(fabricate/type "string")]} pprint
                {:name "print!"
