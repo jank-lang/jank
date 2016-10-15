@@ -6,7 +6,7 @@
 (defn add-to-scope
   [item-name value scope]
   (let [path (util/path #((:binding-definitions %2) %1) item-name scope)]
-    (internal-assert (not-empty path)
+    (internal-assert (some? path)
                      (str "No path found for item " item-name))
     (update-in scope
                (conj path :binding-definitions item-name)
