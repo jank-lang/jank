@@ -34,4 +34,4 @@
         path
         (recur (:parent current-scope)
                (conj path :parent)))
-      path)))
+      nil)))
