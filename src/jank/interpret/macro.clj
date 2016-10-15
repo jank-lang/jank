@@ -17,77 +17,80 @@
                 :argument-types [(fabricate/type "boolean")]} pprint})
 
 (defmulti evaluate-item
-  (fn [item env]
+  (fn [item scope]
     (:kind item)))
 
 (defn evaluate
-  ([item] (evaluate [item] prelude))
-  ([body env]
-   ;(pprint (clean-scope body))
-   (reduce #(let [item (evaluate-item %2 (:env %1))]
-              (assoc %1
-                     :cells (conj (:cells %1) item)
-                     :env (:env item)))
-           {:cells []
-            :env env}
-           body)))
+  [body scope]
+  ;(pprint (clean-scope body))
+  (reduce #(let [item (evaluate-item %2 (:scope %1))]
+             (assoc %1
+                    :cells (conj (:cells %1) item)
+                    :scope (:scope item)))
+          {:cells []
+           :scope scope}
+          body))
 
 (defmethod evaluate-item :macro-call
-  [item env]
+  [item scope]
   ; TODO: If external, the function must be in prelude
-  ; TODO: Bring arguments into env
+  ; TODO: Bring arguments into scope
+  (pprint (clean-scope item))
+  (assert false)
   (let [;arg-types (map #(expression/realize-type % (:scope item))
         ;               (:arguments))
-        argument-values (map (comp #(evaluate-item % env) :value)
+        argument-values (map (comp #(evaluate-item % scope) :value)
                              (:actual-arguments item))
         ;env-with-args (reduce #(assoc %1 )
-        ;                      env
+        ;                      scope
         ;                      (:arguments item))
-        body (evaluate (get-in item [:definition :body]) env)]
+        body (evaluate (get-in item [:definition :body]) scope)]
     (-> (assoc-in item [:definition :body] (:cells body))
-        (assoc :env (:env body)))))
+        (assoc :scope (:scope body)))))
 
 (defmethod evaluate-item :function-call
-  [item env]
-  ;(pprint "evaluating function " (clean-scope item) env)
+  [item scope]
+  ;(pprint "evaluating function " (clean-scope item) scope)
   (let [signature {:name (-> item :name :name)
                    :argument-types (map (comp type-declaration/strip
                                               #(expression/realize-type % (:scope item)))
                                         (:arguments item))}
         ; TODO: look up arguments
-        arguments (map #(evaluate-item % env) (:arguments item))
-        func (get env signature)]
+        arguments (map #(evaluate-item % scope) (:arguments item))
+        func (if-let [f (get prelude signature)]
+               f
+               (not-yet-implemented interpret-assert "non-prelude functions"))]
     (interpret-assert func (str "unknown function " signature))
     (apply func (map :value arguments))
-    (assoc item :env env)))
+    (assoc item :scope scope)))
 
 ; TODO: Assoc values onto each of these items
 (defmethod evaluate-item :string
-  [item env]
-  (assoc item :env env))
+  [item scope]
+  (assoc item :scope scope))
 
 (defmethod evaluate-item :integer
-  [item env]
-  (assoc item :env env))
+  [item scope]
+  (assoc item :scope scope))
 
 (defmethod evaluate-item :real
-  [item env]
-  (assoc item :env env))
+  [item scope]
+  (assoc item :scope scope))
 
 (defmethod evaluate-item :boolean
-  [item env]
-  (assoc item :env env))
+  [item scope]
+  (assoc item :scope scope))
 
 (defmethod evaluate-item :identifier
-  [item env]
+  [item scope]
   ; TODO
-  (assoc item :env env))
+  (assoc item :scope scope))
 
 (defmethod evaluate-item :return
-  [item env]
+  [item scope]
   ; TODO
-  (assoc item :env env))
+  (assoc item :scope scope))
 
 (defmethod evaluate-item :default
-  [item env]
+  [item scope]
   (interpret-assert false (str "no supported evaluation for '" item "'")))
