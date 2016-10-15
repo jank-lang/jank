@@ -198,12 +198,12 @@
                             (:scope checked-args))
         updated-def (assoc definition
                            :arguments checked-args
-                           :body (:cells checked-body))
+                           :body (:cells checked-body)
+                           :scope (:scope checked-body))
         with-return (return/add-explicit-returns updated-def
                                                  (:scope checked-body))]
     (-> (assoc item
-               :definition with-return
-               :scope (:scope checked-body))
+               :definition with-return)
         (#(macro/evaluate [%] (:scope %)))
         :cells
         first)))
