@@ -204,7 +204,7 @@
     (-> (assoc item
                :definition with-return
                :scope (:scope checked-body))
-        macro/evaluate
+        (#(macro/evaluate [%] (:scope %)))
         :cells
         first)))
 
