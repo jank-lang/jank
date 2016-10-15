@@ -35,12 +35,22 @@
   [item scope]
   ; TODO: If external, the function must be in prelude
   ; TODO: Bring arguments into scope
-  (pprint (clean-scope item))
-  (assert false)
+  ;(pprint (clean-scope item))
+  ;(assert false)
   (let [;arg-types (map #(expression/realize-type % (:scope item))
         ;               (:arguments))
-        argument-values (map (comp #(evaluate-item % scope) :value)
-                             (:actual-arguments item))
+        argument-pairs (map #(vector (:name %1)
+                                     (evaluate-item %2 scope))
+                            (get-in item [:definition :arguments :values])
+                            (get-in item [:definition :arguments :actual-arguments]))
+        updated-item (update-in item
+                                [:definition :scope]
+                                (fn [inner-scope]
+                                  (reduce (fn [acc [name value]]
+                                            (value/add-to-scope name value acc))
+                                          inner-scope
+                                          argument-pairs)))
+        _ (assert false)
         ;env-with-args (reduce #(assoc %1 )
         ;                      scope
         ;                      (:arguments item))
