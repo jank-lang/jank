@@ -7,7 +7,7 @@
   [item-name value scope]
   (let [source-path (util/path #((:binding-declarations %2) %1) item-name scope)
         dest-path [:interpreted-values item-name]]
-    (internal-assert (some? path)
+    (internal-assert (some? source-path)
                      (str "no path found for item " item-name))
     (internal-assert (nil? (get-in scope dest-path))
                      (str "interpreted value already exists for " item-name))
