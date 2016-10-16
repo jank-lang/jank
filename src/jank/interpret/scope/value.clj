@@ -5,10 +5,10 @@
 
 (defn add-to-scope
   [item-name value scope]
-  (let [path (util/path #((:binding-declarations %2) %1) item-name scope)]
+  (let [source-path (util/path #((:binding-declarations %2) %1) item-name scope)
+        dest-path [:interpreted-values item-name]]
     (internal-assert (some? path)
-                     (str "No path found for item " item-name))
-    ; TODO: Assert the value isn't already there
-    (assoc-in scope
-              [:interpreted-values item-name]
-              value)))
+                     (str "no path found for item " item-name))
+    (internal-assert (nil? (get-in scope dest-path))
+                     (str "interpreted value already exists for " item-name))
+    (assoc-in scope dest-path value)))
