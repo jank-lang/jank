@@ -71,7 +71,7 @@
                f
                (not-yet-implemented interpret-assert "non-prelude functions"))]
     (interpret-assert func (str "unknown function " signature))
-    (apply func (map :value arguments))
+    (apply func (map :interpreted-value arguments)) ; TODO: Ok?
     (assoc item :scope scope)))
 
 ; TODO: Assoc values onto each of these items
