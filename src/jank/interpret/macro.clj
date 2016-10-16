@@ -58,7 +58,6 @@
                                               #(expression/realize-type % (:scope item)))
                                         (:arguments item))}
         arguments (map #(evaluate-item % scope) (:arguments item))
-        _ (pprint (clean-scope arguments))
         func (if-let [f (get prelude signature)]
                f
                (not-yet-implemented interpret-assert "non-prelude functions"))]
