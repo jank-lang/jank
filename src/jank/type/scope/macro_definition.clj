@@ -7,7 +7,7 @@
   (:use jank.assert
         jank.debug.log))
 
-(def lookup (partial util/lookup #((:macro-definitions %2) %1)))
+(def lookup (partial util/lookup #(get (:macro-definitions %2) %1)))
 
 (defn add-to-scope
   [item scope]
