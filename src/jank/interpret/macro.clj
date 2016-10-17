@@ -8,13 +8,13 @@
 
 ; TODO: Check first, then check scope
 (def prelude {{:name "print!"
-                :argument-types [(fabricate/type "string")]} pprint
-               {:name "print!"
-                :argument-types [(fabricate/type "integer")]} pprint
-               {:name "print!"
-                :argument-types [(fabricate/type "real")]} pprint
-               {:name "print!"
-                :argument-types [(fabricate/type "boolean")]} pprint})
+               :argument-types [(fabricate/type "string")]} pprint
+              {:name "print!"
+               :argument-types [(fabricate/type "integer")]} pprint
+              {:name "print!"
+               :argument-types [(fabricate/type "real")]} pprint
+              {:name "print!"
+               :argument-types [(fabricate/type "boolean")]} pprint})
 
 (defmulti evaluate-item
   (fn [item scope]
@@ -23,6 +23,7 @@
 (defn evaluate
   [body scope]
   ;(pprint (clean-scope body))
+  ; TODO: Return value of last form?
   (reduce #(let [item (evaluate-item %2 (:scope %1))]
              (assoc %1
                     :cells (conj (:cells %1) item)
@@ -49,7 +50,7 @@
         body (evaluate (get-in updated-item [:definition :body])
                        (get-in updated-item [:definition :scope]))]
     (-> (assoc-in item [:definition :body] (:cells body))
-        (assoc :scope (:scope body)))))
+        (assoc-in [:definition :scope] (:scope body)))))
 
 (defmethod evaluate-item :function-call
   [item scope]
