@@ -179,7 +179,8 @@
   [item scope]
   (check-item
     ; TODO: lookup macro based on name *and* signature
-    (if-let [macro-definition (macro-definition/lookup (-> item :name :name) scope)]
+    (if-let [macro-definition (macro-definition/lookup (-> item :name :name)
+                                                       scope)]
       (assoc item
              :kind :macro-call
              :definition macro-definition)
@@ -202,11 +203,12 @@
                            :scope (:scope checked-body))
         with-return (return/add-explicit-returns updated-def
                                                  (:scope checked-body))]
-    (-> (assoc item
-               :definition with-return)
+    (-> (assoc item :definition with-return)
         (#(macro/evaluate [%] (get-in % [:definition :scope])))
         :cells
-        first)))
+        first
+        ; XXX: Evaluate works in definition's scope; bring in the outer scope
+        (assoc :scope scope))))
 
 (defmethod check-item :syntax-definition
   [item scope]
