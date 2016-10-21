@@ -17,12 +17,15 @@
                :argument-types [(fabricate/type "boolean")]} pprint
               {:name "+"
                :argument-types (map fabricate/type (repeat 2 "integer"))} +
+              {:name "-"
+               :argument-types (map fabricate/type (repeat 2 "integer"))} -
               })
 
 (defn wrap-value
-  [v]
-  {:kind :interpreted-value
-   :value v})
+  [value scope]
+  {:kind :wrapped-value
+   :interpreted-value value
+   :scope scope})
 
 (defmulti evaluate-item
   (fn [item scope]
@@ -71,17 +74,21 @@
                f
                (not-yet-implemented interpret-assert "non-prelude functions"))]
     (interpret-assert func (str "unknown function " signature))
-    (let [result (apply func (map :value arguments))]
-      (wrap-value result))))
+    (let [result (apply func (map :interpreted-value arguments))]
+      (wrap-value result scope))))
 
 ; TODO: Assoc values onto each of these items
 (defmethod evaluate-item :string
   [item scope]
-  (assoc item :scope scope))
+  (assoc item
+         :interpreted-value (:value item)
+         :scope scope))
 
 (defmethod evaluate-item :integer
   [item scope]
-  (wrap-value (:value item)))
+  (assoc item
+         :interpreted-value (:value item)
+         :scope scope))
 
 (defmethod evaluate-item :real
   [item scope]
