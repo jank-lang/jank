@@ -3,7 +3,7 @@
   (:use jank.assert
         jank.debug.log))
 
-(def lookup (partial util/lookup #((:interpreted-values %2) %1)))
+(def lookup (partial util/lookup #(get (:interpreted-values %2) %1)))
 
 (defn add-to-scope
   [item-name value scope]
