@@ -14,7 +14,9 @@
     item))
 
 (defn pprint [arg & args]
-  (clojure.pprint/pprint (if (not-empty args)
-                           (apply vector arg args)
-                           arg))
-  arg)
+  (let [cleaned-arg (clean-scope arg)
+        cleaned-args (map clean-scope args)]
+    (clojure.pprint/pprint (if (not-empty args)
+                             (apply vector cleaned-arg cleaned-args)
+                             cleaned-arg))
+    arg))
