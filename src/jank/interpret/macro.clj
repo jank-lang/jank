@@ -29,7 +29,9 @@
 
 (defmulti evaluate-item
   (fn [item scope]
-    (:kind item)))
+    (if (some (partial = (:kind item)) [:string :integer :boolean :real])
+      :primitive
+      (:kind item))))
 
 (defn evaluate
   [body scope]
@@ -77,26 +79,11 @@
     (let [result (apply func (map :interpreted-value arguments))]
       (wrap-value result scope))))
 
-; TODO: Assoc values onto each of these items
-(defmethod evaluate-item :string
+(defmethod evaluate-item :primitive
   [item scope]
   (assoc item
          :interpreted-value (:value item)
          :scope scope))
-
-(defmethod evaluate-item :integer
-  [item scope]
-  (assoc item
-         :interpreted-value (:value item)
-         :scope scope))
-
-(defmethod evaluate-item :real
-  [item scope]
-  (assoc item :scope scope))
-
-(defmethod evaluate-item :boolean
-  [item scope]
-  (assoc item :scope scope))
 
 (defmethod evaluate-item :identifier
   [item scope]
