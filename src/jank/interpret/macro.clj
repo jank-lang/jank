@@ -22,6 +22,7 @@
               })
 
 (defn wrap-value
+  "Wrap a raw value (such as 4 or \"foo\") in a kinded map with the scope"
   [value scope]
   {:kind :wrapped-value
    :interpreted-value value
