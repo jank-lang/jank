@@ -29,6 +29,8 @@
    :scope scope})
 
 (defmulti evaluate-item
+  "Interprets the specified item, interpreting any necessary arguments and
+   dependencies. Interpreted values are associated as :interpreted-value"
   (fn [item scope]
     (if (some (partial = (:kind item)) [:string :integer :boolean :real])
       :primitive
