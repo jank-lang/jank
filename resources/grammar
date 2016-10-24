@@ -42,7 +42,6 @@ lambda-definition =
     atom*
   right-paren
 
-
 generic-specialization-list = left-paren
                                 keyword+
                               right-paren
@@ -72,9 +71,14 @@ macro-definition =
   right-paren
 
 <syntax-keyword> = <'syntax'>
+syntax-item = identifier | string | number | boolean | identifier | keyword
+syntax-list =
+  left-paren
+    (syntax-list | syntax-item)*
+  right-paren
 syntax-definition =
   left-paren syntax-keyword
-    atom+
+    (syntax-list | syntax-item)+
   right-paren
 
 <bind-keyword> = <'bind'>
