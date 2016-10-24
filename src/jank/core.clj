@@ -12,7 +12,6 @@
                   parse/prelude)
                 (slurp (first args)))}
       type/check
-      clean-scope
-      ;pprint
+      pprint
       ;c++/codegen
       ))
