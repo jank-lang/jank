@@ -213,7 +213,9 @@
 (defmethod check-item :syntax-definition
   [item scope]
   ; TODO
-  (assoc item :scope scope))
+  (assoc item
+         :interpreted-value (:body item)
+         :scope scope))
 
 (defmethod check-item :function-call
   [item scope]
