@@ -98,6 +98,11 @@
   ; TODO
   (assoc item :scope scope))
 
+(defmethod evaluate-item :syntax-definition
+  [item scope]
+  ; TODO
+  (assoc item :scope scope))
+
 (defmethod evaluate-item :default
   [item scope]
   (interpret-assert false (str "no supported evaluation for '" item "'")))
