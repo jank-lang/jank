@@ -19,6 +19,8 @@
                :argument-types (map fabricate/type (repeat 2 "integer"))} +
               {:name "-"
                :argument-types (map fabricate/type (repeat 2 "integer"))} -
+              {:name "count"
+               :argument-types [(fabricate/type "syntax")]} count
               })
 
 (defn wrap-value

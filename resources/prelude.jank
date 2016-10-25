@@ -45,3 +45,6 @@
 (declare-extern = ƒ : ((integer integer) (boolean)))
 (declare-extern = ƒ : ((real real) (boolean)))
 (declare-extern = ƒ : ((string string) (boolean)))
+
+(; -- Macros -- ;)
+(declare-extern count ƒ : ((syntax) (integer)))
