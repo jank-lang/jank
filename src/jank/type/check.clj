@@ -167,7 +167,6 @@
                     updated-item
                     (:scope checked-val)))))
 
-; TODO: Don't check these until they're called
 (defmethod check-item :macro-definition
   [item scope]
   (let [checked-name (check-item (:name item) scope)
