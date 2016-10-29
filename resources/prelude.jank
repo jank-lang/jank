@@ -17,6 +17,7 @@
 (declare-extern print! ƒ : ((real) (string)))
 (declare-extern print! ƒ : ((integer) (string)))
 (declare-extern print! ƒ : ((boolean) (string)))
+(declare-extern print! ƒ : ((syntax) (string)))
 
 (; -- Input -- ;)
 (declare-extern input! ƒ : (() (string)))

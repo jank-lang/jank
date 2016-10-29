@@ -15,6 +15,8 @@
                :argument-types [(fabricate/type "real")]} pprint
               {:name "print!"
                :argument-types [(fabricate/type "boolean")]} pprint
+              {:name "print!"
+               :argument-types [(fabricate/type "syntax")]} pprint
               {:name "+"
                :argument-types (map fabricate/type (repeat 2 "integer"))} +
               {:name "-"

@@ -12,6 +12,6 @@
                   parse/prelude)
                 (slurp (first args)))}
       type/check
-      pprint
+      ;pprint
       ;c++/codegen
       ))
