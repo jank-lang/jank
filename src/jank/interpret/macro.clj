@@ -2,7 +2,8 @@
   (:require [jank.parse.fabricate :as fabricate]
             [jank.type.scope.type-declaration :as type-declaration]
             [jank.type.expression :as expression]
-            [jank.interpret.scope.value :as value])
+            [jank.interpret.scope.value :as value]
+            [jank.interpret.check-shim :as check-shim])
   (:use jank.assert
         jank.debug.log))
 
@@ -24,7 +25,7 @@
               {:name "count"
                :argument-types [(fabricate/type "syntax")]} count
               {:name "type-check"
-               :argument-types [(fabricate/type "syntax")]} pprint
+               :argument-types [(fabricate/type "syntax")]} check-shim/check
               })
 
 (defn wrap-value
