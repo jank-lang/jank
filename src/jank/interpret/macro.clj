@@ -2,31 +2,11 @@
   (:require [jank.parse.fabricate :as fabricate]
             [jank.type.scope.type-declaration :as type-declaration]
             [jank.type.expression :as expression]
+            [jank.interpret.scope.prelude :as prelude]
             [jank.interpret.scope.value :as value]
             [jank.interpret.check-shim :as check-shim])
   (:use jank.assert
         jank.debug.log))
-
-; TODO: Check first, then check scope
-(def prelude {{:name "print!"
-               :argument-types [(fabricate/type "string")]} pprint
-              {:name "print!"
-               :argument-types [(fabricate/type "integer")]} pprint
-              {:name "print!"
-               :argument-types [(fabricate/type "real")]} pprint
-              {:name "print!"
-               :argument-types [(fabricate/type "boolean")]} pprint
-              {:name "print!"
-               :argument-types [(fabricate/type "syntax")]} pprint
-              {:name "+"
-               :argument-types (map fabricate/type (repeat 2 "integer"))} +
-              {:name "-"
-               :argument-types (map fabricate/type (repeat 2 "integer"))} -
-              {:name "count"
-               :argument-types [(fabricate/type "syntax")]} count
-              {:name "type-check"
-               :argument-types [(fabricate/type "syntax")]} check-shim/check
-              })
 
 (defn wrap-value
   "Wrap a raw value (such as 4 or \"foo\") in a kinded map with the scope"
@@ -82,7 +62,7 @@
                                               #(expression/realize-type % (:scope item)))
                                         (:arguments item))}
         arguments (map #(evaluate-item % scope) (:arguments item))
-        func (if-let [f (get prelude signature)]
+        func (if-let [f (get prelude/environment signature)]
                f
                (not-yet-implemented interpret-assert "non-prelude functions"))]
     (interpret-assert func (str "unknown function " signature))
