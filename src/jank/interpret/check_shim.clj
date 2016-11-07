@@ -1,5 +1,5 @@
 (ns jank.interpret.check-shim
-  (:require [jank.type.check :as check])
+  ;(:require [jank.type.check :as check]) ; TODO: cyclical
   (:use jank.assert
         jank.debug.log))
 
