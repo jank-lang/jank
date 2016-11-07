@@ -105,7 +105,9 @@
 (defmethod evaluate-item :syntax-definition
   [item scope]
   ; TODO
-  (assoc item :scope scope))
+  (assoc item
+         :interpreted-value (:body item)
+         :scope scope))
 
 (defmethod evaluate-item :default
   [item scope]

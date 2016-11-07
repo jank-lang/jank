@@ -213,7 +213,6 @@
   [item scope]
   ; TODO
   (assoc item
-         :interpreted-value (:body item)
          :scope scope))
 
 (defmethod check-item :function-call
