@@ -1,5 +1,6 @@
 (ns jank.interpret.scope.prelude
-  (:require [jank.interpret.check-shim :as check-shim])
+  (:require [jank.parse.fabricate :as fabricate]
+            [jank.interpret.check-shim :as check-shim])
   (:use jank.assert
         jank.debug.log))
 
