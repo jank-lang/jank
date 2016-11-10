@@ -9,6 +9,7 @@ tweak grammar to handle whitespace/comments properly
 namespacing
   imports
   treat / in any identifier as namespacing
+  allow cyclical dependencies!
 
 basic stdlib (two layers: core and aux) -- core can run in kernel
   arithmetic, logic, bit ops
