@@ -203,7 +203,7 @@
         with-return (return/add-explicit-returns updated-def
                                                  (:scope checked-body))]
     (-> (assoc item :definition with-return)
-        (#(macro/evaluate [%] (get-in % [:definition :scope])))
+        (#(macro/evaluate [%] (get-in % [:definition :scope]))) ; TODO: This is no good
         :cells
         first
         ; XXX: Evaluate works in definition's scope; bring in the outer scope
