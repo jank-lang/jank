@@ -2,7 +2,7 @@
 
 adopt core.typed
 
-investigate clojure.spec
+adopt clojure.spec
 
 tweak grammar to handle whitespace/comments properly
 
