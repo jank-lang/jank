@@ -4,7 +4,7 @@
   (:use jank.assert
         jank.debug.log))
 
-; TODO: Check first, then check scope
+; TODO: Check prelude first, then check scope
 (def environment
   {{:name "print!"
     :argument-types [(fabricate/type "string")]} pprint
