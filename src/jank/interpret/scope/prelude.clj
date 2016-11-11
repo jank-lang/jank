@@ -5,7 +5,7 @@
         jank.debug.log))
 
 ; TODO: Check prelude first, then check scope
-(def environment
+(defn create [check]
   {{:name "print!"
     :argument-types [(fabricate/type "string")]} pprint
    {:name "print!"
@@ -23,5 +23,5 @@
    {:name "count"
     :argument-types [(fabricate/type "syntax")]} count
    {:name "type-check"
-    :argument-types [(fabricate/type "syntax")]} check-shim/check
+    :argument-types [(fabricate/type "syntax")]} (partial check-shim/check check)
    })

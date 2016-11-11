@@ -3,8 +3,7 @@
             [jank.type.scope.type-declaration :as type-declaration]
             [jank.type.expression :as expression]
             [jank.interpret.scope.prelude :as prelude]
-            [jank.interpret.scope.value :as value]
-            [jank.interpret.check-shim :as check-shim])
+            [jank.interpret.scope.value :as value])
   (:use jank.assert
         jank.debug.log))
 
@@ -18,16 +17,17 @@
 (defmulti evaluate-item
   "Interprets the specified item, interpreting any necessary arguments and
    dependencies. Interpreted values are associated as :interpreted-value"
-  (fn [item scope]
+  (fn [prelude item scope]
+    ; TODO: Use a set
     (if (some (partial = (:kind item)) [:string :integer :boolean :real])
       :primitive
       (:kind item))))
 
 (defn evaluate
-  [body scope]
+  [prelude body scope]
   ;(pprint (clean-scope body))
   ; TODO: Return value of last form?
-  (reduce #(let [item (evaluate-item %2 (:scope %1))]
+  (reduce #(let [item (evaluate-item prelude %2 (:scope %1))]
              (assoc %1
                     :cells (conj (:cells %1) item)
                     :scope (:scope item)))
@@ -36,10 +36,10 @@
           body))
 
 (defmethod evaluate-item :macro-call
-  [item scope]
+  [prelude item scope]
   ; TODO: If external, the function must be in prelude
   (let [argument-pairs (map #(vector (:name %1)
-                                     (evaluate-item %2 scope))
+                                     (evaluate-item prelude %2 scope))
                             ; TODO: Add value for AST
                             (rest (get-in item [:definition :arguments :values]))
                             (get-in item [:definition :arguments :actual-arguments]))
@@ -50,19 +50,20 @@
                                             (value/add-to-scope name value acc))
                                           inner-scope
                                           argument-pairs)))
-        body (evaluate (get-in updated-item [:definition :body])
+        body (evaluate prelude
+                       (get-in updated-item [:definition :body])
                        (get-in updated-item [:definition :scope]))]
     (-> (assoc-in item [:definition :body] (:cells body))
         (assoc-in [:definition :scope] (:scope body)))))
 
 (defmethod evaluate-item :function-call
-  [item scope]
+  [prelude item scope]
   (let [signature {:name (-> item :name :name)
                    :argument-types (map (comp type-declaration/strip
                                               #(expression/realize-type % (:scope item)))
                                         (:arguments item))}
-        arguments (map #(evaluate-item % scope) (:arguments item))
-        func (if-let [f (get prelude/environment signature)]
+        arguments (map #(evaluate-item prelude % scope) (:arguments item))
+        func (if-let [f (prelude signature)]
                f
                (not-yet-implemented interpret-assert "non-prelude functions"))]
     (interpret-assert func (str "unknown function " signature))
@@ -70,28 +71,28 @@
       (wrap-value result scope))))
 
 (defmethod evaluate-item :primitive
-  [item scope]
+  [prelude item scope]
   (assoc item
          :interpreted-value (:value item)
          :scope scope))
 
 (defmethod evaluate-item :identifier
-  [item scope]
+  [prelude item scope]
   ; TODO: If value hasn't been evaluated (may be a def), do so
   (value/lookup (:name item) scope))
 
 (defmethod evaluate-item :return
-  [item scope]
+  [prelude item scope]
   ; TODO
   (assoc item :scope scope))
 
 (defmethod evaluate-item :syntax-definition
-  [item scope]
+  [prelude item scope]
   ; TODO
   (assoc item
          :interpreted-value (:body item)
          :scope scope))
 
 (defmethod evaluate-item :default
-  [item scope]
+  [prelude item scope]
   (interpret-assert false (str "no supported evaluation for '" item "'")))

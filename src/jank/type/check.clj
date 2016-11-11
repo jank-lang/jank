@@ -7,6 +7,7 @@
             [jank.type.scope.macro-definition :as macro-definition]
             [jank.type.expression :as expression]
             [jank.type.return :as return]
+            [jank.interpret.scope.prelude :as interpret.scope.prelude]
             [jank.interpret.macro :as macro])
   (:use jank.assert
         jank.debug.log))
@@ -203,7 +204,12 @@
         with-return (return/add-explicit-returns updated-def
                                                  (:scope checked-body))]
     (-> (assoc item :definition with-return)
-        (#(macro/evaluate [%] (get-in % [:definition :scope]))) ; TODO: This is no good
+        ; To avoid cyclical deps, we pass in our type checking function.
+        ; Macros may call back into the type checker, to process data into
+        ; the AST. This cyclical relationship is intended and, to me, logical.
+        (#(macro/evaluate (interpret.scope.prelude/create check)
+                          [%]
+                          (get-in % [:definition :scope])))
         :cells
         first
         ; XXX: Evaluate works in definition's scope; bring in the outer scope
