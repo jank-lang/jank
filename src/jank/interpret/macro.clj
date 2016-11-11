@@ -18,8 +18,7 @@
   "Interprets the specified item, interpreting any necessary arguments and
    dependencies. Interpreted values are associated as :interpreted-value"
   (fn [prelude item scope]
-    ; TODO: Use a set
-    (if (some (partial = (:kind item)) [:string :integer :boolean :real])
+    (if (#{:string :integer :boolean :real} (:kind item))
       :primitive
       (:kind item))))
 
