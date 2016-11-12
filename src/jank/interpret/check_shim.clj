@@ -29,4 +29,4 @@
   ; TODO: Convert syntax def to string
   ; TODO: Parse/transform string into tree
   ; TODO: Type check tree with current scope (have evaluate take in scope?)
-  (pprint "checking syntax" (parse/parse "" (unparse syntax-def))))
+  (pprint "checking syntax" (actual-check (parse/parse "" (unparse syntax-def)) scope)))
