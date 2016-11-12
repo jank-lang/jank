@@ -19,7 +19,7 @@
 (defn unparse
   "Walks the syntax definition and 'unparses' it back into a string."
   [syntax-def]
-  (walk/postwalk unparse-item syntax-def))
+  (apply str (walk/postwalk unparse-item syntax-def)))
 
 (defn check
   "Takes a syntax definition, converts it to a string, reparses it as normal
