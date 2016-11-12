@@ -4,24 +4,33 @@
   (:use jank.assert
         jank.debug.log))
 
+(defn ignore-scope
+  "Allows the easy wrapping of functions which will be interpreted and only
+   care about the jank value arguments, not the scope."
+  [fun]
+  (fn [scope & args]
+    (apply fun args)))
+
+(def wrapped-pprint (ignore-scope pprint))
+
 ; TODO: Check prelude first, then check scope
 (defn create [check]
   {{:name "print!"
-    :argument-types [(fabricate/type "string")]} pprint
+    :argument-types [(fabricate/type "string")]} wrapped-pprint
    {:name "print!"
-    :argument-types [(fabricate/type "integer")]} pprint
+    :argument-types [(fabricate/type "integer")]} wrapped-pprint
    {:name "print!"
-    :argument-types [(fabricate/type "real")]} pprint
+    :argument-types [(fabricate/type "real")]} wrapped-pprint
    {:name "print!"
-    :argument-types [(fabricate/type "boolean")]} pprint
+    :argument-types [(fabricate/type "boolean")]} wrapped-pprint
    {:name "print!"
-    :argument-types [(fabricate/type "syntax")]} pprint
+    :argument-types [(fabricate/type "syntax")]} wrapped-pprint
    {:name "+"
-    :argument-types (map fabricate/type (repeat 2 "integer"))} +
+    :argument-types (map fabricate/type (repeat 2 "integer"))} (ignore-scope +)
    {:name "-"
-    :argument-types (map fabricate/type (repeat 2 "integer"))} -
+    :argument-types (map fabricate/type (repeat 2 "integer"))} (ignore-scope -)
    {:name "count"
-    :argument-types [(fabricate/type "syntax")]} count
+    :argument-types [(fabricate/type "syntax")]} (ignore-scope count)
    {:name "type-check"
-    :argument-types [(fabricate/type "syntax")]} (partial check-shim/check check)
+    :argument-types [(fabricate/type "syntax")]} #(check-shim/check %1 check %2)
    })
