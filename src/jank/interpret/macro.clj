@@ -66,7 +66,7 @@
                f
                (not-yet-implemented interpret-assert "non-prelude functions"))]
     (interpret-assert func (str "unknown function " signature))
-    (let [result (apply func (map :interpreted-value arguments))]
+    (let [result (apply func scope (map :interpreted-value arguments))]
       (wrap-value result scope))))
 
 (defmethod evaluate-item :primitive
