@@ -47,6 +47,8 @@
                         :argument-list transform/argument-list
                         :macro-argument-list transform/macro-argument-list
                         :syntax-definition transform/syntax-definition
+                        :syntax-list transform/syntax-list
+                        :syntax-item transform/syntax-item
                         :return-list transform/return-list
                         :if-expression transform/if-expression}
                        parsed)]

@@ -105,6 +105,14 @@
   {:kind :syntax-definition
    :body more})
 
+(defn syntax-list [& more]
+  {:kind :syntax-list
+   :body more})
+
+(defn syntax-item [& more]
+  {:kind :syntax-item
+   :value (first more)})
+
 (defn return-list [& more]
   {:kind :return-list
    :values more})
