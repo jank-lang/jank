@@ -1,5 +1,6 @@
 (ns jank.interpret.check-shim
-  (:require [clojure.walk :as walk]
+  (:require [jank.parse :as parse]
+            [clojure.walk :as walk]
             [clojure.string :as string])
   (:use jank.assert
         jank.debug.log))
@@ -28,4 +29,4 @@
   ; TODO: Convert syntax def to string
   ; TODO: Parse/transform string into tree
   ; TODO: Type check tree with current scope (have evaluate take in scope?)
-  (pprint "checking syntax" (unparse syntax-def)))
+  (pprint "checking syntax" (parse/parse "" (unparse syntax-def))))
