@@ -29,4 +29,4 @@
   (let [unparsed (unparse syntax-def)
         parsed (parse/parse "" unparsed) ; Empty prelude
         checked (actual-check {:cells parsed} scope)]
-    (pprint "checking syntax" checked)))
+    checked))
