@@ -16,7 +16,10 @@
   "Type checks the given expression. Returns a cons of the typed
    expression and the updated scope."
   (fn [item scope]
-    (:kind item)))
+    (let [kind (:kind item)]
+      (if (#{:list :string :integer :boolean :real :identifier} kind)
+        :passthrough
+        kind))))
 
 (defn empty-scope
   "Builds an empty type scope."
@@ -211,15 +214,14 @@
                           [%]
                           (get-in % [:definition :scope])))
         :cells
-        first
+        first ; Pull macro call out of cell wrapper
         ; XXX: Evaluate works in definition's scope; bring in the outer scope
         (assoc :scope scope))))
 
 (defmethod check-item :syntax-definition
   [item scope]
   ; TODO
-  (assoc item
-         :scope scope))
+  (assoc item :scope scope))
 
 (defmethod check-item :function-call
   [item scope]
@@ -324,22 +326,7 @@
           updated-item)
         scoped-item))))
 
-(defmethod check-item :list [item scope]
-  (assoc item :scope scope))
-
-(defmethod check-item :string [item scope]
-  (assoc item :scope scope))
-
-(defmethod check-item :integer [item scope]
-  (assoc item :scope scope))
-
-(defmethod check-item :real [item scope]
-  (assoc item :scope scope))
-
-(defmethod check-item :boolean [item scope]
-  (assoc item :scope scope))
-
-(defmethod check-item :identifier [item scope]
+(defmethod check-item :passthrough [item scope]
   (assoc item :scope scope))
 
 (defmethod check-item :default [item scope]
