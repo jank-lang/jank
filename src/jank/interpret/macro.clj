@@ -57,7 +57,8 @@
         body (evaluate prelude
                        (get-in updated-item [:definition :body])
                        (get-in updated-item [:definition :scope]))]
-    (-> (assoc-in item [:definition :body] (:cells body))
+    (-> (assoc item :scope (:scope body))
+        (assoc-in [:definition :body] (:cells body))
         (assoc-in [:definition :scope] (:scope body)))))
 
 (defmethod evaluate-item :function-call
