@@ -242,6 +242,20 @@
          (map codegen-impl (:values current)))
        ">"))
 
+(defmethod codegen-impl :macro-definition
+  [current]
+  (str "")) ; TODO: Have a common impl for empty methods under :empty
+
+(defmethod codegen-impl :macro-call
+  [current]
+  (apply str (map codegen-impl (-> current
+                                   :definition
+                                   :body
+                                   last ; Macros return an ast, so this is a return
+                                   :interpreted-value
+                                   :interpreted-value
+                                   :emplaced))))
+
 (defmethod codegen-impl :default
   [current]
   (codegen-assert false (str "no codegen for '" current "'")))

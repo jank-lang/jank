@@ -13,5 +13,5 @@
                 (slurp (first args)))}
       type/check
       ;pprint
-      ;c++/codegen
+      c++/codegen
       ))
