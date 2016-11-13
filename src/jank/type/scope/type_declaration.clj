@@ -21,7 +21,7 @@
   (let [type-name (:name (:value decl-type))]
     (= "syntax" type-name)))
 
-(defn ast?
+(defn ast? ; TODO: Rename to ast-context or something?
   [decl-type]
   (let [type-name (:name (:value decl-type))]
     (= "ast" type-name)))
