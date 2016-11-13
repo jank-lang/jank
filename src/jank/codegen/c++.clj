@@ -8,15 +8,13 @@
 
 (defmulti codegen-impl
   (fn [current]
-    (:kind current)))
-
-(defmethod codegen-impl :type-declaration
-  [current]
-  "")
-
-(defmethod codegen-impl :binding-declaration
-  [current]
-  "")
+    (let [kind (:kind current)]
+      (cond
+        (#{:type-declaration
+           :binding-declaration
+           :generic-lambda-definition} kind) :passthrough
+        (#{:integer :real :boolean} kind) :primitive
+        :default kind))))
 
 ; Only used for the main functions; all other functions
 ; are just local lambdas within main
@@ -42,10 +40,6 @@
        (util/reduce-spaced-map (comp util/end-statement codegen-impl)
                                (:body current))
        "}"))
-
-(defmethod codegen-impl :generic-lambda-definition
-  [current]
-  "")
 
 (defmethod codegen-impl :binding-type
   [current]
@@ -198,15 +192,11 @@
   [current]
   (str "\"" (:value current) "\""))
 
-(defmethod codegen-impl :integer
+(defmethod codegen-impl :passthrough
   [current]
   (:value current))
 
-(defmethod codegen-impl :real
-  [current]
-  (:value current))
-
-(defmethod codegen-impl :boolean
+(defmethod codegen-impl :primitive
   [current]
   (:value current))
 
