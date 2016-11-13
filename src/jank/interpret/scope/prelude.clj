@@ -14,7 +14,7 @@
 (def wrapped-pprint (ignore-scope pprint))
 
 (defn emplace
-  [scope ast syntax]
+  [scope ast syntax] ; TODO: Add syntax to ast
   (pprint "emplacing!"))
 
 ; TODO: Check prelude first, then check scope
