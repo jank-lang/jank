@@ -50,3 +50,4 @@
 (; -- Macros -- ;)
 (declare-extern count ƒ : ((syntax) (integer)))
 (declare-extern type-check ƒ : ((syntax) (syntax))) (; TODO: Return checked-syntax? ;)
+(declare-extern emplace ƒ : ((ast syntax) (ast)))
