@@ -13,6 +13,7 @@
        %)
     item))
 
+; TODO: Use a macro instead; unary has a label which is the pprint of its form
 (defn pprint [arg & args]
   (let [cleaned-arg (clean-scope arg)
         cleaned-args (map clean-scope args)]
