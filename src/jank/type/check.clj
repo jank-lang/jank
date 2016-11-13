@@ -77,7 +77,7 @@
 
 (defmethod check-item :generic-lambda-definition
   [item scope]
-  (let [generics (:generics item)]
+  (let [generics (:generics item)] ; TODO: Not used?
     (assoc item
            :scope scope)))
 
