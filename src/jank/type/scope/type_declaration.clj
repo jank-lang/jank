@@ -10,6 +10,7 @@
   [decl-type]
   (= "ƒ" (:name (:value decl-type))))
 
+; TODO: Macro for these? They're all very similar.
 (defn auto?
   "Returns whether or not the provided type is to be deduced."
   [decl-type]
