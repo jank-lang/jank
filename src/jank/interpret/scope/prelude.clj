@@ -29,10 +29,14 @@
     :argument-types [(fabricate/type "boolean")]} wrapped-pprint
    {:name "print!"
     :argument-types [(fabricate/type "syntax")]} wrapped-pprint
+   {:name "print!"
+    :argument-types [(fabricate/type "ast")]} wrapped-pprint
+
    {:name "+"
     :argument-types (map fabricate/type (repeat 2 "integer"))} (ignore-scope +)
    {:name "-"
     :argument-types (map fabricate/type (repeat 2 "integer"))} (ignore-scope -)
+
    {:name "count"
     :argument-types [(fabricate/type "syntax")]} (ignore-scope count)
    {:name "type-check"
