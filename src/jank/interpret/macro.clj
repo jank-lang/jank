@@ -39,9 +39,11 @@
   ; TODO: If external, the function must be in prelude
   (let [argument-pairs (map #(vector (:name %1)
                                      (evaluate-item prelude %2 scope))
-                            ; TODO: Add value for AST
-                            (rest (get-in item [:definition :arguments :values]))
-                            (get-in item [:definition :arguments :actual-arguments]))
+                            (get-in item [:definition :arguments :values])
+                            (cons {:kind :ast
+                                   :scope scope
+                                   :emplaced []}
+                                  (get-in item [:definition :arguments :actual-arguments])))
         updated-item (update-in item
                                 [:definition :scope]
                                 (fn [inner-scope]
@@ -90,6 +92,13 @@
   ; TODO
   (assoc item
          :interpreted-value (:body item)
+         :scope scope))
+
+(defmethod evaluate-item :ast
+  [prelude item scope]
+  ; TODO
+  (assoc item
+         :interpreted-value item
          :scope scope))
 
 (defmethod evaluate-item :default
