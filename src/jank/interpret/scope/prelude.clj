@@ -14,8 +14,8 @@
 (def wrapped-pprint (ignore-scope pprint))
 
 (defn emplace
-  [scope ast syntax] ; TODO: Add syntax to ast
-  (pprint "emplacing!"))
+  [scope ast syntax]
+  (update ast :emplaced #(into % (:cells syntax))))
 
 ; TODO: Check prelude first, then check scope
 (defn create [check]
