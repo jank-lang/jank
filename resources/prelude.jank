@@ -17,7 +17,6 @@
 (declare-extern print! ƒ : ((real) (string)))
 (declare-extern print! ƒ : ((integer) (string)))
 (declare-extern print! ƒ : ((boolean) (string)))
-(declare-extern print! ƒ : ((syntax) (string)))
 
 (; -- Input -- ;)
 (declare-extern input! ƒ : (() (string)))
@@ -51,3 +50,6 @@
 (declare-extern count ƒ : ((syntax) (integer)))
 (declare-extern type-check ƒ : ((syntax) (syntax))) (; TODO: Return checked-syntax? ;)
 (declare-extern emplace ƒ : ((ast syntax) (ast)))
+
+(declare-extern print! ƒ : ((syntax) (string)))
+(declare-extern print! ƒ : ((ast) (string)))
