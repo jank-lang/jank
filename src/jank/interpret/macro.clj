@@ -18,9 +18,10 @@
   "Interprets the specified item, interpreting any necessary arguments and
    dependencies. Interpreted values are associated as :interpreted-value"
   (fn [prelude item scope]
-    (if (#{:string :integer :boolean :real} (:kind item))
-      :primitive
-      (:kind item))))
+    (let [kind (:kind item)]
+      (if (#{:string :integer :boolean :real} kind)
+        :primitive
+        kind))))
 
 (defn evaluate
   [prelude body scope]
