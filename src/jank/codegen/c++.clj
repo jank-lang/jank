@@ -123,10 +123,11 @@
 (defmethod codegen-impl :binding-definition
   [current]
   ;(pprint (clean-scope current))
-  (str (codegen-impl (assoc current :kind :binding-type))
-       (codegen-impl (assoc current :kind :binding-name))
-       "="
-       (codegen-impl (:value current))))
+  (util/end-statement
+    (str (codegen-impl (assoc current :kind :binding-type))
+         (codegen-impl (assoc current :kind :binding-name))
+         "="
+         (codegen-impl (:value current)))))
 
 (defmethod codegen-impl :function-call
   [current]
