@@ -41,6 +41,8 @@
   (let [argument-pairs (map #(vector (:name %1)
                                      (evaluate-item prelude %2 scope))
                             (get-in item [:definition :arguments :values])
+                            ; Add a wrapped ast value which supports emplacing
+                            ; checked code and looking up in the scope.
                             (cons {:kind :ast
                                    :scope scope
                                    :emplaced []}
