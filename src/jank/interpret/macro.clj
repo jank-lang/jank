@@ -87,8 +87,9 @@
 
 (defmethod evaluate-item :return
   [prelude item scope]
-  ; TODO
-  (assoc item :scope scope))
+  (assoc item
+         :interpreted-value (evaluate-item prelude (:value item) scope)
+         :scope scope))
 
 (defmethod evaluate-item :syntax-definition
   [prelude item scope]
