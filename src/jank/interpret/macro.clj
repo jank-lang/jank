@@ -30,8 +30,10 @@
   (reduce #(let [item (evaluate-item prelude %2 (:scope %1))]
              (assoc %1
                     :cells (conj (:cells %1) item)
+                    :interpreted-value (:interpreted-value item)
                     :scope (:scope item)))
           {:cells []
+           :interpreted-value nil
            :scope scope}
           body))
 
@@ -56,10 +58,15 @@
                                           argument-pairs)))
         body (evaluate prelude
                        (get-in updated-item [:definition :body])
-                       (get-in updated-item [:definition :scope]))]
-    (-> (assoc item :scope (:scope body))
-        (assoc-in [:definition :body] (:cells body))
-        (assoc-in [:definition :scope] (:scope body)))))
+                       (get-in updated-item [:definition :scope]))
+        ; If the macro returns a non-empty checked syntax, pull out its scope
+        checked-scope (or (-> body
+                              :cells last
+                              :interpreted-value :interpreted-value
+                              :emplaced last
+                              :scope)
+                          (:scope item))]
+    (assoc item :scope checked-scope)))
 
 (defmethod evaluate-item :function-call
   [prelude item scope]
