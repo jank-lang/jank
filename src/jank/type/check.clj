@@ -216,7 +216,7 @@
         :cells
         first ; Pull macro call out of cell wrapper
         ; XXX: Evaluate works in definition's scope; bring in the outer scope
-        (assoc :scope scope))))
+        )))
 
 (defmethod check-item :syntax-definition
   [item scope]
