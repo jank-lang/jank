@@ -66,7 +66,9 @@
                               :emplaced last
                               :scope)
                           (:scope item))]
-    (assoc item :scope checked-scope)))
+    (-> (assoc item :scope checked-scope)
+        (assoc-in [:definition :body] (:cells body))
+        (assoc-in [:definition :scope] (:scope body)))))
 
 (defmethod evaluate-item :function-call
   [prelude item scope]
