@@ -67,6 +67,8 @@
                               :scope)
                           (:scope item))]
     (-> (assoc item :scope checked-scope)
+        ; Update the definition's body, since it now contains the interpreted
+        ; value and updated scope
         (assoc-in [:definition :body] (:cells body))
         (assoc-in [:definition :scope] (:scope body)))))
 
