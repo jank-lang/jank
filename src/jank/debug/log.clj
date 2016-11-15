@@ -9,7 +9,9 @@
   [item]
   (postwalk
     #(if (map? %)
-       (dissoc % :scope)
+       (if-let [scope (:scope %)]
+         (assoc % :scope :elided)
+         %)
        %)
     item))
 
