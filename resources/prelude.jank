@@ -56,4 +56,5 @@
 
 (declare-extern string ƒ : ((syntax) (string)))
 
+(declare-extern push-front ƒ : ((syntax syntax) (syntax)))
 (declare-extern push-back ƒ : ((syntax syntax) (syntax)))

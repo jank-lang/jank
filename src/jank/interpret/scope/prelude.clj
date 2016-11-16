@@ -17,6 +17,10 @@
   [scope ast syntax]
   (update ast :emplaced #(into % (:cells syntax))))
 
+(defn push-front
+  [dest source]
+  (into source dest))
+
 (defn push-back
   [dest source]
   (into dest source))
@@ -39,6 +43,8 @@
    {:name "string"
     :argument-types [(fabricate/type "syntax")]} (ignore-scope check-shim/unparse)
 
+   {:name "push-front"
+    :argument-types (map fabricate/type (repeat 2 "syntax"))} (ignore-scope push-front)
    {:name "push-back"
     :argument-types (map fabricate/type (repeat 2 "syntax"))} (ignore-scope push-back)
 
