@@ -17,6 +17,10 @@
   [scope ast syntax]
   (update ast :emplaced #(into % (:cells syntax))))
 
+(defn push-back
+  [dest source]
+  (into dest source))
+
 ; TODO: Check prelude first, then check scope
 (defn create [check]
   {{:name "print!"
@@ -35,13 +39,14 @@
    {:name "string"
     :argument-types [(fabricate/type "syntax")]} (ignore-scope check-shim/unparse)
 
+   {:name "push-back"
+    :argument-types (map fabricate/type (repeat 2 "syntax"))} (ignore-scope push-back)
+
    {:name "+"
     :argument-types (map fabricate/type (repeat 2 "integer"))} (ignore-scope +)
    {:name "-"
     :argument-types (map fabricate/type (repeat 2 "integer"))} (ignore-scope -)
 
-   {:name "count"
-    :argument-types [(fabricate/type "syntax")]} (ignore-scope count)
    {:name "type-check"
     :argument-types [(fabricate/type "syntax")]} #(check-shim/check %1 check %2)
    {:name "emplace"

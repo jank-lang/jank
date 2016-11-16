@@ -55,3 +55,5 @@
 (declare-extern print! ƒ : ((ast) (string)))
 
 (declare-extern string ƒ : ((syntax) (string)))
+
+(declare-extern push-back ƒ : ((syntax syntax) (syntax)))
