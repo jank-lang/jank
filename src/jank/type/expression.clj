@@ -11,6 +11,19 @@
   (fn [item scope]
     (:kind item)))
 
+(defn overload-args
+  "Extracts just a sequence of all overload args. This is used for cleaner
+   error messages."
+  [overloads]
+  (apply vector
+         (map #(-> %
+                   :value
+                   :generics
+                   :values
+                   first
+                   :values)
+              overloads)))
+
 (defn call-signature
   "Calculates the signature of a given function call."
   [item scope]
@@ -60,25 +73,11 @@
       (type-assert (not-empty matches)
                    (str "no matching function call to " func-name
                         " with argument types " arg-types
-                        " expected one of " (apply vector
-                                                   (map #(-> % ; TODO: Clean up duplication
-                                                             :value
-                                                             :generics
-                                                             :values
-                                                             first
-                                                             :values)
-                                                        overloads))))
+                        " expected one of " (overload-args overloads)))
       (type-assert (>= 1 (count full-matches))
                    (str "ambiguous function call to " func-name
                         " with argument types " arg-types
-                        " expected one of " (apply vector
-                                                   (map #(-> % ; TODO: Clean up duplication
-                                                             :value
-                                                             :generics
-                                                             :values
-                                                             first
-                                                             :values)
-                                                        overloads))))
+                        " expected one of " (overload-args overloads)))
 
       (let [match (ffirst full-matches)
             generics (:generics (:value match))
