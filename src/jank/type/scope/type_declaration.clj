@@ -63,7 +63,8 @@
                    "invalid function parameter type"))
     (when (> (count (:values (second signature))) 0)
       (type-assert (every? valid? (-> signature second :values))
-                   "invalid function return type"))
+                   (str "invalid function return type "
+                        (-> signature second :values))))
     decl-type))
 
 (defmethod lookup :auto
