@@ -22,6 +22,11 @@
   (let [type-name (:name (:value decl-type))]
     (= "syntax" type-name)))
 
+(defn checked-syntax?
+  [decl-type]
+  (let [type-name (:name (:value decl-type))]
+    (= "checked-syntax" type-name)))
+
 (defn ast? ; TODO: Rename to ast-context or something?
   [decl-type]
   (let [type-name (:name (:value decl-type))]
@@ -43,6 +48,8 @@
       :auto
       (syntax? decl-type)
       :syntax
+      (checked-syntax? decl-type)
+      :checked-syntax
       (ast? decl-type)
       :ast
       :else
@@ -74,6 +81,10 @@
 (defmethod lookup :syntax
   [decl-type scope]
   (fabricate/type "syntax"))
+
+(defmethod lookup :checked-syntax
+  [decl-type scope]
+  (fabricate/type "checked-syntax"))
 
 (defmethod lookup :ast
   [decl-type scope]

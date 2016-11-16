@@ -49,8 +49,8 @@
 (; -- Macros -- ;)
 (; TODO: Prevent certain functions from being called outside of macros. ;)
 (declare-extern count ƒ : ((syntax) (integer)))
-(declare-extern type-check ƒ : ((syntax) (syntax))) (; TODO: Return checked-syntax? ;)
-(declare-extern emplace ƒ : ((ast syntax) (ast)))
+(declare-extern type-check ƒ : ((syntax) (checked-syntax)))
+(declare-extern emplace ƒ : ((ast checked-syntax) (ast)))
 
 (declare-extern print! ƒ : ((syntax) (string)))
 (declare-extern print! ƒ : ((ast) (string)))

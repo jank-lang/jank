@@ -56,5 +56,5 @@
    {:name "type-check"
     :argument-types [(fabricate/type "syntax")]} #(check-shim/check %1 check %2)
    {:name "emplace"
-    :argument-types (map fabricate/type ["ast" "syntax"])} emplace
+    :argument-types (map fabricate/type ["ast" "checked-syntax"])} emplace
    })
