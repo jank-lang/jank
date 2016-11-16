@@ -60,11 +60,25 @@
       (type-assert (not-empty matches)
                    (str "no matching function call to " func-name
                         " with argument types " arg-types
-                        " expected one of " overloads))
+                        " expected one of " (apply vector
+                                                   (map #(-> % ; TODO: Clean up duplication
+                                                             :value
+                                                             :generics
+                                                             :values
+                                                             first
+                                                             :values)
+                                                        overloads))))
       (type-assert (>= 1 (count full-matches))
                    (str "ambiguous function call to " func-name
                         " with argument types " arg-types
-                        " expected one of " overloads))
+                        " expected one of " (apply vector
+                                                   (map #(-> % ; TODO: Clean up duplication
+                                                             :value
+                                                             :generics
+                                                             :values
+                                                             first
+                                                             :values)
+                                                        overloads))))
 
       (let [match (ffirst full-matches)
             generics (:generics (:value match))
