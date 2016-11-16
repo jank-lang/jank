@@ -32,6 +32,9 @@
    {:name "print!"
     :argument-types [(fabricate/type "ast")]} wrapped-pprint
 
+   {:name "string"
+    :argument-types [(fabricate/type "syntax")]} (ignore-scope check-shim/unparse)
+
    {:name "+"
     :argument-types (map fabricate/type (repeat 2 "integer"))} (ignore-scope +)
    {:name "-"
