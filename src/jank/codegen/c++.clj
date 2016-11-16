@@ -239,13 +239,14 @@
 
 (defmethod codegen-impl :macro-call
   [current]
-  (apply str (map codegen-impl (-> current
-                                   :definition
-                                   :body
-                                   last ; Macros return an ast, so this is a return
-                                   :interpreted-value
-                                   :interpreted-value
-                                   :emplaced))))
+  (apply str (map (comp util/end-statement codegen-impl)
+                  (-> current
+                      :definition
+                      :body
+                      last ; Macros return an ast, so this is a return
+                      :interpreted-value
+                      :interpreted-value
+                      :emplaced))))
 
 (defmethod codegen-impl :default
   [current]
