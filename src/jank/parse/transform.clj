@@ -8,7 +8,7 @@
   {:kind kind :value value})
 
 (defn read-single [kind value]
-  {:kind kind :value (read-string value)})
+  {:kind kind :value (read-string value)}) ; TODO: Use a safer option
 
 (defn identifier [& more]
   (let [base {:kind :identifier
@@ -19,11 +19,11 @@
 
 (defn specialization-list [& more]
   {:kind :specialization-list
-   :values (or more '())})
+   :values (or more [])})
 
 (defn generic-specialization-list [& more]
   {:kind :generic-specialization-list
-   :values (or more '())})
+   :values (or more [])})
 
 (defn declaration [kind & more]
   (let [base {:kind (if (= kind :type)
@@ -51,7 +51,7 @@
 (defn struct-definition [& more]
   {:kind :struct-definition
    :name (first more)
-   :members (rest more)
+   :members (into [] (rest more))
    :type {:kind :type
           :value (first more)}})
 
@@ -67,7 +67,7 @@
 (defn new-expression [& more]
   {:kind :new-expression
    :specialization-list (first more)
-   :values (rest more)})
+   :values (into [] (rest more))})
 
 (defn function-call [& more]
   {:kind :macro-function-call
@@ -78,36 +78,36 @@
   {:kind :macro-definition
    :name (first more)
    :arguments (second more)
-   :body (drop 2 more)})
+   :body (into [] (drop 2 more))})
 
 (defn lambda-definition [& more]
   {:kind :lambda-definition
    :arguments (first more)
    :return (second more)
-   :body (drop 2 more)})
+   :body (into [] (drop 2 more))})
 
 (defn generic-lambda-definition [& more]
   {:kind :generic-lambda-definition
    :generics (first more)
    :arguments (second more)
    :return (nth more 2)
-   :body (drop 3 more)})
+   :body (into [] (drop 3 more))})
 
 (defn argument-list [& more]
   {:kind :argument-list
-   :values more})
+   :values (into [] more)})
 
 (defn macro-argument-list [& more]
   {:kind :macro-argument-list
-   :values more})
+   :values (into [] more)})
 
 (defn syntax-definition [& more]
   {:kind :syntax-definition
-   :body more})
+   :body (into [] more)})
 
 (defn syntax-list [& more]
   {:kind :syntax-list
-   :body more})
+   :body (into [] more)})
 
 (defn syntax-item [& more]
   {:kind :syntax-item
@@ -115,7 +115,7 @@
 
 (defn return-list [& more]
   {:kind :return-list
-   :values more})
+   :values (into [] more)})
 
 (defn if-expression [& more]
   (let [base {:kind :if-expression
