@@ -27,6 +27,8 @@
    code, and type checks it. Returns the checked body in a syntax definition."
   [scope actual-check syntax-def]
   (let [unparsed (unparse syntax-def)
-        parsed (parse/parse "" unparsed) ; Empty prelude
-        checked (actual-check {:cells parsed} scope)]
+        ; Empty prelude, since the scope already includes it
+        parsed (parse/parse "" unparsed)
+        ; Use the parent scope so we can't pull in macro bindings
+        checked (actual-check {:cells parsed} (:parent scope))]
     checked))
