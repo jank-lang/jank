@@ -113,6 +113,10 @@
   {:kind :syntax-item
    :value (first more)})
 
+(defn escaped-item [& more]
+  {:kind :escaped-item
+   :value (first more)})
+
 (defn return-list [& more]
   {:kind :return-list
    :values (into [] more)})
