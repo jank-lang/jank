@@ -9,4 +9,6 @@
                  [me.raynes/fs "1.4.6"]]
   :main ^:skip-aot jank.core
   :target-path "target/%s"
-  :profiles {:uberjar {:aot :all}})
+  :profiles {:uberjar {:aot :all}
+             :dev {:source-paths ["dev/"]
+                   :main jank.dev}})
