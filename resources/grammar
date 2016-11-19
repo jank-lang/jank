@@ -71,7 +71,7 @@ macro-definition =
   right-paren
 
 <syntax-keyword> = <'syntax'>
-syntax-item = identifier | string | number | boolean | identifier | keyword
+syntax-item = identifier | string | number | boolean | identifier | keyword | escaped-item
 syntax-list =
   left-paren
     (syntax-list | syntax-item)*
@@ -79,6 +79,12 @@ syntax-list =
 syntax-definition =
   left-paren syntax-keyword
     (syntax-list | syntax-item)+
+  right-paren
+
+<escape-keyword> = <'escape'>
+escaped-item =
+  left-paren escape-keyword
+    syntax-item+
   right-paren
 
 <bind-keyword> = <'bind'>
