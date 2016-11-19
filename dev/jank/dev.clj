@@ -9,4 +9,4 @@
   (apply core/-main args))
 
 (defn -main [& args]
-  (run args))
+  (apply run args))
