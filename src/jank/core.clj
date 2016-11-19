@@ -7,6 +7,7 @@
 
 (defn -main
   [& args]
+  ; TODO: Proper argument parsing
   (-> {:cells (parse/parse
                 (when (not-any? #(= "--bare" %) args)
                   parse/prelude)
