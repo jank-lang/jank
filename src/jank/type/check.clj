@@ -212,6 +212,11 @@
   ; TODO
   (assoc item :scope scope))
 
+(defmethod check-item :escaped-item
+  [item scope]
+  ; TODO
+  (assoc item :scope scope))
+
 (defmethod check-item :function-call
   [item scope]
   (loop [args (:arguments item)
