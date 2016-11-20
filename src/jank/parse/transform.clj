@@ -5,7 +5,7 @@
 ; TODO: Use fabricate for all of these?
 
 (defn single [kind value]
-  {:kind kind :value value})
+  {:kind kind :value value}) ; TODO: add single-body and single-values
 
 (defn read-single [kind value]
   {:kind kind :value (read-string value)}) ; TODO: Use a safer option
@@ -113,9 +113,13 @@
   {:kind :syntax-item
    :value (first more)})
 
+(defn syntax-escaped-item [& more]
+  {:kind :syntax-escaped-item
+   :body (into [] more)})
+
 (defn escaped-item [& more]
   {:kind :escaped-item
-   :value (first more)})
+   :body (into [] more)})
 
 (defn return-list [& more]
   {:kind :return-list

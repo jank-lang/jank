@@ -49,7 +49,8 @@
                         :syntax-definition transform/syntax-definition
                         :syntax-list transform/syntax-list
                         :syntax-item transform/syntax-item
-                        :escaped-item transform/escaped-item
+                        :syntax-escaped-item (partial transform/single :syntax-escaped-item)
+                        :escaped-item (partial transform/single :escaped-item)
                         :return-list transform/return-list
                         :if-expression transform/if-expression}
                        parsed)]
