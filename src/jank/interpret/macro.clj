@@ -110,6 +110,12 @@
          :interpreted-value (:body item)
          :scope scope))
 
+(defmethod evaluate-item :syntax-escaped-item
+  [prelude item scope]
+  (assoc item
+         :interpreted-value (evaluate prelude (:body item) scope)
+         :scope scope))
+
 (defmethod evaluate-item :ast
   [prelude item scope]
   ; TODO
