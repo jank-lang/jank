@@ -37,6 +37,6 @@
   (let [unparsed (unparse syntax-def)
         ; Empty prelude, since the scope already includes it
         parsed (parse/parse "" unparsed)
-        checked (actual-check {:cells parsed}
+        checked (actual-check {:cells parsed} ; TODO: Prevent usage of unescaped items in macro scope
                               (new-macro-scope scope))]
     checked))
