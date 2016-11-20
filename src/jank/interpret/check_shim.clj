@@ -13,6 +13,7 @@
     (condp = (:kind item)
       :syntax-list (str "(" (string/join " " (:body item)) ")")
       :syntax-item (:value item)
+      :escaped-item (str "(escape " (:value item) ")")
       :string (str "\"" (:value item) "\"")
       :identifier (str (:name item))
       (str (:value item)))))
