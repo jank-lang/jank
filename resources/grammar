@@ -11,6 +11,7 @@
               struct-definition /
               new-expression /
               syntax-definition /
+              escaped-item /
               macro-function-call
 <atom> = statement /
          list
@@ -71,7 +72,7 @@ macro-definition =
   right-paren
 
 <syntax-keyword> = <'syntax'>
-syntax-item = identifier | string | number | boolean | identifier | keyword | escaped-item
+syntax-item = identifier | string | number | boolean | identifier | keyword | syntax-escaped-item
 syntax-list =
   left-paren
     (syntax-list | syntax-item)*
@@ -82,9 +83,14 @@ syntax-definition =
   right-paren
 
 <escape-keyword> = <'escape'>
-escaped-item =
+sytntax-escaped-item =
   left-paren escape-keyword
     (syntax-list | syntax-item)+
+  right-paren
+
+escaped-item =
+  left-paren escape-keyword
+    atom+
   right-paren
 
 <bind-keyword> = <'bind'>
