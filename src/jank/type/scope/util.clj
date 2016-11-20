@@ -1,5 +1,4 @@
 (ns jank.type.scope.util
-  (:require clojure.set)
   (:use jank.assert
         jank.debug.log))
 
