@@ -5,6 +5,7 @@
             [jank.type.scope.binding-declaration :as binding-declaration]
             [jank.type.scope.binding-definition :as binding-definition]
             [jank.type.scope.macro-definition :as macro-definition]
+            [jank.type.scope.util :as scope.util]
             [jank.type.expression :as expression]
             [jank.type.return :as return]
             [jank.interpret.scope.prelude :as interpret.scope.prelude]
@@ -21,23 +22,11 @@
         :passthrough
         kind))))
 
-(defn empty-scope
-  "Builds an empty type scope."
-  ([]
-   (empty-scope nil))
-  ([parent]
-   {:parent parent
-    :macro-definitions {}
-    :binding-declarations {}
-    :binding-definitions {}
-    :type-declarations #{}
-    :type-definitions #{}}))
-
 (defn check
   "Builds type information on the parsed source. Returns
    a list of the typed source and the top-level scope."
   ([parsed]
-   (check parsed (empty-scope)))
+   (check parsed (scope.util/new-empty)))
   ([parsed parent-scope]
    ;(pprint (list "parsed:" parsed))
    (loop [item (first (:cells parsed))
@@ -67,7 +56,7 @@
   [item scope]
   (let [args (:arguments item)
         return (:return item)
-        new-scope (empty-scope scope)
+        new-scope (scope.util/new-empty scope)
         checked-args (check-item args new-scope)
         checked-return (check-item return (:scope checked-args))
         checked-body (check {:cells (:body item)} (:scope checked-return))
@@ -194,7 +183,7 @@
   [item scope]
   ; TODO
   (let [definition (:definition item)
-        new-scope (empty-scope scope) ; XXX: Scope from call site, not definition
+        new-scope (scope.util/new-empty scope) ; XXX: Scope from call site, not definition
         checked-args (check-item (assoc (:arguments definition)
                                         :actual-arguments (:arguments item))
                                  new-scope)
@@ -312,14 +301,14 @@
                  (str "if expression condition must be boolean, not " cond-type))
 
     (let [checked-then (check {:cells [(:value (:then item))]}
-                              (empty-scope scope))
+                              (scope.util/new-empty scope))
           updated-item (assoc-in item
                                  [:then :values]
                                  (:cells checked-then))
           scoped-item (assoc updated-item :scope scope)]
       (if (contains? item :else)
         (let [checked-else (check {:cells [(:value (:else scoped-item))]}
-                                  (empty-scope scope))
+                                  (scope.util/new-empty scope))
               updated-item (assoc-in scoped-item
                                      [:else :values]
                                      (:cells checked-else))]

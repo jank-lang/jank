@@ -35,3 +35,16 @@
         (recur (:parent current-scope)
                (conj path :parent)))
       nil)))
+
+(defn new-empty
+  "Builds an empty type scope."
+  ([]
+   (new-empty nil))
+  ([parent]
+   {:parent parent
+    :macro-definitions {}
+    :binding-declarations {}
+    :binding-definitions {}
+    :type-declarations #{}
+    :type-definitions #{}}))
+
