@@ -83,7 +83,7 @@ syntax-definition =
   right-paren
 
 <escape-keyword> = <'escape'>
-sytntax-escaped-item =
+syntax-escaped-item =
   left-paren escape-keyword
     (syntax-list | syntax-item)+
   right-paren
