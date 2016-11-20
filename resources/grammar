@@ -84,7 +84,7 @@ syntax-definition =
 <escape-keyword> = <'escape'>
 escaped-item =
   left-paren escape-keyword
-    syntax-item+
+    (syntax-list | syntax-item)+
   right-paren
 
 <bind-keyword> = <'bind'>
