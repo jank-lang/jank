@@ -25,7 +25,6 @@
 
 (defn evaluate
   [prelude body scope]
-  ;(pprint (clean-scope body))
   ; TODO: Return value of last form?
   (reduce #(let [item (evaluate-item prelude %2 (:scope %1))]
              (assoc %1
