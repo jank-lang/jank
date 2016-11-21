@@ -9,8 +9,9 @@
 
 (defn wrap-value
   "Wrap a raw value (such as 4 or \"foo\") in a kinded map with the scope"
-  [value scope]
+  [type value scope]
   {:kind :wrapped-value
+   :type type
    :interpreted-value value
    :scope scope})
 
@@ -78,13 +79,15 @@
                                               #(expression/realize-type % (:scope item)))
                                         (:arguments item))}
         arguments (map #(evaluate-item prelude % scope) (:arguments item))
+        ret-type (-> item
+                     :signature :value
+                     :generics :values last :values first)
         func (if-let [f (prelude signature)]
                f
                (not-yet-implemented interpret-assert "non-prelude functions"))]
     (interpret-assert func (str "unknown function " signature))
     (let [result (apply func scope (map :interpreted-value arguments))]
-      ; TODO: Add return type to wrapped values
-      (wrap-value result scope))))
+      (wrap-value ret-type result scope))))
 
 (defmethod evaluate-item :primitive
   [prelude item scope]
