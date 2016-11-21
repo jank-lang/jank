@@ -203,9 +203,8 @@
                           [%]
                           (get-in % [:definition :scope])))
         :cells
-        first ; Pull macro call out of cell wrapper
-        ; XXX: Evaluate works in definition's scope; bring in the outer scope
-        )))
+        ; Pull macro call out of cell wrapper
+        first)))
 
 (defmethod check-item :syntax-definition
   [item scope]
