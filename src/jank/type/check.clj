@@ -193,15 +193,15 @@
                            :arguments checked-args
                            :body (:cells checked-body)
                            :scope (:scope checked-body))
-        with-return (return/add-explicit-returns updated-def
-                                                 (:scope checked-body))]
-    (-> (assoc item :definition with-return)
-        ; To avoid cyclical deps, we pass in our type checking function.
+        def-with-return (return/add-explicit-returns updated-def
+                                                     (:scope checked-body))
+        item-with-return (assoc item :definition with-return)]
+    (-> ; To avoid cyclical deps, we pass in our type checking function.
         ; Macros may call back into the type checker, to process data into
         ; the AST. This cyclical relationship is intended and, to me, logical.
-        (#(macro/evaluate (interpret.scope.prelude/create check)
-                          [%]
-                          (get-in % [:definition :scope])))
+        (macro/evaluate (interpret.scope.prelude/create check)
+                          [item-with-return]
+                          (get-in % [:definition :scope]))
         :cells
         ; Pull macro call out of cell wrapper
         first)))
