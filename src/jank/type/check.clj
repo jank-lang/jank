@@ -216,8 +216,9 @@
   [item scope]
   (type-assert (scope.util/lookup (fn [e s] (true? e)) :in-macro? scope)
                "Cannot evaluate escape form outside of macro")
-  ; TODO
-  (assoc item :scope scope))
+  ; TODO: Make escape ns with escape/unescape fns
+  (let [evaluated nil]
+    (assoc item :scope scope)))
 
 (defmethod check-item :function-call
   [item scope]
