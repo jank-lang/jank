@@ -9,7 +9,8 @@
             [jank.type.expression :as expression]
             [jank.type.return :as return]
             [jank.interpret.scope.prelude :as interpret.scope.prelude]
-            [jank.interpret.macro :as macro])
+            [jank.interpret.macro :as macro]
+            [jank.interpret.escape :as escape])
   (:use jank.assert
         jank.debug.log))
 
@@ -215,8 +216,10 @@
   [item scope]
   (type-assert (scope.util/lookup (fn [e s] (true? e)) :in-macro? scope)
                "Cannot evaluate escape form outside of macro")
-  ; TODO: Make escape ns with escape/unescape fns
-  (let [evaluated nil]
+  (let [evaluated (escape/evaluate (interpret.scope.prelude/create check)
+                                   [item]
+                                   scope)]
+    (pprint "evaluated" evaluated)
     (assoc item :scope scope)))
 
 (defmethod check-item :function-call
