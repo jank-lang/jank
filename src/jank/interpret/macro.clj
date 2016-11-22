@@ -79,6 +79,7 @@
                                               #(expression/realize-type % (:scope item)))
                                         (:arguments item))}
         arguments (map #(evaluate-item prelude % scope) (:arguments item))
+        ; TODO: Add an easy accessor for things like return type
         ret-type (-> item
                      :signature :value
                      :generics :values last :values first)
