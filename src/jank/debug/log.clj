@@ -22,4 +22,6 @@
     (clojure.pprint/pprint (if (not-empty args)
                              (apply vector cleaned-arg cleaned-args)
                              cleaned-arg))
-    arg))
+    (if (not-empty args)
+      (first args)
+      arg)))
