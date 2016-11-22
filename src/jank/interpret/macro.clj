@@ -90,13 +90,14 @@
                (not-yet-implemented interpret-assert "non-prelude functions"))]
     (interpret-assert func (str "unknown function " signature))
     (let [result (apply func scope (map :interpreted-value arguments))]
-      (wrap-value ret-type result scope))))
+      (wrap-value ret-type result scope)))) ; TODO: Loses the expression information
 
 (defmethod evaluate-item :primitive
   [prelude item scope]
+  (pprint ":primitive"
   (assoc item
          :interpreted-value (:value item)
-         :scope scope))
+         :scope scope)))
 
 (defmethod evaluate-item :identifier
   [prelude item scope]
