@@ -7,6 +7,8 @@
   (:use jank.assert
         jank.debug.log))
 
+; TODO: Move the non-macro stuff out into an evaluate ns
+
 (defn wrap-value
   "Wrap a raw value (such as 4 or \"foo\") in a kinded map with the scope"
   [type value scope]
