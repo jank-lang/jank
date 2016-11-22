@@ -216,9 +216,10 @@
   [item scope]
   (type-assert (scope.util/lookup (fn [k s] (true? (s k))) :in-macro? scope)
                "Cannot evaluate escape form outside of macro")
-  (let [evaluated (escape/evaluate (interpret.scope.prelude/create check)
-                                   [item]
-                                   scope)]
+  (let [checked (check-item (:value item) scope)
+        evaluated (escape/evaluate (interpret.scope.prelude/create check)
+                                   [checked]
+                                   (:scope checked))]
     (pprint "evaluated" evaluated)
     (assoc item :scope scope)))
 

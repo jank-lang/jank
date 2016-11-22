@@ -116,13 +116,6 @@
          :interpreted-value (:body item)
          :scope scope))
 
-(defmethod evaluate-item :escaped-item
-  [prelude item scope]
-  (pprint "eval escaped item" item)
-  (assoc item
-         :interpreted-value (evaluate prelude (:body item) scope)
-         :scope scope))
-
 (defmethod evaluate-item :ast
   [prelude item scope]
   ; TODO
