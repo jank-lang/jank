@@ -214,7 +214,7 @@
 
 (defmethod check-item :escaped-item
   [item scope]
-  (type-assert (scope.util/lookup (fn [e s] (true? e)) :in-macro? scope)
+  (type-assert (scope.util/lookup (fn [k s] (true? (s k))) :in-macro? scope)
                "Cannot evaluate escape form outside of macro")
   (let [evaluated (escape/evaluate (interpret.scope.prelude/create check)
                                    [item]
