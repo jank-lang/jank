@@ -37,6 +37,11 @@
   [syntax]
   (rest syntax))
 
+(defn syntax-partition
+  [size syntax]
+  (assert (= 1 (count syntax)) "assuming single syntax")
+  (update-in syntax [0 :body] (partial partition 2)))
+
 ; TODO: Check prelude first, then check scope
 (defn create [check]
   {{:name "print!"
@@ -76,4 +81,7 @@
     :argument-types [(fabricate/type "syntax")]} (ignore-scope syntax-second)
    {:name "rest"
     :argument-types [(fabricate/type "syntax")]} (ignore-scope syntax-rest)
+
+   {:name "partition"
+    :argument-types (map fabricate/type ["integer" "syntax"])} (ignore-scope syntax-partition)
    })

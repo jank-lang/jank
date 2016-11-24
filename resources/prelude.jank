@@ -63,3 +63,6 @@
 (declare-extern first ƒ : ((syntax) (syntax)))
 (declare-extern second ƒ : ((syntax) (syntax)))
 (declare-extern rest ƒ : ((syntax) (syntax)))
+
+(declare-extern partition ƒ : ((integer syntax) (syntax)))
+(declare-extern map ƒ : ((ƒ : ((syntax) (syntax)) syntax) (syntax)))
