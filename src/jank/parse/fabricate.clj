@@ -13,17 +13,17 @@
 (defn function-type
   [args ret]
   {:kind :type
-    :external? false
-    :value
-    {:kind :identifier
-     :name "ƒ"
-     :generics
-     {:kind :specialization-list
-      :values
-      [{:kind :specialization-list
-        :values (map type args)}
-       {:kind :specialization-list
-        :values [(type ret)]}]}}})
+   :external? false
+   :value
+   {:kind :identifier
+    :name "ƒ"
+    :generics
+    {:kind :specialization-list
+     :values
+     [{:kind :specialization-list
+       :values args}
+      {:kind :specialization-list
+       :values ret}]}}})
 
 (defn function-declaration
   [fn-name fn-args fn-ret]
@@ -32,7 +32,7 @@
    :external? false
    :name {:kind :identifier
           :name fn-name}
-   :type (function-type fn-args fn-ret)})
+   :type (function-type (map type fn-args) (type fn-ret))})
 
 (defn binding-declaration
   [decl-name decl-type]

@@ -84,4 +84,9 @@
 
    {:name "partition"
     :argument-types (map fabricate/type ["integer" "syntax"])} (ignore-scope syntax-partition)
+
+   {:name "map"
+    :argument-types [(fabricate/function-type [(fabricate/type "syntax")]
+                                              (fabricate/type "syntax"))
+                     (fabricate/type "syntax")]} (ignore-scope syntax-partition)
    })
