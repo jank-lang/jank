@@ -60,6 +60,10 @@ read command-line arguments from a separate file
   don't bother with the target macro yet
 
 ** everything else: **
+rename to kio?
+
+figure out logo
+
 write the extra compilation args to a file
 
 long-term macros should be predicative pattern matching
