@@ -59,3 +59,7 @@
 
 (declare-extern push-front ƒ : ((syntax syntax) (syntax)))
 (declare-extern push-back ƒ : ((syntax syntax) (syntax)))
+
+(declare-extern first ƒ : ((syntax) (syntax)))
+(declare-extern second ƒ : ((syntax) (syntax)))
+(declare-extern rest ƒ : ((syntax) (syntax)))

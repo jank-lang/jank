@@ -25,6 +25,18 @@
   [dest source]
   (into dest source))
 
+(defn syntax-first
+  [syntax]
+  [(first syntax)])
+
+(defn syntax-second
+  [syntax]
+  [(second syntax)])
+
+(defn syntax-rest
+  [syntax]
+  (rest syntax))
+
 ; TODO: Check prelude first, then check scope
 (defn create [check]
   {{:name "print!"
@@ -57,4 +69,11 @@
     :argument-types [(fabricate/type "syntax")]} #(check-shim/check %1 check %2)
    {:name "emplace"
     :argument-types (map fabricate/type ["ast" "checked-syntax"])} emplace
+
+   {:name "first"
+    :argument-types [(fabricate/type "syntax")]} (ignore-scope syntax-first)
+   {:name "second"
+    :argument-types [(fabricate/type "syntax")]} (ignore-scope syntax-second)
+   {:name "rest"
+    :argument-types [(fabricate/type "syntax")]} (ignore-scope syntax-rest)
    })
