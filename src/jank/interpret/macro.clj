@@ -66,6 +66,7 @@
 
 (defmethod evaluate-item :function-call
   [prelude item scope]
+  (pprint "prelude" prelude)
   (let [signature {:name (-> item :name :name)
                    :argument-types (map (comp type-declaration/strip
                                               #(expression/realize-type % (:scope item)))

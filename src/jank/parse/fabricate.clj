@@ -23,7 +23,7 @@
      [{:kind :specialization-list
        :values args}
       {:kind :specialization-list
-       :values ret}]}}})
+       :values [ret]}]}}})
 
 (defn function-declaration
   [fn-name fn-args fn-ret]
