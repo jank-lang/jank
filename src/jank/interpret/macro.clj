@@ -116,6 +116,13 @@
          :interpreted-value item
          :scope scope))
 
+(defmethod evaluate-item :binding-definition
+  [prelude item scope]
+  (assoc item
+         :scope (value/add-to-scope (-> item :name :name)
+                                    (evaluate-item prelude (:value item) scope)
+                                    scope)))
+
 (defmethod evaluate-item :default
   [prelude item scope]
   (interpret-assert false (str "no supported evaluation for '" item "'")))
