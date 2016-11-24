@@ -192,7 +192,9 @@
 
 (defmethod codegen-impl :string
   [current]
-  (str "\"" (:value current) "\""))
+  (str "\""
+       (clojure.string/replace (:value current) #"\"" "\\\\\"")
+       "\""))
 
 (defmethod codegen-impl :passthrough
   [current]
