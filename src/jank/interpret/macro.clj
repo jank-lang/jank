@@ -87,10 +87,9 @@
 
 (defmethod evaluate-item :primitive
   [prelude item scope]
-  (pprint ":primitive"
   (assoc item
          :interpreted-value (:value item)
-         :scope scope)))
+         :scope scope))
 
 (defmethod evaluate-item :identifier
   [prelude item scope]
