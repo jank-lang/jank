@@ -10,15 +10,9 @@
    :value {:kind :identifier
            :name name}})
 
-(defn function-declaration
-  [fn-name fn-args fn-ret]
-  ; TODO: Check for string or map
-  {:kind :binding-declaration
-   :external? false
-   :name {:kind :identifier
-          :name fn-name}
-   :type
-   {:kind :type
+(defn function-type
+  [args ret]
+  {:kind :type
     :external? false
     :value
     {:kind :identifier
@@ -27,9 +21,18 @@
      {:kind :specialization-list
       :values
       [{:kind :specialization-list
-        :values (map type fn-args)}
+        :values (map type args)}
        {:kind :specialization-list
-        :values (list (type fn-ret))}]}}}})
+        :values [(type ret)]}]}}})
+
+(defn function-declaration
+  [fn-name fn-args fn-ret]
+  ; TODO: Check for string or map
+  {:kind :binding-declaration
+   :external? false
+   :name {:kind :identifier
+          :name fn-name}
+   :type (function-type fn-args fn-ret)})
 
 (defn binding-declaration
   [decl-name decl-type]
