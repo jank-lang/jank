@@ -89,16 +89,10 @@
 
 (defmethod realize-type :lambda-definition
   [item scope]
-  {:kind :type
-   :value {:kind :identifier
-           :name "ƒ",
-           :generics {:kind :specialization-list
-                      :values [{:kind :specialization-list
-                                :values (filter #(= :type (:kind %))
-                                                (:values (:arguments item)))}
-                               {:kind :specialization-list
-                                :values (filter #(= :type (:kind %))
-                                                (:values (:return item)))}]}}})
+  (fabricate/function-type (filter #(= :type (:kind %))
+                                   (:values (:arguments item)))
+                           (filter #(= :type (:kind %))
+                                   (:values (:return item)))))
 
 (defmethod realize-type :generic-lambda-definition
   [item scope]
