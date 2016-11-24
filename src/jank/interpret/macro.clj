@@ -9,14 +9,6 @@
 
 ; TODO: Move the non-macro stuff out into an evaluate ns
 
-(defn wrap-value
-  "Wrap a raw value (such as 4 or \"foo\") in a kinded map with the scope"
-  [type value scope]
-  {:kind :wrapped-value
-   :type type
-   :interpreted-value value
-   :scope scope})
-
 (defmulti evaluate-item
   "Interprets the specified item, interpreting any necessary arguments and
    dependencies. Interpreted values are associated as :interpreted-value"
@@ -32,10 +24,8 @@
   (reduce #(let [item (evaluate-item prelude %2 (:scope %1))]
              (assoc %1
                     :cells (conj (:cells %1) item)
-                    :interpreted-value (:interpreted-value item)
                     :scope (:scope item)))
           {:cells []
-           :interpreted-value nil
            :scope scope}
           body))
 
@@ -90,7 +80,10 @@
                (not-yet-implemented interpret-assert "non-prelude functions"))]
     (interpret-assert func (str "unknown function " signature))
     (let [result (apply func scope (map :interpreted-value arguments))]
-      (wrap-value ret-type result scope)))) ; TODO: Loses the expression information
+      (assoc item
+             :interpreted-type ret-type
+             :interpreted-value result
+             :scope scope))))
 
 (defmethod evaluate-item :primitive
   [prelude item scope]

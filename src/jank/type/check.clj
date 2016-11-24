@@ -220,7 +220,7 @@
         evaluated (escape/evaluate (interpret.scope.prelude/create check)
                                    [checked]
                                    (:scope checked))]
-    (pprint "evaluated" evaluated)
+    (pprint "escaped" evaluated)
     (assoc item :scope scope)))
 
 (defmethod check-item :function-call
