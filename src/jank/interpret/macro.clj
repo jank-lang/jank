@@ -14,7 +14,7 @@
    dependencies. Interpreted values are associated as :interpreted-value"
   (fn [prelude item scope]
     (let [kind (:kind item)]
-      (if (#{:string :integer :boolean :real} kind)
+      (if (type-declaration/built-ins kind)
         :primitive
         kind))))
 

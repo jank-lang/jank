@@ -1,5 +1,6 @@
 (ns jank.codegen.c++
   (:require [jank.parse.fabricate :as fabricate]
+            [jank.type.scope.type-declaration :as type-declaration]
             [jank.codegen.sanitize :as sanitize]
             [jank.codegen.util :as util]
             [jank.codegen.mangle :as mangle])
@@ -13,7 +14,7 @@
         (#{:type-declaration
            :binding-declaration
            :generic-lambda-definition} kind) :passthrough
-        (#{:integer :real :boolean} kind) :primitive
+        (type-declaration/integrals kind) :primitive
         :default kind))))
 
 ; Only used for the main functions; all other functions

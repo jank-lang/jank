@@ -5,6 +5,9 @@
         jank.assert
         jank.debug.log))
 
+(def integrals #{:integer :boolean :real})
+(def built-ins (conj integrals :string))
+
 (defn function?
   "Returns whether or not the provided type is that of a function."
   [decl-type]
