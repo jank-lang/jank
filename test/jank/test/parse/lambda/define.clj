@@ -1,4 +1,4 @@
-(ns jank.test.parse.lambda
+(ns jank.test.parse.lambda.define
   (:require [clojure.test :refer :all]
             [jank.test.parse.util :as util]))
 

@@ -1,7 +1,7 @@
-(ns jank.test.parse.function
+(ns jank.test.parse.lambda.call
   (:require [clojure.test :refer :all]
             [jank.test.parse.util :as util]))
 
-(deftest function-calls
+(deftest lambda-call
   (doseq [file ["fail-non-function-literal"]]
     (util/test-file (str "test/parse/function/call/" file))))
