@@ -23,5 +23,6 @@
                 "single-line/pass-normal"
                 "single-line/pass-parens"
                 "single-line/pass-quotes"
+                "single-line/pass-single-unmatched-quote"
                 "single-line/pass-unicode"]]
     (util/test-file (str "test/parse/comment/" file))))
