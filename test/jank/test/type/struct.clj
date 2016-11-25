@@ -1,5 +1,5 @@
 (ns jank.test.type.struct
-  (:refer-clojure :excluce [struct])
+  (:refer-clojure :exclude [struct])
   (:require [clojure.test :refer :all]
             [jank.test.type.util :as util]))
 
