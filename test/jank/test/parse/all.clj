@@ -13,21 +13,6 @@
                             (valid-parse? full-file)))
       (is (valid-parse? full-file)))))
 
-(deftest structs
-  (doseq [file ["fail-no-members"
-                "fail-empty-member"
-                "fail-member-too-many-fields"
-                "fail-no-name"
-                "fail-no-name-some-members"
-                "fail-too-many-names"
-                "fail-non-list-member"
-                "fail-multiple-members-all-values"
-                "fail-multiple-members-mixed-values"
-                "pass-one-member-no-value"
-                "pass-unicode-name"
-                "pass-multiple-members-no-values"]]
-    (test-file (str "test/parse/struct/" file))))
-
 (deftest new-expressions
   (doseq [file ["pass-multiple-types"
                 "pass-no-values"
