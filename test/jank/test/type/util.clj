@@ -14,14 +14,6 @@
       (is (valid-type? full-file)))))
 
 
-(deftest closures
-  (doseq [file ["pass-global-from-nested"
-                "pass-global"
-                "pass-local-from-nested"
-                "pass-parameter-from-nested"
-                "pass-partial"]]
-    (test-file (str "test/type/lambda/closure/" file))))
-
 (deftest superpositions
   ; TODO
   (doseq [file [;"pass-lazy"
