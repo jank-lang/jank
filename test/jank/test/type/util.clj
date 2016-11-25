@@ -14,20 +14,6 @@
       (is (valid-type? full-file)))))
 
 
-(deftest nested-lambdas
-  (doseq [file ["fail-multiple-inner-definition"
-                "pass-capture-params"
-                "pass-define"
-                "pass-overload-inner"
-                "pass-overload-outer-call-outer"
-                "pass-overload-outer"
-                "pass-overload-self"
-                ; TODO: Fix
-                ;"pass-redefine-outer"
-                ;"pass-redefine-self"
-                ]]
-    (test-file (str "test/type/lambda/nest/" file))))
-
 (deftest overloaded-lambdas
   (doseq [file ["fail-multiple-definition"
                 "fail-return-type"
