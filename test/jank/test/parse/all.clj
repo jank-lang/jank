@@ -14,13 +14,6 @@
       (is (valid-parse? full-file)))))
 
 ; TODO: Split into multiple tests
-(deftest idents
-  (doseq [file ["ascii/fail-bad-chars"
-                "ascii/pass-good-chars"
-                "ascii/pass-true-false"
-                "unicode/pass-all-good"]]
-    (test-file (str "test/parse/ident/" file))))
-
 (deftest parens
   (doseq [file ["match/fail-close-nothing-else"
                 "match/fail-multiple-close-nothing-else"
