@@ -14,15 +14,6 @@
       (is (valid-type? full-file)))))
 
 
-(deftest type-declarations
-  ; TODO
-  (doseq [file [;"fail-invalid-generic"
-                ;"pass-generic"
-                ;"pass-generic-multiple"
-                "pass-multiple"
-                "pass-normal"]]
-    (test-file (str "test/type/declaration/type/" file))))
-
 (deftest binding-declarations
   ; TODO
   (doseq [file ["fail-mismatched-types"
