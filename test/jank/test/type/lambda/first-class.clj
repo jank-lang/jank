@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [jank.test.type.util :as util]))
 
-(deftest first-class-lambdas
+(deftest lambda-first-class
   (doseq [file ["pass-as-param"
                 "fail-incorrect-return-type"
                 "fail-incorrect-param-type"

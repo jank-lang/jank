@@ -13,17 +13,6 @@
                             (valid-type? full-file)))
       (is (valid-type? full-file)))))
 
-(deftest lambda-bindings
-  (doseq [file ["fail-incorrect-type"
-                "fail-invalid-param-type"
-                "fail-invalid-return-type"
-                "fail-same-param-name"
-                "pass-with-type"
-                "pass-simple"
-                "pass-call"
-                "pass-nested"]]
-    (test-file (str "test/type/lambda/bind/" file))))
-
 (deftest if-definitions
   (doseq [file ["fail-integer-condition"
                 "pass-boolean-condition"
