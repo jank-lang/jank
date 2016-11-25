@@ -1,7 +1,7 @@
 (ns jank.test.parse.binding
   (:refer-clojure :exclude [binding])
   (:require [clojure.test :refer :all]
-            [jank.test.parse.all :as util]))
+            [jank.test.parse.util :as util]))
 
 (deftest binding
   (doseq [file ["fail-missing-value"

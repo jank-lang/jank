@@ -1,7 +1,7 @@
 (ns jank.test.parse.new
   (:refer-clojure :exclude [new])
   (:require [clojure.test :refer :all]
-            [jank.test.parse.all :as util]))
+            [jank.test.parse.util :as util]))
 
 (deftest new
   (doseq [file ["pass-multiple-types"

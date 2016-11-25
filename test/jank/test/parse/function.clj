@@ -1,6 +1,6 @@
 (ns jank.test.parse.function
   (:require [clojure.test :refer :all]
-            [jank.test.parse.all :as util]))
+            [jank.test.parse.util :as util]))
 
 (deftest function-calls
   (doseq [file ["fail-non-function-literal"]]

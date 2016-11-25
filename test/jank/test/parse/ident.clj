@@ -1,6 +1,6 @@
 (ns jank.test.parse.ident
   (:require [clojure.test :refer :all]
-            [jank.test.parse.all :as util]))
+            [jank.test.parse.util :as util]))
 
 (deftest ident
   (doseq [file ["ascii/fail-bad-chars"

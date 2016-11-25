@@ -1,6 +1,6 @@
 (ns jank.test.parse.string
   (:require [clojure.test :refer :all]
-            [jank.test.parse.all :as util]))
+            [jank.test.parse.util :as util]))
 
 (deftest string
   (doseq [file ["escape/pass-lots-of-unescaped-closes"

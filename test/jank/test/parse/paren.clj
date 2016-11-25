@@ -1,6 +1,6 @@
 (ns jank.test.parse.paren
   (:require [clojure.test :refer :all]
-            [jank.test.parse.all :as util]))
+            [jank.test.parse.util :as util]))
 
 (deftest paren
   (doseq [file ["match/fail-close-nothing-else"

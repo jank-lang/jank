@@ -1,7 +1,7 @@
 (ns jank.test.parse.struct
   (:refer-clojure :exclude [struct])
   (:require [clojure.test :refer :all]
-            [jank.test.parse.all :as util]))
+            [jank.test.parse.util :as util]))
 
 (deftest struct
   (doseq [file ["fail-no-members"

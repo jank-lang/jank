@@ -1,7 +1,7 @@
 (ns jank.test.parse.comment
   (:refer-clojure :exclude [comment])
   (:require [clojure.test :refer :all]
-            [jank.test.parse.all :as util]))
+            [jank.test.parse.util :as util]))
 
 (deftest comment
   (doseq [file ["multi-line/fail-double-close"

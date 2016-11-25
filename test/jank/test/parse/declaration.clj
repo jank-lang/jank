@@ -1,6 +1,6 @@
 (ns jank.test.parse.declaration
   (:require [clojure.test :refer :all]
-            [jank.test.parse.all :as util]))
+            [jank.test.parse.util :as util]))
 
 ; TODO: Split these into type/binding directories
 (deftest declaration

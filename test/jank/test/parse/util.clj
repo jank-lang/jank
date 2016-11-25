@@ -1,4 +1,4 @@
-(ns jank.test.parse.all
+(ns jank.test.parse.util
   (:require [clojure.test :refer :all]
             [jank.test.bootstrap :refer :all :refer-macros :all]))
 

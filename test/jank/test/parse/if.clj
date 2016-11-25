@@ -1,7 +1,7 @@
 (ns jank.test.parse.if
   (:refer-clojure :exclude [if])
   (:require [clojure.test :refer :all]
-            [jank.test.parse.all :as util]))
+            [jank.test.parse.util :as util]))
 (deftest if
   (doseq [file ["fail-without-both"
                 "fail-too-many-branches"

@@ -1,6 +1,6 @@
 (ns jank.test.parse.lambda
   (:require [clojure.test :refer :all]
-            [jank.test.parse.all :as util]))
+            [jank.test.parse.util :as util]))
 
 (deftest lambda-define
   (doseq [file ["fail-missing-param-name"
