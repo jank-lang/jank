@@ -14,16 +14,6 @@
       (is (valid-parse? full-file)))))
 
 ; TODO: Split into multiple tests
-(deftest strings
-  (doseq [file ["escape/pass-lots-of-unescaped-closes"
-                "escape/pass-unescaped-both"
-                "escape/pass-unescaped-close"
-                "escape/pass-unescaped-open"
-                "escape/pass-escape-both"
-                "escape/pass-escape-close"
-                "escape/pass-escape-open"]]
-    (test-file (str "test/parse/string/" file))))
-
 (deftest bindings
   (doseq [file ["fail-missing-value"
                 "pass-builtin-function"
