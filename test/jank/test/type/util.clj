@@ -14,15 +14,6 @@
       (is (valid-type? full-file)))))
 
 
-(deftest superpositions
-  ; TODO
-  (doseq [file [;"pass-lazy"
-                ;"pass-outer-and-inner"
-                ;"pass-outer"
-                ;"pass-parameter"
-                ]]
-    (test-file (str "test/type/lambda/superposition/" file))))
-
 (deftest type-declarations
   ; TODO
   (doseq [file [;"fail-invalid-generic"
