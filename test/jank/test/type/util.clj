@@ -13,12 +13,6 @@
                             (valid-type? full-file)))
       (is (valid-type? full-file)))))
 
-(deftest if-definitions
-  (doseq [file ["fail-integer-condition"
-                "pass-boolean-condition"
-                "pass-with-else"]]
-    (test-file (str "test/type/if/define/" file))))
-
 (deftest if-expressions
   (doseq [file ["fail-different-types"
                 "fail-invalid-param-type"
