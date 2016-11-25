@@ -14,13 +14,6 @@
       (is (valid-type? full-file)))))
 
 
-(deftest overloaded-lambdas
-  (doseq [file ["fail-multiple-definition"
-                "fail-return-type"
-                "pass-different-param-count"
-                "pass-same-param-count"]]
-    (test-file (str "test/type/lambda/overload/" file))))
-
 (deftest lambda-returns
   (doseq [file ["fail-lambda-wrong-type"
                 "fail-no-return"
