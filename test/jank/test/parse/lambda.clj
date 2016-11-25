@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [jank.test.parse.all :as util]))
 
-(deftest lambda
+(deftest lambda-define
   (doseq [file ["fail-missing-param-name"
                 "fail-no-param-list"
                 "fail-no-return-type"

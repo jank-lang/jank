@@ -13,11 +13,6 @@
                             (valid-parse? full-file)))
       (is (valid-parse? full-file)))))
 
-; TODO: Split into multiple tests
-(deftest function-calls
-  (doseq [file ["fail-non-function-literal"]]
-    (test-file (str "test/parse/function/call/" file))))
-
 ; TODO: Split these into type/binding directories
 (deftest declarations
   (doseq [file ["fail-missing-idenfitier"
