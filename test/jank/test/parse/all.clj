@@ -14,14 +14,6 @@
       (is (valid-parse? full-file)))))
 
 ; TODO: Split into multiple tests
-(deftest bindings
-  (doseq [file ["fail-missing-value"
-                "pass-builtin-function"
-                "pass-builtin-identifier"
-                "pass-builtin-literal"
-                "pass-builtin-parameter"]]
-    (test-file (str "test/parse/binding/" file))))
-
 (deftest ifs
   (doseq [file ["fail-without-both"
                 "fail-too-many-branches"
