@@ -14,18 +14,6 @@
       (is (valid-parse? full-file)))))
 
 ; TODO: Split into multiple tests
-(deftest lambda-definitions
-  (doseq [file ["fail-missing-param-name"
-                "fail-no-param-list"
-                "fail-no-return-type"
-                "fail-multiple-return-types"
-                "pass-body"
-                "pass-empty"
-                "pass-primitive"
-                "pass-long-form"
-                "pass-unicode-short-form"]]
-    (test-file (str "test/parse/lambda/define/" file))))
-
 (deftest function-calls
   (doseq [file ["fail-non-function-literal"]]
     (test-file (str "test/parse/function/call/" file))))
