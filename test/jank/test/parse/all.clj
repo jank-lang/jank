@@ -14,14 +14,6 @@
       (is (valid-parse? full-file)))))
 
 ; TODO: Split into multiple tests
-(deftest ifs
-  (doseq [file ["fail-without-both"
-                "fail-too-many-branches"
-                "pass-with-literal"
-                "pass-without-else"
-                "pass-with-predicate"]]
-    (test-file (str "test/parse/if/" file))))
-
 (deftest lambda-definitions
   (doseq [file ["fail-missing-param-name"
                 "fail-no-param-list"
