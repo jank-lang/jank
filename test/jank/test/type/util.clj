@@ -13,17 +13,6 @@
                             (valid-type? full-file)))
       (is (valid-type? full-file)))))
 
-(deftest first-class-lambdas
-  (doseq [file ["pass-as-param"
-                "fail-incorrect-return-type"
-                "fail-incorrect-param-type"
-                "pass-simple"
-                ; TODO: lambda identifiers
-                ;"pass-return-lambda"
-                "pass-with-params"
-                "pass-higher-order-lambda"]]
-    (test-file (str "test/type/lambda/first-class/" file))))
-
 (deftest lambda-bindings
   (doseq [file ["fail-incorrect-type"
                 "fail-invalid-param-type"
