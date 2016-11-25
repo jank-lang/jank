@@ -14,15 +14,6 @@
       (is (valid-type? full-file)))))
 
 
-(deftest binding-declarations
-  ; TODO
-  (doseq [file ["fail-mismatched-types"
-                "fail-unknown-type"
-                "pass-lambda"
-                "pass-multiple"
-                "pass-normal"]]
-    (test-file (str "test/type/declaration/binding/" file))))
-
 (deftest structs
   ; TODO: Fix these
   (doseq [file [;"fail-name-used"
