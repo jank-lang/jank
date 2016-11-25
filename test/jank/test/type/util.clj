@@ -14,18 +14,6 @@
       (is (valid-type? full-file)))))
 
 
-(deftest lambda-type-deduction
-  (doseq [file ["fail-mismatched-types"
-                "pass-if"
-                "pass-void"
-                "pass-with-normal-return"
-                ; TODO: lambda identifiers
-                ;"pass-with-unicode"
-                "pass-void-lambda"
-                "pass-non-void-lambda"
-                "pass-deduced-lambda"]]
-    (test-file (str "test/type/lambda/deduce/" file))))
-
 (deftest closures
   (doseq [file ["pass-global-from-nested"
                 "pass-global"
