@@ -14,13 +14,6 @@
       (is (valid-parse? full-file)))))
 
 ; TODO: Split into multiple tests
-(deftest parens
-  (doseq [file ["match/fail-close-nothing-else"
-                "match/fail-multiple-close-nothing-else"
-                "match/fail-multiple-open-nothing-else"
-                "match/fail-open-nothing-else"]]
-    (test-file (str "test/parse/paren/" file))))
-
 (deftest strings
   (doseq [file ["escape/pass-lots-of-unescaped-closes"
                 "escape/pass-unescaped-both"
