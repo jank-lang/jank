@@ -13,17 +13,6 @@
                             (valid-type? full-file)))
       (is (valid-type? full-file)))))
 
-(deftest if-expressions
-  (doseq [file ["fail-different-types"
-                "fail-invalid-param-type"
-                "fail-without-else"
-                "fail-nested-without-else"
-                "pass-matching-types"
-                "pass-if-as-condition"
-                "pass-nested"
-                ]]
-    (test-file (str "test/type/if/expression/" file))))
-
 (deftest lambda-calls
   (doseq [file ["fail-invalid-lambda"
                 "fail-invalid-param-type"
