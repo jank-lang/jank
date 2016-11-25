@@ -14,23 +14,6 @@
       (is (valid-type? full-file)))))
 
 
-(deftest lambda-returns
-  (doseq [file ["fail-lambda-wrong-type"
-                "fail-no-return"
-                "fail-unknown-type"
-                "fail-unknown-value"
-                "fail-wrong-param-type"
-                "fail-wrong-type"
-                "fail-first-class-lambda-wrong-return-type"
-                "fail-first-class-lambda-wrong-parameter-type"
-                "pass-lambda"
-                "pass-normal"
-                "pass-param"
-                "pass-void-no-return"
-                "pass-void-incomplete-if"
-                "pass-void-wrong-type"]]
-    (test-file (str "test/type/lambda/return/" file))))
-
 (deftest lambda-type-deduction
   (doseq [file ["fail-mismatched-types"
                 "pass-if"
