@@ -9,6 +9,7 @@
                 "multi-line/pass-normal"
                 "multi-line/pass-parens"
                 "multi-line/pass-quotes"
+                "multi-line/pass-single-unmatched-quote"
                 "multi-line/pass-unicode"
                 "nested/fail-multi-line-multi-end"
                 "nested/fail-no-close"
