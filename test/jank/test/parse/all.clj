@@ -13,19 +13,6 @@
                             (valid-parse? full-file)))
       (is (valid-parse? full-file)))))
 
-; TODO: Split these into type/binding directories
-(deftest declarations
-  (doseq [file ["fail-missing-idenfitier"
-                "fail-non-identifier-integer"
-                "fail-non-identifier-string"
-                ; TODO: Generics
-                ;"fail-empty-generic-type"
-                ;"pass-generic-type-with-parameters"
-                "pass-type"
-                "pass-binding"
-                "pass-generic-binding"]]
-    (test-file (str "test/parse/declaration/" file))))
-
 (deftest structs
   (doseq [file ["fail-no-members"
                 "fail-empty-member"
