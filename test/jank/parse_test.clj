@@ -1,6 +1,6 @@
 (ns jank.parse-test
   (:require [clojure.test :refer :all]
-            [jank.bootstrap :refer :all :refer-macros :all]))
+            [jank.test.bootstrap :refer :all :refer-macros :all]))
 
 (def error #"parse error:")
 

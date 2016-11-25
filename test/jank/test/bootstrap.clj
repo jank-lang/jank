@@ -1,4 +1,4 @@
-(ns jank.bootstrap
+(ns jank.test.bootstrap
   (:require [clojure.test :refer :all]
             [jank.parse :as parse]
             [jank.type.check :as type]
