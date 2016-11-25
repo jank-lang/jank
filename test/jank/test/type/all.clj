@@ -13,20 +13,6 @@
                             (valid-type? full-file)))
       (is (valid-type? full-file)))))
 
-(deftest bindings
-  (doseq [file ["fail-lambda-with-incompatible-type"
-                "fail-identifier-with-incompatible-type"
-                "fail-incompatible-value"
-                "fail-multiple-definition-different-type"
-                "fail-multiple-definition-same-type"
-                "fail-unknown-type"
-                "fail-unknown-value-identifier"
-                "fail-outside-lambda"
-                "pass-deduce-type"
-                "pass-proper-types"
-                "pass-within-lambda"]]
-    (test-file (str "test/type/binding/" file))))
-
 (deftest first-class-lambdas
   (doseq [file ["pass-as-param"
                 "fail-incorrect-return-type"
