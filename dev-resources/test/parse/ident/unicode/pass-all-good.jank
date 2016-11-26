@@ -1,4 +1,5 @@
-(ƒ ♥ (♦ string) ()
-  (print! ♦))
+(bind ♥
+  (λ (♦ string) ()
+    (print! ♦)))
 
 (♥ "yay")
