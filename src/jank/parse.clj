@@ -57,3 +57,6 @@
      ;(pprint parsed)
      ;(pprint transformed)
      transformed)))
+
+(defn parses [source & args]
+  (apply insta/parses parser source args))
