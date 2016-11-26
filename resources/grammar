@@ -24,7 +24,7 @@ string = <double-quote> not-double-quote <double-quote>
 <identifier-text> = #'[^\s"\'()\d:][^\s"\'()]*'
 identifier = identifier-text generic-specialization?
 keyword = <':'> identifier
-special-identifier = declare-keyword | bind-keyword | macro-keyword | if-keyword | lambda-keyword | struct-keyword
+special-identifier = declare-keyword | bind-keyword | macro-keyword | if-keyword | lambda-keyword | struct-keyword | ';'
 
 boolean = 'true' | 'false'
 
@@ -109,6 +109,3 @@ struct-definition = left-paren struct-keyword identifier
 new-expression = left-paren
                    new-keyword generic-specialization atom*
                  right-paren
-
-comment = <'(;'> inside-comment* <';)'>
-<inside-comment> = !(';)' | '(;') #'[\s\S]\s*' | comment

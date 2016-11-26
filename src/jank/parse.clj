@@ -6,10 +6,19 @@
 
 (def prelude (slurp (clojure.java.io/resource "prelude.jank")))
 
+; TODO: Move to separate grammar file
+(def whitespace-or-comments-parser
+  (insta/parser
+    "whitespace-or-comment = #'\\s+' | comments
+     whitespace = #'\\s+'
+     comments = comment+
+     comment = whitespace* '(;' inside-comment* ';)' whitespace*
+     inside-comment =  !( ';)' | '(;' ) #'[\\s\\S]' | comment"))
+
 (def parser
   (insta/parser
     (clojure.java.io/resource "grammar")
-    :auto-whitespace :standard))
+    :auto-whitespace whitespace-or-comments-parser))
 
 (defn parse
   "Runs the provided resource file through instaparse. Returns
