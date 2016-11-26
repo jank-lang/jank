@@ -6,14 +6,9 @@
 
 (def prelude (slurp (clojure.java.io/resource "prelude.jank")))
 
-; TODO: Move to separate grammar file
 (def whitespace-or-comments-parser
   (insta/parser
-    "whitespace-or-comment = #'\\s+' | comments
-     whitespace = #'\\s+'
-     comments = comment+
-     comment = whitespace* '(;' inside-comment* ';)' whitespace*
-     inside-comment =  !( ';)' | '(;' ) #'[\\s\\S]' | comment"))
+    (clojure.java.io/resource "whitespace-grammar")))
 
 (def parser
   (insta/parser
