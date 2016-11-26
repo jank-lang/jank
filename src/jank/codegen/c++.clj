@@ -186,10 +186,6 @@
        (when (some? (:value current))
          (codegen-impl (:value current)))))
 
-(defmethod codegen-impl :list
-  [current]
-  (not-yet-implemented codegen-assert "lists"))
-
 (defmethod codegen-impl :string
   [current]
   (str "\""
