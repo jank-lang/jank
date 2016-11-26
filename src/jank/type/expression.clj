@@ -133,11 +133,6 @@
                           else-type))
     then-type))
 
-(defmethod realize-type :list
-  [item scope]
-  ; TODO
-  (not-yet-implemented type-assert false "list type realization"))
-
 (defmethod realize-type :identifier
   [item scope]
   (let [ident (:name item)

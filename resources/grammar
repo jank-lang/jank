@@ -1,20 +1,17 @@
-<program> = (<comment> / statement)*
-<statement> = string / number / boolean /
-              identifier / keyword /
-              generic-lambda-definition /
-              lambda-definition /
-              macro-definition /
-              binding-definition /
-              if-expression /
-              type-declaration /
-              binding-declaration /
-              struct-definition /
-              new-expression /
-              syntax-definition /
-              escaped-item /
-              macro-function-call
-<atom> = statement /
-         list
+<program> = atom*
+<atom> = string / number / boolean /
+         identifier / keyword /
+         lambda-definition /
+         macro-definition /
+         binding-definition /
+         if-expression /
+         type-declaration /
+         binding-declaration /
+         struct-definition /
+         new-expression /
+         syntax-definition /
+         escaped-item /
+         macro-function-call
 
 integer = #'[+-]?\d+'
 real = #'[+-]?\d+\.\d*'
@@ -33,7 +30,6 @@ boolean = 'true' | 'false'
 
 <left-paren> = <'('>
 <right-paren> = <')'>
-list = left-paren !special-identifier atom* right-paren
 
 <lambda-keyword> = <'lambda'> | <'λ'>
 argument-list = left-paren (identifier type)* right-paren

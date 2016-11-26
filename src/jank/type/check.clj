@@ -19,7 +19,7 @@
    expression and the updated scope."
   (fn [item scope]
     (let [kind (:kind item)]
-      (if (#{:list :string :integer :boolean :real :identifier} kind)
+      (if (#{:string :integer :boolean :real :identifier} kind)
         :passthrough
         kind))))
 
