@@ -21,7 +21,7 @@ real = #'[+-]?\d+\.\d*'
 <not-double-quote> = #'[^\"]*'
 string = <double-quote> not-double-quote <double-quote>
 
-<identifier-text> = #'[^\s"\'()\d:][^\s"\'()]*'
+<identifier-text> = #'[^\s"()\d:][^\s"()]*'
 identifier = identifier-text generic-specialization?
 keyword = <':'> identifier
 special-identifier = declare-keyword | bind-keyword | macro-keyword | if-keyword | lambda-keyword | struct-keyword | ';'
