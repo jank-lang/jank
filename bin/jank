@@ -4,13 +4,16 @@ set -u
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 tmp=$(mktemp -d)
+echo "Working in $tmp"
 
 pushd $here/.. > /dev/null
+echo "Compiling to C++..."
 lein run $@ > $tmp/jank-generated.hpp 2>&1
 ret=$?
 if [ $ret -eq 0 ];
 then
   set -e
+  echo "Compiling to binary..."
   g++ -std=c++14 -I$here/../backend/c++/include -I$tmp $here/../backend/c++/src/main.cpp
   set +e
 else
