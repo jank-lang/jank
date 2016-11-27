@@ -304,20 +304,23 @@
 
 (defmethod check-item :if-expression
   [item scope]
-  (let [cond-type (expression/realize-type (:value (:condition item)) scope)]
+  (let [checked-cond (check-item (-> item :condition :value) scope) ; TODO: Tests for function calls as condition
+        item-with-checked-cond (assoc-in item
+                                         [:condition :value] checked-cond)
+        cond-type (expression/realize-type checked-cond scope)]
     (type-assert (= (type-declaration/strip cond-type)
                     {:kind :type
                      :value {:kind :identifier
                              :name "boolean"}})
                  (str "if expression condition must be boolean, not " cond-type))
 
-    (let [checked-then (check {:cells [(:value (:then item))]}
+    (let [checked-then (check {:cells [(:value (:then item-with-checked-cond))]}
                               (scope.util/new-empty scope))
-          updated-item (assoc-in item
+          updated-item (assoc-in item-with-checked-cond
                                  [:then :values]
                                  (:cells checked-then))
           scoped-item (assoc updated-item :scope scope)]
-      (if (contains? item :else)
+      (if (contains? item-with-checked-cond :else)
         (let [checked-else (check {:cells [(:value (:else scoped-item))]}
                                   (scope.util/new-empty scope))
               updated-item (assoc-in scoped-item
