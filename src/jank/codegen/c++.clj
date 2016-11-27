@@ -33,7 +33,7 @@
 
 (defmethod codegen-impl :lambda-definition
   [current]
-  (str "[=]"
+  (str "[&]" ; TODO: Capture is unsafe?
        (codegen-impl (:arguments current))
        "->"
        (codegen-impl (:return current))
@@ -51,7 +51,7 @@
       (str "std::function<"
            (codegen-impl (:return value))
            (codegen-impl (:arguments value))
-           "> const ")
+           "> ") ; Not const, since it will be assigned after definition
 
       ; Typically, we just want auto
       :else
@@ -115,7 +115,10 @@
       ; Lambda bindings contain type info in the name, to work around
       ; the lack of overloading in the target
       (= (:kind value) :lambda-definition)
-      (mangle/mangle current)
+      (let [mangled (mangle/mangle current)]
+        ; Functions need to be defined first, then assigned, to allow
+        ; for recursion
+        (str (util/end-statement mangled) " " mangled))
 
       ; A non-function binding, so normal identifier codegen
       :else
@@ -158,7 +161,7 @@
 
 (defmethod codegen-impl :if-expression
   [current]
-  (let [base (str "[=]()->"
+  (let [base (str "[&]()->" ; TODO: Capture is unsafe?
                   ; If expressions used as returns need a type to be specified
                   (if-let [if-type (:type current)]
                     (codegen-impl if-type)
