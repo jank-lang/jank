@@ -14,13 +14,13 @@ if [ $ret -eq 0 ];
 then
   set -e
   echo "Compiling to binary..."
-  g++ -std=c++14 -I$here/../backend/c++/include -I$tmp $here/../backend/c++/src/main.cpp
+  g++ -O3 -std=c++14 -I$here/../backend/c++/include -I$tmp $here/../backend/c++/src/main.cpp
   set +e
 else
   cat $tmp/jank-generated.hpp
 fi
 popd > /dev/null
 
-rm -f $tmp/jank-generated.hpp
-rmdir $tmp
+#rm -f $tmp/jank-generated.hpp
+#rmdir $tmp
 exit $ret
