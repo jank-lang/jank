@@ -27,6 +27,8 @@
 (declare-extern = ƒ : ((integer integer) (boolean)))
 (declare-extern = ƒ : ((boolean boolean) (boolean)))
 
+(declare-extern <= ƒ : ((integer integer) (boolean)))
+
 (; -- Arithmetic -- ;)
 (declare-extern + ƒ : ((integer integer) (integer)))
 (declare-extern + ƒ : ((real real) (real)))
@@ -41,10 +43,6 @@
 
 (declare-extern / ƒ : ((integer integer) (integer)))
 (declare-extern / ƒ : ((real real) (real)))
-
-(declare-extern = ƒ : ((integer integer) (boolean)))
-(declare-extern = ƒ : ((real real) (boolean)))
-(declare-extern = ƒ : ((string string) (boolean)))
 
 (; -- Macros -- ;)
 (; TODO: Prevent certain functions from being called outside of macros. ;)
