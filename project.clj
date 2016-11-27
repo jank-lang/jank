@@ -11,4 +11,7 @@
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}
              :dev {:source-paths ["dev/"]
-                   :main jank.dev}})
+                   :main jank.dev}
+             :benchmark {:source-paths ["benchmark/"]
+                         :resource-paths ["dev-resources/"]
+                         :main jank.benchmark}})

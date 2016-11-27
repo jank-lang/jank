@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [jank.parse :as parse]
             [jank.type.check :as type]
-            [jank.codegen.c++ :as c++]))
+            [jank.codegen.c++ :as c++])
+  (:use jank.debug.log))
 
 (defmacro consume-output
   [& body]
