@@ -61,12 +61,13 @@
         checked-args (check-item args new-scope)
         checked-return (check-item return (:scope checked-args))
         checked-body (check {:cells (:body item)} (:scope checked-return))
-        updated-item (assoc item :body (:cells checked-body))
+        updated-item (assoc item
+                            :body (:cells checked-body)
+                            :arguments checked-args
+                            :return checked-return)
         item-with-return (return/add-explicit-returns updated-item
                                                       (:scope checked-body))]
-    (assoc item-with-return
-           :arguments checked-args
-           :scope scope)))
+    (assoc item-with-return :scope scope)))
 
 (defmethod check-item :generic-lambda-definition
   [item scope]
