@@ -317,15 +317,15 @@
     (let [checked-then (check {:cells [(:value (:then item-with-checked-cond))]}
                               (scope.util/new-empty scope))
           updated-item (assoc-in item-with-checked-cond
-                                 [:then :values]
-                                 (:cells checked-then))
+                                 [:then :value]
+                                 (-> checked-then :cells first))
           scoped-item (assoc updated-item :scope scope)]
       (if (contains? item-with-checked-cond :else)
         (let [checked-else (check {:cells [(:value (:else scoped-item))]}
                                   (scope.util/new-empty scope))
               updated-item (assoc-in scoped-item
-                                     [:else :values]
-                                     (:cells checked-else))]
+                                     [:else :value]
+                                     (-> checked-else :cells first))]
           updated-item)
         scoped-item))))
 
