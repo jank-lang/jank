@@ -4,7 +4,10 @@
             [jank.test.bootstrap :refer :all :refer-macros :all]
             [me.raynes.fs :as fs]
             [criterium.core :as crit]
-            [jank.core :as core])
+            [jank.core :as core]
+            [clj-time
+             [core :as t]
+             [coerce :as c]])
   (:use jank.debug.log))
 
 (defn run
@@ -51,11 +54,15 @@
           mean-ms (* 1000 mean-sec)]
       [n mean-ms])))
 
+(defn timestamp []
+  (c/to-long (t/now)))
+
 (defn -main [& args]
   (let [os-details (crit/os-details)
         runtime-details (crit/runtime-details)
-        results (run-all)
-        data {:results results
+        results {} ;(run-all)
+        data {:timestamp (timestamp)
               :os-details os-details
-              :runtime-details runtime-details}]
+              :runtime-details runtime-details
+              :results results}]
     (clojure.pprint/pprint data)))
