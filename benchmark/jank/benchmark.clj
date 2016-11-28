@@ -40,13 +40,20 @@
               "fib-run" #(run-file "./a.out")
               })
 
+(defn run-all []
+  (for [[n f] mapping]
+    (let [results (crit/benchmark* f {:samples 10
+                                      :warmup-jit-period 100000 ; 100us
+                                      })
+          mean-sec (-> results :mean first)
+          mean-ms (* 1000 mean-sec)]
+      [n mean-ms])))
+
 (defn -main [& args]
-  (pprint "results"
-    (for [[n f] mapping]
-      (let [results (crit/with-progress-reporting
-                      (crit/benchmark* f {:samples 10
-                                          :warmup-jit-period 100000 ; 100us
-                                          :verbose true}))
-            mean-sec (-> results :mean first)
-            mean-ms (* 1000 mean-sec)]
-        [n mean-ms]))))
+  (let [os-details (crit/os-details)
+        runtime-details (crit/runtime-details)
+        results (run-all)
+        data {:results results
+              :os-details os-details
+              :runtime-details runtime-details}]
+    (clojure.pprint/pprint data)))
