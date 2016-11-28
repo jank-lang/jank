@@ -39,7 +39,7 @@
 
 (def mapping {;"tests" tests
               "fib-compile" #(compile-file "fibonacci.jank")
-              "fib-run: 40" #(run-file "./a.out")
+              "fib-run: 40" #(run-file "./a.out") ; TODO: Use temporary file
               })
 
 (defn run-all []
