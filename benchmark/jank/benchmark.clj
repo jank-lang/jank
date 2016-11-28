@@ -26,7 +26,9 @@
 
 (defn compile-file [file]
   (let [result (clojure.java.shell/sh "bin/jank"
-                                      (.getPath (fs/absolute file)))
+                                      (-> (str "dev-resources/benchmark/" file)
+                                          fs/absolute
+                                          .getPath))
         code (:exit result)]
     code))
 
@@ -36,8 +38,8 @@
     code))
 
 (def mapping {;"tests" tests
-              "fib-compile" #(compile-file "fib.jank")
-              "fib-run" #(run-file "./a.out")
+              "fib-compile" #(compile-file "fibonacci.jank")
+              "fib-run: 40" #(run-file "./a.out")
               })
 
 (defn run-all []
