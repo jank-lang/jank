@@ -40,9 +40,9 @@
         code (:exit result)]
     code))
 
-(def mapping {;"tests" tests
-              "fib-compile" #(compile-file "fibonacci.jank")
-              "fib-run: 40" #(run-file "./a.out") ; TODO: Use temporary file
+(def mapping {;:tests tests
+              :fib-compile #(compile-file "fibonacci.jank")
+              :fib-run-40 #(run-file "./a.out") ; TODO: Use temporary file
               })
 
 (defn run-all []
@@ -60,7 +60,7 @@
 (defn -main [& args]
   (let [os-details (crit/os-details)
         runtime-details (crit/runtime-details)
-        results {} ;(run-all)
+        results (into {} (run-all))
         data {:timestamp (timestamp)
               :os-details os-details
               :runtime-details runtime-details
