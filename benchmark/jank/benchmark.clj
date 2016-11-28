@@ -30,9 +30,23 @@
 (defn sleep []
   (Thread/sleep 50))
 
+(defn compile-file [file]
+  (let [result (clojure.java.shell/sh "bin/jank"
+                                      (.getPath (fs/absolute file)))
+        code (:exit result)]
+    (pprint "compile code: " code)))
+
+(defn run-file [file]
+  (let [result (clojure.java.shell/sh file)
+        code (:exit result)]
+    (pprint "run code: " code)))
+
 (def mapping {;"tests" tests
-              "math" math
-              "sleep" sleep})
+              ;"fib-compile" #(compile-file "fib.jank")
+              "fib-run" #(run-file "./a.out")
+              ;"math" math
+              ;"sleep" sleep
+              })
 
 (defn -main [& args]
   (doseq [[n f] mapping]
