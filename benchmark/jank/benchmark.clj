@@ -24,33 +24,29 @@
       (require n)
       (run-tests n))))
 
-(defn math []
-  (apply + (range 100)))
-
-(defn sleep []
-  (Thread/sleep 50))
-
 (defn compile-file [file]
   (let [result (clojure.java.shell/sh "bin/jank"
                                       (.getPath (fs/absolute file)))
         code (:exit result)]
-    (pprint "compile code: " code)))
+    code))
 
 (defn run-file [file]
   (let [result (clojure.java.shell/sh file)
         code (:exit result)]
-    (pprint "run code: " code)))
+    code))
 
 (def mapping {;"tests" tests
-              ;"fib-compile" #(compile-file "fib.jank")
+              "fib-compile" #(compile-file "fib.jank")
               "fib-run" #(run-file "./a.out")
-              ;"math" math
-              ;"sleep" sleep
               })
 
 (defn -main [& args]
-  (doseq [[n f] mapping]
-    (let [results (crit/quick-benchmark (f) {})
-          mean-sec (-> results :mean first)
-          mean-ms (* 1000 mean-sec)]
-      (println (str n " => " mean-ms "ms")))))
+  (pprint "results"
+    (for [[n f] mapping]
+      (let [results (crit/with-progress-reporting
+                      (crit/benchmark* f {:samples 10
+                                          :warmup-jit-period 100000 ; 100us
+                                          :verbose true}))
+            mean-sec (-> results :mean first)
+            mean-ms (* 1000 mean-sec)]
+        [n mean-ms]))))
