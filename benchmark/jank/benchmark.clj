@@ -30,7 +30,13 @@
 (defn sleep []
   (Thread/sleep 50))
 
+(def mapping {;"tests" tests
+              "math" math
+              "sleep" sleep})
+
 (defn -main [& args]
-  (let [results (crit/quick-benchmark (sleep) {})
-        mean (-> results :mean first)]
-    (pprint (str (* 1000 mean) "ms"))))
+  (doseq [[n f] mapping]
+    (let [results (crit/quick-benchmark (f) {})
+          mean-sec (-> results :mean first)
+          mean-ms (* 1000 mean-sec)]
+      (println (str n " => " mean-ms "ms")))))
