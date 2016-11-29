@@ -66,10 +66,11 @@
 (defn -main [& args]
   (let [os-details (crit/os-details)
         runtime-details (crit/runtime-details)
-        results {:foo (rand) :bar (rand)};(into {} (run-all))
+        results {:tests (rand) :fib-compile (rand) :fib-run-40 (rand)};(into {} (run-all))
         data {:timestamp (timestamp)
-              :commit-timestamp (commit-timestamp)
+              :commit-timestamp (timestamp) ; TODO: commit-timestamp
               :os-details os-details
               :runtime-details runtime-details
-              :results results}]
+              :results results
+              :views [[:tests] [:fib-compile :fib-run-40]]}]
     (clojure.pprint/pprint data)))
