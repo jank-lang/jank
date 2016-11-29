@@ -57,11 +57,18 @@
 (defn timestamp []
   (c/to-long (t/now)))
 
+(defn commit-timestamp []
+  (let [result (clojure.java.shell/sh "git" "log" "-1" "--date=raw")
+        date-str (second (re-find #"Date:\s+(\d+)\s+" (:out result)))
+        stamp (Integer/parseInt date-str)]
+    stamp))
+
 (defn -main [& args]
   (let [os-details (crit/os-details)
         runtime-details (crit/runtime-details)
-        results (into {} (run-all))
+        results {};(into {} (run-all))
         data {:timestamp (timestamp)
+              :commit-timestamp (commit-timestamp)
               :os-details os-details
               :runtime-details runtime-details
               :results results}]
