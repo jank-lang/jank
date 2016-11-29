@@ -66,7 +66,7 @@
 (defn -main [& args]
   (let [os-details (crit/os-details)
         runtime-details (crit/runtime-details)
-        results {};(into {} (run-all))
+        results [{:foo (rand) :bar (rand)];(into {} (run-all))
         data {:timestamp (timestamp)
               :commit-timestamp (commit-timestamp)
               :os-details os-details
