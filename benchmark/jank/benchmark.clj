@@ -71,6 +71,5 @@
               :commit-timestamp (timestamp) ; TODO: commit-timestamp
               :os-details os-details
               :runtime-details runtime-details
-              :results results
-              :views [[:tests] [:fib-compile :fib-run-40]]}]
+              :results results}]
     (clojure.pprint/pprint data)))
