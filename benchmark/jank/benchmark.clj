@@ -43,6 +43,8 @@
 (def mapping {;:tests tests
               :fib-compile #(compile-file "fibonacci.jank")
               :fib-run-40 #(run-file "./a.out") ; TODO: Use temporary file
+              :empty-compile #(compile-file "empty.jank")
+              :empty-run #(run-file "./a.out")
               })
 
 (defn run-all []
@@ -66,7 +68,9 @@
 (defn -main [& args]
   (let [os-details (crit/os-details)
         runtime-details (crit/runtime-details)
-        results {:tests (rand) :fib-compile (rand) :fib-run-40 (rand)};(into {} (run-all))
+        results {:tests (rand)
+                 :empty-compile (rand) :empty-run (rand)
+                 :fib-compile (rand) :fib-run-40 (rand)};(into {} (run-all))
         data {:timestamp (timestamp)
               :commit-timestamp (timestamp) ; TODO: commit-timestamp
               :os-details os-details
