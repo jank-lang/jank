@@ -72,7 +72,7 @@
                  :empty-compile (rand) :empty-run (rand)
                  :fib-compile (rand) :fib-run-40 (rand)};(into {} (run-all))
         data {:timestamp (timestamp)
-              :commit-timestamp (timestamp) ; TODO: commit-timestamp
+              :commit-timestamp (commit-timestamp)
               :os-details os-details
               :runtime-details runtime-details
               :results results}]
