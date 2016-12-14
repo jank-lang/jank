@@ -27,11 +27,15 @@
       (require n)
       (run-tests n))))
 
+(def tmp-dir (fs/temp-dir "jank-benchmark"))
+(def tmp-binary (str tmp-dir "/a.out"))
+
 (defn compile-file [file]
   (let [result (clojure.java.shell/sh "bin/jank"
                                       (-> (str "dev-resources/benchmark/" file)
                                           fs/absolute
-                                          .getPath))
+                                          .getPath)
+                                      tmp-binary)
         code (:exit result)]
     code))
 
@@ -42,10 +46,9 @@
 
 (def mapping {;:tests tests
               :fib-compile #(compile-file "fibonacci.jank")
-              :fib-run-40 #(run-file "./a.out") ; TODO: Use temporary file
+              :fib-run-40 #(run-file tmp-binary)
               :empty-compile #(compile-file "empty.jank")
-              :empty-run #(run-file "./a.out")
-              })
+              :empty-run #(run-file tmp-binary)})
 
 (defn run-all []
   (for [[n f] mapping]
