@@ -68,9 +68,10 @@
 (defn -main [& args]
   (let [os-details (crit/os-details)
         runtime-details (crit/runtime-details)
-        results {:tests (rand)
-                 :empty-compile (rand) :empty-run (rand)
-                 :fib-compile (rand) :fib-run-40 (rand)};(into {} (run-all))
+        ;results {:tests (rand)
+        ;         :empty-compile (rand) :empty-run (rand)
+        ;         :fib-compile (rand) :fib-run-40 (rand)}
+        results (into {} (run-all))
         data {:timestamp (timestamp)
               :commit-timestamp (commit-timestamp)
               :os-details os-details
