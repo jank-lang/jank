@@ -44,7 +44,7 @@
         code (:exit result)]
     code))
 
-(def mapping {;:tests tests
+(def mapping {:tests tests
               :fib-compile #(compile-file "fibonacci.jank")
               :fib-run-40 #(run-file tmp-binary)
               :empty-compile #(compile-file "empty.jank")
@@ -71,9 +71,6 @@
 (defn -main [& args]
   (let [os-details (crit/os-details)
         runtime-details (crit/runtime-details)
-        ;results {:tests (rand)
-        ;         :empty-compile (rand) :empty-run (rand)
-        ;         :fib-compile (rand) :fib-run-40 (rand)}
         results (into {} (run-all))
         data {:timestamp (timestamp)
               :commit-timestamp (commit-timestamp)
