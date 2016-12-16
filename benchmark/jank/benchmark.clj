@@ -51,13 +51,15 @@
               :empty-run #(run-file tmp-binary)})
 
 (defn run-all []
-  (for [[n f] mapping]
-    (let [results (crit/benchmark* f {:samples 10
-                                      :warmup-jit-period 100000 ; 100us
-                                      })
-          mean-sec (-> results :mean first)
-          mean-ms (* 1000 mean-sec)]
-      [n mean-ms])))
+  ; Ignore test output
+  (binding [*out* (new java.io.StringWriter)]
+    (for [[n f] mapping]
+      (let [results (crit/benchmark* f {:samples 10
+                                        :warmup-jit-period 100000 ; 100us
+                                        })
+            mean-sec (-> results :mean first)
+            mean-ms (* 1000 mean-sec)]
+        [n mean-ms]))))
 
 (defn timestamp []
   (c/to-long (t/now)))
