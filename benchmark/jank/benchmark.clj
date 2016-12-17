@@ -30,6 +30,15 @@
 (def tmp-dir (fs/temp-dir "jank-benchmark"))
 (def tmp-binary (str tmp-dir "/a.out"))
 
+(defn silently
+  "Returns a function which applies f to args and consumes all effecting output"
+  [f & args]
+  (let [writer (new java.io.StringWriter)]
+    #(binding [*out* writer
+               *err* writer
+               *test-out* writer]
+       (apply f args))))
+
 (defn compile-file [file]
   (let [result (clojure.java.shell/sh "bin/jank"
                                       (-> (str "dev-resources/benchmark/" file)
@@ -44,22 +53,20 @@
         code (:exit result)]
     code))
 
-(def mapping {:tests tests
-              :fib-compile #(compile-file "fibonacci.jank")
-              :fib-run-40 #(run-file tmp-binary)
-              :empty-compile #(compile-file "empty.jank")
-              :empty-run #(run-file tmp-binary)})
+(def mapping {:tests (silently tests)
+              :fib-compile (silently compile-file "fibonacci.jank")
+              :fib-run-40 (silently run-file tmp-binary)
+              :empty-compile (silently compile-file "empty.jank")
+              :empty-run (silently run-file tmp-binary)})
 
 (defn run-all []
-  ; Ignore test output
-  (binding [*out* (new java.io.StringWriter)]
-    (for [[n f] mapping]
-      (let [results (crit/benchmark* f {:samples 10
-                                        :warmup-jit-period 100000 ; 100us
-                                        })
-            mean-sec (-> results :mean first)
-            mean-ms (* 1000 mean-sec)]
-        [n mean-ms]))))
+  (for [[n f] mapping]
+    (let [results (crit/benchmark* f {:samples 10
+                                      :warmup-jit-period 100000 ; 100us
+                                      })
+          mean-sec (-> results :mean first)
+          mean-ms (* 1000 mean-sec)]
+      [n mean-ms])))
 
 (defn timestamp []
   (c/to-long (t/now)))
