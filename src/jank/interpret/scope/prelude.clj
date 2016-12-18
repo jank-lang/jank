@@ -4,6 +4,7 @@
   (:use jank.assert
         jank.debug.log))
 
+; TODO: Have prelude functions take scope last
 (defn ignore-scope
   "Allows the easy wrapping of functions which will be interpreted and only
    care about the jank value arguments, not the scope."
