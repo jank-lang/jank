@@ -58,8 +58,8 @@ Functions are defined via the `function` (or `ƒ`) special identifier and requir
 ## Structs
 ```lisp
 (struct coord
-  (x real)
-  (y real))
+  (x :: real)
+  (y :: real))
 ```
 
 User-defined data types are supported, in the form of structs. Structs may contain any number of members, all of which are public (as in C). Structs may also be generic. Structs may not have member functions. Instead, functions should be designed in a generic manner and may be overloaded/specialized for certain types. See [generics](#generics). The compiler will make sure no members are uninitialized.
@@ -68,8 +68,8 @@ User-defined data types are supported, in the form of structs. Structs may conta
 Members of structs are accessed with a `.foo` syntax, where `.foo` is a function and `foo` is the field. An example:
 ```lisp
 (struct person
-  (first-name string)
-  (last-name string))
+  (first-name :: string)
+  (last-name :: string))
 
 (bind john (new : (person) "john" "doe"))
 (print! (.last-name john))
@@ -117,8 +117,8 @@ Definitions may be dependent on types. Such definitions may be functions or stru
 #### Struct
 ```lisp
 (struct coord : (:T-x :T-y)
-  (x T-x)
-  (y T-y))
+  (x :: T-x)
+  (y :: T-y))
 ```
 
 ### Variadics
@@ -138,8 +138,8 @@ Generic functions and types can be variadic, allowing any number of parameters, 
 ```lisp
 (; Use variadic type args as a form of policies. ;)
 (struct coord : (:T-component &T-policies)
-  (x T-component)
-  (y T-component))
+  (x :: T-component)
+  (y :: T-component))
 
 (; Builds a cartesian coordinate with an offset origin.
  ; All of this is built in to the coordinate's type.
@@ -161,7 +161,7 @@ easily be placed into the right namespace from any other namespace.
 ```lisp
 (ns foo/bar
   (struct score
-    (value integer)))
+    (value :: integer)))
 
 (ns /bar/spam
   (bind val -98.1))
@@ -177,7 +177,7 @@ Since constructors are the functions to actually create objects, not something t
 #### Example
 ```lisp
 (struct score
-  (value integer))
+  (value :: integer))
 
 (ƒ score (value) (∀)
   (print! "creating score: " value)
@@ -216,7 +216,7 @@ Constraints can be applied to various definitions, including functions and struc
 #### Structs
 ```lisp
 (struct coord : (:T) where (number? : T)
-  (data T))
+  (data :: T))
 ```
 
 ## Enums
@@ -231,13 +231,13 @@ Enums function as variant sum types; each variant can have its own type or simpl
 (; Unique types. ;)
 (enum character
   (struct digit
-    (value integer))
+    (value :: integer))
   (struct other))
 
 (; A generic enum of unique types. ;)
 (enum optional : (:T)
   (struct some
-    (value T))
+    (value :: T))
   (struct none))
 ```
 
