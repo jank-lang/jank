@@ -13,7 +13,7 @@
 (defn function-type
   [args rets]
   {:kind :type
-   :external? false
+   ;:external? false
    :value
    {:kind :identifier
     :name "ƒ"
@@ -29,7 +29,7 @@
   [fn-name fn-args fn-ret]
   ; TODO: Check for string or map
   {:kind :binding-declaration
-   :external? false
+   ;:external? false
    :name {:kind :identifier
           :name fn-name}
    :type (function-type (map type fn-args) [(type fn-ret)])})
