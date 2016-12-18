@@ -41,7 +41,7 @@
 (defn syntax-partition
   [size syntax]
   (assert (= 1 (count syntax)) "assuming single syntax")
-  (update-in syntax [0 :body] (partial partition 2)))
+  (update-in syntax [0 :body] (partial partition size)))
 
 ; TODO: Check prelude first, then check scope
 (defn create [check]
