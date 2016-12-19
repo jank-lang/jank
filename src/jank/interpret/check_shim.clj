@@ -6,35 +6,44 @@
   (:use jank.assert
         jank.debug.log))
 
-(defn unparse-item
-  "'Unparses' a single item, if it's a map, into a string."
-  [item]
-  (if (not (map? item))
-    item
-    (condp = (:kind item)
-      :syntax-list (str "(" (string/join " " (:body item)) ")")
-      :syntax-item (:value item)
-      :syntax-escaped-item (str "(escape " (:value item) ")")
-      :string (str "\"" (:value item) "\"")
-      :identifier (str (:name item))
-      (str (:value item)))))
-
-(defn unparse
-  "Walks the syntax definition and 'unparses' it back into a string."
-  [syntax-def]
-  (apply str (walk/postwalk unparse-item syntax-def)))
-
 (defn new-macro-scope
   "Returns a scope that's marked as being in a macro"
   [parent]
   (assoc (scope.util/new-empty parent)
          :in-macro? true))
 
+(declare unparse)
+
+(defn unparse-item
+  "'Unparses' a single item, if it's a map, into a string."
+  [item actual-check scope]
+  (if (not (map? item))
+    item
+    (condp = (:kind item)
+      :syntax-definition (:value item)
+      :syntax-list (str "(" (string/join " " (:body item)) ")")
+      :syntax-item (:value item)
+      :syntax-escaped-item (let [s (str "(escape " (:value item) ")")
+                                 parsed (parse/parse "" s)
+                                 checked (actual-check {:cells parsed}
+                                                       (new-macro-scope scope))
+                                 last-cell (-> checked :cells last)]
+                             (unparse (clean-scope last-cell) actual-check scope))
+      :string (str "\"" (:value item) "\"")
+      :identifier (str (:name item))
+      (str (:value item)))))
+
+(defn unparse
+  "Walks the syntax definition and 'unparses' it back into a string."
+  [syntax-def actual-check scope]
+  (apply str (walk/postwalk #(unparse-item % actual-check scope)
+                            (clean-scope syntax-def))))
+
 (defn check
   "Takes a syntax definition, converts it to a string, reparses it as normal
    code, and type checks it. Returns the checked body in a syntax definition."
   [scope actual-check syntax-def]
-  (let [unparsed (unparse syntax-def)
+  (let [unparsed (unparse syntax-def actual-check scope)
         ; Empty prelude, since the scope already includes it
         parsed (parse/parse "" unparsed)
         checked (actual-check {:cells parsed} ; TODO: Prevent usage of unescaped items in macro scope

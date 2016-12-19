@@ -43,6 +43,13 @@
   (assert (= 1 (count syntax)) "assuming single syntax")
   (update-in syntax [0 :body] (partial partition size)))
 
+(defn syntax-map
+  [f syntax]
+  (pprint "syntax" syntax)
+  (pprint "f" f)
+  (assert (= 1 (count syntax)) "assuming single syntax")
+  (update-in syntax [0 :body] (partial map f)))
+
 ; TODO: Check prelude first, then check scope
 (defn create [check]
   {{:name "print!"
@@ -59,7 +66,7 @@
     :argument-types [(fabricate/type "ast")]} wrapped-pprint
 
    {:name "string"
-    :argument-types [(fabricate/type "syntax")]} (ignore-scope check-shim/unparse)
+    :argument-types [(fabricate/type "syntax")]} #(check-shim/unparse %2 check %1)
 
    {:name "push-front"
     :argument-types (map fabricate/type (repeat 2 "syntax"))} (ignore-scope push-front)
@@ -89,5 +96,5 @@
    {:name "map"
     :argument-types [(fabricate/function-type [(fabricate/type "syntax")]
                                               [(fabricate/type "syntax")])
-                     (fabricate/type "syntax")]} (ignore-scope syntax-partition)
+                     (fabricate/type "syntax")]} (ignore-scope syntax-map)
    })

@@ -81,7 +81,7 @@
     (interpret-assert func (str "unknown function " signature))
     (let [result (apply func scope (map :interpreted-value arguments))]
       (assoc item
-             :interpreted-type ret-type
+             :interpreted-type ret-type ; TODO: Needed?
              :interpreted-value result
              :scope scope))))
 
