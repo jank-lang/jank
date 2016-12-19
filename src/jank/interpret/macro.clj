@@ -85,6 +85,12 @@
              :interpreted-value result
              :scope scope))))
 
+(defmethod evaluate-item :lambda-definition
+  [prelude item scope]
+  (assoc item
+         :interpreted-value item
+         :scope scope))
+
 (defmethod evaluate-item :primitive
   [prelude item scope]
   (assoc item
