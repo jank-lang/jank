@@ -15,7 +15,8 @@
 (declare unparse)
 
 (defn unparse-item
-  "'Unparses' a single item, if it's a map, into a string."
+  "'Unparses' a single item, if it's a map, into a string. Any syntax escape
+   items are evaluated and the result is emplaced and unparsed."
   [item actual-check scope]
   (if (not (map? item))
     item
