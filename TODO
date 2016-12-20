@@ -73,8 +73,6 @@ long-term macros should be predicative pattern matching
 
   how can I distinguish 'let' from a predicate? see racket's macros
 
-port to boot?
-
 better logging
   timbre (allows profiling, too)
 
