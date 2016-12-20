@@ -97,8 +97,6 @@ tests
   comments within forms
     including functions
   keywords
-  per-commit performance?
-    criterium benchmarking
   codegen
     returning an integer literal and a jank integer from an if should work
   code execution (functional tests)
