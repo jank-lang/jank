@@ -11,6 +11,7 @@ namespacing
   imports
   treat / in any identifier as namespacing
   allow cyclical dependencies!
+  require everything be in a namespace; only prelude exists in global ns
 
 basic stdlib (two layers: core and aux) -- core can run in kernel
   arithmetic, logic, bit ops
