@@ -4,8 +4,6 @@ adopt core.typed
 
 adopt clojure.spec
 
-tweak grammar to handle whitespace/comments properly
-
 address generic construction of items
   given a T and some args, how can I construct a T, passing the args to the ctor?
 
