@@ -4,8 +4,6 @@ adopt core.typed
 
 adopt clojure.spec
 
-tweak grammar to handle whitespace/comments properly
-
 address generic construction of items
   given a T and some args, how can I construct a T, passing the args to the ctor?
 
@@ -13,6 +11,7 @@ namespacing
   imports
   treat / in any identifier as namespacing
   allow cyclical dependencies!
+  require everything be in a namespace; only prelude exists in global ns
 
 basic stdlib (two layers: core and aux) -- core can run in kernel
   arithmetic, logic, bit ops
@@ -75,8 +74,6 @@ long-term macros should be predicative pattern matching
 
   how can I distinguish 'let' from a predicate? see racket's macros
 
-port to boot?
-
 better logging
   timbre (allows profiling, too)
 
@@ -101,8 +98,6 @@ tests
   comments within forms
     including functions
   keywords
-  per-commit performance?
-    criterium benchmarking
   codegen
     returning an integer literal and a jank integer from an if should work
   code execution (functional tests)
