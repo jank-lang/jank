@@ -112,7 +112,7 @@
   [prelude item scope]
   ; TODO
   (assoc item
-         :interpreted-value (:body item)
+         :interpreted-value item
          :scope scope))
 
 (defmethod evaluate-item :ast

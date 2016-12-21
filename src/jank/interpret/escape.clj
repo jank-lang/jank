@@ -17,7 +17,7 @@
         item-type (expression/realize-type item (:scope item))
         item-type-name (-> item-type :value :name keyword)]
     (cond
-      (= :syntax item-type-name) (last item-value)
+      (= :syntax item-type-name) item-value
       (type-declaration/built-ins item-type-name) {:kind :syntax-item
                                                    :value {:kind item-type-name
                                                            :value item-value}}

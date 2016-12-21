@@ -21,7 +21,7 @@
   (if (not (map? item))
     item
     (condp = (:kind item)
-      :syntax-definition (:value item)
+      :syntax-definition (apply str (:body item))
       :syntax-list (str "(" (string/join " " (:body item)) ")")
       :syntax-item (:value item)
       :syntax-escaped-item (let [s (str "(escape " (:value item) ")")
@@ -29,7 +29,7 @@
                                  checked (actual-check {:cells parsed}
                                                        (new-macro-scope scope))
                                  last-cell (-> checked :cells last)]
-                             (unparse (clean-scope last-cell) actual-check scope))
+                             (unparse last-cell actual-check scope))
       :string (str "\"" (:value item) "\"")
       :identifier (str (:name item))
       (str (:value item)))))
