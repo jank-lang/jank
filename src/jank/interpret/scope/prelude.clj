@@ -36,7 +36,7 @@
 
 (defn syntax-rest
   [syntax]
-  (rest syntax))
+  (update syntax :body subvec 1))
 
 (defn syntax-partition
   [size syntax]
