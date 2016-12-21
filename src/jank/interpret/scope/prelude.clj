@@ -28,11 +28,11 @@
 
 (defn syntax-first
   [syntax]
-  [(first syntax)])
+  (update syntax :body subvec 0 1))
 
 (defn syntax-second
   [syntax]
-  [(second syntax)])
+  (update syntax :body subvec 1 2))
 
 (defn syntax-rest
   [syntax]
