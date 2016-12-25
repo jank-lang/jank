@@ -18,8 +18,7 @@ real = #'[+-]?\d+\.\d*'
 <number> = (integer | real)
 
 <double-quote> = '\"'
-<not-double-quote> = #'[^\"]*'
-string = <double-quote> not-double-quote <double-quote>
+string = <double-quote> #'(?:[^"\\]|\\.)*' <double-quote>
 
 <identifier-text> = #'[^\s"()\d:][^\s"()]*'
 identifier = identifier-text generic-specialization?
