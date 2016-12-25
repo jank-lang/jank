@@ -8,11 +8,11 @@
 
 (def whitespace-or-comments-parser
   (insta/parser
-    (clojure.java.io/resource "whitespace-grammar")))
+    (slurp (clojure.java.io/resource "whitespace-grammar"))))
 
 (def parser
   (insta/parser
-    (clojure.java.io/resource "grammar")
+    (slurp (clojure.java.io/resource "grammar"))
     :auto-whitespace whitespace-or-comments-parser))
 
 (defn parse
