@@ -10,5 +10,6 @@
                 "escape/pass-escape-both"
                 "escape/pass-escape-close"
                 "escape/pass-escape-open"
-                "escape/pass-numbers"]]
+                "escape/pass-numbers"
+                "escape/pass-nested-quotes"]]
     (util/test-file (str "test/parse/string/" file))))
