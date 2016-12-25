@@ -13,8 +13,8 @@
                 "escape/pass-escape-open"
                 "pass-numbers"
                 "pass-nested-quotes"
-                "fail-unmatched-odd.jank"
-                "fail-unmatched.jank"
-                "pass-multi-line.jank"
-                "pass-unicode.jank"]]
+                "fail-unmatched-odd"
+                "fail-unmatched"
+                "pass-multi-line"
+                "pass-unicode"]]
     (util/test-file (str "test/parse/string/" file))))
