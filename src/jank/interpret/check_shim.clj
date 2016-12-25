@@ -30,7 +30,10 @@
                                                        (new-macro-scope scope))
                                  last-cell (-> checked :cells last)]
                              (unparse last-cell actual-check scope))
-      :string (str "\"" (:value item) "\"")
+      ; Any strings in the value built so far need to be escaped
+      :string (str "\""
+                   (clojure.string/replace (:value item) "\"" "\\\"")
+                   "\"")
       :identifier (str (:name item))
       (str (:value item)))))
 
