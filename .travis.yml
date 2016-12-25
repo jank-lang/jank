@@ -11,6 +11,10 @@ cache:
 script:
   - ./travis.sh
 
+after_success:
+- lein cloverage --codecov
+- bash <(curl -s https://codecov.io/bash) -f target/coverage/codecov.json
+
 notifications:
   email:
     on_success: change

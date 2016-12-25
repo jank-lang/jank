@@ -3,6 +3,7 @@
   :url "https://github.com/jeaye/jank"
   :license {:name "jank license"
             :url "https://upload.jeaye.com/jank-license"}
+  :plugins [[lein-cloverage "1.0.9"]]
   :dependencies [[org.clojure/clojure "1.9.0-alpha13"]
                  [instaparse "1.4.4"]
                  [org.clojure/core.logic "0.8.11"]
