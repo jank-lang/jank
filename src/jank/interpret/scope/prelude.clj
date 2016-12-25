@@ -20,11 +20,11 @@
 
 (defn push-front
   [dest source]
-  (into source dest))
+  (update dest :body (partial into (:body source))))
 
 (defn push-back
   [dest source]
-  (into dest source))
+  (update dest :body (into (:body source))))
 
 (defn syntax-first
   [syntax]
@@ -45,8 +45,6 @@
 
 (defn syntax-map
   [f syntax]
-  (pprint "syntax" syntax)
-  (pprint "f" f)
   (assert (= 1 (count syntax)) "assuming single syntax")
   (update-in syntax [0 :body] (partial map f)))
 
