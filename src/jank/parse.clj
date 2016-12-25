@@ -20,6 +20,7 @@
    then generated syntax tree."
   ([resource] (parse prelude resource))
   ([pre resource]
+   ;(pprint "parsing" (str pre resource))
    (let [parsed (parser (str pre resource))
          error (pr-str (insta/get-failure parsed))
          _ (parse-assert (not (insta/failure? parsed))
