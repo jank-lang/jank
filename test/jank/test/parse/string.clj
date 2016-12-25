@@ -10,6 +10,10 @@
                 "escape/pass-escape-both"
                 "escape/pass-escape-close"
                 "escape/pass-escape-open"
-                "escape/pass-numbers"
-                "escape/pass-nested-quotes"]]
+                "pass-numbers"
+                "pass-nested-quotes"
+                "fail-unmatched-odd.jank"
+                "fail-unmatched.jank"
+                "pass-multi-line.jank"
+                "pass-unicode.jank"]]
     (util/test-file (str "test/parse/string/" file))))
