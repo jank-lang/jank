@@ -2,6 +2,7 @@
   (:require [clojure.test :refer :all]
             [jank.test.parse.util :as util]))
 
+; TODO: Refactor into escape and normal tests
 (deftest string
   (doseq [file ["escape/pass-lots-of-unescaped-closes"
                 "escape/pass-unescaped-both"
