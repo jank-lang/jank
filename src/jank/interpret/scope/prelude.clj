@@ -73,8 +73,20 @@
 
    {:name "+"
     :argument-types (map fabricate/type (repeat 2 "integer"))} (ignore-scope +)
+   {:name "+"
+    :argument-types (map fabricate/type (repeat 2 "real"))} (ignore-scope +)
    {:name "-"
     :argument-types (map fabricate/type (repeat 2 "integer"))} (ignore-scope -)
+   {:name "-"
+    :argument-types (map fabricate/type (repeat 2 "real"))} (ignore-scope -)
+   {:name "*"
+    :argument-types (map fabricate/type (repeat 2 "integer"))} (ignore-scope *)
+   {:name "*"
+    :argument-types (map fabricate/type (repeat 2 "real"))} (ignore-scope *)
+   {:name "/"
+    :argument-types (map fabricate/type (repeat 2 "integer"))} (ignore-scope /)
+   {:name "/"
+    :argument-types (map fabricate/type (repeat 2 "real"))} (ignore-scope /)
 
    {:name "type-check"
     :argument-types [(fabricate/type "syntax")]} #(check-shim/check %1 check %2)
