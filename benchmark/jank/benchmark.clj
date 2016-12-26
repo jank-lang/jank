@@ -53,6 +53,7 @@
         code (:exit result)]
     code))
 
+; TODO: Add "tests" for line count and test count
 (def mapping {:tests (silently tests)
               :fib-compile (silently compile-file "fibonacci.jank")
               :fib-run-40 (silently run-file tmp-binary)
@@ -72,6 +73,7 @@
   (c/to-long (t/now)))
 
 (defn commit-timestamp []
+  ; TODO: This is broken, I think; test it
   (let [result (clojure.java.shell/sh "git" "log" "-1" "--date=raw")
         date-str (second (re-find #"Date:\s+(\d+)\s+" (:out result)))
         stamp (Integer/parseInt date-str)]
@@ -83,6 +85,7 @@
         results (into {} (run-all))
         data {:timestamp (timestamp)
               :commit-timestamp (commit-timestamp)
+              ; TODO: Stop putting these in each result; have the server run it instead
               :os-details os-details
               :runtime-details runtime-details
               :results results}]
