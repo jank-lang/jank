@@ -29,28 +29,28 @@
     stripped))
 
 (defn try-parse [file]
-  (consume-output
-    (parse/parse (slurp-resource file))))
+  (parse/parse (slurp-resource file)))
 
 (defn should-fail? [file]
   (some? (re-matches #".*/fail-.*" file)))
 
 (defn valid-parse? [file]
-  (try-parse file)
+  (consume-output (try-parse file))
   true)
 
 (defn try-type [file]
-  (consume-output
-    (type/check {:cells (try-parse file)})))
+  (type/check {:cells (try-parse file)}))
 
 (defn valid-type? [file]
-  (try-type file)
+  (consume-output (try-type file))
   true)
 
-(defn valid-interpret? [file]
+(defn try-interpret [file]
   (let [checked (try-type file)]
-    (consume-output
       (interpret/evaluate (interpret.scope.prelude/create type/check)
                           (:cells checked)
-                          (:scope checked)))
-    true))
+                          (:scope checked))))
+
+(defn valid-interpret? [file]
+  (consume-output (try-interpret file))
+  true)
