@@ -2,6 +2,8 @@
   (:require [clojure.test :refer :all]
             [jank.parse :as parse]
             [jank.type.check :as type]
+            [jank.interpret.macro :as interpret]
+            [jank.interpret.scope.prelude :as interpret.scope.prelude]
             [jank.codegen.c++ :as c++]
             [me.raynes.fs :as fs])
   (:use jank.debug.log))
@@ -26,7 +28,7 @@
                       matched)]
     stripped))
 
-(defn parse [file]
+(defn try-parse [file]
   (consume-output
     (parse/parse (slurp-resource file))))
 
@@ -34,10 +36,21 @@
   (some? (re-matches #".*/fail-.*" file)))
 
 (defn valid-parse? [file]
-  (parse file)
+  (try-parse file)
   true)
 
-(defn valid-type? [file]
+(defn try-type [file]
   (consume-output
-    (type/check {:cells (parse file)}))
+    (type/check {:cells (try-parse file)})))
+
+(defn valid-type? [file]
+  (try-type file)
   true)
+
+(defn valid-interpret? [file]
+  (let [checked (try-type file)]
+    (consume-output
+      (interpret/evaluate (interpret.scope.prelude/create type/check)
+                          (:cells checked)
+                          (:scope checked)))
+    true))

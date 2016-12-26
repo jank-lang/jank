@@ -202,8 +202,8 @@
         ; Macros may call back into the type checker, to process data into
         ; the AST. This cyclical relationship is intended and, to me, logical.
         (macro/evaluate (interpret.scope.prelude/create check)
-                          [item-with-return]
-                          (get-in item-with-return [:definition :scope]))
+                        [item-with-return]
+                        (get-in item-with-return [:definition :scope]))
         :cells
         ; Pull macro call out of cell wrapper
         first)))
