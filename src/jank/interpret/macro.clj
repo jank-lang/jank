@@ -129,6 +129,14 @@
                                     (evaluate-item prelude (:value item) scope)
                                     scope)))
 
+(defmethod evaluate-item :type-declaration
+  [prelude item scope]
+  (assoc item :scope scope))
+
+(defmethod evaluate-item :binding-declaration
+  [prelude item scope]
+  (assoc item :scope scope))
+
 (defmethod evaluate-item :default
   [prelude item scope]
   (interpret-assert false (str "no supported evaluation for '" item "'")))
