@@ -13,9 +13,9 @@
      (reload)
      (apply ~to-wrap args#)))
 
-(def-reload try-parse bootstrap/try-parse)
-(def-reload try-type bootstrap/try-type)
-(def-reload try-interpret bootstrap/try-interpret)
+(def-reload parse bootstrap/try-parse)
+(def-reload type-check bootstrap/try-type-check)
+(def-reload interpret bootstrap/try-interpret)
 
 (defn run
   "Analogous to lein run; start jank with the specified args"
@@ -28,7 +28,6 @@
   ([file & args]
    (reload)
    (apply parse/parses (slurp file) args)))
-
 
 (defn -main [& args]
   (apply run args))

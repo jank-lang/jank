@@ -38,7 +38,7 @@
   (consume-output (try-parse file))
   true)
 
-(defn try-type [file]
+(defn try-type-check [file]
   (type/check {:cells (try-parse file)}))
 
 (defn valid-type? [file]
@@ -46,7 +46,7 @@
   true)
 
 (defn try-interpret [file]
-  (let [checked (try-type file)]
+  (let [checked (try-type-check file)]
       (interpret/evaluate (interpret.scope.prelude/create type/check)
                           (:cells checked)
                           (:scope checked))))
