@@ -1,14 +1,16 @@
 (ns jank.test.parse.util
   (:require [clojure.test :refer :all]
-            [jank.test.bootstrap :refer :all :refer-macros :all]))
+            [jank.test.bootstrap :as bootstrap]))
 
 (def error #"parse error:")
 
-(defn test-file [file]
-  (let [full-file (str file ".jank")]
-    (println "[parse] testing" full-file)
-    (if (should-fail? full-file)
-      (is (thrown-with-msg? AssertionError
-                            error
-                            (valid-parse? full-file)))
-      (is (valid-parse? full-file)))))
+(defn test-files [path excludes]
+  (println "[parse] Gathering files...")
+  (let [files (bootstrap/files path excludes)]
+    (doseq [file files]
+      (println "[parse] testing" file)
+      (if (bootstrap/should-fail? file)
+        (is (thrown-with-msg? AssertionError
+                              error
+                              (bootstrap/valid-parse? file)))
+        (is (bootstrap/valid-parse? file))))))
