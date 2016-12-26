@@ -1,7 +1,8 @@
 (ns jank.dev
   (:gen-class)
   (:require [jank.core :as core]
-            [jank.parse :as parse]))
+            [jank.parse :as parse]
+            [jank.test.bootstrap :as bootstrap :refer :all]))
 
 (defn reload []
   (use 'jank.dev :reload-all))
