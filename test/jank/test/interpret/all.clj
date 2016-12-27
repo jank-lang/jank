@@ -4,7 +4,7 @@
 
 (deftest all
   (util/test-files
-    "dev-resources/test/type/"
+    "dev-resources/test/type-interpret/"
     [; TODO: Generics
      #".*declaration/type/fail-invalid-generic.*"
      #".*declaration/type/pass-generic.*"

@@ -2,9 +2,14 @@
   (:require [clojure.test :refer :all]
             [jank.test.type.util :as util]))
 
-(deftest all
+(deftest specific
   (util/test-files
     "dev-resources/test/type/"
+    []))
+
+(deftest all
+  (util/test-files
+    "dev-resources/test/type-interpret/"
     [; TODO: Generics
      #".*declaration/type/fail-invalid-generic.*"
      #".*declaration/type/pass-generic.*"
