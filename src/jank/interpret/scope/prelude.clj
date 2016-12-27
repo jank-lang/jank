@@ -14,6 +14,14 @@
 
 (def wrapped-pprint (ignore-scope pprint))
 
+(defn assert!
+  ([condition] (assert! condition "user assertion failed"))
+  ([condition message] (interpret-assert condition message)))
+
+(defn assert-unreachable!
+  ([] (assert-unreachable! "unreachable code reached"))
+  ([message] (assert! false message)))
+
 (defn emplace
   [scope ast syntax]
   (update ast :emplaced #(into % (:cells syntax))))
@@ -40,12 +48,12 @@
 
 (defn syntax-partition
   [size syntax]
-  (assert (= 1 (count syntax)) "assuming single syntax")
+  (interpret-assert (= 1 (count syntax)) "assuming single syntax")
   (update-in syntax [0 :body] (partial partition size)))
 
 (defn syntax-map
   [f syntax]
-  (assert (= 1 (count syntax)) "assuming single syntax")
+  (interpret-assert (= 1 (count syntax)) "assuming single syntax")
   (update-in syntax [0 :body] (partial map f)))
 
 ; TODO: Check prelude first, then check scope
@@ -62,6 +70,15 @@
     :argument-types [(fabricate/type "syntax")]} wrapped-pprint
    {:name "print!"
     :argument-types [(fabricate/type "ast")]} wrapped-pprint
+
+   {:name "assert!"
+    :argument-types (map fabricate/type ["boolean" "string"])} (ignore-scope assert!)
+   {:name "assert!"
+    :argument-types [(fabricate/type "boolean")]} (ignore-scope assert!)
+   {:name "assert-unreachable!"
+    :argument-types []} (ignore-scope assert-unreachable!)
+   {:name "assert-unreachable!"
+    :argument-types [(fabricate/type "string")]} (ignore-scope assert-unreachable!)
 
    {:name "string"
     :argument-types [(fabricate/type "syntax")]} #(check-shim/unparse %2 check %1)
