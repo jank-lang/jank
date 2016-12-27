@@ -6,11 +6,8 @@
 (def lookup (partial util/lookup #(get (:interpreted-values %2) %1)))
 
 (defn add-to-scope
-  [item-name value scope]
-  (let [source-path (util/path #((:binding-declarations %2) %1) item-name scope)
-        dest-path [:interpreted-values item-name]]
-    (internal-assert (some? source-path)
-                     (str "no path found for item " item-name))
+  [item-name item-type value scope]
+  (let [dest-path [:interpreted-values item-name item-type]]
     (internal-assert (nil? (get-in scope dest-path))
                      (str "interpreted value already exists for " item-name))
     (assoc-in scope dest-path value)))
