@@ -2,6 +2,7 @@
   (:require [jank.parse.fabricate :as fabricate]
             [jank.type.scope.type-declaration :as type-declaration]
             [jank.type.expression :as expression]
+            [jank.type.scope.util :as scope.util]
             [jank.interpret.scope.prelude :as prelude]
             [jank.interpret.scope.value :as value])
   (:use jank.assert
@@ -66,7 +67,8 @@
 
 (defmethod evaluate-item :function-call
   [prelude item scope]
-  (let [signature {:name (-> item :name :name)
+  (let [fn-name (-> item :name :name)
+        signature {:name fn-name
                    :argument-types (map (comp type-declaration/strip
                                               #(expression/realize-type % (:scope item)))
                                         (:arguments item))}
@@ -77,13 +79,52 @@
                      :generics :values last :values first)
         func (if-let [f (prelude signature)]
                f
-               (not-yet-implemented interpret-assert "non-prelude functions"))]
+               ; TODO: Same code as identifier lookup
+               (let [overloads (value/lookup fn-name scope)
+                     item-type (expression/call-signature item scope)
+                     matched (get overloads (type-declaration/strip item-type))]
+                 (internal-assert matched (str "unable to find value for " item))
+                 ; TODO: Refactor this into a proper function
+                 (fn [& args]
+                   ; The new scope needs to be based on the scope of lambda body
+                   (let [empty-scope (scope.util/new-empty (-> matched :body first :scope))
+                         add-to-scope (fn [acc-scope [item-name item-type item-value]]
+                                        (value/add-to-scope item-name
+                                                            item-type
+                                                            item-value
+                                                            acc-scope))
+                         argument-names (filter #(= (:kind %) :identifier)
+                                                (-> matched :arguments :values))
+                         name-type-values (map vector
+                                               (map :name argument-names)
+                                               (:argument-types signature)
+                                               arguments)
+                         new-scope (reduce add-to-scope empty-scope name-type-values)
+                         ; TODO: The matched scope doesn't have argument names like it should
+                         result (evaluate prelude (:body matched) new-scope)]
+                     (-> (:cells result)
+                         last
+                         :interpreted-value
+                         :interpreted-value)))))]
     (interpret-assert func (str "unknown function " signature))
     (let [result (apply func scope (map :interpreted-value arguments))]
       (assoc item
-             :interpreted-type ret-type ; TODO: Needed?
              :interpreted-value result
              :scope scope))))
+
+(defmethod evaluate-item :if-expression
+  [prelude item scope]
+  (let [cond-expr (-> item :condition :value)
+        cond-value (evaluate-item prelude cond-expr scope)
+        then (-> item :then :value)
+        else (-> item :else :value)]
+    (assoc item
+           :interpreted-value (-> (if (:interpreted-value cond-value)
+                                    (evaluate-item prelude then scope)
+                                    (when else
+                                      (evaluate-item prelude else scope)))
+                                  :interpreted-value)
+           :scope scope)))
 
 (defmethod evaluate-item :lambda-definition
   [prelude item scope]
@@ -99,8 +140,11 @@
 
 (defmethod evaluate-item :identifier
   [prelude item scope]
-  ; TODO: If value hasn't been evaluated (may be a def), do so
-  (value/lookup (:name item) scope))
+  (let [overloads (value/lookup (:name item) scope)
+        item-type (expression/realize-type item scope)
+        matched (get overloads (type-declaration/strip item-type))]
+    (internal-assert matched (str "unable to find value for " item))
+    matched))
 
 (defmethod evaluate-item :return
   [prelude item scope]
@@ -126,6 +170,7 @@
   [prelude item scope]
   (assoc item
          :scope (value/add-to-scope (-> item :name :name)
+                                    (type-declaration/strip (:type item))
                                     (evaluate-item prelude (:value item) scope)
                                     scope)))
 
