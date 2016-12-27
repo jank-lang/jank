@@ -42,7 +42,7 @@
   (type/check {:cells (try-parse file)}))
 
 (defn valid-type? [file]
-  (consume-output (try-type file))
+  (consume-output (try-type-check file))
   true)
 
 (defn try-interpret [file]
