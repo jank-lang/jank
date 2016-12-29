@@ -102,7 +102,8 @@
     (let [updated-last (add-explicit-returns (last body) scope)]
       (assoc item :values (concat (butlast body)
                                   [{:kind :return
-                                    :value updated-last}])))))
+                                    :value updated-last
+                                    :scope scope}])))))
 
 (defmethod add-explicit-returns :default
   [item scope]
