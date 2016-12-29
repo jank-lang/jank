@@ -35,12 +35,14 @@
                (conj path :parent)))
       nil)))
 
+(def id-counter (atom 0))
 (defn new-empty
-  "Builds an empty type scope."
+  "Builds an empty type scope with a unique id."
   ([]
    (new-empty nil))
   ([parent]
    {:parent parent
+    :id (swap! id-counter inc)
     :macro-definitions {}
     :binding-declarations {}
     :binding-definitions {}
