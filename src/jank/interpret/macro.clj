@@ -21,7 +21,6 @@
 
 (defn evaluate
   [prelude body scope]
-  ; TODO: Return value of last form?
   (reduce #(let [item (evaluate-item prelude %2 (:scope %1))]
              (assoc %1
                     :cells (conj (:cells %1) item)
@@ -87,6 +86,7 @@
                  ; TODO: Refactor this into a proper function
                  (fn [& args]
                    ; The new scope needs to be based on the scope of lambda body
+                   ; TODO: This new-scope doesn't have any interpreted values from the current scope
                    (let [empty-scope (scope.util/new-empty (-> matched :body first :scope))
                          add-to-scope (fn [acc-scope [item-name item-type item-value]]
                                         (value/add-to-scope item-name
@@ -180,6 +180,11 @@
 
 (defmethod evaluate-item :binding-declaration
   [prelude item scope]
+  (assoc item :scope scope))
+
+(defmethod evaluate-item :struct-definition
+  [prelude item scope]
+  ; TODO: Add member function definitions to scope
   (assoc item :scope scope))
 
 (defmethod evaluate-item :default
