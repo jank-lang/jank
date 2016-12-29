@@ -5,7 +5,9 @@
 (deftest all
   (util/test-files
     "dev-resources/test/type-interpret/"
-    [; TODO: Structs
+    [; TODO: All
+     #".*"
+     ; TODO: Structs
      #".*struct.*"
      ; TODO: New expressions
      #".*new/.*"
