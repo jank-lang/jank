@@ -5,7 +5,12 @@
 (deftest all
   (util/test-files
     "dev-resources/test/type-interpret/"
-    [; TODO: Generics
+    [; TODO: Structs
+     #".*struct.*"
+     ; TODO: New expressions
+     #".*new/.*"
+
+     ; TODO: Generics
      #".*declaration/type/fail-invalid-generic.*"
      #".*declaration/type/pass-generic.*"
      #".*declaration/type/pass-generic-multiple.*"
