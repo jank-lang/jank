@@ -1,11 +1,6 @@
 (bind foo string "string")
 
 (bind num real 3.14)
-(bind num_copy real num)
+(bind num-copy real num)
 
-(declare some-type)
-(declare make-some-type ƒ : (() (some-type)))
-(bind flarb some-type (make-some-type))
-
-(declare * ƒ : ((real real) (real)))
-(bind mult_num real (* num_copy 2.0))
+(bind mult-num real (* num-copy 2.0))

@@ -1,4 +1,7 @@
-(declare some-bool ƒ : (() (boolean)))
+(bind some-bool
+  (λ () (∀)
+    (print! "some-bool")
+    false))
 
 (if (some-bool)
   (print! "good"))
