@@ -5,7 +5,8 @@
 (deftest specific
   (util/test-files
     "dev-resources/test/type/"
-    []))
+    [; TODO: Lambda identifiers
+     #".*lambda/first-class/pass-return-lambda.*"]))
 
 (deftest all
   (util/test-files
@@ -20,7 +21,6 @@
      #".*struct/fail-member-function-declaration-incorrect.*"
      #".*struct/fail-extern-declaration.*"
      ; TODO: Lambda identifiers
-     #".*lambda/first-class/pass-return-lambda.*"
      #".*lambda/deduce/pass-with-unicode.*"
      ; TODO: Superpositions
      #".*lambda/superposition/pass-lazy.*"
