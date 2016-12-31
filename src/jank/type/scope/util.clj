@@ -4,7 +4,9 @@
 
 (defn lookup
   "Recursively looks through the hierarchy of scopes for the item.
-   Returns the first item found in the closest scope, not all."
+   Returns the first item found in the closest scope, not all.
+   Calls the finder with the current scope, moving up the hierarchy, and the
+   item-name."
   [finder item-name scope]
   (loop [current-scope scope]
     (when current-scope
@@ -14,7 +16,9 @@
 
 (defn lookup-all
   "Recursively looks through the hierarchy of scopes for the item.
-   Returns all matching items in all scopes, from closest to furthest."
+   Returns all matching items in all scopes, from closest to furthest.
+   Calls the finder with the current scope, moving up the hierarchy, and the
+   item-name."
   [finder item-name scope]
   (loop [current-scope scope
          all []]
