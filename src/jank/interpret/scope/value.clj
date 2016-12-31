@@ -18,7 +18,7 @@
 (defn lookup
   ; TODO: Document
   ([item-name item-type scope scope-values]
-   (get (lookup item-name scope-values) item-type))
+   (get (lookup item-name scope scope-values) item-type))
   ([item-name scope scope-values]
    (util/lookup (fn [_ cur-scope]
                   (get scope-values (name-id item-name cur-scope)))
