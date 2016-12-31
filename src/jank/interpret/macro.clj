@@ -160,9 +160,10 @@
 
 (defmethod evaluate-item :identifier
   [prelude item scope scope-values]
-  (let [overloads (value/lookup (:name item) scope scope-values)
-        item-type (expression/realize-type item scope)
-        matched (get overloads (type-declaration/strip item-type))]
+  (let [item-type (expression/realize-type item scope)
+        matched (value/lookup (:name item)
+                              (type-declaration/strip item-type)
+                              scope scope-values)]
     (internal-assert matched (str "unable to find value for " item))
     matched))
 

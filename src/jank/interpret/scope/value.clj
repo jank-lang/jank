@@ -17,13 +17,12 @@
 
 (defn lookup
   ; TODO: Document
-  ([item-name item-type scope scope-values]
-   (get (lookup item-name scope scope-values) item-type))
-  ([item-name scope scope-values]
-   (util/lookup (fn [_ cur-scope]
-                  (get scope-values (name-id item-name cur-scope)))
-                :ignored
-                scope)))
+  [item-name item-type scope scope-values]
+  (util/lookup (fn [_ cur-scope]
+                 (get-in scope-values [(name-id item-name cur-scope)
+                                       item-type]))
+               :ignored
+               scope))
 
 (defn add-to-scope
   [item-name item-type value scope scope-values]
