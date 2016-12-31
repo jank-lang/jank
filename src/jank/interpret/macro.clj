@@ -106,9 +106,10 @@
                                   (str "unable to find value for " fn-name))
                  ; TODO: Refactor this into a proper function
                  (fn [& args]
-                   ; The new scope needs to be based on the scope of lambda body
-                   (let [body-scope (-> matched :body first :scope)
-                         add-to-scope (fn [acc-values [item-name item-type item-value scope]]
+                   ; The body's last item knows about all previous items, which
+                   ; could be binds or other bits which change the scope.
+                   (let [body-scope (-> matched :body last :scope)
+                         add-to-scope (fn [acc-values [item-name item-type item-value]]
                                         (value/add-to-scope item-name item-type item-value
                                                             body-scope acc-values))
                          argument-names (filter #(= (:kind %) :identifier)

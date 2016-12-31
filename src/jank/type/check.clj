@@ -183,7 +183,6 @@
 
 (defmethod check-item :macro-call
   [item scope]
-  ; TODO
   (let [definition (:definition item)
         new-scope (scope.util/new-empty scope) ; XXX: Scope from call site, not definition
         checked-args (check-item (assoc (:arguments definition)
