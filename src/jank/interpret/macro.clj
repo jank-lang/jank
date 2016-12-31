@@ -102,7 +102,8 @@
                                              (type-declaration/strip item-type)
                                              scope scope-values)
                                (:name item))]
-                 (internal-assert matched (str "unable to find value for " fn-name))
+                 (internal-assert matched
+                                  (str "unable to find value for " fn-name))
                  ; TODO: Refactor this into a proper function
                  (fn [& args]
                    ; The new scope needs to be based on the scope of lambda body
