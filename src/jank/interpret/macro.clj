@@ -169,8 +169,9 @@
 (defmethod evaluate-item :return
   [prelude item scope scope-values]
   (assoc item
-         :interpreted-value (evaluate-item prelude (:value item)
-                                           scope scope-values)
+         :interpreted-value (when-let [value (:value item)]
+                              (evaluate-item prelude value
+                                             scope scope-values))
          :scope scope))
 
 (defmethod evaluate-item :syntax-definition
