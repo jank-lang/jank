@@ -74,48 +74,57 @@
         (assoc-in [:definition :body] (:cells body))
         (assoc-in [:definition :scope] (:scope body)))))
 
+; TODO: Relocate to a new home
+(defn prelude-signature [fn-name fn-signature]
+  (let [argument-types (-> fn-signature :generics :values first :values)]
+    {:name fn-name
+     :argument-types argument-types}))
+
 (defmethod evaluate-item :function-call
   [prelude item scope scope-values]
-  (let [fn-name (-> item :name :name)
-        signature {:name fn-name
-                   :argument-types (map (comp type-declaration/strip
-                                              #(expression/realize-type % (:scope item)))
-                                        (:arguments item))}
-        arguments (map #(evaluate-item prelude %
-                                       scope scope-values)
-                       (:arguments item))
+  (let [named? (= :identifier (:kind (:name item)))
+        fn-name (when named?
+                  (-> item :name :name))
+        fn-signature (-> item :signature :value)
+        prelude-signature (prelude-signature fn-name fn-signature)
+        evaluated-arguments (map #(evaluate-item prelude %
+                                                 scope scope-values)
+                                 (:arguments item))
         ; TODO: Add an easy accessor for things like return type
-        ret-type (-> item
-                     :signature :value
-                     :generics :values last :values first)
-        func (if-let [f (prelude signature)]
+        ret-type (-> fn-signature :generics :values last :values first)
+        func (if-let [f (prelude prelude-signature)]
                f
-               ; TODO: Same code as identifier lookup
-               (let [overloads (value/lookup fn-name scope scope-values)
-                     item-type (expression/call-signature item scope)
-                     matched (get overloads (type-declaration/strip item-type))]
-                 (internal-assert matched (str "unable to find value for " item))
+               (let [item-type (expression/call-signature item scope)
+                     ; The name can be a lambda definition itself, if invoked
+                     ; directly.
+                     matched (if named?
+                               (value/lookup fn-name
+                                             (type-declaration/strip item-type)
+                                             scope scope-values)
+                               (:name item))]
+                 (internal-assert matched (str "unable to find value for " fn-name))
                  ; TODO: Refactor this into a proper function
                  (fn [& args]
                    ; The new scope needs to be based on the scope of lambda body
                    (let [body-scope (-> matched :body first :scope)
                          add-to-scope (fn [acc-values [item-name item-type item-value scope]]
                                         (value/add-to-scope item-name item-type item-value
-                                                            scope acc-values))
+                                                            body-scope acc-values))
                          argument-names (filter #(= (:kind %) :identifier)
                                                 (-> matched :arguments :values))
                          name-type-values (map vector
                                                (map :name argument-names)
-                                               (:argument-types signature)
-                                               arguments)
+                                               (:argument-types prelude-signature)
+                                               evaluated-arguments)
                          new-values (reduce add-to-scope scope-values name-type-values)
                          result (evaluate prelude (:body matched) body-scope new-values)]
                      (-> (:cells result)
                          last
                          :interpreted-value
                          :interpreted-value)))))]
-    (interpret-assert func (str "unknown function " signature))
-    (let [result (apply func scope (map :interpreted-value arguments))]
+    (interpret-assert func (str "unknown function " prelude-signature))
+    ; TODO: Send scope-values into prelude functions
+    (let [result (apply func scope (map :interpreted-value evaluated-arguments))]
       (assoc item
              :interpreted-value result
              :scope scope))))
