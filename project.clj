@@ -13,6 +13,7 @@
   :profiles {:uberjar {:aot :all}
              :dev {:source-paths ["dev/"]
                    :main jank.dev}
+             :coverage {:resource-paths ["dev-resources/"]}
              :benchmark {:dependencies [[criterium "0.4.4"]
                                         [clj-time "0.13.0"]]
                          :source-paths ["benchmark/"]
