@@ -13,7 +13,6 @@
 (defn function-type
   [args rets]
   {:kind :type
-   ;:external? false
    :value
    {:kind :identifier
     :name "ƒ"

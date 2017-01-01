@@ -56,72 +56,125 @@
   (interpret-assert (= 1 (count syntax)) "assuming single syntax")
   (update-in syntax [0 :body] (partial map f)))
 
-; TODO: Check prelude first, then check scope
 (defn create [check]
   {{:name "print!"
-    :argument-types [(fabricate/type "string")]} wrapped-pprint
+    :type (fabricate/function-type
+            [(fabricate/type "string")]
+            [(fabricate/type "string")])} wrapped-pprint
    {:name "print!"
-    :argument-types [(fabricate/type "integer")]} wrapped-pprint
+    :type (fabricate/function-type
+            [(fabricate/type "integer")]
+            [(fabricate/type "string")])} wrapped-pprint
    {:name "print!"
-    :argument-types [(fabricate/type "real")]} wrapped-pprint
+    :type (fabricate/function-type
+            [(fabricate/type "real")]
+            [(fabricate/type "string")])} wrapped-pprint
    {:name "print!"
-    :argument-types [(fabricate/type "boolean")]} wrapped-pprint
+    :type (fabricate/function-type
+            [(fabricate/type "boolean")]
+            [(fabricate/type "string")])} wrapped-pprint
    {:name "print!"
-    :argument-types [(fabricate/type "syntax")]} wrapped-pprint
+    :type (fabricate/function-type
+            [(fabricate/type "syntax")]
+            [(fabricate/type "string")])} wrapped-pprint
    {:name "print!"
-    :argument-types [(fabricate/type "ast")]} wrapped-pprint
+    :type (fabricate/function-type
+            [(fabricate/type "ast")]
+            [(fabricate/type "string")])} wrapped-pprint
 
    {:name "assert!"
-    :argument-types (map fabricate/type ["boolean" "string"])} (ignore-scope assert!)
+    :type (fabricate/function-type
+            (map fabricate/type ["boolean" "string"])
+            [])} (ignore-scope assert!)
    {:name "assert!"
-    :argument-types [(fabricate/type "boolean")]} (ignore-scope assert!)
+    :type (fabricate/function-type
+            [(fabricate/type "boolean")]
+            [])} (ignore-scope assert!)
    {:name "assert-unreachable!"
-    :argument-types []} (ignore-scope assert-unreachable!)
+    :type (fabricate/function-type [] [])} (ignore-scope assert-unreachable!)
    {:name "assert-unreachable!"
-    :argument-types [(fabricate/type "string")]} (ignore-scope assert-unreachable!)
+    :type (fabricate/function-type
+            [(fabricate/type "string")]
+            [])} (ignore-scope assert-unreachable!)
 
    {:name "string"
-    :argument-types [(fabricate/type "syntax")]} #(check-shim/unparse %2 check %1)
+    :type (fabricate/function-type
+            [(fabricate/type "syntax")]
+            [(fabricate/type "string")])} #(check-shim/unparse %2 check %1)
 
    {:name "push-front"
-    :argument-types (map fabricate/type (repeat 2 "syntax"))} (ignore-scope push-front)
+    :type (fabricate/function-type
+            (map fabricate/type (repeat 2 "syntax"))
+            [(fabricate/type "syntax")])} (ignore-scope push-front)
    {:name "push-back"
-    :argument-types (map fabricate/type (repeat 2 "syntax"))} (ignore-scope push-back)
+    :type (fabricate/function-type
+            (map fabricate/type (repeat 2 "syntax"))
+            [(fabricate/type "syntax")])} (ignore-scope push-back)
 
    {:name "+"
-    :argument-types (map fabricate/type (repeat 2 "integer"))} (ignore-scope +)
+    :type (fabricate/function-type
+            (map fabricate/type (repeat 2 "integer"))
+            [(fabricate/type "integer")])} (ignore-scope +)
    {:name "+"
-    :argument-types (map fabricate/type (repeat 2 "real"))} (ignore-scope +)
+    :type (fabricate/function-type
+            (map fabricate/type (repeat 2 "real"))
+            [(fabricate/type "real")])} (ignore-scope +)
    {:name "-"
-    :argument-types (map fabricate/type (repeat 2 "integer"))} (ignore-scope -)
+    :type (fabricate/function-type
+            (map fabricate/type (repeat 2 "integer"))
+            [(fabricate/type "integer")])} (ignore-scope -)
    {:name "-"
-    :argument-types (map fabricate/type (repeat 2 "real"))} (ignore-scope -)
+    :type (fabricate/function-type
+            (map fabricate/type (repeat 2 "real"))
+            [(fabricate/type "real")])} (ignore-scope -)
    {:name "*"
-    :argument-types (map fabricate/type (repeat 2 "integer"))} (ignore-scope *)
+    :type (fabricate/function-type
+            (map fabricate/type (repeat 2 "integer"))
+            [(fabricate/type "integer")])} (ignore-scope *)
    {:name "*"
-    :argument-types (map fabricate/type (repeat 2 "real"))} (ignore-scope *)
+    :type (fabricate/function-type
+            (map fabricate/type (repeat 2 "real"))
+            [(fabricate/type "real")])} (ignore-scope *)
    {:name "/"
-    :argument-types (map fabricate/type (repeat 2 "integer"))} (ignore-scope /)
+    :type (fabricate/function-type
+            (map fabricate/type (repeat 2 "integer"))
+            [(fabricate/type "integer")])} (ignore-scope /)
    {:name "/"
-    :argument-types (map fabricate/type (repeat 2 "real"))} (ignore-scope /)
+    :type (fabricate/function-type
+            (map fabricate/type (repeat 2 "real"))
+            [(fabricate/type "real")])} (ignore-scope /)
 
    {:name "type-check"
-    :argument-types [(fabricate/type "syntax")]} #(check-shim/check %1 check %2)
+    :type (fabricate/function-type
+            [(fabricate/type "syntax")]
+            [(fabricate/type "syntax")])} #(check-shim/check %1 check %2)
    {:name "emplace"
-    :argument-types (map fabricate/type ["ast" "checked-syntax"])} emplace
+    :type (fabricate/function-type
+            (map fabricate/type ["ast" "checked-syntax"])
+            [(fabricate/type "ast")])} emplace
 
    {:name "first"
-    :argument-types [(fabricate/type "syntax")]} (ignore-scope syntax-first)
+    :type (fabricate/function-type
+            [(fabricate/type "syntax")]
+            [(fabricate/type "syntax")])} (ignore-scope syntax-first)
    {:name "second"
-    :argument-types [(fabricate/type "syntax")]} (ignore-scope syntax-second)
+    :type (fabricate/function-type
+            [(fabricate/type "syntax")]
+            [(fabricate/type "syntax")])} (ignore-scope syntax-second)
    {:name "rest"
-    :argument-types [(fabricate/type "syntax")]} (ignore-scope syntax-rest)
+    :type (fabricate/function-type
+            [(fabricate/type "syntax")]
+            [(fabricate/type "syntax")])} (ignore-scope syntax-rest)
 
    {:name "partition"
-    :argument-types (map fabricate/type ["integer" "syntax"])} (ignore-scope syntax-partition)
+    :type (fabricate/function-type
+            (map fabricate/type ["integer" "syntax"])
+            [(fabricate/type "syntax")])} (ignore-scope syntax-partition)
 
    {:name "map"
-    :argument-types [(fabricate/function-type [(fabricate/type "syntax")]
-                                              [(fabricate/type "syntax")])
-                     (fabricate/type "syntax")]} (ignore-scope syntax-map)
+    :type (fabricate/function-type
+            [(fabricate/function-type [(fabricate/type "syntax")]
+                                      [(fabricate/type "syntax")])
+             (fabricate/type "syntax")]
+            [(fabricate/type "syntax")])} (ignore-scope syntax-map)
    })

@@ -74,28 +74,23 @@
         (assoc-in [:definition :body] (:cells body))
         (assoc-in [:definition :scope] (:scope body)))))
 
-; TODO: Relocate to a new home
-(defn prelude-signature [fn-name fn-signature]
-  (let [argument-types (-> fn-signature :generics :values first :values)]
-    {:name fn-name
-     :argument-types argument-types}))
-
 (defmethod evaluate-item :function-call
   [prelude item scope scope-values]
   (let [named? (= :identifier (:kind (:name item)))
         fn-name (when named?
                   (-> item :name :name))
         fn-signature (-> item :signature :value)
-        prelude-signature (prelude-signature fn-name fn-signature)
+        item-type (-> (expression/call-signature item scope)
+                      type-declaration/strip)
+        prelude-type {:name fn-name :type item-type}
         evaluated-arguments (map #(evaluate-item prelude %
                                                  scope scope-values)
                                  (:arguments item))
         ; TODO: Add an easy accessor for things like return type
         ret-type (-> fn-signature :generics :values last :values first)
-        func (if-let [f (prelude prelude-signature)]
+        func (if-let [f (prelude prelude-type)]
                f
-               (let [item-type (expression/call-signature item scope)
-                     ; The name can be a lambda definition itself, if invoked
+               (let [; The name can be a lambda definition itself, if invoked
                      ; directly.
                      matched (if named?
                                (value/lookup fn-name
@@ -114,9 +109,10 @@
                                                             body-scope acc-values))
                          argument-names (filter #(= (:kind %) :identifier)
                                                 (-> matched :arguments :values))
+                         argument-types (-> fn-signature :generics :values first :values)
                          name-type-values (map vector
                                                (map :name argument-names)
-                                               (:argument-types prelude-signature)
+                                               argument-types
                                                evaluated-arguments)
                          new-values (reduce add-to-scope scope-values name-type-values)
                          result (evaluate prelude (:body matched) body-scope new-values)]
@@ -124,7 +120,7 @@
                          last
                          :interpreted-value
                          :interpreted-value)))))]
-    (interpret-assert func (str "unknown function " prelude-signature))
+    (interpret-assert func (str "unknown function " fn-name))
     ; TODO: Send scope-values into prelude functions
     (let [result (apply func scope (map :interpreted-value evaluated-arguments))]
       (assoc item

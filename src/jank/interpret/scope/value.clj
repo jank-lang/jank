@@ -3,11 +3,6 @@
   (:use jank.assert
         jank.debug.log))
 
-; TODO: Rework how values are stored
-; 1. give each new-scope an id, from incrementing an atom
-; 2. store values in a map of name and id to map of types to values
-; 3. pass value map and type scope as separate items
-
 (defn new-empty []
   {})
 
