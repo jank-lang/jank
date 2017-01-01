@@ -36,6 +36,30 @@
             :scope-values scope-values}
            body)))
 
+(defn wrap-evaluate [prelude matched fn-signature scope-values]
+  (fn [& evaluated-arguments]
+    ; The body's last item knows about all previous items, which
+    ; could be binds or other bits which change the scope.
+    (let [body-scope (-> matched :body last :scope)
+          add-to-scope (fn [acc-values [item-name item-type item-value]]
+                         (value/add-to-scope item-name item-type item-value
+                                             body-scope acc-values))
+          argument-names (filter #(= (:kind %) :identifier)
+                                 (-> matched :arguments :values))
+          argument-types (-> fn-signature :generics :values first :values)
+          argument-values (map (partial hash-map :interpreted-value)
+                               evaluated-arguments)
+          name-type-values (map vector
+                                (map :name argument-names)
+                                argument-types
+                                argument-values)
+          new-values (reduce add-to-scope scope-values name-type-values)
+          result (evaluate prelude (:body matched) body-scope new-values)]
+      (-> (:cells result)
+          last
+          :interpreted-value
+          :interpreted-value))))
+
 (defmethod evaluate-item :macro-call
   [prelude item scope scope-values]
   ; TODO: If external, the function must be in prelude
@@ -99,27 +123,7 @@
                                (:name item))]
                  (internal-assert matched
                                   (str "unable to find value for " fn-name))
-                 ; TODO: Refactor this into a proper function
-                 (fn [& args]
-                   ; The body's last item knows about all previous items, which
-                   ; could be binds or other bits which change the scope.
-                   (let [body-scope (-> matched :body last :scope)
-                         add-to-scope (fn [acc-values [item-name item-type item-value]]
-                                        (value/add-to-scope item-name item-type item-value
-                                                            body-scope acc-values))
-                         argument-names (filter #(= (:kind %) :identifier)
-                                                (-> matched :arguments :values))
-                         argument-types (-> fn-signature :generics :values first :values)
-                         name-type-values (map vector
-                                               (map :name argument-names)
-                                               argument-types
-                                               evaluated-arguments)
-                         new-values (reduce add-to-scope scope-values name-type-values)
-                         result (evaluate prelude (:body matched) body-scope new-values)]
-                     (-> (:cells result)
-                         last
-                         :interpreted-value
-                         :interpreted-value)))))]
+                 (wrap-evaluate prelude matched fn-signature scope-values)))]
     (interpret-assert func (str "unknown function " fn-name))
     ; TODO: Send scope-values into prelude functions
     (let [result (apply func scope (map :interpreted-value evaluated-arguments))]
