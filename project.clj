@@ -5,7 +5,7 @@
             :url "https://upload.jeaye.com/jank-license"}
   :plugins [[lein-cloverage "1.0.9"]]
   :dependencies [[org.clojure/clojure "1.9.0-alpha13"]
-                 [instaparse "1.4.4"]
+                 [instaparse "1.4.5"]
                  [org.clojure/core.logic "0.8.11"]
                  [me.raynes/fs "1.4.6"]
                  [clj-time "0.12.2"]]

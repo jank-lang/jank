@@ -6,14 +6,12 @@
 
 (def prelude (slurp (clojure.java.io/resource "prelude.jank")))
 
-(def whitespace-or-comments-parser
-  (insta/parser
-    (slurp (clojure.java.io/resource "whitespace-grammar"))))
+(insta/defparser whitespace-or-comments-parser
+  (clojure.java.io/resource "whitespace-grammar"))
 
-(def parser
-  (insta/parser
-    (slurp (clojure.java.io/resource "grammar"))
-    :auto-whitespace whitespace-or-comments-parser))
+(insta/defparser parser
+  (clojure.java.io/resource "grammar")
+  :auto-whitespace whitespace-or-comments-parser)
 
 (defn parse
   "Runs the provided resource file through instaparse. Returns
