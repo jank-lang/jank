@@ -106,12 +106,16 @@ Definitions may be dependent on types. Such definitions may be functions or stru
   (print! "coord: " o))
 
 (; Non-type parameter partial specialization. ;)
-(ƒ show! : ((o coord : (:T-x :T-y))) () ()
+(ƒ show! : (o :: coord : (:T-x :T-y)) () ()
   (print! "coord: " o))
 
 (; Non-type parameter full specialization. ;)
-(ƒ show! : ((o coord : (real integer))) () ()
+(ƒ show! : (o :: coord : (real integer)) () ()
   (print! "coord: " o))
+
+(; Variadic parameters; may be types or values. ;)
+(ƒ show! : (& args) () ()
+  (print! args)) ; args is a tuple
 ```
 
 #### Struct
