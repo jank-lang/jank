@@ -1,5 +1,13 @@
 **** what's needed to make jank usable: ****
 
+implement generic functions first
+  take an integer or string or T
+
+then follow up with generic types
+  first parameterized on types
+  then add support for constraints
+  then add support for values
+
 adopt core.typed
 
 adopt clojure.spec
