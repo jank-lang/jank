@@ -11,6 +11,7 @@ then follow up with generic types
 adopt core.typed
 
 adopt clojure.spec
+  need namespaced keywords
 
 address generic construction of items
   given a T and some args, how can I construct a T, passing the args to the ctor?
