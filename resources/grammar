@@ -22,7 +22,7 @@ string = <double-quote> #'(?:[^"\\]|\\.)*' <double-quote>
 
 <identifier-text> = #'[^\s"()\d:][^\s"()]*'
 identifier = identifier-text generic-specialization?
-keyword = <':'> identifier
+keyword = #':[^\s"()\d:][^\s"()]*'
 special-identifier = declare-keyword | bind-keyword | macro-keyword | if-keyword | lambda-keyword | struct-keyword | ';'
 
 boolean = 'true' | 'false'
