@@ -38,6 +38,16 @@ lambda-definition =
     atom*
   right-paren
 
+generic-specialization-list = left-paren
+                                keyword+
+                              right-paren
+<generic-lambda-specialization> = <':'> generic-specialization-list
+generic-lambda-definition =
+  left-paren lambda-keyword generic-lambda-specialization
+             argument-list return-list
+    atom*
+  right-paren
+
 specialization-list = left-paren
                         (type | specialization-list)*
                       right-paren
