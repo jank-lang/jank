@@ -81,17 +81,18 @@
    :body (into [] (drop 2 more))})
 
 (defn lambda-definition [& more]
-  {:kind :lambda-definition
-   :arguments (first more)
-   :return (second more)
-   :body (into [] (drop 2 more))})
-
-(defn generic-lambda-definition [& more]
-  {:kind :generic-lambda-definition
-   :generics (first more)
-   :arguments (second more)
-   :return (nth more 2)
-   :body (into [] (drop 3 more))})
+  (let [generics (when (= :generic-specialization-list (-> more first :kind))
+                   (first more))
+        generic? (some? generics)
+        more (if generic?
+               (rest more)
+               more)]
+    {:kind :lambda-definition
+     :generic? generic?
+     :generics generics
+     :arguments (first more)
+     :return (second more)
+     :body (into [] (drop 2 more))}))
 
 (defn argument-list [& more]
   {:kind :argument-list

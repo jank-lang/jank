@@ -30,21 +30,16 @@ boolean = 'true' | 'false'
 <left-paren> = <'('>
 <right-paren> = <')'>
 
-<lambda-keyword> = <'lambda'> | <'λ'>
-argument-list = left-paren (identifier type)* right-paren
-return-list = left-paren type? right-paren
-lambda-definition =
-  left-paren lambda-keyword argument-list return-list
-    atom*
-  right-paren
-
 generic-specialization-list = left-paren
                                 keyword+
                               right-paren
+
+<lambda-keyword> = <'lambda'> | <'λ'>
 <generic-lambda-specialization> = <':'> generic-specialization-list
-generic-lambda-definition =
-  left-paren lambda-keyword generic-lambda-specialization
-             argument-list return-list
+argument-list = left-paren (identifier type)* right-paren
+return-list = left-paren type? right-paren
+lambda-definition =
+  left-paren lambda-keyword generic-lambda-specialization? argument-list return-list
     atom*
   right-paren
 

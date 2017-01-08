@@ -46,7 +46,7 @@
                         :macro-function-call transform/function-call
                         :macro-definition transform/macro-definition
                         :lambda-definition transform/lambda-definition
-                        :generic-lambda-definition transform/generic-lambda-definition
+                        :generic-lambda-definition transform/lambda-definition
                         :argument-list transform/argument-list
                         :macro-argument-list transform/macro-argument-list
                         :syntax-definition transform/syntax-definition
@@ -57,8 +57,8 @@
                         :return-list transform/return-list
                         :if-expression transform/if-expression}
                        parsed)]
-     ;(pprint parsed)
-     ;(pprint transformed)
+     ;(pprint "parsed" parsed)
+     ;(pprint "transformed" transformed)
      transformed)))
 
 (defn parses [source & args]
