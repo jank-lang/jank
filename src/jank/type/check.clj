@@ -62,13 +62,13 @@
         checked-return (check-item return (:scope checked-args))
         checked-body (check {:cells (:body item)} (:scope checked-return))
         updated-item (assoc item
+                            :kind :lambda-definition
                             :arguments checked-args ; TODO: Move these back into def?
                             :return checked-return
                             :body (:cells checked-body))
         item-with-return (return/add-explicit-returns updated-item
                                                       (:scope checked-body))]
     (assoc item-with-return
-           :kind :lambda-definition
            :scope scope)))
 
 (defmethod check-item :lambda-definition
