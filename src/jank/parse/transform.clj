@@ -1,4 +1,5 @@
 (ns jank.parse.transform
+  (:require [jank.parse.fabricate :as fabricate])
   (:use jank.assert
         jank.debug.log))
 
@@ -80,9 +81,14 @@
    :arguments (second more)
    :body (into [] (drop 2 more))})
 
+(defn keyword-to-type [kw]
+  ; Remove the prefixed colon
+  (fabricate/type (subs (:value kw) 1)))
+
 (defn lambda-definition [& more]
-  (let [generics (when (= :generic-specialization-list (-> more first :kind))
-                   (first more))
+  (let [generics (when (= :generic-specialization-list
+                          (-> more first :kind))
+                   (update (first more) :values (partial map keyword-to-type)))
         generic? (some? generics)
         more (if generic?
                (rest more)
