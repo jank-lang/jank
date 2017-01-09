@@ -127,11 +127,15 @@
 (defmethod codegen-impl :binding-definition
   [current]
   ;(pprint (clean-scope current))
-  (util/end-statement
-    (str (codegen-impl (assoc current :kind :binding-type))
-         (codegen-impl (assoc current :kind :binding-name))
-         "="
-         (codegen-impl (:value current)))))
+  (let [value (:value current)
+        func? (= :lambda-definition (:kind value))
+        generic? (:generic? value)]
+    (when-not (and func? generic?)
+      (util/end-statement
+        (str (codegen-impl (assoc current :kind :binding-type))
+             (codegen-impl (assoc current :kind :binding-name))
+             "="
+             (codegen-impl (:value current)))))))
 
 (defmethod codegen-impl :function-call
   [current]
