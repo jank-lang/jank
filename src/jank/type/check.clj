@@ -53,7 +53,7 @@
   [item scope]
   (assoc item :scope (type-declaration/add-to-scope item scope)))
 
-(defmethod check-item :lambda-definition
+(defmethod check-item :lambda-instantiation
   [item scope]
   (let [args (:arguments item)
         return (:return item)
@@ -62,18 +62,26 @@
         checked-return (check-item return (:scope checked-args))
         checked-body (check {:cells (:body item)} (:scope checked-return))
         updated-item (assoc item
-                            :body (:cells checked-body)
-                            :arguments checked-args
-                            :return checked-return)
+                            :arguments checked-args ; TODO: Move these back into def?
+                            :return checked-return
+                            :body (:cells checked-body))
         item-with-return (return/add-explicit-returns updated-item
                                                       (:scope checked-body))]
-    (assoc item-with-return :scope scope)))
-
-(defmethod check-item :generic-lambda-definition
-  [item scope]
-  (let [generics (:generics item)] ; TODO: Not used?
-    (assoc item
+    (assoc item-with-return
+           :kind :lambda-definition
            :scope scope)))
+
+(defmethod check-item :lambda-definition
+  [item scope]
+  (let [updated-item (assoc item
+                            :scope scope)
+        ret-item (if (:generic? updated-item)
+                   ; TODO: Two-phase name lookup
+                   updated-item ; Don't check until instantiation time
+                   (check-item (assoc updated-item
+                                      :kind :lambda-instantiation)
+                               scope))]
+    ret-item))
 
 (defmethod check-item :struct-definition
   [item scope]

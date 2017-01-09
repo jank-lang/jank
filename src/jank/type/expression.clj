@@ -89,16 +89,13 @@
 
 (defmethod realize-type :lambda-definition
   [item scope]
-  (fabricate/function-type (filter #(= :type (:kind %))
-                                   (:values (:arguments item)))
-                           (filter #(= :type (:kind %))
-                                   (:values (:return item)))))
-
-(defmethod realize-type :generic-lambda-definition
-  [item scope]
-  (let [lamdef (realize-type (update item :kind (fn [_] :lambda-definition))
-                             scope)]
-    (assoc lamdef :generics (:generics item))))
+  (let [ret (fabricate/function-type (filter #(= :type (:kind %))
+                                             (:values (:arguments item)))
+                                     (filter #(= :type (:kind %))
+                                             (:values (:return item))))]
+    (if (:generic? item)
+      (assoc ret :generics (:generics item))
+      ret)))
 
 (defmethod realize-type :binding-definition
   [item scope]
