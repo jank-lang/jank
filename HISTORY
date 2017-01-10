@@ -1,0 +1,6 @@
+Jan 2015 - (C++) Project started
+Oct 2015 - (C++) Parser, Type checker, Interpreter working
+Oct 2015 - Rewrite in Clojure, focusing on C++ codegen
+Nov 2015 - (Clojure) Codegen is working
+...      - (Clojure) Flushed out design
+Dec 2016 - (Clojure) Initial macro system and interpreter are working
