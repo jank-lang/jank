@@ -232,24 +232,17 @@
 
 (defmethod check-item :function-call
   [item scope]
-  (loop [args (:arguments item)
-         checked-args []
-         new-scope scope]
-    (if (empty? args)
-      (let [checked-name (check-item (:name item) scope)
-            args-with-returns (map #(return/add-parameter-returns % new-scope)
-                                   checked-args)
-            updated-item (assoc item
-                                :name checked-name
-                                :arguments args-with-returns)
-            signature (expression/call-signature updated-item new-scope)]
-        (assoc updated-item
-               :scope new-scope
-               :signature signature))
-      (let [checked-arg (check-item (first args) new-scope)]
-        (recur (rest args)
-               (conj checked-args checked-arg)
-               (:scope checked-arg))))))
+  (let [checked-args (map #(check-item % scope) (:arguments item))
+        checked-name (check-item (:name item) scope)
+        args-with-returns (map #(return/add-parameter-returns % scope)
+                               checked-args)
+        updated-item (assoc item
+                            :name checked-name
+                            :arguments args-with-returns)
+        signature (expression/call-signature updated-item scope)]
+    (assoc updated-item
+           :scope scope
+           :signature signature)))
 
 ; Bring the arguments into scope and type check.
 (defmethod check-item :argument-list
