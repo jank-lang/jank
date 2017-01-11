@@ -6,7 +6,15 @@
 (defn instantiate [call scope]
   (let [matches (expression/overload-matches call scope)
         match (ffirst (:full-matches matches))]
+    (pprint "call" call)
+    (pprint "match" match)
     (if-not (contains? :generics match)
       call
-      (let [generics (-> match :value :generics)]
+      (let [generics (-> match :value :generics)
+            ; TODO: Support explicit param specification
+            empty-type-mapping (zipmap generics (repeat nil))
+            ; TODO: Navigate through arguments and setup type mapping
+            ]
+        ; TODO: Assert all types have a mapping
+        ; TODO: Assoc instantiation info onto call
         ))))
