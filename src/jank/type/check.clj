@@ -7,6 +7,7 @@
             [jank.type.scope.macro-definition :as macro-definition]
             [jank.type.scope.util :as scope.util]
             [jank.type.expression :as expression]
+            [jank.type.generic :as generic]
             [jank.type.return :as return]
             [jank.interpret.scope.prelude :as interpret.scope.prelude]
             [jank.interpret.macro :as macro]
@@ -238,10 +239,11 @@
                                checked-args)
         updated-item (assoc item
                             :name checked-name
-                            :arguments args-with-returns)
-        signature (expression/call-signature updated-item scope)]
-    (assoc updated-item
-           :scope scope
+                            :arguments args-with-returns
+                            :scope scope)
+        instantiated-item (generic/instantiate updated-item scope)
+        signature (expression/call-signature instantiated-item scope)]
+    (assoc instantiated-item
            :signature signature)))
 
 ; Bring the arguments into scope and type check.
