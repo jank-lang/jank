@@ -24,16 +24,23 @@
                    :values)
               overloads)))
 
-(defn call-signature
-  "Calculates the signature of a given function call."
+(defn function-name
+  "Extracts the name identifier out of function calls and provides a constant
+   in the case of anonymous functions."
+  [item identifier?]
+  (if identifier?
+    (:name (:name item))
+    "anonymous-function"))
+
+(defn overload-matches
+  "Finds all matching overloads for a call. The matching overloads may be generic
+   and may need instantiation."
   [item scope]
   ; The value/name of the function might be a function call which returns a
   ; function or a lambda definition directly; we special case for identifiers
   ; so we can lookup overloads. Otherwise, we use the function directly.
   (let [identifier? (= :identifier (:kind (:name item)))
-        func-name (if identifier?
-                    (:name (:name item))
-                    "anonymous-function")
+        func-name (function-name item identifier?)
         overloads (if identifier?
                     (binding-declaration/lookup-overloads func-name scope)
                     [(realize-type (:name item) scope)])
@@ -78,14 +85,21 @@
                    (str "ambiguous function call to " func-name
                         " with argument types " arg-types
                         " expected one of " (overload-args overloads)))
+      {:full-matches full-matches
+       :identifier? identifier?
+       :function-name func-name})))
 
-      (let [match (ffirst full-matches)
-            generics (:generics (:value match))
-            return-types (-> generics :values second :values)]
-        (type-assert (not (type-declaration/auto? (first return-types)))
-                     (str "call to function " func-name
-                          " before its type is deduced"))
-        match))))
+(defn call-signature
+  "Calculates the signature of a given function call."
+  [item scope]
+  (let [matches (overload-matches item scope)
+        match (ffirst (:full-matches matches))
+        generics (:generics (:value match))
+        return-types (-> generics :values second :values)]
+    (type-assert (not (type-declaration/auto? (first return-types)))
+                 (str "call to function " (:function-name matches)
+                      " before its type is deduced"))
+    match))
 
 (defmethod realize-type :lambda-definition
   [item scope]
