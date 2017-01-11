@@ -1,6 +1,7 @@
-Jan 2015 - (C++) Project started
-Oct 2015 - (C++) Parser, Type checker, Interpreter working
-Oct 2015 - Rewrite in Clojure, focusing on C++ codegen
-Nov 2015 - (Clojure) Codegen is working
-...      - (Clojure) Flushed out design
-Dec 2016 - (Clojure) Initial macro system and interpreter are working
+Jan 2015 - Project started in C++
+Oct 2015 - Parser, Type checker, and Interpreter implemented
+Oct 2015 - Rewrite in Clojure started, focusing on C++ codegen
+Nov 2015 - Parser, Type checker, and Codegen targeting C++ implemented
+Dec 2016 - Initial macro system and interpreter are working
+Dec 2016 - Continuous benchmark service added
+Jan 2017 - Transition to fully generic, type-rich programming
