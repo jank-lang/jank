@@ -8,7 +8,7 @@
         match (ffirst (:full-matches matches))]
     (pprint "call" call)
     (pprint "match" match)
-    (if-not (contains? :generics match)
+    (if-not (contains? match :generics)
       call
       (let [generics (-> match :value :generics)
             ; TODO: Support explicit param specification
