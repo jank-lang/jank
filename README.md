@@ -342,7 +342,7 @@ set runtimepath^=~/projects/jank/vim/after
 ```
 
 ## Donate
-Feel free to shoot Bitcoins my way: **1HaMvpDjy7QJBDkcZALJr3s26FxLpv5WtJ**
+Feel free to shoot Bitcoins my way: **123NMGCvRZLfQJwk2AhsLMLSpCCJhCRoz6**
 
 For more information regarding how I use donations, see
 [here](http://jeaye.com/donate/).
