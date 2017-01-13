@@ -72,6 +72,7 @@
                             [% :full]
 
                             (every? (fn [[arg expected]]
+                                      ; TODO: Allow expected to be auto for shorthand generics
                                       (or (= arg expected)
                                           (generics expected)))
                                     pairs)
