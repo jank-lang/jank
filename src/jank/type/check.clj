@@ -78,6 +78,7 @@
                             :scope scope)
         ret-item (if (:generic? updated-item)
                    ; TODO: Two-phase name lookup
+                   ; TODO: Verify generic types are unique
                    updated-item ; Don't check until instantiation time
                    (check-item (assoc updated-item
                                       :kind :lambda-instantiation)
