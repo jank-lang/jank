@@ -32,11 +32,7 @@
             empty-type-mapping (zipmap generic-types (repeat nil))
             argument-type-mapping (reduce map-type
                                           empty-type-mapping
-                                          expected-actual-pairs)
-            _ (pprint "mapping" argument-type-mapping)
-            ;return-types (-> match :value :generics :values second :values)
-            ; TODO: Navigate through arguments and setup type mapping
-            ]
+                                          expected-actual-pairs)]
         (type-assert (every? (comp some? second) argument-type-mapping)
                      (str "incomplete instantiation of "
                           (-> call :name :name)
