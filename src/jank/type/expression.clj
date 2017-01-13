@@ -53,10 +53,16 @@
     ; Test all overloads
     (let [stripped-arg-types (map type-declaration/strip arg-types)
           match-info (map
-                       #(let [generics (:generics (:value %))
-                              expected-types (-> generics :values first :values)
-                              stripped-expected (map type-declaration/strip expected-types)
-                              pairs (map vector stripped-arg-types stripped-expected)]
+                       ; TODO: Move this into its own function
+                       #(let [type-generics (-> % :value :generics)
+                              expected-types (-> type-generics
+                                                 :values first :values)
+                              stripped-expected (map type-declaration/strip
+                                                     expected-types)
+                              pairs (map vector
+                                         stripped-arg-types
+                                         stripped-expected)
+                              generics (into #{} (-> % :generics :values))]
                           ; TODO: Allow comparison of overload superpositions
                           (cond
                             (not= (count stripped-arg-types) (count stripped-expected))
@@ -67,7 +73,7 @@
 
                             (every? (fn [[arg expected]]
                                       (or (= arg expected)
-                                          (some type-declaration/auto? [arg expected])))
+                                          (generics expected)))
                                     pairs)
                             [% :partial]
 
@@ -75,17 +81,19 @@
                             nil))
                        overloads)
           matches (filter some? match-info)
-          full-matches (filter #(= :full (second %))
-                               matches)]
+          full-matches (filter #(= :full (second %)) matches)
+          partial-matches (filter #(= :partial (second %)) matches)]
       (type-assert (not-empty matches)
                    (str "no matching function call to " func-name
                         " with argument types " arg-types
                         " expected one of " (overload-args overloads)))
-      (type-assert (>= 1 (count full-matches))
+      (type-assert (and (>= 1 (count full-matches))
+                        (>= 1 (count partial-matches)))
                    (str "ambiguous function call to " func-name
                         " with argument types " arg-types
                         " expected one of " (overload-args overloads)))
       {:full-matches full-matches
+       :partial-matches partial-matches
        :identifier? identifier?
        :function-name func-name})))
 
