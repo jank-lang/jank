@@ -14,6 +14,8 @@
 (defn instantiate [call scope]
   (let [matches (expression/overload-matches call scope)
         match (ffirst (:partial-matches matches))]
+    (pprint "call" call)
+    (pprint "match" match)
     (if-not (contains? match :generics)
       call
       (let [generic-types (-> match :generics :values)
