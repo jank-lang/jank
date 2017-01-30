@@ -11,6 +11,9 @@
       map-acc)
     (assoc map-acc expected actual)))
 
+(defn substitute [definition type-map scope]
+  definition)
+
 (defn instantiate [call scope]
   (let [matches (expression/overload-matches call scope)
         match (ffirst (:partial-matches matches))]
@@ -39,6 +42,6 @@
                           " with type mapping "
                           argument-type-mapping))
         ; TODO: Substitute actual types in, for return type too (by walking)
-        (let [instantiation (substitute call argument-type-mapping scope)]
+        (let [instantiation (substitute match argument-type-mapping scope)]
           (assoc call
                  :instantiation instantiation))))))
