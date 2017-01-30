@@ -38,6 +38,7 @@
                           (-> call :name :name)
                           " with type mapping "
                           argument-type-mapping))
-        ; TODO: Substitute actual types in, for return type too
-        ; TODO: Assoc instantiation info onto call
-        call))))
+        ; TODO: Substitute actual types in, for return type too (by walking)
+        (let [instantiation (substitute call argument-type-mapping scope)]
+          (assoc call
+                 :instantiation instantiation))))))
