@@ -39,7 +39,7 @@
   "Removes additional information from types which isn't
    needed during comparison."
   [decl-type]
-  (dissoc decl-type :external?))
+  (dissoc decl-type :external? :scope))
 
 (defmulti lookup
   "Recursively looks through the hierarchy of scopes for the declaration."
