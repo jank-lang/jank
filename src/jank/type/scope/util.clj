@@ -24,8 +24,11 @@
          all []]
     (if current-scope
       (if-let [found (finder item-name current-scope)]
-        (recur (:parent current-scope) (into all (second found)))
-        (recur (:parent current-scope) all))
+        (recur (:parent current-scope)
+               (into all (map #(assoc % :scope current-scope)
+                              (second found))))
+        (recur (:parent current-scope)
+               all))
       all)))
 
 (defn path
