@@ -43,15 +43,16 @@
         func-name (function-name item identifier?)
         overloads (if identifier?
                     (binding-declaration/lookup-overloads func-name scope)
-                    [(realize-type (:name item) scope)])
-        arg-types (apply list (map #(realize-type % scope) (:arguments item)))]
+                    [(assoc (realize-type (:name item) scope)
+                            :scope scope)])]
     (type-assert (some? overloads) (str "unknown function " func-name))
     (type-assert (every? type-declaration/function? overloads)
                  (str "not a function " func-name))
 
     ; TODO: Handle generic calls; match generics explicitly
     ; Test all overloads
-    (let [stripped-arg-types (map type-declaration/strip arg-types)
+    (let [arg-types (apply list (map #(realize-type % scope) (:arguments item)))
+          stripped-arg-types (map type-declaration/strip arg-types)
           match-info (map
                        ; TODO: Move this into its own function
                        #(let [type-generics (-> % :value :generics)
@@ -96,17 +97,18 @@
       {:full-matches full-matches
        :partial-matches partial-matches
        :identifier? identifier?
+       :argument-types arg-types
        :function-name func-name})))
 
 (defn call-signature
   "Calculates the signature of a given function call."
   [item scope]
-  (let [matches (overload-matches item scope)
-        match (ffirst (:full-matches matches))
+  (let [match-info (overload-matches item scope)
+        match (ffirst (:full-matches match-info))
         generics (:generics (:value match))
         return-types (-> generics :values second :values)]
     (type-assert (not (type-declaration/auto? (first return-types)))
-                 (str "call to function " (:function-name matches)
+                 (str "call to function " (:function-name match-info)
                       " before its type is deduced"))
     match))
 

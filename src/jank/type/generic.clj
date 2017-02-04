@@ -1,5 +1,6 @@
 (ns jank.type.generic
-  (:require [jank.type.expression :as expression])
+  (:require [jank.type.expression :as expression]
+            [clojure.walk :as walk])
   (:use jank.assert
         jank.debug.log))
 
@@ -15,8 +16,8 @@
   definition)
 
 (defn instantiate [call scope]
-  (let [matches (expression/overload-matches call scope)
-        match (ffirst (:partial-matches matches))]
+  (let [match-info (expression/overload-matches call scope)
+        match (ffirst (:partial-matches match-info))]
     (pprint "call" call)
     (pprint "match" match)
     (if-not (contains? match :generics)
@@ -26,9 +27,7 @@
             expected-argument-types (-> match
                                         :value :generics
                                         :values first :values)
-            arguments (:arguments call)
-            actual-argument-types (map #(expression/realize-type % scope)
-                                       arguments)
+            actual-argument-types (:argument-types match-info)
             expected-actual-pairs (map vector
                                        expected-argument-types
                                        actual-argument-types)
