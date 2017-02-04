@@ -43,5 +43,6 @@
                           argument-type-mapping))
         ; TODO: Substitute actual types in, for return type too (by walking)
         (let [instantiation (substitute match argument-type-mapping scope)]
+          ; TODO: Type check instantiation before the assoc
           (assoc call
                  :instantiation instantiation))))))
