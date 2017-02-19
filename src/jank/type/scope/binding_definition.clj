@@ -40,10 +40,6 @@
                              :type item-type
                              :external? false}
                             scope)]
-      (if (nil? overloads)
-        (update
-          scope-with-decl
-          :binding-definitions assoc item-name #{item-type})
-        (update-in
-          scope-with-decl
-          [:binding-definitions item-name] conj item-type)))))
+      (update-in
+        scope-with-decl
+        [:binding-definitions item-name] (fnil conj #{}) item-type))))
