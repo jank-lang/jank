@@ -54,4 +54,5 @@
     :binding-declarations {}
     :binding-definitions {}
     :type-declarations #{}
-    :type-definitions #{}}))
+    :type-definitions #{}
+    :generic-lambas {}}))

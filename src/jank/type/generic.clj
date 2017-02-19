@@ -4,6 +4,13 @@
   (:use jank.assert
         jank.debug.log))
 
+(defn add-to-scope
+  [item scope]
+  (let [item-name (:name (:name item))]
+    (update-in
+      scope
+      [:generic-lambas item-name] (fnil conj #{}) item)))
+
 (defn map-type [map-acc [expected actual]]
   (if-let [existing (map-acc expected)]
     (do
@@ -12,14 +19,17 @@
       map-acc)
     (assoc map-acc expected actual)))
 
-(defn substitute [definition type-map scope]
-  definition)
+(defn substitute [match type-map scope]
+  ; TODO: Lookup definition in match scope
+  ; TODO: Substitute actual types in, for return type too (by walking)
+  nil)
 
 (defn instantiate [call scope]
   (let [match-info (expression/overload-matches call scope)
         match (ffirst (:partial-matches match-info))]
     (pprint "call" call)
     (pprint "match" match)
+    (pprint "generic-lambdas" (-> match :scope :generic-lambas))
     (if-not (contains? match :generics)
       call
       (let [generic-types (-> match :generics :values)
@@ -40,7 +50,6 @@
                           (-> call :name :name)
                           " with type mapping "
                           argument-type-mapping))
-        ; TODO: Substitute actual types in, for return type too (by walking)
         (let [instantiation (substitute match argument-type-mapping scope)]
           ; TODO: Type check instantiation before the assoc
           (assoc call

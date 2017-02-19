@@ -151,12 +151,14 @@
   ; There is an optional type specifier which may be before the value
   (let [checked-name (check-item (:name item) scope)
         value (:value item)
+        lambda? (= :lambda-definition (:kind value))
+        generic-lambda? (and lambda? (:generic? value))
         checked-val (check-item
                       value
                       ; Add a declaration before checking it. This allows
                       ; recursive functions to have a declaration of
                       ; themselves.
-                      (if (= :lambda-definition (:kind value))
+                      (if lambda?
                         (binding-declaration/add-to-scope
                           (assoc item
                                  :type (expression/realize-type value scope))
@@ -165,12 +167,15 @@
         updated-item (assoc item
                             :name checked-name
                             :value checked-val)
-        value-type (expression/realize-type checked-val (:scope checked-val))]
+        value-type (expression/realize-type checked-val (:scope checked-val))
+        updated-scope (if generic-lambda?
+                        (generic/add-to-scope updated-item (:scope checked-val))
+                        (:scope checked-val))]
     (assoc updated-item
            :type value-type
            :scope (binding-definition/add-to-scope
                     updated-item
-                    (:scope checked-val)))))
+                    updated-scope))))
 
 (defmethod check-item :macro-definition
   [item scope]
