@@ -5,13 +5,13 @@
             :url "https://upload.jeaye.com/jank-license"}
   :plugins [[lein-cloverage "1.0.9"]]
   :dependencies [[org.clojure/clojure "1.9.0-alpha16"]
-                 [instaparse "1.4.5"]
                  [org.clojure/core.logic "0.8.11"]
+                 [instaparse "1.4.5"]
                  [me.raynes/fs "1.4.6"]]
   :main ^:skip-aot jank.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}
-             :dev {:source-paths ["dev/"]
+             :dev {:source-paths ["dev/" "playground/"]
                    :main jank.dev}
              :coverage {:resource-paths ["dev-resources/"]}
              :benchmark {:dependencies [[criterium "0.4.4"]
