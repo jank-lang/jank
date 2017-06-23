@@ -9,23 +9,24 @@
 
 (def types [:int :float :string])
 
-(def foo-fn {:args [:int :float]
-             :ret :string})
+(def foo-fns [{:args [:int :float]
+               :ret :string}
+              {:args [:float :int]
+               :ret :string}
+              {:args [:string]
+               :ret :string}])
 
 (defn typeo [lvar]
   (l/membero lvar types))
 
-(defn match-call [args fn-type]
+(defn match-call [args fn-types]
   (l/run*
     [r]
-    ; Each expected arg is a valid type.
-    (l/everyg typeo (:args fn-type))
-
     ; Each provided arg is a valid type.
     (l/everyg typeo args)
 
-    ; Args are in right order.
-    (l/== args (:args fn-type))
+    ; One of the overloads matches.
+    (l/membero args (map :args fn-types))
 
     ; Good
     (l/== r args)))
