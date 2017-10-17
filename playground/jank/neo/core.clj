@@ -1,6 +1,7 @@
 (ns jank.neo.core
+  (:refer-clojure :exclude [==])
   (:require [jank.debug.log :refer [pprint]]
-            [clojure.core.logic :as l]))
+            [clojure.core.logic :refer :all]))
 
 ; 1. Type-check simple calls
 ; 2. Overload resolution
@@ -10,43 +11,50 @@
 
 (def types [:int :float :string])
 
-(def fns {:foo [{:args [:int :float]
-                 :ret :string}
-                {:args [:float :int]
-                 :ret :string}
-                {:args [:string]
-                 :ret :string}]
-          :bar [{:args []
-                 :ret :int}]})
+;;(def fns {:foo [{:args [:int :float]
+;;                 :ret :string}
+;;                {:args [:float :int]
+;;                 :ret :string}
+;;                {:args [:string]
+;;                 :ret :string}]
+;;          :bar [{:args []
+;;                 :ret :int}]})
+;;
+;;(def definition {:args {:x :int
+;;                        :y :float
+;;                        :s :string}
+;;                 :body [{:fn :foo
+;;                         :args [:x :y]}
+;;                        {:fn :bar
+;;                         :args []}]})
 
-(def definition {:args {:x :int
-                        :y :float
-                        :s :string}
-                 :body [{:fn :foo
-                         :args [:x :y]}
-                        {:fn :bar
-                         :args []}]})
+(def fns {:foo {:args [:int :float]
+                :ret :string}
+          :bar {:args []
+                :ret :int}})
 
-(defn typeo [lvar]
-  (l/membero lvar types))
+(def test-call {:fn :foo
+                :args [:int :float]})
 
-(defn valid-callo [defin allowed-fns call]
-  (let [overloads (-> call :fn fns)
-        arg-types (map (:args defin) (:args call))]
-    ; Each call argument is of a valid type.
-    (l/everyg typeo arg-types)
+(defn known-fno [call allowed-fns out]
+  (fresh
+    [fn-name]
+    (== fn-name out)
+    (membero fn-name (keys allowed-fns))
+    (== fn-name (:fn call))))
 
-    ; Each call matches an overload.
-    (l/membero arg-types (map :args overloads))))
+(defn valid-typeo [lvar]
+  (membero lvar types))
 
-(defn check-definition [defin allowed-fns]
-  (l/run*
-    [r]
-    ; Each argument is of a valid type.
-    (l/everyg typeo (-> defin :args vals))
+(defn check-call [call allowed-fns]
+  (run*
+    [q]
 
-    ; All of the calls in the body are valid.
-    (l/everyg #(valid-callo defin allowed-fns %) (:body defin))
+    (fresh
+      [fn-name args]
+      (known-fno call allowed-fns fn-name)
 
-    ; Good
-    (l/== r true)))
+      (== args (:args call))
+      (== args (get-in allowed-fns [(:fn call) :args]))
+
+      (== q fn-name))))
