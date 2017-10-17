@@ -11,15 +11,15 @@
 
 (def types [:int :float :string])
 
-;;(def fns {:foo [{:args [:int :float]
-;;                 :ret :string}
-;;                {:args [:float :int]
-;;                 :ret :string}
-;;                {:args [:string]
-;;                 :ret :string}]
-;;          :bar [{:args []
-;;                 :ret :int}]})
-;;
+(def fns {:foo [{:args [:int :float]
+                 :ret :string}
+                {:args [:float :int]
+                 :ret :string}
+                {:args [:string]
+                 :ret :string}]
+          :bar [{:args []
+                 :ret :int}]})
+
 ;;(def definition {:args {:x :int
 ;;                        :y :float
 ;;                        :s :string}
@@ -27,11 +27,6 @@
 ;;                         :args [:x :y]}
 ;;                        {:fn :bar
 ;;                         :args []}]})
-
-(def fns {:foo {:args [:int :float]
-                :ret :string}
-          :bar {:args []
-                :ret :int}})
 
 (def test-call {:fn :foo
                 :args [:int :float]})
@@ -55,6 +50,6 @@
       (known-fno call allowed-fns fn-name)
 
       (== args (:args call))
-      (== args (get-in allowed-fns [(:fn call) :args]))
+      (membero args (map :args (allowed-fns (:fn call))))
 
       (== q fn-name))))
