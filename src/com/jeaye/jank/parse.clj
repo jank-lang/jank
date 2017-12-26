@@ -14,7 +14,8 @@
 
 (insta/defparser parser
   (clojure.java.io/resource "neo-grammar")
-  :auto-whitespace whitespace-or-comments-parser)
+  :auto-whitespace whitespace-or-comments-parser
+  )
 
 (defn parse
   "Runs the provided resource file through instaparse and transforms from hiccup

@@ -1,7 +1,11 @@
 <program> = atom*
 <atom> = string / number / boolean /
          qualified-keyword / keyword / identifier /
-         binding-definition
+         binding-definition /
+         fn-definition /
+         application
+
+special-identifier = def-keyword | fn-keyword
 
 integer = #'[+-]?\d+'
 real = #'[+-]?\d+\.\d*'
@@ -10,15 +14,30 @@ real = #'[+-]?\d+\.\d*'
 <double-quote> = '\"'
 string = <double-quote> #'(?:[^"\\]|\\.)*' <double-quote>
 
-<identifier-text> = #'[^\s"()\d:][^\s"()/]*'
+<identifier-text> = #'[^\s"()\[\]\d:/][^\s"()\[\]/]*'
 identifier = identifier-text
-qualified-keyword = #'::?' identifier-text '/' identifier-text
-keyword = #'::?' identifier-text
+<keyword-text> = #'[^\s"()\[\]/]*'
+qualified-keyword = #'::?' keyword-text '/' keyword-text
+keyword = #'::?' keyword-text
 
 boolean = 'true' | 'false'
 
 <left-paren> = <'('>
 <right-paren> = <')'>
+<left-bracket> = <'['>
+<right-bracket> = <']'>
 
 <def-keyword> = <'def'>
 binding-definition = left-paren def-keyword identifier atom right-paren
+
+<fn-keyword> = <'fn'>
+argument-list = left-bracket identifier* right-bracket
+fn-definition =
+  left-paren fn-keyword argument-list
+    atom*
+  right-paren
+
+application =
+  left-paren !special-identifier (identifier | application | fn-definition)
+    atom*
+  right-paren

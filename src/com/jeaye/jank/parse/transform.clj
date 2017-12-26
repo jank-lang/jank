@@ -18,7 +18,7 @@
              {:ns (second more)
               :value (nth more 3)}
              (= (first more) "::")
-             {:ns :current
+             {:ns :current ; TODO: Do something here. Track current ns?
               :value (second more)}
              :else
              {:value (second more)}))))
