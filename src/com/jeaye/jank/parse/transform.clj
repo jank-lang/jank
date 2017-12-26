@@ -6,19 +6,25 @@
             [com.jeaye.jank.parse
              [fabricate :as fabricate]]))
 
-(defn single [kind value]
+(def ^:dynamic *input-file* nil)
+
+(defmacro deftransform [fn-name fn-args & fn-body]
+  `(defn ~fn-name ~fn-args
+     (with-meta (do ~@fn-body) {:file ~*input-file*})))
+
+(deftransform single [kind value]
   {:kind kind :value value})
 
-(defn single-values [kind values]
+(deftransform single-values [kind values]
   {:kind kind :values values})
 
-(defn single-named [kind name value]
+(deftransform single-named [kind name value]
   {:kind kind :name name :value value})
 
-(defn read-single [kind value]
+(deftransform read-single [kind value]
   {:kind kind :value (edn/read-string value)})
 
-(defn keyword [qualified & more]
+(deftransform keyword [qualified & more]
   (let [qualified? (= qualified :qualified)]
     (merge {:kind :keyword}
            (cond
@@ -31,25 +37,25 @@
              :else
              {:value (second more)}))))
 
-(defn map [& more]
+(deftransform map [& more]
   (let [kvs (partition-all 2 more)
         _ (parse-assert (every? #(= 2 (count %)) kvs)
                         "maps require an even number of forms")
         values (mapv #(do {:key (first %) :value (second %)}) kvs)]
     (single-values :map values)))
 
-(defn binding-definition [& more]
+(deftransform binding-definition [& more]
   (single-named :binding-definition (first more) (second more)))
 
-(defn fn-definition [& more]
+(deftransform fn-definition [& more]
   {:kind :fn-definition
    :arguments (first more)
    :body (into [] (rest more))})
 
-(defn argument-list [& more]
+(deftransform argument-list [& more]
   (into [] more))
 
-(defn application [& more]
+(deftransform application [& more]
   {:kind :application
    :value (first more)
    :arguments (into [] (rest more))})
