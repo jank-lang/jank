@@ -3,10 +3,10 @@
   :url "https://github.com/jeaye/jank"
   :license {:name "jank license"
             :url "https://upload.jeaye.com/jank-license"}
-  :plugins [[lein-cloverage "1.0.9"]]
-  :dependencies [[org.clojure/clojure "1.9.0-beta1"]
+  :plugins [[lein-cloverage "1.0.10"]]
+  :dependencies [[org.clojure/clojure "1.9.0"]
                  [org.clojure/core.logic "0.8.11"]
-                 [instaparse "1.4.5"]
+                 [instaparse "1.4.8"]
                  [me.raynes/fs "1.4.6"]]
   :main ^:skip-aot jank.core
   :target-path "target/%s"
@@ -15,7 +15,7 @@
                    :main jank.dev}
              :coverage {:resource-paths ["dev-resources/"]}
              :benchmark {:dependencies [[criterium "0.4.4"]
-                                        [clj-time "0.13.0"]]
+                                        [clj-time "0.14.2"]]
                          :source-paths ["benchmark/"]
                          :resource-paths ["dev-resources/"]
                          :main jank.benchmark}})
