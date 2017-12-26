@@ -1,0 +1,5 @@
+whitespace-or-comment = #'\s+' | comments
+whitespace = #'\s+'
+comments = comment+
+comment = whitespace* '(;' inside-comment* ';)' whitespace*
+inside-comment =  !( ';)' | '(;' ) #'[\s\S]' | comment

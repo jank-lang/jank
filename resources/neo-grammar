@@ -1,0 +1,19 @@
+<program> = atom*
+<atom> = string / number / boolean /
+         identifier / keyword
+
+integer = #'[+-]?\d+'
+real = #'[+-]?\d+\.\d*'
+<number> = (integer | real)
+
+<double-quote> = '\"'
+string = <double-quote> #'(?:[^"\\]|\\.)*' <double-quote>
+
+<identifier-text> = #'[^\s"()\d:][^\s"()]*'
+identifier = identifier-text
+keyword = #':[^\s"()\d:][^\s"()]*'
+
+boolean = 'true' | 'false'
+
+<left-paren> = <'('>
+<right-paren> = <')'>

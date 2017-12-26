@@ -1,0 +1,37 @@
+(ns com.jeaye.jank.parse
+  (:require [instaparse.core :as insta]
+            [com.jeaye.jank
+             [log :refer [pprint]]
+             [assert :refer [parse-assert]]]
+            [com.jeaye.jank.parse
+             [transform :as transform]]))
+
+;(def prelude (slurp (clojure.java.io/resource "prelude.jank")))
+(def prelude "")
+
+(insta/defparser whitespace-or-comments-parser
+  (clojure.java.io/resource "neo-whitespace-grammar"))
+
+(insta/defparser parser
+  (clojure.java.io/resource "neo-grammar")
+  :auto-whitespace whitespace-or-comments-parser)
+
+(defn parse
+  "Runs the provided resource file through instaparse. Returns
+   then generated syntax tree."
+  ([resource] (parse prelude resource))
+  ([pre resource]
+   ;(pprint "parsing" (str pre resource))
+   (let [parsed (parser (str pre resource))
+         error (pr-str (insta/get-failure parsed))
+         _ (parse-assert (not (insta/failure? parsed))
+                         "invalid syntax\n" error)
+         transformed (insta/transform
+                       {}
+                       parsed)]
+     (pprint "parsed" parsed)
+     ;(pprint "transformed" transformed)
+     transformed)))
+
+(defn parses [source & args]
+  (apply insta/parses parser source args))
