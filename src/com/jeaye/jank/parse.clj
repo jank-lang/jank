@@ -17,8 +17,8 @@
   :auto-whitespace whitespace-or-comments-parser)
 
 (defn parse
-  "Runs the provided resource file through instaparse. Returns
-   then generated syntax tree."
+  "Runs the provided resource file through instaparse and transforms from hiccup
+   to hickory. Returns the generated syntax tree."
   ([resource] (parse prelude resource))
   ([pre resource]
    ;(pprint "parsing" (str pre resource))
