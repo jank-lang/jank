@@ -14,8 +14,7 @@
 
 (insta/defparser parser
   (clojure.java.io/resource "neo-grammar")
-  :auto-whitespace whitespace-or-comments-parser
-  )
+  :auto-whitespace whitespace-or-comments-parser)
 
 (defn parse
   "Runs the provided resource file through instaparse and transforms from hiccup
@@ -36,7 +35,10 @@
                         :qualified-keyword (partial transform/keyword :qualified)
                         :string (partial transform/single :string)
                         :identifier (partial transform/single :identifier)
-                        :binding-definition transform/binding-definition}
+                        :binding-definition transform/binding-definition
+                        :application transform/application
+                        :fn-definition transform/fn-definition
+                        :argument-list transform/argument-list}
                        parsed)]
      ;(pprint "transformed" transformed)
      transformed)))

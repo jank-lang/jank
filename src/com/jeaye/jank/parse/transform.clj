@@ -5,7 +5,13 @@
              [fabricate :as fabricate]]))
 
 (defn single [kind value]
-  {:kind kind :value value}) ; TODO: add single-body and single-values
+  {:kind kind :value value})
+
+(defn single-values [kind values]
+  {:kind kind :values values})
+
+(defn single-named [kind name value]
+  {:kind kind :name name :value value})
 
 (defn read-single [kind value]
   {:kind kind :value (edn/read-string value)})
@@ -24,6 +30,17 @@
              {:value (second more)}))))
 
 (defn binding-definition [& more]
-  {:kind :binding-definition
-   :name (first more)
-   :value (second more)})
+  (single-named :binding-definition (first more) (second more)))
+
+(defn fn-definition [& more]
+  {:kind :fn-definition
+   :arguments (first more)
+   :body (into [] (rest more))})
+
+(defn argument-list [& more]
+  (into [] more))
+
+(defn application [& more]
+  {:kind :application
+   :value (first more)
+   :arguments (into [] (rest more))})
