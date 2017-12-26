@@ -22,11 +22,15 @@
   ([resource] (parse prelude resource))
   ([pre resource]
    ;(pprint "parsing" (str pre resource))
-   (let [parsed (parser (str pre resource))
+   (let [input (str pre resource)
+         parsed (parser input)
          error (pr-str (insta/get-failure parsed))
          _ (parse-assert (not (insta/failure? parsed))
                          "invalid syntax\n" error)
-         _ (pprint "parsed" parsed)
+         parsed-with-meta (insta/add-line-and-column-info-to-metadata
+                            input
+                            parsed)
+         _ (pprint "parsed" parsed-with-meta)
          transformed (insta/transform
                        {:integer (partial transform/read-single :integer)
                         :real (partial transform/read-single :real)
@@ -40,7 +44,7 @@
                         :application transform/application
                         :fn-definition transform/fn-definition
                         :argument-list transform/argument-list}
-                       parsed)]
+                       parsed-with-meta)]
      ;(pprint "transformed" transformed)
      transformed)))
 
