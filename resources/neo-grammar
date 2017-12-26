@@ -1,9 +1,16 @@
 <program> = atom*
-<atom> = string / number / boolean /
+<atom> = string / number / boolean / map /
          qualified-keyword / keyword / identifier /
          binding-definition /
          fn-definition /
          application
+
+<left-paren> = <'('>
+<right-paren> = <')'>
+<left-bracket> = <'['>
+<right-bracket> = <']'>
+<left-curly> = <'{'>
+<right-curly> = <'}'>
 
 special-identifier = def-keyword | fn-keyword
 
@@ -14,18 +21,15 @@ real = #'[+-]?\d+\.\d*'
 <double-quote> = '\"'
 string = <double-quote> #'(?:[^"\\]|\\.)*' <double-quote>
 
-<identifier-text> = #'[^\s"()\[\]\d:/][^\s"()\[\]/]*'
+<identifier-text> = #'[^\s"()\[\]{}\d:/][^\s"()\[\]{}/]*'
 identifier = identifier-text
-<keyword-text> = #'[^\s"()\[\]/]*'
+<keyword-text> = #'[^\s"()\[\]{}/]*'
 qualified-keyword = #'::?' keyword-text '/' keyword-text
 keyword = #'::?' keyword-text
 
 boolean = 'true' | 'false'
 
-<left-paren> = <'('>
-<right-paren> = <')'>
-<left-bracket> = <'['>
-<right-bracket> = <']'>
+map = left-curly atom* right-curly
 
 <def-keyword> = <'def'>
 binding-definition = left-paren def-keyword identifier atom right-paren

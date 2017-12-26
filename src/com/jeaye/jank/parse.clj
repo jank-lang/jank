@@ -34,6 +34,7 @@
                         :keyword (partial transform/keyword :unqualified)
                         :qualified-keyword (partial transform/keyword :qualified)
                         :string (partial transform/single :string)
+                        :map transform/map
                         :identifier (partial transform/single :identifier)
                         :binding-definition transform/binding-definition
                         :application transform/application
