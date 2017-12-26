@@ -1,6 +1,7 @@
 <program> = atom*
 <atom> = string / number / boolean /
-         identifier / keyword
+         identifier / keyword /
+         binding-definition
 
 integer = #'[+-]?\d+'
 real = #'[+-]?\d+\.\d*'
@@ -17,3 +18,6 @@ boolean = 'true' | 'false'
 
 <left-paren> = <'('>
 <right-paren> = <')'>
+
+<def-keyword> = <'def'>
+binding-definition = left-paren def-keyword identifier atom right-paren

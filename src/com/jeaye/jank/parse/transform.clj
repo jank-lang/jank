@@ -8,3 +8,8 @@
 
 (defn read-single [kind value]
   {:kind kind :value (edn/read-string value)})
+
+(defn binding-definition [& more]
+  {:kind :binding-definition
+   :name (first more)
+   :value (second more)})
