@@ -13,9 +13,14 @@
 (defn keyword [qualified & more]
   (let [qualified? (= qualified :qualified)]
     (merge {:kind :keyword}
-           (if qualified?
+           (cond
+             qualified?
              {:ns (second more)
               :value (nth more 3)}
+             (= (first more) "::")
+             {:ns :current
+              :value (second more)}
+             :else
              {:value (second more)}))))
 
 (defn binding-definition [& more]
