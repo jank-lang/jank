@@ -5,4 +5,7 @@
 
 (defn -main
   [& args]
-  (parse/parse parse/prelude (-> args first slurp)))
+  (let [parse-info (parse/parse parse/prelude
+                                (first args)
+                                (-> args first slurp))]
+    (::parse/tree parse-info)))

@@ -16,7 +16,7 @@
 (defn parse
   "Runs the provided resource file through instaparse and transforms from hiccup
    to hickory. Returns the generated syntax tree."
-  [prelude input]
+  [prelude input-filename input]
   ;(pprint "parsing" input)
    (let [parsed (parser input)
          error (pr-str (insta/get-failure parsed))
@@ -41,11 +41,13 @@
                         :argument-list transform/argument-list}
                        parsed-with-meta)]
      ;(pprint "transformed" transformed)
-     (into prelude transformed)))
+     {::file input-filename
+      ::tree (into prelude transformed)}))
 
 (defn parses [source & args]
   (apply insta/parses parser source args))
 
 (def prelude (->> (clojure.java.io/resource "neo-prelude.jank")
                   slurp
-                  (parse [])))
+                  (parse [] "<prelude>")
+                  ::tree))
