@@ -6,9 +6,6 @@
             [com.jeaye.jank.parse
              [transform :as transform]]))
 
-;(def prelude (slurp (clojure.java.io/resource "prelude.jank")))
-(def prelude "")
-
 (insta/defparser whitespace-or-comments-parser
   (clojure.java.io/resource "neo-whitespace-grammar"))
 
@@ -19,11 +16,9 @@
 (defn parse
   "Runs the provided resource file through instaparse and transforms from hiccup
    to hickory. Returns the generated syntax tree."
-  ([resource] (parse prelude resource))
-  ([pre resource]
-   ;(pprint "parsing" (str pre resource))
-   (let [input (str pre resource)
-         parsed (parser input)
+  [prelude input]
+  ;(pprint "parsing" input)
+   (let [parsed (parser input)
          error (pr-str (insta/get-failure parsed))
          _ (parse-assert (not (insta/failure? parsed))
                          "invalid syntax\n" error)
@@ -46,7 +41,11 @@
                         :argument-list transform/argument-list}
                        parsed-with-meta)]
      ;(pprint "transformed" transformed)
-     transformed)))
+     (into prelude transformed)))
 
 (defn parses [source & args]
   (apply insta/parses parser source args))
+
+(def prelude (->> (clojure.java.io/resource "neo-prelude.jank")
+                  slurp
+                  (parse [])))
