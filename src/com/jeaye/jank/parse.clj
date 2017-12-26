@@ -26,16 +26,17 @@
          error (pr-str (insta/get-failure parsed))
          _ (parse-assert (not (insta/failure? parsed))
                          "invalid syntax\n" error)
+         _ (pprint "parsed" parsed)
          transformed (insta/transform
                        {:integer (partial transform/read-single :integer)
                         :real (partial transform/read-single :real)
                         :boolean (partial transform/read-single :boolean)
-                        :keyword (partial transform/single :keyword)
+                        :keyword (partial transform/keyword :unqualified)
+                        :qualified-keyword (partial transform/keyword :qualified)
                         :string (partial transform/single :string)
                         :identifier (partial transform/single :identifier)
                         :binding-definition transform/binding-definition}
                        parsed)]
-     (pprint "parsed" parsed)
      ;(pprint "transformed" transformed)
      transformed)))
 

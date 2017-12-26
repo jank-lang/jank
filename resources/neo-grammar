@@ -1,6 +1,6 @@
 <program> = atom*
 <atom> = string / number / boolean /
-         identifier / keyword /
+         qualified-keyword / keyword / identifier /
          binding-definition
 
 integer = #'[+-]?\d+'
@@ -10,9 +10,10 @@ real = #'[+-]?\d+\.\d*'
 <double-quote> = '\"'
 string = <double-quote> #'(?:[^"\\]|\\.)*' <double-quote>
 
-<identifier-text> = #'[^\s"()\d:][^\s"()]*'
+<identifier-text> = #'[^\s"()\d:][^\s"()/]*'
 identifier = identifier-text
-keyword = #':[^\s"()\d:][^\s"()]*'
+qualified-keyword = #'::?' identifier-text '/' identifier-text
+keyword = #'::?' identifier-text
 
 boolean = 'true' | 'false'
 
