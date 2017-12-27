@@ -1,11 +1,19 @@
 (ns com.jeaye.jank.assert
   (:require [com.jeaye.jank
-             [log :refer [pprint]]]))
+             [log :refer [pprint]]]
+            [com.jeaye.jank.parse
+              [binding :as parse.binding]]))
 
 (defn report [prefix form msg]
   (pprint [form (meta form)])
-  (let [file (:file (meta form))]
-    (println (str file ": " prefix ": "))))
+  (let [{:keys [:file
+                :instaparse.gll/start-line :instaparse.gll/start-column
+                :instaparse.gll/start-index :instaparse.gll/end-index]} (meta form)]
+    (println (apply str
+                    file ":" start-line ":" start-column ": "
+                    prefix ": "
+                    msg "\n"
+                    (pr-str form)))))
 
 (defn parse-assert [condition form & msg]
   (when-not condition

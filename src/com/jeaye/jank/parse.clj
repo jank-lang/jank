@@ -1,9 +1,11 @@
 (ns com.jeaye.jank.parse
   (:require [instaparse.core :as insta]
+            [clojure.java.io :as io]
             [com.jeaye.jank
              [log :refer [pprint]]
              [assert :refer [parse-assert]]]
             [com.jeaye.jank.parse
+             [binding :as parse.binding]
              [transform :as transform]]))
 
 (insta/defparser whitespace-or-comments-parser
@@ -20,23 +22,27 @@
 (defn parse
   "Runs the provided resource file through instaparse and transforms from hiccup
    to hickory. Returns the generated syntax tree."
-  [prelude file input]
+  [prelude]
   ;(pprint "parsing" input)
-   (let [parsed (pprint "parsed raw" (parser input))
+   (let [input parse.binding/*input-source*
+         parsed (pprint "parsed raw" (parser input))
          error (pr-str (insta/get-failure parsed))
          _ (parse-assert (not (insta/failure? parsed))
                          "invalid syntax\n" error)
          parsed-with-meta (add-meta input parsed)
          _ (pprint "parsed" parsed-with-meta)
-         transformed (transform/walk file parsed-with-meta)]
+         transformed (transform/walk parsed-with-meta)]
      ;(pprint "transformed" transformed)
-     {::file file
+     {::file parse.binding/*input-file*
       ::tree (into prelude transformed)}))
 
 (defn parses [source & args]
   (apply insta/parses parser source args))
 
-(def prelude (->> (clojure.java.io/resource "neo-prelude.jank")
-                  slurp
-                  (parse [] "<prelude>")
-                  ::tree))
+(def prelude-file "neo-prelude.jank")
+(def prelude
+  (->> (binding [parse.binding/*input-file* prelude-file
+                 parse.binding/*input-source* (-> (io/resource prelude-file)
+                                                  slurp)]
+         (parse []))
+       ::tree))

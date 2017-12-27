@@ -6,19 +6,18 @@
              [log :refer [pprint]]
              [assert :refer [parse-assert]]]
             [com.jeaye.jank.parse
+             [binding :as parse.binding]
              [fabricate :as fabricate]]))
-
-(def ^:dynamic *input-file* nil)
-(def ^:dynamic *form* nil)
 
 (defn merge-meta [obj new-meta]
   (with-meta obj (merge (meta obj) new-meta)))
 
 (defmacro deftransform [fn-name fn-args & fn-body]
   `(defn ~fn-name ~fn-args
-     (-> (binding [*form* (merge-meta *form* {:file ~'*input-file*})]
+     (-> (binding [parse.binding/*current-form* (merge-meta *form*
+                                                            {:file ~'parse.binding/*input-file*})]
            ~@fn-body)
-         (merge-meta {:file ~'*input-file*}))))
+         (merge-meta {:file ~'parse.binding/*input-file*}))))
 
 (deftransform single [kind value]
   {:kind kind :value value})
@@ -48,7 +47,7 @@
 (deftransform map [& more]
   (let [kvs (partition-all 2 more)
         _ (parse-assert (every? #(= 2 (count %)) kvs)
-                        *form*
+                        parse.binding/*current-form*
                         "maps require an even number of forms")
         values (mapv #(do {:key (first %) :value (second %)}) kvs)]
     (single-values :map values)))
@@ -83,15 +82,14 @@
                   :argument-list argument-list
                   })
 
-(defn walk [input-file parsed]
-  (binding [*input-file* input-file]
-    (postwalk (fn [item]
-                ;(pprint "walk item" [item (meta item)])
-                (if-let [trans (and (map? item) (contains? item :tag)
-                                    (transformer (:tag item)))]
-                  (let [r (binding [*form* item]
-                            (apply trans (:content item)))]
-                    ;(pprint [r (meta r)])
-                    r)
-                  item))
-              parsed)))
+(defn walk [parsed]
+  (postwalk (fn [item]
+              ;(pprint "walk item" [item (meta item)])
+              (if-let [trans (and (map? item) (contains? item :tag)
+                                  (transformer (:tag item)))]
+                (let [r (binding [*form* item]
+                          (apply trans (:content item)))]
+                  ;(pprint [r (meta r)])
+                  r)
+                item))
+            parsed))
