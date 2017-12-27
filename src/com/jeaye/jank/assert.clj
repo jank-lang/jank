@@ -1,11 +1,15 @@
-(ns com.jeaye.jank.assert)
+(ns com.jeaye.jank.assert
+  (:require [com.jeaye.jank
+             [log :refer [pprint]]]))
 
-(defn report [prefix form & msg]
-  )
+(defn report [prefix form msg]
+  (pprint [form (meta form)])
+  (let [file (:file (meta form))]
+    (println (str file ": " prefix ": "))))
 
 (defn parse-assert [condition form & msg]
   (when-not condition
-    (apply str "parse error: " msg)))
+    (report "parse error" form msg)))
 
 ;(defn type-assert [condition & msg]
 ;  (assert condition (apply str "type error: " msg)))

@@ -11,7 +11,8 @@
 
 (insta/defparser parser
   (clojure.java.io/resource "neo-grammar")
-  :auto-whitespace whitespace-or-comments-parser)
+  :auto-whitespace whitespace-or-comments-parser
+  :output-format :enlive)
 
 (defn add-meta [input parsed]
   (insta/add-line-and-column-info-to-metadata input parsed))
@@ -27,23 +28,8 @@
                          "invalid syntax\n" error)
          parsed-with-meta (add-meta input parsed)
          _ (pprint "parsed" parsed-with-meta)
-         transformed (binding [transform/*input-file* file]
-                       (insta/transform
-                         {:integer (partial transform/read-single :integer)
-                          :real (partial transform/read-single :real)
-                          :boolean (partial transform/read-single :boolean)
-                          :keyword (partial transform/keyword :unqualified)
-                          :qualified-keyword (partial transform/keyword :qualified)
-                          :string (partial transform/single :string)
-                          :map transform/map
-                          :identifier (partial transform/single :identifier)
-                          :binding-definition transform/binding-definition
-                          :application transform/application
-                          :fn-definition transform/fn-definition
-                          :argument-list transform/argument-list}
-                         parsed-with-meta))]
-     ;(pprint "transformed" transformed)
-     (pprint (meta (-> transformed first :name)))
+         transformed (transform/walk file parsed-with-meta)]
+     (pprint "transformed" transformed)
      {::file file
       ::tree (into prelude transformed)}))
 
