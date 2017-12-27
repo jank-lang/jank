@@ -25,12 +25,12 @@
   [prelude]
   ;(pprint "parsing" input)
    (let [input parse.binding/*input-source*
-         parsed (pprint "parsed raw" (parser input))
+         parsed (parser input)
          error (pr-str (insta/get-failure parsed))
          _ (parse-assert (not (insta/failure? parsed))
                          "invalid syntax\n" error)
          parsed-with-meta (add-meta input parsed)
-         _ (pprint "parsed" parsed-with-meta)
+         ;_ (pprint "parsed" parsed-with-meta)
          transformed (transform/walk parsed-with-meta)]
      ;(pprint "transformed" transformed)
      {::file parse.binding/*input-file*

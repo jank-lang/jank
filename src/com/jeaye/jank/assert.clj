@@ -4,16 +4,30 @@
             [com.jeaye.jank.parse
               [binding :as parse.binding]]))
 
+(defn form-source [source start-line end-line]
+  (->> (clojure.string/split-lines source)
+       (drop (dec start-line))
+       (take (inc (- end-line start-line)))
+       (clojure.string/join "\n")))
+
+(defn underline [start-column end-column]
+  (apply str (-> (into [] (repeat start-column " "))
+                 (into ["^"])
+                 (into (repeat (- end-column start-column 2) "~")))))
+
 (defn report [prefix form msg]
-  (pprint [form (meta form)])
   (let [{:keys [:file
-                :instaparse.gll/start-line :instaparse.gll/start-column
-                :instaparse.gll/start-index :instaparse.gll/end-index]} (meta form)]
-    (println (apply str
-                    file ":" start-line ":" start-column ": "
-                    prefix ": "
-                    msg "\n"
-                    (pr-str form)))))
+                :instaparse.gll/start-line :instaparse.gll/end-line
+                :instaparse.gll/start-column :instaparse.gll/end-column]} (meta form)]
+    (println (str (apply str
+                         file ":" start-line ":" start-column ": "
+                         prefix ": "
+                         msg)
+                  "\n"
+                  (form-source parse.binding/*input-source*
+                               start-line end-line)
+                  "\n"
+                  (underline start-column end-column)))))
 
 (defn parse-assert [condition form & msg]
   (when-not condition
