@@ -11,7 +11,7 @@
        (clojure.string/join "\n")))
 
 (defn underline [start-column end-column]
-  (apply str (-> (into [] (repeat start-column " "))
+  (apply str (-> (vec (repeat start-column " "))
                  (into ["^"])
                  (into (repeat (- end-column start-column 2) "~")))))
 
