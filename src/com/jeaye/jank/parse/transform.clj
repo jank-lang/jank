@@ -9,25 +9,30 @@
              [fabricate :as fabricate]]))
 
 (def ^:dynamic *input-file* nil)
+(def ^:dynamic *form* nil)
+
+(defn merge-meta [obj new-meta]
+  (with-meta obj (merge (meta obj) new-meta)))
 
 (defmacro deftransform [fn-name fn-args & fn-body]
   `(defn ~fn-name ~fn-args
-     ; TODO: Make form arg entirely implicit?
-     (with-meta (do ~@fn-body) (merge (meta ~'form) {:file ~'*input-file*}))))
+     (-> (binding [*form* (merge-meta *form* {:file ~'*input-file*})]
+           ~@fn-body)
+         (merge-meta {:file ~'*input-file*}))))
 
-(deftransform single [kind form value]
+(deftransform single [kind value]
   {:kind kind :value value})
 
-(deftransform single-values [kind form values]
+(deftransform single-values [kind values]
   {:kind kind :values values})
 
-(deftransform single-named [kind form name value]
+(deftransform single-named [kind name value]
   {:kind kind :name name :value value})
 
-(deftransform read-single [kind form value]
+(deftransform read-single [kind value]
   {:kind kind :value (edn/read-string value)})
 
-(deftransform keyword [qualified form & more]
+(deftransform keyword [qualified & more]
   (let [qualified? (= qualified :qualified)]
     (merge {:kind :keyword}
            (cond
@@ -40,27 +45,26 @@
              :else
              {:value (second more)}))))
 
-(deftransform map [form & more]
-  (pprint "map" more)
+(deftransform map [& more]
   (let [kvs (partition-all 2 more)
         _ (parse-assert (every? #(= 2 (count %)) kvs)
-                        form
+                        *form*
                         "maps require an even number of forms")
         values (mapv #(do {:key (first %) :value (second %)}) kvs)]
-    (single-values :map form values)))
+    (single-values :map values)))
 
-(deftransform binding-definition [form & more]
-  (single-named :binding-definition form (first more) (second more)))
+(deftransform binding-definition [& more]
+  (single-named :binding-definition (first more) (second more)))
 
-(deftransform fn-definition [form & more]
+(deftransform fn-definition [& more]
   {:kind :fn-definition
    :arguments (first more)
    :body (into [] (rest more))})
 
-(deftransform argument-list [form & more]
+(deftransform argument-list [& more]
   (into [] more))
 
-(deftransform application [form & more]
+(deftransform application [& more]
   {:kind :application
    :value (first more)
    :arguments (into [] (rest more))})
@@ -82,11 +86,12 @@
 (defn walk [input-file parsed]
   (binding [*input-file* input-file]
     (postwalk (fn [item]
-                (pprint "walk item" [item (meta item)])
+                ;(pprint "walk item" [item (meta item)])
                 (if-let [trans (and (map? item) (contains? item :tag)
                                     (transformer (:tag item)))]
-                  (let [r (apply trans item (:content item))]
-                    (pprint [r (meta r)])
+                  (let [r (binding [*form* item]
+                            (apply trans (:content item)))]
+                    ;(pprint [r (meta r)])
                     r)
                   item))
               parsed)))

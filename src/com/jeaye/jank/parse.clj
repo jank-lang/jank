@@ -29,7 +29,7 @@
          parsed-with-meta (add-meta input parsed)
          _ (pprint "parsed" parsed-with-meta)
          transformed (transform/walk file parsed-with-meta)]
-     (pprint "transformed" transformed)
+     ;(pprint "transformed" transformed)
      {::file file
       ::tree (into prelude transformed)}))
 
