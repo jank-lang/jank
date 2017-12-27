@@ -14,7 +14,7 @@
 
 (defmacro deftransform [fn-name fn-args & fn-body]
   `(defn ~fn-name ~fn-args
-     (-> (binding [parse.binding/*current-form* (merge-meta *form*
+     (-> (binding [parse.binding/*current-form* (merge-meta parse.binding/*current-form*
                                                             {:file ~'parse.binding/*input-file*})]
            ~@fn-body)
          (merge-meta {:file ~'parse.binding/*input-file*}))))
@@ -87,7 +87,7 @@
               ;(pprint "walk item" [item (meta item)])
               (if-let [trans (and (map? item) (contains? item :tag)
                                   (transformer (:tag item)))]
-                (let [r (binding [*form* item]
+                (let [r (binding [parse.binding/*current-form* item]
                           (apply trans (:content item)))]
                   ;(pprint [r (meta r)])
                   r)
