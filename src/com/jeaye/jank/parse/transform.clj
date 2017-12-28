@@ -4,7 +4,7 @@
             [clojure.walk :refer [postwalk]]
             [com.jeaye.jank
              [log :refer [pprint]]
-             [assert :refer [parse-assert]]]
+             [assert :refer [parse-assert!]]]
             [com.jeaye.jank.parse
              [binding :as parse.binding]
              [fabricate :as fabricate]]))
@@ -39,9 +39,6 @@
              {:ns (second more)
               :value (nth more 3)}
              (= (first more) "::")
-             #_(parse-assert false
-                           parse.binding/*current-form*
-                           "namespaced keywords unsupported")
              {:ns :current ; TODO: Do something here. Track current ns?
               :value (second more)}
              :else
@@ -49,9 +46,9 @@
 
 (deftransform map [& more]
   (let [kvs (partition-all 2 more)
-        _ (parse-assert (every? #(= 2 (count %)) kvs)
-                        parse.binding/*current-form*
-                        "maps require an even number of forms")
+        _ (parse-assert! (every? #(= 2 (count %)) kvs)
+                         parse.binding/*current-form*
+                         "maps require an even number of forms")
         values (mapv #(do {:key (first %) :value (second %)}) kvs)]
     (single-values :map values)))
 

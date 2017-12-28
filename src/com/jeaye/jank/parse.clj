@@ -3,7 +3,7 @@
             [clojure.java.io :as io]
             [com.jeaye.jank
              [log :refer [pprint]]
-             [assert :refer [incomplete-parse]]]
+             [assert :refer [incomplete-parse!]]]
             [com.jeaye.jank.parse
              [binding :as parse.binding]
              [transform :as transform]]))
@@ -28,7 +28,7 @@
          parsed (parser input)
          _ (pprint "raw parsed" parsed)
          _ (when (insta/failure? parsed)
-             (incomplete-parse (insta/get-failure parsed)))
+             (incomplete-parse! (insta/get-failure parsed)))
          parsed-with-meta (add-meta input parsed)
          ;_ (pprint "parsed" parsed-with-meta)
          transformed (transform/walk parsed-with-meta)]
