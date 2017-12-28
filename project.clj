@@ -7,7 +7,8 @@
   :dependencies [[org.clojure/clojure "1.9.0"]
                  [org.clojure/core.logic "0.8.11"]
                  [instaparse "1.4.8"]
-                 [me.raynes/fs "1.4.6"]]
+                 [me.raynes/fs "1.4.6"]
+                 [io.aviso/pretty "0.1.34"]]
   :main ^:skip-aot jank.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}
