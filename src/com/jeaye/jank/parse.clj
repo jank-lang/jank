@@ -33,8 +33,7 @@
          ;_ (pprint "parsed" parsed-with-meta)
          transformed (transform/walk parsed-with-meta)]
      ;(pprint "transformed" transformed)
-     {::file parse.binding/*input-file*
-      ::tree (into prelude transformed)}))
+     {::tree (into prelude transformed)}))
 
 (defn parses [source & args]
   (apply insta/parses parser source args))
