@@ -80,6 +80,8 @@
         start-column (form-start-column form-meta)
         ; Instaparse uses an exclusive end column, but we want inclusive.
         end-column (-> form-meta :instaparse.gll/end-column dec)
+        ; We don't highlight parse errors, since the code isn't syntactically
+        ; correct and isn't worth trying to highlight.
         highlight (if highlight?
                     #(glow/highlight % syntax-colors)
                     identity)
