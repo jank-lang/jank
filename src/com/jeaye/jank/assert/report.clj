@@ -1,10 +1,12 @@
 (ns com.jeaye.jank.assert.report
   (:require [io.aviso.ansi :as ansi]
+            ; TODO: Implement custom highlighter. There's no need to parse the
+            ; source again when we already have the parse tree.
             [glow.core :as glow]
             [com.jeaye.jank
              [log :refer [pprint]]]
             [com.jeaye.jank.parse
-              [binding :as parse.binding]]))
+             [binding :as parse.binding]]))
 
 (def file-color ansi/green-font)
 (def error-color ansi/red-font)
