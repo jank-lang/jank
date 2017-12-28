@@ -73,8 +73,8 @@
               :instaparse.gll/end-column (:column error)
               :instaparse.gll/start-index index
               :instaparse.gll/end-index index}
-             msg))
-  (throw!))
+             msg)
+    (throw!)))
 
 ;(defn type-assert [condition & msg]
 ;  (assert condition (apply str "type error: " msg)))
