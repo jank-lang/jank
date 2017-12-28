@@ -73,20 +73,22 @@
 (defn dump!
   "Prints an error report containing the relevant file/line/column info, a code
    snippet of the relevant form, and a helpful underline."
-  [prefix form-meta msg]
+  [prefix form-meta msg highlight?]
   (let [{:keys [:file
                 :instaparse.gll/start-line
                 :instaparse.gll/end-line]} form-meta
         start-column (form-start-column form-meta)
         ; Instaparse uses an exclusive end column, but we want inclusive.
         end-column (-> form-meta :instaparse.gll/end-column dec)
+        highlight (if highlight?
+                    #(glow/highlight % syntax-colors)
+                    identity)
         sections [(apply str
                          file-color file ":" start-line ":" start-column ": "
                          error-color prefix ": "
                          ansi/reset-font msg)
-                  (glow/highlight (form-source parse.binding/*input-source*
-                                               start-line end-line)
-                                  syntax-colors)
+                  (highlight (form-source parse.binding/*input-source*
+                                          start-line end-line))
                   (str error-color
                        (underline start-column end-column)
                        ansi/reset-font)]]

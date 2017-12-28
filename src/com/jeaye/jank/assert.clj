@@ -10,7 +10,7 @@
 
 (defn parse-assert! [condition form & msg]
   (when-not condition
-    (report/dump! "parse error" (meta form) msg)
+    (report/dump! "parse error" (meta form) msg false)
     (throw!)))
 
 (defn incomplete-parse!
@@ -37,7 +37,8 @@
                    :instaparse.gll/end-column (:column error)
                    :instaparse.gll/start-index index
                    :instaparse.gll/end-index index}
-                  msg)
+                  msg
+                  false)
     (throw!)))
 
 ;(defn type-assert [condition & msg]
