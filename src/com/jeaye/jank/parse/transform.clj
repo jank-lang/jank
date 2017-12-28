@@ -1,5 +1,5 @@
 (ns com.jeaye.jank.parse.transform
-  (:refer-clojure :exclude [keyword map])
+  (:refer-clojure :exclude [keyword map vector])
   (:require [clojure.edn :as edn]
             [clojure.walk :refer [postwalk]]
             [com.jeaye.jank
@@ -52,21 +52,24 @@
         values (mapv #(do {:key (first %) :value (second %)}) kvs)]
     (single-values :map values)))
 
+(deftransform vector [& more]
+  (single-values :vector (vec more)))
+
 (deftransform binding-definition [& more]
   (single-named :binding-definition (first more) (second more)))
 
 (deftransform fn-definition [& more]
   {:kind :fn-definition
    :arguments (first more)
-   :body (into [] (rest more))})
+   :body (vec (rest more))})
 
 (deftransform argument-list [& more]
-  (into [] more))
+  (vec more))
 
 (deftransform application [& more]
   {:kind :application
    :value (first more)
-   :arguments (into [] (rest more))})
+   :arguments (vec (rest more))})
 
 (def transformer {:integer (partial read-single :integer)
                   :real (partial read-single :real)
@@ -75,6 +78,7 @@
                   :qualified-keyword (partial keyword :qualified)
                   :string (partial single :string)
                   :map map
+                  :vector vector
                   :identifier (partial single :identifier)
                   :binding-definition binding-definition
                   :application application
