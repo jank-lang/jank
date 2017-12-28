@@ -26,7 +26,7 @@
   ;(pprint "parsing" input)
    (let [input parse.binding/*input-source*
          parsed (parser input)
-         ;_ (pprint "raw parsed" parsed)
+         _ (pprint "raw parsed" parsed)
          _ (when (insta/failure? parsed)
              (incomplete-parse (insta/get-failure parsed)))
          parsed-with-meta (add-meta input parsed)
@@ -40,7 +40,7 @@
   (apply insta/parses parser source args))
 
 (def prelude-file "neo-prelude.jank")
-(def prelude
+#_(def prelude
   (->> (binding [parse.binding/*input-file* prelude-file
                  parse.binding/*input-source* (-> (io/resource prelude-file)
                                                   slurp)]

@@ -13,17 +13,33 @@
        (take (inc (- end-line start-line)))
        (clojure.string/join "\n")))
 
+(defn whitespace? [ch]
+  (or (= \space ch) (= \newline ch)))
+
+(defn form-start-column [form-meta]
+  (let [{:keys [:instaparse.gll/start-column
+                :instaparse.gll/start-index]} form-meta]
+    (if (whitespace? (nth parse.binding/*input-source* start-index))
+      (let [whitespace (->> (subs parse.binding/*input-source* start-index)
+                            (re-seq #"\s+")
+                            first)
+            multiple-lines? (clojure.string/includes? whitespace "\n")]
+        (if multiple-lines?
+          (->> (re-seq #" +" whitespace) last count inc)
+          (+ start-column (count whitespace))))
+      start-column)))
+
 (defn underline [start-column end-column]
-  (apply str (-> (vec (repeat start-column " "))
+  (apply str (-> (vec (repeat (dec start-column) " "))
                  (into ["^"])
-                 (into (repeat (- end-column start-column 2) "~")))))
+                 (into (repeat (- end-column start-column) "~")))))
 
 (defn report! [prefix form-meta msg]
   (let [{:keys [:file
                 :instaparse.gll/start-line
-                :instaparse.gll/end-line
-                :instaparse.gll/start-column
-                :instaparse.gll/end-column]} form-meta]
+                :instaparse.gll/end-line]} form-meta
+        start-column (form-start-column form-meta)
+        end-column (-> form-meta :instaparse.gll/end-column dec)]
     (println (str (apply str
                          file ":" start-line ":" start-column ": "
                          prefix ": "
@@ -40,19 +56,24 @@
     (throw!)))
 
 (defn incomplete-parse [error]
-  (report! "parse error"
-           {:file parse.binding/*input-file*
-            :instaparse.gll/start-line (:line error)
-            :instaparse.gll/end-line (:line error)
-            :instaparse.gll/start-column (-> error :column )
-            :instaparse.gll/end-column (-> error :column )
-            :instaparse.gll/start-index (:index error)
-            :instaparse.gll/end-index (:index error)}
-           (cond
-             (= (:index error) (count parse.binding/*input-source*))
-             "unexpected end of file"
-             :else
-             "invalid syntax"))
+  (let [end? (= (:index error) (count parse.binding/*input-source*))
+        msg (cond
+              end?
+              "unexpected end of file"
+              :else
+              "invalid syntax")
+        index (if end? ; TODO: Determine where it started
+                (-> error :index dec)
+                (:index error))]
+    (report! "parse error"
+             {:file parse.binding/*input-file*
+              :instaparse.gll/start-line (:line error)
+              :instaparse.gll/end-line (:line error)
+              :instaparse.gll/start-column (:column error)
+              :instaparse.gll/end-column (:column error)
+              :instaparse.gll/start-index index
+              :instaparse.gll/end-index index}
+             msg))
   (throw!))
 
 ;(defn type-assert [condition & msg]

@@ -39,6 +39,9 @@
              {:ns (second more)
               :value (nth more 3)}
              (= (first more) "::")
+             #_(parse-assert false
+                           parse.binding/*current-form*
+                           "namespaced keywords unsupported")
              {:ns :current ; TODO: Do something here. Track current ns?
               :value (second more)}
              :else
@@ -92,4 +95,4 @@
                   ;(pprint [r (meta r)])
                   r)
                 item))
-            parsed))
+                 parsed))
