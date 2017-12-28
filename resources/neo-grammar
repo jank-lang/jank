@@ -38,7 +38,7 @@ binding-definition = left-paren def-keyword identifier atom right-paren
 <fn-keyword> = <'fn'>
 argument-list = left-bracket identifier* right-bracket
 fn-definition =
-  left-paren fn-keyword argument-list
+  left-paren fn-keyword identifier? argument-list
     atom*
   right-paren
 

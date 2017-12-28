@@ -59,9 +59,19 @@
   (single-named :binding-definition (first more) (second more)))
 
 (deftransform fn-definition [& more]
-  {:kind :fn-definition
-   :arguments (first more)
-   :body (vec (rest more))})
+  (pprint "fn" more)
+  (let [has-name? (= :identifier (-> more first :kind))
+        args (if has-name?
+               (second more)
+               (first more))
+        body (if has-name?
+               (drop 2 more)
+               (rest more))]
+    (merge {:kind :fn-definition
+            :arguments args
+            :body (vec body)}
+           (when has-name?
+             {:name (first more)}))))
 
 (deftransform argument-list [& more]
   (vec more))
