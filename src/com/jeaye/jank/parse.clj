@@ -40,7 +40,7 @@
   (apply insta/parses parser source args))
 
 (def prelude-file "neo-prelude.jank")
-#_(def prelude
+(def prelude
   (->> (binding [parse.binding/*input-file* prelude-file
                  parse.binding/*input-source* (-> (io/resource prelude-file)
                                                   slurp)]

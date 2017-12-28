@@ -9,5 +9,5 @@
   [& args]
   (binding [parse.binding/*input-file* (first args)
             parse.binding/*input-source* (-> args first slurp)]
-    (let [parse-info (parse/parse [])]
+    (let [parse-info (parse/parse parse/prelude)]
       (::parse/tree parse-info))))
