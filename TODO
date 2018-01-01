@@ -1,3 +1,29 @@
+**** to become a clojure dialect: ****
+parsing
+  commas:
+  comments:
+  require:
+  integers: working, untested
+  reals: working, untested
+  bools: working, untested
+  strings: working, untested
+  keywords
+    simple: working, untested
+    qualified: working, untested
+    namespaced: working, untested
+    namespaced and qualified: working, untested
+  maps: working, untested
+  vectors: working, untested
+  sets:
+  lists:
+  regexes:
+  identifiers: working, untested
+  defs: working, untested
+  defn:
+  anonymous fns: working, untested
+  anonymous shorthand fns:
+  applications: working, untested
+
 **** what's needed to make jank usable: ****
 
 website style
