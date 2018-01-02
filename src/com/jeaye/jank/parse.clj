@@ -24,6 +24,7 @@
    to hickory. Returns the generated syntax tree."
   [prelude]
   ;(pprint "parsing" input)
+  ; TODO: Assert that the proper bindings are present
    (let [input parse.binding/*input-source*
          parsed (parser input)
          ;_ (pprint "raw parsed" parsed)
