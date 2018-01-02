@@ -1,5 +1,6 @@
 **** to become a clojure dialect: ****
 parsing
+  parens: working, untested
   commas:
   comments:
   require:
