@@ -28,7 +28,7 @@ parsing
 **** what's needed to make jank usable: ****
 
 website style
-  similar to http://eta-lang.org/#
+  similar to http://eta-lang.org/
   also emacs site
 
 implement generic functions first
