@@ -5,4 +5,4 @@
 (deftest all
   (util/test-files
     "dev-resources/test/neo-parse/"
-    []))
+    [#".*identifier/ascii/pass-true-false\.jank"]))
