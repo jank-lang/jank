@@ -93,5 +93,12 @@
                                           start-line end-line))
                   (str error-color
                        (underline start-column end-column)
-                       ansi/reset-font)]]
-    (println (clojure.string/join "\n" sections))))
+                       ansi/reset-font)]
+        dump {:prefix prefix
+              :output (clojure.string/join "\n" sections)
+              :start-line start-line
+              :end-line end-line
+              :start-column start-column
+              :end-column end-column}]
+    (println (:output dump))
+    dump))

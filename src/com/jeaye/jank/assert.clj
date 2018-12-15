@@ -5,16 +5,15 @@
               [binding :as parse.binding]]
             [com.jeaye.jank.assert.report :as report]))
 
-(defn throw! []
-  (assert false))
+(defn throw! [dump]
+  (throw (ex-info (:prefix dump) {:dump dump})))
 
 (defn parse-assert! [condition form & msg]
   (when-not condition
-    (report/dump! "parse error" (meta form) msg false)
-    (throw!)))
+    (throw! (report/dump! "parse error" (meta form) msg false))))
 
 (defn incomplete-parse!
-  "Triggers and assertion failuire for a parse which could not be finished. In
+  "Triggers and assertion failure for a parse which could not be finished. In
    this specific case, there isn't a parse tree with meta data for each form,
    so the meta data is built from the parse error instead."
   [error]
@@ -28,18 +27,18 @@
               "invalid syntax")
         index (if end? ; TODO: Determine where it started
                 (-> error :index dec)
-                (:index error))]
-    (report/dump! "parse error"
-                  {:file parse.binding/*input-file*
-                   :instaparse.gll/start-line (:line error)
-                   :instaparse.gll/end-line (:line error)
-                   :instaparse.gll/start-column (:column error)
-                   :instaparse.gll/end-column (:column error)
-                   :instaparse.gll/start-index index
-                   :instaparse.gll/end-index index}
-                  msg
-                  false)
-    (throw!)))
+                (:index error))
+        dump (report/dump! "parse error"
+                           {:file parse.binding/*input-file*
+                            :instaparse.gll/start-line (:line error)
+                            :instaparse.gll/end-line (:line error)
+                            :instaparse.gll/start-column (:column error)
+                            :instaparse.gll/end-column (:column error)
+                            :instaparse.gll/start-index index
+                            :instaparse.gll/end-index index}
+                           msg
+                           false)]
+    (throw! dump)))
 
 ;(defn type-assert [condition & msg]
 ;  (assert condition (apply str "type error: " msg)))
