@@ -43,6 +43,6 @@ fn-definition =
   right-paren
 
 application =
-  left-paren !special-identifier (identifier | application | fn-definition)
-    atom*
+  left-paren !special-identifier
+    atom+
   right-paren
