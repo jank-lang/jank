@@ -14,17 +14,20 @@ parsing
     simple: working, tested
     qualified: working, tested
     aliased: working, tested
-  maps: working, untested
-  vectors: working, untested
+  maps: working, tested
+  vectors: working, tested
   sets:
   lists:
   regexes:
   identifiers: working, tested
   defs: working, tested
   defn:
-  anonymous fns: working, untested
+  anonymous fns: working, tested
   anonymous shorthand fns:
   applications: working, untested
+  destructuring:
+  macros:
+  reader macros:
 
 **** what's needed to make jank usable: ****
 
