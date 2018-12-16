@@ -15,22 +15,23 @@
 (defn files
   [path excludes]
   (let [all (map #(.getPath %) (fs/find-files path #".*\.jank"))
-        matched (filter (fn [f]
-                          (not-any? #(re-matches % f) excludes))
-                        all)
-        stripped (map #(-> (re-matches #".*/dev-resources/(.+)" %)
-                           second)
-                      matched)]
-    stripped))
+        dev-resources-regex #".*/dev-resources/(.+)"]
+    (map (fn [file]
+           (hash-map :resource (-> (re-matches dev-resources-regex
+                                               file)
+                                   second)
+                     :skip? (some #(re-matches % file)
+                                  excludes)))
+         all)))
 
 (defn try-parse [file]
   (binding [parse.binding/*input-file* file
             parse.binding/*input-source* (slurp-resource file)]
     (parse/parse parse/prelude)))
 
-(defn should-fail? [file]
-  (some? (re-matches #".*/fail-.*" file)))
+(defn should-fail? [file-info]
+  (some? (re-matches #".*/fail-.*" (:resource file-info))))
 
-(defn valid-parse? [file]
-  (consume-output (try-parse file))
+(defn valid-parse? [file-info]
+  (consume-output (try-parse (:resource file-info)))
   true)

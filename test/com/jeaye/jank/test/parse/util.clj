@@ -7,10 +7,17 @@
 (defn test-files [path excludes]
   (println "[parse] Gathering files...")
   (let [files (bootstrap/files path excludes)]
-    (doseq [file files]
-      (println "[parse] testing" file)
-      (if (bootstrap/should-fail? file)
+    (doseq [file-info files]
+      (if (:skip? file-info)
+        (println "[parse] SKIP" (:resource file-info))
+        (println "[parse] test" (:resource file-info)))
+      (cond
+        (:skip? file-info) nil
+
+        (bootstrap/should-fail? file-info)
         (is (thrown-with-msg? clojure.lang.ExceptionInfo
                               error
-                              (bootstrap/valid-parse? file)))
-        (is (bootstrap/valid-parse? file))))))
+                              (bootstrap/valid-parse? file-info)))
+
+        :else
+        (is (bootstrap/valid-parse? file-info))))))
