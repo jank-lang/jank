@@ -23,7 +23,7 @@ string = <double-quote> #'(?:[^"\\]|\\.)*' <double-quote>
 
 <identifier-text> = #'[^\s"()\[\]{}\d:/][^\s"()\[\]{}/]*'
 identifier = identifier-text
-<keyword-text> = #'[^\s"()\[\]{}/]*'
+<keyword-text> = #'[^\s"()\[\]{}/:]+'
 qualified-keyword = #'::?' keyword-text '/' keyword-text
 keyword = #'::?' keyword-text
 
