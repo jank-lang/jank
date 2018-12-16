@@ -1,25 +1,26 @@
 **** to become a clojure dialect: ****
 parsing
-  parens: working, untested
+  ns:
+  require:
+  parens: working, tested
   commas:
   comments:
   require:
   integers: working, untested
   reals: working, untested
   bools: working, untested
-  strings: working, untested
+  strings: working, tested
   keywords
-    simple: working, untested
-    qualified: working, untested
-    namespaced: working, untested
-    namespaced and qualified: working, untested
+    simple: working, tested
+    qualified: working, tested
+    aliased: working, tested
   maps: working, untested
   vectors: working, untested
   sets:
   lists:
   regexes:
-  identifiers: working, untested
-  defs: working, untested
+  identifiers: working, tested
+  defs: working, tested
   defn:
   anonymous fns: working, untested
   anonymous shorthand fns:
