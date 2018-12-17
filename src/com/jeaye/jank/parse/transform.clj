@@ -91,6 +91,7 @@
                   :keyword (partial keyword :unqualified)
                   :qualified-keyword (partial keyword :qualified)
                   :string (partial single :string)
+                  :regex (partial single :regex)
                   :map map
                   :vector vector
                   :set set

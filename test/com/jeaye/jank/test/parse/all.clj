@@ -10,4 +10,5 @@
      #".*/keyword/fail-qualified-space-between-colon\.jank"
      #".*/integer/fail-invalid-chars.jank"
      #".*/real/fail-invalid-chars.jank"
-     #".*/set/fail-space-between-hash-and-curly.jank"]))
+     #".*/set/fail-space-between-hash-and-curly.jank"
+     #".*/regex/fail-space-between.jank"]))

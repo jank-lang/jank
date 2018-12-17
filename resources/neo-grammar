@@ -1,5 +1,5 @@
 <program> = atom*
-<atom> = string / number / boolean / set / map / vector /
+<atom> = regex / string / number / boolean / set / map / vector /
          qualified-keyword / keyword / identifier /
          binding-definition /
          fn-definition /
@@ -20,6 +20,8 @@ real = #'[+-]?\d+\.\d*'
 
 <double-quote> = '\"'
 string = <double-quote> #'(?:[^"\\]|\\.)*' <double-quote>
+
+regex = <'#'> <double-quote> #'(?:[^"\\]|\\.)*' <double-quote>
 
 <identifier-text> = #'[^\s"()\[\]{}\d:/\.#][^\s"()\[\]{}/\.#]*'
 identifier = identifier-text

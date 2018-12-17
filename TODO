@@ -15,9 +15,9 @@ parsing
     aliased: working, tested
   maps: working, tested
   vectors: working, tested
-  sets:
+  sets: working, tested
   lists:
-  regexes:
+  regexes: working, tested
   identifiers: working, tested
   defs: working, tested
   defn:
