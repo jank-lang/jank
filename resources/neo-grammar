@@ -21,7 +21,7 @@ real = #'[+-]?\d+\.\d*'
 <double-quote> = '\"'
 string = <double-quote> #'(?:[^"\\]|\\.)*' <double-quote>
 
-<identifier-text> = #'[^\s"()\[\]{}\d:/][^\s"()\[\]{}/]*'
+<identifier-text> = #'[^\s"()\[\]{}\d:/\.][^\s"()\[\]{}/\.]*'
 identifier = identifier-text
 <keyword-text> = #'[^\s"()\[\]{}/:]+'
 qualified-keyword = #'::?' keyword-text '/' keyword-text
