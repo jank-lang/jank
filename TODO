@@ -5,9 +5,8 @@ parsing
   parens: working, tested
   commas:
   comments:
-  require:
-  integers: working, untested
-  reals: working, untested
+  integers: working, tested
+  reals: working, tested
   bools: working, untested
   strings: working, tested
   keywords
@@ -24,7 +23,7 @@ parsing
   defn:
   anonymous fns: working, tested
   anonymous shorthand fns:
-  applications: working, untested
+  applications: working, tested
   destructuring:
   macros:
   reader macros:
