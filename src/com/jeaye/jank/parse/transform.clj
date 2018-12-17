@@ -1,5 +1,5 @@
 (ns com.jeaye.jank.parse.transform
-  (:refer-clojure :exclude [keyword map vector])
+  (:refer-clojure :exclude [keyword map vector set])
   (:require [clojure.edn :as edn]
             [clojure.walk :refer [postwalk]]
             [com.jeaye.jank
@@ -52,6 +52,10 @@
         values (mapv #(do {:key (first %) :value (second %)}) kvs)]
     (single-values :map values)))
 
+(deftransform set [& more]
+  ; Doesn't go into a set yet, since it needs to be evaluated before it's deduped.
+  (single-values :set (vec more)))
+
 (deftransform vector [& more]
   (single-values :vector (vec more)))
 
@@ -89,18 +93,18 @@
                   :string (partial single :string)
                   :map map
                   :vector vector
+                  :set set
                   :identifier (partial single :identifier)
                   :binding-definition binding-definition
                   :application application
                   :fn-definition fn-definition
-                  :argument-list argument-list
-                  })
+                  :argument-list argument-list})
 
 (defn walk [parsed]
   (postwalk (fn [item]
               ;(pprint "walk item" [item (meta item)])
-              (if-let [trans (and (map? item) (contains? item :tag)
-                                  (transformer (:tag item)))]
+              (if-some [trans (when (and (map? item) (contains? item :tag))
+                                (transformer (:tag item)))]
                 (let [r (binding [parse.binding/*current-form* item]
                           (apply trans (:content item)))]
                   ;(pprint [r (meta r)])
