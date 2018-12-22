@@ -59,43 +59,6 @@
 (deftransform vector [& more]
   (single-values :vector (vec more)))
 
-(deftransform ns-definition [sym & more]
-  (merge {:kind :ns-definition
-          :name sym}
-         (reduce (fn [acc item]
-                   (case (:kind item)
-                     :ns-require-list
-                     (update acc :requires into (:values item))))
-                 {:requires []}
-                 more)))
-
-(deftransform ns-require-list [& more]
-  (single-values :ns-require-list
-                 ; Flatten all the nested requires into a single require list.
-                 (->> more
-                      (mapcat #(case (:kind %)
-                                 :ns-require [%]
-                                 :ns-nested-require (:values %)))
-                      (into []))))
-
-(deftransform ns-require [sym & more]
-  (into {:kind :ns-require
-         :name sym}
-        (clojure.core/map (fn [item]
-                            (case (:kind item)
-                              :ns-require-alias
-                              [:alias (:value item)]))
-                          more)))
-
-(deftransform ns-nested-require [sym & more]
-  ; Combine the nested requires into normal requires.
-  {:kind :ns-nested-require
-   :values (mapv (fn [item]
-                   (update-in item
-                              [:name :value]
-                              #(str (:value sym) "." %)))
-                 more)})
-
 (deftransform binding-definition [& more]
   (single-named :binding-definition (first more) (second more)))
 
@@ -134,11 +97,6 @@
                   :set set
                   :identifier (partial single :identifier)
                   :symbol (partial single :symbol)
-                  :ns-definition ns-definition
-                  :ns-require-list ns-require-list
-                  :ns-require ns-require
-                  :ns-nested-require ns-nested-require
-                  :ns-require-alias (partial single :ns-require-alias)
                   :binding-definition binding-definition
                   :application application
                   :fn-definition fn-definition
