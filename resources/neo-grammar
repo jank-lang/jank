@@ -2,7 +2,7 @@
 <atom> = regex / string / number / boolean / set / map / vector /
          qualified-keyword / keyword / identifier /
          binding-definition /
-         fn-definition /
+         fn-definition / do-definition /
          application
 
 <left-paren> = <'('>
@@ -44,6 +44,12 @@ binding-definition = left-paren def-keyword identifier atom right-paren
 argument-list = left-bracket identifier* right-bracket
 fn-definition =
   left-paren fn-keyword identifier? argument-list
+    atom*
+  right-paren
+
+<do-keyword> = <'do'>
+do-definition =
+  left-paren do-keyword
     atom*
   right-paren
 

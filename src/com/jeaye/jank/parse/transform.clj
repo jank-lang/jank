@@ -62,6 +62,9 @@
 (deftransform binding-definition [& more]
   (single-named :binding-definition (first more) (second more)))
 
+(deftransform argument-list [& more]
+  (vec more))
+
 (deftransform fn-definition [& more]
   (pprint "fn" more)
   (let [has-name? (= :identifier (-> more first :kind))
@@ -77,8 +80,11 @@
            (when has-name?
              {:name (first more)}))))
 
-(deftransform argument-list [& more]
-  (vec more))
+(deftransform do-definition [& more]
+  (pprint "do" more)
+  ; TODO: If the body is empty, add a nil
+  {:kind :do-definition
+   :body (vec more)})
 
 (deftransform application [& more]
   {:kind :application
@@ -98,9 +104,10 @@
                   :identifier (partial single :identifier)
                   :symbol (partial single :symbol)
                   :binding-definition binding-definition
-                  :application application
+                  :argument-list argument-list
                   :fn-definition fn-definition
-                  :argument-list argument-list})
+                  :do-definition do-definition
+                  :application application})
 
 (defn walk [parsed]
   (postwalk (fn [item]
