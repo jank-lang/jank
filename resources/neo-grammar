@@ -3,7 +3,7 @@
          qualified-keyword / keyword / identifier /
          binding-definition /
          fn-definition /
-         application
+         application / ns-definition
 
 <left-paren> = <'('>
 <right-paren> = <')'>
@@ -12,7 +12,7 @@
 <left-curly> = <'{'>
 <right-curly> = <'}'>
 
-special-identifier = def-keyword | fn-keyword
+special-identifier = def-keyword | fn-keyword | ns-keyword
 
 integer = #'[+-]?\d+'
 real = #'[+-]?\d+\.\d*'
@@ -25,6 +25,8 @@ regex = <'#'> <double-quote> #'(?:[^"\\]|\\.)*' <double-quote>
 
 <identifier-text> = #'[^\s"()\[\]{}\d:/\.#][^\s"()\[\]{}/\.#]*'
 identifier = identifier-text
+<symbol-text> = #'[^\s"()\[\]{}\d:/#][^\s"()\[\]{}/#]*'
+symbol = symbol-text
 <keyword-text> = #'[^\s"()\[\]{}/:]+'
 qualified-keyword = #'::?' keyword-text '/' keyword-text
 keyword = #'::?' keyword-text
@@ -48,4 +50,25 @@ fn-definition =
 application =
   left-paren !special-identifier
     atom+
+  right-paren
+
+<ns-keyword> = <'ns'>
+ns-require-list =
+  left-paren <':require'>
+    (ns-require | ns-nested-require)*
+  right-paren
+ns-require =
+  left-bracket
+    symbol (ns-require-alias | ns-require-refer)*
+  right-bracket
+ns-nested-require =
+  left-bracket
+    symbol
+    ns-require+
+  right-bracket
+ns-require-alias = <':as'> symbol
+<ns-require-refer> = <':refer'> left-bracket identifier* right-bracket
+ns-definition =
+  left-paren ns-keyword symbol
+    ns-require-list*
   right-paren
