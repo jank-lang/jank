@@ -1,7 +1,5 @@
 **** to become a clojure dialect: ****
 parsing
-  ns:
-  require:
   parens: working, tested
   commas:
   comments:
@@ -19,14 +17,26 @@ parsing
   lists:
   regexes: working, tested
   identifiers: working, tested
-  defs: working, tested
-  defn:
-  anonymous fns: working, tested
-  anonymous shorthand fns:
+  special forms
+    def: working, tested
+    if:
+    do:
+    let:
+    quote:
+    var:
+    fn: working, tested
+    loop:
+    recur:
+    throw:
+    try:
+    monitor-enter:
+    monitor-exit:
   applications: working, tested
   destructuring:
   macros:
   reader macros:
+    anonymous shorthand fns:
+    regex:
 
 **** what's needed to make jank usable: ****
 
