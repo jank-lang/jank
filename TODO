@@ -1,4 +1,6 @@
 **** to become a clojure dialect: ****
+ast doc: https://clojure.github.io/tools.analyzer/spec/quickref.html
+
 parsing
   parens: working, tested
   commas:
@@ -38,6 +40,9 @@ parsing
   reader macros:
     anonymous shorthand fns:
     regex:
+
+organization
+  group all literals: nil bool keyword symbol string number map vector set seq char regex var
 
 **** what's needed to make jank usable: ****
 
