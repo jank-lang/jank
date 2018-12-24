@@ -3,6 +3,7 @@ parsing
   parens: working, tested
   commas:
   comments:
+  nil:
   integers: working, tested
   reals: working, tested
   bools: working, untested

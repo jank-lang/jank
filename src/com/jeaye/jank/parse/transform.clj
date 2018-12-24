@@ -19,6 +19,9 @@
            ~@fn-body)
          (merge-meta {:file ~'parse.binding/*input-file*}))))
 
+(deftransform none [kind]
+  {:kind kind})
+
 (deftransform single [kind value]
   {:kind kind :value value})
 
@@ -91,7 +94,8 @@
    :value (first more)
    :arguments (vec (rest more))})
 
-(def transformer {:integer (partial read-single :integer)
+(def transformer {:nil (partial none :nil)
+                  :integer (partial read-single :integer)
                   :real (partial read-single :real)
                   :boolean (partial read-single :boolean)
                   :keyword (partial keyword :unqualified)

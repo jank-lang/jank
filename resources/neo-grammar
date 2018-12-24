@@ -1,5 +1,5 @@
 <program> = atom*
-<atom> = regex / string / number / boolean / set / map / vector /
+<atom> = regex / string / nil / number / boolean / set / map / vector /
          qualified-keyword / keyword / identifier /
          binding-definition /
          fn-definition / do-definition /
@@ -13,6 +13,8 @@
 <right-curly> = <'}'>
 
 special-identifier = def-keyword | fn-keyword
+
+nil = <'nil'>
 
 integer = #'[+-]?\d+'
 real = #'[+-]?\d+\.\d*'
