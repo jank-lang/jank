@@ -42,6 +42,9 @@ parsing
     anonymous shorthand fns:
     regex:
 
+grammar
+  manually specify whitespace
+
 organization
   group all literals: nil bool keyword symbol string number map vector set seq char regex var
 
