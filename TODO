@@ -10,6 +10,7 @@ parsing
   reals: working, tested
   bools: working, untested
   strings: working, tested
+  chars:
   keywords
     simple: working, tested
     qualified: working, tested

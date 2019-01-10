@@ -19,6 +19,12 @@
            ~@fn-body)
          (merge-meta {:file ~'parse.binding/*input-file*}))))
 
+(deftransform constant [transformer & args]
+  (let [transformed (apply transformer args)]
+    (assoc transformed
+           :kind :literal
+           :type (:kind transformed))))
+
 (deftransform none [kind]
   {:kind kind})
 
@@ -52,7 +58,9 @@
         _ (parse-assert! (every? #(= 2 (count %)) kvs)
                          parse.binding/*current-form*
                          "maps require an even number of forms")
-        values (mapv #(do {:key (first %) :value (second %)}) kvs)]
+        values (mapv #(do {:key (first %)
+                           :value (second %)})
+                     kvs)]
     (single-values :map values)))
 
 (deftransform set [& more]
@@ -89,26 +97,26 @@
      :body (into [] (butlast more))
      :return (if (some? ret)
                ret
-               {:kind :nil})}))
+               (constant none :nil))}))
 
 (deftransform application [& more]
   {:kind :application
    :value (first more)
    :arguments (vec (rest more))})
 
-(def transformer {:nil (partial none :nil)
-                  :integer (partial read-single :integer)
-                  :real (partial read-single :real)
-                  :boolean (partial read-single :boolean)
-                  :keyword (partial keyword :unqualified)
-                  :qualified-keyword (partial keyword :qualified)
-                  :string (partial single :string)
-                  :regex (partial single :regex)
-                  :map map
-                  :vector vector
-                  :set set
+(def transformer {:nil (partial constant none :nil)
+                  :integer (partial constant read-single :integer)
+                  :real (partial constant read-single :real)
+                  :boolean (partial constant read-single :boolean)
+                  :keyword (partial constant keyword :unqualified)
+                  :qualified-keyword (partial constant keyword :qualified)
+                  :string (partial constant single :string)
+                  :regex (partial constant single :regex)
+                  :map (partial constant map)
+                  :vector (partial constant vector)
+                  :set (partial constant set)
                   :identifier (partial single :identifier)
-                  :symbol (partial single :symbol)
+                  :symbol (partial constant single :symbol)
                   :binding-definition binding-definition
                   :argument-list argument-list
                   :fn-definition fn-definition
