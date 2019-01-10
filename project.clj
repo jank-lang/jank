@@ -3,16 +3,16 @@
   :url "https://github.com/jeaye/jank"
   :license {:name "jank license"
             :url "https://upload.jeaye.com/jank-license"}
-  :plugins [[lein-cloverage "1.0.10"]
-            [io.taylorwood/lein-native-image "0.2.0"]]
-  :dependencies [[org.clojure/clojure "1.9.0"]
+  :plugins [[lein-cloverage "1.0.13"]
+            [io.taylorwood/lein-native-image "0.3.0"]]
+  :dependencies [[org.clojure/clojure "1.10.0"]
                  [org.clojure/core.logic "0.8.11"]
-                 [instaparse "1.4.8"]
+                 [instaparse "1.4.10"]
                  [me.raynes/fs "1.4.6"]
 
                  ; Colored output
-                 [io.aviso/pretty "0.1.34"]
-                 [venantius/glow "0.1.4"]]
+                 [io.aviso/pretty "0.1.36"]
+                 [venantius/glow "0.1.5"]]
   :main ^:skip-aot jank.core
   :target-path "target/%s"
   :native-image {:name "jank"
@@ -26,7 +26,7 @@
                    :main com.jeaye.jank.dev}
              :coverage {:resource-paths ["dev-resources/"]}
              :benchmark {:dependencies [[criterium "0.4.4"]
-                                        [clj-time "0.14.2"]]
+                                        [clj-time "0.15.1"]]
                          :source-paths ["benchmark/"]
                          :resource-paths ["dev-resources/"]
                          :main jank.benchmark}})
