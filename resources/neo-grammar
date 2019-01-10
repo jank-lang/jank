@@ -13,7 +13,7 @@
 <left-curly> = <'{'>
 <right-curly> = <'}'>
 
-special-identifier = def-keyword | fn-keyword
+special-identifier = def-keyword | fn-keyword | do-keyword | if-keyword
 
 nil = <'nil'>
 
