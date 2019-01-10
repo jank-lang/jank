@@ -13,7 +13,7 @@
                  ; Colored output
                  [io.aviso/pretty "0.1.36"]
                  [venantius/glow "0.1.5"]]
-  :main ^:skip-aot jank.core
+  :main ^:skip-aot com.jeaye.jank.core
   :target-path "target/%s"
   :native-image {:name "jank"
                  :opts ["--verbose"
