@@ -84,10 +84,12 @@
              {:name (first more)}))))
 
 (deftransform do-definition [& more]
-  (pprint "do" more)
-  ; TODO: If the body is empty, add a nil
-  {:kind :do-definition
-   :body (vec more)})
+  (let [ret (last more)]
+    {:kind :do-definition
+     :body (into [] (butlast more))
+     :return (if (some? ret)
+               ret
+               {:kind :nil})}))
 
 (deftransform application [& more]
   {:kind :application
