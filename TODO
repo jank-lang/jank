@@ -38,9 +38,11 @@ parsing
   applications: working, tested
   destructuring:
   macros:
-  reader macros:
+  reader macros
     anonymous shorthand fns:
     regex:
+    var:
+    conditionals:
 
 grammar
   manually specify whitespace
