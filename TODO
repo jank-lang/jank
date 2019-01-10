@@ -23,7 +23,7 @@ parsing
   identifiers: working, tested
   special forms
     def: working, tested
-    if: working, untested
+    if: working, tested
     do: working, tested
     let:
     quote:
