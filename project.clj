@@ -20,13 +20,14 @@
                         "--no-server"
                         "-H:+ReportUnsupportedElementsAtRuntime"]
                  :graal-bin "/usr/lib/jvm/java-8-graal/bin"}
+  :resource-paths ["resources/"]
   :profiles {:uberjar {:aot :all
                        :main com.jeaye.jank.core}
              :dev {:source-paths ["dev/src/"]
+                   :resource-paths ["dev/resources/"]
                    :main com.jeaye.jank.dev}
-             :coverage {:resource-paths ["dev-resources/"]}
              :benchmark {:dependencies [[criterium "0.4.4"]
                                         [clj-time "0.15.1"]]
                          :source-paths ["benchmark/"]
-                         :resource-paths ["dev-resources/"]
+                         :resource-paths ["dev/resources/"]
                          :main jank.benchmark}})

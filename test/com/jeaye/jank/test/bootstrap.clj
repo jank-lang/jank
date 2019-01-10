@@ -15,7 +15,7 @@
 (defn files
   [path excludes]
   (let [all (map #(.getPath %) (fs/find-files path #".*\.jank"))
-        dev-resources-regex #".*/dev-resources/(.+)"]
+        dev-resources-regex #".*/dev/resources/(.+)"]
     (map (fn [file]
            (hash-map :resource (-> (re-matches dev-resources-regex
                                                file)

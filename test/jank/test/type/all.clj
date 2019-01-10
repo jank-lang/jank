@@ -4,13 +4,13 @@
 
 (deftest specific
   (util/test-files
-    "dev-resources/test/type/"
+    "dev/resources/test/type/"
     [; TODO: Lambda identifiers
      #".*lambda/first-class/pass-return-lambda.*"]))
 
 (deftest all
   (util/test-files
-    "dev-resources/test/type-interpret/"
+    "dev/resources/test/type-interpret/"
     [; TODO: Generics
      #".*declaration/type/fail-invalid-generic.*"
      #".*declaration/type/pass-generic.*"

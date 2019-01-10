@@ -41,7 +41,7 @@
 
 (defn compile-file [file]
   (let [result (clojure.java.shell/sh "bin/jank"
-                                      (-> (str "dev-resources/benchmark/" file)
+                                      (-> (str "dev/resources/benchmark/" file)
                                           fs/absolute
                                           .getPath)
                                       tmp-binary)

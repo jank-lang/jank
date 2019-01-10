@@ -23,7 +23,7 @@
         matched (filter (fn [f]
                           (not-any? #(re-matches % f) excludes))
                         all)
-        stripped (map #(-> (re-matches #".*/dev-resources/(.+)" %)
+        stripped (map #(-> (re-matches #".*/dev/resources/(.+)" %)
                            second)
                       matched)]
     stripped))

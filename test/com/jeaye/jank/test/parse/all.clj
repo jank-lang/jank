@@ -4,7 +4,7 @@
 
 (deftest all
   (util/test-files
-    "dev-resources/test/neo-parse/"
+    "dev/resources/test/neo-parse/"
     [#".*/identifier/ascii/pass-true-false\.jank"
      #".*/keyword/fail-plain-space-between-colon\.jank"
      #".*/keyword/fail-qualified-space-between-colon\.jank"
