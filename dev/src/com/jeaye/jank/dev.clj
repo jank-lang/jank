@@ -1,11 +1,11 @@
-(ns jank.dev
+(ns com.jeaye.jank.dev
   (:gen-class)
   (:require [com.jeaye.jank.core :as core]
             [com.jeaye.jank.parse :as parse]
             [com.jeaye.jank.test.bootstrap :as bootstrap]))
 
 (defn reload! []
-  (use 'jank.dev :reload-all))
+  (use 'com.jeaye.jank.dev :reload-all))
 
 (defmacro def-reload
   [def-name to-wrap]
