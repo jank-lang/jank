@@ -22,7 +22,7 @@
                  :graal-bin "/usr/lib/jvm/java-8-graal/bin"}
   :profiles {:uberjar {:aot :all
                        :main com.jeaye.jank.core}
-             :dev {:source-paths ["dev/src/" "playground/"]
+             :dev {:source-paths ["dev/src/"]
                    :main com.jeaye.jank.dev}
              :coverage {:resource-paths ["dev-resources/"]}
              :benchmark {:dependencies [[criterium "0.4.4"]
