@@ -3,6 +3,7 @@
          qualified-keyword / keyword / identifier /
          binding-definition /
          fn-definition / do-definition /
+         if /
          application
 
 <left-paren> = <'('>
@@ -53,6 +54,13 @@ fn-definition =
 do-definition =
   left-paren do-keyword
     atom*
+  right-paren
+
+<if-keyword> = <'if'>
+if =
+  left-paren if-keyword atom
+    atom
+    atom?
   right-paren
 
 application =

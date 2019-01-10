@@ -99,6 +99,13 @@
                ret
                (constant none :nil))}))
 
+(deftransform if-expression [& [condition then else]]
+  (merge {:kind :if
+          :condition condition
+          :then then}
+         (when (some? else)
+           {:else else})))
+
 (deftransform application [& more]
   {:kind :application
    :value (first more)
@@ -121,6 +128,7 @@
                   :argument-list argument-list
                   :fn-definition fn-definition
                   :do-definition do-definition
+                  :if if-expression
                   :application application})
 
 (defn walk [parsed]
