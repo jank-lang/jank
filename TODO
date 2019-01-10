@@ -23,7 +23,7 @@ parsing
   special forms
     def: working, tested
     if:
-    do: working, untested
+    do: working, tested
     let:
     quote:
     var:
