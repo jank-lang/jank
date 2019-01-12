@@ -46,9 +46,32 @@ parsing
 
 grammar
   manually specify whitespace
+  don't have grammar for bools and nil at all?
+    true, false, and nil can be defs
 
 organization
   group all literals: nil bool keyword symbol string number map vector set seq char regex var
+
+**** type features: ****
+
+tracking function purity
+  all std lib fns are annotated as pure
+  all other fns are compositions of std lib fns
+  interop is impure
+
+functions are generic by default
+  all std lib fns have type annotations
+  all other fns are compositions of std lib fns
+  interop requires annotations (or is type-unsafe?)
+
+compile-time evaluation of literals and pure fns
+  any literals composed entirely of pure fns are evaluated at compile-time
+  any operations done to those literals are propagated at compile-time
+
+zero-allocation containers
+  any compile-time literal at code gen will use this container
+    (conj [1 2] 3) results in a code gen static-vector [1 2 3]
+  static-string, static-vector, static-map, static-set
 
 **** what's needed to make jank usable: ****
 
