@@ -49,6 +49,8 @@ grammar
   don't have grammar for bools and nil at all?
     true, false, and nil can be defs
 
+primitive types like Julia?
+
 organization
   group all literals: nil bool keyword symbol string number map vector set seq char regex var
 
@@ -87,6 +89,11 @@ syntax for types
 
 definition of types
   ???
+
+syntax for generics
+  fns can refer to symbols in a special way, to note that they're polymorphic
+    maybe ~t
+  those symbols may be referenced multiple times in the fn and must all balance
 
 **** what's needed to make jank usable: ****
 
