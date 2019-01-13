@@ -54,6 +54,11 @@ organization
 
 **** type features: ****
 
+fully declarative
+  definition order doesn't matter
+  referencing undefined things doesn't fail until everything has been checked
+  this allows for cyclical dependencies
+
 tracking function purity
   all std lib fns are annotated as pure
   all other fns are compositions of std lib fns
@@ -72,6 +77,16 @@ zero-allocation containers
   any compile-time literal at code gen will use this container
     (conj [1 2] 3) results in a code gen static-vector [1 2 3]
   static-string, static-vector, static-map, static-set
+
+polymorphism comes from function specialization
+  functions can be specified with partial or fully specialized types
+  functions from any namespace can be specialized from any other
+
+syntax for types
+  ???
+
+definition of types
+  ???
 
 **** what's needed to make jank usable: ****
 

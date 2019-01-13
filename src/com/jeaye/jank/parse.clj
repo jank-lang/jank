@@ -27,13 +27,13 @@
   ; TODO: Assert that the proper bindings are present
    (let [input parse.binding/*input-source*
          parsed (parser input)
-         ;_ (pprint "raw parsed" parsed)
+         _ (pprint "raw parsed" parsed)
          _ (when (insta/failure? parsed)
              (incomplete-parse! (insta/get-failure parsed)))
          parsed-with-meta (add-meta input parsed)
          ;_ (pprint "parsed" parsed-with-meta)
          transformed (transform/walk parsed-with-meta)]
-     ;(pprint "transformed" transformed)
+     (pprint "transformed" transformed)
      {::tree (into prelude transformed)}))
 
 (defn parses [source & args]
