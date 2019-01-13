@@ -84,16 +84,16 @@ polymorphism comes from function specialization
   functions can be specified with partial or fully specialized types
   functions from any namespace can be specialized from any other
 
-syntax for types
-  ???
-
-definition of types
+syntax for type specifiers
   ???
 
 syntax for generics
   fns can refer to symbols in a special way, to note that they're polymorphic
     maybe ~t
   those symbols may be referenced multiple times in the fn and must all balance
+
+syntax for type definitions
+  ???
 
 **** what's needed to make jank usable: ****
 
