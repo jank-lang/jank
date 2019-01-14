@@ -87,7 +87,7 @@ polymorphism comes from function specialization
 syntax for type specifiers
   ???
 
-syntax for generics
+syntax for generic fn definitions
   fns can refer to symbols in a special way, to note that they're polymorphic
     maybe ~t
   those symbols may be referenced multiple times in the fn and must all balance

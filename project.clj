@@ -25,9 +25,4 @@
                        :main com.jeaye.jank.core}
              :dev {:source-paths ["dev/src/"]
                    :resource-paths ["dev/resources/"]
-                   :main com.jeaye.jank.dev}
-             :benchmark {:dependencies [[criterium "0.4.4"]
-                                        [clj-time "0.15.1"]]
-                         :source-paths ["benchmark/"]
-                         :resource-paths ["dev/resources/"]
-                         :main jank.benchmark}})
+                   :main com.jeaye.jank.dev}})
