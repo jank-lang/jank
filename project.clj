@@ -23,6 +23,7 @@
   :resource-paths ["resources/"]
   :profiles {:uberjar {:aot :all
                        :main com.jeaye.jank.core}
-             :dev {:source-paths ["dev/src/"]
+             :dev {:dependencies [[me.raynes/fs "1.4.6"]]
+                   :source-paths ["dev/src/"]
                    :resource-paths ["dev/resources/"]
                    :main com.jeaye.jank.dev}})
