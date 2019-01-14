@@ -2,13 +2,13 @@
   (:require [clojure.test :refer :all]
             [jank.test.type.util :as util]))
 
-(deftest specific
+#_(deftest specific
   (util/test-files
     "dev/resources/test/type/"
     [; TODO: Lambda identifiers
      #".*lambda/first-class/pass-return-lambda.*"]))
 
-(deftest all
+#_(deftest all
   (util/test-files
     "dev/resources/test/type-interpret/"
     [; TODO: Generics

@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [jank.test.interpret.util :as util]))
 
-(deftest all
+#_(deftest all
   (util/test-files
     "dev/resources/test/type-interpret/"
     [; TODO: Structs
