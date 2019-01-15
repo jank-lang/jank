@@ -24,6 +24,7 @@
   :profiles {:uberjar {:aot :all
                        :main com.jeaye.jank.core}
              :dev {:dependencies [[me.raynes/fs "1.4.6"]]
+                   :plugins [[com.jakemccrary/lein-test-refresh "0.23.0"]]
                    :source-paths ["dev/src/"]
                    :resource-paths ["dev/resources/"]
                    :main com.jeaye.jank.dev}})
