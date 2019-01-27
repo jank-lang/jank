@@ -43,15 +43,21 @@
   (fn [data]
     (s/valid? value-spec (::value data))))
 
+(s/def ::keyword (s/keys :req [::name]
+                         :opt [::ns]))
+(s/def ::ns string?)
+(s/def ::name string?)
+
+(s/def ::string string?)
+(s/def ::regex string?)
 (s/def ::symbol string?)
 (s/def ::node (s/or :nil (node (constant? :nil))
                     :integer (node (constant? :integer) (single? integer?))
                     :real (node (constant? :real) (single? double?))
                     :boolean (node (constant? :boolean) (single? boolean?))
-                    ;:keyword (constant keyword :unqualified)
-                    ;:qualified-keyword (constant keyword :qualified)
-                    :string (node (constant? :string) (single? string?))
-                    :regex (node (constant? :regex) (single? (single? string?)))
+                    :keyword (node (constant? :keyword) ::keyword)
+                    :string (node (constant? :string) (single? ::string))
+                    :regex (node (constant? :regex) (single? (single? ::regex)))
                     ;:map (constant map)
                     ;:vector (constant vector)
                     ;:set (constant set)

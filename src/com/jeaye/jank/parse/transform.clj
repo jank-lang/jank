@@ -46,12 +46,12 @@
            (cond
              qualified?
              {::parse.spec/ns (second more)
-              ::parse.spec/value (nth more 3)}
+              ::parse.spec/name (nth more 3)}
              (= (first more) "::")
              {::parse.spec/ns :current ; TODO: Do something here. Track current ns?
-              ::parse.spec/value (second more)}
+              ::parse.spec/name (second more)}
              :else
-             {::parse.spec/value (second more)}))))
+             {::parse.spec/name (second more)}))))
 
 (deftransform map [& more]
   (let [kvs (partition-all 2 more)
