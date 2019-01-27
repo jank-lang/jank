@@ -32,6 +32,11 @@
     `(s/and (s/keys :req [~kind])
             ~@specs)))
 
+(defn-spec kind? fn?
+  [kind ::kind]
+  (fn [data]
+    (= ::kind (::kind data))))
+
 (defn-spec constant? fn?
   [type ::type]
   (fn [data]
@@ -43,10 +48,11 @@
   (fn [data]
     (s/valid? value-spec (::value data))))
 
-(s/def ::keyword (s/keys :req [::name]
-                         :opt [::ns]))
+(s/def ::identifier (s/keys :req [::name]
+                            :opt [::ns]))
 (s/def ::ns string?)
 (s/def ::name string?)
+(s/def ::keyword ::identifier)
 
 (s/def ::string string?)
 (s/def ::regex string?)
@@ -61,7 +67,7 @@
                     ;:map (constant map)
                     ;:vector (constant vector)
                     ;:set (constant set)
-                    ;:identifier (single :identifier)
+                    ;:identifier (node (kind? :identifier) ::identifier)
                     :symbol (node (constant? :symbol) (single? ::symbol))
                     ;:binding-definition binding-definition
                     ;:argument-list argument-list

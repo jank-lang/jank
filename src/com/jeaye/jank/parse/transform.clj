@@ -122,6 +122,7 @@
                   :map (partial constant map)
                   :vector (partial constant vector)
                   :set (partial constant set)
+                  ; TODO: Namespaced idents
                   :identifier (partial single :identifier)
                   :symbol (partial constant single :symbol)
                   :binding-definition binding-definition
