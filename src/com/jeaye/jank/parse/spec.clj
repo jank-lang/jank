@@ -69,7 +69,7 @@
                     :boolean (node (constant? :boolean) (single? boolean?))
                     :keyword (node (constant? :keyword) ::keyword)
                     :string (node (constant? :string) (single? ::string))
-                    :regex (node (constant? :regex) (single? (single? ::regex)))
+                    :regex (node (constant? :regex) (single? ::regex))
                     ;:map (constant map)
                     ;:vector (constant vector)
                     ;:set (constant set)
