@@ -34,7 +34,6 @@ identifier = identifier-text
 <namespace> = symbol-text
 qualified-identifier = namespace <'/'> identifier-text
 
-
 <keyword-text> = #'[^\s"()\[\]{}/:]+'
 qualified-keyword = #'::?' keyword-text '/' keyword-text
 keyword = #'::?' keyword-text

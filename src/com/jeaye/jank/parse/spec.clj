@@ -5,6 +5,7 @@
 
 (s/def ::tree (s/coll-of ::node))
 
+; TODO: Input type/kind, output type/kind
 (def types #{:nil
              :integer
              :real
@@ -58,6 +59,10 @@
 (s/def ::string string?)
 (s/def ::regex string?)
 (s/def ::symbol string?)
+
+(s/def ::binding-definition (s/keys :req [::identifier
+                                          ::value]))
+
 (s/def ::node (s/or :nil (node (constant? :nil))
                     :integer (node (constant? :integer) (single? integer?))
                     :real (node (constant? :real) (single? double?))
@@ -70,7 +75,8 @@
                     ;:set (constant set)
                     :identifier (node (kind? :identifier) ::identifier)
                     :symbol (node (constant? :symbol) (single? ::symbol))
-                    ;:binding-definition binding-definition
+                    :binding-definition (node (kind? :binding-definition)
+                                              ::binding-definition)
                     ;:argument-list argument-list
                     ;:fn-definition fn-definition
                     ;:do-definition do-definition

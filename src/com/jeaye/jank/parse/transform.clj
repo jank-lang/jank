@@ -28,14 +28,12 @@
 (deftransform none [kind]
   {::parse.spec/kind kind})
 
+; TODO: Rename value to node
 (deftransform single [kind value]
   {::parse.spec/kind kind ::parse.spec/value value})
 
 (deftransform single-values [kind values]
   {::parse.spec/kind kind ::parse.spec/values values})
-
-(deftransform single-named [kind name value]
-  {::parse.spec/kind kind ::parse.spec/name name ::parse.spec/value value})
 
 (deftransform read-single [kind value]
   {::parse.spec/kind kind ::parse.spec/value (edn/read-string value)})
@@ -61,14 +59,14 @@
         values (mapv #(do {::parse.spec/key (first %)
                            ::parse.spec/value (second %)})
                      kvs)]
-    (single-values ::parse.spec/map values)))
+    (single-values :map values)))
 
 (deftransform set [& more]
   ; Doesn't go into a set yet, since it needs to be evaluated before it's deduped.
-  (single-values ::parse.spec/set (vec more)))
+  (single-values :set (vec more)))
 
 (deftransform vector [& more]
-  (single-values ::parse.spec/vector (vec more)))
+  (single-values :vector (vec more)))
 
 (deftransform identifier [qualified & more]
   (let [qualified? (= qualified :qualified)]
@@ -79,7 +77,9 @@
              {::parse.spec/name (first more)}))))
 
 (deftransform binding-definition [& more]
-  (single-named ::parse.spec/binding-definition (first more) (second more)))
+  {::parse.spec/kind :binding-definition
+   ::parse.spec/identifier (first more)
+   ::parse.spec/value (second more)})
 
 (deftransform argument-list [& more]
   (vec more))
