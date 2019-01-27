@@ -1,5 +1,8 @@
 (ns com.jeaye.jank.test.bootstrap
-  (:require [me.raynes.fs :as fs]
+  (:require [clojure.spec.alpha :as s]
+            [orchestra.spec.test :as stest]
+            [expound.alpha :as expound]
+            [me.raynes.fs :as fs]
             [com.jeaye.jank.parse :as parse]
             [com.jeaye.jank.parse.binding :as parse.binding]))
 
@@ -9,19 +12,26 @@
      (binding [*out* s# *err* s#]
        ~@body)))
 
+(defn with-instrumentation [fun]
+  (s/check-asserts true)
+  (stest/instrument)
+  (set! s/*explain-out* (expound/custom-printer {:show-valid-values? true}))
+  (fun))
+
 (defn slurp-resource [file]
-  (slurp (clojure.java.io/resource file)))
+  (-> file
+      clojure.java.io/resource
+      slurp))
 
 (defn files
   [path excludes]
   (let [all (map #(.getPath %) (fs/find-files path #".*\.jank"))
         dev-resources-regex #".*/dev/resources/(.+)"]
     (map (fn [file]
-           (hash-map :resource (-> (re-matches dev-resources-regex
-                                               file)
-                                   second)
-                     :skip? (some #(re-matches % file)
-                                  excludes)))
+           {:resource (-> (re-matches dev-resources-regex
+                                      file)
+                          second)
+            :skip? (some #(re-matches % file) excludes)})
          all)))
 
 (defn try-parse [file]

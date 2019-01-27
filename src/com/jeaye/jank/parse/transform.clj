@@ -2,12 +2,12 @@
   (:refer-clojure :exclude [keyword map vector set])
   (:require [clojure.edn :as edn]
             [clojure.walk :refer [postwalk]]
+            [orchestra.core :refer [defn-spec]]
             [com.jeaye.jank
              [log :refer [pprint]]
              [assert :refer [parse-assert!]]]
-            [com.jeaye.jank.parse
-             [binding :as parse.binding]
-             [fabricate :as fabricate]]))
+            [com.jeaye.jank.parse.binding :as parse.binding]
+            [com.jeaye.jank.parse.spec :as parse.spec]))
 
 (defn merge-meta [obj new-meta]
   (with-meta obj (merge (meta obj) new-meta)))
@@ -22,56 +22,56 @@
 (deftransform constant [transformer & args]
   (let [transformed (apply transformer args)]
     (assoc transformed
-           :kind :literal
-           :type (:kind transformed))))
+           ::parse.spec/kind :constant
+           ::parse.spec/type (::parse.spec/kind transformed))))
 
 (deftransform none [kind]
-  {:kind kind})
+  {::parse.spec/kind kind})
 
 (deftransform single [kind value]
-  {:kind kind :value value})
+  {::parse.spec/kind kind ::parse.spec/value value})
 
 (deftransform single-values [kind values]
-  {:kind kind :values values})
+  {::parse.spec/kind kind ::parse.spec/values values})
 
 (deftransform single-named [kind name value]
-  {:kind kind :name name :value value})
+  {::parse.spec/kind kind ::parse.spec/name name ::parse.spec/value value})
 
 (deftransform read-single [kind value]
-  {:kind kind :value (edn/read-string value)})
+  {::parse.spec/kind kind ::parse.spec/value (edn/read-string value)})
 
 (deftransform keyword [qualified & more]
   (let [qualified? (= qualified :qualified)]
-    (merge {:kind :keyword}
+    (merge {::parse.spec/kind :keyword}
            (cond
              qualified?
-             {:ns (second more)
-              :value (nth more 3)}
+             {::parse.spec/ns (second more)
+              ::parse.spec/value (nth more 3)}
              (= (first more) "::")
-             {:ns :current ; TODO: Do something here. Track current ns?
-              :value (second more)}
+             {::parse.spec/ns :current ; TODO: Do something here. Track current ns?
+              ::parse.spec/value (second more)}
              :else
-             {:value (second more)}))))
+             {::parse.spec/value (second more)}))))
 
 (deftransform map [& more]
   (let [kvs (partition-all 2 more)
         _ (parse-assert! (every? #(= 2 (count %)) kvs)
                          parse.binding/*current-form*
                          "maps require an even number of forms")
-        values (mapv #(do {:key (first %)
-                           :value (second %)})
+        values (mapv #(do {::parse.spec/key (first %)
+                           ::parse.spec/value (second %)})
                      kvs)]
-    (single-values :map values)))
+    (single-values ::parse.spec/map values)))
 
 (deftransform set [& more]
   ; Doesn't go into a set yet, since it needs to be evaluated before it's deduped.
-  (single-values :set (vec more)))
+  (single-values ::parse.spec/set (vec more)))
 
 (deftransform vector [& more]
-  (single-values :vector (vec more)))
+  (single-values ::parse.spec/vector (vec more)))
 
 (deftransform binding-definition [& more]
-  (single-named :binding-definition (first more) (second more)))
+  (single-named ::parse.spec/binding-definition (first more) (second more)))
 
 (deftransform argument-list [& more]
   (vec more))
@@ -85,31 +85,31 @@
         body (if has-name?
                (drop 2 more)
                (rest more))]
-    (merge {:kind :fn-definition
-            :arguments args
-            :body (vec body)}
+    (merge {::parse.spec/kind :fn-definition
+            ::parse.spec/arguments args
+            ::parse.spec/body (vec body)}
            (when has-name?
-             {:name (first more)}))))
+             {::parse.spec/name (first more)}))))
 
 (deftransform do-definition [& more]
   (let [ret (last more)]
-    {:kind :do-definition
-     :body (into [] (butlast more))
-     :return (if (some? ret)
+    {::parse.spec/kind :do-definition
+     ::parse.spec/body (into [] (butlast more))
+     ::parse.spec/return (if (some? ret)
                ret
                (constant none :nil))}))
 
 (deftransform if-expression [& [condition then else]]
-  (merge {:kind :if
-          :condition condition
-          :then then}
+  (merge {::parse.spec/kind :if
+          ::parse.spec/condition condition
+          ::parse.spec/then then}
          (when (some? else)
-           {:else else})))
+           {::parse.spec/else else})))
 
 (deftransform application [& more]
-  {:kind :application
-   :value (first more)
-   :arguments (vec (rest more))})
+  {::parse.spec/kind :application
+   ::parse.spec/value (first more)
+   ::parse.spec/arguments (vec (rest more))})
 
 (def transformer {:nil (partial constant none :nil)
                   :integer (partial constant read-single :integer)
@@ -131,7 +131,8 @@
                   :if if-expression
                   :application application})
 
-(defn walk [parsed]
+(defn-spec walk ::parse.spec/tree
+  [parsed any?]
   (postwalk (fn [item]
               ;(pprint "walk item" [item (meta item)])
               (if-some [trans (when (and (map? item) (contains? item :tag))

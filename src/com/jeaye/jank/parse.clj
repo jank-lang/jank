@@ -1,6 +1,7 @@
 (ns com.jeaye.jank.parse
-  (:require [instaparse.core :as insta]
-            [clojure.java.io :as io]
+  (:require [clojure.java.io :as io]
+            [instaparse.core :as insta]
+            [orchestra.core :refer [defn-spec]]
             [com.jeaye.jank
              [log :refer [pprint]]
              [assert :refer [incomplete-parse!]]]
@@ -34,15 +35,13 @@
          ;_ (pprint "parsed" parsed-with-meta)
          transformed (transform/walk parsed-with-meta)]
      (pprint "transformed" transformed)
-     {::tree (into prelude transformed)}))
+     (into prelude transformed)))
 
 (defn parses [source & args]
   (apply insta/parses parser source args))
 
 (def prelude-file "neo-prelude.jank")
-(def prelude
-  (->> (binding [parse.binding/*input-file* prelude-file
-                 parse.binding/*input-source* (-> (io/resource prelude-file)
-                                                  slurp)]
-         (parse []))
-       ::tree))
+(def prelude (binding [parse.binding/*input-file* prelude-file
+                       parse.binding/*input-source* (-> (io/resource prelude-file)
+                                                        slurp)]
+               (parse [])))

@@ -4,15 +4,23 @@
   :license {:name "jank license"
             :url "https://upload.jeaye.com/jank-license"}
   :plugins [[lein-cloverage "1.0.13"]
-            [io.taylorwood/lein-native-image "0.3.0"]]
+            [io.taylorwood/lein-native-image "0.3.0"]
+            [cider/cider-nrepl "0.20.0"]
+            [refactor-nrepl "2.4.0"]]
   :dependencies [[org.clojure/clojure "1.10.0"]
-                 [org.clojure/core.logic "0.8.11"]
+                 [org.clojure/spec.alpha "0.2.176"]
+                 [org.clojure/test.check "0.9.0"]
                  [instaparse "1.4.10"]
-                 [me.raynes/fs "1.4.6"]
+                 [orchestra "2018.12.06-2"]
+                 [expound "0.7.2"]
 
                  ; Colored output
                  [io.aviso/pretty "0.1.36"]
-                 [venantius/glow "0.1.5"]]
+                 [venantius/glow "0.1.5"]
+
+                 ; REPL
+                 [alembic "0.3.2"]
+                 [nrepl "0.5.3"] ]
   :main ^:skip-aot com.jeaye.jank.core
   :target-path "target/%s"
   :native-image {:name "jank"

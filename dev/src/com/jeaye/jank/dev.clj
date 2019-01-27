@@ -1,11 +1,18 @@
 (ns com.jeaye.jank.dev
-  (:gen-class)
-  (:require [com.jeaye.jank.core :as core]
+  (:require [clojure.spec.alpha :as s]
+            [orchestra.core :refer [defn-spec]]
+            [orchestra.spec.test :as stest]
+            [expound.alpha :as expound]
+            [com.jeaye.jank.core :as core]
             [com.jeaye.jank.parse :as parse]
             [com.jeaye.jank.test.bootstrap :as bootstrap]))
 
 (defn reload! []
-  (use 'com.jeaye.jank.dev :reload-all))
+  (use 'com.jeaye.jank.dev :reload-all)
+  (s/check-asserts true)
+  (stest/instrument)
+  (->> (constantly (expound/custom-printer {:show-valid-values? true}))
+       (alter-var-root #'s/*explain-out*)) )
 
 (defmacro def-reload
   [def-name to-wrap]
