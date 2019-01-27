@@ -17,6 +17,7 @@
              :vector
              :set
              :identifier
+             :qualified-identifier
              :symbol})
 (s/def ::type types)
 (s/def ::kind (into types [:constant
@@ -35,7 +36,7 @@
 (defn-spec kind? fn?
   [kind ::kind]
   (fn [data]
-    (= ::kind (::kind data))))
+    (= kind (::kind data))))
 
 (defn-spec constant? fn?
   [type ::type]
@@ -67,7 +68,7 @@
                     ;:map (constant map)
                     ;:vector (constant vector)
                     ;:set (constant set)
-                    ;:identifier (node (kind? :identifier) ::identifier)
+                    :identifier (node (kind? :identifier) ::identifier)
                     :symbol (node (constant? :symbol) (single? ::symbol))
                     ;:binding-definition binding-definition
                     ;:argument-list argument-list

@@ -70,6 +70,14 @@
 (deftransform vector [& more]
   (single-values ::parse.spec/vector (vec more)))
 
+(deftransform identifier [qualified & more]
+  (let [qualified? (= qualified :qualified)]
+    (merge {::parse.spec/kind :identifier}
+           (if qualified?
+             {::parse.spec/ns (first more)
+              ::parse.spec/name (second more)}
+             {::parse.spec/name (first more)}))))
+
 (deftransform binding-definition [& more]
   (single-named ::parse.spec/binding-definition (first more) (second more)))
 
@@ -122,8 +130,8 @@
                   :map (partial constant map)
                   :vector (partial constant vector)
                   :set (partial constant set)
-                  ; TODO: Namespaced idents
-                  :identifier (partial single :identifier)
+                  :identifier (partial identifier :unqualified)
+                  :qualified-identifier (partial identifier :qualified)
                   :symbol (partial constant single :symbol)
                   :binding-definition binding-definition
                   :argument-list argument-list

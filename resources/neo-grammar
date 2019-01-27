@@ -1,6 +1,6 @@
 <program> = atom*
 <atom> = regex / string / nil / number / boolean / set / map / vector /
-         qualified-keyword / keyword / identifier /
+         qualified-keyword / keyword / qualified-identifier / identifier /
          binding-definition /
          fn-definition / do-definition /
          if /
@@ -26,10 +26,15 @@ string = <double-quote> #'(?:[^"\\]|\\.)*' <double-quote>
 
 regex = <'#'> <double-quote> #'(?:[^"\\]|\\.)*' <double-quote>
 
-<identifier-text> = #'[^\s"()\[\]{}\d:/\.#][^\s"()\[\]{}/\.#]*'
-identifier = identifier-text
 <symbol-text> = #'[^\s"()\[\]{}\d:/#][^\s"()\[\]{}/#]*'
 symbol = symbol-text
+
+<identifier-text> = #'[^\s"()\[\]{}\d:/\.#][^\s"()\[\]{}/\.#]*'
+identifier = identifier-text
+<namespace> = symbol-text
+qualified-identifier = namespace <'/'> identifier-text
+
+
 <keyword-text> = #'[^\s"()\[\]{}/:]+'
 qualified-keyword = #'::?' keyword-text '/' keyword-text
 keyword = #'::?' keyword-text
