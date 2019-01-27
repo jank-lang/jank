@@ -20,7 +20,9 @@ parsing
   sets: working, tested
   lists:
   regexes: working, tested
-  identifiers: working, tested
+  identifiers
+    simple: working, tested
+    qualified: working, tested
   special forms
     def: working, tested
     if: working, tested
