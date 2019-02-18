@@ -50,6 +50,11 @@
   (fn [data]
     (s/valid? value-spec (::value data))))
 
+(defn-spec single-values? fn?
+  [values-spec ifn?]
+  (fn [data]
+    (s/valid? values-spec (::values data))))
+
 (s/def ::identifier (s/keys :req [::name]
                             :opt [::ns]))
 (s/def ::ns string?)
@@ -59,6 +64,8 @@
 (s/def ::string string?)
 (s/def ::regex string?)
 (s/def ::symbol string?)
+(s/def ::vector (s/coll-of ::node))
+(s/def ::set (s/coll-of ::node))
 
 (s/def ::binding-definition (s/keys :req [::identifier
                                           ::value]))
@@ -71,8 +78,8 @@
                     :string (node (constant? :string) (single? ::string))
                     :regex (node (constant? :regex) (single? ::regex))
                     ;:map (constant map)
-                    ;:vector (constant vector)
-                    ;:set (constant set)
+                    :vector (node (constant? :vector) (single-values? ::vector))
+                    :set (node (constant? :set) (single-values? ::set))
                     :identifier (node (kind? :identifier) ::identifier)
                     :symbol (node (constant? :symbol) (single? ::symbol))
                     :binding-definition (node (kind? :binding-definition)
