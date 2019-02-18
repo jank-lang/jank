@@ -74,6 +74,12 @@
 (s/def ::binding-definition (s/keys :req [::identifier
                                           ::value]))
 
+(s/def ::arguments (s/coll-of ::node)) ; TODO: identifier
+(s/def ::body any?) ; TODO: do-definition
+(s/def ::fn-definition (s/keys :req [::arguments
+                                     ::body]
+                               :opt [::name]))
+
 (s/def ::node (s/or :nil (node (constant? :nil))
                     :integer (node (constant? :integer) (single? integer?))
                     :real (node (constant? :real) (single? double?))
@@ -88,8 +94,8 @@
                     :symbol (node (constant? :symbol) (single? ::symbol))
                     :binding-definition (node (kind? :binding-definition)
                                               ::binding-definition)
-                    ;:argument-list argument-list
-                    ;:fn-definition fn-definition
+                    :fn-definition (node (kind? :fn-definition)
+                                         ::fn-definition)
                     ;:do-definition do-definition
                     ;:if if-expression
                     ;:application application

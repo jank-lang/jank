@@ -84,8 +84,15 @@
 (deftransform argument-list [& more]
   (vec more))
 
+(deftransform do-definition [& more]
+  (let [ret (last more)]
+    {::parse.spec/kind :do-definition
+     ::parse.spec/body (into [] (butlast more))
+     ::parse.spec/return (if (some? ret)
+                           ret
+                           (constant none :nil))}))
+
 (deftransform fn-definition [& more]
-  (pprint "fn" more)
   (let [has-name? (= :identifier (-> more first :kind))
         args (if has-name?
                (second more)
@@ -95,17 +102,9 @@
                (rest more))]
     (merge {::parse.spec/kind :fn-definition
             ::parse.spec/arguments args
-            ::parse.spec/body (vec body)}
+            ::parse.spec/body (apply do-definition body)}
            (when has-name?
              {::parse.spec/name (first more)}))))
-
-(deftransform do-definition [& more]
-  (let [ret (last more)]
-    {::parse.spec/kind :do-definition
-     ::parse.spec/body (into [] (butlast more))
-     ::parse.spec/return (if (some? ret)
-               ret
-               (constant none :nil))}))
 
 (deftransform if-expression [& [condition then else]]
   (merge {::parse.spec/kind :if
