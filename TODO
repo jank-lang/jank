@@ -68,6 +68,11 @@ tracking function purity
   all other fns are compositions of std lib fns
   interop is impure
 
+gradual static typing?
+  by default, only the essentials are type checked
+  the compiler will only raise a type error when it's certain something is wrong
+  type annotations can be added, which are used at compile-time
+
 functions are generic by default
   all std lib fns have type annotations
   all other fns are compositions of std lib fns
