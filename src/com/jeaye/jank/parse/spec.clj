@@ -26,7 +26,7 @@
                            :argument-list
                            :fn-definition
                            :do-definition
-                           :if
+                           :if-expression
                            :application]))
 
 (defmacro node [& specs]
@@ -83,6 +83,13 @@
 (s/def ::do-definition (s/keys :req [::body
                                      ::return]))
 
+(s/def ::condition any?) ; TODO: ::node
+(s/def ::then any?) ; TODO: ::node
+(s/def ::else any?) ; TODO: ::node
+(s/def ::if-expression (s/keys :req [::condition
+                                     ::then]
+                               :opt [::else]))
+
 (s/def ::node (s/or :nil (node (constant? :nil))
                     :integer (node (constant? :integer) (single? integer?))
                     :real (node (constant? :real) (single? double?))
@@ -101,6 +108,7 @@
                                          ::fn-definition)
                     :do-definition (node (kind? :do-definition)
                                          ::do-definition)
-                    ;:if if-expression
+                    :if-expression (node (kind? :if-expression)
+                                         ::if-expression)
                     ;:application application
                     ))

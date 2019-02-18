@@ -107,7 +107,7 @@
              {::parse.spec/name (first more)}))))
 
 (deftransform if-expression [& [condition then else]]
-  (merge {::parse.spec/kind :if
+  (merge {::parse.spec/kind :if-expression
           ::parse.spec/condition condition
           ::parse.spec/then then}
          (when (some? else)
