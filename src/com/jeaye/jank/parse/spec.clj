@@ -79,6 +79,9 @@
 (s/def ::fn-definition (s/keys :req [::arguments
                                      ::body]
                                :opt [::name]))
+(s/def ::return any?) ; TODO: ::node
+(s/def ::do-definition (s/keys :req [::body
+                                     ::return]))
 
 (s/def ::node (s/or :nil (node (constant? :nil))
                     :integer (node (constant? :integer) (single? integer?))
@@ -96,7 +99,8 @@
                                               ::binding-definition)
                     :fn-definition (node (kind? :fn-definition)
                                          ::fn-definition)
-                    ;:do-definition do-definition
+                    :do-definition (node (kind? :do-definition)
+                                         ::do-definition)
                     ;:if if-expression
                     ;:application application
                     ))
