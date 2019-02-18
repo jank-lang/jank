@@ -64,6 +64,10 @@
 (s/def ::string string?)
 (s/def ::regex string?)
 (s/def ::symbol string?)
+
+(s/def ::map-entry (s/keys :req [::key ; TODO: spec
+                                 ::value]))
+(s/def ::map (s/coll-of ::map-entry))
 (s/def ::vector (s/coll-of ::node))
 (s/def ::set (s/coll-of ::node))
 
@@ -77,7 +81,7 @@
                     :keyword (node (constant? :keyword) ::keyword)
                     :string (node (constant? :string) (single? ::string))
                     :regex (node (constant? :regex) (single? ::regex))
-                    ;:map (constant map)
+                    :map (node (constant? :map) (single-values? ::map))
                     :vector (node (constant? :vector) (single-values? ::vector))
                     :set (node (constant? :set) (single-values? ::set))
                     :identifier (node (kind? :identifier) ::identifier)
