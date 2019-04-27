@@ -24,8 +24,8 @@
 (s/def ::kind (into types [:constant
                            :binding-definition
                            :argument-list
-                           :fn-definition ; TODO: rename to fn-expression
-                           :do-definition ; TODO: rename to do-expression
+                           :fn-expression ; TODO: rename to fn-expression
+                           :do-expression ; TODO: rename to do-expression
                            :if-expression
                            :application]))
 
@@ -75,12 +75,12 @@
                                           ::value]))
 
 (s/def ::parameters (s/coll-of any?)) ; TODO: identifier
-(s/def ::body any?) ; TODO: do-definition
-(s/def ::fn-definition (s/keys :req [::parameters
+(s/def ::body any?) ; TODO: do-expression
+(s/def ::fn-expression (s/keys :req [::parameters
                                      ::body]
                                :opt [::name]))
 (s/def ::return any?) ; TODO: ::node
-(s/def ::do-definition (s/keys :req [::body
+(s/def ::do-expression (s/keys :req [::body
                                      ::return]))
 
 (s/def ::condition any?) ; TODO: ::node
@@ -109,10 +109,10 @@
                     :symbol (node (constant? :symbol) (single? ::symbol))
                     :binding-definition (node (kind? :binding-definition)
                                               ::binding-definition)
-                    :fn-definition (node (kind? :fn-definition)
-                                         ::fn-definition)
-                    :do-definition (node (kind? :do-definition)
-                                         ::do-definition)
+                    :fn-expression (node (kind? :fn-expression)
+                                         ::fn-expression)
+                    :do-expression (node (kind? :do-expression)
+                                         ::do-expression)
                     :if-expression (node (kind? :if-expression)
                                          ::if-expression)
                     :application (node (kind? :application)

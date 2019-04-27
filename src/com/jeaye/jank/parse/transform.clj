@@ -84,15 +84,15 @@
 (deftransform argument-list [& more]
   (vec more))
 
-(deftransform do-definition [& more]
+(deftransform do-expression [& more]
   (let [ret (last more)]
-    {::parse.spec/kind :do-definition
+    {::parse.spec/kind :do-expression
      ::parse.spec/body (into [] (butlast more))
      ::parse.spec/return (if (some? ret)
                            ret
                            (constant none :nil))}))
 
-(deftransform fn-definition [& more]
+(deftransform fn-expression [& more]
   (let [has-name? (= :identifier (-> more first :kind))
         params (if has-name?
                  (second more)
@@ -100,9 +100,9 @@
         body (if has-name?
                (drop 2 more)
                (rest more))]
-    (merge {::parse.spec/kind :fn-definition
+    (merge {::parse.spec/kind :fn-expression
             ::parse.spec/parameters params
-            ::parse.spec/body (apply do-definition body)}
+            ::parse.spec/body (apply do-expression body)}
            (when has-name?
              {::parse.spec/name (first more)}))))
 
@@ -134,8 +134,8 @@
                   :symbol (partial constant single :symbol)
                   :binding-definition binding-definition
                   :argument-list argument-list
-                  :fn-definition fn-definition
-                  :do-definition do-definition
+                  :fn-expression fn-expression
+                  :do-expression do-expression
                   :if if-expression
                   :application application})
 
