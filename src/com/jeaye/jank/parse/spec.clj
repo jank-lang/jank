@@ -24,8 +24,8 @@
 (s/def ::kind (into types [:constant
                            :binding-definition
                            :argument-list
-                           :fn-definition
-                           :do-definition
+                           :fn-definition ; TODO: rename to fn-expression
+                           :do-definition ; TODO: rename to do-expression
                            :if-expression
                            :application]))
 
@@ -74,9 +74,9 @@
 (s/def ::binding-definition (s/keys :req [::identifier
                                           ::value]))
 
-(s/def ::arguments (s/coll-of ::node)) ; TODO: identifier
+(s/def ::parameters (s/coll-of any?)) ; TODO: identifier
 (s/def ::body any?) ; TODO: do-definition
-(s/def ::fn-definition (s/keys :req [::arguments
+(s/def ::fn-definition (s/keys :req [::parameters
                                      ::body]
                                :opt [::name]))
 (s/def ::return any?) ; TODO: ::node
@@ -89,6 +89,11 @@
 (s/def ::if-expression (s/keys :req [::condition
                                      ::then]
                                :opt [::else]))
+
+(s/def ::fn any?) ; TODO: ::node
+(s/def ::arguments any?) ; TODO: coll-of ::node
+(s/def ::application (s/keys :req [::fn
+                                   ::arguments]))
 
 (s/def ::node (s/or :nil (node (constant? :nil))
                     :integer (node (constant? :integer) (single? integer?))
@@ -110,5 +115,5 @@
                                          ::do-definition)
                     :if-expression (node (kind? :if-expression)
                                          ::if-expression)
-                    ;:application application
-                    ))
+                    :application (node (kind? :application)
+                                       ::application)))

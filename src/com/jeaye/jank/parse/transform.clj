@@ -94,14 +94,14 @@
 
 (deftransform fn-definition [& more]
   (let [has-name? (= :identifier (-> more first :kind))
-        args (if has-name?
-               (second more)
-               (first more))
+        params (if has-name?
+                 (second more)
+                 (first more))
         body (if has-name?
                (drop 2 more)
                (rest more))]
     (merge {::parse.spec/kind :fn-definition
-            ::parse.spec/arguments args
+            ::parse.spec/parameters params
             ::parse.spec/body (apply do-definition body)}
            (when has-name?
              {::parse.spec/name (first more)}))))
@@ -115,7 +115,7 @@
 
 (deftransform application [& more]
   {::parse.spec/kind :application
-   ::parse.spec/value (first more)
+   ::parse.spec/fn (first more)
    ::parse.spec/arguments (vec (rest more))})
 
 (def transformer {:nil (partial constant none :nil)

@@ -12,7 +12,8 @@
   (s/check-asserts true)
   (stest/instrument)
   (->> (constantly (expound/custom-printer {:show-valid-values? true}))
-       (alter-var-root #'s/*explain-out*)) )
+       (alter-var-root #'s/*explain-out*))
+  nil)
 
 (defmacro def-reload
   [def-name to-wrap]
