@@ -77,7 +77,7 @@
              {::parse.spec/name (first more)}))))
 
 (deftransform def-expression [& more]
-  {::parse.spec/kind :binding-definition
+  {::parse.spec/kind :binding
    ::parse.spec/identifier (first more)
    ::parse.spec/value (second more)
    ::parse.spec/scope ::parse.spec/global})
@@ -97,7 +97,7 @@
   (let [has-name? (= :identifier (-> more first :kind))
         ; TODO: Add parse support for variadic fns
         params (mapv (fn [ident]
-                       {::parse.spec/kind :binding-definition
+                       {::parse.spec/kind :binding
                         ::parse.spec/identifier ident
                         ::parse.spec/scope ::parse.spec/parameter})
                      (if has-name?
@@ -110,7 +110,7 @@
             ::parse.spec/parameters params
             ::parse.spec/body (apply do-expression body)}
            (when has-name?
-             {::parse.spec/name {::parse.spec/kind :binding-definition
+             {::parse.spec/name {::parse.spec/kind :binding
                                  ::parse.spec/identifier (first more)
                                  ::parse.spec/scope ::parse.spec/fn}}))))
 

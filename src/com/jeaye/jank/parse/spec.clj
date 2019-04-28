@@ -22,7 +22,7 @@
              :symbol})
 (s/def ::type types)
 (s/def ::kind (into types [:constant
-                           :binding-definition
+                           :binding
                            :argument-list
                            :fn-expression
                            :do-expression
@@ -76,9 +76,9 @@
                  ::parameter ; Inputs bound to a fn-expression.
                  ::let ; Bound to the body of the let.
                  })
-(s/def ::binding-definition (s/keys :req [::identifier
-                                          ::scope]
-                                    :opt [::value]))
+(s/def ::binding (s/keys :req [::identifier
+                               ::scope]
+                         :opt [::value]))
 
 (s/def ::parameters (s/coll-of any?)) ; TODO: identifier
 (s/def ::body any?) ; TODO: do-expression
@@ -113,8 +113,8 @@
                     :set (node (constant? :set) (single-values? ::set))
                     :identifier (node (kind? :identifier) ::identifier)
                     :symbol (node (constant? :symbol) (single? ::symbol))
-                    :binding-definition (node (kind? :binding-definition)
-                                              ::binding-definition)
+                    :binding (node (kind? :binding)
+                                   ::binding)
                     :fn-expression (node (kind? :fn-expression)
                                          ::fn-expression)
                     :do-expression (node (kind? :do-expression)
