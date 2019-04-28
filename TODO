@@ -27,7 +27,7 @@ parsing
     def: working, tested
     if: working, tested
     do: working, tested
-    let: working, untested
+    let: working, tested
     quote:
     var:
     fn: working, tested
