@@ -1,7 +1,7 @@
 <program> = atom*
 <atom> = regex / string / nil / number / boolean / set / map / vector /
          qualified-keyword / keyword / qualified-identifier / identifier /
-         binding-definition /
+         def-expression /
          fn-expression / do-expression /
          if /
          application
@@ -45,7 +45,7 @@ set = <'#'> left-curly atom* right-curly
 vector = left-bracket atom* right-bracket
 
 <def-keyword> = <'def'>
-binding-definition = left-paren def-keyword identifier atom right-paren
+def-expression = left-paren def-keyword identifier atom right-paren
 
 <fn-keyword> = <'fn'>
 argument-list = left-bracket identifier* right-bracket

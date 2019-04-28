@@ -28,7 +28,7 @@
 (deftransform none [kind]
   {::parse.spec/kind kind})
 
-; TODO: Rename value to node
+; TODO: Rename value to node? thoe whole thing is the node though
 (deftransform single [kind value]
   {::parse.spec/kind kind ::parse.spec/value value})
 
@@ -76,10 +76,11 @@
               ::parse.spec/name (second more)}
              {::parse.spec/name (first more)}))))
 
-(deftransform binding-definition [& more]
+(deftransform def-expression [& more]
   {::parse.spec/kind :binding-definition
    ::parse.spec/identifier (first more)
-   ::parse.spec/value (second more)})
+   ::parse.spec/value (second more)
+   ::parse.spec/scope ::parse.spec/global})
 
 (deftransform argument-list [& more]
   (vec more))
@@ -94,9 +95,14 @@
 
 (deftransform fn-expression [& more]
   (let [has-name? (= :identifier (-> more first :kind))
-        params (if has-name?
-                 (second more)
-                 (first more))
+        ; TODO: Add parse support for variadic fns
+        params (mapv (fn [ident]
+                       {::parse.spec/kind :binding-definition
+                        ::parse.spec/identifier ident
+                        ::parse.spec/scope ::parse.spec/parameter})
+                     (if has-name?
+                       (second more)
+                       (first more)))
         body (if has-name?
                (drop 2 more)
                (rest more))]
@@ -104,7 +110,9 @@
             ::parse.spec/parameters params
             ::parse.spec/body (apply do-expression body)}
            (when has-name?
-             {::parse.spec/name (first more)}))))
+             {::parse.spec/name {::parse.spec/kind :binding-definition
+                                 ::parse.spec/identifier (first more)
+                                 ::parse.spec/scope ::parse.spec/fn}}))))
 
 (deftransform if-expression [& [condition then else]]
   (merge {::parse.spec/kind :if-expression
@@ -132,7 +140,7 @@
                   :identifier (partial identifier :unqualified)
                   :qualified-identifier (partial identifier :qualified)
                   :symbol (partial constant single :symbol)
-                  :binding-definition binding-definition
+                  :def-expression def-expression
                   :argument-list argument-list
                   :fn-expression fn-expression
                   :do-expression do-expression

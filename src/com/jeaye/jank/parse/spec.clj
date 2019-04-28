@@ -5,7 +5,7 @@
 
 (s/def ::tree (s/coll-of ::node))
 
-; TODO: Input type/kind, output type/kind
+; TODO: Input type/kind, output type/kind (for literals, namely)
 (def types #{:nil
              :integer
              :real
@@ -24,8 +24,8 @@
 (s/def ::kind (into types [:constant
                            :binding-definition
                            :argument-list
-                           :fn-expression ; TODO: rename to fn-expression
-                           :do-expression ; TODO: rename to do-expression
+                           :fn-expression
+                           :do-expression
                            :if-expression
                            :application]))
 
@@ -71,8 +71,14 @@
 (s/def ::vector (s/coll-of ::node))
 (s/def ::set (s/coll-of ::node))
 
+(s/def ::scope #{::global ; A global def.
+                 ::fn ; The name of a fn-expression.
+                 ::parameter ; Inputs bound to a fn-expression.
+                 ::let ; Bound to the body of the let.
+                 })
 (s/def ::binding-definition (s/keys :req [::identifier
-                                          ::value]))
+                                          ::scope]
+                                    :opt [::value]))
 
 (s/def ::parameters (s/coll-of any?)) ; TODO: identifier
 (s/def ::body any?) ; TODO: do-expression
