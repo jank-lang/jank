@@ -21,12 +21,14 @@
              :qualified-identifier
              :symbol})
 (s/def ::type types)
+; TODO: Qualify these
 (s/def ::kind (into types [:constant
                            :binding
                            :argument-list
-                           :fn-expression
-                           :do-expression
-                           :if-expression
+                           :fn
+                           :do
+                           :if
+                           :let
                            :application]))
 
 (defmacro node [& specs]
@@ -72,8 +74,8 @@
 (s/def ::set (s/coll-of ::node))
 
 (s/def ::scope #{::global ; A global def.
-                 ::fn ; The name of a fn-expression.
-                 ::parameter ; Inputs bound to a fn-expression.
+                 ::fn ; The name of a fn.
+                 ::parameter ; Inputs bound to a fn.
                  ::let ; Bound to the body of the let.
                  })
 (s/def ::binding (s/keys :req [::identifier
@@ -81,24 +83,25 @@
                          :opt [::value]))
 
 (s/def ::parameters (s/coll-of any?)) ; TODO: identifier
-(s/def ::body any?) ; TODO: do-expression
-(s/def ::fn-expression (s/keys :req [::parameters
-                                     ::body]
-                               :opt [::name]))
+(s/def ::body any?) ; TODO: do
+(s/def ::fn (s/keys :req [::parameters
+                          ::body]
+                    :opt [::name]))
 (s/def ::return any?) ; TODO: ::node
-(s/def ::do-expression (s/keys :req [::body
-                                     ::return]))
+(s/def ::do (s/keys :req [::body
+                          ::return]))
 
 (s/def ::condition any?) ; TODO: ::node
 (s/def ::then any?) ; TODO: ::node
 (s/def ::else any?) ; TODO: ::node
-(s/def ::if-expression (s/keys :req [::condition
-                                     ::then]
-                               :opt [::else]))
+(s/def ::if (s/keys :req [::condition
+                          ::then]
+                    :opt [::else]))
 
-(s/def ::fn any?) ; TODO: ::node
+(s/def ::let any?) ; TODO:
+
 (s/def ::arguments any?) ; TODO: coll-of ::node
-(s/def ::application (s/keys :req [::fn
+(s/def ::application (s/keys :req [::value
                                    ::arguments]))
 
 (s/def ::node (s/or :nil (node (constant? :nil))
@@ -115,11 +118,13 @@
                     :symbol (node (constant? :symbol) (single? ::symbol))
                     :binding (node (kind? :binding)
                                    ::binding)
-                    :fn-expression (node (kind? :fn-expression)
-                                         ::fn-expression)
-                    :do-expression (node (kind? :do-expression)
-                                         ::do-expression)
-                    :if-expression (node (kind? :if-expression)
-                                         ::if-expression)
+                    :fn (node (kind? :fn)
+                              ::fn)
+                    :do (node (kind? :do)
+                              ::do)
+                    :if (node (kind? :if)
+                              ::if)
+                    :let (node (kind? :let)
+                               ::let)
                     :application (node (kind? :application)
                                        ::application)))

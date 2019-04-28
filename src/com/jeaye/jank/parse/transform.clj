@@ -68,8 +68,8 @@
 (deftransform vector [& more]
   (single-values :vector (vec more)))
 
-(deftransform identifier [qualified & more]
-  (let [qualified? (= qualified :qualified)]
+(deftransform identifier [qualification & more]
+  (let [qualified? (= qualification :qualified)]
     (merge {::parse.spec/kind :identifier}
            (if qualified?
              {::parse.spec/ns (first more)
@@ -87,7 +87,7 @@
 
 (deftransform do-expression [& more]
   (let [ret (last more)]
-    {::parse.spec/kind :do-expression
+    {::parse.spec/kind :do
      ::parse.spec/body (into [] (butlast more))
      ::parse.spec/return (if (some? ret)
                            ret
@@ -106,7 +106,7 @@
         body (if has-name?
                (drop 2 more)
                (rest more))]
-    (merge {::parse.spec/kind :fn-expression
+    (merge {::parse.spec/kind :fn
             ::parse.spec/parameters params
             ::parse.spec/body (apply do-expression body)}
            (when has-name?
@@ -115,15 +115,29 @@
                                  ::parse.spec/scope ::parse.spec/fn}}))))
 
 (deftransform if-expression [& [condition then else]]
-  (merge {::parse.spec/kind :if-expression
+  (merge {::parse.spec/kind :if
           ::parse.spec/condition condition
           ::parse.spec/then then}
          (when (some? else)
            {::parse.spec/else else})))
 
+(deftransform let-bindings [& bindings]
+  (->> (partition-all 2 bindings)
+       (mapv (fn [[ident value]]
+               {::parse.spec/kind :binding
+                ::parse.spec/identifier ident
+                ::parse.spec/value value
+                ::parse.spec/scope ::parse.spec/let}))))
+
+(deftransform let-expression [bindings & body]
+  (clojure.pprint/pprint [:let bindings body])
+  (merge {::parse.spec/kind :let
+          ::parse.spec/bindings bindings
+          ::parse.spec/body (apply do-expression body)}))
+
 (deftransform application [& more]
   {::parse.spec/kind :application
-   ::parse.spec/fn (first more)
+   ::parse.spec/value (first more)
    ::parse.spec/arguments (vec (rest more))})
 
 (def transformer {:nil (partial constant none :nil)
@@ -140,11 +154,13 @@
                   :identifier (partial identifier :unqualified)
                   :qualified-identifier (partial identifier :qualified)
                   :symbol (partial constant single :symbol)
-                  :def-expression def-expression
+                  :def def-expression
                   :argument-list argument-list
-                  :fn-expression fn-expression
-                  :do-expression do-expression
+                  :fn fn-expression
+                  :do do-expression
                   :if if-expression
+                  :let let-expression
+                  :let-bindings let-bindings
                   :application application})
 
 (defn-spec walk ::parse.spec/tree

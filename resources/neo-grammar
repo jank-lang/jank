@@ -1,8 +1,8 @@
 <program> = atom*
 <atom> = regex / string / nil / number / boolean / set / map / vector /
          qualified-keyword / keyword / qualified-identifier / identifier /
-         def-expression /
-         fn-expression / do-expression /
+         def /
+         fn / do / let /
          if /
          application
 
@@ -13,7 +13,7 @@
 <left-curly> = <'{'>
 <right-curly> = <'}'>
 
-special-identifier = def-keyword | fn-keyword | do-keyword | if-keyword
+special-identifier = def-keyword | fn-keyword | do-keyword | if-keyword | let-keyword
 
 nil = <'nil'>
 
@@ -45,17 +45,17 @@ set = <'#'> left-curly atom* right-curly
 vector = left-bracket atom* right-bracket
 
 <def-keyword> = <'def'>
-def-expression = left-paren def-keyword identifier atom right-paren
+def = left-paren def-keyword identifier atom right-paren
 
 <fn-keyword> = <'fn'>
 argument-list = left-bracket identifier* right-bracket
-fn-expression =
+fn =
   left-paren fn-keyword identifier? argument-list
     atom*
   right-paren
 
 <do-keyword> = <'do'>
-do-expression =
+do =
   left-paren do-keyword
     atom*
   right-paren
@@ -65,6 +65,17 @@ if =
   left-paren if-keyword atom
     atom
     atom?
+  right-paren
+
+<let-keyword> = <'let'>
+let-bindings =
+  left-bracket
+    (identifier atom)*
+  right-bracket
+let =
+  left-paren let-keyword
+    let-bindings
+    atom*
   right-paren
 
 application =
