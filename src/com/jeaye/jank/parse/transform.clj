@@ -130,10 +130,9 @@
                 ::parse.spec/scope ::parse.spec/let}))))
 
 (deftransform let-expression [bindings & body]
-  (clojure.pprint/pprint [:let bindings body])
-  (merge {::parse.spec/kind :let
-          ::parse.spec/bindings bindings
-          ::parse.spec/body (apply do-expression body)}))
+  {::parse.spec/kind :let
+   ::parse.spec/bindings bindings
+   ::parse.spec/body (apply do-expression body)})
 
 (deftransform application [& more]
   {::parse.spec/kind :application
