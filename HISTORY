@@ -1,4 +1,4 @@
-Jan 2015 - Project started in C++
+Jan 2015 - Project started in C++, called jank
 Oct 2015 - Parser, Type checker, and Interpreter implemented
 Oct 2015 - Rewrite in Clojure started, focusing on C++ codegen
 Nov 2015 - Parser, Type checker, and Codegen targeting C++ implemented
@@ -6,3 +6,4 @@ Dec 2016 - Initial macro system and interpreter are working
 Dec 2016 - Continuous benchmark service added
 Jan 2017 - Transition to fully generic, type-rich programming
 Dec 2017 - Syntax changed to be a Clojure dialect
+Apr 2019 - Renamed to idiolisp
