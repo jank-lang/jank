@@ -92,15 +92,26 @@ polymorphism comes from function specialization
   functions from any namespace can be specialized from any other
 
 syntax for type specifiers
-  ???
+  https://docs.racket-lang.org/ts-guide/types.html
 
-syntax for generic fn definitions
-  fns can refer to symbols in a special way, to note that they're polymorphic
-    maybe ~t
-  those symbols may be referenced multiple times in the fn and must all balance
+  unanswered:
+    how will specialization work?
+    can one specialize across namespaces?
 
-syntax for type definitions
-  ???
+  (deftype real (U integer float))
+  (deftype coord (vector real real))
+
+  (deftype none)
+  (deftype some [t] (keys ::value t))
+  (deftype optional [t] (U (some t) none))
+  (type find (-> real (vector real) (optional real)))
+
+  (type a real)
+  (type inc (-> real real))
+  (type + (-> real real real))
+  (type identity (-> any any))
+
+  (type count (all [t] (-> (collection t) integer)))
 
 **** what's needed to make jank usable: ****
 
