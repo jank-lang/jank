@@ -132,22 +132,6 @@ website style
   similar to http://eta-lang.org/
   also emacs site
 
-implement generic functions first
-  take an integer or string or T
-
-then follow up with generic types
-  first parameterized on types
-  then add support for constraints
-  then add support for values
-
-adopt core.typed
-
-adopt clojure.spec
-  need namespaced keywords
-
-address generic construction of items
-  given a T and some args, how can I construct a T, passing the args to the ctor?
-
 namespacing
   imports
   treat / in any identifier as namespacing
@@ -197,12 +181,7 @@ structs
   more tests!
 
 ** everything else: **
-rename to kio? discipline? idiolisp?
-
 figure out logo
-
-remove function-call from grammar; just use lists
-  it becomes unhelpful with macros
 
 repl
   online repl sandbox
