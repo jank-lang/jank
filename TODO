@@ -109,9 +109,22 @@ syntax for type specifiers
   (type a real)
   (type inc (-> real real))
   (type + (-> real real real))
-  (type identity (-> any any))
+  (type identity (all [t] (-> t t)))
 
   (type count (all [t] (-> (collection t) integer)))
+
+function specialization
+  (type print (-> any none))
+  (defn print [a]
+    ...)
+  (extend print
+    (-> string none)
+    [b]
+    ...)
+  (extend print
+    (all [t] (-> (collection t) none))
+    [c]
+    ...)
 
 **** what's needed to make jank usable: ****
 
@@ -183,83 +196,15 @@ structs
       requires generics? just overloading?
   more tests!
 
-read command-line arguments from a separate file
-  don't bother with the target macro yet
-
 ** everything else: **
-rename to kio? disciple? idiolisp?
+rename to kio? discipline? idiolisp?
 
 figure out logo
-
-write the extra compilation args to a file
-
-long-term macros should be predicative pattern matching
-  defining a syntax allows arbitrary nesting of predicates
-  maybe with regex-like specifiers?
-
-  (bind-syntax (let ((identifer? expression?)+)
-                 expression?+))
-
-  how can I distinguish 'let' from a predicate? see racket's macros
-
-better logging
-  timbre (allows profiling, too)
-
-sanitize idents which are keywords in backend language
-
-passing first class overloaded declared functions
-  implicitly wrap every function identifier in a lambda
-    (λ (& args) (∀)
-      (apply func args))
 
 remove function-call from grammar; just use lists
   it becomes unhelpful with macros
 
-consider allowing param packs to not be last
-  perform matching as needed
-  (ƒ shout (s string &strings i int &ints) () ...)
-
-
-use bind and declare as expressions
-
-tests
-  comments within forms
-    including functions
-  keywords
-  codegen
-    returning an integer literal and a jank integer from an if should work
-  code execution (functional tests)
-  static analysis of generated code
-
-targets
-  each target has its own prelude
-    c++
-    bash
-    opencl
-    nix
-    forth
-    vimscript
-
-  (#target c++
-           (dependencies "gl/gl.h")
-           (command-line "-ggdb -Og -lGL"))
-
-  prelude isn't included until #target macro is used
-
-allow keywords?
-  each keyword is its own type
-  useful in the case of policies?
-  just resolved to integers? hash of key name?
-
-^type within macros for first class types
-  maybe no need for generic syntax for macros?
-
-constraints on return types
-  Allow dependent types there
-  (ƒ foo () (:T-ret) where (^number? : (T-ret))
-    42)
-
-REPL
+repl
   online repl sandbox
   irc bot for #jank
   tests
