@@ -1,12 +1,9 @@
-/build
-/build_debug
-/build_release
-
 test.io
 a.out
 
 # Vim files
 /.ycm_extra_conf.py*
+/.lsp
 
 # lein
 /target
