@@ -129,7 +129,7 @@ function specialization
     [c]
     ...)
 
-**** what's needed to make idiolisp usable: ****
+**** what's needed to make jank usable: ****
 
 website style
   similar to http://eta-lang.org/
@@ -188,5 +188,5 @@ figure out logo
 
 repl
   online repl sandbox
-  irc bot for #idiolisp
+  irc bot for #jank
   tests
