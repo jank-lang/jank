@@ -46,6 +46,11 @@ parsing
     var:
     conditionals:
 
+codegen
+  add c ffi fns which compile to c
+  generate c code
+  build data structures using c ffi
+
 grammar
   manually specify whitespace
   don't have grammar for bools and nil at all?
@@ -94,10 +99,6 @@ polymorphism comes from function specialization
 syntax for type specifiers
   https://docs.racket-lang.org/ts-guide/types.html
 
-  unanswered:
-    how will specialization work?
-    can one specialize across namespaces?
-
   (deftype real (U integer float))
   (deftype coord (vector real real))
 
@@ -105,6 +106,8 @@ syntax for type specifiers
   (deftype some [t] (keys ::value t))
   (deftype optional [t] (U (some t) none))
   (type find (-> real (vector real) (optional real)))
+
+  (deftype map [& ts])
 
   (type a real)
   (type inc (-> real real))
