@@ -28,15 +28,18 @@
 (deftransform none [kind]
   {::parse.spec/kind kind})
 
-; TODO: Rename value to node? thoe whole thing is the node though
+; TODO: Rename value to node? the whole thing is the node though
 (deftransform single [kind value]
-  {::parse.spec/kind kind ::parse.spec/value value})
+  {::parse.spec/kind kind
+   ::parse.spec/value value})
 
 (deftransform single-values [kind values]
-  {::parse.spec/kind kind ::parse.spec/values values})
+  {::parse.spec/kind kind
+   ::parse.spec/values values})
 
 (deftransform read-single [kind value]
-  {::parse.spec/kind kind ::parse.spec/value (edn/read-string value)})
+  {::parse.spec/kind kind
+   ::parse.spec/value (edn/read-string value)})
 
 (deftransform keyword [qualified & more]
   (let [qualified? (= qualified :qualified)]
