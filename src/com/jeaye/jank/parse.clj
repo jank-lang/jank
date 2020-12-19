@@ -7,7 +7,7 @@
              [assert :refer [incomplete-parse!]]]
             [com.jeaye.jank.parse
              [binding :as parse.binding]
-             [transform :as transform]]))
+             [transform :as parse.transform]]))
 
 (insta/defparser whitespace-or-comments-parser
   (clojure.java.io/resource "neo-whitespace-grammar"))
@@ -33,7 +33,7 @@
              (incomplete-parse! (insta/get-failure parsed)))
          parsed-with-meta (add-meta input parsed)
          ;_ (pprint "parsed" parsed-with-meta)
-         transformed (transform/walk parsed-with-meta)]
+         transformed (parse.transform/walk parsed-with-meta)]
      (pprint "transformed" transformed)
      (into prelude transformed)))
 

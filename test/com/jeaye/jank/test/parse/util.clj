@@ -5,10 +5,10 @@
 (def error #"parse error")
 
 (defn test-files [path excludes]
-  (println "[parse] Gathering files...")
+  #_(println "[parse] Gathering files...")
   (let [files (bootstrap/files path excludes)]
     (doseq [file-info files]
-      (if (:skip? file-info)
+      #_(if (:skip? file-info)
         (println "[parse] SKIP" (:resource file-info))
         (println "[parse] test" (:resource file-info)))
       (cond

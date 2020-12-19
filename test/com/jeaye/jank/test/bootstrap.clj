@@ -6,17 +6,20 @@
             [com.jeaye.jank.parse :as parse]
             [com.jeaye.jank.parse.binding :as parse.binding]))
 
-(defmacro consume-output
+(defmacro with-consumed-output
   [& body]
   `(let [s# (new java.io.StringWriter)]
-     (binding [*out* s# *err* s#]
+     (binding [*out* s#
+               *err* s#]
        ~@body)))
 
 (defn with-instrumentation [fun]
   (s/check-asserts true)
+  (->> (constantly (expound/custom-printer {:show-valid-values? true}))
+       (alter-var-root #'s/*explain-out*))
   (stest/instrument)
-  (set! s/*explain-out* (expound/custom-printer {:show-valid-values? true}))
-  (fun))
+  (fun)
+  (stest/unstrument))
 
 (defn slurp-resource [file]
   (-> file
@@ -27,12 +30,12 @@
   [path excludes]
   (let [all (map #(.getPath %) (fs/find-files path #".*\.jank"))
         dev-resources-regex #".*/dev/resources/(.+)"]
-    (map (fn [file]
-           {:resource (-> (re-matches dev-resources-regex
-                                      file)
-                          second)
-            :skip? (some #(re-matches % file) excludes)})
-         all)))
+    (->> all
+         (map (fn [file]
+                {:resource (-> (re-matches dev-resources-regex
+                                           file)
+                               second)
+                 :skip? (some #(re-matches % file) excludes)})))))
 
 (defn try-parse [file]
   (binding [parse.binding/*input-file* file
@@ -43,5 +46,6 @@
   (some? (re-matches #".*/fail-.*" (:resource file-info))))
 
 (defn valid-parse? [file-info]
-  (consume-output (try-parse (:resource file-info)))
+  (with-consumed-output
+    (try-parse (:resource file-info)))
   true)

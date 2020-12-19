@@ -33,8 +33,7 @@
 
 (defmacro node [& specs]
   (let [kind ::kind]
-    `(s/and (s/keys :req [~kind])
-            ~@specs)))
+    `(s/and (s/keys :req [~kind]) ~@specs)))
 
 (defn-spec kind? fn?
   [kind ::kind]
@@ -44,8 +43,7 @@
 (defn-spec constant? fn?
   [type ::type]
   (fn [data]
-    (and (= :constant (::kind data))
-         (= type (::type data)))))
+    (and (= :constant (::kind data)) (= type (::type data)))))
 
 (defn-spec single? fn?
   [value-spec ifn?]
@@ -59,8 +57,9 @@
 
 (s/def ::identifier (s/keys :req [::name]
                             :opt [::ns]))
-(s/def ::ns string?)
 (s/def ::name string?)
+(s/def ::ns (s/or :current #{::current}
+                  :named ::name))
 (s/def ::keyword ::identifier)
 
 (s/def ::string string?)

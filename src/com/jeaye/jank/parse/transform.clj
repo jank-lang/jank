@@ -49,7 +49,7 @@
              {::parse.spec/ns (second more)
               ::parse.spec/name (nth more 3)}
              (= (first more) "::")
-             {::parse.spec/ns :current ; TODO: Do something here. Track current ns?
+             {::parse.spec/ns ::parse.spec/current
               ::parse.spec/name (second more)}
              :else
              {::parse.spec/name (second more)}))))
