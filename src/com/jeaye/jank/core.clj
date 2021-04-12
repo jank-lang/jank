@@ -1,12 +1,19 @@
 (ns com.jeaye.jank.core
   (:gen-class)
-  (:require [com.jeaye.jank
-             [parse :as parse]]
-            [com.jeaye.jank.parse
-             [binding :as parse.binding]]))
+  (:require [com.jeaye.jank.parse :as parse]
+            [com.jeaye.jank.parse.binding :as parse.binding]
+            [com.jeaye.jank.codegen :as codegen]))
+
+(defn parse+codegen [file]
+  (binding [parse.binding/*input-file* file
+            parse.binding/*input-source* (slurp file)]
+    (let [parse-tree (parse/parse parse/prelude)
+          code (codegen/generate parse-tree)]
+      code)))
 
 (defn -main [& args]
-  (binding [parse.binding/*input-file* (first args)
-            parse.binding/*input-source* (-> args first slurp)]
-    (let [parse-tree (parse/parse parse/prelude)]
-      parse-tree)))
+  (println (parse+codegen (first args)))
+  (shutdown-agents))
+
+(comment
+  (parse+codegen "test.jank"))

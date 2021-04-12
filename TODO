@@ -69,7 +69,7 @@ fully declarative
   this allows for cyclical dependencies
 
 tracking function purity
-  all std lib fns are annotated as pure
+  all pure std lib fns are annotated as pure
   all other fns are compositions of std lib fns
   interop is impure
 

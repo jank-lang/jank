@@ -19,7 +19,7 @@ ret=$?
 if [ $ret -eq 0 ];
 then
   echo "Compiling to binary..."
-  c++ -O3 -std=c++14 -o $2 -I$here/../backend/c++/include -I$tmp $here/../backend/c++/src/main.cpp
+  c++ -O3 -std=c++17 -o $2 -I$here/../backend/neo-c++/include -I$tmp $here/../backend/neo-c++/src/main.cpp
 else
   cat $tmp/jank-generated.hpp
 fi

@@ -12,6 +12,7 @@
 (defn merge-meta [obj new-meta]
   (with-meta obj (merge (meta obj) new-meta)))
 
+; TODO: Switch to with-transform and use normal defns
 (defmacro deftransform [fn-name fn-args & fn-body]
   `(defn ~fn-name ~fn-args
      (-> (binding [parse.binding/*current-form* (merge-meta parse.binding/*current-form*

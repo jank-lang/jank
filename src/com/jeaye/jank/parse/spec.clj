@@ -82,9 +82,9 @@
                          :opt [::value]))
 
 (s/def ::parameters (s/coll-of any?)) ; TODO: identifier
-(s/def ::body any?) ; TODO: do
+(s/def ::body any?)
 (s/def ::fn (s/keys :req [::parameters
-                          ::body]
+                          ::body] ; TODO: do
                     :opt [::name]))
 (s/def ::return any?) ; TODO: ::node
 (s/def ::do (s/keys :req [::body
