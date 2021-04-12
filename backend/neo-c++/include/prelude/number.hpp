@@ -15,8 +15,8 @@ namespace jank
         using R = std::decay_t<decltype(r_data)>;
 
         /* TODO: Trait for is_number_v */
-        if constexpr((std::is_same_v<L, integer> || std::is_same_v<L, real>)
-                     && (std::is_same_v<R, integer> || std::is_same_v<R, real>))
+        if constexpr((std::is_same_v<L, detail::integer> || std::is_same_v<L, detail::real>)
+                     && (std::is_same_v<R, detail::integer> || std::is_same_v<R, detail::real>))
         {
           return object{ l_data + r_data };
         }

@@ -14,13 +14,13 @@ namespace jank
       {
         using T = std::decay_t<decltype(data)>;
         /* TODO: Generic seq handling. */
-        auto constexpr is_vector(std::is_same_v<T, vector>);
-        auto constexpr is_set(std::is_same_v<T, set>);
-        auto constexpr is_map(std::is_same_v<T, map>);
+        auto constexpr is_vector(std::is_same_v<T, detail::vector>);
+        auto constexpr is_set(std::is_same_v<T, detail::set>);
+        auto constexpr is_map(std::is_same_v<T, detail::map>);
 
         if constexpr(is_vector || is_set || is_map)
         {
-          vector ret;
+          detail::vector ret;
           ret.reserve(data.size());
 
           if constexpr(is_vector || is_set)
@@ -31,7 +31,7 @@ namespace jank
           else if constexpr(is_map)
           {
             for(auto const &p : data)
-            { ret.push_back(detail::invoke(&f, object{ vector{ p.first, p.second } })); }
+            { ret.push_back(detail::invoke(&f, object{ detail::vector{ p.first, p.second } })); }
           }
 
           return object{ ret };

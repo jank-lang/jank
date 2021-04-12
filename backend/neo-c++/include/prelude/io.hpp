@@ -23,7 +23,7 @@ namespace jank
 
   inline object read_gen_minus_line()
   {
-    string input;
+    detail::string input;
     std::getline(std::cin, input);
     return object{ std::move(input) };
   }

@@ -1,74 +1,78 @@
 #pragma once
 
-#include <boost/variant.hpp>
-
 #include <experimental/iterator>
 #include <type_traits>
 #include <vector>
 #include <set>
 #include <map>
 #include <any>
+#include <functional>
 
 namespace jank
 {
-  /* TODO: Move these non-object types into detail. */
-  using integer = int64_t;
-  using real = double;
-  using boolean = bool;
-  using string = std::string;
-
-  struct function
+  namespace detail
   {
+    using integer = int64_t;
+    using real = double;
+    using boolean = bool;
+    using string = std::string;
+
+    struct function
+    {
+      template <typename T>
+      using value_type = std::function<T>;
+
+      template <typename R, typename... Args>
+      function(R (* const f)(Args...)) : function(value_type<R (Args...)>{ f })
+      { }
+      template <typename R, typename... Args>
+      function(value_type<R (Args...)> &&f) : value{ std::move(f) }
+      { }
+      template <typename R, typename... Args>
+      function(value_type<R (Args...)> const &f) : value{ f }
+      { }
+
+      template <typename F>
+      F const* get() const
+      { return std::any_cast<F>(&value); }
+
+      std::any value;
+    };
+    inline bool operator==(function const &, function const &)
+    { return true; }
+    inline bool operator!=(function const &, function const &)
+    { return false; }
+    inline bool operator<(function const &, function const &)
+    { return true; }
+
+    struct nil
+    { };
+    inline bool operator==(nil const &, nil const &)
+    { return true; }
+    inline bool operator!=(nil const &, nil const &)
+    { return false; }
+    inline bool operator<(nil const &, nil const &)
+    { return true; }
+
+    template <typename T, typename Enable = void>
+    struct conversion
+    { using type = T; };
+    template <typename T>
+    struct conversion<T, std::enable_if_t<std::is_integral_v<T>>>
+    { using type = integer; };
+    template <typename T>
+    struct conversion<T, std::enable_if_t<std::is_floating_point_v<T>>>
+    { using type = real; };
+    template <typename T>
+    struct conversion<T, std::enable_if_t<std::is_convertible_v<T, char const*>>>
+    { using type = string; };
     template <typename R, typename... Args>
-    function(R (* const f)(Args...)) : function(std::function<R (Args...)>{ f })
-    { }
-    template <typename R, typename... Args>
-    function(std::function<R (Args...)> &&f) : value{ std::move(f) }
-    { }
-    template <typename R, typename... Args>
-    function(std::function<R (Args...)> const &f) : value{ f }
-    { }
+    struct conversion<R (*)(Args...)>
+    { using type = function; };
 
-    template <typename F>
-    F const* get() const
-    { return std::any_cast<F>(&value); }
-
-    std::any value;
-  };
-  inline bool operator==(function const &, function const &)
-  { return true; }
-  inline bool operator!=(function const &, function const &)
-  { return false; }
-  inline bool operator<(function const &, function const &)
-  { return true; }
-
-  struct nil
-  { };
-  inline bool operator==(nil const &, nil const &)
-  { return true; }
-  inline bool operator!=(nil const &, nil const &)
-  { return false; }
-  inline bool operator<(nil const &, nil const &)
-  { return true; }
-
-  template <typename T, typename Enable = void>
-  struct conversion
-  { using type = T; };
-  template <typename T>
-  struct conversion<T, std::enable_if_t<std::is_integral_v<T>>>
-  { using type = integer; };
-  template <typename T>
-  struct conversion<T, std::enable_if_t<std::is_floating_point_v<T>>>
-  { using type = real; };
-  template <typename T>
-  struct conversion<T, std::enable_if_t<std::is_convertible_v<T, char const*>>>
-  { using type = string; };
-  template <typename R, typename... Args>
-  struct conversion<R (*)(Args...)>
-  { using type = function; };
-
-  template <typename T>
-  using conversion_t = typename conversion<T>::type;
+    template <typename T>
+    using conversion_t = typename conversion<T>::type;
+  }
 
   class object
   {
@@ -81,7 +85,7 @@ namespace jank
       using map_type = std::map<object, object>;
 
       object()
-      { set(nil{}); }
+      { set(detail::nil{}); }
       ~object()
       { unset(); }
 
@@ -93,9 +97,8 @@ namespace jank
       object(object const &o)
       { *this = o; }
 
-      /* TODO: Sort out the types here. */
       template <typename F>
-      auto visit(F const &f) const -> decltype(f(nil{}))
+      auto visit(F const &f) const -> decltype(f(detail::nil{}))
       {
         switch(current_kind)
         {
@@ -148,7 +151,7 @@ namespace jank
         {
           /* TODO: Just call set here. */
           case object::kind::string:
-            new (&current_data.string_data) string(std::move(o.current_data.string_data));
+            new (&current_data.string_data) detail::string(std::move(o.current_data.string_data));
             break;
           case object::kind::vector:
             new (&current_data.vector_data) vector_type(std::move(o.current_data.vector_data));
@@ -160,7 +163,7 @@ namespace jank
             new (&current_data.map_data) map_type(std::move(o.current_data.map_data));
             break;
           case object::kind::function:
-            new (&current_data.function_data) function(std::move(o.current_data.function_data));
+            new (&current_data.function_data) detail::function(std::move(o.current_data.function_data));
             break;
           default:
             *this = static_cast<object const&>(o);
@@ -261,15 +264,15 @@ namespace jank
       template <typename T>
       static kind constexpr type_to_kind()
       {
-        if constexpr(std::is_same_v<nil, T>)
+        if constexpr(std::is_same_v<detail::nil, T>)
         { return kind::nil; }
-        else if constexpr(std::is_same_v<integer, T>)
+        else if constexpr(std::is_same_v<detail::integer, T>)
         { return kind::integer; }
-        else if constexpr(std::is_same_v<real, T>)
+        else if constexpr(std::is_same_v<detail::real, T>)
         { return kind::real; }
-        else if constexpr(std::is_same_v<boolean, T>)
+        else if constexpr(std::is_same_v<detail::boolean, T>)
         { return kind::boolean; }
-        else if constexpr(std::is_same_v<string, T>)
+        else if constexpr(std::is_same_v<detail::string, T>)
         { return kind::string; }
         else if constexpr(std::is_same_v<vector_type, T>)
         { return kind::vector; }
@@ -277,7 +280,7 @@ namespace jank
         { return kind::set; }
         else if constexpr(std::is_same_v<map_type, T>)
         { return kind::map; }
-        else if constexpr(std::is_same_v<function, T>)
+        else if constexpr(std::is_same_v<detail::function, T>)
         { return kind::function; }
         else
         { static_assert((T*)nullptr, "invalid type_to_kind"); }
@@ -286,7 +289,7 @@ namespace jank
       template <typename T>
       void set(T &&new_data)
       {
-        using converted_type = conversion_t<std::decay_t<T>>;
+        using converted_type = detail::conversion_t<std::decay_t<T>>;
 
         kind constexpr k{ type_to_kind<converted_type>() };
 
@@ -299,7 +302,7 @@ namespace jank
         else if constexpr(k == kind::boolean)
         { current_data.bool_data = new_data; }
         else if constexpr(k == kind::string)
-        { new (&current_data.string_data) string(std::forward<T>(new_data)); }
+        { new (&current_data.string_data) detail::string(std::forward<T>(new_data)); }
         else if constexpr(k == kind::vector)
         { new (&current_data.vector_data) vector_type(std::forward<T>(new_data)); }
         else if constexpr(k == kind::set)
@@ -307,7 +310,7 @@ namespace jank
         else if constexpr(k == kind::map)
         { new (&current_data.map_data) map_type(std::forward<T>(new_data)); }
         else if constexpr(k == kind::function)
-        { new (&current_data.function_data) function(std::forward<T>(new_data)); }
+        { new (&current_data.function_data) detail::function(std::forward<T>(new_data)); }
         else
         { static_assert((T*)nullptr, "invalid variant input"); }
 
@@ -319,6 +322,7 @@ namespace jank
         switch(current_kind)
         {
           case kind::string:
+            using detail::string;
             current_data.string_data.~string();
             break;
           case kind::vector:
@@ -331,6 +335,7 @@ namespace jank
             current_data.map_data.~map_type();
             break;
           case kind::function:
+            using detail::function;
             current_data.function_data.~function();
             break;
         }
@@ -345,15 +350,15 @@ namespace jank
         ~data_union()
         { }
 
-        nil nil_data;
-        integer int_data;
-        real real_data;
-        boolean bool_data;
-        string string_data;
+        detail::nil nil_data;
+        detail::integer int_data;
+        detail::real real_data;
+        detail::boolean bool_data;
+        detail::string string_data;
         vector_type vector_data;
         set_type set_data;
         map_type map_data;
-        function function_data;
+        detail::function function_data;
       } current_data;
 
       friend std::ostream& operator<<(std::ostream&, object const&);
@@ -414,30 +419,33 @@ namespace jank
     return os;
   }
 
-  using vector = object::vector_type;
-  using set = object::set_type;
-  using map = object::map_type;
+  namespace detail
+  {
+    using vector = object::vector_type;
+    using set = object::set_type;
+    using map = object::map_type;
+  }
 
   using JANK_OBJECT = object;
-  using JANK_INTEGER = integer;
-  using JANK_REAL = real;
-  using JANK_BOOL = boolean;
-  using JANK_STRING = string;
+  using JANK_INTEGER = detail::integer;
+  using JANK_REAL = detail::real;
+  using JANK_BOOL = detail::boolean;
+  using JANK_STRING = detail::string;
 
   template<typename... Ts>
   object JANK_VECTOR(Ts &&... args)
-  { return object{ vector{ std::forward<Ts>(args)... } }; }
+  { return object{ detail::vector{ std::forward<Ts>(args)... } }; }
   template<typename... Ts>
   object JANK_SET(Ts &&... args)
-  { return object{ set{ std::forward<Ts>(args)... } }; }
+  { return object{ detail::set{ std::forward<Ts>(args)... } }; }
 
-  inline map::value_type JANK_MAP_ENTRY(object const &k, object const &v)
+  inline detail::map::value_type JANK_MAP_ENTRY(object const &k, object const &v)
   { return { k, v }; }
   template<typename... Ts>
   object JANK_MAP(Ts &&... entries)
-  { return object{ map{ std::forward<Ts>(entries)... } }; }
+  { return object{ detail::map{ std::forward<Ts>(entries)... } }; }
 
-  static jank::object const JANK_NIL{ jank::nil{} };
+  static jank::object const JANK_NIL{ detail::nil{} };
   static jank::object const JANK_TRUE{ true };
   static jank::object const JANK_FALSE{ false };
 
@@ -459,9 +467,9 @@ namespace jank
       {
         size_t constexpr arg_count{ sizeof...(args) };
         using arity = typename build_arity<arg_count>::type;
-        using function_type = std::function<arity>;
+        using function_type = detail::function::value_type<arity>;
 
-        auto const * const func(f->template get<function>());
+        auto const * const func(f->template get<detail::function>());
         if(!func)
         {
           /* TODO: Throw error. */

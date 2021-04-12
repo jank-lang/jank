@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 set -eu
 
@@ -12,6 +12,8 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 tmp=$(mktemp -d)
 echo "Working in $tmp"
 
+cxx=${CXX:-c++}
+
 pushd $here/.. > /dev/null
 echo "Compiling to C++..."
 lein run $1 > $tmp/jank-generated.hpp 2>&1
@@ -19,7 +21,7 @@ ret=$?
 if [ $ret -eq 0 ];
 then
   echo "Compiling to binary..."
-  c++ -O3 -std=c++17 -o $2 -I$here/../backend/neo-c++/include -I$tmp $here/../backend/neo-c++/src/main.cpp
+  $cxx -O3 -std=c++17 -o $2 -I$here/../backend/neo-c++/include -I$tmp $here/../backend/neo-c++/src/main.cpp
 else
   cat $tmp/jank-generated.hpp
 fi

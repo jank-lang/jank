@@ -10,20 +10,20 @@ namespace jank
 
   /* some? */
   inline object some_gen_qmark_(object const &o)
-  { return object{ !o.get<nil>() }; }
+  { return object{ !o.get<detail::nil>() }; }
 
   /* nil? */
   inline object nil_gen_qmark_(object const &o)
-  { return object{ static_cast<boolean>(o.get<nil>()) }; }
+  { return object{ static_cast<detail::boolean>(o.get<detail::nil>()) }; }
 
   /* truthy? */
   inline object truthy_gen_qmark_(object const &o)
   {
     object ret{ some_gen_qmark_(o) };
-    if(!*ret.get<boolean>())
+    if(!*ret.get<detail::boolean>())
     { return JANK_FALSE; }
 
-    if(auto const b = o.get<boolean>())
+    if(auto const b = o.get<detail::boolean>())
     { return object{ *b }; }
     else
     { return JANK_TRUE; }
@@ -33,7 +33,7 @@ namespace jank
     inline bool truthy(object const &o)
     {
       object const truthy_obj(truthy_gen_qmark_(o));
-      return *truthy_obj.get<boolean>();
+      return *truthy_obj.get<detail::boolean>();
     }
   }
 
