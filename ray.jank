@@ -55,28 +55,64 @@
 (def ray-at (fn [r t]
               (vec3-add (get r "origin") (vec3-scale (get r "direction") t))))
 
-(def hit-sphere (fn [center radius ray]
+(def hit-info-create (fn [point normal t front-face?]
+                       {"point" point
+                        "normal" normal
+                        "t" t
+                        "front-face?" front-face?}))
+
+(def hit-sphere (fn [center radius t-min t-max ray]
                   (def oc (vec3-sub (get ray "origin") center))
                   (def a (vec3-length-squared (get ray "direction")))
                   (def half-b (vec3-dot oc (get ray "direction")))
                   (def c (- (vec3-length-squared oc) (* radius radius)))
                   (def discriminant (- (* half-b half-b) (* a c)))
                   (if (< discriminant 0)
-                    -1.0
-                    (div (- (- 0 half-b) (sqrt discriminant)) a))))
+                    nil
+                    (do
+                      (def sqrt-d (sqrt discriminant))
+                      (def root (do
+                                  (def root (div (- (- half-b) sqrt-d) a))
+                                  (if (either (< root t-min) (< t-max root))
+                                    (div (+ (- half-b) sqrt-d) a)
+                                    root)))
+                      (if (either (< root t-min) (< t-max root))
+                        nil
+                        (do
+                          (def point (ray-at ray root))
+                          (def outward-normal (vec3-div (vec3-sub point center) radius))
+                          (def front-face? (< 0.0 (vec3-dot (get ray "direction") outward-normal)))
+                          (hit-info-create point
+                                           (if front-face?
+                                             outward-normal
+                                             (vec3-sub (vec3-create 0 0 0) outward-normal))
+                                           root
+                                           front-face?)))
+                      (div (- (- 0 half-b) (sqrt discriminant)) a)))))
 
-(def ray-color (fn [r]
+(def hit-all (fn [t-min t-max ray hittables]
+               ; TODO: Implement reduce and assoc
+               (reduce (fn [acc hittable]
+                         (def hit-info (hit-sphere (get hittable "center")
+                                                   (get hittable "radius")
+                                                   t-min
+                                                   (get acc "closest-so-far")
+                                                   ray))
+                         (if (some? hit-info)
+                           (assoc (assoc acc "hit-info" hit-info)
+                                  "closest-so-far" (get hit-info "t"))
+                           acc))
+                       {"closest-so-far" t-max
+                        "hit-info" nil}
+                       hittables)))
+
+(def ray-color (fn [r hittables]
                  (def normalize-direction (vec3-normalize (get r "direction")))
                  (def t (* 0.5 (+ (get normalize-direction "g") 1.0)))
-                 (def hit (hit-sphere (vec3-create 0 0 -1) 0.5 r))
-                 (if (< 0.0 hit)
-                   (do
-                     (def n (vec3-normalize (vec3-sub (ray-at r hit)
-                                                      (vec3-create 0 0 -1))))
-                     (vec3-scale (vec3-create (+ 1 (get n "r"))
-                                              (+ 1 (get n "g"))
-                                              (+ 1 (get n "b")))
-                                 0.5))
+                 ; TODO: infinity
+                 (def hit-info (hit-all 0.001 99999999 r hittables))
+                 (if (some? hit-info)
+                   (vec3-scale (vec3-add (get hit-info "normal") (vec3-create 1 1 1)) 0.5)
                    (vec3-add (vec3-scale (vec3-create 1.0 1.0 1.0) (- 1.0 t))
                              (vec3-scale (vec3-create 0.5 0.7 1.0) t)))))
 
@@ -102,6 +138,10 @@
       lower-left-corner (vec3-sub (vec3-sub (vec3-sub origin (vec3-div horizontal 2))
                                             (vec3-div vertical 2))
                                   (vec3-create 0 0 focal-length))
+      hittables [{"center" (vec3-create 0 0 -1)
+                  "radius" 0.5}
+                 {"center" (vec3-create 0 -100.5 -1)
+                  "radius" 100}]
       data (mapv (fn [y]
                    (mapv (fn [x]
                            (def u (div (->float x) (- image-width 1)))
