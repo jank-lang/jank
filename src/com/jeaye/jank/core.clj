@@ -16,4 +16,4 @@
   (shutdown-agents))
 
 (comment
-  (parse+codegen "test.jank"))
+  (parse+codegen "ray.jank"))

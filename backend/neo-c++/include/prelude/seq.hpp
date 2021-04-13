@@ -45,6 +45,36 @@ namespace jank
     );
   }
 
+  inline object reduce(object const &f, object const &initial, object const &seq)
+  {
+    return seq.visit
+    (
+      [&](auto &&data) -> object
+      {
+        using T = std::decay_t<decltype(data)>;
+        /* TODO: Generic seq handling. */
+        auto constexpr is_vector(std::is_same_v<T, detail::vector>);
+        auto constexpr is_set(std::is_same_v<T, detail::set>);
+
+        if constexpr(is_vector || is_set)
+        {
+          object acc{ initial };
+
+          for(auto const &e : data)
+          { acc = detail::invoke(&f, acc, e); }
+
+          return acc;
+        }
+        else
+        {
+          /* TODO: Throw an error. */
+          std::cout << "not a seq" << std::endl;
+          return JANK_NIL;
+        }
+      }
+    );
+  }
+
   /* TODO: Laziness */
   inline object partition(object const &n, object const &seq)
   {
@@ -170,5 +200,53 @@ namespace jank
         return JANK_NIL;
       }
     }
+  }
+
+  inline object assoc(object const &o, object const &key, object const &val)
+  {
+    return o.visit
+    (
+      [&](auto &&data) -> object
+      {
+        using T = std::decay_t<decltype(data)>;
+        /* TODO: Generic seq handling. */
+        auto constexpr is_vector(std::is_same_v<T, detail::vector>);
+        auto constexpr is_map(std::is_same_v<T, detail::map>);
+
+        if constexpr(is_vector)
+        {
+          if(key.get_kind() != object::kind::integer)
+          {
+            /* TODO: throw error */
+            std::cout << "vector assoc key must be an integer: " << key << std::endl;
+            return JANK_NIL;
+          }
+
+          auto const i(*key.get<detail::integer>());
+          if(i < 0 || i >= data.size())
+          {
+            /* TODO: Throw error */
+            std::cout << "vector assoc key out of bounds: " << key << std::endl;
+            return JANK_NIL;
+          }
+
+          T ret{ data };
+          ret[i] = val;
+          return object{ ret };
+        }
+        else if constexpr(is_map)
+        {
+          T ret{ data };
+          ret[key] = val;
+          return object{ ret };
+        }
+        else
+        {
+          /* TODO: Throw an error. */
+          std::cout << "not a seq" << std::endl;
+          return JANK_NIL;
+        }
+      }
+    );
   }
 }

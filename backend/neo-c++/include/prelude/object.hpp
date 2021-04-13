@@ -371,6 +371,8 @@ namespace jank
             using detail::function;
             current_data.function_data.~function();
             break;
+          default:
+            break;
         }
         current_kind = kind::nil;
       }

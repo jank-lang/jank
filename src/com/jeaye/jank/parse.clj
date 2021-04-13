@@ -45,3 +45,8 @@
                        parse.binding/*input-source* (-> (io/resource prelude-file)
                                                         slurp)]
                (parse [])))
+
+(comment
+  (binding [parse.binding/*input-file* "repl"
+            parse.binding/*input-source* (slurp "ray.jank")]
+    (parse prelude)))

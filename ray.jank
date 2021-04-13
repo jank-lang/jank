@@ -72,44 +72,42 @@
                     (do
                       (def sqrt-d (sqrt discriminant))
                       (def root (do
-                                  (def root (div (- (- half-b) sqrt-d) a))
+                                  (def root (div (- (- 0 half-b) sqrt-d) a))
                                   (if (either (< root t-min) (< t-max root))
-                                    (div (+ (- half-b) sqrt-d) a)
+                                    (div (+ (- 0 half-b) sqrt-d) a)
                                     root)))
                       (if (either (< root t-min) (< t-max root))
                         nil
                         (do
                           (def point (ray-at ray root))
                           (def outward-normal (vec3-div (vec3-sub point center) radius))
-                          (def front-face? (< 0.0 (vec3-dot (get ray "direction") outward-normal)))
+                          (def front-face? (< (vec3-dot (get ray "direction") outward-normal) 0.0))
                           (hit-info-create point
                                            (if front-face?
                                              outward-normal
                                              (vec3-sub (vec3-create 0 0 0) outward-normal))
                                            root
-                                           front-face?)))
-                      (div (- (- 0 half-b) (sqrt discriminant)) a)))))
+                                           front-face?)))))))
 
 (def hit-all (fn [t-min t-max ray hittables]
-               ; TODO: Implement reduce and assoc
-               (reduce (fn [acc hittable]
-                         (def hit-info (hit-sphere (get hittable "center")
-                                                   (get hittable "radius")
-                                                   t-min
-                                                   (get acc "closest-so-far")
-                                                   ray))
-                         (if (some? hit-info)
-                           (assoc (assoc acc "hit-info" hit-info)
-                                  "closest-so-far" (get hit-info "t"))
-                           acc))
-                       {"closest-so-far" t-max
-                        "hit-info" nil}
-                       hittables)))
+               (get (reduce (fn [acc hittable]
+                              (def hit-info (hit-sphere (get hittable "center")
+                                                        (get hittable "radius")
+                                                        t-min
+                                                        (get acc "closest-so-far")
+                                                        ray))
+                              (if (some? hit-info)
+                                (assoc (assoc acc "hit-info" hit-info)
+                                       "closest-so-far" (get hit-info "t"))
+                                acc))
+                            {"closest-so-far" t-max
+                             "hit-info" nil}
+                            hittables)
+                    "hit-info")))
 
 (def ray-color (fn [r hittables]
                  (def normalize-direction (vec3-normalize (get r "direction")))
                  (def t (* 0.5 (+ (get normalize-direction "g") 1.0)))
-                 ; TODO: infinity
                  (def hit-info (hit-all 0.001 99999999 r hittables))
                  (if (some? hit-info)
                    (vec3-scale (vec3-add (get hit-info "normal") (vec3-create 1 1 1)) 0.5)
@@ -151,7 +149,7 @@
                                                                               (vec3-scale horizontal u))
                                                                     (vec3-scale vertical v))
                                                           origin)))
-                           (ray-color ray))
+                           (ray-color ray hittables))
                          (range 0 image-width)))
                  (range 0 image-height))]
   (write-ppm image-width image-height data)
