@@ -151,6 +151,6 @@
                                                           origin)))
                            (ray-color ray hittables))
                          (range 0 image-width)))
-                 (range 0 image-height))]
+                 (reverse (range 0 image-height)))]
   (write-ppm image-width image-height data)
   (println "meow"))

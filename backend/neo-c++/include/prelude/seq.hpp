@@ -151,6 +151,36 @@ namespace jank
     return ret;
   }
 
+  inline object reverse(object const &seq)
+  {
+    return seq.visit
+    (
+      [&](auto &&data) -> object
+      {
+        using T = std::decay_t<decltype(data)>;
+        /* TODO: Generic seq handling. */
+        auto constexpr is_vector(std::is_same_v<T, detail::vector>);
+
+        if constexpr(is_vector)
+        {
+          T ret;
+          ret.reserve(data.size());
+
+          for(auto it(data.rbegin()); it != data.rend(); ++it)
+          { ret.push_back(*it); }
+
+          return ret;
+        }
+        else
+        {
+          /* TODO: Throw an error. */
+          std::cout << "not a reversible seq" << std::endl;
+          return JANK_NIL;
+        }
+      }
+    );
+  }
+
   inline object get(object const &o, object const &key)
   {
     switch(o.get_kind())
