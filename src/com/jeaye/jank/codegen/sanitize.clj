@@ -53,4 +53,5 @@
   [identifier-str string?]
   (apply str (map (comp sanitize* str) identifier-str)))
 
-(sanitize-str "not=")
+(comment
+  (sanitize-str "*"))

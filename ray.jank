@@ -1,0 +1,98 @@
+(def print+space (fn [data]
+                   (print data) (print " ")))
+
+(def vec3-create (fn [r g b]
+                   {"r" r
+                    "g" g
+                    "b" b}))
+(def vec3-scale (fn [l n]
+                  {"r" (* (get l "r") n)
+                   "g" (* (get l "g") n)
+                   "b" (* (get l "b") n)}))
+(def vec3-add (fn [l r]
+                {"r" (+ (get l "r") (get r "r"))
+                 "g" (+ (get l "g") (get r "g"))
+                 "b" (+ (get l "b") (get r "b"))}))
+(def vec3-sub (fn [l r]
+                {"r" (- (get l "r") (get r "r"))
+                 "g" (- (get l "g") (get r "g"))
+                 "b" (- (get l "b") (get r "b"))}))
+(def vec3-mul (fn [l r]
+                {"r" (* (get l "r") (get r "r"))
+                 "g" (* (get l "g") (get r "g"))
+                 "b" (* (get l "b") (get r "b"))}))
+(def vec3-div (fn [l n]
+                {"r" (div (get l "r") n)
+                 "g" (div (get l "g") n)
+                 "b" (div (get l "b") n)}))
+(def vec3-length-squared (fn [v]
+                           (+ (+ (* (get v "r") (get v "r"))
+                                 (* (get v "g") (get v "g")))
+                              (* (get v "b") (get v "b")))))
+(def vec3-length (fn [v]
+                   (sqrt (vec3-length-squared v))))
+(def vec3-dot (fn [l r]
+                (+ (+ (* (get l "r") (get r "r"))
+                      (* (get l "g") (get r "g")))
+                   (* (get l "b") (get r "b")))))
+(def vec3-cross (fn [l r]
+                  (vec3-create (- (* (get l "g") (get r "b"))
+                                  (* (get l "b") (get r "g")))
+                               (- (* (get l "b") (get r "r"))
+                                  (* (get l "r") (get r "b")))
+                               (- (* (get l "r") (get r "g"))
+                                  (* (get l "g") (get r "r"))))))
+(def vec3-normalize (fn [v]
+                      (vec3-div v (vec3-length v))))
+(def vec3-print (fn [v]
+                  (print+space (->int (* 255.999 (get v "r"))))
+                  (print+space (->int (* 255.999 (get v "g"))))
+                  (print+space (->int (* 255.999 (get v "b"))))))
+
+(def ray-create (fn [origin direction]
+                  {"origin" origin
+                   "direction" direction}))
+(def ray-at (fn [r t]
+              (vec3-add (get r "origin") (vec3-scale (get r "direction") t))))
+(def ray-color (fn [r]
+                 (def normalize-direction (vec3-normalize (get r "direction")))
+                 (def t (* 0.5 (+ (get normalize-direction "g") 1.0)))
+                 (vec3-add (vec3-scale (vec3-create 1.0 1.0 1.0) (- 1.0 t))
+                           (vec3-scale (vec3-create 0.5 0.7 1.0) t))))
+
+(def write-ppm (fn [width height data]
+                 (println "P3")
+                 (print+space width) (println height)
+                 (println 255)
+                 (mapv (fn [row]
+                         (mapv vec3-print row)
+                         (println ""))
+                       data)))
+
+
+(let [aspect-ratio (div 16.0 9.0)
+      image-width 400
+      image-height (->int (div image-width aspect-ratio))
+      viewport-height 2.0
+      viewport-width (* aspect-ratio viewport-height)
+      focal-length 1.0
+      origin (vec3-create 0 0 0)
+      horizontal (vec3-create viewport-width 0 0)
+      vertical (vec3-create 0 viewport-height 0)
+      lower-left-corner (vec3-sub (vec3-sub (vec3-sub origin (vec3-div horizontal 2))
+                                            (vec3-div vertical 2))
+                                  (vec3-create 0 0 focal-length))
+      data (mapv (fn [y]
+                   (mapv (fn [x]
+                           (def u (div (->float x) (- image-width 1)))
+                           (def v (div (->float y) (- image-height 1)))
+                           (def ray (ray-create origin
+                                                (vec3-sub (vec3-add (vec3-add lower-left-corner
+                                                                              (vec3-scale horizontal u))
+                                                                    (vec3-scale vertical v))
+                                                          origin)))
+                           (ray-color ray))
+                         (range 0 image-width)))
+                 (range 0 image-height))]
+  (write-ppm image-width image-height data)
+  (println "meow"))

@@ -110,7 +110,7 @@
   (let [fn-name (expression->code (::parse.spec/value expression))
         arguments (mapv expression->code (::parse.spec/arguments expression))]
     (str "detail::invoke("
-         (clojure.string/join ", " (cons (str "" fn-name) arguments))
+         (clojure.string/join ", " (cons (str "&" fn-name) arguments))
          ")")))
 
 (defmethod expression->code :default

@@ -69,6 +69,9 @@ namespace jank
     template <typename R, typename... Args>
     struct conversion<R (*)(Args...)>
     { using type = function; };
+    template <typename R, typename... Args>
+    struct conversion<function::value_type<R (Args...)>>
+    { using type = function; };
 
     template <typename T>
     using conversion_t = typename conversion<T>::type;
@@ -85,11 +88,11 @@ namespace jank
       using map_type = std::map<object, object>;
 
       object()
-      { set(detail::nil{}); }
+      { }
       ~object()
       { unset(); }
 
-      template <typename T>
+      template <typename T, std::enable_if_t<!std::is_same_v<std::decay_t<T>, object>, bool> = true>
       object(T &&data)
       { set(std::forward<T>(data)); }
       object(object &&o)
@@ -102,8 +105,6 @@ namespace jank
       {
         switch(current_kind)
         {
-          case object::kind::nil:
-            return f(current_data.nil_data);
           case object::kind::integer:
             return f(current_data.int_data);
           case object::kind::real:
@@ -120,6 +121,9 @@ namespace jank
             return f(current_data.map_data);
           case object::kind::function:
             return f(current_data.function_data);
+          case object::kind::nil:
+          default:
+            return f(current_data.nil_data);
         }
       }
       template <typename F>
@@ -149,21 +153,20 @@ namespace jank
 
         switch(o.current_kind)
         {
-          /* TODO: Just call set here. */
           case object::kind::string:
-            new (&current_data.string_data) detail::string(std::move(o.current_data.string_data));
+            set(std::move(o.current_data.string_data));
             break;
           case object::kind::vector:
-            new (&current_data.vector_data) vector_type(std::move(o.current_data.vector_data));
+            set(std::move(o.current_data.vector_data));
             break;
           case object::kind::set:
-            new (&current_data.set_data) set_type(std::move(o.current_data.set_data));
+            set(std::move(o.current_data.set_data));
             break;
           case object::kind::map:
-            new (&current_data.map_data) map_type(std::move(o.current_data.map_data));
+            set(std::move(o.current_data.map_data));
             break;
           case object::kind::function:
-            new (&current_data.function_data) detail::function(std::move(o.current_data.function_data));
+            set(std::move(o.current_data.function_data));
             break;
           default:
             *this = static_cast<object const&>(o);
@@ -244,6 +247,30 @@ namespace jank
         );
       }
 
+      bool operator<(object const &o) const
+      {
+        if(&o == this)
+        { return false; }
+        else if(static_cast<size_t>(current_kind) < static_cast<size_t>(o.current_kind))
+        { return true; }
+        return visit_with
+        (
+          [](auto const &l, auto const &r) -> bool
+          {
+            using L = std::decay_t<decltype(l)>;
+            using R = std::decay_t<decltype(r)>;
+
+            /* TODO: Handle comparable types. */
+            if constexpr(std::is_same_v<L, R>)
+            { return l < r; }
+            else
+            { return true; }
+          },
+          o
+        );
+      }
+
+      /* TODO: Add `expect` and return a ref; assert kind. */
       template <typename T>
       T const * get() const
       {
@@ -259,6 +286,9 @@ namespace jank
           }
         );
       }
+
+      kind get_kind() const
+      { return current_kind; }
 
     private:
       template <typename T>
@@ -283,7 +313,10 @@ namespace jank
         else if constexpr(std::is_same_v<detail::function, T>)
         { return kind::function; }
         else
-        { static_assert((T*)nullptr, "invalid type_to_kind"); }
+        {
+          static_assert((T*)nullptr, "invalid type_to_kind");
+          return kind::nil; /* Please the compiler */
+        }
       }
 
       template <typename T>
@@ -342,7 +375,7 @@ namespace jank
         current_kind = kind::nil;
       }
 
-      kind current_kind;
+      kind current_kind{ kind::nil };
       union data_union
       {
         data_union()
@@ -408,7 +441,7 @@ namespace jank
         for(auto i(o.current_data.map_data.begin()); i != o.current_data.map_data.end(); ++i)
         {
           /* TODO: Delim. */
-          os << i->first << " " << i->second;
+          os << i->first << " " << i->second << " ";
         }
         os << "}";
         break;
