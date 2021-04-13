@@ -1,11 +1,19 @@
 #pragma once
 
 #include <cmath>
+#include <random>
 
 #include <prelude/object.hpp>
 
 namespace jank
 {
+  inline object rand()
+  {
+    static std::uniform_real_distribution<detail::real> distribution(0.0, 1.0);
+    static std::mt19937 generator;
+    return distribution(generator);
+  }
+
   /* + */
   inline object _gen_plus_(object const &l, object const &r)
   {

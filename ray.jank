@@ -1,6 +1,15 @@
 (def print+space (fn [data]
                    (print data) (print " ")))
 
+(def rand-real (fn [min max]
+                 (+ min (* (- max min) (rand)))))
+(def clamp (fn [n min max]
+             (if (< n min)
+               min
+               (if (< max n)
+                 max
+                 n))))
+
 (def vec3-create (fn [r g b]
                    {"r" r
                     "g" g
@@ -44,10 +53,14 @@
                                   (* (get l "g") (get r "r"))))))
 (def vec3-normalize (fn [v]
                       (vec3-div v (vec3-length v))))
-(def vec3-print (fn [v]
-                  (print+space (->int (* 255.999 (get v "r"))))
-                  (print+space (->int (* 255.999 (get v "g"))))
-                  (print+space (->int (* 255.999 (get v "b"))))))
+(def vec3-print (fn [v samples-per-pixel]
+                  (def scale (div 1.0 samples-per-pixel))
+                  (def r (* scale (get v "r")))
+                  (def g (* scale (get v "g")))
+                  (def b (* scale (get v "b")))
+                  (print+space (->int (* 256 (clamp r 0.0 0.999))))
+                  (print+space (->int (* 256 (clamp g 0.0 0.999))))
+                  (print+space (->int (* 256 (clamp b 0.0 0.999))))))
 
 (def ray-create (fn [origin direction]
                   {"origin" origin
@@ -114,12 +127,14 @@
                    (vec3-add (vec3-scale (vec3-create 1.0 1.0 1.0) (- 1.0 t))
                              (vec3-scale (vec3-create 0.5 0.7 1.0) t)))))
 
-(def write-ppm (fn [width height data]
+(def write-ppm (fn [width height samples-per-pixel data]
                  (println "P3")
                  (print+space width) (println height)
                  (println 255)
                  (mapv (fn [row]
-                         (mapv vec3-print row)
+                         (mapv (fn [v]
+                                 (vec3-print v samples-per-pixel))
+                               row)
                          (println ""))
                        data)))
 
@@ -127,6 +142,7 @@
 (let [aspect-ratio (div 16.0 9.0)
       image-width 400
       image-height (->int (div image-width aspect-ratio))
+      samples-per-pixel 5
       viewport-height 2.0
       viewport-width (* aspect-ratio viewport-height)
       focal-length 1.0
@@ -142,15 +158,18 @@
                   "radius" 100}]
       data (mapv (fn [y]
                    (mapv (fn [x]
-                           (def u (div (->float x) (- image-width 1)))
-                           (def v (div (->float y) (- image-height 1)))
-                           (def ray (ray-create origin
-                                                (vec3-sub (vec3-add (vec3-add lower-left-corner
-                                                                              (vec3-scale horizontal u))
-                                                                    (vec3-scale vertical v))
-                                                          origin)))
-                           (ray-color ray hittables))
+                           (reduce (fn [acc sample]
+                                     (def u (div (+ x (rand-real)) (- image-width 1)))
+                                     (def v (div (+ y (rand-real)) (- image-height 1)))
+                                     (def ray (ray-create origin
+                                                          (vec3-sub (vec3-add (vec3-add lower-left-corner
+                                                                                        (vec3-scale horizontal u))
+                                                                              (vec3-scale vertical v))
+                                                                    origin)))
+                                     (vec3-add acc (ray-color ray hittables)))
+                                   (vec3-create 0 0 0)
+                                   (range 0 samples-per-pixel)))
                          (range 0 image-width)))
                  (reverse (range 0 image-height)))]
-  (write-ppm image-width image-height data)
+  (write-ppm image-width image-height samples-per-pixel data)
   (println "meow"))

@@ -87,8 +87,7 @@ namespace jank
       using set_type = std::set<object>;
       using map_type = std::map<object, object>;
 
-      object()
-      { }
+      object() = default;
       ~object()
       { unset(); }
 
