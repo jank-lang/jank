@@ -17,16 +17,18 @@ cxx=${CXX:-c++}
 pushd $here/.. > /dev/null
 echo "Compiling to C++..."
 lein run $1 > $tmp/jank-generated.hpp 2>&1
+clang-format $tmp/jank-generated.hpp > latest-generated.hpp
 ret=$?
 if [ $ret -eq 0 ];
 then
   echo "Compiling to binary..."
-  $cxx -O0 -g -std=c++17 -o $2 -I$here/../backend/neo-c++/include -I$tmp $here/../backend/neo-c++/src/main.cpp
+  $cxx -O0 -g -fsanitize=address -std=c++17 -o $2 -I$here/../backend/neo-c++/include -I$tmp $here/../backend/neo-c++/src/main.cpp
 else
   cat $tmp/jank-generated.hpp
 fi
 popd > /dev/null
 
-#rm -f $tmp/jank-generated.hpp
-#rmdir $tmp
+# TODO: Trap exit and delete
+rm -f $tmp/jank-generated.hpp
+rmdir $tmp
 exit $ret

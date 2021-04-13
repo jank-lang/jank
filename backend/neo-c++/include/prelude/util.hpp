@@ -45,4 +45,8 @@ namespace jank
   /* not= */
   inline object not_gen_equal_(object const &l, object const &r)
   { return object{ l != r }; }
+
+  /* TODO: This should be the `or` macro. */
+  inline object either(object const &l, object const &r)
+  { return detail::truthy(l) ? l : r;}
 }

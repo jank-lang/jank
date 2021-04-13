@@ -58,7 +58,7 @@ namespace jank
     struct conversion
     { using type = T; };
     template <typename T>
-    struct conversion<T, std::enable_if_t<std::is_integral_v<T>>>
+    struct conversion<T, std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, boolean>>>
     { using type = integer; };
     template <typename T>
     struct conversion<T, std::enable_if_t<std::is_floating_point_v<T>>>
@@ -459,11 +459,12 @@ namespace jank
     using map = object::map_type;
   }
 
+  /* TODO: Get rid of these. */
   using JANK_OBJECT = object;
-  using JANK_INTEGER = detail::integer;
-  using JANK_REAL = detail::real;
-  using JANK_BOOL = detail::boolean;
-  using JANK_STRING = detail::string;
+  using JANK_INTEGER = object;
+  using JANK_REAL = object;
+  using JANK_BOOL = object;
+  using JANK_STRING = object;
 
   template<typename... Ts>
   object JANK_VECTOR(Ts &&... args)

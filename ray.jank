@@ -54,11 +54,31 @@
                    "direction" direction}))
 (def ray-at (fn [r t]
               (vec3-add (get r "origin") (vec3-scale (get r "direction") t))))
+
+(def hit-sphere (fn [center radius ray]
+                  (def oc (vec3-sub (get ray "origin") center))
+                  (def a (vec3-length-squared (get ray "direction")))
+                  (def half-b (vec3-dot oc (get ray "direction")))
+                  (def c (- (vec3-length-squared oc) (* radius radius)))
+                  (def discriminant (- (* half-b half-b) (* a c)))
+                  (if (< discriminant 0)
+                    -1.0
+                    (div (- (- 0 half-b) (sqrt discriminant)) a))))
+
 (def ray-color (fn [r]
                  (def normalize-direction (vec3-normalize (get r "direction")))
                  (def t (* 0.5 (+ (get normalize-direction "g") 1.0)))
-                 (vec3-add (vec3-scale (vec3-create 1.0 1.0 1.0) (- 1.0 t))
-                           (vec3-scale (vec3-create 0.5 0.7 1.0) t))))
+                 (def hit (hit-sphere (vec3-create 0 0 -1) 0.5 r))
+                 (if (< 0.0 hit)
+                   (do
+                     (def n (vec3-normalize (vec3-sub (ray-at r hit)
+                                                      (vec3-create 0 0 -1))))
+                     (vec3-scale (vec3-create (+ 1 (get n "r"))
+                                              (+ 1 (get n "g"))
+                                              (+ 1 (get n "b")))
+                                 0.5))
+                   (vec3-add (vec3-scale (vec3-create 1.0 1.0 1.0) (- 1.0 t))
+                             (vec3-scale (vec3-create 0.5 0.7 1.0) t)))))
 
 (def write-ppm (fn [width height data]
                  (println "P3")
