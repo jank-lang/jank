@@ -49,11 +49,14 @@
 
 (defmethod expression->code :binding
   [expression]
-  (str "JANK_OBJECT const "
-       (expression->code (::parse.spec/identifier expression))
-       " = "
-       (expression->code (::parse.spec/value expression))
-       ";"))
+  (let [ident (expression->code (::parse.spec/identifier expression))]
+    (str "JANK_OBJECT "
+         ident
+         ";"
+         ident
+         " = "
+         (expression->code (::parse.spec/value expression))
+         ";")))
 
 (defmethod expression->code :let
   [expression]
