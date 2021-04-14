@@ -64,9 +64,9 @@
                              (vec3-rand-in-sphere))))
 (def vec3-print (fn [v samples-per-pixel]
                   (def scale (div 1.0 samples-per-pixel))
-                  (def r (* scale (get v "r")))
-                  (def g (* scale (get v "g")))
-                  (def b (* scale (get v "b")))
+                  (def r (sqrt (* scale (get v "r"))))
+                  (def g (sqrt (* scale (get v "g"))))
+                  (def b (sqrt (* scale (get v "b"))))
                   (print+space (->int (* 256 (clamp r 0.0 0.999))))
                   (print+space (->int (* 256 (clamp g 0.0 0.999))))
                   (print+space (->int (* 256 (clamp b 0.0 0.999))))))
