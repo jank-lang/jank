@@ -62,6 +62,8 @@
                            (if (< 1.0 (vec3-length-squared v))
                              v
                              (vec3-rand-in-sphere))))
+(def vec3-rand-unit-in-sphere (fn []
+                                (vec3-normalize (vec3-rand-in-sphere))))
 (def vec3-print (fn [v samples-per-pixel]
                   (def scale (div 1.0 samples-per-pixel))
                   (def r (sqrt (* scale (get v "r"))))
@@ -138,7 +140,7 @@
                        (do
                          (def bounce-target (vec3-add (vec3-add (get hit-info "point")
                                                                 (get hit-info "normal"))
-                                                      (vec3-rand-in-sphere)))
+                                                      (vec3-rand-unit-in-sphere)))
                          (vec3-scale (ray-color (ray-create (get hit-info "point")
                                                             (vec3-sub bounce-target (get hit-info "point")))
                                                 (dec max-ray-bounces)
