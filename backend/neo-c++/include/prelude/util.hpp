@@ -4,7 +4,6 @@
 
 namespace jank
 {
-  /* some? */
   inline object identity(object const &o)
   { return o; }
 

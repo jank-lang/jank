@@ -50,6 +50,7 @@
 (defmethod expression->code :binding
   [expression]
   (let [ident (expression->code (::parse.spec/identifier expression))]
+    ; Allow recursion by having the fn capture its own object.
     (str "JANK_OBJECT "
          ident
          ";"

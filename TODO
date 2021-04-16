@@ -63,6 +63,26 @@ organization
 
 **** type features: ****
 
+references
+  https://stackoverflow.com/questions/415532/implementing-type-inference
+  https://danilafe.com/blog/10_compiler_polymorphism/
+  https://drboolean.gitbooks.io/mostly-adequate-guide-old/content/ch7.html
+  https://eli.thegreenplace.net/2018/type-inference/
+    Unification: https://eli.thegreenplace.net/2018/unification/
+    CLJ unification: https://github.com/eliben/paip-in-clojure/blob/master/src/paip/11_logic/unification.clj
+  https://lispcast.com/Hindley-Milner-in-Clojure/
+    CLJ implementation: https://github.com/ericnormand/hindley-milner
+  https://westkamper.wordpress.com/2013/04/20/typed-lisp-adventure/
+    CLJ HM with core.logic: https://github.com/timowest/symbol
+  C++ HM implementation: https://github.com/jaredhoberock/hindley_milner
+  HM discussion: https://news.ycombinator.com/item?id=15054752
+  bi-directional inference
+    https://www.cis.upenn.edu/~bcpierce/papers/lti-toplas.pdf
+    https://arxiv.org/pdf/1306.6032.pdf
+  compositional type checking
+    https://gergo.erdi.hu/blog/2010-10-23-the_case_for_compositional_type_checking/
+    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.25.818
+
 fully declarative
   definition order doesn't matter
   referencing undefined things doesn't fail until everything has been checked
@@ -185,6 +205,11 @@ structs
 
 ** everything else: **
 figure out logo
+
+name
+  jank
+  idiolisp
+  harmony
 
 repl
   online repl sandbox

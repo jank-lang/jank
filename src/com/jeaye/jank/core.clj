@@ -2,6 +2,7 @@
   (:gen-class)
   (:require [com.jeaye.jank.parse :as parse]
             [com.jeaye.jank.parse.binding :as parse.binding]
+            [com.jeaye.jank.inference.core :as inference.core]
             [com.jeaye.jank.codegen :as codegen]))
 
 (defn parse+codegen [file]
@@ -16,4 +17,11 @@
   (shutdown-agents))
 
 (comment
-  (parse+codegen "ray.jank"))
+  (parse+codegen "ray.jank")
+
+  (let [file "test.jank"]
+    (binding [parse.binding/*input-file* file
+              parse.binding/*input-source* (slurp file)]
+      (let [parse-tree (parse/parse parse/prelude)
+            typed-tree (inference.core/infer parse-tree)]
+        typed-tree))))
