@@ -9,6 +9,24 @@
   {::type-kind ::unknown
    ::name (str "t" (swap! type-counter* inc))})
 
+(defn new-scope
+  ([]
+   {::binding {}})
+  ([parent]
+   {::parent parent
+    ::binding {}}))
+
+(defn scope-lookup [scope bind]
+  (loop [scope scope]
+    (if (nil? scope)
+      nil
+      (if-some [found (get-in scope [::binding bind])]
+        found
+        (recur (::parent scope))))))
+
+(defn scope-add-binding [scope bind-name bind-type]
+  (update scope ::binding assoc bind-name bind-type))
+
 (defmulti assign-typenames
   (fn [expression scope]
     (::parse.spec/kind expression)))
@@ -26,54 +44,108 @@
                    :vector "vector" ; TODO: Parameterize?
                    :set "set" ; TODO: Parameterize?
                    )]
-    (assoc expression ::type {::type-kind ::literal
-                              ::name typename})))
+    {::expression (assoc expression ::type {::type-kind ::literal
+                                            ::name typename})
+     ::scope scope}))
+
+(defmethod assign-typenames :binding
+  [expression scope]
+  (let [ident-type (next-typename!)
+        scope+binding (scope-add-binding scope
+                                         (-> expression ::parse.spec/identifier ::parse.spec/name)
+                                         ident-type)
+        value (when-some [value (::parse.spec/value expression)]
+                (::expression (assign-typenames value scope+binding)))]
+    {::expression (-> (if-some [v value]
+                        (assoc expression
+                               ::type (::type v)
+                               ::parse.spec/value v)
+                        (assoc expression ::type ident-type))
+                      (assoc-in [::parse.spec/identifier ::type] ident-type))
+     ::scope scope+binding}))
 
 (defmethod assign-typenames :identifier
   [expression scope]
-  ; TODO: Look up identifier; unresolved is ok, check again at the end.
-  expression)
+  ; TODO: Unresolved is ok; check again at the end.
+  (if-some [ident-type (scope-lookup scope (::parse.spec/name expression))]
+    {::expression (assoc expression ::type ident-type)
+     ::scope scope}
+    (assert false (str "error: unknown identifier " (::parse.spec/name expression)))))
 
 (defmethod assign-typenames :fn
   [expression scope]
   (let [fn-typename (next-typename!)
-        params (map (fn [param]
-                      (assoc param ::type (next-typename!)))
-                    (::parse.spec/parameters expression))]
-    (assoc (assign-typenames (::parse.spec/body expression))
-           ::type fn-typename
-           ::parse.spec/parameters params)))
+        scope+params (reduce (fn [acc param]
+                               (let [res (assign-typenames param (::scope acc))]
+                                 (-> (assoc acc ::scope (::scope res))
+                                     (update ::parse.spec/parameters conj (::expression res)))))
+                             {::parse.spec/parameters []
+                              ::scope (new-scope scope)}
+                             (::parse.spec/parameters expression))
+        body (assign-typenames (::parse.spec/body expression) (::scope scope+params))]
+    {::expression (assoc expression
+                         ::type fn-typename
+                         ::parse.spec/parameters (::parse.spec/parameters scope+params)
+                         ::parse.spec/body (::expression body))
+     ::scope scope}))
 
 (defmethod assign-typenames :do
   [expression scope]
-  (let [body (map assign-typenames (::parse.spec/body expression))
-        return (assign-typenames (::parse.spec/return expression))]
-    (assoc expression
-           ::parse.spec/body body
-           ::parse.spec/return return)))
+  (let [body (reduce (fn [acc body-expr]
+                       (let [res (assign-typenames body-expr (::scope acc))]
+                         (-> (assoc acc ::scope (::scope res))
+                             (update ::parse.spec/body conj (::expression res)))))
+                     {::parse.spec/body []
+                      ::scope scope}
+                     (::parse.spec/body expression))
+        return (::expression (assign-typenames (::parse.spec/return expression) scope))]
+    {::expression (assoc expression
+                         ::parse.spec/body (::parse.spec/body body)
+                         ::parse.spec/return return)
+     ::scope scope}))
+
+(defmethod assign-typenames :let
+  [expression scope]
+  (let [scope+bindings (reduce (fn [acc bind]
+                                 (let [res (assign-typenames bind (::scope acc))]
+                                   (-> (assoc acc ::scope (::scope res))
+                                       (update ::parse.spec/bindings conj (::expression res)))))
+                               {::parse.spec/bindings []
+                                ::scope scope}
+                               (::parse.spec/bindings expression))
+        body (::expression (assign-typenames (::parse.spec/body expression)
+                                             (::scope scope+bindings)))]
+    {::expression (assoc expression
+                         ::parse.spec/bindings (::parse.spec/bindings scope+bindings)
+                         ::parse.spec/body body)
+     ::scope scope}))
 
 (defmethod assign-typenames :application
   [expression scope]
-  (let [fn-name (assign-typenames (::parse.spec/value expression))
-        arguments (map assign-typenames (::parse.spec/arguments expression))]
-    (assoc expression
-           ::type (next-typename!)
-           ::parse.spec/value fn-name
-           ::parse.spec/arguments arguments)))
+  (let [fn-name-expr (::expression (assign-typenames (::parse.spec/value expression) scope))
+        arguments (map #(::expression (assign-typenames % scope))
+                       (::parse.spec/arguments expression))]
+    {::expression (assoc expression
+                         ::type (next-typename!)
+                         ::parse.spec/value fn-name-expr
+                         ::parse.spec/arguments arguments)
+     ::scope scope}))
 
 (defmethod assign-typenames :if
   [expression scope]
-  (let [condition (assign-typenames (::parse.spec/condition expression))
-        then (assign-typenames (::parse.spec/then expression))
-        else (assign-typenames (::parse.spec/else expression))]
-    (-> (assoc expression ::type (next-typename!))
-        (update ::parse.spec/condition assign-typenames)
-        (update ::parse.spec/then assign-typenames)
-        (update ::parse.spec/else assign-typenames))))
+  (let [condition (::expression (assign-typenames (::parse.spec/condition expression) scope))
+        then (::expression (assign-typenames (::parse.spec/then expression) scope))
+        else (::expression (assign-typenames (::parse.spec/else expression) scope))]
+    {::expression (-> (assoc expression ::type (next-typename!))
+                      (assoc ::parse.spec/condition condition)
+                      (assoc ::parse.spec/then then)
+                      (assoc ::parse.spec/else else))
+     ::scope scope}))
 
 (defmethod assign-typenames :default
   [expression scope]
-  expression)
+  {::expression expression
+   ::scope scope})
 
 (defmulti generate-equations
   (fn [expression equations]
@@ -84,14 +156,25 @@
   (let [side (::type expression)]
     (conj equations [side side])))
 
+(defmethod generate-equations :binding
+  [expression equations]
+  (if-some [value (::parse.spec/value expression)]
+    (conj equations [(::type expression) (::type value)])
+    equations))
+
 (defmethod generate-equations :identifier
   [expression equations]
   equations)
 
 (defmethod generate-equations :fn
   [expression equations]
-  (let [side {::type-kind ::function
+  (let [equations (reduce (fn [acc param-expr]
+                            (generate-equations param-expr acc))
+                          equations
+                          (::parse.spec/parameters expression))
+        side {::type-kind ::function
               ::parameter-types (map ::type (::parse.spec/parameters expression))
+              ; TODO: hmmm
               ::return-type (-> expression ::parse.spec/body ::parse.spec/return ::type)}]
     (-> (generate-equations (::parse.spec/body expression) equations)
         (conj [(::type expression) side]))))
@@ -105,15 +188,27 @@
         equations (generate-equations (::parse.spec/return expression) equations)]
     equations))
 
+(defmethod generate-equations :let
+  [expression equations]
+  (let [equations (reduce (fn [acc bind]
+                            (generate-equations bind acc))
+                          equations
+                          (::parse.spec/bindings expression))
+        equations (generate-equations (::parse.spec/body expression) equations)]
+    equations))
+
 (defmethod generate-equations :application
   [expression equations]
   (let [fn-side {::type-kind ::function
                  ::parameter-types (map ::type (::parse.spec/arguments expression))
                  ::return-type (::type expression)}
-        equations (reduce (fn [acc arg-expr]
-                            (generate-equations arg-expr acc))
+        equations (reduce (fn [acc [arg-expr arg-type]]
+                            (conj (generate-equations arg-expr acc)
+                                  [(::type arg-expr) arg-type]))
                           equations
-                          (::parse.spec/arguments expression))]
+                          (map vector
+                               (::parse.spec/arguments expression)
+                               (::parameter-types fn-side)))]
     (conj equations [(-> expression ::parse.spec/value ::type) fn-side])))
 
 (defmethod generate-equations :if
@@ -250,32 +345,165 @@
                          substitutions)))
 
 (comment
-  (let [ast #:com.jeaye.jank.parse.spec{:kind :if,
-                                        :condition
-                                        #:com.jeaye.jank.parse.spec{:kind
-                                                                    :application,
-                                                                    :value #:com.jeaye.jank.parse.spec{:kind :identifier,
-                                                                                                       :name "f"},
-                                                                    :arguments [#:com.jeaye.jank.parse.spec{:kind :constant,
-                                                                                                            :value 1,
-                                                                                                            :type :integer}]},
-                                        :then
-                                        #:com.jeaye.jank.parse.spec{:kind :constant,
-                                                                    :value 2,
-                                                                    :type :integer},
-                                        :else
-                                        #:com.jeaye.jank.parse.spec{:kind :application,
-                                                                    :value #:com.jeaye.jank.parse.spec{:kind :identifier,
-                                                                                                       :name "g"},
-                                                                    :arguments [#:com.jeaye.jank.parse.spec{:kind :constant,
-                                                                                                            :value 3,
-                                                                                                            :type :integer}]}}
+  (let [ast #:com.jeaye.jank.parse.spec{:kind :let,
+                                        :bindings
+                                        [#:com.jeaye.jank.parse.spec{:kind
+                                                                     :binding,
+                                                                     :identifier
+                                                                     #:com.jeaye.jank.parse.spec{:kind
+                                                                                                 :identifier,
+                                                                                                 :name
+                                                                                                 "f"},
+                                                                     :value
+                                                                     #:com.jeaye.jank.parse.spec{:kind
+                                                                                                 :fn,
+                                                                                                 :parameters
+                                                                                                 [#:com.jeaye.jank.parse.spec{:kind
+                                                                                                                              :binding,
+                                                                                                                              :identifier
+                                                                                                                              #:com.jeaye.jank.parse.spec{:kind
+                                                                                                                                                          :identifier,
+                                                                                                                                                          :name
+                                                                                                                                                          "a"},
+                                                                                                                              :scope
+                                                                                                                              :com.jeaye.jank.parse.spec/parameter}],
+                                                                                                 :body
+                                                                                                 #:com.jeaye.jank.parse.spec{:kind
+                                                                                                                             :do,
+                                                                                                                             :body
+                                                                                                                             [],
+                                                                                                                             :return
+                                                                                                                             #:com.jeaye.jank.parse.spec{:kind
+                                                                                                                                                         :identifier,
+                                                                                                                                                         :name "a"}}},
+                                                                     :scope
+                                                                     :com.jeaye.jank.parse.spec/let}],
+                                        :body
+                                        #:com.jeaye.jank.parse.spec{:kind :do,
+                                                                    :body [],
+                                                                    :return
+                                                                    #:com.jeaye.jank.parse.spec{:kind
+                                                                                                :application,
+                                                                                                :value
+                                                                                                #:com.jeaye.jank.parse.spec{:kind
+                                                                                                                            :identifier,
+                                                                                                                            :name
+                                                                                                                            "f"},
+                                                                                                :arguments
+                                                                                                [#:com.jeaye.jank.parse.spec{:kind
+                                                                                                                             :constant,
+                                                                                                                             :value
+                                                                                                                             "meow",
+                                                                                                                             :type
+                                                                                                                             :string}]}}}
+
         _ (reset! type-counter* 0)
-        ast+types (assign-typenames ast {})
-        substitutions (-> ast+types
-                          (generate-equations [])
-                          unify-equations)]
+        assign-res (assign-typenames ast (new-scope))
+        ast+types (::expression assign-res)
+        equations (generate-equations ast+types [])
+        substitutions (unify-equations equations)
+        ]
+
     #_ast+types
-    (apply-substitutions (-> ast+types ::parse.spec/condition #_::parse.spec/else ::parse.spec/value ::type)
+    equations
+    #_substitutions
+    #_(apply-substitutions (-> ast+types ::parse.spec/body ::type)
+                         substitutions)
+    #_(apply-substitutions (-> ast+types ::parse.spec/condition #_::parse.spec/else ::parse.spec/value ::type)
                          substitutions)
     #_substitutions))
+
+(comment
+  #:com.jeaye.jank.parse.spec{:kind :let,
+                              :bindings
+                              [{:com.jeaye.jank.parse.spec/kind :binding,
+                                :com.jeaye.jank.parse.spec/identifier
+                                {:com.jeaye.jank.parse.spec/kind
+                                 :identifier,
+                                 :com.jeaye.jank.parse.spec/name "f",
+                                 :com.jeaye.jank.inference.core/type
+                                 #:com.jeaye.jank.inference.core{:type-kind
+                                                                 :com.jeaye.jank.inference.core/unknown,
+                                                                 :name
+                                                                 "t1"}},
+                                :com.jeaye.jank.parse.spec/value
+                                {:com.jeaye.jank.parse.spec/kind :fn,
+                                 :com.jeaye.jank.parse.spec/parameters
+                                 [{:com.jeaye.jank.parse.spec/kind
+                                   :binding,
+                                   :com.jeaye.jank.parse.spec/identifier
+                                   {:com.jeaye.jank.parse.spec/kind
+                                    :identifier,
+                                    :com.jeaye.jank.parse.spec/name "a",
+                                    :com.jeaye.jank.inference.core/type
+                                    #:com.jeaye.jank.inference.core{:type-kind
+                                                                    :com.jeaye.jank.inference.core/unknown,
+                                                                    :name
+                                                                    "t3"}},
+                                   :com.jeaye.jank.parse.spec/scope
+                                   :com.jeaye.jank.parse.spec/parameter,
+                                   :com.jeaye.jank.inference.core/type
+                                   #:com.jeaye.jank.inference.core{:type-kind
+                                                                   :com.jeaye.jank.inference.core/unknown,
+                                                                   :name
+                                                                   "t3"}}],
+                                 :com.jeaye.jank.parse.spec/body
+                                 #:com.jeaye.jank.parse.spec{:kind :do,
+                                                             :body [],
+                                                             :return
+                                                             {:com.jeaye.jank.parse.spec/kind
+                                                              :constant,
+                                                              :com.jeaye.jank.parse.spec/value
+                                                              true,
+                                                              :com.jeaye.jank.parse.spec/type
+                                                              :boolean,
+                                                              :com.jeaye.jank.inference.core/type
+                                                              #:com.jeaye.jank.inference.core{:type-kind
+                                                                                              :com.jeaye.jank.inference.core/literal,
+                                                                                              :name
+                                                                                              "boolean"}}},
+                                 :com.jeaye.jank.inference.core/type
+                                 #:com.jeaye.jank.inference.core{:type-kind
+                                                                 :com.jeaye.jank.inference.core/unknown,
+                                                                 :name
+                                                                 "t2"}},
+                                :com.jeaye.jank.parse.spec/scope
+                                :com.jeaye.jank.parse.spec/let,
+                                :com.jeaye.jank.inference.core/type
+                                #:com.jeaye.jank.inference.core{:type-kind
+                                                                :com.jeaye.jank.inference.core/unknown,
+                                                                :name
+                                                                "t2"}}],
+                              :body
+                              #:com.jeaye.jank.parse.spec{:kind :do,
+                                                          :body [],
+                                                          :return
+                                                          {:com.jeaye.jank.parse.spec/kind
+                                                           :application,
+                                                           :com.jeaye.jank.parse.spec/value
+                                                           {:com.jeaye.jank.parse.spec/kind
+                                                            :identifier,
+                                                            :com.jeaye.jank.parse.spec/name
+                                                            "f",
+                                                            :com.jeaye.jank.inference.core/type
+                                                            #:com.jeaye.jank.inference.core{:type-kind
+                                                                                            :com.jeaye.jank.inference.core/unknown,
+                                                                                            :name
+                                                                                            "t1"}},
+                                                           :com.jeaye.jank.parse.spec/arguments
+                                                           ({:com.jeaye.jank.parse.spec/kind
+                                                             :constant,
+                                                             :com.jeaye.jank.parse.spec/value
+                                                             "meow",
+                                                             :com.jeaye.jank.parse.spec/type
+                                                             :string,
+                                                             :com.jeaye.jank.inference.core/type
+                                                             #:com.jeaye.jank.inference.core{:type-kind
+                                                                                             :com.jeaye.jank.inference.core/literal,
+                                                                                             :name
+                                                                                             "string"}}),
+                                                           :com.jeaye.jank.inference.core/type
+                                                           #:com.jeaye.jank.inference.core{:type-kind
+                                                                                           :com.jeaye.jank.inference.core/unknown,
+                                                                                           :name
+                                                                                           "t4"}}}})

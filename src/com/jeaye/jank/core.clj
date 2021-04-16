@@ -23,5 +23,6 @@
     (binding [parse.binding/*input-file* file
               parse.binding/*input-source* (slurp file)]
       (let [parse-tree (parse/parse parse/prelude)
-            typed-tree (inference.core/infer parse-tree)]
-        typed-tree))))
+            ;typed-tree (inference.core/infer parse-tree)
+            ]
+        parse-tree))))
