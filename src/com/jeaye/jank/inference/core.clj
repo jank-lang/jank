@@ -28,11 +28,11 @@
   (update scope ::binding assoc bind-name bind-type))
 
 (defmulti assign-typenames
-  (fn [expression scope]
+  (fn [expression scope scope-path]
     (::parse.spec/kind expression)))
 
 (defmethod assign-typenames :constant
-  [expression scope]
+  [expression scope scope-path]
   (let [typename (case (::parse.spec/type expression)
                    :nil "nil"
                    :boolean "boolean"
@@ -49,13 +49,13 @@
      ::scope scope}))
 
 (defmethod assign-typenames :binding
-  [expression scope]
+  [expression scope scope-path]
   (let [ident-type (next-typename!)
         scope+binding (scope-add-binding scope
                                          (-> expression ::parse.spec/identifier ::parse.spec/name)
                                          ident-type)
         value (when-some [value (::parse.spec/value expression)]
-                (::expression (assign-typenames value scope+binding)))]
+                (::expression (assign-typenames value scope+binding scope-path)))]
     {::expression (-> (if-some [v value]
                         (assoc expression
                                ::type (::type v)
@@ -65,7 +65,7 @@
      ::scope scope+binding}))
 
 (defmethod assign-typenames :identifier
-  [expression scope]
+  [expression scope scope-path]
   ; TODO: Unresolved is ok; check again at the end.
   (if-some [ident-type (scope-lookup scope (::parse.spec/name expression))]
     {::expression (assoc expression ::type ident-type)
@@ -73,16 +73,16 @@
     (assert false (str "error: unknown identifier " (::parse.spec/name expression)))))
 
 (defmethod assign-typenames :fn
-  [expression scope]
+  [expression scope scope-path]
   (let [fn-typename (next-typename!)
         scope+params (reduce (fn [acc param]
-                               (let [res (assign-typenames param (::scope acc))]
+                               (let [res (assign-typenames param (::scope acc) scope-path)]
                                  (-> (assoc acc ::scope (::scope res))
                                      (update ::parse.spec/parameters conj (::expression res)))))
                              {::parse.spec/parameters []
                               ::scope (new-scope scope)}
                              (::parse.spec/parameters expression))
-        body (assign-typenames (::parse.spec/body expression) (::scope scope+params))]
+        body (assign-typenames (::parse.spec/body expression) (::scope scope+params) scope-path)]
     {::expression (assoc expression
                          ::type fn-typename
                          ::parse.spec/parameters (::parse.spec/parameters scope+params)
@@ -90,40 +90,41 @@
      ::scope scope}))
 
 (defmethod assign-typenames :do
-  [expression scope]
+  [expression scope scope-path]
   (let [body (reduce (fn [acc body-expr]
-                       (let [res (assign-typenames body-expr (::scope acc))]
+                       (let [res (assign-typenames body-expr (::scope acc) scope-path)]
                          (-> (assoc acc ::scope (::scope res))
                              (update ::parse.spec/body conj (::expression res)))))
                      {::parse.spec/body []
                       ::scope scope}
                      (::parse.spec/body expression))
-        return (::expression (assign-typenames (::parse.spec/return expression) scope))]
+        return (::expression (assign-typenames (::parse.spec/return expression) scope scope-path))]
     {::expression (assoc expression
                          ::parse.spec/body (::parse.spec/body body)
                          ::parse.spec/return return)
      ::scope scope}))
 
 (defmethod assign-typenames :let
-  [expression scope]
+  [expression scope scope-path]
   (let [scope+bindings (reduce (fn [acc bind]
-                                 (let [res (assign-typenames bind (::scope acc))]
+                                 (let [res (assign-typenames bind (::scope acc) scope-path)]
                                    (-> (assoc acc ::scope (::scope res))
                                        (update ::parse.spec/bindings conj (::expression res)))))
                                {::parse.spec/bindings []
                                 ::scope scope}
                                (::parse.spec/bindings expression))
         body (::expression (assign-typenames (::parse.spec/body expression)
-                                             (::scope scope+bindings)))]
+                                             (::scope scope+bindings)
+                                             scope-path))]
     {::expression (assoc expression
                          ::parse.spec/bindings (::parse.spec/bindings scope+bindings)
                          ::parse.spec/body body)
      ::scope scope}))
 
 (defmethod assign-typenames :application
-  [expression scope]
-  (let [fn-name-expr (::expression (assign-typenames (::parse.spec/value expression) scope))
-        arguments (map #(::expression (assign-typenames % scope))
+  [expression scope scope-path]
+  (let [fn-name-expr (::expression (assign-typenames (::parse.spec/value expression) scope scope-path))
+        arguments (map #(::expression (assign-typenames % scope scope-path))
                        (::parse.spec/arguments expression))]
     {::expression (assoc expression
                          ::type (next-typename!)
@@ -132,10 +133,10 @@
      ::scope scope}))
 
 (defmethod assign-typenames :if
-  [expression scope]
-  (let [condition (::expression (assign-typenames (::parse.spec/condition expression) scope))
-        then (::expression (assign-typenames (::parse.spec/then expression) scope))
-        else (::expression (assign-typenames (::parse.spec/else expression) scope))]
+  [expression scope scope-path]
+  (let [condition (::expression (assign-typenames (::parse.spec/condition expression) scope scope-path))
+        then (::expression (assign-typenames (::parse.spec/then expression) scope scope-path))
+        else (::expression (assign-typenames (::parse.spec/else expression) scope scope-path))]
     {::expression (-> (assoc expression ::type (next-typename!))
                       (assoc ::parse.spec/condition condition)
                       (assoc ::parse.spec/then then)
@@ -143,7 +144,7 @@
      ::scope scope}))
 
 (defmethod assign-typenames :default
-  [expression scope]
+  [expression scope scope-path]
   {::expression expression
    ::scope scope})
 
@@ -327,24 +328,6 @@
     nil))
 
 (comment
-  (unify {::type-kind ::unknown
-          ::name "t1"}
-         {::type-kind ::literal
-          ::name "integer"}
-         {})
-  (let [substitutions (unify-equations [[{::type-kind ::unknown
-                                          ::name "t1"}
-                                         {::type-kind ::literal
-                                          ::name "integer"}]
-                                        [{::type-kind ::unknown
-                                          ::name "t2"}
-                                         {::type-kind ::unknown
-                                          ::name "t1"}]])]
-    (apply-substitutions {::type-kind ::unknown
-                          ::name "t2"}
-                         substitutions)))
-
-(comment
   (let [ast #:com.jeaye.jank.parse.spec{:kind :let,
                                         :bindings
                                         [#:com.jeaye.jank.parse.spec{:kind
@@ -398,14 +381,15 @@
                                                                                                                              :string}]}}}
 
         _ (reset! type-counter* 0)
-        assign-res (assign-typenames ast (new-scope))
+        assign-res (assign-typenames ast (new-scope) [])
         ast+types (::expression assign-res)
         equations (generate-equations ast+types [])
         substitutions (unify-equations equations)
         ]
 
+    (::scope assign-res)
     #_ast+types
-    equations
+    #_equations
     #_substitutions
     #_(apply-substitutions (-> ast+types ::parse.spec/body ::type)
                          substitutions)
