@@ -10,40 +10,32 @@
    ::name (str "t" (swap! type-counter* inc))})
 
 (defmulti assign-typenames
-  (fn [expression]
+  (fn [expression scope]
     (::parse.spec/kind expression)))
 
 (defmethod assign-typenames :constant
-  [expression]
+  [expression scope]
   (let [typename (case (::parse.spec/type expression)
-                   :nil {::type-kind ::literal
-                         ::name "nil"}
-                   :boolean {::type-kind ::literal
-                         ::name "boolean"}
-                   :integer {::type-kind ::literal
-                             ::name "integer"}
-                   :real {::type-kind ::literal
-                          ::name "real"}
-                   :string {::type-kind ::literal
-                            ::name "string"}
-                   :regex {::type-kind ::literal
-                           ::name "regex"}
-                   :map {::type-kind ::literal
-                         ::name "map"} ; TODO: Parameterize?
-                   :vector {::type-kind ::literal
-                            ::name "vector"} ; TODO: Parameterize?
-                   :set {::type-kind ::literal
-                         ::name "set"} ; TODO: Parameterize?
+                   :nil "nil"
+                   :boolean "boolean"
+                   :integer "integer"
+                   :real "real"
+                   :string "string"
+                   :regex "regex"
+                   :map "map" ; TODO: Parameterize?
+                   :vector "vector" ; TODO: Parameterize?
+                   :set "set" ; TODO: Parameterize?
                    )]
-    (assoc expression ::type typename)))
+    (assoc expression ::type {::type-kind ::literal
+                              ::name typename})))
 
 (defmethod assign-typenames :identifier
-  [expression]
+  [expression scope]
   ; TODO: Look up identifier; unresolved is ok, check again at the end.
   expression)
 
 (defmethod assign-typenames :fn
-  [expression]
+  [expression scope]
   (let [fn-typename (next-typename!)
         params (map (fn [param]
                       (assoc param ::type (next-typename!)))
@@ -53,7 +45,7 @@
            ::parse.spec/parameters params)))
 
 (defmethod assign-typenames :do
-  [expression]
+  [expression scope]
   (let [body (map assign-typenames (::parse.spec/body expression))
         return (assign-typenames (::parse.spec/return expression))]
     (assoc expression
@@ -61,7 +53,7 @@
            ::parse.spec/return return)))
 
 (defmethod assign-typenames :application
-  [expression]
+  [expression scope]
   (let [fn-name (assign-typenames (::parse.spec/value expression))
         arguments (map assign-typenames (::parse.spec/arguments expression))]
     (assoc expression
@@ -70,7 +62,7 @@
            ::parse.spec/arguments arguments)))
 
 (defmethod assign-typenames :if
-  [expression]
+  [expression scope]
   (let [condition (assign-typenames (::parse.spec/condition expression))
         then (assign-typenames (::parse.spec/then expression))
         else (assign-typenames (::parse.spec/else expression))]
@@ -80,7 +72,7 @@
         (update ::parse.spec/else assign-typenames))))
 
 (defmethod assign-typenames :default
-  [expression]
+  [expression scope]
   expression)
 
 (defmulti generate-equations
@@ -279,14 +271,11 @@
                                                                                                             :value 3,
                                                                                                             :type :integer}]}}
         _ (reset! type-counter* 0)
-        ast+types (assign-typenames ast)
+        ast+types (assign-typenames ast {})
         substitutions (-> ast+types
                           (generate-equations [])
                           unify-equations)]
     #_ast+types
-    #_(apply-substitutions (-> ast+types ::parse.spec/condition #_::parse.spec/else ::parse.spec/value ::type)
+    (apply-substitutions (-> ast+types ::parse.spec/condition #_::parse.spec/else ::parse.spec/value ::type)
                          substitutions)
-    substitutions))
-
-(defn infer [expressions]
-  (map assign-typenames expressions))
+    #_substitutions))
