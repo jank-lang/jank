@@ -219,7 +219,8 @@
 (defmethod generate-equations :binding
   [expression equations scope]
   (if-some [value (::parse.spec/value expression)]
-    (conj equations [(::type expression) (::type value)])
+    (conj (generate-equations value equations scope)
+          [(::type expression) (::type value)])
     equations))
 
 (defmethod generate-equations :identifier
@@ -270,7 +271,8 @@
 
 (defmethod generate-equations :if
   [expression equations scope]
-  (let [equations (reduce (fn [acc branch-expr]
+  (let [equations (generate-equations (::parse.spec/condition expression) equations scope)
+        equations (reduce (fn [acc branch-expr]
                             (generate-equations branch-expr acc scope))
                           equations
                           [(::parse.spec/then expression)
@@ -288,7 +290,7 @@
 (defn occurs?
   "Returns whether or not `v` occurs within `typ`."
   [v typ substitutions]
-  (println "occurs?" v typ substitutions)
+  ;(println "occurs?" v typ substitutions)
   (if (= v typ)
     true
     (if-let [sub (and (= ::unknown (::type-kind typ)) (get substitutions (::name typ)))]
@@ -300,7 +302,7 @@
 
 (declare unify)
 (defn unify-variable [v typ substitutions]
-  (println "unify-variable" v typ substitutions)
+  ;(println "unify-variable" v typ substitutions)
   (if-some [sub (get substitutions (::name v))]
     (unify sub typ substitutions)
     (if-let [sub (and (= ::unknown (::type-kind typ)) (get substitutions (::name typ)))]
@@ -313,7 +315,7 @@
         (assoc substitutions (::name v) typ)))))
 
 (defn unify [left right substitutions]
-  (println "unify" left right substitutions)
+  ;(println "unify" left right substitutions)
   (cond
     ; Error propogation.
     (nil? substitutions)
@@ -335,7 +337,7 @@
                (-> right ::parameter-types count))
       ; We can't unify these incompatible fns.
       (do
-        (println "error: incompatible fn types" left "and" right)
+        (println "error: incompatible fn arities" left "and" right)
         nil)
       (let [substitutions (unify (::return-type left) (::return-type right) substitutions)]
         (reduce (fn [acc [left-param right-param]]
@@ -383,152 +385,30 @@
     :else
     nil))
 
-; t1 = f
-; t2 = fn
-; t3 = a
-; f4 = fn ret
+(defn render-type
+  [typ]
+  (case (::type-kind typ)
+    nil
+    "unsolvable"
+
+    (::single ::unknown)
+    (::name typ)
+
+    ::function
+    (let [params (map render-type (::parameter-types typ))
+          ret (render-type (::return-type typ))]
+      (str "((" (clojure.string/join ", " params) ") -> " ret ")"))))
 
 (comment
-  (let [ast #:com.jeaye.jank.parse.spec{:kind :let,
-                                        :bindings
-                                        [#:com.jeaye.jank.parse.spec{:kind
-                                                                     :binding,
-                                                                     :identifier
-                                                                     #:com.jeaye.jank.parse.spec{:kind
-                                                                                                 :identifier,
-                                                                                                 :name
-                                                                                                 "f"},
-                                                                     :value
-                                                                     #:com.jeaye.jank.parse.spec{:kind
-                                                                                                 :fn,
-                                                                                                 :parameters
-                                                                                                 [#:com.jeaye.jank.parse.spec{:kind
-                                                                                                                              :binding,
-                                                                                                                              :identifier
-                                                                                                                              #:com.jeaye.jank.parse.spec{:kind
-                                                                                                                                                          :identifier,
-                                                                                                                                                          :name
-                                                                                                                                                          "a"},
-                                                                                                                              :scope
-                                                                                                                              :com.jeaye.jank.parse.spec/parameter}],
-                                                                                                 :body
-                                                                                                 #:com.jeaye.jank.parse.spec{:kind
-                                                                                                                             :do,
-                                                                                                                             :body
-                                                                                                                             [],
-                                                                                                                             :return
-                                                                                                                             #:com.jeaye.jank.parse.spec{:kind
-                                                                                                                                                         :identifier,
-                                                                                                                                                         :name
-                                                                                                                                                         "a"}}},
-                                                                     :scope
-                                                                     :com.jeaye.jank.parse.spec/let}
-                                         #:com.jeaye.jank.parse.spec{:kind
-                                                                     :binding,
-                                                                     :identifier
-                                                                     #:com.jeaye.jank.parse.spec{:kind
-                                                                                                 :identifier,
-                                                                                                 :name
-                                                                                                 "g"},
-                                                                     :value
-                                                                     #:com.jeaye.jank.parse.spec{:kind
-                                                                                                 :fn,
-                                                                                                 :parameters
-                                                                                                 [#:com.jeaye.jank.parse.spec{:kind
-                                                                                                                              :binding,
-                                                                                                                              :identifier
-                                                                                                                              #:com.jeaye.jank.parse.spec{:kind
-                                                                                                                                                          :identifier,
-                                                                                                                                                          :name
-                                                                                                                                                          "b"},
-                                                                                                                              :scope
-                                                                                                                              :com.jeaye.jank.parse.spec/parameter}],
-                                                                                                 :body
-                                                                                                 #:com.jeaye.jank.parse.spec{:kind
-                                                                                                                             :do,
-                                                                                                                             :body
-                                                                                                                             [],
-                                                                                                                             :return
-                                                                                                                             #:com.jeaye.jank.parse.spec{:kind
-                                                                                                                                                         :application,
-                                                                                                                                                         :value
-                                                                                                                                                         #:com.jeaye.jank.parse.spec{:kind
-                                                                                                                                                                                     :identifier,
-                                                                                                                                                                                     :name
-                                                                                                                                                                                     "f"},
-                                                                                                                                                         :arguments
-                                                                                                                                                         [#:com.jeaye.jank.parse.spec{:kind
-                                                                                                                                                                                      :identifier,
-                                                                                                                                                                                      :name
-                                                                                                                                                                                      "b"}]}}},
-                                                                     :scope
-                                                                     :com.jeaye.jank.parse.spec/let}],
-                                        :body
-                                        #:com.jeaye.jank.parse.spec{:kind :do,
-                                                                    :body [],
-                                                                    :return
-                                                                    #:com.jeaye.jank.parse.spec{:kind
-                                                                                                :if,
-                                                                                                :condition
-                                                                                                #:com.jeaye.jank.parse.spec{:kind
-                                                                                                                            :application,
-                                                                                                                            :value
-                                                                                                                            #:com.jeaye.jank.parse.spec{:kind
-                                                                                                                                                        :identifier,
-                                                                                                                                                        :name
-                                                                                                                                                        "g"},
-                                                                                                                            :arguments
-                                                                                                                            [#:com.jeaye.jank.parse.spec{:kind
-                                                                                                                                                         :constant,
-                                                                                                                                                         :value
-                                                                                                                                                         true,
-                                                                                                                                                         :type
-                                                                                                                                                         :boolean}]},
-                                                                                                :then
-                                                                                                #:com.jeaye.jank.parse.spec{:kind
-                                                                                                                            :application,
-                                                                                                                            :value
-                                                                                                                            #:com.jeaye.jank.parse.spec{:kind
-                                                                                                                                                        :identifier,
-                                                                                                                                                        :name
-                                                                                                                                                        "f"},
-                                                                                                                            :arguments
-                                                                                                                            [#:com.jeaye.jank.parse.spec{:kind
-                                                                                                                                                         :constant,
-                                                                                                                                                         :value
-                                                                                                                                                         "meow",
-                                                                                                                                                         :type
-                                                                                                                                                         :string}]},
-                                                                                                :else
-                                                                                                #:com.jeaye.jank.parse.spec{:kind
-                                                                                                                            :application,
-                                                                                                                            :value
-                                                                                                                            #:com.jeaye.jank.parse.spec{:kind
-                                                                                                                                                        :identifier,
-                                                                                                                                                        :name
-                                                                                                                                                        "g"},
-                                                                                                                            :arguments
-                                                                                                                            [#:com.jeaye.jank.parse.spec{:kind
-                                                                                                                                                         :constant,
-                                                                                                                                                         :value
-                                                                                                                                                         "meow",
-                                                                                                                                                         :type
-                                                                                                                                                         :string}]}}}}
-        _ (reset! type-counter* 0)
-        assign-res (assign-typenames ast {} [])
-        ast+types (::expression assign-res)
-        equations (generate-equations ast+types [] (::scope assign-res))
-        substitutions (unify-equations equations)
-        ]
-
-    #_(::scope assign-res)
-    #_ast+types
-    #_equations
-    substitutions
-    #_(apply-substitutions (-> ast+types ::parse.spec/body ::type)
-                         substitutions)
-    #_(apply-substitutions (-> ast+types ::parse.spec/bindings first ::type)
-                         substitutions)
-    #_(apply-substitutions (-> ast+types ::parse.spec/condition #_::parse.spec/else ::parse.spec/value ::type)
-                         substitutions)
-    #_substitutions))
+  (render-type {::type-kind ::function
+                ::parameter-types [{::type-kind ::single
+                                    ::name "string"}
+                                   {::type-kind ::single
+                                    ::name "boolean"}
+                                   {::type-kind ::function
+                                    ::parameter-types [{::type-kind ::unknown
+                                                        ::name "a"}]
+                                    ::return-type {::type-kind ::unknown
+                                                   ::name "a"}}]
+                ::return-type {::type-kind ::single
+                               ::name "string"}}))
