@@ -250,4 +250,25 @@ namespace jank
       }
     );
   }
+
+  inline object fabs(object const &o)
+  {
+    return o.visit
+    (
+      [&](auto const &data) -> object
+      {
+        using T = std::decay_t<decltype(data)>;
+
+        /* TODO: Trait for is_number_v */
+        if constexpr(std::is_same_v<T, detail::integer> || std::is_same_v<T, detail::real>)
+        { return object{ std::fabs(data) }; }
+        else
+        {
+          /* TODO: Throw an error. */
+          std::cout << "not a number" << std::endl;
+          return JANK_NIL;
+        }
+      }
+    );
+  }
 }

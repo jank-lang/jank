@@ -18,6 +18,7 @@ pushd $here/.. > /dev/null
 echo "Compiling to C++..."
 lein run $1 > "$tmp/jank-generated.hpp" 2>&1
 echo "Formatting C++..."
+rm -f latest-generated.hpp
 clang-format "$tmp/jank-generated.hpp" > latest-generated.hpp
 cp -f latest-generated.hpp "$tmp/jank-generated.hpp"
 ret=$?
