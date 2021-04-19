@@ -9,6 +9,9 @@
                (if (< max n)
                  max
                  n))))
+(def pi 3.1415926535897932385)
+(def degrees->radians (fn [deg]
+                        (div (* deg pi) 180.0)))
 
 (def vec3-create (fn [r g b]
                    {"r" r
@@ -242,17 +245,28 @@
 (let [aspect-ratio (div 16.0 9.0)
       image-width 400
       image-height (->int (div image-width aspect-ratio))
-      samples-per-pixel 4
+      samples-per-pixel 2
       max-ray-bounces 50
-      viewport-height 2.0
+
+      look-from (vec3-create -2 2 1)
+      look-at (vec3-create 0 0 -1)
+      camera-up (vec3-create 0 1 0)
+      field-of-view 20
+      field-of-view-theta (degrees->radians field-of-view)
+      viewport-height (* 2 (tan (div field-of-view-theta 2.0)))
       viewport-width (* aspect-ratio viewport-height)
+      camera-w (vec3-normalize (vec3-sub look-from look-at))
+      camera-u (vec3-normalize (vec3-cross camera-up camera-w))
+      camera-v (vec3-cross camera-w camera-u)
+
       focal-length 1.0
-      origin (vec3-create 0 0 0)
-      horizontal (vec3-create viewport-width 0 0)
-      vertical (vec3-create 0 viewport-height 0)
+      origin look-from
+      horizontal (vec3-scale camera-u viewport-width)
+      vertical (vec3-scale camera-v viewport-height)
       lower-left-corner (vec3-sub (vec3-sub (vec3-sub origin (vec3-div horizontal 2))
                                             (vec3-div vertical 2))
-                                  (vec3-create 0 0 focal-length))
+                                  camera-w)
+
       hittables [{"center" (vec3-create 0 -100.5 -1)
                   "radius" 100
                   "material" {"albedo" (vec3-create 0.8 0.8 0.0)

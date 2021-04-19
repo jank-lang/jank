@@ -214,7 +214,7 @@ namespace jank
 
         return *this;
       }
-      template <typename T>
+      template <typename T, std::enable_if_t<!std::is_same_v<std::decay_t<T>, object>, bool> = true>
       object& operator=(T &&data)
       {
         unset();

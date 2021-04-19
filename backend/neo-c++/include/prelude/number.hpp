@@ -276,6 +276,27 @@ namespace jank
     );
   }
 
+  inline object tan(object const &o)
+  {
+    return o.visit
+    (
+      [&](auto const &data) -> object
+      {
+        using T = std::decay_t<decltype(data)>;
+
+        /* TODO: Trait for is_number_v */
+        if constexpr(std::is_same_v<T, detail::integer> || std::is_same_v<T, detail::real>)
+        { return object{ std::tan(data) }; }
+        else
+        {
+          /* TODO: Throw an error. */
+          std::cout << "not a number" << std::endl;
+          return JANK_NIL;
+        }
+      }
+    );
+  }
+
   inline object pow(object const &l, object const &r)
   {
     return l.visit_with
