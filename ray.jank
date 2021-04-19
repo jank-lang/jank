@@ -56,7 +56,7 @@
                                   (* (get l "g") (get r "r"))))))
 (def vec3-normalize (fn [v]
                       (vec3-div v (vec3-length v))))
-(def vec3-rand (fn [v]
+(def vec3-rand (fn []
                  (vec3-create (rand) (rand) (rand))))
 (def vec3-rand+clamp (fn [min max]
                        (vec3-create (rand-real min max) (rand-real min max) (rand-real min max))))
@@ -67,6 +67,11 @@
                              (vec3-rand-in-sphere))))
 (def vec3-rand-unit-in-sphere (fn []
                                 (vec3-normalize (vec3-rand-in-sphere))))
+(def vec3-rand-in-unit-disk (fn []
+                              (def p (vec3-create (rand-real -1 1) (rand-real -1 1) 0))
+                              (if (< 1 (vec3-length-squared p))
+                                (vec3-rand-in-unit-disk)
+                                p)))
 (def vec3-near-zero? (fn [v]
                        (def epsilon 0.0000008)
                        (all (all (< (abs (get v "r")) epsilon)
@@ -241,15 +246,61 @@
                          (println ""))
                        data)))
 
+(def rand-scene! (fn []
+                   (reduce (fn [acc i]
+                             (def x (+ -2.5 (mod i 10)))
+                             (def z (+ -5 (div i 10)))
+                             (def choose-mat (rand))
+                             (def center (vec3-create (+ x (* 0.9 (rand)))
+                                                      0.2
+                                                      (+ z (* 0.9 (rand)))))
+                             (if (< 0.9 (vec3-length (vec3-sub center (vec3-create 4 0.2 0))))
+                               (conj acc (if (< choose-mat 0.8)
+                                           {"center" center
+                                            "radius" 0.2
+                                            "material" {"albedo" (vec3-mul (vec3-rand) (vec3-rand))
+                                                        "scatter" scatter-lambertian}}
+                                           (if (< choose-mat 0.95)
+                                             {"center" center
+                                              "radius" 0.2
+                                              "material" {"albedo" (vec3-rand+clamp 0.5 1)
+                                                          "fuzz" (rand-real 0 0.5)
+                                                          "scatter" scatter-metal}}
+                                             {"center" center
+                                              "radius" 0.2
+                                              "material" {"index-of-refraction" 1.5
+                                                          "scatter" scatter-dialetric}})))
+                               acc))
+                           [{"center" (vec3-create 0 -1000 0)
+                             "radius" 1000
+                             "material" {"albedo" (vec3-create 0.5 0.5 0.5)
+                                         "scatter" scatter-lambertian}}
+                            {"center" (vec3-create -4 1 0)
+                             "radius" 1
+                             "material" {"albedo" (vec3-create 0.4 0.2 0.1)
+                                         "scatter" scatter-lambertian}}
+                            {"center" (vec3-create 0 1 0)
+                             "radius" 1
+                             "material" {"index-of-refraction" 1.5
+                                         "scatter" scatter-dialetric}}
+                            {"center" (vec3-create 4 1 0)
+                             "radius" 1
+                             "material" {"albedo" (vec3-create 0.7 0.6 0.5)
+                                         "fuzz" 0
+                                         "scatter" scatter-metal}}]
+                           (range 0 100))))
 
-(let [aspect-ratio (div 16.0 9.0)
-      image-width 400
+(let [aspect-ratio (div 3.0 2.0)
+      image-width 200
       image-height (->int (div image-width aspect-ratio))
-      samples-per-pixel 2
-      max-ray-bounces 50
+      samples-per-pixel 1
+      max-ray-bounces 10
 
-      look-from (vec3-create -2 2 1)
-      look-at (vec3-create 0 0 -1)
+      look-from (vec3-create 13 2 3)
+      look-at (vec3-create 0 0 0)
+      aperture 0.1
+      lens-radius (div aperture 2)
+      focus-distance 10
       camera-up (vec3-create 0 1 0)
       field-of-view 20
       field-of-view-theta (degrees->radians field-of-view)
@@ -261,36 +312,21 @@
 
       focal-length 1.0
       origin look-from
-      horizontal (vec3-scale camera-u viewport-width)
-      vertical (vec3-scale camera-v viewport-height)
+      horizontal (vec3-scale camera-u (* viewport-width focus-distance))
+      vertical (vec3-scale camera-v (* viewport-height focus-distance))
       lower-left-corner (vec3-sub (vec3-sub (vec3-sub origin (vec3-div horizontal 2))
                                             (vec3-div vertical 2))
-                                  camera-w)
+                                  (vec3-scale camera-w focus-distance))
 
-      hittables [{"center" (vec3-create 0 -100.5 -1)
-                  "radius" 100
-                  "material" {"albedo" (vec3-create 0.8 0.8 0.0)
-                              "scatter" scatter-lambertian}}
-                 {"center" (vec3-create -1 0 -1)
-                  "radius" -0.4
-                  "material" {"albedo" (vec3-create 0.8 0.8 0.8)
-                              "fuzz" 0.3
-                              "index-of-refraction" 1.5
-                              "scatter" scatter-dialetric}}
-                 {"center" (vec3-create 0 0 -1)
-                  "radius" 0.5
-                  "material" {"albedo" (vec3-create 0.7 0.3 0.3)
-                              "scatter" scatter-lambertian}}
-                 {"center" (vec3-create 1 0 -1)
-                  "radius" 0.5
-                  "material" {"albedo" (vec3-create 0.8 0.6 0.2)
-                              "fuzz" 1.0
-                              "scatter" scatter-metal}}]
+      hittables (rand-scene!)
       data (mapv (fn [y]
                    (mapv (fn [x]
                            (reduce (fn [acc sample]
                                      (def u (div (+ x (rand)) (- image-width 1)))
                                      (def v (div (+ y (rand)) (- image-height 1)))
+                                     (def rd (vec3-scale (vec3-rand-in-unit-disk) lens-radius))
+                                     (def offset (+ (* u (get rd "r"))
+                                                    (* v (get rd "g"))))
                                      (def ray (ray-create origin
                                                           (vec3-sub (vec3-add (vec3-add lower-left-corner
                                                                                         (vec3-scale horizontal u))

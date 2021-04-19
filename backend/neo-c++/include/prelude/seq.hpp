@@ -232,6 +232,33 @@ namespace jank
     }
   }
 
+  inline object conj(object const &o, object const &val)
+  {
+    return o.visit
+    (
+      [&](auto &&data) -> object
+      {
+        using T = std::decay_t<decltype(data)>;
+        /* TODO: Generic seq handling. */
+        auto constexpr is_vector(std::is_same_v<T, detail::vector>);
+
+        /* TODO: Map support. */
+        if constexpr(is_vector)
+        {
+          T ret(data);
+          ret.push_back(val);
+          return object{ ret };
+        }
+        else
+        {
+          /* TODO: Throw an error. */
+          std::cout << "not a seq" << std::endl;
+          return JANK_NIL;
+        }
+      }
+    );
+  }
+
   inline object assoc(object const &o, object const &key, object const &val)
   {
     return o.visit
