@@ -89,6 +89,31 @@ namespace jank
     );
   }
 
+  /* <= */
+  inline object _gen_less__gen_equal_(object const &l, object const &r)
+  {
+    return l.visit_with
+    (
+      [&](auto const &l_data, auto const &r_data) -> object
+      {
+        using L = std::decay_t<decltype(l_data)>;
+        using R = std::decay_t<decltype(r_data)>;
+
+        /* TODO: Trait for is_number_v */
+        if constexpr((std::is_same_v<L, detail::integer> || std::is_same_v<L, detail::real>)
+                     && (std::is_same_v<R, detail::integer> || std::is_same_v<R, detail::real>))
+        { return object{ l_data <= r_data }; }
+        else
+        {
+          /* TODO: Throw an error. */
+          std::cout << "not a number" << std::endl;
+          return JANK_NIL;
+        }
+      },
+      r
+    );
+  }
+
   /* * */
   inline object _gen_asterisk_(object const &l, object const &r)
   {
@@ -251,7 +276,31 @@ namespace jank
     );
   }
 
-  inline object fabs(object const &o)
+  inline object pow(object const &l, object const &r)
+  {
+    return l.visit_with
+    (
+      [&](auto const &l_data, auto const &r_data) -> object
+      {
+        using L = std::decay_t<decltype(l_data)>;
+        using R = std::decay_t<decltype(r_data)>;
+
+        /* TODO: Trait for is_number_v */
+        if constexpr((std::is_same_v<L, detail::integer> || std::is_same_v<L, detail::real>)
+                     && (std::is_same_v<R, detail::integer> || std::is_same_v<R, detail::real>))
+        { return object{ std::pow(l_data, r_data) }; }
+        else
+        {
+          /* TODO: Throw an error. */
+          std::cout << "not a number" << std::endl;
+          return JANK_NIL;
+        }
+      },
+      r
+    );
+  }
+
+  inline object abs(object const &o)
   {
     return o.visit
     (
@@ -259,8 +308,9 @@ namespace jank
       {
         using T = std::decay_t<decltype(data)>;
 
-        /* TODO: Trait for is_number_v */
-        if constexpr(std::is_same_v<T, detail::integer> || std::is_same_v<T, detail::real>)
+        if constexpr(std::is_same_v<T, detail::integer>)
+        { return object{ std::abs(data) }; }
+        if constexpr(std::is_same_v<T, detail::real>)
         { return object{ std::fabs(data) }; }
         else
         {
@@ -269,6 +319,41 @@ namespace jank
           return JANK_NIL;
         }
       }
+    );
+  }
+
+  inline object min(object const &l, object const &r)
+  {
+    return l.visit_with
+    (
+      [&](auto const &l_data, auto const &r_data) -> object
+      {
+        using L = std::decay_t<decltype(l_data)>;
+        using R = std::decay_t<decltype(r_data)>;
+
+        /* TODO: Trait for is_number_v */
+        if constexpr((std::is_same_v<L, detail::integer> || std::is_same_v<L, detail::real>)
+                     && (std::is_same_v<R, detail::integer> || std::is_same_v<R, detail::real>))
+        {
+          if constexpr(std::is_same_v<L, detail::real> || std::is_same_v<R, detail::real>)
+          {
+            return object
+            { std::min(static_cast<detail::real>(l_data), static_cast<detail::real>(r_data)) };
+          }
+          else
+          {
+            return object
+            { std::min(static_cast<detail::integer>(l_data), static_cast<detail::integer>(r_data)) };
+          }
+        }
+        else
+        {
+          /* TODO: Throw an error. */
+          std::cout << "not a number" << std::endl;
+          return JANK_NIL;
+        }
+      },
+      r
     );
   }
 }

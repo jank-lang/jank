@@ -66,12 +66,21 @@
                                 (vec3-normalize (vec3-rand-in-sphere))))
 (def vec3-near-zero? (fn [v]
                        (def epsilon 0.0000008)
-                       (all (all (< (fabs (get v "r")) epsilon)
-                                 (< (fabs (get v "g")) epsilon))
-                            (< (fabs (get v "b")) epsilon))))
+                       (all (all (< (abs (get v "r")) epsilon)
+                                 (< (abs (get v "g")) epsilon))
+                            (< (abs (get v "b")) epsilon))))
 
 (def vec3-reflect (fn [v n]
                     (vec3-sub v (vec3-scale n (* 2 (vec3-dot v n))))))
+(def vec3-refract (fn [uv n etai-over-etat]
+                    (def cos-theta (min (vec3-dot (vec3-sub (vec3-create 0 0 0)
+                                                            uv)
+                                                  n)
+                                        1.0))
+                    (def r-out-perp (vec3-scale (vec3-add uv (vec3-scale n cos-theta))
+                                                etai-over-etat))
+                    (def r-out-parallel (vec3-scale n (- 0.0 (sqrt (abs (- 1.0 (vec3-length-squared r-out-perp)))))))
+                    (vec3-add r-out-perp r-out-parallel)))
 (def vec3-print (fn [v samples-per-pixel]
                   (def scale (div 1.0 samples-per-pixel))
                   (def r (sqrt (* scale (get v "r"))))
@@ -86,6 +95,13 @@
                    "direction" direction}))
 (def ray-at (fn [r t]
               (vec3-add (get r "origin") (vec3-scale (get r "direction") t))))
+
+(def reflectance (fn [cosine ref-idx]
+                   (def r (div (- 1 ref-idx)
+                               (+ 1 ref-idx)))
+                   (def r2 (* r r))
+                   (* (+ r2 (- 1 r2))
+                      (pow (- 1 cosine) 5))))
 
 (def hit-info-create (fn [point normal t material front-face?]
                        {"point" point
@@ -153,15 +169,42 @@
                            "attenuation" attenuation}))
 
 (def scatter-metal (fn [ray hit-info]
+                     (def material (get hit-info "material"))
                      (def reflected (vec3-reflect (vec3-normalize (get ray "direction"))
                                                   (get hit-info "normal")))
-                     (def scattered (ray-create (get hit-info "point") reflected))
-                     (def attenuation (get (get hit-info "material") "albedo"))
+                     (def scattered (ray-create (get hit-info "point")
+                                                (vec3-add reflected
+                                                          (vec3-scale (vec3-rand-unit-in-sphere)
+                                                                      (get material "fuzz")))))
+                     (def attenuation (get material "albedo"))
                      (def res {"ray" scattered
                                "attenuation" attenuation})
                      (if (< 0 (vec3-dot (get scattered "direction") (get hit-info "normal")))
                        res
                        nil)))
+
+(def scatter-dialetric (fn [ray hit-info]
+                         (def material (get hit-info "material"))
+                         (def attenuation (vec3-create 1 1 1))
+                         (def index-of-refraction (get material "index-of-refraction"))
+                         (def refraction-ratio (if (get hit-info "front-face?")
+                                                 (div 1.0 index-of-refraction)
+                                                 index-of-refraction))
+                         (def unit-direction (vec3-normalize (get ray "direction")))
+
+                         (def normal (get hit-info "normal"))
+                         (def cos-theta (min (vec3-dot (vec3-sub (vec3-create 0 0 0)
+                                                                 unit-direction)
+                                                       normal)
+                                             1.0))
+                         (def sin-theta (sqrt (- 1.0 (* cos-theta cos-theta))))
+                         (def cannot-refract? (< 1.0 (* refraction-ratio sin-theta)))
+                         (def direction (if (either cannot-refract?
+                                                    (< (rand) (reflectance cos-theta refraction-ratio)))
+                                          (vec3-reflect unit-direction normal)
+                                          (vec3-refract unit-direction normal refraction-ratio)))
+                         {"ray" (ray-create (get hit-info "point") direction)
+                          "attenuation" attenuation}))
 
 (def ray-cast (fn [r max-ray-bounces hittables]
                 (if (< max-ray-bounces 0)
@@ -199,7 +242,7 @@
 (let [aspect-ratio (div 16.0 9.0)
       image-width 400
       image-height (->int (div image-width aspect-ratio))
-      samples-per-pixel 200
+      samples-per-pixel 4
       max-ray-bounces 50
       viewport-height 2.0
       viewport-width (* aspect-ratio viewport-height)
@@ -214,17 +257,20 @@
                   "radius" 100
                   "material" {"albedo" (vec3-create 0.8 0.8 0.0)
                               "scatter" scatter-lambertian}}
+                 {"center" (vec3-create -1 0 -1)
+                  "radius" -0.4
+                  "material" {"albedo" (vec3-create 0.8 0.8 0.8)
+                              "fuzz" 0.3
+                              "index-of-refraction" 1.5
+                              "scatter" scatter-dialetric}}
                  {"center" (vec3-create 0 0 -1)
                   "radius" 0.5
                   "material" {"albedo" (vec3-create 0.7 0.3 0.3)
                               "scatter" scatter-lambertian}}
-                 {"center" (vec3-create -1 0 -1)
-                  "radius" 0.5
-                  "material" {"albedo" (vec3-create 0.8 0.8 0.8)
-                              "scatter" scatter-metal}}
                  {"center" (vec3-create 1 0 -1)
                   "radius" 0.5
                   "material" {"albedo" (vec3-create 0.8 0.6 0.2)
+                              "fuzz" 1.0
                               "scatter" scatter-metal}}]
       data (mapv (fn [y]
                    (mapv (fn [x]
