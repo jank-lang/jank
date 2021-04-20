@@ -8,7 +8,7 @@ namespace jank
   {
     o.visit
     (
-      [](auto &&data)
+      [](auto const &data)
       { std::cout << data; }
     );
     return JANK_NIL;

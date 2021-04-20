@@ -248,8 +248,8 @@
 
 (def rand-scene! (fn []
                    (reduce (fn [acc i]
-                             (def x (+ -2.5 (mod i 10)))
-                             (def z (+ -5 (div i 10)))
+                             (def x (- (mod i 21) 10))
+                             (def z (- (div i 21) 6))
                              (def choose-mat (rand))
                              (def center (vec3-create (+ x (* 0.9 (rand)))
                                                       0.2
@@ -288,10 +288,10 @@
                              "material" {"albedo" (vec3-create 0.7 0.6 0.5)
                                          "fuzz" 0
                                          "scatter" scatter-metal}}]
-                           (range 0 100))))
+                           (range 0 200))))
 
 (let [aspect-ratio (div 3.0 2.0)
-      image-width 200
+      image-width 400
       image-height (->int (div image-width aspect-ratio))
       samples-per-pixel 1
       max-ray-bounces 10

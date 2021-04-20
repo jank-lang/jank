@@ -1,0 +1,3 @@
+[submodule "lib/immer"]
+	path = lib/immer
+	url = https://github.com/arximboldi/immer.git
