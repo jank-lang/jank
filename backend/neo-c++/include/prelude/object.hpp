@@ -2,58 +2,130 @@
 
 #include <experimental/iterator>
 #include <type_traits>
-#include <vector>
-#include <set>
-#include <map>
 #include <any>
 #include <functional>
+
+#include <immer/vector.hpp>
+#include <immer/map.hpp>
+#include <immer/set.hpp>
+#include <immer/box.hpp>
+
+namespace jank
+{ class object; }
+
+namespace jank::detail
+{
+  using integer = int64_t;
+  using real = double;
+  using boolean = bool;
+  using string = std::string;
+
+  struct function
+  {
+    template <typename T>
+    using value_type = std::function<T>;
+
+    template <typename R, typename... Args>
+    function(R (* const f)(Args...)) : function(value_type<R (Args...)>{ f })
+    { }
+    template <typename R, typename... Args>
+    function(value_type<R (Args...)> &&f) : value{ std::move(f) }
+    { }
+    template <typename R, typename... Args>
+    function(value_type<R (Args...)> const &f) : value{ f }
+    { }
+
+    template <typename F>
+    F const* get() const
+    { return std::any_cast<F>(&value); }
+
+    std::any value;
+  };
+  inline bool operator==(function const &, function const &)
+  { return true; }
+  inline bool operator!=(function const &, function const &)
+  { return false; }
+  inline bool operator<(function const &, function const &)
+  { return true; }
+
+  struct nil
+  { };
+  inline bool operator==(nil const &, nil const &)
+  { return true; }
+  inline bool operator!=(nil const &, nil const &)
+  { return false; }
+  inline bool operator<(nil const &, nil const &)
+  { return true; }
+
+  /* Very much borrowed from boost. */
+  template <typename T>
+  size_t hash_combine(size_t const seed, T const &t)
+  { return seed ^ std::hash<T>{}(t) + 0x9e3779b9 + (seed << 6) + (seed >> 2); }
+}
+
+namespace std
+{
+  template <>
+  struct hash<jank::object>;
+
+  template <>
+  struct hash<jank::detail::function>
+  {
+    size_t operator()(jank::detail::function const &f) const noexcept
+    { return reinterpret_cast<size_t>(&f); }
+  };
+
+  template <>
+  struct hash<jank::detail::nil>
+  {
+    size_t operator()(jank::detail::nil const &) const noexcept
+    { return 0; }
+  };
+
+  template <typename T>
+  struct hash<immer::vector<T>>
+  {
+    size_t operator()(immer::vector<T> const &v) const noexcept
+    {
+      size_t seed{ v.size() };
+      for(auto const &e : v)
+      { seed = jank::detail::hash_combine(seed, e); }
+      return seed;
+    }
+  };
+
+  template <typename T>
+  struct hash<immer::set<T>>
+  {
+    size_t operator()(immer::set<T> const &s) const noexcept
+    {
+      size_t seed{ s.size() };
+      for(auto const &e : s)
+      { seed = jank::detail::hash_combine(seed, e); }
+      return seed;
+    }
+  };
+
+  template <typename K, typename V>
+  struct hash<immer::map<K, V>>
+  {
+    size_t operator()(immer::map<K, V> const &m) const noexcept
+    {
+      size_t seed{ m.size() };
+      for(auto const &e : m)
+      {
+        seed = jank::detail::hash_combine(seed, e.first);
+        seed = jank::detail::hash_combine(seed, e.second);
+      }
+      return seed;
+    }
+  };
+}
 
 namespace jank
 {
   namespace detail
   {
-    using integer = int64_t;
-    using real = double;
-    using boolean = bool;
-    using string = std::string;
-
-    struct function
-    {
-      template <typename T>
-      using value_type = std::function<T>;
-
-      template <typename R, typename... Args>
-      function(R (* const f)(Args...)) : function(value_type<R (Args...)>{ f })
-      { }
-      template <typename R, typename... Args>
-      function(value_type<R (Args...)> &&f) : value{ std::move(f) }
-      { }
-      template <typename R, typename... Args>
-      function(value_type<R (Args...)> const &f) : value{ f }
-      { }
-
-      template <typename F>
-      F const* get() const
-      { return std::any_cast<F>(&value); }
-
-      std::any value;
-    };
-    inline bool operator==(function const &, function const &)
-    { return true; }
-    inline bool operator!=(function const &, function const &)
-    { return false; }
-    inline bool operator<(function const &, function const &)
-    { return true; }
-
-    struct nil
-    { };
-    inline bool operator==(nil const &, nil const &)
-    { return true; }
-    inline bool operator!=(nil const &, nil const &)
-    { return false; }
-    inline bool operator<(nil const &, nil const &)
-    { return true; }
-
     template <typename T, typename Enable = void>
     struct conversion
     { using type = T; };
@@ -83,9 +155,11 @@ namespace jank
       enum class kind
       { nil, integer, real, boolean, string, vector, set, map, function };
 
-      using vector_type = std::vector<object>;
-      using set_type = std::set<object>;
-      using map_type = std::map<object, object>;
+      using vector_type = immer::vector<immer::box<object>>;
+      using set_type = immer::set<immer::box<object>>;
+      using map_type = immer::map<object, object>;
+      /* Used to detect if some type is an object. */
+      static bool constexpr enable_if_object = true;
 
       object() = default;
       ~object()
@@ -140,7 +214,6 @@ namespace jank
           }
         );
       }
-
 
       object& operator=(object &&o)
       {
@@ -398,7 +471,7 @@ namespace jank
       friend std::ostream& operator<<(std::ostream&, object const&);
   };
 
-  std::ostream& operator<<(std::ostream &os, object const &o)
+  inline std::ostream& operator<<(std::ostream &os, object const &o)
   {
     switch(o.current_kind)
     {
@@ -423,7 +496,7 @@ namespace jank
         (
           std::begin(o.current_data.vector_data),
           std::end(o.current_data.vector_data),
-          std::experimental::make_ostream_joiner(os, ", ")
+          std::experimental::make_ostream_joiner(os, " ")
         );
         os << "]";
         break;
@@ -433,17 +506,14 @@ namespace jank
         (
           std::begin(o.current_data.vector_data),
           std::end(o.current_data.vector_data),
-          std::experimental::make_ostream_joiner(os, ", ")
+          std::experimental::make_ostream_joiner(os, " ")
         );
         os << "}";
         break;
       case object::kind::map:
         os << "{";
         for(auto i(o.current_data.map_data.begin()); i != o.current_data.map_data.end(); ++i)
-        {
-          /* TODO: Delim. */
-          os << i->first << " " << i->second << " ";
-        }
+        { os << i->first << " " << i->second << " "; }
         os << "}";
         break;
       case object::kind::function:
@@ -456,6 +526,7 @@ namespace jank
   namespace detail
   {
     using vector = object::vector_type;
+    using vector_transient = object::vector_type::transient_type;
     using set = object::set_type;
     using map = object::map_type;
   }
@@ -478,11 +549,25 @@ namespace jank
   { return { k, v }; }
   template<typename... Ts>
   object JANK_MAP(Ts &&... entries)
-  { return object{ detail::map{ std::forward<Ts>(entries)... } }; }
+  {
+    /* TODO: Transient. */
+    detail::map ret;
+    int const dummy[sizeof...(Ts)]{ (ret = ret.insert(entries), 0)... };
+    return object{ ret };
+  }
 
   static jank::object const JANK_NIL{ detail::nil{} };
   static jank::object const JANK_TRUE{ true };
   static jank::object const JANK_FALSE{ false };
+
+  /* TODO: Implement. */
+  inline bool operator<(detail::vector const &l, detail::vector const &r)
+  { return true; }
+  /* TODO: Implement. */
+  inline bool operator<(detail::map const &l, detail::map const &r)
+  { return true; }
+  inline bool operator<(detail::set const &l, detail::set const &r)
+  { return true; }
 
   namespace detail
   {
@@ -524,4 +609,23 @@ namespace jank
       }
     }
   }
+}
+
+namespace std
+{
+  template <>
+  struct hash<jank::object>
+  {
+    size_t operator()(jank::object const &o) const noexcept
+    {
+      return o.visit
+      (
+        [&](auto const &data) -> size_t
+        {
+          using T = std::decay_t<decltype(data)>;
+          return std::hash<T>()(data);
+        }
+      );
+    }
+  };
 }

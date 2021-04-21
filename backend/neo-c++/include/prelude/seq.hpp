@@ -2,6 +2,7 @@
 
 #include <prelude/object.hpp>
 
+/* TODO: Transients. */
 namespace jank
 {
   /* TODO: Laziness. */
@@ -9,7 +10,7 @@ namespace jank
   {
     return seq.visit
     (
-      [&](auto &&data) -> object
+      [&](auto const &data) -> object
       {
         using T = std::decay_t<decltype(data)>;
         /* TODO: Generic seq handling. */
@@ -20,17 +21,16 @@ namespace jank
         if constexpr(is_vector || is_set || is_map)
         {
           detail::vector ret;
-          ret.reserve(data.size());
 
           if constexpr(is_vector || is_set)
           {
             for(auto const &e : data)
-            { ret.push_back(detail::invoke(&f, e)); }
+            { ret = ret.push_back(detail::invoke(&f, e)); }
           }
           else if constexpr(is_map)
           {
             for(auto const &p : data)
-            { ret.push_back(detail::invoke(&f, object{ detail::vector{ p.first, p.second } })); }
+            { ret = ret.push_back(detail::invoke(&f, object{ detail::vector{ p.first, p.second } })); }
           }
 
           return object{ ret };
@@ -49,7 +49,7 @@ namespace jank
   {
     return seq.visit
     (
-      [&](auto &&data) -> object
+      [&](auto const &data) -> object
       {
         using T = std::decay_t<decltype(data)>;
         /* TODO: Generic seq handling. */
@@ -88,7 +88,7 @@ namespace jank
 
     return seq.visit
     (
-      [&](auto &&data) -> object
+      [&](auto const &data) -> object
       {
         using T = std::decay_t<decltype(data)>;
         /* TODO: Generic seq handling. */
@@ -99,17 +99,15 @@ namespace jank
         {
           detail::vector ret;
           auto const partitions(data.size() / partition_size);
-          ret.reserve(partitions);
 
           for(size_t i{}; i < partitions; ++i)
           {
             detail::vector partition;
-            ret.reserve(partition_size);
 
             for(size_t k{ i * partition_size }; k < (i * partition_size) + partition_size; ++k)
-            { partition.push_back(data[k]); }
+            { partition = partition.push_back(data[k]); }
 
-            ret.emplace_back(object{ std::move(partition) });
+            ret = ret.push_back(object{ partition });
           }
 
           return object{ ret };
@@ -145,9 +143,8 @@ namespace jank
     auto const end_int(*end.get<detail::integer>());
 
     detail::vector ret;
-    ret.reserve(end_int - start_int);
     for(auto i(start_int); i < end_int; ++i)
-    { ret.push_back(i); }
+    { ret = ret.push_back(i); }
     return ret;
   }
 
@@ -155,7 +152,7 @@ namespace jank
   {
     return seq.visit
     (
-      [&](auto &&data) -> object
+      [&](auto const &data) -> object
       {
         using T = std::decay_t<decltype(data)>;
         /* TODO: Generic seq handling. */
@@ -163,11 +160,10 @@ namespace jank
 
         if constexpr(is_vector)
         {
-          T ret;
-          ret.reserve(data.size());
+          detail::vector ret;
 
           for(auto it(data.rbegin()); it != data.rend(); ++it)
-          { ret.push_back(*it); }
+          { ret = ret.push_back(*it); }
 
           return ret;
         }
@@ -189,7 +185,7 @@ namespace jank
       case object::kind::map:
         return o.visit
         (
-          [&](auto &&data) -> object
+          [&](auto const &data) -> object
           {
             using T = std::decay_t<decltype(data)>;
             /* TODO: Generic associative handling. */
@@ -209,10 +205,10 @@ namespace jank
             }
             else if constexpr(is_map)
             {
-              auto const it(data.find(key));
-              if(it == data.end())
+              if(auto * const found = data.find(key))
+              { return *found; }
+              else
               { return JANK_NIL; }
-              return it->second;
             }
             else
             {
@@ -236,7 +232,7 @@ namespace jank
   {
     return o.visit
     (
-      [&](auto &&data) -> object
+      [&](auto const &data) -> object
       {
         using T = std::decay_t<decltype(data)>;
         /* TODO: Generic seq handling. */
@@ -244,11 +240,7 @@ namespace jank
 
         /* TODO: Map support. */
         if constexpr(is_vector)
-        {
-          T ret(data);
-          ret.push_back(val);
-          return object{ ret };
-        }
+        { return object{ data.push_back(val) }; }
         else
         {
           /* TODO: Throw an error. */
@@ -263,7 +255,7 @@ namespace jank
   {
     return o.visit
     (
-      [&](auto &&data) -> object
+      [&](auto const &data) -> object
       {
         using T = std::decay_t<decltype(data)>;
         /* TODO: Generic seq handling. */
@@ -287,16 +279,10 @@ namespace jank
             return JANK_NIL;
           }
 
-          T ret{ data };
-          ret[i] = val;
-          return object{ ret };
+          return object{ data.set(i, val) };
         }
         else if constexpr(is_map)
-        {
-          T ret{ data };
-          ret[key] = val;
-          return object{ ret };
-        }
+        { return object{ data.set(key, val) }; }
         else
         {
           /* TODO: Throw an error. */

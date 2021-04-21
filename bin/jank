@@ -25,7 +25,11 @@ ret=$?
 if [ $ret -eq 0 ];
 then
   echo "Compiling to binary..."
-  $cxx -O3 -std=c++17 -o $2 -I$here/../backend/neo-c++/include -I$tmp $here/../backend/neo-c++/src/main.cpp
+  $cxx -O3 -std=c++17 -o $2 \
+    -I$here/../backend/neo-c++/include \
+    -I$here/../lib/immer \
+    -I$tmp \
+    $here/../backend/neo-c++/src/main.cpp
 else
   cat $tmp/jank-generated.hpp
 fi
