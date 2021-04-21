@@ -25,12 +25,12 @@ namespace jank
           if constexpr(is_vector || is_set)
           {
             for(auto const &e : data)
-            { ret = ret.push_back(detail::invoke(&f, e)); }
+            { ret = std::move(ret).push_back(detail::invoke(&f, e)); }
           }
           else if constexpr(is_map)
           {
             for(auto const &p : data)
-            { ret = ret.push_back(detail::invoke(&f, object{ detail::vector{ p.first, p.second } })); }
+            { ret = std::move(ret).push_back(detail::invoke(&f, object{ detail::vector{ p.first, p.second } })); }
           }
 
           return object{ ret };
@@ -105,9 +105,9 @@ namespace jank
             detail::vector partition;
 
             for(size_t k{ i * partition_size }; k < (i * partition_size) + partition_size; ++k)
-            { partition = partition.push_back(data[k]); }
+            { partition = std::move(partition).push_back(data[k]); }
 
-            ret = ret.push_back(object{ partition });
+            ret = std::move(ret).push_back(object{ partition });
           }
 
           return object{ ret };
@@ -144,7 +144,7 @@ namespace jank
 
     detail::vector ret;
     for(auto i(start_int); i < end_int; ++i)
-    { ret = ret.push_back(i); }
+    { ret = std::move(ret).push_back(i); }
     return ret;
   }
 
@@ -163,7 +163,7 @@ namespace jank
           detail::vector ret;
 
           for(auto it(data.rbegin()); it != data.rend(); ++it)
-          { ret = ret.push_back(*it); }
+          { ret = std::move(ret).push_back(*it); }
 
           return ret;
         }

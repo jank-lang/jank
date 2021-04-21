@@ -552,7 +552,7 @@ namespace jank
   {
     /* TODO: Transient. */
     detail::map ret;
-    int const dummy[sizeof...(Ts)]{ (ret = ret.insert(entries), 0)... };
+    int const dummy[sizeof...(Ts)]{ (ret = std::move(ret).insert(entries), 0)... };
     return object{ ret };
   }
 
