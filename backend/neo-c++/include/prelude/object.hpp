@@ -579,33 +579,44 @@ namespace jank
     { using type = object (Args const&...); };
 
     template <typename F, typename... Args>
+    auto extract_function(F const &f)
+    {
+      size_t constexpr arg_count{ sizeof...(Args) };
+      using arity = typename build_arity<arg_count>::type;
+      using function_type = detail::function::value_type<arity>;
+
+      auto const * const func(f->template get<detail::function>());
+      if(!func)
+      {
+        /* TODO: Throw error. */
+        std::cout << "object is not a function" << std::endl;
+        return static_cast<function_type const*>(nullptr);
+      }
+
+      auto const * const func_ptr(func->template get<function_type>());
+      if(!func_ptr)
+      {
+        /* TODO: Throw error. */
+        std::cout << "invalid function arity" << std::endl;
+        return static_cast<function_type const*>(nullptr);
+      }
+
+      return func_ptr;
+    }
+
+    template <typename F, typename... Args>
     object invoke(F const &f, Args &&... args)
     {
       if constexpr(std::is_function_v<std::remove_pointer_t<std::decay_t<decltype(f)>>>)
       { return f(std::forward<Args>(args)...); }
       else
       {
-        size_t constexpr arg_count{ sizeof...(args) };
-        using arity = typename build_arity<arg_count>::type;
-        using function_type = detail::function::value_type<arity>;
+        auto const * const func_ptr(extract_function<F, Args...>(f));
 
-        auto const * const func(f->template get<detail::function>());
-        if(!func)
-        {
-          /* TODO: Throw error. */
-          std::cout << "object is not a function" << std::endl;
-          return JANK_NIL;
-        }
-
-        auto const * const func_ptr(func->template get<function_type>());
-        if(!func_ptr)
-        {
-          /* TODO: Throw error. */
-          std::cout << "invalid function arity" << std::endl;
-          return JANK_NIL;
-        }
-
-        return (*func_ptr)(std::forward<Args>(args)...);
+        if(func_ptr)
+        { return (*func_ptr)(std::forward<Args>(args)...); }
+        else
+        { return JANK_NIL; }
       }
     }
   }

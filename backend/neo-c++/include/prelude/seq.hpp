@@ -58,10 +58,18 @@ namespace jank
 
         if constexpr(is_vector || is_set)
         {
+          auto const * const func_ptr(detail::extract_function<object const*, object, object>(&f));
+          if(!func_ptr)
+          {
+            /* TODO: Throw an error. */
+            std::cout << "not a function: " << f << std::endl;
+            return JANK_NIL;
+          }
+
           object acc{ initial };
 
           for(auto const &e : data)
-          { acc = detail::invoke(&f, acc, e); }
+          { acc = (*func_ptr)(acc, e); }
 
           return acc;
         }
