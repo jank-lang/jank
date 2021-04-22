@@ -17,7 +17,13 @@ namespace jank
   inline object println(object const &o)
   {
     print(o);
-    std::cout << std::endl;
+    std::cout << "\n";
+    return JANK_NIL;
+  }
+
+  inline object flush()
+  {
+    std::cout << std::flush;
     return JANK_NIL;
   }
 

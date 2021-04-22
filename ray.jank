@@ -244,7 +244,8 @@
                                  (vec3-print v samples-per-pixel))
                                row)
                          (println ""))
-                       data)))
+                       data)
+                 (flush)))
 
 (def rand-scene! (fn []
                    (reduce (fn [acc i]
@@ -319,6 +320,9 @@
                                   (vec3-scale camera-w focus-distance))
 
       hittables (rand-scene!)
+      y-counter (reverse (range 0 image-height))
+      x-counter (range 0 image-width)
+      sample-counter (range 0 samples-per-pixel)
       data (mapv (fn [y]
                    (mapv (fn [x]
                            (reduce (fn [acc sample]
@@ -334,8 +338,8 @@
                                                                     origin)))
                                      (vec3-add acc (ray-cast ray max-ray-bounces hittables)))
                                    (vec3-create 0 0 0)
-                                   (range 0 samples-per-pixel)))
-                         (range 0 image-width)))
-                 (reverse (range 0 image-height)))]
+                                   sample-counter))
+                         x-counter))
+                 y-counter)]
   (write-ppm image-width image-height samples-per-pixel data)
   (println "meow"))
