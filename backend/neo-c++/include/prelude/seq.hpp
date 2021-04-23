@@ -2,7 +2,6 @@
 
 #include <prelude/object.hpp>
 
-/* TODO: Transients. */
 namespace jank
 {
   /* TODO: Laziness. */
@@ -20,20 +19,28 @@ namespace jank
 
         if constexpr(is_vector || is_set || is_map)
         {
-          detail::vector ret;
+          auto const * const func_ptr(detail::extract_function<object const*, object>(&f));
+          if(!func_ptr)
+          {
+            /* TODO: Throw an error. */
+            std::cout << "not a function: " << f << std::endl;
+            return JANK_NIL;
+          }
+
+          detail::vector_transient ret;
 
           if constexpr(is_vector || is_set)
           {
             for(auto const &e : data)
-            { ret = std::move(ret).push_back(detail::invoke(&f, e)); }
+            { ret.push_back((*func_ptr)(e)); }
           }
           else if constexpr(is_map)
           {
             for(auto const &p : data)
-            { ret = std::move(ret).push_back(detail::invoke(&f, object{ detail::vector{ p.first, p.second } })); }
+            { ret.push_back((*func_ptr)(object{ detail::vector{ p.first, p.second } })); }
           }
 
-          return object{ ret };
+          return object{ ret.persistent() };
         }
         else
         {
@@ -105,20 +112,20 @@ namespace jank
 
         if constexpr(is_vector)
         {
-          detail::vector ret;
+          detail::vector_transient ret;
           auto const partitions(data.size() / partition_size);
 
           for(size_t i{}; i < partitions; ++i)
           {
-            detail::vector partition;
+            detail::vector_transient partition;
 
             for(size_t k{ i * partition_size }; k < (i * partition_size) + partition_size; ++k)
-            { partition = std::move(partition).push_back(data[k]); }
+            { partition.push_back(data[k]); }
 
-            ret = std::move(ret).push_back(object{ partition });
+            ret.push_back(object{ partition.persistent() });
           }
 
-          return object{ ret };
+          return object{ ret.persistent() };
         }
         else
         {
@@ -150,10 +157,10 @@ namespace jank
     auto const start_int(*start.get<detail::integer>());
     auto const end_int(*end.get<detail::integer>());
 
-    detail::vector ret;
+    detail::vector_transient ret;
     for(auto i(start_int); i < end_int; ++i)
-    { ret = std::move(ret).push_back(i); }
-    return ret;
+    { ret.push_back(i); }
+    return ret.persistent();
   }
 
   inline object reverse(object const &seq)
@@ -168,12 +175,12 @@ namespace jank
 
         if constexpr(is_vector)
         {
-          detail::vector ret;
+          detail::vector_transient ret;
 
           for(auto it(data.rbegin()); it != data.rend(); ++it)
-          { ret = std::move(ret).push_back(*it); }
+          { ret.push_back(*it); }
 
-          return ret;
+          return ret.persistent();
         }
         else
         {

@@ -6,8 +6,11 @@
 #include <functional>
 
 #include <immer/vector.hpp>
+#include <immer/vector_transient.hpp>
 #include <immer/map.hpp>
+#include <immer/map_transient.hpp>
 #include <immer/set.hpp>
+#include <immer/set_transient.hpp>
 #include <immer/box.hpp>
 
 namespace jank
@@ -528,7 +531,9 @@ namespace jank
     using vector = object::vector_type;
     using vector_transient = object::vector_type::transient_type;
     using set = object::set_type;
+    using set_transient = object::set_type::transient_type;
     using map = object::map_type;
+    using map_transient = object::map_type::transient_type;
   }
 
   /* TODO: Get rid of these. */
