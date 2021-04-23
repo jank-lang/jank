@@ -192,48 +192,31 @@ namespace jank
     );
   }
 
+  /* TODO: This is too slow, due to copying out of the object. */
   inline object get(object const &o, object const &key)
   {
     switch(o.get_kind())
     {
       case object::kind::vector:
+      {
+        if(key.get_kind() != object::kind::integer)
+        { return JANK_NIL; }
+
+        auto const &data(o.expect<detail::vector>());
+        auto const i(*key.get<detail::integer>());
+        if(i < 0 || i >= data.size())
+        { return JANK_NIL; }
+
+        return data[i];
+      }
       case object::kind::map:
-        return o.visit
-        (
-          [&](auto const &data) -> object
-          {
-            using T = std::decay_t<decltype(data)>;
-            /* TODO: Generic associative handling. */
-            auto constexpr is_vector(std::is_same_v<T, detail::vector>);
-            auto constexpr is_map(std::is_same_v<T, detail::map>);
-
-            if constexpr(is_vector)
-            {
-              if(key.get_kind() != object::kind::integer)
-              { return JANK_NIL; }
-
-              auto const i(*key.get<detail::integer>());
-              if(i < 0 || i >= data.size())
-              { return JANK_NIL; }
-
-              return data[i];
-            }
-            else if constexpr(is_map)
-            {
-              if(auto * const found = data.find(key))
-              { return *found; }
-              else
-              { return JANK_NIL; }
-            }
-            else
-            {
-              /* TODO: Throw an error. */
-              std::cout << "not associative" << std::endl;
-              return JANK_NIL;
-            }
-          }
-        );
-        break;
+      {
+        auto const &data(o.expect<detail::map>());
+        if(auto * const found = data.find(key))
+        { return *found; }
+        else
+        { return JANK_NIL; }
+      }
       default:
       {
         /* TODO: throw error */

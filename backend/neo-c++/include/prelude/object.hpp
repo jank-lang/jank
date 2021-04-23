@@ -362,6 +362,35 @@ namespace jank
         );
       }
 
+      template <typename T>
+      T const& expect() const
+      {
+        using converted_type = detail::conversion_t<std::decay_t<T>>;
+
+        kind constexpr k{ type_to_kind<converted_type>() };
+
+        if constexpr(k == kind::nil)
+        { return current_data.nil_data; }
+        else if constexpr(k == kind::integer)
+        { return current_data.int_data; }
+        else if constexpr(k == kind::real)
+        { return current_data.real_data; }
+        else if constexpr(k == kind::boolean)
+        { return current_data.bool_data; }
+        else if constexpr(k == kind::string)
+        { return current_data.string_data; }
+        else if constexpr(k == kind::vector)
+        { return current_data.vector_data; }
+        else if constexpr(k == kind::set)
+        { return current_data.set_data; }
+        else if constexpr(k == kind::map)
+        { return current_data.map_data; }
+        else if constexpr(k == kind::function)
+        { return current_data.function_data; }
+        else
+        { static_assert((T*)nullptr, "invalid variant input"); }
+      }
+
       kind get_kind() const
       { return current_kind; }
 
