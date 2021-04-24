@@ -428,7 +428,7 @@ namespace jank
         else
         {
           static_assert((T*)nullptr, "invalid type_to_kind");
-          return kind::nil; /* Please the compiler */
+          return kind::nil; /* Please the compiler. */
         }
       }
 

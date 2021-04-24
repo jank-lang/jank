@@ -284,7 +284,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "(assoce) not a seq: " << o << std::endl;
+          std::cout << "(assoc) not a seq: " << o << std::endl;
           return JANK_NIL;
         }
       }
