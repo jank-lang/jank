@@ -31,7 +31,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a number" << std::endl;
+          std::cout << "(+) not a number: " << l << " and " << r << std::endl;
           return JANK_NIL;
         }
       },
@@ -56,7 +56,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a number" << std::endl;
+          std::cout << "(-) not a number: " << l << " and " << r << std::endl;
           return JANK_NIL;
         }
       },
@@ -81,7 +81,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a number" << std::endl;
+          std::cout << "(<) not a number: " << l << " and " << r << std::endl;
           return JANK_NIL;
         }
       },
@@ -106,7 +106,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a number" << std::endl;
+          std::cout << "(<=) not a number: " << l << " and " << r << std::endl;
           return JANK_NIL;
         }
       },
@@ -131,7 +131,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a number" << std::endl;
+          std::cout << "(*) not a number: " << l << " and " << r << std::endl;
           return JANK_NIL;
         }
       },
@@ -157,7 +157,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a number" << std::endl;
+          std::cout << "(div) not a number: " << l << " and " << r << std::endl;
           return JANK_NIL;
         }
       },
@@ -182,7 +182,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a number" << std::endl;
+          std::cout << "(->int) not a number: " << o << std::endl;
           return JANK_NIL;
         }
       }
@@ -206,7 +206,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a number" << std::endl;
+          std::cout << "(->float) not a number: " << o << std::endl;
           return JANK_NIL;
         }
       }
@@ -227,7 +227,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a number" << std::endl;
+          std::cout << "(inc) not a number: " << o << std::endl;
           return JANK_NIL;
         }
       }
@@ -248,7 +248,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a number" << std::endl;
+          std::cout << "(dec) not a number: " << o << std::endl;
           return JANK_NIL;
         }
       }
@@ -269,7 +269,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a number" << std::endl;
+          std::cout << "(sqrt) not a number: " << o << std::endl;
           return JANK_NIL;
         }
       }
@@ -290,7 +290,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a number" << std::endl;
+          std::cout << "(tan) not a number: " << o << std::endl;
           return JANK_NIL;
         }
       }
@@ -313,7 +313,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a number" << std::endl;
+          std::cout << "(pow) not a number: " << l << " and " << r << std::endl;
           return JANK_NIL;
         }
       },
@@ -348,7 +348,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a number" << std::endl;
+          std::cout << "(mod) not a number: " << l << " and " << r << std::endl;
           return JANK_NIL;
         }
       },
@@ -371,7 +371,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a number" << std::endl;
+          std::cout << "(abs) not a number: " << o << std::endl;
           return JANK_NIL;
         }
       }
@@ -405,7 +405,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a number" << std::endl;
+          std::cout << "(min) not a number: " << l << " and " << r << std::endl;
           return JANK_NIL;
         }
       },

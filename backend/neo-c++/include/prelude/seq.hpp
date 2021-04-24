@@ -23,7 +23,7 @@ namespace jank
           if(!func_ptr)
           {
             /* TODO: Throw an error. */
-            std::cout << "not a function: " << f << std::endl;
+            std::cout << "(mapv) not a function: " << f << std::endl;
             return JANK_NIL;
           }
 
@@ -45,7 +45,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a seq" << std::endl;
+          std::cout << "(mapv) not a seq: " << seq << std::endl;
           return JANK_NIL;
         }
       }
@@ -69,7 +69,7 @@ namespace jank
           if(!func_ptr)
           {
             /* TODO: Throw an error. */
-            std::cout << "not a function: " << f << std::endl;
+            std::cout << "(reduce) not a function: " << f << std::endl;
             return JANK_NIL;
           }
 
@@ -83,7 +83,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a seq" << std::endl;
+          std::cout << "(reduce) not a seq: " << seq << std::endl;
           return JANK_NIL;
         }
       }
@@ -130,7 +130,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a seq" << std::endl;
+          std::cout << "(partition) not a seq: " << seq << std::endl;
           return JANK_NIL;
         }
       }
@@ -185,7 +185,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a reversible seq" << std::endl;
+          std::cout << "(range) not a seq: " << seq << std::endl;
           return JANK_NIL;
         }
       }
@@ -220,7 +220,7 @@ namespace jank
       default:
       {
         /* TODO: throw error */
-        std::cout << "can only call get on associative types" << std::endl;
+        std::cout << "can only call get on associative types, not " << o << std::endl;
         return JANK_NIL;
       }
     }
@@ -242,7 +242,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a seq" << std::endl;
+          std::cout << "(conj) not a seq: " << o << std::endl;
           return JANK_NIL;
         }
       }
@@ -284,7 +284,7 @@ namespace jank
         else
         {
           /* TODO: Throw an error. */
-          std::cout << "not a seq" << std::endl;
+          std::cout << "(assoce) not a seq: " << o << std::endl;
           return JANK_NIL;
         }
       }

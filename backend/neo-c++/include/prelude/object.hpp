@@ -348,7 +348,6 @@ namespace jank
         );
       }
 
-      /* TODO: Add `expect` and return a ref; assert kind. */
       template <typename T>
       T const * get() const
       {
