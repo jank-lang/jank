@@ -28,8 +28,11 @@ then
   $cxx -g -O2 -fno-omit-frame-pointer -std=c++17 -o $2 \
     -I$here/../backend/neo-c++/include \
     -I$here/../lib/immer \
+    -I$here/../lib/bdwgc/install/usr/local/include \
     -I$tmp \
-    $here/../backend/neo-c++/src/main.cpp
+    -L$here/../lib/bdwgc/install/usr/local/lib \
+    $here/../backend/neo-c++/src/main.cpp \
+    -lgc
 else
   cat $tmp/jank-generated.hpp
 fi

@@ -5,6 +5,7 @@
 #include <any>
 #include <functional>
 
+#define IMMER_HAS_LIBGC 1
 #include <immer/vector.hpp>
 #include <immer/vector_transient.hpp>
 #include <immer/map.hpp>
@@ -12,12 +13,17 @@
 #include <immer/set.hpp>
 #include <immer/set_transient.hpp>
 #include <immer/box.hpp>
+#include <immer/heap/gc_heap.hpp>
+#include <immer/memory_policy.hpp>
 
 namespace jank
 { class object; }
 
 namespace jank::detail
 {
+  using memory_policy = immer::memory_policy<immer::free_list_heap_policy<immer::cpp_heap>, immer::refcount_policy, immer::default_lock_policy>;
+  //using memory_policy = immer::memory_policy<immer::heap_policy<immer::gc_heap>, immer::no_refcount_policy, immer::default_lock_policy>;
+
   using integer = int64_t;
   using real = double;
   using boolean = bool;
@@ -88,10 +94,10 @@ namespace std
     { return 0; }
   };
 
-  template <typename T>
-  struct hash<immer::vector<T>>
+  template <typename T, typename M>
+  struct hash<immer::vector<T, M>>
   {
-    size_t operator()(immer::vector<T> const &v) const noexcept
+    size_t operator()(immer::vector<T, M> const &v) const noexcept
     {
       size_t seed{ v.size() };
       for(auto const &e : v)
@@ -100,10 +106,10 @@ namespace std
     }
   };
 
-  template <typename T>
-  struct hash<immer::set<T>>
+  template <typename T, typename H, typename E, typename M>
+  struct hash<immer::set<T, H, E, M>>
   {
-    size_t operator()(immer::set<T> const &s) const noexcept
+    size_t operator()(immer::set<T, H, E, M> const &s) const noexcept
     {
       size_t seed{ s.size() };
       for(auto const &e : s)
@@ -112,10 +118,10 @@ namespace std
     }
   };
 
-  template <typename K, typename V>
-  struct hash<immer::map<K, V>>
+  template <typename K, typename V, typename H, typename E, typename M>
+  struct hash<immer::map<K, V, H, E, M>>
   {
-    size_t operator()(immer::map<K, V> const &m) const noexcept
+    size_t operator()(immer::map<K, V, H, E, M> const &m) const noexcept
     {
       size_t seed{ m.size() };
       for(auto const &e : m)
@@ -161,9 +167,10 @@ namespace jank
       enum class kind
       { nil, integer, real, boolean, string, vector, set, map, function };
 
-      using vector_type = immer::vector<immer::box<object>>;
-      using set_type = immer::set<immer::box<object>>;
-      using map_type = immer::map<object, object>;
+      using box_type = immer::box<object, detail::memory_policy>;
+      using vector_type = immer::vector<box_type, detail::memory_policy>;
+      using set_type = immer::set<box_type, std::hash<object>, std::equal_to<object>, detail::memory_policy>;
+      using map_type = immer::map<object, object, std::hash<object>, std::equal_to<object>, detail::memory_policy>;
       /* Used to detect if some type is an object. */
       static bool constexpr enable_if_object = true;
 
