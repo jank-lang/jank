@@ -203,7 +203,7 @@ namespace jank
         { return JANK_NIL; }
 
         auto const &data(o.expect<detail::vector>());
-        auto const i(*key.get<detail::integer>());
+        auto const i(key.expect<detail::integer>());
         if(i < 0 || i >= data.size())
         { return JANK_NIL; }
 

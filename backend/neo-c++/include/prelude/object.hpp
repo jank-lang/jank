@@ -63,7 +63,10 @@ namespace jank::detail
   /* Very much borrowed from boost. */
   template <typename T>
   size_t hash_combine(size_t const seed, T const &t)
-  { return seed ^ std::hash<T>{}(t) + 0x9e3779b9 + (seed << 6) + (seed >> 2); }
+  {
+    static std::hash<T> hasher{};
+    return seed ^ hasher(t) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+  }
 }
 
 namespace std
@@ -668,7 +671,8 @@ namespace std
         [&](auto const &data) -> size_t
         {
           using T = std::decay_t<decltype(data)>;
-          return std::hash<T>()(data);
+          static std::hash<T> hasher{};
+          return hasher(data);
         }
       );
     }
