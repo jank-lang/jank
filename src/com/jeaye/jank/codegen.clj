@@ -25,9 +25,6 @@
     :map (str "JANK_MAP("
               (->> (mapcat vals (::parse.spec/values expression))
                    (map expression->code)
-                   (partition 2)
-                   (map (fn [[k v]]
-                          (str "JANK_MAP_ENTRY(" k ", " v ")")))
                    (clojure.string/join ", ")
                    (apply str))
               ")")
@@ -49,15 +46,22 @@
 
 (defmethod expression->code :binding
   [expression]
-  (let [ident (expression->code (::parse.spec/identifier expression))]
-    ; Allow recursion by having the fn capture its own object.
-    (str "JANK_OBJECT "
-         ident
-         ";"
-         ident
-         " = "
-         (expression->code (::parse.spec/value expression))
-         ";")))
+  (let [ident (expression->code (::parse.spec/identifier expression))
+        function? (= :fn (-> expression ::parse.spec/value ::parse.spec/kind))]
+    (if function?
+      ; Allow recursion by having the fn capture its own object.
+      (str "JANK_OBJECT "
+           ident
+           ";"
+           ident
+           " = "
+           (expression->code (::parse.spec/value expression))
+           ";")
+      (str "JANK_OBJECT "
+           ident
+           "{"
+           (expression->code (::parse.spec/value expression))
+           "};"))))
 
 (defmethod expression->code :let
   [expression]

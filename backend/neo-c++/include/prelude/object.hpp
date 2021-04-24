@@ -588,15 +588,22 @@ namespace jank
   object JANK_SET(Ts &&... args)
   { return object{ detail::set{ std::forward<Ts>(args)... } }; }
 
-  inline detail::map::value_type JANK_MAP_ENTRY(object const &k, object const &v)
-  { return { k, v }; }
-  template<typename... Ts>
-  object JANK_MAP(Ts &&... entries)
+  detail::map JANK_MAP_IMPL(detail::map &&m)
+  { return std::move(m); }
+  template <typename K, typename V, typename... Rest>
+  detail::map JANK_MAP_IMPL(detail::map &&m, K &&k, V &&v, Rest &&... rest)
   {
-    /* TODO: Transient. */
-    detail::map ret;
-    int const dummy[sizeof...(Ts)]{ (ret = std::move(ret).insert(entries), 0)... };
-    return object{ ret };
+    return JANK_MAP_IMPL
+    (std::move(m), std::forward<Rest>(rest)...).insert({ std::forward<K>(k), std::forward<V>(v) });
+  }
+
+  template <typename... Kvs>
+  object JANK_MAP(Kvs &&... kvs)
+  {
+    /* XXX: It's somehow consistently faster to use `m` and move it, rather than just return
+     * the result of JANK_MAP_IMPL. */
+    detail::map m{ JANK_MAP_IMPL(detail::map{}, std::forward<Kvs>(kvs)...) };
+    return std::move(m);
   }
 
   static jank::object const JANK_NIL{ detail::nil{} };
@@ -632,7 +639,7 @@ namespace jank
       if(!func)
       {
         /* TODO: Throw error. */
-        std::cout << "object is not a function" << std::endl;
+        std::cout << "(extract_function) object is not a function: " << *f << std::endl;
         return static_cast<function_type const*>(nullptr);
       }
 
@@ -640,7 +647,7 @@ namespace jank
       if(!func_ptr)
       {
         /* TODO: Throw error. */
-        std::cout << "invalid function arity" << std::endl;
+        std::cout << "invalid function arity; expected " << arg_count << std::endl;
         return static_cast<function_type const*>(nullptr);
       }
 
