@@ -4,13 +4,15 @@
             [com.jeaye.jank.parse.binding :as parse.binding]
             [com.jeaye.jank.parse.spec :as parse.spec]
             [com.jeaye.jank.inference.core :as inference.core]
+            [com.jeaye.jank.optimize :as optimize]
             [com.jeaye.jank.codegen :as codegen]))
 
 (defn parse+codegen [file]
   (binding [parse.binding/*input-file* file
             parse.binding/*input-source* (slurp file)]
     (let [parse-tree (parse/parse parse/prelude)
-          code (codegen/generate parse-tree)]
+          optimized-tree (optimize/optimize parse-tree)
+          code (codegen/generate optimized-tree)]
       code)))
 
 (defn -main [& args]
@@ -18,7 +20,7 @@
   (shutdown-agents))
 
 (comment
-  (parse+codegen "ray.jank")
+  (parse+codegen "test.jank")
 
   (let [file "test.jank"]
     (binding [parse.binding/*input-file* file

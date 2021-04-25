@@ -22,7 +22,7 @@
              :symbol})
 (s/def ::type types)
 ; TODO: Qualify these
-(s/def ::kind (into types [:constant
+(s/def ::kind (into types [:constant ; TODO: Rename to literal
                            :binding
                            :argument-list
                            :fn
