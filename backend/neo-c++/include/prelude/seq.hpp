@@ -19,7 +19,7 @@ namespace jank
 
         if constexpr(is_vector || is_set || is_map)
         {
-          auto const * const func_ptr(detail::extract_function<object const*, object>(&f));
+          auto const * const func_ptr(detail::extract_function<object const*, object const&>(&f));
           if(!func_ptr)
           {
             /* TODO: Throw an error. */
@@ -65,7 +65,7 @@ namespace jank
 
         if constexpr(is_vector || is_set)
         {
-          auto const * const func_ptr(detail::extract_function<object const*, object, object>(&f));
+          auto const * const func_ptr(detail::extract_function<object const*, object const &, object const &>(&f));
           if(!func_ptr)
           {
             /* TODO: Throw an error. */

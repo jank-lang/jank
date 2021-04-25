@@ -170,7 +170,7 @@ namespace jank
       using box_type = immer::box<object, detail::memory_policy>;
       using vector_type = immer::vector<box_type, detail::memory_policy>;
       using set_type = immer::set<box_type, std::hash<object>, std::equal_to<object>, detail::memory_policy>;
-      using map_type = immer::map<object, object, std::hash<object>, std::equal_to<object>, detail::memory_policy>;
+      using map_type = immer::map<object, box_type, std::hash<object>, std::equal_to<object>, detail::memory_policy>;
       /* Used to detect if some type is an object. */
       static bool constexpr enable_if_object = true;
 
