@@ -3,7 +3,8 @@
             [orchestra.core :refer [defn-spec]]
             [com.jeaye.jank.log :refer [pprint]]
             [com.jeaye.jank.parse.spec :as parse.spec]
-            [com.jeaye.jank.codegen.sanitize :as codegen.sanitize]))
+            [com.jeaye.jank.codegen.sanitize :as codegen.sanitize]
+            [com.jeaye.jank.codegen.util :as codegen.util]))
 
 (defmulti expression->code
   (fn [expression]
@@ -66,36 +67,70 @@
 (defmethod expression->code :let
   [expression]
   (let [bindings (mapv expression->code (::parse.spec/bindings expression))
-        body (expression->code (::parse.spec/body expression))
-        return (expression->code (::parse.spec/return expression))]
-    (str "[&](){\n"
-         (clojure.string/join "\n" bindings)
-         body ";\n"
-         "return " return ";"
-         "\n}()")))
+        body (binding [codegen.util/*inline-return?* false]
+               (expression->code (::parse.spec/body expression)))
+        return (expression->code (::parse.spec/return expression))
+        returns? (codegen.util/contains-return? (::parse.spec/return expression))]
+    (if codegen.util/*inline-return?*
+      (str "{\n"
+           (clojure.string/join "\n" bindings)
+           body ";\n"
+           (when-not returns?
+             "return ")
+           return ";"
+           "\n}")
+      (str "[&](){\n"
+           (clojure.string/join "\n" bindings)
+           body ";\n"
+           "return " return ";"
+           "\n}()"))))
 
 (defmethod expression->code :do
   [expression]
-  (let [body (mapv expression->code (::parse.spec/body expression))
-        return (expression->code (::parse.spec/return expression))]
-    (str "[&](){\n"
-         (clojure.string/join ";\n" body) ";\n"
-         "return " return ";"
-         "\n}()")))
+  (let [body (binding [codegen.util/*inline-return?* false]
+               (mapv expression->code (::parse.spec/body expression)))
+        return (expression->code (::parse.spec/return expression))
+        returns? (codegen.util/contains-return? (::parse.spec/return expression))]
+    (if codegen.util/*inline-return?*
+      (str "{\n"
+           (clojure.string/join ";\n" body) ";\n"
+           (when-not returns?
+             "return ")
+           return ";"
+           "\n}")
+      (str "[&](){\n"
+           (clojure.string/join ";\n" body) ";\n"
+           "return " return ";"
+           "\n}()"))))
 
 (defmethod expression->code :if
   [expression]
   (let [condition (expression->code (::parse.spec/condition expression))
         then (expression->code (::parse.spec/then expression))
-        else (expression->code (::parse.spec/else expression))]
-    (str "[&](){\nif(detail::truthy("
+        else (expression->code (::parse.spec/else expression))
+        then-returns? (codegen.util/contains-return? (::parse.spec/then expression))
+        else-returns? (codegen.util/contains-return? (::parse.spec/else expression))]
+    (if codegen.util/*inline-return?*
+      (str "if(detail::truthy("
+           condition
+           "))\n{\n"
+           (when-not then-returns?
+             "return ")
+           then ";"
+           "\n}\n"
+           "else\n{\n"
+           (when-not else-returns?
+             "return ")
+           else ";"
+           "\n}")
+      (str "[&](){\nif(detail::truthy("
          condition
          "))\n{\n"
          "return " then ";"
          "\n}\n"
          "else\n{\n"
          "return " else ";"
-         "\n}\n}()")))
+         "\n}\n}()"))))
 
 (defmethod expression->code :fn
   [expression]
@@ -105,21 +140,32 @@
                      ")")
         params (mapv (fn [param]
                        (str "JANK_OBJECT const &" (-> param ::parse.spec/identifier expression->code)))
-                     (::parse.spec/parameters expression))]
+                     (::parse.spec/parameters expression))
+        body (mapv expression->code (-> expression ::parse.spec/body ::parse.spec/body))
+        return-expr (-> expression ::parse.spec/body ::parse.spec/return)
+        return (binding [codegen.util/*inline-return?* true]
+                 (expression->code return-expr))
+        need-return? (case (::parse.spec/kind return-expr)
+                       :if false
+                       true)]
     (str "std::function<" fn-type ">{"
          "[&]("
          (clojure.string/join ", " params)
          ") -> JANK_OBJECT {\n"
-         "return " (expression->code (::parse.spec/body expression)) ";\n"
+         (clojure.string/join ";\n" body) ";\n"
+         (when need-return?
+           "return ")
+         return ";\n"
          "}}\n")))
 
 (defmethod expression->code :application
   [expression]
-  (let [fn-name (expression->code (::parse.spec/value expression))
-        arguments (mapv expression->code (::parse.spec/arguments expression))]
-    (str "detail::invoke("
-         (clojure.string/join ", " (cons (str "&" fn-name) arguments))
-         ")")))
+  (binding [codegen.util/*inline-return?* false]
+    (let [fn-name (expression->code (::parse.spec/value expression))
+          arguments (mapv expression->code (::parse.spec/arguments expression))]
+      (str "detail::invoke("
+           (clojure.string/join ", " (cons (str "&" fn-name) arguments))
+           ")"))))
 
 (defmethod expression->code :default
   [expression]
