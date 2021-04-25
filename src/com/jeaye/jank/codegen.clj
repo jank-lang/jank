@@ -58,7 +58,7 @@
            " = "
            (expression->code (::parse.spec/value expression))
            ";")
-      (str "JANK_OBJECT "
+      (str "JANK_OBJECT const "
            ident
            "{"
            (expression->code (::parse.spec/value expression))
