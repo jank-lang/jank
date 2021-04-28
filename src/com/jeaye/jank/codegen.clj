@@ -17,12 +17,12 @@
     :boolean (if (::parse.spec/value expression)
                "JANK_TRUE"
                "JANK_FALSE")
-    :integer (str "JANK_INTEGER(" (::parse.spec/value expression) ")")
-    :real (str "JANK_REAL(" (::parse.spec/value expression) ")")
+    :integer (str "make_object_ptr<integer>(" (::parse.spec/value expression) ")")
+    :real (str "make_object_ptr<real>(" (::parse.spec/value expression) ")")
     ; TODO: Escape quotes.
-    :string (str "JANK_STRING(\"" (::parse.spec/value expression) "\")")
+    :string (str "make_object_ptr<string>(\"" (::parse.spec/value expression) "\")")
     ; TODO: Raw string?
-    :regex (str "JANK_REGEX(\"" (::parse.spec/value expression) "\")")
+    :regex (str "make_object_ptr<regex>(\"" (::parse.spec/value expression) "\")")
     :map (str "JANK_MAP("
               (->> (mapcat vals (::parse.spec/values expression))
                    (map expression->code)
@@ -51,14 +51,14 @@
         function? (= :fn (-> expression ::parse.spec/value ::parse.spec/kind))]
     (if function?
       ; Allow recursion by having the fn capture its own object.
-      (str "JANK_OBJECT "
+      (str "object_ptr "
            ident
            ";"
            ident
            " = "
            (expression->code (::parse.spec/value expression))
            ";")
-      (str "JANK_OBJECT const "
+      (str "object_ptr const "
            ident
            "{"
            (expression->code (::parse.spec/value expression))
@@ -134,12 +134,12 @@
 
 (defmethod expression->code :fn
   [expression]
-  (let [fn-type (str "JANK_OBJECT ("
-                     (->> (repeat (-> expression ::parse.spec/parameters count) "JANK_OBJECT const &")
+  (let [fn-type (str "object_ptr ("
+                     (->> (repeat (-> expression ::parse.spec/parameters count) "object_ptr const &")
                           (clojure.string/join ", "))
                      ")")
         params (mapv (fn [param]
-                       (str "JANK_OBJECT const &" (-> param ::parse.spec/identifier expression->code)))
+                       (str "object_ptr const &" (-> param ::parse.spec/identifier expression->code)))
                      (::parse.spec/parameters expression))
         body (mapv expression->code (-> expression ::parse.spec/body ::parse.spec/body))
         return-expr (-> expression ::parse.spec/body ::parse.spec/return)
@@ -148,15 +148,15 @@
         need-return? (case (::parse.spec/kind return-expr)
                        :if false
                        true)]
-    (str "std::function<" fn-type ">{"
+    (str "make_object_ptr<function>(std::function<" fn-type ">{"
          "[&]("
          (clojure.string/join ", " params)
-         ") -> JANK_OBJECT {\n"
+         ") -> object_ptr {\n"
          (clojure.string/join ";\n" body) ";\n"
          (when need-return?
            "return ")
          return ";\n"
-         "}}\n")))
+         "}})\n")))
 
 (defmethod expression->code :application
   [expression]

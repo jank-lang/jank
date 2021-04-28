@@ -4,4 +4,5 @@
 #include <prelude/util.hpp>
 #include <prelude/seq.hpp>
 #include <prelude/number.hpp>
+#include <prelude/fn.hpp>
 #include <prelude/io.hpp>

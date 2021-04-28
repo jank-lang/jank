@@ -1,415 +1,90 @@
 #pragma once
 
-#include <cmath>
-#include <random>
-
 #include <prelude/object.hpp>
 
 namespace jank
 {
-  inline object rand()
+  struct number
   {
-    static std::uniform_real_distribution<detail::real> distribution(0.0, 1.0);
-    static std::mt19937 generator;
-    return distribution(generator);
-  }
+    virtual detail::integer_type get_integer() const = 0;
+    virtual detail::real_type get_real() const = 0;
+  };
 
-  /* + */
-  inline object _gen_plus_(object const &l, object const &r)
+  struct boolean : object, number
   {
-    return l.visit_with
-    (
-      [&](auto const &l_data, auto const &r_data) -> object
-      {
-        using L = std::decay_t<decltype(l_data)>;
-        using R = std::decay_t<decltype(r_data)>;
+    boolean() = default;
+    boolean(boolean &&) = default;
+    boolean(boolean const &) = default;
+    boolean(detail::boolean_type const d)
+      : data{ d }
+    { }
 
-        /* TODO: Trait for is_number_v */
-        if constexpr((std::is_same_v<L, detail::integer> || std::is_same_v<L, detail::real>)
-                     && (std::is_same_v<R, detail::integer> || std::is_same_v<R, detail::real>))
-        { return object{ l_data + r_data }; }
-        else
-        {
-          /* TODO: Throw an error. */
-          std::cout << "(+) not a number: " << l << " and " << r << std::endl;
-          return JANK_NIL;
-        }
-      },
-      r
-    );
-  }
+    detail::boolean_type equal(object const &) const override;
+    detail::string_type to_string() const override;
+    detail::integer_type to_hash() const override;
 
-  /* - */
-  inline object _gen_minus_(object const &l, object const &r)
+    detail::integer_type get_integer() const override;
+    detail::real_type get_real() const override;
+
+    detail::boolean_type data{};
+  };
+  extern object_ptr JANK_TRUE;
+  extern object_ptr JANK_FALSE;
+
+  struct integer : object, number
   {
-    return l.visit_with
-    (
-      [&](auto const &l_data, auto const &r_data) -> object
-      {
-        using L = std::decay_t<decltype(l_data)>;
-        using R = std::decay_t<decltype(r_data)>;
+    integer() = default;
+    integer(integer &&) = default;
+    integer(integer const &) = default;
+    integer(detail::integer_type const d)
+      : data{ d }
+    { }
 
-        /* TODO: Trait for is_number_v */
-        if constexpr((std::is_same_v<L, detail::integer> || std::is_same_v<L, detail::real>)
-                     && (std::is_same_v<R, detail::integer> || std::is_same_v<R, detail::real>))
-        { return object{ l_data - r_data }; }
-        else
-        {
-          /* TODO: Throw an error. */
-          std::cout << "(-) not a number: " << l << " and " << r << std::endl;
-          return JANK_NIL;
-        }
-      },
-      r
-    );
-  }
+    detail::boolean_type equal(object const &) const override;
+    detail::string_type to_string() const override;
+    detail::integer_type to_hash() const override;
 
-  /* < */
-  inline object _gen_less_(object const &l, object const &r)
+    detail::integer_type get_integer() const override;
+    detail::real_type get_real() const override;
+
+    detail::integer_type data{};
+  };
+
+  struct real : object, number
   {
-    return l.visit_with
-    (
-      [&](auto const &l_data, auto const &r_data) -> object
-      {
-        using L = std::decay_t<decltype(l_data)>;
-        using R = std::decay_t<decltype(r_data)>;
+    real() = default;
+    real(real &&) = default;
+    real(real const &) = default;
+    real(detail::real_type const d)
+      : data{ d }
+    { }
 
-        /* TODO: Trait for is_number_v */
-        if constexpr((std::is_same_v<L, detail::integer> || std::is_same_v<L, detail::real>)
-                     && (std::is_same_v<R, detail::integer> || std::is_same_v<R, detail::real>))
-        { return object{ l_data < r_data }; }
-        else
-        {
-          /* TODO: Throw an error. */
-          std::cout << "(<) not a number: " << l << " and " << r << std::endl;
-          return JANK_NIL;
-        }
-      },
-      r
-    );
-  }
+    detail::boolean_type equal(object const &) const override;
+    detail::string_type to_string() const override;
+    detail::integer_type to_hash() const override;
 
-  /* <= */
-  inline object _gen_less__gen_equal_(object const &l, object const &r)
-  {
-    return l.visit_with
-    (
-      [&](auto const &l_data, auto const &r_data) -> object
-      {
-        using L = std::decay_t<decltype(l_data)>;
-        using R = std::decay_t<decltype(r_data)>;
+    detail::integer_type get_integer() const override;
+    detail::real_type get_real() const override;
 
-        /* TODO: Trait for is_number_v */
-        if constexpr((std::is_same_v<L, detail::integer> || std::is_same_v<L, detail::real>)
-                     && (std::is_same_v<R, detail::integer> || std::is_same_v<R, detail::real>))
-        { return object{ l_data <= r_data }; }
-        else
-        {
-          /* TODO: Throw an error. */
-          std::cout << "(<=) not a number: " << l << " and " << r << std::endl;
-          return JANK_NIL;
-        }
-      },
-      r
-    );
-  }
+    detail::real_type data{};
+  };
 
-  /* * */
-  inline object _gen_asterisk_(object const &l, object const &r)
-  {
-    return l.visit_with
-    (
-      [&](auto const &l_data, auto const &r_data) -> object
-      {
-        using L = std::decay_t<decltype(l_data)>;
-        using R = std::decay_t<decltype(r_data)>;
-
-        /* TODO: Trait for is_number_v */
-        if constexpr((std::is_same_v<L, detail::integer> || std::is_same_v<L, detail::real>)
-                     && (std::is_same_v<R, detail::integer> || std::is_same_v<R, detail::real>))
-        { return object{ l_data * r_data }; }
-        else
-        {
-          /* TODO: Throw an error. */
-          std::cout << "(*) not a number: " << l << " and " << r << std::endl;
-          return JANK_NIL;
-        }
-      },
-      r
-    );
-  }
-
-  /* / */
-  /* TODO: Handle naming this / */
-  inline object div(object const &l, object const &r)
-  {
-    return l.visit_with
-    (
-      [&](auto const &l_data, auto const &r_data) -> object
-      {
-        using L = std::decay_t<decltype(l_data)>;
-        using R = std::decay_t<decltype(r_data)>;
-
-        /* TODO: Trait for is_number_v */
-        if constexpr((std::is_same_v<L, detail::integer> || std::is_same_v<L, detail::real>)
-                     && (std::is_same_v<R, detail::integer> || std::is_same_v<R, detail::real>))
-        { return object{ l_data / r_data }; }
-        else
-        {
-          /* TODO: Throw an error. */
-          std::cout << "(div) not a number: " << l << " and " << r << std::endl;
-          return JANK_NIL;
-        }
-      },
-      r
-    );
-  }
-
-  /* ->int */
-  inline object _gen_minus__gen_greater_int(object const &o)
-  {
-    return o.visit
-    (
-      [&](auto const &data) -> object
-      {
-        using T = std::decay_t<decltype(data)>;
-
-        /* TODO: Trait for is_number_v */
-        if constexpr(std::is_same_v<T, detail::integer>)
-        { return data; }
-        if constexpr(std::is_same_v<T, detail::real>)
-        { return detail::integer(data); }
-        else
-        {
-          /* TODO: Throw an error. */
-          std::cout << "(->int) not a number: " << o << std::endl;
-          return JANK_NIL;
-        }
-      }
-    );
-  }
-
-  /* ->float */
-  inline object _gen_minus__gen_greater_float(object const &o)
-  {
-    return o.visit
-    (
-      [&](auto const &data) -> object
-      {
-        using T = std::decay_t<decltype(data)>;
-
-        /* TODO: Trait for is_number_v */
-        if constexpr(std::is_same_v<T, detail::real>)
-        { return data; }
-        if constexpr(std::is_same_v<T, detail::integer>)
-        { return detail::real(data); }
-        else
-        {
-          /* TODO: Throw an error. */
-          std::cout << "(->float) not a number: " << o << std::endl;
-          return JANK_NIL;
-        }
-      }
-    );
-  }
-
-  inline object inc(object const &o)
-  {
-    return o.visit
-    (
-      [&](auto const &data) -> object
-      {
-        using T = std::decay_t<decltype(data)>;
-
-        /* TODO: Trait for is_number_v */
-        if constexpr(std::is_same_v<T, detail::integer> || std::is_same_v<T, detail::real>)
-        { return object{ data + 1 }; }
-        else
-        {
-          /* TODO: Throw an error. */
-          std::cout << "(inc) not a number: " << o << std::endl;
-          return JANK_NIL;
-        }
-      }
-    );
-  }
-
-  inline object dec(object const &o)
-  {
-    return o.visit
-    (
-      [&](auto const &data) -> object
-      {
-        using T = std::decay_t<decltype(data)>;
-
-        /* TODO: Trait for is_number_v */
-        if constexpr(std::is_same_v<T, detail::integer> || std::is_same_v<T, detail::real>)
-        { return object{ data - 1 }; }
-        else
-        {
-          /* TODO: Throw an error. */
-          std::cout << "(dec) not a number: " << o << std::endl;
-          return JANK_NIL;
-        }
-      }
-    );
-  }
-
-  inline object sqrt(object const &o)
-  {
-    return o.visit
-    (
-      [&](auto const &data) -> object
-      {
-        using T = std::decay_t<decltype(data)>;
-
-        /* TODO: Trait for is_number_v */
-        if constexpr(std::is_same_v<T, detail::integer> || std::is_same_v<T, detail::real>)
-        { return object{ std::sqrt(data) }; }
-        else
-        {
-          /* TODO: Throw an error. */
-          std::cout << "(sqrt) not a number: " << o << std::endl;
-          return JANK_NIL;
-        }
-      }
-    );
-  }
-
-  inline object tan(object const &o)
-  {
-    return o.visit
-    (
-      [&](auto const &data) -> object
-      {
-        using T = std::decay_t<decltype(data)>;
-
-        /* TODO: Trait for is_number_v */
-        if constexpr(std::is_same_v<T, detail::integer> || std::is_same_v<T, detail::real>)
-        { return object{ std::tan(data) }; }
-        else
-        {
-          /* TODO: Throw an error. */
-          std::cout << "(tan) not a number: " << o << std::endl;
-          return JANK_NIL;
-        }
-      }
-    );
-  }
-
-  inline object pow(object const &l, object const &r)
-  {
-    return l.visit_with
-    (
-      [&](auto const &l_data, auto const &r_data) -> object
-      {
-        using L = std::decay_t<decltype(l_data)>;
-        using R = std::decay_t<decltype(r_data)>;
-
-        /* TODO: Trait for is_number_v */
-        if constexpr((std::is_same_v<L, detail::integer> || std::is_same_v<L, detail::real>)
-                     && (std::is_same_v<R, detail::integer> || std::is_same_v<R, detail::real>))
-        { return object{ std::pow(l_data, r_data) }; }
-        else
-        {
-          /* TODO: Throw an error. */
-          std::cout << "(pow) not a number: " << l << " and " << r << std::endl;
-          return JANK_NIL;
-        }
-      },
-      r
-    );
-  }
-
-  inline object mod(object const &l, object const &r)
-  {
-    return l.visit_with
-    (
-      [&](auto const &l_data, auto const &r_data) -> object
-      {
-        using L = std::decay_t<decltype(l_data)>;
-        using R = std::decay_t<decltype(r_data)>;
-
-        /* TODO: Trait for is_number_v */
-        if constexpr((std::is_same_v<L, detail::integer> || std::is_same_v<L, detail::real>)
-                     && (std::is_same_v<R, detail::integer> || std::is_same_v<R, detail::real>))
-        {
-          if constexpr(std::is_same_v<L, detail::real> || std::is_same_v<R, detail::real>)
-          {
-            return object
-            { std::fmod(static_cast<detail::integer>(l_data), static_cast<detail::integer>(r_data)) };
-          }
-          else
-          {
-            return object
-            { static_cast<detail::integer>(l_data) % static_cast<detail::integer>(r_data) };
-          }
-        }
-        else
-        {
-          /* TODO: Throw an error. */
-          std::cout << "(mod) not a number: " << l << " and " << r << std::endl;
-          return JANK_NIL;
-        }
-      },
-      r
-    );
-  }
-
-  inline object abs(object const &o)
-  {
-    return o.visit
-    (
-      [&](auto const &data) -> object
-      {
-        using T = std::decay_t<decltype(data)>;
-
-        if constexpr(std::is_same_v<T, detail::integer>)
-        { return object{ std::abs(data) }; }
-        if constexpr(std::is_same_v<T, detail::real>)
-        { return object{ std::fabs(data) }; }
-        else
-        {
-          /* TODO: Throw an error. */
-          std::cout << "(abs) not a number: " << o << std::endl;
-          return JANK_NIL;
-        }
-      }
-    );
-  }
-
-  inline object min(object const &l, object const &r)
-  {
-    return l.visit_with
-    (
-      [&](auto const &l_data, auto const &r_data) -> object
-      {
-        using L = std::decay_t<decltype(l_data)>;
-        using R = std::decay_t<decltype(r_data)>;
-
-        /* TODO: Trait for is_number_v */
-        if constexpr((std::is_same_v<L, detail::integer> || std::is_same_v<L, detail::real>)
-                     && (std::is_same_v<R, detail::integer> || std::is_same_v<R, detail::real>))
-        {
-          if constexpr(std::is_same_v<L, detail::real> || std::is_same_v<R, detail::real>)
-          {
-            return object
-            { std::min(static_cast<detail::real>(l_data), static_cast<detail::real>(r_data)) };
-          }
-          else
-          {
-            return object
-            { std::min(static_cast<detail::integer>(l_data), static_cast<detail::integer>(r_data)) };
-          }
-        }
-        else
-        {
-          /* TODO: Throw an error. */
-          std::cout << "(min) not a number: " << l << " and " << r << std::endl;
-          return JANK_NIL;
-        }
-      },
-      r
-    );
-  }
+  object_ptr rand();
+  object_ptr _gen_plus_(object_ptr const &l, object_ptr const &r);
+  object_ptr _gen_minus_(object_ptr const &l, object_ptr const &r);
+  object_ptr _gen_asterisk_(object_ptr const &l, object_ptr const &r);
+  object_ptr div(object_ptr const &l, object_ptr const &r);
+  object_ptr mod(object_ptr const &l, object_ptr const &r);
+  object_ptr _gen_less_(object_ptr const &l, object_ptr const &r);
+  object_ptr _gen_less__gen_equal_(object_ptr const &l, object_ptr const &r);
+  object_ptr _gen_minus__gen_greater_int(object_ptr const &o);
+  object_ptr _gen_minus__gen_greater_float(object_ptr const &o);
+  object_ptr inc(object_ptr const &n);
+  object_ptr dec(object_ptr const &n);
+  object_ptr sqrt(object_ptr const &o);
+  object_ptr tan(object_ptr const &o);
+  object_ptr pow(object_ptr const &l, object_ptr const &r);
+  object_ptr abs(object_ptr const &n);
+  object_ptr min(object_ptr const &l, object_ptr const &r);
+  object_ptr max(object_ptr const &l, object_ptr const &r);
 }

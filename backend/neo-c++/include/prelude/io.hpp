@@ -4,33 +4,29 @@
 
 namespace jank
 {
-  inline object print(object const &o)
+  inline object_ptr print(object_ptr const &o)
   {
-    o.visit
-    (
-      [](auto const &data)
-      { std::cout << data; }
-    );
+    std::cout << o->to_string();
     return JANK_NIL;
   }
 
-  inline object println(object const &o)
+  inline object_ptr println(object_ptr const &o)
   {
     print(o);
     std::cout << "\n";
     return JANK_NIL;
   }
 
-  inline object flush()
+  inline object_ptr flush()
   {
     std::cout << std::flush;
     return JANK_NIL;
   }
 
-  inline object read_gen_minus_line()
+  inline object_ptr read_gen_minus_line()
   {
-    detail::string input;
+    detail::string_type input;
     std::getline(std::cin, input);
-    return object{ std::move(input) };
+    return make_object_ptr<string>(std::move(input));
   }
 }

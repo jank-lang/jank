@@ -1,55 +1,68 @@
 #pragma once
 
 #include <prelude/object.hpp>
+#include <prelude/number.hpp>
 
 namespace jank
 {
-  inline object identity(object const &o)
-  { return o; }
-
-  /* some? */
-  inline object some_gen_qmark_(object const &o)
-  { return object{ !o.get<detail::nil>() }; }
-
-  /* nil? */
-  inline object nil_gen_qmark_(object const &o)
-  { return object{ static_cast<detail::boolean>(o.get<detail::nil>()) }; }
-
-  /* truthy? */
-  inline object truthy_gen_qmark_(object const &o)
-  {
-    object ret{ some_gen_qmark_(o) };
-    if(!*ret.get<detail::boolean>())
-    { return JANK_FALSE; }
-
-    if(auto const b = o.get<detail::boolean>())
-    { return object{ *b }; }
-    else
-    { return JANK_TRUE; }
-  }
   namespace detail
   {
-    inline bool truthy(object const &o)
+    inline bool truthy(object_ptr const &o)
     {
-      object const truthy_obj(truthy_gen_qmark_(o));
-      return *truthy_obj.get<detail::boolean>();
+      auto const * const n(dynamic_cast<nil const*>(o.get()));
+      if(n)
+      { return false; }
+
+      auto const * const b(dynamic_cast<boolean const*>(o.get()));
+      if(b)
+      { return b->data; }
+
+      return true;
+    }
+
+    /* Very much borrowed from boost. */
+    template <typename T>
+    size_t hash_combine(size_t const seed, T const &t)
+    {
+      static std::hash<T> hasher{};
+      return seed ^ hasher(t) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
   }
 
+  inline object_ptr identity(object_ptr const &o)
+  { return o; }
+
+  /* some? */
+  inline object_ptr some_gen_qmark_(object_ptr const &o)
+  {
+    auto const * const d(dynamic_cast<nil const*>(o.get()));
+    return make_object_ptr<boolean>(d == nullptr);
+  }
+
+  /* nil? */
+  inline object_ptr nil_gen_qmark_(object_ptr const &o)
+  {
+    auto const * const d(dynamic_cast<nil const*>(o.get()));
+    return make_object_ptr<boolean>(d != nullptr);
+  }
+
+  /* truthy? */
+  inline object_ptr truthy_gen_qmark_(object_ptr const &o)
+  { return make_object_ptr<boolean>(detail::truthy(o)); }
 
   /* = */
-  inline object _gen_equal_(object const &l, object const &r)
-  { return object{ l == r }; }
+  inline object_ptr _gen_equal_(object_ptr const &l, object_ptr const &r)
+  { return make_object_ptr<boolean>(l->equal(*r)); }
 
   /* not= */
-  inline object not_gen_equal_(object const &l, object const &r)
-  { return object{ l != r }; }
+  inline object_ptr not_gen_equal_(object_ptr const &l, object_ptr const &r)
+  { return make_object_ptr<boolean>(!l->equal(*r)); }
 
   /* TODO: This should be the `and` macro. */
-  inline object all(object const &l, object const &r)
-  { return detail::truthy(l) && detail::truthy(r);}
+  inline object_ptr all(object_ptr const &l, object_ptr const &r)
+  { return make_object_ptr<boolean>(detail::truthy(l) && detail::truthy(r));}
 
   /* TODO: This should be the `or` macro. */
-  inline object either(object const &l, object const &r)
+  inline object_ptr either(object_ptr const &l, object_ptr const &r)
   { return detail::truthy(l) ? l : r;}
 }

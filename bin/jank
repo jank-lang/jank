@@ -32,6 +32,10 @@ then
     -I$tmp \
     -L$here/../lib/bdwgc/install/usr/local/lib \
     $here/../backend/neo-c++/src/main.cpp \
+    $here/../backend/neo-c++/src/prelude/object.cpp \
+    $here/../backend/neo-c++/src/prelude/number.cpp \
+    $here/../backend/neo-c++/src/prelude/seq.cpp \
+    $here/../backend/neo-c++/src/prelude/fn.cpp \
     -lgc
 else
   cat $tmp/jank-generated.hpp
