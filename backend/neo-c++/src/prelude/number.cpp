@@ -79,121 +79,154 @@ namespace jank
     virtual number_ops const& with(real_ops const&) const = 0;
 
     /* TODO: Return number_ptr */
-    virtual object_ptr add(number const &l, number const &r) const = 0;
-    virtual object_ptr subtract(number const &l, number const &r) const = 0;
-    virtual object_ptr multiply(number const &l, number const &r) const = 0;
-    virtual object_ptr divide(number const &l, number const &r) const = 0;
-    virtual object_ptr remainder(number const &l, number const &r) const = 0;
-    virtual object_ptr inc(number const &n) const = 0;
-    virtual object_ptr dec(number const &n) const = 0;
-    virtual object_ptr negate(number const &n) const = 0;
-    virtual object_ptr abs(number const &n) const = 0;
-    virtual object_ptr min(number const &l, number const &r) const = 0;
-    virtual object_ptr max(number const &l, number const &r) const = 0;
-    virtual detail::boolean_type lt(number const &l, number const &r) const = 0;
-    virtual detail::boolean_type lte(number const &l, number const &r) const = 0;
-    virtual detail::boolean_type gte(number const &l, number const &r) const = 0;
-    virtual detail::boolean_type equal(number const &l, number const &r) const = 0;
+    virtual object_ptr add() const = 0;
+    virtual object_ptr subtract() const = 0;
+    virtual object_ptr multiply() const = 0;
+    virtual object_ptr divide() const = 0;
+    virtual object_ptr remainder() const = 0;
+    virtual object_ptr inc() const = 0;
+    virtual object_ptr dec() const = 0;
+    virtual object_ptr negate() const = 0;
+    virtual object_ptr abs() const = 0;
+    virtual object_ptr min() const = 0;
+    virtual object_ptr max() const = 0;
+    virtual detail::boolean_type lt() const = 0;
+    virtual detail::boolean_type lte() const = 0;
+    virtual detail::boolean_type gte() const = 0;
+    virtual detail::boolean_type equal() const = 0;
   };
 
   struct integer_ops : number_ops
   {
-    number_ops const& combine(number_ops const &o) const override
-    { return o.with(*this); }
+    number_ops const& combine(number_ops const &l) const override
+    { return l.with(*this); }
     number_ops const& with(integer_ops const&) const override;
     number_ops const& with(real_ops const&) const override;
-    object_ptr add(number const &l, number const &r) const override
-    { return make_object_ptr<integer>(l.get_integer() + r.get_integer()); }
-    object_ptr subtract(number const &l, number const &r) const override
-    { return make_object_ptr<integer>(l.get_integer() - r.get_integer()); }
-    object_ptr multiply(number const &l, number const &r) const override
-    { return make_object_ptr<integer>(l.get_integer() * r.get_integer()); }
-    object_ptr divide(number const &l, number const &r) const override
-    { return make_object_ptr<integer>(l.get_integer() / r.get_integer()); }
-    object_ptr remainder(number const &l, number const &r) const override
-    { return make_object_ptr<integer>(l.get_integer() % r.get_integer()); }
-    object_ptr inc(number const &n) const override
-    { return make_object_ptr<integer>(n.get_integer() + 1); }
-    object_ptr dec(number const &n) const override
-    { return make_object_ptr<integer>(n.get_integer() - 1); }
-    object_ptr negate(number const &n) const override
-    { return make_object_ptr<integer>(-n.get_integer()); }
-    object_ptr abs(number const &n) const override
-    { return make_object_ptr<integer>(std::abs(n.get_integer())); }
-    object_ptr min(number const &l, number const &r) const override
-    { return make_object_ptr<integer>(std::min(l.get_integer(), r.get_integer())); }
-    object_ptr max(number const &l, number const &r) const override
-    { return make_object_ptr<integer>(std::max(l.get_integer(), r.get_integer())); }
-    detail::boolean_type lt(number const &l, number const &r) const override
-    { return l.get_integer() < r.get_integer(); }
-    detail::boolean_type lte(number const &l, number const &r) const override
-    { return l.get_integer() <= r.get_integer(); }
-    detail::boolean_type gte(number const &l, number const &r) const override
-    { return l.get_integer() >= r.get_integer(); }
-    detail::boolean_type equal(number const &l, number const &r) const override
-    { return l.get_integer() == r.get_integer(); }
+    object_ptr add() const override
+    { return make_object_ptr<integer>(left + right); }
+    object_ptr subtract() const override
+    { return make_object_ptr<integer>(left - right); }
+    object_ptr multiply() const override
+    { return make_object_ptr<integer>(left * right); }
+    object_ptr divide() const override
+    { return make_object_ptr<integer>(left / right); }
+    object_ptr remainder() const override
+    { return make_object_ptr<integer>(left % right); }
+    object_ptr inc() const override
+    { return make_object_ptr<integer>(left + 1); }
+    object_ptr dec() const override
+    { return make_object_ptr<integer>(left - 1); }
+    object_ptr negate() const override
+    { return make_object_ptr<integer>(-left); }
+    object_ptr abs() const override
+    { return make_object_ptr<integer>(std::abs(left)); }
+    object_ptr min() const override
+    { return make_object_ptr<integer>(std::min(left, right)); }
+    object_ptr max() const override
+    { return make_object_ptr<integer>(std::max(left, right)); }
+    detail::boolean_type lt() const override
+    { return left < right; }
+    detail::boolean_type lte() const override
+    { return left <= right; }
+    detail::boolean_type gte() const override
+    { return left >= right; }
+    detail::boolean_type equal() const override
+    { return left == right; }
+
+    detail::integer_type left, right;
   };
 
   struct real_ops : number_ops
   {
-    number_ops const& combine(number_ops const &o) const override
-    { return o.with(*this); }
+    number_ops const& combine(number_ops const &l) const override
+    { return l.with(*this); }
     number_ops const& with(integer_ops const&) const override;
     number_ops const& with(real_ops const&) const override;
-    object_ptr add(number const &l, number const &r) const override
-    { return make_object_ptr<real>(l.get_real() + r.get_real()); }
-    object_ptr subtract(number const &l, number const &r) const override
-    { return make_object_ptr<real>(l.get_real() - r.get_real()); }
-    object_ptr multiply(number const &l, number const &r) const override
-    { return make_object_ptr<real>(l.get_real() * r.get_real()); }
-    object_ptr divide(number const &l, number const &r) const override
-    { return make_object_ptr<real>(l.get_real() / r.get_real()); }
-    object_ptr remainder(number const &l, number const &r) const override
-    { return make_object_ptr<real>(std::fmod(l.get_real(), r.get_real())); }
-    object_ptr inc(number const &n) const override
-    { return make_object_ptr<real>(n.get_real() + 1); }
-    object_ptr dec(number const &n) const override
-    { return make_object_ptr<real>(n.get_real() - 1); }
-    object_ptr negate(number const &n) const override
-    { return make_object_ptr<real>(-n.get_real()); }
-    object_ptr abs(number const &n) const override
-    { return make_object_ptr<real>(std::abs(n.get_real())); }
-    object_ptr min(number const &l, number const &r) const override
-    { return make_object_ptr<real>(std::min(l.get_real(), r.get_real())); }
-    object_ptr max(number const &l, number const &r) const override
-    { return make_object_ptr<real>(std::max(l.get_real(), r.get_real())); }
-    detail::boolean_type lt(number const &l, number const &r) const override
-    { return l.get_real() < r.get_real(); }
-    detail::boolean_type lte(number const &l, number const &r) const override
-    { return l.get_real() <= r.get_real(); }
-    detail::boolean_type gte(number const &l, number const &r) const override
-    { return l.get_real() >= r.get_real(); }
-    detail::boolean_type equal(number const &l, number const &r) const override
-    { return l.get_real() == r.get_real(); }
+    object_ptr add() const override
+    { return make_object_ptr<real>(left + right); }
+    object_ptr subtract() const override
+    { return make_object_ptr<real>(left - right); }
+    object_ptr multiply() const override
+    { return make_object_ptr<real>(left * right); }
+    object_ptr divide() const override
+    { return make_object_ptr<real>(left / right); }
+    object_ptr remainder() const override
+    { return make_object_ptr<real>(std::fmod(left, right)); }
+    object_ptr inc() const override
+    { return make_object_ptr<real>(left + 1); }
+    object_ptr dec() const override
+    { return make_object_ptr<real>(right + 1); }
+    object_ptr negate() const override
+    { return make_object_ptr<real>(-left); }
+    object_ptr abs() const override
+    { return make_object_ptr<real>(std::abs(left)); }
+    object_ptr min() const override
+    { return make_object_ptr<real>(std::min(left, right)); }
+    object_ptr max() const override
+    { return make_object_ptr<real>(std::max(left, right)); }
+    detail::boolean_type lt() const override
+    { return left < right; }
+    detail::boolean_type lte() const override
+    { return left <= right; }
+    detail::boolean_type gte() const override
+    { return left >= right; }
+    detail::boolean_type equal() const override
+    { return left == right; }
+
+    detail::real_type left, right;
   };
 
-  static integer_ops int_ops;
-  static real_ops r_ops;
+  static thread_local integer_ops int_ops;
+  static thread_local real_ops r_ops;
 
-  number_ops const& integer_ops::with(integer_ops const&) const
+  number_ops const& integer_ops::with(integer_ops const &r) const
   { return int_ops; }
-  number_ops const& integer_ops::with(real_ops const&) const
-  { return r_ops; }
-
-  number_ops const& real_ops::with(integer_ops const&) const
-  { return r_ops; }
-  number_ops const& real_ops::with(real_ops const&) const
-  { return r_ops; }
-
-  number_ops& ops(object_ptr const &n)
+  number_ops const& integer_ops::with(real_ops const &r) const
   {
-    if(n->as_integer())
-    { return int_ops; }
-    if(n->as_real())
-    { return r_ops; }
+    r_ops.left = left;
+    return r_ops;
+  }
+
+  number_ops const& real_ops::with(integer_ops const &r) const
+  {
+    r_ops.right = r.right;
+    return r_ops;
+  }
+  number_ops const& real_ops::with(real_ops const &r) const
+  { return r_ops; }
+
+  number_ops& left_ops(object_ptr const &n)
+  {
+    if(auto const * const i = n->as_integer())
+    {
+      int_ops.left = i->data;
+      return int_ops;
+    }
+    if(auto const * const r = n->as_real())
+    {
+      r_ops.left = r->data;
+      return r_ops;
+    }
 
     /* TODO: Exception type. */
-    throw detail::string_type{ "not a number: " } + n->to_string();
+    throw detail::string_type{ "(left_ops) not a number: " } + n->to_string();
+  }
+
+  number_ops& right_ops(object_ptr const &n)
+  {
+    if(auto const * const i = n->as_integer())
+    {
+      int_ops.right = i->data;
+      return int_ops;
+    }
+    if(auto const * const r = n->as_real())
+    {
+      r_ops.right = r->data;
+      return r_ops;
+    }
+
+    /* TODO: Exception type. */
+    throw detail::string_type{ "(right_ops) not a number: " } + n->to_string();
   }
 
   object_ptr rand()
@@ -205,36 +238,36 @@ namespace jank
 
   /* + */
   object_ptr _gen_plus_(object_ptr const &l, object_ptr const &r)
-  { return ops(l).combine(ops(r)).add(*l->as_number(), *r->as_number()); }
+  { return right_ops(r).combine(left_ops(l)).add(); }
 
   /* - */
   object_ptr _gen_minus_(object_ptr const &l, object_ptr const &r)
-  { return ops(l).combine(ops(r)).subtract(*l->as_number(), *r->as_number()); }
+  { return right_ops(r).combine(left_ops(l)).subtract(); }
 
   /* * */
   object_ptr _gen_asterisk_(object_ptr const &l, object_ptr const &r)
-  { return ops(l).combine(ops(r)).multiply(*l->as_number(), *r->as_number()); }
+  { return right_ops(r).combine(left_ops(l)).multiply(); }
 
   /* TODO: Rename to / once the parser supports it. */
   /* / */
   object_ptr div(object_ptr const &l, object_ptr const &r)
-  { return ops(l).combine(ops(r)).divide(*l->as_number(), *r->as_number()); }
+  { return right_ops(r).combine(left_ops(l)).divide(); }
 
   object_ptr mod(object_ptr const &l, object_ptr const &r)
-  { return ops(l).combine(ops(r)).remainder(*l->as_number(), *r->as_number()); }
+  { return right_ops(r).combine(left_ops(l)).remainder(); }
 
   /* < */
   object_ptr _gen_less_(object_ptr const &l, object_ptr const &r)
   {
     return make_object_ptr<boolean>
-    (ops(l).combine(ops(r)).lt(*l->as_number(), *r->as_number()));
+    (right_ops(r).combine(left_ops(l)).lt());
   }
 
   /* <= */
   object_ptr _gen_less__gen_equal_(object_ptr const &l, object_ptr const &r)
   {
     return make_object_ptr<boolean>
-    (ops(l).combine(ops(r)).lte(*l->as_number(), *r->as_number()));
+    (right_ops(r).combine(left_ops(l)).lte());
   }
 
   /* ->int */
@@ -264,10 +297,10 @@ namespace jank
   }
 
   object_ptr inc(object_ptr const &n)
-  { return ops(n).inc(*n->as_number()); }
+  { return left_ops(n).inc(); }
 
   object_ptr dec(object_ptr const &n)
-  { return ops(n).dec(*n->as_number()); }
+  { return left_ops(n).dec(); }
 
   object_ptr sqrt(object_ptr const &o)
   {
@@ -307,11 +340,11 @@ namespace jank
   }
 
   object_ptr abs(object_ptr const &n)
-  { return ops(n).abs(*n->as_number()); }
+  { return left_ops(n).abs(); }
 
   object_ptr min(object_ptr const &l, object_ptr const &r)
-  { return ops(l).combine(ops(r)).min(*l->as_number(), *r->as_number()); }
+  { return right_ops(r).combine(left_ops(l)).min(); }
 
   object_ptr max(object_ptr const &l, object_ptr const &r)
-  { return ops(l).combine(ops(r)).max(*l->as_number(), *r->as_number()); }
+  { return right_ops(r).combine(left_ops(l)).max(); }
 }
