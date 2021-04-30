@@ -315,8 +315,8 @@ namespace jank
 
     for(auto s(sable->seq()); s != nullptr; s = s->next())
     { in_order.push_back(s->first()); }
-    for(auto &&e : in_order)
-    { reverse_order.push_back(std::move(e)); }
+    for(auto it(in_order.rbegin()); it != in_order.rend(); ++it)
+    { reverse_order.push_back(std::move(*it)); }
 
     return make_object_ptr<vector>(reverse_order.persistent());
   }
