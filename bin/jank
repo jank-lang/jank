@@ -12,6 +12,8 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 output_hpp=jank-generated.hpp
 
 cxx=${CXX:-c++}
+release_opts="-Ofast -march=native -fwhole-program -flto"
+debug_opts="-g -fno-omit-frame-pointer"
 
 pushd $here/.. > /dev/null
   echo "Compiling to C++..."
@@ -23,7 +25,7 @@ pushd $here/.. > /dev/null
   if [ $ret -eq 0 ];
   then
     echo "Compiling to binary..."
-    $cxx -g -O2 -fno-omit-frame-pointer -std=c++17 -o $2 \
+    $cxx $release_opts -std=c++17 -o $2 \
       -I$here/../backend/neo-c++/include \
       -I$here/../lib/immer \
       -I$here/../lib/bdwgc/install/usr/local/include \
