@@ -9,12 +9,9 @@ namespace jank
   {
     inline bool truthy(object_ptr const &o)
     {
-      auto const * const n(dynamic_cast<nil const*>(o.get()));
-      if(n)
+      if(o->as_nil())
       { return false; }
-
-      auto const * const b(dynamic_cast<boolean const*>(o.get()));
-      if(b)
+      else if(auto const * const b = o->as_boolean())
       { return b->data; }
 
       return true;
@@ -34,17 +31,11 @@ namespace jank
 
   /* some? */
   inline object_ptr some_gen_qmark_(object_ptr const &o)
-  {
-    auto const * const d(dynamic_cast<nil const*>(o.get()));
-    return make_object_ptr<boolean>(d == nullptr);
-  }
+  { return make_object_ptr<boolean>(o->as_nil() == nullptr); }
 
   /* nil? */
   inline object_ptr nil_gen_qmark_(object_ptr const &o)
-  {
-    auto const * const d(dynamic_cast<nil const*>(o.get()));
-    return make_object_ptr<boolean>(d != nullptr);
-  }
+  { return make_object_ptr<boolean>(o->as_nil() != nullptr); }
 
   /* truthy? */
   inline object_ptr truthy_gen_qmark_(object_ptr const &o)

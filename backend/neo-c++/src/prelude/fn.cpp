@@ -29,7 +29,7 @@ namespace jank
 
   detail::boolean_type function::equal(object const &o) const
   {
-    auto const *d(dynamic_cast<function const*>(&o));
+    auto const *d(o.as_function());
     return d == this;
   }
   detail::string_type function::to_string() const
@@ -37,6 +37,10 @@ namespace jank
   { return "<function>"; }
   detail::integer_type function::to_hash() const
   { return reinterpret_cast<detail::integer_type>(this); }
+  function const* function::as_function() const
+  { return this; }
+  callable const* function::as_callable() const
+  { return this; }
 
   template <size_t N, typename... Args>
   struct build_arity

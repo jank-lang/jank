@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eu
+set -euo pipefail
 
 if [ ! $# -eq 2 ];
 then
@@ -9,40 +9,35 @@ then
 fi
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-tmp=$(mktemp -d)
-echo "Working in $tmp"
+output_hpp=jank-generated.hpp
 
 cxx=${CXX:-c++}
 
 pushd $here/.. > /dev/null
-echo "Compiling to C++..."
-lein run $1 > "$tmp/jank-generated.hpp" 2>&1
-echo "Formatting C++..."
-rm -f latest-generated.hpp
-clang-format "$tmp/jank-generated.hpp" > latest-generated.hpp
-cp -f latest-generated.hpp "$tmp/jank-generated.hpp"
-ret=$?
-if [ $ret -eq 0 ];
-then
-  echo "Compiling to binary..."
-  $cxx -g -O2 -fno-omit-frame-pointer -std=c++17 -o $2 \
-    -I$here/../backend/neo-c++/include \
-    -I$here/../lib/immer \
-    -I$here/../lib/bdwgc/install/usr/local/include \
-    -I$tmp \
-    -L$here/../lib/bdwgc/install/usr/local/lib \
-    $here/../backend/neo-c++/src/main.cpp \
-    $here/../backend/neo-c++/src/prelude/object.cpp \
-    $here/../backend/neo-c++/src/prelude/number.cpp \
-    $here/../backend/neo-c++/src/prelude/seq.cpp \
-    $here/../backend/neo-c++/src/prelude/fn.cpp \
-    -lgc
-else
-  cat $tmp/jank-generated.hpp
-fi
+  echo "Compiling to C++..."
+  rm -f "$output_hpp"
+  lein run $1 > "jank-generated.hpp" 2>&1
+  echo "Formatting C++..."
+  clang-format -i "$output_hpp"
+  ret=$?
+  if [ $ret -eq 0 ];
+  then
+    echo "Compiling to binary..."
+    $cxx -g -O2 -fno-omit-frame-pointer -std=c++17 -o $2 \
+      -I$here/../backend/neo-c++/include \
+      -I$here/../lib/immer \
+      -I$here/../lib/bdwgc/install/usr/local/include \
+      -I$PWD \
+      -L$here/../lib/bdwgc/install/usr/local/lib \
+      $here/../backend/neo-c++/src/main.cpp \
+      $here/../backend/neo-c++/src/prelude/object.cpp \
+      $here/../backend/neo-c++/src/prelude/number.cpp \
+      $here/../backend/neo-c++/src/prelude/seq.cpp \
+      $here/../backend/neo-c++/src/prelude/fn.cpp \
+      -lgc
+  else
+    cat "$output_hpp"
+  fi
 popd > /dev/null
 
-# TODO: Trap exit and delete
-rm -f $tmp/jank-generated.hpp
-rmdir $tmp
 exit $ret

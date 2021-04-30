@@ -32,6 +32,8 @@ namespace jank
     detail::string_type to_string() const override;
     detail::integer_type to_hash() const override;
 
+    string const* as_string() const override;
+
     detail::string_type data;
   };
 
@@ -50,6 +52,9 @@ namespace jank
     detail::boolean_type equal(object const &) const override;
     detail::string_type to_string() const override;
     detail::integer_type to_hash() const override;
+
+    vector const* as_vector() const override;
+    seqable const* as_seqable() const override;
 
     sequence_pointer seq() const override;
 
@@ -75,6 +80,9 @@ namespace jank
     detail::boolean_type equal(object const &) const override;
     detail::string_type to_string() const override;
     detail::integer_type to_hash() const override;
+
+    map const* as_map() const override;
+    seqable const* as_seqable() const override;
 
     sequence_pointer seq() const override;
 
@@ -113,6 +121,9 @@ namespace jank
     detail::boolean_type equal(object const &) const override;
     detail::string_type to_string() const override;
     detail::integer_type to_hash() const override;
+
+    set const* as_set() const override;
+    seqable const* as_seqable() const override;
 
     sequence_pointer seq() const override;
 

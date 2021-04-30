@@ -10,7 +10,7 @@ namespace jank
     virtual detail::real_type get_real() const = 0;
   };
 
-  struct boolean : object, number
+  struct boolean : object
   {
     boolean() = default;
     boolean(boolean &&) = default;
@@ -23,8 +23,7 @@ namespace jank
     detail::string_type to_string() const override;
     detail::integer_type to_hash() const override;
 
-    detail::integer_type get_integer() const override;
-    detail::real_type get_real() const override;
+    boolean const* as_boolean() const override;
 
     detail::boolean_type data{};
   };
@@ -47,6 +46,9 @@ namespace jank
     detail::integer_type get_integer() const override;
     detail::real_type get_real() const override;
 
+    integer const* as_integer() const override;
+    number const* as_number() const override;
+
     detail::integer_type data{};
   };
 
@@ -65,6 +67,9 @@ namespace jank
 
     detail::integer_type get_integer() const override;
     detail::real_type get_real() const override;
+
+    real const* as_real() const override;
+    number const* as_number() const override;
 
     detail::real_type data{};
   };

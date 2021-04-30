@@ -10,7 +10,7 @@ namespace jank
   /***** string *****/
   detail::boolean_type string::equal(object const &o) const
   {
-    auto const *s(dynamic_cast<string const*>(&o));
+    auto const *s(o.as_string());
     if(!s)
     { return false; }
 
@@ -23,6 +23,8 @@ namespace jank
     static std::hash<detail::string_type> hasher;
     return hasher(data);
   }
+  string const* string::as_string() const
+  { return this; }
 
   template <typename It>
   struct basic_iterator_wrapper : sequence
@@ -50,7 +52,7 @@ namespace jank
   /***** vector *****/
   detail::boolean_type vector::equal(object const &o) const
   {
-    auto const *s(dynamic_cast<seqable const*>(&o));
+    auto const *s(o.as_seqable());
     if(!s)
     { return false; }
 
@@ -83,8 +85,16 @@ namespace jank
     { seed = jank::detail::hash_combine(seed, *e); }
     return seed;
   }
+  vector const* vector::as_vector() const
+  { return this; }
+  seqable const* vector::as_seqable() const
+  { return this; }
   sequence_pointer vector::seq() const
-  { return make_box<basic_iterator_wrapper<detail::vector_type::iterator>>(data.begin(), data.end()); }
+  {
+    if(data.size() == 0)
+    { return nullptr; }
+    return make_box<basic_iterator_wrapper<detail::vector_type::iterator>>(data.begin(), data.end());
+  }
 
   template <typename It>
   struct map_iterator_wrapper : sequence
@@ -112,7 +122,7 @@ namespace jank
   /***** map *****/
   detail::boolean_type map::equal(object const &o) const
   {
-    auto const *m(dynamic_cast<map const*>(&o));
+    auto const *m(o.as_map());
     if(!m)
     { return false; }
 
@@ -144,8 +154,16 @@ namespace jank
     }
     return seed;
   }
+  map const* map::as_map() const
+  { return this; }
+  seqable const* map::as_seqable() const
+  { return this; }
   sequence_pointer map::seq() const
-  { return make_box<map_iterator_wrapper<detail::map_type::iterator>>(data.begin(), data.end()); }
+  {
+    if(data.size() == 0)
+    { return nullptr; }
+    return make_box<map_iterator_wrapper<detail::map_type::iterator>>(data.begin(), data.end());
+  }
 
   ///***** set *****/
   //detail::boolean_type set::equal(object const &) const
@@ -157,6 +175,10 @@ namespace jank
   //detail::integer_type set::to_hash() const
   //{
   //}
+  //set const* set::as_set() const
+  //{ return this; }
+  //seqable const* set::as_seqable() const
+  //{ return this; }
   //iterator_ptr set::begin() const
   //{ return make_box<basic_iterator_wrapper<detail::set_type::iterator>>(data.begin()); }
   //iterator_ptr set::end() const
@@ -165,7 +187,7 @@ namespace jank
   /* TODO: Laziness. */
   object_ptr mapv(object_ptr const &f, object_ptr const &seq)
   {
-    auto const * const sable(dynamic_cast<seqable const*>(seq.get()));
+    auto const * const sable(seq->as_seqable());
     if(!sable)
     {
       /* TODO: Throw error. */
@@ -173,7 +195,7 @@ namespace jank
       return JANK_NIL;
     }
 
-    auto const * const func(dynamic_cast<callable const*>(f.get()));
+    auto const * const func(f->as_callable());
     if(!func)
     {
       /* TODO: Throw error. */
@@ -191,7 +213,7 @@ namespace jank
 
   object_ptr reduce(object_ptr const &f, object_ptr const &initial, object_ptr const &seq)
   {
-    auto const * const sable(dynamic_cast<seqable const*>(seq.get()));
+    auto const * const sable(seq->as_seqable());
     if(!sable)
     {
       /* TODO: Throw error. */
@@ -199,7 +221,7 @@ namespace jank
       return JANK_NIL;
     }
 
-    auto const * const func(dynamic_cast<callable const*>(f.get()));
+    auto const * const func(f->as_callable());
     if(!func)
     {
       /* TODO: Throw error. */
@@ -218,7 +240,7 @@ namespace jank
   /* TODO: Laziness */
   object_ptr partition_gen_minus_all(object_ptr const &n, object_ptr const &seq)
   {
-    auto const * const i(dynamic_cast<integer const*>(n.get()));
+    auto const * const i(n->as_integer());
     if(!i)
     {
       /* TODO: Throw error */
@@ -227,7 +249,7 @@ namespace jank
     }
     auto const partition_size(i->data);
 
-    auto const * const sable(dynamic_cast<seqable const*>(seq.get()));
+    auto const * const sable(seq->as_seqable());
     if(!sable)
     {
       /* TODO: Throw error. */
@@ -253,8 +275,8 @@ namespace jank
   /* TODO: Laziness */
   object_ptr range(object_ptr const &start, object_ptr const &end)
   {
-    auto const * const s(dynamic_cast<integer const*>(start.get()));
-    auto const * const e(dynamic_cast<integer const*>(end.get()));
+    auto const * const s(start->as_integer());
+    auto const * const e(end->as_integer());
     if(!s || !e)
     {
       /* TODO: Throw error */
@@ -280,7 +302,7 @@ namespace jank
 
   object_ptr reverse(object_ptr const &seq)
   {
-    auto const * const sable(dynamic_cast<seqable const*>(seq.get()));
+    auto const * const sable(seq->as_seqable());
     if(!sable)
     {
       /* TODO: Throw error. */
@@ -302,7 +324,7 @@ namespace jank
   /* TODO: Associative interface. */
   object_ptr get(object_ptr const &o, object_ptr const &key)
   {
-    auto const * const m(dynamic_cast<map const*>(o.get()));
+    auto const * const m(o->as_map());
     if(m)
     {
       if(auto * const found = m->data.find(key))
@@ -311,10 +333,10 @@ namespace jank
       { return JANK_NIL; }
     }
 
-    auto const * const v(dynamic_cast<vector const*>(o.get()));
+    auto const * const v(o->as_vector());
     if(v)
     {
-      auto const * const n(dynamic_cast<integer const*>(key.get()));
+      auto const * const n(key->as_integer());
       if(!n)
       {
         /* TODO: Throw error. */
@@ -329,17 +351,17 @@ namespace jank
       return v->data[n->data];
     }
 
-    std::cout << "(get) not associative: " << *o << std::endl;
+    std::cout << "(get) not associative: " << *o << " with key: " << *key << std::endl;
     return JANK_NIL;
   }
 
   /* TODO: Persistent collection interface. */
   object_ptr conj(object_ptr const &o, object_ptr const &val)
   {
-    auto const * const m(dynamic_cast<map const*>(o.get()));
+    auto const * const m(o->as_map());
     if(m)
     {
-      if(auto const * const v = dynamic_cast<vector const*>(val.get()))
+      if(auto const * const v = val->as_vector())
       {
         if(v->data.size() != 2)
         {
@@ -353,7 +375,7 @@ namespace jank
       { return JANK_NIL; }
     }
 
-    auto const * const v(dynamic_cast<vector const*>(o.get()));
+    auto const * const v(o->as_vector());
     if(v)
     { return make_object_ptr<vector>(v->data.push_back(val)); }
 
@@ -363,14 +385,14 @@ namespace jank
 
   object_ptr assoc(object_ptr const &o, object_ptr const &key, object_ptr const &val)
   {
-    auto const * const m(dynamic_cast<map const*>(o.get()));
+    auto const * const m(o->as_map());
     if(m)
     { return make_object_ptr<map>(m->data.set(key, val)); }
 
-    auto const * const v(dynamic_cast<vector const*>(o.get()));
+    auto const * const v(o->as_vector());
     if(v)
     {
-      auto const * const n(dynamic_cast<integer const*>(key.get()));
+      auto const * const n(key->as_integer());
       if(!n)
       {
         /* TODO: Throw error. */

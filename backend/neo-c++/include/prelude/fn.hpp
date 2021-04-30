@@ -64,6 +64,9 @@ namespace jank
     detail::string_type to_string() const override;
     detail::integer_type to_hash() const override;
 
+    function const* as_function() const override;
+    callable const* as_callable() const override;
+
     object_ptr call() const override;
     object_ptr call(object_ptr const&) const override;
     object_ptr call(object_ptr const&, object_ptr const&) const override;
@@ -88,7 +91,7 @@ namespace jank
       { return f(std::forward<Args>(args)...); }
       else
       {
-        auto const * const c(dynamic_cast<callable const*>(f->get()));
+        auto const * const c((*f)->as_callable());
 
         if(c)
         { return c->call(std::forward<Args>(args)...); }

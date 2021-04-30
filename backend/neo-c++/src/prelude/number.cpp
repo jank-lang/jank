@@ -12,7 +12,7 @@ namespace jank
 
   detail::boolean_type boolean::equal(object const &o) const
   {
-    auto const *b(dynamic_cast<boolean const*>(&o));
+    auto const *b(o.as_boolean());
     if(!b)
     { return false; }
 
@@ -23,15 +23,13 @@ namespace jank
   { return data ? "true" : "false"; }
   detail::integer_type boolean::to_hash() const
   { return data ? 1 : 0; }
-  detail::integer_type boolean::get_integer() const
-  { return data ? 1 : 0; }
-  detail::real_type boolean::get_real() const
-  { return data ? 1.0 : 0.0; }
+  boolean const* boolean::as_boolean() const
+  { return this; }
 
   /***** integer *****/
   detail::boolean_type integer::equal(object const &o) const
   {
-    auto const *i(dynamic_cast<integer const*>(&o));
+    auto const *i(o.as_integer());
     if(!i)
     { return false; }
 
@@ -45,11 +43,15 @@ namespace jank
   { return data; }
   detail::real_type integer::get_real() const
   { return data; }
+  integer const* integer::as_integer() const
+  { return this; }
+  number const* integer::as_number() const
+  { return this; }
 
   /***** real *****/
   detail::boolean_type real::equal(object const &o) const
   {
-    auto const *r(dynamic_cast<real const*>(&o));
+    auto const *r(o.as_real());
     if(!r)
     { return false; }
 
@@ -63,6 +65,10 @@ namespace jank
   { return data; }
   detail::real_type real::get_real() const
   { return data; }
+  real const* real::as_real() const
+  { return this; }
+  number const* real::as_number() const
+  { return this; }
 
   struct integer_ops;
   struct real_ops;
@@ -181,10 +187,9 @@ namespace jank
 
   number_ops& ops(object_ptr const &n)
   {
-    auto const * const ptr(n.get());
-    if(dynamic_cast<integer const*>(ptr))
+    if(n->as_integer())
     { return int_ops; }
-    if(dynamic_cast<real const*>(ptr))
+    if(n->as_real())
     { return r_ops; }
 
     /* TODO: Exception type. */
@@ -200,84 +205,42 @@ namespace jank
 
   /* + */
   object_ptr _gen_plus_(object_ptr const &l, object_ptr const &r)
-  {
-    return ops(l).combine(ops(r)).add
-    (
-      *dynamic_cast<number const*>(l.get()),
-      *dynamic_cast<number const*>(r.get())
-    );
-  }
+  { return ops(l).combine(ops(r)).add(*l->as_number(), *r->as_number()); }
 
   /* - */
   object_ptr _gen_minus_(object_ptr const &l, object_ptr const &r)
-  {
-    return ops(l).combine(ops(r)).subtract
-    (
-      *dynamic_cast<number const*>(l.get()),
-      *dynamic_cast<number const*>(r.get())
-    );
-  }
+  { return ops(l).combine(ops(r)).subtract(*l->as_number(), *r->as_number()); }
 
   /* * */
   object_ptr _gen_asterisk_(object_ptr const &l, object_ptr const &r)
-  {
-    return ops(l).combine(ops(r)).multiply
-    (
-      *dynamic_cast<number const*>(l.get()),
-      *dynamic_cast<number const*>(r.get())
-    );
-  }
+  { return ops(l).combine(ops(r)).multiply(*l->as_number(), *r->as_number()); }
 
   /* TODO: Rename to / once the parser supports it. */
   /* / */
   object_ptr div(object_ptr const &l, object_ptr const &r)
-  {
-    return ops(l).combine(ops(r)).divide
-    (
-      *dynamic_cast<number const*>(l.get()),
-      *dynamic_cast<number const*>(r.get())
-    );
-  }
+  { return ops(l).combine(ops(r)).divide(*l->as_number(), *r->as_number()); }
 
   object_ptr mod(object_ptr const &l, object_ptr const &r)
-  {
-    return ops(l).combine(ops(r)).remainder
-    (
-      *dynamic_cast<number const*>(l.get()),
-      *dynamic_cast<number const*>(r.get())
-    );
-  }
+  { return ops(l).combine(ops(r)).remainder(*l->as_number(), *r->as_number()); }
 
   /* < */
   object_ptr _gen_less_(object_ptr const &l, object_ptr const &r)
   {
     return make_object_ptr<boolean>
-    (
-      ops(l).combine(ops(r)).lt
-      (
-        *dynamic_cast<number const*>(l.get()),
-        *dynamic_cast<number const*>(r.get())
-      )
-    );
+    (ops(l).combine(ops(r)).lt(*l->as_number(), *r->as_number()));
   }
 
   /* <= */
   object_ptr _gen_less__gen_equal_(object_ptr const &l, object_ptr const &r)
   {
     return make_object_ptr<boolean>
-    (
-      ops(l).combine(ops(r)).lte
-      (
-        *dynamic_cast<number const*>(l.get()),
-        *dynamic_cast<number const*>(r.get())
-      )
-    );
+    (ops(l).combine(ops(r)).lte(*l->as_number(), *r->as_number()));
   }
 
   /* ->int */
   object_ptr _gen_minus__gen_greater_int(object_ptr const &o)
   {
-    auto const * const n(dynamic_cast<number const*>(o.get()));
+    auto const * const n(o->as_number());
     if(!n)
     {
       /* TODO: Throw error. */
@@ -290,7 +253,7 @@ namespace jank
   /* ->float */
   object_ptr _gen_minus__gen_greater_float(object_ptr const &o)
   {
-    auto const * const n(dynamic_cast<number const*>(o.get()));
+    auto const * const n(o->as_number());
     if(!n)
     {
       /* TODO: Throw error. */
@@ -301,14 +264,14 @@ namespace jank
   }
 
   object_ptr inc(object_ptr const &n)
-  { return ops(n).inc(*dynamic_cast<number const*>(n.get())); }
+  { return ops(n).inc(*n->as_number()); }
 
   object_ptr dec(object_ptr const &n)
-  { return ops(n).dec(*dynamic_cast<number const*>(n.get())); }
+  { return ops(n).dec(*n->as_number()); }
 
   object_ptr sqrt(object_ptr const &o)
   {
-    auto const * const n(dynamic_cast<number const*>(o.get()));
+    auto const * const n(o->as_number());
     if(!n)
     {
       /* TODO: Throw error. */
@@ -320,7 +283,7 @@ namespace jank
 
   object_ptr tan(object_ptr const &o)
   {
-    auto const * const n(dynamic_cast<number const*>(o.get()));
+    auto const * const n(o->as_number());
     if(!n)
     {
       /* TODO: Throw error. */
@@ -332,8 +295,8 @@ namespace jank
 
   object_ptr pow(object_ptr const &l, object_ptr const &r)
   {
-    auto const * const l_num(dynamic_cast<number const*>(l.get()));
-    auto const * const r_num(dynamic_cast<number const*>(r.get()));
+    auto const * const l_num(l->as_number());
+    auto const * const r_num(r->as_number());
     if(!l_num || !r_num)
     {
       /* TODO: Throw error. */
@@ -344,23 +307,11 @@ namespace jank
   }
 
   object_ptr abs(object_ptr const &n)
-  { return ops(n).abs(*dynamic_cast<number const*>(n.get())); }
+  { return ops(n).abs(*n->as_number()); }
 
   object_ptr min(object_ptr const &l, object_ptr const &r)
-  {
-    return ops(l).combine(ops(r)).min
-    (
-      *dynamic_cast<number const*>(l.get()),
-      *dynamic_cast<number const*>(r.get())
-    );
-  }
+  { return ops(l).combine(ops(r)).min(*l->as_number(), *r->as_number()); }
 
   object_ptr max(object_ptr const &l, object_ptr const &r)
-  {
-    return ops(l).combine(ops(r)).max
-    (
-      *dynamic_cast<number const*>(l.get()),
-      *dynamic_cast<number const*>(r.get())
-    );
-  }
+  { return ops(l).combine(ops(r)).max(*l->as_number(), *r->as_number()); }
 }

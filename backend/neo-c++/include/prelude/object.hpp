@@ -32,11 +32,49 @@ namespace jank
     //using box_type = immer::box<T, detail::memory_policy>;
   }
 
+  struct nil;
+  struct boolean;
+  struct integer;
+  struct real;
+  struct number;
+  struct string;
+  struct vector;
+  struct map;
+  struct set;
+  struct seqable;
+  struct function;
+  struct callable;
+
   struct object
   {
     virtual detail::boolean_type equal(object const &) const = 0;
     virtual detail::string_type to_string() const = 0;
     virtual detail::integer_type to_hash() const = 0;
+
+    virtual nil const* as_nil() const
+    { return nullptr; }
+    virtual boolean const* as_boolean() const
+    { return nullptr; }
+    virtual integer const* as_integer() const
+    { return nullptr; }
+    virtual real const* as_real() const
+    { return nullptr; }
+    virtual number const* as_number() const
+    { return nullptr; }
+    virtual string const* as_string() const
+    { return nullptr; }
+    virtual vector const* as_vector() const
+    { return nullptr; }
+    virtual map const* as_map() const
+    { return nullptr; }
+    virtual set const* as_set() const
+    { return nullptr; }
+    virtual seqable const* as_seqable() const
+    { return nullptr; }
+    virtual function const* as_function() const
+    { return nullptr; }
+    virtual callable const* as_callable() const
+    { return nullptr; }
   };
   using object_ptr = detail::box_type<object>;
 
@@ -89,6 +127,8 @@ namespace jank
     detail::boolean_type equal(object const &) const override;
     detail::string_type to_string() const override;
     detail::integer_type to_hash() const override;
+
+    nil const* as_nil() const override;
   };
   extern object_ptr JANK_NIL;
 }
