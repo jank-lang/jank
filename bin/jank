@@ -13,7 +13,8 @@ output_hpp=jank-generated.hpp
 
 cxx=${CXX:-c++}
 release_opts="-Ofast -march=native -fwhole-program -flto"
-debug_opts="-g -fno-omit-frame-pointer"
+profile_opts="$release_opts -g -fno-omit-frame-pointer"
+debug_opts="-g -Og"
 
 pushd $here/.. > /dev/null
   echo "Compiling to C++..."
@@ -25,7 +26,7 @@ pushd $here/.. > /dev/null
   if [ $ret -eq 0 ];
   then
     echo "Compiling to binary..."
-    $cxx $release_opts -std=c++17 -o $2 \
+    $cxx $profile_opts -std=c++17 -o $2 \
       -I$here/../backend/neo-c++/include \
       -I$here/../lib/immer \
       -I$here/../lib/bdwgc/install/usr/local/include \
