@@ -98,7 +98,7 @@ namespace jank
     struct object_ptr_equal
     {
       static bool equal(object_ptr const &l, object_ptr const &r)
-      { return l->equal(*r); }
+      { return l == r || l->equal(*r); }
 
       inline bool operator()(object_ptr const &l, object_ptr const &r) const
       { return equal(l, r); }
@@ -148,100 +148,3 @@ namespace std
     }
   };
 }
-
-//  template <>
-//  struct hash<jank::detail::function>
-//  {
-//    size_t operator()(jank::detail::function const &f) const noexcept
-//    { return reinterpret_cast<size_t>(&f); }
-//  };
-//
-//  template <>
-//  struct hash<jank::detail::nil>
-//  {
-//    size_t operator()(jank::detail::nil const &) const noexcept
-//    { return 0; }
-//  };
-//
-//  template <typename T, typename M>
-//  struct hash<immer::vector<T, M>>
-//  {
-//    size_t operator()(immer::vector<T, M> const &v) const noexcept
-//    {
-//      size_t seed{ v.size() };
-//      for(auto const &e : v)
-//      { seed = jank::detail::hash_combine(seed, e); }
-//      return seed;
-//    }
-//  };
-//
-//  template <typename T, typename H, typename E, typename M>
-//  struct hash<immer::set<T, H, E, M>>
-//  {
-//    size_t operator()(immer::set<T, H, E, M> const &s) const noexcept
-//    {
-//      size_t seed{ s.size() };
-//      for(auto const &e : s)
-//      { seed = jank::detail::hash_combine(seed, e); }
-//      return seed;
-//    }
-//  };
-//
-//  template <typename K, typename V, typename H, typename E, typename M>
-//  struct hash<immer::map<K, V, H, E, M>>
-//  {
-//    size_t operator()(immer::map<K, V, H, E, M> const &m) const noexcept
-//    {
-//      size_t seed{ m.size() };
-//      for(auto const &e : m)
-//      {
-//        seed = jank::detail::hash_combine(seed, e.first);
-//        seed = jank::detail::hash_combine(seed, e.second);
-//      }
-//      return seed;
-//    }
-//  };
-//}
-//
-//  inline std::ostream& operator<<(std::ostream &os, object const &o)
-//  {
-//    switch(o.current_kind)
-//    {
-//      case object::kind::nil:
-//        os << "nil";
-//        break;
-//      case object::kind::integer:
-//        os << o.current_data.int_data;
-//        break;
-//      case object::kind::real:
-//        os << o.current_data.real_data;
-//        break;
-//      case object::kind::boolean:
-//        os << (o.current_data.bool_data ? "true" : "false");
-//        break;
-//      case object::kind::string:
-//        os << "\"" << o.current_data.string_data << "\"";
-//        break;
-//      case object::kind::vector:
-//        break;
-//      case object::kind::set:
-//        os << "#{";
-//        std::copy
-//        (
-//          std::begin(o.current_data.vector_data),
-//          std::end(o.current_data.vector_data),
-//          std::experimental::make_ostream_joiner(os, " ")
-//        );
-//        os << "}";
-//        break;
-//      case object::kind::map:
-//        break;
-//      case object::kind::function:
-//        os << "<function>";
-//        break;
-//    }
-//    return os;
-//  }
-//  template<typename... Ts>
-//  object_ptr JANK_SET(Ts &&... args)
-//  { return make_box(detail::set{ std::forward<Ts>(args)... }); }

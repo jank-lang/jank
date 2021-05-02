@@ -44,7 +44,7 @@ namespace jank
 
   template <size_t N, typename... Args>
   struct build_arity
-  { using type = typename build_arity<N - 1, Args..., object_ptr>::type; };
+  { using type = typename build_arity<N - 1, Args..., object_ptr const &>::type; };
   template <typename... Args>
   struct build_arity<0, Args...>
   { using type = object_ptr (Args const&...); };
