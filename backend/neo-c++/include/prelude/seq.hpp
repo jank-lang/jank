@@ -4,7 +4,7 @@
 
 namespace jank
 {
-  struct sequence
+  struct sequence : virtual pool_item_common_base
   {
     using sequence_pointer = detail::box_type<sequence>;
 
@@ -16,7 +16,7 @@ namespace jank
   struct seqable
   { virtual sequence_pointer seq() const = 0; };
 
-  struct string : object
+  struct string : object, pool_item_base<string>
   {
     string() = default;
     string(string &&) = default;
@@ -37,7 +37,7 @@ namespace jank
     detail::string_type data;
   };
 
-  struct vector : object, seqable
+  struct vector : object, seqable, pool_item_base<vector>
   {
     vector() = default;
     vector(vector &&) = default;
@@ -63,9 +63,9 @@ namespace jank
 
   template <typename... Args>
   object_ptr JANK_VECTOR(Args &&... args)
-  { return make_object_ptr<vector>(detail::vector_type{ std::forward<Args>(args)... }); }
+  { return make_box<vector>(detail::vector_type{ std::forward<Args>(args)... }); }
 
-  struct map : object, seqable
+  struct map : object, seqable, pool_item_base<map>
   {
     map() = default;
     map(map &&) = default;
@@ -103,10 +103,10 @@ namespace jank
     /* XXX: It's somehow consistently faster to use `m` and move it, rather than just return
      * the result of JANK_MAP_IMPL. */
     detail::map_type m{ JANK_MAP_IMPL(detail::map_type{}, std::forward<Kvs>(kvs)...) };
-    return make_object_ptr<map>(std::move(m));
+    return make_box<map>(std::move(m));
   }
 
-  struct set : object, seqable
+  struct set : object, seqable, pool_item_base<set>
   {
     set() = default;
     set(set &&) = default;

@@ -11,6 +11,7 @@ namespace jank
       template <typename T>
       using value_type = std::function<T>;
 
+      function_type() = default;
       template <typename R, typename... Args>
       function_type(R (* const f)(Args...)) : function_type(value_type<R (Args...)>{ f })
       { }
@@ -33,7 +34,7 @@ namespace jank
   struct invalid_arity
   { };
 
-  struct callable
+  struct callable : virtual pool_item_common_base
   {
     virtual object_ptr call() const;
     virtual object_ptr call(object_ptr const&) const;
@@ -48,7 +49,7 @@ namespace jank
     virtual object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const;
   };
 
-  struct function : object, callable
+  struct function : object, callable, pool_item_base<function>
   {
     function() = default;
     function(function &&) = default;

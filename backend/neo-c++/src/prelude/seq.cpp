@@ -27,8 +27,9 @@ namespace jank
   { return this; }
 
   template <typename It>
-  struct basic_iterator_wrapper : sequence
+  struct basic_iterator_wrapper : sequence, pool_item_base<basic_iterator_wrapper<It>>
   {
+    basic_iterator_wrapper() = default;
     basic_iterator_wrapper(It const &b, It const &e)
       : begin{ b }, end { e }
     { }
@@ -97,14 +98,16 @@ namespace jank
   }
 
   template <typename It>
-  struct map_iterator_wrapper : sequence
+  struct map_iterator_wrapper : sequence, pool_item_base<map_iterator_wrapper<It>>
   {
+    map_iterator_wrapper() = default;
     map_iterator_wrapper(It const &b, It const &e)
-      : begin{ b }, end { e }
+      : begin{ b }
+      , end{ e }
     { }
 
     object_ptr first() const override
-    { return make_object_ptr<vector>(detail::vector_type{ begin->first, begin->second }); }
+    { return make_box<vector>(detail::vector_type{ begin->first, begin->second }); }
     sequence_pointer next() const override
     {
       auto n(begin);
@@ -208,7 +211,7 @@ namespace jank
     for(auto s(sable->seq()); s != nullptr; s = s->next())
     { ret.push_back(func->call(s->first())); }
 
-    return make_object_ptr<vector>(ret.persistent());
+    return make_box<vector>(ret.persistent());
   }
 
   object_ptr reduce(object_ptr const &f, object_ptr const &initial, object_ptr const &seq)
@@ -266,10 +269,10 @@ namespace jank
       for(size_t k{}; k < partition_size && s != nullptr; ++k, s = s->next())
       { partition.push_back(s->first()); }
 
-      ret.push_back(make_object_ptr<vector>(partition.persistent()));
+      ret.push_back(make_box<vector>(partition.persistent()));
     }
 
-    return make_object_ptr<vector>(ret.persistent());
+    return make_box<vector>(ret.persistent());
   }
 
   /* TODO: Laziness */
@@ -296,8 +299,8 @@ namespace jank
 
     detail::vector_transient_type ret;
     for(auto i(start_int); i < end_int; ++i)
-    { ret.push_back(make_object_ptr<integer>(i)); }
-    return make_object_ptr<vector>(ret.persistent());
+    { ret.push_back(make_box<integer>(i)); }
+    return make_box<vector>(ret.persistent());
   }
 
   object_ptr reverse(object_ptr const &seq)
@@ -318,7 +321,7 @@ namespace jank
     for(auto it(in_order.rbegin()); it != in_order.rend(); ++it)
     { reverse_order.push_back(std::move(*it)); }
 
-    return make_object_ptr<vector>(reverse_order.persistent());
+    return make_box<vector>(reverse_order.persistent());
   }
 
   /* TODO: Associative interface. */
@@ -369,7 +372,7 @@ namespace jank
           std::cout << "(conj) invalid map entry: " << *val << std::endl;
           return JANK_NIL;
         }
-        return make_object_ptr<map>(m->data.set(v->data[0], v->data[1]));
+        return make_box<map>(m->data.set(v->data[0], v->data[1]));
       }
       else
       { return JANK_NIL; }
@@ -377,7 +380,7 @@ namespace jank
 
     auto const * const v(o->as_vector());
     if(v)
-    { return make_object_ptr<vector>(v->data.push_back(val)); }
+    { return make_box<vector>(v->data.push_back(val)); }
 
     std::cout << "(conj) unsupported for: " << *o << std::endl;
     return JANK_NIL;
@@ -387,7 +390,7 @@ namespace jank
   {
     auto const * const m(o->as_map());
     if(m)
-    { return make_object_ptr<map>(m->data.set(key, val)); }
+    { return make_box<map>(m->data.set(key, val)); }
 
     auto const * const v(o->as_vector());
     if(v)
@@ -408,9 +411,9 @@ namespace jank
         return JANK_NIL;
       }
       else if(n->data == size)
-      { return make_object_ptr<vector>(v->data.push_back(val)); }
+      { return make_box<vector>(v->data.push_back(val)); }
 
-      return make_object_ptr<vector>(v->data.set(n->data, val));
+      return make_box<vector>(v->data.set(n->data, val));
     }
 
     std::cout << "(get) not associative: " << *o << std::endl;

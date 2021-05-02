@@ -17,12 +17,12 @@
     :boolean (if (::parse.spec/value expression)
                "JANK_TRUE"
                "JANK_FALSE")
-    :integer (str "make_object_ptr<integer>(" (::parse.spec/value expression) ")")
-    :real (str "make_object_ptr<real>(" (::parse.spec/value expression) ")")
+    :integer (str "make_box<integer>(" (::parse.spec/value expression) ")")
+    :real (str "make_box<real>(" (::parse.spec/value expression) ")")
     ; TODO: Escape quotes.
-    :string (str "make_object_ptr<string>(\"" (::parse.spec/value expression) "\")")
+    :string (str "make_box<string>(\"" (::parse.spec/value expression) "\")")
     ; TODO: Raw string?
-    :regex (str "make_object_ptr<regex>(\"" (::parse.spec/value expression) "\")")
+    :regex (str "make_box<regex>(\"" (::parse.spec/value expression) "\")")
     :map (str "JANK_MAP("
               (->> (mapcat vals (::parse.spec/values expression))
                    (map expression->code)
@@ -148,7 +148,7 @@
         need-return? (case (::parse.spec/kind return-expr)
                        :if false
                        true)]
-    (str "make_object_ptr<function>(std::function<" fn-type ">{"
+    (str "make_box<function>(std::function<" fn-type ">{"
          "[&]("
          (clojure.string/join ", " params)
          ") -> object_ptr {\n"

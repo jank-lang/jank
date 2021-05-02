@@ -7,8 +7,8 @@
 namespace jank
 {
   /***** boolean *****/
-  object_ptr JANK_TRUE{ make_object_ptr<boolean>(true) };
-  object_ptr JANK_FALSE{ make_object_ptr<boolean>(false) };
+  object_ptr JANK_TRUE{ make_box<boolean>(true) };
+  object_ptr JANK_FALSE{ make_box<boolean>(false) };
 
   detail::boolean_type boolean::equal(object const &o) const
   {
@@ -103,27 +103,27 @@ namespace jank
     number_ops const& with(integer_ops const&) const override;
     number_ops const& with(real_ops const&) const override;
     object_ptr add() const override
-    { return make_object_ptr<integer>(left + right); }
+    { return make_box<integer>(left + right); }
     object_ptr subtract() const override
-    { return make_object_ptr<integer>(left - right); }
+    { return make_box<integer>(left - right); }
     object_ptr multiply() const override
-    { return make_object_ptr<integer>(left * right); }
+    { return make_box<integer>(left * right); }
     object_ptr divide() const override
-    { return make_object_ptr<integer>(left / right); }
+    { return make_box<integer>(left / right); }
     object_ptr remainder() const override
-    { return make_object_ptr<integer>(left % right); }
+    { return make_box<integer>(left % right); }
     object_ptr inc() const override
-    { return make_object_ptr<integer>(left + 1); }
+    { return make_box<integer>(left + 1); }
     object_ptr dec() const override
-    { return make_object_ptr<integer>(left - 1); }
+    { return make_box<integer>(left - 1); }
     object_ptr negate() const override
-    { return make_object_ptr<integer>(-left); }
+    { return make_box<integer>(-left); }
     object_ptr abs() const override
-    { return make_object_ptr<integer>(std::abs(left)); }
+    { return make_box<integer>(std::abs(left)); }
     object_ptr min() const override
-    { return make_object_ptr<integer>(std::min(left, right)); }
+    { return make_box<integer>(std::min(left, right)); }
     object_ptr max() const override
-    { return make_object_ptr<integer>(std::max(left, right)); }
+    { return make_box<integer>(std::max(left, right)); }
     detail::boolean_type lt() const override
     { return left < right; }
     detail::boolean_type lte() const override
@@ -143,27 +143,27 @@ namespace jank
     number_ops const& with(integer_ops const&) const override;
     number_ops const& with(real_ops const&) const override;
     object_ptr add() const override
-    { return make_object_ptr<real>(left + right); }
+    { return make_box<real>(left + right); }
     object_ptr subtract() const override
-    { return make_object_ptr<real>(left - right); }
+    { return make_box<real>(left - right); }
     object_ptr multiply() const override
-    { return make_object_ptr<real>(left * right); }
+    { return make_box<real>(left * right); }
     object_ptr divide() const override
-    { return make_object_ptr<real>(left / right); }
+    { return make_box<real>(left / right); }
     object_ptr remainder() const override
-    { return make_object_ptr<real>(std::fmod(left, right)); }
+    { return make_box<real>(std::fmod(left, right)); }
     object_ptr inc() const override
-    { return make_object_ptr<real>(left + 1); }
+    { return make_box<real>(left + 1); }
     object_ptr dec() const override
-    { return make_object_ptr<real>(right + 1); }
+    { return make_box<real>(right + 1); }
     object_ptr negate() const override
-    { return make_object_ptr<real>(-left); }
+    { return make_box<real>(-left); }
     object_ptr abs() const override
-    { return make_object_ptr<real>(std::abs(left)); }
+    { return make_box<real>(std::abs(left)); }
     object_ptr min() const override
-    { return make_object_ptr<real>(std::min(left, right)); }
+    { return make_box<real>(std::min(left, right)); }
     object_ptr max() const override
-    { return make_object_ptr<real>(std::max(left, right)); }
+    { return make_box<real>(std::max(left, right)); }
     detail::boolean_type lt() const override
     { return left < right; }
     detail::boolean_type lte() const override
@@ -233,7 +233,7 @@ namespace jank
   {
     static std::uniform_real_distribution<detail::real_type> distribution(0.0, 1.0);
     static std::mt19937 generator;
-    return make_object_ptr<real>(distribution(generator));
+    return make_box<real>(distribution(generator));
   }
 
   /* + */
@@ -259,14 +259,14 @@ namespace jank
   /* < */
   object_ptr _gen_less_(object_ptr const &l, object_ptr const &r)
   {
-    return make_object_ptr<boolean>
+    return make_box<boolean>
     (right_ops(r).combine(left_ops(l)).lt());
   }
 
   /* <= */
   object_ptr _gen_less__gen_equal_(object_ptr const &l, object_ptr const &r)
   {
-    return make_object_ptr<boolean>
+    return make_box<boolean>
     (right_ops(r).combine(left_ops(l)).lte());
   }
 
@@ -280,7 +280,7 @@ namespace jank
       std::cout << "(->int) not a number: " << *o << std::endl;
       return JANK_NIL;
     }
-    return make_object_ptr<integer>(n->get_integer());
+    return make_box<integer>(n->get_integer());
   }
 
   /* ->float */
@@ -293,7 +293,7 @@ namespace jank
       std::cout << "(->float) not a number: " << *o << std::endl;
       return JANK_NIL;
     }
-    return make_object_ptr<real>(n->get_real());
+    return make_box<real>(n->get_real());
   }
 
   object_ptr inc(object_ptr const &n)
@@ -311,7 +311,7 @@ namespace jank
       std::cout << "(sqrt) not a number: " << *o << std::endl;
       return JANK_NIL;
     }
-    return make_object_ptr<real>(std::sqrt(n->get_real()));
+    return make_box<real>(std::sqrt(n->get_real()));
   }
 
   object_ptr tan(object_ptr const &o)
@@ -323,7 +323,7 @@ namespace jank
       std::cout << "(tan) not a number: " << *o << std::endl;
       return JANK_NIL;
     }
-    return make_object_ptr<real>(std::tan(n->get_real()));
+    return make_box<real>(std::tan(n->get_real()));
   }
 
   object_ptr pow(object_ptr const &l, object_ptr const &r)
@@ -336,7 +336,7 @@ namespace jank
       std::cout << "(pow) not a number: " << *l << " and " << *r << std::endl;
       return JANK_NIL;
     }
-    return make_object_ptr<real>(std::pow(l_num->get_real(), r_num->get_real()));
+    return make_box<real>(std::pow(l_num->get_real(), r_num->get_real()));
   }
 
   object_ptr abs(object_ptr const &n)

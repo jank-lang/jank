@@ -10,7 +10,7 @@ namespace jank
     virtual detail::real_type get_real() const = 0;
   };
 
-  struct boolean : object
+  struct boolean : object, pool_item_base<boolean>
   {
     boolean() = default;
     boolean(boolean &&) = default;
@@ -30,7 +30,7 @@ namespace jank
   extern object_ptr JANK_TRUE;
   extern object_ptr JANK_FALSE;
 
-  struct integer : object, number
+  struct integer : object, number, pool_item_base<integer>
   {
     integer() = default;
     integer(integer &&) = default;
@@ -52,7 +52,7 @@ namespace jank
     detail::integer_type data{};
   };
 
-  struct real : object, number
+  struct real : object, number, pool_item_base<real>
   {
     real() = default;
     real(real &&) = default;

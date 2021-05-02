@@ -27,6 +27,6 @@ namespace jank
   {
     detail::string_type input;
     std::getline(std::cin, input);
-    return make_object_ptr<string>(std::move(input));
+    return make_box<string>(std::move(input));
   }
 }

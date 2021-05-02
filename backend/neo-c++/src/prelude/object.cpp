@@ -3,7 +3,7 @@
 
 namespace jank
 {
-  object_ptr JANK_NIL{ make_object_ptr<nil>() };
+  object_ptr JANK_NIL{ make_box<nil>() };
 
   detail::boolean_type nil::equal(object const &o) const
   {

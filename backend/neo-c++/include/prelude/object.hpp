@@ -6,7 +6,6 @@
 #include <functional>
 #include <memory>
 
-#define IMMER_HAS_LIBGC 1
 #include <immer/vector.hpp>
 #include <immer/vector_transient.hpp>
 #include <immer/map.hpp>
@@ -14,21 +13,24 @@
 #include <immer/set.hpp>
 #include <immer/set_transient.hpp>
 #include <immer/box.hpp>
-#include <immer/heap/gc_heap.hpp>
 #include <immer/memory_policy.hpp>
+
+#include <prelude/memory_pool.hpp>
 
 namespace jank
 {
   namespace detail
   {
     using memory_policy = immer::memory_policy<immer::free_list_heap_policy<immer::cpp_heap>, immer::refcount_policy, immer::default_lock_policy>;
+    //using memory_policy = immer::memory_policy<immer::heap_policy<immer::gc_heap>, immer::no_refcount_policy, immer::default_lock_policy>;
     using integer_type = int64_t;
     using real_type = double;
     using boolean_type = bool;
     using string_type = std::string;
 
     template <typename T>
-    using box_type = std::shared_ptr<T>;
+    //using box_type = std::shared_ptr<T>;
+    using box_type = boost::intrusive_ptr<T>;
     //using box_type = immer::box<T, detail::memory_policy>;
   }
 
@@ -45,7 +47,7 @@ namespace jank
   struct function;
   struct callable;
 
-  struct object
+  struct object : virtual pool_item_common_base
   {
     virtual detail::boolean_type equal(object const &) const = 0;
     virtual detail::string_type to_string() const = 0;
@@ -80,24 +82,16 @@ namespace jank
 
   inline std::ostream& operator<<(std::ostream &os, object const &o)
   { return os << o.to_string(); }
-  inline std::ostream& operator<<(std::ostream &os, object_ptr const &o)
-  { return os << o->to_string(); }
 
-  template <typename C>
-  object_ptr make_object_ptr()
-  { return std::make_shared<C>(); }
-  template <typename C, typename T, std::enable_if_t<!std::is_same_v<std::decay_t<T>, object_ptr>, bool> = true>
-  object_ptr make_object_ptr(T &&t)
-  { return std::make_shared<C>(std::forward<T>(t)); }
-  inline object_ptr make_object_ptr(object_ptr const &o)
+  template <typename T>
+  inline detail::box_type<T> make_box(detail::box_type<T> const &o)
   { return o; }
-
   template <typename C>
   auto make_box()
-  { return std::make_shared<C>(); }
+  { return get_pool<C>().allocate(); }
   template <typename C, typename... Args>
   auto make_box(Args &&... args)
-  { return std::make_shared<C>(std::forward<Args>(args)...); }
+  { return get_pool<C>().allocate(std::forward<Args>(args)...); }
 
   namespace detail
   {
@@ -118,7 +112,7 @@ namespace jank
     using map_transient_type = map_type::transient_type;
   }
 
-  struct nil : object
+  struct nil : object, pool_item_base<nil>
   {
     nil() = default;
     nil(nil &&) = default;
@@ -131,6 +125,8 @@ namespace jank
     nil const* as_nil() const override;
   };
   extern object_ptr JANK_NIL;
+  extern object_ptr JANK_TRUE;
+  extern object_ptr JANK_FALSE;
 }
 
 namespace std
@@ -248,4 +244,4 @@ namespace std
 //  }
 //  template<typename... Ts>
 //  object_ptr JANK_SET(Ts &&... args)
-//  { return make_object_ptr(detail::set{ std::forward<Ts>(args)... }); }
+//  { return make_box(detail::set{ std::forward<Ts>(args)... }); }
