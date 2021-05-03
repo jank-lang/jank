@@ -19,10 +19,7 @@ namespace jank
   detail::string_type string::to_string() const
   { return data; }
   detail::integer_type string::to_hash() const
-  {
-    static std::hash<detail::string_type> hasher;
-    return hasher(data);
-  }
+  { return data.to_hash(); }
   string const* string::as_string() const
   { return this; }
 
@@ -68,14 +65,16 @@ namespace jank
   }
   detail::string_type vector::to_string() const
   {
+    auto const end(data.end());
     std::stringstream ss;
     ss << "[";
-    std::copy
-    (
-      data.begin(),
-      data.end(),
-      std::experimental::make_ostream_joiner(ss, " ")
-    );
+    for(auto i(data.begin()); i != end; ++i)
+    {
+      ss << **i;
+      auto n(i);
+      if(++n != end)
+      { ss << " "; }
+    }
     ss << "]";
     return ss.str();
   }

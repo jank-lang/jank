@@ -6,7 +6,7 @@ namespace jank
 {
   inline object_ptr print(object_ptr const &o)
   {
-    std::cout << o->to_string();
+    std::cout << *o;
     return JANK_NIL;
   }
 
@@ -25,7 +25,8 @@ namespace jank
 
   inline object_ptr read_gen_minus_line()
   {
-    detail::string_type input;
+    /* TODO: Optimize by reading into string_type. */
+    std::string input;
     std::getline(std::cin, input);
     return make_box<string>(std::move(input));
   }

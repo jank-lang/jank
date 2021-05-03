@@ -9,6 +9,8 @@ namespace jank
   /***** boolean *****/
   object_ptr JANK_TRUE{ make_box<boolean>(true) };
   object_ptr JANK_FALSE{ make_box<boolean>(false) };
+  static detail::string_type str_true{ "true" };
+  static detail::string_type str_false{ "false" };
 
   detail::boolean_type boolean::equal(object const &o) const
   {
@@ -19,8 +21,7 @@ namespace jank
     return data == b->data;
   }
   detail::string_type boolean::to_string() const
-  /* TODO: Optimize. */
-  { return data ? "true" : "false"; }
+  { return data ? str_true : str_false; }
   detail::integer_type boolean::to_hash() const
   { return data ? 1 : 0; }
   boolean const* boolean::as_boolean() const
@@ -36,6 +37,7 @@ namespace jank
     return data == i->data;
   }
   detail::string_type integer::to_string() const
+  /* TODO: Optimize by rendering into string_type. */
   { return std::to_string(data); }
   detail::integer_type integer::to_hash() const
   { return data; }
@@ -58,6 +60,7 @@ namespace jank
     return data == r->data;
   }
   detail::string_type real::to_string() const
+  /* TODO: Optimize by rendering into string_type. */
   { return std::to_string(data); }
   detail::integer_type real::to_hash() const
   { return static_cast<detail::integer_type>(data); }

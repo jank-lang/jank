@@ -16,6 +16,7 @@
 #include <immer/memory_policy.hpp>
 
 #include <prelude/memory_pool.hpp>
+#include <prelude/detail/string_type.hpp>
 
 namespace jank
 {
@@ -26,7 +27,7 @@ namespace jank
     using integer_type = int64_t;
     using real_type = double;
     using boolean_type = bool;
-    using string_type = std::string;
+    //using string_type = std::string;
 
     template <typename T>
     //using box_type = std::shared_ptr<T>;
@@ -81,6 +82,7 @@ namespace jank
   using object_ptr = detail::box_type<object>;
 
   inline std::ostream& operator<<(std::ostream &os, object const &o)
+  /* TODO: Optimize this by using virtual dispatch to write into the stream. */
   { return os << o.to_string(); }
 
   template <typename T>
