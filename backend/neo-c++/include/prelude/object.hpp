@@ -12,7 +12,6 @@
 #include <immer/map_transient.hpp>
 #include <immer/set.hpp>
 #include <immer/set_transient.hpp>
-#include <immer/box.hpp>
 #include <immer/memory_policy.hpp>
 
 #include <prelude/memory_pool.hpp>
@@ -23,16 +22,13 @@ namespace jank
   namespace detail
   {
     using memory_policy = immer::memory_policy<immer::free_list_heap_policy<immer::cpp_heap>, immer::refcount_policy, immer::default_lock_policy>;
-    //using memory_policy = immer::memory_policy<immer::heap_policy<immer::gc_heap>, immer::no_refcount_policy, immer::default_lock_policy>;
     using integer_type = int64_t;
     using real_type = double;
     using boolean_type = bool;
-    //using string_type = std::string;
+    using string_type = string_type_impl<memory_policy>;
 
     template <typename T>
-    //using box_type = std::shared_ptr<T>;
     using box_type = boost::intrusive_ptr<T>;
-    //using box_type = immer::box<T, detail::memory_policy>;
   }
 
   struct nil;
