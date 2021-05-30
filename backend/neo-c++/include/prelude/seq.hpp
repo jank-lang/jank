@@ -99,7 +99,9 @@ namespace jank
   {
     /* XXX: It's somehow consistently faster to use `m` and move it, rather than just return
      * the result of JANK_MAP_IMPL. */
-    detail::map_type m{ JANK_MAP_IMPL(detail::map_type{}, std::forward<Kvs>(kvs)...) };
+    //detail::map_type m{ JANK_MAP_IMPL(detail::map_type{}, std::forward<Kvs>(kvs)...) };
+    detail::map_type m;
+    m.insert_all(std::forward<Kvs>(kvs)...);
     return make_box<map>(std::move(m));
   }
 

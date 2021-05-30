@@ -17,6 +17,7 @@
 
 #include <prelude/memory_pool.hpp>
 #include <prelude/detail/string_type.hpp>
+#include <prelude/detail/map_type.hpp>
 
 namespace jank
 {
@@ -117,7 +118,8 @@ namespace jank
     using set_type = immer::set<object_ptr, std::hash<object_ptr>, std::equal_to<object_ptr>, detail::memory_policy>;
     using set_transient_type = set_type::transient_type;
     //using map_type = immer::map<object_ptr, object_ptr, std::hash<object_ptr>, object_ptr_equal, detail::memory_policy>;
-    using map_type = std::map<object_ptr, object_ptr, object_ptr_less>;
+    //using map_type = std::map<object_ptr, object_ptr, object_ptr_less>;
+    using map_type = map_type_impl<object_ptr, object_ptr>;
     //using map_transient_type = map_type::transient_type;
   }
 

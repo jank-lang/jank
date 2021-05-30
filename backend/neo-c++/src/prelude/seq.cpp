@@ -3,6 +3,7 @@
 
 #include <prelude/seq.hpp>
 #include <prelude/util.hpp>
+#include <prelude/hash.hpp>
 #include <prelude/fn.hpp>
 
 namespace jank
@@ -166,7 +167,7 @@ namespace jank
   {
     if(data.size() == 0)
     { return nullptr; }
-    return make_box<map_iterator_wrapper<detail::map_type::const_iterator>>(data.cbegin(), data.cend());
+    return make_box<map_iterator_wrapper<detail::map_type::const_iterator>>(data.begin(), data.end());
   }
 
   ///***** set *****/
@@ -331,9 +332,8 @@ namespace jank
     auto const * const m(o->as_map());
     if(m)
     {
-      auto const found(m->data.find(key));
-      if(found != m->data.end())
-      { return found->second; }
+      if(auto const * found = m->data.find(key))
+      { return *found; }
       else
       { return JANK_NIL; }
     }
