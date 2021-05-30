@@ -48,14 +48,14 @@ namespace jank::detail
       size_t h{};
       for(size_t i{}; i < length; ++i)
       { h = 31 * h + (s[i] & 0xff); }
-      const_cast<string_type_impl*>(this)->hash = h;
+      hash = h;
       return h;
     }
 
     value_type data;
     /* TODO: Consider removing this. */
     size_t length{};
-    size_t hash{};
+    mutable size_t hash{};
 
     template <typename M>
     friend std::ostream& operator<<(std::ostream&, string_type_impl<M> const&);

@@ -91,8 +91,8 @@ namespace jank
   template <typename K, typename V, typename... Rest>
   detail::map_type JANK_MAP_IMPL(detail::map_type &&m, K &&k, V &&v, Rest &&... rest)
   {
-    return JANK_MAP_IMPL
-    (std::move(m), std::forward<Rest>(rest)...).insert({ std::forward<K>(k), std::forward<V>(v) });
+    m.insert_or_assign(std::forward<K>(k), std::forward<V>(v));
+    return JANK_MAP_IMPL(std::move(m), std::forward<Rest>(rest)...);
   }
   template <typename... Kvs>
   object_ptr JANK_MAP(Kvs &&... kvs)

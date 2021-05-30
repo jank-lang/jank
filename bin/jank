@@ -14,7 +14,7 @@ output_hpp=jank-generated.hpp
 cxx=${CXX:-c++}
 release_opts="-Ofast -march=native -fwhole-program -flto"
 profile_opts="$release_opts -g -fno-omit-frame-pointer"
-debug_opts="-g -Og -fsanitize=address"
+debug_opts="-g -Og -fsanitize=address -fno-omit-frame-pointer"
 
 pushd $here/.. > /dev/null
   echo "Compiling to C++..."

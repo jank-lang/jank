@@ -78,6 +78,7 @@ namespace jank
     ss << "]";
     return ss.str();
   }
+  /* TODO: Cache this. */
   detail::integer_type vector::to_hash() const
   {
     size_t seed{ data.size() };
@@ -146,6 +147,7 @@ namespace jank
     ss << "}";
     return ss.str();
   }
+  /* TODO: Cache this. */
   detail::integer_type map::to_hash() const
   {
     size_t seed{ data.size() };
@@ -164,7 +166,7 @@ namespace jank
   {
     if(data.size() == 0)
     { return nullptr; }
-    return make_box<map_iterator_wrapper<detail::map_type::iterator>>(data.begin(), data.end());
+    return make_box<map_iterator_wrapper<detail::map_type::const_iterator>>(data.cbegin(), data.cend());
   }
 
   ///***** set *****/
@@ -329,8 +331,9 @@ namespace jank
     auto const * const m(o->as_map());
     if(m)
     {
-      if(auto * const found = m->data.find(key))
-      { return *found; }
+      auto const found(m->data.find(key));
+      if(found != m->data.end())
+      { return found->second; }
       else
       { return JANK_NIL; }
     }
@@ -371,7 +374,9 @@ namespace jank
           std::cout << "(conj) invalid map entry: " << *val << std::endl;
           return JANK_NIL;
         }
-        return make_box<map>(m->data.set(v->data[0], v->data[1]));
+        detail::map_type copy{ m->data };
+        copy.insert_or_assign(v->data[0], v->data[1]);
+        return make_box<map>(std::move(copy));
       }
       else
       { return JANK_NIL; }
@@ -389,7 +394,11 @@ namespace jank
   {
     auto const * const m(o->as_map());
     if(m)
-    { return make_box<map>(m->data.set(key, val)); }
+    {
+      detail::map_type copy{ m->data };
+      copy.insert_or_assign(key, val);
+      return make_box<map>(std::move(copy));
+    }
 
     auto const * const v(o->as_vector());
     if(v)

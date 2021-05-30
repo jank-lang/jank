@@ -5,6 +5,7 @@
 #include <any>
 #include <functional>
 #include <memory>
+#include <map>
 
 #include <immer/vector.hpp>
 #include <immer/vector_transient.hpp>
@@ -101,13 +102,23 @@ namespace jank
       inline bool operator()(object_ptr const &l, object_ptr const &r) const
       { return equal(l, r); }
     };
+    struct object_ptr_less
+    {
+      inline bool operator()(object_ptr const &l, object_ptr const &r) const
+      {
+        auto const l_hash(l->to_hash());
+        auto const r_hash(r->to_hash());
+        return l_hash < r_hash;
+      }
+    };
 
     using vector_type = immer::vector<object_ptr, detail::memory_policy>;
     using vector_transient_type = vector_type::transient_type;
     using set_type = immer::set<object_ptr, std::hash<object_ptr>, std::equal_to<object_ptr>, detail::memory_policy>;
     using set_transient_type = set_type::transient_type;
-    using map_type = immer::map<object_ptr, object_ptr, std::hash<object_ptr>, object_ptr_equal, detail::memory_policy>;
-    using map_transient_type = map_type::transient_type;
+    //using map_type = immer::map<object_ptr, object_ptr, std::hash<object_ptr>, object_ptr_equal, detail::memory_policy>;
+    using map_type = std::map<object_ptr, object_ptr, object_ptr_less>;
+    //using map_transient_type = map_type::transient_type;
   }
 
   struct nil : object, pool_item_base<nil>
