@@ -203,6 +203,9 @@ structs
       requires generics? just overloading?
   more tests!
 
+compare performance benchmarks with clj/clje
+  https://github.com/clojerl/clojerl/blob/master/scripts/benchmark/clojure-vs-clojerl.md
+
 ** everything else: **
 figure out logo
 

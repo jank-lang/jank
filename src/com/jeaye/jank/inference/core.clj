@@ -32,14 +32,23 @@
 
 (defn scope-add-binding
   ([scope scope-path bind-name bind-type]
-   (update-in scope (conj scope-path ::names) assoc bind-name bind-type))
+   (update-in scope (conj scope-path ::names) assoc bind-name {::type bind-type}))
   ([scope scope-path bind-name bind-type value-type]
    (-> (scope-add-binding scope scope-path bind-name bind-type)
-       (update-in (conj scope-path ::types) assoc bind-name value-type))))
+       (update-in (conj scope-path ::types) assoc bind-name {::type value-type}))))
 
 (defmulti assign-typenames
   (fn [expression scope scope-path]
     (::parse.spec/kind expression)))
+
+(defn assign-all-typenames [expressions scope scope-path]
+  (reduce (fn [acc expr]
+            (let [res (assign-typenames expr (::scope acc) scope-path)]
+              (-> (update acc ::expressions conj (::expression res))
+                  (assoc ::scope (::scope res)))))
+          {::expressions []
+           ::scope scope}
+          expressions))
 
 (defmethod assign-typenames :constant
   [expression scope scope-path]
@@ -97,14 +106,17 @@
 (defmethod assign-typenames :identifier
   [expression scope scope-path]
   ; TODO: Unresolved is ok; check again at the end.
-  (if-some [ident-type (scope-lookup scope scope-path (::parse.spec/name expression))]
+  (if-some [ident-type (::type (scope-lookup scope scope-path (::parse.spec/name expression)))]
     {::expression (assoc expression
                          ::type ident-type
                          ::scope-path scope-path)
      ::scope scope}
-    (do
-      (pprint {:scope scope
-               :scope-path scope-path})
+    {::expression (assoc expression
+                         ::type (next-typename!)
+                         ::scope-path scope-path)
+     ::scope scope}
+    ; TODO: Handle externs.
+    #_(do
       (assert false (str "error: unknown identifier " (::parse.spec/name expression))))))
 
 (defmethod assign-typenames :fn

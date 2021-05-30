@@ -1,26 +1,31 @@
 (ns com.jeaye.jank.core
   (:gen-class)
-  (:require [com.jeaye.jank.parse :as parse]
+  (:require [com.jeaye.jank.log :refer [pprint]]
+            [com.jeaye.jank.parse :as parse]
             [com.jeaye.jank.parse.binding :as parse.binding]
             [com.jeaye.jank.parse.spec :as parse.spec]
             [com.jeaye.jank.inference.core :as inference.core]
             [com.jeaye.jank.optimize :as optimize]
             [com.jeaye.jank.codegen :as codegen]))
 
-(defn parse+codegen [file]
+(defn compile* [file]
   (binding [parse.binding/*input-file* file
             parse.binding/*input-source* (slurp file)]
     (let [parse-tree (parse/parse parse/prelude)
-          optimized-tree (optimize/optimize parse-tree)
-          code (codegen/generate optimized-tree)]
+          assign-res (inference.core/assign-all-typenames parse-tree {} [])
+          scope (::inference.core/scope assign-res)
+          typed-tree (::inference.core/expressions assign-res)
+          optimize-res (optimize/optimize typed-tree scope)
+          scope (:scope optimize-res)
+          code (codegen/generate (:expressions optimize-res) scope)]
       code)))
 
 (defn -main [& args]
-  (println (parse+codegen (first args)))
+  (println (compile* (first args)))
   (shutdown-agents))
 
 (comment
-  (parse+codegen "test.jank")
+  (compile* "test.jank")
 
   (let [file "test.jank"]
     (binding [parse.binding/*input-file* file

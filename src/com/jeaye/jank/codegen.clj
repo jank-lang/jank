@@ -3,6 +3,8 @@
             [orchestra.core :refer [defn-spec]]
             [com.jeaye.jank.log :refer [pprint]]
             [com.jeaye.jank.parse.spec :as parse.spec]
+            [com.jeaye.jank.inference.core :as inference.core]
+            [com.jeaye.jank.optimize.spec :as optimize.spec]
             [com.jeaye.jank.codegen.sanitize :as codegen.sanitize]
             [com.jeaye.jank.codegen.util :as codegen.util]))
 
@@ -43,21 +45,48 @@
 
 (defmethod expression->code :identifier
   [expression]
-  (codegen.sanitize/sanitize-str (::parse.spec/name expression)))
+  (let [found (get-in codegen.util/*scope* (conj (::inference.core/scope-path expression []) ; TODO: Why is this not set?
+                                                 ::inference.core/names
+                                                 (::parse.spec/name expression)))
+        boxed? (::optimize.spec/boxed? found true)
+        boxed-name (::optimize.spec/boxed-name found)]
+    (cond
+      (or (and codegen.util/*need-box?* boxed?)
+          (and (not codegen.util/*need-box?*) (not boxed?)))
+      (codegen.sanitize/sanitize-str (::parse.spec/name expression))
+
+      (and codegen.util/*need-box?* (not boxed?))
+      ; TODO: Make a new box, if needed.
+      boxed-name
+
+      (and (not codegen.util/*need-box?*) boxed?)
+      ; TODO: Unbox.
+      (codegen.sanitize/sanitize-str (::parse.spec/name expression)))))
 
 (defmethod expression->code :binding
   [expression]
-  (let [ident (expression->code (::parse.spec/identifier expression))
-        function? (= :fn (-> expression ::parse.spec/value ::parse.spec/kind))]
-    (if function?
+  (let [ident (binding [codegen.util/*need-box?* false]
+                (expression->code (::parse.spec/identifier expression)))
+        function? (= :fn (-> expression ::parse.spec/value ::parse.spec/kind))
+        global? (= ::parse.spec/global (::parse.spec/scope expression))]
+    (cond
+      (and global? function?)
+      (binding [codegen.util/*fn-name* ident
+                codegen.util/*global?* true]
+        (expression->code (::parse.spec/value expression)))
+
+      function?
       ; Allow recursion by having the fn capture its own object.
-      (str "object_ptr "
-           ident
-           ";"
-           ident
-           " = "
-           (expression->code (::parse.spec/value expression))
-           ";")
+      (binding [codegen.util/*fn-name* ident]
+        (str "object_ptr "
+             ident
+             ";"
+             ident
+             " = "
+             (expression->code (::parse.spec/value expression))
+             ";"))
+
+      :else
       (str "object_ptr const "
            ident
            "{"
@@ -141,14 +170,26 @@
         params (mapv (fn [param]
                        (str "object_ptr const &" (-> param ::parse.spec/identifier expression->code)))
                      (::parse.spec/parameters expression))
-        body (mapv expression->code (-> expression ::parse.spec/body ::parse.spec/body))
+        body (binding [codegen.util/*global?* false]
+               (mapv expression->code (-> expression ::parse.spec/body ::parse.spec/body)))
         return-expr (-> expression ::parse.spec/body ::parse.spec/return)
-        return (binding [codegen.util/*inline-return?* true]
+        return (binding [codegen.util/*global?* false
+                         codegen.util/*inline-return?* true]
                  (expression->code return-expr))
         need-return? (case (::parse.spec/kind return-expr)
                        :if false
-                       true)]
-    (str "make_box<function>(std::function<" fn-type ">{"
+                       true)
+        boxed-name (::optimize.spec/boxed-name expression)]
+    (if codegen.util/*global?*
+      (str "object_ptr " codegen.util/*fn-name*
+           "(" (clojure.string/join ", " params) ")"
+           "\n{" (clojure.string/join ";\n" body) ";\n"
+           (when need-return?
+             "return ")
+           return ";\n"
+           "}\n"
+           "object_ptr const " boxed-name "{make_box<function>(&" codegen.util/*fn-name* ")};\n")
+      (str "make_box<function>(std::function<" fn-type ">{"
          "[&]("
          (clojure.string/join ", " params)
          ") -> object_ptr {\n"
@@ -156,16 +197,24 @@
          (when need-return?
            "return ")
          return ";\n"
-         "}})\n")))
+         "}})\n"))))
 
 (defmethod expression->code :application
   [expression]
   (binding [codegen.util/*inline-return?* false]
-    (let [fn-name (expression->code (::parse.spec/value expression))
+    (let [ident (::parse.spec/value expression)
+          found (get-in codegen.util/*scope* (conj (::inference.core/scope-path ident []) ; TODO: Why is this not set?
+                                                   ::inference.core/names
+                                                   (::parse.spec/name ident)))
+          boxed? (::optimize.spec/boxed? found true)
+          fn-name (binding [codegen.util/*need-box?* false]
+                    (expression->code ident))
           arguments (mapv expression->code (::parse.spec/arguments expression))]
-      (str "detail::invoke("
-           (clojure.string/join ", " (cons (str "&" fn-name) arguments))
-           ")"))))
+      (if boxed?
+        (str "detail::invoke("
+             (clojure.string/join ", " (cons (str "&" fn-name) arguments))
+             ")")
+        (str fn-name "(" (clojure.string/join ", " arguments) ")")))))
 
 (defmethod expression->code :default
   [expression]
@@ -173,15 +222,23 @@
   "")
 
 ; TODO: Spec
-(defn generate [expressions]
-  (let [code ""]
+(defn generate [expressions scope]
+  (let [bindings (filter #(= :binding (::parse.spec/kind %)) expressions)
+        not-bindings (filter #(not= :binding (::parse.spec/kind %)) expressions)]
     ; TODO: Maintain proper indentation for sane formatting
-    (str "void _gen_poundmain()\n{"
-         (reduce (fn [acc expression]
-                   ;(pprint "generating for " expression)
-                   (str acc "\n" (expression->code expression)))
-                 code
-                 [{::parse.spec/kind :do
-                   ::parse.spec/body (butlast expressions)
-                   ::parse.spec/return (last expressions)}])
-         "\n;}")))
+    (binding [codegen.util/*scope* scope]
+      (str (reduce (fn [acc expression]
+                     (str acc ";\n" (expression->code expression)))
+                   ""
+                   bindings)
+           "void _gen_poundmain()\n{"
+           (reduce (fn [acc expression]
+                     ;(pprint "generating for " expression)
+                     (str acc ";\n" (expression->code expression)))
+                   ""
+                   not-bindings
+                   #_[{::parse.spec/kind :do
+                       ::parse.spec/body nil
+                       ::parse.spec/return {::parse.spec/kind :constant
+                                            ::parse.spec/type :nil}}])
+           "\n;}"))))

@@ -86,7 +86,7 @@ namespace jank
     detail::map_type data;
   };
 
-  inline detail::map_type JANK_MAP_IMPL(detail::map_type &&m)
+  inline detail::map_type&& JANK_MAP_IMPL(detail::map_type &&m)
   { return std::move(m); }
   template <typename K, typename V, typename... Rest>
   detail::map_type JANK_MAP_IMPL(detail::map_type &&m, K &&k, V &&v, Rest &&... rest)
