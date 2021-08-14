@@ -1,3 +1,4 @@
+; TODO: Rename this to parse.meta?
 (ns com.jeaye.jank.parse.binding)
 
 (def ^:dynamic *input-file* nil)

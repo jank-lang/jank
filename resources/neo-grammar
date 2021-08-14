@@ -27,10 +27,9 @@ string = <double-quote> #'(?:[^"\\]|\\.)*' <double-quote>
 regex = <'#'> <double-quote> #'(?:[^"\\]|\\.)*' <double-quote>
 
 <symbol-text> = #'[^\s"()\[\]{}\d:/#][^\s"()\[\]{}/#]*'
-symbol = symbol-text
 
 <identifier-text> = #'[^\s"()\[\]{}\d:/\.#][^\s"()\[\]{}/\.#]*'
-identifier = identifier-text
+identifier = '/' | identifier-text
 <namespace> = symbol-text
 qualified-identifier = namespace <'/'> identifier-text
 
