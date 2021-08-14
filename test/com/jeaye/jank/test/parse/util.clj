@@ -8,7 +8,7 @@
   #_(println "[parse] Gathering files...")
   (let [files (bootstrap/files path excludes)]
     (doseq [file-info files]
-      #_(if (:skip? file-info)
+      (if (:skip? file-info)
         (println "[parse] SKIP" (:resource file-info))
         (println "[parse] test" (:resource file-info)))
       (cond
