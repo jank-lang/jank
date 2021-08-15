@@ -1,10 +1,10 @@
-<program> = atom*
+<program> = atom (ws atom)* ws*
 <atom> = regex / string / nil / number / boolean / set / map / vector /
          qualified-keyword / keyword / qualified-identifier / identifier /
          def /
          fn / do / let /
          if /
-         application
+         application / ws
 
 <left-paren> = <'('>
 <right-paren> = <')'>
@@ -12,6 +12,10 @@
 <right-bracket> = <']'>
 <left-curly> = <'{'>
 <right-curly> = <'}'>
+
+<whitespace> = #'\s+'
+<comment> = whitespace* #';.*$'
+<ws> = <whitespace>
 
 special-identifier = def-keyword | fn-keyword | do-keyword | if-keyword | let-keyword
 
@@ -44,14 +48,15 @@ set = <'#'> left-curly atom* right-curly
 vector = left-bracket atom* right-bracket
 
 <def-keyword> = <'def'>
-def = left-paren def-keyword identifier atom right-paren
+def = left-paren ws* def-keyword ws identifier ws atom ws* right-paren
 
 <fn-keyword> = <'fn'>
-argument-list = left-bracket identifier* right-bracket
+argument-list = left-bracket ws* identifier? (ws identifier)* ws* right-bracket
 fn =
-  left-paren fn-keyword identifier? argument-list
-    atom*
-  right-paren
+  left-paren ws* fn-keyword ws (identifier ws)? argument-list
+    (ws atom)?
+    (ws atom)*
+  ws* right-paren
 
 <do-keyword> = <'do'>
 do =
@@ -61,23 +66,24 @@ do =
 
 <if-keyword> = <'if'>
 if =
-  left-paren if-keyword atom
-    atom
-    atom?
-  right-paren
+  left-paren ws* if-keyword ws atom
+    ws atom
+    (ws atom)?
+  ws* right-paren
 
 <let-keyword> = <'let'>
 let-bindings =
   left-bracket
-    (identifier atom)*
+    (ws* identifier ws atom ws*)*
   right-bracket
 let =
-  left-paren let-keyword
+  left-paren ws* let-keyword ws*
     let-bindings
-    atom*
+    (ws atom)*
   right-paren
 
 application =
-  left-paren !special-identifier
-    atom+
-  right-paren
+  left-paren
+    ws* !special-identifier atom
+    (ws atom)*
+  ws* right-paren

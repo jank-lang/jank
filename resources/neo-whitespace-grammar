@@ -1,5 +1,0 @@
-whitespace-or-comment = #'\s+' | comments
-whitespace = #'\s+'
-comments = comment+
-comment = whitespace* ';' inside-comment*
-inside-comment =  #'[\s\S]'

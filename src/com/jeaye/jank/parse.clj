@@ -9,12 +9,8 @@
              [binding :as parse.binding]
              [transform :as parse.transform]]))
 
-(insta/defparser whitespace-or-comments-parser
-  (clojure.java.io/resource "neo-whitespace-grammar"))
-
 (insta/defparser parser
   (clojure.java.io/resource "neo-grammar")
-  :auto-whitespace whitespace-or-comments-parser
   :output-format :enlive)
 
 (defn add-meta [input parsed]
@@ -48,5 +44,7 @@
 
 (comment
   (binding [parse.binding/*input-file* "repl"
-            parse.binding/*input-source* (slurp "ray.jank")]
-    (parse prelude)))
+            parse.binding/*input-source* "(def prelude? true)\n(def foo bar)\n\nfoo"
+            #_(-> (io/resource prelude-file)
+                                             slurp)]
+    (parser parse.binding/*input-source*)))
