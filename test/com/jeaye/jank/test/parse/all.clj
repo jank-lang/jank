@@ -8,12 +8,5 @@
 (deftest all
   (util/test-files
     "dev/resources/test/neo-parse/"
-    [#".*/identifier/ascii/pass-true-false\.jank"
-     #".*/keyword/fail-plain-space-between-colon\.jank"
-     #".*/keyword/fail-qualified-space-between-colon\.jank"
-     #".*/keyword/pass-qualified\.jank"
-     #".*/keyword/pass-aliased\.jank"
-     #".*/integer/fail-invalid-chars.jank"
-     #".*/real/fail-invalid-chars.jank"
-     #".*/set/fail-space-between-hash-and-curly.jank"
-     #".*/regex/fail-space-between.jank"]))
+    [#".*/keyword/pass-qualified\.jank"
+     #".*/keyword/pass-aliased\.jank"]))
