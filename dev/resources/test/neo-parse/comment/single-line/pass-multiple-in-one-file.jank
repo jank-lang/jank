@@ -1,0 +1,10 @@
+; prints foo.
+(def foo (fn []
+           (println "foo")))
+
+; prints bar.
+(def bar (fn []
+           (println "bar")))
+
+(foo)
+(bar)

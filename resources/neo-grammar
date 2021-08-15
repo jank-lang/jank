@@ -1,10 +1,11 @@
 <program> = atom (ws atom)* ws*
-<atom> = regex / string / nil / number / boolean / set / map / vector /
+<atom> = ws /
+         regex / string / nil / number / boolean / set / map / vector /
          qualified-keyword / keyword / qualified-identifier / identifier /
          def /
          fn / do / let /
          if /
-         application / ws
+         application
 
 <left-paren> = <'('>
 <right-paren> = <')'>
@@ -13,8 +14,8 @@
 <left-curly> = <'{'>
 <right-curly> = <'}'>
 
-<whitespace> = #'\s+'
-<comment> = whitespace* #';.*$'
+<whitespace> = #'\s+' | comment+
+<comment> = whitespace* #';.*'
 <ws> = <whitespace>
 
 special-identifier = def-keyword | fn-keyword | do-keyword | if-keyword | let-keyword

@@ -4,7 +4,7 @@ ast doc: https://clojure.github.io/tools.analyzer/spec/quickref.html
 parsing
   parens: working, tested
   commas:
-  comments:
+  comments: working, tested
   nil: working, tested
   integers: working, tested
   reals: working, tested
@@ -46,13 +46,7 @@ parsing
     var:
     conditionals:
 
-codegen
-  add c ffi fns which compile to c
-  generate c code
-  build data structures using c ffi
-
 grammar
-  manually specify whitespace
   don't have grammar for bools and nil at all?
     true, false, and nil can be defs
 

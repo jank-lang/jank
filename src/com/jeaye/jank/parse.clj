@@ -14,7 +14,9 @@
   :output-format :enlive)
 
 (defn add-meta [input parsed]
-  (insta/add-line-and-column-info-to-metadata input parsed))
+  (if (empty? parsed)
+    parsed
+    (insta/add-line-and-column-info-to-metadata input parsed)))
 
 (defn parse
   "Runs the provided resource file through instaparse and transforms from hiccup
@@ -44,7 +46,8 @@
 
 (comment
   (binding [parse.binding/*input-file* "repl"
-            parse.binding/*input-source* "(def prelude? true)\n(def foo bar)\n\nfoo"
+            parse.binding/*input-source* #_"; foo( bar spam\nfoo ; bar spa(m"
+            (slurp "dev/resources/test/neo-parse/comment/single-line/pass-nested.jank")
             #_(-> (io/resource prelude-file)
-                                             slurp)]
+                  slurp)]
     (parser parse.binding/*input-source*)))
