@@ -33,7 +33,7 @@ regex = <'#'> <double-quote> #'(?:[^"\\]|\\.)*' <double-quote>
 
 <symbol-text> = #'[^\s"()\[\]{}\d:/#][^\s"()\[\]{}/#]*'
 
-<identifier-text> = #'[^\s"()\[\]{}\d:/\.#][^\s"()\[\]{}/\.#]*'
+<identifier-text> = !integer !nil !boolean #'[^\s"()\[\]{}\d:/\.#][^\s"()\[\]{}/\.#]*'
 identifier = '/' | identifier-text
 <namespace> = symbol-text
 qualified-identifier = namespace <'/'> identifier-text
@@ -55,7 +55,6 @@ def = left-paren ws* def-keyword ws identifier ws atom ws* right-paren
 argument-list = left-bracket ws* identifier? (ws identifier)* ws* right-bracket
 fn =
   left-paren ws* fn-keyword ws (identifier ws)? argument-list
-    (ws atom)?
     (ws atom)*
   ws* right-paren
 
@@ -75,13 +74,13 @@ if =
 <let-keyword> = <'let'>
 let-bindings =
   left-bracket
-    (ws* identifier ws atom ws*)*
-  right-bracket
+    (ws* identifier ws atom)*
+  ws* right-bracket
 let =
   left-paren ws* let-keyword ws*
     let-bindings
     (ws atom)*
-  right-paren
+  ws* right-paren
 
 application =
   left-paren
