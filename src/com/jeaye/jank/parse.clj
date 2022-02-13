@@ -47,7 +47,9 @@
 (comment
   (binding [parse.binding/*input-file* "repl"
             parse.binding/*input-source* #_"; foo( bar spam\nfoo ; bar spa(m"
-            (slurp "dev/resources/test/neo-parse/comment/single-line/pass-nested.jank")
+            ;(slurp "dev/resources/test/neo-parse/comment/single-line/pass-nested.jank")
+            (slurp "test.jank")
             #_(-> (io/resource prelude-file)
                   slurp)]
-    (parser parse.binding/*input-source*)))
+    (parses parse.binding/*input-source*)
+    (time (count (parses (slurp "test.jank"))))))

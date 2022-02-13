@@ -14,9 +14,11 @@
 
 (defmacro with-transform-meta [& body]
   `(-> (binding [parse.binding/*current-form* (merge-meta parse.binding/*current-form*
-                                                          {:file ~'parse.binding/*input-file*})]
+                                                          {::parse.spec/input-source ~'parse.binding/*input-source*
+                                                           ::parse.spec/file ~'parse.binding/*input-file*})]
          ~@body)
-       (merge-meta {:file ~'parse.binding/*input-file*})))
+       (merge-meta {::parse.spec/input-source ~'parse.binding/*input-source*
+                    ::parse.spec/file ~'parse.binding/*input-file*})))
 
 (defn constant [transformer & args]
   (with-transform-meta
@@ -191,7 +193,8 @@
                                 (transformer (:tag item)))]
                 (let [r (binding [parse.binding/*current-form* item]
                           (apply trans (:content item)))]
+                  ;(pprint (meta item))
                   ;(pprint [r (meta r)])
-                  r)
+                  (merge-meta r (meta item)))
                 item))
             parsed))

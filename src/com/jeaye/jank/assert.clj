@@ -12,6 +12,10 @@
   (when-not condition
     (throw! (report/dump! "parse error" (meta form) msg false))))
 
+(defn type-assert! [condition form & msg]
+  (when-not condition
+    (throw! (report/dump! "type error" (meta form) msg true))))
+
 (defn incomplete-parse!
   "Triggers and assertion failure for a parse which could not be finished. In
    this specific case, there isn't a parse tree with meta data for each form,

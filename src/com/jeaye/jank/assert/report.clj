@@ -1,12 +1,13 @@
 (ns com.jeaye.jank.assert.report
-  (:require [io.aviso.ansi :as ansi]
+  (:require [clojure.string]
+            [io.aviso.ansi :as ansi]
             ; TODO: Implement custom highlighter. There's no need to parse the
             ; source again when we already have the parse tree.
             [glow.core :as glow]
             [com.jeaye.jank
              [log :refer [pprint]]]
-            [com.jeaye.jank.parse
-             [binding :as parse.binding]]))
+            [com.jeaye.jank.parse.binding :as parse.binding]
+            [com.jeaye.jank.parse.spec :as parse.spec]))
 
 (def file-color ansi/green-font)
 (def error-color ansi/red-font)
@@ -74,7 +75,8 @@
   "Prints an error report containing the relevant file/line/column info, a code
    snippet of the relevant form, and a helpful underline."
   [prefix form-meta msg highlight?]
-  (let [{:keys [:file
+  (let [{:keys [::parse.spec/file
+                ::parse.spec/input-source
                 :instaparse.gll/start-line
                 :instaparse.gll/end-line]} form-meta
         start-column (form-start-column form-meta)
@@ -83,13 +85,18 @@
         ; We don't highlight parse errors, since the code isn't syntactically
         ; correct and isn't worth trying to highlight.
         highlight (if highlight?
-                    #(glow/highlight % syntax-colors)
+                    #(try
+                       (glow/highlight % syntax-colors)
+                       (catch Exception _
+                         %))
                     identity)
         sections [(apply str
                          file-color file ":" start-line ":" start-column ": "
                          error-color prefix ": "
                          ansi/reset-font msg)
-                  (highlight (form-source parse.binding/*input-source*
+                  ; For incomplete parses, the input-source meta won't be set on the form, but
+                  ; we can read it from the binding.
+                  (highlight (form-source (or input-source parse.binding/*input-source*)
                                           start-line end-line))
                   (str error-color
                        (underline start-column end-column)

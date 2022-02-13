@@ -51,15 +51,14 @@
         boxed? (::optimize.spec/boxed? found true)
         boxed-name (::optimize.spec/boxed-name found)]
     (cond
-      (or (and codegen.util/*need-box?* boxed?)
-          (and (not codegen.util/*need-box?*) (not boxed?)))
+      (= codegen.util/*need-box?* boxed?)
       (codegen.sanitize/sanitize-str (::parse.spec/name expression))
 
-      (and codegen.util/*need-box?* (not boxed?))
+      codegen.util/*need-box?*
       ; TODO: Make a new box, if needed.
       boxed-name
 
-      (and (not codegen.util/*need-box?*) boxed?)
+      :else ; Don't need a box.
       ; TODO: Unbox.
       (codegen.sanitize/sanitize-str (::parse.spec/name expression)))))
 

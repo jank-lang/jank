@@ -1,9 +1,16 @@
 (ns com.jeaye.jank.inference.core
   (:require [clojure.string]
+            [clojure.core.logic :as logic]
             [orchestra.core :refer [defn-spec]]
             [com.jeaye.jank.log :refer [pprint]]
             [com.jeaye.jank.parse.spec :as parse.spec]))
 
+(comment
+  (logic/run*
+    [q]
+    (logic/== 5 q)))
+
+; Intentionall not defonce.
 (def type-counter* (atom 0))
 (defn next-typename! []
   {::type-kind ::unknown

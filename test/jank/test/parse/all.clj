@@ -1,6 +1,5 @@
 (ns jank.test.parse.all
-  (:require [clojure.test :refer :all]
-            [jank.test.parse.util :as util]))
+  (:require [clojure.test :refer :all]))
 
 #_(deftest all
   (util/test-files

@@ -5,6 +5,8 @@
             [com.jeaye.jank.parse.binding :as parse.binding]
             [com.jeaye.jank.parse.spec :as parse.spec]
             [com.jeaye.jank.inference.core :as inference.core]
+            [com.jeaye.jank.semantic.core :as semantic.core]
+            [com.jeaye.jank.semantic.spec :as semantic.spec]
             [com.jeaye.jank.optimize :as optimize]
             [com.jeaye.jank.codegen :as codegen]))
 
@@ -12,9 +14,9 @@
   (binding [parse.binding/*input-file* file
             parse.binding/*input-source* (slurp file)]
     (let [parse-tree (parse/parse parse/prelude)
-          assign-res (inference.core/assign-all-typenames parse-tree {} [])
-          scope (::inference.core/scope assign-res)
-          typed-tree (::inference.core/expressions assign-res)
+          sem-tree (semantic.core/pass-1 parse-tree {} [])
+          typed-tree (::semantic.spec/expressions sem-tree)
+          scope (::semantic.spec/scope sem-tree)
           optimize-res (optimize/optimize typed-tree scope)
           scope (:scope optimize-res)
           code (codegen/generate (:expressions optimize-res) scope)]
@@ -26,6 +28,17 @@
 
 (comment
   (compile* "test.jank")
+
+  (let [file "test.jank"]
+    (binding [parse.binding/*input-file* file
+              parse.binding/*input-source* (slurp file)]
+      (let [parse-tree (parse/parse parse/prelude)
+            _ (reset! inference.core/type-counter* 0)
+            typed-tree (semantic.core/pass-1 parse-tree {} [])
+            ]
+        (::semantic.spec/scope typed-tree)
+        ;(::semantic.spec/expressions typed-tree)
+        )))
 
   (let [file "test.jank"]
     (binding [parse.binding/*input-file* file
