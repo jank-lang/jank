@@ -4,14 +4,15 @@
   :license {:name "jank license"
             :url "https://upload.jeaye.com/jank-license"}
   :aliases {"kaocha" ["run" "-m" "kaocha.runner" "--watch"]}
-  :plugins [[com.jakemccrary/lein-test-refresh "0.24.1"]
+  :plugins [[com.jakemccrary/lein-test-refresh "0.25.0"]
             [lein-cloverage "1.2.2"]]
   :dependencies [[org.clojure/clojure "1.10.3"]
-                 [org.clojure/spec.alpha "0.2.194"]
+                 [org.clojure/spec.alpha "0.3.214"]
                  [org.clojure/test.check "1.1.0"]
+                 [org.clojure/core.logic "1.0.0"]
                  [instaparse "1.4.10"]
                  [orchestra "2021.01.01-1"]
-                 [expound "0.8.9"]
+                 [expound "0.8.10"]
 
                  ; Colored output
                  [io.aviso/pretty "1.1"]
@@ -21,7 +22,7 @@
   :resource-paths ["resources/"]
   :profiles {:uberjar {:aot :all
                        :main com.jeaye.jank.core}
-             :dev {:dependencies [[lambdaisland/kaocha "1.0.861"]
+             :dev {:dependencies [[lambdaisland/kaocha "1.60.945"]
                                   [me.raynes/fs "1.4.6"]]
                    :source-paths ["dev/src/"]
                    :resource-paths ["dev/resources/"]

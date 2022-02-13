@@ -17,3 +17,4 @@ pom.xml.asc
 /.lein-*
 .hgignore
 .hg/
+.clj-kondo
