@@ -233,7 +233,7 @@
 
 (defmethod pass-1* :application
   [expression scope scope-path]
-  (let [; TODO: What if we're invoking an anonymous fn?
+  (let [; TODO: Handle anonymous fn application differently.
         ident (::parse.spec/value expression)
         fn-scope-path (conj (::semantic.spec/scope-path ident []) ; TODO: Why is this not set?
                             ::semantic.spec/names
@@ -260,7 +260,7 @@
                                        ::semantic.spec/arguments (::semantic.spec/arguments scope+arguments)
                                        ::semantic.spec/type return-type
                                        ::semantic.spec/scope-path scope-path)
-     ; TODO: Update fn-interface in scope
+     ; TODO: Update fn-interface in scope so we don't need to do this again.
      ::semantic.spec/scope scope}))
 
 (defmethod pass-1* :binding
