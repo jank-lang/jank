@@ -1,3 +1,14 @@
+**** C++ rewrite
+https://carlosvin.github.io/langs/en/posts/choosing-modern-cpp-stack/
+https://github.com/arximboldi/lager
+https://github.com/doctest/doctest
+
+**** to work with a clojure-like RT: ****
+https://www.duelinmarkers.com/2016/01/24/the-life-of-a-clojure-expression.html
+https://github.com/clojure/clojurescript/blob/515900f9762102987bda7d53b919dafc0b6c0580/src/clj/clojure/cljs.clj
+https://github.com/jgpc42/insn
+https://www.youtube.com/watch?v=-Qm09YiUHTs
+
 **** to become a clojure dialect: ****
 ast doc: https://clojure.github.io/tools.analyzer/spec/quickref.html
 

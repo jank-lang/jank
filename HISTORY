@@ -5,4 +5,5 @@ Nov 2015 - Parser, Type checker, and Codegen targeting C++ implemented
 Dec 2016 - Initial macro system and interpreter are working
 Dec 2016 - Continuous benchmark service added
 Jan 2017 - Transition to fully generic, type-rich programming
-Dec 2017 - Syntax changed to be a Clojure dialect
+Dec 2017 - Rewrite in Clojure, syntax changed to be a Clojure dialect
+May 2022 - Rewrite in C++, backed by cling
