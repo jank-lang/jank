@@ -18,3 +18,8 @@ pom.xml.asc
 .hgignore
 .hg/
 .clj-kondo
+
+# C++
+.ccls-cache
+.gdb_history
+/build

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+cd build && meson compile && ./test/cpp/jank-unit-tests
