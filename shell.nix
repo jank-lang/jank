@@ -9,6 +9,8 @@ mkShell
     ninja
     entr
     ccls
+    boost
+    lcov
   ];
   shellHook =
   ''

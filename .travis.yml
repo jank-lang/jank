@@ -1,4 +1,5 @@
-language: clojure
+# TODO: Port this to Github actions.
+language: nix
 
 sudo: false
 
@@ -9,11 +10,7 @@ cache:
   -apt
 
 script:
-  - ./travis.sh
-
-after_success:
-- lein with-profile coverage cloverage --codecov
-- bash <(curl -s https://codecov.io/bash) -f target/coverage/codecov.json
+  - nix-shell --command "./travis.sh"
 
 notifications:
   email:

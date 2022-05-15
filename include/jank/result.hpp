@@ -43,19 +43,48 @@ namespace jank
     result(T &&t, std::enable_if_t<std::is_constructible_v<E, T>>* = 0)
       : data{ std::forward<T>(t) }
     {}
+    /* Allow implicit construction from results with compatible constructor args. This allows
+     * things like ok(none) for option<some<R>>. */
+    template <typename T>
+    result(detail::result<true, T> const &t, std::enable_if_t<std::is_constructible_v<R, T>>* = 0)
+      : data{ t.data }
+    {}
+    template <typename T>
+    result(detail::result<false, T> const &t, std::enable_if_t<std::is_constructible_v<E, T>>* = 0)
+      : data{ t.data }
+    {}
 
     bool is_ok() const
     { return data.index() == 0; }
     bool is_err() const
     { return data.index() == 1; }
 
+    R expect_ok()
+    { return std::get<0>(data); }
+    R* expect_ok_ptr()
+    { return &std::get<0>(data); }
+    R expect_ok_move()
+    { return std::move(std::get<0>(data)); }
     option<R> ok()
     {
       if(is_ok())
-      { return some(std::move(std::get<0>(data))); }
+      { return some(std::get<0>(data)); }
+      return none;
+    }
+    E expect_err()
+    { return std::get<1>(data); }
+    E* expect_err_ptr()
+    { return &std::get<1>(data); }
+    E expect_err_move()
+    { return std::move(std::get<1>(data)); }
+    option<E> err()
+    {
+      if(is_err())
+      { return some(std::get<1>(data)); }
       return none;
     }
 
+    /* Moves value. */
     R unwrap()
     {
       if(!is_ok())
