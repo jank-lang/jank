@@ -1,4 +1,4 @@
-# The jank programming language [![Build Status](https://travis-ci.org/jeaye/jank.svg?branch=master)](https://travis-ci.org/jeaye/jank) [![codecov](https://codecov.io/gh/jeaye/jank/branch/master/graph/badge.svg)](https://codecov.io/gh/jeaye/jank)
+# The jank programming language [![Build Status](https://app.travis-ci.com/jeaye/jank.svg?branch=main)](https://travis-ci.org/jeaye/jank) [![codecov](https://codecov.io/gh/jeaye/jank/branch/main/graph/badge.svg)](https://codecov.io/gh/jeaye/jank)
 
 jank is a Clojure dialect which aims to offer the best of both worlds: dynamic
 and static. For both of these worlds, jank uses a single runtime, so the
