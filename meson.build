@@ -23,8 +23,7 @@ add_global_arguments(
     '-Werror', '-Wfloat-equal', '-Wuninitialized',
     '-Wswitch-enum', '-Wnon-virtual-dtor', '-Wold-style-cast',
     '-Wno-gnu-case-range', '-Wno-error=#warnings',
-    #'-fprofile-instr-generate', '-fcoverage-mapping',
-    #'-fprofile-arcs', '-ftest-coverage'
+    '-fprofile-instr-generate', '-fcoverage-mapping',
   ],
   language : 'cpp'
 )
@@ -45,6 +44,7 @@ executable(
   'jank',
   project_src + ['src/main.cpp'],
   dependencies : [threads_dep, boost_dep],
+  link_args : ['-fprofile-instr-generate', '-fcoverage-mapping'],
   include_directories : project_inc,
   install : true
 )

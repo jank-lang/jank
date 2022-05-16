@@ -9,6 +9,7 @@ unit = executable(
   'jank-unit-tests',
   project_src + test_src,
   include_directories : [project_inc] + [test_inc],
+  link_args : ['-fprofile-instr-generate', '-fcoverage-mapping'],
   dependencies : [threads_dep, boost_dep],
 )
 test('unit tests', unit)

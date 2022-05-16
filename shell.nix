@@ -3,6 +3,7 @@ mkShell
 {
   buildInputs =
   [
+    llvm
     clang
     cling
     meson
