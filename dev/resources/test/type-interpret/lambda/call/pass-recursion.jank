@@ -1,3 +1,0 @@
-(bind recurse
-  (λ () ()
-    (recurse)))

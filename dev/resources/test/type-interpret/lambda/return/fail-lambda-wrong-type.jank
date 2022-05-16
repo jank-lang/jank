@@ -1,9 +1,0 @@
-(bind bar-foo
-  (λ () (string)
-    "good"))
-
-(bind foo-bar
-  (λ () (integer)
-    (bar-foo)))
-
-(print! (foo-bar))

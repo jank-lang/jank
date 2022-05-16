@@ -1,7 +1,0 @@
-(; Multi-line nested comments are allows.
-  (; Prints something. ;)
-  (print! "do something")
-
-  (; Does something. ;)
-  (do something)
-;)

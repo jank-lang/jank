@@ -1,3 +1,0 @@
-(assert
-  (if true
-    true))

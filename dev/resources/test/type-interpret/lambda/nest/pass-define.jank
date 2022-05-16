@@ -1,8 +1,0 @@
-(bind outer
-  (λ () ()
-    (bind inner
-      (λ () ()
-        (print! "all good")))
-    (inner)))
-
-(outer)

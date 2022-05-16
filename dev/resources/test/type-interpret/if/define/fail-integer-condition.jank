@@ -1,4 +1,0 @@
-(declare int ƒ : (() (integer)))
-
-(if (int)
-  (print! "not good"))

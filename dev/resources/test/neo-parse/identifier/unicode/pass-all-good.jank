@@ -1,5 +1,0 @@
-(def ♥
-  (fn [♦]
-    (println ♦)))
-
-(♥ "yay")
