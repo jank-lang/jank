@@ -10,6 +10,7 @@ mkShell
     entr
     ccls
     boost
+    gcovr
     lcov
   ];
   shellHook =

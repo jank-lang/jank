@@ -9,6 +9,6 @@ unit = executable(
   'jank-unit-tests',
   project_src + test_src,
   include_directories : [project_inc] + [test_inc],
-  dependencies : threads_dep
+  dependencies : [threads_dep, boost_dep],
 )
 test('unit tests', unit)

@@ -23,7 +23,8 @@ add_global_arguments(
     '-Werror', '-Wfloat-equal', '-Wuninitialized',
     '-Wswitch-enum', '-Wnon-virtual-dtor', '-Wold-style-cast',
     '-Wno-gnu-case-range',
-    '-Werror=format-security'
+    '-fprofile-instr-generate', '-fcoverage-mapping',
+    #'-fprofile-arcs', '-ftest-coverage'
   ],
   language : 'cpp'
 )
@@ -41,7 +42,7 @@ boost_dep = dependency('boost')
 executable(
   'jank',
   project_src + ['src/main.cpp'],
-  dependencies : threads_dep,
+  dependencies : [threads_dep, boost_dep],
   include_directories : project_inc,
   install : true
 )
