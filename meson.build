@@ -29,8 +29,10 @@ add_global_arguments(
   language : 'cpp'
 )
 # TODO: Disable these in release.
-add_global_arguments(
-  ['-fno-omit-frame-pointer', '-fno-optimize-sibling-calls', '-fstack-protector-strong'],
+add_global_arguments([
+  '-fno-omit-frame-pointer', '-fno-optimize-sibling-calls',
+  #'-fstack-protector-strong'
+  ],
   language : 'cpp'
 )
 
