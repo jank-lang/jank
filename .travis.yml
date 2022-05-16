@@ -10,7 +10,7 @@ cache:
   -apt
 
 script:
-  - nix-shell --command "./travis.sh"
+  - nix-shell --command "./bin/ci/travis"
 
 after_success:
 - lein with-profile coverage cloverage --codecov
