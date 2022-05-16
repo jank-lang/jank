@@ -23,7 +23,7 @@ add_global_arguments(
     '-Werror', '-Wfloat-equal', '-Wuninitialized',
     '-Wswitch-enum', '-Wnon-virtual-dtor', '-Wold-style-cast',
     '-Wno-gnu-case-range', '-Wno-error=#warnings',
-    '-fprofile-instr-generate', '-fcoverage-mapping',
+    #'-fprofile-instr-generate', '-fcoverage-mapping',
     #'-fprofile-arcs', '-ftest-coverage'
   ],
   language : 'cpp'
