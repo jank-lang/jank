@@ -7,7 +7,7 @@ which clang++
 # TODO: Also test release builds.
 rm -rf build
 meson setup build -Db_coverage=true
-ninja compile -C build
+meson compile -C build
 
 lcov --directory build --capture --initial --output-file "$PWD/build/meson-logs/capture.initial" --gcov-tool "$PWD/bin/ci/llvm-cov"
 
