@@ -22,7 +22,7 @@ add_global_arguments(
   [
     '-Werror', '-Wfloat-equal', '-Wuninitialized',
     '-Wswitch-enum', '-Wnon-virtual-dtor', '-Wold-style-cast',
-    '-Wno-gnu-case-range',
+    '-Wno-gnu-case-range', '-Wno-error=#warnings',
     '-fprofile-instr-generate', '-fcoverage-mapping',
     #'-fprofile-arcs', '-ftest-coverage'
   ],
@@ -31,7 +31,7 @@ add_global_arguments(
 # TODO: Disable these in release.
 add_global_arguments([
   '-fno-omit-frame-pointer', '-fno-optimize-sibling-calls',
-  #'-fstack-protector-strong'
+  '-fstack-protector-strong'
   ],
   language : 'cpp'
 )
