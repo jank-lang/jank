@@ -212,7 +212,6 @@ namespace jank::read::lex
     }
   }
 
-  /* TODO: Unterminated. */
   TEST_CASE("String")
   {
     SUBCASE("Empty")
@@ -262,6 +261,13 @@ namespace jank::read::lex
       processor p{ "\"foo\\\"\\nbar\\nspam\\t\"" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
       WARN(tokens == make_tokens({{ token_kind::string, "foo\"\nbar\nspam\t" }}));
+    }
+
+    SUBCASE("Unterminated")
+    {
+      processor p{ "\"meow" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_results({ error{ 0, "unterminated string" }, }));
     }
   }
 }

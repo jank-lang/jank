@@ -166,12 +166,16 @@ namespace jank::read
         {
           if(auto &&e = check_whitespace(found_space))
           { return err(std::move(*e)); }
+          auto const token_start(pos);
           bool escaped{};
           while(true)
           {
             auto const oc(peek());
             if(!oc)
-            { break; }
+            {
+              ++pos;
+              return err(error{ token_start, "unterminated string" });
+            }
             else if(!escaped && *oc == '"')
             {
               ++pos;
