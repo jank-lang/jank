@@ -1,6 +1,5 @@
 #pragma once
 
-#include <jank/detail/type.hpp>
 #include <jank/result.hpp>
 #include <jank/option.hpp>
 #include <jank/read/lex.hpp>

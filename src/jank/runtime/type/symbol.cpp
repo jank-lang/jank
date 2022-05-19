@@ -1,11 +1,11 @@
 #include <iostream>
 #include <sstream>
 
-#include <jank/runtime/symbol.hpp>
+#include <jank/runtime/type/symbol.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::type
 {
-  detail::boolean_type symbol::equal(object const &o) const
+  runtime::detail::boolean_type symbol::equal(object const &o) const
   {
     auto const *s(o.as_symbol());
     if(!s)
@@ -13,13 +13,13 @@ namespace jank::runtime
 
     return ns == s->ns && name == s->name;
   }
-  detail::string_type symbol::to_string() const
+  runtime::detail::string_type symbol::to_string() const
   {
     if(ns.length > 0)
     { return ns + "/" + name; }
     return name;
   }
-  detail::integer_type symbol::to_hash() const
+  runtime::detail::integer_type symbol::to_hash() const
   /* TODO: Cache this. */
   { return ns.to_hash() + name.to_hash(); }
 

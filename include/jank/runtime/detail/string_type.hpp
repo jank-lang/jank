@@ -4,8 +4,12 @@
 #include <memory>
 #include <cstring>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#pragma clang diagnostic ignored "-Wold-style-cast"
 #include <immer/box.hpp>
 #include <immer/memory_policy.hpp>
+#pragma clang diagnostic pop
 
 namespace jank::runtime::detail
 {

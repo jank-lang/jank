@@ -2,7 +2,7 @@
 
 #include <jank/runtime/object.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::type
 {
   struct symbol : object, pool_item_base<symbol>
   {

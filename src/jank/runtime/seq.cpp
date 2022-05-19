@@ -4,241 +4,14 @@
 #include <jank/runtime/seq.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/hash.hpp>
-#include <jank/runtime/fn.hpp>
+#include <jank/runtime/type/fn.hpp>
+#include <jank/runtime/type/vector.hpp>
+#include <jank/runtime/type/map.hpp>
+#include <jank/runtime/behavior/seq.hpp>
+#include <jank/runtime/behavior/callable.hpp>
 
 namespace jank::runtime
 {
-  /***** string *****/
-  detail::boolean_type string::equal(object const &o) const
-  {
-    auto const *s(o.as_string());
-    if(!s)
-    { return false; }
-
-    return data == s->data;
-  }
-  detail::string_type string::to_string() const
-  { return data; }
-  detail::integer_type string::to_hash() const
-  { return data.to_hash(); }
-  string const* string::as_string() const
-  { return this; }
-
-  template <typename It>
-  struct basic_iterator_wrapper : sequence, pool_item_base<basic_iterator_wrapper<It>>
-  {
-    basic_iterator_wrapper() = default;
-    basic_iterator_wrapper(It const &b, It const &e)
-      : begin{ b }, end { e }
-    { }
-
-    object_ptr first() const override
-    { return *begin; }
-    sequence_pointer next() const override
-    {
-      auto n(begin);
-      ++n;
-
-      if(n == end)
-      { return nullptr; }
-
-      return make_box<basic_iterator_wrapper<It>>(n, end);
-    }
-
-    It begin, end;
-  };
-
-  /***** list *****/
-  detail::boolean_type list::equal(object const &o) const
-  {
-    auto const *s(o.as_seqable());
-    if(!s)
-    { return false; }
-
-    /* TODO: Optimize using better interfaces. */
-    auto seq(s->seq());
-    for(auto it(data.begin()); it != data.end(); ++it, seq = seq->next())
-    {
-      if(seq == nullptr || !(*it)->equal(*seq->first()))
-      { return false; }
-    }
-    return true;
-  }
-  detail::string_type list::to_string() const
-  {
-    auto const end(data.end());
-    std::stringstream ss;
-    ss << "[";
-    for(auto i(data.begin()); i != end; ++i)
-    {
-      ss << **i;
-      auto n(i);
-      if(++n != end)
-      { ss << " "; }
-    }
-    ss << "]";
-    return ss.str();
-  }
-  /* TODO: Cache this. */
-  detail::integer_type list::to_hash() const
-  {
-    size_t seed{ data.size() };
-    for(auto const &e : data)
-    { seed = detail::hash_combine(seed, *e); }
-    return seed;
-  }
-  list const* list::as_list() const
-  { return this; }
-  seqable const* list::as_seqable() const
-  { return this; }
-  sequence_pointer list::seq() const
-  {
-    if(data.size() == 0)
-    { return nullptr; }
-    return make_box<basic_iterator_wrapper<detail::list_type::iterator>>(data.begin(), data.end());
-  }
-
-  /***** vector *****/
-  detail::boolean_type vector::equal(object const &o) const
-  {
-    auto const *s(o.as_seqable());
-    if(!s)
-    { return false; }
-
-    /* TODO: Optimize using better interfaces. */
-    auto seq(s->seq());
-    for(auto it(data.begin()); it != data.end(); ++it, seq = seq->next())
-    {
-      if(seq == nullptr || !(*it)->equal(*seq->first()))
-      { return false; }
-    }
-    return true;
-  }
-  detail::string_type vector::to_string() const
-  {
-    auto const end(data.end());
-    std::stringstream ss;
-    ss << "[";
-    for(auto i(data.begin()); i != end; ++i)
-    {
-      ss << **i;
-      auto n(i);
-      if(++n != end)
-      { ss << " "; }
-    }
-    ss << "]";
-    return ss.str();
-  }
-  /* TODO: Cache this. */
-  detail::integer_type vector::to_hash() const
-  {
-    size_t seed{ data.size() };
-    for(auto const &e : data)
-    { seed = detail::hash_combine(seed, *e); }
-    return seed;
-  }
-  vector const* vector::as_vector() const
-  { return this; }
-  seqable const* vector::as_seqable() const
-  { return this; }
-  sequence_pointer vector::seq() const
-  {
-    if(data.size() == 0)
-    { return nullptr; }
-    return make_box<basic_iterator_wrapper<detail::vector_type::iterator>>(data.begin(), data.end());
-  }
-
-  template <typename It>
-  struct map_iterator_wrapper : sequence, pool_item_base<map_iterator_wrapper<It>>
-  {
-    map_iterator_wrapper() = default;
-    map_iterator_wrapper(It const &b, It const &e)
-      : begin{ b }
-      , end{ e }
-    { }
-
-    object_ptr first() const override
-    { return make_box<vector>(detail::vector_type{ begin->first, begin->second }); }
-    sequence_pointer next() const override
-    {
-      auto n(begin);
-      ++n;
-
-      if(n == end)
-      { return nullptr; }
-
-      return make_box<map_iterator_wrapper<It>>(n, end);
-    }
-
-    It begin, end;
-  };
-
-  /***** map *****/
-  detail::boolean_type map::equal(object const &o) const
-  {
-    auto const *m(o.as_map());
-    if(!m)
-    { return false; }
-
-    return m->data == data;
-  }
-  detail::string_type map::to_string() const
-  {
-    auto const end(data.end());
-
-    std::stringstream ss;
-    ss << "{";
-    for(auto i(data.begin()); i != end; ++i)
-    {
-      ss << *i->first << " " << *i->second;
-      auto n(i);
-      if(++n != end)
-      { ss << " "; }
-    }
-    ss << "}";
-    return ss.str();
-  }
-  /* TODO: Cache this. */
-  detail::integer_type map::to_hash() const
-  {
-    size_t seed{ data.size() };
-    for(auto const &e : data)
-    {
-      seed = detail::hash_combine(seed, *e.first);
-      seed = detail::hash_combine(seed, *e.second);
-    }
-    return seed;
-  }
-  map const* map::as_map() const
-  { return this; }
-  seqable const* map::as_seqable() const
-  { return this; }
-  sequence_pointer map::seq() const
-  {
-    if(data.size() == 0)
-    { return nullptr; }
-    return make_box<map_iterator_wrapper<detail::map_type::const_iterator>>(data.begin(), data.end());
-  }
-
-  ///***** set *****/
-  //detail::boolean_type set::equal(object const &) const
-  //{
-  //}
-  //detail::string_type set::to_string() const
-  //{
-  //}
-  //detail::integer_type set::to_hash() const
-  //{
-  //}
-  //set const* set::as_set() const
-  //{ return this; }
-  //seqable const* set::as_seqable() const
-  //{ return this; }
-  //iterator_ptr set::begin() const
-  //{ return make_box<basic_iterator_wrapper<detail::set_type::iterator>>(data.begin()); }
-  //iterator_ptr set::end() const
-  //{ return make_box<basic_iterator_wrapper<detail::set_type::iterator>>(data.end()); }
-
   /* TODO: Laziness. */
   object_ptr mapv(object_ptr const &f, object_ptr const &seq)
   {
@@ -263,7 +36,7 @@ namespace jank::runtime
     for(auto s(sable->seq()); s != nullptr; s = s->next())
     { ret.push_back(func->call(s->first())); }
 
-    return make_box<vector>(ret.persistent());
+    return make_box<type::vector>(ret.persistent());
   }
 
   object_ptr reduce(object_ptr const &f, object_ptr const &initial, object_ptr const &seq)
@@ -321,10 +94,10 @@ namespace jank::runtime
       for(size_t k{}; k < partition_size && s != nullptr; ++k, s = s->next())
       { partition.push_back(s->first()); }
 
-      ret.push_back(make_box<vector>(partition.persistent()));
+      ret.push_back(make_box<type::vector>(partition.persistent()));
     }
 
-    return make_box<vector>(ret.persistent());
+    return make_box<type::vector>(ret.persistent());
   }
 
   /* TODO: Laziness */
@@ -351,8 +124,8 @@ namespace jank::runtime
 
     detail::vector_transient_type ret;
     for(auto i(start_int); i < end_int; ++i)
-    { ret.push_back(make_box<integer>(i)); }
-    return make_box<vector>(ret.persistent());
+    { ret.push_back(make_box<type::integer>(i)); }
+    return make_box<type::vector>(ret.persistent());
   }
 
   object_ptr reverse(object_ptr const &seq)
@@ -373,7 +146,7 @@ namespace jank::runtime
     for(auto it(in_order.rbegin()); it != in_order.rend(); ++it)
     { reverse_order.push_back(std::move(*it)); }
 
-    return make_box<vector>(reverse_order.persistent());
+    return make_box<type::vector>(reverse_order.persistent());
   }
 
   /* TODO: Associative interface. */
@@ -426,7 +199,7 @@ namespace jank::runtime
         }
         detail::map_type copy{ m->data };
         copy.insert_or_assign(v->data[0], v->data[1]);
-        return make_box<map>(std::move(copy));
+        return make_box<type::map>(std::move(copy));
       }
       else
       { return JANK_NIL; }
@@ -434,7 +207,7 @@ namespace jank::runtime
 
     auto const * const v(o->as_vector());
     if(v)
-    { return make_box<vector>(v->data.push_back(val)); }
+    { return make_box<type::vector>(v->data.push_back(val)); }
 
     std::cout << "(conj) unsupported for: " << *o << std::endl;
     return JANK_NIL;
@@ -447,7 +220,7 @@ namespace jank::runtime
     {
       detail::map_type copy{ m->data };
       copy.insert_or_assign(key, val);
-      return make_box<map>(std::move(copy));
+      return make_box<type::map>(std::move(copy));
     }
 
     auto const * const v(o->as_vector());
@@ -469,9 +242,9 @@ namespace jank::runtime
         return JANK_NIL;
       }
       else if(static_cast<size_t>(n->data) == size)
-      { return make_box<vector>(v->data.push_back(val)); }
+      { return make_box<type::vector>(v->data.push_back(val)); }
 
-      return make_box<vector>(v->data.set(n->data, val));
+      return make_box<type::vector>(v->data.set(n->data, val));
     }
 
     std::cout << "(get) not associative: " << *o << std::endl;

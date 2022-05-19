@@ -3,9 +3,9 @@
 #include <string_view>
 #include <variant>
 
-#include <jank/detail/type.hpp>
 #include <jank/result.hpp>
 #include <jank/option.hpp>
+#include <jank/runtime/detail/type.hpp>
 
 namespace jank::read::lex
 {
@@ -53,7 +53,7 @@ namespace jank::read::lex
 
     size_t pos{};
     token_kind kind;
-    std::variant<no_data, detail::int_type, detail::string_view_type> data;
+    std::variant<no_data, runtime::detail::integer_type, std::string_view> data;
   };
   std::ostream& operator <<(std::ostream &os, token const &t);
   std::ostream& operator <<(std::ostream &os, token::no_data const &t);
@@ -63,10 +63,10 @@ namespace jank::read
 {
   struct error
   {
-    error(size_t const s, detail::string_type const &m)
+    error(size_t const s, std::string const &m)
       : start{ s }, end{ s }, message{ m }
     { }
-    error(size_t const s, size_t const e, detail::string_type const &m)
+    error(size_t const s, size_t const e, std::string const &m)
       : start{ s }, end{ e }, message{ m }
     { }
 
@@ -77,7 +77,7 @@ namespace jank::read
 
     size_t start{};
     size_t end{};
-    detail::string_type message;
+    std::string message;
   };
   std::ostream& operator <<(std::ostream &os, error const &e);
 }
@@ -103,7 +103,7 @@ namespace jank::read::lex
       processor &p;
     };
 
-    processor(detail::string_view_type const &f) : file{ f }
+    processor(std::string_view const &f) : file{ f }
     { }
 
     result<token, error> next();
@@ -116,6 +116,6 @@ namespace jank::read::lex
     size_t pos{};
     /* Whether or not the previous token requires a space after it. */
     bool require_space{};
-    detail::string_view_type file;
+    std::string_view file;
   };
 }

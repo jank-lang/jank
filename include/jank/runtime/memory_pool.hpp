@@ -3,9 +3,20 @@
 #include <memory>
 
 #include <boost/smart_ptr/intrusive_ptr.hpp>
+#include <jank/runtime/detail/type.hpp>
 
 namespace jank::runtime
 {
+  namespace type
+  {
+    struct map;
+    struct vector;
+    struct string;
+    struct set;
+    struct integer;
+    struct real;
+  }
+
   template <typename T>
   union pool_item
   {
@@ -106,15 +117,17 @@ namespace jank::runtime
     return p;
   }
   template <>
-  pool<struct integer>& get_pool<struct integer>();
+  pool<type::integer>& get_pool<type::integer>();
   template <>
-  pool<struct real>& get_pool<struct real>();
+  pool<type::real>& get_pool<type::real>();
   template <>
-  pool<struct string>& get_pool<struct string>();
+  pool<type::string>& get_pool<type::string>();
   template <>
-  pool<struct vector>& get_pool<struct vector>();
+  pool<type::vector>& get_pool<type::vector>();
   template <>
-  pool<struct map>& get_pool<struct map>();
+  pool<type::map>& get_pool<type::map>();
+  template <>
+  pool<type::set>& get_pool<type::set>();
 
   struct pool_item_common_base
   {
@@ -155,4 +168,14 @@ namespace jank::runtime
   template <typename T, typename std::enable_if_t<std::is_base_of_v<pool_item_common_base, T> && !std::is_base_of_v<pool_item_base<T>, T>, bool> = true>
   void intrusive_ptr_release(T * const p)
   { p->release(); }
+
+  template <typename T>
+  inline detail::box_type<T> make_box(detail::box_type<T> const &o)
+  { return o; }
+  template <typename C>
+  auto make_box()
+  { return get_pool<C>().allocate(); }
+  template <typename C, typename... Args>
+  auto make_box(Args &&... args)
+  { return get_pool<C>().allocate(std::forward<Args>(args)...); }
 }

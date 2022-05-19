@@ -10,12 +10,18 @@ project_src = files([
   'src/jank/util/mapped_file.cpp',
   'src/jank/read/lex.cpp',
   'src/jank/read/parse.cpp',
-  'src/jank/runtime/number.cpp',
   'src/jank/runtime/seq.cpp',
   'src/jank/runtime/memory_pool.cpp',
   'src/jank/runtime/object.cpp',
-  'src/jank/runtime/fn.cpp',
-  'src/jank/runtime/symbol.cpp',
+  'src/jank/runtime/type/number.cpp',
+  'src/jank/runtime/type/fn.cpp',
+  'src/jank/runtime/type/symbol.cpp',
+  'src/jank/runtime/type/list.cpp',
+  'src/jank/runtime/type/vector.cpp',
+  'src/jank/runtime/type/map.cpp',
+  'src/jank/runtime/type/set.cpp',
+  'src/jank/runtime/type/string.cpp',
+  'src/jank/runtime/behavior/callable.cpp',
 ])
 
 add_global_arguments(

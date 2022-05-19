@@ -7,9 +7,12 @@
 
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
-#include <jank/runtime/number.hpp>
 #include <jank/runtime/seq.hpp>
-#include <jank/runtime/symbol.hpp>
+#include <jank/runtime/type/number.hpp>
+#include <jank/runtime/type/symbol.hpp>
+#include <jank/runtime/type/vector.hpp>
+#include <jank/runtime/type/string.hpp>
+#include <jank/runtime/type/list.hpp>
 
 namespace jank::read::parse
 {
@@ -28,7 +31,7 @@ namespace jank::read::parse
     processor p{ lp.begin(), lp.end() };
     auto r(p.next());
     CHECK(r.is_ok());
-    CHECK(r.expect_ok()->equal(runtime::integer{ 1234 }));
+    CHECK(r.expect_ok()->equal(runtime::type::integer{ 1234 }));
   }
 
   TEST_CASE("String")
@@ -39,7 +42,7 @@ namespace jank::read::parse
     {
       auto r(p.next());
       CHECK(r.is_ok());
-      CHECK(r.expect_ok()->equal(runtime::string{ runtime::detail::string_type{ s } }));
+      CHECK(r.expect_ok()->equal(runtime::type::string{ runtime::detail::string_type{ s } }));
     }
   }
 
@@ -53,7 +56,7 @@ namespace jank::read::parse
       {
         auto r(p.next());
         CHECK(r.is_ok());
-        CHECK(r.expect_ok()->equal(runtime::symbol{ runtime::detail::string_type{ s } }));
+        CHECK(r.expect_ok()->equal(runtime::type::symbol{ runtime::detail::string_type{ s } }));
       }
     }
 
@@ -65,7 +68,7 @@ namespace jank::read::parse
       {
         auto r(p.next());
         CHECK(r.is_ok());
-        CHECK(r.expect_ok()->equal(runtime::symbol{ s.first, s.second }));
+        CHECK(r.expect_ok()->equal(runtime::type::symbol{ s.first, s.second }));
       }
     }
   }
@@ -81,7 +84,7 @@ namespace jank::read::parse
         auto r(p.next());
         CHECK(r.is_ok());
         CHECK(r.expect_ok() != nullptr);
-        CHECK(r.expect_ok()->equal(runtime::list{}));
+        CHECK(r.expect_ok()->equal(runtime::type::list{}));
       }
     }
 
@@ -97,14 +100,14 @@ namespace jank::read::parse
         (
           r.expect_ok()->equal
           (
-            runtime::list
+            runtime::type::list
             {
               runtime::detail::list_type
               {
-                runtime::make_box<runtime::integer>(1 * i),
-                runtime::make_box<runtime::integer>(2 * i),
-                runtime::make_box<runtime::integer>(3 * i),
-                runtime::make_box<runtime::integer>(4 * i),
+                runtime::make_box<runtime::type::integer>(1 * i),
+                runtime::make_box<runtime::type::integer>(2 * i),
+                runtime::make_box<runtime::type::integer>(3 * i),
+                runtime::make_box<runtime::type::integer>(4 * i),
               }
             }
           )
@@ -118,7 +121,7 @@ namespace jank::read::parse
       processor p{ lp.begin(), lp.end() };
       auto r1(p.next());
       CHECK(r1.is_ok());
-      CHECK(r1.expect_ok()->equal(runtime::integer{ 1 }));
+      CHECK(r1.expect_ok()->equal(runtime::type::integer{ 1 }));
       auto r2(p.next());
       CHECK(r2.is_err());
     }
@@ -143,7 +146,7 @@ namespace jank::read::parse
         auto r(p.next());
         CHECK(r.is_ok());
         CHECK(r.expect_ok() != nullptr);
-        CHECK(r.expect_ok()->equal(runtime::vector{}));
+        CHECK(r.expect_ok()->equal(runtime::type::vector{}));
       }
     }
 
@@ -159,14 +162,14 @@ namespace jank::read::parse
         (
           r.expect_ok()->equal
           (
-            runtime::vector
+            runtime::type::vector
             {
               runtime::detail::vector_type
               {
-                runtime::make_box<runtime::integer>(1 * i),
-                runtime::make_box<runtime::integer>(2 * i),
-                runtime::make_box<runtime::integer>(3 * i),
-                runtime::make_box<runtime::integer>(4 * i),
+                runtime::make_box<runtime::type::integer>(1 * i),
+                runtime::make_box<runtime::type::integer>(2 * i),
+                runtime::make_box<runtime::type::integer>(3 * i),
+                runtime::make_box<runtime::type::integer>(4 * i),
               }
             }
           )
@@ -180,7 +183,7 @@ namespace jank::read::parse
       processor p{ lp.begin(), lp.end() };
       auto r1(p.next());
       CHECK(r1.is_ok());
-      CHECK(r1.expect_ok()->equal(runtime::integer{ 1 }));
+      CHECK(r1.expect_ok()->equal(runtime::type::integer{ 1 }));
       auto r2(p.next());
       CHECK(r2.is_err());
     }

@@ -3,9 +3,13 @@
 
 #include <magic_enum.hpp>
 
-#include <jank/runtime/number.hpp>
-#include <jank/runtime/seq.hpp>
-#include <jank/runtime/symbol.hpp>
+#include <jank/runtime/type/number.hpp>
+#include <jank/runtime/type/vector.hpp>
+#include <jank/runtime/type/list.hpp>
+#include <jank/runtime/type/map.hpp>
+#include <jank/runtime/type/set.hpp>
+#include <jank/runtime/type/symbol.hpp>
+#include <jank/runtime/type/string.hpp>
 #include <jank/read/parse.hpp>
 
 namespace jank::read::parse
@@ -84,7 +88,7 @@ namespace jank::read::parse
     { return err(error{ start_token.pos, "Unterminated list" }); }
 
     expected_closer = prev_expected_closer;
-    return runtime::make_box<runtime::list>(runtime::detail::list_type{ ret.rbegin(), ret.rend() });
+    return runtime::make_box<runtime::type::list>(runtime::detail::list_type{ ret.rbegin(), ret.rend() });
   }
 
   result<runtime::object_ptr, error> processor::parse_vector()
@@ -105,7 +109,7 @@ namespace jank::read::parse
     { return err(error{ start_token.pos, "Unterminated vector" }); }
 
     expected_closer = prev_expected_closer;
-    return runtime::make_box<runtime::vector>(ret.persistent());
+    return runtime::make_box<runtime::type::vector>(ret.persistent());
   }
 
   result<runtime::object_ptr, error> processor::parse_map()
@@ -124,9 +128,9 @@ namespace jank::read::parse
   {
     auto token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(std::get<detail::string_view_type>(token.data));
+    auto const sv(std::get<std::string_view>(token.data));
     auto const slash(sv.find('/'));
-    detail::string_type ns, name;
+    std::string ns, name;
     if(slash != std::string::npos)
     {
       ns = sv.substr(0, slash);
@@ -134,7 +138,7 @@ namespace jank::read::parse
     }
     else
     { name = sv; }
-    return ok(runtime::make_box<runtime::symbol>(ns, name));
+    return ok(runtime::make_box<runtime::type::symbol>(ns, name));
   }
 
   result<runtime::object_ptr, error> processor::parse_keyword()
@@ -147,15 +151,15 @@ namespace jank::read::parse
     // TODO: -> operator
     auto token((*token_current).expect_ok());
     ++token_current;
-    return ok(runtime::make_box<runtime::integer>(std::get<detail::int_type>(token.data)));
+    return ok(runtime::make_box<runtime::type::integer>(std::get<runtime::detail::integer_type>(token.data)));
   }
 
   result<runtime::object_ptr, error> processor::parse_string()
   {
     auto token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(std::get<detail::string_view_type>(token.data));
-    return ok(runtime::make_box<runtime::string>(detail::string_type{ sv.data(), sv.size() }));
+    auto const sv(std::get<std::string_view>(token.data));
+    return ok(runtime::make_box<runtime::type::string>(std::string{ sv.data(), sv.size() }));
   }
 
   processor::iterator processor::begin()

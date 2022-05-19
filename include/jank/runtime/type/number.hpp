@@ -2,14 +2,14 @@
 
 #include <jank/runtime/object.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::type
 {
   struct number
   {
     virtual ~number() = default;
 
-    virtual detail::integer_type get_integer() const = 0;
-    virtual detail::real_type get_real() const = 0;
+    virtual runtime::detail::integer_type get_integer() const = 0;
+    virtual runtime::detail::real_type get_real() const = 0;
   };
 
   struct boolean : object, pool_item_base<boolean>
@@ -17,17 +17,17 @@ namespace jank::runtime
     boolean() = default;
     boolean(boolean &&) = default;
     boolean(boolean const &) = default;
-    boolean(detail::boolean_type const d)
+    boolean(runtime::detail::boolean_type const d)
       : data{ d }
     { }
 
-    detail::boolean_type equal(object const &) const override;
-    detail::string_type to_string() const override;
-    detail::integer_type to_hash() const override;
+    runtime::detail::boolean_type equal(object const &) const override;
+    runtime::detail::string_type to_string() const override;
+    runtime::detail::integer_type to_hash() const override;
 
     boolean const* as_boolean() const override;
 
-    detail::boolean_type data{};
+    runtime::detail::boolean_type data{};
   };
   extern object_ptr JANK_TRUE;
   extern object_ptr JANK_FALSE;
@@ -37,21 +37,21 @@ namespace jank::runtime
     integer() = default;
     integer(integer &&) = default;
     integer(integer const &) = default;
-    integer(detail::integer_type const d)
+    integer(runtime::detail::integer_type const d)
       : data{ d }
     { }
 
-    detail::boolean_type equal(object const &) const override;
-    detail::string_type to_string() const override;
-    detail::integer_type to_hash() const override;
+    runtime::detail::boolean_type equal(object const &) const override;
+    runtime::detail::string_type to_string() const override;
+    runtime::detail::integer_type to_hash() const override;
 
-    detail::integer_type get_integer() const override;
-    detail::real_type get_real() const override;
+    runtime::detail::integer_type get_integer() const override;
+    runtime::detail::real_type get_real() const override;
 
     integer const* as_integer() const override;
     number const* as_number() const override;
 
-    detail::integer_type data{};
+    runtime::detail::integer_type data{};
   };
 
   struct real : object, number, pool_item_base<real>
@@ -59,21 +59,21 @@ namespace jank::runtime
     real() = default;
     real(real &&) = default;
     real(real const &) = default;
-    real(detail::real_type const d)
+    real(runtime::detail::real_type const d)
       : data{ d }
     { }
 
-    detail::boolean_type equal(object const &) const override;
-    detail::string_type to_string() const override;
-    detail::integer_type to_hash() const override;
+    runtime::detail::boolean_type equal(object const &) const override;
+    runtime::detail::string_type to_string() const override;
+    runtime::detail::integer_type to_hash() const override;
 
-    detail::integer_type get_integer() const override;
-    detail::real_type get_real() const override;
+    runtime::detail::integer_type get_integer() const override;
+    runtime::detail::real_type get_real() const override;
 
     real const* as_real() const override;
     number const* as_number() const override;
 
-    detail::real_type data{};
+    runtime::detail::real_type data{};
   };
 
   object_ptr rand();

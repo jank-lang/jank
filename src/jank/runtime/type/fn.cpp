@@ -1,45 +1,22 @@
 #include <iostream>
 
-#include <jank/runtime/fn.hpp>
+#include <jank/runtime/type/fn.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::type
 {
-  object_ptr callable::call() const
-  { throw invalid_arity<0>{}; }
-  object_ptr callable::call(object_ptr const&) const
-  { throw invalid_arity<1>{}; }
-  object_ptr callable::call(object_ptr const&, object_ptr const&) const
-  { throw invalid_arity<2>{}; }
-  object_ptr callable::call(object_ptr const&, object_ptr const&, object_ptr const&) const
-  { throw invalid_arity<3>{}; }
-  object_ptr callable::call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const
-  { throw invalid_arity<4>{}; }
-  object_ptr callable::call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const
-  { throw invalid_arity<5>{}; }
-  object_ptr callable::call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const
-  { throw invalid_arity<6>{}; }
-  object_ptr callable::call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const
-  { throw invalid_arity<7>{}; }
-  object_ptr callable::call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const
-  { throw invalid_arity<8>{}; }
-  object_ptr callable::call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const
-  { throw invalid_arity<9>{}; }
-  object_ptr callable::call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const
-  { throw invalid_arity<10>{}; }
-
-  detail::boolean_type function::equal(object const &o) const
+  runtime::detail::boolean_type function::equal(object const &o) const
   {
     auto const *d(o.as_function());
     return d == this;
   }
-  detail::string_type function::to_string() const
+  runtime::detail::string_type function::to_string() const
   /* TODO: Optimize. */
   { return "<function>"; }
-  detail::integer_type function::to_hash() const
-  { return reinterpret_cast<detail::integer_type>(this); }
+  runtime::detail::integer_type function::to_hash() const
+  { return reinterpret_cast<runtime::detail::integer_type>(this); }
   function const* function::as_function() const
   { return this; }
-  callable const* function::as_callable() const
+  behavior::callable const* function::as_callable() const
   { return this; }
 
   template <size_t N, typename... Args>

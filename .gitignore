@@ -23,3 +23,4 @@ pom.xml.asc
 .ccls-cache
 .gdb_history
 /build
+coverage.txt

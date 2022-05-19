@@ -1,8 +1,11 @@
 #pragma once
 
-#include <jank/runtime/object.hpp>
+#include <iostream>
 
-namespace jank::runtime
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/behavior/callable.hpp>
+
+namespace jank::runtime::type
 {
   namespace detail
   {
@@ -34,22 +37,7 @@ namespace jank::runtime
   struct invalid_arity
   { };
 
-  struct callable : virtual pool_item_common_base
-  {
-    virtual object_ptr call() const;
-    virtual object_ptr call(object_ptr const&) const;
-    virtual object_ptr call(object_ptr const&, object_ptr const&) const;
-    virtual object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&) const;
-    virtual object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const;
-    virtual object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const;
-    virtual object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const;
-    virtual object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const;
-    virtual object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const;
-    virtual object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const;
-    virtual object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const;
-  };
-
-  struct function : object, callable, pool_item_base<function>
+  struct function : object, behavior::callable, pool_item_base<function>
   {
     function() = default;
     function(function &&) = default;
@@ -61,12 +49,12 @@ namespace jank::runtime
       : data{ d }
     { }
 
-    detail::boolean_type equal(object const &) const override;
-    detail::string_type to_string() const override;
-    detail::integer_type to_hash() const override;
+    runtime::detail::boolean_type equal(object const &) const override;
+    runtime::detail::string_type to_string() const override;
+    runtime::detail::integer_type to_hash() const override;
 
     function const* as_function() const override;
-    callable const* as_callable() const override;
+    behavior::callable const* as_callable() const override;
 
     object_ptr call() const override;
     object_ptr call(object_ptr const&) const override;

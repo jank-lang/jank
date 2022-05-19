@@ -2,9 +2,9 @@
 #include <random>
 #include <cmath>
 
-#include <jank/runtime/number.hpp>
+#include <jank/runtime/type/number.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::type
 {
   /***** boolean *****/
   object_ptr JANK_TRUE{ make_box<boolean>(true) };

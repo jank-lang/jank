@@ -20,7 +20,7 @@ namespace jank::read
        [&](auto &&arg)
        {
          using T = std::decay_t<decltype(arg)>;
-         if constexpr(std::is_same_v<T, std::string> || std::is_same_v<T, detail::string_view_type>)
+         if constexpr(std::is_same_v<T, std::string> || std::is_same_v<T, std::string_view>)
          { os << std::quoted(arg); }
          else
          { os << arg; }
@@ -142,7 +142,7 @@ namespace jank::read
           }
           require_space = true;
           /* TODO: Ensure it uses / correctly. */
-          return ok(token{ pos++, token_kind::symbol, detail::string_view_type(file.data() + token_start, pos - token_start) });
+          return ok(token{ pos++, token_kind::symbol, std::string_view(file.data() + token_start, pos - token_start) });
         }
         /* Keywords. */
         case ':':
@@ -159,7 +159,7 @@ namespace jank::read
           }
           require_space = true;
           /* TODO: Ensure it's not empty and uses / properly. */
-          return ok(token{ pos++, token_kind::keyword, detail::string_view_type(file.data() + token_start + 1, pos - token_start - 1) });
+          return ok(token{ pos++, token_kind::keyword, std::string_view(file.data() + token_start + 1, pos - token_start - 1) });
         }
         /* Strings. */
         case '"':
@@ -200,7 +200,7 @@ namespace jank::read
             ++pos;
           }
           require_space = true;
-          return ok(token{ pos++, token_kind::string, detail::string_view_type(file.data() + token_start + 1, pos - token_start - 2) });
+          return ok(token{ pos++, token_kind::string, std::string_view(file.data() + token_start + 1, pos - token_start - 2) });
         }
         default:
           ++pos;
