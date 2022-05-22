@@ -4,10 +4,10 @@
 #include <jank/runtime/seq.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/hash.hpp>
-#include <jank/runtime/type/fn.hpp>
-#include <jank/runtime/type/list.hpp>
+#include <jank/runtime/obj/function.hpp>
+#include <jank/runtime/obj/list.hpp>
 
-namespace jank::runtime::type
+namespace jank::runtime::obj
 {
   runtime::detail::boolean_type list::equal(object const &o) const
   {

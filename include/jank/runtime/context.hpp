@@ -16,9 +16,9 @@ namespace jank::runtime
     void initialize();
     void dump() const;
 
-    ns_ptr intern_ns(type::symbol_ptr const &);
+    ns_ptr intern_ns(obj::symbol_ptr const &);
 
-    std::unordered_map<type::symbol_ptr, detail::box_type<ns>> namespaces;
+    std::unordered_map<obj::symbol_ptr, detail::box_type<ns>> namespaces;
     var_ptr current_ns;
     var_ptr in_ns;
   };

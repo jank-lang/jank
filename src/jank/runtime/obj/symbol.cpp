@@ -1,9 +1,9 @@
 #include <iostream>
 #include <sstream>
 
-#include <jank/runtime/type/symbol.hpp>
+#include <jank/runtime/obj/symbol.hpp>
 
-namespace jank::runtime::type
+namespace jank::runtime::obj
 {
   template <typename S>
   void separate(symbol &sym, S &&s)

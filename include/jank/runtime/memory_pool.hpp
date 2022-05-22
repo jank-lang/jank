@@ -7,7 +7,7 @@
 
 namespace jank::runtime
 {
-  namespace type
+  namespace obj
   {
     struct map;
     struct vector;
@@ -117,17 +117,17 @@ namespace jank::runtime
     return p;
   }
   template <>
-  pool<type::integer>& get_pool<type::integer>();
+  pool<obj::integer>& get_pool<obj::integer>();
   template <>
-  pool<type::real>& get_pool<type::real>();
+  pool<obj::real>& get_pool<obj::real>();
   template <>
-  pool<type::string>& get_pool<type::string>();
+  pool<obj::string>& get_pool<obj::string>();
   template <>
-  pool<type::vector>& get_pool<type::vector>();
+  pool<obj::vector>& get_pool<obj::vector>();
   template <>
-  pool<type::map>& get_pool<type::map>();
+  pool<obj::map>& get_pool<obj::map>();
   template <>
-  pool<type::set>& get_pool<type::set>();
+  pool<obj::set>& get_pool<obj::set>();
 
   struct pool_item_common_base
   {

@@ -5,8 +5,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 
-/* TODO: Rename to function.hpp */
-namespace jank::runtime::type
+namespace jank::runtime::obj
 {
   namespace detail
   {

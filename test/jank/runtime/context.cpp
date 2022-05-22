@@ -8,19 +8,19 @@ namespace jank::runtime
   {
     context ctx;
     ctx.initialize();
-    CHECK(ctx.namespaces.find(type::symbol::create("clojure.core")) != ctx.namespaces.end());
-    CHECK(ctx.namespaces.find(type::symbol::create("missing")) == ctx.namespaces.end());
-    CHECK(ctx.current_ns->root->as_ns()->name->equal(type::symbol("clojure.core")));
+    CHECK(ctx.namespaces.find(obj::symbol::create("clojure.core")) != ctx.namespaces.end());
+    CHECK(ctx.namespaces.find(obj::symbol::create("missing")) == ctx.namespaces.end());
+    CHECK(ctx.current_ns->root->as_ns()->name->equal(obj::symbol("clojure.core")));
   }
 
   TEST_CASE("Namespace changing")
   {
     context ctx;
     ctx.initialize();
-    CHECK(ctx.current_ns->root->as_ns()->name->equal(type::symbol("clojure.core")));
-    CHECK(ctx.namespaces.find(type::symbol::create("test")) == ctx.namespaces.end());
-    ctx.in_ns->root->as_callable()->call(type::symbol::create("test"));
-    CHECK(ctx.namespaces.find(type::symbol::create("test")) != ctx.namespaces.end());
-    CHECK(ctx.current_ns->root->as_ns()->name->equal(type::symbol("test")));
+    CHECK(ctx.current_ns->root->as_ns()->name->equal(obj::symbol("clojure.core")));
+    CHECK(ctx.namespaces.find(obj::symbol::create("test")) == ctx.namespaces.end());
+    ctx.in_ns->root->as_callable()->call(obj::symbol::create("test"));
+    CHECK(ctx.namespaces.find(obj::symbol::create("test")) != ctx.namespaces.end());
+    CHECK(ctx.current_ns->root->as_ns()->name->equal(obj::symbol("test")));
   }
 }

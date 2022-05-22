@@ -2,7 +2,7 @@
 
 #include <jank/runtime/object.hpp>
 
-namespace jank::runtime::type
+namespace jank::runtime::obj
 {
   /* TODO: Seqable. */
   struct string : object, pool_item_base<string>

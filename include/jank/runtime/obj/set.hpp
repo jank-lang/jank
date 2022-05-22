@@ -3,7 +3,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/seq.hpp>
 
-namespace jank::runtime::type
+namespace jank::runtime::obj
 {
   struct set : object, behavior::seqable, pool_item_base<set>
   {

@@ -1,47 +1,47 @@
 #include <jank/runtime/memory_pool.hpp>
-#include <jank/runtime/type/number.hpp>
-#include <jank/runtime/type/string.hpp>
-#include <jank/runtime/type/vector.hpp>
-#include <jank/runtime/type/list.hpp>
-#include <jank/runtime/type/map.hpp>
-#include <jank/runtime/type/set.hpp>
+#include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/obj/string.hpp>
+#include <jank/runtime/obj/vector.hpp>
+#include <jank/runtime/obj/list.hpp>
+#include <jank/runtime/obj/map.hpp>
+#include <jank/runtime/obj/set.hpp>
 
 namespace jank::runtime
 {
   template <>
-  pool<type::integer>& get_pool<type::integer>()
+  pool<obj::integer>& get_pool<obj::integer>()
   {
-    static pool<type::integer> p{ 16 };
+    static pool<obj::integer> p{ 16 };
     return p;
   }
   template <>
-  pool<type::real>& get_pool<type::real>()
+  pool<obj::real>& get_pool<obj::real>()
   {
-    static pool<type::real> p{ 16 };
+    static pool<obj::real> p{ 16 };
     return p;
   }
   template <>
-  pool<type::string>& get_pool<type::string>()
+  pool<obj::string>& get_pool<obj::string>()
   {
-    static pool<type::string> p{ 16 };
+    static pool<obj::string> p{ 16 };
     return p;
   }
   template <>
-  pool<type::vector>& get_pool<type::vector>()
+  pool<obj::vector>& get_pool<obj::vector>()
   {
-    static pool<type::vector> p{ 16 };
+    static pool<obj::vector> p{ 16 };
     return p;
   }
   template <>
-  pool<type::map>& get_pool<type::map>()
+  pool<obj::map>& get_pool<obj::map>()
   {
-    static pool<type::map> p{ 16 };
+    static pool<obj::map> p{ 16 };
     return p;
   }
   template <>
-  pool<type::set>& get_pool<type::set>()
+  pool<obj::set>& get_pool<obj::set>()
   {
-    static pool<type::set> p{ 16 };
+    static pool<obj::set> p{ 16 };
     return p;
   }
 }

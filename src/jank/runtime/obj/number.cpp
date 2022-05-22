@@ -2,9 +2,9 @@
 #include <random>
 #include <cmath>
 
-#include <jank/runtime/type/number.hpp>
+#include <jank/runtime/obj/number.hpp>
 
-namespace jank::runtime::type
+namespace jank::runtime::obj
 {
   /***** boolean *****/
   detail::boolean_type boolean::equal(object const &o) const

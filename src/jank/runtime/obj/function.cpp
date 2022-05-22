@@ -1,8 +1,8 @@
 #include <iostream>
 
-#include <jank/runtime/type/fn.hpp>
+#include <jank/runtime/obj/function.hpp>
 
-namespace jank::runtime::type
+namespace jank::runtime::obj
 {
   runtime::detail::box_type<function> function::create(detail::function_type const &d)
   { return make_box<function>(d); }

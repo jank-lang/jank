@@ -3,7 +3,7 @@
 #include <functional>
 #include <unordered_map>
 
-#include <jank/runtime/type/symbol.hpp>
+#include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/var.hpp>
 
 namespace jank::runtime
@@ -13,11 +13,11 @@ namespace jank::runtime
 
   struct ns : object, pool_item_base<ns>
   {
-    ns(type::symbol_ptr const &name, context const &c)
+    ns(obj::symbol_ptr const &name, context const &c)
       : name{ name }, ctx{ c }
     { }
 
-    static ns_ptr create(type::symbol_ptr const &n, context const &c);
+    static ns_ptr create(obj::symbol_ptr const &n, context const &c);
 
     detail::boolean_type equal(object const &) const override;
     detail::string_type to_string() const override;
@@ -27,8 +27,8 @@ namespace jank::runtime
 
     bool operator ==(ns const &rhs) const;
 
-    type::symbol_ptr name;
-    std::unordered_map<type::symbol_ptr, var_ptr> vars;
+    obj::symbol_ptr name;
+    std::unordered_map<obj::symbol_ptr, var_ptr> vars;
     context const &ctx;
   };
   using ns_ptr = detail::box_type<ns>;

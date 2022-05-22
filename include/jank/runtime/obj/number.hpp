@@ -2,7 +2,7 @@
 
 #include <jank/runtime/object.hpp>
 
-namespace jank::runtime::type
+namespace jank::runtime::obj
 {
   struct number
   {

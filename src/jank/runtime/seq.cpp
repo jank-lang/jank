@@ -4,9 +4,9 @@
 #include <jank/runtime/seq.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/hash.hpp>
-#include <jank/runtime/type/fn.hpp>
-#include <jank/runtime/type/vector.hpp>
-#include <jank/runtime/type/map.hpp>
+#include <jank/runtime/obj/function.hpp>
+#include <jank/runtime/obj/vector.hpp>
+#include <jank/runtime/obj/map.hpp>
 #include <jank/runtime/behavior/seq.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 
@@ -36,7 +36,7 @@ namespace jank::runtime
     for(auto s(sable->seq()); s != nullptr; s = s->next())
     { ret.push_back(func->call(s->first())); }
 
-    return make_box<type::vector>(ret.persistent());
+    return make_box<obj::vector>(ret.persistent());
   }
 
   object_ptr reduce(object_ptr const &f, object_ptr const &initial, object_ptr const &seq)
@@ -94,10 +94,10 @@ namespace jank::runtime
       for(size_t k{}; k < partition_size && s != nullptr; ++k, s = s->next())
       { partition.push_back(s->first()); }
 
-      ret.push_back(make_box<type::vector>(partition.persistent()));
+      ret.push_back(make_box<obj::vector>(partition.persistent()));
     }
 
-    return make_box<type::vector>(ret.persistent());
+    return make_box<obj::vector>(ret.persistent());
   }
 
   /* TODO: Laziness */
@@ -124,8 +124,8 @@ namespace jank::runtime
 
     detail::vector_transient_type ret;
     for(auto i(start_int); i < end_int; ++i)
-    { ret.push_back(make_box<type::integer>(i)); }
-    return make_box<type::vector>(ret.persistent());
+    { ret.push_back(make_box<obj::integer>(i)); }
+    return make_box<obj::vector>(ret.persistent());
   }
 
   object_ptr reverse(object_ptr const &seq)
@@ -146,7 +146,7 @@ namespace jank::runtime
     for(auto it(in_order.rbegin()); it != in_order.rend(); ++it)
     { reverse_order.push_back(std::move(*it)); }
 
-    return make_box<type::vector>(reverse_order.persistent());
+    return make_box<obj::vector>(reverse_order.persistent());
   }
 
   /* TODO: Associative interface. */
@@ -199,7 +199,7 @@ namespace jank::runtime
         }
         detail::map_type copy{ m->data };
         copy.insert_or_assign(v->data[0], v->data[1]);
-        return make_box<type::map>(std::move(copy));
+        return make_box<obj::map>(std::move(copy));
       }
       else
       { return JANK_NIL; }
@@ -207,7 +207,7 @@ namespace jank::runtime
 
     auto const * const v(o->as_vector());
     if(v)
-    { return make_box<type::vector>(v->data.push_back(val)); }
+    { return make_box<obj::vector>(v->data.push_back(val)); }
 
     std::cout << "(conj) unsupported for: " << *o << std::endl;
     return JANK_NIL;
@@ -220,7 +220,7 @@ namespace jank::runtime
     {
       detail::map_type copy{ m->data };
       copy.insert_or_assign(key, val);
-      return make_box<type::map>(std::move(copy));
+      return make_box<obj::map>(std::move(copy));
     }
 
     auto const * const v(o->as_vector());
@@ -242,9 +242,9 @@ namespace jank::runtime
         return JANK_NIL;
       }
       else if(static_cast<size_t>(n->data) == size)
-      { return make_box<type::vector>(v->data.push_back(val)); }
+      { return make_box<obj::vector>(v->data.push_back(val)); }
 
-      return make_box<type::vector>(v->data.set(n->data, val));
+      return make_box<obj::vector>(v->data.set(n->data, val));
     }
 
     std::cout << "(get) not associative: " << *o << std::endl;

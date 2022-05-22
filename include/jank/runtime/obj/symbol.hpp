@@ -5,7 +5,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/hash.hpp>
 
-namespace jank::runtime::type
+namespace jank::runtime::obj
 {
   struct symbol : object, pool_item_base<symbol>
   {
@@ -35,32 +35,32 @@ namespace jank::runtime::type
     detail::string_type ns;
     detail::string_type name;
   };
-  using symbol_ptr = detail::box_type<type::symbol>;
+  using symbol_ptr = detail::box_type<obj::symbol>;
 }
 
 namespace std
 {
   template <>
-  struct hash<jank::runtime::type::symbol>
+  struct hash<jank::runtime::obj::symbol>
   {
-    size_t operator()(jank::runtime::type::symbol const &o) const noexcept
+    size_t operator()(jank::runtime::obj::symbol const &o) const noexcept
     { return static_cast<size_t>(jank::runtime::detail::hash_combine(o.ns.to_hash(), o.name.to_hash())); }
   };
 
   template <>
-  struct hash<jank::runtime::type::symbol_ptr>
+  struct hash<jank::runtime::obj::symbol_ptr>
   {
-    size_t operator()(jank::runtime::type::symbol_ptr const &o) const noexcept
+    size_t operator()(jank::runtime::obj::symbol_ptr const &o) const noexcept
     {
-      static auto hasher(std::hash<jank::runtime::type::symbol>{});
+      static auto hasher(std::hash<jank::runtime::obj::symbol>{});
       return hasher(*o);
     }
   };
 
   template <>
-  struct equal_to<jank::runtime::type::symbol_ptr>
+  struct equal_to<jank::runtime::obj::symbol_ptr>
   {
-    bool operator()(jank::runtime::type::symbol_ptr const &lhs, jank::runtime::type::symbol_ptr const &rhs) const noexcept
+    bool operator()(jank::runtime::obj::symbol_ptr const &lhs, jank::runtime::obj::symbol_ptr const &rhs) const noexcept
     {
       if(!lhs)
       { return !rhs; }

@@ -1,12 +1,12 @@
 #include <memory>
 
 #include <jank/runtime/ns.hpp>
-#include <jank/runtime/type/fn.hpp>
-#include <jank/runtime/type/string.hpp>
+#include <jank/runtime/obj/function.hpp>
+#include <jank/runtime/obj/string.hpp>
 
 namespace jank::runtime
 {
-  ns_ptr ns::create(type::symbol_ptr const &n, context const &c)
+  ns_ptr ns::create(obj::symbol_ptr const &n, context const &c)
   { return make_box<ns>(n, c); }
 
   runtime::detail::boolean_type ns::equal(object const &o) const

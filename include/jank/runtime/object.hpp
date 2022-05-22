@@ -29,7 +29,7 @@
 
 namespace jank::runtime
 {
-  namespace type
+  namespace obj
   {
     struct nil;
     struct boolean;
@@ -64,31 +64,31 @@ namespace jank::runtime
     { return nullptr; }
     virtual ns const* as_ns() const
     { return nullptr; }
-    virtual type::nil const* as_nil() const
+    virtual obj::nil const* as_nil() const
     { return nullptr; }
-    virtual type::boolean const* as_boolean() const
+    virtual obj::boolean const* as_boolean() const
     { return nullptr; }
-    virtual type::integer const* as_integer() const
+    virtual obj::integer const* as_integer() const
     { return nullptr; }
-    virtual type::real const* as_real() const
+    virtual obj::real const* as_real() const
     { return nullptr; }
-    virtual type::number const* as_number() const
+    virtual obj::number const* as_number() const
     { return nullptr; }
-    virtual type::string const* as_string() const
+    virtual obj::string const* as_string() const
     { return nullptr; }
-    virtual type::symbol const* as_symbol() const
+    virtual obj::symbol const* as_symbol() const
     { return nullptr; }
-    virtual type::list const* as_list() const
+    virtual obj::list const* as_list() const
     { return nullptr; }
-    virtual type::vector const* as_vector() const
+    virtual obj::vector const* as_vector() const
     { return nullptr; }
-    virtual type::map const* as_map() const
+    virtual obj::map const* as_map() const
     { return nullptr; }
-    virtual type::set const* as_set() const
+    virtual obj::set const* as_set() const
     { return nullptr; }
     virtual behavior::seqable const* as_seqable() const
     { return nullptr; }
-    virtual type::function const* as_function() const
+    virtual obj::function const* as_function() const
     { return nullptr; }
     virtual behavior::callable const* as_callable() const
     { return nullptr; }
@@ -129,7 +129,7 @@ namespace jank::runtime
     //using map_transient_type = map_type::transient_type;
   }
 
-  namespace type
+  namespace obj
   {
     struct nil : object, pool_item_base<nil>
     {

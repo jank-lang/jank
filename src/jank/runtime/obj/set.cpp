@@ -4,10 +4,10 @@
 #include <jank/runtime/seq.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/hash.hpp>
-#include <jank/runtime/type/fn.hpp>
-#include <jank/runtime/type/map.hpp>
+#include <jank/runtime/obj/function.hpp>
+#include <jank/runtime/obj/map.hpp>
 
-namespace jank::runtime::type
+namespace jank::runtime::obj
 {
   ///***** set *****/
   //detail::boolean_type set::equal(object const &) const

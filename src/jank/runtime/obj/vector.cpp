@@ -4,10 +4,10 @@
 #include <jank/runtime/seq.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/hash.hpp>
-#include <jank/runtime/type/fn.hpp>
-#include <jank/runtime/type/vector.hpp>
+#include <jank/runtime/obj/function.hpp>
+#include <jank/runtime/obj/vector.hpp>
 
-namespace jank::runtime::type
+namespace jank::runtime::obj
 {
   runtime::detail::boolean_type vector::equal(object const &o) const
   {
