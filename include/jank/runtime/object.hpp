@@ -46,6 +46,8 @@ namespace jank::runtime
     struct function;
     struct callable;
   }
+  struct var;
+  struct ns;
 
   using object_ptr = detail::box_type<struct object>;
   struct object : virtual pool_item_common_base
@@ -58,6 +60,10 @@ namespace jank::runtime
     virtual detail::integer_type to_hash() const = 0;
 
     /* TODO: Benchmark what it's like to store a pointer of each type instead; no more dynamic dispactch. */
+    virtual var const* as_var() const
+    { return nullptr; }
+    virtual ns const* as_ns() const
+    { return nullptr; }
     virtual type::nil const* as_nil() const
     { return nullptr; }
     virtual type::boolean const* as_boolean() const
@@ -159,6 +165,19 @@ namespace std
     {
       static auto hasher(std::hash<jank::runtime::object>{});
       return hasher(*o);
+    }
+  };
+
+  template <>
+  struct equal_to<jank::runtime::object_ptr>
+  {
+    bool operator()(jank::runtime::object_ptr const &lhs, jank::runtime::object_ptr const &rhs) const noexcept
+    {
+      if(!lhs)
+      { return !rhs; }
+      else if(!rhs)
+      { return !lhs; }
+      return lhs->equal(*rhs);
     }
   };
 }

@@ -4,6 +4,9 @@
 
 namespace jank::runtime::type
 {
+  runtime::detail::box_type<function> function::create(detail::function_type const &d)
+  { return make_box<function>(d); }
+
   runtime::detail::boolean_type function::equal(object const &o) const
   {
     auto const *d(o.as_function());
@@ -11,7 +14,7 @@ namespace jank::runtime::type
   }
   runtime::detail::string_type function::to_string() const
   /* TODO: Optimize. */
-  { return "<function>"; }
+  { return "function"; }
   runtime::detail::integer_type function::to_hash() const
   { return reinterpret_cast<runtime::detail::integer_type>(this); }
   function const* function::as_function() const

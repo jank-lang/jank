@@ -22,4 +22,5 @@ namespace jank::runtime::type
 
     runtime::detail::string_type data;
   };
+  using string_ptr = runtime::detail::box_type<string>;
 }

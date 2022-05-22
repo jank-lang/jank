@@ -4,6 +4,7 @@
 #include <jank/util/mapped_file.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
+#include <jank/runtime/context.hpp>
 
 int main(int const argc, char const **argv)
 {
@@ -17,4 +18,7 @@ int main(int const argc, char const **argv)
   auto const mfile(jank::util::map_file(file));
   auto lexer(jank::read::lex::processor{ { mfile->head, mfile->size } });
   (void)lexer;
+
+  jank::runtime::context ctx;
+  ctx.initialize();
 }

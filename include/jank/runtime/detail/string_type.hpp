@@ -41,6 +41,9 @@ namespace jank::runtime::detail
       , length{ l }
     { }
 
+    string_type_impl<MP>& operator=(string_type_impl<MP> const&) = default;
+    string_type_impl<MP>& operator=(string_type_impl<MP> &&) = default;
+
     bool operator==(string_type_impl const &s) const
     { return to_hash() == s.to_hash(); }
 
@@ -73,6 +76,9 @@ namespace jank::runtime::detail
   template <typename MP, size_t N>
   string_type_impl<MP> operator+(string_type_impl<MP> const &l, char const (&r)[N])
   { return { l.data.get() + r }; }
+  template <typename MP, size_t N>
+  string_type_impl<MP> operator+(char const (&l)[N], string_type_impl<MP> const &r)
+  { return { l + r.data.get() }; }
 
   template <typename MP>
   std::ostream& operator<<(std::ostream &os, string_type_impl<MP> const &s)

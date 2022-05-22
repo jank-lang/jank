@@ -3,7 +3,14 @@
 
 namespace jank::runtime
 {
+  /* XXX: Any static helpers stay in here, to ensure they're all created deterministically. */
   object_ptr JANK_NIL{ make_box<type::nil>() };
+
+  namespace type
+  {
+    object_ptr JANK_TRUE{ make_box<boolean>(true) };
+    object_ptr JANK_FALSE{ make_box<boolean>(false) };
+  }
 
   detail::boolean_type object::equal(object_ptr const &rhs) const
   { return rhs && equal(*rhs); }

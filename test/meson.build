@@ -4,6 +4,7 @@ test_src = [
   'jank/read/lex.cpp',
   'jank/read/parse.cpp',
   'jank/runtime/detail/list_type.cpp',
+  'jank/runtime/context.cpp',
 ]
 unit = executable(
   'jank-unit-tests',

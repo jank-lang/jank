@@ -5,6 +5,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 
+/* TODO: Rename to function.hpp */
 namespace jank::runtime::type
 {
   namespace detail
@@ -49,6 +50,8 @@ namespace jank::runtime::type
       : data{ d }
     { }
 
+    static runtime::detail::box_type<function> create(detail::function_type const &d);
+
     runtime::detail::boolean_type equal(object const &) const override;
     runtime::detail::string_type to_string() const override;
     runtime::detail::integer_type to_hash() const override;
@@ -70,6 +73,7 @@ namespace jank::runtime::type
 
     detail::function_type data;
   };
+  using function_ptr = runtime::detail::box_type<function>;
 
   namespace detail
   {

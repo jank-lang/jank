@@ -2,7 +2,7 @@ project(
   'jank',
   'cpp',
   version : 'snapshot',
-  default_options : ['warning_level=3', 'cpp_std=c++17', 'cpp_debugstl=true']
+  default_options : ['warning_level=3', 'werror=true', 'cpp_std=c++17', 'cpp_debugstl=true']
 )
 
 project_inc = include_directories('include', 'lib/magic_enum/include', 'lib/immer')
@@ -13,6 +13,9 @@ project_src = files([
   'src/jank/runtime/seq.cpp',
   'src/jank/runtime/memory_pool.cpp',
   'src/jank/runtime/object.cpp',
+  'src/jank/runtime/context.cpp',
+  'src/jank/runtime/ns.cpp',
+  'src/jank/runtime/var.cpp',
   'src/jank/runtime/type/number.cpp',
   'src/jank/runtime/type/fn.cpp',
   'src/jank/runtime/type/symbol.cpp',
@@ -26,7 +29,7 @@ project_src = files([
 
 add_global_arguments(
   [
-    '-Werror', '-Wfloat-equal', '-Wuninitialized',
+    '-Wfloat-equal', '-Wuninitialized',
     '-Wswitch-enum', '-Wnon-virtual-dtor', '-Wold-style-cast',
     '-Wno-gnu-case-range', '-Wno-error=#warnings',
     '-fprofile-instr-generate', '-fcoverage-mapping',
