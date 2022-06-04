@@ -84,6 +84,7 @@ namespace jank::read
 
 namespace jank::read::lex
 {
+  /* TODO: Rename to stream? */
   struct processor
   {
     struct iterator

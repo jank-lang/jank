@@ -1,7 +1,7 @@
 #pragma once
 
 #include <variant>
-#include <ostream> // std::ostream
+#include <ostream>
 #include <cstdlib> // std::abort
 
 #include <jank/option.hpp>

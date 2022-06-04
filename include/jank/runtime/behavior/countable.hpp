@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdlib>
+#include <cstdlib> // size_t
 
 namespace jank::runtime::behavior
 {

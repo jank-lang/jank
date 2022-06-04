@@ -6,7 +6,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/list.hpp>
-#include <jank/analyze/expresssion.hpp>
+#include <jank/analyze/expression.hpp>
 #include <jank/option.hpp>
 
 namespace jank::analyze
@@ -18,6 +18,7 @@ namespace jank::analyze
     expression value_expr;
   };
 
+  /* TODO: combine this with processor? */
   struct context
   {
     context() = delete;

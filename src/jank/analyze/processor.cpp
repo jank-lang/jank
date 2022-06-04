@@ -11,7 +11,6 @@ namespace jank::analyze
 
   expression processor::analyze_def(runtime::obj::list_ptr const &l)
   {
-    std::cout << "anal def " << l->to_string() << std::endl;
     auto const length(l->count());
     if(length != 3)
     {
@@ -62,7 +61,7 @@ namespace jank::analyze
     }
     else
     {
-      auto const &vars(ctx.runtime_ctx.current_ns->as_ns()->vars);
+      auto const &vars(ctx.runtime_ctx.current_ns->root->as_ns()->vars);
       auto const var(vars.find(sym));
       if(var == vars.end())
       {
@@ -157,9 +156,8 @@ namespace jank::analyze
     else if(auto * const string = o->as_string())
     {
     }
-    else if(auto * const symbol = o->as_symbol())
-    {
-    }
+    else if(o->as_symbol())
+    { return analyze_symbol(boost::static_pointer_cast<runtime::obj::symbol>(o)); }
     else if(auto * const nil = o->as_nil())
     {
     }
