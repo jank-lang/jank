@@ -21,6 +21,13 @@ namespace jank::read::parse
     { std::abort(); }
     return *latest;
   }
+  processor::iterator::pointer processor::iterator::operator ->()
+  {
+    if(!latest)
+    /* TODO: panic */
+    { std::abort(); }
+    return &(*latest);
+  }
   processor::iterator& processor::iterator::operator ++()
   {
     latest = some(p.next());

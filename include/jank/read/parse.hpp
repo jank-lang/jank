@@ -18,6 +18,7 @@ namespace jank::read::parse
       using reference = value_type&;
 
       value_type operator *() const;
+      pointer operator ->();
       iterator& operator ++();
       bool operator !=(iterator const &rhs) const;
       bool operator ==(iterator const &rhs) const;

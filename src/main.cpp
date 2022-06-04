@@ -20,5 +20,4 @@ int main(int const argc, char const **argv)
   (void)lexer;
 
   jank::runtime::context ctx;
-  ctx.initialize();
 }

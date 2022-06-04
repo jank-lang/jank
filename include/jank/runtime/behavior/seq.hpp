@@ -1,6 +1,6 @@
 #pragma once
 
-#include <jank/runtime/detail/type.hpp>
+#include <jank/runtime/memory_pool.hpp>
 
 namespace jank::runtime
 {
@@ -12,6 +12,7 @@ namespace jank::runtime
     {
       using sequence_pointer = detail::box_type<sequence>;
 
+      virtual ~sequence() = default;
       virtual object_ptr first() const = 0;
       virtual sequence_pointer next() const = 0;
     };

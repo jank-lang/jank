@@ -47,6 +47,9 @@ namespace jank::runtime::detail
     bool operator==(string_type_impl const &s) const
     { return to_hash() == s.to_hash(); }
 
+    bool empty() const
+    { return length == 0; }
+
     size_t to_hash() const
     {
       if(hash != 0)

@@ -25,6 +25,7 @@ project_src = files([
   'src/jank/runtime/obj/set.cpp',
   'src/jank/runtime/obj/string.cpp',
   'src/jank/runtime/behavior/callable.cpp',
+  'src/jank/analyze/processor.cpp',
 ])
 
 add_global_arguments(

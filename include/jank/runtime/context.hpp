@@ -9,11 +9,10 @@ namespace jank::runtime
 {
   struct context
   {
-    context() = default;
+    context();
     context(context const&) = default;
     context(context &&) = default;
 
-    void initialize();
     void dump() const;
 
     ns_ptr intern_ns(obj::symbol_ptr const &);

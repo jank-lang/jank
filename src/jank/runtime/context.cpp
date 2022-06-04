@@ -4,9 +4,8 @@
 
 namespace jank::runtime
 {
-  void context::initialize()
+  context::context()
   {
-    namespaces.clear();
     auto core(intern_ns(obj::symbol::create("clojure.core")));
     auto ns_sym(obj::symbol::create("*ns*"));
     auto ns_res(core->vars.insert({ns_sym, var::create(core, ns_sym, core)}));

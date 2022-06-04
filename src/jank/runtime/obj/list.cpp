@@ -57,4 +57,6 @@ namespace jank::runtime::obj
     { return nullptr; }
     return make_box<behavior::basic_iterator_wrapper<runtime::detail::list_type::iterator>>(data.begin(), data.end());
   }
+  size_t list::count() const
+  { return data.size(); }
 }
