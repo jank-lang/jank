@@ -129,6 +129,7 @@ namespace jank::read
         case '-':
         case '/':
         case '?':
+        case '+':
         {
           if(auto &&e = check_whitespace(found_space))
           { return err(std::move(*e)); }
@@ -136,7 +137,7 @@ namespace jank::read
           {
             auto const oc(peek());
             /* TODO: Lift this to a separate fn, since it's used twice. */
-            if(!oc || (std::isalnum(static_cast<unsigned char>(*oc)) == 0 && *oc != '_' && *oc != '-' && *oc != '/' && *oc != '?' && *oc != '.'))
+            if(!oc || (std::isalnum(static_cast<unsigned char>(*oc)) == 0 && *oc != '_' && *oc != '-' && *oc != '/' && *oc != '?' && *oc != '+' && *oc != '.'))
             { break; }
             ++pos;
           }
@@ -153,7 +154,7 @@ namespace jank::read
           while(true)
           {
             auto const oc(peek());
-            if(!oc || (std::isalnum(static_cast<unsigned char>(*oc)) == 0 && *oc != '_' && *oc != '-' && *oc != '/' && *oc != '?' && *oc != '.'))
+            if(!oc || (std::isalnum(static_cast<unsigned char>(*oc)) == 0 && *oc != '_' && *oc != '-' && *oc != '/' && *oc != '?' && *oc != '+' && *oc != '.'))
             { break; }
             ++pos;
           }

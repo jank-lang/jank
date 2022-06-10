@@ -17,8 +17,8 @@ namespace jank::runtime
 
   detail::boolean_type obj::nil::equal(object const &o) const
   {
-    auto const *b(o.as_boolean());
-    return b != nullptr;
+    auto const *n(o.as_nil());
+    return n != nullptr;
   }
   detail::string_type obj::nil::to_string() const
   /* TODO: Optimize. */

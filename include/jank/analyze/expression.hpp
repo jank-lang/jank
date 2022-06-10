@@ -11,7 +11,13 @@ namespace jank::analyze
   struct expression
   {
     using E = expression;
-    using value_type = std::variant<expr::def<E>, expr::var_deref<E>, expr::call<E>, expr::list<E>>;
+    using value_type = std::variant
+    <
+      expr::def<E>,
+      expr::var_deref<E>,
+      expr::call<E>,
+      expr::list<E>
+    >;
 
     expression() = default;
     template <typename T>

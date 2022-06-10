@@ -9,6 +9,9 @@
 
 namespace jank::runtime::obj
 {
+  list_ptr list::create(runtime::detail::list_type const &l)
+  { return make_box<list>(l); }
+
   runtime::detail::boolean_type list::equal(object const &o) const
   {
     auto const *s(o.as_seqable());

@@ -24,14 +24,14 @@ namespace jank::analyze
     context() = delete;
     context(context const &) = default;
     context(context &&) = default;
-    context(runtime::context &ctx, std::string const &label, option<std::reference_wrapper<context>> p);
+    context(runtime::context &ctx, std::string const &label, option<std::reference_wrapper<context>> const &p);
 
     /* TODO: Maybe remove. */
     std::string debug_label;
     option<std::reference_wrapper<context>> parent;
     std::unordered_map<runtime::obj::symbol_ptr, local_binding> locals;
     /* TODO: Only add to this during AOT. */
-    //std::vector<expression> exprs;
+    //std::list<expression> exprs;
     runtime::context &runtime_ctx;
   };
 

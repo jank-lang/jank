@@ -8,12 +8,14 @@ namespace jank::runtime
 
   namespace behavior
   {
+    /* TODO: Replace this with something more efficient? */
     struct sequence : virtual pool_item_common_base
     {
       using sequence_pointer = detail::box_type<sequence>;
 
       virtual ~sequence() = default;
       virtual object_ptr first() const = 0;
+      /* TODO: This should be optional. */
       virtual sequence_pointer next() const = 0;
     };
     using sequence_pointer = sequence::sequence_pointer;

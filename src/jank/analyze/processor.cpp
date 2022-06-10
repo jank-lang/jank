@@ -5,7 +5,7 @@
 
 namespace jank::analyze
 {
-  context::context(runtime::context &ctx, std::string const &label, option<std::reference_wrapper<context>> p)
+  context::context(runtime::context &ctx, std::string const &label, option<std::reference_wrapper<context>> const &p)
     : debug_label{ label }, parent{ p }, runtime_ctx{ ctx }
   { }
 
@@ -42,37 +42,10 @@ namespace jank::analyze
   }
   expression processor::analyze_symbol(runtime::obj::symbol_ptr const &sym)
   {
-    if(!sym->ns.empty())
-    {
-      auto const ns(ctx.runtime_ctx.namespaces.find(runtime::obj::symbol::create(sym->ns)));
-      if(ns == ctx.runtime_ctx.namespaces.end())
-      {
-        /* TODO: Error handling. */
-        throw "unbound namespace for sym";
-      }
-      auto const var(ns->second->vars.find(sym));
-      if(var == ns->second->vars.end())
-      {
-        /* TODO: Error handling. */
-        throw "unbound sym";
-      }
-
-      return { expr::var_deref<expression>{ var->second } };
-    }
-    else
-    {
-      auto const &vars(ctx.runtime_ctx.current_ns->root->as_ns()->vars);
-      auto const var(vars.find(sym));
-      if(var == vars.end())
-      {
-        /* TODO: Error handling. */
-        throw "unbound sym";
-      }
-
-      return { expr::var_deref<expression>{ var->second } };
-    }
-
-    return {};
+    auto const var(ctx.runtime_ctx.find_var(sym));
+    if(!var)
+    { throw "unbound symbol"; }
+    return { expr::var_deref<expression>{ *var } };
   }
   expression processor::analyze_fn(runtime::obj::list_ptr const &)
   { return {}; }
@@ -96,17 +69,39 @@ namespace jank::analyze
   expression processor::analyze_call(runtime::obj::list_ptr const &o)
   {
     /* An empty list evaluates to a list, not a call. */
-    if(o->count() == 0)
+    auto const count(o->count());
+    if(count == 0)
     { return analyze_list(o); }
 
-    auto const first(o->seq()->first());
-    if(auto const * const sym = first->as_symbol())
+    auto const o_seq(o->seq());
+    auto const first(o_seq->first());
+    if(first->as_symbol())
     {
-      auto const found_special(specials.find(boost::static_pointer_cast<runtime::obj::symbol>(first)));
+      auto const sym(boost::static_pointer_cast<runtime::obj::symbol>(first));
+      auto const found_special(specials.find(sym));
       if(found_special != specials.end())
       { return found_special->second(o); }
 
-      // TODO: Normal fn call
+      auto const found_sym(ctx.runtime_ctx.find_val(sym));
+      if(!found_sym)
+      { throw "cannot call unbound symbol"; }
+      else if(!found_sym->get()->as_callable())
+      { throw "value is not callable"; }
+
+      std::vector<expression> arg_exprs;
+      arg_exprs.reserve(count - 1);
+      for(auto s = o_seq->next(); s != nullptr; s = s->next())
+      { arg_exprs.emplace_back(analyze(s->first())); }
+
+      return
+      {
+        expr::call<expression>
+        {
+          boost::static_pointer_cast<runtime::obj::function>(*found_sym),
+          runtime::obj::list::create(o->data.rest()),
+          arg_exprs
+        }
+      };
     }
     else if(auto const * const callable = first->as_callable())
     {
