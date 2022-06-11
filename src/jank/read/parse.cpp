@@ -15,19 +15,9 @@
 namespace jank::read::parse
 {
   processor::iterator::value_type processor::iterator::operator *() const
-  {
-    if(!latest)
-    /* TODO: panic */
-    { std::abort(); }
-    return *latest;
-  }
+  { return latest.unwrap(); }
   processor::iterator::pointer processor::iterator::operator ->()
-  {
-    if(!latest)
-    /* TODO: panic */
-    { std::abort(); }
-    return &(*latest);
-  }
+  { return &latest.unwrap(); }
   processor::iterator& processor::iterator::operator ++()
   {
     latest = some(p.next());
@@ -45,7 +35,7 @@ namespace jank::read::parse
 
     auto token_result(*token_current);
     if(token_result.is_err())
-    { return token_result.err().value(); }
+    { return token_result.err().unwrap(); }
     auto token(token_result.expect_ok());
     switch(token.kind)
     {
@@ -79,7 +69,7 @@ namespace jank::read::parse
 
   result<runtime::object_ptr, error> processor::parse_list()
   {
-    auto const start_token(token_current.latest->expect_ok());
+    auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_paren);
@@ -87,11 +77,11 @@ namespace jank::read::parse
     runtime::detail::vector_transient_type ret;
     for(auto it(begin()); it != end(); ++it)
     {
-      if(it.latest->is_err())
-      { return err(it.latest->expect_err()); }
-      ret.push_back(it.latest->expect_ok());
+      if(it.latest.unwrap().is_err())
+      { return err(it.latest.unwrap().expect_err()); }
+      ret.push_back(it.latest.unwrap().expect_ok());
     }
-    if(expected_closer)
+    if(expected_closer.is_some())
     { return err(error{ start_token.pos, "Unterminated list" }); }
 
     expected_closer = prev_expected_closer;
@@ -100,7 +90,7 @@ namespace jank::read::parse
 
   result<runtime::object_ptr, error> processor::parse_vector()
   {
-    auto const start_token(token_current.latest->expect_ok());
+    auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_square_bracket);
@@ -108,11 +98,11 @@ namespace jank::read::parse
     runtime::detail::vector_transient_type ret;
     for(auto it(begin()); it != end(); ++it)
     {
-      if(it.latest->is_err())
-      { return err(it.latest->expect_err()); }
-      ret.push_back(it.latest->expect_ok());
+      if(it.latest.unwrap().is_err())
+      { return err(it.latest.unwrap().expect_err()); }
+      ret.push_back(it.latest.unwrap().expect_ok());
     }
-    if(expected_closer)
+    if(expected_closer.is_some())
     { return err(error{ start_token.pos, "Unterminated vector" }); }
 
     expected_closer = prev_expected_closer;

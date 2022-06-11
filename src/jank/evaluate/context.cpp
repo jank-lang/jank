@@ -47,9 +47,9 @@ namespace jank::evaluate
       case 0:
         return expr.fn->call();
       case 1:
-        return expr.fn->call(*expr.args->data.first());
+        return expr.fn->call(expr.args->data.first().unwrap());
       case 2:
-        return expr.fn->call(*expr.args->data.first(), *expr.args->data.rest().first());
+        return expr.fn->call(expr.args->data.first().unwrap(), expr.args->data.rest().first().unwrap());
       default:
         throw "unsupported arg count";
     }

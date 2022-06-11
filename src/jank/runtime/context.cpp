@@ -79,8 +79,8 @@ namespace jank::runtime
   option<object_ptr> context::find_val(obj::symbol_ptr const &sym)
   {
     auto const var(find_var(sym));
-    if(var)
-    { return var->get()->root; }
+    if(var.is_some())
+    { return var.unwrap()->root; }
 
     /* TODO: Return val. */
     return find_local(sym);

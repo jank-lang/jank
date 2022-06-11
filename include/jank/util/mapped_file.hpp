@@ -1,6 +1,6 @@
 #pragma once
 
-#include <optional>
+#include <jank/option.hpp>
 
 namespace jank::util
 {
@@ -14,5 +14,5 @@ namespace jank::util
     size_t size{};
   };
 
-  std::optional<mapped_file> map_file(char const * const file);
+  option<mapped_file> map_file(char const * const file);
 }

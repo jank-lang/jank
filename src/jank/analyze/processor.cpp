@@ -18,7 +18,7 @@ namespace jank::analyze
       throw "invalid def";
     }
 
-    auto const sym_obj(*l->data.rest().first());
+    auto const sym_obj(l->data.rest().first().unwrap());
     auto const sym(sym_obj->as_symbol());
     if(sym == nullptr)
     {
@@ -31,7 +31,7 @@ namespace jank::analyze
       throw "invalid def";
     }
 
-    auto const value(l->data.rest().rest().first()->get());
+    auto const value(l->data.rest().rest().first().unwrap());
     if(value == nullptr)
     {
       /* TODO: Error handling. */
@@ -43,9 +43,9 @@ namespace jank::analyze
   expression processor::analyze_symbol(runtime::obj::symbol_ptr const &sym)
   {
     auto const var(ctx.runtime_ctx.find_var(sym));
-    if(!var)
+    if(var.is_none())
     { throw "unbound symbol"; }
-    return { expr::var_deref<expression>{ *var } };
+    return { expr::var_deref<expression>{ var.unwrap() } };
   }
   expression processor::analyze_fn(runtime::obj::list_ptr const &)
   { return {}; }
@@ -83,9 +83,9 @@ namespace jank::analyze
       { return found_special->second(o); }
 
       auto const found_sym(ctx.runtime_ctx.find_val(sym));
-      if(!found_sym)
+      if(found_sym.is_none())
       { throw "cannot call unbound symbol"; }
-      else if(!found_sym->get()->as_callable())
+      else if(!found_sym.unwrap()->as_callable())
       { throw "value is not callable"; }
 
       std::vector<expression> arg_exprs;
@@ -97,7 +97,7 @@ namespace jank::analyze
       {
         expr::call<expression>
         {
-          boost::static_pointer_cast<runtime::obj::function>(*found_sym),
+          boost::static_pointer_cast<runtime::obj::function>(found_sym.unwrap()),
           runtime::obj::list::create(o->data.rest()),
           arg_exprs
         }

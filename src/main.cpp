@@ -16,7 +16,7 @@ int main(int const argc, char const **argv)
   char const *file{ argv[1] };
 
   auto const mfile(jank::util::map_file(file));
-  auto lexer(jank::read::lex::processor{ { mfile->head, mfile->size } });
+  auto lexer(jank::read::lex::processor{ { mfile.unwrap().head, mfile.unwrap().size } });
   (void)lexer;
 
   jank::runtime::context ctx;

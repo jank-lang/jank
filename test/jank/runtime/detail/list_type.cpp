@@ -13,7 +13,7 @@ namespace jank::runtime::detail
   TEST_CASE("Empty")
   {
     list_type_impl<int> l;
-    CHECK(!l.first());
+    CHECK(l.first().is_none());
     CHECK(l.rest().size() == 0);
     CHECK(l.size() == 0);
   }

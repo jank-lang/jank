@@ -44,12 +44,7 @@ namespace jank::read
     { return os << "<no data>"; }
 
     processor::iterator::value_type processor::iterator::operator *() const
-    {
-      if(!latest)
-      /* TODO: panic */
-      { std::abort(); }
-      return *latest;
-    }
+    { return latest.unwrap(); }
     processor::iterator& processor::iterator::operator ++()
     {
       latest = some(p.next());
@@ -110,12 +105,13 @@ namespace jank::read
         /* Numbers. */
         case '0' ... '9':
         {
-          if(auto &&e = check_whitespace(found_space))
-          { return err(std::move(*e)); }
+          auto &&e = check_whitespace(found_space);
+          if(e.is_some())
+          { return err(std::move(e.unwrap())); }
           while(true)
           {
             auto const oc(peek());
-            if(!oc || std::isdigit(*oc) == 0)
+            if(oc.is_none() || std::isdigit(oc.unwrap()) == 0)
             { break; }
             ++pos;
           }
@@ -131,13 +127,17 @@ namespace jank::read
         case '?':
         case '+':
         {
-          if(auto &&e = check_whitespace(found_space))
-          { return err(std::move(*e)); }
+          auto &&e = check_whitespace(found_space);
+          if(e.is_some())
+          { return err(std::move(e.unwrap())); }
           while(true)
           {
             auto const oc(peek());
+            if(oc.is_none())
+            { break; }
+            auto const c(oc.unwrap());
             /* TODO: Lift this to a separate fn, since it's used twice. */
-            if(!oc || (std::isalnum(static_cast<unsigned char>(*oc)) == 0 && *oc != '_' && *oc != '-' && *oc != '/' && *oc != '?' && *oc != '+' && *oc != '.'))
+            if(std::isalnum(static_cast<unsigned char>(c)) == 0 && c != '_' && c != '-' && c != '/' && c != '?' && c != '+' && c != '.')
             { break; }
             ++pos;
           }
@@ -149,12 +149,17 @@ namespace jank::read
         case ':':
         /* TODO: Support for ::foo */
         {
-          if(auto &&e = check_whitespace(found_space))
-          { return err(std::move(*e)); }
+          auto &&e = check_whitespace(found_space);
+          if(e.is_some())
+          { return err(std::move(e.unwrap())); }
           while(true)
           {
             auto const oc(peek());
-            if(!oc || (std::isalnum(static_cast<unsigned char>(*oc)) == 0 && *oc != '_' && *oc != '-' && *oc != '/' && *oc != '?' && *oc != '+' && *oc != '.'))
+            if(oc.is_none())
+            { break; }
+            auto const c(oc.unwrap());
+            /* TODO: Lift this to a separate fn, since it's used twice. */
+            if(std::isalnum(static_cast<unsigned char>(c)) == 0 && c != '_' && c != '-' && c != '/' && c != '?' && c != '+' && c != '.')
             { break; }
             ++pos;
           }
@@ -165,19 +170,20 @@ namespace jank::read
         /* Strings. */
         case '"':
         {
-          if(auto &&e = check_whitespace(found_space))
-          { return err(std::move(*e)); }
+          auto &&e = check_whitespace(found_space);
+          if(e.is_some())
+          { return err(std::move(e.unwrap())); }
           auto const token_start(pos);
           bool escaped{};
           while(true)
           {
             auto const oc(peek());
-            if(!oc)
+            if(oc.is_none())
             {
               ++pos;
               return err(error{ token_start, "unterminated string" });
             }
-            else if(!escaped && *oc == '"')
+            else if(!escaped && oc.unwrap() == '"')
             {
               ++pos;
               break;
@@ -185,7 +191,7 @@ namespace jank::read
 
             if(escaped)
             {
-              switch(*oc)
+              switch(oc.unwrap())
               {
                 case 'n':
                 case 't':
@@ -196,7 +202,7 @@ namespace jank::read
               }
               escaped = false;
             }
-            else if(*oc == '\\')
+            else if(oc.unwrap() == '\\')
             { escaped = true; }
             ++pos;
           }

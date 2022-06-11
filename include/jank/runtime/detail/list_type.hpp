@@ -117,7 +117,7 @@ namespace jank::runtime::detail
     option<T> first() const
     {
       if(data)
-      { return data->first; }
+      { return some(data->first); }
       return none;
     }
     list_type_impl<T> rest() const
