@@ -102,6 +102,9 @@ namespace jank::read
           return ok(token{ pos++, token_kind::open_curly_bracket });
         case '}':
           return ok(token{ pos++, token_kind::close_curly_bracket });
+        case '\'':
+          require_space = false;
+          return ok(token{ pos++, token_kind::single_quote });
         /* Numbers. */
         case '0' ... '9':
         {

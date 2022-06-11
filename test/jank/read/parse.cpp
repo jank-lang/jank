@@ -20,7 +20,7 @@ namespace jank::read::parse
   {
     lex::processor lp{ "" };
     processor p{ lp.begin(), lp.end() };
-    auto r(p.next());
+    auto const r(p.next());
     CHECK(r.is_ok());
     CHECK(r.expect_ok() == nullptr);
   }
@@ -29,7 +29,7 @@ namespace jank::read::parse
   {
     lex::processor lp{ "1234" };
     processor p{ lp.begin(), lp.end() };
-    auto r(p.next());
+    auto const r(p.next());
     CHECK(r.is_ok());
     CHECK(r.expect_ok()->equal(runtime::obj::integer{ 1234 }));
   }
@@ -40,7 +40,7 @@ namespace jank::read::parse
     processor p{ lp.begin(), lp.end() };
     for(auto const &s : { "foo", "bar" })
     {
-      auto r(p.next());
+      auto const r(p.next());
       CHECK(r.is_ok());
       CHECK(r.expect_ok()->equal(runtime::obj::string{ runtime::detail::string_type{ s } }));
     }
@@ -54,7 +54,7 @@ namespace jank::read::parse
       processor p{ lp.begin(), lp.end() };
       for(auto const &s : { "foo", "bar", "spam" })
       {
-        auto r(p.next());
+        auto const r(p.next());
         CHECK(r.is_ok());
         CHECK(r.expect_ok()->equal(runtime::obj::symbol{ runtime::detail::string_type{ s } }));
       }
@@ -66,9 +66,31 @@ namespace jank::read::parse
       processor p{ lp.begin(), lp.end() };
       for(auto const &s : { std::make_pair("foo", "foo"), std::make_pair("foo.bar", "bar"), std::make_pair("spam.bar", "spam") })
       {
-        auto r(p.next());
+        auto const r(p.next());
         CHECK(r.is_ok());
         CHECK(r.expect_ok()->equal(runtime::obj::symbol{ s.first, s.second }));
+      }
+    }
+
+    SUBCASE("Quoted")
+    {
+      lex::processor lp{ "'foo 'bar/spam" };
+      processor p{ lp.begin(), lp.end() };
+      for(auto const &s : { std::make_pair("", "foo"), std::make_pair("bar", "spam") })
+      {
+        auto const r(p.next());
+        CHECK(r.is_ok());
+        CHECK
+        (
+          r.expect_ok()->equal
+          (
+            runtime::obj::list
+            {
+              runtime::obj::symbol::create("quote"),
+              runtime::obj::symbol::create(s.first, s.second)
+            }
+          )
+        );
       }
     }
   }
@@ -81,7 +103,7 @@ namespace jank::read::parse
       processor p{ lp.begin(), lp.end() };
       for(size_t i{}; i < 3; ++i)
       {
-        auto r(p.next());
+        auto const r(p.next());
         CHECK(r.is_ok());
         CHECK(r.expect_ok() != nullptr);
         CHECK(r.expect_ok()->equal(runtime::obj::list{}));
@@ -94,7 +116,7 @@ namespace jank::read::parse
       processor p{ lp.begin(), lp.end() };
       for(size_t i{ 1 }; i < 3; ++i)
       {
-        auto r(p.next());
+        auto const r(p.next());
         CHECK(r.is_ok());
         CHECK
         (
@@ -102,13 +124,10 @@ namespace jank::read::parse
           (
             runtime::obj::list
             {
-              runtime::detail::list_type
-              {
-                runtime::make_box<runtime::obj::integer>(1 * i),
-                runtime::make_box<runtime::obj::integer>(2 * i),
-                runtime::make_box<runtime::obj::integer>(3 * i),
-                runtime::make_box<runtime::obj::integer>(4 * i),
-              }
+              runtime::make_box<runtime::obj::integer>(1 * i),
+              runtime::make_box<runtime::obj::integer>(2 * i),
+              runtime::make_box<runtime::obj::integer>(3 * i),
+              runtime::make_box<runtime::obj::integer>(4 * i),
             }
           )
         );
@@ -119,10 +138,10 @@ namespace jank::read::parse
     {
       lex::processor lp{ "1)" };
       processor p{ lp.begin(), lp.end() };
-      auto r1(p.next());
+      auto const r1(p.next());
       CHECK(r1.is_ok());
       CHECK(r1.expect_ok()->equal(runtime::obj::integer{ 1 }));
-      auto r2(p.next());
+      auto const r2(p.next());
       CHECK(r2.is_err());
     }
 
@@ -130,7 +149,7 @@ namespace jank::read::parse
     {
       lex::processor lp{ "(1" };
       processor p{ lp.begin(), lp.end() };
-      auto r1(p.next());
+      auto const r1(p.next());
       CHECK(r1.is_err());
     }
   }
@@ -143,7 +162,7 @@ namespace jank::read::parse
       processor p{ lp.begin(), lp.end() };
       for(size_t i{}; i < 3; ++i)
       {
-        auto r(p.next());
+        auto const r(p.next());
         CHECK(r.is_ok());
         CHECK(r.expect_ok() != nullptr);
         CHECK(r.expect_ok()->equal(runtime::obj::vector{}));
@@ -156,7 +175,7 @@ namespace jank::read::parse
       processor p{ lp.begin(), lp.end() };
       for(size_t i{ 1 }; i < 3; ++i)
       {
-        auto r(p.next());
+        auto const r(p.next());
         CHECK(r.is_ok());
         CHECK
         (
@@ -181,10 +200,10 @@ namespace jank::read::parse
     {
       lex::processor lp{ "1]" };
       processor p{ lp.begin(), lp.end() };
-      auto r1(p.next());
+      auto const r1(p.next());
       CHECK(r1.is_ok());
       CHECK(r1.expect_ok()->equal(runtime::obj::integer{ 1 }));
-      auto r2(p.next());
+      auto const r2(p.next());
       CHECK(r2.is_err());
     }
 
@@ -192,7 +211,7 @@ namespace jank::read::parse
     {
       lex::processor lp{ "[1" };
       processor p{ lp.begin(), lp.end() };
-      auto r1(p.next());
+      auto const r1(p.next());
       CHECK(r1.is_err());
     }
   }

@@ -179,6 +179,13 @@ namespace jank::read::lex
       std::vector<result<token, error>> tokens(p.begin(), p.end());
       CHECK(tokens == make_tokens({{ token_kind::symbol, "abc_.123/-foo+?" }}));
     }
+
+    SUBCASE("Quoted")
+    {
+      processor p{ "'foo" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({{ token_kind::single_quote }, { token_kind::symbol, "foo" }}));
+    }
   }
 
   TEST_CASE("Keyword")

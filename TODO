@@ -3,45 +3,36 @@ https://carlosvin.github.io/langs/en/posts/choosing-modern-cpp-stack/
 https://github.com/arximboldi/lager
 https://github.com/doctest/doctest
 
-**** to work with a clojure-like RT: ****
-https://www.duelinmarkers.com/2016/01/24/the-life-of-a-clojure-expression.html
-https://github.com/clojure/clojurescript/blob/515900f9762102987bda7d53b919dafc0b6c0580/src/clj/clojure/cljs.clj
-https://github.com/jgpc42/insn
-https://www.youtube.com/watch?v=-Qm09YiUHTs
-
-**** to become a clojure dialect: ****
-ast doc: https://clojure.github.io/tools.analyzer/spec/quickref.html
-
-parsing
+lexing/parsing
   parens: working, tested
-  commas:
-  comments: working, tested
-  nil: working, tested
+  commas: working, tested
+  comments:
+  nil:
   integers: working, tested
-  reals: working, tested
-  bools: working, untested
+  reals:
+  bools:
   strings: working, tested
   chars:
   keywords
     simple: working, tested
     qualified: working, tested
-    aliased: working, tested
-  maps: working, tested
+    aliased:
+  maps:
   vectors: working, tested
-  sets: working, tested
-  lists:
-  regexes: working, tested
+  sets:
+  lists: working, tested
+  regexes:
   identifiers
     simple: working, tested
     qualified: working, tested
   special forms
     def: working, tested
-    if: working, tested
-    do: working, tested
-    let: working, tested
-    quote:
+    if:
+    do:
+    let:
+    quote: working, tested
     var:
-    fn: working, tested
+    fn:
     loop:
     recur:
     throw:
@@ -56,6 +47,16 @@ parsing
     regex:
     var:
     conditionals:
+
+
+**** to work with a clojure-like RT: ****
+https://www.duelinmarkers.com/2016/01/24/the-life-of-a-clojure-expression.html
+https://github.com/clojure/clojurescript/blob/515900f9762102987bda7d53b919dafc0b6c0580/src/clj/clojure/cljs.clj
+https://github.com/jgpc42/insn
+https://www.youtube.com/watch?v=-Qm09YiUHTs
+
+**** to become a clojure dialect: ****
+ast doc: https://clojure.github.io/tools.analyzer/spec/quickref.html
 
 grammar
   don't have grammar for bools and nil at all?

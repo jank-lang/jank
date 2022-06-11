@@ -30,6 +30,7 @@ namespace jank::read::parse
 
   result<runtime::object_ptr, error> processor::next()
   {
+    /* TODO: Replace nullptr with none. */
     if(token_current == token_end)
     { return ok(nullptr); }
 
@@ -53,6 +54,8 @@ namespace jank::read::parse
         ++token_current;
         expected_closer = none;
         return ok(nullptr);
+      case lex::token_kind::single_quote:
+        return parse_quote();
       case lex::token_kind::symbol:
         return parse_symbol();
       case lex::token_kind::keyword:
@@ -85,7 +88,7 @@ namespace jank::read::parse
     { return err(error{ start_token.pos, "Unterminated list" }); }
 
     expected_closer = prev_expected_closer;
-    return runtime::make_box<runtime::obj::list>(runtime::detail::list_type{ ret.rbegin(), ret.rend() });
+    return runtime::make_box<runtime::obj::list>(ret.rbegin(), ret.rend());
   }
 
   result<runtime::object_ptr, error> processor::parse_vector()
@@ -119,6 +122,23 @@ namespace jank::read::parse
 
     expected_closer = prev_expected_closer;
     throw "unimplemented";
+  }
+
+  result<runtime::object_ptr, error> processor::parse_quote()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    ++token_current;
+    auto val_result(next());
+    if(val_result.is_err())
+    { return val_result; }
+    else if(val_result.expect_ok() == nullptr)
+    { return err(error{ start_token.pos, std::string{ "invalid value after quote" } }); }
+
+    return runtime::obj::list::create
+    (
+      runtime::obj::symbol::create("quote"),
+      val_result.expect_ok_move()
+    );
   }
 
   result<runtime::object_ptr, error> processor::parse_symbol()

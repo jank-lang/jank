@@ -17,8 +17,15 @@ namespace jank::runtime::obj
     list(runtime::detail::list_type const &d)
       : data{ d }
     { }
+    template <typename... Args>
+    list(Args &&...args)
+      : data{ std::forward<Args>(args)... }
+    { }
 
     static runtime::detail::box_type<list> create(runtime::detail::list_type const &l);
+    template <typename... Args>
+    static runtime::detail::box_type<list> create(Args &&...args)
+    { return make_box<list>(std::forward<Args>(args)...); }
 
     runtime::detail::boolean_type equal(object const &) const override;
     runtime::detail::string_type to_string() const override;

@@ -61,9 +61,11 @@ namespace jank
     bool is_err() const
     { return data.index() == 1; }
 
-    R expect_ok()
+    R expect_ok() const
     { return std::get<0>(data); }
     R* expect_ok_ptr()
+    { return &std::get<0>(data); }
+    R const* expect_ok_ptr() const
     { return &std::get<0>(data); }
     R expect_ok_move()
     { return std::move(std::get<0>(data)); }
@@ -73,9 +75,11 @@ namespace jank
       { return some(std::get<0>(data)); }
       return none;
     }
-    E expect_err()
+    E expect_err() const
     { return std::get<1>(data); }
     E* expect_err_ptr()
+    { return &std::get<1>(data); }
+    E const* expect_err_ptr() const
     { return &std::get<1>(data); }
     E expect_err_move()
     { return std::move(std::get<1>(data)); }

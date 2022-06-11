@@ -35,6 +35,7 @@ namespace jank::read::parse
     result<runtime::object_ptr, error> parse_list();
     result<runtime::object_ptr, error> parse_vector();
     result<runtime::object_ptr, error> parse_map();
+    result<runtime::object_ptr, error> parse_quote();
     result<runtime::object_ptr, error> parse_symbol();
     result<runtime::object_ptr, error> parse_keyword();
     result<runtime::object_ptr, error> parse_integer();
