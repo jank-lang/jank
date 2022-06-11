@@ -55,8 +55,6 @@ namespace jank::evaluate
     }
   }
 
-  runtime::object_ptr context::eval(analyze::expr::list<analyze::expression> const &)
-  {
-    return {};
-  }
+  runtime::object_ptr context::eval(analyze::expr::literal<analyze::expression> const &expr)
+  { return expr.data; }
 }

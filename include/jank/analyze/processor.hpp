@@ -50,7 +50,8 @@ namespace jank::analyze
     expression analyze_fn(runtime::obj::list_ptr const &);
     expression analyze_let(runtime::obj::list_ptr const &);
     expression analyze_if(runtime::obj::list_ptr const &);
-    expression analyze_list(runtime::obj::list_ptr const &o);
+    expression analyze_quote(runtime::obj::list_ptr const &);
+    expression analyze_literal(runtime::object_ptr const &o);
 
     std::unordered_map<runtime::obj::symbol_ptr, std::function<expression (runtime::obj::list_ptr const &)>> specials;
     context ctx;

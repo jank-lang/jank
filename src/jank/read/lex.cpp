@@ -91,16 +91,22 @@ namespace jank::read
       switch(file[token_start])
       {
         case '(':
+          require_space = false;
           return ok(token{ pos++, token_kind::open_paren });
         case ')':
+          require_space = false;
           return ok(token{ pos++, token_kind::close_paren });
         case '[':
+          require_space = false;
           return ok(token{ pos++, token_kind::open_square_bracket });
         case ']':
+          require_space = false;
           return ok(token{ pos++, token_kind::close_square_bracket });
         case '{':
+          require_space = false;
           return ok(token{ pos++, token_kind::open_curly_bracket });
         case '}':
+          require_space = false;
           return ok(token{ pos++, token_kind::close_curly_bracket });
         case '\'':
           require_space = false;

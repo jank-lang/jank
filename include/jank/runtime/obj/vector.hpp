@@ -16,6 +16,10 @@ namespace jank::runtime::obj
     vector(runtime::detail::vector_type const &d)
       : data{ d }
     { }
+    template <typename... Args>
+    vector(Args &&...args)
+      : data{ std::forward<Args>(args)... }
+    { }
 
     runtime::detail::boolean_type equal(object const &) const override;
     runtime::detail::string_type to_string() const override;

@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include <jank/analyze/processor.hpp>
-#include <jank/analyze/expr/list.hpp>
+#include <jank/analyze/expr/literal.hpp>
 
 namespace jank::analyze
 {
@@ -53,17 +53,17 @@ namespace jank::analyze
   { return {}; }
   expression processor::analyze_if(runtime::obj::list_ptr const &)
   { return {}; }
-  expression processor::analyze_list(runtime::obj::list_ptr const &o)
+  expression processor::analyze_quote(runtime::obj::list_ptr const &o)
   {
-    expr::list<expression> ret;
-    ret.data = o;
-    ret.exprs.reserve(o->count());
+    if(o->count() != 2)
+    { throw "invalid quote: expects one argument"; }
 
-    for(auto const &e : o->data)
-    /* TODO: Disable eval while analyzing these. */
-    { ret.exprs.push_back(analyze(e)); }
-
-    return {};
+    return analyze_literal(o->data.rest().first().unwrap());
+  }
+  expression processor::analyze_literal(runtime::object_ptr const &o)
+  {
+    /* TODO: Dedupe literals. */
+    return { expr::literal<expression>{ o } };
   }
 
   expression processor::analyze_call(runtime::obj::list_ptr const &o)
@@ -71,7 +71,7 @@ namespace jank::analyze
     /* An empty list evaluates to a list, not a call. */
     auto const count(o->count());
     if(count == 0)
-    { return analyze_list(o); }
+    { return analyze_literal(o); }
 
     auto const o_seq(o->seq());
     auto const first(o_seq->first());
@@ -127,6 +127,7 @@ namespace jank::analyze
       { symbol::create("fn*"), make_fn(&processor::analyze_fn) },
       { symbol::create("let*"), make_fn(&processor::analyze_let) },
       { symbol::create("if"), make_fn(&processor::analyze_if) },
+      { symbol::create("quote"), make_fn(&processor::analyze_quote) },
     };
   }
 

@@ -76,10 +76,10 @@ namespace jank::read::lex
       std::vector<result<token, error>> tokens(p.begin(), p.end());
       CHECK(tokens == make_tokens
       (
-       {
-        { token_kind::open_paren }, { token_kind::open_paren },
-        { token_kind::close_paren }, { token_kind::close_paren }
-       }
+        {
+          { token_kind::open_paren }, { token_kind::open_paren },
+          { token_kind::close_paren }, { token_kind::close_paren }
+        }
       ));
     }
 
@@ -97,6 +97,67 @@ namespace jank::read::lex
         processor p{ ")" };
         std::vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens == make_tokens({{ token_kind::close_paren }}));
+      }
+    }
+  }
+
+  TEST_CASE("Vector")
+  {
+    SUBCASE("Empty")
+    {
+      processor p{ "[]" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({{ token_kind::open_square_bracket }, { token_kind::close_square_bracket }}));
+    }
+
+    SUBCASE("Nested")
+    {
+      processor p{ "[[]]" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens
+      (
+        {
+          { token_kind::open_square_bracket }, { token_kind::open_square_bracket },
+          { token_kind::close_square_bracket }, { token_kind::close_square_bracket }
+        }
+      ));
+    }
+
+    SUBCASE("Mixed")
+    {
+      processor p{ "[(foo [1 2]) 2]" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens
+      (
+        {
+          { token_kind::open_square_bracket },
+          { token_kind::open_paren },
+          { token_kind::symbol, "foo" },
+          { token_kind::open_square_bracket },
+          { token_kind::integer, 1 },
+          { token_kind::integer, 2 },
+          { token_kind::close_square_bracket },
+          { token_kind::close_paren },
+          { token_kind::integer, 2 },
+          { token_kind::close_square_bracket },
+        }
+      ));
+    }
+
+    SUBCASE("Unbalanced")
+    {
+      SUBCASE("Open")
+      {
+        processor p{ "[" };
+        std::vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ token_kind::open_square_bracket }}));
+      }
+
+      SUBCASE("Closed")
+      {
+        processor p{ "]" };
+        std::vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ token_kind::close_square_bracket }}));
       }
     }
   }
@@ -126,11 +187,11 @@ namespace jank::read::lex
         std::vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens == make_results
         (
-         {
-           token{ token_kind::integer, 1234 },
-           error{ 4, "expected whitespace before next token" },
-           token{ token_kind::symbol, "abc" },
-         }
+          {
+            token{ token_kind::integer, 1234 },
+            error{ 4, "expected whitespace before next token" },
+            token{ token_kind::symbol, "abc" },
+          }
         ));
       }
 
@@ -140,11 +201,11 @@ namespace jank::read::lex
         std::vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens == make_results
         (
-         {
-           token{ token_kind::open_paren },
-           token{ token_kind::integer, 1234 },
-           token{ token_kind::close_paren },
-         }
+          {
+            token{ token_kind::open_paren },
+            token{ token_kind::integer, 1234 },
+            token{ token_kind::close_paren },
+          }
         ));
       }
     }

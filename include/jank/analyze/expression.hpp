@@ -4,7 +4,7 @@
 #include <jank/analyze/expr/def.hpp>
 #include <jank/analyze/expr/var_deref.hpp>
 #include <jank/analyze/expr/call.hpp>
-#include <jank/analyze/expr/list.hpp>
+#include <jank/analyze/expr/literal.hpp>
 
 namespace jank::analyze
 {
@@ -16,7 +16,7 @@ namespace jank::analyze
       expr::def<E>,
       expr::var_deref<E>,
       expr::call<E>,
-      expr::list<E>
+      expr::literal<E>
     >;
 
     expression() = default;
