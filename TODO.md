@@ -1,61 +1,57 @@
-**** C++ rewrite
+## C++ rewrite
 https://carlosvin.github.io/langs/en/posts/choosing-modern-cpp-stack/
 https://github.com/arximboldi/lager
 https://github.com/doctest/doctest
 
-lexing/parsing
-  parens: working, tested
-  commas: working, tested
-  comments:
-  nil:
-  integers: working, tested
-  reals:
-  bools:
-  strings: working, tested
-  chars:
-  keywords
-    simple: working, tested
-    qualified: working, tested
-    aliased:
-  maps:
-  vectors: working, tested
-  sets:
-  lists: working, tested
-  regexes:
-  identifiers
-    simple: working, tested
-    qualified: working, tested
-  special forms
-    def: working, tested
-    if:
-    do:
-    let:
-    quote: working, tested
-    var:
-    fn:
-    loop:
-    recur:
-    throw:
-    try:
-    monitor-enter:
-    monitor-exit:
-  applications: working, tested
-  destructuring:
-  macros:
-  reader macros
-    anonymous shorthand fns:
-    regex:
-    var:
-    conditionals:
+| feature                   | lexing | parsing | analyzing | evaluating |
+|---------------------------|--------|---------|-----------|------------|
+| parens                    | X      | X       | -         | -          |
+| commas                    | X      | -       | -         | -          |
+| comments                  |        |         |           |            |
+| nil                       |        |         |           |            |
+| integers                  | X      | X       | X         | X          |
+| reals                     |        |         |           |            |
+| bools                     |        |         |           |            |
+| strings                   | X      | X       | X         | X          |
+| chars                     |        |         |           |            |
+| keywords/unqualified      | X      | X       |           |            |
+| keywords/qualified        | X      | X       |           |            |
+| keywords/aliased          |        |         |           |            |
+| maps                      | X      |         |           |            |
+| sets                      |        |         |           |            |
+| lists                     | X      | X       | X         | X          |
+| regexes                   |        |         |           |            |
+| symbols/unqualified       | X      | X       | X         | X          |
+| symbols/qualified         | X      | X       | X         | X          |
+| specials/def              | X      | X       | X         | X          |
+| specials/if               |        |         |           |            |
+| specials/do               |        |         |           |            |
+| specials/let*             |        |         |           |            |
+| specials/quote            | X      | X       | X         | X          |
+| specials/var              |        |         |           |            |
+| specials/fn*              |        |         |           |            |
+| specials/loop*            |        |         |           |            |
+| specials/recur            |        |         |           |            |
+| specials/throw            |        |         |           |            |
+| specials/try              |        |         |           |            |
+| specials/monitor-enter    |        |         |           |            |
+| specials/monitor-exit     |        |         |           |            |
+| calls                     | X      | X       | X         | X          |
+| destructuring             |        |         |           |            |
+| macros                    | -      | -       |           |            |
+| reader-macros/fns         |        |         |           |            |
+| reader-macros/regex       |        |         |           |            |
+| reader-macros/quote       | X      | X       | X         | X          |
+| reader-macros/var         |        |         |           |            |
+| reader-macros/conditional |        |         |           |            |
 
-
-**** to work with a clojure-like RT: ****
+### to work with a clojure-like RT
 https://www.duelinmarkers.com/2016/01/24/the-life-of-a-clojure-expression.html
 https://github.com/clojure/clojurescript/blob/515900f9762102987bda7d53b919dafc0b6c0580/src/clj/clojure/cljs.clj
 https://github.com/jgpc42/insn
 https://www.youtube.com/watch?v=-Qm09YiUHTs
 
-**** to become a clojure dialect: ****
+### to become a clojure dialect
 ast doc: https://clojure.github.io/tools.analyzer/spec/quickref.html
 
 grammar
@@ -67,7 +63,7 @@ primitive types like Julia?
 organization
   group all literals: nil bool keyword symbol string number map vector set seq char regex var
 
-**** type features: ****
+### type features
 
 references
   https://stackoverflow.com/questions/415532/implementing-type-inference
@@ -155,7 +151,7 @@ function specialization
     [c]
     ...)
 
-**** what's needed to make jank usable: ****
+### what's needed to make jank usable:
 
 website style
   similar to http://eta-lang.org/
@@ -213,7 +209,7 @@ structs
 compare performance benchmarks with clj/clje
   https://github.com/clojerl/clojerl/blob/master/scripts/benchmark/clojure-vs-clojerl.md
 
-** everything else: **
+### everything else
 figure out logo
 
 name
