@@ -21,6 +21,8 @@ namespace jank::read::lex
     { return detail::to_array_impl(a, std::make_index_sequence<N>{}); }
   }
 
+  constexpr std::array<token, 0> make_tokens()
+  { return {}; }
   template <size_t N>
   constexpr std::array<token, N> make_tokens(token const (&arr)[N])
   { return detail::to_array(arr); }
@@ -59,6 +61,51 @@ namespace jank::read::lex
     CHECK(r.is_ok());
     auto const t(r.unwrap());
     CHECK(t.kind == token_kind::eof);
+  }
+
+  TEST_CASE("Comments")
+  {
+    SUBCASE("Empty")
+    {
+      processor p{ ";" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens());
+    }
+
+    SUBCASE("Non-empty")
+    {
+      processor p{ "; Hello hello" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens());
+    }
+
+    SUBCASE("Multiple on same line")
+    {
+      processor p{ "; Hello hello ; \"hi hi\"" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens());
+    }
+
+    SUBCASE("Multiple ; in a row")
+    {
+      processor p{ ";;; Hello hello 12" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens());
+    }
+
+    SUBCASE("Expressions before")
+    {
+      processor p{ "1 2 ; meow" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({ { token_kind::integer, 1 }, { token_kind::integer, 2 } }));
+    }
+
+    SUBCASE("Expressions before and after")
+    {
+      processor p{ "1 ; meow\n2" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({ { token_kind::integer, 1 }, { token_kind::integer, 2 } }));
+    }
   }
 
   TEST_CASE("List")

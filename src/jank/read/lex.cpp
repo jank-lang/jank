@@ -74,13 +74,18 @@ namespace jank::read
     {
       /* Skip whitespace. */
       bool found_space{};
+      bool in_comment{};
       while(true)
       {
         if(pos >= file.size())
         { return ok(token{ pos, token_kind::eof }); }
 
         auto const c(file[pos]);
-        if(std::isspace(c) == 0 && c != ',')
+        if(!in_comment && c == ';')
+        { in_comment = true; }
+        else if(in_comment && c == '\n')
+        { in_comment = false; }
+        else if(std::isspace(c) == 0 && c != ',' && !in_comment)
         { break; }
 
         found_space = true;
