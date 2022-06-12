@@ -151,8 +151,11 @@ namespace jank::read
             ++pos;
           }
           require_space = true;
-          /* TODO: Ensure it uses / correctly. */
-          return ok(token{ pos++, token_kind::symbol, std::string_view(file.data() + token_start, pos - token_start) });
+          std::string_view const name{ file.data() + token_start, ++pos - token_start };
+          if(name[0] == '/' && name.size() > 1)
+          { return err(error{ token_start, "invalid symbol" }); }
+
+          return ok(token{ pos, token_kind::symbol, name });
         }
         /* Keywords. */
         case ':':
@@ -173,8 +176,11 @@ namespace jank::read
             ++pos;
           }
           require_space = true;
-          /* TODO: Ensure it's not empty and uses / properly. */
-          return ok(token{ pos++, token_kind::keyword, std::string_view(file.data() + token_start + 1, pos - token_start - 1) });
+          std::string_view const name{ file.data() + token_start + 1, ++pos - token_start - 1 };
+          if(name[0] == '/' && name.size() > 1)
+          { return err(error{ token_start, "invalid keyword" }); }
+
+          return ok(token{ pos, token_kind::keyword, name });
         }
         /* Strings. */
         case '"':

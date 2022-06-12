@@ -227,6 +227,27 @@ namespace jank::read::lex
       CHECK(tokens == make_tokens({{ token_kind::symbol, "abc" }}));
     }
 
+    SUBCASE("Single slash")
+    {
+      processor p{ "/" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({{ token_kind::symbol, "/" }}));
+    }
+
+    SUBCASE("Multi slash")
+    {
+      processor p{ "//" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_results({ error{ 0, "invalid symbol" }, }));
+    }
+
+    SUBCASE("Starting with a slash")
+    {
+      processor p{ "/foo" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_results({ error{ 0, "invalid symbol" }, }));
+    }
+
     SUBCASE("With numbers")
     {
       processor p{ "abc123" };
@@ -263,6 +284,27 @@ namespace jank::read::lex
       processor p{ ":abc" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
       CHECK(tokens == make_tokens({{ token_kind::keyword, "abc" }}));
+    }
+
+    SUBCASE("Single slash")
+    {
+      processor p{ ":/" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({{ token_kind::keyword, "/" }}));
+    }
+
+    SUBCASE("Multi slash")
+    {
+      processor p{ "://" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_results({ error{ 0, "invalid keyword" }, }));
+    }
+
+    SUBCASE("Starting with a slash")
+    {
+      processor p{ ":/foo" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_results({ error{ 0, "invalid keyword" }, }));
     }
 
     SUBCASE("With numbers")
