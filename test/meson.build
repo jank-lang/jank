@@ -14,6 +14,6 @@ unit = executable(
   project_src + test_src,
   include_directories : [project_inc] + [test_inc],
   link_args : ['-fprofile-instr-generate', '-fcoverage-mapping'],
-  dependencies : [threads_dep, boost_dep],
+  dependencies : [threads_dep, boost_dep, cling_dep],
 )
 test('unit tests', unit)
