@@ -1,6 +1,12 @@
 #include <iostream>
 #include <vector>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"
+#include <cling/Interpreter/Interpreter.h>
+#include <cling/Interpreter/Value.h>
+#pragma clang diagnostic pop
+
 #include <jank/util/mapped_file.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>

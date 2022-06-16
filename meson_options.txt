@@ -1,0 +1,10 @@
+option(
+  'cling_include_path',
+  type : 'string',
+  description : 'Path to include directory for cling'
+)
+option(
+  'cling_lib_path',
+  type : 'string',
+  description : 'Path to lib directory for cling'
+)

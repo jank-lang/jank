@@ -1,3 +1,4 @@
+# TODO: Debug/release profiles.
 project(
   'jank',
   'cpp',
@@ -51,10 +52,14 @@ add_global_arguments([
 
 threads_dep = dependency('threads')
 boost_dep = dependency('boost')
+cling_dep = declare_dependency(
+  include_directories : include_directories(get_option('cling_include_path')),
+  link_args : ['-L' + get_option('cling_lib_path'), '-lcling'],
+)
 executable(
   'jank',
   project_src + ['src/main.cpp'],
-  dependencies : [threads_dep, boost_dep],
+  dependencies : [threads_dep, boost_dep, cling_dep],
   link_args : ['-fprofile-instr-generate', '-fcoverage-mapping'],
   include_directories : project_inc,
   install : true
