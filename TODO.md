@@ -5,8 +5,10 @@
 | commas                    | X      | -       | -         | -          |
 | comments                  | X      | -       | -         | -          |
 | nil                       |        |         |           |            |
-| integers                  | X      | X       | X         | X          |
-| reals                     |        |         |           |            |
+| integers/positive         | X      | X       | X         | X          |
+| integers/negative         | X      | X       | X         | X          |
+| reals/positive            |        |         |           |            |
+| reals/negative            |        |         |           |            |
 | bools                     |        |         |           |            |
 | strings                   | X      | X       | X         | X          |
 | chars                     |        |         |           |            |
