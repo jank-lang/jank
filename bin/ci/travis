@@ -4,7 +4,7 @@ set -eu
 
 # TODO: Also test release builds.
 rm -rf build
-meson setup build
+meson setup build -Dcling_include_path="$CLING_INCLUDE_PATH" -Dcling_lib_path="$CLING_LIB_PATH" -Dllvm_path="$LLVM_PATH"
 meson compile -C build
 
 # Code coverage.
