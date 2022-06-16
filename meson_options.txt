@@ -8,3 +8,8 @@ option(
   type : 'string',
   description : 'Path to lib directory for cling'
 )
+option(
+  'llvm_path',
+  type : 'string',
+  description : 'Path to root directory for the LLVM installation'
+)

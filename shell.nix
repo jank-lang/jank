@@ -22,5 +22,6 @@ mkShell
   export CXX=clang++
   export CLING_INCLUDE_PATH="${pkgs.cling.unwrapped}/include"
   export CLING_LIB_PATH="${pkgs.cling.unwrapped}/lib"
+  export LLVM_PATH="${pkgs.llvmPackages_5.llvm}"
   '';
 }

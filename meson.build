@@ -3,7 +3,7 @@ project(
   'jank',
   'cpp',
   version : 'snapshot',
-  default_options : ['warning_level=3', 'werror=true', 'cpp_std=c++17', 'cpp_debugstl=true']
+  default_options : ['warning_level=3', 'werror=true', 'cpp_std=c++17', 'cpp_debugstl=true', 'optimization=g']
 )
 
 project_inc = include_directories('include', 'lib/magic_enum/include', 'lib/immer')
@@ -46,6 +46,8 @@ add_global_arguments([
   ],
   language : 'cpp'
 )
+
+add_global_arguments(['-DLLVM_PATH="' + get_option('llvm_path') + '"'], language : 'cpp')
 
 # TODO: Release flags
 # -O3 -march=native -DNDEBUG -flto

@@ -26,4 +26,6 @@ int main(int const argc, char const **argv)
   (void)lexer;
 
   jank::runtime::context ctx;
+
+  cling::Interpreter interp(argc, argv, LLVM_PATH);
 }
