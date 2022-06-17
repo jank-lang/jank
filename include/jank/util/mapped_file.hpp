@@ -1,12 +1,18 @@
 #pragma once
 
-#include <jank/option.hpp>
+#include <cstdlib> // size_t
+#include <string>
+
+#include <jank/result.hpp>
 
 namespace jank::util
 {
   struct mapped_file
   {
     mapped_file() = default;
+    mapped_file(mapped_file const&) = delete;
+    mapped_file(mapped_file &&);
+    mapped_file(int const f, char const * const h, size_t const s);
     ~mapped_file();
 
     int fd{};
@@ -14,5 +20,5 @@ namespace jank::util
     size_t size{};
   };
 
-  option<mapped_file> map_file(char const * const file);
+  result<mapped_file, std::string> map_file(char const * const file);
 }
