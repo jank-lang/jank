@@ -43,8 +43,10 @@ namespace jank::read
     std::ostream& operator <<(std::ostream &os, token::no_data const &)
     { return os << "<no data>"; }
 
-    processor::iterator::value_type processor::iterator::operator *() const
+    processor::iterator::value_type const& processor::iterator::operator *() const
     { return latest.unwrap(); }
+    processor::iterator::value_type const* processor::iterator::operator ->() const
+    { return &latest.unwrap(); }
     processor::iterator& processor::iterator::operator ++()
     {
       latest = some(p.next());

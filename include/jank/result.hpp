@@ -91,7 +91,7 @@ namespace jank
     }
 
     /* Moves value. */
-    R unwrap()
+    R unwrap_move()
     {
       if(!is_ok())
       /* TODO: Panic function. */

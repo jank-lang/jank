@@ -96,7 +96,8 @@ namespace jank::read::lex
       using pointer = value_type*;
       using reference = value_type&;
 
-      value_type operator *() const;
+      value_type const& operator *() const;
+      value_type const* operator ->() const;
       iterator& operator ++();
       bool operator ==(iterator const &rhs) const;
       bool operator !=(iterator const &rhs) const;

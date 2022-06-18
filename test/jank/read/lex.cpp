@@ -50,7 +50,7 @@ namespace jank::read::lex
     processor p{ "" };
     auto r(p.next());
     CHECK(r.is_ok());
-    auto const t(r.unwrap());
+    auto const t(r.unwrap_move());
     CHECK(t.kind == token_kind::eof);
   }
 
@@ -59,7 +59,7 @@ namespace jank::read::lex
     processor p{ "  ,,,,,  ," };
     auto r(p.next());
     CHECK(r.is_ok());
-    auto const t(r.unwrap());
+    auto const t(r.unwrap_move());
     CHECK(t.kind == token_kind::eof);
   }
 

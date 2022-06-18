@@ -165,15 +165,14 @@ namespace jank::read::parse
 
   result<runtime::object_ptr, error> processor::parse_integer()
   {
-    // TODO: -> operator
-    auto token((*token_current).expect_ok());
+    auto const token(token_current->expect_ok());
     ++token_current;
     return ok(runtime::make_box<runtime::obj::integer>(std::get<runtime::detail::integer_type>(token.data)));
   }
 
   result<runtime::object_ptr, error> processor::parse_string()
   {
-    auto token((*token_current).expect_ok());
+    auto const token(token_current->expect_ok());
     ++token_current;
     auto const sv(std::get<std::string_view>(token.data));
     return ok(runtime::make_box<runtime::obj::string>(std::string{ sv.data(), sv.size() }));
