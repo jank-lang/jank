@@ -1,4 +1,10 @@
 option(
+  'jank_build_type',
+  type : 'string',
+  value : 'release',
+  description : 'Build mode to use (debug, release)'
+)
+option(
   'cling_include_path',
   type : 'string',
   description : 'Path to include directory for cling'

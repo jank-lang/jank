@@ -13,7 +13,8 @@ unit = executable(
   'jank-unit-tests',
   project_src + test_src,
   include_directories : [project_inc] + [test_inc],
-  link_args : ['-fprofile-instr-generate', '-fcoverage-mapping'],
+  link_args : link_args,
+  override_options : option_overrides,
   dependencies : [threads_dep, boost_dep, cling_dep],
 )
 test('unit tests', unit)

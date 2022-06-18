@@ -1,4 +1,3 @@
-# TODO: Port this to Github actions.
 language: nix
 
 sudo: false
@@ -7,7 +6,7 @@ os:
   - linux
 
 cache:
-  -apt
+  - apt
 
 script:
   - nix-shell --command "./bin/ci/travis"
@@ -20,9 +19,3 @@ notifications:
   email:
     on_success: change
     on_failure: always
-  irc:
-    channels:
-      - "irc.libera.chat#jank"
-    on_success: always
-    on_failure: always
-    use_notice: true

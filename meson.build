@@ -1,9 +1,8 @@
-# TODO: Debug/release profiles.
 project(
   'jank',
   'cpp',
   version : 'snapshot',
-  default_options : ['warning_level=3', 'werror=true', 'cpp_std=c++17', 'cpp_debugstl=true', 'optimization=g']
+  default_options : ['warning_level=3', 'werror=true', 'cpp_std=c++17']
 )
 
 project_inc = include_directories('include', 'lib/magic_enum/include', 'lib/immer')
@@ -35,22 +34,42 @@ add_global_arguments(
     '-Wfloat-equal', '-Wuninitialized',
     '-Wswitch-enum', '-Wnon-virtual-dtor', '-Wold-style-cast',
     '-Wno-gnu-case-range', '-Wno-error=#warnings',
-    '-fprofile-instr-generate', '-fcoverage-mapping',
-  ],
-  language : 'cpp'
-)
-# TODO: Disable these in release.
-add_global_arguments([
-  '-fno-omit-frame-pointer', '-fno-optimize-sibling-calls',
-  '-fstack-protector-strong'
   ],
   language : 'cpp'
 )
 
 add_global_arguments(['-DLLVM_PATH="' + get_option('llvm_root_path') + '"'], language : 'cpp')
 
-# TODO: Release flags
-# -O3 -march=native -DNDEBUG -flto
+if get_option('jank_build_type') == 'release'
+  option_overrides = [
+    'buildtype=release',
+    'optimization=3',
+    'cpp_debugstl=false',
+    'b_lto=true',
+    'b_ndebug=true',
+    'strip=true',
+  ]
+  link_args = []
+elif get_option('jank_build_type') == 'debug'
+  option_overrides = [
+    'buildtype=debug',
+    'optimization=g',
+    'cpp_debugstl=true',
+    'b_lto=false',
+    'b_ndebug=false',
+    'strip=false',
+  ]
+  link_args = ['-fprofile-instr-generate', '-fcoverage-mapping']
+  add_global_arguments([
+    '-fno-omit-frame-pointer', '-fno-optimize-sibling-calls',
+    '-fstack-protector-strong',
+    '-fprofile-instr-generate', '-fcoverage-mapping',
+    ],
+    language : 'cpp'
+  )
+else
+  error('invalid build mode: ' + get_option('jank_build_mode'))
+endif
 
 threads_dep = dependency('threads')
 boost_dep = dependency('boost')
@@ -65,8 +84,9 @@ executable(
   'jank',
   project_src + ['src/main.cpp'],
   dependencies : [threads_dep, boost_dep, cling_dep],
-  link_args : ['-fprofile-instr-generate', '-fcoverage-mapping'],
+  link_args : link_args,
   include_directories : project_inc,
+  override_options : option_overrides,
   install : true
 )
 

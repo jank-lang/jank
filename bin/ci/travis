@@ -2,10 +2,14 @@
 
 set -eu
 
-# TODO: Also test release builds.
-rm -rf build
-meson setup build -Dcling_include_path="$CLING_INCLUDE_PATH" -Dcling_lib_path="$CLING_LIB_PATH" -Dllvm_path="$LLVM_PATH"
-meson compile -C build
+# TODO: Build matrix for this.
+jank-configure -Djank_build_type=release
+jank-compile
+jank-test
+
+jank-configure -Djank_build_type=debug
+jank-compile
+jank-test
 
 # Code coverage.
 LLVM_PROFILE_FILE=build/test.profraw ./build/test/jank-unit-tests

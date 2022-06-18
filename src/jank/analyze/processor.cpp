@@ -110,6 +110,7 @@ namespace jank::analyze
 
     /* TODO: Proper error handling. */
     assert(false);
+    throw "";
   }
 
   processor::processor(runtime::context &rt_ctx)
