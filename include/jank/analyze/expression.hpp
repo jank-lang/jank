@@ -20,9 +20,11 @@ namespace jank::analyze
     >;
 
     expression() = default;
+    expression(expression const &) = default;
+    expression(expression &&) = default;
     template <typename T>
-    expression(T &&t)
-      : data{ std::forward<T>(t) }
+    expression(T &&t, std::enable_if_t<!std::is_same_v<std::decay_t<T>, expression>>* = nullptr)
+      : data{ t }
     { }
 
     value_type data;
