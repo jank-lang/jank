@@ -47,7 +47,7 @@ add_global_arguments([
   language : 'cpp'
 )
 
-add_global_arguments(['-DLLVM_PATH="' + get_option('llvm_path') + '"'], language : 'cpp')
+add_global_arguments(['-DLLVM_PATH="' + get_option('llvm_root_path') + '"'], language : 'cpp')
 
 # TODO: Release flags
 # -O3 -march=native -DNDEBUG -flto
@@ -55,7 +55,10 @@ add_global_arguments(['-DLLVM_PATH="' + get_option('llvm_path') + '"'], language
 threads_dep = dependency('threads')
 boost_dep = dependency('boost')
 cling_dep = declare_dependency(
-  include_directories : include_directories(get_option('cling_include_path')),
+  include_directories : include_directories(
+    get_option('cling_include_path'),
+    get_option('llvm_include_path'),
+  ),
   link_args : ['-L' + get_option('cling_lib_path'), '-lcling'],
 )
 executable(

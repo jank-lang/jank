@@ -3,6 +3,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wold-style-cast"
+#pragma clang diagnostic ignored "-Wunused-parameter"
 #include <cling/Interpreter/Interpreter.h>
 #include <cling/Interpreter/Value.h>
 #pragma clang diagnostic pop
@@ -23,15 +24,14 @@ int main(int const argc, char const **argv)
   }
   char const *file{ argv[1] };
 
-  //jank::runtime::context rt_ctx;
-  //jank::analyze::processor anal_prc{ rt_ctx };
-  //jank::evaluate::context eval_ctx{ rt_ctx };
+  jank::runtime::context rt_ctx;
+  jank::analyze::processor anal_prc{ rt_ctx };
+  jank::evaluate::context eval_ctx{ rt_ctx };
 
   auto const mfile(jank::util::map_file(file));
-  std::cout << "file: \n" << mfile.expect_ok().head << std::endl;
-  //jank::read::lex::processor l_prc{ { mfile.unwrap().head, mfile.unwrap().size } };
-  //jank::read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-  //std::cout << eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok()))->to_string() << std::endl;
+  jank::read::lex::processor l_prc{ { mfile.expect_ok().head, mfile.expect_ok().size } };
+  jank::read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+  std::cout << eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok()))->to_string() << std::endl;
 
-  cling::Interpreter interp(argc, argv, LLVM_PATH);
+  cling::Interpreter jit(argc, argv, LLVM_PATH);
 }

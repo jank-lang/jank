@@ -9,7 +9,12 @@ option(
   description : 'Path to lib directory for cling'
 )
 option(
-  'llvm_path',
+  'llvm_include_path',
   type : 'string',
-  description : 'Path to root directory for the LLVM installation'
+  description : 'Path to include directory for the LLVM installation'
+)
+option(
+  'llvm_root_path',
+  type : 'string',
+  description : 'Path to root resource directory for the LLVM installation'
 )

@@ -24,7 +24,8 @@ mkShell
   export CXX="clang++"
   export CLING_INCLUDE_PATH="${pkgs.cling.unwrapped}/include"
   export CLING_LIB_PATH="${pkgs.cling.unwrapped}/lib"
-  export LLVM_PATH="${lib.getDev pkgs.llvmPackages_5.llvm}"
+  export LLVM_INCLUDE_PATH="${lib.getDev pkgs.llvmPackages_5.llvm}/include"
+  export LLVM_ROOT_PATH="${pkgs.cling.unwrapped}"
   export BOOST_LIB_PATH="${pkgs.boost}/lib"
 
   function jank-configure
@@ -32,8 +33,8 @@ mkShell
     ${pkgs.coreutils}/bin/rm -rf build
     ${pkgs.meson}/bin/meson setup build -Dcling_include_path="''${CLING_INCLUDE_PATH}" \
                                         -Dcling_lib_path="''${CLING_LIB_PATH}" \
-                                        -Dllvm_path="''${LLVM_PATH}" \
-                                        -Dboost_lib_path="''${BOOST_LIB_PATH}"
+                                        -Dllvm_include_path="''${LLVM_INCLUDE_PATH}" \
+                                        -Dllvm_root_path="''${LLVM_ROOT_PATH}"
   }
 
   function jank-watch-unit-tests
