@@ -11,6 +11,7 @@ mkShell
     boost
 
     # Dev tools.
+    llvm
     entr
     ccls
     gcovr
@@ -40,15 +41,15 @@ mkShell
   export -f jank-configure
 
   function jank-compile
-  { ${pkgs.meson}/bin/meson compile -C build; }
+  { ${pkgs.meson}/bin/meson compile -C build "$@"; }
   export -f jank-compile
 
   function jank-test
-  { ./build/test/jank-unit-tests; }
+  { ./build/test/jank-unit-tests "$@"; }
   export -f jank-test
 
   function jank-watch-tests
-  { ${pkgs.git}/bin/git ls-files -cdmo --exclude-standard | ${pkgs.entr}/bin/entr bash -c "./bin/run-unit-tests $@ || true"; }
+  { ${pkgs.git}/bin/git ls-files -cdmo --exclude-standard | ${pkgs.entr}/bin/entr bash -c "./bin/run-unit-tests \"$@\"|| true"; }
   export -f jank-watch-tests
 
   function jank-install-deps
