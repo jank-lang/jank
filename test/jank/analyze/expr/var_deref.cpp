@@ -35,7 +35,7 @@ namespace jank::analyze::expr
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
       auto const expr(anal_prc.analyze(p_prc.begin()->expect_ok()));
-      auto const *var_deref_expr(std::get_if<var_deref<expression>>(&expr.data));
+      auto const *var_deref_expr(boost::get<var_deref<expression>>(&expr.data));
       CHECK(var_deref_expr != nullptr);
       CHECK(var_deref_expr->var != nullptr);
       CHECK(var_deref_expr->var->name->name == "foo");
@@ -68,7 +68,7 @@ namespace jank::analyze::expr
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
       auto const expr(anal_prc.analyze(p_prc.begin()->expect_ok()));
-      auto const *var_deref_expr(std::get_if<var_deref<expression>>(&expr.data));
+      auto const *var_deref_expr(boost::get<var_deref<expression>>(&expr.data));
       CHECK(var_deref_expr != nullptr);
       CHECK(var_deref_expr->var != nullptr);
       CHECK(var_deref_expr->var->name->name == "foo");

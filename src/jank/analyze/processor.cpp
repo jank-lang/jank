@@ -1,15 +1,12 @@
 #include <iostream>
 
+#include <jank/runtime/obj/vector.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/literal.hpp>
 
 namespace jank::analyze
 {
-  context::context(runtime::context &ctx, std::string const &label, option<std::reference_wrapper<context>> const &p)
-    : debug_label{ label }, parent{ p }, runtime_ctx{ ctx }
-  { }
-
-  expression processor::analyze_def(runtime::obj::list_ptr const &l)
+  expression processor::analyze_def(runtime::obj::list_ptr const &l, frame<expression> &)
   {
     auto const length(l->count());
     if(length != 3)
@@ -38,40 +35,83 @@ namespace jank::analyze
       throw "invalid def";
     }
 
-    return { expr::def<expression>{ boost::static_pointer_cast<runtime::obj::symbol>(sym_obj), value } };
+    return
+    {
+      expr::def<expression>
+      {
+        boost::static_pointer_cast<runtime::obj::symbol>(sym_obj),
+        value
+      }
+    };
   }
-  expression processor::analyze_symbol(runtime::obj::symbol_ptr const &sym)
+  expression processor::analyze_symbol(runtime::obj::symbol_ptr const &sym, frame<expression> &current_frame)
   {
-    auto const var(ctx.runtime_ctx.find_var(sym));
+    auto const found_local(current_frame.find(sym));
+    if(found_local.is_some())
+    { return { expr::local_reference<expression>{ sym, found_local.unwrap() } }; }
+
+    auto const var(root_frame.runtime_ctx.find_var(sym));
     if(var.is_none())
     { throw "unbound symbol"; }
     return { expr::var_deref<expression>{ var.unwrap() } };
   }
-  expression processor::analyze_fn(runtime::obj::list_ptr const &)
+  expression processor::analyze_fn(runtime::obj::list_ptr const &list, frame<expression> &current_frame)
+  {
+    auto const length(list->count());
+    if(length < 2)
+    { throw "fn missing parameter vector"; }
+
+    auto const params_obj(list->data.rest().first().unwrap());
+    auto const params(params_obj->as_vector());
+    if(params == nullptr)
+    { throw "invalid fn param vector"; }
+
+    if(params->data.size() > 10)
+    { throw "invalid parameter count; must be <= 10; use & args to capture the rest"; }
+
+    frame<expression> local_frame{ "anon fn", current_frame.runtime_ctx, current_frame };
+
+    for(auto const &p : params->data)
+    {
+      auto const sym(p->as_symbol());
+      if(sym == nullptr)
+      { throw "invalid parameter; must be a symbol"; }
+      else if(!sym->ns.empty())
+      { throw "invalid parameter; must be unqualified"; }
+
+      auto const sym_ptr(boost::static_pointer_cast<runtime::obj::symbol>(p));
+      local_frame.locals.emplace(sym_ptr, local_binding<expression>{ sym_ptr, none });
+    }
+
+    std::list<expression> body;
+    for(auto const &item : list->data.rest().rest())
+    { body.push_back(analyze(item, local_frame)); }
+
+    return { expr::function<expression>{ std::move(body), std::move(local_frame) } };
+  }
+  expression processor::analyze_let(runtime::obj::list_ptr const &, frame<expression> &)
   { return {}; }
-  expression processor::analyze_let(runtime::obj::list_ptr const &)
+  expression processor::analyze_if(runtime::obj::list_ptr const &, frame<expression> &)
   { return {}; }
-  expression processor::analyze_if(runtime::obj::list_ptr const &)
-  { return {}; }
-  expression processor::analyze_quote(runtime::obj::list_ptr const &o)
+  expression processor::analyze_quote(runtime::obj::list_ptr const &o, frame<expression> &current_frame)
   {
     if(o->count() != 2)
     { throw "invalid quote: expects one argument"; }
 
-    return analyze_literal(o->data.rest().first().unwrap());
+    return analyze_literal(o->data.rest().first().unwrap(), current_frame);
   }
-  expression processor::analyze_literal(runtime::object_ptr const &o)
+  expression processor::analyze_literal(runtime::object_ptr const &o, frame<expression> &)
   {
     /* TODO: Dedupe literals. */
     return { expr::literal<expression>{ o } };
   }
 
-  expression processor::analyze_call(runtime::obj::list_ptr const &o)
+  expression processor::analyze_call(runtime::obj::list_ptr const &o, frame<expression> &current_frame)
   {
     /* An empty list evaluates to a list, not a call. */
     auto const count(o->count());
     if(count == 0)
-    { return analyze_literal(o); }
+    { return analyze_literal(o, current_frame); }
 
     auto const o_seq(o->seq());
     auto const first(o_seq->first());
@@ -80,9 +120,9 @@ namespace jank::analyze
       auto const sym(boost::static_pointer_cast<runtime::obj::symbol>(first));
       auto const found_special(specials.find(sym));
       if(found_special != specials.end())
-      { return found_special->second(o); }
+      { return found_special->second(o, current_frame); }
 
-      auto const found_sym(ctx.runtime_ctx.find_val(sym));
+      auto const found_sym(root_frame.runtime_ctx.find_val(sym));
       if(found_sym.is_none())
       { throw "cannot call unbound symbol"; }
       else if(!found_sym.unwrap()->as_callable())
@@ -114,13 +154,13 @@ namespace jank::analyze
   }
 
   processor::processor(runtime::context &rt_ctx)
-    : ctx{ rt_ctx, "root", none }
+    : root_frame{ "root", rt_ctx, none }
   {
     using runtime::obj::symbol;
     auto const make_fn = [this](auto const fn) -> decltype(specials)::mapped_type
     {
-      return [this, fn](auto const &list)
-      { return (this->*fn)(list); };
+      return [this, fn](auto const &list, auto &current_frame)
+      { return (this->*fn)(list, current_frame); };
     };
     specials =
     {
@@ -133,11 +173,14 @@ namespace jank::analyze
   }
 
   expression processor::analyze(runtime::object_ptr const &o)
+  { return analyze(o, root_frame); }
+
+  expression processor::analyze(runtime::object_ptr const &o, frame<expression> &current_frame)
   {
     assert(o);
 
     if(o->as_list())
-    { return analyze_call(boost::static_pointer_cast<runtime::obj::list>(o)); }
+    { return analyze_call(boost::static_pointer_cast<runtime::obj::list>(o), current_frame); }
     else if(auto * const vector = o->as_vector())
     {
     }
@@ -154,7 +197,7 @@ namespace jank::analyze
     {
     }
     else if(o->as_symbol())
-    { return analyze_symbol(boost::static_pointer_cast<runtime::obj::symbol>(o)); }
+    { return analyze_symbol(boost::static_pointer_cast<runtime::obj::symbol>(o), current_frame); }
     else if(auto * const nil = o->as_nil())
     {
     }

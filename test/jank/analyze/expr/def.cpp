@@ -19,7 +19,7 @@ namespace jank::analyze::expr
     processor anal_prc{ rt_ctx };
 
     auto const expr(anal_prc.analyze(p_prc.begin()->expect_ok()));
-    auto const *def_expr(std::get_if<def<expression>>(&expr.data));
+    auto const *def_expr(boost::get<def<expression>>(&expr.data));
     CHECK(def_expr != nullptr);
     CHECK(def_expr->name != nullptr);
     CHECK(def_expr->name->equal(runtime::obj::symbol{ "foo" }));

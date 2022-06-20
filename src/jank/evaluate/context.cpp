@@ -12,7 +12,7 @@ namespace jank::evaluate
   runtime::object_ptr context::eval(analyze::expression const &ex)
   {
     runtime::object_ptr ret;
-    std::visit
+    boost::apply_visitor
     (
       [this, &ret](auto const &typed_ex)
       { ret = eval(typed_ex); },
