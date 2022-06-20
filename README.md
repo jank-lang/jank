@@ -23,6 +23,32 @@ goodness and native compilation.
 |                                             | Types are specified in a malli/spec fashion, allowing robust and flexible definitions |
 |                                             | Static typing maintains Clojure compatibility                                         |
 
+## Building locally
+Use [Nix](https://nixos.org/manual/nix/stable/). After cloning, use `nix-shell`
+to enter an environment with all necessary deps. The Nix shell will also set up
+some bash functions for you.
+
+* `jank-configure` -- For setting up the project.
+* `jank-compile` -- For one-off compilation.
+* `jank-test` -- For one-off testing.
+* `jank-watch-tests` -- For test hot reloading on save.
+
+### Release
+A typical release build just needs the following:
+
+```bash
+$ jank-configure
+$ jank-compile
+```
+
+### Debug
+To make a debug build, specify the build type when configuring.
+
+```bash
+$ jank-configure -Djank_build_type=debug
+$ jank-compile
+```
+
 ## License
 jank is under a strict copyleft license; see the
 [LICENSE](https://github.com/jeaye/jank/blob/main/LICENSE) file.
