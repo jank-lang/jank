@@ -1,4 +1,3 @@
-#include <doctest/doctest.h>
 #include <unistd.h>
 
 #include <vector>
@@ -6,6 +5,12 @@
 #include <iostream>
 
 #include <jank/read/lex.hpp>
+
+/* This must go last; doctest and glog both define CHECK and family. */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmacro-redefined"
+#include <doctest/doctest.h>
+#pragma clang diagnostic pop
 
 namespace jank::read::lex
 {

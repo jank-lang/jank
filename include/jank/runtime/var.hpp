@@ -2,6 +2,8 @@
 
 #include <functional>
 
+#include <folly/Synchronized.h>
+
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 
@@ -32,11 +34,14 @@ namespace jank::runtime
 
     bool operator ==(var const &rhs) const;
 
+    object_ptr get_root() const;
     void set_root(object_ptr const &r);
 
     ns_ptr n;
     obj::symbol_ptr name;
-    object_ptr root;
+
+  private:
+    folly::Synchronized<object_ptr> root;
   };
   using var_ptr = detail::box_type<var>;
 }

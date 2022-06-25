@@ -7,10 +7,12 @@ namespace jank::runtime
 {
   context::context()
   {
+    auto &t_state(get_thread_state());
     auto const core(intern_ns(obj::symbol::create("clojure.core")));
+    auto const locked_core_vars(core->vars.wlock());
     auto const ns_sym(obj::symbol::create("*ns*"));
-    auto const ns_res(core->vars.insert({ns_sym, var::create(core, ns_sym, core)}));
-    current_ns = ns_res.first->second;
+    auto const ns_res(locked_core_vars->insert({ns_sym, var::create(core, ns_sym, core)}));
+    t_state.current_ns = ns_res.first->second;
 
     auto const in_ns_sym(obj::symbol::create("in-ns"));
     std::function<object_ptr (object_ptr const&)> in_ns_fn
@@ -25,12 +27,12 @@ namespace jank::runtime
         }
         auto typed_sym(boost::static_pointer_cast<obj::symbol>(sym));
         auto new_ns(intern_ns(typed_sym));
-        current_ns->set_root(new_ns);
+        get_thread_state().current_ns->set_root(new_ns);
         return JANK_NIL;
       }
     );
-    auto const in_ns_res(core->vars.insert({in_ns_sym, var::create(core, in_ns_sym, obj::function::create(in_ns_fn))}));
-    in_ns = in_ns_res.first->second;
+    auto const in_ns_res(locked_core_vars->insert({in_ns_sym, var::create(core, in_ns_sym, obj::function::create(in_ns_fn))}));
+    t_state.in_ns = in_ns_res.first->second;
 
     /* TODO: Remove this once it can be defined in jank. */
     auto const println_sym(obj::symbol::create("println"));
@@ -42,34 +44,45 @@ namespace jank::runtime
         return JANK_NIL;
       }
     );
-    core->vars.insert({println_sym, var::create(core, println_sym, obj::function::create(println_fn))});
+    locked_core_vars->insert({println_sym, var::create(core, println_sym, obj::function::create(println_fn))});
 
     /* TODO: Remove this once it can be defined in jank. */
     auto const plus_sym(obj::symbol::create("+"));
-    core->vars.insert({plus_sym, var::create(core, plus_sym, obj::function::create(&obj::_gen_plus_))});
+    locked_core_vars->insert({plus_sym, var::create(core, plus_sym, obj::function::create(&obj::_gen_plus_))});
   }
 
   option<var_ptr> context::find_var(obj::symbol_ptr const &sym)
   {
     if(!sym->ns.empty())
     {
-      auto const ns(namespaces.find(runtime::obj::symbol::create(sym->ns)));
-      if(ns == namespaces.end())
-      { return none; }
-      auto const var(ns->second->vars.find(runtime::obj::symbol::create(sym->name)));
-      if(var == ns->second->vars.end())
-      { return none; }
+      ns_ptr ns;
+      {
+        decltype(namespaces)::DataType::iterator found;
+        auto const locked_namespaces(namespaces.rlock());
+        found = locked_namespaces.asNonConstUnsafe().find(runtime::obj::symbol::create(sym->ns));
+        if(found == locked_namespaces->end())
+        { return none; }
+        ns = found->second;
+      }
 
-      return { var->second };
+      {
+        decltype(ns->vars)::DataType::iterator found;
+        auto const locked_vars(ns->vars.rlock());
+        found = locked_vars.asNonConstUnsafe().find(runtime::obj::symbol::create(sym->name));
+        if(found == locked_vars->end())
+        { return none; }
+
+        return { found->second };
+      }
     }
     else
     {
-      auto const &vars(current_ns->root->as_ns()->vars);
-      auto const var(vars.find(sym));
-      if(var == vars.end())
+      auto const locked_vars(get_thread_state().current_ns->get_root()->as_ns()->vars.rlock());
+      auto const found(locked_vars->find(sym));
+      if(found == locked_vars->end())
       { return none; }
 
-      return { var->second };
+      return { found->second };
     }
   }
   option<object_ptr> context::find_local(obj::symbol_ptr const &)
@@ -80,7 +93,7 @@ namespace jank::runtime
   {
     auto const var(find_var(sym));
     if(var.is_some())
-    { return var.unwrap()->root; }
+    { return var.unwrap()->get_root(); }
 
     /* TODO: Return val. */
     return find_local(sym);
@@ -89,22 +102,58 @@ namespace jank::runtime
   void context::dump() const
   {
     std::cout << "context dump" << std::endl;
-    for(auto p : namespaces)
+    for(auto p : *namespaces.rlock())
     {
       std::cout << "  " << p.second->name->to_string() << std::endl;
-      for(auto vp : p.second->vars)
+      for(auto vp : *p.second->vars.rlock())
       {
-        std::cout << "    " << vp.second->to_string() << " = " << vp.second->root->to_string() << std::endl;
+        std::cout << "    " << vp.second->to_string() << " = " << vp.second->get_root()->to_string() << std::endl;
       }
     }
   }
 
   ns_ptr context::intern_ns(obj::symbol_ptr const &sym)
   {
-    auto const found(namespaces.find(sym));
-    if(found != namespaces.end())
+    auto locked_namespaces(namespaces.ulock());
+    auto const found(locked_namespaces->find(sym));
+    if(found != locked_namespaces->end())
     { return found->second; }
-    auto const result(namespaces.emplace(sym, make_box<ns>(sym, *this)));
+
+    auto const write_locked_namespaces(locked_namespaces.moveFromUpgradeToWrite());
+    auto const result(write_locked_namespaces->emplace(sym, make_box<ns>(sym, *this)));
     return result.first->second;
+  }
+
+  context::thread_state::thread_state(context &ctx)
+    : rt_ctx{ ctx }, eval_ctx{ ctx }
+  { }
+
+  context::thread_state& context::get_thread_state()
+  { return get_thread_state(none); }
+  context::thread_state& context::get_thread_state(option<thread_state> init)
+  {
+    auto const this_id(std::this_thread::get_id());
+    decltype(thread_states)::DataType::iterator found;
+
+    /* Assume it's there and use a read lock. */
+    {
+      auto const locked_thread_states(thread_states.rlock());
+      found = locked_thread_states.asNonConstUnsafe().find(this_id);
+      if(found != locked_thread_states->end())
+      { return found->second; }
+    }
+
+    /* If it's not there, use a write lock and put it there (but check again first). */
+    {
+      auto const locked_thread_states(thread_states.wlock());
+      found = locked_thread_states->find(this_id);
+      if(found != locked_thread_states->end())
+      { return found->second; }
+      else if(init.is_some())
+      { found = locked_thread_states->emplace(this_id, std::move(init.unwrap())).first; }
+      else
+      { found = locked_thread_states->emplace(this_id, thread_state{ *this }).first; }
+      return found->second;
+    }
   }
 }

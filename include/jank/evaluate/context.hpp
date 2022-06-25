@@ -1,8 +1,10 @@
 #pragma once
 
-#include <jank/runtime/context.hpp>
 #include <jank/runtime/object.hpp>
 #include <jank/analyze/expression.hpp>
+
+namespace jank::runtime
+{ struct context; }
 
 namespace jank::evaluate
 {
@@ -18,6 +20,8 @@ namespace jank::evaluate
     runtime::object_ptr eval(analyze::expr::var_deref<analyze::expression> const &);
     runtime::object_ptr eval(analyze::expr::call<analyze::expression> const &);
     runtime::object_ptr eval(analyze::expr::literal<analyze::expression> const &);
+    runtime::object_ptr eval(analyze::expr::local_reference<analyze::expression> const &);
+    runtime::object_ptr eval(analyze::expr::function<analyze::expression> const &);
 
     runtime::context &runtime_ctx;
   };

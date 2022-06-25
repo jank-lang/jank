@@ -1,10 +1,14 @@
-#include <doctest/doctest.h>
-
 #include <iostream>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/evaluate/context.hpp>
+
+/* This must go last; doctest and glog both define CHECK and family. */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmacro-redefined"
+#include <doctest/doctest.h>
+#pragma clang diagnostic pop
 
 /* TODO: Presence tests once defs can be evaluated. */
 namespace jank::analyze::expr

@@ -29,6 +29,9 @@ namespace jank::runtime
   var const* var::as_var() const
   { return this; }
 
+  object_ptr var::get_root() const
+  { return *root.rlock(); }
+
   void var::set_root(object_ptr const &r)
-  { root = r; }
+  { *root.wlock() = r; }
 }

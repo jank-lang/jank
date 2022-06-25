@@ -1,9 +1,13 @@
-#include <doctest/doctest.h>
-
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/analyze/processor.hpp>
+
+/* This must go last; doctest and glog both define CHECK and family. */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmacro-redefined"
+#include <doctest/doctest.h>
+#pragma clang diagnostic pop
 
 /* TODO: Test cases
  * Redefine var

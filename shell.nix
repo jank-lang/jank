@@ -1,6 +1,7 @@
 with (import <nixpkgs> {});
 mkShell
 {
+  # TODO: Move current submodules into Nix packages using fetchgit.
   buildInputs =
   [
     # Build deps.
@@ -9,6 +10,8 @@ mkShell
     meson
     ninja
     boost
+    folly
+    glog
 
     # Dev tools.
     llvm

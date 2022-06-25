@@ -1,4 +1,3 @@
-#include <doctest/doctest.h>
 #include <unistd.h>
 
 #include <vector>
@@ -13,6 +12,12 @@
 #include <jank/runtime/obj/vector.hpp>
 #include <jank/runtime/obj/string.hpp>
 #include <jank/runtime/obj/list.hpp>
+
+/* This must go last; doctest and glog both define CHECK and family. */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmacro-redefined"
+#include <doctest/doctest.h>
+#pragma clang diagnostic pop
 
 namespace jank::read::parse
 {

@@ -73,6 +73,9 @@ endif
 
 threads_dep = dependency('threads')
 boost_dep = dependency('boost')
+folly_dep = declare_dependency(
+  link_args : ['-lfolly', '-lglog'],
+)
 cling_dep = declare_dependency(
   include_directories : include_directories(
     get_option('cling_include_path'),
@@ -83,7 +86,7 @@ cling_dep = declare_dependency(
 executable(
   'jank',
   project_src + ['src/main.cpp'],
-  dependencies : [threads_dep, boost_dep, cling_dep],
+  dependencies : [threads_dep, boost_dep, folly_dep, cling_dep],
   link_args : link_args,
   include_directories : project_inc,
   override_options : option_overrides,

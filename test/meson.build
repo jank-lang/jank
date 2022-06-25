@@ -16,6 +16,6 @@ unit = executable(
   include_directories : [project_inc] + [test_inc],
   link_args : link_args,
   override_options : option_overrides,
-  dependencies : [threads_dep, boost_dep, cling_dep],
+  dependencies : [threads_dep, boost_dep, folly_dep, cling_dep],
 )
 test('unit tests', unit)
