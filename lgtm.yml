@@ -1,0 +1,77 @@
+##########################################################################################
+# Customize file classifications.                                                        #
+# Results from files under any classifier will be excluded from LGTM                     #
+# statistics.                                                                            #
+##########################################################################################
+
+##########################################################################################
+# Use the `path_classifiers` block to define changes to the default classification of    #
+# files.                                                                                 #
+##########################################################################################
+
+path_classifiers:
+  test:
+    - test
+  library:
+    - lib
+
+#########################################################################################
+# Define changes to the default code extraction process.                                #
+# Each block configures the extraction of a single language, and modifies actions in a  #
+# named step. Every named step includes automatic default actions,                      #
+# except for the 'prepare' step. The steps are performed in the following sequence:     #
+# prepare                                                                               #
+# after_prepare                                                                         #
+# configure (C/C++ only)                                                                #
+# python_setup (Python only)                                                            #
+# before_index                                                                          #
+# index                                                                                 #
+##########################################################################################
+
+#########################################################################################
+# Environment variables available to the steps:                                         #
+#########################################################################################
+
+# LGTM_SRC
+#   The root of the source tree.
+# LGTM_WORKSPACE
+#   An existing (initially empty) folder outside the source tree.
+#   Used for temporary download and setup commands.
+
+#########################################################################################
+# Use the extraction block to define changes to the default code extraction process     #
+# for one or more languages. The settings for each language are defined in a child      #
+# block, with one or more steps.                                                        #
+#########################################################################################
+
+extraction:
+  # Define settings for C/C++ analysis
+  #####################################
+  cpp:
+    # The `prepare` step exists for customization on LGTM.com only.
+    # prepare:
+    #   # The `packages` section is valid for LGTM.com only. It names Ubuntu packages to
+    #   # be installed.
+    #   packages:
+    #     - libxml2-dev
+    #     - libxslt1-dev
+    # Add an `after-prepare` step if you need to run commands after the prepare step.
+    # Each command should be listed on a separate line.
+    # This step is useful for C/C++ analysis where you want to prepare the environment
+    # for the `configure` step without changing the default behavior for that step.
+    after_prepare:
+      - sudo install -d -m755 -o $(id -u) -g $(id -g) /nix
+      - curl -L https://nixos.org/nix/install | sh
+      - source $HOME/.nix-profile/etc/profile.d/nix.sh
+    # The `configure` step generates build configuration files which the `index` step
+    # then uses to build the codebase.
+    configure:
+      command:
+        - nix-shell --command "jank-configure -Djank_build_type=debug"
+    # The `index` step builds the code and extracts information during the build
+    # process.
+    index:
+      # Override the autobuild process by specifying a list of custom build commands
+      # to use instead.
+      build_command:
+        - nix-shell --command "jank-compile"
