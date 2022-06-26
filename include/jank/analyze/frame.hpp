@@ -27,7 +27,7 @@ namespace jank::analyze
       : debug_label{ label }, parent{ p }, runtime_ctx{ ctx }
     { }
 
-    option<local_binding<E>> find(runtime::obj::symbol_ptr const &sym)
+    option<local_binding<E>> find(runtime::obj::symbol_ptr const &sym) const
     {
       auto const result(locals.find(sym));
       if(result != locals.end())

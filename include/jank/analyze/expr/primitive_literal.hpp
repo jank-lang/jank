@@ -7,7 +7,7 @@
 namespace jank::analyze::expr
 {
   template <typename E>
-  struct literal
+  struct primitive_literal
   {
     runtime::object_ptr data;
   };

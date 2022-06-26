@@ -2,6 +2,7 @@
 
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/ns.hpp>
+#include <jank/runtime/obj/vector.hpp>
 #include <jank/evaluate/context.hpp>
 
 namespace jank::evaluate
@@ -11,18 +12,20 @@ namespace jank::evaluate
   { }
 
   runtime::object_ptr context::eval(analyze::expression const &ex)
+  { return eval(ex, root_frame); }
+  runtime::object_ptr context::eval(analyze::expression const &ex, frame const &current_frame)
   {
     runtime::object_ptr ret;
     boost::apply_visitor
     (
-      [this, &ret](auto const &typed_ex)
-      { ret = eval(typed_ex); },
+      [this, &ret, &current_frame](auto const &typed_ex)
+      { ret = eval(typed_ex, current_frame); },
       ex.data
     );
     return ret;
   }
 
-  runtime::object_ptr context::eval(analyze::expr::def<analyze::expression> const &expr)
+  runtime::object_ptr context::eval(analyze::expr::def<analyze::expression> const &expr, frame const &)
   {
     auto &t_state(runtime_ctx.get_thread_state(none));
     auto const &ns_ptr(boost::static_pointer_cast<runtime::ns>(t_state.current_ns->get_root()));
@@ -42,10 +45,10 @@ namespace jank::evaluate
     }
   }
 
-  runtime::object_ptr context::eval(analyze::expr::var_deref<analyze::expression> const &expr)
+  runtime::object_ptr context::eval(analyze::expr::var_deref<analyze::expression> const &expr, frame const &)
   { return expr.var->get_root(); }
 
-  runtime::object_ptr context::eval(analyze::expr::call<analyze::expression> const &expr)
+  runtime::object_ptr context::eval(analyze::expr::call<analyze::expression> const &expr, frame const &)
   {
     switch(expr.arg_exprs.size())
     {
@@ -60,12 +63,71 @@ namespace jank::evaluate
     }
   }
 
-  runtime::object_ptr context::eval(analyze::expr::literal<analyze::expression> const &expr)
+  runtime::object_ptr context::eval(analyze::expr::primitive_literal<analyze::expression> const &expr, frame const &)
   { return expr.data; }
 
-  runtime::object_ptr context::eval(analyze::expr::local_reference<analyze::expression> const &expr)
-  { return expr.name; }
+  runtime::object_ptr context::eval(analyze::expr::vector<analyze::expression> const &expr, frame const &current_frame)
+  {
+    runtime::detail::vector_transient_type ret;
+    for(auto const &e : expr.data_exprs)
+    { ret.push_back(eval(e, current_frame)); }
+    return runtime::obj::vector::create(ret.persistent());
+  }
 
-  runtime::object_ptr context::eval(analyze::expr::function<analyze::expression> const &)
-  { return {}; }
+  runtime::object_ptr context::eval(analyze::expr::local_reference<analyze::expression> const &expr, frame const &current_frame)
+  { return current_frame.find(expr.name).unwrap().value; }
+
+  runtime::object_ptr context::interpret(analyze::expr::function<analyze::expression> const &expr, frame const &current_frame)
+  {
+    runtime::object_ptr ret;
+    for(auto const &body_expr : expr.body)
+    { ret = eval(body_expr, current_frame); }
+    return ret;
+  }
+
+  runtime::object_ptr context::eval(analyze::expr::function<analyze::expression> const &expr, frame const &current_frame)
+  {
+    /* TODO: JIT fn bodies, don't interpret them. */
+    switch(expr.params.size())
+    {
+      case 0:
+        return runtime::obj::function::create
+        (
+          std::function<runtime::object_ptr ()>
+          {
+            [this, current_frame, expr]()
+            { return interpret(expr, current_frame); }
+          }
+        );
+      case 1:
+        return runtime::obj::function::create
+        (
+          std::function<runtime::object_ptr (runtime::object_ptr const&)>
+          {
+            [this, current_frame, expr](runtime::object_ptr const &a0)
+            {
+              frame fn_frame{ some(std::ref(current_frame)) };
+              fn_frame.locals[expr.params[0]] = { expr.params[0], a0 };
+              return interpret(expr, fn_frame);
+            }
+          }
+        );
+      case 2:
+        return runtime::obj::function::create
+        (
+          std::function<runtime::object_ptr (runtime::object_ptr const&, runtime::object_ptr const&)>
+          {
+            [this, current_frame, expr](runtime::object_ptr const &a0, runtime::object_ptr const &a1)
+            {
+              frame fn_frame{ some(std::ref(current_frame)) };
+              fn_frame.locals[expr.params[0]] = { expr.params[0], a0 };
+              fn_frame.locals[expr.params[1]] = { expr.params[1], a1 };
+              return interpret(expr, fn_frame);
+            }
+          }
+        );
+      default:
+        throw "unsupported arg count";
+    }
+  }
 }

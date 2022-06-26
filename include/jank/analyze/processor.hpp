@@ -6,6 +6,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/list.hpp>
+#include <jank/runtime/obj/vector.hpp>
 #include <jank/analyze/frame.hpp>
 #include <jank/analyze/expression.hpp>
 #include <jank/option.hpp>
@@ -29,7 +30,8 @@ namespace jank::analyze
     expression analyze_let(runtime::obj::list_ptr const &, frame<expression> &);
     expression analyze_if(runtime::obj::list_ptr const &, frame<expression> &);
     expression analyze_quote(runtime::obj::list_ptr const &, frame<expression> &);
-    expression analyze_literal(runtime::object_ptr const &, frame<expression> &);
+    expression analyze_primitive_literal(runtime::object_ptr const &, frame<expression> &);
+    expression analyze_vector(runtime::obj::vector_ptr const &, frame<expression> &);
 
     using special_function_type = std::function<expression (runtime::obj::list_ptr const &, frame<expression> &)>;
     std::unordered_map<runtime::obj::symbol_ptr, special_function_type> specials;

@@ -4,7 +4,8 @@
 #include <jank/analyze/expr/def.hpp>
 #include <jank/analyze/expr/var_deref.hpp>
 #include <jank/analyze/expr/call.hpp>
-#include <jank/analyze/expr/literal.hpp>
+#include <jank/analyze/expr/primitive_literal.hpp>
+#include <jank/analyze/expr/vector.hpp>
 #include <jank/analyze/expr/function.hpp>
 #include <jank/analyze/expr/local_reference.hpp>
 
@@ -18,7 +19,8 @@ namespace jank::analyze
       expr::def<E>,
       expr::var_deref<E>,
       expr::call<E>,
-      expr::literal<E>,
+      expr::primitive_literal<E>,
+      expr::vector<E>,
       boost::recursive_wrapper<expr::function<E>>,
       expr::local_reference<E>
     >;

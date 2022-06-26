@@ -16,24 +16,27 @@
 | keywords/qualified        | X      | X       |           |            |
 | keywords/aliased          |        |         |           |            |
 | maps                      | X      |         |           |            |
+| vectors                   | X      | X       | X         | X          |
 | sets                      |        |         |           |            |
 | lists                     | X      | X       | X         | X          |
 | regexes                   |        |         |           |            |
 | symbols/unqualified       | X      | X       | X         | X          |
 | symbols/qualified         | X      | X       | X         | X          |
 | specials/def              | X      | X       | X         | X          |
-| specials/if               |        |         |           |            |
-| specials/do               |        |         |           |            |
-| specials/let*             |        |         |           |            |
+| specials/if               | X      |         |           |            |
+| specials/do               | X      |         |           |            |
+| specials/let*             | X      |         |           |            |
 | specials/quote            | X      | X       | X         | X          |
-| specials/var              |        |         |           |            |
-| specials/fn*              |        |         |           |            |
-| specials/loop*            |        |         |           |            |
-| specials/recur            |        |         |           |            |
-| specials/throw            |        |         |           |            |
-| specials/try              |        |         |           |            |
-| specials/monitor-enter    |        |         |           |            |
-| specials/monitor-exit     |        |         |           |            |
+| specials/var              | X      |         |           |            |
+| specials/fn*              | X      | X       | X         | X (no jit) |
+| specials/loop*            | X      |         |           |            |
+| specials/recur            | X      |         |           |            |
+| specials/throw            | X      |         |           |            |
+| specials/try              | X      |         |           |            |
+| specials/monitor-enter    | X      |         |           |            |
+| specials/monitor-exit     | X      |         |           |            |
+| bindings/thread-local     |        |         |           |            |
+| bindings/conveyance       |        |         |           |            |
 | calls                     | X      | X       | X         | X          |
 | destructuring             |        |         |           |            |
 | macros                    | -      | -       |           |            |

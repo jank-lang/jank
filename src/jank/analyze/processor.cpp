@@ -2,7 +2,7 @@
 
 #include <jank/runtime/obj/vector.hpp>
 #include <jank/analyze/processor.hpp>
-#include <jank/analyze/expr/literal.hpp>
+#include <jank/analyze/expr/primitive_literal.hpp>
 
 namespace jank::analyze
 {
@@ -70,6 +70,8 @@ namespace jank::analyze
     { throw "invalid parameter count; must be <= 10; use & args to capture the rest"; }
 
     frame<expression> local_frame{ "anon fn", current_frame.runtime_ctx, current_frame };
+    std::vector<runtime::obj::symbol_ptr> param_symbols;
+    param_symbols.reserve(params->data.size());
 
     for(auto const &p : params->data)
     {
@@ -81,13 +83,14 @@ namespace jank::analyze
 
       auto const sym_ptr(boost::static_pointer_cast<runtime::obj::symbol>(p));
       local_frame.locals.emplace(sym_ptr, local_binding<expression>{ sym_ptr, none });
+      param_symbols.emplace_back(sym_ptr);
     }
 
     std::list<expression> body;
     for(auto const &item : list->data.rest().rest())
     { body.push_back(analyze(item, local_frame)); }
 
-    return { expr::function<expression>{ std::move(body), std::move(local_frame) } };
+    return { expr::function<expression>{ std::move(param_symbols), std::move(body), std::move(local_frame) } };
   }
   expression processor::analyze_let(runtime::obj::list_ptr const &, frame<expression> &)
   { return {}; }
@@ -98,12 +101,21 @@ namespace jank::analyze
     if(o->count() != 2)
     { throw "invalid quote: expects one argument"; }
 
-    return analyze_literal(o->data.rest().first().unwrap(), current_frame);
+    return analyze_primitive_literal(o->data.rest().first().unwrap(), current_frame);
   }
-  expression processor::analyze_literal(runtime::object_ptr const &o, frame<expression> &)
+  expression processor::analyze_primitive_literal(runtime::object_ptr const &o, frame<expression> &)
   {
     /* TODO: Dedupe literals. */
-    return { expr::literal<expression>{ o } };
+    return { expr::primitive_literal<expression>{ o } };
+  }
+
+  expression processor::analyze_vector(runtime::obj::vector_ptr const &o, frame<expression> &current_frame)
+  {
+    std::vector<expression> exprs;
+    exprs.reserve(o->count());
+    for(auto d = o->seq(); d != nullptr; d = d->next())
+    { exprs.emplace_back(analyze(d->first(), current_frame)); }
+    return { expr::vector<expression>{ std::move(exprs) } };
   }
 
   expression processor::analyze_call(runtime::obj::list_ptr const &o, frame<expression> &current_frame)
@@ -111,7 +123,7 @@ namespace jank::analyze
     /* An empty list evaluates to a list, not a call. */
     auto const count(o->count());
     if(count == 0)
-    { return analyze_literal(o, current_frame); }
+    { return analyze_primitive_literal(o, current_frame); }
 
     auto const o_seq(o->seq());
     auto const first(o_seq->first());
@@ -181,30 +193,28 @@ namespace jank::analyze
 
     if(o->as_list())
     { return analyze_call(boost::static_pointer_cast<runtime::obj::list>(o), current_frame); }
-    else if(auto * const vector = o->as_vector())
-    {
-    }
+    else if(o->as_vector())
+    { return analyze_vector(boost::static_pointer_cast<runtime::obj::vector>(o), current_frame); }
     else if(auto * const map = o->as_map())
     {
     }
     else if(auto * const set = o->as_set())
     {
     }
-    else if(auto * const number = o->as_number())
-    {
-    }
+    else if(o->as_number())
+    { return analyze_primitive_literal(o, current_frame); }
     else if(auto * const string = o->as_string())
     {
     }
     else if(o->as_symbol())
     { return analyze_symbol(boost::static_pointer_cast<runtime::obj::symbol>(o), current_frame); }
     else if(auto * const nil = o->as_nil())
-    {
-    }
+    { return analyze_primitive_literal(o, current_frame); }
     else
     {
       std::cout << "unsupported analysis of " << o->to_string() << std::endl;
       assert(false);
+      throw nullptr;
     }
 
     return {};

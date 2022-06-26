@@ -9,6 +9,9 @@
 
 namespace jank::runtime::obj
 {
+  vector_ptr vector::create(runtime::detail::vector_type const &o)
+  { return make_box<vector>(o); }
+
   runtime::detail::boolean_type vector::equal(object const &o) const
   {
     auto const *s(o.as_seqable());
@@ -57,4 +60,6 @@ namespace jank::runtime::obj
     { return nullptr; }
     return make_box<behavior::basic_iterator_wrapper<runtime::detail::vector_type::iterator>>(data.begin(), data.end());
   }
+  size_t vector::count() const
+  { return data.size(); }
 }
