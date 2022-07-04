@@ -4,24 +4,7 @@ jank is a Clojure dialect which aims to offer the best of both worlds: dynamic
 and static. For both of these worlds, jank uses a single runtime, so the
 transition from one to the other is not only seamless, it can be gradual.
 
-## Status
-jank is undergoing a rewrite to use an LLVM-based JIT to achieve both REPL
-goodness and native compilation.
-
-## Runtime
-| Dynamic Runtime      | Static Runtime                                                     |
-|----------------------|--------------------------------------------------------------------|
-| Eval code with a JIT | AOT compile to native executable                                   |
-| REPL support         | Whole program analysis                                             |
-| Code-as-data macros  | Seamless C and C++ interop (including templates, inheritance, etc) |
-
-## Typing
-| Dynamic Typing                              | Static Typing                                                                         |
-|---------------------------------------------|---------------------------------------------------------------------------------------|
-| Dynamically typed by default                | Define types once you figure out your data shapes                                     |
-| Specified types can be disabled at any time | Compiler will use type knowledge to optimize codegen                                  |
-|                                             | Types are specified in a malli/spec fashion, allowing robust and flexible definitions |
-|                                             | Static typing maintains Clojure compatibility                                         |
+https://jank-lang.org
 
 ## Building locally
 Use [Nix](https://nixos.org/manual/nix/stable/). After cloning, use `nix-shell`

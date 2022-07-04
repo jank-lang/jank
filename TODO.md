@@ -6,7 +6,7 @@
 | comments                  | X      | -       | -         | -          |
 | nil                       |        |         |           |            |
 | integers/positive         | X      | X       | X         | X          |
-| integers/negative         | X      | X       | X         | X          |
+| integers/negative         |        |         |           |            |
 | reals/positive            |        |         |           |            |
 | reals/negative            |        |         |           |            |
 | bools                     |        |         |           |            |
