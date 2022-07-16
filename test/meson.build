@@ -8,6 +8,7 @@ test_src = [
   'jank/analyze/expr/def.cpp',
   'jank/analyze/expr/var_deref.cpp',
   'jank/analyze/expr/function.cpp',
+  'jank/analyze/expr/let.cpp',
   'jank/evaluate/context.cpp',
 ]
 unit = executable(

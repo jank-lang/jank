@@ -82,6 +82,7 @@ namespace jank::read
         if(pos >= file.size())
         { return ok(token{ pos, token_kind::eof }); }
 
+        /* TODO: Lex comments into tokens. */
         auto const c(file[pos]);
         if(!in_comment && c == ';')
         { in_comment = true; }

@@ -8,6 +8,8 @@
 #include <jank/analyze/expr/vector.hpp>
 #include <jank/analyze/expr/function.hpp>
 #include <jank/analyze/expr/local_reference.hpp>
+#include <jank/analyze/expr/let.hpp>
+#include <jank/analyze/expr/do.hpp>
 
 namespace jank::analyze
 {
@@ -22,7 +24,9 @@ namespace jank::analyze
       expr::primitive_literal<E>,
       expr::vector<E>,
       boost::recursive_wrapper<expr::function<E>>,
-      expr::local_reference<E>
+      expr::local_reference<E>,
+      expr::let<E>,
+      expr::do_<E>
     >;
 
     expression() = default;

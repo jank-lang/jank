@@ -18,7 +18,7 @@ namespace jank::analyze::expr
     auto const *fn_expr(boost::get<function<expression>>(&expr.data));
     CHECK(fn_expr != nullptr);
     CHECK(fn_expr->local_frame.locals.empty());
-    CHECK(fn_expr->body.empty());
+    CHECK(fn_expr->body.body.empty());
   }
 
   TEST_CASE("Parameters")
@@ -35,7 +35,7 @@ namespace jank::analyze::expr
       auto const *fn_expr(boost::get<function<expression>>(&expr.data));
       CHECK(fn_expr != nullptr);
       CHECK(fn_expr->local_frame.locals.size() == 2);
-      CHECK(fn_expr->body.size() == 2);
+      CHECK(fn_expr->body.body.size() == 2);
     }
 
     SUBCASE("Missing - nothing else")

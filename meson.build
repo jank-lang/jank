@@ -50,6 +50,10 @@ if get_option('jank_build_type') == 'release'
     'strip=true',
   ]
   link_args = []
+  add_global_arguments([
+    ],
+    language : 'cpp'
+  )
 elif get_option('jank_build_type') == 'debug'
   option_overrides = [
     'buildtype=debug',

@@ -86,14 +86,47 @@ namespace jank::analyze
       param_symbols.emplace_back(sym_ptr);
     }
 
-    std::list<expression> body;
+    expr::do_<expression> body_do;
     for(auto const &item : list->data.rest().rest())
-    { body.push_back(analyze(item, local_frame)); }
+    { body_do.body.emplace_back(analyze(item, local_frame)); }
 
-    return { expr::function<expression>{ std::move(param_symbols), std::move(body), std::move(local_frame) } };
+    return { expr::function<expression>{ std::move(param_symbols), std::move(body_do), std::move(local_frame) } };
   }
-  expression processor::analyze_let(runtime::obj::list_ptr const &, frame<expression> &)
-  { return {}; }
+  expression processor::analyze_let(runtime::obj::list_ptr const &o, frame<expression> &current_frame)
+  {
+    if(o->count() < 2)
+    { throw "invalid let: expects bindings"; }
+
+    auto const bindings_obj(o->data.rest().first().unwrap());
+    auto const bindings(bindings_obj->as_vector());
+    if(bindings == nullptr)
+    { throw "invalid let* bindings: must be a vector"; }
+
+    auto const binding_parts(bindings->data.size());
+    if(binding_parts % 2 == 1)
+    { throw "invalid let* bindings: must be an even number"; }
+
+    expr::let<expression> ret{ {}, {}, frame<expression>{ "let*", current_frame.runtime_ctx, current_frame } };
+    for(size_t i{}; i < binding_parts; i += 2)
+    {
+      auto const &sym_obj(bindings->data[i]);
+      auto const &val(bindings->data[i + 1]);
+
+      auto const &sym(sym_obj->as_symbol());
+      if(sym == nullptr || !sym->ns.empty())
+      { throw "invalid let* binding: left hand must be an unqualified symbol"; }
+
+      auto const sym_ptr(boost::static_pointer_cast<runtime::obj::symbol>(sym_obj));
+      auto it(ret.pairs.emplace_back(sym_ptr, analyze(val, ret.local_frame)));
+      ret.local_frame.locals.emplace(sym_ptr, local_binding<expression>{ sym_ptr, some(std::ref(it.second)) });
+      /* TODO: Rename shadowed bindings? */
+    }
+
+    for(auto const &item : o->data.rest().rest())
+    { ret.body.body.emplace_back(analyze(item, ret.local_frame)); }
+
+    return { std::move(ret) };
+  }
   expression processor::analyze_if(runtime::obj::list_ptr const &, frame<expression> &)
   { return {}; }
   expression processor::analyze_quote(runtime::obj::list_ptr const &o, frame<expression> &current_frame)

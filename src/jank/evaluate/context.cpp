@@ -80,7 +80,7 @@ namespace jank::evaluate
   runtime::object_ptr context::interpret(analyze::expr::function<analyze::expression> const &expr, frame const &current_frame)
   {
     runtime::object_ptr ret;
-    for(auto const &body_expr : expr.body)
+    for(auto const &body_expr : expr.body.body)
     { ret = eval(body_expr, current_frame); }
     return ret;
   }
