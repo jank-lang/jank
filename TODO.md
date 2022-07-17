@@ -1,50 +1,6 @@
-## Current progress
-| feature                   | lexing | parsing | analyzing | evaluating |
-|---------------------------|--------|---------|-----------|------------|
-| parens                    | X      | X       | -         | -          |
-| commas                    | X      | -       | -         | -          |
-| comments                  | X      | -       | -         | -          |
-| nil                       |        |         |           |            |
-| integers/positive         | X      | X       | X         | X          |
-| integers/negative         |        |         |           |            |
-| reals/positive            |        |         |           |            |
-| reals/negative            |        |         |           |            |
-| bools                     |        |         |           |            |
-| strings                   | X      | X       | X         | X          |
-| chars                     |        |         |           |            |
-| keywords/unqualified      | X      | X       |           |            |
-| keywords/qualified        | X      | X       |           |            |
-| keywords/aliased          |        |         |           |            |
-| maps                      | X      |         |           |            |
-| vectors                   | X      | X       | X         | X          |
-| sets                      |        |         |           |            |
-| lists                     | X      | X       | X         | X          |
-| regexes                   |        |         |           |            |
-| symbols/unqualified       | X      | X       | X         | X          |
-| symbols/qualified         | X      | X       | X         | X          |
-| specials/def              | X      | X       | X         | X          |
-| specials/if               | X      |         |           |            |
-| specials/do               | X      |         |           |            |
-| specials/let*             | X      |         |           |            |
-| specials/quote            | X      | X       | X         | X          |
-| specials/var              | X      |         |           |            |
-| specials/fn*              | X      | X       | X         | X (no jit) |
-| specials/loop*            | X      |         |           |            |
-| specials/recur            | X      |         |           |            |
-| specials/throw            | X      |         |           |            |
-| specials/try              | X      |         |           |            |
-| specials/monitor-enter    | X      |         |           |            |
-| specials/monitor-exit     | X      |         |           |            |
-| bindings/thread-local     |        |         |           |            |
-| bindings/conveyance       |        |         |           |            |
-| calls                     | X      | X       | X         | X          |
-| destructuring             |        |         |           |            |
-| macros                    | -      | -       |           |            |
-| reader-macros/fns         |        |         |           |            |
-| reader-macros/regex       |        |         |           |            |
-| reader-macros/quote       | X      | X       | X         | X          |
-| reader-macros/var         |        |         |           |            |
-| reader-macros/conditional |        |         |           |            |
+# HM type system
+* http://www.mpprogramming.com/cpp/Default.aspx
+* http://www.mpprogramming.com/resources/CastorReference.pdf
 
 ### To work with a clojure-like RT
 * https://www.duelinmarkers.com/2016/01/24/the-life-of-a-clojure-expression.html
