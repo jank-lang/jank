@@ -1,3 +1,6 @@
+# Perf
+* Bring in folly
+
 # HM type system
 * http://www.mpprogramming.com/cpp/Default.aspx
 * http://www.mpprogramming.com/resources/CastorReference.pdf
