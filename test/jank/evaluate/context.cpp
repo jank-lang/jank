@@ -151,4 +151,37 @@ namespace jank::evaluate
       }
     }
   }
+
+  TEST_CASE("Var")
+  {
+    runtime::context rt_ctx;
+    analyze::processor anal_prc{ rt_ctx };
+    context eval_ctx{ rt_ctx };
+
+    SUBCASE("Basic")
+    {
+      read::lex::processor l_prc{ "(def foo-bar 1) foo-bar" };
+      read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+
+      runtime::object_ptr result;
+      for(auto const &form : p_prc)
+      { result = eval_ctx.eval(anal_prc.analyze(form.expect_ok())); }
+      CHECK(result != nullptr);
+      CHECK(result->as_integer() != nullptr);
+      CHECK(result->as_integer()->equal(runtime::obj::integer{ 1 }));
+    }
+
+    SUBCASE("Redefinition")
+    {
+      read::lex::processor l_prc{ "(def foo-bar 1) (def foo-bar 'meow) foo-bar" };
+      read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+
+      runtime::object_ptr result;
+      for(auto const &form : p_prc)
+      { result = eval_ctx.eval(anal_prc.analyze(form.expect_ok())); }
+      CHECK(result != nullptr);
+      CHECK(result->as_symbol() != nullptr);
+      CHECK(result->equal(runtime::obj::symbol{ "meow" }));
+    }
+  }
 }

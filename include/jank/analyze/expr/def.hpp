@@ -8,7 +8,7 @@ namespace jank::analyze::expr
   struct def
   {
     runtime::obj::symbol_ptr name;
-    runtime::object_ptr value;
+    E value;
     /* TODO: Keep track of whether this is a redefinition. Maybe keep the existing var. */
   };
 }

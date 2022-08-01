@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <experimental/array>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wold-style-cast"
@@ -33,5 +34,14 @@ int main(int const argc, char const **argv)
   jank::read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
   std::cout << eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok()))->to_string() << std::endl;
 
-  cling::Interpreter jit(argc, argv, LLVM_PATH);
+  auto const cling_args(std::experimental::make_array(argv[0], "-std=c++17"));
+  cling::Interpreter jit(cling_args.size(), cling_args.data(), LLVM_PATH);
+  jit.AddIncludePath("/home/jeaye/projects/jank/lib/immer");
+  jit.AddIncludePath("/home/jeaye/projects/jank/lib/magic_enum/include");
+  jit.AddIncludePath("/home/jeaye/projects/jank/include");
+  jit.process("#include <iostream>");
+  jit.process("#include \"jank/runtime/object.hpp\"");
+  jit.process("#include \"jank/runtime/obj/string.hpp\"");
+  jit.process("std::cout << jank::runtime::obj::string(\"meow\").to_string() << std::endl;");
+  jit.process("std::cout << jank::runtime::make_box<jank::runtime::obj::string>(\"meow\")->to_string() << std::endl;");
 }

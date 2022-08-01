@@ -18,7 +18,7 @@ namespace jank::analyze
     using E = expression;
     using value_type = boost::variant
     <
-      expr::def<E>,
+      boost::recursive_wrapper<expr::def<E>>,
       expr::var_deref<E>,
       expr::call<E>,
       expr::primitive_literal<E>,

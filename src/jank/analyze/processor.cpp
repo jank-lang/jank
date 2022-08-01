@@ -6,7 +6,7 @@
 
 namespace jank::analyze
 {
-  expression processor::analyze_def(runtime::obj::list_ptr const &l, frame<expression> &)
+  expression processor::analyze_def(runtime::obj::list_ptr const &l, frame<expression> &current_frame)
   {
     auto const length(l->count());
     if(length != 3)
@@ -40,7 +40,7 @@ namespace jank::analyze
       expr::def<expression>
       {
         boost::static_pointer_cast<runtime::obj::symbol>(sym_obj),
-        value
+        analyze(value, current_frame)
       }
     };
   }

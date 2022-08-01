@@ -27,8 +27,8 @@ namespace jank::analyze::expr
     CHECK(def_expr != nullptr);
     CHECK(def_expr->name != nullptr);
     CHECK(def_expr->name->equal(runtime::obj::symbol{ "foo" }));
-    CHECK(def_expr->value != nullptr);
-    CHECK(def_expr->value->equal(runtime::obj::integer{ 777 }));
+    CHECK(boost::get<expr::primitive_literal<expression>>(&def_expr->value.data) != nullptr);
+    CHECK(boost::get<expr::primitive_literal<expression>>(def_expr->value.data).data->equal(runtime::obj::integer{ 777 }));
   }
 
   TEST_CASE("Qualified symbol")

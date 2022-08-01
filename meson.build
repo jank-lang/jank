@@ -85,7 +85,7 @@ cling_dep = declare_dependency(
     get_option('cling_include_path'),
     get_option('llvm_include_path'),
   ),
-  link_args : ['-L' + get_option('cling_lib_path'), '-lcling'],
+  link_args : ['-L' + get_option('cling_lib_path'), '-lcling', '-Wl,--export-dynamic', '-rdynamic'],
 )
 executable(
   'jank',

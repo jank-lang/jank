@@ -139,6 +139,29 @@ namespace jank::read::parse
       }
     }
 
+    SUBCASE("Mixed")
+    {
+      lex::processor lp{ "(def foo-bar 1) foo-bar" };
+      processor p{ lp.begin(), lp.end() };
+      auto const r1(p.next());
+      CHECK(r1.is_ok());
+      CHECK
+      (
+        r1.expect_ok()->equal
+        (
+          runtime::obj::list
+          {
+            runtime::make_box<runtime::obj::symbol>("def"),
+            runtime::make_box<runtime::obj::symbol>("foo-bar"),
+            runtime::make_box<runtime::obj::integer>(1),
+          }
+        )
+      );
+      auto const r2(p.next());
+      CHECK(r2.is_ok());
+      CHECK(r2.expect_ok()->equal(runtime::make_box<runtime::obj::symbol>("foo-bar")));
+    }
+
     SUBCASE("Extra close")
     {
       lex::processor lp{ "1)" };

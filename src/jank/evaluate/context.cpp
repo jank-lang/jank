@@ -25,20 +25,22 @@ namespace jank::evaluate
     return ret;
   }
 
-  runtime::object_ptr context::eval(analyze::expr::def<analyze::expression> const &expr, frame const &)
+  runtime::object_ptr context::eval(analyze::expr::def<analyze::expression> const &expr, frame const &current_frame)
   {
     auto &t_state(runtime_ctx.get_thread_state(none));
     auto const &ns_ptr(boost::static_pointer_cast<runtime::ns>(t_state.current_ns->get_root()));
+    auto const evaluated_value(eval(expr.value, current_frame));
+
     auto locked_vars(ns_ptr->vars.ulock());
     auto const &existing(locked_vars->find(expr.name));
     if(existing != locked_vars->end())
     {
-      existing->second->set_root(expr.value);
+      existing->second->set_root(evaluated_value);
       return existing->second;
     }
     else
     {
-      auto var(runtime::var::create(ns_ptr, expr.name, expr.value));
+      auto var(runtime::var::create(ns_ptr, expr.name, evaluated_value));
       auto write_locked_vars(locked_vars.moveFromUpgradeToWrite());
       auto const &res(write_locked_vars->insert({expr.name, std::move(var)}));
       return res.first->second;

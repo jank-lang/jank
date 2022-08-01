@@ -31,7 +31,7 @@ namespace jank::runtime::obj
   {
     auto const end(data.end());
     std::stringstream ss;
-    ss << "[";
+    ss << "list(";
     for(auto i(data.begin()); i != end; ++i)
     {
       ss << **i;
@@ -39,7 +39,7 @@ namespace jank::runtime::obj
       if(++n != end)
       { ss << " "; }
     }
-    ss << "]";
+    ss << ")";
     return ss.str();
   }
   /* TODO: Cache this. */
