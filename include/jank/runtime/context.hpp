@@ -24,6 +24,8 @@ namespace jank::runtime
     option<object_ptr> find_local(obj::symbol_ptr const &);
     option<object_ptr> find_val(obj::symbol_ptr const &);
 
+    object_ptr eval_string(std::string_view const &);
+
     folly::Synchronized<std::unordered_map<obj::symbol_ptr, detail::box_type<ns>>> namespaces;
 
     struct thread_state

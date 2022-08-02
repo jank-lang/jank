@@ -20,15 +20,24 @@ namespace jank::analyze::expr
     read::lex::processor l_prc{ "(def foo 777)" };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
     runtime::context rt_ctx;
+    context anal_ctx;
     processor anal_prc{ rt_ctx };
 
-    auto const expr(anal_prc.analyze(p_prc.begin()->expect_ok()));
+    auto const expr(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
     auto const *def_expr(boost::get<def<expression>>(&expr.data));
     CHECK(def_expr != nullptr);
     CHECK(def_expr->name != nullptr);
     CHECK(def_expr->name->equal(runtime::obj::symbol{ "foo" }));
     CHECK(boost::get<expr::primitive_literal<expression>>(&def_expr->value.data) != nullptr);
     CHECK(boost::get<expr::primitive_literal<expression>>(def_expr->value.data).data->equal(runtime::obj::integer{ 777 }));
+
+    SUBCASE("Lifting")
+    {
+      CHECK_EQ(anal_ctx.lifted_vars.size(), 1);
+      CHECK_NE(anal_ctx.lifted_vars.find(runtime::obj::symbol::create("clojure.core/foo")), anal_ctx.lifted_vars.end());
+      CHECK_EQ(anal_ctx.lifted_constants.size(), 1);
+      CHECK_NE(anal_ctx.lifted_constants.find(runtime::obj::integer::create(777)), anal_ctx.lifted_constants.end());
+    }
   }
 
   TEST_CASE("Qualified symbol")
@@ -36,14 +45,16 @@ namespace jank::analyze::expr
     read::lex::processor l_prc{ "(def bar/foo 777)" };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
     runtime::context rt_ctx;
+    context anal_ctx;
     processor anal_prc{ rt_ctx };
 
-    CHECK_THROWS(anal_prc.analyze(p_prc.begin()->expect_ok()));
+    CHECK_THROWS(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
   }
 
   TEST_CASE("Arities")
   {
     runtime::context rt_ctx;
+    context anal_ctx;
     processor anal_prc{ rt_ctx };
 
     SUBCASE("Missing value")
@@ -51,7 +62,7 @@ namespace jank::analyze::expr
       read::lex::processor l_prc{ "(def foo)" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
-      CHECK_THROWS(anal_prc.analyze(p_prc.begin()->expect_ok()));
+      CHECK_THROWS(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
     }
 
     SUBCASE("Extra value")
@@ -59,7 +70,7 @@ namespace jank::analyze::expr
       read::lex::processor l_prc{ "(def foo 1 2)" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
-      CHECK_THROWS(anal_prc.analyze(p_prc.begin()->expect_ok()));
+      CHECK_THROWS(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
     }
   }
 }

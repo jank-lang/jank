@@ -16,6 +16,7 @@ namespace jank::analyze::expr
   TEST_CASE("Unqualified")
   {
     runtime::context rt_ctx;
+    context anal_ctx;
     processor anal_prc{ rt_ctx };
     evaluate::context eval_ctx{ rt_ctx };
 
@@ -24,7 +25,7 @@ namespace jank::analyze::expr
       read::lex::processor l_prc{ "foo" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
-      CHECK_THROWS(anal_prc.analyze(p_prc.begin()->expect_ok()));
+      CHECK_THROWS(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
     }
 
     SUBCASE("Present")
@@ -32,13 +33,13 @@ namespace jank::analyze::expr
       {
         read::lex::processor l_prc{ "(def foo 1)" };
         read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-        eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok()));
+        eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
       }
 
       read::lex::processor l_prc{ "foo" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
-      auto const expr(anal_prc.analyze(p_prc.begin()->expect_ok()));
+      auto const expr(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
       auto const *var_deref_expr(boost::get<var_deref<expression>>(&expr.data));
       CHECK(var_deref_expr != nullptr);
       CHECK(var_deref_expr->var != nullptr);
@@ -49,6 +50,7 @@ namespace jank::analyze::expr
   TEST_CASE("Qualified")
   {
     runtime::context rt_ctx;
+    context anal_ctx;
     processor anal_prc{ rt_ctx };
     evaluate::context eval_ctx{ rt_ctx };
 
@@ -57,7 +59,7 @@ namespace jank::analyze::expr
       read::lex::processor l_prc{ "clojure.core/foo" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
-      CHECK_THROWS(anal_prc.analyze(p_prc.begin()->expect_ok()));
+      CHECK_THROWS(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
     }
 
     SUBCASE("Present")
@@ -65,13 +67,13 @@ namespace jank::analyze::expr
       {
         read::lex::processor l_prc{ "(def foo 1)" };
         read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-        eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok()));
+        eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
       }
 
       read::lex::processor l_prc{ "clojure.core/foo" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
-      auto const expr(anal_prc.analyze(p_prc.begin()->expect_ok()));
+      auto const expr(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
       auto const *var_deref_expr(boost::get<var_deref<expression>>(&expr.data));
       CHECK(var_deref_expr != nullptr);
       CHECK(var_deref_expr->var != nullptr);

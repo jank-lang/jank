@@ -24,6 +24,8 @@ namespace jank::runtime::obj
   { return this; }
 
   /***** integer *****/
+  runtime::detail::box_type<integer> integer::create(runtime::detail::integer_type const &n)
+  { return make_box<integer>(n); }
   detail::boolean_type integer::equal(object const &o) const
   {
     auto const *i(o.as_integer());

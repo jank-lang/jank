@@ -7,6 +7,7 @@
 namespace jank::runtime
 { struct context; }
 
+/* TODO: Rename this ns to interpret. */
 namespace jank::evaluate
 {
   /* There's only one eval context per thread, so no synchronization is needed for its members. */

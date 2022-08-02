@@ -26,13 +26,14 @@ int main(int const argc, char const **argv)
   char const *file{ argv[1] };
 
   jank::runtime::context rt_ctx;
+  jank::analyze::context anal_ctx;
   jank::analyze::processor anal_prc{ rt_ctx };
   jank::evaluate::context eval_ctx{ rt_ctx };
 
   auto const mfile(jank::util::map_file(file));
   jank::read::lex::processor l_prc{ { mfile.expect_ok().head, mfile.expect_ok().size } };
   jank::read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-  std::cout << eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok()))->to_string() << std::endl;
+  std::cout << eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx))->to_string() << std::endl;
 
   auto const cling_args(std::experimental::make_array(argv[0], "-std=c++17"));
   cling::Interpreter jit(cling_args.size(), cling_args.data(), LLVM_PATH);

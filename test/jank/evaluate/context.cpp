@@ -16,13 +16,8 @@ namespace jank::evaluate
 {
   TEST_CASE("Call")
   {
-    read::lex::processor l_prc{ "(+ 777 2)" };
-    read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
     runtime::context rt_ctx;
-    analyze::processor anal_prc{ rt_ctx };
-    context eval_ctx{ rt_ctx };
-
-    auto const result(eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok())));
+    auto const result(rt_ctx.eval_string("(+ 777 2)"));
     CHECK(result != nullptr);
     CHECK(result->equal(runtime::obj::integer{ 779 }));
   }
@@ -30,15 +25,10 @@ namespace jank::evaluate
   TEST_CASE("Function")
   {
     runtime::context rt_ctx;
-    analyze::processor anal_prc{ rt_ctx };
-    context eval_ctx{ rt_ctx };
 
     SUBCASE("Nullary")
     {
-      read::lex::processor l_prc{ "(fn* [] 1)" };
-      read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-
-      auto const result(eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok())));
+      auto const result(rt_ctx.eval_string("(fn* [] 1)"));
       CHECK(result != nullptr);
       CHECK(result->as_function() != nullptr);
       CHECK(result->as_function()->call()->equal(runtime::obj::integer{ 1 }));
@@ -46,10 +36,7 @@ namespace jank::evaluate
 
     SUBCASE("Unary")
     {
-      read::lex::processor l_prc{ "(fn* [a] a)" };
-      read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-
-      auto const result(eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok())));
+      auto const result(rt_ctx.eval_string("(fn* [a] a)"));
       CHECK(result != nullptr);
       CHECK(result->as_function() != nullptr);
       CHECK(result->as_function()->call(runtime::make_box<runtime::obj::integer>(1))->equal(runtime::obj::integer{ 1 }));
@@ -57,10 +44,7 @@ namespace jank::evaluate
 
     SUBCASE("Binary")
     {
-      read::lex::processor l_prc{ "(fn* [a b] [a b])" };
-      read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-
-      auto const result(eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok())));
+      auto const result(rt_ctx.eval_string("(fn* [a b] [a b])"));
       CHECK(result != nullptr);
       CHECK(result->as_function() != nullptr);
 
@@ -73,15 +57,10 @@ namespace jank::evaluate
   TEST_CASE("Literals")
   {
     runtime::context rt_ctx;
-    analyze::processor anal_prc{ rt_ctx };
-    context eval_ctx{ rt_ctx };
 
     SUBCASE("Empty list")
     {
-      read::lex::processor l_prc{ "()" };
-      read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-
-      auto const result(eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok())));
+      auto const result(rt_ctx.eval_string("()"));
       CHECK(result != nullptr);
       CHECK(result->equal(runtime::obj::list{ }));
     }
@@ -90,10 +69,7 @@ namespace jank::evaluate
     {
       SUBCASE("List")
       {
-        read::lex::processor l_prc{ "'(1 2 (foo))" };
-        read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-
-        auto const result(eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok())));
+        auto const result(rt_ctx.eval_string("'(1 2 (foo))"));
         CHECK(result != nullptr);
         CHECK
         (
@@ -111,10 +87,7 @@ namespace jank::evaluate
 
       SUBCASE("Vector")
       {
-        read::lex::processor l_prc{ "'[1 2 (foo)]" };
-        read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-
-        auto const result(eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok())));
+        auto const result(rt_ctx.eval_string("'[1 2 (foo)]"));
         CHECK(result != nullptr);
         CHECK
         (
@@ -132,20 +105,14 @@ namespace jank::evaluate
 
       SUBCASE("Symbol")
       {
-        read::lex::processor l_prc{ "'foo/bar" };
-        read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-
-        auto const result(eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok())));
+        auto const result(rt_ctx.eval_string("'foo/bar"));
         CHECK(result != nullptr);
         CHECK(result->equal(runtime::obj::symbol{ "foo/bar" }));
       }
 
       SUBCASE("Integer")
       {
-        read::lex::processor l_prc{ "'123" };
-        read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-
-        auto const result(eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok())));
+        auto const result(rt_ctx.eval_string("'123"));
         CHECK(result != nullptr);
         CHECK(result->equal(runtime::obj::integer{ 123 }));
       }
@@ -155,17 +122,10 @@ namespace jank::evaluate
   TEST_CASE("Var")
   {
     runtime::context rt_ctx;
-    analyze::processor anal_prc{ rt_ctx };
-    context eval_ctx{ rt_ctx };
 
     SUBCASE("Basic")
     {
-      read::lex::processor l_prc{ "(def foo-bar 1) foo-bar" };
-      read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-
-      runtime::object_ptr result;
-      for(auto const &form : p_prc)
-      { result = eval_ctx.eval(anal_prc.analyze(form.expect_ok())); }
+      auto const result(rt_ctx.eval_string("(def foo-bar 1) foo-bar"));
       CHECK(result != nullptr);
       CHECK(result->as_integer() != nullptr);
       CHECK(result->as_integer()->equal(runtime::obj::integer{ 1 }));
@@ -173,12 +133,7 @@ namespace jank::evaluate
 
     SUBCASE("Redefinition")
     {
-      read::lex::processor l_prc{ "(def foo-bar 1) (def foo-bar 'meow) foo-bar" };
-      read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-
-      runtime::object_ptr result;
-      for(auto const &form : p_prc)
-      { result = eval_ctx.eval(anal_prc.analyze(form.expect_ok())); }
+      auto const result(rt_ctx.eval_string("(def foo-bar 1) (def foo-bar 'meow) foo-bar"));
       CHECK(result != nullptr);
       CHECK(result->as_symbol() != nullptr);
       CHECK(result->equal(runtime::obj::symbol{ "meow" }));
