@@ -38,7 +38,6 @@ int main(int const argc, char const **argv)
   {
     auto const anal_result(anal_prc.analyze(form.expect_ok(), anal_ctx));
     jank::codegen::context cg_ctx{ rt_ctx, anal_ctx };
-    cg_ctx.gen(anal_result);
     std::cout << cg_ctx.header_str() << std::endl;
     std::cout << cg_ctx.body_str() << std::endl;
     std::cout << cg_ctx.footer_str() << std::endl;
