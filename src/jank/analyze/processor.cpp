@@ -7,13 +7,33 @@
 
 namespace jank::analyze
 {
-  void context::lift_var(runtime::obj::symbol_ptr const &sym)
+  context::context(runtime::context &rt_ctx)
+    : rt_ctx{ rt_ctx }
+  { }
+
+  runtime::obj::symbol_ptr context::lift_var(runtime::obj::symbol_ptr const &sym)
   {
     auto const found(lifted_vars.find(sym));
     if(found != lifted_vars.end())
-    { return; }
-    lifted_var lv{ unique_name("var"), sym };
-    lifted_vars.emplace(sym, lv);
+    { return found->first; }
+
+    auto qualified_sym(runtime::make_box<runtime::obj::symbol>(*sym));
+    if(qualified_sym->ns.empty())
+    {
+      auto const state(rt_ctx.get_thread_state());
+      qualified_sym->ns = state.current_ns->get_root()->as_ns()->name->name;
+    }
+    lifted_var lv{ unique_name("var"), qualified_sym };
+    lifted_vars.emplace(qualified_sym, lv);
+    return qualified_sym;
+  }
+
+  option<std::reference_wrapper<lifted_var>> context::find_lifted_var(runtime::obj::symbol_ptr const &sym)
+  {
+    auto const found(lifted_vars.find(sym));
+    if(found != lifted_vars.end())
+    { return some(std::ref(found->second)); }
+    return none;
   }
 
   void context::lift_constant(runtime::object_ptr const &constant)
@@ -25,8 +45,16 @@ namespace jank::analyze
     lifted_constants.emplace(constant, l);
   }
 
+  option<std::reference_wrapper<lifted_constant>> context::find_lifted_constant(runtime::object_ptr const &o)
+  {
+    auto const found(lifted_constants.find(o));
+    if(found != lifted_constants.end())
+    { return some(std::ref(found->second)); }
+    return none;
+  }
+
   runtime::obj::symbol context::unique_name()
-  { return unique_name(""); }
+  { return unique_name("gen"); }
   runtime::obj::symbol context::unique_name(std::string const &prefix)
   {
     static std::atomic_size_t index{ 1 };
@@ -81,23 +109,18 @@ namespace jank::analyze
       throw "invalid def";
     }
 
-    runtime::obj::symbol_ptr current_ns;
-    {
-      auto const state(rt_ctx.get_thread_state());
-      current_ns = state.current_ns->get_root()->as_ns()->name;
-    }
-    ctx.lift_var(runtime::obj::symbol::create(current_ns->name, sym->name));
+    auto const qualified_sym(ctx.lift_var(boost::static_pointer_cast<runtime::obj::symbol>(sym_obj)));
 
     return
     {
       expr::def<expression>
       {
-        boost::static_pointer_cast<runtime::obj::symbol>(sym_obj),
+        qualified_sym,
         analyze(value, current_frame, ctx)
       }
     };
   }
-  expression processor::analyze_symbol(runtime::obj::symbol_ptr const &sym, frame<expression> &current_frame, context &)
+  expression processor::analyze_symbol(runtime::obj::symbol_ptr const &sym, frame<expression> &current_frame, context &ctx)
   {
     auto const found_local(current_frame.find(sym));
     if(found_local.is_some())
@@ -106,6 +129,8 @@ namespace jank::analyze
     auto const var(root_frame.runtime_ctx.find_var(sym));
     if(var.is_none())
     { throw "unbound symbol"; }
+
+    ctx.lift_var(var.unwrap()->name);
     return { expr::var_deref<expression>{ var.unwrap() } };
   }
   expression processor::analyze_fn(runtime::obj::list_ptr const &list, frame<expression> &current_frame, context &ctx)
@@ -280,11 +305,12 @@ namespace jank::analyze
     { return analyze_primitive_literal(o, current_frame, ctx); }
     else
     {
-      std::cout << "unsupported analysis of " << o->to_string() << std::endl;
+      std::cerr << "unsupported analysis of " << o->to_string() << std::endl;
       assert(false);
       throw nullptr;
     }
 
-    return {};
+    std::cerr << "unimplemented analysis of " << *o << std::endl;
+    throw nullptr;
   }
 }

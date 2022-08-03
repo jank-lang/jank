@@ -27,11 +27,18 @@ namespace jank::analyze
 
   struct context
   {
-    void lift_var(runtime::obj::symbol_ptr const &);
-    void lift_constant(runtime::object_ptr const &);
-    runtime::obj::symbol unique_name();
-    runtime::obj::symbol unique_name(std::string const &prefix);
+    context() = delete;
+    context(runtime::context &rt_ctx);
 
+    runtime::obj::symbol_ptr lift_var(runtime::obj::symbol_ptr const &);
+    option<std::reference_wrapper<lifted_var>> find_lifted_var(runtime::obj::symbol_ptr const &);
+    void lift_constant(runtime::object_ptr const &);
+    option<std::reference_wrapper<lifted_constant>> find_lifted_constant(runtime::object_ptr const &);
+
+    static runtime::obj::symbol unique_name();
+    static runtime::obj::symbol unique_name(std::string const &prefix);
+
+    runtime::context &rt_ctx;
     std::unordered_map<runtime::obj::symbol_ptr, lifted_var> lifted_vars;
     std::unordered_map<runtime::object_ptr, lifted_constant> lifted_constants;
   };

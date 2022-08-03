@@ -5,6 +5,7 @@
 
 #include <folly/Synchronized.h>
 
+#include <jank/result.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
 #include <jank/evaluate/context.hpp>
@@ -20,6 +21,8 @@ namespace jank::runtime
     void dump() const;
 
     ns_ptr intern_ns(obj::symbol_ptr const &);
+    result<var_ptr, std::string> intern_var(obj::symbol_ptr const &);
+    result<var_ptr, std::string> intern_var(detail::string_type const &ns, detail::string_type const &name);
     option<var_ptr> find_var(obj::symbol_ptr const &);
     option<object_ptr> find_local(obj::symbol_ptr const &);
     option<object_ptr> find_val(obj::symbol_ptr const &);

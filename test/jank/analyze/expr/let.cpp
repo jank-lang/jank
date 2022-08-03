@@ -12,7 +12,7 @@ namespace jank::analyze::expr
     read::lex::processor l_prc{ "(let* [])" };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
     runtime::context rt_ctx;
-    context anal_ctx;
+    context anal_ctx{ rt_ctx };
     processor anal_prc{ rt_ctx };
 
     auto const expr(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
@@ -25,7 +25,7 @@ namespace jank::analyze::expr
   TEST_CASE("Bindings")
   {
     runtime::context rt_ctx;
-    context anal_ctx;
+    context anal_ctx{ rt_ctx };
     processor anal_prc{ rt_ctx };
 
     SUBCASE("Literal")
@@ -68,7 +68,7 @@ namespace jank::analyze::expr
   TEST_CASE("Misuse")
   {
     runtime::context rt_ctx;
-    context anal_ctx;
+    context anal_ctx{ rt_ctx };
     processor anal_prc{ rt_ctx };
 
     SUBCASE("Non-symbol binding")

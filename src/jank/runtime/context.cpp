@@ -106,7 +106,7 @@ namespace jank::runtime
   {
     read::lex::processor l_prc{ s };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-    analyze::context anal_ctx;
+    analyze::context anal_ctx{ *this };
     analyze::processor anal_prc{ *this };
     evaluate::context eval_ctx{  *this };
 
@@ -139,6 +139,26 @@ namespace jank::runtime
     auto const write_locked_namespaces(locked_namespaces.moveFromUpgradeToWrite());
     auto const result(write_locked_namespaces->emplace(sym, make_box<ns>(sym, *this)));
     return result.first->second;
+  }
+
+  result<var_ptr, std::string> context::intern_var(obj::symbol_ptr const &qualified_sym)
+  { return intern_var(qualified_sym->ns, qualified_sym->name); }
+  result<var_ptr, std::string> context::intern_var(detail::string_type const &ns, detail::string_type const &name)
+  {
+    auto const name_sym(runtime::obj::symbol::create(name));
+    auto locked_namespaces(namespaces.ulock());
+    auto const found_ns(locked_namespaces->find(runtime::obj::symbol::create(ns)));
+    if(found_ns == locked_namespaces->end())
+    { return err("can't intern var; namespace doesn't exist"); }
+
+    auto locked_vars(found_ns->second->vars.ulock());
+    auto const found_var(locked_vars->find(name_sym));
+    if(found_var != locked_vars->end())
+    { return ok(found_var->second); }
+
+    auto const locked_vars_w(locked_vars.moveFromUpgradeToWrite());
+    auto const ns_res(locked_vars_w->insert({name_sym, var::create(found_ns->second, name_sym)}));
+    return ok(ns_res.first->second);
   }
 
   context::thread_state::thread_state(context &ctx)

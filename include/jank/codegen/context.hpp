@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include <jank/analyze/expression.hpp>
+#include <jank/analyze/processor.hpp>
 
 namespace jank::runtime
 { struct context; }
@@ -13,7 +14,7 @@ namespace jank::codegen
   struct context
   {
     context() = delete;
-    context(runtime::context &ctx);
+    context(runtime::context &rt_ctx, analyze::context &anal_ctx);
     context(context const &) = delete;
     context(context &&) = default;
 
@@ -27,9 +28,12 @@ namespace jank::codegen
     void gen(analyze::expr::function<analyze::expression> const &);
 
     /* TODO: C++20: Return std::string_view. */
-    std::string data() const;
+    std::string header_str() const;
+    std::string body_str() const;
+    std::string footer_str() const;
 
-    runtime::context &runtime_ctx;
+    runtime::context &rt_ctx;
+    analyze::context &anal_ctx;
     std::ostringstream oss;
   };
 }

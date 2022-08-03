@@ -16,7 +16,7 @@ namespace jank::analyze::expr
   TEST_CASE("Unqualified")
   {
     runtime::context rt_ctx;
-    context anal_ctx;
+    context anal_ctx{ rt_ctx };
     processor anal_prc{ rt_ctx };
     evaluate::context eval_ctx{ rt_ctx };
 
@@ -50,7 +50,7 @@ namespace jank::analyze::expr
   TEST_CASE("Qualified")
   {
     runtime::context rt_ctx;
-    context anal_ctx;
+    context anal_ctx{ rt_ctx };
     processor anal_prc{ rt_ctx };
     evaluate::context eval_ctx{ rt_ctx };
 
