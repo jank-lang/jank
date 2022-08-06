@@ -3,11 +3,18 @@
 #include <cassert>
 #include <utility> // move, forward
 #include <type_traits>
+#include <ostream>
 
 namespace jank
 {
   struct empty_option
   { };
+
+  namespace detail
+  {
+    template <bool Ok, typename T>
+    struct result;
+  }
 
   template <typename T>
   struct option
@@ -15,7 +22,7 @@ namespace jank
     using storage_type = char[sizeof(T)];
 
     option() = default;
-    option(option const &o)
+    option(option<T> const &o)
       : set{ o.set }
     {
       if(set)
@@ -53,9 +60,9 @@ namespace jank
     option(option<D> &&o, std::enable_if_t<std::is_constructible_v<T, D>>* = 0)
       : set{ std::move(o.set) }
     {
-      o.set = false;
       if(set)
-      { new (data) T{ std::move(*reinterpret_cast<D const*>(o.data)) }; }
+      { new (data) T{ std::move(*reinterpret_cast<D*>(o.data)) }; }
+      o.reset();
     }
     option(empty_option const&)
     { }
@@ -80,6 +87,7 @@ namespace jank
       set = std::move(rhs.set);
       if(set)
       { new (data) T{ std::move(*reinterpret_cast<T const*>(rhs.data)) }; }
+      rhs.reset();
       return *this;
     }
     option<T>& operator =(empty_option const&)
@@ -88,7 +96,7 @@ namespace jank
       return *this;
     }
     template <typename D>
-    option<T>& operator =(D &&rhs)
+    std::enable_if_t<std::is_constructible_v<T, D>, option<T>&> operator =(D &&rhs)
     {
       reset();
 
@@ -147,4 +155,12 @@ namespace jank
   option<Decayed> some(T &&t)
   { return { std::forward<T>(t) }; }
   inline constexpr empty_option none = empty_option{};
+
+  template <typename T>
+  std::ostream& operator<<(std::ostream &os, option<T> const &o)
+  {
+    if(o.is_none())
+    { return os << "none"; }
+    return os << "some(" << o.unwrap() << ")";
+  }
 }

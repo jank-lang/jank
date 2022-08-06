@@ -183,6 +183,6 @@ namespace jank::read::parse
   processor::iterator processor::begin()
   { return { some(next()), *this }; }
   processor::iterator processor::end()
-  { return { some(nullptr), *this }; }
+  { return { some(ok(nullptr)), *this }; }
 }
 

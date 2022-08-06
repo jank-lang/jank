@@ -46,7 +46,7 @@ namespace jank
       : data{ std::forward<T>(t) }
     {}
     /* Allow implicit construction from results with compatible constructor args. This allows
-     * things like ok(none) for option<some<R>>. */
+     * things like ok(none) for option<R>. */
     template <typename T>
     result(detail::result<true, T> const &t, std::enable_if_t<std::is_constructible_v<R, T>>* = 0)
       : data{ t.data }
@@ -115,7 +115,7 @@ namespace jank
   std::ostream& operator <<(std::ostream &os, result<R, E> const &r)
   {
     if(r.is_ok())
-    { return os << std::get<0>(r.data); }
-    return os << std::get<1>(r.data);
+    { return os << "ok(" << std::get<0>(r.data) << ")"; }
+    return os << "err(" << std::get<1>(r.data) << ")";
   }
 }

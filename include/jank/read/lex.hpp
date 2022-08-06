@@ -70,6 +70,9 @@ namespace jank::read
     error(size_t const s, size_t const e, std::string const &m)
       : start{ s }, end{ e }, message{ m }
     { }
+    error(std::string const &m)
+      : message{ m }
+    { }
 
     bool operator ==(error const &rhs) const
     { return !(*this != rhs); }
@@ -85,7 +88,6 @@ namespace jank::read
 
 namespace jank::read::lex
 {
-  /* TODO: Rename to stream? */
   struct processor
   {
     struct iterator

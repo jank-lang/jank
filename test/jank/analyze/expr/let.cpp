@@ -13,9 +13,9 @@ namespace jank::analyze::expr
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
     runtime::context rt_ctx;
     context anal_ctx{ rt_ctx };
-    processor anal_prc{ rt_ctx };
+    processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-    auto const expr(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
+    auto const expr(anal_prc.next(anal_ctx).expect_ok().unwrap());
     auto const *let_expr(boost::get<let<expression>>(&expr.data));
     CHECK(let_expr != nullptr);
     CHECK(let_expr->local_frame.locals.empty());
@@ -26,14 +26,14 @@ namespace jank::analyze::expr
   {
     runtime::context rt_ctx;
     context anal_ctx{ rt_ctx };
-    processor anal_prc{ rt_ctx };
 
     SUBCASE("Literal")
     {
       read::lex::processor l_prc{ "(let* [a 1] a)" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+      processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      auto const expr(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
+      auto const expr(anal_prc.next(anal_ctx).expect_ok().unwrap());
       auto const *let_expr(boost::get<let<expression>>(&expr.data));
       CHECK(let_expr != nullptr);
       CHECK(let_expr->local_frame.locals.size() == 1);
@@ -44,8 +44,9 @@ namespace jank::analyze::expr
     {
       read::lex::processor l_prc{ "(let* [a 1 b a] b)" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+      processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      auto const expr(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
+      auto const expr(anal_prc.next(anal_ctx).expect_ok().unwrap());
       auto const *let_expr(boost::get<let<expression>>(&expr.data));
       CHECK(let_expr != nullptr);
       CHECK(let_expr->local_frame.locals.size() == 2);
@@ -56,8 +57,9 @@ namespace jank::analyze::expr
     {
       read::lex::processor l_prc{ "(let* [a 1 a 2] a)" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+      processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      auto const expr(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
+      auto const expr(anal_prc.next(anal_ctx).expect_ok().unwrap());
       auto const *let_expr(boost::get<let<expression>>(&expr.data));
       CHECK(let_expr != nullptr);
       CHECK(let_expr->local_frame.locals.size() == 1);
@@ -69,27 +71,29 @@ namespace jank::analyze::expr
   {
     runtime::context rt_ctx;
     context anal_ctx{ rt_ctx };
-    processor anal_prc{ rt_ctx };
 
     SUBCASE("Non-symbol binding")
     {
       read::lex::processor l_prc{ "(let* [1 1])" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-      CHECK_THROWS(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
+      processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
+      CHECK(anal_prc.next(anal_ctx).is_err());
     }
 
     SUBCASE("Qualified symbol binding")
     {
       read::lex::processor l_prc{ "(let* [foo.bar/spam 1])" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-      CHECK_THROWS(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
+      processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
+      CHECK(anal_prc.next(anal_ctx).is_err());
     }
 
     SUBCASE("Self-referenced binding")
     {
       read::lex::processor l_prc{ "(let* [a a])" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-      CHECK_THROWS(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
+      processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
+      CHECK_THROWS(anal_prc.next(anal_ctx));
     }
   }
 }

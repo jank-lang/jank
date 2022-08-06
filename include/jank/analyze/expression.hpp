@@ -33,7 +33,15 @@ namespace jank::analyze
     expression(expression const &) = default;
     expression(expression &&) = default;
     template <typename T>
-    expression(T &&t, std::enable_if_t<!std::is_same_v<std::decay_t<T>, expression>>* = nullptr)
+    expression
+    (
+      T &&t,
+      std::enable_if_t
+      <
+        !std::is_same_v<std::decay_t<T>, expression>
+        && std::is_constructible_v<value_type, T>
+      >* = nullptr
+    )
       : data{ std::forward<T>(t) }
     { }
 

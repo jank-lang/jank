@@ -28,15 +28,14 @@ int main(int const argc, char const **argv)
 
   jank::runtime::context rt_ctx;
   jank::analyze::context anal_ctx{ rt_ctx };
-  jank::analyze::processor anal_prc{ rt_ctx };
   jank::evaluate::context eval_ctx{ rt_ctx };
 
   auto const mfile(jank::util::map_file(file));
   jank::read::lex::processor l_prc{ { mfile.expect_ok().head, mfile.expect_ok().size } };
   jank::read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-  for(auto const &form : p_prc)
+  jank::analyze::processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
+  for(auto anal_result(anal_prc.begin(anal_ctx)); anal_result != anal_prc.end(anal_ctx); ++anal_result)
   {
-    auto const anal_result(anal_prc.analyze(form.expect_ok(), anal_ctx));
     jank::codegen::context cg_ctx{ rt_ctx, anal_ctx };
     std::cout << cg_ctx.header_str() << std::endl;
     std::cout << cg_ctx.body_str() << std::endl;

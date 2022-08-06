@@ -10,36 +10,31 @@
 #include <doctest/doctest.h>
 #pragma clang diagnostic pop
 
-/* TODO: Presence tests once defs can be evaluated. */
 namespace jank::analyze::expr
 {
   TEST_CASE("Unqualified")
   {
     runtime::context rt_ctx;
     context anal_ctx{ rt_ctx };
-    processor anal_prc{ rt_ctx };
-    evaluate::context eval_ctx{ rt_ctx };
 
     SUBCASE("Missing")
     {
       read::lex::processor l_prc{ "foo" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+      processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      CHECK_THROWS(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
+      CHECK(anal_prc.next(anal_ctx).is_err());
     }
 
     SUBCASE("Present")
     {
-      {
-        read::lex::processor l_prc{ "(def foo 1)" };
-        read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-        eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
-      }
+      rt_ctx.eval_string("(def foo 1)");
 
       read::lex::processor l_prc{ "foo" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+      processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      auto const expr(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
+      auto const expr(anal_prc.next(anal_ctx).expect_ok().unwrap());
       auto const *var_deref_expr(boost::get<var_deref<expression>>(&expr.data));
       CHECK(var_deref_expr != nullptr);
       CHECK(var_deref_expr->var != nullptr);
@@ -51,29 +46,25 @@ namespace jank::analyze::expr
   {
     runtime::context rt_ctx;
     context anal_ctx{ rt_ctx };
-    processor anal_prc{ rt_ctx };
-    evaluate::context eval_ctx{ rt_ctx };
 
     SUBCASE("Missing")
     {
       read::lex::processor l_prc{ "clojure.core/foo" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+      processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      CHECK_THROWS(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
+      CHECK(anal_prc.next(anal_ctx).is_err());
     }
 
     SUBCASE("Present")
     {
-      {
-        read::lex::processor l_prc{ "(def foo 1)" };
-        read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-        eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
-      }
+      rt_ctx.eval_string("(def foo 1)");
 
       read::lex::processor l_prc{ "clojure.core/foo" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+      processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      auto const expr(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
+      auto const expr(anal_prc.next(anal_ctx).expect_ok().unwrap());
       auto const *var_deref_expr(boost::get<var_deref<expression>>(&expr.data));
       CHECK(var_deref_expr != nullptr);
       CHECK(var_deref_expr->var != nullptr);

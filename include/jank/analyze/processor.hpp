@@ -2,6 +2,7 @@
 
 #include <functional>
 
+#include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/symbol.hpp>
@@ -43,28 +44,58 @@ namespace jank::analyze
     std::unordered_map<runtime::object_ptr, lifted_constant> lifted_constants;
   };
 
+  using error = read::error;
+
   struct processor
   {
+    using expression_result = result<option<expression>, error>;
+
+    struct iterator
+    {
+      using iterator_category = std::input_iterator_tag;
+      using difference_type = std::ptrdiff_t;
+      using value_type = expression_result;
+      using pointer = value_type*;
+      using reference = value_type&;
+
+      value_type operator *() const;
+      pointer operator ->();
+      iterator& operator ++();
+      bool operator !=(iterator const &rhs) const;
+      bool operator ==(iterator const &rhs) const;
+
+      /* TODO: Get rid of option. */
+      value_type latest;
+      context &ctx;
+      processor &p;
+      bool is_end{};
+    };
+
     processor() = delete;
-    processor(runtime::context &rt_ctx);
+    processor(runtime::context &rt_ctx, read::parse::processor::iterator const &b, read::parse::processor::iterator const &e);
     processor(processor const &) = default;
     processor(processor &&) = default;
 
-    expression analyze(runtime::object_ptr const &, context &);
-    expression analyze(runtime::object_ptr const &, frame<expression> &, context &);
-    expression analyze_call(runtime::obj::list_ptr const &, frame<expression> &, context &);
-    expression analyze_def(runtime::obj::list_ptr const &, frame<expression> &, context &);
-    expression analyze_symbol(runtime::obj::symbol_ptr const &, frame<expression> &, context &);
-    expression analyze_fn(runtime::obj::list_ptr const &, frame<expression> &, context &);
-    expression analyze_let(runtime::obj::list_ptr const &, frame<expression> &, context &);
-    expression analyze_if(runtime::obj::list_ptr const &, frame<expression> &, context &);
-    expression analyze_quote(runtime::obj::list_ptr const &, frame<expression> &, context &);
-    expression analyze_primitive_literal(runtime::object_ptr const &, frame<expression> &, context &);
-    expression analyze_vector(runtime::obj::vector_ptr const &, frame<expression> &, context &);
+    iterator begin(context &ctx);
+    iterator end(context &ctx);
 
-    using special_function_type = std::function<expression (runtime::obj::list_ptr const &, frame<expression> &, context &)>;
+    expression_result next(context &ctx);
+    expression_result analyze(runtime::object_ptr const &, context &);
+    expression_result analyze(runtime::object_ptr const &, frame<expression> &, context &);
+    expression_result analyze_call(runtime::obj::list_ptr const &, frame<expression> &, context &);
+    expression_result analyze_def(runtime::obj::list_ptr const &, frame<expression> &, context &);
+    expression_result analyze_symbol(runtime::obj::symbol_ptr const &, frame<expression> &, context &);
+    expression_result analyze_fn(runtime::obj::list_ptr const &, frame<expression> &, context &);
+    expression_result analyze_let(runtime::obj::list_ptr const &, frame<expression> &, context &);
+    expression_result analyze_if(runtime::obj::list_ptr const &, frame<expression> &, context &);
+    expression_result analyze_quote(runtime::obj::list_ptr const &, frame<expression> &, context &);
+    expression_result analyze_primitive_literal(runtime::object_ptr const &, frame<expression> &, context &);
+    expression_result analyze_vector(runtime::obj::vector_ptr const &, frame<expression> &, context &);
+
+    using special_function_type = std::function<expression_result (runtime::obj::list_ptr const &, frame<expression> &, context &)>;
     std::unordered_map<runtime::obj::symbol_ptr, special_function_type> specials;
     runtime::context &rt_ctx;
     frame<expression> root_frame;
+    read::parse::processor::iterator parse_current, parse_end;
   };
 }

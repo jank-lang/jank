@@ -13,6 +13,7 @@ namespace jank::read::parse
     {
       using iterator_category = std::input_iterator_tag;
       using difference_type = std::ptrdiff_t;
+      /* TODO: none instead of nullptr. */
       using value_type = result<runtime::object_ptr, error>;
       using pointer = value_type*;
       using reference = value_type&;

@@ -13,11 +13,11 @@ namespace jank::runtime
     auto &t_state(get_thread_state());
     auto const core(intern_ns(obj::symbol::create("clojure.core")));
     auto const locked_core_vars(core->vars.wlock());
-    auto const ns_sym(obj::symbol::create("*ns*"));
+    auto const ns_sym(obj::symbol::create("clojure.core/*ns*"));
     auto const ns_res(locked_core_vars->insert({ns_sym, var::create(core, ns_sym, core)}));
     t_state.current_ns = ns_res.first->second;
 
-    auto const in_ns_sym(obj::symbol::create("in-ns"));
+    auto const in_ns_sym(obj::symbol::create("clojure.core/in-ns"));
     std::function<object_ptr (object_ptr const&)> in_ns_fn
     (
       [this](object_ptr const &sym)
@@ -38,7 +38,7 @@ namespace jank::runtime
     t_state.in_ns = in_ns_res.first->second;
 
     /* TODO: Remove this once it can be defined in jank. */
-    auto const println_sym(obj::symbol::create("println"));
+    auto const println_sym(obj::symbol::create("clojure.core/println"));
     std::function<object_ptr (object_ptr const&)> println_fn
     (
       [](object_ptr const &o)
@@ -50,7 +50,7 @@ namespace jank::runtime
     locked_core_vars->insert({println_sym, var::create(core, println_sym, obj::function::create(println_fn))});
 
     /* TODO: Remove this once it can be defined in jank. */
-    auto const plus_sym(obj::symbol::create("+"));
+    auto const plus_sym(obj::symbol::create("clojure.core/+"));
     locked_core_vars->insert({plus_sym, var::create(core, plus_sym, obj::function::create(&obj::_gen_plus_))});
   }
 
@@ -62,7 +62,7 @@ namespace jank::runtime
       {
         decltype(namespaces)::DataType::iterator found;
         auto const locked_namespaces(namespaces.rlock());
-        found = locked_namespaces.asNonConstUnsafe().find(runtime::obj::symbol::create(sym->ns));
+        found = locked_namespaces.asNonConstUnsafe().find(runtime::obj::symbol::create("", sym->ns));
         if(found == locked_namespaces->end())
         { return none; }
         ns = found->second;
@@ -71,7 +71,7 @@ namespace jank::runtime
       {
         decltype(ns->vars)::DataType::iterator found;
         auto const locked_vars(ns->vars.rlock());
-        found = locked_vars.asNonConstUnsafe().find(runtime::obj::symbol::create(sym->name));
+        found = locked_vars.asNonConstUnsafe().find(sym);
         if(found == locked_vars->end())
         { return none; }
 
@@ -80,8 +80,11 @@ namespace jank::runtime
     }
     else
     {
-      auto const locked_vars(get_thread_state().current_ns->get_root()->as_ns()->vars.rlock());
-      auto const found(locked_vars->find(sym));
+      auto const t_state(get_thread_state());
+      auto const current_ns(t_state.current_ns->get_root()->as_ns());
+      auto const locked_vars(current_ns->vars.rlock());
+      auto const qualified_sym(runtime::obj::symbol::create(current_ns->name->name, sym->name));
+      auto const found(locked_vars->find(qualified_sym));
       if(found == locked_vars->end())
       { return none; }
 
@@ -90,13 +93,13 @@ namespace jank::runtime
   }
   option<object_ptr> context::find_local(obj::symbol_ptr const &)
   {
-    return {};
+    return none;
   }
   option<object_ptr> context::find_val(obj::symbol_ptr const &sym)
   {
     auto const var(find_var(sym));
     if(var.is_some())
-    { return var.unwrap()->get_root(); }
+    { return some(var.unwrap()->get_root()); }
 
     /* TODO: Return val. */
     return find_local(sym);
@@ -107,12 +110,13 @@ namespace jank::runtime
     read::lex::processor l_prc{ s };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
     analyze::context anal_ctx{ *this };
-    analyze::processor anal_prc{ *this };
+    analyze::processor anal_prc{ *this, p_prc.begin(), p_prc.end() };
     evaluate::context eval_ctx{  *this };
 
     runtime::object_ptr result;
-    for(auto const &form : p_prc)
-    { result = eval_ctx.eval(anal_prc.analyze(form.expect_ok(), anal_ctx)); }
+    for(auto anal_result(anal_prc.begin(anal_ctx)); anal_result != anal_prc.end(anal_ctx); ++anal_result)
+    /* TODO: Codegen and JIT. */
+    { result = eval_ctx.eval(anal_result->expect_ok().unwrap()); }
     return result;
   }
 

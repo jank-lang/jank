@@ -21,13 +21,13 @@ namespace jank::analyze::expr
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
     runtime::context rt_ctx;
     context anal_ctx{ rt_ctx };
-    processor anal_prc{ rt_ctx };
+    processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-    auto const expr(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
+    auto const expr(anal_prc.next(anal_ctx).expect_ok().unwrap());
     auto const *def_expr(boost::get<def<expression>>(&expr.data));
     CHECK(def_expr != nullptr);
     CHECK(def_expr->name != nullptr);
-    CHECK(def_expr->name->equal(runtime::obj::symbol{ "foo" }));
+    CHECK(def_expr->name->equal(runtime::obj::symbol{ "clojure.core/foo" }));
     CHECK(boost::get<expr::primitive_literal<expression>>(&def_expr->value.data) != nullptr);
     CHECK(boost::get<expr::primitive_literal<expression>>(def_expr->value.data).data->equal(runtime::obj::integer{ 777 }));
 
@@ -46,31 +46,32 @@ namespace jank::analyze::expr
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
     runtime::context rt_ctx;
     context anal_ctx{ rt_ctx };
-    processor anal_prc{ rt_ctx };
+    processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-    CHECK_THROWS(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
+    CHECK(anal_prc.next(anal_ctx).is_err());
   }
 
   TEST_CASE("Arities")
   {
     runtime::context rt_ctx;
     context anal_ctx{ rt_ctx };
-    processor anal_prc{ rt_ctx };
 
     SUBCASE("Missing value")
     {
       read::lex::processor l_prc{ "(def foo)" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+      processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      CHECK_THROWS(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
+      CHECK(anal_prc.next(anal_ctx).is_err());
     }
 
     SUBCASE("Extra value")
     {
       read::lex::processor l_prc{ "(def foo 1 2)" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+      processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      CHECK_THROWS(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx));
+      CHECK(anal_prc.next(anal_ctx).is_err());
     }
   }
 }
