@@ -9,12 +9,14 @@ namespace jank::read::parse
 {
   struct processor
   {
+    /* TODO: none instead of nullptr. */
+    using object_result = result<runtime::object_ptr, error>;
+
     struct iterator
     {
       using iterator_category = std::input_iterator_tag;
       using difference_type = std::ptrdiff_t;
-      /* TODO: none instead of nullptr. */
-      using value_type = result<runtime::object_ptr, error>;
+      using value_type = object_result;
       using pointer = value_type*;
       using reference = value_type&;
 
@@ -32,15 +34,15 @@ namespace jank::read::parse
       : token_current{ b }, token_end{ e }
     { }
 
-    result<runtime::object_ptr, error> next();
-    result<runtime::object_ptr, error> parse_list();
-    result<runtime::object_ptr, error> parse_vector();
-    result<runtime::object_ptr, error> parse_map();
-    result<runtime::object_ptr, error> parse_quote();
-    result<runtime::object_ptr, error> parse_symbol();
-    result<runtime::object_ptr, error> parse_keyword();
-    result<runtime::object_ptr, error> parse_integer();
-    result<runtime::object_ptr, error> parse_string();
+    object_result next();
+    object_result parse_list();
+    object_result parse_vector();
+    object_result parse_map();
+    object_result parse_quote();
+    object_result parse_symbol();
+    object_result parse_keyword();
+    object_result parse_integer();
+    object_result parse_string();
 
     iterator begin();
     iterator end();

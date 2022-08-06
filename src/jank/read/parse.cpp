@@ -28,7 +28,7 @@ namespace jank::read::parse
   bool processor::iterator::operator ==(processor::iterator const &rhs) const
   { return latest == rhs.latest; }
 
-  result<runtime::object_ptr, error> processor::next()
+  processor::object_result processor::next()
   {
     /* TODO: Replace nullptr with none. */
     if(token_current == token_end)
@@ -70,7 +70,7 @@ namespace jank::read::parse
     }
   }
 
-  result<runtime::object_ptr, error> processor::parse_list()
+  processor::object_result processor::parse_list()
   {
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
@@ -91,7 +91,7 @@ namespace jank::read::parse
     return runtime::make_box<runtime::obj::list>(ret.rbegin(), ret.rend());
   }
 
-  result<runtime::object_ptr, error> processor::parse_vector()
+  processor::object_result processor::parse_vector()
   {
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
@@ -112,7 +112,7 @@ namespace jank::read::parse
     return runtime::make_box<runtime::obj::vector>(ret.persistent());
   }
 
-  result<runtime::object_ptr, error> processor::parse_map()
+  processor::object_result processor::parse_map()
   {
     ++token_current;
     auto const prev_expected_closer(expected_closer);
@@ -122,10 +122,10 @@ namespace jank::read::parse
 
 
     expected_closer = prev_expected_closer;
-    throw "unimplemented";
+    return err(error{ "unimplemented: maps" });
   }
 
-  result<runtime::object_ptr, error> processor::parse_quote()
+  processor::object_result processor::parse_quote()
   {
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
@@ -142,7 +142,7 @@ namespace jank::read::parse
     );
   }
 
-  result<runtime::object_ptr, error> processor::parse_symbol()
+  processor::object_result processor::parse_symbol()
   {
     auto token((*token_current).expect_ok());
     ++token_current;
@@ -159,20 +159,20 @@ namespace jank::read::parse
     return ok(runtime::make_box<runtime::obj::symbol>(ns, name));
   }
 
-  result<runtime::object_ptr, error> processor::parse_keyword()
+  processor::object_result processor::parse_keyword()
   {
     /* TODO */
-    throw "unimplemented";
+    return err(error{ "unimplemented: keywords" });
   }
 
-  result<runtime::object_ptr, error> processor::parse_integer()
+  processor::object_result processor::parse_integer()
   {
     auto const token(token_current->expect_ok());
     ++token_current;
     return ok(runtime::make_box<runtime::obj::integer>(std::get<runtime::detail::integer_type>(token.data)));
   }
 
-  result<runtime::object_ptr, error> processor::parse_string()
+  processor::object_result processor::parse_string()
   {
     auto const token(token_current->expect_ok());
     ++token_current;
