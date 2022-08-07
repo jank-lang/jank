@@ -36,13 +36,12 @@ int main(int const argc, char const **argv)
   jank::analyze::processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
   for(auto anal_result(anal_prc.begin(anal_ctx)); anal_result != anal_prc.end(anal_ctx); ++anal_result)
   {
+    /* TODO: Give codegen anal iters. */
     jank::codegen::context cg_ctx{ rt_ctx, anal_ctx };
     std::cout << cg_ctx.header_str() << std::endl;
     std::cout << cg_ctx.body_str() << std::endl;
     std::cout << cg_ctx.footer_str() << std::endl;
   }
-
-  //std::cout << eval_ctx.eval(anal_prc.analyze(p_prc.begin()->expect_ok(), anal_ctx))->to_string() << std::endl;
 
   //auto const cling_args(std::experimental::make_array(argv[0], "-std=c++17"));
   //cling::Interpreter jit(cling_args.size(), cling_args.data(), LLVM_PATH);
