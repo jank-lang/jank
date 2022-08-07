@@ -20,10 +20,10 @@ namespace jank::analyze::expr
     read::lex::processor l_prc{ "(def foo 777)" };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
     runtime::context rt_ctx;
-    context anal_ctx{ rt_ctx };
-    processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
+    context an_ctx{ rt_ctx };
+    processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-    auto const expr(anal_prc.next(anal_ctx).expect_ok().unwrap());
+    auto const expr(an_prc.next(an_ctx).expect_ok().unwrap());
     auto const *def_expr(boost::get<def<expression>>(&expr.data));
     CHECK(def_expr != nullptr);
     CHECK(def_expr->name != nullptr);
@@ -33,10 +33,10 @@ namespace jank::analyze::expr
 
     SUBCASE("Lifting")
     {
-      CHECK_EQ(anal_ctx.lifted_vars.size(), 1);
-      CHECK_NE(anal_ctx.lifted_vars.find(runtime::obj::symbol::create("clojure.core/foo")), anal_ctx.lifted_vars.end());
-      CHECK_EQ(anal_ctx.lifted_constants.size(), 1);
-      CHECK_NE(anal_ctx.lifted_constants.find(runtime::obj::integer::create(777)), anal_ctx.lifted_constants.end());
+      CHECK_EQ(an_ctx.lifted_vars.size(), 1);
+      CHECK_NE(an_ctx.lifted_vars.find(runtime::obj::symbol::create("clojure.core/foo")), an_ctx.lifted_vars.end());
+      CHECK_EQ(an_ctx.lifted_constants.size(), 1);
+      CHECK_NE(an_ctx.lifted_constants.find(runtime::obj::integer::create(777)), an_ctx.lifted_constants.end());
     }
   }
 
@@ -45,33 +45,33 @@ namespace jank::analyze::expr
     read::lex::processor l_prc{ "(def bar/foo 777)" };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
     runtime::context rt_ctx;
-    context anal_ctx{ rt_ctx };
-    processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
+    context an_ctx{ rt_ctx };
+    processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-    CHECK(anal_prc.next(anal_ctx).is_err());
+    CHECK(an_prc.next(an_ctx).is_err());
   }
 
   TEST_CASE("Arities")
   {
     runtime::context rt_ctx;
-    context anal_ctx{ rt_ctx };
+    context an_ctx{ rt_ctx };
 
     SUBCASE("Missing value")
     {
       read::lex::processor l_prc{ "(def foo)" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-      processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
+      processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      CHECK(anal_prc.next(anal_ctx).is_err());
+      CHECK(an_prc.next(an_ctx).is_err());
     }
 
     SUBCASE("Extra value")
     {
       read::lex::processor l_prc{ "(def foo 1 2)" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-      processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
+      processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      CHECK(anal_prc.next(anal_ctx).is_err());
+      CHECK(an_prc.next(an_ctx).is_err());
     }
   }
 }

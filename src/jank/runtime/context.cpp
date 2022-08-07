@@ -109,14 +109,14 @@ namespace jank::runtime
   {
     read::lex::processor l_prc{ s };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-    analyze::context anal_ctx{ *this };
-    analyze::processor anal_prc{ *this, p_prc.begin(), p_prc.end() };
+    analyze::context an_ctx{ *this };
+    analyze::processor an_prc{ *this, p_prc.begin(), p_prc.end() };
     evaluate::context eval_ctx{  *this };
 
     runtime::object_ptr result;
-    for(auto anal_result(anal_prc.begin(anal_ctx)); anal_result != anal_prc.end(anal_ctx); ++anal_result)
+    for(auto an_result(an_prc.begin(an_ctx)); an_result != an_prc.end(an_ctx); ++an_result)
     /* TODO: Codegen and JIT. */
-    { result = eval_ctx.eval(anal_result->expect_ok().unwrap()); }
+    { result = eval_ctx.eval(an_result->expect_ok().unwrap()); }
     return result;
   }
 

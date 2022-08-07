@@ -27,17 +27,17 @@ int main(int const argc, char const **argv)
   char const *file{ argv[1] };
 
   jank::runtime::context rt_ctx;
-  jank::analyze::context anal_ctx{ rt_ctx };
+  jank::analyze::context an_ctx{ rt_ctx };
   jank::evaluate::context eval_ctx{ rt_ctx };
 
   auto const mfile(jank::util::map_file(file));
   jank::read::lex::processor l_prc{ { mfile.expect_ok().head, mfile.expect_ok().size } };
   jank::read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-  jank::analyze::processor anal_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
-  for(auto anal_result(anal_prc.begin(anal_ctx)); anal_result != anal_prc.end(anal_ctx); ++anal_result)
+  jank::analyze::processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
+  for(auto an_result(an_prc.begin(an_ctx)); an_result != an_prc.end(an_ctx); ++an_result)
   {
-    /* TODO: Give codegen anal iters. */
-    jank::codegen::context cg_ctx{ rt_ctx, anal_ctx };
+    /* TODO: Give codegen analysis iters. */
+    jank::codegen::context cg_ctx{ rt_ctx, an_ctx };
     std::cout << cg_ctx.header_str() << std::endl;
     std::cout << cg_ctx.body_str() << std::endl;
     std::cout << cg_ctx.footer_str() << std::endl;

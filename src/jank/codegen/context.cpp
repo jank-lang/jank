@@ -25,8 +25,8 @@ namespace jank::codegen
     }
   }
 
-  context::context(runtime::context &rt_ctx, analyze::context &anal_ctx)
-    : rt_ctx{ rt_ctx }, anal_ctx{ anal_ctx }
+  context::context(runtime::context &rt_ctx, analyze::context &an_ctx)
+    : rt_ctx{ rt_ctx }, an_ctx{ an_ctx }
   { }
 
   void context::gen(analyze::expression const &ex, std::ostream &oss)
@@ -42,7 +42,7 @@ namespace jank::codegen
   void context::gen(analyze::expr::def<analyze::expression> const &expr, std::ostream &oss)
   {
     //std::cout << "gen def" << std::endl;
-    auto const &var(anal_ctx.find_lifted_var(expr.name).unwrap().get());
+    auto const &var(an_ctx.find_lifted_var(expr.name).unwrap().get());
     oss << var.local_name.name << "->set_root(";
     gen(expr.value, oss);
     oss << ");";
@@ -51,7 +51,7 @@ namespace jank::codegen
   void context::gen(analyze::expr::var_deref<analyze::expression> const &expr, std::ostream &oss)
   {
     //std::cout << "gen var deref" << std::endl;
-    auto const &var(anal_ctx.find_lifted_var(expr.var->name).unwrap().get());
+    auto const &var(an_ctx.find_lifted_var(expr.var->name).unwrap().get());
     oss << var.local_name.name;
   }
 
@@ -63,7 +63,7 @@ namespace jank::codegen
   void context::gen(analyze::expr::primitive_literal<analyze::expression> const &expr, std::ostream &oss)
   {
     //std::cout << "gen literal" << std::endl;
-    auto const &constant(anal_ctx.find_lifted_constant(expr.data).unwrap().get());
+    auto const &constant(an_ctx.find_lifted_constant(expr.data).unwrap().get());
     oss << constant.local_name.name;
   }
 
@@ -81,23 +81,23 @@ namespace jank::codegen
 
   std::string context::header_str() const
   {
-    auto const struct_name(anal_ctx.unique_name());
+    auto const struct_name(an_ctx.unique_name());
     std::ostringstream oss;
     oss << "namespace jank::generated { struct " << struct_name.name << "{";
 
-    for(auto const &v : anal_ctx.lifted_vars)
+    for(auto const &v : an_ctx.lifted_vars)
     { oss << "jank::runtime::var_ptr const " << v.second.local_name.name << ";"; }
 
-    for(auto const &v : anal_ctx.lifted_constants)
+    for(auto const &v : an_ctx.lifted_constants)
     { oss << "jank::runtime::object_ptr const " << v.second.local_name.name << ";"; }
 
     /* TODO: Prevent name collision with rt_ctx. */
     oss << struct_name.name << "(jank::runtime::context &rt_ctx)";
-    if(anal_ctx.lifted_vars.size() > 0 || anal_ctx.lifted_constants.size() > 0)
+    if(an_ctx.lifted_vars.size() > 0 || an_ctx.lifted_constants.size() > 0)
     { oss << " : "; }
 
     bool need_comma{};
-    for(auto const &v : anal_ctx.lifted_vars)
+    for(auto const &v : an_ctx.lifted_vars)
     {
       oss << (need_comma ? "," : "") << v.second.local_name.name
            << "{ rt_ctx.intern_var("
@@ -107,7 +107,7 @@ namespace jank::codegen
       need_comma = true;
     }
 
-    for(auto const &v : anal_ctx.lifted_constants)
+    for(auto const &v : an_ctx.lifted_constants)
     {
       oss << (need_comma ? "," : "") << v.second.local_name.name << "{ ";
       detail::gen_constant(v.second.data, oss);

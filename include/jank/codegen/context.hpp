@@ -14,7 +14,7 @@ namespace jank::codegen
   struct context
   {
     context() = delete;
-    context(runtime::context &rt_ctx, analyze::context &anal_ctx);
+    context(runtime::context &rt_ctx, analyze::context &an_ctx);
     context(context const &) = delete;
     context(context &&) = default;
 
@@ -33,6 +33,6 @@ namespace jank::codegen
     std::string footer_str() const;
 
     runtime::context &rt_ctx;
-    analyze::context &anal_ctx;
+    analyze::context &an_ctx;
   };
 }
