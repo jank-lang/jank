@@ -12,30 +12,30 @@ namespace jank::runtime::obj
     symbol() = default;
     symbol(symbol &&) = default;
     symbol(symbol const &) = default;
-    symbol(detail::string_type const &d);
-    symbol(detail::string_type &&d);
-    symbol(detail::string_type const &ns, detail::string_type const &n)
+    symbol(runtime::detail::string_type const &d);
+    symbol(runtime::detail::string_type &&d);
+    symbol(runtime::detail::string_type const &ns, runtime::detail::string_type const &n)
       : ns{ ns }, name{ n }
     { }
-    symbol(detail::string_type &&ns, detail::string_type &&n)
+    symbol(runtime::detail::string_type &&ns, runtime::detail::string_type &&n)
       : ns{ std::move(ns) }, name{ std::move(n) }
     { }
 
-    static detail::box_type<symbol> create(detail::string_type const &n);
-    static detail::box_type<symbol> create(detail::string_type const &ns, detail::string_type const &name);
+    static runtime::detail::box_type<symbol> create(runtime::detail::string_type const &n);
+    static runtime::detail::box_type<symbol> create(runtime::detail::string_type const &ns, runtime::detail::string_type const &name);
 
-    detail::boolean_type equal(object const &) const override;
-    detail::string_type to_string() const override;
-    detail::integer_type to_hash() const override;
+    runtime::detail::boolean_type equal(object const &) const override;
+    runtime::detail::string_type to_string() const override;
+    runtime::detail::integer_type to_hash() const override;
 
     symbol const* as_symbol() const override;
 
     bool operator ==(symbol const &rhs) const;
 
-    detail::string_type ns;
-    detail::string_type name;
+    runtime::detail::string_type ns;
+    runtime::detail::string_type name;
   };
-  using symbol_ptr = detail::box_type<obj::symbol>;
+  using symbol_ptr = runtime::detail::box_type<obj::symbol>;
 }
 
 namespace std

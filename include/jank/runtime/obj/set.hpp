@@ -10,22 +10,22 @@ namespace jank::runtime::obj
     set() = default;
     set(set &&) = default;
     set(set const &) = default;
-    set(detail::set_type &&d)
+    set(runtime::detail::set_type &&d)
       : data{ std::move(d) }
     { }
-    set(detail::set_type const &d)
+    set(runtime::detail::set_type const &d)
       : data{ d }
     { }
 
-    detail::boolean_type equal(object const &) const override;
-    detail::string_type to_string() const override;
-    detail::integer_type to_hash() const override;
+    runtime::detail::boolean_type equal(object const &) const override;
+    runtime::detail::string_type to_string() const override;
+    runtime::detail::integer_type to_hash() const override;
 
     set const* as_set() const override;
     behavior::seqable const* as_seqable() const override;
 
     behavior::sequence_pointer seq() const override;
 
-    detail::set_type data;
+    runtime::detail::set_type data;
   };
 }

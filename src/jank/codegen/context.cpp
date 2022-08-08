@@ -13,13 +13,13 @@ namespace jank::codegen
       if(o->as_nil())
       { oss << "jank::runtime::JANK_NIL"; }
       else if(auto d = o->as_boolean())
-      { oss << "jank::runtime::make_box<jank::runtime::boolean>(" << d->data << ")"; }
+      { oss << "jank::runtime::make_box<jank::runtime::obj::boolean>(" << d->data << ")"; }
       else if(auto d = o->as_integer())
-      { oss << "jank::runtime::make_box<jank::runtime::integer>(" << d->data << ")"; }
+      { oss << "jank::runtime::make_box<jank::runtime::obj::integer>(" << d->data << ")"; }
       else if(auto d = o->as_real())
-      { oss << "jank::runtime::make_box<jank::runtime::real>(" << d->data << ")"; }
+      { oss << "jank::runtime::make_box<jank::runtime::obj::real>(" << d->data << ")"; }
       else if(auto d = o->as_symbol())
-      { oss << "jank::runtime::make_box<jank::runtime::symbol>(\"" << d->ns << "\", \"" << d->name << "\")"; }
+      { oss << "jank::runtime::make_box<jank::runtime::obj::symbol>(\"" << d->ns << "\", \"" << d->name << "\")"; }
       else
       { std::cerr << "unimplemented constant codegen: " << *o << std::endl; }
     }
@@ -90,10 +90,18 @@ namespace jank::codegen
   {
   }
 
-  std::string context::header_str() const
+  std::string context::str() const
+  {
+    std::ostringstream oss;
+    header_str(oss);
+    body_str(oss);
+    footer_str(oss);
+    return oss.str();
+  }
+
+  void context::header_str(std::ostream &oss) const
   {
     auto const struct_name(an_ctx.unique_name());
-    std::ostringstream oss;
     oss << "namespace jank::generated { struct " << struct_name.name << "{";
 
     for(auto const &v : an_ctx.lifted_vars)
@@ -114,7 +122,7 @@ namespace jank::codegen
            << "{ rt_ctx.intern_var("
            << "\"" << v.second.var_name->ns << "\""
            << ", \"" << v.second.var_name->name << "\""
-           << ") }";
+           << ").expect_ok() }";
       need_comma = true;
     }
 
@@ -127,21 +135,15 @@ namespace jank::codegen
     }
 
     oss << "{";
-    return oss.str();
   }
 
-  std::string context::body_str() const
+  void context::body_str(std::ostream &oss) const
   {
-    std::ostringstream oss;
+    /* TODO: Put into fn with return type and return value of last expression. */
     for(auto const &expr : expressions)
     { gen(expr, oss); }
-    return oss.str();
   }
 
-  std::string context::footer_str() const
-  {
-    std::ostringstream oss;
-    oss << "}};}";
-    return oss.str();
-  }
+  void context::footer_str(std::ostream &oss) const
+  { oss << "}};}"; }
 }

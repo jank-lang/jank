@@ -37,9 +37,10 @@ namespace jank::codegen
     void gen(analyze::expr::function<analyze::expression> const &, std::ostream &os) const;
 
     /* TODO: C++20: Return std::string_view. */
-    std::string header_str() const;
-    std::string body_str() const;
-    std::string footer_str() const;
+    std::string str() const;
+    void header_str(std::ostream &) const;
+    void body_str(std::ostream &) const;
+    void footer_str(std::ostream &) const;
 
     runtime::context &rt_ctx;
     analyze::context &an_ctx;

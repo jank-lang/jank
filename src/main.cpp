@@ -35,18 +35,22 @@ int main(int const argc, char const **argv)
   jank::read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
   jank::analyze::processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
   jank::codegen::context cg_ctx{ rt_ctx, an_ctx, an_prc.begin(an_ctx), an_prc.end(an_ctx), an_prc.total_forms };
-  std::cout << cg_ctx.header_str() << std::endl;
-  std::cout << cg_ctx.body_str() << std::endl;
-  std::cout << cg_ctx.footer_str() << std::endl;
+  std::cout << cg_ctx.str() << std::endl;
 
-  //auto const cling_args(std::experimental::make_array(argv[0], "-std=c++17"));
-  //cling::Interpreter jit(cling_args.size(), cling_args.data(), LLVM_PATH);
-  //jit.AddIncludePath("/home/jeaye/projects/jank/lib/immer");
-  //jit.AddIncludePath("/home/jeaye/projects/jank/lib/magic_enum/include");
-  //jit.AddIncludePath("/home/jeaye/projects/jank/include");
-  //jit.process("#include <iostream>");
-  //jit.process("#include \"jank/runtime/object.hpp\"");
-  //jit.process("#include \"jank/runtime/obj/string.hpp\"");
-  //jit.process("std::cout << jank::runtime::obj::string(\"meow\").to_string() << std::endl;");
-  //jit.process("std::cout << jank::runtime::make_box<jank::runtime::obj::string>(\"meow\")->to_string() << std::endl;");
+  auto const cling_args(std::experimental::make_array(argv[0], "-std=c++17"));
+  cling::Interpreter jit(cling_args.size(), cling_args.data(), LLVM_PATH);
+  jit.AddIncludePath("/home/jeaye/projects/jank/lib/immer");
+  jit.AddIncludePath("/home/jeaye/projects/jank/lib/magic_enum/include");
+  jit.AddIncludePath("/home/jeaye/projects/jank/include");
+  jit.process("#include \"jank/runtime/obj/number.hpp\"");
+  jit.process("#include \"jank/runtime/obj/function.hpp\"");
+  jit.process("#include \"jank/runtime/obj/map.hpp\"");
+  jit.process("#include \"jank/runtime/obj/list.hpp\"");
+  jit.process("#include \"jank/runtime/obj/vector.hpp\"");
+  jit.process("#include \"jank/runtime/obj/set.hpp\"");
+  jit.process("#include \"jank/runtime/obj/string.hpp\"");
+  jit.process("#include \"jank/runtime/ns.hpp\"");
+  jit.process("#include \"jank/runtime/var.hpp\"");
+  jit.process("#include \"jank/runtime/context.hpp\"");
+  jit.process(cg_ctx.str());
 }
