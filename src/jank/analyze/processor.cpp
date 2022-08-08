@@ -124,6 +124,7 @@ namespace jank::analyze
     if(form == nullptr)
     { return ok(none); }
     ++parse_current;
+    ++total_forms;
 
     return analyze(form, ctx);
   }

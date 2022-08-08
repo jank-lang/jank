@@ -34,14 +34,10 @@ int main(int const argc, char const **argv)
   jank::read::lex::processor l_prc{ { mfile.expect_ok().head, mfile.expect_ok().size } };
   jank::read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
   jank::analyze::processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
-  for(auto an_result(an_prc.begin(an_ctx)); an_result != an_prc.end(an_ctx); ++an_result)
-  {
-    /* TODO: Give codegen analysis iters. */
-    jank::codegen::context cg_ctx{ rt_ctx, an_ctx };
-    std::cout << cg_ctx.header_str() << std::endl;
-    std::cout << cg_ctx.body_str() << std::endl;
-    std::cout << cg_ctx.footer_str() << std::endl;
-  }
+  jank::codegen::context cg_ctx{ rt_ctx, an_ctx, an_prc.begin(an_ctx), an_prc.end(an_ctx), an_prc.total_forms };
+  std::cout << cg_ctx.header_str() << std::endl;
+  std::cout << cg_ctx.body_str() << std::endl;
+  std::cout << cg_ctx.footer_str() << std::endl;
 
   //auto const cling_args(std::experimental::make_array(argv[0], "-std=c++17"));
   //cling::Interpreter jit(cling_args.size(), cling_args.data(), LLVM_PATH);

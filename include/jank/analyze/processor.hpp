@@ -97,5 +97,6 @@ namespace jank::analyze
     runtime::context &rt_ctx;
     frame<expression> root_frame;
     read::parse::processor::iterator parse_current, parse_end;
+    size_t total_forms{};
   };
 }

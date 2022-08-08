@@ -25,11 +25,22 @@ namespace jank::codegen
     }
   }
 
-  context::context(runtime::context &rt_ctx, analyze::context &an_ctx)
+  context::context
+  (
+    runtime::context &rt_ctx,
+    analyze::context &an_ctx,
+    analyze::processor::iterator const an_begin,
+    analyze::processor::iterator const an_end,
+    size_t const total_forms
+  )
     : rt_ctx{ rt_ctx }, an_ctx{ an_ctx }
-  { }
+  {
+    expressions.reserve(total_forms);
+    for(auto it(an_begin); it != an_end; ++it)
+    { expressions.emplace_back(std::move(it->expect_ok_move().unwrap())); }
+  }
 
-  void context::gen(analyze::expression const &ex, std::ostream &oss)
+  void context::gen(analyze::expression const &ex, std::ostream &oss) const
   {
     boost::apply_visitor
     (
@@ -39,7 +50,7 @@ namespace jank::codegen
     );
   }
 
-  void context::gen(analyze::expr::def<analyze::expression> const &expr, std::ostream &oss)
+  void context::gen(analyze::expr::def<analyze::expression> const &expr, std::ostream &oss) const
   {
     //std::cout << "gen def" << std::endl;
     auto const &var(an_ctx.find_lifted_var(expr.name).unwrap().get());
@@ -48,34 +59,34 @@ namespace jank::codegen
     oss << ");";
   }
 
-  void context::gen(analyze::expr::var_deref<analyze::expression> const &expr, std::ostream &oss)
+  void context::gen(analyze::expr::var_deref<analyze::expression> const &expr, std::ostream &oss) const
   {
     //std::cout << "gen var deref" << std::endl;
     auto const &var(an_ctx.find_lifted_var(expr.var->name).unwrap().get());
     oss << var.local_name.name;
   }
 
-  void context::gen(analyze::expr::call<analyze::expression> const &, std::ostream &)
+  void context::gen(analyze::expr::call<analyze::expression> const &, std::ostream &) const
   {
     //std::cout << "gen call" << std::endl;
   }
 
-  void context::gen(analyze::expr::primitive_literal<analyze::expression> const &expr, std::ostream &oss)
+  void context::gen(analyze::expr::primitive_literal<analyze::expression> const &expr, std::ostream &oss) const
   {
     //std::cout << "gen literal" << std::endl;
     auto const &constant(an_ctx.find_lifted_constant(expr.data).unwrap().get());
     oss << constant.local_name.name;
   }
 
-  void context::gen(analyze::expr::vector<analyze::expression> const &, std::ostream &)
+  void context::gen(analyze::expr::vector<analyze::expression> const &, std::ostream &) const
   {
   }
 
-  void context::gen(analyze::expr::local_reference<analyze::expression> const &, std::ostream &)
+  void context::gen(analyze::expr::local_reference<analyze::expression> const &, std::ostream &) const
   {
   }
 
-  void context::gen(analyze::expr::function<analyze::expression> const &, std::ostream &)
+  void context::gen(analyze::expr::function<analyze::expression> const &, std::ostream &) const
   {
   }
 
@@ -122,7 +133,8 @@ namespace jank::codegen
   std::string context::body_str() const
   {
     std::ostringstream oss;
-    // TODO: gen
+    for(auto const &expr : expressions)
+    { gen(expr, oss); }
     return oss.str();
   }
 
