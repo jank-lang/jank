@@ -1,8 +1,9 @@
 #pragma once
 
-#include <variant>
 #include <ostream>
 #include <cstdlib> // std::abort
+
+#include <boost/variant.hpp>
 
 #include <jank/option.hpp>
 
@@ -57,36 +58,36 @@ namespace jank
     {}
 
     bool is_ok() const
-    { return data.index() == 0; }
+    { return data.which() == 0; }
     bool is_err() const
-    { return data.index() == 1; }
+    { return data.which() == 1; }
 
     R const& expect_ok() const
-    { return std::get<0>(data); }
+    { return boost::get<R>(data); }
     R* expect_ok_ptr()
-    { return &std::get<0>(data); }
+    { return &boost::get<R>(data); }
     R const* expect_ok_ptr() const
-    { return &std::get<0>(data); }
+    { return &boost::get<R>(data); }
     R expect_ok_move()
-    { return std::move(std::get<0>(data)); }
+    { return std::move(boost::get<R>(data)); }
     option<R> ok()
     {
       if(is_ok())
-      { return some(std::get<0>(data)); }
+      { return some(boost::get<R>(data)); }
       return none;
     }
     E const& expect_err() const
-    { return std::get<1>(data); }
+    { return boost::get<E>(data); }
     E* expect_err_ptr()
-    { return &std::get<1>(data); }
+    { return &boost::get<E>(data); }
     E const* expect_err_ptr() const
-    { return &std::get<1>(data); }
+    { return &boost::get<E>(data); }
     E expect_err_move()
-    { return std::move(std::get<1>(data)); }
+    { return std::move(boost::get<E>(data)); }
     option<E> err()
     {
       if(is_err())
-      { return some(std::get<1>(data)); }
+      { return some(boost::get<E>(data)); }
       return none;
     }
 
@@ -96,7 +97,7 @@ namespace jank
       if(!is_ok())
       /* TODO: Panic function. */
       { std::abort(); }
-      return std::move(std::get<0>(data));
+      return std::move(boost::get<R>(data));
     }
 
     bool operator ==(result const &rhs) const
@@ -104,18 +105,18 @@ namespace jank
     bool operator !=(result const &rhs) const
     { return rhs.data != data; }
     bool operator ==(R const &rhs) const
-    { return data.index() == 0 && rhs == std::get<0>(data); }
+    { return data.which() == 0 && rhs == boost::get<R>(data); }
     bool operator ==(E const &rhs) const
-    { return data.index() == 1 && rhs == std::get<1>(data); }
+    { return data.which() == 1 && rhs == boost::get<E>(data); }
 
-    std::variant<R, E> data;
+    boost::variant<R, E> data;
   };
 
   template <typename R, typename E>
   std::ostream& operator <<(std::ostream &os, result<R, E> const &r)
   {
     if(r.is_ok())
-    { return os << "ok(" << std::get<0>(r.data) << ")"; }
-    return os << "err(" << std::get<1>(r.data) << ")";
+    { return os << "ok(" << boost::get<R>(r.data) << ")"; }
+    return os << "err(" << boost::get<E>(r.data) << ")";
   }
 }
