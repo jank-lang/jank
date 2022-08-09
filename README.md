@@ -7,6 +7,9 @@ transition from one to the other is not only seamless, it can be gradual.
 https://jank-lang.org
 
 ## Building locally
+**NOTE:** jank is not very buildable right now. It's also not very usable right
+now. See this issue for details: https://github.com/jeaye/jank/issues/7
+
 Use [Nix](https://nixos.org/manual/nix/stable/). After cloning, use `nix-shell`
 to enter an environment with all necessary deps. The Nix shell will also set up
 some bash functions for you.
