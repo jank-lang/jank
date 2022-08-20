@@ -127,6 +127,9 @@ Interop with C and C++ will require the following abilities:
 9. Convert native values to jank objects (numbers, strings, arrays, etc)
 10. Create native objects (numbers, strings, arrays, etc)
 
+The priority for interop is the ability to call into existing C and C++
+libraries. Exposing all of C++ is not a goal.
+
 ## Type system
 In terms of capability set, these are the categories I want to hit:
 
