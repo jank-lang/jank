@@ -128,17 +128,33 @@ Interop with C and C++ will require the following abilities:
 10. Create native objects (numbers, strings, arrays, etc)
 
 ## Type system
+In terms of capability set, these are the categories I want to hit:
+
 1. Gradual typing
 2. Structural typing
 3. Dependent typing
 4. HM-style inference
 
+In terms of API and usage, there are these:
+
+1. Malli-style syntax
+2. jank-provided API for transforming types in macros
+
 ## LLVM-based JIT
-JIT support can be broken down into the following steps:
+JIT compilation support can be broken down into the following steps:
 
-1. Codegen to C++
+1. Codegen to C++ (requires a fair amount of semantic analysis)
 2. JIT compilation and evaluation
-3. Cache generated source (or LLVM IR?) when loading whole files
+3. Cache generated source (or LLVM IR?) when loading whole files (i.e. `.class` files)
 
-## Memory
-https://github.com/carp-lang/Carp/blob/master/docs/Memory.md
+## Memory management
+Currently, jank is using `boost::intrusive_ptr` for reference counting runtime
+objects. This will not detect cycles, so it will lead to memory leaks. jank's
+requirements will require determinism, but there are still a few options here.
+
+1. Reference counting (with cyclical detection and weak refs where needed)
+2. Lifetime tracking
+  * https://github.com/carp-lang/Carp/blob/master/docs/Memory.md
+
+Note that whatever is chosen needs to work with interop as well, so it needs to
+be flexible enough to hand over ownership to native land or acquire it.
