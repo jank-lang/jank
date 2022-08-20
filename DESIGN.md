@@ -77,13 +77,13 @@ forward type checking can still pick that up.
 (+ a a) ; Type error
 ```
 
-### Tracking defs
+### Evaluating while analyzing
 Clojure, being as dynamic as it is, can evaluate each form one after the next.
 As long as all symbols are in scope and semantically capable to be used in that
 form, all is well. This rules out things like whole programs analysis, though,
 since analyzing the program would require running the whole thing.
 
-Def can show up in a few different ways:
+Def, for example, can show up in a few different ways:
 
 1. Top-level
 ```clojure
