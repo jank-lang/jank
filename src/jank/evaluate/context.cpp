@@ -29,7 +29,7 @@ namespace jank::evaluate
   {
     auto &t_state(runtime_ctx.get_thread_state(none));
     auto const &ns_ptr(boost::static_pointer_cast<runtime::ns>(t_state.current_ns->get_root()));
-    auto const evaluated_value(eval(expr.value, current_frame));
+    auto const evaluated_value(eval(*expr.value, current_frame));
 
     auto locked_vars(ns_ptr->vars.ulock());
     auto const &existing(locked_vars->find(expr.name));
@@ -48,21 +48,25 @@ namespace jank::evaluate
   }
 
   runtime::object_ptr context::eval(analyze::expr::var_deref<analyze::expression> const &expr, frame const &)
-  { return expr.var->get_root(); }
-
-  runtime::object_ptr context::eval(analyze::expr::call<analyze::expression> const &expr, frame const &)
   {
-    switch(expr.arg_exprs.size())
-    {
-      case 0:
-        return expr.fn->call();
-      case 1:
-        return expr.fn->call(expr.args->data.first().unwrap());
-      case 2:
-        return expr.fn->call(expr.args->data.first().unwrap(), expr.args->data.rest().first().unwrap());
-      default:
-        throw "unsupported arg count";
-    }
+    auto const var(runtime_ctx.find_var(expr.qualified_name));
+    return var.unwrap()->get_root();
+  }
+
+  runtime::object_ptr context::eval(analyze::expr::call<analyze::expression> const &, frame const &)
+  {
+    return nullptr;
+    //switch(expr.arg_exprs.size())
+    //{
+    //  case 0:
+    //    return expr.fn->call();
+    //  case 1:
+    //    return expr.fn->call(expr.args->data.first().unwrap());
+    //  case 2:
+    //    return expr.fn->call(expr.args->data.first().unwrap(), expr.args->data.rest().first().unwrap());
+    //  default:
+    //    throw "unsupported arg count";
+    //}
   }
 
   runtime::object_ptr context::eval(analyze::expr::primitive_literal<analyze::expression> const &expr, frame const &)

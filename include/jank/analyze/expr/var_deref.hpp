@@ -7,6 +7,6 @@ namespace jank::analyze::expr
   template <typename E>
   struct var_deref
   {
-    runtime::var_ptr var;
+    runtime::obj::symbol_ptr qualified_name;
   };
 }

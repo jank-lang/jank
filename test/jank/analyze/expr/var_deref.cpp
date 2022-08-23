@@ -28,7 +28,7 @@ namespace jank::analyze::expr
 
     SUBCASE("Present")
     {
-      rt_ctx.eval_string("(def foo 1)");
+      rt_ctx.eval_string("(def foo 1)", an_ctx);
 
       read::lex::processor l_prc{ "foo" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
@@ -37,8 +37,8 @@ namespace jank::analyze::expr
       auto const expr(an_prc.next(an_ctx).expect_ok().unwrap());
       auto const *var_deref_expr(boost::get<var_deref<expression>>(&expr.data));
       CHECK(var_deref_expr != nullptr);
-      CHECK(var_deref_expr->var != nullptr);
-      CHECK(var_deref_expr->var->name->name == "foo");
+      CHECK(var_deref_expr->qualified_name != nullptr);
+      CHECK(*var_deref_expr->qualified_name == runtime::obj::symbol{ "clojure.core/foo" });
     }
   }
 
@@ -58,7 +58,7 @@ namespace jank::analyze::expr
 
     SUBCASE("Present")
     {
-      rt_ctx.eval_string("(def foo 1)");
+      rt_ctx.eval_string("(def foo 1)", an_ctx);
 
       read::lex::processor l_prc{ "clojure.core/foo" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
@@ -67,8 +67,8 @@ namespace jank::analyze::expr
       auto const expr(an_prc.next(an_ctx).expect_ok().unwrap());
       auto const *var_deref_expr(boost::get<var_deref<expression>>(&expr.data));
       CHECK(var_deref_expr != nullptr);
-      CHECK(var_deref_expr->var != nullptr);
-      CHECK(var_deref_expr->var->name->name == "foo");
+      CHECK(var_deref_expr->qualified_name != nullptr);
+      CHECK(*var_deref_expr->qualified_name == runtime::obj::symbol{ "clojure.core/foo" });
     }
   }
 }

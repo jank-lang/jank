@@ -10,6 +10,9 @@
 #include <jank/runtime/var.hpp>
 #include <jank/evaluate/context.hpp>
 
+namespace jank::analyze
+{ struct context; }
+
 namespace jank::runtime
 {
   struct context
@@ -27,10 +30,11 @@ namespace jank::runtime
     option<object_ptr> find_local(obj::symbol_ptr const &);
     option<object_ptr> find_val(obj::symbol_ptr const &);
 
-    object_ptr eval_string(std::string_view const &);
+    object_ptr eval_string(std::string_view const &, analyze::context &);
 
     folly::Synchronized<std::unordered_map<obj::symbol_ptr, detail::box_type<ns>>> namespaces;
 
+    /* TODO: This can be forward declared and moved to the cpp. */
     struct thread_state
     {
       thread_state(thread_state const&) = default;

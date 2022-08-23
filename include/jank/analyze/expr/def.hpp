@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <jank/runtime/obj/symbol.hpp>
 
 namespace jank::analyze::expr
@@ -8,7 +10,7 @@ namespace jank::analyze::expr
   struct def
   {
     runtime::obj::symbol_ptr name;
-    E value;
+    std::shared_ptr<E> value;
     /* TODO: Keep track of whether this is a redefinition. Maybe keep the existing var. */
   };
 }

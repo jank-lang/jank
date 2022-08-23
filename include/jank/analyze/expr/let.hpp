@@ -4,7 +4,7 @@
 
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/analyze/expr/do.hpp>
-#include <jank/analyze/frame.hpp>
+#include <jank/analyze/local_frame.hpp>
 
 namespace jank::analyze::expr
 {
@@ -15,6 +15,6 @@ namespace jank::analyze::expr
     /* Stable references. */
     std::list<pair_type> pairs;
     do_<E> body;
-    frame<E> local_frame;
+    local_frame<E> local_frame;
   };
 }

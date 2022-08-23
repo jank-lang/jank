@@ -18,12 +18,12 @@ namespace jank::analyze
   };
 
   template <typename E>
-  struct frame
+  struct local_frame
   {
-    frame() = delete;
-    frame(frame const &) = default;
-    frame(frame &&) = default;
-    frame(std::string const &label, runtime::context &ctx, option<std::reference_wrapper<frame>> const &p)
+    local_frame() = delete;
+    local_frame(local_frame const &) = default;
+    local_frame(local_frame &&) = default;
+    local_frame(std::string const &label, runtime::context &ctx, option<std::reference_wrapper<local_frame>> const &p)
       : debug_label{ label }, parent{ p }, runtime_ctx{ ctx }
     { }
 
@@ -40,7 +40,7 @@ namespace jank::analyze
 
     /* TODO: Maybe remove. */
     std::string debug_label;
-    option<std::reference_wrapper<frame>> parent;
+    option<std::reference_wrapper<local_frame>> parent;
     std::unordered_map<runtime::obj::symbol_ptr, local_binding<E>> locals;
     runtime::context &runtime_ctx;
   };

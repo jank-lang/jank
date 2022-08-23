@@ -105,13 +105,12 @@ namespace jank::runtime
     return find_local(sym);
   }
 
-  object_ptr context::eval_string(std::string_view const &s)
+  object_ptr context::eval_string(std::string_view const &s, analyze::context &an_ctx)
   {
     read::lex::processor l_prc{ s };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-    analyze::context an_ctx{ *this };
     analyze::processor an_prc{ *this, p_prc.begin(), p_prc.end() };
-    evaluate::context eval_ctx{  *this };
+    evaluate::context eval_ctx{ *this };
 
     runtime::object_ptr result;
     for(auto an_result(an_prc.begin(an_ctx)); an_result != an_prc.end(an_ctx); ++an_result)

@@ -1,6 +1,9 @@
 #pragma once
 
+#include <memory>
+
 #include <boost/variant.hpp>
+
 #include <jank/analyze/expr/def.hpp>
 #include <jank/analyze/expr/var_deref.hpp>
 #include <jank/analyze/expr/call.hpp>
@@ -13,6 +16,7 @@
 
 namespace jank::analyze
 {
+  /* TODO: Wrap all of these in shared_ptrs for reference tracking. */
   struct expression
   {
     using E = expression;
@@ -20,7 +24,7 @@ namespace jank::analyze
     <
       boost::recursive_wrapper<expr::def<E>>,
       expr::var_deref<E>,
-      expr::call<E>,
+      boost::recursive_wrapper<expr::call<E>>,
       expr::primitive_literal<E>,
       expr::vector<E>,
       boost::recursive_wrapper<expr::function<E>>,
@@ -45,6 +49,10 @@ namespace jank::analyze
       : data{ std::forward<T>(t) }
     { }
 
+    /* TODO: Keep track of references to this expression using weak_ptrs. */
+
     value_type data;
   };
+  /* TODO: Use something non-nullable. */
+  using expression_ptr = std::shared_ptr<expression>;
 }

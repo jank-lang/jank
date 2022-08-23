@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ostream>
+#include <iostream>
 #include <cstdlib> // std::abort
 
 #include <boost/variant.hpp>
@@ -62,14 +62,36 @@ namespace jank
     bool is_err() const
     { return data.which() == 1; }
 
+    void assert_ok() const
+    {
+      if(is_ok())
+      { return; }
+
+      auto const &err(expect_err());
+      std::cout << "error: expected ok result, but found: " << err << std::endl;
+      throw err;
+    }
+
     R const& expect_ok() const
-    { return boost::get<R>(data); }
+    {
+      assert_ok();
+      return boost::get<R>(data);
+    }
     R* expect_ok_ptr()
-    { return &boost::get<R>(data); }
+    {
+      assert_ok();
+      return &boost::get<R>(data);
+    }
     R const* expect_ok_ptr() const
-    { return &boost::get<R>(data); }
+    {
+      assert_ok();
+      return &boost::get<R>(data);
+    }
     R expect_ok_move()
-    { return std::move(boost::get<R>(data)); }
+    {
+      assert_ok();
+      return std::move(boost::get<R>(data));
+    }
     option<R> ok()
     {
       if(is_ok())

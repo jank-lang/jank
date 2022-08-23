@@ -42,6 +42,7 @@ int main(int const argc, char const **argv)
   jit.AddIncludePath("/home/jeaye/projects/jank/lib/immer");
   jit.AddIncludePath("/home/jeaye/projects/jank/lib/magic_enum/include");
   jit.AddIncludePath("/home/jeaye/projects/jank/include");
+  /* TODO: Pre-compiled prelude. */
   jit.process("#include \"jank/runtime/obj/number.hpp\"");
   jit.process("#include \"jank/runtime/obj/function.hpp\"");
   jit.process("#include \"jank/runtime/obj/map.hpp\"");

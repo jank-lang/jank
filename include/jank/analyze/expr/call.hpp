@@ -8,7 +8,8 @@ namespace jank::analyze::expr
   template <typename E>
   struct call
   {
-    runtime::obj::function_ptr fn;
+    /* Var, local, or callable. */
+    E source;
     runtime::obj::list_ptr args;
     std::vector<E> arg_exprs;
   };

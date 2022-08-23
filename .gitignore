@@ -24,3 +24,6 @@ pom.xml.asc
 .gdb_history
 /build
 coverage.txt
+
+# Rust
+rust/jank

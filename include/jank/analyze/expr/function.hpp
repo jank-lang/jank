@@ -4,7 +4,7 @@
 #include <list>
 
 #include <jank/runtime/obj/symbol.hpp>
-#include <jank/analyze/frame.hpp>
+#include <jank/analyze/local_frame.hpp>
 #include <jank/analyze/expr/do.hpp>
 
 namespace jank::analyze::expr
@@ -14,6 +14,6 @@ namespace jank::analyze::expr
   {
     std::vector<runtime::obj::symbol_ptr> params;
     do_<E> body;
-    frame<E> local_frame;
+    local_frame<E> local_frame;
   };
 }
