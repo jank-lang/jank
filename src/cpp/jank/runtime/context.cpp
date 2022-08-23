@@ -5,6 +5,7 @@
 #include <jank/runtime/obj/string.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/analyze/processor.hpp>
+#include <jank/util/mapped_file.hpp>
 
 namespace jank::runtime
 {
@@ -103,6 +104,13 @@ namespace jank::runtime
 
     /* TODO: Return val. */
     return find_local(sym);
+  }
+
+  object_ptr context::eval_file(std::string_view const &path, analyze::context &an_ctx)
+  {
+    //auto const file(util::map_file(path).expect_ok_move());
+    auto const file(util::map_file(path));
+    return eval_string({ file.expect_ok().head, file.expect_ok().size }, an_ctx);
   }
 
   object_ptr context::eval_string(std::string_view const &s, analyze::context &an_ctx)

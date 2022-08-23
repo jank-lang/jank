@@ -1,0 +1,9 @@
+;(def *ns*)
+(def in-ns (fn* [ns]))
+
+(def + (fn* [a b]))
+(def - (fn* [a b]))
+(def * (fn* [a b]))
+(def / (fn* [a b]))
+
+(def println (fn* [o]))

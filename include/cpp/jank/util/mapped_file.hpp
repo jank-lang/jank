@@ -20,5 +20,5 @@ namespace jank::util
     size_t size{};
   };
 
-  result<mapped_file, std::string> map_file(char const * const file);
+  result<mapped_file, std::string> map_file(std::string_view const &path);
 }

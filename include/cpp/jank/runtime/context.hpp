@@ -30,7 +30,8 @@ namespace jank::runtime
     option<object_ptr> find_local(obj::symbol_ptr const &);
     option<object_ptr> find_val(obj::symbol_ptr const &);
 
-    object_ptr eval_string(std::string_view const &, analyze::context &);
+    object_ptr eval_file(std::string_view const &path, analyze::context &);
+    object_ptr eval_string(std::string_view const &code, analyze::context &);
 
     folly::Synchronized<std::unordered_map<obj::symbol_ptr, detail::box_type<ns>>> namespaces;
 

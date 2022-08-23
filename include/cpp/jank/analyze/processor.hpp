@@ -46,6 +46,8 @@ namespace jank::analyze
     void lift_constant(runtime::object_ptr const &);
     option<std::reference_wrapper<lifted_constant>> find_lifted_constant(runtime::object_ptr const &);
 
+    void clear_tracking();
+
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */
     static runtime::obj::symbol unique_name();

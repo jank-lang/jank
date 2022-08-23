@@ -70,6 +70,12 @@ namespace jank::analyze
     return none;
   }
 
+  void context::clear_tracking()
+  {
+    tracked_refs.lifted_vars.clear();
+    tracked_refs.lifted_constants.clear();
+  }
+
   runtime::obj::symbol context::unique_name()
   { return unique_name("gen"); }
   runtime::obj::symbol context::unique_name(std::string const &prefix)
@@ -208,7 +214,7 @@ namespace jank::analyze
 
     auto const var(ctx.find_var(sym));
     if(var.is_none())
-    { return err(error{ "unbound symbol" }); }
+    { return err(error{ "unbound symbol: " + *sym->to_string().data }); }
 
     ctx.lift_var(var.unwrap().first);
     return { expr::var_deref<expression>{ var.unwrap().first } };

@@ -29,12 +29,12 @@ namespace jank::util
     { ::close(fd); }
   }
 
-  result<mapped_file, std::string> map_file(char const * const file)
+  result<mapped_file, std::string> map_file(std::string_view const &path)
   {
-    if(!std::filesystem::exists(file))
+    if(!std::filesystem::exists(path))
     { return err("file doesn't exist"); }
-    auto const file_size(std::filesystem::file_size(file));
-    auto const fd(::open(file, O_RDONLY));
+    auto const file_size(std::filesystem::file_size(path));
+    auto const fd(::open(path.data(), O_RDONLY));
     if(fd < 0)
     { return err("unable to open file"); }
     auto const * const head(reinterpret_cast<char const*>(mmap(0, file_size, PROT_READ, MAP_PRIVATE, fd, 0)));
