@@ -55,7 +55,7 @@ namespace jank::codegen
     //std::cout << "gen def" << std::endl;
     auto const &var(an_ctx.find_lifted_var(expr.name).unwrap().get());
     oss << var.local_name.name << "->set_root(";
-    //gen(expr.value, oss);
+    gen(*expr.value, oss);
     oss << ");";
   }
 
@@ -70,7 +70,7 @@ namespace jank::codegen
   {
     //std::cout << "gen call" << std::endl;
     gen(expr.source, oss);
-    oss << "->call(";
+    oss << "->as_callable()->call(";
     for(auto const &arg_expr : expr.arg_exprs)
     /* TODO: Comma separate. */
     { gen(arg_expr, oss); }
