@@ -48,7 +48,7 @@ mkShell
   export -f jank-compile
 
   function jank-test
-  { ./build/test/jank-unit-tests "$@"; }
+  { ./build/test/cpp/jank-unit-tests "$@"; }
   export -f jank-test
 
   function jank-watch-tests

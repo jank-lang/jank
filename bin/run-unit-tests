@@ -2,4 +2,4 @@
 
 set -euo pipefail
 
-cd build && meson compile && ./test/jank-unit-tests $@
+cd build && meson compile && ./test/cpp/jank-unit-tests $@

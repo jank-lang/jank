@@ -1,4 +1,4 @@
-test_inc = include_directories('../lib/doctest')
+test_inc = include_directories('../../lib/doctest')
 test_src = [
   'main.cpp',
   'jank/read/lex.cpp',

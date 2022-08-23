@@ -5,29 +5,29 @@ project(
   default_options : ['warning_level=3', 'werror=true', 'cpp_std=c++17']
 )
 
-project_inc = include_directories('include', 'lib/magic_enum/include', 'lib/immer')
+project_inc = include_directories('include/cpp', 'lib/magic_enum/include', 'lib/immer')
 project_src = files([
-  'src/jank/util/mapped_file.cpp',
-  'src/jank/read/lex.cpp',
-  'src/jank/read/parse.cpp',
-  'src/jank/runtime/seq.cpp',
-  'src/jank/runtime/memory_pool.cpp',
-  'src/jank/runtime/object.cpp',
-  'src/jank/runtime/context.cpp',
-  'src/jank/runtime/ns.cpp',
-  'src/jank/runtime/var.cpp',
-  'src/jank/runtime/obj/number.cpp',
-  'src/jank/runtime/obj/function.cpp',
-  'src/jank/runtime/obj/symbol.cpp',
-  'src/jank/runtime/obj/list.cpp',
-  'src/jank/runtime/obj/vector.cpp',
-  'src/jank/runtime/obj/map.cpp',
-  'src/jank/runtime/obj/set.cpp',
-  'src/jank/runtime/obj/string.cpp',
-  'src/jank/runtime/behavior/callable.cpp',
-  'src/jank/analyze/processor.cpp',
-  'src/jank/evaluate/context.cpp',
-  'src/jank/codegen/context.cpp',
+  'src/cpp/jank/util/mapped_file.cpp',
+  'src/cpp/jank/read/lex.cpp',
+  'src/cpp/jank/read/parse.cpp',
+  'src/cpp/jank/runtime/seq.cpp',
+  'src/cpp/jank/runtime/memory_pool.cpp',
+  'src/cpp/jank/runtime/object.cpp',
+  'src/cpp/jank/runtime/context.cpp',
+  'src/cpp/jank/runtime/ns.cpp',
+  'src/cpp/jank/runtime/var.cpp',
+  'src/cpp/jank/runtime/obj/number.cpp',
+  'src/cpp/jank/runtime/obj/function.cpp',
+  'src/cpp/jank/runtime/obj/symbol.cpp',
+  'src/cpp/jank/runtime/obj/list.cpp',
+  'src/cpp/jank/runtime/obj/vector.cpp',
+  'src/cpp/jank/runtime/obj/map.cpp',
+  'src/cpp/jank/runtime/obj/set.cpp',
+  'src/cpp/jank/runtime/obj/string.cpp',
+  'src/cpp/jank/runtime/behavior/callable.cpp',
+  'src/cpp/jank/analyze/processor.cpp',
+  'src/cpp/jank/evaluate/context.cpp',
+  'src/cpp/jank/codegen/context.cpp',
 ])
 
 add_global_arguments(
@@ -90,7 +90,7 @@ cling_dep = declare_dependency(
 )
 executable(
   'jank',
-  project_src + ['src/main.cpp'],
+  project_src + ['src/cpp/main.cpp'],
   dependencies : [threads_dep, boost_dep, folly_dep, cling_dep],
   link_args : link_args,
   include_directories : project_inc,
@@ -98,4 +98,4 @@ executable(
   install : true
 )
 
-subdir('test')
+subdir('test/cpp')
