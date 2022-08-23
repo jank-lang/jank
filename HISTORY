@@ -7,3 +7,4 @@ Dec 2016 - Continuous benchmark service added
 Jan 2017 - Transition to fully generic, type-rich programming
 Dec 2017 - Rewrite in Clojure, syntax changed to be a Clojure dialect
 May 2022 - Rewrite in C++, backed by cling
+Aug 2022 - Switch to Mozilla Public License 2.0
