@@ -41,76 +41,70 @@ namespace jank::codegen
     struct_name = an_ctx.unique_name();
   }
 
-  void context::gen(analyze::expression const &ex, std::ostream &oss) const
+  void context::gen(analyze::expression const &ex, std::ostream &oss, bool const is_statement) const
   {
     boost::apply_visitor
     (
-      [this, &oss](auto const &typed_ex)
-      { gen(typed_ex, oss); },
+      [this, &oss, is_statement](auto const &typed_ex)
+      { gen(typed_ex, oss, is_statement); },
       ex.data
     );
   }
 
-  void context::gen(analyze::expr::def<analyze::expression> const &expr, std::ostream &oss) const
+  void context::gen(analyze::expr::def<analyze::expression> const &expr, std::ostream &oss, bool const is_statement) const
   {
     //std::cout << "gen def" << std::endl;
     auto const &var(an_ctx.find_lifted_var(expr.name).unwrap().get());
     oss << var.local_name.name << "->set_root(";
-    bool saved_need_semi = need_semi_colon;
-    need_semi_colon = false;
-    gen(*expr.value, oss);
-    need_semi_colon = saved_need_semi;
+    gen(*expr.value, oss, false);
     oss << ")";
-    if(need_semi_colon)
+    if(is_statement)
     { oss << ";"; }
   }
 
-  void context::gen(analyze::expr::var_deref<analyze::expression> const &expr, std::ostream &oss) const
+  void context::gen(analyze::expr::var_deref<analyze::expression> const &expr, std::ostream &oss, bool const) const
   {
     //std::cout << "gen var deref" << std::endl;
     auto const &var(an_ctx.find_lifted_var(expr.qualified_name).unwrap().get());
     oss << var.local_name.name << "->get_root()";
   }
 
-  void context::gen(analyze::expr::call<analyze::expression> const &expr, std::ostream &oss) const
+  void context::gen(analyze::expr::call<analyze::expression> const &expr, std::ostream &oss, bool const is_statement) const
   {
     //std::cout << "gen call" << std::endl;
-    gen(expr.source, oss);
+    gen(expr.source, oss, false);
     oss << "->as_callable()->call(";
     //for(auto const &arg_expr : expr.arg_exprs)
     bool need_comma{};
-    bool save_need_semi = need_semi_colon;
-    need_semi_colon = false;
     for(auto it = expr.arg_exprs.begin(); it != expr.arg_exprs.end(); ++it)
     /* TODO: Comma separate. */
     {
       if(need_comma)
       { oss << ", "; }
-      gen(*it, oss);
+      gen(*it, oss, false);
       need_comma = true;
     }
     oss << ")";
-    need_semi_colon = save_need_semi;
-    if(save_need_semi)
+    if(is_statement)
     { oss << ";"; }
   }
 
-  void context::gen(analyze::expr::primitive_literal<analyze::expression> const &expr, std::ostream &oss) const
+  void context::gen(analyze::expr::primitive_literal<analyze::expression> const &expr, std::ostream &oss, bool const) const
   {
     //std::cout << "gen literal" << std::endl;
     auto const &constant(an_ctx.find_lifted_constant(expr.data).unwrap().get());
     oss << constant.local_name.name;
   }
 
-  void context::gen(analyze::expr::vector<analyze::expression> const &, std::ostream &) const
+  void context::gen(analyze::expr::vector<analyze::expression> const &, std::ostream &, bool const) const
   {
   }
 
-  void context::gen(analyze::expr::local_reference<analyze::expression> const &, std::ostream &) const
+  void context::gen(analyze::expr::local_reference<analyze::expression> const &, std::ostream &, bool const) const
   {
   }
 
-  void context::gen(analyze::expr::function<analyze::expression> const &, std::ostream &) const
+  void context::gen(analyze::expr::function<analyze::expression> const &, std::ostream &, bool const) const
   {
   }
 
@@ -164,7 +158,7 @@ namespace jank::codegen
   {
     /* TODO: Put into fn with return type and return value of last expression. */
     for(auto const &expr : expressions)
-    { gen(expr, oss); }
+    { gen(expr, oss, true); }
   }
 
   void context::footer_str(std::ostream &oss) const
