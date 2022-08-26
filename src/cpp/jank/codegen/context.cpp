@@ -53,10 +53,13 @@ namespace jank::codegen
 
   void context::gen(analyze::expr::def<analyze::expression> const &expr, std::ostream &oss, bool const is_statement) const
   {
-    //std::cout << "gen def" << std::endl;
+    /* Forward declarations don't need codegen. */
+    if(expr.value.is_none())
+    { return; }
+
     auto const &var(an_ctx.find_lifted_var(expr.name).unwrap().get());
     oss << var.local_name.name << "->set_root(";
-    gen(*expr.value, oss, false);
+    gen(*expr.value.unwrap(), oss, false);
     oss << ")";
     if(is_statement)
     { oss << ";"; }
@@ -64,20 +67,16 @@ namespace jank::codegen
 
   void context::gen(analyze::expr::var_deref<analyze::expression> const &expr, std::ostream &oss, bool const) const
   {
-    //std::cout << "gen var deref" << std::endl;
     auto const &var(an_ctx.find_lifted_var(expr.qualified_name).unwrap().get());
     oss << var.local_name.name << "->get_root()";
   }
 
   void context::gen(analyze::expr::call<analyze::expression> const &expr, std::ostream &oss, bool const is_statement) const
   {
-    //std::cout << "gen call" << std::endl;
     gen(expr.source, oss, false);
     oss << "->as_callable()->call(";
-    //for(auto const &arg_expr : expr.arg_exprs)
     bool need_comma{};
     for(auto it = expr.arg_exprs.begin(); it != expr.arg_exprs.end(); ++it)
-    /* TODO: Comma separate. */
     {
       if(need_comma)
       { oss << ", "; }
@@ -91,7 +90,6 @@ namespace jank::codegen
 
   void context::gen(analyze::expr::primitive_literal<analyze::expression> const &expr, std::ostream &oss, bool const) const
   {
-    //std::cout << "gen literal" << std::endl;
     auto const &constant(an_ctx.find_lifted_constant(expr.data).unwrap().get());
     oss << constant.local_name.name;
   }

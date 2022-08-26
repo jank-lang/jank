@@ -40,13 +40,14 @@ namespace jank::analyze
     context() = delete;
     context(runtime::context &rt_ctx);
 
-    option<std::pair<runtime::obj::symbol_ptr, expression_ptr>> find_var(runtime::obj::symbol_ptr const &qualified_sym) const;
+    option<std::pair<runtime::obj::symbol_ptr, option<expression_ptr>>> find_var(runtime::obj::symbol_ptr const &qualified_sym) const;
     runtime::obj::symbol_ptr lift_var(runtime::obj::symbol_ptr const &);
     option<std::reference_wrapper<lifted_var>> find_lifted_var(runtime::obj::symbol_ptr const &);
     void lift_constant(runtime::object_ptr const &);
     option<std::reference_wrapper<lifted_constant>> find_lifted_constant(runtime::object_ptr const &);
 
     void clear_tracking();
+    void dump() const;
 
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */
@@ -55,7 +56,7 @@ namespace jank::analyze
 
     /* These accumulate the whole lifetime of the program. */
     runtime::context &rt_ctx;
-    std::unordered_map<runtime::obj::symbol_ptr, expression_ptr> vars;
+    std::unordered_map<runtime::obj::symbol_ptr, option<expression_ptr>> vars;
 
     /* These are all per-form and are wiped often. */
     tracked_references tracked_refs;

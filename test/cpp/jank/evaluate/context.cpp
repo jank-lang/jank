@@ -14,10 +14,12 @@
 
 namespace jank::evaluate
 {
-  TEST_CASE("Call" * doctest::may_fail())
+  TEST_CASE("Call")
   {
     runtime::context rt_ctx;
+    auto const plus_sym(runtime::obj::symbol::create("clojure.core/+"));
     analyze::context an_ctx{ rt_ctx };
+    rt_ctx.eval_prelude(an_ctx);
     auto const result(rt_ctx.eval_string("(+ 777 2)", an_ctx));
     CHECK(result != nullptr);
     CHECK(result->equal(runtime::obj::integer{ 779 }));

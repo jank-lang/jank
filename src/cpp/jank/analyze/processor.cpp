@@ -11,14 +11,21 @@ namespace jank::analyze
     : rt_ctx{ rt_ctx }
   { }
 
-  option<std::pair<runtime::obj::symbol_ptr, expression_ptr>> context::find_var(runtime::obj::symbol_ptr const &sym) const
+  void context::dump() const
+  {
+    std::cout << "analysis ctx dump begin" << std::endl;
+    for(auto const &v : vars)
+    { std::cout << "  var " << *v.first << std::endl; }
+    std::cout << "analysis ctx dump end" << std::endl;
+  }
+
+  option<std::pair<runtime::obj::symbol_ptr, option<expression_ptr>>> context::find_var(runtime::obj::symbol_ptr const &sym) const
   {
     runtime::obj::symbol_ptr qualified_sym{ sym };
     if(qualified_sym->ns.empty())
     {
       auto const t_state(rt_ctx.get_thread_state());
       auto const current_ns(t_state.current_ns->get_root()->as_ns());
-      auto const locked_vars(current_ns->vars.rlock());
       qualified_sym = runtime::obj::symbol::create(current_ns->name->name, sym->name);
     }
 
@@ -155,7 +162,7 @@ namespace jank::analyze
   processor::expression_result processor::analyze_def(runtime::obj::list_ptr const &l, local_frame<expression> &current_frame, context &ctx)
   {
     auto const length(l->count());
-    if(length != 3)
+    if(length != 2 && length != 3)
     {
       /* TODO: Error handling. */
       return err(error{ "invalid def" });
@@ -174,17 +181,20 @@ namespace jank::analyze
       return err(error{ "invalid def" });
     }
 
-    auto const value(l->data.rest().rest().first().unwrap());
-    if(value == nullptr)
-    {
-      /* TODO: Error handling. */
-      return err(error{ "invalid def" });
-    }
+    bool has_value{ true };
+    auto const value_opt(l->data.rest().rest().first());
+    if(value_opt.is_none())
+    { has_value = false; }
 
-    auto const value_result(analyze(value, current_frame, ctx));
-    if(value_result.is_err())
-    { return value_result; }
-    auto const value_expr(std::make_shared<expression>(value_result.expect_ok().unwrap()));
+    option<std::shared_ptr<expression>> value_expr;
+
+    if(has_value)
+    {
+      auto const value_result(analyze(value_opt.unwrap(), current_frame, ctx));
+      if(value_result.is_err())
+      { return value_result; }
+      value_expr = some(std::make_shared<expression>(value_result.expect_ok().unwrap()));
+    }
 
     auto const qualified_sym(ctx.lift_var(boost::static_pointer_cast<runtime::obj::symbol>(sym_obj)));
     auto const existing_var(ctx.vars.find(qualified_sym));

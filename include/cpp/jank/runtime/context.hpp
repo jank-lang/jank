@@ -28,8 +28,8 @@ namespace jank::runtime
     result<var_ptr, std::string> intern_var(detail::string_type const &ns, detail::string_type const &name);
     option<var_ptr> find_var(obj::symbol_ptr const &);
     option<object_ptr> find_local(obj::symbol_ptr const &);
-    option<object_ptr> find_val(obj::symbol_ptr const &);
 
+    void eval_prelude(analyze::context &);
     object_ptr eval_file(std::string_view const &path, analyze::context &);
     object_ptr eval_string(std::string_view const &code, analyze::context &);
 

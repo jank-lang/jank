@@ -3,6 +3,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/obj/vector.hpp>
+#include <jank/runtime/obj/number.hpp>
 #include <jank/evaluate/context.hpp>
 
 namespace jank::evaluate
@@ -27,24 +28,13 @@ namespace jank::evaluate
 
   runtime::object_ptr context::eval(analyze::expr::def<analyze::expression> const &expr, frame const &current_frame)
   {
-    auto &t_state(runtime_ctx.get_thread_state(none));
-    auto const &ns_ptr(boost::static_pointer_cast<runtime::ns>(t_state.current_ns->get_root()));
-    auto const evaluated_value(eval(*expr.value, current_frame));
+    auto var(runtime_ctx.intern_var(expr.name).expect_ok());
+    if(expr.value.is_none())
+    { return var; }
 
-    auto locked_vars(ns_ptr->vars.ulock());
-    auto const &existing(locked_vars->find(expr.name));
-    if(existing != locked_vars->end())
-    {
-      existing->second->set_root(evaluated_value);
-      return existing->second;
-    }
-    else
-    {
-      auto var(runtime::var::create(ns_ptr, expr.name, evaluated_value));
-      auto write_locked_vars(locked_vars.moveFromUpgradeToWrite());
-      auto const &res(write_locked_vars->insert({expr.name, std::move(var)}));
-      return res.first->second;
-    }
+    auto const evaluated_value(eval(*expr.value.unwrap(), current_frame));
+    var->set_root(evaluated_value);
+    return var;
   }
 
   runtime::object_ptr context::eval(analyze::expr::var_deref<analyze::expression> const &expr, frame const &)
@@ -53,20 +43,33 @@ namespace jank::evaluate
     return var.unwrap()->get_root();
   }
 
-  runtime::object_ptr context::eval(analyze::expr::call<analyze::expression> const &, frame const &)
+  runtime::object_ptr context::eval(analyze::expr::call<analyze::expression> const &expr, frame const &current_frame)
   {
-    return nullptr;
-    //switch(expr.arg_exprs.size())
-    //{
-    //  case 0:
-    //    return expr.fn->call();
-    //  case 1:
-    //    return expr.fn->call(expr.args->data.first().unwrap());
-    //  case 2:
-    //    return expr.fn->call(expr.args->data.first().unwrap(), expr.args->data.rest().first().unwrap());
-    //  default:
-    //    throw "unsupported arg count";
-    //}
+    auto const source(eval(expr.source, current_frame));
+    auto const callable(source->as_callable());
+    if(!callable)
+    {
+      /* TODO: Error handling. */
+      std::cout << "unable to call: " << *source << std::endl;
+      throw "call error";
+    }
+
+    std::vector<runtime::object_ptr> arg_vals;
+    arg_vals.reserve(expr.arg_exprs.size());
+    for(auto const &arg_expr: expr.arg_exprs)
+    { arg_vals.emplace_back(eval(arg_expr, current_frame)); }
+
+    switch(arg_vals.size())
+    {
+      case 0:
+        return callable->call();
+      case 1:
+        return callable->call(arg_vals[0]);
+      case 2:
+        return callable->call(arg_vals[0], arg_vals[1]);
+      default:
+        throw "unsupported arg count";
+    }
   }
 
   runtime::object_ptr context::eval(analyze::expr::primitive_literal<analyze::expression> const &expr, frame const &)

@@ -62,20 +62,19 @@ namespace jank::runtime
   {
     if(!sym->ns.empty())
     {
+      /* TODO: This is the issue. Diff it with intern_var. */
       ns_ptr ns;
       {
-        decltype(namespaces)::DataType::iterator found;
         auto const locked_namespaces(namespaces.rlock());
-        found = locked_namespaces.asNonConstUnsafe().find(runtime::obj::symbol::create("", sym->ns));
+        auto const found(locked_namespaces->find(runtime::obj::symbol::create("", sym->ns)));
         if(found == locked_namespaces->end())
         { return none; }
         ns = found->second;
       }
 
       {
-        decltype(ns->vars)::DataType::iterator found;
         auto const locked_vars(ns->vars.rlock());
-        found = locked_vars.asNonConstUnsafe().find(sym);
+        auto const found(locked_vars->find(sym));
         if(found == locked_vars->end())
         { return none; }
 
@@ -99,19 +98,16 @@ namespace jank::runtime
   {
     return none;
   }
-  option<object_ptr> context::find_val(obj::symbol_ptr const &sym)
-  {
-    auto const var(find_var(sym));
-    if(var.is_some())
-    { return some(var.unwrap()->get_root()); }
 
-    /* TODO: Return val. */
-    return find_local(sym);
+  void context::eval_prelude(analyze::context &an_ctx)
+  {
+    /* TODO: Know the location of this in any installation. */
+    eval_file("src/jank/clojure/core.jank", an_ctx);
+    an_ctx.clear_tracking();
   }
 
   object_ptr context::eval_file(std::string_view const &path, analyze::context &an_ctx)
   {
-    //auto const file(util::map_file(path).expect_ok_move());
     auto const file(util::map_file(path));
     return eval_string({ file.expect_ok().head, file.expect_ok().size }, an_ctx);
   }
@@ -158,23 +154,23 @@ namespace jank::runtime
     return result.first->second;
   }
 
-  result<var_ptr, std::string> context::intern_var(obj::symbol_ptr const &qualified_sym)
-  { return intern_var(qualified_sym->ns, qualified_sym->name); }
   result<var_ptr, std::string> context::intern_var(detail::string_type const &ns, detail::string_type const &name)
+  { return intern_var(runtime::obj::symbol::create(ns, name)); }
+  result<var_ptr, std::string> context::intern_var(obj::symbol_ptr const &qualified_sym)
   {
-    auto const name_sym(runtime::obj::symbol::create(name));
+    assert(!qualified_sym->ns.empty());
     auto locked_namespaces(namespaces.ulock());
-    auto const found_ns(locked_namespaces->find(runtime::obj::symbol::create(ns)));
+    auto const found_ns(locked_namespaces->find(runtime::obj::symbol::create(qualified_sym->ns)));
     if(found_ns == locked_namespaces->end())
     { return err("can't intern var; namespace doesn't exist"); }
 
     auto locked_vars(found_ns->second->vars.ulock());
-    auto const found_var(locked_vars->find(name_sym));
+    auto const found_var(locked_vars->find(qualified_sym));
     if(found_var != locked_vars->end())
     { return ok(found_var->second); }
 
     auto const locked_vars_w(locked_vars.moveFromUpgradeToWrite());
-    auto const ns_res(locked_vars_w->insert({name_sym, var::create(found_ns->second, name_sym)}));
+    auto const ns_res(locked_vars_w->insert({qualified_sym, var::create(found_ns->second, qualified_sym)}));
     return ok(ns_res.first->second);
   }
 

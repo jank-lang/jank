@@ -12,6 +12,7 @@ namespace jank::runtime
 
 namespace jank::codegen
 {
+  /* TODO: Rename to processor. */
   /* There's only one codegen context per thread, so no synchronization is needed for its members. */
   struct context
   {

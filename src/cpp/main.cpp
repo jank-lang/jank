@@ -30,9 +30,7 @@ int main(int const argc, char const **argv)
   jank::analyze::context an_ctx{ rt_ctx };
   jank::evaluate::context eval_ctx{ rt_ctx };
 
-  /* TODO: Know the location of this in any installation. */
-  rt_ctx.eval_file("src/jank/clojure/core.jank", an_ctx);
-  an_ctx.clear_tracking();
+  rt_ctx.eval_prelude(an_ctx);
 
   auto const mfile(jank::util::map_file(file));
   jank::read::lex::processor l_prc{ { mfile.expect_ok().head, mfile.expect_ok().size } };

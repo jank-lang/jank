@@ -7,6 +7,7 @@
 namespace jank::runtime
 { struct context; }
 
+/* TODO: Remove this whole thing? */
 /* TODO: Rename this ns to interpret. */
 namespace jank::evaluate
 {

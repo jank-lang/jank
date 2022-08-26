@@ -67,5 +67,9 @@ mkShell
     ${pkgs.coreutils}/bin/chmod -R u+w "''${install_dir}/"
   }
   export -f jank-install-deps
+
+  function jank-clean
+  { /bin/rm -r build; }
+  export -f jank-clean
   '';
 }

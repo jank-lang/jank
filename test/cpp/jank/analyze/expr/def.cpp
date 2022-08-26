@@ -15,6 +15,22 @@
  */
 namespace jank::analyze::expr
 {
+  TEST_CASE("Declare")
+  {
+    read::lex::processor l_prc{ "(def *meow-meow*)" };
+    read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+    runtime::context rt_ctx;
+    context an_ctx{ rt_ctx };
+    processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
+
+    auto const expr(an_prc.next(an_ctx).expect_ok().unwrap());
+    auto const *def_expr(boost::get<def<expression>>(&expr.data));
+    CHECK(def_expr != nullptr);
+    CHECK(def_expr->name != nullptr);
+    CHECK(def_expr->name->equal(runtime::obj::symbol{ "clojure.core/*meow-meow*" }));
+    CHECK(def_expr->value.is_none());
+  }
+
   TEST_CASE("Basic")
   {
     read::lex::processor l_prc{ "(def foo 777)" };
@@ -28,8 +44,8 @@ namespace jank::analyze::expr
     CHECK(def_expr != nullptr);
     CHECK(def_expr->name != nullptr);
     CHECK(def_expr->name->equal(runtime::obj::symbol{ "clojure.core/foo" }));
-    CHECK(boost::get<expr::primitive_literal<expression>>(&def_expr->value->data) != nullptr);
-    CHECK(boost::get<expr::primitive_literal<expression>>(def_expr->value->data).data->equal(runtime::obj::integer{ 777 }));
+    CHECK(boost::get<expr::primitive_literal<expression>>(&def_expr->value.unwrap()->data) != nullptr);
+    CHECK(boost::get<expr::primitive_literal<expression>>(def_expr->value.unwrap()->data).data->equal(runtime::obj::integer{ 777 }));
 
     SUBCASE("Lifting")
     {
@@ -55,15 +71,6 @@ namespace jank::analyze::expr
   {
     runtime::context rt_ctx;
     context an_ctx{ rt_ctx };
-
-    SUBCASE("Missing value")
-    {
-      read::lex::processor l_prc{ "(def foo)" };
-      read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-      processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
-
-      CHECK(an_prc.next(an_ctx).is_err());
-    }
 
     SUBCASE("Extra value")
     {
