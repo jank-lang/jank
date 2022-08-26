@@ -13,10 +13,12 @@ namespace jank::runtime
   {
     auto &t_state(get_thread_state());
     auto const core(intern_ns(obj::symbol::create("clojure.core")));
-    auto const locked_core_vars(core->vars.wlock());
-    auto const ns_sym(obj::symbol::create("clojure.core/*ns*"));
-    auto const ns_res(locked_core_vars->insert({ns_sym, var::create(core, ns_sym, core)}));
-    t_state.current_ns = ns_res.first->second;
+    {
+      auto const locked_core_vars(core->vars.wlock());
+      auto const ns_sym(obj::symbol::create("clojure.core/*ns*"));
+      auto const ns_res(locked_core_vars->insert({ns_sym, var::create(core, ns_sym, core)}));
+      t_state.current_ns = ns_res.first->second;
+    }
 
     auto const in_ns_sym(obj::symbol::create("clojure.core/in-ns"));
     std::function<object_ptr (object_ptr const&)> in_ns_fn
@@ -35,8 +37,9 @@ namespace jank::runtime
         return JANK_NIL;
       }
     );
-    auto const in_ns_res(locked_core_vars->insert({in_ns_sym, var::create(core, in_ns_sym, obj::function::create(in_ns_fn))}));
-    t_state.in_ns = in_ns_res.first->second;
+    auto in_ns_var(intern_var(in_ns_sym).expect_ok());
+    in_ns_var->set_root(obj::function::create(in_ns_fn));
+    t_state.in_ns = in_ns_var;
 
     /* TODO: Remove this once it can be defined in jank. */
     auto const println_sym(obj::symbol::create("clojure.core/println"));
@@ -48,11 +51,11 @@ namespace jank::runtime
         return JANK_NIL;
       }
     );
-    locked_core_vars->insert({println_sym, var::create(core, println_sym, obj::function::create(println_fn))});
+    intern_var(println_sym).expect_ok()->set_root(obj::function::create(println_fn));
 
     /* TODO: Remove this once it can be defined in jank. */
     auto const plus_sym(obj::symbol::create("clojure.core/+"));
-    locked_core_vars->insert({plus_sym, var::create(core, plus_sym, obj::function::create(&obj::_gen_plus_))});
+    intern_var(plus_sym).expect_ok()->set_root(obj::function::create(&obj::_gen_plus_));
   }
 
   option<var_ptr> context::find_var(obj::symbol_ptr const &sym)
@@ -135,7 +138,10 @@ namespace jank::runtime
       std::cout << "  " << p.second->name->to_string() << std::endl;
       for(auto vp : *p.second->vars.rlock())
       {
-        std::cout << "    " << vp.second->to_string() << " = " << vp.second->get_root()->to_string() << std::endl;
+        if(vp.second->get_root() == nullptr)
+        { std::cout << "    " << vp.second->to_string() << " = nil" << std::endl; }
+        else
+        { std::cout << "    " << vp.second->to_string() << " = " << vp.second->get_root()->to_string() << std::endl; }
       }
     }
   }

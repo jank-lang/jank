@@ -39,7 +39,7 @@ int main(int const argc, char const **argv)
   jank::read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
   jank::analyze::processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
   jank::codegen::context cg_ctx{ rt_ctx, an_ctx, an_prc.begin(an_ctx), an_prc.end(an_ctx), an_prc.total_forms };
-  std::cout << cg_ctx.str() << std::endl;
+  //std::cout << cg_ctx.str() << std::endl;
 
   auto const cling_args(std::experimental::make_array(argv[0], "-std=c++17"));
   cling::Interpreter jit(cling_args.size(), cling_args.data(), LLVM_PATH);

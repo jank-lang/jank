@@ -32,6 +32,9 @@ namespace jank::runtime::obj
 
     bool operator ==(symbol const &rhs) const;
 
+    symbol& operator =(symbol const &) = default;
+    symbol& operator =(symbol &&) = default;
+
     runtime::detail::string_type ns;
     runtime::detail::string_type name;
   };

@@ -16,6 +16,7 @@ namespace jank::runtime
   {
     var(var const&) = default;
     var(var &&) = default;
+    /* TODO: Move to cpp */
     var(ns_ptr const &n, obj::symbol_ptr const &s)
       : n{ n }, name{ s }
     { }
@@ -38,6 +39,7 @@ namespace jank::runtime
     void set_root(object_ptr const &r);
 
     ns_ptr n;
+    /* TODO: Make sure this gets fully qualified. */
     obj::symbol_ptr name;
 
   private:

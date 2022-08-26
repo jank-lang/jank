@@ -38,6 +38,7 @@ namespace jank::codegen
     expressions.reserve(total_forms);
     for(auto it(an_begin); it != an_end; ++it)
     { expressions.emplace_back(std::move(it->expect_ok_move().unwrap())); }
+    struct_name = an_ctx.unique_name();
   }
 
   void context::gen(analyze::expression const &ex, std::ostream &oss) const
@@ -55,15 +56,20 @@ namespace jank::codegen
     //std::cout << "gen def" << std::endl;
     auto const &var(an_ctx.find_lifted_var(expr.name).unwrap().get());
     oss << var.local_name.name << "->set_root(";
+    bool saved_need_semi = need_semi_colon;
+    need_semi_colon = false;
     gen(*expr.value, oss);
-    oss << ");";
+    need_semi_colon = saved_need_semi;
+    oss << ")";
+    if(need_semi_colon)
+    { oss << ";"; }
   }
 
   void context::gen(analyze::expr::var_deref<analyze::expression> const &expr, std::ostream &oss) const
   {
     //std::cout << "gen var deref" << std::endl;
     auto const &var(an_ctx.find_lifted_var(expr.qualified_name).unwrap().get());
-    oss << var.local_name.name;
+    oss << var.local_name.name << "->get_root()";
   }
 
   void context::gen(analyze::expr::call<analyze::expression> const &expr, std::ostream &oss) const
@@ -71,10 +77,22 @@ namespace jank::codegen
     //std::cout << "gen call" << std::endl;
     gen(expr.source, oss);
     oss << "->as_callable()->call(";
-    for(auto const &arg_expr : expr.arg_exprs)
+    //for(auto const &arg_expr : expr.arg_exprs)
+    bool need_comma{};
+    bool save_need_semi = need_semi_colon;
+    need_semi_colon = false;
+    for(auto it = expr.arg_exprs.begin(); it != expr.arg_exprs.end(); ++it)
     /* TODO: Comma separate. */
-    { gen(arg_expr, oss); }
-    oss << ");";
+    {
+      if(need_comma)
+      { oss << ", "; }
+      gen(*it, oss);
+      need_comma = true;
+    }
+    oss << ")";
+    need_semi_colon = save_need_semi;
+    if(save_need_semi)
+    { oss << ";"; }
   }
 
   void context::gen(analyze::expr::primitive_literal<analyze::expression> const &expr, std::ostream &oss) const
@@ -107,7 +125,6 @@ namespace jank::codegen
 
   void context::header_str(std::ostream &oss) const
   {
-    auto const struct_name(an_ctx.unique_name());
     oss << "namespace jank::generated { struct " << struct_name.name << "{";
 
     for(auto const &v : an_ctx.tracked_refs.lifted_vars)
@@ -151,5 +168,13 @@ namespace jank::codegen
   }
 
   void context::footer_str(std::ostream &oss) const
-  { oss << "}};}"; }
+  {
+    oss << "}};} ";
+    oss << "namespace { jank::generated::"
+        << struct_name.name
+        << " tmp{ "
+        << "*reinterpret_cast<jank::runtime::context*>(" << std::hex << &rt_ctx << std::dec << ")"
+        << " }; "
+        << "}";
+  }
 }

@@ -45,5 +45,7 @@ namespace jank::codegen
     runtime::context &rt_ctx;
     analyze::context &an_ctx;
     folly::fbvector<analyze::expression> expressions;
+    mutable runtime::obj::symbol struct_name;
+    mutable bool need_semi_colon{ true };
   };
 }
