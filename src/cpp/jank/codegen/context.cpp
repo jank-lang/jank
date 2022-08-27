@@ -20,6 +20,8 @@ namespace jank::codegen
       { oss << "jank::runtime::make_box<jank::runtime::obj::real>(" << d->data << ")"; }
       else if(auto d = o->as_symbol())
       { oss << "jank::runtime::make_box<jank::runtime::obj::symbol>(\"" << d->ns << "\", \"" << d->name << "\")"; }
+      else if(auto d = o->as_keyword())
+      { oss << "rt_ctx.intern_keyword(\"" << d->sym.ns << "\", \"" << d->sym.name << "\", " <<  d->resolved << ")"; }
       else
       { std::cerr << "unimplemented constant codegen: " << *o << std::endl; }
     }
@@ -109,6 +111,7 @@ namespace jank::codegen
   std::string context::str() const
   {
     std::ostringstream oss;
+    oss << std::boolalpha;
     header_str(oss);
     body_str(oss);
     footer_str(oss);

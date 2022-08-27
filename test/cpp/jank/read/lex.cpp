@@ -424,6 +424,48 @@ namespace jank::read::lex
       std::vector<result<token, error>> tokens(p.begin(), p.end());
       CHECK(tokens == make_tokens({{ token_kind::keyword, "abc_.123/-foo+?" }}));
     }
+
+    SUBCASE("Auto-resolved unqualified")
+    {
+      processor p{ "::foo-bar" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({{ token_kind::keyword, ":foo-bar" }}));
+    }
+
+    SUBCASE("Auto-resolved qualified")
+    {
+      processor p{ "::foo/bar" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({{ token_kind::keyword, ":foo/bar" }}));
+    }
+
+    SUBCASE("Too many starting colons")
+    {
+      processor p{ ":::foo" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_results
+      (
+        {
+          error{ 0, "invalid keyword" },
+          error{ 2, "expected whitespace before next token" },
+          token{ token_kind::keyword, "foo" }
+        }
+      ));
+    }
+
+    SUBCASE("Way too many starting colons")
+    {
+      processor p{ "::::foo" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_results
+      (
+        {
+          error{ 0, "invalid keyword" },
+          error{ 2, "expected whitespace before next token" },
+          token{ token_kind::keyword, ":foo" }
+        }
+      ));
+    }
   }
 
   TEST_CASE("String")

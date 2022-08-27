@@ -19,6 +19,7 @@ project_src = files([
   'src/cpp/jank/runtime/obj/number.cpp',
   'src/cpp/jank/runtime/obj/function.cpp',
   'src/cpp/jank/runtime/obj/symbol.cpp',
+  'src/cpp/jank/runtime/obj/keyword.cpp',
   'src/cpp/jank/runtime/obj/list.cpp',
   'src/cpp/jank/runtime/obj/vector.cpp',
   'src/cpp/jank/runtime/obj/map.cpp',

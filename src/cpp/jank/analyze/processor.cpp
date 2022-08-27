@@ -409,6 +409,8 @@ namespace jank::analyze
     }
     else if(o->as_symbol())
     { return analyze_symbol(boost::static_pointer_cast<runtime::obj::symbol>(o), current_frame, ctx); }
+    else if(o->as_keyword())
+    { return analyze_primitive_literal(o, current_frame, ctx); }
     else if(auto * const nil = o->as_nil())
     { return analyze_primitive_literal(o, current_frame, ctx); }
     else

@@ -3,6 +3,7 @@
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/vector.hpp>
 #include <jank/runtime/obj/string.hpp>
+#include <jank/runtime/obj/keyword.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/evaluate/context.hpp>
 
@@ -112,7 +113,14 @@ namespace jank::evaluate
       {
         auto const result(rt_ctx.eval_string("'foo/bar", an_ctx));
         CHECK(result != nullptr);
-        CHECK(result->equal(runtime::obj::symbol{ "foo/bar" }));
+        CHECK(result->equal(runtime::obj::symbol{ "foo", "bar" }));
+      }
+
+      SUBCASE("Keyword")
+      {
+        auto const result(rt_ctx.eval_string("':foo", an_ctx));
+        CHECK(result != nullptr);
+        CHECK(result->equal(runtime::obj::keyword{ runtime::obj::symbol{ "", "foo" }, true }));
       }
 
       SUBCASE("Integer")
@@ -142,7 +150,38 @@ namespace jank::evaluate
       auto const result(rt_ctx.eval_string("(def foo-bar 1) (def foo-bar 'meow) foo-bar", an_ctx));
       CHECK(result != nullptr);
       CHECK(result->as_symbol() != nullptr);
-      CHECK(result->equal(runtime::obj::symbol{ "meow" }));
+      CHECK(result->equal(runtime::obj::symbol{ "", "meow" }));
     }
+  }
+
+  TEST_CASE("Keyword")
+  {
+    runtime::context rt_ctx;
+    analyze::context an_ctx{ rt_ctx };
+
+    SUBCASE("Resolved")
+    {
+      auto const result(rt_ctx.eval_string(":foo/bar", an_ctx));
+      CHECK(result != nullptr);
+      CHECK(result->equal(runtime::obj::keyword{ runtime::obj::symbol{ "foo", "bar" }, true }));
+    }
+
+    SUBCASE("Auto-resolved unqualified")
+    {
+      auto const result(rt_ctx.eval_string("::bar", an_ctx));
+      CHECK(result != nullptr);
+      CHECK(result->equal(runtime::obj::keyword{ runtime::obj::symbol{ "clojure.core", "bar" }, true }));
+    }
+  }
+
+  /* TODO: Namespace aliases. */
+  TEST_CASE("Auto-resolved qualified" * doctest::should_fail())
+  {
+    runtime::context rt_ctx;
+    analyze::context an_ctx{ rt_ctx };
+
+    auto const result(rt_ctx.eval_string("::foo/bar", an_ctx));
+    CHECK(result != nullptr);
+    CHECK(result->equal(runtime::obj::keyword{ runtime::obj::symbol{ "foo", "bar" }, true }));
   }
 }

@@ -123,7 +123,7 @@ namespace jank::read
         case '-':
         case '0' ... '9':
         {
-          auto &&e = check_whitespace(found_space);
+          auto &&e(check_whitespace(found_space));
           if(e.is_some())
           { return err(std::move(e.unwrap())); }
           while(true)
@@ -152,7 +152,7 @@ namespace jank::read
         case '+':
         case '*':
         {
-          auto &&e = check_whitespace(found_space);
+          auto &&e(check_whitespace(found_space));
           if(e.is_some())
           { return err(std::move(e.unwrap())); }
           while(true)
@@ -179,9 +179,15 @@ namespace jank::read
         case ':':
         /* TODO: Support for ::foo */
         {
-          auto &&e = check_whitespace(found_space);
+          auto &&e(check_whitespace(found_space));
           if(e.is_some())
           { return err(std::move(e.unwrap())); }
+
+          /* Support auto-resolved qualified keywords. */
+          auto const oc(peek());
+          if(oc.is_some() && oc.unwrap() == ':')
+          { ++pos; }
+
           while(true)
           {
             auto const oc(peek());
@@ -197,13 +203,15 @@ namespace jank::read
           std::string_view const name{ file.data() + token_start + 1, ++pos - token_start - 1 };
           if(name[0] == '/' && name.size() > 1)
           { return err(error{ token_start, "invalid keyword" }); }
+          else if(name[0] == ':' && name.size() == 1)
+          { return err(error{ token_start, "invalid keyword" }); }
 
           return ok(token{ pos, token_kind::keyword, name });
         }
         /* Strings. */
         case '"':
         {
-          auto &&e = check_whitespace(found_space);
+          auto &&e(check_whitespace(found_space));
           if(e.is_some())
           { return err(std::move(e.unwrap())); }
           auto const token_start(pos);

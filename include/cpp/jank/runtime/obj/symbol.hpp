@@ -14,15 +14,13 @@ namespace jank::runtime::obj
     symbol(symbol const &) = default;
     symbol(runtime::detail::string_type const &d);
     symbol(runtime::detail::string_type &&d);
-    symbol(runtime::detail::string_type const &ns, runtime::detail::string_type const &n)
-      : ns{ ns }, name{ n }
-    { }
-    symbol(runtime::detail::string_type &&ns, runtime::detail::string_type &&n)
-      : ns{ std::move(ns) }, name{ std::move(n) }
-    { }
+    symbol(runtime::detail::string_type const &ns, runtime::detail::string_type const &n);
+    symbol(runtime::detail::string_type &&ns, runtime::detail::string_type &&n);
 
     static runtime::detail::box_type<symbol> create(runtime::detail::string_type const &n);
+    static runtime::detail::box_type<symbol> create(runtime::detail::string_type &&n);
     static runtime::detail::box_type<symbol> create(runtime::detail::string_type const &ns, runtime::detail::string_type const &name);
+    static runtime::detail::box_type<symbol> create(runtime::detail::string_type &&ns, runtime::detail::string_type &&name);
 
     runtime::detail::boolean_type equal(object const &) const override;
     runtime::detail::string_type to_string() const override;

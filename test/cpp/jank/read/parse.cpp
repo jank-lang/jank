@@ -9,6 +9,7 @@
 #include <jank/runtime/seq.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/symbol.hpp>
+#include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/vector.hpp>
 #include <jank/runtime/obj/string.hpp>
 #include <jank/runtime/obj/list.hpp>
@@ -70,7 +71,7 @@ namespace jank::read::parse
       {
         auto const r(p.next());
         CHECK(r.is_ok());
-        CHECK(r.expect_ok()->equal(runtime::obj::symbol{ runtime::detail::string_type{ s } }));
+        CHECK(r.expect_ok()->equal(runtime::obj::symbol{ "", runtime::detail::string_type{ s } }));
       }
     }
 
@@ -105,6 +106,57 @@ namespace jank::read::parse
             }
           )
         );
+      }
+    }
+  }
+
+  TEST_CASE("Keyword")
+  {
+    SUBCASE("Unqualified")
+    {
+      lex::processor lp{ ":foo :bar :spam" };
+      processor p{ lp.begin(), lp.end() };
+      for(auto const &s : { "foo", "bar", "spam" })
+      {
+        auto const r(p.next());
+        CHECK(r.is_ok());
+        CHECK(r.expect_ok()->equal(runtime::obj::keyword{ runtime::obj::symbol{ "", runtime::detail::string_type{ s } }, true }));
+      }
+    }
+
+    SUBCASE("Qualified")
+    {
+      lex::processor lp{ ":foo/foo :foo.bar/bar :spam.bar/spam" };
+      processor p{ lp.begin(), lp.end() };
+      for(auto const &s : { std::make_pair("foo", "foo"), std::make_pair("foo.bar", "bar"), std::make_pair("spam.bar", "spam") })
+      {
+        auto const r(p.next());
+        CHECK(r.is_ok());
+        CHECK(r.expect_ok()->equal(runtime::obj::keyword{ runtime::obj::symbol{ s.first, s.second }, true }));
+      }
+    }
+
+    SUBCASE("Auto-resolved unqualified")
+    {
+      lex::processor lp{ "::foo ::spam" };
+      processor p{ lp.begin(), lp.end() };
+      for(auto const &s : { "foo", "spam" })
+      {
+        auto const r(p.next());
+        CHECK(r.is_ok());
+        CHECK(r.expect_ok()->equal(runtime::obj::keyword{ runtime::obj::symbol{ "", runtime::detail::string_type{ s } }, false }));
+      }
+    }
+
+    SUBCASE("Auto-resolved qualified")
+    {
+      lex::processor lp{ "::foo/foo ::foo.bar/bar ::spam.bar/spam" };
+      processor p{ lp.begin(), lp.end() };
+      for(auto const &s : { std::make_pair("foo", "foo"), std::make_pair("foo.bar", "bar"), std::make_pair("spam.bar", "spam") })
+      {
+        auto const r(p.next());
+        CHECK(r.is_ok());
+        CHECK(r.expect_ok()->equal(runtime::obj::keyword{ runtime::obj::symbol{ s.first, s.second }, false }));
       }
     }
   }

@@ -38,7 +38,7 @@ namespace jank::analyze::expr
       auto const *var_deref_expr(boost::get<var_deref<expression>>(&expr.data));
       CHECK(var_deref_expr != nullptr);
       CHECK(var_deref_expr->qualified_name != nullptr);
-      CHECK(*var_deref_expr->qualified_name == runtime::obj::symbol{ "clojure.core/foo" });
+      CHECK(*var_deref_expr->qualified_name == runtime::obj::symbol{ "clojure.core", "foo" });
     }
   }
 
@@ -68,7 +68,7 @@ namespace jank::analyze::expr
       auto const *var_deref_expr(boost::get<var_deref<expression>>(&expr.data));
       CHECK(var_deref_expr != nullptr);
       CHECK(var_deref_expr->qualified_name != nullptr);
-      CHECK(*var_deref_expr->qualified_name == runtime::obj::symbol{ "clojure.core/foo" });
+      CHECK(*var_deref_expr->qualified_name == runtime::obj::symbol{ "clojure.core", "foo" });
     }
   }
 }

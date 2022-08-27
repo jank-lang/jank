@@ -27,7 +27,7 @@ namespace jank::analyze::expr
     auto const *def_expr(boost::get<def<expression>>(&expr.data));
     CHECK(def_expr != nullptr);
     CHECK(def_expr->name != nullptr);
-    CHECK(def_expr->name->equal(runtime::obj::symbol{ "clojure.core/*meow-meow*" }));
+    CHECK(def_expr->name->equal(runtime::obj::symbol{ "clojure.core", "*meow-meow*" }));
     CHECK(def_expr->value.is_none());
   }
 
@@ -43,14 +43,14 @@ namespace jank::analyze::expr
     auto const *def_expr(boost::get<def<expression>>(&expr.data));
     CHECK(def_expr != nullptr);
     CHECK(def_expr->name != nullptr);
-    CHECK(def_expr->name->equal(runtime::obj::symbol{ "clojure.core/foo" }));
+    CHECK(def_expr->name->equal(runtime::obj::symbol{ "clojure.core", "foo" }));
     CHECK(boost::get<expr::primitive_literal<expression>>(&def_expr->value.unwrap()->data) != nullptr);
     CHECK(boost::get<expr::primitive_literal<expression>>(def_expr->value.unwrap()->data).data->equal(runtime::obj::integer{ 777 }));
 
     SUBCASE("Lifting")
     {
       CHECK_EQ(an_ctx.tracked_refs.lifted_vars.size(), 1);
-      CHECK_NE(an_ctx.tracked_refs.lifted_vars.find(runtime::obj::symbol::create("clojure.core/foo")), an_ctx.tracked_refs.lifted_vars.end());
+      CHECK_NE(an_ctx.tracked_refs.lifted_vars.find(runtime::obj::symbol::create("clojure.core", "foo")), an_ctx.tracked_refs.lifted_vars.end());
       CHECK_EQ(an_ctx.tracked_refs.lifted_constants.size(), 1);
       CHECK_NE(an_ctx.tracked_refs.lifted_constants.find(runtime::obj::integer::create(777)), an_ctx.tracked_refs.lifted_constants.end());
     }

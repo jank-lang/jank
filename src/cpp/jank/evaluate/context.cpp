@@ -73,7 +73,11 @@ namespace jank::evaluate
   }
 
   runtime::object_ptr context::eval(analyze::expr::primitive_literal<analyze::expression> const &expr, frame const &)
-  { return expr.data; }
+  {
+    if(auto d = expr.data->as_keyword())
+    { return runtime_ctx.intern_keyword(d->sym, d->resolved); }
+    return expr.data;
+  }
 
   runtime::object_ptr context::eval(analyze::expr::vector<analyze::expression> const &expr, frame const &current_frame)
   {

@@ -8,6 +8,7 @@
 #include <jank/result.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
+#include <jank/runtime/obj/keyword.hpp>
 #include <jank/evaluate/context.hpp>
 
 namespace jank::analyze
@@ -29,11 +30,15 @@ namespace jank::runtime
     option<var_ptr> find_var(obj::symbol_ptr const &);
     option<object_ptr> find_local(obj::symbol_ptr const &);
 
+    obj::keyword_ptr intern_keyword(obj::symbol const &sym, bool const resolved);
+    obj::keyword_ptr intern_keyword(std::string_view const &ns, std::string_view const &name, bool resolved);
+
     void eval_prelude(analyze::context &);
     object_ptr eval_file(std::string_view const &path, analyze::context &);
     object_ptr eval_string(std::string_view const &code, analyze::context &);
 
     folly::Synchronized<std::unordered_map<obj::symbol_ptr, detail::box_type<ns>>> namespaces;
+    folly::Synchronized<std::unordered_map<obj::symbol, obj::keyword_ptr>> keywords;
 
     /* TODO: This can be forward declared and moved to the cpp. */
     struct thread_state

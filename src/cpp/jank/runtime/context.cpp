@@ -174,6 +174,35 @@ namespace jank::runtime
     return ok(ns_res.first->second);
   }
 
+  obj::keyword_ptr context::intern_keyword(obj::symbol const &sym, bool const resolved)
+  { return intern_keyword(sym.ns, sym.name, resolved); }
+  obj::keyword_ptr context::intern_keyword(std::string_view const &ns, std::string_view const &name, bool resolved)
+  {
+    obj::symbol sym{ ns, name };
+    if(!resolved)
+    {
+      /* The ns will be an ns alias. */
+      if(!ns.empty())
+      { throw "unimplemented: auto-resolved ns aliases"; }
+      else
+      {
+        auto const t_state(get_thread_state());
+        auto const current_ns(t_state.current_ns->get_root()->as_ns());
+        sym.ns = current_ns->name->name;
+        resolved = true;
+      }
+    }
+
+    auto locked_keywords(keywords.ulock());
+    auto const found(locked_keywords->find(sym));
+    if(found != locked_keywords->end())
+    { return found->second; }
+
+    auto const locked_keywords_w(locked_keywords.moveFromUpgradeToWrite());
+    auto const res(locked_keywords_w->insert({sym, obj::keyword::create(sym, resolved)}));
+    return res.first->second;
+  }
+
   context::thread_state::thread_state(context &ctx)
     : rt_ctx{ ctx }, eval_ctx{ ctx }
   { }

@@ -23,11 +23,22 @@ namespace jank::runtime::obj
   symbol::symbol(detail::string_type &&d)
   { separate(*this, std::move(d)); }
 
+  symbol::symbol(runtime::detail::string_type const &ns, runtime::detail::string_type const &n)
+    : ns{ ns }, name{ n }
+  { }
+  symbol::symbol(runtime::detail::string_type &&ns, runtime::detail::string_type &&n)
+    : ns{ std::move(ns) }, name{ std::move(n) }
+  { }
+
   detail::box_type<symbol> symbol::create(detail::string_type const &n)
   { return make_box<symbol>(n); }
+  detail::box_type<symbol> symbol::create(detail::string_type &&n)
+  { return make_box<symbol>(std::move(n)); }
 
   detail::box_type<symbol> symbol::create(detail::string_type const &ns, detail::string_type const &name)
   { return make_box<symbol>(ns, name); }
+  detail::box_type<symbol> symbol::create(detail::string_type &&ns, detail::string_type &&name)
+  { return make_box<symbol>(std::move(ns), std::move(name)); }
 
   runtime::detail::boolean_type symbol::equal(object const &o) const
   {

@@ -36,6 +36,10 @@ namespace jank::runtime::detail
       : data{ s }
       , length{ s.size() }
     { }
+    string_type_impl(std::string_view const &s)
+      : data{ s }
+      , length{ s.size() }
+    { }
     string_type_impl(char const * const s, size_t const l)
       : data{ s, l }
       , length{ l }
@@ -63,6 +67,9 @@ namespace jank::runtime::detail
       hash = h;
       return h;
     }
+
+    operator std::string_view() const
+    { return { data.get() }; }
 
     value_type data;
     /* TODO: Consider removing this. */

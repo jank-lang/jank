@@ -38,6 +38,7 @@ namespace jank::runtime
     struct number;
     struct string;
     struct symbol;
+    struct keyword;
     struct list;
     struct vector;
     struct map;
@@ -78,6 +79,8 @@ namespace jank::runtime
     virtual obj::string const* as_string() const
     { return nullptr; }
     virtual obj::symbol const* as_symbol() const
+    { return nullptr; }
+    virtual obj::keyword const* as_keyword() const
     { return nullptr; }
     virtual obj::list const* as_list() const
     { return nullptr; }

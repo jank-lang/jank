@@ -9,6 +9,7 @@
 #include <jank/runtime/obj/map.hpp>
 #include <jank/runtime/obj/set.hpp>
 #include <jank/runtime/obj/symbol.hpp>
+#include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/string.hpp>
 #include <jank/read/parse.hpp>
 
@@ -169,8 +170,24 @@ namespace jank::read::parse
 
   processor::object_result processor::parse_keyword()
   {
-    /* TODO */
-    return err(error{ "unimplemented: keywords" });
+    auto token((*token_current).expect_ok());
+    ++token_current;
+    auto const sv(std::get<std::string_view>(token.data));
+    bool const resolved{ sv[0] != ':' };
+
+    auto const slash(sv.find('/'));
+    std::string ns, name;
+    if(slash != std::string::npos)
+    {
+      if(resolved)
+      { ns = sv.substr(0, slash); }
+      else
+      { ns = sv.substr(1, slash - 1); }
+      name = sv.substr(slash + 1);
+    }
+    else
+    { name = sv.substr(resolved ? 0 : 1); }
+    return ok(runtime::obj::keyword::create(runtime::obj::symbol{ ns, name }, resolved));
   }
 
   processor::object_result processor::parse_integer()
