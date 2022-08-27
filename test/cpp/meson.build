@@ -9,6 +9,7 @@ test_src = [
   'jank/analyze/expr/var_deref.cpp',
   'jank/analyze/expr/function.cpp',
   'jank/analyze/expr/let.cpp',
+  'jank/analyze/expr/primitive_literal.cpp',
   'jank/evaluate/context.cpp',
 ]
 

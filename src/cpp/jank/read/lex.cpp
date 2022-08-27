@@ -163,6 +163,8 @@ namespace jank::read
           std::string_view const name{ file.data() + token_start, ++pos - token_start };
           if(name[0] == '/' && name.size() > 1)
           { return err(error{ token_start, "invalid symbol" }); }
+          else if(name == "nil")
+          { return ok(token{ pos, token_kind::nil }); }
 
           return ok(token{ pos, token_kind::symbol, name });
         }

@@ -56,6 +56,8 @@ namespace jank::read::parse
         return ok(nullptr);
       case lex::token_kind::single_quote:
         return parse_quote();
+      case lex::token_kind::nil:
+        return parse_nil();
       case lex::token_kind::symbol:
         return parse_symbol();
       case lex::token_kind::keyword:
@@ -140,6 +142,12 @@ namespace jank::read::parse
       runtime::obj::symbol::create("quote"),
       val_result.expect_ok_move()
     );
+  }
+
+  processor::object_result processor::parse_nil()
+  {
+    ++token_current;
+    return ok(runtime::make_box<runtime::obj::nil>());
   }
 
   processor::object_result processor::parse_symbol()

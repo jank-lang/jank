@@ -11,7 +11,7 @@ namespace jank::codegen
     void gen_constant(runtime::object_ptr const &o, std::ostream &oss)
     {
       if(o->as_nil())
-      { oss << "jank::runtime::JANK_NIL"; }
+      { oss << "jank::runtime::make_box<jank::runtime::obj::nil>()"; }
       else if(auto d = o->as_boolean())
       { oss << "jank::runtime::make_box<jank::runtime::obj::boolean>(" << d->data << ")"; }
       else if(auto d = o->as_integer())

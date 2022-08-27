@@ -3,7 +3,7 @@
 
 namespace jank::runtime
 {
-  /* XXX: Any static helpers stay in here, to ensure they're all created deterministically. */
+  /* TODO: Replace these with non-static values. */
   object_ptr JANK_NIL{ make_box<obj::nil>() };
 
   namespace obj

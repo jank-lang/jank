@@ -214,6 +214,30 @@ namespace jank::read::lex
     }
   }
 
+  TEST_CASE("Nil")
+  {
+    SUBCASE("Full match")
+    {
+      processor p{ "nil" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({{ token_kind::nil }}));
+    }
+
+    SUBCASE("Partial match, prefix")
+    {
+      processor p{ "nili" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({{ token_kind::symbol, "nili" }}));
+    }
+
+    SUBCASE("Partial match, suffix")
+    {
+      processor p{ "onil" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({{ token_kind::symbol, "onil" }}));
+    }
+  }
+
   /* TODO: Negative. */
   TEST_CASE("Integer")
   {

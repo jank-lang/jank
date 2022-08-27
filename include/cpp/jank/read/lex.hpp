@@ -18,6 +18,7 @@ namespace jank::read::lex
     open_curly_bracket,
     close_curly_bracket,
     single_quote,
+    nil,
     /* Has string data. */
     symbol,
     /* Has string data. */

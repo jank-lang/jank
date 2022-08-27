@@ -30,6 +30,15 @@ namespace jank::read::parse
     CHECK(r.expect_ok() == nullptr);
   }
 
+  TEST_CASE("Nil")
+  {
+    lex::processor lp{ "nil" };
+    processor p{ lp.begin(), lp.end() };
+    auto const r(p.next());
+    CHECK(r.is_ok());
+    CHECK(r.expect_ok()->equal(runtime::obj::nil{ }));
+  }
+
   TEST_CASE("Integer")
   {
     lex::processor lp{ "1234" };
