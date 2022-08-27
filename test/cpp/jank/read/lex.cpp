@@ -241,18 +241,32 @@ namespace jank::read::lex
   /* TODO: Negative. */
   TEST_CASE("Integer")
   {
-    SUBCASE("Single-char")
+    SUBCASE("Positive single-char")
     {
       processor p{ "0" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
       CHECK(tokens == make_tokens({{ token_kind::integer, 0 }}));
     }
 
-    SUBCASE("Multi-char")
+    SUBCASE("Positive multi-char")
     {
       processor p{ "1234" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
       CHECK(tokens == make_tokens({{ token_kind::integer, 1234 }}));
+    }
+
+    SUBCASE("Negative single-char")
+    {
+      processor p{ "-1" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({{ token_kind::integer, -1 }}));
+    }
+
+    SUBCASE("Negative multi-char")
+    {
+      processor p{ "-1234" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({{ token_kind::integer, -1234 }}));
     }
 
     SUBCASE("Expect space")
@@ -336,6 +350,20 @@ namespace jank::read::lex
       processor p{ "abc_.123/-foo+?" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
       CHECK(tokens == make_tokens({{ token_kind::symbol, "abc_.123/-foo+?" }}));
+    }
+
+    SUBCASE("Only -")
+    {
+      processor p{ "-" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({{ token_kind::symbol, "-" }}));
+    }
+
+    SUBCASE("Starting with -")
+    {
+      processor p{ "-main" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({{ token_kind::symbol, "-main" }}));
     }
 
     SUBCASE("Quoted")

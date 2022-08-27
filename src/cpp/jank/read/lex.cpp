@@ -120,6 +120,7 @@ namespace jank::read
           require_space = false;
           return ok(token{ pos++, token_kind::single_quote });
         /* Numbers. */
+        case '-':
         case '0' ... '9':
         {
           auto &&e = check_whitespace(found_space);
@@ -132,14 +133,20 @@ namespace jank::read
             { break; }
             ++pos;
           }
-          require_space = true;
-          return ok(token{ pos++, token_kind::integer, std::strtoll(file.data() + token_start, nullptr, 10) });
+
+          /* Tokens beginning with - are ambiguous; it's only a negative number if it has numbers
+           * to follow. */
+          if(file[token_start] != '-' || (pos - token_start) >= 1)
+          {
+            require_space = true;
+            return ok(token{ pos++, token_kind::integer, std::strtoll(file.data() + token_start, nullptr, 10) });
+          }
+          /* XXX: Fall through to symbol starting with - */
         }
         /* Symbols. */
         case 'a' ... 'z':
         case 'A' ... 'Z':
         case '_':
-        case '-':
         case '/':
         case '?':
         case '+':
