@@ -29,6 +29,10 @@ namespace jank::read::parse
   bool processor::iterator::operator ==(processor::iterator const &rhs) const
   { return latest == rhs.latest; }
 
+  processor::processor(lex::processor::iterator const &b, lex::processor::iterator const &e)
+    : token_current{ b }, token_end{ e }
+  { }
+
   processor::object_result processor::next()
   {
     /* TODO: Replace nullptr with none. */
@@ -65,6 +69,8 @@ namespace jank::read::parse
         return parse_keyword();
       case lex::token_kind::integer:
         return parse_integer();
+      case lex::token_kind::real:
+        return parse_real();
       case lex::token_kind::string:
         return parse_string();
       case lex::token_kind::eof:
@@ -195,6 +201,13 @@ namespace jank::read::parse
     auto const token(token_current->expect_ok());
     ++token_current;
     return ok(runtime::make_box<runtime::obj::integer>(std::get<runtime::detail::integer_type>(token.data)));
+  }
+
+  processor::object_result processor::parse_real()
+  {
+    auto const token(token_current->expect_ok());
+    ++token_current;
+    return ok(runtime::make_box<runtime::obj::real>(std::get<runtime::detail::real_type>(token.data)));
   }
 
   processor::object_result processor::parse_string()

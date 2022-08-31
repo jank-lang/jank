@@ -25,6 +25,8 @@ namespace jank::read::lex
     keyword,
     /* Has int data. */
     integer,
+    /* Has double data. */
+    real,
     /* Has string data. */
     string,
     eof,
@@ -32,10 +34,8 @@ namespace jank::read::lex
 
   struct token
   {
-    token(token_kind const k) : kind{ k }
-    { }
-    token(size_t const p, token_kind const k) : pos{ p }, kind{ k }
-    { }
+    token(token_kind const k);
+    token(size_t const p, token_kind const k);
     template <typename T>
     token(token_kind const k, T &&t) : kind{ k }, data{ std::forward<T>(t) }
     { }
@@ -55,7 +55,7 @@ namespace jank::read::lex
 
     size_t pos{};
     token_kind kind;
-    std::variant<no_data, runtime::detail::integer_type, std::string_view> data;
+    std::variant<no_data, runtime::detail::integer_type, runtime::detail::real_type, std::string_view> data;
   };
   std::ostream& operator <<(std::ostream &os, token const &t);
   std::ostream& operator <<(std::ostream &os, token::no_data const &t);
@@ -65,20 +65,12 @@ namespace jank::read
 {
   struct error
   {
-    error(size_t const s, std::string const &m)
-      : start{ s }, end{ s }, message{ m }
-    { }
-    error(size_t const s, size_t const e, std::string const &m)
-      : start{ s }, end{ e }, message{ m }
-    { }
-    error(std::string const &m)
-      : message{ m }
-    { }
+    error(size_t const s, std::string const &m);
+    error(size_t const s, size_t const e, std::string const &m);
+    error(std::string const &m);
 
-    bool operator ==(error const &rhs) const
-    { return !(*this != rhs); }
-    bool operator !=(error const &rhs) const
-    { return start != rhs.start || end != rhs.end || message != rhs.message; }
+    bool operator ==(error const &rhs) const;
+    bool operator !=(error const &rhs) const;
 
     size_t start{};
     size_t end{};
@@ -109,8 +101,7 @@ namespace jank::read::lex
       processor &p;
     };
 
-    processor(std::string_view const &f) : file{ f }
-    { }
+    processor(std::string_view const &f);
 
     result<token, error> next();
     option<char> peek() const;

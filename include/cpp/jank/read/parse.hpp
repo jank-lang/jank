@@ -30,9 +30,7 @@ namespace jank::read::parse
       processor &p;
     };
 
-    processor(lex::processor::iterator const &b, lex::processor::iterator const &e)
-      : token_current{ b }, token_end{ e }
-    { }
+    processor(lex::processor::iterator const &b, lex::processor::iterator const &e);
 
     object_result next();
     object_result parse_list();
@@ -43,6 +41,7 @@ namespace jank::read::parse
     object_result parse_nil();
     object_result parse_keyword();
     object_result parse_integer();
+    object_result parse_real();
     object_result parse_string();
 
     iterator begin();

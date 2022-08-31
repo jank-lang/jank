@@ -49,6 +49,15 @@ namespace jank::read::parse
     CHECK(r.expect_ok()->equal(runtime::obj::integer{ 1234 }));
   }
 
+  TEST_CASE("Real")
+  {
+    lex::processor lp{ "12.34" };
+    processor p{ lp.begin(), lp.end() };
+    auto const r(p.next());
+    CHECK(r.is_ok());
+    CHECK(r.expect_ok()->equal(runtime::obj::real{ 12.34 }));
+  }
+
   TEST_CASE("String")
   {
     lex::processor lp{ "\"foo\" \"bar\"" };

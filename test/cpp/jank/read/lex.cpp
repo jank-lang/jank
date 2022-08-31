@@ -238,7 +238,6 @@ namespace jank::read::lex
     }
   }
 
-  /* TODO: Negative. */
   TEST_CASE("Integer")
   {
     SUBCASE("Positive single-char")
@@ -294,6 +293,142 @@ namespace jank::read::lex
           {
             token{ token_kind::open_paren },
             token{ token_kind::integer, 1234 },
+            token{ token_kind::close_paren },
+          }
+        ));
+      }
+    }
+  }
+
+  TEST_CASE("Real")
+  {
+    SUBCASE("Positive 0.")
+    {
+      processor p{ "0." };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({{ token_kind::real, 0.0 }}));
+    }
+
+    SUBCASE("Positive 0.0")
+    {
+      processor p{ "0.0" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({{ token_kind::real, 0.0 }}));
+    }
+
+    SUBCASE("Negative 1.")
+    {
+      processor p{ "-1." };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({{ token_kind::real, -1.0 }}));
+    }
+
+    SUBCASE("Negative 1.5")
+    {
+      processor p{ "-1.5" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({{ token_kind::real, -1.5 }}));
+    }
+
+    SUBCASE("Negative multi-char")
+    {
+      processor p{ "-1234.1234" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens({{ token_kind::real, -1234.1234 }}));
+    }
+
+    SUBCASE("Positive no leading digit")
+    {
+      processor p{ ".0" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_results
+      (
+        {
+          error{ 0, "unexpected character: ." },
+          token{ token_kind::integer, 0 },
+        }
+      ));
+    }
+
+    SUBCASE("Negative no leading digit")
+    {
+      processor p{ "-.0" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_results
+      (
+        {
+          error{ 0, 1, "invalid number" },
+          error{ 1, "unexpected character: ." },
+          token{ token_kind::integer, 0 },
+        }
+      ));
+    }
+
+    SUBCASE("Too many dots")
+    {
+      {
+        processor p{ "0.0." };
+        std::vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_results
+        (
+          {
+            error{ 0, 3, "invalid number" },
+            error{ 3, "unexpected character: ." },
+          }
+        ));
+      }
+
+      {
+        processor p{ "0..0" };
+        std::vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_results
+        (
+          {
+            error{ 0, 2, "invalid number" },
+            error{ 2, "unexpected character: ." },
+            token{ token_kind::integer, 0 },
+          }
+        ));
+      }
+      {
+        processor p{ "0.0.0" };
+        std::vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_results
+        (
+          {
+            error{ 0, 3, "invalid number" },
+            error{ 3, "unexpected character: ." },
+            token{ token_kind::integer, 0 },
+          }
+        ));
+      }
+    }
+
+    SUBCASE("Expect space")
+    {
+      SUBCASE("Required")
+      {
+        processor p{ "12.34abc" };
+        std::vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_results
+        (
+          {
+            token{ token_kind::real, 12.34 },
+            error{ 5, "expected whitespace before next token" },
+            token{ token_kind::symbol, "abc" },
+          }
+        ));
+      }
+
+      SUBCASE("Not required")
+      {
+        processor p{ "(12.34)" };
+        std::vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_results
+        (
+          {
+            token{ token_kind::open_paren },
+            token{ token_kind::real, 12.34 },
             token{ token_kind::close_paren },
           }
         ));

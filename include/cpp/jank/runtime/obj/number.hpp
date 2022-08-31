@@ -17,6 +17,7 @@ namespace jank::runtime::obj
     boolean() = default;
     boolean(boolean &&) = default;
     boolean(boolean const &) = default;
+    /* TODO: Move these ctors to cpp file. */
     boolean(runtime::detail::boolean_type const d)
       : data{ d }
     { }

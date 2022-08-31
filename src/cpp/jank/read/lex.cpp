@@ -7,6 +7,21 @@
 
 namespace jank::read
 {
+  error::error(size_t const s, std::string const &m)
+    : start{ s }, end{ s }, message{ m }
+  { }
+  error::error(size_t const s, size_t const e, std::string const &m)
+    : start{ s }, end{ e }, message{ m }
+  { }
+  error::error(std::string const &m)
+    : message{ m }
+  { }
+
+  bool error::operator ==(error const &rhs) const
+  { return !(*this != rhs); }
+  bool error::operator !=(error const &rhs) const
+  { return start != rhs.start || end != rhs.end || message != rhs.message; }
+
   std::ostream& operator <<(std::ostream &os, error const &e)
   { return os << "error(" << e.start << " - " << e.end << ", " << std::quoted(e.message) << ")"; }
 
@@ -30,6 +45,11 @@ namespace jank::read
       return os;
     }
 
+    token::token(token_kind const k) : kind{ k }
+    { }
+    token::token(size_t const p, token_kind const k) : pos{ p }, kind{ k }
+    { }
+
     bool token::no_data::operator ==(no_data const &) const
     { return true; }
     bool token::no_data::operator !=(no_data const &) const
@@ -42,6 +62,9 @@ namespace jank::read
     { return os << "token(" << magic_enum::enum_name(t.kind) << ", " << t.data << ")"; }
     std::ostream& operator <<(std::ostream &os, token::no_data const &)
     { return os << "<no data>"; }
+
+    processor::processor(std::string_view const &f) : file{ f }
+    { }
 
     processor::iterator::value_type const& processor::iterator::operator *() const
     { return latest.unwrap(); }
@@ -126,11 +149,29 @@ namespace jank::read
           auto &&e(check_whitespace(found_space));
           if(e.is_some())
           { return err(std::move(e.unwrap())); }
+          bool contains_leading_digit{ file[token_start] != '-' };
+          bool contains_dot{};
           while(true)
           {
             auto const oc(peek());
-            if(oc.is_none() || std::isdigit(oc.unwrap()) == 0)
+            if(oc.is_none())
             { break; }
+
+            auto const c(oc.unwrap());
+            if(c == '.')
+            {
+              if(contains_dot || !contains_leading_digit)
+              {
+                ++pos;
+                return err(error{ token_start, pos, "invalid number" });
+              }
+              contains_dot = true;
+            }
+            else if(std::isdigit(c) == 0)
+            { break; }
+
+            contains_leading_digit = true;
+
             ++pos;
           }
 
@@ -139,7 +180,10 @@ namespace jank::read
           if(file[token_start] != '-' || (pos - token_start) >= 1)
           {
             require_space = true;
-            return ok(token{ pos++, token_kind::integer, std::strtoll(file.data() + token_start, nullptr, 10) });
+            if(contains_dot)
+            { return ok(token{ pos++, token_kind::real, std::strtod(file.data() + token_start, nullptr) }); }
+            else
+            { return ok(token{ pos++, token_kind::integer, std::strtoll(file.data() + token_start, nullptr, 10) }); }
           }
           /* XXX: Fall through to symbol starting with - */
         }

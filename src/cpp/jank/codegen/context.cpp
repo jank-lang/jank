@@ -34,8 +34,7 @@ namespace jank::codegen
     analyze::processor::iterator const an_begin,
     analyze::processor::iterator const an_end,
     size_t const total_forms
-  )
-    : rt_ctx{ rt_ctx }, an_ctx{ an_ctx }
+  ) : rt_ctx{ rt_ctx }, an_ctx{ an_ctx }
   {
     expressions.reserve(total_forms);
     for(auto it(an_begin); it != an_end; ++it)
