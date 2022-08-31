@@ -183,11 +183,11 @@ namespace jank::runtime::obj
     detail::real_type left, right;
   };
 
-  static thread_local integer_ops int_ops;
+  static thread_local integer_ops i_ops;
   static thread_local real_ops r_ops;
 
   number_ops const& integer_ops::with(integer_ops const &) const
-  { return int_ops; }
+  { return i_ops; }
   number_ops const& integer_ops::with(real_ops const &) const
   {
     r_ops.left = left;
@@ -206,8 +206,8 @@ namespace jank::runtime::obj
   {
     if(auto const * const i = n->as_integer())
     {
-      int_ops.left = i->data;
-      return int_ops;
+      i_ops.left = i->data;
+      return i_ops;
     }
     if(auto const * const r = n->as_real())
     {
@@ -223,8 +223,8 @@ namespace jank::runtime::obj
   {
     if(auto const * const i = n->as_integer())
     {
-      int_ops.right = i->data;
-      return int_ops;
+      i_ops.right = i->data;
+      return i_ops;
     }
     if(auto const * const r = n->as_real())
     {

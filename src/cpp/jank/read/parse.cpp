@@ -161,7 +161,7 @@ namespace jank::read::parse
   {
     auto token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(std::get<std::string_view>(token.data));
+    auto const sv(boost::get<std::string_view>(token.data));
     auto const slash(sv.find('/'));
     std::string ns, name;
     if(slash != std::string::npos)
@@ -178,7 +178,7 @@ namespace jank::read::parse
   {
     auto token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(std::get<std::string_view>(token.data));
+    auto const sv(boost::get<std::string_view>(token.data));
     bool const resolved{ sv[0] != ':' };
 
     auto const slash(sv.find('/'));
@@ -200,21 +200,21 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return ok(runtime::make_box<runtime::obj::integer>(std::get<runtime::detail::integer_type>(token.data)));
+    return ok(runtime::make_box<runtime::obj::integer>(boost::get<runtime::detail::integer_type>(token.data)));
   }
 
   processor::object_result processor::parse_real()
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return ok(runtime::make_box<runtime::obj::real>(std::get<runtime::detail::real_type>(token.data)));
+    return ok(runtime::make_box<runtime::obj::real>(boost::get<runtime::detail::real_type>(token.data)));
   }
 
   processor::object_result processor::parse_string()
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    auto const sv(std::get<std::string_view>(token.data));
+    auto const sv(boost::get<std::string_view>(token.data));
     return ok(runtime::make_box<runtime::obj::string>(std::string{ sv.data(), sv.size() }));
   }
 

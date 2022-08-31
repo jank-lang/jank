@@ -1,7 +1,8 @@
 #pragma once
 
 #include <string_view>
-#include <variant>
+
+#include <boost/variant.hpp>
 
 #include <jank/result.hpp>
 #include <jank/option.hpp>
@@ -36,13 +37,9 @@ namespace jank::read::lex
   {
     token(token_kind const k);
     token(size_t const p, token_kind const k);
-    template <typename T>
-    token(token_kind const k, T &&t) : kind{ k }, data{ std::forward<T>(t) }
-    { }
-    template <typename T>
-    token(size_t const p, token_kind const k, T &&t)
-      : pos{ p }, kind{ k }, data{ std::forward<T>(t) }
-    { }
+    token(size_t const p, token_kind const k, runtime::detail::integer_type const);
+    token(size_t const p, token_kind const k, runtime::detail::real_type const);
+    token(size_t const p, token_kind const k, std::string_view const);
 
     bool operator ==(token const &rhs) const;
     bool operator !=(token const &rhs) const;
@@ -55,7 +52,7 @@ namespace jank::read::lex
 
     size_t pos{};
     token_kind kind;
-    std::variant<no_data, runtime::detail::integer_type, runtime::detail::real_type, std::string_view> data;
+    boost::variant<no_data, runtime::detail::integer_type, runtime::detail::real_type, std::string_view> data;
   };
   std::ostream& operator <<(std::ostream &os, token const &t);
   std::ostream& operator <<(std::ostream &os, token::no_data const &t);

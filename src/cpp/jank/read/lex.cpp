@@ -30,7 +30,7 @@ namespace jank::read
     template <typename ... Ts>
     std::ostream& operator<<(std::ostream &os, std::variant<Ts...> const &v)
     {
-      std::visit
+      boost::apply_visitor
       (
        [&](auto &&arg)
        {
@@ -48,6 +48,15 @@ namespace jank::read
     token::token(token_kind const k) : kind{ k }
     { }
     token::token(size_t const p, token_kind const k) : pos{ p }, kind{ k }
+    { }
+    token::token(size_t const p, token_kind const k, runtime::detail::integer_type const d)
+      : pos{ p }, kind{ k }, data{ d }
+    { }
+    token::token(size_t const p, token_kind const k, runtime::detail::real_type const d)
+      : pos{ p }, kind{ k }, data{ d }
+    { }
+    token::token(size_t const p, token_kind const k, std::string_view const d)
+      : pos{ p }, kind{ k }, data{ d }
     { }
 
     bool token::no_data::operator ==(no_data const &) const
@@ -181,7 +190,7 @@ namespace jank::read
           {
             require_space = true;
             if(contains_dot)
-            { return ok(token{ pos++, token_kind::real, std::strtod(file.data() + token_start, nullptr) }); }
+            { return ok(token{ pos++, token_kind::real, std::strtold(file.data() + token_start, nullptr) }); }
             else
             { return ok(token{ pos++, token_kind::integer, std::strtoll(file.data() + token_start, nullptr, 10) }); }
           }

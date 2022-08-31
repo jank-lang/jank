@@ -55,7 +55,7 @@ namespace jank::read::parse
     processor p{ lp.begin(), lp.end() };
     auto const r(p.next());
     CHECK(r.is_ok());
-    CHECK(r.expect_ok()->equal(runtime::obj::real{ 12.34 }));
+    CHECK(r.expect_ok()->equal(runtime::obj::real{ 12.34l }));
   }
 
   TEST_CASE("String")
