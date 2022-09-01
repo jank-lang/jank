@@ -25,14 +25,14 @@ namespace jank::runtime
     (
       [this](object_ptr const &sym)
       {
-        obj::symbol const * const s(sym->as_symbol());
+        auto const s(sym->as_symbol());
         if(!s)
         {
           /* TODO: throw?. */
           return JANK_NIL;
         }
-        auto typed_sym(boost::static_pointer_cast<obj::symbol>(sym));
-        auto new_ns(intern_ns(typed_sym));
+        auto const typed_sym(boost::static_pointer_cast<obj::symbol>(sym));
+        auto const new_ns(intern_ns(typed_sym));
         get_thread_state().current_ns->set_root(new_ns);
         return JANK_NIL;
       }

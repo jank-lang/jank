@@ -50,6 +50,24 @@ namespace jank::read::lex
     return std::equal(v.begin(), v.end(), a.begin());
   }
 
+  /* This really helps with doctest comparison outputs. */
+  template <typename T>
+  std::ostream& operator<<(std::ostream &os, std::vector<T> const &rs)
+  {
+    os << "[ ";
+    for(auto const &r : rs)
+    { os << r << " "; }
+    return os << "]";
+  }
+  template <typename T, size_t N>
+  std::ostream& operator<<(std::ostream &os, std::array<T, N> const &rs)
+  {
+    os << "[ ";
+    for(auto const &r : rs)
+    { os << r << " "; }
+    return os << "]";
+  }
+
   TEST_CASE("Empty")
   {
     processor p{ "" };
@@ -102,14 +120,14 @@ namespace jank::read::lex
     {
       processor p{ "1 2 ; meow" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({ { 0, token_kind::integer, 1ll }, { 0, token_kind::integer, 2ll } }));
+      CHECK(tokens == make_tokens({ { 0, token_kind::integer, 1ll }, { 2, token_kind::integer, 2ll } }));
     }
 
     SUBCASE("Expressions before and after")
     {
       processor p{ "1 ; meow\n2" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({ { 0, token_kind::integer, 1ll }, { 0, token_kind::integer, 2ll } }));
+      CHECK(tokens == make_tokens({ { 0, token_kind::integer, 1ll }, { 9, token_kind::integer, 2ll } }));
     }
   }
 
@@ -183,15 +201,15 @@ namespace jank::read::lex
       (
         {
           { 0, token_kind::open_square_bracket },
-          { 0, token_kind::open_paren },
-          { 0, token_kind::symbol, "foo" },
-          { 0, token_kind::open_square_bracket },
-          { 0, token_kind::integer, 1ll },
-          { 0, token_kind::integer, 2ll },
-          { 0, token_kind::close_square_bracket },
-          { 0, token_kind::close_paren },
-          { 0, token_kind::integer, 2ll },
-          { 0, token_kind::close_square_bracket },
+          { 1, token_kind::open_paren },
+          { 2, token_kind::symbol, "foo" },
+          { 6, token_kind::open_square_bracket },
+          { 7, token_kind::integer, 1ll },
+          { 9, token_kind::integer, 2ll },
+          { 10, token_kind::close_square_bracket },
+          { 11, token_kind::close_paren },
+          { 13, token_kind::integer, 2ll },
+          { 14, token_kind::close_square_bracket },
         }
       ));
     }
@@ -279,7 +297,7 @@ namespace jank::read::lex
           {
             token{ 0, token_kind::integer, 1234ll },
             error{ 4, "expected whitespace before next token" },
-            token{ 0, token_kind::symbol, "abc" },
+            token{ 4, token_kind::symbol, "abc" },
           }
         ));
       }
@@ -292,8 +310,8 @@ namespace jank::read::lex
         (
           {
             token{ 0, token_kind::open_paren },
-            token{ 0, token_kind::integer, 1234ll },
-            token{ 0, token_kind::close_paren },
+            token{ 1, token_kind::integer, 1234ll },
+            token{ 5, token_kind::close_paren },
           }
         ));
       }
@@ -345,7 +363,7 @@ namespace jank::read::lex
       (
         {
           error{ 0, "unexpected character: ." },
-          token{ 0, token_kind::integer, 0ll },
+          token{ 1, token_kind::integer, 0ll },
         }
       ));
     }
@@ -359,7 +377,7 @@ namespace jank::read::lex
         {
           error{ 0, 1, "invalid number" },
           error{ 1, "unexpected character: ." },
-          token{ 0, token_kind::integer, 0ll },
+          token{ 2, token_kind::integer, 0ll },
         }
       ));
     }
@@ -386,7 +404,7 @@ namespace jank::read::lex
           {
             error{ 0, 2, "invalid number" },
             error{ 2, "unexpected character: ." },
-            token{ 0, token_kind::integer, 0ll },
+            token{ 3, token_kind::integer, 0ll },
           }
         ));
       }
@@ -398,7 +416,7 @@ namespace jank::read::lex
           {
             error{ 0, 3, "invalid number" },
             error{ 3, "unexpected character: ." },
-            token{ 0, token_kind::integer, 0ll },
+            token{ 4, token_kind::integer, 0ll },
           }
         ));
       }
@@ -415,7 +433,7 @@ namespace jank::read::lex
           {
             token{ 0, token_kind::real, 12.34l },
             error{ 5, "expected whitespace before next token" },
-            token{ 0, token_kind::symbol, "abc" },
+            token{ 5, token_kind::symbol, "abc" },
           }
         ));
       }
@@ -428,8 +446,8 @@ namespace jank::read::lex
         (
           {
             token{ 0, token_kind::open_paren },
-            token{ 0, token_kind::real, 12.34l },
-            token{ 0, token_kind::close_paren },
+            token{ 1, token_kind::real, 12.34l },
+            token{ 6, token_kind::close_paren },
           }
         ));
       }
@@ -505,7 +523,7 @@ namespace jank::read::lex
     {
       processor p{ "'foo" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, token_kind::single_quote }, { 0, token_kind::symbol, "foo" }}));
+      CHECK(tokens == make_tokens({{ 0, token_kind::single_quote }, { 1, token_kind::symbol, "foo" }}));
     }
   }
 
@@ -583,7 +601,7 @@ namespace jank::read::lex
         {
           error{ 0, "invalid keyword" },
           error{ 2, "expected whitespace before next token" },
-          token{ 0, token_kind::keyword, "foo" }
+          token{ 2, token_kind::keyword, "foo" }
         }
       ));
     }
@@ -597,7 +615,7 @@ namespace jank::read::lex
         {
           error{ 0, "invalid keyword" },
           error{ 2, "expected whitespace before next token" },
-          token{ 0, token_kind::keyword, ":foo" }
+          token{ 2, token_kind::keyword, ":foo" }
         }
       ));
     }

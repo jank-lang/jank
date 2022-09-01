@@ -64,11 +64,11 @@ namespace jank::read
     bool token::no_data::operator !=(no_data const &) const
     { return false; }
     bool token::operator ==(token const &rhs) const
-    { return kind == rhs.kind && data == rhs.data; }
+    { return !(*this != rhs); }
     bool token::operator !=(token const &rhs) const
-    { return kind != rhs.kind || data != rhs.data; }
+    { return (pos != rhs.pos && pos != token::ignore_pos && rhs.pos != token::ignore_pos) || kind != rhs.kind || data != rhs.data; }
     std::ostream& operator <<(std::ostream &os, token const &t)
-    { return os << "token(" << magic_enum::enum_name(t.kind) << ", " << t.data << ")"; }
+    { return os << "token(" << t.pos << ", " << magic_enum::enum_name(t.kind) << ", " << t.data << ")"; }
     std::ostream& operator <<(std::ostream &os, token::no_data const &)
     { return os << "<no data>"; }
 
@@ -189,10 +189,11 @@ namespace jank::read
           if(file[token_start] != '-' || (pos - token_start) >= 1)
           {
             require_space = true;
+            pos++;
             if(contains_dot)
-            { return ok(token{ pos++, token_kind::real, std::strtold(file.data() + token_start, nullptr) }); }
+            { return ok(token{ token_start, token_kind::real, std::strtold(file.data() + token_start, nullptr) }); }
             else
-            { return ok(token{ pos++, token_kind::integer, std::strtoll(file.data() + token_start, nullptr, 10) }); }
+            { return ok(token{ token_start, token_kind::integer, std::strtoll(file.data() + token_start, nullptr, 10) }); }
           }
           /* XXX: Fall through to symbol starting with - */
         }
@@ -224,9 +225,9 @@ namespace jank::read
           if(name[0] == '/' && name.size() > 1)
           { return err(error{ token_start, "invalid symbol" }); }
           else if(name == "nil")
-          { return ok(token{ pos, token_kind::nil }); }
+          { return ok(token{ token_start, token_kind::nil }); }
 
-          return ok(token{ pos, token_kind::symbol, name });
+          return ok(token{ token_start, token_kind::symbol, name });
         }
         /* Keywords. */
         case ':':
@@ -259,7 +260,7 @@ namespace jank::read
           else if(name[0] == ':' && name.size() == 1)
           { return err(error{ token_start, "invalid keyword" }); }
 
-          return ok(token{ pos, token_kind::keyword, name });
+          return ok(token{ token_start, token_kind::keyword, name });
         }
         /* Strings. */
         case '"':
@@ -301,7 +302,8 @@ namespace jank::read
             ++pos;
           }
           require_space = true;
-          return ok(token{ pos++, token_kind::string, std::string_view(file.data() + token_start + 1, pos - token_start - 2) });
+          pos++;
+          return ok(token{ token_start, token_kind::string, std::string_view(file.data() + token_start + 1, pos - token_start - 2) });
         }
         default:
           ++pos;

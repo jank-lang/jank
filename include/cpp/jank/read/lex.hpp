@@ -50,7 +50,10 @@ namespace jank::read::lex
       bool operator !=(no_data const &rhs) const;
     };
 
-    size_t pos{};
+    /* For some values, when comparing tokens, the position doesn't matter.
+     * For example, EOF tokens. In these cases, this cardinal value is used. */
+    static constexpr size_t ignore_pos{ std::numeric_limits<size_t>::max() };
+    size_t pos{ ignore_pos };
     token_kind kind;
     boost::variant<no_data, runtime::detail::integer_type, runtime::detail::real_type, std::string_view> data;
   };
