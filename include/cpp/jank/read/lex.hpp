@@ -41,6 +41,11 @@ namespace jank::read::lex
     token(size_t const p, token_kind const k, runtime::detail::real_type const);
     token(size_t const p, token_kind const k, std::string_view const);
 
+    token(size_t const p, size_t const s, token_kind const k);
+    token(size_t const p, size_t const s, token_kind const k, runtime::detail::integer_type const);
+    token(size_t const p, size_t const s, token_kind const k, runtime::detail::real_type const);
+    token(size_t const p, size_t const s, token_kind const k, std::string_view const);
+
     bool operator ==(token const &rhs) const;
     bool operator !=(token const &rhs) const;
 
@@ -54,6 +59,7 @@ namespace jank::read::lex
      * For example, EOF tokens. In these cases, this cardinal value is used. */
     static constexpr size_t ignore_pos{ std::numeric_limits<size_t>::max() };
     size_t pos{ ignore_pos };
+    size_t size{ 1 };
     token_kind kind;
     boost::variant<no_data, runtime::detail::integer_type, runtime::detail::real_type, std::string_view> data;
   };
