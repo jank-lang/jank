@@ -34,7 +34,3 @@ To make a debug build, specify the build type when configuring.
 $ jank-configure -Djank_build_type=debug
 $ jank-compile
 ```
-
-## License
-jank is under a strict copyleft license; see the
-[LICENSE](https://github.com/jank-lang/jank/blob/main/LICENSE) file.
