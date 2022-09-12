@@ -8,6 +8,7 @@ os:
 cache:
   - apt
   - ${HOME}/vcpkg/installed
+  - ${HOME}/.cache/vcpkg/archives
   - vcpkg_installed
 
 before_install:
