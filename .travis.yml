@@ -24,7 +24,8 @@ cache:
     - vcpkg_installed
 
 install:
-  - which clang && clang --version
+  - export CC=clang-14 && export CXX=clang-14
+  - which clang-14 && clang-14 --version
   - |
     export VCPKG_DISABLE_METRICS=1
     git clone https://github.com/Microsoft/vcpkg.git
