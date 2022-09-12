@@ -2,10 +2,11 @@ project(
   'jank',
   'cpp',
   version : 'snapshot',
-  default_options : ['warning_level=3', 'werror=true', 'cpp_std=c++17']
+  default_options : ['warning_level=3', 'werror=true', 'cpp_std=c++17', #'cmake_args=-DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake'
+    ]
 )
 
-project_inc = include_directories('include/cpp', 'lib/magic_enum/include', 'lib/immer')
+project_inc = include_directories('include/cpp')
 project_src = files([
   'src/cpp/jank/util/mapped_file.cpp',
   'src/cpp/jank/read/lex.cpp',
@@ -35,7 +36,7 @@ add_global_arguments(
   [
     '-Wfloat-equal', '-Wuninitialized',
     '-Wswitch-enum', '-Wnon-virtual-dtor', '-Wold-style-cast',
-    '-Wno-gnu-case-range', '-Wno-error=#warnings',
+    '-Wno-gnu-case-range', '-w' #'-Wno-error=#warnings', '-Wno-gnu-include-next'
   ],
   language : 'cpp'
 )
@@ -65,11 +66,11 @@ elif get_option('jank_build_type') == 'debug'
     'b_ndebug=false',
     'strip=false',
   ]
-  link_args = ['-fprofile-instr-generate', '-fcoverage-mapping']
+  link_args = [] #['-fprofile-instr-generate', '-fcoverage-mapping']
   add_global_arguments([
     '-fno-omit-frame-pointer', '-fno-optimize-sibling-calls',
     '-fstack-protector-strong',
-    '-fprofile-instr-generate', '-fcoverage-mapping',
+    #'-fprofile-instr-generate', '-fcoverage-mapping',
     ],
     language : 'cpp'
   )
@@ -79,9 +80,9 @@ endif
 
 threads_dep = dependency('threads')
 boost_dep = dependency('boost')
-folly_dep = declare_dependency(
-  link_args : ['-lfolly', '-lglog'],
-)
+magic_enum_dep = dependency('magic_enum')
+immer_dep = dependency('Immer')
+folly_dep = dependency('folly')
 cling_dep = declare_dependency(
   include_directories : include_directories(
     get_option('cling_include_path'),
@@ -92,7 +93,7 @@ cling_dep = declare_dependency(
 executable(
   'jank',
   project_src + ['src/cpp/main.cpp'],
-  dependencies : [threads_dep, boost_dep, folly_dep, cling_dep],
+  dependencies : [threads_dep, boost_dep, magic_enum_dep, immer_dep, folly_dep, cling_dep],
   link_args : link_args,
   include_directories : project_inc,
   override_options : option_overrides,

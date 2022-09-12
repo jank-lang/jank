@@ -1,4 +1,3 @@
-test_inc = include_directories('../../lib/doctest')
 test_src = [
   'main.cpp',
   'jank/read/lex.cpp',
@@ -13,12 +12,14 @@ test_src = [
   'jank/evaluate/context.cpp',
 ]
 
+doctest_dep = dependency('doctest')
+
 unit = executable(
   'jank-unit-tests',
   project_src + test_src,
-  include_directories : [project_inc] + [test_inc],
+  include_directories : [project_inc],
   link_args : link_args,
   override_options : option_overrides,
-  dependencies : [threads_dep, boost_dep, folly_dep, cling_dep],
+  dependencies : [threads_dep, boost_dep, magic_enum_dep, immer_dep, folly_dep, cling_dep, doctest_dep],
 )
 test('unit tests', unit)
