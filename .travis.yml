@@ -6,6 +6,14 @@ os:
   - linux
 dist: jammy
 
+addons:
+  apt:
+    sources:
+      - sourceline: 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-14 main'
+      - sourceline: 'deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy-14 main'
+    packages:
+      - clang-14
+
 compiler:
   - clang
 
@@ -16,6 +24,7 @@ cache:
     - vcpkg_installed
 
 install:
+  - which clang && clang --version
   - |
     export VCPKG_DISABLE_METRICS=1
     git clone https://github.com/Microsoft/vcpkg.git
