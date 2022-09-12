@@ -20,7 +20,7 @@ install:
     git clone https://github.com/Microsoft/vcpkg.git
     ./vcpkg/bootstrap-vcpkg.sh
     ./vcpkg/vcpkg install || true
-    tail /home/travis/build/jank-lang/jank/vcpkg/buildtrees/folly/install-x64-linux-dbg-out.log
+    cat /home/travis/build/jank-lang/jank/vcpkg/buildtrees/folly/install-x64-linux-dbg-out.log
 
 script:
   - ./bin/ci/travis
