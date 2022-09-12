@@ -7,10 +7,17 @@ os:
 
 cache:
   - apt
+  - ${HOME}/vcpkg/installed
   - vcpkg_installed
 
+install:
+  - |
+    export VCPKG_DISABLE_METRICS=1
+    git clone https://github.com/Microsoft/vcpkg.git
+    ./vcpkg/bootstrap-vcpkg.sh
+    ./vcpkg/vcpkg install
+
 script:
-  - ./bin/install-vcpkg
   - nix-shell --command "./bin/ci/travis"
 
 after_success:
