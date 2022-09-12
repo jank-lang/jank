@@ -9,10 +9,10 @@ compiler:
   - clang
 
 cache:
-  - apt
-  - ${HOME}/vcpkg/installed
-  - ${HOME}/.cache/vcpkg/archives
-  - vcpkg_installed
+  - apt: true
+  - directories:
+    - ${HOME}/.cache/vcpkg/archives
+    - vcpkg_installed
 
 install:
   - |
