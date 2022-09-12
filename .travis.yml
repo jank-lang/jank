@@ -21,7 +21,7 @@ install:
     export VCPKG_DISABLE_METRICS=1
     git clone https://github.com/Microsoft/vcpkg.git
     ./vcpkg/bootstrap-vcpkg.sh
-    ./vcpkg/vcpkg install
+    ./vcpkg/vcpkg install --triplet=x64-linux-rel
 
 script:
   - nix-shell --command "./bin/ci/travis"
