@@ -10,7 +10,7 @@ cache:
   - vcpkg_installed
 
 script:
-  - export VCPKG_DISABLE_METRICS=1 && ./bin/install-vcpkg && ./vcpkg/vcpkg install
+  - ./bin/install-vcpkg
   - nix-shell --command "./bin/ci/travis"
 
 after_success:

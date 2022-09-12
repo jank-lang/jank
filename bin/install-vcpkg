@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -xeuo pipefail
 
+export VCPKG_DISABLE_METRICS=1
 git clone https://github.com/Microsoft/vcpkg.git
 pushd vcpkg
   ./bootstrap-vcpkg.sh
   ./vcpkg integrate install
 popd
+./vcpkg/vcpkg install
