@@ -1,20 +1,18 @@
-language: nix
+language: c++
 
 sudo: false
 
 os:
   - linux
 
+compiler:
+  - clang
+
 cache:
   - apt
   - ${HOME}/vcpkg/installed
   - ${HOME}/.cache/vcpkg/archives
   - vcpkg_installed
-
-before_install:
-  - sudo apt-get -y install clang
-  - export CC=clang
-  - export CXX=clang++
 
 install:
   - |
@@ -25,7 +23,7 @@ install:
     tail /home/travis/build/jank-lang/jank/vcpkg/buildtrees/folly/install-x64-linux-dbg-out.log
 
 script:
-  - nix-shell --command "./bin/ci/travis"
+  - ./bin/ci/travis
 
 after_success:
 - lein with-profile coverage cloverage --codecov
