@@ -4,6 +4,7 @@ sudo: false
 
 os:
   - linux
+dist: jammy
 
 compiler:
   - clang
