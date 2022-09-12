@@ -21,7 +21,8 @@ install:
     export VCPKG_DISABLE_METRICS=1
     git clone https://github.com/Microsoft/vcpkg.git
     ./vcpkg/bootstrap-vcpkg.sh
-    ./vcpkg/vcpkg install --triplet=x64-linux-rel
+    ./vcpkg/vcpkg install --triplet=x64-linux-dbg || true
+    tail /home/travis/build/jank-lang/jank/vcpkg/buildtrees/folly/install-x64-linux-dbg-out.log
 
 script:
   - nix-shell --command "./bin/ci/travis"
