@@ -10,6 +10,9 @@ cache:
   - ${HOME}/vcpkg/installed
   - vcpkg_installed
 
+before_install:
+  - sudo apt-get -y install clang-13
+
 install:
   - |
     export VCPKG_DISABLE_METRICS=1
