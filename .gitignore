@@ -24,6 +24,7 @@ pom.xml.asc
 .gdb_history
 /build
 coverage.txt
+/vcpkg_installed
 
 # Rust
 rust/jank

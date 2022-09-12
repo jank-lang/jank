@@ -2,8 +2,7 @@ project(
   'jank',
   'cpp',
   version : 'snapshot',
-  default_options : ['warning_level=3', 'werror=true', 'cpp_std=c++17', #'cmake_args=-DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake'
-    ]
+  default_options : ['warning_level=3', 'werror=true', 'cpp_std=c++17']
 )
 
 project_inc = include_directories('include/cpp')
@@ -36,7 +35,7 @@ add_global_arguments(
   [
     '-Wfloat-equal', '-Wuninitialized',
     '-Wswitch-enum', '-Wnon-virtual-dtor', '-Wold-style-cast',
-    '-Wno-gnu-case-range', '-w' #'-Wno-error=#warnings', '-Wno-gnu-include-next'
+    '-Wno-gnu-case-range', '-Wno-error=#warnings', '-Wno-gnu-include-next'
   ],
   language : 'cpp'
 )
@@ -66,12 +65,11 @@ elif get_option('jank_build_type') == 'debug'
     'b_ndebug=false',
     'strip=false',
   ]
-  link_args = [] #['-fprofile-instr-generate', '-fcoverage-mapping']
+  link_args = ['-fprofile-instr-generate', '-fcoverage-mapping']
   add_global_arguments([
     '-fno-omit-frame-pointer', '-fno-optimize-sibling-calls',
     '-fstack-protector-strong',
-    #'-fprofile-instr-generate', '-fcoverage-mapping',
-    ],
+    '-fprofile-instr-generate', '-fcoverage-mapping'],
     language : 'cpp'
   )
 else

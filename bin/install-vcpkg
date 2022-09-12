@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+git clone https://github.com/Microsoft/vcpkg.git
+pushd vcpkg
+  ./bootstrap-vcpkg.sh
+  ./vcpkg integrate install
+  ./vcpkg update
+popd

@@ -1,0 +1,4 @@
+{
+  "name": "jank",
+  "dependencies": ["immer", "folly", "boost-smart-ptr", "magic-enum"]
+}

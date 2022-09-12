@@ -7,8 +7,10 @@ os:
 
 cache:
   - apt
+  - vcpkg_installed
 
 script:
+  - ./bin/install-vcpkg && vcpkg install
   - nix-shell --command "./bin/ci/travis"
 
 after_success:
