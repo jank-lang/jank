@@ -11,7 +11,9 @@ cache:
   - vcpkg_installed
 
 before_install:
-  - sudo apt-get -y install clang-13
+  - sudo apt-get -y install clang
+  - export CC=clang
+  - export CXX=clang++
 
 install:
   - |
