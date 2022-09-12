@@ -1,6 +1,9 @@
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weverything"
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
+#pragma clang diagnostic pop
 
 #include <iostream>
 #include <filesystem>
@@ -38,7 +41,10 @@ namespace jank::util
     if(fd < 0)
     { return err("unable to open file"); }
     auto const * const head(reinterpret_cast<char const*>(mmap(0, file_size, PROT_READ, MAP_PRIVATE, fd, 0)));
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"
     if(head == MAP_FAILED)
+#pragma clang diagnostic pop
     { return err("unable to map file"); }
     return ok(jank::util::mapped_file{fd, head, file_size});
   }

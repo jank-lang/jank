@@ -5,8 +5,7 @@
 #include <vector>
 
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
-#pragma clang diagnostic ignored "-Wold-style-cast"
+#pragma clang diagnostic ignored "-Weverything"
 #include <immer/box.hpp>
 #include <immer/memory_policy.hpp>
 #pragma clang diagnostic pop

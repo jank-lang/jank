@@ -3,7 +3,10 @@
 #include <functional>
 #include <unordered_map>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weverything"
 #include <folly/Synchronized.h>
+#pragma clang diagnostic pop
 
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/var.hpp>

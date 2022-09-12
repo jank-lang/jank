@@ -18,7 +18,7 @@ namespace jank::analyze::expr
     auto const expr(an_prc.next(an_ctx).expect_ok().unwrap());
     auto const *fn_expr(boost::get<function<expression>>(&expr.data));
     CHECK(fn_expr != nullptr);
-    CHECK(fn_expr->local_frame.locals.empty());
+    CHECK(fn_expr->frame.locals.empty());
     CHECK(fn_expr->body.body.empty());
   }
 
@@ -36,7 +36,7 @@ namespace jank::analyze::expr
       auto const expr(an_prc.next(an_ctx).expect_ok().unwrap());
       auto const *fn_expr(boost::get<function<expression>>(&expr.data));
       CHECK(fn_expr != nullptr);
-      CHECK(fn_expr->local_frame.locals.size() == 2);
+      CHECK(fn_expr->frame.locals.size() == 2);
       CHECK(fn_expr->body.body.size() == 2);
     }
 

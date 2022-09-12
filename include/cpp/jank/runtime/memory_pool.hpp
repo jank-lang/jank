@@ -2,7 +2,11 @@
 
 #include <memory>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weverything"
 #include <boost/smart_ptr/intrusive_ptr.hpp>
+#pragma clang diagnostic pop
+
 #include <jank/runtime/detail/type.hpp>
 
 namespace jank::runtime

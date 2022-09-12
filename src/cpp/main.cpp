@@ -3,8 +3,7 @@
 #include <experimental/array>
 
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wold-style-cast"
-#pragma clang diagnostic ignored "-Wunused-parameter"
+#pragma clang diagnostic ignored "-Weverything"
 #include <cling/Interpreter/Interpreter.h>
 #include <cling/Interpreter/Value.h>
 #pragma clang diagnostic pop

@@ -3,7 +3,10 @@
 #include <mutex>
 #include <unordered_map>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weverything"
 #include <folly/Synchronized.h>
+#pragma clang diagnostic pop
 
 #include <jank/result.hpp>
 #include <jank/runtime/ns.hpp>

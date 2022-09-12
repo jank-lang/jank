@@ -2,7 +2,10 @@
 
 #include <functional>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weverything"
 #include <folly/Synchronized.h>
+#pragma clang diagnostic pop
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/symbol.hpp>

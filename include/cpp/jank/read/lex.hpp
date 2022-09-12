@@ -2,7 +2,10 @@
 
 #include <string_view>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weverything"
 #include <boost/variant.hpp>
+#pragma clang diagnostic pop
 
 #include <jank/result.hpp>
 #include <jank/option.hpp>

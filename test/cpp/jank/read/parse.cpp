@@ -1,4 +1,7 @@
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weverything"
 #include <unistd.h>
+#pragma clang diagnostic pop
 
 #include <vector>
 #include <array>
@@ -16,7 +19,7 @@
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmacro-redefined"
+#pragma clang diagnostic ignored "-Weverything"
 #include <doctest/doctest.h>
 #pragma clang diagnostic pop
 

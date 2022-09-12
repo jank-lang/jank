@@ -295,14 +295,14 @@ namespace jank::analyze
 
       auto const sym_ptr(boost::static_pointer_cast<runtime::obj::symbol>(sym_obj));
       /* TODO: Return errors. */
-      auto it(ret.pairs.emplace_back(sym_ptr, analyze(val, ret.local_frame, ctx).expect_ok().unwrap()));
-      ret.local_frame.locals.emplace(sym_ptr, local_binding<expression>{ sym_ptr, some(std::ref(it.second)) });
+      auto it(ret.pairs.emplace_back(sym_ptr, analyze(val, ret.frame, ctx).expect_ok().unwrap()));
+      ret.frame.locals.emplace(sym_ptr, local_binding<expression>{ sym_ptr, some(std::ref(it.second)) });
       /* TODO: Rename shadowed bindings? */
     }
 
     for(auto const &item : o->data.rest().rest())
     /* TODO: Return errors. */
-    { ret.body.body.emplace_back(analyze(item, ret.local_frame, ctx).expect_ok().unwrap()); }
+    { ret.body.body.emplace_back(analyze(item, ret.frame, ctx).expect_ok().unwrap()); }
 
     return { std::move(ret) };
   }
