@@ -24,7 +24,7 @@ cache:
     - vcpkg_installed
 
 install:
-  - export CC=clang-14 && export CXX=clang-14
+  - export CC=clang-14 && export CXX=clang++-14
   - which clang-14 && clang-14 --version
   - |
     export VCPKG_DISABLE_METRICS=1
