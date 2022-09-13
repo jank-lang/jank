@@ -20,7 +20,7 @@ compiler:
 cache:
   - apt: true
   - directories:
-    - ${HOME}/.cache/vcpkg/archives
+    - ${HOME}/.cache/vcpkg
     - vcpkg_installed
 
 install:
