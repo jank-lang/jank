@@ -1,4 +1,4 @@
-language: c++
+language: nix
 
 sudo: false
 
@@ -12,6 +12,12 @@ addons:
       - sourceline: 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-14 main'
       - sourceline: 'deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy-14 main'
     packages:
+      - ca-certificates
+      - git
+      - zip
+      - build-essential
+      - cmake
+      - pkg-config
       - clang-14
 
 compiler:
