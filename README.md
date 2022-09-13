@@ -6,6 +6,8 @@ transition from one to the other is not only seamless, it can be gradual.
 
 https://jank-lang.org
 
+For the current progress of jank and its usability, see the tables here: https://jank-lang.org/progress/
+
 ## Building locally
 **NOTE:** jank is not very buildable right now. It's also not very usable right
 now. See this issue for details: https://github.com/jank-lang/jank/issues/7
