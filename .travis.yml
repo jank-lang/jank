@@ -15,7 +15,7 @@ addons:
       - clang-14
 
 compiler:
-  - clang
+  - clang-14
 
 cache:
   - apt: true
