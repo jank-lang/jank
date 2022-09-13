@@ -15,18 +15,13 @@ addons:
     packages:
       - clang-14
 
-compiler:
-  - clang-14
-
 cache:
   - apt: true
   - directories:
     - ${HOME}/.cache/vcpkg
-    - vcpkg_installed
 
 install:
   - export CC=clang-14 && export CXX=clang++-14
-  - which clang-14 && clang-14 --version
   - |
     export VCPKG_DISABLE_METRICS=1
     git clone https://github.com/Microsoft/vcpkg.git
