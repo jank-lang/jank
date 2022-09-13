@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+/bin/rm -rf build
+/bin/mkdir build
+meson setup build --native-file vcpkg-meson.ini \
+                  -Dcling_include_path="${CLING_INCLUDE_PATH}" \
+                  -Dcling_lib_path="${CLING_LIB_PATH}" \
+                  -Dllvm_include_path="${LLVM_INCLUDE_PATH}" \
+                  -Dllvm_root_path="${LLVM_ROOT_PATH}" \
+                  "$@"

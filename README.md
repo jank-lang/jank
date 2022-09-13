@@ -10,27 +10,45 @@ https://jank-lang.org
 **NOTE:** jank is not very buildable right now. It's also not very usable right
 now. See this issue for details: https://github.com/jank-lang/jank/issues/7
 
-Use [Nix](https://nixos.org/manual/nix/stable/). After cloning, use `nix-shell`
-to enter an environment with all necessary deps. The Nix shell will also set up
-some bash functions for you.
+### Dependencies
+Before configuring, use [vcpkg](https://vcpkg.io/) to install the necessary
+dependencies. Running the following in jank's repo directory will accomplish
+this.
 
-* `jank-configure` -- For setting up the project.
-* `jank-compile` -- For one-off compilation.
-* `jank-test` -- For one-off testing.
-* `jank-watch-tests` -- For test hot reloading on save.
+```bash
+$ vcpkg install
+```
+
+Note that vcpkg will get you everything except for
+[cling](https://github.com/root-project/cling). For that, either use Nix
+(described below), your preferred package manager, or build it yourself.
+
+### Compiling
+* `./bin/configure` -- For setting up the project.
+* `./bin/compile` -- For one-off compilation.
+* `./bin/test` -- For one-off testing.
+* `./bin/watch-tests` -- For test hot reloading on save.
 
 ### Release
 A typical release build just needs the following:
 
 ```bash
-$ jank-configure
-$ jank-compile
+$ vcpkg install
+$ ./bin/configure
+$ ./bin/compile
 ```
 
 ### Debug
 To make a debug build, specify the build type when configuring.
 
 ```bash
-$ jank-configure -Djank_build_type=debug
-$ jank-compile
+$ vcpkg install
+$ ./bin/configure -Djank_build_type=debug
+$ ./bin/compile
 ```
+
+### Nix
+To aid in development, a `shell.nix` is provided. It's not necessary, but can be
+useful for those with Nix who want a reliable way to get some development tools.
+Just run `nix-shell` in the repo's root directory to get a shell with some
+additional tools.

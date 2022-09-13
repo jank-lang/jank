@@ -3,13 +3,13 @@
 set -eu
 
 # TODO: Build matrix for this.
-jank-configure -Djank_build_type=release
-jank-compile
-jank-test
+./bin/configure -Djank_build_type=release
+./bin/compile
+./bin/test
 
-jank-configure -Djank_build_type=debug
-jank-compile -v
-LLVM_PROFILE_FILE=build/test.profraw jank-test
+./bin/configure -Djank_build_type=debug
+./bin/compile -v
+LLVM_PROFILE_FILE=build/test.profraw ./bin/test
 
 # Code coverage.
 llvm-profdata merge --sparse build/test.profraw -o build/test.profdata
