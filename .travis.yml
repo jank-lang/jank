@@ -30,12 +30,10 @@ install:
     export VCPKG_DISABLE_METRICS=1
     git clone https://github.com/Microsoft/vcpkg.git
     ./vcpkg/bootstrap-vcpkg.sh
-    ./vcpkg/vcpkg install || true
-    cat /home/travis/build/jank-lang/jank/vcpkg/buildtrees/folly/config-x64-linux-out.log || true
-    cat /home/travis/build/jank-lang/jank/vcpkg/buildtrees/folly/install-x64-linux-dbg-out.log || true
+    ./vcpkg/vcpkg install
 
 script:
-  - ./bin/ci/travis
+  - nix-shell --command "./bin/ci/travis"
 
 after_success:
 - lein with-profile coverage cloverage --codecov
