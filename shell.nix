@@ -20,8 +20,6 @@ mkShell
   shellHook =
   ''
   export CLING_DEV="${lib.getDev pkgs.cling.unwrapped}"
-  export CC="clang"
-  export CXX="clang++"
   export CLING_INCLUDE_PATH="${pkgs.cling.unwrapped}/include"
   export CLING_LIB_PATH="${pkgs.cling.unwrapped}/lib"
   export LLVM_INCLUDE_PATH="${lib.getDev pkgs.llvmPackages_5.llvm}/include"
