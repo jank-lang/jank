@@ -29,8 +29,4 @@ install:
     ./vcpkg/vcpkg install
 
 script:
-  - true # nix-shell --command "./bin/ci/travis"
-
-after_success:
-  - lein with-profile coverage cloverage --codecov
-  - bash <(curl -s https://codecov.io/bash) -f target/coverage/codecov.json
+  - nix-shell --command "./bin/ci/travis"

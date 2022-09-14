@@ -77,7 +77,7 @@ else
 endif
 
 threads_dep = dependency('threads')
-boost_dep = dependency('boost')
+boost_dep = dependency('Boost')
 magic_enum_dep = dependency('magic_enum')
 immer_dep = dependency('Immer')
 folly_dep = dependency('folly')
