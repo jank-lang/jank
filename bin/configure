@@ -2,11 +2,19 @@
 
 set -euo pipefail
 
-/bin/rm -rf build
-/bin/mkdir build
-meson setup build --native-file vcpkg-meson.ini \
-                  -Dcling_include_path="${CLING_INCLUDE_PATH}" \
-                  -Dcling_lib_path="${CLING_LIB_PATH}" \
-                  -Dllvm_include_path="${LLVM_INCLUDE_PATH}" \
-                  -Dllvm_root_path="${LLVM_ROOT_PATH}" \
-                  "$@"
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+build_dir="${here}/../build"
+/bin/rm -rf "${build_dir}"
+/bin/mkdir "${build_dir}"
+
+# This vcpkg root can vary per-machine, so we create it each time.
+meson_native_file="${build_dir}/native.ini"
+sed "s#\$VCPKG_ROOT#${VCPKG_ROOT}#" vcpkg-meson.ini >> "${meson_native_file}"
+
+meson setup "${build_dir}" \
+            --native-file "${meson_native_file}" \
+            -Dcling_include_path="${CLING_INCLUDE_PATH}" \
+            -Dcling_lib_path="${CLING_LIB_PATH}" \
+            -Dllvm_include_path="${LLVM_INCLUDE_PATH}" \
+            -Dllvm_root_path="${LLVM_ROOT_PATH}" \
+            "$@"
