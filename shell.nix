@@ -5,7 +5,6 @@ mkShell
   [
     # Build deps.
     cling
-    boost
     meson
     cmake
     ninja
