@@ -17,4 +17,4 @@ jobs:
       with:
         path: ~/.cache/vcpkg
     - name: Compile and test
-      run: nix-shell --command "${{ github.workspace }}/bin/ci/travis"
+      run: nix-shell --command "${{ github.workspace }}/bin/ci/test"

@@ -30,4 +30,4 @@ install:
     export VCPKG_ROOT="${PWD}/vcpkg"
 
 script:
-  - nix-shell --command "./bin/ci/travis"
+  - nix-shell --command "./bin/ci/test"
