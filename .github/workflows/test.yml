@@ -6,15 +6,16 @@ jobs:
   tests:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v2.4.0
+    - uses: actions/checkout@v3
     - uses: cachix/install-nix-action@v15
       with:
         nix_path: nixpkgs=channel:nixos-unstable
-    - name: Provision
-      run: source ${{ github.workspace }}/bin/ci/provision
     - name: Cache C++ packages
       uses: actions/cache@v3
       with:
         path: ~/.cache/vcpkg
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('vcpkg.json') }}
+    - name: Provision
+      run: source ${{ github.workspace }}/bin/ci/provision
     - name: Compile and test
       run: nix-shell --command "${{ github.workspace }}/bin/ci/test"
