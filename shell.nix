@@ -7,7 +7,6 @@ mkShell
     cling
     boost
     meson
-    cmake
     ninja
 
     # Dev tools.
