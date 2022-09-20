@@ -3,7 +3,7 @@
 sudo apt-add-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-14 main'
 sudo apt-add-repository 'deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy-14 main'
 sudo apt-get update
-suto apt-get install -y clang-14
+sudo apt-get install -y clang-14 git
 
 export CC=clang-14
 export CXX=clang++-14
