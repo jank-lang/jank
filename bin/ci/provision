@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+sudo apt-add-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-14 main'
+sudo apt-add-repository 'deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy-14 main'
+sudo apt-get update
+suto apt-get install -y clang-14
+
+export CC=clang-14
+export CXX=clang++-14
+export VCPKG_DISABLE_METRICS=1
+git clone https://github.com/Microsoft/vcpkg.git
+./vcpkg/bootstrap-vcpkg.sh
+./vcpkg/vcpkg install
+export VCPKG_ROOT="${PWD}/vcpkg"
