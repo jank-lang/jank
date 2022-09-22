@@ -17,5 +17,5 @@ jobs:
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('vcpkg.json') }}
     - name: Provision
       run: source ${{ github.workspace }}/bin/ci/provision
-        #- name: Compile and test
-        #  run: nix-shell --command "${{ github.workspace }}/bin/ci/test"
+    - name: Compile and test
+      run: nix-shell --command "${{ github.workspace }}/bin/ci/test"
