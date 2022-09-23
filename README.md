@@ -12,31 +12,25 @@ For the current progress of jank and its usability, see the tables here: https:/
 **NOTE:** jank is not very buildable right now. It's also not very usable right
 now. See this issue for details: https://github.com/jank-lang/jank/issues/7
 
-### Dependencies
-Before configuring, use [vcpkg](https://vcpkg.io/) to install the necessary
-dependencies. Running the following in jank's repo directory will accomplish
-this.
-
-```bash
-$ vcpkg install
-```
-
+### Manual dependencies
 Note that vcpkg will get you everything except for
-[cling](https://github.com/root-project/cling). For that, either use Nix
-(described below), your preferred package manager, or build it yourself.
+[cling](https://github.com/root-project/cling). For that, use your preferred
+package manager or build it yourself. Make some noise
+[here](https://github.com/microsoft/vcpkg/issues/24753) to get cling added to
+vcpkg! Better yet, maybe add it yourself so we can all win?
 
 ### Compiling
 * `./bin/configure` -- For setting up the project.
 * `./bin/compile` -- For one-off compilation.
 * `./bin/test` -- For one-off testing.
-* `./bin/watch-tests` -- For test hot reloading on save.
+* `./bin/watch-tests` -- For hot reloading tests on save.
+* `./bin/install` -- For packaging.
 
 ### Release
 A typical release build just needs the following:
 
 ```bash
-$ vcpkg install
-$ ./bin/configure
+$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Dcling_dir=/path/to/your/cling-build/builddir
 $ ./bin/compile
 ```
 
@@ -44,9 +38,19 @@ $ ./bin/compile
 To make a debug build, specify the build type when configuring.
 
 ```bash
-$ vcpkg install
-$ ./bin/configure -Djank_build_type=debug
+$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_tests=on -Dcling_dir=/path/to/your/cling-build/builddir
 $ ./bin/compile
+$ ./bin/watch-tests
+```
+
+### Packaging
+There's also a script for installing jank and all its necessary dependencies.
+Note that this includes a lot of header files, which are necessary for jank's
+JIT compilation.
+
+```bash
+$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Dcling_dir=/path/to/your/cling-build/builddir
+$ ./bin/install
 ```
 
 ### Nix

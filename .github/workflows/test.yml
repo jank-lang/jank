@@ -3,7 +3,7 @@ on:
   pull_request:
   push:
 jobs:
-  tests:
+  test:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v3

@@ -4,10 +4,11 @@ mkShell
   buildInputs =
   [
     # Build deps.
-    cling
-    boost
-    meson
+    cmake
     ninja
+    libsodium
+    liburing
+    libunwind
 
     # Dev tools.
     llvm # For clang-format
@@ -19,10 +20,7 @@ mkShell
   ];
   shellHook =
   ''
-  export CLING_DEV="${lib.getDev pkgs.cling.unwrapped}"
-  export CLING_INCLUDE_PATH="${pkgs.cling.unwrapped}/include"
-  export CLING_LIB_PATH="${pkgs.cling.unwrapped}/lib"
-  export LLVM_INCLUDE_PATH="${lib.getDev pkgs.llvmPackages_5.llvm}/include"
-  export LLVM_ROOT_PATH="${pkgs.cling.unwrapped}"
+  export CC="''${CC:-clang}"
+  export CXX="''${CXX:-clang++}"
   '';
 }

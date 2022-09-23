@@ -3,7 +3,7 @@
 set -eu
 
 # TODO: Build matrix for this.
-./bin/configure -Djank_build_type=release
+./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_tests=on
 ./bin/compile
 ./bin/test
 

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <experimental/array>
+#include <filesystem>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Weverything"
@@ -15,6 +16,10 @@
 #include <jank/analyze/processor.hpp>
 #include <jank/codegen/context.hpp>
 #include <jank/evaluate/context.hpp>
+
+std::filesystem::path process_location()
+/* TODO: Support for other operating systems. */
+{ return std::filesystem::canonical("/proc/self/exe"); }
 
 int main(int const argc, char const **argv)
 {
@@ -38,11 +43,15 @@ int main(int const argc, char const **argv)
   jank::codegen::context cg_ctx{ rt_ctx, an_ctx, an_prc.begin(an_ctx), an_prc.end(an_ctx), an_prc.total_forms };
   //std::cout << cg_ctx.str() << std::endl;
 
+  auto const jank_location(process_location().parent_path());
   auto const cling_args(std::experimental::make_array(argv[0], "-std=c++17"));
-  cling::Interpreter jit(cling_args.size(), cling_args.data(), LLVM_PATH);
-  jit.AddIncludePath("/home/jeaye/projects/jank/lib/immer");
-  jit.AddIncludePath("/home/jeaye/projects/jank/lib/magic_enum/include");
-  jit.AddIncludePath("/home/jeaye/projects/jank/include/cpp");
+  cling::Interpreter jit(cling_args.size(), cling_args.data(), LLVMDIR);
+
+  jit.AddIncludePath(jank_location.string() + "/../include");
+  jit.AddIncludePath(jank_location.string() + "/../include/cpp");
+  /* TODO: Figure out how to make this easier for dev. */
+  jit.AddIncludePath(jank_location.string() + "/vcpkg_installed/x64-linux/include");
+
   /* TODO: Pre-compiled prelude. */
   jit.process("#include \"jank/runtime/obj/number.hpp\"");
   jit.process("#include \"jank/runtime/obj/function.hpp\"");

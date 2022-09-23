@@ -1,4 +1,20 @@
 {
   "name": "jank",
-  "dependencies": ["immer", "folly", "boost-smart-ptr", "magic-enum"]
+  "version-semver": "0.1.0",
+  "dependencies": [
+    "immer",
+    "folly",
+    "boost-smart-ptr",
+    "magic-enum"
+  ],
+  "default-features": [],
+  "features": {
+    "tests": {
+      "description": "Dependencies for testing",
+      "dependencies": [
+        "doctest"
+      ]
+    }
+  },
+  "builtin-baseline": "4217fee510d4c592d3e45564d3ee116ae301189f"
 }

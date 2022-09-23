@@ -10,8 +10,3 @@ sudo apt-get install -y clang-14
 
 export CC=clang-14
 export CXX=clang++-14
-export VCPKG_DISABLE_METRICS=1
-git clone https://github.com/Microsoft/vcpkg.git
-./vcpkg/bootstrap-vcpkg.sh
-./vcpkg/vcpkg install
-export VCPKG_ROOT="${PWD}/vcpkg"

@@ -25,6 +25,14 @@ pom.xml.asc
 /build
 coverage.txt
 /vcpkg_installed
+.idea/
+.vs/
+.vscode/
+cmake-build-*/
+prefix/
+CMakeLists.txt.user
+CMakeUserPresets.json
+
 
 # Rust
 rust/jank
