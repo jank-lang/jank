@@ -12,6 +12,13 @@ For the current progress of jank and its usability, see the tables here: https:/
 **NOTE:** jank is not very buildable right now. It's also not very usable right
 now. See this issue for details: https://github.com/jank-lang/jank/issues/7
 
+### Dependencies
+For Debian-based distros, this should be all you need:
+
+```bash
+$ sudo apt-get install -y curl git zip build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev clang-14
+```
+
 Clone the repo as follows:
 
 ```bash
@@ -28,6 +35,16 @@ $ git submodule update --recursive --init
 * `./bin/test` -- For one-off testing.
 * `./bin/watch-tests` -- For hot reloading tests on save.
 * `./bin/install` -- For packaging.
+
+### Cling
+Note that, by default, jank will compile Cling/Clang/LLVM for you, as part of
+your build directory. This can take an hour or two, depending on your machine.
+Building jank itself should take less than a minute. If you want to build it
+yourself, or want it outside of jank's build dir, you can use the
+`bin/build-cling [build-dir]` script.
+
+If you build your own Cling, or if you get it from somewhere else, you can
+provide it to `./bin/configure` by using `-Dcling_dir=path/to/cling/builddir`.
 
 ### Release
 A typical release build just needs the following:
