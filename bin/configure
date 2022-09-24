@@ -4,7 +4,7 @@ set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 build_dir="${here}/../build"
-/bin/rm -rf "${build_dir}"
-/bin/mkdir "${build_dir}"
+/bin/rm -rf "${build_dir}"/{CMakeCache.txt,CMakeFiles}
+/bin/mkdir -p "${build_dir}"
 
 cmake -S . -B "${build_dir}" "$@"

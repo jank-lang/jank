@@ -13,7 +13,9 @@ jobs:
     - name: Cache C++ packages
       uses: actions/cache@v3
       with:
-        path: ~/.cache/vcpkg
+        path: |
+          ~/.cache/vcpkg
+          ${{ github.workspace }}/build/cling-build
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('vcpkg.json') }}
     - name: Provision
       run: source ${{ github.workspace }}/bin/ci/provision

@@ -12,13 +12,6 @@ For the current progress of jank and its usability, see the tables here: https:/
 **NOTE:** jank is not very buildable right now. It's also not very usable right
 now. See this issue for details: https://github.com/jank-lang/jank/issues/7
 
-### Manual dependencies
-Note that vcpkg will get you everything except for
-[cling](https://github.com/root-project/cling). For that, use your preferred
-package manager or build it yourself. Make some noise
-[here](https://github.com/microsoft/vcpkg/issues/24753) to get cling added to
-vcpkg! Better yet, maybe add it yourself so we can all win?
-
 ### Compiling
 * `./bin/configure` -- For setting up the project.
 * `./bin/compile` -- For one-off compilation.
@@ -30,7 +23,7 @@ vcpkg! Better yet, maybe add it yourself so we can all win?
 A typical release build just needs the following:
 
 ```bash
-$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Dcling_dir=/path/to/your/cling-build/builddir
+$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release
 $ ./bin/compile
 ```
 
@@ -38,7 +31,7 @@ $ ./bin/compile
 To make a debug build, specify the build type when configuring.
 
 ```bash
-$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_tests=on -Dcling_dir=/path/to/your/cling-build/builddir
+$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_tests=on
 $ ./bin/compile
 $ ./bin/watch-tests
 ```
@@ -49,7 +42,7 @@ Note that this includes a lot of header files, which are necessary for jank's
 JIT compilation.
 
 ```bash
-$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Dcling_dir=/path/to/your/cling-build/builddir
+$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release
 $ ./bin/install
 ```
 

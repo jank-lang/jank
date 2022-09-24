@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+set -xeuo pipefail
+
+cpt=
+build_dir="${1:-./cling-build}"
+llvm_url="https://github.com/jeaye/llvm.git"
+llvm_branch=jank
+
+function fetch_cpt
+{
+  local tmp
+  tmp="$(mktemp)"
+  curl -s -o "${tmp}" https://raw.githubusercontent.com/jeaye/root-cling/jank/tools/packaging/cpt.py
+  chmod +x "${tmp}"
+  cpt="${tmp}"
+}
+
+function build_default
+{
+  "${cpt}" --check-requirements \
+           --create-dev-env=Release \
+           --with-workdir="${build_dir}" \
+           --allow-dirty \
+           --with-llvm-url="${llvm_url}" \
+           --with-llvm-branch="${llvm_branch}" \
+           --no-test \
+           $@
+}
+
+fetch_cpt
+build_default

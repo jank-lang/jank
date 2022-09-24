@@ -40,6 +40,16 @@ set_property(TARGET jank_cling_lib PROPERTY OUTPUT_NAME jankcling)
 
 target_compile_features(jank_cling_lib PUBLIC cxx_std_17)
 
+if(NOT cling_dir)
+  message(STATUS "Building Cling/Clang/LLVM")
+  execute_process(
+    COMMAND ${PROJECT_SOURCE_DIR}/bin/build-cling
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND_ERROR_IS_FATAL ANY
+  )
+  set(cling_dir "${CMAKE_CURRENT_BINARY_DIR}/cling-build/builddir")
+endif()
+
 find_package(Clang REQUIRED CONFIG HINTS "${cling_dir}/lib/cmake/clang" NO_DEFAULT_PATH)
 find_package(Cling REQUIRED HINTS "${cling_dir}/lib/cmake/cling")
 target_include_directories(jank_cling_lib PRIVATE ${CLING_INCLUDE_DIRS})
