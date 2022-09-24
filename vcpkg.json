@@ -3,10 +3,7 @@
   "version-semver": "0.1.0",
   "dependencies": [
     "immer",
-    {
-      "name": "folly",
-      "features": []
-    },
+    "folly",
     "boost-smart-ptr",
     "magic-enum"
   ],

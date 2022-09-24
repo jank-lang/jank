@@ -10,16 +10,13 @@
 #pragma clang diagnostic pop
 
 #include <jank/util/mapped_file.hpp>
+#include <jank/util/process_location.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/codegen/context.hpp>
 #include <jank/evaluate/context.hpp>
-
-std::filesystem::path process_location()
-/* TODO: Support for other operating systems. */
-{ return std::filesystem::canonical("/proc/self/exe"); }
 
 int main(int const argc, char const **argv)
 {
@@ -43,7 +40,7 @@ int main(int const argc, char const **argv)
   jank::codegen::context cg_ctx{ rt_ctx, an_ctx, an_prc.begin(an_ctx), an_prc.end(an_ctx), an_prc.total_forms };
   //std::cout << cg_ctx.str() << std::endl;
 
-  auto const jank_location(process_location().parent_path());
+  auto const jank_location(jank::util::process_location().unwrap().parent_path());
   auto const cling_args(std::experimental::make_array(argv[0], "-std=c++17"));
   cling::Interpreter jit(cling_args.size(), cling_args.data(), LLVMDIR);
 
