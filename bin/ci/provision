@@ -1,12 +1,5 @@
 #!/usr/bin/env bash
 
-curl https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-sudo apt-get update
-sudo apt-get install -y ca-certificates curl gnupg git zip build-essential cmake libboost-all-dev libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip
-sudo apt-add-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-14 main'
-sudo apt-add-repository 'deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy-14 main'
-sudo apt-get update
-sudo apt-get install -y clang-14
 # These cause issues when building folly.
 sudo apt-get remove -y libsodium-dev liburing-dev
 
