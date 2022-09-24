@@ -5,8 +5,8 @@ set -eu
 # TODO: Build matrix for this.
 ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_tests=on
 ./bin/compile
-#./bin/test
-#
+./bin/test
+
 #./bin/configure -Djank_build_type=debug
 #./bin/compile -v
 #LLVM_PROFILE_FILE=build/test.profraw ./bin/test
