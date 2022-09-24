@@ -5,7 +5,9 @@
     "immer",
     "folly",
     "boost-smart-ptr",
-    "magic-enum"
+    "magic-enum",
+    "libsodium",
+    "liburing"
   ],
   "default-features": [],
   "features": {
