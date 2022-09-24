@@ -12,6 +12,16 @@ For the current progress of jank and its usability, see the tables here: https:/
 **NOTE:** jank is not very buildable right now. It's also not very usable right
 now. See this issue for details: https://github.com/jank-lang/jank/issues/7
 
+Clone the repo as follows:
+
+```bash
+$ git clone --recurse-submodules https://github.com/jank-lang/jank.git
+
+# If you don't recurse submodules when deploying, you'll need to run this after
+# cloning.
+$ git submodule update --recursive --init
+```
+
 ### Compiling
 * `./bin/configure` -- For setting up the project.
 * `./bin/compile` -- For one-off compilation.
