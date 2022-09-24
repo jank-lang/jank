@@ -4,7 +4,7 @@ set -eu
 
 # TODO: Build matrix for this.
 ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_tests=on
-#./bin/compile
+./bin/compile
 #./bin/test
 #
 #./bin/configure -Djank_build_type=debug
