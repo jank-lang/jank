@@ -3,11 +3,12 @@
   "version-semver": "0.1.0",
   "dependencies": [
     "immer",
-    "folly",
+    {
+      "name": "folly",
+      "features": []
+    },
     "boost-smart-ptr",
-    "magic-enum",
-    "libsodium",
-    "liburing"
+    "magic-enum"
   ],
   "default-features": [],
   "features": {
