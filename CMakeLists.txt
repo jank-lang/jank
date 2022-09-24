@@ -105,7 +105,7 @@ find_package(Boost REQUIRED)
 find_package(folly REQUIRED)
 find_package(Immer REQUIRED)
 find_package(magic_enum REQUIRED)
-target_link_libraries(jank_lib PRIVATE jank_cling_lib immer Folly::folly Folly::folly_deps lzma sodium uring unwind)
+target_link_libraries(jank_lib PRIVATE jank_cling_lib immer Folly::folly Folly::folly_deps lzma unwind)
 set_target_properties(jank_lib PROPERTIES LINK_FLAGS_RELEASE -s)
 # ---- libjank.a ----
 
