@@ -11,13 +11,9 @@ fi
 # TODO: Build matrix for this.
 ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_tests=on -Dcling_dir="${cling_dir}"
 ./bin/compile
-./bin/test
 
-./bin/configure -Djank_build_type=debug
-./bin/compile -v
+# Collect code coverage while testing.
 LLVM_PROFILE_FILE=build/test.profraw ./bin/test
-
-# Code coverage.
 llvm-profdata merge --sparse build/test.profraw -o build/test.profdata
 llvm-cov show ./build/test/cpp/jank-unit-tests --instr-profile build/test.profdata > coverage.txt
 bash <(curl -s https://codecov.io/bash) -f coverage.txt
