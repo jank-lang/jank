@@ -2,13 +2,16 @@
 
 set -eu
 
+# TODO: CI support for address sanitization.
+# TODO: CI support for release build.
+# TODO: CI support for macOS.
+
 cling_dir="build/cling-build/builddir"
 if [[ ! -d "${cling_dir}" ]];
 then
   ./bin/build-cling "${cling_dir}"
 fi
 
-# TODO: Build matrix for this.
 ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_tests=on -Djank_coverage=on -Dcling_dir="${cling_dir}"
 ./bin/compile
 
