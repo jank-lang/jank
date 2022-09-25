@@ -12,11 +12,11 @@ then
   ./bin/build-cling "${cling_dir}"
 fi
 
-./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_tests=on -Djank_coverage=on -Dcling_dir="${cling_dir}"
+./bin/configure -GNinja -Djank_tests=on -Djank_coverage=on -Dcling_dir="${cling_dir}" "$@"
 ./bin/compile
 
 # Collect code coverage while testing.
-LLVM_PROFILE_FILE=build/test.profraw ./bin/test
-llvm-profdata-14 merge --sparse build/test.profraw -o build/test.profdata
-llvm-cov-14 show ./build/jank-test --instr-profile build/test.profdata > coverage.txt
-bash <(curl -s https://codecov.io/bash) -f coverage.txt
+#LLVM_PROFILE_FILE=build/test.profraw ./bin/test
+#llvm-profdata-14 merge --sparse build/test.profraw -o build/test.profdata
+#llvm-cov-14 show ./build/jank-test --instr-profile build/test.profdata > coverage.txt
+#bash <(curl -s https://codecov.io/bash) -f coverage.txt

@@ -11,26 +11,38 @@ env:
 
 jobs:
   test:
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, macos-12]
+        build_type: [Debug, Release]
+        # TODO: sanitize: [On, Off]
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
-    - uses: awalsh128/cache-apt-pkgs-action@latest
-      with:
-        packages: curl git zip build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev clang-14 llvm-14
-        # Update this whenever the list changes.
-        version: 2022/09/24--17.18.35
-    # TODO: Cache Cling separately; hash on bin/build-cling
-    - name: Cache C++ packages
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/vcpkg
-          ${{ github.workspace }}/build/cling-build
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('vcpkg.json') }}
-    - name: Provision
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - if: ${{ runner.os }} == "Linux"
+        name: Install apt packages
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: curl git zip build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev clang-14 llvm-14
+          # Update this whenever the list changes.
+          version: 2022/09/24--17.18.35
+      - if: ${{ runner.os }} == "macOS"
+        name: Install brew packages
+        run: brew install curl git zip build-essential openssl double-conversion pkg-config ninja python pip cmake gnupg zlib llvm@14
+      # TODO: Cache Cling separately; hash on bin/build-cling
+      - name: Cache C++ packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/vcpkg
+            ${{ github.workspace }}/build/cling-build
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('vcpkg.json') }}
       # These cause issues when building folly.
-      run: sudo apt-get remove -y libsodium-dev liburing-dev
-    - name: Compile and test
-      run: "${{ github.workspace }}/bin/ci/test"
+      - if: ${{ runner.os }} == "Linux"
+        name: Remove problematic packages
+        run: sudo apt-get remove -y libsodium-dev liburing-dev
+      - name: Compile and test
+        # TODO Separate job for codecov
+        run: "${{ github.workspace }}/bin/ci/test" -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
