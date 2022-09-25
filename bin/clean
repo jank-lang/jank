@@ -4,4 +4,12 @@ set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-/bin/rm -r "${here}/../build";
+pushd "${here}/../build"
+  if [[ -f build.ninja ]];
+  then
+    ninja clean
+  elif [[ -f Makefile ]];
+  then
+    make clean
+  fi
+popd
