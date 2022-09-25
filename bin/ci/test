@@ -9,7 +9,7 @@ then
 fi
 
 # TODO: Build matrix for this.
-./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_tests=on -Dcling_dir="${cling_dir}"
+./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_tests=on -Djank_coverage=on -Dcling_dir="${cling_dir}"
 ./bin/compile
 
 # Collect code coverage while testing.

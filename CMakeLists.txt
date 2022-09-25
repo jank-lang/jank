@@ -28,15 +28,14 @@ project(
 )
 
 include(cmake/variables.cmake)
+include(cmake/coverage.cmake)
 
 if(MSVC)
-  set(jank_linker_flags "")
   set(jank_compiler_flags /W4)
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     list(APPEND jank_compiler_flags /WX)
   endif()
 else()
-  set(jank_linker_flags "")
   set(
     jank_compiler_flags
     -Wall -Wextra -Wpedantic
@@ -44,8 +43,7 @@ else()
     -Wold-style-cast -Wno-gnu-case-range
   )
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    list(APPEND jank_compiler_flags -Werror -fprofile-instr-generate -fcoverage-mapping)
-    list(APPEND jank_linker_flags -fprofile-instr-generate -fcoverage-mapping)
+    list(APPEND jank_compiler_flags -w -Werror)
   endif()
 endif()
 
@@ -126,7 +124,6 @@ set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 
 target_compile_features(jank_lib PUBLIC cxx_std_17)
 target_compile_options(jank_lib PRIVATE ${jank_compiler_flags})
-target_link_options(jank_lib PRIVATE ${jank_linker_flags})
 
 find_package(Boost REQUIRED)
 find_package(folly REQUIRED)
@@ -149,7 +146,6 @@ endif()
 target_compile_features(jank_exe PRIVATE cxx_std_17)
 target_compile_options(jank_exe PUBLIC -DLLVMDIR="${LLVM_BINARY_DIR}")
 target_compile_options(jank_exe PRIVATE ${jank_compiler_flags})
-target_link_options(jank_exe PRIVATE ${jank_linker_flags})
 
 target_include_directories(jank_exe PRIVATE ${BOOST_INCLUDE_DIRS})
 target_include_directories(jank_exe PRIVATE ${CLING_INCLUDE_DIRS})
@@ -185,7 +181,6 @@ if(jank_tests)
 
   find_package(doctest REQUIRED)
   target_link_libraries(jank_test_exe PRIVATE jank_lib doctest::doctest)
-  target_link_options(jank_test_exe PRIVATE ${jank_linker_flags})
 
   add_test(NAME "Test" COMMAND jank_test_exe)
 endif()
