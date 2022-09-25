@@ -18,5 +18,5 @@ fi
 # Collect code coverage while testing.
 LLVM_PROFILE_FILE=build/test.profraw ./bin/test
 llvm-profdata-14 merge --sparse build/test.profraw -o build/test.profdata
-llvm-cov-14 show ./build/test/cpp/jank-unit-tests --instr-profile build/test.profdata > coverage.txt
+llvm-cov-14 show ./build/jank-test --instr-profile build/test.profdata > coverage.txt
 bash <(curl -s https://codecov.io/bash) -f coverage.txt
