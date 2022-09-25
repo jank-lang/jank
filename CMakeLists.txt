@@ -12,6 +12,11 @@ if(jank_tests)
   list(APPEND VCPKG_MANIFEST_FEATURES "tests")
 endif()
 
+# Enable LTO in release.
+if(CMAKE_BUILD_TYPE EQUAL "Release")
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
+
 project(
     jank
     VERSION 0.1
@@ -23,6 +28,26 @@ project(
 )
 
 include(cmake/variables.cmake)
+
+if(MSVC)
+  set(jank_linker_flags "")
+  set(jank_compiler_flags /W4)
+  if(CMAKE_BUILD_TYPE EQUAL "Debug")
+    list(APPEND jank_compiler_flags /WX)
+  endif()
+else()
+  set(jank_linker_flags "")
+  set(
+    jank_compiler_flags
+    -Wall -Wextra -Wpedantic
+    -Wfloat-equal -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor
+    -Wold-style-cast -Wno-gnu-case-range
+  )
+  if(CMAKE_BUILD_TYPE EQUAL "Debug")
+    list(APPEND jank_compiler_flags -Werror)
+    list(APPEND jank_linker_flags -fprofile-instr-generate -fcoverage-mapping)
+  endif()
+endif()
 
 # ---- libjankcling.so ----
 # Cling, Clang, and LLVM are huge. About 1.5G unstripped and 150M stripped.
@@ -100,6 +125,8 @@ target_include_directories(
 set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 
 target_compile_features(jank_lib PUBLIC cxx_std_17)
+target_compile_options(jank_lib PRIVATE ${jank_compiler_flags})
+target_link_options(jank_lib PRIVATE ${jank_linker_flags})
 
 find_package(Boost REQUIRED)
 find_package(folly REQUIRED)
@@ -121,6 +148,8 @@ endif()
 
 target_compile_features(jank_exe PRIVATE cxx_std_17)
 target_compile_options(jank_exe PUBLIC -DLLVMDIR="${LLVM_BINARY_DIR}")
+target_compile_options(jank_exe PRIVATE ${jank_compiler_flags})
+target_link_options(jank_exe PRIVATE ${jank_linker_flags})
 
 target_include_directories(jank_exe PRIVATE ${BOOST_INCLUDE_DIRS})
 target_include_directories(jank_exe PRIVATE ${CLING_INCLUDE_DIRS})
@@ -152,9 +181,11 @@ if(jank_tests)
   set_property(TARGET jank_test_exe PROPERTY OUTPUT_NAME jank-test)
 
   target_compile_features(jank_test_exe PRIVATE cxx_std_17)
+  target_compile_options(jank_test_exe PRIVATE ${jank_compiler_flags})
 
   find_package(doctest REQUIRED)
   target_link_libraries(jank_test_exe PRIVATE jank_lib doctest::doctest)
+  target_link_options(jank_test_exe PRIVATE ${jank_linker_flags})
 
   add_test(NAME "Test" COMMAND jank_test_exe)
 endif()
