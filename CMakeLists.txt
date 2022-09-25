@@ -13,7 +13,7 @@ if(jank_tests)
 endif()
 
 # Enable LTO in release.
-if(CMAKE_BUILD_TYPE EQUAL "Release")
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
   set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
@@ -32,7 +32,7 @@ include(cmake/variables.cmake)
 if(MSVC)
   set(jank_linker_flags "")
   set(jank_compiler_flags /W4)
-  if(CMAKE_BUILD_TYPE EQUAL "Debug")
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     list(APPEND jank_compiler_flags /WX)
   endif()
 else()
@@ -43,7 +43,7 @@ else()
     -Wfloat-equal -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor
     -Wold-style-cast -Wno-gnu-case-range
   )
-  if(CMAKE_BUILD_TYPE EQUAL "Debug")
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     list(APPEND jank_compiler_flags -Werror -fprofile-instr-generate -fcoverage-mapping)
     list(APPEND jank_linker_flags -fprofile-instr-generate -fcoverage-mapping)
   endif()
