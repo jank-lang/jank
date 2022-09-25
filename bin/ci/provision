@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-# These cause issues when building folly.
-sudo apt-get remove -y libsodium-dev liburing-dev
-
-export CC=clang-14
-export CXX=clang++-14

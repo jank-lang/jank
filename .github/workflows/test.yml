@@ -1,3 +1,4 @@
+# TODO: Rename to build
 name: "Test"
 on:
   pull_request:
@@ -23,6 +24,10 @@ jobs:
           ${{ github.workspace }}/build/cling-build
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('vcpkg.json') }}
     - name: Provision
-      run: source ${{ github.workspace }}/bin/ci/provision
+      run: |
+        # These cause issues when building folly.
+        sudo apt-get remove -y libsodium-dev liburing-dev
+        export CC=clang-14
+        export CXX=clang++-14
     - name: Compile and test
       run: "${{ github.workspace }}/bin/ci/test"
