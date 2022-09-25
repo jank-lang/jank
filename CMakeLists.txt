@@ -44,7 +44,7 @@ else()
     -Wold-style-cast -Wno-gnu-case-range
   )
   if(CMAKE_BUILD_TYPE EQUAL "Debug")
-    list(APPEND jank_compiler_flags -Werror)
+    list(APPEND jank_compiler_flags -Werror -fprofile-instr-generate -fcoverage-mapping)
     list(APPEND jank_linker_flags -fprofile-instr-generate -fcoverage-mapping)
   endif()
 endif()
