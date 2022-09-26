@@ -21,14 +21,14 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - if: ${{ runner.os }} == "Linux"
+      - if: runner.os == 'Linux'
         name: Install apt packages
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
           packages: curl git zip build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev clang-14 llvm-14
           # Update this whenever the list changes.
           version: 2022/09/24--17.18.35
-      - if: ${{ runner.os }} == "macOS"
+      - if: runner.os == 'macOS'
         name: Install brew packages
         run: brew install curl git zip build-essential openssl double-conversion pkg-config ninja python pip cmake gnupg zlib llvm@14
       # TODO: Cache Cling separately; hash on bin/build-cling
@@ -40,7 +40,7 @@ jobs:
             ${{ github.workspace }}/build/cling-build
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('vcpkg.json') }}
       # These cause issues when building folly.
-      - if: ${{ runner.os }} == "Linux"
+      - if: runner.os == 'Linux'
         name: Remove problematic packages
         run: sudo apt-get remove -y libsodium-dev liburing-dev
       - name: Compile and test
