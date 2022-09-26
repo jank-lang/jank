@@ -30,7 +30,7 @@ jobs:
           version: 2022/09/24--17.18.35
       - if: runner.os == 'macOS'
         name: Install brew packages
-        run: brew install curl git zip build-essential openssl double-conversion pkg-config ninja python pip cmake gnupg zlib llvm@14
+        run: brew install curl git zip openssl double-conversion pkg-config ninja python pip cmake gnupg zlib llvm@14
       # TODO: Cache Cling separately; hash on bin/build-cling
       - name: Cache C++ packages
         uses: actions/cache@v3
