@@ -11,9 +11,6 @@ For the current progress of jank and its usability, see the tables here: https:/
 The current tl;dr for jank's usability is: **not usable for anything useful**
 
 ## Building locally
-**NOTE:** jank is not very buildable right now. It's also not very usable right
-now. See this issue for details: https://github.com/jank-lang/jank/issues/7
-
 ### Dependencies
 For Debian-based distros, this should be all you need:
 
