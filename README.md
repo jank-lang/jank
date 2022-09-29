@@ -24,8 +24,7 @@ Clone the repo as follows:
 ```bash
 $ git clone --recurse-submodules https://github.com/jank-lang/jank.git
 
-# If you don't recurse submodules when deploying, you'll need to run this after
-# cloning.
+# If you don't recurse submodules when cloning, you'll need to run this.
 $ git submodule update --recursive --init
 ```
 
