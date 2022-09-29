@@ -3,8 +3,6 @@
 set -eu
 
 # TODO: CI support for address sanitization.
-# TODO: CI support for release build.
-# TODO: CI support for macOS.
 
 cling_dir="build/cling-build/builddir"
 if [[ ! -d "${cling_dir}" ]];

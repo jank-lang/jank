@@ -48,6 +48,7 @@ int main(int const argc, char const **argv)
   jit.AddIncludePath(jank_location.string() + "/../include/cpp");
   /* TODO: Figure out how to make this easier for dev. */
   jit.AddIncludePath(jank_location.string() + "/vcpkg_installed/x64-linux/include");
+  jit.AddIncludePath(jank_location.string() + "/vcpkg_installed/x64-osx/include");
 
   /* TODO: Pre-compiled prelude. */
   jit.process("#include \"jank/runtime/obj/number.hpp\"");

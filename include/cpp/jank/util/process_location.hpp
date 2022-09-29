@@ -15,7 +15,7 @@ namespace jank::util
 #if defined(__APPLE__)
   {
     uint32_t path_length{};
-    if(_NSGetExecutablePath(nullptr, &path_length) != 0 || path_length <= 1)
+    if(_NSGetExecutablePath(nullptr, &path_length) != -1 || path_length <= 1)
     { return none; }
 
     std::string path(path_length, std::string::value_type{});
@@ -24,7 +24,7 @@ namespace jank::util
     return std::filesystem::canonical(path);
   }
 #elif defined(__linux__)
-  { return some(std::filesystem::canonical("/proc/self/exe")); }
+  { return std::filesystem::canonical("/proc/self/exe"); }
 #else
   { static_assert(false, "Unsupported platform"); }
 #endif
