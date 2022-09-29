@@ -130,6 +130,8 @@ Interop with C and C++ will require the following abilities:
 The priority for interop is the ability to call into existing C and C++
 libraries. Exposing all of C++ is not a goal.
 
+Take a look at Ferret: https://ferret-lang.org/#outline-container-sec-4
+
 ## Type system
 In terms of capability set, these are the categories I want to hit:
 
