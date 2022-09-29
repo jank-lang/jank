@@ -12,9 +12,9 @@ if(jank_tests)
   list(APPEND VCPKG_MANIFEST_FEATURES "tests")
 endif()
 
-# Enable LTO in release.
+# LTO is explicitly not used, since it leads to runtime symbol lookup issues with the JIT.
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
 endif()
 
 project(
@@ -152,6 +152,8 @@ add_executable(jank_exe src/cpp/main.cpp)
 add_executable(jank::exe ALIAS jank_exe)
 
 set_property(TARGET jank_exe PROPERTY OUTPUT_NAME jank)
+
+# Symbol exporting for JIT.
 set_target_properties(jank_exe PROPERTIES ENABLE_EXPORTS 1)
 if(MSVC)
   set_target_properties(jank_exe PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
