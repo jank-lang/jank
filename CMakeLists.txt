@@ -78,7 +78,16 @@ find_package(Cling REQUIRED HINTS "${cling_dir}/lib/cmake/cling")
 target_include_directories(jank_cling_lib PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib PRIVATE ${CLANG_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib PRIVATE ${LLVM_INCLUDE_DIRS})
-target_link_libraries(jank_cling_lib PRIVATE -Wl,--whole-archive clingInterpreter -Wl,--no-whole-archive)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  target_link_libraries(jank_cling_lib PRIVATE -Wl,-force_load, clingInterpreter)
+elseif(MSVC)
+  target_link_libraries(jank_cling_lib PRIVATE -WHOLEARCHIVE: clingInterpreter)
+else()
+  target_link_libraries(jank_cling_lib PRIVATE -Wl,--whole-archive clingInterpreter -Wl,--no-whole-archive)
+endif()
+
+
 set_target_properties(jank_cling_lib PROPERTIES LINK_FLAGS -s)
 # ---- libjankcling.so ----
 
@@ -129,7 +138,12 @@ find_package(Boost REQUIRED)
 find_package(folly REQUIRED)
 find_package(Immer REQUIRED)
 find_package(magic_enum REQUIRED)
-target_link_libraries(jank_lib PRIVATE jank_cling_lib immer Folly::folly Folly::folly_deps lzma unwind)
+
+target_link_libraries(jank_lib PRIVATE jank_cling_lib immer Folly::folly Folly::folly_deps lzma)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  target_link_libraries(jank_lib PRIVATE unwind)
+endif()
+
 set_target_properties(jank_lib PROPERTIES LINK_FLAGS_RELEASE -s)
 # ---- libjank.a ----
 

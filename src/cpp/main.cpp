@@ -1,6 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <experimental/array>
 #include <filesystem>
 
 #pragma clang diagnostic push
@@ -11,6 +10,7 @@
 
 #include <jank/util/mapped_file.hpp>
 #include <jank/util/process_location.hpp>
+#include <jank/util/make_array.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
@@ -41,7 +41,7 @@ int main(int const argc, char const **argv)
   //std::cout << cg_ctx.str() << std::endl;
 
   auto const jank_location(jank::util::process_location().unwrap().parent_path());
-  auto const cling_args(std::experimental::make_array(argv[0], "-std=c++17"));
+  auto const cling_args(jank::util::make_array(argv[0], "-std=c++17"));
   cling::Interpreter jit(cling_args.size(), cling_args.data(), LLVMDIR);
 
   jit.AddIncludePath(jank_location.string() + "/../include");
