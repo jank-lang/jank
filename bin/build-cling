@@ -19,7 +19,6 @@ function fetch_cpt
 function build_default
 {
   "${cpt}" -y \
-           --check-requirements \
            --create-dev-env=Release \
            --with-workdir="${build_dir}" \
            --allow-dirty \
