@@ -1,8 +1,11 @@
 # The jank programming language [![codecov](https://codecov.io/gh/jank-lang/jank/branch/main/graph/badge.svg)](https://codecov.io/gh/jank-lang/jank) [![Sponsor](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&link=https://github.com/sponsors/jeaye&color=red)](https://github.com/sponsors/jeaye)
 
-jank is a Clojure dialect which aims to offer the best of both worlds: dynamic
-and static. For both of these worlds, jank uses a single runtime, so the
-transition from one to the other is not only seamless, it can be gradual.
+jank is a general-purpose programming language which embraces the interactive,
+functional, value-oriented nature of Clojure, the desire for native compilation
+and minimal runtimes of C++, and the gradual, structural typing of languages
+like TypeScript. jank aims to be strongly compatible with Clojure. While
+Clojure's default host is the JVM and its interop is with Java, jank's host is
+LLVM and its interop is with C++ or LLVM IR.
 
 https://jank-lang.org
 
@@ -16,6 +19,12 @@ For Debian-based distros, this should be all you need:
 
 ```bash
 $ sudo apt-get install -y curl git zip build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev clang-14
+```
+
+For macOS, try this:
+
+```bash
+$ brew install curl git zip openssl double-conversion pkg-config ninja python cmake gnupg zlib llvm@14
 ```
 
 Clone the repo as follows:
