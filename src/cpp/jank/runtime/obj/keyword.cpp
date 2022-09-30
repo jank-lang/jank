@@ -29,7 +29,7 @@ namespace jank::runtime::obj
   { return "keyword(" + sym.to_string() + ")"; }
   runtime::detail::integer_type keyword::to_hash() const
   /* TODO: Cache this. */
-  { return detail::hash_combine(sym.to_hash(), hash_magic); }
+  { return runtime::detail::hash_combine(sym.to_hash(), hash_magic); }
 
   keyword const* keyword::as_keyword() const
   { return this; }

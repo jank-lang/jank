@@ -51,15 +51,6 @@ int main(int const argc, char const **argv)
   jit.AddIncludePath(jank_location.string() + "/vcpkg_installed/x64-osx/include");
 
   /* TODO: Pre-compiled prelude. */
-  jit.process("#include \"jank/runtime/obj/number.hpp\"");
-  jit.process("#include \"jank/runtime/obj/function.hpp\"");
-  jit.process("#include \"jank/runtime/obj/map.hpp\"");
-  jit.process("#include \"jank/runtime/obj/list.hpp\"");
-  jit.process("#include \"jank/runtime/obj/vector.hpp\"");
-  jit.process("#include \"jank/runtime/obj/set.hpp\"");
-  jit.process("#include \"jank/runtime/obj/string.hpp\"");
-  jit.process("#include \"jank/runtime/ns.hpp\"");
-  jit.process("#include \"jank/runtime/var.hpp\"");
-  jit.process("#include \"jank/runtime/context.hpp\"");
+  jit.process("#include \"jank/prelude.hpp\"");
   jit.process(cg_ctx.str());
 }

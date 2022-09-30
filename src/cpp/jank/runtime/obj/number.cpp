@@ -7,7 +7,7 @@
 namespace jank::runtime::obj
 {
   /***** boolean *****/
-  detail::boolean_type boolean::equal(object const &o) const
+  runtime::detail::boolean_type boolean::equal(object const &o) const
   {
     auto const *b(o.as_boolean());
     if(!b)
@@ -15,10 +15,10 @@ namespace jank::runtime::obj
 
     return data == b->data;
   }
-  detail::string_type boolean::to_string() const
+  runtime::detail::string_type boolean::to_string() const
   /* TODO: Optimize. */
   { return data ? "true" : "false"; }
-  detail::integer_type boolean::to_hash() const
+  runtime::detail::integer_type boolean::to_hash() const
   { return data ? 1 : 0; }
   boolean const* boolean::as_boolean() const
   { return this; }
@@ -26,7 +26,7 @@ namespace jank::runtime::obj
   /***** integer *****/
   runtime::detail::box_type<integer> integer::create(runtime::detail::integer_type const &n)
   { return make_box<integer>(n); }
-  detail::boolean_type integer::equal(object const &o) const
+  runtime::detail::boolean_type integer::equal(object const &o) const
   {
     auto const *i(o.as_integer());
     if(!i)
@@ -34,14 +34,14 @@ namespace jank::runtime::obj
 
     return data == i->data;
   }
-  detail::string_type integer::to_string() const
+  runtime::detail::string_type integer::to_string() const
   /* TODO: Optimize by rendering into string_type. */
   { return std::to_string(data); }
-  detail::integer_type integer::to_hash() const
+  runtime::detail::integer_type integer::to_hash() const
   { return data; }
-  detail::integer_type integer::get_integer() const
+  runtime::detail::integer_type integer::get_integer() const
   { return data; }
-  detail::real_type integer::get_real() const
+  runtime::detail::real_type integer::get_real() const
   { return data; }
   integer const* integer::as_integer() const
   { return this; }
@@ -49,23 +49,23 @@ namespace jank::runtime::obj
   { return this; }
 
   /***** real *****/
-  detail::boolean_type real::equal(object const &o) const
+  runtime::detail::boolean_type real::equal(object const &o) const
   {
     auto const *r(o.as_real());
     if(!r)
     { return false; }
 
-    std::hash<detail::real_type> hasher{};
+    std::hash<runtime::detail::real_type> hasher{};
     return hasher(data) == hasher(r->data);
   }
-  detail::string_type real::to_string() const
+  runtime::detail::string_type real::to_string() const
   /* TODO: Optimize by rendering into string_type. */
   { return std::to_string(data); }
-  detail::integer_type real::to_hash() const
-  { return static_cast<detail::integer_type>(data); }
-  detail::integer_type real::get_integer() const
+  runtime::detail::integer_type real::to_hash() const
+  { return static_cast<runtime::detail::integer_type>(data); }
+  runtime::detail::integer_type real::get_integer() const
   { return data; }
-  detail::real_type real::get_real() const
+  runtime::detail::real_type real::get_real() const
   { return data; }
   real const* real::as_real() const
   { return this; }
@@ -94,10 +94,10 @@ namespace jank::runtime::obj
     virtual object_ptr abs() const = 0;
     virtual object_ptr min() const = 0;
     virtual object_ptr max() const = 0;
-    virtual detail::boolean_type lt() const = 0;
-    virtual detail::boolean_type lte() const = 0;
-    virtual detail::boolean_type gte() const = 0;
-    virtual detail::boolean_type equal() const = 0;
+    virtual runtime::detail::boolean_type lt() const = 0;
+    virtual runtime::detail::boolean_type lte() const = 0;
+    virtual runtime::detail::boolean_type gte() const = 0;
+    virtual runtime::detail::boolean_type equal() const = 0;
   };
 
   struct integer_ops : number_ops
@@ -128,16 +128,16 @@ namespace jank::runtime::obj
     { return make_box<integer>(std::min(left, right)); }
     object_ptr max() const override
     { return make_box<integer>(std::max(left, right)); }
-    detail::boolean_type lt() const override
+    runtime::detail::boolean_type lt() const override
     { return left < right; }
-    detail::boolean_type lte() const override
+    runtime::detail::boolean_type lte() const override
     { return left <= right; }
-    detail::boolean_type gte() const override
+    runtime::detail::boolean_type gte() const override
     { return left >= right; }
-    detail::boolean_type equal() const override
+    runtime::detail::boolean_type equal() const override
     { return left == right; }
 
-    detail::integer_type left, right;
+    runtime::detail::integer_type left, right;
   };
 
   struct real_ops : number_ops
@@ -168,19 +168,19 @@ namespace jank::runtime::obj
     { return make_box<real>(std::min(left, right)); }
     object_ptr max() const override
     { return make_box<real>(std::max(left, right)); }
-    detail::boolean_type lt() const override
+    runtime::detail::boolean_type lt() const override
     { return left < right; }
-    detail::boolean_type lte() const override
+    runtime::detail::boolean_type lte() const override
     { return left <= right; }
-    detail::boolean_type gte() const override
+    runtime::detail::boolean_type gte() const override
     { return left >= right; }
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
-    detail::boolean_type equal() const override
+    runtime::detail::boolean_type equal() const override
     { return left == right; }
 #pragma clang diagnostic pop
 
-    detail::real_type left, right;
+    runtime::detail::real_type left, right;
   };
 
   static thread_local integer_ops i_ops;
@@ -216,7 +216,7 @@ namespace jank::runtime::obj
     }
 
     /* TODO: Exception type. */
-    throw detail::string_type{ "(left_ops) not a number: " } + n->to_string();
+    throw runtime::detail::string_type{ "(left_ops) not a number: " } + n->to_string();
   }
 
   number_ops& right_ops(object_ptr const &n)
@@ -233,12 +233,12 @@ namespace jank::runtime::obj
     }
 
     /* TODO: Exception type. */
-    throw detail::string_type{ "(right_ops) not a number: " } + n->to_string();
+    throw runtime::detail::string_type{ "(right_ops) not a number: " } + n->to_string();
   }
 
   object_ptr rand()
   {
-    static std::uniform_real_distribution<detail::real_type> distribution(0.0, 1.0);
+    static std::uniform_real_distribution<runtime::detail::real_type> distribution(0.0, 1.0);
     static std::mt19937 generator;
     return make_box<real>(distribution(generator));
   }

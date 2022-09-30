@@ -128,6 +128,7 @@ target_include_directories(
     PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/cpp>"
 )
+target_precompile_headers(jank_lib PUBLIC ${PROJECT_SOURCE_DIR}/include/cpp/jank/prelude.hpp)
 
 set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 
@@ -167,6 +168,7 @@ target_include_directories(jank_exe PRIVATE ${BOOST_INCLUDE_DIRS})
 target_include_directories(jank_exe PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_exe PRIVATE ${CLANG_INCLUDE_DIRS})
 target_include_directories(jank_exe PRIVATE ${LLVM_INCLUDE_DIRS})
+target_precompile_headers(jank_exe REUSE_FROM jank_lib)
 
 target_link_libraries(jank_exe PRIVATE jank_lib Boost::boost)
 set_target_properties(jank_exe PROPERTIES LINK_FLAGS_RELEASE -s)
@@ -197,6 +199,8 @@ if(jank_tests)
 
   find_package(doctest REQUIRED)
   target_link_libraries(jank_test_exe PRIVATE jank_lib doctest::doctest)
+
+  target_precompile_headers(jank_test_exe REUSE_FROM jank_lib)
 
   add_test(NAME "Test" COMMAND jank_test_exe)
 endif()
