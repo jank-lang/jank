@@ -19,10 +19,14 @@ jobs:
           - os: ubuntu-22.04
             cc: clang-14
             cxx: clang++-14
+          - os: ubuntu-22.04
+            build_type: Debug
+            codecov: on
     runs-on: ${{ matrix.os }}
     env:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
+      CODECOV: ${{ matrix.codecov }}
     timeout-minutes: 180 # 3h
     steps:
       - uses: actions/checkout@v3
@@ -56,5 +60,4 @@ jobs:
         name: Remove problematic packages
         run: sudo apt-get remove -y libsodium-dev liburing-dev
       - name: Compile and test
-        # TODO Separate job for codecov
         run: ${{ github.workspace }}/bin/ci/test -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
