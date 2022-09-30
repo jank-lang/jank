@@ -44,6 +44,7 @@ jobs:
         with:
           path: |
             ~/.cache/vcpkg
+            ${{ github.workspace }}/build/vcpkg_installed
             ${{ github.workspace }}/build/cling-build
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('vcpkg.json') }}
       # These cause issues when building folly.

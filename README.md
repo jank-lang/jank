@@ -11,7 +11,7 @@ https://jank-lang.org
 
 For the current progress of jank and its usability, see the tables here: https://jank-lang.org/progress/
 
-The current tl;dr for jank's usability is: **not usable for anything useful**
+The current tl;dr for jank's usability is: **not usable for anything useful**.
 
 ## Building locally
 ### Dependencies
@@ -48,10 +48,10 @@ Note that, by default, jank will compile Cling/Clang/LLVM for you, as part of
 your build directory. This can take an hour or two, depending on your machine.
 Building jank itself should take less than a minute. If you want to build it
 yourself, or want it outside of jank's build dir, you can use the
-`bin/build-cling [build-dir]` script.
+`bin/build-cling [cling-dir]` script.
 
 If you build your own Cling, or if you get it from somewhere else, you can
-provide it to `./bin/configure` by using `-Dcling_dir=path/to/cling/builddir`.
+provide it to `./bin/configure` by using `-Dcling_dir=[cling-dir]/builddir`.
 
 ### Release
 A typical release build just needs the following:
@@ -84,7 +84,7 @@ $ ./bin/install
 If you'd like your name, company, or logo here, you can sponsor this project.
 [![Sponsor](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&link=https://github.com/sponsors/jeaye&color=red)](https://github.com/sponsors/jeaye)
 
-## In the press
+## In the news
 <table>
   <tr>
     <td>The REPL Interview</td>
