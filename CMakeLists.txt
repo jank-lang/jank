@@ -79,7 +79,7 @@ target_include_directories(jank_cling_lib PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib PRIVATE ${CLANG_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib PRIVATE ${LLVM_INCLUDE_DIRS})
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   target_link_libraries(jank_cling_lib PRIVATE -Wl,-force_load, clingInterpreter)
 elseif(MSVC)
   target_link_libraries(jank_cling_lib PRIVATE -WHOLEARCHIVE: clingInterpreter)
