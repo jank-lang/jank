@@ -1,16 +1,15 @@
 cmake_minimum_required(VERSION 3.21)
 
-include(cmake/prelude.cmake)
-
-set(
-  CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/third-party/vcpkg/scripts/buildsystems/vcpkg.cmake"
-  CACHE STRING "Vcpkg toolchain file"
-)
-
-option(jank_tests "Build jank's tests" OFF)
-if(jank_tests)
-  list(APPEND VCPKG_MANIFEST_FEATURES "tests")
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+  message(
+      FATAL_ERROR
+      "In-source builds are not supported. "
+      "Please read README.md before trying to build this project. "
+      "You may need to delete 'CMakeCache.txt' and 'CMakeFiles/' first."
+  )
 endif()
+
+include(cmake/vcpkg.cmake)
 
 # LTO is explicitly not used, since it leads to runtime symbol lookup issues with the JIT.
 if(CMAKE_BUILD_TYPE STREQUAL "Release")

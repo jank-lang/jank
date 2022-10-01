@@ -11,8 +11,4 @@ build_dir="${here}/../build"
 export CC="${CC:-clang}"
 export CXX="${CXX:-clang++}"
 
-# Folly can fail, on Linux, with clang, since it struggles to find things like clock_gettime.
-# We get around that by just trusting they're present.
-export CXXFLAGS="${CXXFLAGS:-} -DFOLLY_HAVE_RECVMMSG -DFOLLY_HAVE_CLOCK_GETTIME"
-
 cmake -S . -B "${build_dir}" "$@"
