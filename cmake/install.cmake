@@ -12,7 +12,7 @@ install(
 # So vcpkg puts all of the headers we need for all of our dependencies
 # into one include prefix based on our target triplet. This is excellent,
 # since we need to package all of those headers along with jank. Why?
-# Because JIT compilation means that anything we need at compile-time
+# Because JIT compilation means that any headers we need at compile-time
 # we'll also need at run-time.
 file(GLOB_RECURSE jank_includes ${CMAKE_SOURCE_DIR}/include/cpp/*)
 file(GLOB_RECURSE vcpkg_includes ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include/*)
@@ -22,8 +22,9 @@ set(jank_public_headers ${jank_includes} ${vcpkg_includes})
 # we do it ourselves.
 macro(install_headers_with_directory header_list)
   foreach(header ${${header_list}})
-    string(REGEX REPLACE ".*/(include/.*)/[^/]*$" "\\1" dir ${header})
-    install(FILES ${header} DESTINATION ${dir})
+    string(REGEX REPLACE ".*/(include/.*)[^/]*$" "\\1" relative_path ${header})
+    cmake_path(GET relative_path PARENT_PATH relative_dir)
+    install(FILES ${header} DESTINATION ${relative_dir})
   endforeach(header)
 endmacro(install_headers_with_directory)
 
