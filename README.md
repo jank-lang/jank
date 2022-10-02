@@ -18,13 +18,13 @@ The current tl;dr for jank's usability is: **not usable for anything useful**.
 For Debian-based distros, this should be all you need:
 
 ```bash
-$ sudo apt-get install -y curl git zip build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev clang-14
+$ sudo apt-get install -y curl git zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev clang-14
 ```
 
 For macOS, try this:
 
 ```bash
-$ brew install curl git zip openssl double-conversion pkg-config ninja python cmake gnupg zlib llvm@14
+$ brew install curl git zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib llvm@14
 ```
 
 Clone the repo as follows:
