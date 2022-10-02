@@ -4,6 +4,8 @@ set_target_properties(jank_exe PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib")
 
 install(
   TARGETS jank_exe jank_cling_lib
+  # Tempting to do this, to include all dynamic libs, but it doesn't reliably work.
+  #RUNTIME_DEPENDENCIES DIRECTORIES
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib

@@ -12,9 +12,7 @@ endif()
 include(cmake/vcpkg.cmake)
 
 # LTO is explicitly not used, since it leads to runtime symbol lookup issues with the JIT.
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
-endif()
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
 
 project(
     jank
@@ -97,7 +95,7 @@ set_target_properties(jank_cling_lib PROPERTIES LINK_FLAGS -s)
 # compiler's runtime by the JIT compiler.
 
 add_library(
-  jank_lib OBJECT
+  jank_lib STATIC
   src/cpp/jank/util/mapped_file.cpp
   src/cpp/jank/read/lex.cpp
   src/cpp/jank/read/parse.cpp
