@@ -99,6 +99,7 @@ add_library(
   src/cpp/jank/util/mapped_file.cpp
   src/cpp/jank/read/lex.cpp
   src/cpp/jank/read/parse.cpp
+  src/cpp/jank/runtime/util.cpp
   src/cpp/jank/runtime/seq.cpp
   src/cpp/jank/runtime/memory_pool.cpp
   src/cpp/jank/runtime/object.cpp

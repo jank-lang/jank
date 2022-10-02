@@ -7,45 +7,29 @@ namespace jank::runtime
 {
   namespace detail
   {
-    inline bool truthy(object_ptr const &o)
-    {
-      if(o->as_nil())
-      { return false; }
-      else if(auto const * const b = o->as_boolean())
-      { return b->data; }
-
-      return true;
-    }
+    bool truthy(object_ptr const &o);
   }
 
-  inline object_ptr identity(object_ptr const &o)
-  { return o; }
+  object_ptr identity(object_ptr const &o);
 
   /* some? */
-  inline object_ptr some_gen_qmark_(object_ptr const &o)
-  { return make_box<obj::boolean>(o->as_nil() == nullptr); }
+  object_ptr some_gen_qmark_(object_ptr const &o);
 
   /* nil? */
-  inline object_ptr nil_gen_qmark_(object_ptr const &o)
-  { return make_box<obj::boolean>(o->as_nil() != nullptr); }
+  object_ptr nil_gen_qmark_(object_ptr const &o);
 
   /* truthy? */
-  inline object_ptr truthy_gen_qmark_(object_ptr const &o)
-  { return make_box<obj::boolean>(detail::truthy(o)); }
+  object_ptr truthy_gen_qmark_(object_ptr const &o);
 
   /* = */
-  inline object_ptr _gen_equal_(object_ptr const &l, object_ptr const &r)
-  { return make_box<obj::boolean>(l->equal(*r)); }
+  object_ptr _gen_equal_(object_ptr const &l, object_ptr const &r);
 
   /* not= */
-  inline object_ptr not_gen_equal_(object_ptr const &l, object_ptr const &r)
-  { return make_box<obj::boolean>(!l->equal(*r)); }
+  object_ptr not_gen_equal_(object_ptr const &l, object_ptr const &r);
 
   /* TODO: This should be the `and` macro. */
-  inline object_ptr all(object_ptr const &l, object_ptr const &r)
-  { return make_box<obj::boolean>(detail::truthy(l) && detail::truthy(r));}
+  object_ptr all(object_ptr const &l, object_ptr const &r);
 
   /* TODO: This should be the `or` macro. */
-  inline object_ptr either(object_ptr const &l, object_ptr const &r)
-  { return detail::truthy(l) ? l : r;}
+  object_ptr either(object_ptr const &l, object_ptr const &r);
 }
