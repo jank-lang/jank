@@ -20,7 +20,4 @@ then
   bash <(curl -s https://codecov.io/bash) -f coverage.txt
 else
   ./bin/test
-  echo '(println 2)' >> test.jank
-  ./build/jank test.jank
-  rm -f test.jank
 fi
