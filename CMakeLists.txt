@@ -118,7 +118,7 @@ add_library(
   src/cpp/jank/runtime/behavior/callable.cpp
   src/cpp/jank/analyze/processor.cpp
   src/cpp/jank/evaluate/context.cpp
-  src/cpp/jank/codegen/context.cpp
+  src/cpp/jank/codegen/processor.cpp
 )
 
 target_include_directories(

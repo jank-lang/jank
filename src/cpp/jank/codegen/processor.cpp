@@ -2,7 +2,7 @@
 
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/number.hpp>
-#include <jank/codegen/context.hpp>
+#include <jank/codegen/processor.hpp>
 
 namespace jank::codegen
 {
@@ -27,7 +27,7 @@ namespace jank::codegen
     }
   }
 
-  context::context
+  processor::processor
   (
     runtime::context &rt_ctx,
     analyze::context &an_ctx,
@@ -42,7 +42,7 @@ namespace jank::codegen
     struct_name = an_ctx.unique_name();
   }
 
-  void context::gen(analyze::expression const &ex, std::ostream &oss, bool const is_statement) const
+  void processor::gen(analyze::expression const &ex, std::ostream &oss, bool const is_statement) const
   {
     boost::apply_visitor
     (
@@ -52,7 +52,7 @@ namespace jank::codegen
     );
   }
 
-  void context::gen(analyze::expr::def<analyze::expression> const &expr, std::ostream &oss, bool const is_statement) const
+  void processor::gen(analyze::expr::def<analyze::expression> const &expr, std::ostream &oss, bool const is_statement) const
   {
     /* Forward declarations don't need codegen. */
     if(expr.value.is_none())
@@ -66,13 +66,13 @@ namespace jank::codegen
     { oss << ";"; }
   }
 
-  void context::gen(analyze::expr::var_deref<analyze::expression> const &expr, std::ostream &oss, bool const) const
+  void processor::gen(analyze::expr::var_deref<analyze::expression> const &expr, std::ostream &oss, bool const) const
   {
     auto const &var(an_ctx.find_lifted_var(expr.qualified_name).unwrap().get());
     oss << var.local_name.name << "->get_root()";
   }
 
-  void context::gen(analyze::expr::call<analyze::expression> const &expr, std::ostream &oss, bool const is_statement) const
+  void processor::gen(analyze::expr::call<analyze::expression> const &expr, std::ostream &oss, bool const is_statement) const
   {
     gen(expr.source, oss, false);
     oss << "->as_callable()->call(";
@@ -89,25 +89,25 @@ namespace jank::codegen
     { oss << ";"; }
   }
 
-  void context::gen(analyze::expr::primitive_literal<analyze::expression> const &expr, std::ostream &oss, bool const) const
+  void processor::gen(analyze::expr::primitive_literal<analyze::expression> const &expr, std::ostream &oss, bool const) const
   {
     auto const &constant(an_ctx.find_lifted_constant(expr.data).unwrap().get());
     oss << constant.local_name.name;
   }
 
-  void context::gen(analyze::expr::vector<analyze::expression> const &, std::ostream &, bool const) const
+  void processor::gen(analyze::expr::vector<analyze::expression> const &, std::ostream &, bool const) const
   {
   }
 
-  void context::gen(analyze::expr::local_reference<analyze::expression> const &, std::ostream &, bool const) const
+  void processor::gen(analyze::expr::local_reference<analyze::expression> const &, std::ostream &, bool const) const
   {
   }
 
-  void context::gen(analyze::expr::function<analyze::expression> const &, std::ostream &, bool const) const
+  void processor::gen(analyze::expr::function<analyze::expression> const &, std::ostream &, bool const) const
   {
   }
 
-  std::string context::str() const
+  std::string processor::str() const
   {
     std::ostringstream oss;
     oss << std::boolalpha;
@@ -117,7 +117,7 @@ namespace jank::codegen
     return oss.str();
   }
 
-  void context::header_str(std::ostream &oss) const
+  void processor::header_str(std::ostream &oss) const
   {
     oss << "namespace jank::generated { struct " << struct_name.name << "{";
 
@@ -154,14 +154,14 @@ namespace jank::codegen
     oss << "{";
   }
 
-  void context::body_str(std::ostream &oss) const
+  void processor::body_str(std::ostream &oss) const
   {
     /* TODO: Put into fn with return type and return value of last expression. */
     for(auto const &expr : expressions)
     { gen(expr, oss, true); }
   }
 
-  void context::footer_str(std::ostream &oss) const
+  void processor::footer_str(std::ostream &oss) const
   {
     oss << "}};} ";
     oss << "namespace { jank::generated::"

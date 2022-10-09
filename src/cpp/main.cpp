@@ -15,7 +15,7 @@
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/analyze/processor.hpp>
-#include <jank/codegen/context.hpp>
+#include <jank/codegen/processor.hpp>
 #include <jank/evaluate/context.hpp>
 
 int main(int const argc, char const **argv)
@@ -37,11 +37,12 @@ int main(int const argc, char const **argv)
   jank::read::lex::processor l_prc{ { mfile.expect_ok().head, mfile.expect_ok().size } };
   jank::read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
   jank::analyze::processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
-  jank::codegen::context cg_ctx{ rt_ctx, an_ctx, an_prc.begin(an_ctx), an_prc.end(an_ctx), an_prc.total_forms };
-  //std::cout << cg_ctx.str() << std::endl;
+  jank::codegen::processor cg_prc{ rt_ctx, an_ctx, an_prc.begin(an_ctx), an_prc.end(an_ctx), an_prc.total_forms };
+  //std::cout << cg_prc.str() << std::endl;
 
   auto const jank_location(jank::util::process_location().unwrap().parent_path());
   auto const cling_args(jank::util::make_array(argv[0], "-std=c++17"));
+  /* TODO: Store initial state during install and load it on each use. */
   cling::Interpreter jit(cling_args.size(), cling_args.data(), LLVMDIR);
 
   jit.AddIncludePath(jank_location.string() + "/../include");
@@ -52,5 +53,5 @@ int main(int const argc, char const **argv)
 
   /* TODO: Pre-compiled prelude. */
   jit.process("#include \"jank/prelude.hpp\"");
-  jit.process(cg_ctx.str());
+  jit.process(cg_prc.str());
 }

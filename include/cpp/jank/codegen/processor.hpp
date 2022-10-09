@@ -15,12 +15,11 @@ namespace jank::runtime
 
 namespace jank::codegen
 {
-  /* TODO: Rename to processor. */
   /* There's only one codegen context per thread, so no synchronization is needed for its members. */
-  struct context
+  struct processor
   {
-    context() = delete;
-    context
+    processor() = delete;
+    processor
     (
       runtime::context &rt_ctx,
       analyze::context &an_ctx,
@@ -28,8 +27,8 @@ namespace jank::codegen
       analyze::processor::iterator const an_end,
       size_t const total_forms
     );
-    context(context const &) = delete;
-    context(context &&) = default;
+    processor(processor const &) = delete;
+    processor(processor &&) = default;
 
     void gen(analyze::expression const &, std::ostream &os, bool const is_statement) const;
     void gen(analyze::expr::def<analyze::expression> const &, std::ostream &os, bool const is_statement) const;
