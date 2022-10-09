@@ -15,6 +15,8 @@
 #include <doctest/doctest.h>
 #pragma clang diagnostic pop
 
+using namespace std::string_view_literals;
+
 namespace jank::read::lex
 {
   /* This is just std::to_array, pre-C++20. */
@@ -95,7 +97,7 @@ namespace jank::read::lex
     {
       processor p{ ";" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({ { 0, 1, token_kind::comment, "" } }));
+      CHECK(tokens == make_tokens({ { 0, 1, token_kind::comment, ""sv } }));
     }
 
     SUBCASE("Empty multi-line")
@@ -105,8 +107,8 @@ namespace jank::read::lex
       CHECK(tokens == make_tokens
       (
         {
-          { 0, 1, token_kind::comment, "" },
-          { 2, 1, token_kind::comment, "" }
+          { 0, 1, token_kind::comment, ""sv },
+          { 2, 1, token_kind::comment, ""sv }
         }
       ));
     }
@@ -115,21 +117,21 @@ namespace jank::read::lex
     {
       processor p{ "; Hello hello" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({ { 0, 12, token_kind::comment, " Hello hello" } }));
+      CHECK(tokens == make_tokens({ { 0, 12, token_kind::comment, " Hello hello"sv } }));
     }
 
     SUBCASE("Multiple on same line")
     {
       processor p{ "; Hello hello ; \"hi hi\"" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({ { 0, 22, token_kind::comment, " Hello hello ; \"hi hi\"" } }));
+      CHECK(tokens == make_tokens({ { 0, 22, token_kind::comment, " Hello hello ; \"hi hi\""sv } }));
     }
 
     SUBCASE("Multiple ; in a row")
     {
       processor p{ ";;; Hello hello 12" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({ { 0, 17, token_kind::comment, " Hello hello 12" } }));
+      CHECK(tokens == make_tokens({ { 0, 17, token_kind::comment, " Hello hello 12"sv } }));
     }
 
     SUBCASE("Expressions before")
@@ -141,7 +143,7 @@ namespace jank::read::lex
         {
           { 0, 1, token_kind::integer, 1ll },
           { 2, 1, token_kind::integer, 2ll },
-          { 4, 5, token_kind::comment, " meow" }
+          { 4, 5, token_kind::comment, " meow"sv }
         }
       ));
     }
@@ -154,7 +156,7 @@ namespace jank::read::lex
       (
         {
           { 0, 1, token_kind::integer, 1ll },
-          { 2, 5, token_kind::comment, " meow" },
+          { 2, 5, token_kind::comment, " meow"sv },
           { 9, 1, token_kind::integer, 2ll }
         }
       ));
@@ -232,7 +234,7 @@ namespace jank::read::lex
         {
           { 0, token_kind::open_square_bracket },
           { 1, token_kind::open_paren },
-          { 2, 3, token_kind::symbol, "foo" },
+          { 2, 3, token_kind::symbol, "foo"sv },
           { 6, token_kind::open_square_bracket },
           { 7, token_kind::integer, 1ll },
           { 9, token_kind::integer, 2ll },
@@ -275,14 +277,56 @@ namespace jank::read::lex
     {
       processor p{ "nili" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 4, token_kind::symbol, "nili" }}));
+      CHECK(tokens == make_tokens({{ 0, 4, token_kind::symbol, "nili"sv }}));
     }
 
     SUBCASE("Partial match, suffix")
     {
       processor p{ "onil" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 4, token_kind::symbol, "onil" }}));
+      CHECK(tokens == make_tokens({{ 0, 4, token_kind::symbol, "onil"sv }}));
+    }
+  }
+
+  TEST_CASE("Boolean")
+  {
+    SUBCASE("Full match")
+    {
+      processor p{ "true false" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens
+      (
+        {
+          { 0, 4, token_kind::boolean, true },
+          { 5, 5, token_kind::boolean, false }
+        }
+      ));
+    }
+
+    SUBCASE("Partial match, prefix")
+    {
+      processor p{ "true- falsey" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens
+      (
+        {
+          { 0, 5, token_kind::symbol, "true-"sv },
+          { 6, 6, token_kind::symbol, "falsey"sv }
+        }
+      ));
+    }
+
+    SUBCASE("Partial match, suffix")
+    {
+      processor p{ "sotrue ffalse" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens
+      (
+        {
+          { 0, 6, token_kind::symbol, "sotrue"sv },
+          { 7, 6, token_kind::symbol, "ffalse"sv }
+        }
+      ));
     }
   }
 
@@ -327,7 +371,7 @@ namespace jank::read::lex
           {
             token{ 0, 4, token_kind::integer, 1234ll },
             error{ 4, "expected whitespace before next token" },
-            token{ 4, 3, token_kind::symbol, "abc" },
+            token{ 4, 3, token_kind::symbol, "abc"sv },
           }
         ));
       }
@@ -463,7 +507,7 @@ namespace jank::read::lex
           {
             token{ 0, 5, token_kind::real, 12.34l },
             error{ 5, "expected whitespace before next token" },
-            token{ 5, 3, token_kind::symbol, "abc" },
+            token{ 5, 3, token_kind::symbol, "abc"sv },
           }
         ));
       }
@@ -490,21 +534,21 @@ namespace jank::read::lex
     {
       processor p{ "a" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, token_kind::symbol, "a" }}));
+      CHECK(tokens == make_tokens({{ 0, token_kind::symbol, "a"sv }}));
     }
 
     SUBCASE("Multi-char")
     {
       processor p{ "abc" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 3, token_kind::symbol, "abc" }}));
+      CHECK(tokens == make_tokens({{ 0, 3, token_kind::symbol, "abc"sv }}));
     }
 
     SUBCASE("Single slash")
     {
       processor p{ "/" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, token_kind::symbol, "/" }}));
+      CHECK(tokens == make_tokens({{ 0, token_kind::symbol, "/"sv }}));
     }
 
     SUBCASE("Multi slash")
@@ -525,35 +569,35 @@ namespace jank::read::lex
     {
       processor p{ "abc123" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 6, token_kind::symbol, "abc123" }}));
+      CHECK(tokens == make_tokens({{ 0, 6, token_kind::symbol, "abc123"sv }}));
     }
 
     SUBCASE("With other symbols")
     {
       processor p{ "abc_.123/-foo+?" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 15, token_kind::symbol, "abc_.123/-foo+?" }}));
+      CHECK(tokens == make_tokens({{ 0, 15, token_kind::symbol, "abc_.123/-foo+?"sv }}));
     }
 
     SUBCASE("Only -")
     {
       processor p{ "-" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, token_kind::symbol, "-" }}));
+      CHECK(tokens == make_tokens({{ 0, token_kind::symbol, "-"sv }}));
     }
 
     SUBCASE("Starting with -")
     {
       processor p{ "-main" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 5, token_kind::symbol, "-main" }}));
+      CHECK(tokens == make_tokens({{ 0, 5, token_kind::symbol, "-main"sv }}));
     }
 
     SUBCASE("Quoted")
     {
       processor p{ "'foo" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, token_kind::single_quote }, { 1, 3, token_kind::symbol, "foo" }}));
+      CHECK(tokens == make_tokens({{ 0, token_kind::single_quote }, { 1, 3, token_kind::symbol, "foo"sv }}));
     }
   }
 
@@ -563,21 +607,21 @@ namespace jank::read::lex
     {
       processor p{ ":a" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 2, token_kind::keyword, "a" }}));
+      CHECK(tokens == make_tokens({{ 0, 2, token_kind::keyword, "a"sv }}));
     }
 
     SUBCASE("Multi-char")
     {
       processor p{ ":abc" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 4, token_kind::keyword, "abc" }}));
+      CHECK(tokens == make_tokens({{ 0, 4, token_kind::keyword, "abc"sv }}));
     }
 
     SUBCASE("Single slash")
     {
       processor p{ ":/" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 2, token_kind::keyword, "/" }}));
+      CHECK(tokens == make_tokens({{ 0, 2, token_kind::keyword, "/"sv }}));
     }
 
     SUBCASE("Multi slash")
@@ -598,28 +642,28 @@ namespace jank::read::lex
     {
       processor p{ ":abc123" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 7, token_kind::keyword, "abc123" }}));
+      CHECK(tokens == make_tokens({{ 0, 7, token_kind::keyword, "abc123"sv }}));
     }
 
     SUBCASE("With other symbols")
     {
       processor p{ ":abc_.123/-foo+?" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 16, token_kind::keyword, "abc_.123/-foo+?" }}));
+      CHECK(tokens == make_tokens({{ 0, 16, token_kind::keyword, "abc_.123/-foo+?"sv }}));
     }
 
     SUBCASE("Auto-resolved unqualified")
     {
       processor p{ "::foo-bar" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 9, token_kind::keyword, ":foo-bar" }}));
+      CHECK(tokens == make_tokens({{ 0, 9, token_kind::keyword, ":foo-bar"sv }}));
     }
 
     SUBCASE("Auto-resolved qualified")
     {
       processor p{ "::foo/bar" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 9, token_kind::keyword, ":foo/bar" }}));
+      CHECK(tokens == make_tokens({{ 0, 9, token_kind::keyword, ":foo/bar"sv }}));
     }
 
     SUBCASE("Too many starting colons")
@@ -631,7 +675,7 @@ namespace jank::read::lex
         {
           error{ 0, "invalid keyword" },
           error{ 2, "expected whitespace before next token" },
-          token{ 2, 4, token_kind::keyword, "foo" }
+          token{ 2, 4, token_kind::keyword, "foo"sv }
         }
       ));
     }
@@ -645,7 +689,7 @@ namespace jank::read::lex
         {
           error{ 0, "invalid keyword" },
           error{ 2, "expected whitespace before next token" },
-          token{ 2, 5, token_kind::keyword, ":foo" }
+          token{ 2, 5, token_kind::keyword, ":foo"sv }
         }
       ));
     }
@@ -657,41 +701,41 @@ namespace jank::read::lex
     {
       processor p{ "\"\"" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 2, token_kind::string, "" }}));
+      CHECK(tokens == make_tokens({{ 0, 2, token_kind::string, ""sv }}));
     }
     SUBCASE("Single-char")
     {
       processor p{ "\"a\"" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 3, token_kind::string, "a" }}));
+      CHECK(tokens == make_tokens({{ 0, 3, token_kind::string, "a"sv }}));
     }
 
     SUBCASE("Multi-char")
     {
       processor p{ "\"abc\"" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 5, token_kind::string, "abc" }}));
+      CHECK(tokens == make_tokens({{ 0, 5, token_kind::string, "abc"sv }}));
     }
 
     SUBCASE("With numbers")
     {
       processor p{ "\"123\"" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 5, token_kind::string, "123" }}));
+      CHECK(tokens == make_tokens({{ 0, 5, token_kind::string, "123"sv }}));
     }
 
     SUBCASE("With other symbols")
     {
       processor p{ "\"and then() there was abc_123/-foo?\"" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 36, token_kind::string, "and then() there was abc_123/-foo?" }}));
+      CHECK(tokens == make_tokens({{ 0, 36, token_kind::string, "and then() there was abc_123/-foo?"sv }}));
     }
 
     SUBCASE("With line breaks")
     {
       processor p{ "\"foo\nbar\nspam\t\"" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 15, token_kind::string, "foo\nbar\nspam\t" }}));
+      CHECK(tokens == make_tokens({{ 0, 15, token_kind::string, "foo\nbar\nspam\t"sv }}));
     }
 
     /* TODO: Figure out how to handle this. */
@@ -699,7 +743,7 @@ namespace jank::read::lex
     {
       processor p{ "\"foo\\\"\\nbar\\nspam\\t\"" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      WARN(tokens == make_tokens({{ 0, token_kind::string, "foo\"\nbar\nspam\t" }}));
+      WARN(tokens == make_tokens({{ 0, token_kind::string, "foo\"\nbar\nspam\t"sv }}));
     }
 
     SUBCASE("Unterminated")

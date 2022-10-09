@@ -70,6 +70,8 @@ namespace jank::read::parse
           return parse_quote();
         case lex::token_kind::nil:
           return parse_nil();
+        case lex::token_kind::boolean:
+          return parse_boolean();
         case lex::token_kind::symbol:
           return parse_symbol();
         case lex::token_kind::keyword:
@@ -165,9 +167,17 @@ namespace jank::read::parse
     return ok(runtime::make_box<runtime::obj::nil>());
   }
 
+  processor::object_result processor::parse_boolean()
+  {
+    auto const token((*token_current).expect_ok());
+    ++token_current;
+    auto const b(boost::get<bool>(token.data));
+    return ok(runtime::make_box<runtime::obj::boolean>(b));
+  }
+
   processor::object_result processor::parse_symbol()
   {
-    auto token((*token_current).expect_ok());
+    auto const token((*token_current).expect_ok());
     ++token_current;
     auto const sv(boost::get<std::string_view>(token.data));
     auto const slash(sv.find('/'));
@@ -184,7 +194,7 @@ namespace jank::read::parse
 
   processor::object_result processor::parse_keyword()
   {
-    auto token((*token_current).expect_ok());
+    auto const token((*token_current).expect_ok());
     ++token_current;
     auto const sv(boost::get<std::string_view>(token.data));
     bool const resolved{ sv[0] != ':' };

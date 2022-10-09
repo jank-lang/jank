@@ -43,6 +43,17 @@ namespace jank::read::parse
     CHECK(r.expect_ok()->equal(runtime::obj::nil{ }));
   }
 
+  TEST_CASE("Boolean")
+  {
+    lex::processor lp{ "true false" };
+    processor p{ lp.begin(), lp.end() };
+    auto const t(p.next());
+    CHECK(t.is_ok());
+    CHECK(t.expect_ok()->equal(runtime::obj::boolean{ true }));
+    auto const f(p.next());
+    CHECK(f.expect_ok()->equal(runtime::obj::boolean{ false }));
+  }
+
   TEST_CASE("Integer")
   {
     lex::processor lp{ "1234" };

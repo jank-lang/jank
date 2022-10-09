@@ -404,6 +404,8 @@ namespace jank::analyze
     }
     else if(o->as_number())
     { return analyze_primitive_literal(o, current_frame, ctx); }
+    else if(o->as_boolean())
+    { return analyze_primitive_literal(o, current_frame, ctx); }
     else if(auto * const string = o->as_string())
     {
     }

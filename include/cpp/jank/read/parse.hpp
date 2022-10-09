@@ -39,6 +39,7 @@ namespace jank::read::parse
     object_result parse_quote();
     object_result parse_symbol();
     object_result parse_nil();
+    object_result parse_boolean();
     object_result parse_keyword();
     object_result parse_integer();
     object_result parse_real();

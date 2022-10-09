@@ -5,6 +5,8 @@
 
 #include <jank/read/lex.hpp>
 
+using namespace std::string_view_literals;
+
 namespace jank::read
 {
   error::error(size_t const s, std::string const &m)
@@ -58,6 +60,9 @@ namespace jank::read
     token::token(size_t const p, token_kind const k, std::string_view const d)
       : pos{ p }, kind{ k }, data{ d }
     { }
+    token::token(size_t const p, token_kind const k, bool const d)
+      : pos{ p }, kind{ k }, data{ d }
+    { }
 
     token::token(size_t const p, size_t const s, token_kind const k)
       : pos{ p }, size{ s }, kind{ k }
@@ -69,6 +74,9 @@ namespace jank::read
       : pos{ p }, size{ s }, kind{ k }, data{ d }
     { }
     token::token(size_t const p, size_t const s, token_kind const k, std::string_view const d)
+      : pos{ p }, size{ s }, kind{ k }, data{ d }
+    { }
+    token::token(size_t const p, size_t const s, token_kind const k, bool const d)
       : pos{ p }, size{ s }, kind{ k }, data{ d }
     { }
 
@@ -178,7 +186,7 @@ namespace jank::read
             ++pos;
           }
           if(pos == token_start)
-          { return ok(token{ pos++, 1, token_kind::comment, "" }); }
+          { return ok(token{ pos++, 1, token_kind::comment, ""sv }); }
           else
           {
             ++pos;
@@ -265,12 +273,15 @@ namespace jank::read
           { return err(error{ token_start, "invalid symbol" }); }
           else if(name == "nil")
           { return ok(token{ token_start, pos - token_start, token_kind::nil }); }
+          else if(name == "true")
+          { return ok(token{ token_start, pos - token_start, token_kind::boolean, true }); }
+          else if(name == "false")
+          { return ok(token{ token_start, pos - token_start, token_kind::boolean, false }); }
 
           return ok(token{ token_start, pos - token_start, token_kind::symbol, name });
         }
         /* Keywords. */
         case ':':
-        /* TODO: Support for ::foo */
         {
           auto &&e(check_whitespace(found_space));
           if(e.is_some())

@@ -25,6 +25,8 @@ namespace jank::read::lex
     /* Has string data. */
     comment,
     nil,
+    /* Has bool data. */
+    boolean,
     /* Has string data. */
     symbol,
     /* Has string data. */
@@ -45,11 +47,13 @@ namespace jank::read::lex
     token(size_t const p, token_kind const k, runtime::detail::integer_type const);
     token(size_t const p, token_kind const k, runtime::detail::real_type const);
     token(size_t const p, token_kind const k, std::string_view const);
+    token(size_t const p, token_kind const k, bool const);
 
     token(size_t const p, size_t const s, token_kind const k);
     token(size_t const p, size_t const s, token_kind const k, runtime::detail::integer_type const);
     token(size_t const p, size_t const s, token_kind const k, runtime::detail::real_type const);
     token(size_t const p, size_t const s, token_kind const k, std::string_view const);
+    token(size_t const p, size_t const s, token_kind const k, bool const);
 
     bool operator ==(token const &rhs) const;
     bool operator !=(token const &rhs) const;
@@ -66,7 +70,14 @@ namespace jank::read::lex
     size_t pos{ ignore_pos };
     size_t size{ 1 };
     token_kind kind;
-    boost::variant<no_data, runtime::detail::integer_type, runtime::detail::real_type, std::string_view> data;
+    boost::variant
+    <
+      no_data,
+      runtime::detail::integer_type,
+      runtime::detail::real_type,
+      std::string_view,
+      runtime::detail::boolean_type
+    > data;
   };
   std::ostream& operator <<(std::ostream &os, token const &t);
   std::ostream& operator <<(std::ostream &os, token::no_data const &t);
