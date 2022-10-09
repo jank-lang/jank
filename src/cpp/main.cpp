@@ -9,14 +9,13 @@
 #pragma clang diagnostic pop
 
 #include <jank/util/mapped_file.hpp>
-#include <jank/util/process_location.hpp>
-#include <jank/util/make_array.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/codegen/processor.hpp>
 #include <jank/evaluate/context.hpp>
+#include <jank/jit/processor.hpp>
 
 int main(int const argc, char const **argv)
 {
@@ -40,18 +39,6 @@ int main(int const argc, char const **argv)
   jank::codegen::processor cg_prc{ rt_ctx, an_ctx, an_prc.begin(an_ctx), an_prc.end(an_ctx), an_prc.total_forms };
   //std::cout << cg_prc.str() << std::endl;
 
-  auto const jank_location(jank::util::process_location().unwrap().parent_path());
-  auto const cling_args(jank::util::make_array(argv[0], "-std=c++17"));
-  /* TODO: Store initial state during install and load it on each use. */
-  cling::Interpreter jit(cling_args.size(), cling_args.data(), LLVMDIR);
-
-  jit.AddIncludePath(jank_location.string() + "/../include");
-  jit.AddIncludePath(jank_location.string() + "/../include/cpp");
-  /* TODO: Figure out how to make this easier for dev. */
-  jit.AddIncludePath(jank_location.string() + "/vcpkg_installed/x64-linux/include");
-  jit.AddIncludePath(jank_location.string() + "/vcpkg_installed/x64-osx/include");
-
-  /* TODO: Pre-compiled prelude. */
-  jit.process("#include \"jank/prelude.hpp\"");
-  jit.process(cg_prc.str());
+  jank::jit::processor jit_prc{ rt_ctx };
+  jit_prc.eval(cg_prc);
 }

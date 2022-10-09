@@ -122,6 +122,7 @@ add_library(
   src/cpp/jank/analyze/processor.cpp
   src/cpp/jank/evaluate/context.cpp
   src/cpp/jank/codegen/processor.cpp
+  src/cpp/jank/jit/processor.cpp
 )
 
 target_include_directories(
@@ -135,11 +136,17 @@ set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 
 target_compile_features(jank_lib PUBLIC cxx_std_17)
 target_compile_options(jank_lib PRIVATE ${jank_compiler_flags})
+target_compile_options(jank_lib PUBLIC -DLLVMDIR="${LLVM_BINARY_DIR}")
 
 find_package(Boost REQUIRED)
 find_package(folly REQUIRED)
 find_package(Immer REQUIRED)
 find_package(magic_enum REQUIRED)
+
+target_include_directories(jank_lib PRIVATE ${BOOST_INCLUDE_DIRS})
+target_include_directories(jank_lib PRIVATE ${CLING_INCLUDE_DIRS})
+target_include_directories(jank_lib PRIVATE ${CLANG_INCLUDE_DIRS})
+target_include_directories(jank_lib PRIVATE ${LLVM_INCLUDE_DIRS})
 
 target_link_libraries(jank_lib PRIVATE jank_cling_lib immer Folly::folly Folly::folly_deps lzma)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
