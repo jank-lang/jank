@@ -44,6 +44,9 @@ else()
   endif()
 endif()
 
+# Enable easier tooling during development.
+set(CMAKE_EXPORT_COMPILE_COMMANDS on)
+
 # ---- libjankcling.so ----
 # Cling, Clang, and LLVM are huge. About 1.5G unstripped and 150M stripped.
 # This takes a long time to link, so doing it as part of the jank lib or
