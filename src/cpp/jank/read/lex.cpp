@@ -121,19 +121,13 @@ namespace jank::read
     {
       /* Skip whitespace. */
       bool found_space{};
-      bool in_comment{};
       while(true)
       {
         if(pos >= file.size())
         { return ok(token{ pos, token_kind::eof }); }
 
-        /* TODO: Lex comments into tokens. */
         auto const c(file[pos]);
-        if(!in_comment && c == ';')
-        { in_comment = true; }
-        else if(in_comment && c == '\n')
-        { in_comment = false; }
-        else if(std::isspace(c) == 0 && c != ',' && !in_comment)
+        if(std::isspace(c) == 0 && c != ',')
         { break; }
 
         found_space = true;
@@ -164,6 +158,38 @@ namespace jank::read
         case '\'':
           require_space = false;
           return ok(token{ pos++, token_kind::single_quote });
+        case ';':
+        {
+          size_t leading_semis{ 1 };
+          bool hit_non_semi{};
+          while(true)
+          {
+            auto const oc(peek());
+            if(oc.is_none())
+            { break; }
+            auto const c(oc.unwrap());
+            if(c == '\n')
+            { break; }
+            else if(c == ';' && !hit_non_semi)
+            { ++leading_semis; }
+            else
+            { hit_non_semi = true; }
+
+            ++pos;
+          }
+          if(pos == token_start)
+          { return ok(token{ pos++, 1, token_kind::comment, "" }); }
+          else
+          {
+            ++pos;
+            std::string_view const comment
+            {
+              file.data() + token_start + leading_semis,
+              pos - token_start - leading_semis
+            };
+            return ok(token{ token_start, pos - 1 - token_start, token_kind::comment, comment });
+          }
+        }
         /* Numbers. */
         case '-':
         case '0' ... '9':

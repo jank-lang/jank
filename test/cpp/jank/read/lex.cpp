@@ -95,42 +95,69 @@ namespace jank::read::lex
     {
       processor p{ ";" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens());
+      CHECK(tokens == make_tokens({ { 0, 1, token_kind::comment, "" } }));
+    }
+
+    SUBCASE("Empty multi-line")
+    {
+      processor p{ ";\n;" };
+      std::vector<result<token, error>> tokens(p.begin(), p.end());
+      CHECK(tokens == make_tokens
+      (
+        {
+          { 0, 1, token_kind::comment, "" },
+          { 2, 1, token_kind::comment, "" }
+        }
+      ));
     }
 
     SUBCASE("Non-empty")
     {
       processor p{ "; Hello hello" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens());
+      CHECK(tokens == make_tokens({ { 0, 12, token_kind::comment, " Hello hello" } }));
     }
 
     SUBCASE("Multiple on same line")
     {
       processor p{ "; Hello hello ; \"hi hi\"" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens());
+      CHECK(tokens == make_tokens({ { 0, 22, token_kind::comment, " Hello hello ; \"hi hi\"" } }));
     }
 
     SUBCASE("Multiple ; in a row")
     {
       processor p{ ";;; Hello hello 12" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens());
+      CHECK(tokens == make_tokens({ { 0, 17, token_kind::comment, " Hello hello 12" } }));
     }
 
     SUBCASE("Expressions before")
     {
       processor p{ "1 2 ; meow" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({ { 0, token_kind::integer, 1ll }, { 2, token_kind::integer, 2ll } }));
+      CHECK(tokens == make_tokens
+      (
+        {
+          { 0, 1, token_kind::integer, 1ll },
+          { 2, 1, token_kind::integer, 2ll },
+          { 4, 5, token_kind::comment, " meow" }
+        }
+      ));
     }
 
     SUBCASE("Expressions before and after")
     {
       processor p{ "1 ; meow\n2" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({ { 0, token_kind::integer, 1ll }, { 9, token_kind::integer, 2ll } }));
+      CHECK(tokens == make_tokens
+      (
+        {
+          { 0, 1, token_kind::integer, 1ll },
+          { 2, 5, token_kind::comment, " meow" },
+          { 9, 1, token_kind::integer, 2ll }
+        }
+      ));
     }
   }
 

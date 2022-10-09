@@ -39,43 +39,51 @@ namespace jank::read::parse
     if(token_current == token_end)
     { return ok(nullptr); }
 
-    auto token_result(*token_current);
-    if(token_result.is_err())
-    { return token_result.err().unwrap(); }
-    auto token(token_result.expect_ok());
-    switch(token.kind)
+    while(true)
     {
-      case lex::token_kind::open_paren:
-        return parse_list();
-      case lex::token_kind::open_square_bracket:
-        return parse_vector();
-      case lex::token_kind::open_curly_bracket:
-        return parse_map();
-      case lex::token_kind::close_square_bracket:
-      case lex::token_kind::close_paren:
-      case lex::token_kind::close_curly_bracket:
-        if(expected_closer != token.kind)
-        { return err(error{ token.pos, std::string{ "unexpected closing character" } }); }
-        ++token_current;
-        expected_closer = none;
-        return ok(nullptr);
-      case lex::token_kind::single_quote:
-        return parse_quote();
-      case lex::token_kind::nil:
-        return parse_nil();
-      case lex::token_kind::symbol:
-        return parse_symbol();
-      case lex::token_kind::keyword:
-        return parse_keyword();
-      case lex::token_kind::integer:
-        return parse_integer();
-      case lex::token_kind::real:
-        return parse_real();
-      case lex::token_kind::string:
-        return parse_string();
-      case lex::token_kind::eof:
-      default:
-        return err(error{ token.pos, std::string{ "unexpected character" } });
+      auto token_result(*token_current);
+      if(token_result.is_err())
+      { return token_result.err().unwrap(); }
+      auto token(token_result.expect_ok());
+      switch(token.kind)
+      {
+        /* We ignore comments, but everything else returns out of the loop. */
+        case lex::token_kind::comment:
+          ++token_current;
+          continue;
+
+        case lex::token_kind::open_paren:
+          return parse_list();
+        case lex::token_kind::open_square_bracket:
+          return parse_vector();
+        case lex::token_kind::open_curly_bracket:
+          return parse_map();
+        case lex::token_kind::close_square_bracket:
+        case lex::token_kind::close_paren:
+        case lex::token_kind::close_curly_bracket:
+          if(expected_closer != token.kind)
+          { return err(error{ token.pos, std::string{ "unexpected closing character" } }); }
+          ++token_current;
+          expected_closer = none;
+          return ok(nullptr);
+        case lex::token_kind::single_quote:
+          return parse_quote();
+        case lex::token_kind::nil:
+          return parse_nil();
+        case lex::token_kind::symbol:
+          return parse_symbol();
+        case lex::token_kind::keyword:
+          return parse_keyword();
+        case lex::token_kind::integer:
+          return parse_integer();
+        case lex::token_kind::real:
+          return parse_real();
+        case lex::token_kind::string:
+          return parse_string();
+        case lex::token_kind::eof:
+        default:
+          return err(error{ token.pos, std::string{ "unexpected character" } });
+      }
     }
   }
 
