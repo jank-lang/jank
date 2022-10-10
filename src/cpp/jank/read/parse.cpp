@@ -133,15 +133,33 @@ namespace jank::read::parse
 
   processor::object_result processor::parse_map()
   {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_curly_bracket);
 
-    /* TODO */
+    /* TODO: Map transient. */
+    runtime::detail::map_type ret;
+    for(auto it(begin()); it != end(); ++it)
+    {
+      if(it.latest.unwrap().is_err())
+      { return err(it.latest.unwrap().expect_err()); }
+      auto const key(it.latest.unwrap().expect_ok());
 
+      if(++it == end())
+      { return err(error{ start_token.pos, "odd number of items in map" }); }
+
+      if(it.latest.unwrap().is_err())
+      { return err(it.latest.unwrap().expect_err()); }
+      auto const value(it.latest.unwrap().expect_ok());
+
+      ret.insert_or_assign(key, value);
+    }
+    if(expected_closer.is_some())
+    { return err(error{ start_token.pos, "Unterminated map" }); }
 
     expected_closer = prev_expected_closer;
-    return err(error{ "unimplemented: maps" });
+    return runtime::make_box<runtime::obj::map>(ret);
   }
 
   processor::object_result processor::parse_quote()

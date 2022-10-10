@@ -2,6 +2,7 @@
 #include <atomic>
 
 #include <jank/runtime/obj/vector.hpp>
+#include <jank/runtime/obj/map.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
 
@@ -324,6 +325,7 @@ namespace jank::analyze
     return { expr::primitive_literal<expression>{ o } };
   }
 
+  /* TODO: Test for this. */
   processor::expression_result processor::analyze_vector(runtime::obj::vector_ptr const &o, local_frame<expression> &current_frame, context &ctx)
   {
     /* TODO: Detect literal and act accordingly. */
@@ -333,6 +335,23 @@ namespace jank::analyze
     /* TODO: Return errors. */
     { exprs.emplace_back(analyze(d->first(), current_frame, ctx).expect_ok().unwrap()); }
     return { expr::vector<expression>{ std::move(exprs) } };
+  }
+
+  processor::expression_result processor::analyze_map(runtime::obj::map_ptr const &o, local_frame<expression> &current_frame, context &ctx)
+  {
+    /* TODO: Detect literal and act accordingly. */
+    std::vector<std::pair<expression, expression>> exprs;
+    exprs.reserve(o->data.size());
+    for(auto const &kv : o->data)
+    /* TODO: Return errors. */
+    {
+      auto const k_expr(analyze(kv.first, current_frame, ctx).expect_ok().unwrap());
+      auto const v_expr(analyze(kv.second, current_frame, ctx).expect_ok().unwrap());
+      exprs.emplace_back(k_expr, v_expr);
+    }
+
+    /* TODO: Uniqueness check. */
+    return { expr::map<expression>{ std::move(exprs) } };
   }
 
   processor::expression_result processor::analyze_call(runtime::obj::list_ptr const &o, local_frame<expression> &current_frame, context &ctx)
@@ -397,8 +416,7 @@ namespace jank::analyze
     else if(o->as_vector())
     { return analyze_vector(boost::static_pointer_cast<runtime::obj::vector>(o), current_frame, ctx); }
     else if(auto * const map = o->as_map())
-    {
-    }
+    { return analyze_map(boost::static_pointer_cast<runtime::obj::map>(o), current_frame, ctx); }
     else if(auto * const set = o->as_set())
     {
     }

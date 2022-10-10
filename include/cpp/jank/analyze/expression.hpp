@@ -9,6 +9,7 @@
 #include <jank/analyze/expr/call.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/analyze/expr/vector.hpp>
+#include <jank/analyze/expr/map.hpp>
 #include <jank/analyze/expr/function.hpp>
 #include <jank/analyze/expr/local_reference.hpp>
 #include <jank/analyze/expr/let.hpp>
@@ -27,6 +28,7 @@ namespace jank::analyze
       boost::recursive_wrapper<expr::call<E>>,
       expr::primitive_literal<E>,
       expr::vector<E>,
+      expr::map<E>,
       boost::recursive_wrapper<expr::function<E>>,
       expr::local_reference<E>,
       expr::let<E>,

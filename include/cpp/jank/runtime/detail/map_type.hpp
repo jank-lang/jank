@@ -17,9 +17,23 @@ namespace jank::runtime::detail
     using iterator = typename value_type::iterator;
     using const_iterator = typename value_type::const_iterator;
 
+    struct variadic_tag
+    { };
+
     map_type_impl() = default;
     map_type_impl(map_type_impl const &s) = default;
     map_type_impl(map_type_impl &&s) = default;
+    map_type_impl(std::initializer_list<std::pair<K, V>> &&kvs)
+    {
+      for(auto &&kv : kvs)
+      { insert_or_assign(std::move(kv.first), std::move(kv.second)); }
+    }
+    template <typename... Args>
+    map_type_impl(variadic_tag, Args &&...args)
+    {
+      static_assert(sizeof...(args) % 2 == 0, "odd number of map initializer values");
+      insert_all( std::forward<Args>(args)...);
+    }
 
     template <typename NK, typename NV>
     void insert_or_assign(NK &&key, NV &&val)
@@ -41,6 +55,9 @@ namespace jank::runtime::detail
       { data.emplace_back(std::forward<NK>(key), std::forward<NV>(val)); }
       insert_all(std::forward<Args>(args)...);
     }
+    template <typename NK>
+    void insert_all_impl(NK)
+    { static_assert(static_cast<NK*>(nullptr), "odd number of values passed to map initialization"); }
     template <typename... Args>
     void insert_all(Args &&... args)
     {
@@ -66,9 +83,6 @@ namespace jank::runtime::detail
       }
       return nullptr;
     }
-
-    bool operator==(map_type_impl const &s) const
-    { return data == s.data; }
 
     size_t to_hash() const
     {

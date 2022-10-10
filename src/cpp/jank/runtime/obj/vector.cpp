@@ -9,6 +9,13 @@
 
 namespace jank::runtime::obj
 {
+  vector::vector(runtime::detail::vector_type &&d)
+    : data{ std::move(d) }
+  { }
+  vector::vector(runtime::detail::vector_type const &d)
+    : data{ d }
+  { }
+
   vector_ptr vector::create(runtime::detail::vector_type const &o)
   { return make_box<vector>(o); }
 

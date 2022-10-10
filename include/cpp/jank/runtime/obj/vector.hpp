@@ -11,12 +11,8 @@ namespace jank::runtime::obj
     vector() = default;
     vector(vector &&) = default;
     vector(vector const &) = default;
-    vector(runtime::detail::vector_type &&d)
-      : data{ std::move(d) }
-    { }
-    vector(runtime::detail::vector_type const &d)
-      : data{ d }
-    { }
+    vector(runtime::detail::vector_type &&d);
+    vector(runtime::detail::vector_type const &d);
     template <typename... Args>
     vector(Args &&...args)
       : data{ std::forward<Args>(args)... }

@@ -95,8 +95,33 @@ namespace jank::codegen
     oss << constant.local_name.name;
   }
 
-  void processor::gen(analyze::expr::vector<analyze::expression> const &, std::ostream &, bool const) const
+  void processor::gen(analyze::expr::vector<analyze::expression> const &expr, std::ostream &oss, bool const is_statement) const
   {
+    assert(!is_statement);
+    oss << "jank::runtime::make_box<jank::runtime::obj::vector>(";
+    for(auto it(expr.data_exprs.begin()); it != expr.data_exprs.end();)
+    {
+      gen(*it, oss, false);
+      if(++it != expr.data_exprs.end())
+      { oss << ", "; }
+    }
+    oss << ")";
+  }
+
+  void processor::gen(analyze::expr::map<analyze::expression> const &expr, std::ostream &oss, bool const is_statement) const
+  {
+    assert(!is_statement);
+    oss << "jank::runtime::make_box<jank::runtime::obj::map>(";
+    oss << "jank::runtime::obj::map::variadic_tag{}, ";
+    for(auto it(expr.data_exprs.begin()); it != expr.data_exprs.end();)
+    {
+      gen(it->first, oss, false);
+      oss << ", ";
+      gen(it->second, oss, false);
+      if(++it != expr.data_exprs.end())
+      { oss << ", "; }
+    }
+    oss << ")";
   }
 
   void processor::gen(analyze::expr::local_reference<analyze::expression> const &, std::ostream &, bool const) const

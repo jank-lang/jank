@@ -36,6 +36,7 @@ namespace jank::codegen
     void gen(analyze::expr::call<analyze::expression> const &, std::ostream &os, bool const is_statement) const;
     void gen(analyze::expr::primitive_literal<analyze::expression> const &, std::ostream &os, bool const is_statement) const;
     void gen(analyze::expr::vector<analyze::expression> const &, std::ostream &os, bool const is_statement) const;
+    void gen(analyze::expr::map<analyze::expression> const &, std::ostream &os, bool const is_statement) const;
     void gen(analyze::expr::local_reference<analyze::expression> const &, std::ostream &os, bool const is_statement) const;
     void gen(analyze::expr::function<analyze::expression> const &, std::ostream &os, bool const is_statement) const;
 

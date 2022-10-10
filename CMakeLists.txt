@@ -196,6 +196,7 @@ if(jank_tests)
     test/cpp/jank/analyze/expr/function.cpp
     test/cpp/jank/analyze/expr/let.cpp
     test/cpp/jank/analyze/expr/primitive_literal.cpp
+    test/cpp/jank/analyze/expr/map.cpp
     test/cpp/jank/evaluate/context.cpp
   )
   add_executable(jank::test_exe ALIAS jank_test_exe)

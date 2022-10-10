@@ -11,6 +11,13 @@
 
 namespace jank::runtime::obj
 {
+  map::map(runtime::detail::map_type &&d)
+    : data{ std::move(d) }
+  { }
+  map::map(runtime::detail::map_type const &d)
+    : data{ d }
+  { }
+
   /* TODO: Optimize this. */
   template <typename It>
   struct map_iterator_wrapper : behavior::sequence, pool_item_base<map_iterator_wrapper<It>>
@@ -43,7 +50,7 @@ namespace jank::runtime::obj
     if(!m)
     { return false; }
 
-    return m->data == data;
+    return to_hash() == m->to_hash();
   }
   runtime::detail::string_type map::to_string() const
   {
@@ -56,7 +63,7 @@ namespace jank::runtime::obj
       ss << *i->first << " " << *i->second;
       auto n(i);
       if(++n != end)
-      { ss << " "; }
+      { ss << ", "; }
     }
     ss << "}";
     return ss.str();
