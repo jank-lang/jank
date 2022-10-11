@@ -367,7 +367,7 @@ namespace jank::read::parse
           (
             runtime::obj::map
             {
-              runtime::obj::map::variadic_tag{},
+              std::in_place,
               runtime::make_box<runtime::obj::integer>(1 * i),
               runtime::make_box<runtime::obj::integer>(2 * i),
               runtime::make_box<runtime::obj::integer>(3 * i),
@@ -391,7 +391,7 @@ namespace jank::read::parse
         (
           runtime::obj::map
           {
-            runtime::obj::map::variadic_tag{},
+            std::in_place,
             runtime::make_box<runtime::obj::keyword>(runtime::obj::symbol{ "foo" }, true),
             runtime::make_box<runtime::obj::boolean>(true),
             runtime::make_box<runtime::obj::integer>(1),

@@ -112,7 +112,7 @@ namespace jank::codegen
   {
     assert(!is_statement);
     oss << "jank::runtime::make_box<jank::runtime::obj::map>(";
-    oss << "jank::runtime::obj::map::variadic_tag{}, ";
+    oss << "std::in_place, ";
     for(auto it(expr.data_exprs.begin()); it != expr.data_exprs.end();)
     {
       gen(it->first, oss, false);

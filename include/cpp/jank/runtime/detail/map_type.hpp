@@ -17,9 +17,6 @@ namespace jank::runtime::detail
     using iterator = typename value_type::iterator;
     using const_iterator = typename value_type::const_iterator;
 
-    struct variadic_tag
-    { };
-
     map_type_impl() = default;
     map_type_impl(map_type_impl const &s) = default;
     map_type_impl(map_type_impl &&s) = default;
@@ -29,7 +26,7 @@ namespace jank::runtime::detail
       { insert_or_assign(std::move(kv.first), std::move(kv.second)); }
     }
     template <typename... Args>
-    map_type_impl(variadic_tag, Args &&...args)
+    map_type_impl(std::in_place_t, Args &&...args)
     {
       static_assert(sizeof...(args) % 2 == 0, "odd number of map initializer values");
       insert_all( std::forward<Args>(args)...);
