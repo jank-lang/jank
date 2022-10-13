@@ -31,6 +31,7 @@ namespace jank
   { return { std::forward<R>(data) }; }
   template <typename E, typename Decayed = std::decay_t<E>>
   detail::result<false, Decayed> err(E &&data)
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
   { return { std::forward<E>(data) }; }
 
   template <typename R, typename E>
@@ -42,21 +43,21 @@ namespace jank
     {}
     /* Allow implicit construction of R and E from their ctor args. */
     template <typename T>
-    result(T &&t, std::enable_if_t<std::is_constructible_v<R, T>>* = 0)
+    result(T &&t, std::enable_if_t<std::is_constructible_v<R, T>>* = nullptr)
       : data{ std::forward<T>(t) }
     {}
     template <typename T>
-    result(T &&t, std::enable_if_t<std::is_constructible_v<E, T>>* = 0)
+    result(T &&t, std::enable_if_t<std::is_constructible_v<E, T>>* = nullptr)
       : data{ std::forward<T>(t) }
     {}
     /* Allow implicit construction from results with compatible constructor args. This allows
      * things like ok(none) for option<R>. */
     template <typename T>
-    result(detail::result<true, T> const &t, std::enable_if_t<std::is_constructible_v<R, T>>* = 0)
+    result(detail::result<true, T> const &t, std::enable_if_t<std::is_constructible_v<R, T>>* = nullptr)
       : data{ t.data }
     {}
     template <typename T>
-    result(detail::result<false, T> const &t, std::enable_if_t<std::is_constructible_v<E, T>>* = 0)
+    result(detail::result<false, T> const &t, std::enable_if_t<std::is_constructible_v<E, T>>* = nullptr)
       : data{ t.data }
     {}
 

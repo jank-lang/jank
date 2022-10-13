@@ -12,15 +12,15 @@ namespace jank::codegen
     {
       if(o->as_nil())
       { oss << "jank::runtime::make_box<jank::runtime::obj::nil>()"; }
-      else if(auto d = o->as_boolean())
+      else if(auto const * const d = o->as_boolean())
       { oss << "jank::runtime::make_box<jank::runtime::obj::boolean>(" << d->data << ")"; }
-      else if(auto d = o->as_integer())
+      else if(auto const * const d = o->as_integer())
       { oss << "jank::runtime::make_box<jank::runtime::obj::integer>(" << d->data << ")"; }
-      else if(auto d = o->as_real())
+      else if(auto const * const d = o->as_real())
       { oss << "jank::runtime::make_box<jank::runtime::obj::real>(" << d->data << ")"; }
-      else if(auto d = o->as_symbol())
+      else if(auto const * const d = o->as_symbol())
       { oss << "jank::runtime::make_box<jank::runtime::obj::symbol>(\"" << d->ns << "\", \"" << d->name << "\")"; }
-      else if(auto d = o->as_keyword())
+      else if(auto const * const d = o->as_keyword())
       { oss << "rt_ctx.intern_keyword(\"" << d->sym.ns << "\", \"" << d->sym.name << "\", " <<  d->resolved << ")"; }
       else
       { std::cerr << "unimplemented constant codegen: " << *o << std::endl; }
@@ -31,15 +31,15 @@ namespace jank::codegen
   (
     runtime::context &rt_ctx,
     analyze::context &an_ctx,
-    analyze::processor::iterator const an_begin,
-    analyze::processor::iterator const an_end,
+    analyze::processor::iterator const &an_begin,
+    analyze::processor::iterator const &an_end,
     size_t const total_forms
   ) : rt_ctx{ rt_ctx }, an_ctx{ an_ctx }
   {
     expressions.reserve(total_forms);
     for(auto it(an_begin); it != an_end; ++it)
     { expressions.emplace_back(std::move(it->expect_ok_move().unwrap())); }
-    struct_name = an_ctx.unique_name();
+    struct_name = analyze::context::unique_name();
   }
 
   void processor::gen(analyze::expression const &ex, std::ostream &oss, bool const is_statement) const
@@ -77,11 +77,11 @@ namespace jank::codegen
     gen(expr.source, oss, false);
     oss << "->as_callable()->call(";
     bool need_comma{};
-    for(auto it = expr.arg_exprs.begin(); it != expr.arg_exprs.end(); ++it)
+    for(auto const &arg_expr : expr.arg_exprs)
     {
       if(need_comma)
       { oss << ", "; }
-      gen(*it, oss, false);
+      gen(arg_expr, oss, false);
       need_comma = true;
     }
     oss << ")";
@@ -154,7 +154,7 @@ namespace jank::codegen
 
     /* TODO: Prevent name collision with rt_ctx. */
     oss << struct_name.name << "(jank::runtime::context &rt_ctx)";
-    if(an_ctx.tracked_refs.lifted_vars.size() > 0 || an_ctx.tracked_refs.lifted_constants.size() > 0)
+    if(!an_ctx.tracked_refs.lifted_vars.empty() || !an_ctx.tracked_refs.lifted_constants.empty())
     { oss << " : "; }
 
     bool need_comma{};

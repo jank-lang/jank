@@ -26,7 +26,7 @@ namespace jank::analyze
     if(qualified_sym->ns.empty())
     {
       auto const t_state(rt_ctx.get_thread_state());
-      auto const current_ns(t_state.current_ns->get_root()->as_ns());
+      auto const * const current_ns(t_state.current_ns->get_root()->as_ns());
       qualified_sym = runtime::obj::symbol::create(current_ns->name->name, sym->name);
     }
 
@@ -170,16 +170,16 @@ namespace jank::analyze
     }
 
     auto const sym_obj(l->data.rest().first().unwrap());
-    auto const sym(sym_obj->as_symbol());
+    auto const * const sym(sym_obj->as_symbol());
     if(sym == nullptr)
     {
       /* TODO: Error handling. */
-      return err(error{ "invalid def" });
+      return err(error{ "invalid def: name must be a symbol" });
     }
     else if(!sym->ns.empty())
     {
       /* TODO: Error handling. */
-      return err(error{ "invalid def" });
+      return err(error{ "invalid def: name must not be qualified" });
     }
 
     bool has_value{ true };
@@ -191,7 +191,7 @@ namespace jank::analyze
 
     if(has_value)
     {
-      auto const value_result(analyze(value_opt.unwrap(), current_frame, ctx));
+      auto value_result(analyze(value_opt.unwrap(), current_frame, ctx));
       if(value_result.is_err())
       { return value_result; }
       value_expr = some(std::make_shared<expression>(value_result.expect_ok().unwrap()));
@@ -238,7 +238,7 @@ namespace jank::analyze
     { return err(error{ "fn missing parameter vector" }); }
 
     auto const params_obj(list->data.rest().first().unwrap());
-    auto const params(params_obj->as_vector());
+    auto const * const params(params_obj->as_vector());
     if(params == nullptr)
     { return err(error{ "invalid fn param vector" }); }
 
@@ -251,7 +251,7 @@ namespace jank::analyze
 
     for(auto const &p : params->data)
     {
-      auto const sym(p->as_symbol());
+      auto const * const sym(p->as_symbol());
       if(sym == nullptr)
       { return err(error{ "invalid parameter; must be a symbol" }); }
       else if(!sym->ns.empty())
@@ -276,7 +276,7 @@ namespace jank::analyze
     { return err(error{ "invalid let: expects bindings" }); }
 
     auto const bindings_obj(o->data.rest().first().unwrap());
-    auto const bindings(bindings_obj->as_vector());
+    auto const * const bindings(bindings_obj->as_vector());
     if(bindings == nullptr)
     { return err(error{ "invalid let* bindings: must be a vector" }); }
 
@@ -370,7 +370,7 @@ namespace jank::analyze
       if(found_special != specials.end())
       { return found_special->second(o, current_frame, ctx); }
 
-      auto const sym_result(analyze_symbol(sym, current_frame, ctx));
+      auto sym_result(analyze_symbol(sym, current_frame, ctx));
       if(sym_result.is_err())
       { return sym_result; }
 
@@ -378,7 +378,7 @@ namespace jank::analyze
       arg_exprs.reserve(count - 1);
       for(auto const &s : o->data.rest())
       {
-        auto const arg_expr(analyze(s, current_frame, ctx));
+        auto arg_expr(analyze(s, current_frame, ctx));
         if(arg_expr.is_err())
         { return arg_expr; }
         arg_exprs.emplace_back(arg_expr.expect_ok().unwrap());
@@ -415,32 +415,20 @@ namespace jank::analyze
     { return analyze_call(boost::static_pointer_cast<runtime::obj::list>(o), current_frame, ctx); }
     else if(o->as_vector())
     { return analyze_vector(boost::static_pointer_cast<runtime::obj::vector>(o), current_frame, ctx); }
-    else if(auto * const map = o->as_map())
+    else if(o->as_map())
     { return analyze_map(boost::static_pointer_cast<runtime::obj::map>(o), current_frame, ctx); }
-    else if(auto * const set = o->as_set())
-    {
-    }
-    else if(o->as_number())
+    else if(o->as_set())
+    { return err(error{ "unimplemented analysis: set" }); }
+    else if(o->as_number() || o->as_boolean() || o->as_keyword() || o->as_nil())
     { return analyze_primitive_literal(o, current_frame, ctx); }
-    else if(o->as_boolean())
-    { return analyze_primitive_literal(o, current_frame, ctx); }
-    else if(auto * const string = o->as_string())
-    {
-    }
+    else if(o->as_string())
+    { return err(error{ "unimplemented analysis: string" }); }
     else if(o->as_symbol())
     { return analyze_symbol(boost::static_pointer_cast<runtime::obj::symbol>(o), current_frame, ctx); }
-    else if(o->as_keyword())
-    { return analyze_primitive_literal(o, current_frame, ctx); }
-    else if(auto * const nil = o->as_nil())
-    { return analyze_primitive_literal(o, current_frame, ctx); }
     else
     {
       std::cerr << "unsupported analysis of " << o->to_string() << std::endl;
-      assert(false);
-      throw nullptr;
+      return err(error{ "unimplemented analysis" });
     }
-
-    std::cerr << "unimplemented analysis of " << *o << std::endl;
-    throw nullptr;
   }
 }

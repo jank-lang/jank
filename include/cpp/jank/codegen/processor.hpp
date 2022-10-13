@@ -23,12 +23,12 @@ namespace jank::codegen
     (
       runtime::context &rt_ctx,
       analyze::context &an_ctx,
-      analyze::processor::iterator const an_begin,
-      analyze::processor::iterator const an_end,
+      analyze::processor::iterator const &an_begin,
+      analyze::processor::iterator const &an_end,
       size_t const total_forms
     );
     processor(processor const &) = delete;
-    processor(processor &&) = default;
+    processor(processor &&) noexcept = default;
 
     void gen(analyze::expression const &, std::ostream &os, bool const is_statement) const;
     void gen(analyze::expr::def<analyze::expression> const &, std::ostream &os, bool const is_statement) const;

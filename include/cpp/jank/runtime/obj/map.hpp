@@ -8,7 +8,7 @@ namespace jank::runtime::obj
   struct map : object, behavior::seqable, pool_item_base<map>
   {
     map() = default;
-    map(map &&) = default;
+    map(map &&) noexcept = default;
     map(map const &) = default;
     map(runtime::detail::map_type &&d);
     map(runtime::detail::map_type const &d);
@@ -16,6 +16,7 @@ namespace jank::runtime::obj
     map(std::in_place_t, Args &&...args)
       : data{ std::in_place, std::forward<Args>(args)... }
     { }
+    ~map() = default;
 
     runtime::detail::boolean_type equal(object const &) const override;
     runtime::detail::string_type to_string() const override;

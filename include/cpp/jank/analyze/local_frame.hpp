@@ -22,7 +22,7 @@ namespace jank::analyze
   {
     local_frame() = delete;
     local_frame(local_frame const &) = default;
-    local_frame(local_frame &&) = default;
+    local_frame(local_frame &&) noexcept = default;
     local_frame(std::string const &label, runtime::context &ctx, option<std::reference_wrapper<local_frame>> const &p)
       : debug_label{ label }, parent{ p }, runtime_ctx{ ctx }
     { }

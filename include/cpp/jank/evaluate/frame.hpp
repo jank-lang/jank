@@ -19,7 +19,7 @@ namespace jank::evaluate
   {
     frame() = default;
     frame(frame const &) = default;
-    frame(frame &&) = default;
+    frame(frame &&) noexcept = default;
     frame(option<std::reference_wrapper<frame const>> const &p)
       : parent{ p }
     { }

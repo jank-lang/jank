@@ -46,7 +46,7 @@ namespace jank::evaluate
   runtime::object_ptr context::eval(analyze::expr::call<analyze::expression> const &expr, frame const &current_frame)
   {
     auto const source(eval(expr.source, current_frame));
-    auto const callable(source->as_callable());
+    auto const * const callable(source->as_callable());
     if(!callable)
     {
       /* TODO: Error handling. */
@@ -74,7 +74,7 @@ namespace jank::evaluate
 
   runtime::object_ptr context::eval(analyze::expr::primitive_literal<analyze::expression> const &expr, frame const &)
   {
-    if(auto d = expr.data->as_keyword())
+    if(auto const * const d = expr.data->as_keyword())
     { return runtime_ctx.intern_keyword(d->sym, d->resolved); }
     return expr.data;
   }

@@ -5,10 +5,17 @@
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/hash.hpp>
 #include <jank/runtime/obj/function.hpp>
-#include <jank/runtime/obj/map.hpp>
+#include <jank/runtime/obj/set.hpp>
 
 namespace jank::runtime::obj
 {
+  set::set(runtime::detail::set_type &&d)
+    : data{ std::move(d) }
+  { }
+  set::set(runtime::detail::set_type const &d)
+    : data{ d }
+  { }
+
   ///***** set *****/
   //detail::boolean_type set::equal(object const &) const
   //{

@@ -4,6 +4,13 @@
 
 namespace jank::runtime::obj
 {
+  function::function(detail::function_type &&d)
+    : data{ std::move(d) }
+  { }
+  function::function(detail::function_type const &d)
+    : data{ d }
+  { }
+
   runtime::detail::box_type<function> function::create(detail::function_type const &d)
   { return make_box<function>(d); }
 

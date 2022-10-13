@@ -71,7 +71,7 @@ namespace jank::runtime::obj
   /* TODO: Cache this. */
   runtime::detail::integer_type map::to_hash() const
   {
-    size_t seed{ data.size() };
+    auto seed(static_cast<runtime::detail::integer_type>(data.size()));
     for(auto const &e : data)
     {
       seed = runtime::detail::hash_combine(seed, *e.first);

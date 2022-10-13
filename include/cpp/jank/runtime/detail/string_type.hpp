@@ -10,6 +10,8 @@
 #include <immer/memory_policy.hpp>
 #pragma clang diagnostic pop
 
+#include <jank/runtime/detail/type.hpp>
+
 namespace jank::runtime::detail
 {
   /* This is a custom string impl with the primary benefit of memoized hashing. */
@@ -20,9 +22,9 @@ namespace jank::runtime::detail
 
     string_type_impl() = default;
     string_type_impl(string_type_impl const &s) = default;
-    string_type_impl(string_type_impl &&s) = default;
+    string_type_impl(string_type_impl &&s) noexcept = default;
     template <size_t N>
-    string_type_impl(char const (&s)[N])
+    string_type_impl(char const (&s)[N]) // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
       : data{ s }
       , length{ N }
     { }
@@ -43,9 +45,10 @@ namespace jank::runtime::detail
       : data{ s, l }
       , length{ l }
     { }
+    ~string_type_impl() = default;
 
     string_type_impl<MP>& operator=(string_type_impl<MP> const&) = default;
-    string_type_impl<MP>& operator=(string_type_impl<MP> &&) = default;
+    string_type_impl<MP>& operator=(string_type_impl<MP> &&) noexcept = default;
 
     bool operator==(string_type_impl const &s) const
     { return to_hash() == s.to_hash(); }
@@ -53,14 +56,14 @@ namespace jank::runtime::detail
     bool empty() const
     { return length == 0; }
 
-    size_t to_hash() const
+    detail::integer_type to_hash() const
     {
       if(hash != 0)
       { return hash; }
 
       /* https://github.com/openjdk/jdk/blob/7e30130e354ebfed14617effd2a517ab2f4140a5/src/java.base/share/classes/java/lang/StringLatin1.java#L194 */
       auto const &s(data.get());
-      size_t h{};
+      detail::integer_type h{};
       for(size_t i{}; i < length; ++i)
       { h = 31 * h + (s[i] & 0xff); }
       hash = h;
@@ -73,7 +76,7 @@ namespace jank::runtime::detail
     value_type data;
     /* TODO: Consider removing this. */
     size_t length{};
-    mutable size_t hash{};
+    mutable detail::integer_type hash{};
 
     template <typename M>
     friend std::ostream& operator<<(std::ostream&, string_type_impl<M> const&);
@@ -84,10 +87,10 @@ namespace jank::runtime::detail
   { return { l.data.get() + r.data.get() }; }
   template <typename MP, size_t N>
   string_type_impl<MP> operator+(string_type_impl<MP> const &l, char const (&r)[N])
-  { return { l.data.get() + r }; }
+  { return { l.data.get() + static_cast<char const*>(r) }; }
   template <typename MP, size_t N>
   string_type_impl<MP> operator+(char const (&l)[N], string_type_impl<MP> const &r)
-  { return { l + r.data.get() }; }
+  { return { static_cast<char const*>(l) + r.data.get() }; }
 
   template <typename MP>
   std::ostream& operator<<(std::ostream &os, string_type_impl<MP> const &s)

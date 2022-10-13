@@ -42,18 +42,21 @@ namespace jank::runtime
     struct vector;
     struct map;
     struct set;
-    struct seqable;
     struct function;
-    struct callable;
   }
+  namespace behavior
+  {
+    /* TODO: Remove includes? */
+    struct callable;
+    struct seqable;
+  }
+
   struct var;
   struct ns;
 
   using object_ptr = detail::box_type<struct object>;
   struct object : virtual pool_item_common_base
   {
-    virtual ~object() = default;
-
     virtual detail::boolean_type equal(object const &) const = 0;
     detail::boolean_type equal(object_ptr const &) const;
     virtual detail::string_type to_string() const = 0;
@@ -124,7 +127,7 @@ namespace jank::runtime
     using list_type = list_type_impl<object_ptr>;
     using vector_type = immer::vector<object_ptr, detail::memory_policy>;
     using vector_transient_type = vector_type::transient_type;
-    using set_type = immer::set<object_ptr, std::hash<object_ptr>, std::equal_to<object_ptr>, detail::memory_policy>;
+    using set_type = immer::set<object_ptr, std::hash<object_ptr>, std::equal_to<>, detail::memory_policy>;
     using set_transient_type = set_type::transient_type;
     //using map_type = immer::map<object_ptr, object_ptr, std::hash<object_ptr>, object_ptr_equal, detail::memory_policy>;
     //using map_type = std::map<object_ptr, object_ptr, object_ptr_less>;
@@ -137,8 +140,9 @@ namespace jank::runtime
     struct nil : object, pool_item_base<nil>
     {
       nil() = default;
-      nil(nil &&) = default;
+      nil(nil &&) noexcept = default;
       nil(nil const &) = default;
+      ~nil() = default;
 
       runtime::detail::boolean_type equal(object const &) const override;
       runtime::detail::string_type to_string() const override;
@@ -147,9 +151,9 @@ namespace jank::runtime
       nil const* as_nil() const override;
     };
   }
-  extern object_ptr JANK_NIL;
-  extern object_ptr JANK_TRUE;
-  extern object_ptr JANK_FALSE;
+  extern object_ptr JANK_NIL; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+  extern object_ptr JANK_TRUE; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+  extern object_ptr JANK_FALSE; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 }
 
 namespace std

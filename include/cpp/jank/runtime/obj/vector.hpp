@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   struct vector : object, behavior::seqable, behavior::countable, pool_item_base<vector>
   {
     vector() = default;
-    vector(vector &&) = default;
+    vector(vector &&) noexcept = default;
     vector(vector const &) = default;
     vector(runtime::detail::vector_type &&d);
     vector(runtime::detail::vector_type const &d);
@@ -17,6 +17,7 @@ namespace jank::runtime::obj
     vector(Args &&...args)
       : data{ std::forward<Args>(args)... }
     { }
+    ~vector() = default;
 
     static runtime::detail::box_type<vector> create(runtime::detail::vector_type const &);
     template <typename... Args>

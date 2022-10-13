@@ -84,7 +84,7 @@ namespace jank::read::parse
 
   TEST_CASE("String")
   {
-    lex::processor lp{ "\"foo\" \"bar\"" };
+    lex::processor lp{R"("foo" "bar")"};
     processor p{ lp.begin(), lp.end() };
     for(auto const &s : { "foo", "bar" })
     {
@@ -380,7 +380,7 @@ namespace jank::read::parse
 
     SUBCASE("Heterogeneous")
     {
-      lex::processor lp{ "{:foo true 1 :one \"meow\" \"meow\"}" };
+      lex::processor lp{R"({:foo true 1 :one "meow" "meow"})"};
       processor p{ lp.begin(), lp.end() };
       auto const r(p.next());
       CHECK(r.is_ok());

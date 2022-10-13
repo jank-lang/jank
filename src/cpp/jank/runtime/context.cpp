@@ -25,7 +25,7 @@ namespace jank::runtime
     (
       [this](object_ptr const &sym)
       {
-        auto const s(sym->as_symbol());
+        auto const * const s(sym->as_symbol());
         if(!s)
         {
           /* TODO: throw?. */
@@ -84,7 +84,7 @@ namespace jank::runtime
     else
     {
       auto const t_state(get_thread_state());
-      auto const current_ns(t_state.current_ns->get_root()->as_ns());
+      auto const * const current_ns(t_state.current_ns->get_root()->as_ns());
       auto const locked_vars(current_ns->vars.rlock());
       auto const qualified_sym(runtime::obj::symbol::create(current_ns->name->name, sym->name));
       auto const found(locked_vars->find(qualified_sym));
@@ -112,9 +112,9 @@ namespace jank::runtime
     return eval_string({ file.expect_ok().head, file.expect_ok().size }, an_ctx);
   }
 
-  object_ptr context::eval_string(std::string_view const &s, analyze::context &an_ctx)
+  object_ptr context::eval_string(std::string_view const &code, analyze::context &an_ctx)
   {
-    read::lex::processor l_prc{ s };
+    read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
     analyze::processor an_prc{ *this, p_prc.begin(), p_prc.end() };
     evaluate::context eval_ctx{ *this };
@@ -129,10 +129,10 @@ namespace jank::runtime
   void context::dump() const
   {
     std::cout << "context dump" << std::endl;
-    for(auto p : *namespaces.rlock())
+    for(auto const &p : *namespaces.rlock())
     {
       std::cout << "  " << p.second->name->to_string() << std::endl;
-      for(auto vp : *p.second->vars.rlock())
+      for(auto const &vp : *p.second->vars.rlock())
       {
         if(vp.second->get_root() == nullptr)
         { std::cout << "    " << vp.second->to_string() << " = nil" << std::endl; }
@@ -187,7 +187,7 @@ namespace jank::runtime
       else
       {
         auto const t_state(get_thread_state());
-        auto const current_ns(t_state.current_ns->get_root()->as_ns());
+        auto const * const current_ns(t_state.current_ns->get_root()->as_ns());
         sym.ns = current_ns->name->name;
         resolved = true;
       }

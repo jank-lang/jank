@@ -9,6 +9,13 @@
 
 namespace jank::runtime::obj
 {
+  list::list(runtime::detail::list_type &&d)
+    : data{ std::move(d) }
+  { }
+  list::list(runtime::detail::list_type const &d)
+    : data{ d }
+  { }
+
   list_ptr list::create(runtime::detail::list_type const &l)
   { return make_box<list>(l); }
 
@@ -45,7 +52,7 @@ namespace jank::runtime::obj
   /* TODO: Cache this. */
   runtime::detail::integer_type list::to_hash() const
   {
-    size_t seed{ data.size() };
+    auto seed(static_cast<runtime::detail::integer_type>(data.size()));
     for(auto const &e : data)
     { seed = runtime::detail::hash_combine(seed, *e); }
     return seed;

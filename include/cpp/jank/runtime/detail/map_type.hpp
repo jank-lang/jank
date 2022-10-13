@@ -19,7 +19,7 @@ namespace jank::runtime::detail
 
     map_type_impl() = default;
     map_type_impl(map_type_impl const &s) = default;
-    map_type_impl(map_type_impl &&s) = default;
+    map_type_impl(map_type_impl &&s) noexcept = default;
     map_type_impl(std::initializer_list<std::pair<K, V>> &&kvs)
     {
       for(auto &&kv : kvs)
@@ -31,6 +31,7 @@ namespace jank::runtime::detail
       static_assert(sizeof...(args) % 2 == 0, "odd number of map initializer values");
       insert_all( std::forward<Args>(args)...);
     }
+    ~map_type_impl() = default;
 
     template <typename NK, typename NV>
     void insert_or_assign(NK &&key, NV &&val)

@@ -8,14 +8,11 @@ namespace jank::runtime::obj
   struct set : object, behavior::seqable, pool_item_base<set>
   {
     set() = default;
-    set(set &&) = default;
+    set(set &&) noexcept = default;
     set(set const &) = default;
-    set(runtime::detail::set_type &&d)
-      : data{ std::move(d) }
-    { }
-    set(runtime::detail::set_type const &d)
-      : data{ d }
-    { }
+    set(runtime::detail::set_type &&d);
+    set(runtime::detail::set_type const &d);
+    ~set() = default;
 
     runtime::detail::boolean_type equal(object const &) const override;
     runtime::detail::string_type to_string() const override;

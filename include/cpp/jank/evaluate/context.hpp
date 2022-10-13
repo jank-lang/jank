@@ -17,7 +17,7 @@ namespace jank::evaluate
     context() = delete;
     context(runtime::context &ctx);
     context(context const &) = default;
-    context(context &&) = default;
+    context(context &&) noexcept = default;
 
     runtime::object_ptr eval(analyze::expression const &);
     runtime::object_ptr eval(analyze::expression const &, frame const &);

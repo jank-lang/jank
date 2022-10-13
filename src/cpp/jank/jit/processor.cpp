@@ -28,6 +28,6 @@ namespace jank::jit
     interpreter->loadHeader("jank/prelude.hpp");
   }
 
-  void processor::eval(codegen::processor const &cg_prc)
+  void processor::eval(codegen::processor const &cg_prc) const
   { interpreter->process(cg_prc.str()); }
 }

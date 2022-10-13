@@ -30,5 +30,6 @@ namespace jank::util
 
   template <typename D = void, typename... Args>
   constexpr detail::make_array<D, Args...> make_array(Args &&... ts)
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
   { return { std::forward<Args>(ts)... }; }
 }

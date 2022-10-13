@@ -144,7 +144,7 @@ namespace jank::runtime
     for(auto s(sable->seq()); s != nullptr; s = s->next())
     { in_order.push_back(s->first()); }
     for(auto it(in_order.rbegin()); it != in_order.rend(); ++it)
-    { reverse_order.push_back(std::move(*it)); }
+    { reverse_order.push_back(*it); }
 
     return make_box<obj::vector>(reverse_order.persistent());
   }

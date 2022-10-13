@@ -1,0 +1,49 @@
+Checks: "clang-diagnostic-*,\
+clang-analyzer-*,\
+cppcoreguidelines-*,\
+modernize-*,\
+bugprone-*,\
+performance-*,\
+readability-*,\
+-modernize-use-trailing-return-type,\
+-modernize-use-nodiscard,\
+-modernize-pass-by-value,\
+-cppcoreguidelines-non-private-member-variables-in-classes,\
+-cppcoreguidelines-avoid-c-arrays,\
+-modernize-avoid-c-arrays,\
+-cppcoreguidelines-avoid-magic-numbers,\
+-cppcoreguidelines-pro-type-reinterpret-cast,\
+-cppcoreguidelines-special-member-functions,\
+-cppcoreguidelines-pro-type-union-access,\
+-bugprone-easily-swappable-parameters,\
+-bugprone-reserved-identifier,\
+-readability-implicit-bool-conversion,\
+-readability-magic-numbers,\
+-readability-identifier-length,\
+-readability-else-after-return,\
+-readability-named-parameter,\
+-readability-function-cognitive-complexity,\
+-readability-uppercase-literal-suffix,\
+-readability-avoid-const-params-in-decls,\
+-readability-convert-member-functions-to-static,\
+-readability-isolate-declaration"
+
+WarningsAsErrors: '*'
+HeaderFilterRegex: '.*'
+
+CheckOptions:
+  - key: modernize-loop-convert.MinConfidence
+    value: reasonable
+  - key: modernize-use-override.IgnoreDestructors
+    value: true
+  - key: cppcoreguidelines-explicit-virtual-functions.IgnoreDestructors
+    value: true
+  - key: readability-identifier-length.IgnoredVariableNames
+    value: true
+  - key: readability-identifier-length.IgnoredExceptionVariableNames
+    value: true
+  - key: readability-identifier-length.IgnoredParameterNames
+    value: true
+  - key: readability-identifier-length.IgnoredLoopCounters
+    value: true
+FormatStyle: none

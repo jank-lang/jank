@@ -1,6 +1,13 @@
 # Perf
 * Bring in folly
 
+# Security
+* clang-tidy
+* cppcheck
+* scan-build
+  * `analyze-build --cdb build/compile_commands.json --use-analyzer clang++ --output scan-output`
+* sanitizer during tests
+
 # HM type system
 * http://www.mpprogramming.com/cpp/Default.aspx
 * http://www.mpprogramming.com/resources/CastorReference.pdf

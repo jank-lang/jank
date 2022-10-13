@@ -40,14 +40,11 @@ namespace jank::runtime::obj
   struct function : object, behavior::callable, pool_item_base<function>
   {
     function() = default;
-    function(function &&) = default;
+    function(function &&) noexcept = default;
     function(function const &) = default;
-    function(detail::function_type &&d)
-      : data{ std::move(d) }
-    { }
-    function(detail::function_type const &d)
-      : data{ d }
-    { }
+    function(detail::function_type &&d);
+    function(detail::function_type const &d);
+    ~function() = default;
 
     static runtime::detail::box_type<function> create(detail::function_type const &d);
 

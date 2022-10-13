@@ -628,14 +628,14 @@ namespace jank::read::lex
     {
       processor p{ "://" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_results({ error{ 0, "invalid keyword" }, }));
+      CHECK(tokens == make_results({ error{ 0, "invalid keyword: starts with /" }, }));
     }
 
     SUBCASE("Starting with a slash")
     {
       processor p{ ":/foo" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_results({ error{ 0, "invalid keyword" }, }));
+      CHECK(tokens == make_results({ error{ 0, "invalid keyword: starts with /" }, }));
     }
 
     SUBCASE("With numbers")
@@ -673,7 +673,7 @@ namespace jank::read::lex
       CHECK(tokens == make_results
       (
         {
-          error{ 0, "invalid keyword" },
+          error{ 0, "invalid keyword: incorrect number of :" },
           error{ 2, "expected whitespace before next token" },
           token{ 2, 4, token_kind::keyword, "foo"sv }
         }
@@ -687,7 +687,7 @@ namespace jank::read::lex
       CHECK(tokens == make_results
       (
         {
-          error{ 0, "invalid keyword" },
+          error{ 0, "invalid keyword: incorrect number of :" },
           error{ 2, "expected whitespace before next token" },
           token{ 2, 5, token_kind::keyword, ":foo"sv }
         }
@@ -741,7 +741,7 @@ namespace jank::read::lex
     /* TODO: Figure out how to handle this. */
     SUBCASE("With escapes")
     {
-      processor p{ "\"foo\\\"\\nbar\\nspam\\t\"" };
+      processor p{R"("foo\"\nbar\nspam\t")"};
       std::vector<result<token, error>> tokens(p.begin(), p.end());
       WARN(tokens == make_tokens({{ 0, token_kind::string, "foo\"\nbar\nspam\t"sv }}));
     }

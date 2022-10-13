@@ -4,11 +4,14 @@
 namespace jank::runtime
 {
   /* TODO: Replace these with non-static values. */
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   object_ptr JANK_NIL{ make_box<obj::nil>() };
 
   namespace obj
   {
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     object_ptr JANK_TRUE{ make_box<boolean>(true) };
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     object_ptr JANK_FALSE{ make_box<boolean>(false) };
   }
 

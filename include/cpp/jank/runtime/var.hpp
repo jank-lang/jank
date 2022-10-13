@@ -18,7 +18,7 @@ namespace jank::runtime
   struct var : object, pool_item_base<var>
   {
     var(var const&) = default;
-    var(var &&) = default;
+    var(var &&) noexcept = default;
     /* TODO: Move to cpp */
     var(ns_ptr const &n, obj::symbol_ptr const &s)
       : n{ n }, name{ s }

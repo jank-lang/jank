@@ -9,18 +9,15 @@ namespace jank::runtime::obj
   struct list : object, behavior::seqable, behavior::countable, pool_item_base<list>
   {
     list() = default;
-    list(list &&) = default;
+    list(list &&) noexcept = default;
     list(list const &) = default;
-    list(runtime::detail::list_type &&d)
-      : data{ std::move(d) }
-    { }
-    list(runtime::detail::list_type const &d)
-      : data{ d }
-    { }
+    list(runtime::detail::list_type &&d);
+    list(runtime::detail::list_type const &d);
     template <typename... Args>
     list(Args &&...args)
       : data{ std::forward<Args>(args)... }
     { }
+    ~list() = default;
 
     static runtime::detail::box_type<list> create(runtime::detail::list_type const &l);
     template <typename... Args>

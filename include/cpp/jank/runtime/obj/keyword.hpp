@@ -12,10 +12,11 @@ namespace jank::runtime::obj
   struct keyword : object, pool_item_base<keyword>
   {
     keyword() = default;
-    keyword(keyword &&) = default;
+    keyword(keyword &&) noexcept = default;
     keyword(keyword const &) = default;
     keyword(symbol const &s, bool const resolved);
     keyword(symbol &&s, bool const resolved);
+    ~keyword() = default;
 
     static runtime::detail::box_type<keyword> create(symbol const &s, bool const resolved);
     static runtime::detail::box_type<keyword> create(symbol &&s, bool const resolved);
@@ -27,9 +28,6 @@ namespace jank::runtime::obj
     keyword const* as_keyword() const override;
 
     bool operator ==(keyword const &rhs) const;
-
-    keyword& operator =(keyword const &) = default;
-    keyword& operator =(keyword &&) = default;
 
     symbol sym;
     /* Not resolved means this is a :: keyword. If ns is set, when this is true, it's an ns alias.

@@ -52,7 +52,7 @@ namespace jank::runtime::obj
   /* TODO: Cache this. */
   runtime::detail::integer_type vector::to_hash() const
   {
-    size_t seed{ data.size() };
+    auto seed(static_cast<runtime::detail::integer_type>(data.size()));
     for(auto const &e : data)
     { seed = runtime::detail::hash_combine(seed, *e); }
     return seed;
@@ -63,7 +63,7 @@ namespace jank::runtime::obj
   { return this; }
   behavior::sequence_pointer vector::seq() const
   {
-    if(data.size() == 0)
+    if(data.empty())
     { return nullptr; }
     return make_box<behavior::basic_iterator_wrapper<runtime::detail::vector_type::iterator>>(data.begin(), data.end());
   }

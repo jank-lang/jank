@@ -92,6 +92,7 @@ namespace jank::runtime
       free_list = first_item->get_next_item();
 
       T * const result{ first_item->get_data() };
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
       new (result) T(std::forward<Args>(args)...);
       result->owner_pool = this;
 

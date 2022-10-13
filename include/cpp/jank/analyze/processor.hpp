@@ -8,6 +8,7 @@
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/list.hpp>
 #include <jank/runtime/obj/vector.hpp>
+#include <jank/runtime/obj/map.hpp>
 #include <jank/analyze/local_frame.hpp>
 #include <jank/analyze/expression.hpp>
 #include <jank/option.hpp>
@@ -92,7 +93,7 @@ namespace jank::analyze
     processor() = delete;
     processor(runtime::context &rt_ctx, read::parse::processor::iterator const &b, read::parse::processor::iterator const &e);
     processor(processor const &) = default;
-    processor(processor &&) = default;
+    processor(processor &&) noexcept = default;
 
     iterator begin(context &ctx);
     iterator end(context &ctx);

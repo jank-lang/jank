@@ -15,7 +15,7 @@ namespace jank::runtime::obj
   struct boolean : object, pool_item_base<boolean>
   {
     boolean() = default;
-    boolean(boolean &&) = default;
+    boolean(boolean &&) noexcept = default;
     boolean(boolean const &) = default;
     /* TODO: Move these ctors to cpp file. */
     boolean(runtime::detail::boolean_type const d)
@@ -30,13 +30,13 @@ namespace jank::runtime::obj
 
     runtime::detail::boolean_type data{};
   };
-  extern object_ptr JANK_TRUE;
-  extern object_ptr JANK_FALSE;
+  extern object_ptr JANK_TRUE; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+  extern object_ptr JANK_FALSE; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
   struct integer : object, number, pool_item_base<integer>
   {
     integer() = default;
-    integer(integer &&) = default;
+    integer(integer &&) noexcept = default;
     integer(integer const &) = default;
     integer(runtime::detail::integer_type const d)
       : data{ d }
@@ -60,7 +60,7 @@ namespace jank::runtime::obj
   struct real : object, number, pool_item_base<real>
   {
     real() = default;
-    real(real &&) = default;
+    real(real &&) noexcept = default;
     real(real const &) = default;
     real(runtime::detail::real_type const d)
       : data{ d }

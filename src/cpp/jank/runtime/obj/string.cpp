@@ -9,6 +9,10 @@
 
 namespace jank::runtime::obj
 {
+  string::string(runtime::detail::string_type &&d)
+    : data{ std::move(d) }
+  { }
+
   runtime::detail::boolean_type string::equal(object const &o) const
   {
     auto const *s(o.as_string());

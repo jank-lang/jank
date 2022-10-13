@@ -306,9 +306,9 @@ namespace jank::read
           require_space = true;
           std::string_view const name{ file.data() + token_start + 1, ++pos - token_start - 1 };
           if(name[0] == '/' && name.size() > 1)
-          { return err(error{ token_start, "invalid keyword" }); }
+          { return err(error{ token_start, "invalid keyword: starts with /" }); }
           else if(name[0] == ':' && name.size() == 1)
-          { return err(error{ token_start, "invalid keyword" }); }
+          { return err(error{ token_start, "invalid keyword: incorrect number of :" }); }
 
           return ok(token{ token_start, pos - token_start, token_kind::keyword, name });
         }

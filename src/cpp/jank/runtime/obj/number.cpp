@@ -64,7 +64,7 @@ namespace jank::runtime::obj
   runtime::detail::integer_type real::to_hash() const
   { return static_cast<runtime::detail::integer_type>(data); }
   runtime::detail::integer_type real::get_integer() const
-  { return data; }
+  { return static_cast<runtime::detail::integer_type>(data); }
   runtime::detail::real_type real::get_real() const
   { return data; }
   real const* real::as_real() const
@@ -137,7 +137,7 @@ namespace jank::runtime::obj
     runtime::detail::boolean_type equal() const override
     { return left == right; }
 
-    runtime::detail::integer_type left, right;
+    runtime::detail::integer_type left{}, right{};
   };
 
   struct real_ops : number_ops
@@ -180,10 +180,12 @@ namespace jank::runtime::obj
     { return left == right; }
 #pragma clang diagnostic pop
 
-    runtime::detail::real_type left, right;
+    runtime::detail::real_type left{}, right{};
   };
 
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): These are thread-local.
   static thread_local integer_ops i_ops;
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): These are thread-local.
   static thread_local real_ops r_ops;
 
   number_ops const& integer_ops::with(integer_ops const &) const

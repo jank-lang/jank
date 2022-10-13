@@ -11,7 +11,7 @@ namespace jank::util
   {
     mapped_file() = default;
     mapped_file(mapped_file const&) = delete;
-    mapped_file(mapped_file &&);
+    mapped_file(mapped_file &&) noexcept;
     mapped_file(int const f, char const * const h, size_t const s);
     ~mapped_file();
 

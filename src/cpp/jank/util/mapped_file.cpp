@@ -13,7 +13,7 @@
 
 namespace jank::util
 {
-  mapped_file::mapped_file(mapped_file &&mf)
+  mapped_file::mapped_file(mapped_file &&mf) noexcept
     : fd{ mf.fd }, head{ mf.head }, size{ mf.size }
   {
     mf.fd = -1;
@@ -27,6 +27,7 @@ namespace jank::util
   mapped_file::~mapped_file()
   {
     if(head != nullptr)
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast): I want const everywhere else.
     { munmap(reinterpret_cast<void*>(const_cast<char*>(head)), size); }
     if(fd >= 0)
     { ::close(fd); }
@@ -37,15 +38,20 @@ namespace jank::util
     if(!std::filesystem::exists(path))
     { return err("file doesn't exist"); }
     auto const file_size(std::filesystem::file_size(path));
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     auto const fd(::open(path.data(), O_RDONLY));
     if(fd < 0)
     { return err("unable to open file"); }
-    auto const * const head(reinterpret_cast<char const*>(mmap(0, file_size, PROT_READ, MAP_PRIVATE, fd, 0)));
+    auto const *const head
+    (reinterpret_cast<char const *>(mmap(nullptr, file_size, PROT_READ, MAP_PRIVATE, fd, 0)));
+
+    /* MAP_FAILED is a macro which does a C-style cast. */
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wold-style-cast"
     if(head == MAP_FAILED)
 #pragma clang diagnostic pop
     { return err("unable to map file"); }
+
     return ok(jank::util::mapped_file{fd, head, file_size});
   }
 }

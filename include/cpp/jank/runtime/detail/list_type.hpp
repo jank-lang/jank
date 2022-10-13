@@ -20,7 +20,7 @@ namespace jank::runtime::detail
   {
     list_node() = default;
     list_node(list_node const &) = default;
-    list_node(list_node &&) = default;
+    list_node(list_node &&) noexcept = default;
     list_node(T const &t) : first{ t }
     { }
     list_node(T &&t) : first{ std::move(t) }, length{ 1 }
@@ -85,7 +85,7 @@ namespace jank::runtime::detail
 
     list_type_impl() = default;
     list_type_impl(list_type_impl<T> const &) = default;
-    list_type_impl(list_type_impl<T> &&) = default;
+    list_type_impl(list_type_impl<T> &&) noexcept = default;
     list_type_impl(std::shared_ptr<value_type> const &d) : data{ d }
     { }
 

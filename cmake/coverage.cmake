@@ -1,3 +1,4 @@
+option(jank_coverage "Enable code coverage measurement" OFF)
 if(CMAKE_BUILD_TYPE STREQUAL "coverage" OR jank_coverage)
   if("${CMAKE_C_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang")
     message("Building with llvm Code Coverage Tools")

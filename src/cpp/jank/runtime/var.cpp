@@ -8,8 +8,8 @@ namespace jank::runtime
   detail::box_type<var> var::create(ns_ptr const &n, obj::symbol_ptr const &s)
   { return make_box<var>(n, s); }
 
-  detail::box_type<var> var::create(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr const &o)
-  { return make_box<var>(n, s, o); }
+  detail::box_type<var> var::create(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr const &root)
+  { return make_box<var>(n, s, root); }
 
   runtime::detail::boolean_type var::equal(object const &o) const
   {

@@ -37,7 +37,7 @@ namespace jank::analyze
 
     expression() = default;
     expression(expression const &) = default;
-    expression(expression &&) = default;
+    expression(expression &&) noexcept = default;
     template <typename T>
     expression
     (

@@ -15,7 +15,7 @@ namespace jank::jit
     processor() = delete;
     processor(runtime::context &rt_ctx);
 
-    void eval(codegen::processor const &cg_prc);
+    void eval(codegen::processor const &cg_prc) const;
 
     runtime::context &rt_ctx;
     std::unique_ptr<cling::Interpreter> interpreter;

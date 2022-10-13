@@ -26,14 +26,14 @@ namespace jank
       : set{ o.set }
     {
       if(set)
-      { new (data) T{ *reinterpret_cast<T const*>(o.data) }; }
+      { new (reinterpret_cast<T*>(data)) T{ *reinterpret_cast<T const*>(o.data) }; }
     }
-    option(option &&o)
+    option(option &&o) noexcept
       : set{ std::move(o.set) }
     {
       o.set = false;
       if(set)
-      { new (data) T{ std::move(*reinterpret_cast<T const*>(o.data)) }; }
+      { new (reinterpret_cast<T*>(data)) T{ std::move(*reinterpret_cast<T const*>(o.data)) }; }
     }
     ~option()
     { reset(); }
@@ -45,23 +45,23 @@ namespace jank
       <
         std::is_constructible_v<T, D>
         && !std::is_same_v<std::decay_t<D>, option<T>>
-      >* = 0
+      >* = nullptr
     )
       : set{ true }
-    { new (data) T{ std::forward<D>(d)  }; }
+    { new (reinterpret_cast<T*>(data)) T{ std::forward<D>(d)  }; }
     template <typename D>
-    option(option<D> const &o, std::enable_if_t<std::is_constructible_v<T, D>>* = 0)
+    option(option<D> const &o, std::enable_if_t<std::is_constructible_v<T, D>>* = nullptr)
       : set{ o.set }
     {
       if(set)
-      { new (data) T{ *reinterpret_cast<D const*>(o.data) }; }
+      { new (reinterpret_cast<T*>(data)) T{ *reinterpret_cast<D const*>(o.data) }; }
     }
     template <typename D>
-    option(option<D> &&o, std::enable_if_t<std::is_constructible_v<T, D>>* = 0)
+    option(option<D> &&o, std::enable_if_t<std::is_constructible_v<T, D>>* = nullptr)
       : set{ std::move(o.set) }
     {
       if(set)
-      { new (data) T{ std::move(*reinterpret_cast<D*>(o.data)) }; }
+      { new (reinterpret_cast<T*>(data)) T{ std::move(*reinterpret_cast<D*>(o.data)) }; }
       o.reset();
     }
     option(empty_option const&)
@@ -75,10 +75,10 @@ namespace jank
 
       set = rhs.set;
       if(set)
-      { new (data) T{ *reinterpret_cast<T const*>(rhs.data) }; }
+      { new (reinterpret_cast<T*>(data)) T{ *reinterpret_cast<T const*>(rhs.data) }; }
       return *this;
     }
-    option<T>& operator =(option<T> &&rhs)
+    option<T>& operator =(option<T> &&rhs) noexcept
     {
       if(this == &rhs)
       { return *this; }
@@ -86,7 +86,7 @@ namespace jank
 
       set = std::move(rhs.set);
       if(set)
-      { new (data) T{ std::move(*reinterpret_cast<T const*>(rhs.data)) }; }
+      { new (reinterpret_cast<T*>(data)) T{ std::move(*reinterpret_cast<T const*>(rhs.data)) }; }
       rhs.reset();
       return *this;
     }
@@ -96,19 +96,20 @@ namespace jank
       return *this;
     }
     template <typename D>
+    // NOLINTNEXTLINE(cppcoreguidelines-c-copy-assignment-signature): It gets this wrong.
     std::enable_if_t<std::is_constructible_v<T, D>, option<T>&> operator =(D &&rhs)
     {
       reset();
 
       set = true;
-      new (data) T{ std::forward<D>(rhs) };
+      new (reinterpret_cast<T*>(data)) T{ std::forward<D>(rhs) };
       return *this;
     }
 
-    void reset()
+    void reset() noexcept
     {
       if(set)
-      { reinterpret_cast<T*>(data)->~T(); }
+      { reinterpret_cast<T*>(reinterpret_cast<T*>(data))->~T(); }
       set = false;
     }
 
@@ -148,7 +149,7 @@ namespace jank
     { return !(*this != rhs); }
 
     bool set{};
-    alignas(alignof(T)) storage_type data;
+    alignas(alignof(T)) storage_type data{};
   };
 
   template <typename T, typename Decayed = std::decay_t<T>>

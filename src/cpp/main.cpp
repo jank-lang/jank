@@ -21,9 +21,11 @@ int main(int const argc, char const **argv)
 {
   if(argc < 2)
   {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     std::cerr << "Usage: " << argv[0] << " <file>\n";
     return 1;
   }
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
   char const *file{ argv[1] };
 
   jank::runtime::context rt_ctx;

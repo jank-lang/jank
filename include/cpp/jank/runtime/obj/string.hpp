@@ -8,11 +8,10 @@ namespace jank::runtime::obj
   struct string : object, pool_item_base<string>
   {
     string() = default;
-    string(string &&) = default;
+    string(string &&) noexcept = default;
     string(string const &) = default;
-    string(runtime::detail::string_type &&d)
-      : data{ std::move(d) }
-    { }
+    string(runtime::detail::string_type &&d);
+    ~string() = default;
 
     runtime::detail::boolean_type equal(object const &) const override;
     runtime::detail::string_type to_string() const override;
