@@ -47,7 +47,7 @@ namespace jank::runtime::detail
     template <typename NK, typename NV, typename... Args>
     void insert_all_impl(NK &&key, NV &&val, Args &&... args)
     {
-      if(auto * const found = find(key))
+      if(V * const found = find(key))
       { *found = std::forward<NV>(val); }
       else
       { data.emplace_back(std::forward<NK>(key), std::forward<NV>(val)); }

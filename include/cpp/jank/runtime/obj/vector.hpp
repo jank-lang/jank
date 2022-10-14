@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   struct vector : object, behavior::seqable, behavior::countable, pool_item_base<vector>
   {
     vector() = default;
-    vector(vector &&) noexcept = default;
+    vector(vector &&) = default;
     vector(vector const &) = default;
     vector(runtime::detail::vector_type &&d);
     vector(runtime::detail::vector_type const &d);

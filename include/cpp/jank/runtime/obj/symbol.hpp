@@ -10,7 +10,7 @@ namespace jank::runtime::obj
   struct symbol : object, pool_item_base<symbol>
   {
     symbol() = default;
-    symbol(symbol &&) noexcept = default;
+    symbol(symbol &&) = default;
     symbol(symbol const &) = default;
     symbol(runtime::detail::string_type const &d);
     symbol(runtime::detail::string_type &&d);
@@ -31,7 +31,7 @@ namespace jank::runtime::obj
     bool operator ==(symbol const &rhs) const;
 
     symbol& operator =(symbol const &) = default;
-    symbol& operator =(symbol &&) noexcept = default;
+    symbol& operator =(symbol &&) = default;
 
     runtime::detail::string_type ns;
     runtime::detail::string_type name;

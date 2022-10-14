@@ -22,7 +22,7 @@ namespace jank::runtime::detail
 
     string_type_impl() = default;
     string_type_impl(string_type_impl const &s) = default;
-    string_type_impl(string_type_impl &&s) noexcept = default;
+    string_type_impl(string_type_impl &&s) = default;
     template <size_t N>
     string_type_impl(char const (&s)[N]) // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
       : data{ s }
@@ -48,7 +48,7 @@ namespace jank::runtime::detail
     ~string_type_impl() = default;
 
     string_type_impl<MP>& operator=(string_type_impl<MP> const&) = default;
-    string_type_impl<MP>& operator=(string_type_impl<MP> &&) noexcept = default;
+    string_type_impl<MP>& operator=(string_type_impl<MP> &&) = default;
 
     bool operator==(string_type_impl const &s) const
     { return to_hash() == s.to_hash(); }

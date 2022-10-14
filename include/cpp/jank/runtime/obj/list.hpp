@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   struct list : object, behavior::seqable, behavior::countable, pool_item_base<list>
   {
     list() = default;
-    list(list &&) noexcept = default;
+    list(list &&) = default;
     list(list const &) = default;
     list(runtime::detail::list_type &&d);
     list(runtime::detail::list_type const &d);

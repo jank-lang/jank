@@ -8,7 +8,7 @@ namespace jank::runtime::obj
   struct string : object, pool_item_base<string>
   {
     string() = default;
-    string(string &&) noexcept = default;
+    string(string &&) = default;
     string(string const &) = default;
     string(runtime::detail::string_type &&d);
     ~string() = default;

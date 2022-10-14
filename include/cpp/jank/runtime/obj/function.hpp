@@ -40,7 +40,7 @@ namespace jank::runtime::obj
   struct function : object, behavior::callable, pool_item_base<function>
   {
     function() = default;
-    function(function &&) noexcept = default;
+    function(function &&) = default;
     function(function const &) = default;
     function(detail::function_type &&d);
     function(detail::function_type const &d);

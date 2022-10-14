@@ -8,7 +8,7 @@ namespace jank::runtime::obj
   struct map : object, behavior::seqable, pool_item_base<map>
   {
     map() = default;
-    map(map &&) noexcept = default;
+    map(map &&) = default;
     map(map const &) = default;
     map(runtime::detail::map_type &&d);
     map(runtime::detail::map_type const &d);

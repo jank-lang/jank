@@ -8,7 +8,7 @@ namespace jank::runtime::obj
   struct set : object, behavior::seqable, pool_item_base<set>
   {
     set() = default;
-    set(set &&) noexcept = default;
+    set(set &&) = default;
     set(set const &) = default;
     set(runtime::detail::set_type &&d);
     set(runtime::detail::set_type const &d);

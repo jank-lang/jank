@@ -12,7 +12,7 @@ namespace jank::runtime::obj
   struct keyword : object, pool_item_base<keyword>
   {
     keyword() = default;
-    keyword(keyword &&) noexcept = default;
+    keyword(keyword &&) = default;
     keyword(keyword const &) = default;
     keyword(symbol const &s, bool const resolved);
     keyword(symbol &&s, bool const resolved);
