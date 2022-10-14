@@ -67,8 +67,8 @@ set_property(TARGET jank_cling_lib PROPERTY OUTPUT_NAME jankcling)
 target_compile_features(jank_cling_lib PUBLIC cxx_std_17)
 
 option(jank_build_cling "Whether or not to automatically build Cling" OFF)
-option(jank_cling_build_dir "Location of Cling source, if built locally")
-option(jank_llvm_root "Path to LLVM's resource dir" ${LLVM_BINARY_DIR})
+option(jank_cling_build_dir "Location of Cling source, if built locally" "")
+option(jank_llvm_root "Path to LLVM's resource dir" "")
 
 if(jank_build_cling)
   message(STATUS "Building Cling/Clang/LLVM locally")
@@ -83,6 +83,13 @@ endif()
 find_package(LLVM REQUIRED HINTS "${jank_cling_build_dir}/lib/cmake/llvm")
 find_package(Clang REQUIRED CONFIG HINTS "${jank_cling_build_dir}/lib/cmake/clang" NO_DEFAULT_PATH)
 find_package(Cling REQUIRED HINTS "${jank_cling_build_dir}/lib/cmake/cling")
+
+# This can be set manually if we're using an external Cling, but, if it's not set,
+# we can assume we're using our own Cling and default to a sane value.
+if(NOT jank_build_cling)
+  set(jank_llvm_root ${LLVM_BINARY_DIR})
+endif()
+
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
