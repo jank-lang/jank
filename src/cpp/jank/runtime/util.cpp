@@ -1,5 +1,3 @@
-#pragma once
-
 #include <jank/runtime/util.hpp>
 
 namespace jank::runtime
