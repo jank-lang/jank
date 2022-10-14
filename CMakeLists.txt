@@ -30,6 +30,7 @@ include(cmake/analysis.cmake)
 
 if(MSVC)
   set(jank_compiler_flags /W4)
+  set(jank_linker_flags "")
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     list(APPEND jank_compiler_flags /WX)
   endif()
@@ -40,6 +41,7 @@ else()
     -Wfloat-equal -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor
     -Wold-style-cast -Wno-gnu-case-range
   )
+  set(jank_linker_flags "")
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     list(APPEND jank_compiler_flags -w -Werror)
   endif()
@@ -87,7 +89,6 @@ elseif(MSVC)
 else()
   target_link_libraries(jank_cling_lib PRIVATE -Wl,--whole-archive clingInterpreter -Wl,--no-whole-archive)
 endif()
-
 
 set_target_properties(jank_cling_lib PROPERTIES LINK_FLAGS -s)
 # ---- libjankcling.so ----
@@ -137,6 +138,7 @@ set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 target_compile_features(jank_lib PUBLIC cxx_std_17)
 target_compile_options(jank_lib PRIVATE ${jank_compiler_flags})
 target_compile_options(jank_lib PUBLIC -DLLVMDIR="${LLVM_BINARY_DIR}")
+target_link_options(jank_lib PRIVATE ${jank_linker_flags})
 
 find_package(Boost REQUIRED)
 find_package(folly REQUIRED)
@@ -171,6 +173,7 @@ endif()
 target_compile_features(jank_exe PRIVATE cxx_std_17)
 target_compile_options(jank_exe PUBLIC -DLLVMDIR="${LLVM_BINARY_DIR}")
 target_compile_options(jank_exe PRIVATE ${jank_compiler_flags})
+target_link_options(jank_exe PRIVATE ${jank_linker_flags})
 
 target_include_directories(jank_exe SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
 target_include_directories(jank_exe SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
@@ -204,6 +207,7 @@ if(jank_tests)
 
   target_compile_features(jank_test_exe PRIVATE cxx_std_17)
   target_compile_options(jank_test_exe PRIVATE ${jank_compiler_flags})
+  target_link_options(jank_test_exe PRIVATE ${jank_linker_flags})
 
   find_package(doctest REQUIRED)
   target_link_libraries(jank_test_exe PRIVATE jank_lib doctest::doctest)
