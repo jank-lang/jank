@@ -6,9 +6,8 @@ mkShell
     # Build deps.
     cmake
     ninja
-    libsodium
-    liburing
-    libunwind
+    cling
+    llvmPackages_5.llvm
 
     # Dev tools.
     llvm # For clang-format
@@ -20,7 +19,10 @@ mkShell
   ];
   shellHook =
   ''
-  export CC="''${CC:-clang}"
-  export CXX="''${CXX:-clang++}"
+  export CC="''${CC:-/usr/bin/clang}"
+  export CXX="''${CXX:-/usr/bin/clang++}"
+
+  export CLING_DEV="${lib.getDev pkgs.cling.unwrapped}"
+  export LLVM_DEV="${lib.getDev pkgs.llvmPackages_5.llvm}"
   '';
 }

@@ -44,20 +44,22 @@ $ git submodule update --recursive --init
 * `./bin/install` -- For packaging.
 
 ### Cling
-Note that, by default, jank will compile Cling/Clang/LLVM for you, as part of
-your build directory. This can take an hour or two, depending on your machine.
-Building jank itself should take less than a minute. If you want to build it
-yourself, or want it outside of jank's build dir, you can use the
-`bin/build-cling [cling-dir]` script.
+Note that jank can compile Cling/Clang/LLVM for you, as part of your build
+directory. This can take an hour or two, depending on your machine. Building
+jank itself should take less than a minute. If you want to build it yourself, or
+want it outside of jank's build dir, you can use the `bin/build-cling
+[cling-dir]` script.
 
-If you build your own Cling, or if you get it from somewhere else, you can
-provide it to `./bin/configure` by using `-Dcling_dir=[cling-dir]/builddir`.
+If you build your own Cling, you can provide it to `./bin/configure` by using
+`-Djank_cling_build_dir=[cling-dir]/builddir`. If you're using a pre-built
+Cling, you can pass `-DCling_DIR`, `-DClang_DIR`, `-DLLVM_DIR`, and
+`-Djank_llvm_root` instead. And example of this, with Nix, is below.
 
 ### Release
 A typical release build just needs the following:
 
 ```bash
-$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release
+$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_build_cling=on
 $ ./bin/compile
 ```
 
@@ -65,7 +67,7 @@ $ ./bin/compile
 To make a debug build, specify the build type when configuring.
 
 ```bash
-$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_tests=on
+$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_build_cling=on -Djank_tests=on
 $ ./bin/compile
 $ ./bin/watch-tests
 ```
@@ -76,8 +78,31 @@ Note that this includes a lot of header files, which are necessary for jank's
 JIT compilation.
 
 ```bash
-$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release
+$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_build_cling=on
 $ ./bin/install
+```
+
+### Nix
+This repo comes with a `shell.nix` so you can just `nix-shell` to get into an
+environment which will have a lot of the dependencies you need, rather than
+needing to install them globally on your system or build them locally. This
+includes Cling! To configure jank to use the prebuilt Cling from Nix, you can
+use the following:
+
+```bash
+$ ./bin/configure -DCMAKE_BUILD_TYPE=Debug -GNinja -DCling_DIR=$CLING_DEV/lib/cmake/cling -DClang_DIR=$CLING_DEV/lib/cmake/clang -DLLVM_DIR=$LLVM_DEV/lib/cmake -Djank_llvm_root=$CLING_DEV
+```
+
+Note that those environment variables are **not** placeholders; they're set for
+you by `shell.nix`.
+
+If you run into issues building your vcpkg dependencies in a Nix shell, try
+exporting your `CC` and `CXX` vars to be fully qualified, so they don't use
+Nix's compilers. I've had troubles with folly not liking Nix's environment. For
+example:
+
+```bash
+$ export CC=/usr/bin/clang ; export CXX=/usr/bin/clang++
 ```
 
 ## Sponsors

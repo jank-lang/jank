@@ -66,21 +66,27 @@ set_property(TARGET jank_cling_lib PROPERTY OUTPUT_NAME jankcling)
 
 target_compile_features(jank_cling_lib PUBLIC cxx_std_17)
 
-if(NOT cling_dir)
-  message(STATUS "Building Cling/Clang/LLVM")
+option(jank_build_cling "Whether or not to automatically build Cling" OFF)
+option(jank_cling_build_dir "Location of Cling source, if built locally")
+option(jank_llvm_root "Path to LLVM's resource dir" ${LLVM_BINARY_DIR})
+
+if(jank_build_cling)
+  message(STATUS "Building Cling/Clang/LLVM locally")
   execute_process(
     COMMAND ${PROJECT_SOURCE_DIR}/bin/build-cling
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND_ERROR_IS_FATAL ANY
   )
-  set(cling_dir "${CMAKE_CURRENT_BINARY_DIR}/cling-build/builddir")
+  set(jank_cling_build_dir "${CMAKE_CURRENT_BINARY_DIR}/cling-build/builddir")
 endif()
 
-find_package(Clang REQUIRED CONFIG HINTS "${cling_dir}/lib/cmake/clang" NO_DEFAULT_PATH)
-find_package(Cling REQUIRED HINTS "${cling_dir}/lib/cmake/cling")
+find_package(LLVM REQUIRED HINTS "${jank_cling_build_dir}/lib/cmake/llvm")
+find_package(Clang REQUIRED CONFIG HINTS "${jank_cling_build_dir}/lib/cmake/clang" NO_DEFAULT_PATH)
+find_package(Cling REQUIRED HINTS "${jank_cling_build_dir}/lib/cmake/cling")
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
+target_link_directories(jank_cling_lib SYSTEM PRIVATE ${LLVM_LIBRARY_DIRS})
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   target_link_libraries(jank_cling_lib PRIVATE -Wl,-force_load, clingInterpreter)
@@ -137,7 +143,7 @@ set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 
 target_compile_features(jank_lib PUBLIC cxx_std_17)
 target_compile_options(jank_lib PRIVATE ${jank_compiler_flags})
-target_compile_options(jank_lib PUBLIC -DLLVMDIR="${LLVM_BINARY_DIR}")
+target_compile_options(jank_lib PUBLIC -DLLVMDIR="${jank_llvm_root}")
 target_link_options(jank_lib PRIVATE ${jank_linker_flags})
 
 find_package(Boost REQUIRED)
@@ -171,7 +177,7 @@ if(MSVC)
 endif()
 
 target_compile_features(jank_exe PRIVATE cxx_std_17)
-target_compile_options(jank_exe PUBLIC -DLLVMDIR="${LLVM_BINARY_DIR}")
+target_compile_options(jank_exe PUBLIC -DLLVMDIR="${jank_llvm_root}")
 target_compile_options(jank_exe PRIVATE ${jank_compiler_flags})
 target_link_options(jank_exe PRIVATE ${jank_linker_flags})
 
