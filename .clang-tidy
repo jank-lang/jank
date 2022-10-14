@@ -26,7 +26,8 @@ readability-*,\
 -readability-uppercase-literal-suffix,\
 -readability-avoid-const-params-in-decls,\
 -readability-convert-member-functions-to-static,\
--readability-isolate-declaration"
+-readability-isolate-declaration,
+-performance-noexcept-move-constructor"
 
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
