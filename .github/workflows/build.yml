@@ -22,11 +22,13 @@ jobs:
           - os: ubuntu-22.04
             build_type: Debug
             codecov: on
+            analysis: on
     runs-on: ${{ matrix.os }}
     env:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
       CODECOV: ${{ matrix.codecov }}
+      ANALYSIS: ${{ matrix.analysis }}
     timeout-minutes: 180 # 3h
     steps:
       - uses: actions/checkout@v3
