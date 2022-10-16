@@ -8,7 +8,12 @@ then
   ./bin/build-cling "${cling_dir}"
 fi
 
-./bin/configure -GNinja -Djank_tests=on -Djank_analysis="${ANALYSIS:-off}" -Dcling_dir="${cling_dir}/builddir" "$@"
+./bin/configure -GNinja \
+                -Djank_tests=on \
+                -Djank_analysis="${ANALYSIS:-off}" \
+                -Djank_cling_build_dir="${cling_dir}/builddir" \
+                -Djank_llvm_root="${cling_dir}/builddir" \
+                "$@"
 ./bin/compile
 
 if [[ "${CODECOV:-off}" == "on" ]];

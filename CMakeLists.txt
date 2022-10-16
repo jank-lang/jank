@@ -78,17 +78,22 @@ if(jank_build_cling)
     COMMAND_ERROR_IS_FATAL ANY
   )
   set(jank_cling_build_dir "${CMAKE_CURRENT_BINARY_DIR}/cling-build/builddir")
+  set(jank_llvm_root "${CMAKE_CURRENT_BINARY_DIR}/cling-build/builddir")
 endif()
 
 find_package(LLVM REQUIRED HINTS "${jank_cling_build_dir}/lib/cmake/llvm")
 find_package(Clang REQUIRED CONFIG HINTS "${jank_cling_build_dir}/lib/cmake/clang" NO_DEFAULT_PATH)
-find_package(Cling REQUIRED HINTS "${jank_cling_build_dir}/lib/cmake/cling")
+find_package(Cling REQUIRED HINTS "${jank_cling_build_dir}/tools/cling/lib/cmake/cling")
 
 # This can be set manually if we're using an external Cling, but, if it's not set,
 # we can assume we're using our own Cling and default to a sane value.
-if(NOT jank_build_cling)
+if(NOT jank_build_cling AND NOT jank_llvm_root)
   set(jank_llvm_root ${LLVM_BINARY_DIR})
 endif()
+
+# Cling 0.8 doesn't install sanely, compared to master, so we need to set some things up ourselves.
+# See bin/build-cling for more details.
+list(APPEND CLING_INCLUDE_DIRS "${jank_cling_build_dir}/../cling-src/tools/cling/include")
 
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
