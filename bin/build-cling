@@ -3,8 +3,17 @@
 set -xeuo pipefail
 
 cpt=
-build_dir="${1:-./cling-build}"
+cling_dir="${1:-./cling-build}"
 cling_branch=v0.8
+
+# Ensure cling_dir is absolute.
+case "${cling_dir}" in
+  /*)
+    ;;
+  *)
+    cling_dir="$PWD/${cling_dir}"
+    ;;
+esac
 
 function fetch_cpt
 {
@@ -15,11 +24,11 @@ function fetch_cpt
   cpt="${tmp}"
 }
 
-function build_default
+function build_cling
 {
   "${cpt}" -y \
            --create-dev-env=Release \
-           --with-workdir="${build_dir}" \
+           --with-workdir="${cling_dir}" \
            --allow-dirty \
            --with-cling-branch="${cling_branch}" \
            --no-test \
@@ -35,11 +44,11 @@ function build_default
   local tmp_cling_config
   tmp_cling_config="$(mktemp)"
   # Not every platform supports sed -i and we can't expect sponge to be installed.
-  sed "s#\${CMAKE_CURRENT_LIST_DIR}#\${CMAKE_CURRENT_BINARY_DIR}/${build_dir}/builddir/lib/cmake/cling#" \
-      < "${build_dir}"/builddir/tools/cling/lib/cmake/cling/ClingConfig.cmake \
+  sed "s#\${CMAKE_CURRENT_LIST_DIR}#\${cling_dir}/builddir/lib/cmake/cling#" \
+      < "${cling_dir}"/builddir/tools/cling/lib/cmake/cling/ClingConfig.cmake \
       > "${tmp_cling_config}"
-  mv -f "${tmp_cling_config}" "${build_dir}"/builddir/tools/cling/lib/cmake/cling/ClingConfig.cmake
+  mv -f "${tmp_cling_config}" "${cling_dir}"/builddir/tools/cling/lib/cmake/cling/ClingConfig.cmake
 }
 
 fetch_cpt
-build_default
+build_cling
