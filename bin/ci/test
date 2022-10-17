@@ -1,4 +1,4 @@
-#/usr/bin/env bash
+#!/usr/bin/env bash
 
 set -eu
 
@@ -22,7 +22,7 @@ then
   LLVM_PROFILE_FILE=build/test.profraw ./bin/test
   llvm-profdata-14 merge --sparse build/test.profraw -o build/test.profdata
   llvm-cov-14 show ./build/jank-test --instr-profile build/test.profdata > coverage.txt
-  bash <(curl -s https://codecov.io/bash) -f coverage.txt
+  bash <(curl -s https://codecov.io/bash || true) -f coverage.txt
 else
   ./bin/test
 fi

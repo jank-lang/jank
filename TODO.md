@@ -6,7 +6,6 @@
 * scan-build
   * `analyze-build --cdb build/compile_commands.json --use-analyzer clang++ --output scan-output`
 * sanitizer during tests
-* shellcheck for all scripts
 
 # HM type system
 * http://www.mpprogramming.com/cpp/Default.aspx

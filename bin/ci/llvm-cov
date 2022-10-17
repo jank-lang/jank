@@ -1,2 +1,3 @@
 #!/usr/bin/env sh
-exec "llvm-cov" gcov $@
+
+exec "llvm-cov" gcov "$@"

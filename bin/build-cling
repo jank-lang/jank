@@ -11,7 +11,7 @@ case "${cling_dir}" in
   /*)
     ;;
   *)
-    cling_dir="$PWD/${cling_dir}"
+    cling_dir="${PWD}/${cling_dir}"
     ;;
 esac
 
@@ -32,7 +32,7 @@ function build_cling
            --allow-dirty \
            --with-cling-branch="${cling_branch}" \
            --no-test \
-           $@
+           "$@"
 
   # With Cling 0.8 (not with master), Cling's CMake files don't work when compiling from
   # another CMake project. In particular, ClingConfig.cmake tries to include
@@ -51,4 +51,4 @@ function build_cling
 }
 
 fetch_cpt
-build_cling
+build_cling "$@"
