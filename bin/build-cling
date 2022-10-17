@@ -31,8 +31,7 @@ function build_cling
            --with-workdir="${cling_dir}" \
            --allow-dirty \
            --with-cling-branch="${cling_branch}" \
-           --no-test \
-           "$@"
+           --no-test
 
   # With Cling 0.8 (not with master), Cling's CMake files don't work when compiling from
   # another CMake project. In particular, ClingConfig.cmake tries to include
@@ -51,4 +50,4 @@ function build_cling
 }
 
 fetch_cpt
-build_cling "$@"
+build_cling
