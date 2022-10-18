@@ -41,6 +41,6 @@ int main(int const argc, char const **argv)
   jank::codegen::processor cg_prc{ rt_ctx, an_ctx, an_prc.begin(an_ctx), an_prc.end(an_ctx), an_prc.total_forms };
   //std::cout << cg_prc.str() << std::endl;
 
-  jank::jit::processor jit_prc{ rt_ctx };
-  jit_prc.eval(cg_prc);
+  jank::jit::processor jit_prc;
+  jit_prc.eval(rt_ctx, cg_prc);
 }

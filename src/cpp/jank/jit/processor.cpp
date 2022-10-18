@@ -10,8 +10,7 @@
 
 namespace jank::jit
 {
-  processor::processor(runtime::context &rt_ctx)
-    : rt_ctx{ rt_ctx }
+  processor::processor()
   {
     /* TODO: Store initial state during install and load it on each use. */
     auto const jank_location(jank::util::process_location().unwrap().parent_path());
@@ -28,6 +27,6 @@ namespace jank::jit
     interpreter->loadHeader("jank/prelude.hpp");
   }
 
-  void processor::eval(codegen::processor const &cg_prc) const
+  void processor::eval(runtime::context &, codegen::processor const &cg_prc) const
   { interpreter->process(cg_prc.str()); }
 }

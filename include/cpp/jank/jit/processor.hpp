@@ -12,12 +12,10 @@ namespace jank::jit
 {
   struct processor
   {
-    processor() = delete;
-    processor(runtime::context &rt_ctx);
+    processor();
 
-    void eval(codegen::processor const &cg_prc) const;
+    void eval(runtime::context &rt_ctx, codegen::processor const &cg_prc) const;
 
-    runtime::context &rt_ctx;
     std::unique_ptr<cling::Interpreter> interpreter;
   };
 }
