@@ -18,7 +18,12 @@ fi
 
 if [[ "${CODECOV:-off}" == "on" ]];
 then
-  ./bin/configure -GNinja -Djank_tests=on -Djank_coverage=on -Dcling_dir="${cling_dir}/builddir" "$@"
+  ./bin/configure -GNinja \
+                  -Djank_tests=on \
+                  -Djank_coverage=on \
+                  -Djank_cling_build_dir="${cling_dir}/builddir" \
+                  -Djank_llvm_root="${cling_dir}/builddir" \
+                  "$@"
   LLVM_PROFILE_FILE=build/test.profraw ./bin/test
   llvm-profdata-14 merge --sparse build/test.profraw -o build/test.profdata
   llvm-cov-14 show ./build/jank-test --instr-profile build/test.profdata > coverage.txt
