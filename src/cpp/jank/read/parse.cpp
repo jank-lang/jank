@@ -83,8 +83,13 @@ namespace jank::read::parse
         case lex::token_kind::string:
           return parse_string();
         case lex::token_kind::eof:
+          return ok(nullptr);
         default:
-          return err(error{ token.pos, std::string{ "unexpected character" } });
+        {
+          std::string msg{ "unexpected token kind: " };
+          msg += magic_enum::enum_name(token.kind);
+          return err(error{ token.pos, msg });
+        }
       }
     }
   }

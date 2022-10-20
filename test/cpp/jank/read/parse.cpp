@@ -66,11 +66,15 @@ namespace jank::read::parse
 
   TEST_CASE("Comments")
   {
-    lex::processor lp{ ";meow \n1234 ; bar\n;" };
+    lex::processor lp{ ";meow \n1234 ; bar\n;\n\n" };
     processor p{ lp.begin(), lp.end() };
-    auto const r(p.next());
-    CHECK(r.is_ok());
-    CHECK(r.expect_ok()->equal(runtime::obj::integer{ 1234 }));
+    auto const i(p.next());
+    CHECK(i.is_ok());
+    CHECK(i.expect_ok()->equal(runtime::obj::integer{ 1234 }));
+
+    auto const eof(p.next());
+    CHECK(eof.is_ok());
+    CHECK(eof.expect_ok() == nullptr);
   }
 
   TEST_CASE("Real")
