@@ -574,9 +574,9 @@ namespace jank::read::lex
 
     SUBCASE("With other symbols")
     {
-      processor p{ "abc_.123/-foo+?" };
+      processor p{ "abc_.123/-foo+?=" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 15, token_kind::symbol, "abc_.123/-foo+?"sv }}));
+      CHECK(tokens == make_tokens({{ 0, 16, token_kind::symbol, "abc_.123/-foo+?="sv }}));
     }
 
     SUBCASE("Only -")
@@ -647,9 +647,9 @@ namespace jank::read::lex
 
     SUBCASE("With other symbols")
     {
-      processor p{ ":abc_.123/-foo+?" };
+      processor p{ ":abc_.123/-foo+?=" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 16, token_kind::keyword, "abc_.123/-foo+?"sv }}));
+      CHECK(tokens == make_tokens({{ 0, 17, token_kind::keyword, "abc_.123/-foo+?="sv }}));
     }
 
     SUBCASE("Auto-resolved unqualified")
