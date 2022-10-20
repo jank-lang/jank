@@ -5,5 +5,9 @@
 (def -)
 (def *)
 (def /)
+(def =)
 
 (def println)
+
+; TODO: This should be a macro.
+(def assert)

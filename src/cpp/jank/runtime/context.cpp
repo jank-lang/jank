@@ -1,9 +1,12 @@
+#include <exception>
+
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/function.hpp>
 #include <jank/runtime/obj/string.hpp>
 #include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/util.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/util/mapped_file.hpp>
 
@@ -54,8 +57,25 @@ namespace jank::runtime
     intern_var(println_sym).expect_ok()->set_root(obj::function::create(println_fn));
 
     /* TODO: Remove this once it can be defined in jank. */
+    auto const assert_sym(obj::symbol::create("clojure.core/assert"));
+    std::function<object_ptr (object_ptr const&)> assert_fn
+    (
+      [](object_ptr const &o)
+      {
+        if(!o || !detail::truthy(o))
+        { throw std::runtime_error{ "assertion failed" }; }
+        return JANK_NIL;
+      }
+    );
+    intern_var(assert_sym).expect_ok()->set_root(obj::function::create(assert_fn));
+
+    /* TODO: Remove this once it can be defined in jank. */
     auto const plus_sym(obj::symbol::create("clojure.core/+"));
     intern_var(plus_sym).expect_ok()->set_root(obj::function::create(&obj::_gen_plus_));
+
+    /* TODO: Remove this once it can be defined in jank. */
+    auto const equal_sym(obj::symbol::create("clojure.core/="));
+    intern_var(equal_sym).expect_ok()->set_root(obj::function::create(&_gen_equal_));
   }
 
   option<var_ptr> context::find_var(obj::symbol_ptr const &sym)

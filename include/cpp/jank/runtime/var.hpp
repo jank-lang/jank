@@ -19,13 +19,8 @@ namespace jank::runtime
   {
     var(var const&) = default;
     var(var &&) noexcept = default;
-    /* TODO: Move to cpp */
-    var(ns_ptr const &n, obj::symbol_ptr const &s)
-      : n{ n }, name{ s }
-    { }
-    var(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr const &o)
-      : n{ n }, name{ s }, root{ o }
-    { }
+    var(ns_ptr const &n, obj::symbol_ptr const &s);
+    var(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr const &o);
 
     static detail::box_type<var> create(ns_ptr const &n, obj::symbol_ptr const &s);
     static detail::box_type<var> create(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr const &root);
@@ -39,7 +34,7 @@ namespace jank::runtime
     bool operator ==(var const &rhs) const;
 
     object_ptr get_root() const;
-    void set_root(object_ptr const &r);
+    detail::box_type<var> set_root(object_ptr const &r);
 
     ns_ptr n;
     /* TODO: Make sure this gets fully qualified. */

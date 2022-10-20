@@ -152,6 +152,9 @@ namespace jank::runtime
       { owner_pool->free(static_cast<T*>(this)); }
     }
 
+    boost::intrusive_ptr<T> ptr_from_this()
+    { return { static_cast<T*>(this), true }; }
+
     pool<T> *owner_pool{};
     size_t reference_count{};
   };

@@ -4,6 +4,13 @@
 
 namespace jank::runtime
 {
+  var::var(ns_ptr const &n, obj::symbol_ptr const &s)
+    : n{ n }, name{ s }
+  { }
+  var::var(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr const &o)
+    : n{ n }, name{ s }, root{ o }
+  { }
+
   /* TODO: If ns already has var, don't make a new one. */
   detail::box_type<var> var::create(ns_ptr const &n, obj::symbol_ptr const &s)
   { return make_box<var>(n, s); }
@@ -32,6 +39,9 @@ namespace jank::runtime
   object_ptr var::get_root() const
   { return *root.rlock(); }
 
-  void var::set_root(object_ptr const &r)
-  { *root.wlock() = r; }
+  var_ptr var::set_root(object_ptr const &r)
+  {
+    *root.wlock() = r;
+    return ptr_from_this();
+  }
 }

@@ -218,6 +218,7 @@ if(jank_tests)
     test/cpp/jank/analyze/expr/primitive_literal.cpp
     test/cpp/jank/analyze/expr/map.cpp
     test/cpp/jank/evaluate/context.cpp
+    test/cpp/jank/jit/processor.cpp
   )
   add_executable(jank::test_exe ALIAS jank_test_exe)
 
@@ -227,8 +228,19 @@ if(jank_tests)
   target_compile_options(jank_test_exe PRIVATE ${jank_compiler_flags})
   target_link_options(jank_test_exe PRIVATE ${jank_linker_flags})
 
+  target_include_directories(jank_test_exe SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
+  target_include_directories(jank_test_exe SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
+  target_include_directories(jank_test_exe SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
+  target_include_directories(jank_test_exe SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
+
   find_package(doctest REQUIRED)
   target_link_libraries(jank_test_exe PRIVATE jank_lib doctest::doctest)
+
+# Symbol exporting for JIT.
+  set_target_properties(jank_test_exe PROPERTIES ENABLE_EXPORTS 1)
+  if(MSVC)
+    set_target_properties(jank_test_exe PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
+  endif()
 
   add_test(NAME "Test" COMMAND jank_test_exe)
 endif()
