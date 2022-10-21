@@ -43,7 +43,7 @@ else()
   )
   set(jank_linker_flags "")
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    list(APPEND jank_compiler_flags -w -Werror)
+    list(APPEND jank_compiler_flags -Werror)
   endif()
 endif()
 
