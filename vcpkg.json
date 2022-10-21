@@ -5,7 +5,8 @@
     "immer",
     "folly",
     "boost-smart-ptr",
-    "magic-enum"
+    "magic-enum",
+    "fmt"
   ],
   "default-features": [],
   "features": {
