@@ -15,6 +15,7 @@ mkShell
     gcovr
     lcov
     git
+    shellcheck
   ];
   shellHook =
   ''
