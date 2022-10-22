@@ -26,7 +26,7 @@ namespace jank::codegen
         format_to
         (
           inserter,
-          "jank::runtime::make_box<jank::runtime::obj::symbol>(\"{}\", \"{}\")",
+          R"(jank::runtime::make_box<jank::runtime::obj::symbol>("{}", "{}"))",
           d->ns,
           d->name
         );
@@ -36,7 +36,7 @@ namespace jank::codegen
         format_to
         (
           inserter,
-          "rt_ctx.intern_keyword(\"{}\", \"{}\", {})",
+          R"(rt_ctx.intern_keyword("{}", "{}", {}))",
           d->sym.ns,
           d->sym.name,
           d->resolved
@@ -227,7 +227,7 @@ namespace jank::codegen
       format_to
       (
         inserter,
-        "{0}{1}{{ rt_ctx.intern_var(\"{2}\", \"{3}\").expect_ok() }}",
+        R"({0}{1}{{ rt_ctx.intern_var("{2}", "{3}").expect_ok() }})",
         (need_comma ? "," : ""),
         v.second.local_name.name,
         v.second.var_name->ns,
@@ -258,7 +258,7 @@ namespace jank::codegen
     auto inserter(std::back_inserter(body_buffer));
     format_to(inserter, "jank::runtime::object_ptr call() {{");
 
-    for(auto it(expressions.begin()); it != expressions.end(); ++it)
+    for(auto const * it(expressions.begin()); it != expressions.end(); ++it)
     {
       if(it + 1 == expressions.end())
       { format_to(inserter, "return "); }

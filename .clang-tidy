@@ -15,6 +15,7 @@ readability-*,\
 -cppcoreguidelines-pro-type-reinterpret-cast,\
 -cppcoreguidelines-special-member-functions,\
 -cppcoreguidelines-pro-type-union-access,\
+-cppcoreguidelines-pro-bounds-pointer-arithmetic,\
 -bugprone-easily-swappable-parameters,\
 -bugprone-reserved-identifier,\
 -readability-implicit-bool-conversion,\
