@@ -51,7 +51,8 @@ namespace jank::jit
 
       jank::jit::processor jit_prc;
       auto const result(jit_prc.eval(rt_ctx, cg_prc));
-      CHECK(result->equal(cardinal_result));
+      CHECK(result.is_ok());
+      CHECK(result.expect_ok()->equal(cardinal_result));
     }
   }
 }

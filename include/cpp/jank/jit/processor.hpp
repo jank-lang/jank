@@ -2,6 +2,9 @@
 
 #include <memory>
 
+#include <folly/FBString.h>
+
+#include <jank/result.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/codegen/processor.hpp>
 
@@ -14,7 +17,7 @@ namespace jank::jit
   {
     processor();
 
-    runtime::object_ptr eval(runtime::context &rt_ctx, codegen::processor &cg_prc) const;
+    result<runtime::object_ptr, folly::fbstring> eval(runtime::context &rt_ctx, codegen::processor &cg_prc) const;
 
     std::unique_ptr<cling::Interpreter> interpreter;
   };

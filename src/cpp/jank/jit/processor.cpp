@@ -27,11 +27,13 @@ namespace jank::jit
     interpreter->loadHeader("jank/prelude.hpp");
   }
 
-  runtime::object_ptr processor::eval(runtime::context &, codegen::processor &cg_prc) const
+  result<runtime::object_ptr, folly::fbstring>  processor::eval(runtime::context &, codegen::processor &cg_prc) const
   {
     interpreter->process(cg_prc.declaration_str());
     cling::Value v;
-    interpreter->evaluate(cg_prc.expression_str(), v);
-    return *v.simplisticCastAs<runtime::object_ptr*>();
+    auto const result(interpreter->evaluate(cg_prc.expression_str(), v));
+    if(result != cling::Interpreter::CompilationResult::kSuccess)
+    { return err("compilation error"); }
+    return ok(*v.simplisticCastAs<runtime::object_ptr*>());
   }
 }
