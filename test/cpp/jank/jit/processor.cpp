@@ -1,5 +1,7 @@
 #include <filesystem>
 
+#include <boost/algorithm/string/predicate.hpp>
+
 #include <jank/util/mapped_file.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
@@ -34,6 +36,9 @@ namespace jank::jit
       if(!dir_entry.is_regular_file())
       { continue; }
 
+      auto const expect_success
+      (boost::algorithm::starts_with(dir_entry.path().filename().string(), "pass_"));
+
       //std::cout << "testing " << dir_entry << std::endl;
 
       jank::runtime::context rt_ctx;
@@ -49,10 +54,16 @@ namespace jank::jit
       { rt_ctx, an_ctx, an_prc.begin(an_ctx), an_prc.end(an_ctx), an_prc.total_forms };
       //std::cout << cg_prc.str() << std::endl;
 
-      jank::jit::processor jit_prc;
-      auto const result(jit_prc.eval(rt_ctx, cg_prc));
-      CHECK(result.is_ok());
-      CHECK(result.expect_ok()->equal(cardinal_result));
+      try
+      {
+        jank::jit::processor jit_prc;
+        auto const result(jit_prc.eval(rt_ctx, cg_prc));
+        CHECK_MESSAGE(expect_success, "Test passed when a failure was expected: ", dir_entry);
+        CHECK(result.is_ok());
+        CHECK(result.expect_ok()->equal(cardinal_result));
+      }
+      catch(...)
+      { CHECK(!expect_success); }
     }
   }
 }
