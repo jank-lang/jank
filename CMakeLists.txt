@@ -83,7 +83,11 @@ endif()
 
 find_package(LLVM REQUIRED HINTS "${jank_cling_build_dir}/lib/cmake/llvm")
 find_package(Clang REQUIRED CONFIG HINTS "${jank_cling_build_dir}/lib/cmake/clang" NO_DEFAULT_PATH)
-find_package(Cling REQUIRED HINTS "${jank_cling_build_dir}/tools/cling/lib/cmake/cling")
+find_package(
+  Cling REQUIRED
+  HINTS "${jank_cling_build_dir}/tools/cling/lib/cmake/cling"
+        "${jank_cling_build_dir}/lib/cmake/cling"
+)
 
 # This can be set manually if we're using an external Cling, but, if it's not set,
 # we can assume we're using our own Cling and default to a sane value.
