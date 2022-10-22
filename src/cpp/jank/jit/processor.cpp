@@ -27,6 +27,11 @@ namespace jank::jit
     interpreter->loadHeader("jank/prelude.hpp");
   }
 
-  void processor::eval(runtime::context &, codegen::processor const &cg_prc) const
-  { interpreter->process(cg_prc.str()); }
+  runtime::object_ptr processor::eval(runtime::context &, codegen::processor &cg_prc) const
+  {
+    interpreter->process(cg_prc.declaration_str());
+    cling::Value v;
+    interpreter->evaluate(cg_prc.expression_str(), v);
+    return *v.simplisticCastAs<runtime::object_ptr*>();
+  }
 }

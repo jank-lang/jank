@@ -26,6 +26,9 @@ namespace jank::jit
 {
   TEST_CASE("Files")
   {
+    auto const cardinal_result
+    (runtime::obj::keyword::create(runtime::obj::symbol{ "", "success" }, true));
+
     for(auto const &dir_entry : std::filesystem::recursive_directory_iterator("test/jank"))
     {
       if(!dir_entry.is_regular_file())
@@ -47,9 +50,8 @@ namespace jank::jit
       //std::cout << cg_prc.str() << std::endl;
 
       jank::jit::processor jit_prc;
-      jit_prc.eval(rt_ctx, cg_prc);
-
-      /* TODO: Check that the result of each test is a cardinal value, so we know it finished. */
+      auto const result(jit_prc.eval(rt_ctx, cg_prc));
+      CHECK(result->equal(cardinal_result));
     }
   }
 }

@@ -12,7 +12,6 @@ mkShell
     # Dev tools.
     llvm # For clang-format
     entr
-    ccls
     gcovr
     lcov
     git

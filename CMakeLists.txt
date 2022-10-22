@@ -93,7 +93,9 @@ endif()
 
 # Cling 0.8 doesn't install sanely, compared to master, so we need to set some things up ourselves.
 # See bin/build-cling for more details.
-list(APPEND CLING_INCLUDE_DIRS "${jank_cling_build_dir}/../cling-src/tools/cling/include")
+if(jank_cling_build_dir)
+  list(APPEND CLING_INCLUDE_DIRS "${jank_cling_build_dir}/../cling-src/tools/cling/include")
+endif()
 
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})

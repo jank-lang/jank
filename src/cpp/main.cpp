@@ -39,7 +39,8 @@ int main(int const argc, char const **argv)
   jank::read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
   jank::analyze::processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
   jank::codegen::processor cg_prc{ rt_ctx, an_ctx, an_prc.begin(an_ctx), an_prc.end(an_ctx), an_prc.total_forms };
-  //std::cout << cg_prc.str() << std::endl;
+  //std::cout << cg_prc.declaration_str() << std::endl;
+  //std::cout << cg_prc.expression_str() << std::endl;
 
   jank::jit::processor jit_prc;
   jit_prc.eval(rt_ctx, cg_prc);

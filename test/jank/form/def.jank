@@ -21,5 +21,4 @@
 ; TODO: Ability to assert this.
 ;(assert (deref nested))
 
-; TODO: Return the constant to ensure the test ran fully.
-; "jank"
+:success
