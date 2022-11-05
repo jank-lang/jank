@@ -72,7 +72,7 @@ namespace jank::codegen
   void processor::gen(analyze::expr::def<analyze::expression> const &expr, bool const is_statement)
   {
     auto inserter(std::back_inserter(body_buffer));
-    auto const &var(an_ctx.find_lifted_var(expr.name).unwrap().get());
+    auto const &var(expr.frame->find_lifted_var(expr.name).unwrap().get());
 
     /* Forward declarations just intern the var and evaluate to it. */
     if(expr.value.is_none())
@@ -89,7 +89,7 @@ namespace jank::codegen
   void processor::gen(analyze::expr::var_deref<analyze::expression> const &expr, bool const is_statement)
   {
     auto inserter(std::back_inserter(body_buffer));
-    auto const &var(an_ctx.find_lifted_var(expr.qualified_name).unwrap().get());
+    auto const &var(expr.frame->find_lifted_var(expr.qualified_name).unwrap().get());
     format_to
     (
       inserter,
@@ -120,7 +120,7 @@ namespace jank::codegen
   void processor::gen(analyze::expr::primitive_literal<analyze::expression> const &expr, bool const is_statement)
   {
     auto inserter(std::back_inserter(body_buffer));
-    auto const &constant(an_ctx.find_lifted_constant(expr.data).unwrap().get());
+    auto const &constant(expr.frame->find_lifted_constant(expr.data).unwrap().get());
     format_to
     (
       inserter,
@@ -224,7 +224,7 @@ namespace jank::codegen
       )"
     );
 
-    for(auto const &v : an_ctx.tracked_refs.lifted_vars)
+    for(auto const &v : root_expression.frame->lifted_vars)
     {
       format_to
       (
@@ -233,7 +233,7 @@ namespace jank::codegen
       );
     }
 
-    for(auto const &v : an_ctx.tracked_refs.lifted_constants)
+    for(auto const &v : root_expression.frame->lifted_constants)
     {
       format_to
       (
@@ -242,7 +242,7 @@ namespace jank::codegen
       );
     }
 
-    for(auto const &v : root_expression.frame.captures)
+    for(auto const &v : root_expression.frame->captures)
     {
       format_to
       (
@@ -258,7 +258,7 @@ namespace jank::codegen
       "{0}(jank::runtime::context &rt_ctx", struct_name.name
     );
 
-    for(auto const &v : root_expression.frame.captures)
+    for(auto const &v : root_expression.frame->captures)
     {
       format_to
       (
@@ -269,11 +269,16 @@ namespace jank::codegen
 
     format_to(inserter, ")");
 
-    if(!an_ctx.tracked_refs.lifted_vars.empty() || !an_ctx.tracked_refs.lifted_constants.empty())
+    if
+    (
+      !root_expression.frame->lifted_vars.empty()
+      || !root_expression.frame->lifted_constants.empty()
+      || !root_expression.frame->captures.empty()
+    )
     { format_to(inserter, " : "); }
 
     bool need_member_init_comma{};
-    for(auto const &v : an_ctx.tracked_refs.lifted_vars)
+    for(auto const &v : root_expression.frame->lifted_vars)
     {
       format_to
       (
@@ -287,7 +292,7 @@ namespace jank::codegen
       need_member_init_comma = true;
     }
 
-    for(auto const &v : an_ctx.tracked_refs.lifted_constants)
+    for(auto const &v : root_expression.frame->lifted_constants)
     {
       format_to
       (
@@ -301,7 +306,7 @@ namespace jank::codegen
       need_member_init_comma = true;
     }
 
-    for(auto const &v : root_expression.frame.captures)
+    for(auto const &v : root_expression.frame->captures)
     {
       format_to
       (
@@ -368,7 +373,7 @@ namespace jank::codegen
           fmt::ptr(&rt_ctx)
         );
 
-        for(auto const &v : root_expression.frame.captures)
+        for(auto const &v : root_expression.frame->captures)
         { format_to(inserter, ", {0}", v.first->name); }
 
         format_to(inserter, "}};");
@@ -392,7 +397,7 @@ namespace jank::codegen
           fmt::ptr(&rt_ctx)
         );
 
-        for(auto const &v : root_expression.frame.captures)
+        for(auto const &v : root_expression.frame->captures)
         { format_to(inserter, ", {0}", v.first->name); }
 
         format_to(inserter, ")");

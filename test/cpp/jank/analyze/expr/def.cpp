@@ -51,10 +51,10 @@ namespace jank::analyze::expr
 
     SUBCASE("Lifting")
     {
-      CHECK_EQ(an_ctx.tracked_refs.lifted_vars.size(), 1);
-      CHECK_NE(an_ctx.tracked_refs.lifted_vars.find(runtime::obj::symbol::create("clojure.core", "foo")), an_ctx.tracked_refs.lifted_vars.end());
-      CHECK_EQ(an_ctx.tracked_refs.lifted_constants.size(), 1);
-      CHECK_NE(an_ctx.tracked_refs.lifted_constants.find(runtime::obj::integer::create(777)), an_ctx.tracked_refs.lifted_constants.end());
+      CHECK_EQ(def_expr->frame->lifted_vars.size(), 1);
+      CHECK_NE(def_expr->frame->lifted_vars.find(runtime::obj::symbol::create("clojure.core", "foo")), def_expr->frame->lifted_vars.end());
+      CHECK_EQ(def_expr->frame->lifted_constants.size(), 1);
+      CHECK_NE(def_expr->frame->lifted_constants.find(runtime::obj::integer::create(777)), def_expr->frame->lifted_constants.end());
     }
   }
 

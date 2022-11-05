@@ -1,5 +1,6 @@
 #include <functional>
 
+#include <jank/analyze/processor.hpp>
 #include <jank/analyze/local_frame.hpp>
 
 namespace jank::analyze
@@ -7,9 +8,9 @@ namespace jank::analyze
   local_frame::local_frame
   (
     frame_type const &type,
-    runtime::context &ctx,
-    option<std::reference_wrapper<local_frame>> const &p
-  ) : type{ type }, parent{ p }, runtime_ctx{ ctx }
+    runtime::context &rt_ctx,
+    option<std::shared_ptr<local_frame>> const &p
+  ) : type{ type }, parent{ p }, rt_ctx{ rt_ctx }
   { }
 
   local_frame& local_frame::operator=(local_frame const &rhs)
@@ -35,11 +36,11 @@ namespace jank::analyze
     return *this;
   }
 
-  option<local_frame::find_result> local_frame::find(runtime::obj::symbol_ptr const &sym)
+  option<local_frame::find_result> local_frame::find_capture(runtime::obj::symbol_ptr const &sym)
   {
     decltype(local_frame::find_result::crossed_fns) crossed_fns;
 
-    for(local_frame *it{ this }; it != nullptr; )
+    for(local_frame_ptr it{ shared_from_this() }; it != nullptr; )
     {
       auto const result(it->locals.find(sym));
       if(result != it->locals.end())
@@ -47,8 +48,8 @@ namespace jank::analyze
       else if(it->parent.is_some())
       {
         if(it->type == frame_type::fn)
-        { crossed_fns.emplace_back(*it); }
-        it = &it->parent.unwrap().get();
+        { crossed_fns.emplace_back(it); }
+        it = it->parent.unwrap();
       }
       else
       { return none; }
@@ -60,6 +61,67 @@ namespace jank::analyze
   void local_frame::register_captures(find_result const &result)
   {
     for(auto const &crossed_fn : result.crossed_fns)
-    { crossed_fn.get().captures.emplace(result.binding.name, result.binding); }
+    { crossed_fn->captures.emplace(result.binding.name, result.binding); }
+  }
+
+  local_frame const& find_closest_fn_frame(local_frame const &frame)
+  {
+    if(frame.type == local_frame::frame_type::fn)
+    { return frame; }
+    else if(frame.parent.is_some())
+    { return find_closest_fn_frame(*frame.parent.unwrap()); }
+
+    __builtin_unreachable();
+  }
+  local_frame& find_closest_fn_frame(local_frame &frame)
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast): Avoiding duplication.
+  { return const_cast<local_frame&>(find_closest_fn_frame(std::as_const(frame))); }
+
+  runtime::obj::symbol_ptr local_frame::lift_var(runtime::obj::symbol_ptr const &sym)
+  {
+    auto &closest_fn(find_closest_fn_frame(*this));
+    auto const &found(closest_fn.lifted_vars.find(sym));
+    if(found != closest_fn.lifted_vars.end())
+    { return found->first; }
+
+    auto qualified_sym(runtime::make_box<runtime::obj::symbol>(*sym));
+    if(qualified_sym->ns.empty())
+    {
+      auto const state(rt_ctx.get_thread_state());
+      qualified_sym->ns = state.current_ns->get_root()->as_ns()->name->name;
+    }
+    lifted_var lv{ analyze::context::unique_name("var"), qualified_sym };
+    closest_fn.lifted_vars.emplace(qualified_sym, std::move(lv));
+    return qualified_sym;
+  }
+
+  option<std::reference_wrapper<lifted_var const>> local_frame::find_lifted_var
+  (runtime::obj::symbol_ptr const &sym) const
+  {
+    auto const &closest_fn(find_closest_fn_frame(*this));
+    auto const &found(closest_fn.lifted_vars.find(sym));
+    if(found != closest_fn.lifted_vars.end())
+    { return some(std::ref(found->second)); }
+    return none;
+  }
+
+  void local_frame::lift_constant(runtime::object_ptr const &constant)
+  {
+    auto &closest_fn(find_closest_fn_frame(*this));
+    auto const &found(closest_fn.lifted_constants.find(constant));
+    if(found != closest_fn.lifted_constants.end())
+    { return; }
+    lifted_constant l{ analyze::context::unique_name("const"), constant };
+    closest_fn.lifted_constants.emplace(constant, std::move(l));
+  }
+
+  option<std::reference_wrapper<lifted_constant const>> local_frame::find_lifted_constant
+  (runtime::object_ptr const &o) const
+  {
+    auto const &closest_fn(find_closest_fn_frame(*this));
+    auto const &found(closest_fn.lifted_constants.find(o));
+    if(found != closest_fn.lifted_constants.end())
+    { return some(std::ref(found->second)); }
+    return none;
   }
 }

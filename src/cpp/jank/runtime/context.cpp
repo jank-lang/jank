@@ -125,7 +125,6 @@ namespace jank::runtime
   {
     /* TODO: Know the location of this in any installation. */
     eval_file("src/jank/clojure/core.jank", an_ctx);
-    an_ctx.clear_tracking();
   }
 
   object_ptr context::eval_file(std::string_view const &path, analyze::context &an_ctx)

@@ -14,6 +14,6 @@ namespace jank::analyze::expr
   {
     std::vector<runtime::obj::symbol_ptr> params;
     do_<E> body;
-    local_frame frame;
+    local_frame_ptr frame;
   };
 }

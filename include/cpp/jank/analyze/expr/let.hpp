@@ -15,6 +15,6 @@ namespace jank::analyze::expr
     /* Stable references. */
     std::list<pair_type> pairs;
     do_<E> body;
-    local_frame frame;
+    local_frame_ptr frame;
   };
 }

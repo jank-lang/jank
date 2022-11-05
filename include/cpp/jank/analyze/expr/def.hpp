@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <jank/runtime/obj/symbol.hpp>
+#include <jank/analyze/local_frame.hpp>
 #include <jank/option.hpp>
 
 namespace jank::analyze::expr
@@ -12,6 +13,7 @@ namespace jank::analyze::expr
   {
     runtime::obj::symbol_ptr name;
     option<std::shared_ptr<E>> value;
+    local_frame_ptr frame;
     /* TODO: Keep track of whether this is a redefinition. Maybe keep the existing var. */
   };
 }

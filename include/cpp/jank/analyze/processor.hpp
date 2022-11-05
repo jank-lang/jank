@@ -15,24 +15,6 @@
 
 namespace jank::analyze
 {
-  struct lifted_var
-  {
-    runtime::obj::symbol local_name;
-    runtime::obj::symbol_ptr var_name;
-  };
-
-  struct lifted_constant
-  {
-    runtime::obj::symbol local_name;
-    runtime::object_ptr data;
-  };
-
-  struct tracked_references
-  {
-    std::unordered_map<runtime::obj::symbol_ptr, lifted_var> lifted_vars;
-    std::unordered_map<runtime::object_ptr, lifted_constant> lifted_constants;
-  };
-
   enum class source_type
   {
     repl,
@@ -48,12 +30,7 @@ namespace jank::analyze
 
     option<std::pair<runtime::obj::symbol_ptr, option<expression_ptr>>> find_var
     (runtime::obj::symbol_ptr const &qualified_sym) const;
-    runtime::obj::symbol_ptr lift_var(runtime::obj::symbol_ptr const &);
-    option<std::reference_wrapper<lifted_var>> find_lifted_var(runtime::obj::symbol_ptr const &);
-    void lift_constant(runtime::object_ptr const &);
-    option<std::reference_wrapper<lifted_constant>> find_lifted_constant(runtime::object_ptr const &);
 
-    void clear_tracking();
     void dump() const;
 
     /* Generates a unique name for use with anything from codgen structs,
@@ -65,9 +42,6 @@ namespace jank::analyze
     /* These accumulate the whole lifetime of the program. */
     runtime::context &rt_ctx;
     std::unordered_map<runtime::obj::symbol_ptr, option<expression_ptr>> vars;
-
-    /* These are all per-form and are wiped often. */
-    tracked_references tracked_refs;
   };
 
   using error = read::error;
@@ -90,24 +64,24 @@ namespace jank::analyze
     expression_result result(context &ctx);
 
     expression_result analyze(runtime::object_ptr const &, context &);
-    expression_result analyze(runtime::object_ptr const &, local_frame &, context &);
-    expression_result analyze_call(runtime::obj::list_ptr const &, local_frame &, context &);
-    expression_result analyze_def(runtime::obj::list_ptr const &, local_frame &, context &);
-    expression_result analyze_symbol(runtime::obj::symbol_ptr const &, local_frame &, context &);
-    expression_result analyze_fn(runtime::obj::list_ptr const &, local_frame &, context &);
-    expression_result analyze_let(runtime::obj::list_ptr const &, local_frame &, context &);
-    expression_result analyze_if(runtime::obj::list_ptr const &, local_frame &, context &);
-    expression_result analyze_quote(runtime::obj::list_ptr const &, local_frame &, context &);
-    expression_result analyze_primitive_literal(runtime::object_ptr const &, local_frame &, context &);
-    expression_result analyze_vector(runtime::obj::vector_ptr const &, local_frame &, context &);
-    expression_result analyze_map(runtime::obj::map_ptr const &, local_frame &, context &);
+    expression_result analyze(runtime::object_ptr const &, local_frame_ptr &, context &);
+    expression_result analyze_call(runtime::obj::list_ptr const &, local_frame_ptr &, context &);
+    expression_result analyze_def(runtime::obj::list_ptr const &, local_frame_ptr &, context &);
+    expression_result analyze_symbol(runtime::obj::symbol_ptr const &, local_frame_ptr &, context &);
+    expression_result analyze_fn(runtime::obj::list_ptr const &, local_frame_ptr &, context &);
+    expression_result analyze_let(runtime::obj::list_ptr const &, local_frame_ptr &, context &);
+    expression_result analyze_if(runtime::obj::list_ptr const &, local_frame_ptr &, context &);
+    expression_result analyze_quote(runtime::obj::list_ptr const &, local_frame_ptr &, context &);
+    expression_result analyze_primitive_literal(runtime::object_ptr const &, local_frame_ptr &, context &);
+    expression_result analyze_vector(runtime::obj::vector_ptr const &, local_frame_ptr &, context &);
+    expression_result analyze_map(runtime::obj::map_ptr const &, local_frame_ptr &, context &);
 
     using special_function_type = std::function
-    <expression_result (runtime::obj::list_ptr const &, local_frame &, context &)>;
+    <expression_result (runtime::obj::list_ptr const &, local_frame_ptr &, context &)>;
 
     std::unordered_map<runtime::obj::symbol_ptr, special_function_type> specials;
     runtime::context &rt_ctx;
-    local_frame root_frame;
+    local_frame_ptr root_frame;
     read::parse::processor::iterator parse_current, parse_end;
   };
 }

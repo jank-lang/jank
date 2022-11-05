@@ -12,13 +12,25 @@ namespace jank::analyze
 {
   struct expression;
 
+  struct lifted_var
+  {
+    runtime::obj::symbol local_name;
+    runtime::obj::symbol_ptr var_name;
+  };
+
+  struct lifted_constant
+  {
+    runtime::obj::symbol local_name;
+    runtime::object_ptr data;
+  };
+
   struct local_binding
   {
     runtime::obj::symbol_ptr name;
     option<std::reference_wrapper<expression>> value_expr;
   };
 
-  struct local_frame
+  struct local_frame : std::enable_shared_from_this<local_frame>
   {
     enum class frame_type
     {
@@ -34,7 +46,7 @@ namespace jank::analyze
     (
       frame_type const &type,
       runtime::context &ctx,
-      option<std::reference_wrapper<local_frame>> const &p
+      option<std::shared_ptr<local_frame>> const &p
     );
 
     local_frame& operator=(local_frame const &rhs);
@@ -45,17 +57,29 @@ namespace jank::analyze
     struct find_result
     {
       local_binding &binding;
-      folly::fbvector<std::reference_wrapper<local_frame>> crossed_fns;
+      folly::fbvector<std::shared_ptr<local_frame>> crossed_fns;
     };
 
-    option<find_result> find(runtime::obj::symbol_ptr const &sym);
-
+    /* This is used to find both captures and regular locals, since it's
+     * impossible to know which one a sym is without finding it. */
+    option<find_result> find_capture(runtime::obj::symbol_ptr const &sym);
     static void register_captures(find_result const &result);
 
+    runtime::obj::symbol_ptr lift_var(runtime::obj::symbol_ptr const &);
+    option<std::reference_wrapper<lifted_var const>> find_lifted_var
+    (runtime::obj::symbol_ptr const &) const;
+
+    void lift_constant(runtime::object_ptr const &);
+    option<std::reference_wrapper<lifted_constant const>> find_lifted_constant
+    (runtime::object_ptr const &) const;
+
     frame_type type;
-    option<std::reference_wrapper<local_frame>> parent;
+    option<std::shared_ptr<local_frame>> parent;
     std::unordered_map<runtime::obj::symbol_ptr, local_binding> locals;
     std::unordered_map<runtime::obj::symbol_ptr, local_binding> captures;
-    runtime::context &runtime_ctx;
+    std::unordered_map<runtime::obj::symbol_ptr, lifted_var> lifted_vars;
+    std::unordered_map<runtime::object_ptr, lifted_constant> lifted_constants;
+    runtime::context &rt_ctx;
   };
+  using local_frame_ptr = std::shared_ptr<local_frame>;
 }

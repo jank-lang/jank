@@ -19,7 +19,7 @@ namespace jank::analyze::expr
     auto const expr(boost::get<function<expression>>(fn_expr.data).body.body.front());
     auto const *typed_expr(boost::get<function<expression>>(&expr.data));
     CHECK(typed_expr != nullptr);
-    CHECK(typed_expr->frame.locals.empty());
+    CHECK(typed_expr->frame->locals.empty());
     CHECK(typed_expr->body.body.empty());
   }
 
@@ -38,7 +38,7 @@ namespace jank::analyze::expr
       auto const expr(boost::get<function<expression>>(fn_expr.data).body.body.front());
       auto const *typed_expr(boost::get<function<expression>>(&expr.data));
       CHECK(typed_expr != nullptr);
-      CHECK(typed_expr->frame.locals.size() == 2);
+      CHECK(typed_expr->frame->locals.size() == 2);
       CHECK(typed_expr->body.body.size() == 2);
     }
 
