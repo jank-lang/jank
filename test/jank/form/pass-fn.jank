@@ -1,0 +1,21 @@
+; Invoking right away.
+(assert (= ((fn* [] 1)) 1))
+(assert (= ((fn* [a] a) 1) 1))
+(assert (= ((fn* [a b] [a b]) 1 2) [1 2]))
+
+; Closures.
+(def add-n (fn* [n]
+             (fn* [x]
+               (+ x n))))
+(def add-10 (add-n 10))
+(assert (= (add-10 -5) 5))
+
+; Closures skipping a level.
+(def combine (fn* [n]
+               (fn* [] ; This will implicitly capture n as well.
+                 (fn* [x] ; This explicitly captures n.
+                   [n x]))))
+(def combine-20 ((combine 20)))
+(assert (= (combine-20 25) [20 25]))
+
+:success

@@ -15,7 +15,8 @@ namespace jank::analyze::expr
     context an_ctx{ rt_ctx };
     processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-    auto const expr(an_prc.next(an_ctx).expect_ok().unwrap());
+    auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
+    auto const expr(boost::get<function<expression>>(fn_expr.data).body.body.front());
     auto const *typed_expr(boost::get<primitive_literal<expression>>(&expr.data));
     CHECK(typed_expr != nullptr);
     CHECK(typed_expr->data != nullptr);

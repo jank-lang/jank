@@ -28,6 +28,11 @@ namespace jank::read::parse
   { return latest != rhs.latest; }
   bool processor::iterator::operator ==(processor::iterator const &rhs) const
   { return latest == rhs.latest; }
+  processor::iterator& processor::iterator::operator=(processor::iterator const &rhs)
+  {
+    latest = rhs.latest;
+    return *this;
+  }
 
   processor::processor(lex::processor::iterator const &b, lex::processor::iterator const &e)
     : token_current{ b }, token_end{ e }

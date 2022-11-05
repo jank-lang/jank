@@ -51,8 +51,8 @@ namespace jank::runtime::obj
   runtime::detail::string_type symbol::to_string() const
   {
     if(ns.length > 0)
-    { return "symbol(" + ns + "/" + name + ")"; }
-    return "symbol(" + name + ")";
+    { return ns + "/" + name; }
+    return name;
   }
   runtime::detail::integer_type symbol::to_hash() const
   /* TODO: Cache this. */

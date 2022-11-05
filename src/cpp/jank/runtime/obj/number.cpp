@@ -7,6 +7,10 @@
 namespace jank::runtime::obj
 {
   /***** boolean *****/
+  boolean::boolean(runtime::detail::boolean_type const d)
+    : data{ d }
+  { }
+
   runtime::detail::boolean_type boolean::equal(object const &o) const
   {
     auto const *b(o.as_boolean());
@@ -24,6 +28,10 @@ namespace jank::runtime::obj
   { return this; }
 
   /***** integer *****/
+  integer::integer(runtime::detail::integer_type const d)
+    : data{ d }
+  { }
+
   runtime::detail::box_type<integer> integer::create(runtime::detail::integer_type const &n)
   { return make_box<integer>(n); }
   runtime::detail::boolean_type integer::equal(object const &o) const
@@ -49,6 +57,10 @@ namespace jank::runtime::obj
   { return this; }
 
   /***** real *****/
+  real::real(runtime::detail::real_type const d)
+    : data{ d }
+  { }
+
   runtime::detail::boolean_type real::equal(object const &o) const
   {
     auto const *r(o.as_real());

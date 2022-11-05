@@ -9,6 +9,8 @@
 #include <jank/runtime/util.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/util/mapped_file.hpp>
+#include <jank/codegen/processor.hpp>
+#include <jank/jit/processor.hpp>
 
 namespace jank::runtime
 {
@@ -136,14 +138,17 @@ namespace jank::runtime
   {
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-    analyze::processor an_prc{ *this, p_prc.begin(), p_prc.end() };
-    evaluate::context eval_ctx{ *this };
+    jank::analyze::processor an_prc
+    { *this, p_prc.begin(), p_prc.end() };
+    codegen::processor cg_prc
+    {
+      *this,
+      an_ctx,
+      an_prc.result(an_ctx).expect_ok_move().unwrap()
+    };
 
-    runtime::object_ptr result;
-    for(auto an_result(an_prc.begin(an_ctx)); an_result != an_prc.end(an_ctx); ++an_result)
-    /* TODO: Codegen and JIT. */
-    { result = eval_ctx.eval(an_result->expect_ok().unwrap()); }
-    return result;
+    jit::processor jit_prc;
+    return jit_prc.eval(*this, cg_prc).expect_ok().unwrap();
   }
 
   void context::dump() const
@@ -224,7 +229,7 @@ namespace jank::runtime
   }
 
   context::thread_state::thread_state(context &ctx)
-    : rt_ctx{ ctx }, eval_ctx{ ctx }
+    : rt_ctx{ ctx }
   { }
 
   context::thread_state& context::get_thread_state()

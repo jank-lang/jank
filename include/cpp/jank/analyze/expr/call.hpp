@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <jank/runtime/obj/function.hpp>
 #include <jank/runtime/obj/list.hpp>
 
@@ -9,7 +11,7 @@ namespace jank::analyze::expr
   struct call
   {
     /* Var, local, or callable. */
-    E source;
+    std::shared_ptr<E> source;
     runtime::obj::list_ptr args;
     std::vector<E> arg_exprs;
   };

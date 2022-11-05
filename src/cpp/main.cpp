@@ -14,7 +14,6 @@
 #include <jank/runtime/context.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/codegen/processor.hpp>
-#include <jank/evaluate/context.hpp>
 #include <jank/jit/processor.hpp>
 
 int main(int const argc, char const **argv)
@@ -30,18 +29,31 @@ int main(int const argc, char const **argv)
 
   jank::runtime::context rt_ctx;
   jank::analyze::context an_ctx{ rt_ctx };
-  jank::evaluate::context eval_ctx{ rt_ctx };
 
   rt_ctx.eval_prelude(an_ctx);
 
   auto const mfile(jank::util::map_file(file));
   jank::read::lex::processor l_prc{ { mfile.expect_ok().head, mfile.expect_ok().size } };
   jank::read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-  jank::analyze::processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
-  jank::codegen::processor cg_prc{ rt_ctx, an_ctx, an_prc.begin(an_ctx), an_prc.end(an_ctx), an_prc.total_forms };
-  //std::cout << cg_prc.declaration_str() << std::endl;
-  //std::cout << cg_prc.expression_str() << std::endl;
+  jank::analyze::processor an_prc
+  { rt_ctx, p_prc.begin(), p_prc.end() };
+  jank::codegen::processor cg_prc
+  {
+    rt_ctx,
+    an_ctx,
+    an_prc.result(an_ctx).expect_ok_move().unwrap()
+  };
+  std::cout << cg_prc.declaration_str() << std::endl;
+  std::cout << cg_prc.expression_str() << std::endl;
 
   jank::jit::processor jit_prc;
-  jit_prc.eval(rt_ctx, cg_prc);
+  std::cout << jit_prc.eval(rt_ctx, cg_prc).expect_ok().unwrap()->to_string() << std::endl;
+
+  //std::string line;
+  //std::cout << "> " << std::flush;
+  //while(std::getline(std::cin, line))
+  //{
+  //  jit_prc.eval_string(line);
+  //  std::cout << "> " << std::flush;
+  //}
 }

@@ -33,6 +33,12 @@ namespace jank::analyze
     std::unordered_map<runtime::object_ptr, lifted_constant> lifted_constants;
   };
 
+  enum class source_type
+  {
+    repl,
+    file
+  };
+
   /* Analysis contexts are meant to both span the entire lifecycle of the program and also be
    * reused for each new form evaluation. Parts of it are cleared across each usage, for tracking
    * references which need to be lifted for codegen, but other parts persist. */
@@ -41,7 +47,8 @@ namespace jank::analyze
     context() = delete;
     context(runtime::context &rt_ctx);
 
-    option<std::pair<runtime::obj::symbol_ptr, option<expression_ptr>>> find_var(runtime::obj::symbol_ptr const &qualified_sym) const;
+    option<std::pair<runtime::obj::symbol_ptr, option<expression_ptr>>> find_var
+    (runtime::obj::symbol_ptr const &qualified_sym) const;
     runtime::obj::symbol_ptr lift_var(runtime::obj::symbol_ptr const &);
     option<std::reference_wrapper<lifted_var>> find_lifted_var(runtime::obj::symbol_ptr const &);
     void lift_constant(runtime::object_ptr const &);
@@ -68,38 +75,21 @@ namespace jank::analyze
 
   struct processor
   {
+    /* TODO: Get rid of option. */
     using expression_result = result<option<expression>, error>;
 
-    struct iterator
-    {
-      using iterator_category = std::input_iterator_tag;
-      using difference_type = std::ptrdiff_t;
-      using value_type = expression_result;
-      using pointer = value_type*;
-      using reference = value_type&;
-
-      value_type operator *() const;
-      pointer operator ->();
-      iterator& operator ++();
-      bool operator !=(iterator const &rhs) const;
-      bool operator ==(iterator const &rhs) const;
-
-      /* TODO: Get rid of option. */
-      value_type latest;
-      context &ctx;
-      processor &p;
-      bool is_end{};
-    };
-
     processor() = delete;
-    processor(runtime::context &rt_ctx, read::parse::processor::iterator const &b, read::parse::processor::iterator const &e);
+    processor
+    (
+      runtime::context &rt_ctx,
+      read::parse::processor::iterator const &b,
+      read::parse::processor::iterator const &e
+    );
     processor(processor const &) = default;
     processor(processor &&) noexcept = default;
 
-    iterator begin(context &ctx);
-    iterator end(context &ctx);
+    expression_result result(context &ctx);
 
-    expression_result next(context &ctx);
     expression_result analyze(runtime::object_ptr const &, context &);
     expression_result analyze(runtime::object_ptr const &, local_frame<expression> &, context &);
     expression_result analyze_call(runtime::obj::list_ptr const &, local_frame<expression> &, context &);
@@ -113,11 +103,12 @@ namespace jank::analyze
     expression_result analyze_vector(runtime::obj::vector_ptr const &, local_frame<expression> &, context &);
     expression_result analyze_map(runtime::obj::map_ptr const &, local_frame<expression> &, context &);
 
-    using special_function_type = std::function<expression_result (runtime::obj::list_ptr const &, local_frame<expression> &, context &)>;
+    using special_function_type = std::function
+    <expression_result (runtime::obj::list_ptr const &, local_frame<expression> &, context &)>;
+
     std::unordered_map<runtime::obj::symbol_ptr, special_function_type> specials;
     runtime::context &rt_ctx;
     local_frame<expression> root_frame;
     read::parse::processor::iterator parse_current, parse_end;
-    size_t total_forms{};
   };
 }

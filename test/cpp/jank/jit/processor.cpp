@@ -37,7 +37,15 @@ namespace jank::jit
       { continue; }
 
       auto const expect_success
-      (boost::algorithm::starts_with(dir_entry.path().filename().string(), "pass_"));
+      (boost::algorithm::starts_with(dir_entry.path().filename().string(), "pass-"));
+      auto const expect_failure
+      (boost::algorithm::starts_with(dir_entry.path().filename().string(), "fail-"));
+      CHECK_MESSAGE
+      (
+        (expect_success || expect_failure),
+        "Test file needs to begin with pass- or fail-: ",
+        dir_entry
+      );
 
       //std::cout << "testing " << dir_entry << std::endl;
 
@@ -49,10 +57,16 @@ namespace jank::jit
       auto const mfile(jank::util::map_file(dir_entry.path().string()));
       jank::read::lex::processor l_prc{ { mfile.expect_ok().head, mfile.expect_ok().size } };
       jank::read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-      jank::analyze::processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
+      jank::analyze::processor an_prc
+      { rt_ctx, p_prc.begin(), p_prc.end() };
       jank::codegen::processor cg_prc
-      { rt_ctx, an_ctx, an_prc.begin(an_ctx), an_prc.end(an_ctx), an_prc.total_forms };
-      //std::cout << cg_prc.str() << std::endl;
+      {
+        rt_ctx,
+        an_ctx,
+        an_prc.result(an_ctx).expect_ok_move().unwrap()
+      };
+      //std::cout << cg_prc.declaration_str() << std::endl;
+      //std::cout << cg_prc.expression_str() << std::endl;
 
       try
       {
@@ -60,7 +74,8 @@ namespace jank::jit
         auto const result(jit_prc.eval(rt_ctx, cg_prc));
         CHECK_MESSAGE(expect_success, "Test passed when a failure was expected: ", dir_entry);
         CHECK(result.is_ok());
-        CHECK(result.expect_ok()->equal(cardinal_result));
+        CHECK(result.expect_ok().is_some());
+        CHECK(result.expect_ok().unwrap()->equal(cardinal_result));
       }
       catch(...)
       { CHECK(!expect_success); }

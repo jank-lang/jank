@@ -15,11 +15,12 @@ namespace jank::analyze::expr
     context an_ctx{ rt_ctx };
     processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-    auto const expr(an_prc.next(an_ctx).expect_ok().unwrap());
-    auto const *fn_expr(boost::get<function<expression>>(&expr.data));
-    CHECK(fn_expr != nullptr);
-    CHECK(fn_expr->frame.locals.empty());
-    CHECK(fn_expr->body.body.empty());
+    auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
+    auto const expr(boost::get<function<expression>>(fn_expr.data).body.body.front());
+    auto const *typed_expr(boost::get<function<expression>>(&expr.data));
+    CHECK(typed_expr != nullptr);
+    CHECK(typed_expr->frame.locals.empty());
+    CHECK(typed_expr->body.body.empty());
   }
 
   TEST_CASE("Parameters")
@@ -33,11 +34,12 @@ namespace jank::analyze::expr
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      auto const expr(an_prc.next(an_ctx).expect_ok().unwrap());
-      auto const *fn_expr(boost::get<function<expression>>(&expr.data));
-      CHECK(fn_expr != nullptr);
-      CHECK(fn_expr->frame.locals.size() == 2);
-      CHECK(fn_expr->body.body.size() == 2);
+      auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
+      auto const expr(boost::get<function<expression>>(fn_expr.data).body.body.front());
+      auto const *typed_expr(boost::get<function<expression>>(&expr.data));
+      CHECK(typed_expr != nullptr);
+      CHECK(typed_expr->frame.locals.size() == 2);
+      CHECK(typed_expr->body.body.size() == 2);
     }
 
     SUBCASE("Missing - nothing else")
@@ -46,7 +48,7 @@ namespace jank::analyze::expr
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      CHECK(an_prc.next(an_ctx).is_err());
+      CHECK(an_prc.result(an_ctx).is_err());
     }
 
     SUBCASE("Missing - with body")
@@ -55,7 +57,7 @@ namespace jank::analyze::expr
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      CHECK(an_prc.next(an_ctx).is_err());
+      CHECK(an_prc.result(an_ctx).is_err());
     }
 
     SUBCASE("Not all symbols")
@@ -64,7 +66,7 @@ namespace jank::analyze::expr
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      CHECK(an_prc.next(an_ctx).is_err());
+      CHECK(an_prc.result(an_ctx).is_err());
     }
 
     SUBCASE("Qualified symbol")
@@ -73,7 +75,7 @@ namespace jank::analyze::expr
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      CHECK(an_prc.next(an_ctx).is_err());
+      CHECK(an_prc.result(an_ctx).is_err());
     }
 
     SUBCASE("Too many")
@@ -82,7 +84,7 @@ namespace jank::analyze::expr
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      CHECK(an_prc.next(an_ctx).is_err());
+      CHECK(an_prc.result(an_ctx).is_err());
     }
   }
 }

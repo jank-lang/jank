@@ -17,10 +17,7 @@ namespace jank::runtime::obj
     boolean() = default;
     boolean(boolean &&) noexcept = default;
     boolean(boolean const &) = default;
-    /* TODO: Move these ctors to cpp file. */
-    boolean(runtime::detail::boolean_type const d)
-      : data{ d }
-    { }
+    boolean(runtime::detail::boolean_type const d);
 
     runtime::detail::boolean_type equal(object const &) const override;
     runtime::detail::string_type to_string() const override;
@@ -38,9 +35,7 @@ namespace jank::runtime::obj
     integer() = default;
     integer(integer &&) noexcept = default;
     integer(integer const &) = default;
-    integer(runtime::detail::integer_type const d)
-      : data{ d }
-    { }
+    integer(runtime::detail::integer_type const d);
 
     static runtime::detail::box_type<integer> create(runtime::detail::integer_type const &n);
 
@@ -62,9 +57,7 @@ namespace jank::runtime::obj
     real() = default;
     real(real &&) noexcept = default;
     real(real const &) = default;
-    real(runtime::detail::real_type const d)
-      : data{ d }
-    { }
+    real(runtime::detail::real_type const d);
 
     runtime::detail::boolean_type equal(object const &) const override;
     runtime::detail::string_type to_string() const override;

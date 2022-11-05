@@ -146,7 +146,6 @@ add_library(
   src/cpp/jank/runtime/obj/string.cpp
   src/cpp/jank/runtime/behavior/callable.cpp
   src/cpp/jank/analyze/processor.cpp
-  src/cpp/jank/evaluate/context.cpp
   src/cpp/jank/codegen/processor.cpp
   src/cpp/jank/jit/processor.cpp
 )
@@ -223,7 +222,6 @@ if(jank_tests)
     test/cpp/jank/analyze/expr/let.cpp
     test/cpp/jank/analyze/expr/primitive_literal.cpp
     test/cpp/jank/analyze/expr/map.cpp
-    test/cpp/jank/evaluate/context.cpp
     test/cpp/jank/jit/processor.cpp
   )
   add_executable(jank::test_exe ALIAS jank_test_exe)

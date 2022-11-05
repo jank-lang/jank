@@ -12,7 +12,6 @@
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/obj/keyword.hpp>
-#include <jank/evaluate/context.hpp>
 
 namespace jank::analyze
 { struct context; }
@@ -52,7 +51,6 @@ namespace jank::runtime
       var_ptr current_ns;
       var_ptr in_ns;
       context &rt_ctx;
-      evaluate::context eval_ctx;
     };
 
     thread_state& get_thread_state();

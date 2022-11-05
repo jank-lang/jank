@@ -20,7 +20,8 @@ namespace jank::analyze
     std::cout << "analysis ctx dump end" << std::endl;
   }
 
-  option<std::pair<runtime::obj::symbol_ptr, option<expression_ptr>>> context::find_var(runtime::obj::symbol_ptr const &sym) const
+  option<std::pair<runtime::obj::symbol_ptr, option<expression_ptr>>> context::find_var
+  (runtime::obj::symbol_ptr const &sym) const
   {
     runtime::obj::symbol_ptr qualified_sym{ sym };
     if(qualified_sym->ns.empty())
@@ -53,7 +54,8 @@ namespace jank::analyze
     return qualified_sym;
   }
 
-  option<std::reference_wrapper<lifted_var>> context::find_lifted_var(runtime::obj::symbol_ptr const &sym)
+  option<std::reference_wrapper<lifted_var>> context::find_lifted_var
+  (runtime::obj::symbol_ptr const &sym)
   {
     auto const found(tracked_refs.lifted_vars.find(sym));
     if(found != tracked_refs.lifted_vars.end())
@@ -70,7 +72,8 @@ namespace jank::analyze
     tracked_refs.lifted_constants.emplace(constant, l);
   }
 
-  option<std::reference_wrapper<lifted_constant>> context::find_lifted_constant(runtime::object_ptr const &o)
+  option<std::reference_wrapper<lifted_constant>> context::find_lifted_constant
+  (runtime::object_ptr const &o)
   {
     auto const found(tracked_refs.lifted_constants.find(o));
     if(found != tracked_refs.lifted_constants.end())
@@ -92,30 +95,13 @@ namespace jank::analyze
     return { "", prefix + std::to_string(index++) };
   }
 
-  processor::iterator::value_type processor::iterator::operator *() const
-  { return latest; }
-  processor::iterator::pointer processor::iterator::operator ->()
-  { return &latest; }
-  processor::iterator& processor::iterator::operator ++()
-  {
-    auto next(p.next(ctx));
-    if(next.is_ok() && next.expect_ok().is_none())
-    { is_end = true; }
-    latest = std::move(next);
-    return *this;
-  }
-  bool processor::iterator::operator !=(processor::iterator const &rhs) const
-  { return !(*this == rhs); }
-  bool processor::iterator::operator ==(processor::iterator const &rhs) const
-  { return is_end && rhs.is_end; }
-
   processor::processor
   (
     runtime::context &rt_ctx,
     read::parse::processor::iterator const &b,
     read::parse::processor::iterator const &e
   )
-    : rt_ctx{ rt_ctx }, root_frame{ "root", rt_ctx, none }
+    : rt_ctx{ rt_ctx }, root_frame{ local_frame<expression>::frame_type::root, rt_ctx, none }
     , parse_current{ b }, parse_end{ e }
   {
     using runtime::obj::symbol;
@@ -134,33 +120,29 @@ namespace jank::analyze
     };
   }
 
-  processor::iterator processor::begin(context &ctx)
-  {
-    auto first(next(ctx));
-    auto const has_first(first.is_err() || (first.is_ok() && first.expect_ok().is_some()));
-    return { std::move(first), ctx, *this, !has_first };
-  }
-  processor::iterator processor::end(context &ctx)
-  { return { ok(none), ctx, *this, true }; }
-
-  processor::expression_result processor::next(context &ctx)
+  processor::expression_result processor::result(context &ctx)
   {
     if(parse_current == parse_end)
     { return ok(none); }
 
-    if(parse_current->is_err())
-    { return err(parse_current->expect_err_move()); }
-
-    auto const form(parse_current->expect_ok());
-    if(form == nullptr)
-    { return ok(none); }
-    ++parse_current;
-    ++total_forms;
-
-    return analyze(form, ctx);
+    /* We wrap all of the expressions we get in an anonymous fn so that we can call it easily.
+     * This also simplifies codegen, since we only ever codegen a single fn, even if that fn
+     * represents a ns, a single REPL expression, or an actual source fn. */
+    runtime::detail::vector_transient_type fn_body;
+    fn_body.push_back(runtime::obj::symbol::create("fn*"));
+    fn_body.push_back(runtime::obj::vector::create());
+    for(; parse_current != parse_end; ++parse_current)
+    {
+      if(parse_current->is_err())
+      { return err(parse_current->expect_err_move()); }
+      fn_body.push_back(parse_current->expect_ok());
+    }
+    auto fn(runtime::obj::list::create(fn_body.rbegin(), fn_body.rend()));
+    return analyze(std::move(fn), ctx);
   }
 
-  processor::expression_result processor::analyze_def(runtime::obj::list_ptr const &l, local_frame<expression> &current_frame, context &ctx)
+  processor::expression_result processor::analyze_def
+  (runtime::obj::list_ptr const &l, local_frame<expression> &current_frame, context &ctx)
   {
     auto const length(l->count());
     if(length != 2 && length != 3)
@@ -217,11 +199,15 @@ namespace jank::analyze
     };
   }
 
-  processor::expression_result processor::analyze_symbol(runtime::obj::symbol_ptr const &sym, local_frame<expression> &current_frame, context &ctx)
+  processor::expression_result processor::analyze_symbol
+  (runtime::obj::symbol_ptr const &sym, local_frame<expression> &current_frame, context &ctx)
   {
-    auto const found_local(current_frame.find(sym));
+    auto const found_local(current_frame.find_capture(sym));
     if(found_local.is_some())
-    { return { expr::local_reference<expression>{ sym, found_local.unwrap() } }; }
+    {
+      local_frame<expression>::register_captures(found_local.unwrap());
+      return { expr::local_reference<expression>{ sym, found_local.unwrap().binding } };
+    }
 
     auto const var(ctx.find_var(sym));
     if(var.is_none())
@@ -231,7 +217,8 @@ namespace jank::analyze
     return { expr::var_deref<expression>{ var.unwrap().first } };
   }
 
-  processor::expression_result processor::analyze_fn(runtime::obj::list_ptr const &list, local_frame<expression> &current_frame, context &ctx)
+  processor::expression_result processor::analyze_fn
+  (runtime::obj::list_ptr const &list, local_frame<expression> &current_frame, context &ctx)
   {
     auto const length(list->count());
     if(length < 2)
@@ -245,7 +232,8 @@ namespace jank::analyze
     if(params->data.size() > 10)
     { return err(error{ "invalid parameter count; must be <= 10; use & args to capture the rest" }); }
 
-    local_frame<expression> local_frame{ "anon fn", current_frame.runtime_ctx, current_frame };
+    local_frame<expression> frame
+    { local_frame<expression>::frame_type::fn, current_frame.runtime_ctx, current_frame };
     std::vector<runtime::obj::symbol_ptr> param_symbols;
     param_symbols.reserve(params->data.size());
 
@@ -258,19 +246,30 @@ namespace jank::analyze
       { return err(error{ "invalid parameter; must be unqualified" }); }
 
       auto const sym_ptr(boost::static_pointer_cast<runtime::obj::symbol>(p));
-      local_frame.locals.emplace(sym_ptr, local_binding<expression>{ sym_ptr, none });
+      frame.locals.emplace(sym_ptr, local_binding<expression>{ sym_ptr, none });
       param_symbols.emplace_back(sym_ptr);
     }
 
     expr::do_<expression> body_do;
     for(auto const &item : list->data.rest().rest())
-    /* TODO: Return errors. */
-    { body_do.body.emplace_back(analyze(item, local_frame, ctx).expect_ok().unwrap()); }
+    {
+      auto form(analyze(item, frame, ctx));
+      if(form.is_err())
+      { return form.expect_err_move(); }
+      else if(form.expect_ok().is_none())
+      { return err(read::error{ "expected fn body value" }); }
+      body_do.body.emplace_back(std::move(form.expect_ok_move().unwrap()));
+    }
 
-    return { expr::function<expression>{ std::move(param_symbols), std::move(body_do), std::move(local_frame) } };
+    return
+    {
+      expr::function<expression>
+      { std::move(param_symbols), std::move(body_do), std::move(frame) }
+    };
   }
 
-  processor::expression_result processor::analyze_let(runtime::obj::list_ptr const &o, local_frame<expression> &current_frame, context &ctx)
+  processor::expression_result processor::analyze_let
+  (runtime::obj::list_ptr const &o, local_frame<expression> &current_frame, context &ctx)
   {
     if(o->count() < 2)
     { return err(error{ "invalid let: expects bindings" }); }
@@ -284,7 +283,13 @@ namespace jank::analyze
     if(binding_parts % 2 == 1)
     { return err(error{ "invalid let* bindings: must be an even number" }); }
 
-    expr::let<expression> ret{ {}, {}, local_frame<expression>{ "let*", current_frame.runtime_ctx, current_frame } };
+    expr::let<expression> ret
+    {
+      {},
+      {},
+      local_frame<expression>
+      { local_frame<expression>::frame_type::let, current_frame.runtime_ctx, current_frame }
+    };
     for(size_t i{}; i < binding_parts; i += 2)
     {
       auto const &sym_obj(bindings->data[i]);
@@ -308,10 +313,12 @@ namespace jank::analyze
     return { std::move(ret) };
   }
 
-  processor::expression_result processor::analyze_if(runtime::obj::list_ptr const &, local_frame<expression> &, context &)
+  processor::expression_result processor::analyze_if
+  (runtime::obj::list_ptr const &, local_frame<expression> &, context &)
   { return err(error{ "unimplemented: if" }); }
 
-  processor::expression_result processor::analyze_quote(runtime::obj::list_ptr const &o, local_frame<expression> &current_frame, context &ctx)
+  processor::expression_result processor::analyze_quote
+  (runtime::obj::list_ptr const &o, local_frame<expression> &current_frame, context &ctx)
   {
     if(o->count() != 2)
     { return err(error{ "invalid quote: expects one argument" }); }
@@ -319,14 +326,16 @@ namespace jank::analyze
     return analyze_primitive_literal(o->data.rest().first().unwrap(), current_frame, ctx);
   }
 
-  processor::expression_result processor::analyze_primitive_literal(runtime::object_ptr const &o, local_frame<expression> &, context &ctx)
+  processor::expression_result processor::analyze_primitive_literal
+  (runtime::object_ptr const &o, local_frame<expression> &, context &ctx)
   {
     ctx.lift_constant(o);
     return { expr::primitive_literal<expression>{ o } };
   }
 
   /* TODO: Test for this. */
-  processor::expression_result processor::analyze_vector(runtime::obj::vector_ptr const &o, local_frame<expression> &current_frame, context &ctx)
+  processor::expression_result processor::analyze_vector
+  (runtime::obj::vector_ptr const &o, local_frame<expression> &current_frame, context &ctx)
   {
     /* TODO: Detect literal and act accordingly. */
     std::vector<expression> exprs;
@@ -337,7 +346,8 @@ namespace jank::analyze
     return { expr::vector<expression>{ std::move(exprs) } };
   }
 
-  processor::expression_result processor::analyze_map(runtime::obj::map_ptr const &o, local_frame<expression> &current_frame, context &ctx)
+  processor::expression_result processor::analyze_map
+  (runtime::obj::map_ptr const &o, local_frame<expression> &current_frame, context &ctx)
   {
     /* TODO: Detect literal and act accordingly. */
     std::vector<std::pair<expression, expression>> exprs;
@@ -354,7 +364,8 @@ namespace jank::analyze
     return { expr::map<expression>{ std::move(exprs) } };
   }
 
-  processor::expression_result processor::analyze_call(runtime::obj::list_ptr const &o, local_frame<expression> &current_frame, context &ctx)
+  processor::expression_result processor::analyze_call
+  (runtime::obj::list_ptr const &o, local_frame<expression> &current_frame, context &ctx)
   {
     /* An empty list evaluates to a list, not a call. */
     auto const count(o->count());
@@ -363,6 +374,7 @@ namespace jank::analyze
 
     auto const o_seq(o->seq());
     auto const first(o_seq->first());
+    expression_ptr source;
     if(first->as_symbol())
     {
       auto const sym(boost::static_pointer_cast<runtime::obj::symbol>(first));
@@ -373,41 +385,42 @@ namespace jank::analyze
       auto sym_result(analyze_symbol(sym, current_frame, ctx));
       if(sym_result.is_err())
       { return sym_result; }
-
-      std::vector<expression> arg_exprs;
-      arg_exprs.reserve(count - 1);
-      for(auto const &s : o->data.rest())
-      {
-        auto arg_expr(analyze(s, current_frame, ctx));
-        if(arg_expr.is_err())
-        { return arg_expr; }
-        arg_exprs.emplace_back(arg_expr.expect_ok().unwrap());
-      }
-
-      return
-      {
-        expr::call<expression>
-        {
-          sym_result.expect_ok().unwrap(),
-          runtime::obj::list::create(o->data.rest()),
-          arg_exprs
-        }
-      };
+      source = std::make_shared<expression>(sym_result.expect_ok().unwrap());
     }
-    else if(auto const * const callable = first->as_callable())
+    else
     {
-      // TODO: Callable
+      auto callable_expr(analyze(first, current_frame, ctx));
+      if(callable_expr.is_err())
+      { return callable_expr; }
+      source = std::make_shared<expression>(callable_expr.expect_ok().unwrap());
     }
 
-    /* TODO: Proper error handling. */
-    assert(false);
-    return err(error{ "unreachable call" });
+    std::vector<expression> arg_exprs;
+    arg_exprs.reserve(count - 1);
+    for(auto const &s : o->data.rest())
+    {
+      auto arg_expr(analyze(s, current_frame, ctx));
+      if(arg_expr.is_err())
+      { return arg_expr; }
+      arg_exprs.emplace_back(arg_expr.expect_ok().unwrap());
+    }
+
+    return
+    {
+      expr::call<expression>
+      {
+        source,
+        runtime::obj::list::create(o->data.rest()),
+        arg_exprs
+      }
+    };
   }
 
   processor::expression_result processor::analyze(runtime::object_ptr const &o, context &ctx)
   { return analyze(o, root_frame, ctx); }
 
-  processor::expression_result processor::analyze(runtime::object_ptr const &o, local_frame<expression> &current_frame, context &ctx)
+  processor::expression_result processor::analyze
+  (runtime::object_ptr const &o, local_frame<expression> &current_frame, context &ctx)
   {
     assert(o);
 

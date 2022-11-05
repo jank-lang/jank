@@ -21,11 +21,14 @@ namespace jank::read::parse
       using pointer = value_type*;
       using reference = value_type&;
 
+      iterator(iterator const&) = default;
+
       value_type operator *() const;
       pointer operator ->();
       iterator& operator ++();
       bool operator !=(iterator const &rhs) const;
       bool operator ==(iterator const &rhs) const;
+      iterator& operator=(iterator const&);
 
       option<value_type> latest;
       processor &p;

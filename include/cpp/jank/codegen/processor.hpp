@@ -17,7 +17,9 @@ namespace jank::runtime
 
 namespace jank::codegen
 {
-  /* There's only one codegen context per thread, so no synchronization is needed for its members. */
+  /* Codegen processors render a single function expression to a C++ functor. REPL expressions
+   * are wrapped in a nullary functor. These functors nest arbitrarily, if an expression has more
+   * fn values of its own, each one rendered with its own codegen processor. */
   struct processor
   {
     processor() = delete;
@@ -25,9 +27,7 @@ namespace jank::codegen
     (
       runtime::context &rt_ctx,
       analyze::context &an_ctx,
-      analyze::processor::iterator const &an_begin,
-      analyze::processor::iterator const &an_end,
-      size_t const total_forms
+      analyze::expression const &expr
     );
     processor(processor const &) = delete;
     processor(processor &&) noexcept = default;
@@ -42,16 +42,15 @@ namespace jank::codegen
     void gen(analyze::expr::local_reference<analyze::expression> const &, bool const is_statement);
     void gen(analyze::expr::function<analyze::expression> const &, bool const is_statement);
 
-    /* TODO: C++20: Return std::string_view. */
     std::string declaration_str();
     void build_header();
     void build_body();
     void build_footer();
-    std::string expression_str();
+    std::string expression_str(bool const auto_call = true);
 
     runtime::context &rt_ctx;
     analyze::context &an_ctx;
-    folly::fbvector<analyze::expression> expressions;
+    analyze::expr::function<analyze::expression> root_expression;
 
     mutable runtime::obj::symbol struct_name;
     mutable bool need_semi_colon{ true };

@@ -23,7 +23,8 @@ namespace jank::analyze::expr
     context an_ctx{ rt_ctx };
     processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-    auto const expr(an_prc.next(an_ctx).expect_ok().unwrap());
+    auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
+    auto const expr(boost::get<function<expression>>(fn_expr.data).body.body.front());
     auto const *def_expr(boost::get<def<expression>>(&expr.data));
     CHECK(def_expr != nullptr);
     CHECK(def_expr->name != nullptr);
@@ -39,7 +40,8 @@ namespace jank::analyze::expr
     context an_ctx{ rt_ctx };
     processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-    auto const expr(an_prc.next(an_ctx).expect_ok().unwrap());
+    auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
+    auto const expr(boost::get<function<expression>>(fn_expr.data).body.body.front());
     auto const *def_expr(boost::get<def<expression>>(&expr.data));
     CHECK(def_expr != nullptr);
     CHECK(def_expr->name != nullptr);
@@ -64,7 +66,7 @@ namespace jank::analyze::expr
     context an_ctx{ rt_ctx };
     processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-    CHECK(an_prc.next(an_ctx).is_err());
+    CHECK(an_prc.result(an_ctx).is_err());
   }
 
   TEST_CASE("Arities")
@@ -78,7 +80,7 @@ namespace jank::analyze::expr
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      CHECK(an_prc.next(an_ctx).is_err());
+      CHECK(an_prc.result(an_ctx).is_err());
     }
   }
 }

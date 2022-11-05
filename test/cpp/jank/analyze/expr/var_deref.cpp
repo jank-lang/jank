@@ -2,7 +2,6 @@
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/analyze/processor.hpp>
-#include <jank/evaluate/context.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #pragma clang diagnostic push
@@ -23,7 +22,7 @@ namespace jank::analyze::expr
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      CHECK(an_prc.next(an_ctx).is_err());
+      CHECK(an_prc.result(an_ctx).is_err());
     }
 
     SUBCASE("Present")
@@ -34,7 +33,8 @@ namespace jank::analyze::expr
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      auto const expr(an_prc.next(an_ctx).expect_ok().unwrap());
+      auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
+      auto const expr(boost::get<function<expression>>(fn_expr.data).body.body.front());
       auto const *var_deref_expr(boost::get<var_deref<expression>>(&expr.data));
       CHECK(var_deref_expr != nullptr);
       CHECK(var_deref_expr->qualified_name != nullptr);
@@ -53,7 +53,7 @@ namespace jank::analyze::expr
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      CHECK(an_prc.next(an_ctx).is_err());
+      CHECK(an_prc.result(an_ctx).is_err());
     }
 
     SUBCASE("Present")
@@ -64,7 +64,8 @@ namespace jank::analyze::expr
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      auto const expr(an_prc.next(an_ctx).expect_ok().unwrap());
+      auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
+      auto const expr(boost::get<function<expression>>(fn_expr.data).body.body.front());
       auto const *var_deref_expr(boost::get<var_deref<expression>>(&expr.data));
       CHECK(var_deref_expr != nullptr);
       CHECK(var_deref_expr->qualified_name != nullptr);

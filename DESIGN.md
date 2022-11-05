@@ -163,3 +163,6 @@ requirements will require determinism, but there are still a few options here.
 
 Note that whatever is chosen needs to work with interop as well, so it needs to
 be flexible enough to hand over ownership to native land or acquire it.
+
+## Performance
+Interesting things with Roc: https://www.roc-lang.org 

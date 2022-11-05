@@ -23,6 +23,7 @@ pom.xml.asc
 .ccls-cache
 .gdb_history
 /build
+/build-*
 coverage.txt
 /vcpkg_installed
 .idea/
