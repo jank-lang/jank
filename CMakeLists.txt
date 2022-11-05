@@ -146,6 +146,7 @@ add_library(
   src/cpp/jank/runtime/obj/string.cpp
   src/cpp/jank/runtime/behavior/callable.cpp
   src/cpp/jank/analyze/processor.cpp
+  src/cpp/jank/analyze/local_frame.cpp
   src/cpp/jank/codegen/processor.cpp
   src/cpp/jank/jit/processor.cpp
 )

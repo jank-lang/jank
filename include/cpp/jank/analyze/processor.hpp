@@ -39,9 +39,8 @@ namespace jank::analyze
     file
   };
 
-  /* Analysis contexts are meant to both span the entire lifecycle of the program and also be
-   * reused for each new form evaluation. Parts of it are cleared across each usage, for tracking
-   * references which need to be lifted for codegen, but other parts persist. */
+  /* Analysis contexts are meant to span the entire lifecycle of the
+   * program and aid in keeping track of what's what. */
   struct context
   {
     context() = delete;
@@ -91,24 +90,24 @@ namespace jank::analyze
     expression_result result(context &ctx);
 
     expression_result analyze(runtime::object_ptr const &, context &);
-    expression_result analyze(runtime::object_ptr const &, local_frame<expression> &, context &);
-    expression_result analyze_call(runtime::obj::list_ptr const &, local_frame<expression> &, context &);
-    expression_result analyze_def(runtime::obj::list_ptr const &, local_frame<expression> &, context &);
-    expression_result analyze_symbol(runtime::obj::symbol_ptr const &, local_frame<expression> &, context &);
-    expression_result analyze_fn(runtime::obj::list_ptr const &, local_frame<expression> &, context &);
-    expression_result analyze_let(runtime::obj::list_ptr const &, local_frame<expression> &, context &);
-    expression_result analyze_if(runtime::obj::list_ptr const &, local_frame<expression> &, context &);
-    expression_result analyze_quote(runtime::obj::list_ptr const &, local_frame<expression> &, context &);
-    expression_result analyze_primitive_literal(runtime::object_ptr const &, local_frame<expression> &, context &);
-    expression_result analyze_vector(runtime::obj::vector_ptr const &, local_frame<expression> &, context &);
-    expression_result analyze_map(runtime::obj::map_ptr const &, local_frame<expression> &, context &);
+    expression_result analyze(runtime::object_ptr const &, local_frame &, context &);
+    expression_result analyze_call(runtime::obj::list_ptr const &, local_frame &, context &);
+    expression_result analyze_def(runtime::obj::list_ptr const &, local_frame &, context &);
+    expression_result analyze_symbol(runtime::obj::symbol_ptr const &, local_frame &, context &);
+    expression_result analyze_fn(runtime::obj::list_ptr const &, local_frame &, context &);
+    expression_result analyze_let(runtime::obj::list_ptr const &, local_frame &, context &);
+    expression_result analyze_if(runtime::obj::list_ptr const &, local_frame &, context &);
+    expression_result analyze_quote(runtime::obj::list_ptr const &, local_frame &, context &);
+    expression_result analyze_primitive_literal(runtime::object_ptr const &, local_frame &, context &);
+    expression_result analyze_vector(runtime::obj::vector_ptr const &, local_frame &, context &);
+    expression_result analyze_map(runtime::obj::map_ptr const &, local_frame &, context &);
 
     using special_function_type = std::function
-    <expression_result (runtime::obj::list_ptr const &, local_frame<expression> &, context &)>;
+    <expression_result (runtime::obj::list_ptr const &, local_frame &, context &)>;
 
     std::unordered_map<runtime::obj::symbol_ptr, special_function_type> specials;
     runtime::context &rt_ctx;
-    local_frame<expression> root_frame;
+    local_frame root_frame;
     read::parse::processor::iterator parse_current, parse_end;
   };
 }

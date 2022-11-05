@@ -101,7 +101,7 @@ namespace jank::analyze
     read::parse::processor::iterator const &b,
     read::parse::processor::iterator const &e
   )
-    : rt_ctx{ rt_ctx }, root_frame{ local_frame<expression>::frame_type::root, rt_ctx, none }
+    : rt_ctx{ rt_ctx }, root_frame{ local_frame::frame_type::root, rt_ctx, none }
     , parse_current{ b }, parse_end{ e }
   {
     using runtime::obj::symbol;
@@ -142,7 +142,7 @@ namespace jank::analyze
   }
 
   processor::expression_result processor::analyze_def
-  (runtime::obj::list_ptr const &l, local_frame<expression> &current_frame, context &ctx)
+  (runtime::obj::list_ptr const &l, local_frame &current_frame, context &ctx)
   {
     auto const length(l->count());
     if(length != 2 && length != 3)
@@ -200,13 +200,13 @@ namespace jank::analyze
   }
 
   processor::expression_result processor::analyze_symbol
-  (runtime::obj::symbol_ptr const &sym, local_frame<expression> &current_frame, context &ctx)
+  (runtime::obj::symbol_ptr const &sym, local_frame &current_frame, context &ctx)
   {
-    auto const found_local(current_frame.find_capture(sym));
+    auto const found_local(current_frame.find(sym));
     if(found_local.is_some())
     {
-      local_frame<expression>::register_captures(found_local.unwrap());
-      return { expr::local_reference<expression>{ sym, found_local.unwrap().binding } };
+      local_frame::register_captures(found_local.unwrap());
+      return { expr::local_reference{ sym, found_local.unwrap().binding } };
     }
 
     auto const var(ctx.find_var(sym));
@@ -218,7 +218,7 @@ namespace jank::analyze
   }
 
   processor::expression_result processor::analyze_fn
-  (runtime::obj::list_ptr const &list, local_frame<expression> &current_frame, context &ctx)
+  (runtime::obj::list_ptr const &list, local_frame &current_frame, context &ctx)
   {
     auto const length(list->count());
     if(length < 2)
@@ -232,8 +232,8 @@ namespace jank::analyze
     if(params->data.size() > 10)
     { return err(error{ "invalid parameter count; must be <= 10; use & args to capture the rest" }); }
 
-    local_frame<expression> frame
-    { local_frame<expression>::frame_type::fn, current_frame.runtime_ctx, current_frame };
+    local_frame frame
+    { local_frame::frame_type::fn, current_frame.runtime_ctx, current_frame };
     std::vector<runtime::obj::symbol_ptr> param_symbols;
     param_symbols.reserve(params->data.size());
 
@@ -246,7 +246,7 @@ namespace jank::analyze
       { return err(error{ "invalid parameter; must be unqualified" }); }
 
       auto const sym_ptr(boost::static_pointer_cast<runtime::obj::symbol>(p));
-      frame.locals.emplace(sym_ptr, local_binding<expression>{ sym_ptr, none });
+      frame.locals.emplace(sym_ptr, local_binding{ sym_ptr, none });
       param_symbols.emplace_back(sym_ptr);
     }
 
@@ -269,7 +269,7 @@ namespace jank::analyze
   }
 
   processor::expression_result processor::analyze_let
-  (runtime::obj::list_ptr const &o, local_frame<expression> &current_frame, context &ctx)
+  (runtime::obj::list_ptr const &o, local_frame &current_frame, context &ctx)
   {
     if(o->count() < 2)
     { return err(error{ "invalid let: expects bindings" }); }
@@ -287,8 +287,8 @@ namespace jank::analyze
     {
       {},
       {},
-      local_frame<expression>
-      { local_frame<expression>::frame_type::let, current_frame.runtime_ctx, current_frame }
+      local_frame
+      { local_frame::frame_type::let, current_frame.runtime_ctx, current_frame }
     };
     for(size_t i{}; i < binding_parts; i += 2)
     {
@@ -302,7 +302,7 @@ namespace jank::analyze
       auto const sym_ptr(boost::static_pointer_cast<runtime::obj::symbol>(sym_obj));
       /* TODO: Return errors. */
       auto it(ret.pairs.emplace_back(sym_ptr, analyze(val, ret.frame, ctx).expect_ok().unwrap()));
-      ret.frame.locals.emplace(sym_ptr, local_binding<expression>{ sym_ptr, some(std::ref(it.second)) });
+      ret.frame.locals.emplace(sym_ptr, local_binding{ sym_ptr, some(std::ref(it.second)) });
       /* TODO: Rename shadowed bindings? */
     }
 
@@ -314,11 +314,11 @@ namespace jank::analyze
   }
 
   processor::expression_result processor::analyze_if
-  (runtime::obj::list_ptr const &, local_frame<expression> &, context &)
+  (runtime::obj::list_ptr const &, local_frame &, context &)
   { return err(error{ "unimplemented: if" }); }
 
   processor::expression_result processor::analyze_quote
-  (runtime::obj::list_ptr const &o, local_frame<expression> &current_frame, context &ctx)
+  (runtime::obj::list_ptr const &o, local_frame &current_frame, context &ctx)
   {
     if(o->count() != 2)
     { return err(error{ "invalid quote: expects one argument" }); }
@@ -327,7 +327,7 @@ namespace jank::analyze
   }
 
   processor::expression_result processor::analyze_primitive_literal
-  (runtime::object_ptr const &o, local_frame<expression> &, context &ctx)
+  (runtime::object_ptr const &o, local_frame &, context &ctx)
   {
     ctx.lift_constant(o);
     return { expr::primitive_literal<expression>{ o } };
@@ -335,7 +335,7 @@ namespace jank::analyze
 
   /* TODO: Test for this. */
   processor::expression_result processor::analyze_vector
-  (runtime::obj::vector_ptr const &o, local_frame<expression> &current_frame, context &ctx)
+  (runtime::obj::vector_ptr const &o, local_frame &current_frame, context &ctx)
   {
     /* TODO: Detect literal and act accordingly. */
     std::vector<expression> exprs;
@@ -347,7 +347,7 @@ namespace jank::analyze
   }
 
   processor::expression_result processor::analyze_map
-  (runtime::obj::map_ptr const &o, local_frame<expression> &current_frame, context &ctx)
+  (runtime::obj::map_ptr const &o, local_frame &current_frame, context &ctx)
   {
     /* TODO: Detect literal and act accordingly. */
     std::vector<std::pair<expression, expression>> exprs;
@@ -365,7 +365,7 @@ namespace jank::analyze
   }
 
   processor::expression_result processor::analyze_call
-  (runtime::obj::list_ptr const &o, local_frame<expression> &current_frame, context &ctx)
+  (runtime::obj::list_ptr const &o, local_frame &current_frame, context &ctx)
   {
     /* An empty list evaluates to a list, not a call. */
     auto const count(o->count());
@@ -420,7 +420,7 @@ namespace jank::analyze
   { return analyze(o, root_frame, ctx); }
 
   processor::expression_result processor::analyze
-  (runtime::object_ptr const &o, local_frame<expression> &current_frame, context &ctx)
+  (runtime::object_ptr const &o, local_frame &current_frame, context &ctx)
   {
     assert(o);
 

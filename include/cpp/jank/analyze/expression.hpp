@@ -30,7 +30,7 @@ namespace jank::analyze
       expr::vector<E>,
       expr::map<E>,
       boost::recursive_wrapper<expr::function<E>>,
-      expr::local_reference<E>,
+      expr::local_reference,
       expr::let<E>,
       expr::do_<E>
     >;

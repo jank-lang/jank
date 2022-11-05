@@ -39,7 +39,7 @@ namespace jank::codegen
     void gen(analyze::expr::primitive_literal<analyze::expression> const &, bool const is_statement);
     void gen(analyze::expr::vector<analyze::expression> const &, bool const is_statement);
     void gen(analyze::expr::map<analyze::expression> const &, bool const is_statement);
-    void gen(analyze::expr::local_reference<analyze::expression> const &, bool const is_statement);
+    void gen(analyze::expr::local_reference const &, bool const is_statement);
     void gen(analyze::expr::function<analyze::expression> const &, bool const is_statement);
 
     std::string declaration_str();

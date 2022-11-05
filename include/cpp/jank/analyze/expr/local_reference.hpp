@@ -5,10 +5,9 @@
 
 namespace jank::analyze::expr
 {
-  template <typename E>
   struct local_reference
   {
     runtime::obj::symbol_ptr name;
-    local_binding<E> const &binding;
+    local_binding const &binding;
   };
 }

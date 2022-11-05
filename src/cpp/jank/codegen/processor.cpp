@@ -158,7 +158,7 @@ namespace jank::codegen
     format_to(inserter, "){}", (is_statement ? ";" : ""));
   }
 
-  void processor::gen(analyze::expr::local_reference<analyze::expression> const &expr, bool const is_statement)
+  void processor::gen(analyze::expr::local_reference const &expr, bool const is_statement)
   {
     auto inserter(std::back_inserter(body_buffer));
     format_to(inserter, "{}{}", expr.name->to_string(), (is_statement ? ";" : ""));
