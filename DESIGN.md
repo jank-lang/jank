@@ -159,6 +159,8 @@ Wrapping the HTTP get fn would look like this:
 (defn http-get [host path]
   (cxx "auto const response(http_get(string::c_str(host), string::c_str(path)));
         __result = obj<string>(response.body);"))
+
+(http-get "localhost" "/meow")
 ```
 
 Conversion to/from native types just uses Ferret's C++ API, the same as the
@@ -187,6 +189,8 @@ which can be done for interop, such as conversions and boxing. For example:
 
 (register-type HttpResponse "httplib::Response")
 (register http-get (Fn [(Ptr CChar) (Ptr CChar)] (Ptr CChar)) "http_get")
+
+(http-get (String.cstr "localhost") (String.cstr "/meow"))
 ```
 
 Carp technically wraps C, not C++, but I'm using the same syntax it has here for
@@ -226,6 +230,9 @@ what it calls "templates". For example:
    from Clojure
 2. Each native function and type needs to be manually lifted into jank, rather
    than kept as an implementation detail
+3. Since each fn isn't wrapped, it's registered, the nativeness of it leaks
+   (calling a fn taking C strs requires manual conversions at each call site);
+   this will ultimately result in fns being both wrapped *and* registered
 
 I'll note that, even if Carp's approach isn't chosen, I think the way it handles
 overriding the native names for symbols is clean and should be done by jank as
