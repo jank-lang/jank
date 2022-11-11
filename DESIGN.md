@@ -238,6 +238,31 @@ I'll note that, even if Carp's approach isn't chosen, I think the way it handles
 overriding the native names for symbols is clean and should be done by jank as
 well.
 
+#### Suggested approach
+I think Ferret's approach is both lightweight and flexible. A system like what
+Carp has could always be added on if it's needed, but even Carp has the escape
+hatch into the native world so it makes sense to start with that.
+
+I don't like the idea of the C++ code just being a string, so I'm chewing on how
+to make it richer while still keeping things simple. In terms of how it'll look
+in jank, here's what I'm thinking:
+
+```clojure
+(defn string? [o]
+  (native/raw "{{ o }}->as_string() != nullptr"))
+```
+
+Two things of note here:
+
+1. Everything under the `native` ns will be jank-provided mechanisms for working
+   with interop
+2. Rather than just putting `o` in the string, we use interpolation; this will
+   help reduce typos, ensure captures are properly closed over, and help with
+   tooling, so LSP can identity that as a usage of `o`
+
+This alone will allow me to implement a great deal of `clojure.core` functions.
+It doesn't solve all interop questions, but I'll get to them.
+
 ## Type system
 In terms of capability set, these are the categories I want to hit:
 
