@@ -1,6 +1,8 @@
 #include <iostream>
 #include <atomic>
 
+#include <fmt/core.h>
+
 #include <jank/runtime/obj/vector.hpp>
 #include <jank/runtime/obj/map.hpp>
 #include <jank/analyze/processor.hpp>

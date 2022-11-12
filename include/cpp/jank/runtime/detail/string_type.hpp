@@ -33,9 +33,12 @@ namespace jank::runtime::detail
       , length{ std::strlen(s) }
     { }
     string_type_impl(std::string const &s)
-      /* Add one for the trailing null. */
       : data{ s }
       , length{ s.size() }
+    { }
+    string_type_impl(std::string &&s)
+      : data{ std::move(s) }
+      , length{ data->size() }
     { }
     string_type_impl(std::string_view const &s)
       : data{ s }

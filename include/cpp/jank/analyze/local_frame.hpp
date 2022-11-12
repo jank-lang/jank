@@ -14,13 +14,13 @@ namespace jank::analyze
 
   struct lifted_var
   {
-    runtime::obj::symbol local_name;
+    runtime::obj::symbol native_name;
     runtime::obj::symbol_ptr var_name;
   };
 
   struct lifted_constant
   {
-    runtime::obj::symbol local_name;
+    runtime::obj::symbol native_name;
     runtime::object_ptr data;
   };
 

@@ -47,7 +47,7 @@ namespace jank::jit
         dir_entry
       );
 
-      //std::cout << "testing " << dir_entry << std::endl;
+      std::cout << "testing file " << dir_entry << std::endl;
 
       jank::runtime::context rt_ctx;
       jank::analyze::context an_ctx{ rt_ctx };

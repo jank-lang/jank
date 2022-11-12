@@ -2,6 +2,7 @@
 
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/util.hpp>
 #include <jank/codegen/processor.hpp>
 
 namespace jank::codegen
@@ -77,11 +78,17 @@ namespace jank::codegen
     /* Forward declarations just intern the var and evaluate to it. */
     if(expr.value.is_none())
     {
-      format_to(inserter, "{}{}", var.local_name.name, (is_statement ? ";" : ""));
+      format_to
+      (
+        inserter,
+        "{}{}",
+        runtime::munge(var.native_name.name),
+        (is_statement ? ";" : "")
+      );
       return;
     }
 
-    format_to(inserter, "{}->set_root(", var.local_name.name);
+    format_to(inserter, "{}->set_root(", runtime::munge(var.native_name.name));
     gen(*expr.value.unwrap(), false);
     format_to(inserter, "){}", (is_statement ? ";" : ""));
   }
@@ -94,7 +101,7 @@ namespace jank::codegen
     (
       inserter,
       "{}->get_root(){}",
-      var.local_name.name,
+      runtime::munge(var.native_name.name),
       (is_statement ? ";" : "")
     );
   }
@@ -125,7 +132,7 @@ namespace jank::codegen
     (
       inserter,
       "{}{}",
-      constant.local_name.name,
+      runtime::munge(constant.native_name.name),
       (is_statement ? ";" : "")
     );
   }
@@ -161,7 +168,7 @@ namespace jank::codegen
   void processor::gen(analyze::expr::local_reference const &expr, bool const is_statement)
   {
     auto inserter(std::back_inserter(body_buffer));
-    format_to(inserter, "{}{}", expr.name->to_string(), (is_statement ? ";" : ""));
+    format_to(inserter, "{}{}", runtime::munge(expr.name->name), (is_statement ? ";" : ""));
   }
 
   void processor::gen(analyze::expr::function<analyze::expression> const &expr, bool const is_statement)
@@ -206,7 +213,7 @@ namespace jank::codegen
             jank::runtime::behavior::callable
         {{
       )",
-      struct_name.name
+      runtime::munge(struct_name.name)
     );
 
     format_to
@@ -229,7 +236,7 @@ namespace jank::codegen
       format_to
       (
         inserter,
-        "jank::runtime::var_ptr const {0};", v.second.local_name.name
+        "jank::runtime::var_ptr const {0};", runtime::munge(v.second.native_name.name)
       );
     }
 
@@ -238,7 +245,7 @@ namespace jank::codegen
       format_to
       (
         inserter,
-        "jank::runtime::object_ptr const {0};", v.second.local_name.name
+        "jank::runtime::object_ptr const {0};", runtime::munge(v.second.native_name.name)
       );
     }
 
@@ -247,7 +254,7 @@ namespace jank::codegen
       format_to
       (
         inserter,
-        "jank::runtime::object_ptr const {0};", v.first->name
+        "jank::runtime::object_ptr const {0};", runtime::munge(v.first->name)
       );
     }
 
@@ -255,7 +262,7 @@ namespace jank::codegen
     format_to
     (
       inserter,
-      "{0}(jank::runtime::context &rt_ctx", struct_name.name
+      "{0}(jank::runtime::context &rt_ctx", runtime::munge(struct_name.name)
     );
 
     for(auto const &v : root_expression.frame->captures)
@@ -263,7 +270,7 @@ namespace jank::codegen
       format_to
       (
         inserter,
-        ", jank::runtime::object_ptr const &{0}", v.first->name
+        ", jank::runtime::object_ptr const &{0}", runtime::munge(v.first->name)
       );
     }
 
@@ -285,7 +292,7 @@ namespace jank::codegen
         inserter,
         R"({0}{1}{{ rt_ctx.intern_var("{2}", "{3}").expect_ok() }})",
         (need_member_init_comma ? "," : ""),
-        v.second.local_name.name,
+        runtime::munge(v.second.native_name.name),
         v.second.var_name->ns,
         v.second.var_name->name
       );
@@ -299,7 +306,7 @@ namespace jank::codegen
         inserter,
         "{0}{1}{{",
         (need_member_init_comma ? "," : ""),
-        v.second.local_name.name
+        runtime::munge(v.second.native_name.name)
       );
       detail::gen_constant(v.second.data, header_buffer);
       format_to(inserter, "}}");
@@ -313,7 +320,7 @@ namespace jank::codegen
         inserter,
         "{0}{1}{{ {1} }}",
         (need_member_init_comma ? "," : ""),
-        v.first->name
+        runtime::munge(v.first->name)
       );
       need_member_init_comma = true;
     }
@@ -328,7 +335,13 @@ namespace jank::codegen
     bool param_comma{};
     for(auto const &param : root_expression.params)
     {
-      format_to(inserter, "{} jank::runtime::object_ptr const &{}", (param_comma ? ", " : ""), param->to_string());
+      format_to
+      (
+        inserter,
+        "{} jank::runtime::object_ptr const &{}",
+        (param_comma ? ", " : ""),
+        runtime::munge(param->name)
+      );
       param_comma = true;
     }
     format_to(inserter, ") const override {{");
@@ -368,13 +381,13 @@ namespace jank::codegen
           R"(
             {0} {1}{{ *reinterpret_cast<jank::runtime::context*>({2})
           )",
-          struct_name.name,
-          tmp_name.name,
+          runtime::munge(struct_name.name),
+          runtime::munge(tmp_name.name),
           fmt::ptr(&rt_ctx)
         );
 
         for(auto const &v : root_expression.frame->captures)
-        { format_to(inserter, ", {0}", v.first->name); }
+        { format_to(inserter, ", {0}", runtime::munge(v.first->name)); }
 
         format_to(inserter, "}};");
 
@@ -382,8 +395,8 @@ namespace jank::codegen
         (
           inserter,
           "{1}.call();",
-          struct_name.name,
-          tmp_name.name,
+          runtime::munge(struct_name.name),
+          runtime::munge(tmp_name.name),
           fmt::ptr(&rt_ctx)
         );
       }
@@ -393,12 +406,12 @@ namespace jank::codegen
         (
           inserter,
           "jank::runtime::make_box<{0}>(std::ref(*reinterpret_cast<jank::runtime::context*>({1}))",
-          struct_name.name,
+          runtime::munge(struct_name.name),
           fmt::ptr(&rt_ctx)
         );
 
         for(auto const &v : root_expression.frame->captures)
-        { format_to(inserter, ", {0}", v.first->name); }
+        { format_to(inserter, ", {0}", runtime::munge(v.first->name)); }
 
         format_to(inserter, ")");
       }

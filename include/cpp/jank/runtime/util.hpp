@@ -32,4 +32,7 @@ namespace jank::runtime
 
   /* TODO: This should be the `or` macro. */
   object_ptr either(object_ptr const &l, object_ptr const &r);
+
+  detail::string_type munge(detail::string_type const &o);
+  object_ptr munge(object_ptr const &o);
 }

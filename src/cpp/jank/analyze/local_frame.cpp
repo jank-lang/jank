@@ -1,5 +1,8 @@
 #include <functional>
 
+#include <fmt/core.h>
+
+#include <jank/runtime/util.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/local_frame.hpp>
 
@@ -90,7 +93,7 @@ namespace jank::analyze
       auto const state(rt_ctx.get_thread_state());
       qualified_sym->ns = state.current_ns->get_root()->as_ns()->name->name;
     }
-    lifted_var lv{ analyze::context::unique_name("var"), qualified_sym };
+    lifted_var lv{ runtime::munge(qualified_sym->name), qualified_sym };
     closest_fn.lifted_vars.emplace(qualified_sym, std::move(lv));
     return qualified_sym;
   }
