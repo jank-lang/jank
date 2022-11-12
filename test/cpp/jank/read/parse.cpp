@@ -112,6 +112,15 @@ namespace jank::read::parse
       }
     }
 
+    SUBCASE("Slash")
+    {
+      lex::processor lp{ "/" };
+      processor p{ lp.begin(), lp.end() };
+      auto const r(p.next());
+      CHECK(r.is_ok());
+      CHECK(r.expect_ok()->equal(runtime::obj::symbol{ "", runtime::detail::string_type{ "/" } }));
+    }
+
     SUBCASE("Qualified")
     {
       lex::processor lp{ "foo/foo foo.bar/bar spam.bar/spam" };

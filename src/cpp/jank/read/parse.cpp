@@ -212,8 +212,14 @@ namespace jank::read::parse
     std::string ns, name;
     if(slash != std::string::npos)
     {
-      ns = sv.substr(0, slash);
-      name = sv.substr(slash + 1);
+      /* If it's only a slash, that a name. Otherwise, it's a ns/name separator. */
+      if(sv.size() == 1)
+      { name = sv; }
+      else
+      {
+        ns = sv.substr(0, slash);
+        name = sv.substr(slash + 1);
+      }
     }
     else
     { name = sv; }
