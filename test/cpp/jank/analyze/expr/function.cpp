@@ -5,6 +5,10 @@
 #include <jank/runtime/obj/number.hpp>
 #include <jank/analyze/processor.hpp>
 
+/* TODO: Negative test cases:
+ * 1. no arg vector
+ * 2. arg vector is another type
+ * 3. fn* used as a value */
 namespace jank::analyze::expr
 {
   TEST_CASE("Empty")

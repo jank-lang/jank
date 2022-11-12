@@ -70,6 +70,7 @@ namespace jank::analyze
       { symbol::create("let*"), make_fn(&processor::analyze_let) },
       { symbol::create("if"), make_fn(&processor::analyze_if) },
       { symbol::create("quote"), make_fn(&processor::analyze_quote) },
+      { symbol::create("native/raw"), make_fn(&processor::analyze_native_raw) },
     };
   }
 
@@ -278,6 +279,21 @@ namespace jank::analyze
     { return err(error{ "invalid quote: expects one argument" }); }
 
     return analyze_primitive_literal(o->data.rest().first().unwrap(), current_frame, ctx);
+  }
+
+  processor::expression_result processor::analyze_native_raw
+  (runtime::obj::list_ptr const &o, local_frame_ptr &, context &)
+  {
+    if(o->count() != 2)
+    { return err(error{ "invalid native/raw: expects one argument" }); }
+
+    auto const &code(o->data.rest().first().unwrap());
+    if(code->as_string() == nullptr)
+    { return err(error{ "invalid native/raw: expects string of C++ code" }); }
+
+    /* TODO: Interpolated expressions. */
+
+    return { expr::native_raw<expression>{ boost::static_pointer_cast<runtime::obj::string>(code) } };
   }
 
   processor::expression_result processor::analyze_primitive_literal

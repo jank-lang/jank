@@ -68,17 +68,33 @@ namespace jank::jit
       //std::cout << cg_prc.declaration_str() << std::endl;
       //std::cout << cg_prc.expression_str() << std::endl;
 
+      /* Silence ouptut when running these. This include compilation errors from Cling, since we're
+       * going to intentionally make that happen. */
+      std::stringstream new_cout, new_cerr;
+      std::streambuf * const old_cout{ std::cout.rdbuf(new_cout.rdbuf()) };
+      std::streambuf * const old_cerr{ std::cerr.rdbuf(new_cerr.rdbuf()) };
       try
       {
         jank::jit::processor jit_prc;
         auto const result(jit_prc.eval(rt_ctx, cg_prc));
-        CHECK_MESSAGE(expect_success, "Test passed when a failure was expected: ", dir_entry);
-        CHECK(result.is_ok());
-        CHECK(result.expect_ok().is_some());
-        CHECK(result.expect_ok().unwrap()->equal(cardinal_result));
+        if(!expect_success)
+        { CHECK_MESSAGE(result.is_err(), "Test passed when a failure was expected: ", dir_entry); }
+        else
+        {
+          CHECK(result.is_ok());
+          CHECK(result.expect_ok().is_some());
+          CHECK_MESSAGE
+          (
+            result.expect_ok().unwrap()->equal(cardinal_result),
+            "Test file expected to result in :success but did not: ", dir_entry
+          );
+        }
       }
       catch(...)
       { CHECK(!expect_success); }
+
+      std::cout.rdbuf(old_cout);
+      std::cerr.rdbuf(old_cerr);
     }
   }
 }

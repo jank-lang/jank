@@ -1,0 +1,15 @@
+; TODO: Use interpolation in this file.
+
+; native/raw expressions can appear anywhere.
+(assert (native/raw "make_box<obj::boolean>(true)"))
+(assert (= (native/raw "make_box<obj::integer>(77)") 77))
+
+(def keyword? (fn* [o]
+                ; An explicit return is required in the last position of a fn.
+                (native/raw "return make_box<obj::boolean>(o->as_keyword() != nullptr)")))
+
+(assert (= (keyword? :meow) true))
+(assert (= (keyword? 1) false))
+(assert (= (keyword? nil) false))
+
+:success

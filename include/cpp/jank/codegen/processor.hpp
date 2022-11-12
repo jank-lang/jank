@@ -41,6 +41,7 @@ namespace jank::codegen
     void gen(analyze::expr::map<analyze::expression> const &, bool const is_statement);
     void gen(analyze::expr::local_reference const &, bool const is_statement);
     void gen(analyze::expr::function<analyze::expression> const &, bool const is_statement);
+    void gen(analyze::expr::native_raw<analyze::expression> const &, bool const is_statement);
 
     std::string declaration_str();
     void build_header();

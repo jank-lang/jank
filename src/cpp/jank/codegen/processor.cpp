@@ -137,7 +137,8 @@ namespace jank::codegen
     );
   }
 
-  void processor::gen(analyze::expr::vector<analyze::expression> const &expr, bool const is_statement)
+  void processor::gen
+  (analyze::expr::vector<analyze::expression> const &expr, bool const is_statement)
   {
     auto inserter(std::back_inserter(body_buffer));
     format_to(inserter, "jank::runtime::make_box<jank::runtime::obj::vector>(");
@@ -171,7 +172,8 @@ namespace jank::codegen
     format_to(inserter, "{}{}", runtime::munge(expr.name->name), (is_statement ? ";" : ""));
   }
 
-  void processor::gen(analyze::expr::function<analyze::expression> const &expr, bool const is_statement)
+  void processor::gen
+  (analyze::expr::function<analyze::expression> const &expr, bool const is_statement)
   {
     /* Since each codegen proc handles one callable struct, we create a new one for this fn. */
     processor prc{ rt_ctx, an_ctx, expr };
@@ -180,6 +182,13 @@ namespace jank::codegen
     auto body_inserter(std::back_inserter(body_buffer));
     format_to(header_inserter, "{}", prc.declaration_str());
     format_to(body_inserter, "{}{}", prc.expression_str(false), (is_statement ? ";" : ""));
+  }
+
+  void processor::gen
+  (analyze::expr::native_raw<analyze::expression> const &expr, bool const is_statement)
+  {
+    auto inserter(std::back_inserter(body_buffer));
+    format_to(inserter, "{}{}", expr.code->data, (is_statement ? ";" : ""));
   }
 
   std::string processor::declaration_str()
@@ -344,12 +353,26 @@ namespace jank::codegen
       );
       param_comma = true;
     }
-    format_to(inserter, ") const override {{");
+    format_to
+    (
+      inserter,
+      R"(
+        ) const override {{
+        using namespace jank;
+        using namespace jank::runtime;
+      )"
+    );
 
     for(auto it(root_expression.body.body.begin()); it != root_expression.body.body.end();)
     {
       auto const &form(*it);
-      if(++it == root_expression.body.body.end())
+      if
+      (
+        ++it == root_expression.body.body.end()
+        /* Ending a fn in a native/raw expression assumes it will be returning something
+         * explicitly. */
+        && boost::get<analyze::expr::native_raw<analyze::expression>>(&form.data) == nullptr
+      )
       { format_to(inserter, "return "); }
       gen(form, true);
     }

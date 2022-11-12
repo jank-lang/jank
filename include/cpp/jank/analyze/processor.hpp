@@ -72,6 +72,7 @@ namespace jank::analyze
     expression_result analyze_let(runtime::obj::list_ptr const &, local_frame_ptr &, context &);
     expression_result analyze_if(runtime::obj::list_ptr const &, local_frame_ptr &, context &);
     expression_result analyze_quote(runtime::obj::list_ptr const &, local_frame_ptr &, context &);
+    expression_result analyze_native_raw(runtime::obj::list_ptr const &, local_frame_ptr &, context &);
     expression_result analyze_primitive_literal(runtime::object_ptr const &, local_frame_ptr &, context &);
     expression_result analyze_vector(runtime::obj::vector_ptr const &, local_frame_ptr &, context &);
     expression_result analyze_map(runtime::obj::map_ptr const &, local_frame_ptr &, context &);
