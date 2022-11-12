@@ -249,7 +249,7 @@ in jank, here's what I'm thinking:
 
 ```clojure
 (defn string? [o]
-  (native/raw "{{ o }}->as_string() != nullptr"))
+  (native/raw "${ o }->as_string() != nullptr"))
 ```
 
 Two things of note here:
@@ -257,8 +257,8 @@ Two things of note here:
 1. Everything under the `native` ns will be jank-provided mechanisms for working
    with interop
 2. Rather than just putting `o` in the string, we use interpolation; this will
-   help reduce typos, ensure captures are properly closed over, and help with
-   tooling, so LSP can identity that as a usage of `o`
+   help reduce typos, magically do munging, ensure captures are properly closed
+   over, and help with tooling, so LSP can identity that as a usage of `o`
 
 This alone will allow me to implement a great deal of `clojure.core` functions.
 It doesn't solve all interop questions, but I'll get to them.
