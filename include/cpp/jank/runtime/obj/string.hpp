@@ -10,6 +10,7 @@ namespace jank::runtime::obj
     string() = default;
     string(string &&) = default;
     string(string const &) = default;
+    string(runtime::detail::string_type const &d);
     string(runtime::detail::string_type &&d);
     ~string() = default;
 

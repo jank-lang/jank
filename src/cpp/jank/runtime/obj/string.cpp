@@ -9,6 +9,9 @@
 
 namespace jank::runtime::obj
 {
+  string::string(runtime::detail::string_type const &d)
+    : data{ d }
+  { }
   string::string(runtime::detail::string_type &&d)
     : data{ std::move(d) }
   { }

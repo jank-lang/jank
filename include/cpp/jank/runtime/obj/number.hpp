@@ -27,8 +27,6 @@ namespace jank::runtime::obj
 
     runtime::detail::boolean_type data{};
   };
-  extern object_ptr JANK_TRUE; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-  extern object_ptr JANK_FALSE; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
   struct integer : object, number, pool_item_base<integer>
   {

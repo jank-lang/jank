@@ -1,5 +1,6 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/obj/string.hpp>
 
 namespace jank::runtime
 {
@@ -30,4 +31,19 @@ namespace jank::runtime
   { return 0; }
   obj::nil const* obj::nil::as_nil() const
   { return this; }
+
+  object_ptr make_box(std::nullptr_t const &)
+  { return JANK_NIL; }
+  object_ptr make_box(bool const b)
+  { return b ? obj::JANK_TRUE : obj::JANK_FALSE; }
+  object_ptr make_box(int const i)
+  { return make_box<obj::integer>(detail::integer_type{ i }); }
+  object_ptr make_box(detail::integer_type const i)
+  { return make_box<obj::integer>(i); }
+  object_ptr make_box(detail::real_type const r)
+  { return make_box<obj::real>(r); }
+  object_ptr make_box(detail::string_type const &s)
+  { return make_box<obj::string>(s); }
+  object_ptr make_box(std::string_view const &s)
+  { return make_box<obj::string>(s); }
 }

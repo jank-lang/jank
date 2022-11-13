@@ -147,10 +147,20 @@ namespace jank::runtime
 
       nil const* as_nil() const override;
     };
+
+    extern object_ptr JANK_TRUE; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+    extern object_ptr JANK_FALSE; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
   }
   extern object_ptr JANK_NIL; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-  extern object_ptr JANK_TRUE; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-  extern object_ptr JANK_FALSE; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+
+
+  object_ptr make_box(std::nullptr_t const &);
+  object_ptr make_box(bool const);
+  object_ptr make_box(int const);
+  object_ptr make_box(detail::integer_type const);
+  object_ptr make_box(detail::real_type const);
+  object_ptr make_box(detail::string_type const &);
+  object_ptr make_box(std::string_view const &);
 }
 
 namespace std
