@@ -2,11 +2,8 @@
 #include <vector>
 #include <filesystem>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weverything"
 #include <cling/Interpreter/Interpreter.h>
 #include <cling/Interpreter/Value.h>
-#pragma clang diagnostic pop
 
 #include <jank/util/mapped_file.hpp>
 #include <jank/read/lex.hpp>

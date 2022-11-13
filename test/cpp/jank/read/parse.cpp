@@ -1,7 +1,4 @@
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weverything"
 #include <unistd.h>
-#pragma clang diagnostic pop
 
 #include <vector>
 #include <array>
@@ -19,10 +16,7 @@
 #include <jank/runtime/obj/list.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weverything"
 #include <doctest/doctest.h>
-#pragma clang diagnostic pop
 
 namespace jank::read::parse
 {

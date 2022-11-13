@@ -1,9 +1,6 @@
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weverything"
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
-#pragma clang diagnostic pop
 
 #include <iostream>
 #include <filesystem>

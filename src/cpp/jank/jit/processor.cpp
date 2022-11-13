@@ -1,7 +1,4 @@
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weverything"
 #include <cling/Interpreter/Value.h>
-#pragma clang diagnostic pop
 
 #include <jank/util/process_location.hpp>
 #include <jank/util/make_array.hpp>

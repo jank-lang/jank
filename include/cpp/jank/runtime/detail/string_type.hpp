@@ -4,11 +4,8 @@
 #include <memory>
 #include <cstring>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weverything"
 #include <immer/box.hpp>
 #include <immer/memory_policy.hpp>
-#pragma clang diagnostic pop
 
 #include <jank/runtime/detail/type.hpp>
 

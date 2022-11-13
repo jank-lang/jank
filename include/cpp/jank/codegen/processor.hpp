@@ -2,10 +2,7 @@
 
 #include <sstream>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weverything"
 #include <folly/FBVector.h>
-#pragma clang diagnostic pop
 
 #include <fmt/format.h>
 

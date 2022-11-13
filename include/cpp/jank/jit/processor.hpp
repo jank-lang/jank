@@ -2,10 +2,7 @@
 
 #include <memory>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weverything"
 #include <cling/Interpreter/Interpreter.h>
-#pragma clang diagnostic pop
 
 #include <folly/FBString.h>
 

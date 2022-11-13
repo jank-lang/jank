@@ -7,8 +7,6 @@
 #include <memory>
 #include <map>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weverything"
 #include <immer/vector.hpp>
 #include <immer/vector_transient.hpp>
 #include <immer/map.hpp>
@@ -16,7 +14,6 @@
 #include <immer/set.hpp>
 #include <immer/set_transient.hpp>
 #include <immer/memory_policy.hpp>
-#pragma clang diagnostic pop
 
 #include <jank/runtime/memory_pool.hpp>
 #include <jank/runtime/detail/type.hpp>

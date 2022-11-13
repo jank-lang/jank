@@ -12,17 +12,11 @@
 #include <jank/analyze/processor.hpp>
 #include <jank/jit/processor.hpp>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weverything"
 #include <cling/Interpreter/Interpreter.h>
 #include <cling/Interpreter/Value.h>
-#pragma clang diagnostic pop
 
 /* This must go last; doctest and glog both define CHECK and family. */
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weverything"
 #include <doctest/doctest.h>
-#pragma clang diagnostic pop
 
 namespace jank::jit
 {
