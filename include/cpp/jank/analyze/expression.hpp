@@ -34,7 +34,7 @@ namespace jank::analyze
       expr::local_reference,
       expr::let<E>,
       expr::do_<E>,
-      expr::native_raw<E>
+      boost::recursive_wrapper<expr::native_raw<E>>
     >;
 
     expression() = default;

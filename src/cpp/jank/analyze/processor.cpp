@@ -282,18 +282,60 @@ namespace jank::analyze
   }
 
   processor::expression_result processor::analyze_native_raw
-  (runtime::obj::list_ptr const &o, local_frame_ptr &, context &)
+  (runtime::obj::list_ptr const &o, local_frame_ptr &current_frame, context &ctx)
   {
     if(o->count() != 2)
     { return err(error{ "invalid native/raw: expects one argument" }); }
 
     auto const &code(o->data.rest().first().unwrap());
-    if(code->as_string() == nullptr)
+    auto const * const code_str(code->as_string());
+    if(code_str == nullptr)
     { return err(error{ "invalid native/raw: expects string of C++ code" }); }
+    if(code_str->data.empty())
+    { return { expr::native_raw<expression>{ } }; }
 
-    /* TODO: Interpolated expressions. */
+    /* native/raw expressions are broken up into chunks of either literal C++ code or
+     * interpolated jank code, the latter needing to also be analyzed. */
+    decltype(expr::native_raw<expression>::chunks) chunks;
+    constexpr std::string_view interp_start{ "#{" }, interp_end{ "}#" };
+    for(size_t it{}; it != std::string::npos; )
+    {
+      auto const next_start(code_str->data.data->find(interp_start, it));
+      if(next_start == std::string::npos)
+      {
+        /* This is the final chunk. */
+        chunks.emplace_back(std::string_view{ code_str->data.data->data() + it });
+        break;
+      }
+      auto const next_end(code_str->data.data->find(interp_end, next_start));
+      if(next_end == std::string::npos)
+      { return err(error{ "no matching }$ found for native/raw interpolation" }); }
 
-    return { expr::native_raw<expression>{ boost::static_pointer_cast<runtime::obj::string>(code) } };
+      read::lex::processor l_prc
+      {
+        {
+          code_str->data.data->data() + next_start + interp_start.size(),
+          next_end - next_start - interp_end.size()
+        }
+      };
+      read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+      auto parsed_it(p_prc.begin());
+      if(parsed_it->is_err())
+      { return parsed_it->expect_err_move(); }
+      auto result(analyze(parsed_it->expect_ok(), current_frame, ctx));
+      if(result.is_err())
+      { return result.expect_err_move(); }
+
+      if(next_start - it > 0)
+      { chunks.emplace_back(std::string_view{ code_str->data.data->data() + it, next_start - it }); }
+      chunks.emplace_back(result.expect_ok_move().unwrap());
+      it = next_end + interp_end.size();
+
+      if(++parsed_it != p_prc.end())
+      { return err(error{ "invalid native/raw: only one expression per interpolation" }); }
+    }
+
+    return { expr::native_raw<expression>{ std::move(chunks) } };
   }
 
   processor::expression_result processor::analyze_primitive_literal

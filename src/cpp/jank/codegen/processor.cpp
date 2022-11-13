@@ -188,7 +188,15 @@ namespace jank::codegen
   (analyze::expr::native_raw<analyze::expression> const &expr, bool const is_statement)
   {
     auto inserter(std::back_inserter(body_buffer));
-    format_to(inserter, "{}{}", expr.code->data, (is_statement ? ";" : ""));
+    for(auto const &chunk : expr.chunks)
+    {
+      auto const * const code(boost::get<runtime::detail::string_type>(&chunk));
+      if(code != nullptr)
+      { format_to(inserter, "{}", *code->data); }
+      else
+      { gen(boost::get<analyze::expression>(chunk), false); }
+    }
+    format_to(inserter, "{}", (is_statement ? ";" : ""));
   }
 
   std::string processor::declaration_str()

@@ -249,7 +249,7 @@ in jank, here's what I'm thinking:
 
 ```clojure
 (defn string? [o]
-  (native/raw "return make_box<obj::boolean>(${ o }->as_string() != nullptr)"))
+  (native/raw "return make_box<obj::boolean>(#{ o }#->as_string() != nullptr)"))
 ```
 
 Two things of note here:
