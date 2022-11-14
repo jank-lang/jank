@@ -13,7 +13,8 @@
 
 (def also-keyword?
   (fn* [o]
-    ; Interpolation can also capture vars, which then lifts them appropriately for this fn's scope.
+    ; Interpolation can contain arbitrary jank code.
+    ; It can also capture vars and locals, which lifts and captures them accordingly.
     (native/raw "return #{ (keyword? o) }# ")))
 
 (assert (= (also-keyword? :meow) true))

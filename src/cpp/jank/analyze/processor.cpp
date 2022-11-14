@@ -297,6 +297,8 @@ namespace jank::analyze
     /* native/raw expressions are broken up into chunks of either literal C++ code or
      * interpolated jank code, the latter needing to also be analyzed. */
     decltype(expr::native_raw<expression>::chunks) chunks;
+    /* TODO: Just use } for end and rely on token parsing info for when that is.
+     * This requires storing line/col start/end meta in each object. */
     constexpr std::string_view interp_start{ "#{" }, interp_end{ "}#" };
     for(size_t it{}; it != std::string::npos; )
     {
