@@ -3,7 +3,8 @@
 #include <unistd.h>
 
 #include <iostream>
-#include <filesystem>
+
+#include <boost/filesystem.hpp>
 
 #include <jank/util/mapped_file.hpp>
 #include <jank/option.hpp>
@@ -32,9 +33,9 @@ namespace jank::util
 
   result<mapped_file, std::string> map_file(std::string_view const &path)
   {
-    if(!std::filesystem::exists(path))
+    if(!boost::filesystem::exists(path.data()))
     { return err("file doesn't exist"); }
-    auto const file_size(std::filesystem::file_size(path));
+    auto const file_size(boost::filesystem::file_size(path.data()));
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     auto const fd(::open(path.data(), O_RDONLY));
     if(fd < 0)

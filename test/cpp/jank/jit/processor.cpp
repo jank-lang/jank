@@ -12,6 +12,8 @@
 #include <jank/analyze/processor.hpp>
 #include <jank/jit/processor.hpp>
 
+#include <boost/filesystem.hpp>
+
 #include <cling/Interpreter/Interpreter.h>
 #include <cling/Interpreter/Value.h>
 
@@ -25,9 +27,9 @@ namespace jank::jit
     auto const cardinal_result
     (runtime::obj::keyword::create(runtime::obj::symbol{ "", "success" }, true));
 
-    for(auto const &dir_entry : std::filesystem::recursive_directory_iterator("test/jank"))
+    for(auto const &dir_entry : boost::filesystem::recursive_directory_iterator("test/jank"))
     {
-      if(!dir_entry.is_regular_file())
+      if(!boost::filesystem::is_regular_file(dir_entry.path()))
       { continue; }
 
       auto const expect_success
