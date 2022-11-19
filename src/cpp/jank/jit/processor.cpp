@@ -23,7 +23,7 @@ namespace jank::jit
     interpreter->loadHeader("jank/prelude.hpp");
   }
 
-  result<option<runtime::object_ptr>, folly::fbstring>  processor::eval
+  result<option<runtime::object_ptr>, std::string>  processor::eval
   (runtime::context &, codegen::processor &cg_prc) const
   {
     interpreter->process(cg_prc.declaration_str());

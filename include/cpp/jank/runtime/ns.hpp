@@ -2,8 +2,9 @@
 
 #include <functional>
 #include <unordered_map>
+#include <mutex>
 
-#include <folly/Synchronized.h>
+#include <libguarded/shared_guarded.hpp>
 
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/var.hpp>
@@ -30,7 +31,7 @@ namespace jank::runtime
     bool operator ==(ns const &rhs) const;
 
     obj::symbol_ptr name;
-    folly::Synchronized<std::unordered_map<obj::symbol_ptr, var_ptr>> vars;
+    libguarded::shared_guarded<std::unordered_map<obj::symbol_ptr, var_ptr>> vars;
     context const &ctx;
   };
   using ns_ptr = detail::box_type<ns>;

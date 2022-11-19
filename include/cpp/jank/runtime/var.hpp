@@ -1,8 +1,9 @@
 #pragma once
 
 #include <functional>
+#include <mutex>
 
-#include <folly/Synchronized.h>
+#include <libguarded/shared_guarded.hpp>
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/symbol.hpp>
@@ -38,7 +39,7 @@ namespace jank::runtime
     obj::symbol_ptr name;
 
   private:
-    folly::Synchronized<object_ptr> root;
+    libguarded::shared_guarded<object_ptr> root;
   };
   using var_ptr = detail::box_type<var>;
 }

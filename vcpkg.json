@@ -3,8 +3,10 @@
   "version-semver": "0.1.0",
   "dependencies": [
     "immer",
-    "folly",
+    "libguarded",
     "boost-smart-ptr",
+    "boost-variant",
+    "boost-algorithm",
     "magic-enum",
     "fmt"
   ],

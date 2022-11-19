@@ -2,8 +2,6 @@
 
 #include <unordered_map>
 
-#include <folly/FBVector.h>
-
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/option.hpp>
@@ -57,7 +55,7 @@ namespace jank::analyze
     struct find_result
     {
       local_binding &binding;
-      folly::fbvector<std::shared_ptr<local_frame>> crossed_fns;
+      std::vector<std::shared_ptr<local_frame>> crossed_fns;
     };
 
     /* This is used to find both captures and regular locals, since it's

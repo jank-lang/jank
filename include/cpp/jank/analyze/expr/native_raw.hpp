@@ -2,8 +2,6 @@
 
 #include <boost/variant.hpp>
 
-#include <folly/FBVector.h>
-
 #include <jank/runtime/obj/string.hpp>
 
 namespace jank::analyze::expr
@@ -16,6 +14,6 @@ namespace jank::analyze::expr
   {
     using chunk_t = boost::variant<runtime::detail::string_type, E>;
 
-    folly::fbvector<chunk_t> chunks;
+    std::vector<chunk_t> chunks;
   };
 }

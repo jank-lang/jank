@@ -1,9 +1,5 @@
 #pragma once
 
-#include <sstream>
-
-#include <folly/FBVector.h>
-
 #include <fmt/format.h>
 
 #include <jank/analyze/expression.hpp>

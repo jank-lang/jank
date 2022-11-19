@@ -3,7 +3,7 @@
 #include <mutex>
 #include <unordered_map>
 
-#include <folly/Synchronized.h>
+#include <libguarded/shared_guarded.hpp>
 
 #include <jank/result.hpp>
 #include <jank/runtime/ns.hpp>
@@ -36,8 +36,8 @@ namespace jank::runtime
     object_ptr eval_file(std::string_view const &path, analyze::context &);
     object_ptr eval_string(std::string_view const &code, analyze::context &);
 
-    folly::Synchronized<std::unordered_map<obj::symbol_ptr, detail::box_type<ns>>> namespaces;
-    folly::Synchronized<std::unordered_map<obj::symbol, obj::keyword_ptr>> keywords;
+    libguarded::shared_guarded<std::unordered_map<obj::symbol_ptr, detail::box_type<ns>>> namespaces;
+    libguarded::shared_guarded<std::unordered_map<obj::symbol, obj::keyword_ptr>> keywords;
 
     /* TODO: This can be forward declared and moved to the cpp. */
     struct thread_state
@@ -53,6 +53,6 @@ namespace jank::runtime
     thread_state& get_thread_state();
     thread_state& get_thread_state(option<thread_state> init);
 
-    folly::Synchronized<std::unordered_map<std::thread::id, thread_state>> thread_states;
+    libguarded::shared_guarded<std::unordered_map<std::thread::id, thread_state>> thread_states;
   };
 }
