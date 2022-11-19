@@ -13,6 +13,9 @@
 namespace jank::analyze
 { struct context; }
 
+namespace jank::jit
+{ struct processor; }
+
 namespace jank::runtime
 {
   struct context
@@ -32,9 +35,9 @@ namespace jank::runtime
     obj::keyword_ptr intern_keyword(obj::symbol const &sym, bool const resolved);
     obj::keyword_ptr intern_keyword(std::string_view const &ns, std::string_view const &name, bool resolved);
 
-    void eval_prelude(analyze::context &);
-    object_ptr eval_file(std::string_view const &path, analyze::context &);
-    object_ptr eval_string(std::string_view const &code, analyze::context &);
+    void eval_prelude(analyze::context &, jit::processor const &);
+    object_ptr eval_file(std::string_view const &path, analyze::context &, jit::processor const &);
+    object_ptr eval_string(std::string_view const &code, analyze::context &, jit::processor const &);
 
     libguarded::shared_guarded<std::unordered_map<obj::symbol_ptr, detail::box_type<ns>>> namespaces;
     libguarded::shared_guarded<std::unordered_map<obj::symbol, obj::keyword_ptr>> keywords;

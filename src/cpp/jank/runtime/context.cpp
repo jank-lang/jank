@@ -121,19 +121,21 @@ namespace jank::runtime
     return none;
   }
 
-  void context::eval_prelude(analyze::context &an_ctx)
+  void context::eval_prelude(analyze::context &an_ctx, jit::processor const &jit_prc)
   {
     /* TODO: Know the location of this in any installation. */
-    eval_file("src/jank/clojure/core.jank", an_ctx);
+    eval_file("src/jank/clojure/core.jank", an_ctx, jit_prc);
   }
 
-  object_ptr context::eval_file(std::string_view const &path, analyze::context &an_ctx)
+  object_ptr context::eval_file
+  (std::string_view const &path, analyze::context &an_ctx, jit::processor const &jit_prc)
   {
     auto const file(util::map_file(path));
-    return eval_string({ file.expect_ok().head, file.expect_ok().size }, an_ctx);
+    return eval_string({ file.expect_ok().head, file.expect_ok().size }, an_ctx, jit_prc);
   }
 
-  object_ptr context::eval_string(std::string_view const &code, analyze::context &an_ctx)
+  object_ptr context::eval_string
+  (std::string_view const &code, analyze::context &an_ctx, jit::processor const &jit_prc)
   {
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
@@ -146,7 +148,6 @@ namespace jank::runtime
       an_prc.result(an_ctx).expect_ok_move().unwrap()
     };
 
-    jit::processor jit_prc;
     return jit_prc.eval(*this, cg_prc).expect_ok().unwrap();
   }
 

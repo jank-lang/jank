@@ -2,6 +2,7 @@
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/analyze/processor.hpp>
+#include <jank/jit/processor.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #include <doctest/doctest.h>
@@ -12,6 +13,7 @@ namespace jank::analyze::expr
   {
     runtime::context rt_ctx;
     context an_ctx{ rt_ctx };
+    jit::processor jit_prc;
 
     SUBCASE("Missing")
     {
@@ -24,7 +26,7 @@ namespace jank::analyze::expr
 
     SUBCASE("Present")
     {
-      rt_ctx.eval_string("(def foo 1)", an_ctx);
+      rt_ctx.eval_string("(def foo 1)", an_ctx, jit_prc);
 
       read::lex::processor l_prc{ "foo" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
@@ -43,6 +45,7 @@ namespace jank::analyze::expr
   {
     runtime::context rt_ctx;
     context an_ctx{ rt_ctx };
+    jit::processor jit_prc;
 
     SUBCASE("Missing")
     {
@@ -55,7 +58,7 @@ namespace jank::analyze::expr
 
     SUBCASE("Present")
     {
-      rt_ctx.eval_string("(def foo 1)", an_ctx);
+      rt_ctx.eval_string("(def foo 1)", an_ctx, jit_prc);
 
       read::lex::processor l_prc{ "clojure.core/foo" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };

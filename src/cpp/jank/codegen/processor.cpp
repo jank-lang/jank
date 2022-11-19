@@ -425,10 +425,8 @@ namespace jank::codegen
         format_to
         (
           inserter,
-          "{1}.call();",
-          runtime::munge(struct_name.name),
-          runtime::munge(tmp_name.name),
-          fmt::ptr(&rt_ctx)
+          "{}.call();",
+          runtime::munge(tmp_name.name)
         );
       }
       else

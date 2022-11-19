@@ -26,8 +26,13 @@ int main(int const argc, char const **argv)
 
   jank::runtime::context rt_ctx;
   jank::analyze::context an_ctx{ rt_ctx };
+  //auto start = std::chrono::high_resolution_clock::now();
+  jank::jit::processor jit_prc;
+  //auto end = std::chrono::high_resolution_clock::now();
+  //std::chrono::duration<double> diff = end - start;
+  //std::cout << "jit startup time: " << diff.count() << "s" << std::endl;
 
-  rt_ctx.eval_prelude(an_ctx);
+  rt_ctx.eval_prelude(an_ctx, jit_prc);
 
   auto const mfile(jank::util::map_file(file));
   jank::read::lex::processor l_prc{ { mfile.expect_ok().head, mfile.expect_ok().size } };
@@ -43,7 +48,6 @@ int main(int const argc, char const **argv)
   std::cout << cg_prc.declaration_str() << std::endl;
   std::cout << cg_prc.expression_str() << std::endl;
 
-  jank::jit::processor jit_prc;
   std::cout << jit_prc.eval(rt_ctx, cg_prc).expect_ok().unwrap()->to_string() << std::endl;
 
   //std::string line;

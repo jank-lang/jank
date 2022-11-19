@@ -43,17 +43,18 @@ namespace jank::jit
 
       std::cout << "testing file " << dir_entry << std::endl;
 
-      jank::runtime::context rt_ctx;
-      jank::analyze::context an_ctx{ rt_ctx };
+      runtime::context rt_ctx;
+      analyze::context an_ctx{ rt_ctx };
+      jit::processor jit_prc;
 
-      rt_ctx.eval_prelude(an_ctx);
+      rt_ctx.eval_prelude(an_ctx, jit_prc);
 
-      auto const mfile(jank::util::map_file(dir_entry.path().string()));
-      jank::read::lex::processor l_prc{ { mfile.expect_ok().head, mfile.expect_ok().size } };
-      jank::read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-      jank::analyze::processor an_prc
+      auto const mfile(util::map_file(dir_entry.path().string()));
+      read::lex::processor l_prc{ { mfile.expect_ok().head, mfile.expect_ok().size } };
+      read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+      analyze::processor an_prc
       { rt_ctx, p_prc.begin(), p_prc.end() };
-      jank::codegen::processor cg_prc
+      codegen::processor cg_prc
       {
         rt_ctx,
         an_ctx,
@@ -69,7 +70,6 @@ namespace jank::jit
       std::streambuf * const old_cerr{ std::cerr.rdbuf(new_cerr.rdbuf()) };
       try
       {
-        jank::jit::processor jit_prc;
         auto const result(jit_prc.eval(rt_ctx, cg_prc));
         if(!expect_success)
         { CHECK_MESSAGE(result.is_err(), "Test passed when a failure was expected: ", dir_entry); }
