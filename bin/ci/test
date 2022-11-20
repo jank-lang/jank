@@ -7,7 +7,7 @@ if [[ ! -d "${cling_dir}" ]];
 then
   mkdir -p build
   pushd build
-    ./bin/build-cling
+    ../bin/build-cling
   popd
 fi
 export CC="${cling_dir}/bin/clang"
