@@ -5,6 +5,7 @@ set -eu
 cling_dir="${PWD}/build/cling-build"
 if [[ ! -d "${cling_dir}" ]];
 then
+  mkdir -p build
   pushd build
     ./bin/build-cling
   popd
