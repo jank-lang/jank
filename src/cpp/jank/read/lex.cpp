@@ -127,9 +127,9 @@ namespace jank::read
 
     static bool is_symbol_char(char const c)
     {
-      return std::isalnum(static_cast<unsigned char>(c)) == 0
-             && c != '_' && c != '-' && c != '/' && c != '?'
-             && c != '+' && c != '*' && c != '=' && c != '.';
+      return std::isalnum(static_cast<unsigned char>(c)) != 0
+             || c == '_' || c == '-' || c == '/' || c == '?' || c == '!'
+             || c == '+' || c == '*' || c == '=' || c == '.';
     }
 
     result<token, error> processor::next()
@@ -270,7 +270,7 @@ namespace jank::read
             if(oc.is_none())
             { break; }
             auto const c(oc.unwrap());
-            if(is_symbol_char(c))
+            if(!is_symbol_char(c))
             { break; }
             ++pos;
           }
@@ -305,7 +305,7 @@ namespace jank::read
             if(oc.is_none())
             { break; }
             auto const c(oc.unwrap());
-            if(is_symbol_char(c))
+            if(!is_symbol_char(c))
             { break; }
             ++pos;
           }
