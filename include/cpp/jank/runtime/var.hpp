@@ -15,7 +15,7 @@ namespace jank::runtime
 
   struct var : object, pool_item_base<var>
   {
-    var(var const&) = default;
+    var(var const&) = delete;
     var(var &&) noexcept = default;
     var(ns_ptr const &n, obj::symbol_ptr const &s);
     var(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr const &o);

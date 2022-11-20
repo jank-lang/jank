@@ -1,3 +1,5 @@
+#include <unordered_map>
+
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/obj/string.hpp>
 

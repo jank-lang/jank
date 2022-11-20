@@ -386,8 +386,7 @@ namespace jank::analyze
     if(count == 0)
     { return analyze_primitive_literal(o, current_frame, ctx); }
 
-    auto const o_seq(o->seq());
-    auto const first(o_seq->first());
+    auto const first(o->data.first().unwrap());
     expression_ptr source;
     if(first->as_symbol())
     {
