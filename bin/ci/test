@@ -2,13 +2,15 @@
 
 set -eu
 
-cling_dir="build/cling-build"
+cling_dir="${PWD}/build/cling-build"
 if [[ ! -d "${cling_dir}" ]];
 then
   pushd build
     ./bin/build-cling
   popd
 fi
+export CC="${cling_dir}/bin/clang"
+export CXX="${cling_dir}/bin/clang++"
 
 # We do a separate analysis build because PCH usage currently breaks
 # clang-tidy. The reason is that clang-tidy is not the same version of clang as
@@ -19,7 +21,7 @@ if [[ "${ANALYSIS:-off}" == "on" ]];
 then
   ./bin/configure -GNinja \
                   -Djank_tests=on \
-                  -Djank_analysis="${ANALYSIS:-off}" \
+                  -Djank_analysis=on \
                   -Djank_cling_build_dir="${cling_dir}" \
                   "$@"
   ./bin/compile
