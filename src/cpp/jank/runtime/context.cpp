@@ -47,18 +47,6 @@ namespace jank::runtime
     t_state.in_ns = in_ns_var;
 
     /* TODO: Remove this once it can be defined in jank. */
-    auto const println_sym(obj::symbol::create("clojure.core/println"));
-    std::function<object_ptr (object_ptr const&)> println_fn
-    (
-      [](object_ptr const &o)
-      {
-        std::cout << o->to_string() << std::endl;
-        return JANK_NIL;
-      }
-    );
-    intern_var(println_sym).expect_ok()->set_root(obj::function::create(println_fn));
-
-    /* TODO: Remove this once it can be defined in jank. */
     auto const assert_sym(obj::symbol::create("clojure.core/assert"));
     std::function<object_ptr (object_ptr const&)> assert_fn
     (

@@ -1,13 +1,95 @@
+; The layout of this file rougly matches: https://clojure.org/api/cheatsheet
+
+; Namespace management.
 (def *ns*)
 (def in-ns)
 
+; Primitives.
+;; Arithmetic.
 (def +)
 (def -)
 (def *)
 (def /)
 (def =)
 
-(def println)
+;; Numbers.
+(def integer?
+  (fn* [o]
+    (native/raw "return make_box(#{ o }#->as_integer() != nullptr)")))
+(def float?
+  (fn* [o]
+    (native/raw "return make_box(#{ o }#->as_real() != nullptr)")))
+(def boolean?
+  (fn* [o]
+    (native/raw "return make_box(#{ o }#->as_boolean() != nullptr)")))
+(def number?
+  (fn* [o]
+    (native/raw "return make_box(#{ o }#->as_number() != nullptr)")))
 
+;; Strings.
+(def string?
+  (fn* [o]
+    (native/raw "return make_box(#{ o }#->as_string() != nullptr)")))
+(def str
+  (fn* [o]
+    (native/raw "return make_box(#{ o }#->to_string())")))
+
+;; Other.
+(def keyword?
+  (fn* [o]
+    (native/raw "return make_box(#{ o }#->as_keyword() != nullptr)")))
+(def simple-keyword?
+  (fn* [o]
+    (native/raw "auto const * const k(#{ o }#->as_keyword());
+                 return make_box(k != nullptr && k->sym.ns.empty())")))
+(def qualified-keyword?
+  (fn* [o]
+    (native/raw "auto const * const k(#{ o }#->as_keyword());
+                 return make_box(k != nullptr && !k->sym.ns.empty())")))
+(def simple-symbol?
+  (fn* [o]
+    (native/raw "auto const * const sym(#{ o }#->as_symbol());
+                 return make_box(sym != nullptr && sym->ns.empty())")))
+(def qualified-symbol?
+  (fn* [o]
+    (native/raw "auto const * const sym(#{ o }#->as_symbol());
+                 return make_box(sym != nullptr && !sym->ns.empty())")))
+(def symbol?
+  (fn* [o]
+    (native/raw "return make_box(#{ o }#->as_symbol() != nullptr)")))
+
+; Sequences.
+;; Associative.
+;;; Common.
+; TODO: get
+
+; Input/output.
+(def print
+  (fn* [o]
+    (native/raw "std::cout << #{ o }#->to_string();
+                 return #{ nil }#")))
+(def println
+  (fn* [o]
+    (native/raw "std::cout << #{ o }#->to_string() << std::endl;
+                 return #{ nil }#")))
+
+; Relations.
+;; Miscellaneous.
+(def true?
+  (fn* [o]
+    (native/raw "return #{ o }#->equal(*#{ true }#) ? #{ true }# : #{ false }# ")))
+(def false?
+  (fn* [o]
+    (native/raw "return #{ o }#->equal(*#{ false }#) ? #{ true }# : #{ false }# ")))
+
+; Functions.
+(def ifn?
+  (fn* [o]
+    (native/raw "return make_box(#{ o }#->as_callable() != nullptr)")))
+(def fn?
+  (fn* [o]
+    (native/raw "return make_box(#{ o }#->as_function() != nullptr)")))
+
+; Miscellaneous.
 ; TODO: This should be a macro.
 (def assert)
