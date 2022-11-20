@@ -2,17 +2,30 @@ cmake_minimum_required(VERSION 3.21)
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(
-      FATAL_ERROR
-      "In-source builds are not supported. "
-      "Please read README.md before trying to build this project. "
-      "You may need to delete 'CMakeCache.txt' and 'CMakeFiles/' first."
+    FATAL_ERROR
+    "In-source builds are not supported. "
+    "Please read README.md before trying to build this project. "
+    "You may need to delete 'CMakeCache.txt' and 'CMakeFiles/' first."
   )
 endif()
+
+# jank can only be built with the corresponding Clang that Cling will be using,
+# since the JIT compiled code needs to match 1:1 with the AOT compiled runtime.
+# We just pull the Clang compiler right out of the Cling build dir.
+option(jank_cling_build_dir "Location of Cling source, if built locally" "")
+cmake_path(ABSOLUTE_PATH jank_cling_build_dir OUTPUT_VARIABLE jank_cling_build_dir_absolute)
+set(CMAKE_C_COMPILER "${jank_cling_build_dir_absolute}/bin/clang")
+set(CMAKE_CXX_COMPILER "${jank_cling_build_dir_absolute}/bin/clang++")
+
+# TODO: Disable PCH during analysis builds
 
 include(cmake/vcpkg.cmake)
 
 # LTO is explicitly not used, since it leads to runtime symbol lookup issues with the JIT.
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
+
+set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/vcpkg-triplet")
+set(VCPKG_TARGET_TRIPLET "x64-clang-static")
 
 project(
     jank
@@ -24,27 +37,37 @@ project(
     LANGUAGES C CXX
 )
 
+set(jank_required_compiler_id "Clang")
+set(jank_required_compiler_version "9.0.1")
+
+if(
+  NOT CMAKE_CXX_COMPILER_ID STREQUAL jank_required_compiler_id
+  OR
+  NOT CMAKE_CXX_COMPILER_VERSION STREQUAL jank_required_compiler_version
+)
+  message(
+    FATAL_ERROR
+    "${jank_required_compiler_id} ${jank_required_compiler_version} is required to build jank, "
+    "but ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} was found. "
+    "Please follow the README.md for build instructions."
+  )
+endif()
+
 include(cmake/variables.cmake)
 include(cmake/coverage.cmake)
 include(cmake/analysis.cmake)
 
-if(MSVC)
-  set(jank_compiler_flags /W4)
-  set(jank_linker_flags "")
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    list(APPEND jank_compiler_flags /WX)
-  endif()
-else()
-  set(
-    jank_compiler_flags
-    -Wall -Wextra -Wpedantic
-    -Wfloat-equal -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor
-    -Wold-style-cast -Wno-gnu-case-range
+set(
+  jank_compiler_flags
+  -Wall -Wextra -Wpedantic
+  -Wfloat-equal -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor
+  -Wold-style-cast -Wno-gnu-case-range
+  #-stdlib=libc++
+)
+set(jank_linker_flags "" #-stdlib=libc++ -lc++abi
   )
-  set(jank_linker_flags "")
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    list(APPEND jank_compiler_flags -Werror)
-  endif()
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  list(APPEND jank_compiler_flags -Werror)
 endif()
 
 # Enable easier tooling during development.
@@ -66,53 +89,23 @@ set_property(TARGET jank_cling_lib PROPERTY OUTPUT_NAME jankcling)
 
 target_compile_features(jank_cling_lib PUBLIC cxx_std_17)
 
-option(jank_build_cling "Whether or not to automatically build Cling" OFF)
-option(jank_cling_build_dir "Location of Cling source, if built locally" "")
-option(jank_llvm_root "Path to LLVM's resource dir" "")
-
-if(jank_build_cling)
-  message(STATUS "Building Cling/Clang/LLVM locally")
-  execute_process(
-    COMMAND ${PROJECT_SOURCE_DIR}/bin/build-cling
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMAND_ERROR_IS_FATAL ANY
-  )
-  set(jank_cling_build_dir "${CMAKE_CURRENT_BINARY_DIR}/cling-build/builddir")
-  set(jank_llvm_root "${CMAKE_CURRENT_BINARY_DIR}/cling-build/builddir")
-endif()
-
-find_package(LLVM REQUIRED HINTS "${jank_cling_build_dir}/lib/cmake/llvm")
+find_package(LLVM REQUIRED CONFIG HINTS "${jank_cling_build_dir}/lib/cmake/llvm" NO_DEFAULT_PATH)
 find_package(Clang REQUIRED CONFIG HINTS "${jank_cling_build_dir}/lib/cmake/clang" NO_DEFAULT_PATH)
 find_package(
   Cling REQUIRED
   HINTS "${jank_cling_build_dir}/tools/cling/lib/cmake/cling"
         "${jank_cling_build_dir}/lib/cmake/cling"
+  NO_DEFAULT_PATH
 )
 
-# This can be set manually if we're using an external Cling, but, if it's not set,
-# we can assume we're using our own Cling and default to a sane value.
-if(NOT jank_build_cling AND NOT jank_llvm_root)
-  set(jank_llvm_root ${LLVM_BINARY_DIR})
-endif()
-
-# Cling 0.8 doesn't install sanely, compared to master, so we need to set some things up ourselves.
-# See bin/build-cling for more details.
-if(jank_cling_build_dir)
-  list(APPEND CLING_INCLUDE_DIRS "${jank_cling_build_dir}/../cling-src/tools/cling/include")
-endif()
+option(jank_enable_pch "Enable precompiled header creation" ON)
+set(jank_llvm_root ${LLVM_BINARY_DIR})
 
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 target_link_directories(jank_cling_lib SYSTEM PRIVATE ${LLVM_LIBRARY_DIRS})
-
-if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-  target_link_libraries(jank_cling_lib PRIVATE -Wl,-force_load, clingInterpreter)
-elseif(MSVC)
-  target_link_libraries(jank_cling_lib PRIVATE -WHOLEARCHIVE: clingInterpreter)
-else()
-  target_link_libraries(jank_cling_lib PRIVATE -Wl,--whole-archive clingInterpreter -Wl,--no-whole-archive)
-endif()
+target_link_libraries(jank_cling_lib PRIVATE -Wl,--whole-archive clingInterpreter -Wl,--no-whole-archive)
 
 set_target_properties(jank_cling_lib PROPERTIES LINK_FLAGS -s)
 # ---- libjankcling.so ----
@@ -156,6 +149,9 @@ target_include_directories(
     PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/cpp>"
 )
+if(jank_enable_pch)
+  target_precompile_headers(jank_lib PUBLIC ${PROJECT_SOURCE_DIR}/include/cpp/jank/prelude.hpp)
+endif()
 
 set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 
@@ -164,22 +160,25 @@ target_compile_options(jank_lib PRIVATE ${jank_compiler_flags})
 target_compile_options(jank_lib PUBLIC -DLLVMDIR="${jank_llvm_root}")
 target_link_options(jank_lib PRIVATE ${jank_linker_flags})
 
-find_package(Boost REQUIRED)
-find_package(folly REQUIRED)
-find_package(Immer REQUIRED)
-find_package(magic_enum REQUIRED)
+find_package(Boost REQUIRED COMPONENTS filesystem)
+find_package(Immer CONFIG REQUIRED)
+find_package(magic_enum CONFIG REQUIRED)
+find_package(fmt CONFIG REQUIRED)
+find_path(LIBGUARDED_INCLUDE_DIRS "libguarded/shared_guarded.hpp")
+target_compile_options(jank_lib PUBLIC -DHAVE_CXX14=1)
 
-target_include_directories(jank_lib SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
+target_include_directories(jank_lib SYSTEM PRIVATE ${LIBGUARDED_INCLUDE_DIRS})
+target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 
-target_link_libraries(jank_lib PRIVATE jank_cling_lib immer Folly::folly Folly::folly_deps lzma)
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  target_link_libraries(jank_lib PRIVATE unwind)
-endif()
+target_link_libraries(jank_lib PRIVATE jank_cling_lib immer fmt::fmt Boost::boost Boost::filesystem)
 
-set_target_properties(jank_lib PROPERTIES LINK_FLAGS_RELEASE -s)
+set_target_properties(jank_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
+
+# Symbol exporting for JIT.
+set_target_properties(jank_lib PROPERTIES ENABLE_EXPORTS 1)
 # ---- libjank.a ----
 
 # ---- jank executable ----
@@ -190,9 +189,6 @@ set_property(TARGET jank_exe PROPERTY OUTPUT_NAME jank)
 
 # Symbol exporting for JIT.
 set_target_properties(jank_exe PROPERTIES ENABLE_EXPORTS 1)
-if(MSVC)
-  set_target_properties(jank_exe PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
-endif()
 
 target_compile_features(jank_exe PRIVATE cxx_std_17)
 target_compile_options(jank_exe PUBLIC -DLLVMDIR="${jank_llvm_root}")
@@ -240,13 +236,13 @@ if(jank_tests)
   target_include_directories(jank_test_exe SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 
   find_package(doctest REQUIRED)
-  target_link_libraries(jank_test_exe PRIVATE jank_lib doctest::doctest)
-
-# Symbol exporting for JIT.
-  set_target_properties(jank_test_exe PROPERTIES ENABLE_EXPORTS 1)
-  if(MSVC)
-    set_target_properties(jank_test_exe PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
+  target_link_libraries(jank_test_exe PRIVATE jank_lib Boost::boost doctest::doctest)
+  if(jank_enable_pch)
+    target_precompile_headers(jank_test_exe REUSE_FROM jank_lib)
   endif()
+
+  # Symbol exporting for JIT.
+  set_target_properties(jank_test_exe PROPERTIES ENABLE_EXPORTS 1)
 
   add_test(NAME "Test" COMMAND jank_test_exe)
 endif()

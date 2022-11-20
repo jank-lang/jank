@@ -1,6 +1,10 @@
 # Perf
 * Bring in folly
 
+## Profiling
+* gperftools
+* gprof + flamegraph
+
 # Security/linting
 * cppcheck
 * scan-build

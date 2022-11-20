@@ -10,6 +10,10 @@ install(
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
 )
+install(
+  FILES ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/jank_lib.dir/cmake_pch.hxx.pch
+  DESTINATION include
+)
 
 # So vcpkg puts all of the headers we need for all of our dependencies
 # into one include prefix based on our target triplet. This is excellent,

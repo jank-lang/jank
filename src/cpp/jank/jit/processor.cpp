@@ -6,21 +6,39 @@
 
 namespace jank::jit
 {
+  option<boost::filesystem::path> find_pch()
+  {
+    auto const jank_path(jank::util::process_location().unwrap().parent_path());
+
+    auto dev_path(jank_path / "CMakeFiles/jank_lib.dir/cmake_pch.hxx.pch");
+    if(boost::filesystem::exists(dev_path))
+    { return std::move(dev_path); }
+
+    auto installed_path(jank_path / "../include/cmake_pch.hxx.pch");
+    if(boost::filesystem::exists(installed_path))
+    { return std::move(installed_path); }
+
+    return none;
+  }
+
   processor::processor()
   {
-    /* TODO: Store initial state during install and load it on each use. */
-    auto const jank_location(jank::util::process_location().unwrap().parent_path());
-    auto const args(jank::util::make_array("clang++", "-std=c++17"));
+    auto const pch_path(find_pch());
+    if(pch_path.is_none())
+    /* TODO: Better error handling. */
+    { throw std::runtime_error{ "unable to find PCH path for JIT" }; }
+    auto const &pch_path_str(pch_path.unwrap().string());
+
+    auto const args
+    (
+      jank::util::make_array
+      (
+        "clang++", "-std=c++17",
+        "-DHAVE_CXX14=1",
+        "-include-pch", pch_path_str.c_str()
+      )
+    );
     interpreter = std::make_unique<cling::Interpreter>(args.size(), args.data(), LLVMDIR);
-
-    interpreter->AddIncludePath(jank_location.string() + "/../include");
-    interpreter->AddIncludePath(jank_location.string() + "/../include/cpp");
-    /* TODO: Figure out how to make this easier for dev. */
-    interpreter->AddIncludePath(jank_location.string() + "/vcpkg_installed/x64-linux/include");
-    interpreter->AddIncludePath(jank_location.string() + "/vcpkg_installed/x64-osx/include");
-
-    /* TODO: Pre-compiled prelude. */
-    interpreter->loadHeader("jank/prelude.hpp");
   }
 
   result<option<runtime::object_ptr>, std::string>  processor::eval

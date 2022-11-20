@@ -1,67 +1,93 @@
 #!/usr/bin/env bash
 
-set -xeuo pipefail
+set -euo pipefail
 
-cpt=
-cling_dir="${1:-./cling-build}"
-cling_branch=v0.8
-llvm_release=release_50
+# We build Cling with Clang for consistency.
+export CC=clang
+export CXX=clang++
 
-# Linux needs Cling 0.8, but it fails to work on macOS, running into lots of
-# runtime JIT compilation issues regarding libc++. Fortunately, Cling master
-# works on macOS, so we'll just go with that for now.
-if [[ "${OSTYPE:?}" == "darwin"* ]]
-then
-  cling_branch=master
-  llvm_release=release_90
-fi
+make_j="$(nproc || echo 4)"
 
-# Ensure cling_dir is absolute.
-case "${cling_dir}" in
-  /*)
-    ;;
-  *)
-    cling_dir="${PWD}/${cling_dir}"
-    ;;
-esac
+while getopts ":hj:" opt; do
+  case "${opt}" in
+    h)
+      echo "Usage ${0} [-j N] [srcdir]"
+      exit 0
+      ;;
+    j)
+      make_j="${OPTARG}"
+      ;;
+    \?)
+      echo "Invalid option: ${OPTARG}" 1>&2
+      ;;
+    :)
+      echo "Invalid option: ${OPTARG} requires an argument" 1>&2
+      ;;
+  esac
+done
+shift $((OPTIND -1))
 
-function fetch_cpt
+echo "Using ${make_j} cores to build"
+
+srcdir="${PWD}"
+
+# Cling latest
+llvm_url="http://root.cern.ch/git/llvm.git"
+llvm_branch="cling-patches"
+clang_url="http://root.cern.ch/git/clang.git"
+clang_branch="cling-patches"
+cling_url="http://root.cern.ch/git/cling.git"
+cling_branch="master"
+
+function prepare()
 {
-  local tmp
-  tmp="$(mktemp)"
-  curl -s -o "${tmp}" https://raw.githubusercontent.com/jeaye/root-cling/jank/tools/packaging/cpt.py
-  chmod +x "${tmp}"
-  cpt="${tmp}"
-}
-
-function build_cling
-{
-  "${cpt}" -y \
-           --create-dev-env=Release \
-           --with-workdir="${cling_dir}" \
-           --allow-dirty \
-           --with-cling-branch="${cling_branch}" \
-           --with-llvm-release="${llvm_release}" \
-           --no-test
-
-  # With Cling 0.8 (not with master), Cling's CMake files don't work when compiling from
-  # another CMake project. In particular, ClingConfig.cmake tries to include
-  # ClingTargets.cmake, but it does so using ${CMAKE_CURRENT_LIST_DIR}, which Cling thinks should
-  # be Cling's root, but it's actually jank's. We fix this up by pointing it at the right place,
-  # but this seems to have an impact on CLING_INCLUDE_DIRS being set, so you'll see we set that
-  # manually as well. Wasn't an issue on Cling master, but we're stuck on 0.8 until this is fixed:
-  # https://github.com/root-project/cling/issues/470
-  if [[ "${cling_branch}" == "v0.8" ]];
+  if [ ! -d "$srcdir/llvm" ];
   then
-    local tmp_cling_config
-    tmp_cling_config="$(mktemp)"
-    # Not every platform supports sed -i and we can't expect sponge to be installed.
-    sed "s#\${CMAKE_CURRENT_LIST_DIR}#${cling_dir}/builddir/lib/cmake/cling#" \
-        < "${cling_dir}"/builddir/tools/cling/lib/cmake/cling/ClingConfig.cmake \
-        > "${tmp_cling_config}"
-    mv -f "${tmp_cling_config}" "${cling_dir}"/builddir/tools/cling/lib/cmake/cling/ClingConfig.cmake
+    git clone -b "${llvm_branch}" --single-branch "${llvm_url}" "${srcdir}"/llvm
+  fi
+
+  if [ ! -d "$srcdir/clang" ];
+  then
+    git clone -b "${clang_branch}" --single-branch "${clang_url}" "${srcdir}"/clang
+  fi
+
+  if [ ! -d "$srcdir/cling" ];
+  then
+    git clone -b "${cling_branch}" --single-branch "${cling_url}" "${srcdir}"/cling
+  fi
+
+  if [ ! -h "$srcdir/llvm/tools/clang" ];
+  then
+    ln -sf "$srcdir/clang" "$srcdir/llvm/tools/clang"
+  fi
+
+  if [ ! -h "$srcdir/llvm/tools/cling" ];
+  then
+    ln -sf "$srcdir/cling" "$srcdir/llvm/tools/cling"
   fi
 }
 
-fetch_cpt
-build_cling
+function build()
+{
+  mkdir -p "$srcdir/cling-build"
+  cd "$srcdir/cling-build"
+
+  cmake -DCMAKE_BUILD_TYPE=Release \
+        -DLLVM_TARGETS_TO_BUILD="host;NVPTX" \
+        -DLLVM_BUILD_LLVM_DYLIB=OFF \
+        -DLLVM_ENABLE_RTTI=ON \
+        -DLLVM_ENABLE_FFI=ON \
+        -DLLVM_BUILD_DOCS=OFF \
+        -DLLVM_ENABLE_SPHINX=OFF \
+        -DLLVM_ENABLE_DOXYGEN=OFF \
+        -DLLVM_ENABLE_LIBCXX=OFF \
+        -DFFI_INCLUDE_DIR="$(pkg-config --cflags-only-I libffi | cut -c3-)" \
+        -DCLING_CXX_HEADERS=ON \
+        "$srcdir/llvm"
+
+  make -j"${make_j}" -C tools/clang
+  make -j"${make_j}" -C tools/cling
+}
+
+prepare
+build

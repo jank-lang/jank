@@ -5,14 +5,29 @@ set -eu
 cling_dir="build/cling-build"
 if [[ ! -d "${cling_dir}" ]];
 then
-  ./bin/build-cling "${cling_dir}"
+  pushd build
+    ./bin/build-cling
+  popd
+fi
+
+# We do a separate analysis build because PCH usage currently breaks
+# clang-tidy. The reason is that clang-tidy is not the same version of clang as
+# what we're using to compile jank. Unfortunately, the Cling build doesn't
+# include clang-tidy, so we'd need to manually clone it and compile the right
+# branch alongside LLVM. That's for another day.
+if [[ "${ANALYSIS:-off}" == "on" ]];
+then
+  ./bin/configure -GNinja \
+                  -Djank_tests=on \
+                  -Djank_analysis="${ANALYSIS:-off}" \
+                  -Djank_cling_build_dir="${cling_dir}" \
+                  "$@"
+  ./bin/compile
 fi
 
 ./bin/configure -GNinja \
                 -Djank_tests=on \
-                -Djank_analysis="${ANALYSIS:-off}" \
-                -Djank_cling_build_dir="${cling_dir}/builddir" \
-                -Djank_llvm_root="${cling_dir}/builddir" \
+                -Djank_cling_build_dir="${cling_dir}" \
                 "$@"
 ./bin/compile
 
@@ -21,8 +36,7 @@ then
   ./bin/configure -GNinja \
                   -Djank_tests=on \
                   -Djank_coverage=on \
-                  -Djank_cling_build_dir="${cling_dir}/builddir" \
-                  -Djank_llvm_root="${cling_dir}/builddir" \
+                  -Djank_cling_build_dir="${cling_dir}" \
                   "$@"
   LLVM_PROFILE_FILE=build/test.profraw ./bin/test
   llvm-profdata-14 merge --sparse build/test.profraw -o build/test.profdata
