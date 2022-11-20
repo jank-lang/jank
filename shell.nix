@@ -1,4 +1,10 @@
 with (import <nixpkgs> {});
+let pkgsUnstable = import
+(
+  fetchTarball https://github.com/NixOS/nixpkgs-channels/archive/nixos-unstable.tar.gz
+)
+{ };
+in
 mkShell
 {
   buildInputs =
@@ -6,8 +12,7 @@ mkShell
     # Build deps.
     cmake
     ninja
-    cling
-    llvmPackages_5.llvm
+    clang
 
     # Dev tools.
     llvm # For clang-format
@@ -19,10 +24,7 @@ mkShell
   ];
   shellHook =
   ''
-  export CC="''${CC:-/usr/bin/clang}"
-  export CXX="''${CXX:-/usr/bin/clang++}"
-
-  export CLING_DEV="${lib.getDev pkgs.cling.unwrapped}"
-  export LLVM_DEV="${lib.getDev pkgs.llvmPackages_5.llvm}"
+  export CC="${pkgs.clang}/bin/clang"
+  export CXX="${pkgs.clang}/bin/clang++"
   '';
 }
