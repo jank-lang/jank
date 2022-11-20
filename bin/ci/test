@@ -12,6 +12,7 @@ then
 fi
 export CC="${cling_dir}/bin/clang"
 export CXX="${cling_dir}/bin/clang++"
+exit 0
 
 # We do a separate analysis build because PCH usage currently breaks
 # clang-tidy. The reason is that clang-tidy is not the same version of clang as
