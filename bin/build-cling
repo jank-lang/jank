@@ -39,21 +39,27 @@ clang_branch="cling-patches"
 cling_url="http://root.cern.ch/git/cling.git"
 cling_branch="master"
 
+# $1 == Repo URL
+# $2 == Repo branch
+# $3 == Path
+function shallow_clone()
+{ git clone -b "${2}" --depth 1 --shallow-submodules --single-branch "${1}" "${3}"; }
+
 function prepare()
 {
   if [ ! -d "$srcdir/llvm" ];
   then
-    git clone -b "${llvm_branch}" --single-branch "${llvm_url}" "${srcdir}"/llvm
+    shallow_clone "${llvm_url}" "${llvm_branch}" "${srcdir}"/llvm
   fi
 
   if [ ! -d "$srcdir/clang" ];
   then
-    git clone -b "${clang_branch}" --single-branch "${clang_url}" "${srcdir}"/clang
+    shallow_clone "${clang_url}" "${clang_branch}" "${srcdir}"/clang
   fi
 
   if [ ! -d "$srcdir/cling" ];
   then
-    git clone -b "${cling_branch}" --single-branch "${cling_url}" "${srcdir}"/cling
+    shallow_clone "${cling_url}" "${cling_branch}" "${srcdir}"/cling
   fi
 
   if [ ! -h "$srcdir/llvm/tools/clang" ];
