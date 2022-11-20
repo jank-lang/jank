@@ -38,7 +38,7 @@ namespace jank::runtime::obj
   {
     auto const end(data.end());
     std::stringstream ss;
-    ss << "list(";
+    ss << "(";
     for(auto i(data.begin()); i != end; ++i)
     {
       ss << **i;
@@ -61,7 +61,7 @@ namespace jank::runtime::obj
   { return this; }
   behavior::seqable const* list::as_seqable() const
   { return this; }
-  behavior::sequence_pointer list::seq() const
+  behavior::sequence_ptr list::seq() const
   {
     if(data.size() == 0)
     { return nullptr; }

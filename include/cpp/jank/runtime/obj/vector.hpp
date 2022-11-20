@@ -31,7 +31,7 @@ namespace jank::runtime::obj
     vector const* as_vector() const override;
     behavior::seqable const* as_seqable() const override;
 
-    behavior::sequence_pointer seq() const override;
+    behavior::sequence_ptr seq() const override;
     size_t count() const override;
 
     runtime::detail::vector_type data;

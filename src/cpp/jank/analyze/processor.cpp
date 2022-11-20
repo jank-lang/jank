@@ -7,6 +7,7 @@
 #include <jank/runtime/obj/map.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
+#include <jank/result.hpp>
 
 namespace jank::analyze
 {
@@ -172,17 +173,13 @@ namespace jank::analyze
     return { expr::var_deref<expression>{ var.unwrap().first, current_frame } };
   }
 
-  processor::expression_result processor::analyze_fn
+  result<expr::function_arity<expression>, error> processor::analyze_fn_arity
   (runtime::obj::list_ptr const &list, local_frame_ptr &current_frame, context &ctx)
   {
-    auto const length(list->count());
-    if(length < 2)
-    { return err(error{ "fn missing parameter vector" }); }
-
-    auto const params_obj(list->data.rest().first().unwrap());
+    auto const params_obj(list->data.first().unwrap());
     auto const * const params(params_obj->as_vector());
     if(params == nullptr)
-    { return err(error{ "invalid fn param vector" }); }
+    { return err(error{ "invalid fn parameter vector" }); }
 
     if(params->data.size() > 10)
     { return err(error{ "invalid parameter count; must be <= 10; use & args to capture the rest" }); }
@@ -206,7 +203,7 @@ namespace jank::analyze
     }
 
     expr::do_<expression> body_do;
-    for(auto const &item : list->data.rest().rest())
+    for(auto const &item : list->data.rest())
     {
       auto form(analyze(item, frame, ctx));
       if(form.is_err())
@@ -218,9 +215,68 @@ namespace jank::analyze
 
     return
     {
-      expr::function<expression>
+      expr::function_arity<expression>
       { std::move(param_symbols), std::move(body_do), std::move(frame) }
     };
+  }
+
+  /* TODO: Support variadic arities. */
+  processor::expression_result processor::analyze_fn
+  (runtime::obj::list_ptr const &list, local_frame_ptr &current_frame, context &ctx)
+  {
+    auto const length(list->count());
+    if(length < 2)
+    { return err(error{ "fn missing forms" }); }
+
+    std::vector<expr::function_arity<expression>> arities;
+
+    auto const first_elem(list->data.rest().first().unwrap());
+    if(first_elem->as_vector() != nullptr)
+    {
+      auto result
+      (
+        analyze_fn_arity
+        (runtime::make_box<runtime::obj::list>(list->data.rest()), current_frame, ctx)
+      );
+      if(result.is_err())
+      { return result.expect_err_move(); }
+      arities.emplace_back(result.expect_ok_move());
+    }
+    else if(first_elem->as_list() != nullptr)
+    {
+      for(auto it(list->data.rest()); it.size() > 0; it = it.rest())
+      {
+        auto arity_list(it.first().unwrap());
+        if(arity_list->as_list() == nullptr)
+        { return err(error{ "invalid fn: expected arity list" }); }
+
+        auto result
+        (
+          analyze_fn_arity
+          (boost::static_pointer_cast<runtime::obj::list>(arity_list), current_frame, ctx)
+        );
+        if(result.is_err())
+        { return result.expect_err_move(); }
+        arities.emplace_back(result.expect_ok_move());
+      }
+    }
+    else
+    { return err(error{ "invalid fn syntax" }); }
+
+    /* Assert that arities are unique. Lazy implementation, but N is small anyway. */
+    for(auto base(arities.begin()); base != arities.end(); ++base)
+    {
+      if(base + 1 == arities.end())
+      { break; }
+
+      for(auto other(base + 1); other != arities.end(); ++other)
+      {
+        if(base->params.size() == other->params.size())
+        { return err(error{ "invalid fn: duplicate arity definition" }); }
+      }
+    }
+
+    return { expr::function<expression> { none, std::move(arities) } };
   }
 
   processor::expression_result processor::analyze_let

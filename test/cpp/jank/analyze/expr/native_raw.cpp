@@ -39,7 +39,7 @@ namespace jank::analyze::expr
     processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
     auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
-    auto const expr(boost::get<function<expression>>(fn_expr.data).body.body.front());
+    auto const expr(boost::get<function<expression>>(fn_expr.data).arities[0].body.body.front());
     auto const *native_raw_expr(boost::get<native_raw<expression>>(&expr.data));
     CHECK(native_raw_expr != nullptr);
     CHECK(native_raw_expr->chunks.empty());
@@ -54,7 +54,7 @@ namespace jank::analyze::expr
     processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
     auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
-    auto const expr(boost::get<function<expression>>(fn_expr.data).body.body.front());
+    auto const expr(boost::get<function<expression>>(fn_expr.data).arities[0].body.body.front());
     auto const *native_raw_expr(boost::get<native_raw<expression>>(&expr.data));
     CHECK(native_raw_expr != nullptr);
     CHECK(native_raw_expr->chunks.size() == 1);
@@ -72,7 +72,7 @@ namespace jank::analyze::expr
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
       auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
-      auto const expr(*(++boost::get<function<expression>>(fn_expr.data).body.body.begin()));
+      auto const expr(*(++boost::get<function<expression>>(fn_expr.data).arities[0].body.body.begin()));
       auto const *native_raw_expr(boost::get<native_raw<expression>>(&expr.data));
       CHECK(native_raw_expr != nullptr);
       CHECK(native_raw_expr->chunks.size() == 3);

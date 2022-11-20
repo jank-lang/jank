@@ -69,6 +69,8 @@ namespace jank::analyze
     expression_result analyze_def(runtime::obj::list_ptr const &, local_frame_ptr &, context &);
     expression_result analyze_symbol(runtime::obj::symbol_ptr const &, local_frame_ptr &, context &);
     expression_result analyze_fn(runtime::obj::list_ptr const &, local_frame_ptr &, context &);
+    jank::result<expr::function_arity<expression>, error> analyze_fn_arity
+    (runtime::obj::list_ptr const &, local_frame_ptr &, context &);
     expression_result analyze_let(runtime::obj::list_ptr const &, local_frame_ptr &, context &);
     expression_result analyze_if(runtime::obj::list_ptr const &, local_frame_ptr &, context &);
     expression_result analyze_quote(runtime::obj::list_ptr const &, local_frame_ptr &, context &);

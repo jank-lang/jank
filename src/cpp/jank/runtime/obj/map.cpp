@@ -30,7 +30,7 @@ namespace jank::runtime::obj
 
     object_ptr first() const override
     { return make_box<vector>(runtime::detail::vector_type{ begin->first, begin->second }); }
-    behavior::sequence_pointer next() const override
+    behavior::sequence_ptr next() const override
     {
       auto n(begin);
       ++n;
@@ -83,7 +83,7 @@ namespace jank::runtime::obj
   { return this; }
   behavior::seqable const* map::as_seqable() const
   { return this; }
-  behavior::sequence_pointer map::seq() const
+  behavior::sequence_ptr map::seq() const
   {
     if(data.size() == 0)
     { return nullptr; }

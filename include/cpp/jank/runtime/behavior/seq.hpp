@@ -11,19 +11,19 @@ namespace jank::runtime
     /* TODO: Replace this with something more efficient? */
     struct sequence : virtual pool_item_common_base
     {
-      using sequence_pointer = detail::box_type<sequence>;
+      using sequence_ptr = detail::box_type<sequence>;
 
       virtual ~sequence() = default;
       virtual object_ptr first() const = 0;
       /* TODO: This should be optional. */
-      virtual sequence_pointer next() const = 0;
+      virtual sequence_ptr next() const = 0;
     };
-    using sequence_pointer = sequence::sequence_pointer;
+    using sequence_ptr = sequence::sequence_ptr;
 
     struct seqable
     {
       virtual ~seqable() = default;
-      virtual sequence_pointer seq() const = 0;
+      virtual sequence_ptr seq() const = 0;
     };
 
     /* TODO: Optimize this. */
@@ -37,7 +37,7 @@ namespace jank::runtime
 
       object_ptr first() const override
       { return *begin; }
-      sequence_pointer next() const override
+      sequence_ptr next() const override
       {
         auto n(begin);
         ++n;

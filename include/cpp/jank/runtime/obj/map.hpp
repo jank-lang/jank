@@ -25,7 +25,7 @@ namespace jank::runtime::obj
     map const* as_map() const override;
     seqable const* as_seqable() const override;
 
-    behavior::sequence_pointer seq() const override;
+    behavior::sequence_ptr seq() const override;
 
     runtime::detail::map_type data;
   };

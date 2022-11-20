@@ -10,10 +10,17 @@
 namespace jank::analyze::expr
 {
   template <typename E>
-  struct function
+  struct function_arity
   {
     std::vector<runtime::obj::symbol_ptr> params;
     do_<E> body;
     local_frame_ptr frame;
+  };
+
+  template <typename E>
+  struct function
+  {
+    option<std::string> name;
+    std::vector<function_arity<E>> arities;
   };
 }

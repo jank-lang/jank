@@ -21,7 +21,7 @@ namespace jank::runtime::obj
     set const* as_set() const override;
     behavior::seqable const* as_seqable() const override;
 
-    behavior::sequence_pointer seq() const override;
+    behavior::sequence_ptr seq() const override;
 
     runtime::detail::set_type data;
   };

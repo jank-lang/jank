@@ -26,7 +26,7 @@ namespace jank::runtime::obj
     return resolved == s->resolved && sym == s->sym;
   }
   runtime::detail::string_type keyword::to_string() const
-  { return "keyword(" + sym.to_string() + ")"; }
+  { return ":" + sym.to_string(); }
   runtime::detail::integer_type keyword::to_hash() const
   /* TODO: Cache this. */
   { return runtime::detail::hash_combine(sym.to_hash(), hash_magic); }

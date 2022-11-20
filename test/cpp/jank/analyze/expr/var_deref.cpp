@@ -33,7 +33,7 @@ namespace jank::analyze::expr
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
       auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
-      auto const expr(boost::get<function<expression>>(fn_expr.data).body.body.front());
+      auto const expr(boost::get<function<expression>>(fn_expr.data).arities[0].body.body.front());
       auto const *var_deref_expr(boost::get<var_deref<expression>>(&expr.data));
       CHECK(var_deref_expr != nullptr);
       CHECK(var_deref_expr->qualified_name != nullptr);
@@ -65,7 +65,7 @@ namespace jank::analyze::expr
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
       auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
-      auto const expr(boost::get<function<expression>>(fn_expr.data).body.body.front());
+      auto const expr(boost::get<function<expression>>(fn_expr.data).arities[0].body.body.front());
       auto const *var_deref_expr(boost::get<var_deref<expression>>(&expr.data));
       CHECK(var_deref_expr != nullptr);
       CHECK(var_deref_expr->qualified_name != nullptr);

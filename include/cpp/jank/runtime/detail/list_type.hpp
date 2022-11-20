@@ -97,6 +97,9 @@ namespace jank::runtime::detail
       { data = std::make_shared<value_type>(*it, data, length++); }
     }
 
+    list_type_impl& operator=(list_type_impl<T> const &) = default;
+    list_type_impl& operator=(list_type_impl<T> &&) noexcept = default;
+
     iterator begin() const
     { return { data }; }
     iterator end() const

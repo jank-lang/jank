@@ -26,6 +26,7 @@ namespace jank::jit
   {
     auto const cardinal_result
     (runtime::obj::keyword::create(runtime::obj::symbol{ "", "success" }, true));
+    jit::processor jit_prc;
 
     for(auto const &dir_entry : boost::filesystem::recursive_directory_iterator("test/jank"))
     {
@@ -47,7 +48,6 @@ namespace jank::jit
 
       runtime::context rt_ctx;
       analyze::context an_ctx{ rt_ctx };
-      jit::processor jit_prc;
 
       rt_ctx.eval_prelude(an_ctx, jit_prc);
 

@@ -59,7 +59,6 @@ namespace jank::codegen
       struct_name{ analyze::context::unique_name() }
   { }
 
-  /* TODO: Use source names as much as possible and sanitize all of them. */
   void processor::gen(analyze::expression const &ex, bool const is_statement)
   {
     boost::apply_visitor
@@ -248,31 +247,40 @@ namespace jank::codegen
       )"
     );
 
-    for(auto const &v : root_expression.frame->lifted_vars)
-    {
-      format_to
-      (
-        inserter,
-        "jank::runtime::var_ptr const {0};", runtime::munge(v.second.native_name.name)
-      );
-    }
+    bool needs_member_init{};
 
-    for(auto const &v : root_expression.frame->lifted_constants)
+    for(auto const &arity : root_expression.arities)
     {
-      format_to
-      (
-        inserter,
-        "jank::runtime::object_ptr const {0};", runtime::munge(v.second.native_name.name)
-      );
-    }
+      needs_member_init |= !arity.frame->lifted_vars.empty()
+                           || !arity.frame->lifted_constants.empty()
+                           || !arity.frame->captures.empty();
+      for(auto const &v : arity.frame->lifted_vars)
+      {
 
-    for(auto const &v : root_expression.frame->captures)
-    {
-      format_to
-      (
-        inserter,
-        "jank::runtime::object_ptr const {0};", runtime::munge(v.first->name)
-      );
+        format_to
+        (
+          inserter,
+          "jank::runtime::var_ptr const {0};", runtime::munge(v.second.native_name.name)
+        );
+      }
+
+      for(auto const &v : arity.frame->lifted_constants)
+      {
+        format_to
+        (
+          inserter,
+          "jank::runtime::object_ptr const {0};", runtime::munge(v.second.native_name.name)
+        );
+      }
+
+      for(auto const &v : arity.frame->captures)
+      {
+        format_to
+        (
+          inserter,
+          "jank::runtime::object_ptr const {0};", runtime::munge(v.first->name)
+        );
+      }
     }
 
     /* TODO: Prevent name collision with rt_ctx. */
@@ -282,64 +290,65 @@ namespace jank::codegen
       "{0}(jank::runtime::context &rt_ctx", runtime::munge(struct_name.name)
     );
 
-    for(auto const &v : root_expression.frame->captures)
+    for(auto const &arity : root_expression.arities)
     {
-      format_to
-      (
-        inserter,
-        ", jank::runtime::object_ptr const &{0}", runtime::munge(v.first->name)
-      );
+      for(auto const &v : arity.frame->captures)
+      {
+        format_to
+        (
+          inserter,
+          ", jank::runtime::object_ptr const &{0}", runtime::munge(v.first->name)
+        );
+      }
     }
 
     format_to(inserter, ")");
 
-    if
-    (
-      !root_expression.frame->lifted_vars.empty()
-      || !root_expression.frame->lifted_constants.empty()
-      || !root_expression.frame->captures.empty()
-    )
+    if(needs_member_init)
     { format_to(inserter, " : "); }
 
     bool need_member_init_comma{};
-    for(auto const &v : root_expression.frame->lifted_vars)
+    for(auto const &arity : root_expression.arities)
     {
-      format_to
-      (
-        inserter,
-        R"({0}{1}{{ rt_ctx.intern_var("{2}", "{3}").expect_ok() }})",
-        (need_member_init_comma ? "," : ""),
-        runtime::munge(v.second.native_name.name),
-        v.second.var_name->ns,
-        v.second.var_name->name
-      );
-      need_member_init_comma = true;
-    }
+      for(auto const &v : arity.frame->lifted_vars)
+      {
+        format_to
+        (
+          inserter,
+          R"({0}{1}{{ rt_ctx.intern_var("{2}", "{3}").expect_ok() }})",
+          (need_member_init_comma ? "," : ""),
+          runtime::munge(v.second.native_name.name),
+          v.second.var_name->ns,
+          v.second.var_name->name
+        );
+        need_member_init_comma = true;
+      }
 
-    for(auto const &v : root_expression.frame->lifted_constants)
-    {
-      format_to
-      (
-        inserter,
-        "{0}{1}{{",
-        (need_member_init_comma ? "," : ""),
-        runtime::munge(v.second.native_name.name)
-      );
-      detail::gen_constant(v.second.data, header_buffer);
-      format_to(inserter, "}}");
-      need_member_init_comma = true;
-    }
+      for(auto const &v : arity.frame->lifted_constants)
+      {
+        format_to
+        (
+          inserter,
+          "{0}{1}{{",
+          (need_member_init_comma ? "," : ""),
+          runtime::munge(v.second.native_name.name)
+        );
+        detail::gen_constant(v.second.data, header_buffer);
+        format_to(inserter, "}}");
+        need_member_init_comma = true;
+      }
 
-    for(auto const &v : root_expression.frame->captures)
-    {
-      format_to
-      (
-        inserter,
-        "{0}{1}{{ {1} }}",
-        (need_member_init_comma ? "," : ""),
-        runtime::munge(v.first->name)
-      );
-      need_member_init_comma = true;
+      for(auto const &v : arity.frame->captures)
+      {
+        format_to
+        (
+          inserter,
+          "{0}{1}{{ {1} }}",
+          (need_member_init_comma ? "," : ""),
+          runtime::munge(v.first->name)
+        );
+        need_member_init_comma = true;
+      }
     }
 
     format_to(inserter, "{{ }}");
@@ -348,44 +357,48 @@ namespace jank::codegen
   void processor::build_body()
   {
     auto inserter(std::back_inserter(body_buffer));
-    format_to(inserter, "jank::runtime::object_ptr call(");
-    bool param_comma{};
-    for(auto const &param : root_expression.params)
+
+    for(auto const &arity : root_expression.arities)
     {
+      format_to(inserter, "jank::runtime::object_ptr call(");
+      bool param_comma{};
+      for(auto const &param : arity.params)
+      {
+        format_to
+        (
+          inserter,
+          "{} jank::runtime::object_ptr const &{}",
+          (param_comma ? ", " : ""),
+          runtime::munge(param->name)
+        );
+        param_comma = true;
+      }
       format_to
       (
         inserter,
-        "{} jank::runtime::object_ptr const &{}",
-        (param_comma ? ", " : ""),
-        runtime::munge(param->name)
+        R"(
+          ) const override {{
+          using namespace jank;
+          using namespace jank::runtime;
+        )"
       );
-      param_comma = true;
-    }
-    format_to
-    (
-      inserter,
-      R"(
-        ) const override {{
-        using namespace jank;
-        using namespace jank::runtime;
-      )"
-    );
 
-    for(auto it(root_expression.body.body.begin()); it != root_expression.body.body.end();)
-    {
-      auto const &form(*it);
-      if
-      (
-        ++it == root_expression.body.body.end()
-        /* Ending a fn in a native/raw expression assumes it will be returning something
-         * explicitly. */
-        && boost::get<analyze::expr::native_raw<analyze::expression>>(&form.data) == nullptr
-      )
-      { format_to(inserter, "return "); }
-      gen(form, true);
-    }
+      for(auto it(arity.body.body.begin()); it != arity.body.body.end();)
+      {
+        auto const &form(*it);
+        if
+        (
+          ++it == arity.body.body.end()
+          /* Ending a fn in a native/raw expression assumes it will be returning something
+           * explicitly. */
+          && boost::get<analyze::expr::native_raw<analyze::expression>>(&form.data) == nullptr
+        )
+        { format_to(inserter, "return "); }
+        gen(form, true);
+      }
 
-    format_to(inserter, "}}");
+      format_to(inserter, "}}");
+    }
   }
 
   void processor::build_footer()
@@ -417,8 +430,11 @@ namespace jank::codegen
           fmt::ptr(&rt_ctx)
         );
 
-        for(auto const &v : root_expression.frame->captures)
-        { format_to(inserter, ", {0}", runtime::munge(v.first->name)); }
+        for(auto const &arity : root_expression.arities)
+        {
+          for(auto const &v : arity.frame->captures)
+          { format_to(inserter, ", {0}", runtime::munge(v.first->name)); }
+        }
 
         format_to(inserter, "}};");
 
@@ -439,8 +455,11 @@ namespace jank::codegen
           fmt::ptr(&rt_ctx)
         );
 
-        for(auto const &v : root_expression.frame->captures)
-        { format_to(inserter, ", {0}", runtime::munge(v.first->name)); }
+        for(auto const &arity : root_expression.arities)
+        {
+          for(auto const &v : arity.frame->captures)
+          { format_to(inserter, ", {0}", runtime::munge(v.first->name)); }
+        }
 
         format_to(inserter, ")");
       }

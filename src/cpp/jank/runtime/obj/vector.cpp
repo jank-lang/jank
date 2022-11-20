@@ -61,7 +61,7 @@ namespace jank::runtime::obj
   { return this; }
   behavior::seqable const* vector::as_seqable() const
   { return this; }
-  behavior::sequence_pointer vector::seq() const
+  behavior::sequence_ptr vector::seq() const
   {
     if(data.empty())
     { return nullptr; }

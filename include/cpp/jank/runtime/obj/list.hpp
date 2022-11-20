@@ -31,7 +31,7 @@ namespace jank::runtime::obj
     list const* as_list() const override;
     behavior::seqable const* as_seqable() const override;
 
-    behavior::sequence_pointer seq() const override;
+    behavior::sequence_ptr seq() const override;
     size_t count() const override;
 
     runtime::detail::list_type data;
