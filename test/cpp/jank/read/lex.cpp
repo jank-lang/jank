@@ -568,9 +568,9 @@ namespace jank::read::lex
 
     SUBCASE("With other symbols")
     {
-      processor p{ "abc_.123/-foo+?=!" };
+      processor p{ "abc_.123/-foo+?=!&" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 17, token_kind::symbol, "abc_.123/-foo+?=!"sv }}));
+      CHECK(tokens == make_tokens({{ 0, 18, token_kind::symbol, "abc_.123/-foo+?=!&"sv }}));
     }
 
     SUBCASE("Only -")
@@ -641,9 +641,9 @@ namespace jank::read::lex
 
     SUBCASE("With other symbols")
     {
-      processor p{ ":abc_.123/-foo+?=!" };
+      processor p{ ":abc_.123/-foo+?=!&" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 18, token_kind::keyword, "abc_.123/-foo+?=!"sv }}));
+      CHECK(tokens == make_tokens({{ 0, 19, token_kind::keyword, "abc_.123/-foo+?=!&"sv }}));
     }
 
     SUBCASE("Auto-resolved unqualified")
@@ -720,9 +720,9 @@ namespace jank::read::lex
 
     SUBCASE("With other symbols")
     {
-      processor p{ "\"and then() there was abc_123/-foo?!\"" };
+      processor p{ "\"and then() there was abc_123/-foo?!&\"" };
       std::vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 37, token_kind::string, "and then() there was abc_123/-foo?!"sv }}));
+      CHECK(tokens == make_tokens({{ 0, 38, token_kind::string, "and then() there was abc_123/-foo?!&"sv }}));
     }
 
     SUBCASE("With line breaks")
