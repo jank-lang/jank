@@ -108,19 +108,52 @@ namespace jank::codegen
   void processor::gen(analyze::expr::call<analyze::expression> const &expr, bool const is_statement)
   {
     auto inserter(std::back_inserter(body_buffer));
-    gen(*expr.source, false);
-    format_to(inserter, "->as_callable()->call(");
-    bool need_comma{};
-    for(auto const &arg_expr : expr.arg_exprs)
+
+    if(expr.required_packed_args.is_none())
     {
-      if(need_comma)
-      { format_to(inserter, ", "); }
-      gen(arg_expr, false);
-      need_comma = true;
+      format_to(inserter, "jank::runtime::dynamic_call(");
+      gen(*expr.source, false);
+      for(auto const &arg_expr : expr.arg_exprs)
+      {
+        format_to(inserter, ", ");
+        gen(arg_expr, false);
+      }
+      format_to(inserter, ")");
     }
-    format_to(inserter, ")");
-    if(is_statement)
-    { format_to(inserter, ";"); }
+    else
+    {
+      gen(*expr.source, false);
+      format_to(inserter, "->as_callable()->call(");
+      bool need_comma{};
+      for(size_t i{}; i < expr.arg_exprs.size() - expr.required_packed_args.unwrap(); ++i)
+      {
+        if(need_comma)
+        { format_to(inserter, ", "); }
+        gen(expr.arg_exprs[i], false);
+        need_comma = true;
+      }
+
+      if(expr.required_packed_args.unwrap() > 0)
+      {
+        if(need_comma)
+        { format_to(inserter, ", "); }
+
+        format_to(inserter, "jank::runtime::make_box<jank::runtime::obj::list>(");
+        bool need_packed_comma{};
+        for(size_t i{ expr.arg_exprs.size() - expr.required_packed_args.unwrap() }; i < expr.arg_exprs.size(); ++i)
+        {
+          if(need_packed_comma)
+          { format_to(inserter, ", "); }
+          gen(expr.arg_exprs[i], false);
+          need_packed_comma = true;
+        }
+        format_to(inserter, ")");
+      }
+
+      format_to(inserter, ")");
+    }
+
+    format_to(inserter, "{}", (is_statement ? ";" : ""));
   }
 
   void processor::gen(analyze::expr::primitive_literal<analyze::expression> const &expr, bool const is_statement)
@@ -153,14 +186,13 @@ namespace jank::codegen
   void processor::gen(analyze::expr::map<analyze::expression> const &expr, bool const is_statement)
   {
     auto inserter(std::back_inserter(body_buffer));
-    format_to(inserter, "jank::runtime::make_box<jank::runtime::obj::map>(std::in_place, ");
-    for(auto it(expr.data_exprs.begin()); it != expr.data_exprs.end();)
+    format_to(inserter, "jank::runtime::make_box<jank::runtime::obj::map>(std::in_place ");
+    for(auto const &data_expr : expr.data_exprs)
     {
-      gen(it->first, false);
       format_to(inserter, ", ");
-      gen(it->second, false);
-      if(++it != expr.data_exprs.end())
-      { format_to(inserter, ", "); }
+      gen(data_expr.first, false);
+      format_to(inserter, ", ");
+      gen(data_expr.second, false);
     }
     format_to(inserter, "){}", (is_statement ? ";" : ""));
   }
@@ -358,8 +390,12 @@ namespace jank::codegen
   {
     auto inserter(std::back_inserter(body_buffer));
 
+    option<size_t> required_arity;
     for(auto const &arity : root_expression.arities)
     {
+      if(arity.is_variadic)
+      { required_arity = arity.params.size() - 1; }
+
       format_to(inserter, "jank::runtime::object_ptr call(");
       bool param_comma{};
       for(auto const &param : arity.params)
@@ -398,6 +434,16 @@ namespace jank::codegen
       }
 
       format_to(inserter, "}}");
+    }
+
+    if(required_arity.is_some())
+    {
+      format_to
+      (
+        inserter,
+        "jank::option<size_t> get_required_arity() const override{{ return {}; }}",
+        required_arity.unwrap()
+      );
     }
   }
 

@@ -260,6 +260,8 @@ namespace jank::read
         case '+':
         case '=':
         case '*':
+        case '!':
+        case '&':
         {
           auto &&e(check_whitespace(found_space));
           if(e.is_some())

@@ -50,8 +50,6 @@ namespace jank::analyze
     local_frame& operator=(local_frame const &rhs);
     local_frame& operator=(local_frame &&rhs);
 
-    /* TODO: Return the binding and all fn frames which were crossed to get it, so they can be
-     * updated to register the closure. */
     struct find_result
     {
       local_binding &binding;

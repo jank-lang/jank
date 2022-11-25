@@ -135,6 +135,7 @@ namespace jank::analyze
     }
 
     auto const qualified_sym(current_frame->lift_var(boost::static_pointer_cast<runtime::obj::symbol>(sym_obj)));
+    /* TODO: Should this use find_var? */
     auto const existing_var(ctx.vars.find(qualified_sym));
     if(existing_var != ctx.vars.end())
     {
@@ -181,26 +182,40 @@ namespace jank::analyze
     if(params == nullptr)
     { return err(error{ "invalid fn parameter vector" }); }
 
-    if(params->data.size() > 10)
-    { return err(error{ "invalid parameter count; must be <= 10; use & args to capture the rest" }); }
-
     local_frame_ptr frame
     { std::make_shared<local_frame>(local_frame::frame_type::fn, current_frame->rt_ctx, current_frame) };
     std::vector<runtime::obj::symbol_ptr> param_symbols;
     param_symbols.reserve(params->data.size());
 
-    for(auto const &p : params->data)
+    bool is_variadic{};
+    for(auto it(params->data.begin()); it != params->data.end(); ++it)
     {
+      auto const &p(*it);
       auto const * const sym(p->as_symbol());
       if(sym == nullptr)
       { return err(error{ "invalid parameter; must be a symbol" }); }
       else if(!sym->ns.empty())
       { return err(error{ "invalid parameter; must be unqualified" }); }
+      else if(sym->name == "&")
+      {
+        if(is_variadic)
+        { return err(error{ "invalid function; parameters contain mutliple &" }); }
+        else if(it + 1 == params->data.end())
+        { return err(error{ "invalid function; missing symbol after &" }); }
+
+        is_variadic = true;
+        continue;
+      }
 
       auto const sym_ptr(boost::static_pointer_cast<runtime::obj::symbol>(p));
       frame->locals.emplace(sym_ptr, local_binding{ sym_ptr, none });
       param_symbols.emplace_back(sym_ptr);
     }
+
+    /* We do this after building the symbols vector, since the & symbol isn't a param
+     * and would cause an off-by-one error. */
+    if(param_symbols.size() > 10)
+    { return err(error{ "invalid parameter count; must be <= 10; use & args to capture the rest" }); }
 
     expr::do_<expression> body_do;
     for(auto const &item : list->data.rest())
@@ -216,11 +231,10 @@ namespace jank::analyze
     return
     {
       expr::function_arity<expression>
-      { std::move(param_symbols), std::move(body_do), std::move(frame) }
+      { std::move(param_symbols), is_variadic, std::move(body_do), std::move(frame) }
     };
   }
 
-  /* TODO: Support variadic arities. */
   processor::expression_result processor::analyze_fn
   (runtime::obj::list_ptr const &list, local_frame_ptr &current_frame, context &ctx)
   {
@@ -263,6 +277,28 @@ namespace jank::analyze
     else
     { return err(error{ "invalid fn syntax" }); }
 
+    /* There can only be one variadic arity. Clojure requires this. */
+    size_t found_variadic{};
+    size_t variadic_arity{};
+    for(auto const &arity : arities)
+    {
+      found_variadic += static_cast<int>(arity.is_variadic);
+      variadic_arity = arity.params.size();
+    }
+    if(found_variadic > 1)
+    { return err(error{ "invalid fn: has more than one variadic arity" }); }
+
+    /* The variadic arity, if present, must have at least as many fixed params as the
+     * highest non-variadic arity. Clojure requires this. */
+    if(found_variadic > 0)
+    {
+      for(auto const &arity : arities)
+      {
+        if(!arity.is_variadic && arity.params.size() >= variadic_arity)
+        { return err(error{ "invalid fn: fixed arity has >= params than variadic arity" }); }
+      }
+    }
+
     /* Assert that arities are unique. Lazy implementation, but N is small anyway. */
     for(auto base(arities.begin()); base != arities.end(); ++base)
     {
@@ -271,7 +307,11 @@ namespace jank::analyze
 
       for(auto other(base + 1); other != arities.end(); ++other)
       {
-        if(base->params.size() == other->params.size())
+        if
+        (
+          base->params.size() == other->params.size()
+          && base->is_variadic == other->is_variadic
+        )
         { return err(error{ "invalid fn: duplicate arity definition" }); }
       }
     }
@@ -434,6 +474,72 @@ namespace jank::analyze
     return { expr::map<expression>{ std::move(exprs) } };
   }
 
+  /* This is largely a hack until we have type information for these things. */
+  result<option<size_t>, error> match_fn_call
+  (expression_ptr const &source, std::vector<expression> const &args, context &ctx)
+  {
+    expr::function<expression> const *fn{};
+    boost::apply_visitor
+    (
+      [&fn, &ctx](auto const &arg)
+      {
+        using T = std::decay_t<decltype(arg)>;
+        if constexpr(std::is_same_v<T, expr::var_deref<expression>>)
+        {
+          auto const found_var(ctx.find_var(arg.qualified_name));
+          auto const &var_expr(found_var.unwrap().second);
+          if(var_expr.is_none())
+          { return; }
+          fn = boost::get<expr::function<expression>>(&var_expr.unwrap()->data);
+        }
+        else if constexpr(std::is_same_v<T, expr::local_reference>)
+        {
+          if(arg.binding.value_expr.is_none())
+          { return; }
+          fn = boost::get<expr::function<expression>>(&arg.binding.value_expr.unwrap().get().data);
+        }
+        else if constexpr(std::is_same_v<T, expr::function<expression>>)
+        { fn = &arg; }
+      },
+      source->data
+    );
+
+    /* TODO: Support other callables. */
+    if(!fn)
+    { return none; }
+
+    /* TODO: Put this into fn expr. */
+    std::unordered_map<expr::arity_key, none_t> arity_map;
+    for(auto const &arity : fn->arities)
+    { arity_map.emplace(expr::arity_key{ arity.params.size(), arity.is_variadic }, none); }
+
+    size_t const arg_count{ args.size() };
+    expr::arity_key lookup{ arg_count, false };
+    option<size_t> required_packed_args{};
+    auto const found_concrete(arity_map.find(lookup));
+    if(found_concrete != arity_map.end())
+    { required_packed_args = 0; }
+    else
+    {
+      for(size_t packed_args{}; packed_args <= arg_count; ++packed_args)
+      {
+        lookup.arg_count = arg_count - packed_args;
+        lookup.is_variadic = true;
+        auto const found_variadic(arity_map.find(lookup));
+        if(found_variadic != arity_map.end())
+        {
+          required_packed_args = packed_args + 1;
+          break;
+        }
+      }
+    }
+
+    if(required_packed_args.is_none())
+    { return err(error{ "invalid call to fn: unmatched arity" }); }
+
+    return required_packed_args;
+  }
+
   processor::expression_result processor::analyze_call
   (runtime::obj::list_ptr const &o, local_frame_ptr &current_frame, context &ctx)
   {
@@ -454,6 +560,7 @@ namespace jank::analyze
       auto sym_result(analyze_symbol(sym, current_frame, ctx));
       if(sym_result.is_err())
       { return sym_result; }
+
       source = std::make_shared<expression>(sym_result.expect_ok().unwrap());
     }
     else
@@ -463,6 +570,8 @@ namespace jank::analyze
       { return callable_expr; }
       source = std::make_shared<expression>(callable_expr.expect_ok().unwrap());
     }
+
+    /* TODO: Verify source is callable. */
 
     std::vector<expression> arg_exprs;
     arg_exprs.reserve(count - 1);
@@ -474,13 +583,18 @@ namespace jank::analyze
       arg_exprs.emplace_back(arg_expr.expect_ok().unwrap());
     }
 
+    auto const match_result(match_fn_call(source, arg_exprs, ctx));
+    if(match_result.is_err())
+    { return match_result.expect_err(); }
+
     return
     {
       expr::call<expression>
       {
         source,
         runtime::obj::list::create(o->data.rest()),
-        arg_exprs
+        arg_exprs,
+        match_result.expect_ok()
       }
     };
   }

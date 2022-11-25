@@ -7,7 +7,7 @@
 
 namespace jank
 {
-  struct empty_option
+  struct none_t
   { };
 
   namespace detail
@@ -64,7 +64,7 @@ namespace jank
       { new (reinterpret_cast<T*>(data)) T{ std::move(*reinterpret_cast<D*>(o.data)) }; }
       o.reset();
     }
-    option(empty_option const&)
+    option(none_t const&)
     { }
 
     option<T>& operator =(option<T> const &rhs)
@@ -90,7 +90,7 @@ namespace jank
       rhs.reset();
       return *this;
     }
-    option<T>& operator =(empty_option const&)
+    option<T>& operator =(none_t const&)
     {
       reset();
       return *this;
@@ -155,7 +155,7 @@ namespace jank
   template <typename T, typename Decayed = std::decay_t<T>>
   option<Decayed> some(T &&t)
   { return { std::forward<T>(t) }; }
-  inline constexpr empty_option none = empty_option{};
+  inline constexpr none_t none = none_t{};
 
   template <typename T>
   std::ostream& operator<<(std::ostream &os, option<T> const &o)

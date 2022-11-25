@@ -87,7 +87,10 @@ namespace jank::jit
         }
       }
       catch(...)
-      { CHECK(!expect_success); }
+      {
+        CHECK_MESSAGE
+        (!expect_success, "Test file expected to pass, but did not: ", dir_entry);
+      }
 
       std::cout.rdbuf(old_cout);
       std::cerr.rdbuf(old_cerr);

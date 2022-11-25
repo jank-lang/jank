@@ -6,6 +6,7 @@
 #include <functional>
 #include <memory>
 #include <map>
+#include <string_view>
 
 #include <immer/vector.hpp>
 #include <immer/vector_transient.hpp>

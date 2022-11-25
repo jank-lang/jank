@@ -28,4 +28,22 @@
 (assert (= (add -500) -500))
 (assert (= (add -500 50) -450))
 
+; Variadic arities.
+(def variadic
+  (fn*
+    ([] 0)
+    ([a] 1)
+    ([a b] 2)
+    ([a b & args] args)))
+(assert (= (variadic) 0))
+(assert (= (variadic :meow) 1))
+(assert (= (variadic 'wow 'two) 2))
+(assert (= (variadic 'wow 'two {} nil :meow) [{} nil :meow]))
+
+; Dynamic call to variadic fn.
+(def dynamic+variadic
+  (fn* [f]
+    (f 'wow 'two {} nil :meow)))
+(assert (= (dynamic+variadic variadic) [{} nil :meow]))
+
 :success

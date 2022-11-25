@@ -14,5 +14,6 @@ namespace jank::analyze::expr
     std::shared_ptr<E> source;
     runtime::obj::list_ptr args;
     std::vector<E> arg_exprs;
+    option<size_t> required_packed_args{};
   };
 }

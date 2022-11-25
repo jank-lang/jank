@@ -216,6 +216,7 @@ if(jank_tests)
     test/cpp/jank/analyze/expr/def.cpp
     test/cpp/jank/analyze/expr/var_deref.cpp
     test/cpp/jank/analyze/expr/function.cpp
+    test/cpp/jank/analyze/expr/call.cpp
     test/cpp/jank/analyze/expr/let.cpp
     test/cpp/jank/analyze/expr/primitive_literal.cpp
     test/cpp/jank/analyze/expr/map.cpp
@@ -228,6 +229,7 @@ if(jank_tests)
 
   target_compile_features(jank_test_exe PRIVATE cxx_std_17)
   target_compile_options(jank_test_exe PRIVATE ${jank_compiler_flags})
+  target_compile_options(jank_test_exe PRIVATE -DDOCTEST_CONFIG_SUPER_FAST_ASSERTS)
   target_link_options(jank_test_exe PRIVATE ${jank_linker_flags})
 
   target_include_directories(jank_test_exe SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
