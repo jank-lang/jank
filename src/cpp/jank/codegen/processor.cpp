@@ -215,6 +215,11 @@ namespace jank::codegen
     format_to(body_inserter, "{}{}", prc.expression_str(false), (is_statement ? ";" : ""));
   }
 
+  void processor::gen(analyze::expr::if_<analyze::expression> const &, bool const)
+  {
+    //auto inserter(std::back_inserter(body_buffer));
+  }
+
   void processor::gen
   (analyze::expr::native_raw<analyze::expression> const &expr, bool const is_statement)
   {

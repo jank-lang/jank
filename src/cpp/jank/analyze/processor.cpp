@@ -320,7 +320,11 @@ namespace jank::analyze
   }
 
   processor::expression_result processor::analyze_let
-  (runtime::obj::list_ptr const &o, local_frame_ptr &current_frame, context &ctx)
+  (
+    runtime::obj::list_ptr const &o,
+    local_frame_ptr &current_frame,
+    context &ctx
+  )
   {
     if(o->count() < 2)
     { return err(error{ "invalid let: expects bindings" }); }
@@ -365,8 +369,48 @@ namespace jank::analyze
   }
 
   processor::expression_result processor::analyze_if
-  (runtime::obj::list_ptr const &, local_frame_ptr &, context &)
-  { return err(error{ "unimplemented: if" }); }
+  (
+    runtime::obj::list_ptr const &o,
+    local_frame_ptr &current_frame,
+    context &ctx
+  )
+  {
+    auto const form_count(o->count());
+    if(form_count < 2)
+    { return err(error{ "invalid if: expects at least two forms" }); }
+    else if(form_count > 3)
+    { return err(error{ "invalid if: expects at most three forms" }); }
+
+    auto const condition(o->data.first().unwrap());
+    auto condition_expr(analyze(condition, current_frame, ctx));
+    if(condition_expr.is_err())
+    { return condition_expr.expect_err_move(); }
+
+    auto const then(o->data.rest().first().unwrap());
+    auto then_expr(analyze(then, current_frame, ctx));
+    if(then_expr.is_err())
+    { return then_expr.expect_err_move(); }
+
+    option<expression_ptr> else_expr_opt;
+    if(form_count == 3)
+    {
+      auto const else_(o->data.rest().rest().first().unwrap());
+      auto else_expr(analyze(else_, current_frame, ctx));
+      if(else_expr.is_err())
+      { return else_expr.expect_err_move(); }
+      else_expr_opt = std::make_shared<expression>(else_expr.expect_ok_move().unwrap());
+    }
+
+    return
+    {
+      expr::if_<expression>
+      {
+        std::make_shared<expression>(condition_expr.expect_ok_move().unwrap()),
+        std::make_shared<expression>(then_expr.expect_ok_move().unwrap()),
+        else_expr_opt
+      }
+    };
+  }
 
   processor::expression_result processor::analyze_quote
   (runtime::obj::list_ptr const &o, local_frame_ptr &current_frame, context &ctx)

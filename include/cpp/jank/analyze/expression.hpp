@@ -14,6 +14,7 @@
 #include <jank/analyze/expr/local_reference.hpp>
 #include <jank/analyze/expr/let.hpp>
 #include <jank/analyze/expr/do.hpp>
+#include <jank/analyze/expr/if.hpp>
 #include <jank/analyze/expr/native_raw.hpp>
 
 namespace jank::analyze
@@ -34,6 +35,7 @@ namespace jank::analyze
       expr::local_reference,
       expr::let<E>,
       expr::do_<E>,
+      expr::if_<E>,
       boost::recursive_wrapper<expr::native_raw<E>>
     >;
 
