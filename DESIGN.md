@@ -263,6 +263,155 @@ Two things of note here:
 This alone will allow me to implement a great deal of `clojure.core` functions.
 It doesn't solve all interop questions, but I'll get to them.
 
+## Codegen
+### Handling expressions like if/let which can be arbitrarily nested
+The expression `(println (if :foo :a :b))` results in the following decompiled
+Java, from Clojure:
+
+```java
+public static Object invokeStatic() {
+  // println
+  final IFn fn = (IFn)user$fn_line_1__219.const__0.getRawRoot();
+  // foo
+  final Keyword const__1 = user$fn_line_1__219.const__1;
+  // truthy check becomes a != null and != false check
+  if (const__1 != null) {
+    if (const__1 != Boolean.FALSE) {
+      // Lifted constant gets put into a local and the println call is
+      // duplicated here and also below
+      final Keyword keyword = user$fn_line_1__219.const__2;
+      return fn.invoke(keyword);
+    }
+  }
+  final Keyword keyword = user$fn_line_1__219.const__3;
+  return fn.invoke(keyword);
+}
+```
+
+Even worse, if the expression grows to be `(println (if :foo :a :b) (if
+:bar :c :d))` then the generated code effectively has a `goto`.
+
+```java
+public static Object invokeStatic() {
+  // println
+  final IFn fn = (IFn)user$fn_line_1__223.const__0.getRawRoot();
+  // foo
+  final Keyword const__1 = user$fn_line_1__223.const__1;
+
+  Keyword keyword = null;
+  Label_0032: {
+    if (const__1 != null) {
+      if (const__1 != Boolean.FALSE) {
+        keyword = user$fn_line_1__223.const__2;
+        // curious that this isn't just an else with a combined if, but ok
+        break Label_0032;
+      }
+    }
+    keyword = user$fn_line_1__223.const__3;
+  }
+
+  // bar
+  final Keyword const__2 = user$fn_line_1__223.const__4;
+  if (const__2 != null) {
+    if (const__2 != Boolean.FALSE) {
+      final Keyword keyword2 = user$fn_line_1__223.const__5;
+      return fn.invoke(keyword, keyword2);
+    }
+  }
+  final Keyword keyword2 = user$fn_line_1__223.const__6;
+  return fn.invoke(keyword, keyword2);
+}
+```
+
+So, given these two examples, we see two different strategies:
+
+1. Nest the `if` statements and duplicate the outer call to println
+2. Mutate a local and use a single call
+
+I suspect that the first strategy is used over the second in favor of
+performance, but, favoring simplicity, I'd rather just explore one option right
+now. Before moving forward with the second option, it'd help to prove that it
+alone will handle all of the necessary cases of if and let.
+
+### Example case: if expr in return position
+Here we pull the value of each branch into a local and return that. Just like
+strategy #2 above, but we're using return rather than calling a fn. If there is
+no else form, we can still generate one to set the value to `nil`.
+
+```clojure
+(fn []
+  (if foo
+    1
+    2))
+```
+```c++
+jank::runtime::object_ptr call() const override
+{
+  object_ptr val;
+  if(truthy(foo))
+  { val = 1; }
+  else
+  { val = 2; }
+  return val;
+}
+```
+
+### Example case: nested if expr
+```clojure
+(println (if foo (thing)))
+```
+```c++
+jank::runtime::object_ptr call() const override
+{
+  object_ptr val;
+  if(truthy(foo))
+  { val = thing->call(); }
+  else
+  { val = JANK_NIL; }
+  return println->call(val);
+}
+```
+
+### Example case: multi-nested if expr
+```clojure
+(println (if foo (if thing 1) 2))
+```
+```c++
+jank::runtime::object_ptr call() const override
+{
+  object_ptr val1;
+  if(truthy(foo))
+  {
+    object_ptr val2;
+    if(truthy(thing))
+    { val2 = 1; }
+    else
+    { val2 = JANK_NIL; }
+    val1 = val2;
+  }
+  else
+  { val1 = 2; }
+  return println->call(val1);
+}
+```
+
+### Example case: nested call with an if expr
+```clojure
+(println (str (if foo "a" "b")))
+```
+```c++
+jank::runtime::object_ptr call() const override
+{
+  object_ptr val1;
+  if(truthy(foo))
+  { val1 = "a"; }
+  else
+  { val1 = "b"; }
+  object_ptr val2{ str->call(val1) };
+  return println->call(val2);
+}
+```
+
 ## Type system
 In terms of capability set, these are the categories I want to hit:
 
@@ -281,7 +430,7 @@ JIT compilation support can be broken down into the following steps:
 
 1. Codegen to C++ (requires a fair amount of semantic analysis)
 2. JIT compilation and evaluation
-3. Cache generated source (or LLVM IR?) when loading whole files (i.e. `.class` files)
+3. Cache generated source (or LLVM IR? or C++ modules?) when loading whole files (i.e. `.class` files)
 
 ## Memory management
 Currently, jank is using `boost::intrusive_ptr` for reference counting runtime
