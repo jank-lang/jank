@@ -5,6 +5,39 @@
 #include <jank/runtime/util.hpp>
 #include <jank/codegen/processor.hpp>
 
+/* The strategy for codegen to C++ is quite simple. Codegen always happens on a
+ * single fn, which generates a single C++ struct. Top-level expressions and
+ * REPL expressions are all implicitly wrapped in a fn during analysis. If the
+ * jank fn has a nested fn, it becomes a nested struct, since this whole
+ * generation works recursively.
+ *
+ * Analysis lifts constants and vars, so those just become members which are
+ * initialized in the ctor.
+ *
+ * The most interesting part is the translation of expressions into statements,
+ * so that something like `(println (if foo bar spam))` can become sane C++.
+ * To do this, _every_ nested expression is replaced with a temporary and turned
+ * into a statement. When needed, such as with if statements, that temporary
+ * is mutated from the then/else branches. In other cases, it's just set
+ * directly.
+ *
+ * That means something like `(println (thing) (if foo bar spam))` will become
+ * roughly this C++:
+ *
+ * ```c++
+ * object_ptr const &thing_result(thing->call());
+ * object_ptr if_result;
+ * if(foo)
+ * { if_result = bar; }
+ * else
+ * { if_result = spam; }
+ * println->call(thing_result, if_result);
+ * ```
+ *
+ * TODO: This could be optimized, in some cases, but let's do that when the
+ * profiler tells us to.
+ */
+
 namespace jank::codegen
 {
   namespace detail
@@ -15,7 +48,7 @@ namespace jank::codegen
     {
       auto inserter(std::back_inserter(buffer));
       if(o->as_nil())
-      { format_to(inserter, "jank::runtime::make_box<jank::runtime::obj::nil>()"); }
+      { format_to(inserter, "jank::runtime::JANK_NIL"); }
       else if(auto const * const d = o->as_boolean())
       { format_to(inserter, "jank::runtime::make_box<jank::runtime::obj::boolean>({})", d->data); }
       else if(auto const * const d = o->as_integer())
@@ -37,7 +70,7 @@ namespace jank::codegen
         format_to
         (
           inserter,
-          R"(rt_ctx.intern_keyword("{}", "{}", {}))",
+          R"(__rt_ctx.intern_keyword("{}", "{}", {}))",
           d->sym.ns,
           d->sym.name,
           d->resolved
@@ -59,20 +92,24 @@ namespace jank::codegen
       struct_name{ analyze::context::unique_name() }
   { }
 
-  void processor::gen(analyze::expression const &ex, bool const is_statement)
+  runtime::obj::symbol processor::gen(analyze::expression const &ex, bool const is_statement)
   {
+    runtime::obj::symbol ret;
     boost::apply_visitor
     (
-      [this, is_statement](auto const &typed_ex)
-      { gen(typed_ex, is_statement); },
+      [this, is_statement, &ret](auto const &typed_ex)
+      { ret = gen(typed_ex, is_statement); },
       ex.data
     );
+    return ret;
   }
 
-  void processor::gen(analyze::expr::def<analyze::expression> const &expr, bool const is_statement)
+  runtime::obj::symbol processor::gen(analyze::expr::def<analyze::expression> const &expr, bool const)
   {
     auto inserter(std::back_inserter(body_buffer));
     auto const &var(expr.frame->find_lifted_var(expr.name).unwrap().get());
+    auto const &munged_name(runtime::munge(var.native_name.name));
+    auto tmp_ret(analyze::context::unique_name(munged_name));
 
     /* Forward declarations just intern the var and evaluate to it. */
     if(expr.value.is_none())
@@ -80,159 +117,228 @@ namespace jank::codegen
       format_to
       (
         inserter,
-        "{}{}",
-        runtime::munge(var.native_name.name),
-        (is_statement ? ";" : "")
+        "var_ptr const &{}{{{}}};",
+        tmp_ret.name,
+        munged_name
       );
-      return;
+      return tmp_ret;
     }
 
-    format_to(inserter, "{}->set_root(", runtime::munge(var.native_name.name));
-    gen(*expr.value.unwrap(), false);
-    format_to(inserter, "){}", (is_statement ? ";" : ""));
+    auto const &val_tmp(gen(*expr.value.unwrap(), false));
+    format_to
+    (
+      inserter,
+      "var_ptr const &{}{{{}->set_root({})}};",
+      tmp_ret.name,
+      runtime::munge(var.native_name.name),
+      val_tmp.name
+    );
+    return tmp_ret;
   }
 
-  void processor::gen(analyze::expr::var_deref<analyze::expression> const &expr, bool const is_statement)
+  runtime::obj::symbol processor::gen(analyze::expr::var_deref<analyze::expression> const &expr, bool const)
   {
     auto inserter(std::back_inserter(body_buffer));
     auto const &var(expr.frame->find_lifted_var(expr.qualified_name).unwrap().get());
-    format_to
-    (
-      inserter,
-      "{}->get_root(){}",
-      runtime::munge(var.native_name.name),
-      (is_statement ? ";" : "")
-    );
+    auto tmp_ret(analyze::context::unique_name(var.native_name.name));
+    format_to(inserter, "auto const &{}({}->get_root());", tmp_ret.name, var.native_name.name);
+    return tmp_ret;
   }
 
-  void processor::gen(analyze::expr::call<analyze::expression> const &expr, bool const is_statement)
+  runtime::obj::symbol processor::gen(analyze::expr::call<analyze::expression> const &expr, bool const)
   {
+    /* It's worth noting that there's extra scope wrapped around the generated
+     * arg values. This ensures that the args are only retained for the duration
+     * of the call. Otherwise, a large, long-running fn could lead to a lot of
+     * memory bloat. */
     auto inserter(std::back_inserter(body_buffer));
+    auto tmp_ret(analyze::context::unique_name("call"));
 
+    /* If we don't know how many packed args there are, it's because we were
+     * unable to analyze this call. Needs to be a dynamic call. */
     if(expr.required_packed_args.is_none())
     {
-      format_to(inserter, "jank::runtime::dynamic_call(");
-      gen(*expr.source, false);
+      auto const &source_tmp(gen(*expr.source, false));
+      format_to(inserter, "object_ptr {}; {{", tmp_ret.name);
+      std::vector<runtime::obj::symbol> arg_tmps;
+      arg_tmps.reserve(expr.arg_exprs.size());
       for(auto const &arg_expr : expr.arg_exprs)
-      {
-        format_to(inserter, ", ");
-        gen(arg_expr, false);
-      }
-      format_to(inserter, ")");
+      { arg_tmps.emplace_back(gen(arg_expr, false)); }
+
+      format_to
+      (inserter, "{} = jank::runtime::dynamic_call({}", tmp_ret.name, source_tmp.name);
+      for(auto const &arg_tmp : arg_tmps)
+      { format_to(inserter, ", {}", arg_tmp.name); }
+      format_to(inserter, "); }}");
     }
     else
     {
-      gen(*expr.source, false);
-      format_to(inserter, "->as_callable()->call(");
-      bool need_comma{};
+      auto const &source_tmp(gen(*expr.source, false));
+      format_to(inserter, "object_ptr {}; {{", tmp_ret.name);
+      std::vector<runtime::obj::symbol> arg_tmps;
+      arg_tmps.reserve(expr.arg_exprs.size());
       for(size_t i{}; i < expr.arg_exprs.size() - expr.required_packed_args.unwrap(); ++i)
-      {
-        if(need_comma)
-        { format_to(inserter, ", "); }
-        gen(expr.arg_exprs[i], false);
-        need_comma = true;
-      }
+      { arg_tmps.emplace_back(gen(expr.arg_exprs[i], false)); }
 
       if(expr.required_packed_args.unwrap() > 0)
       {
-        if(need_comma)
-        { format_to(inserter, ", "); }
+        std::vector<runtime::obj::symbol> packed_tmps;
+        packed_tmps.reserve(expr.required_packed_args.unwrap());
+        for
+        (
+          size_t i{ expr.arg_exprs.size() - expr.required_packed_args.unwrap() };
+          i < expr.arg_exprs.size();
+          ++i
+        )
+        { packed_tmps.emplace_back(gen(expr.arg_exprs[i], false)); }
 
-        format_to(inserter, "jank::runtime::make_box<jank::runtime::obj::list>(");
+        auto packed_tmp(analyze::context::unique_name("packed"));
+        format_to
+        (
+          inserter,
+          "auto const &{}(jank::runtime::make_box<jank::runtime::obj::list>(",
+          packed_tmp.name
+        );
         bool need_packed_comma{};
-        for(size_t i{ expr.arg_exprs.size() - expr.required_packed_args.unwrap() }; i < expr.arg_exprs.size(); ++i)
+        for(auto const &packed_tmp : packed_tmps)
         {
-          if(need_packed_comma)
-          { format_to(inserter, ", "); }
-          gen(expr.arg_exprs[i], false);
+          format_to(inserter, "{} {}", (need_packed_comma ? ", " : ""), packed_tmp.name);
           need_packed_comma = true;
         }
-        format_to(inserter, ")");
+        format_to(inserter, "));");
+        arg_tmps.emplace_back(std::move(packed_tmp));
       }
 
-      format_to(inserter, ")");
+      format_to(inserter, "{} = {}->as_callable()->call(", tmp_ret.name, source_tmp.name);
+      bool need_comma{};
+      for(auto const &arg_tmp : arg_tmps)
+      {
+        format_to(inserter, "{} {}", (need_comma ? ", " : ""), arg_tmp.name);
+        need_comma = true;
+      }
+
+      format_to(inserter, "); }}");
     }
 
-    format_to(inserter, "{}", (is_statement ? ";" : ""));
+    return tmp_ret;
   }
 
-  void processor::gen(analyze::expr::primitive_literal<analyze::expression> const &expr, bool const is_statement)
+  runtime::obj::symbol processor::gen(analyze::expr::primitive_literal<analyze::expression> const &expr, bool const)
   {
-    auto inserter(std::back_inserter(body_buffer));
     auto const &constant(expr.frame->find_lifted_constant(expr.data).unwrap().get());
+    return constant.native_name;
+  }
+
+  runtime::obj::symbol processor::gen
+  (analyze::expr::vector<analyze::expression> const &expr, bool const)
+  {
+    std::vector<runtime::obj::symbol> data_tmps;
+    data_tmps.reserve(expr.data_exprs.size());
+    for(auto const &data_expr : expr.data_exprs)
+    { data_tmps.emplace_back(gen(data_expr, false)); }
+
+    auto inserter(std::back_inserter(body_buffer));
+    auto tmp_ret(analyze::context::unique_name("vec"));
+    format_to
+    (inserter, "auto const &{}(jank::runtime::make_box<jank::runtime::obj::vector>(", tmp_ret.name);
+    for(auto it(data_tmps.begin()); it != data_tmps.end();)
+    {
+      format_to(inserter, "{}", it->name);
+      if(++it != data_tmps.end())
+      { format_to(inserter, ", "); }
+    }
+    format_to(inserter, "));");
+    return tmp_ret;
+  }
+
+  runtime::obj::symbol processor::gen(analyze::expr::map<analyze::expression> const &expr, bool const)
+  {
+    std::vector<std::pair<runtime::obj::symbol, runtime::obj::symbol>> data_tmps;
+    data_tmps.reserve(expr.data_exprs.size());
+    for(auto const &data_expr : expr.data_exprs)
+    { data_tmps.emplace_back(gen(data_expr.first, false), gen(data_expr.second, false)); }
+
+    auto inserter(std::back_inserter(body_buffer));
+    auto tmp_ret(analyze::context::unique_name("map"));
     format_to
     (
       inserter,
-      "{}{}",
-      runtime::munge(constant.native_name.name),
-      (is_statement ? ";" : "")
+      "auto const &{}(jank::runtime::make_box<jank::runtime::obj::map>(std::in_place ",
+      tmp_ret.name
     );
-  }
-
-  void processor::gen
-  (analyze::expr::vector<analyze::expression> const &expr, bool const is_statement)
-  {
-    auto inserter(std::back_inserter(body_buffer));
-    format_to(inserter, "jank::runtime::make_box<jank::runtime::obj::vector>(");
-    for(auto it(expr.data_exprs.begin()); it != expr.data_exprs.end();)
+    for(auto const &data_tmp : data_tmps)
     {
-      gen(*it, false);
-      if(++it != expr.data_exprs.end())
-      { format_to(inserter, ", "); }
+      format_to(inserter, ", {}", data_tmp.first.name);
+      format_to(inserter, ", {}", data_tmp.second.name);
     }
-    format_to(inserter, "){}", (is_statement ? ";" : ""));
+    format_to(inserter, "));");
+    return tmp_ret;
   }
 
-  void processor::gen(analyze::expr::map<analyze::expression> const &expr, bool const is_statement)
-  {
-    auto inserter(std::back_inserter(body_buffer));
-    format_to(inserter, "jank::runtime::make_box<jank::runtime::obj::map>(std::in_place ");
-    for(auto const &data_expr : expr.data_exprs)
-    {
-      format_to(inserter, ", ");
-      gen(data_expr.first, false);
-      format_to(inserter, ", ");
-      gen(data_expr.second, false);
-    }
-    format_to(inserter, "){}", (is_statement ? ";" : ""));
-  }
+  runtime::obj::symbol processor::gen(analyze::expr::local_reference const &expr, bool const)
+  { return { "", runtime::munge(expr.name->name) }; }
 
-  void processor::gen(analyze::expr::local_reference const &expr, bool const is_statement)
-  {
-    auto inserter(std::back_inserter(body_buffer));
-    format_to(inserter, "{}{}", runtime::munge(expr.name->name), (is_statement ? ";" : ""));
-  }
-
-  void processor::gen
-  (analyze::expr::function<analyze::expression> const &expr, bool const is_statement)
+  runtime::obj::symbol processor::gen
+  (analyze::expr::function<analyze::expression> const &expr, bool const)
   {
     /* Since each codegen proc handles one callable struct, we create a new one for this fn. */
     processor prc{ rt_ctx, an_ctx, expr };
+    auto tmp_ret(analyze::context::unique_name("fn"));
 
     auto header_inserter(std::back_inserter(header_buffer));
     auto body_inserter(std::back_inserter(body_buffer));
     format_to(header_inserter, "{}", prc.declaration_str());
-    format_to(body_inserter, "{}{}", prc.expression_str(false), (is_statement ? ";" : ""));
+    format_to(body_inserter, "auto const &{}({});", tmp_ret.name, prc.expression_str(false));
+    return tmp_ret;
   }
 
-  void processor::gen(analyze::expr::if_<analyze::expression> const &, bool const)
-  {
-    //auto inserter(std::back_inserter(body_buffer));
-  }
-
-  void processor::gen
-  (analyze::expr::native_raw<analyze::expression> const &expr, bool const is_statement)
+  runtime::obj::symbol processor::gen(analyze::expr::if_<analyze::expression> const &expr, bool const)
   {
     auto inserter(std::back_inserter(body_buffer));
+    auto tmp_ret(analyze::context::unique_name("if"));
+    format_to(inserter, "object_ptr {};", tmp_ret.name);
+    auto const &condition_tmp(gen(*expr.condition, false));
+    format_to(inserter, "if(jank::runtime::detail::truthy({})) {{", condition_tmp.name);
+    auto const &then_tmp(gen(*expr.then, false));
+    format_to(inserter, "{} = {}; }}", tmp_ret.name, then_tmp.name);
+    if(expr.else_.is_some())
+    {
+      format_to(inserter, "else {{");
+      auto const &else_tmp(gen(*expr.else_.unwrap(), false));
+      format_to(inserter, "{} = {}; }}", tmp_ret.name, else_tmp.name);
+    }
+    return tmp_ret;
+  }
+
+  runtime::obj::symbol processor::gen
+  (analyze::expr::native_raw<analyze::expression> const &expr, bool const)
+  {
+    auto inserter(std::back_inserter(body_buffer));
+    auto tmp_ret(analyze::context::unique_name("native"));
+
+    std::vector<runtime::obj::symbol> interpolated_chunk_tmps;
+    interpolated_chunk_tmps.reserve((expr.chunks.size() / 2) + 1);
+    for(auto const &chunk : expr.chunks)
+    {
+      auto const * const chunk_expr(boost::get<analyze::expression>(&chunk));
+      if(chunk_expr == nullptr)
+      { continue; }
+      interpolated_chunk_tmps.emplace_back(gen(*chunk_expr, false));
+    }
+
+    format_to(inserter, "object_ptr {};", tmp_ret.name);
+    format_to(inserter, "{{ object_ptr __value{{ JANK_NIL }};");
+    size_t interpolated_chunk_it{};
     for(auto const &chunk : expr.chunks)
     {
       auto const * const code(boost::get<runtime::detail::string_type>(&chunk));
       if(code != nullptr)
       { format_to(inserter, "{}", *code->data); }
       else
-      { gen(boost::get<analyze::expression>(chunk), false); }
+      { format_to(inserter, "{}", interpolated_chunk_tmps[interpolated_chunk_it++].name); }
     }
-    format_to(inserter, "{}", (is_statement ? ";" : ""));
+    format_to(inserter, ";{} = __value; }}", tmp_ret.name);
+    return tmp_ret;
   }
 
   std::string processor::declaration_str()
@@ -320,11 +426,10 @@ namespace jank::codegen
       }
     }
 
-    /* TODO: Prevent name collision with rt_ctx. */
     format_to
     (
       inserter,
-      "{0}(jank::runtime::context &rt_ctx", runtime::munge(struct_name.name)
+      "{0}(jank::runtime::context &__rt_ctx", runtime::munge(struct_name.name)
     );
 
     for(auto const &arity : root_expression.arities)
@@ -352,7 +457,7 @@ namespace jank::codegen
         format_to
         (
           inserter,
-          R"({0}{1}{{ rt_ctx.intern_var("{2}", "{3}").expect_ok() }})",
+          R"({0}{1}{{ __rt_ctx.intern_var("{2}", "{3}").expect_ok() }})",
           (need_member_init_comma ? "," : ""),
           runtime::munge(v.second.native_name.name),
           v.second.var_name->ns,
@@ -427,15 +532,9 @@ namespace jank::codegen
       for(auto it(arity.body.body.begin()); it != arity.body.body.end();)
       {
         auto const &form(*it);
-        if
-        (
-          ++it == arity.body.body.end()
-          /* Ending a fn in a native/raw expression assumes it will be returning something
-           * explicitly. */
-          && boost::get<analyze::expr::native_raw<analyze::expression>>(&form.data) == nullptr
-        )
-        { format_to(inserter, "return "); }
-        gen(form, true);
+        auto const &val_tmp(gen(form, true));
+        if(++it == arity.body.body.end())
+        { format_to(inserter, "return {};", val_tmp.name); }
       }
 
       format_to(inserter, "}}");

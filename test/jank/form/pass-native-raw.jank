@@ -1,11 +1,11 @@
 ; native/raw expressions can appear anywhere.
-(assert (native/raw "make_box(true)"))
-(assert (= (native/raw "make_box(77)") 77))
+(assert (native/raw "__value = make_box(true)"))
+(assert (= (native/raw "__value = make_box(77)") 77))
 
 ; Interpolation will often by used for parameters.
 (def keyword? (fn* [o]
                 ; An explicit return is required in the last position of a fn.
-                (native/raw "return make_box(#{ o }#->as_keyword() != nullptr)")))
+                (native/raw "__value = make_box(#{ o }#->as_keyword() != nullptr)")))
 
 (assert (= (keyword? :meow) true))
 (assert (= (keyword? 1) false))
@@ -15,7 +15,7 @@
   (fn* [o]
     ; Interpolation can contain arbitrary jank code.
     ; It can also capture vars and locals, which lifts and captures them accordingly.
-    (native/raw "return #{ (keyword? o) }# ")))
+    (native/raw "__value = #{ (keyword? o) }# ")))
 
 (assert (= (also-keyword? :meow) true))
 (assert (= (also-keyword? 1) false))

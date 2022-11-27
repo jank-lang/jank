@@ -1,0 +1,33 @@
+; Top-level.
+(if {:this-is-truthy :yep}
+  (assert true)
+  (assert false))
+
+; Nested expression.
+(assert (if (= 1 (+ 0 1))
+          true
+          false))
+
+; In return position.
+(def even-or-odd
+  (fn* [n]
+    (if (even? n)
+      :even
+      :odd)))
+(assert (= :even (even-or-odd 0)))
+(assert (= :odd (even-or-odd 1)))
+
+; Further nesting.
+(def consistent?
+  (fn* [n]
+    (if (even? n)
+      (if (even? n)
+        :consistently-even
+        :inconsistently-even)
+      (if (even? n)
+        :inconsistently-odd
+        :consistently-odd))))
+(assert (= :consistently-even (consistent? 0)))
+(assert (= :consistently-odd (consistent? 1)))
+
+:success

@@ -42,10 +42,10 @@ namespace jank::analyze
 
   runtime::obj::symbol context::unique_name()
   { return unique_name("gen"); }
-  runtime::obj::symbol context::unique_name(std::string const &prefix)
+  runtime::obj::symbol context::unique_name(std::string_view const &prefix)
   {
     static std::atomic_size_t index{ 1 };
-    return { "", prefix + std::to_string(index++) };
+    return { "", prefix.data() + std::to_string(index++) };
   }
 
   processor::processor
@@ -159,6 +159,7 @@ namespace jank::analyze
   processor::expression_result processor::analyze_symbol
   (runtime::obj::symbol_ptr const &sym, local_frame_ptr &current_frame, context &ctx)
   {
+    /* TODO: Assert it doesn't start with __. */
     auto const found_local(current_frame->find_capture(sym));
     if(found_local.is_some())
     {
@@ -376,25 +377,25 @@ namespace jank::analyze
   )
   {
     auto const form_count(o->count());
-    if(form_count < 2)
+    if(form_count < 3)
     { return err(error{ "invalid if: expects at least two forms" }); }
-    else if(form_count > 3)
+    else if(form_count > 4)
     { return err(error{ "invalid if: expects at most three forms" }); }
 
-    auto const condition(o->data.first().unwrap());
+    auto const condition(o->data.rest().first().unwrap());
     auto condition_expr(analyze(condition, current_frame, ctx));
     if(condition_expr.is_err())
     { return condition_expr.expect_err_move(); }
 
-    auto const then(o->data.rest().first().unwrap());
+    auto const then(o->data.rest().rest().first().unwrap());
     auto then_expr(analyze(then, current_frame, ctx));
     if(then_expr.is_err())
     { return then_expr.expect_err_move(); }
 
     option<expression_ptr> else_expr_opt;
-    if(form_count == 3)
+    if(form_count == 4)
     {
-      auto const else_(o->data.rest().rest().first().unwrap());
+      auto const else_(o->data.rest().rest().rest().first().unwrap());
       auto else_expr(analyze(else_, current_frame, ctx));
       if(else_expr.is_err())
       { return else_expr.expect_err_move(); }

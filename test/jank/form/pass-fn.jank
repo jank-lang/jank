@@ -40,6 +40,13 @@
 (assert (= (variadic 'wow 'two) 2))
 (assert (= (variadic 'wow 'two {} nil :meow) [{} nil :meow]))
 
+;(def variadic-catch-all
+;  (fn*
+;    ([& args] args)))
+;(assert (= (variadic-catch-all) []))
+;(assert (= (variadic-catch-all 1) [1]))
+;(assert (= (variadic-catch-all 1 :two) [1 :two]))
+
 ; Dynamic call to variadic fn.
 (def dynamic+variadic
   (fn* [f]

@@ -37,7 +37,7 @@ namespace jank::analyze
      * lifted vars, to shadowed locals. */
     /* TODO: Move this to RT context? */
     static runtime::obj::symbol unique_name();
-    static runtime::obj::symbol unique_name(std::string const &prefix);
+    static runtime::obj::symbol unique_name(std::string_view const &prefix);
 
     /* These accumulate the whole lifetime of the program. */
     runtime::context &rt_ctx;

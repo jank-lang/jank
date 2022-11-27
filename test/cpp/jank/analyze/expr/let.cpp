@@ -71,6 +71,7 @@ namespace jank::analyze::expr
     }
   }
 
+  /* TODO: Odd number of elements. */
   TEST_CASE("Misuse")
   {
     runtime::context rt_ctx;
@@ -92,6 +93,7 @@ namespace jank::analyze::expr
       CHECK(an_prc.result(an_ctx).is_err());
     }
 
+    /* TODO: This is allowed when it exists outside the let. */
     SUBCASE("Self-referenced binding")
     {
       read::lex::processor l_prc{ "(let* [a a])" };

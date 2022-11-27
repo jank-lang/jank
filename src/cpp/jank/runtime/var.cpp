@@ -28,7 +28,7 @@ namespace jank::runtime
   }
   runtime::detail::string_type var::to_string() const
   /* TODO: Maybe cache this. */
-  { return "var(" + n->name->to_string() + "/" + name->to_string() + ")"; }
+  { return "#'" + name->to_string(); }
   runtime::detail::integer_type var::to_hash() const
   /* TODO: Cache this. */
   { return detail::hash_combine(n->name->to_hash(), name->to_hash()); }

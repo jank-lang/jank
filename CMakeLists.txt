@@ -218,6 +218,7 @@ if(jank_tests)
     test/cpp/jank/analyze/expr/function.cpp
     test/cpp/jank/analyze/expr/call.cpp
     test/cpp/jank/analyze/expr/let.cpp
+    test/cpp/jank/analyze/expr/if.cpp
     test/cpp/jank/analyze/expr/primitive_literal.cpp
     test/cpp/jank/analyze/expr/map.cpp
     test/cpp/jank/analyze/expr/native_raw.cpp
