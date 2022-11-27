@@ -34,6 +34,7 @@ namespace jank::codegen
     runtime::obj::symbol gen(analyze::expr::map<analyze::expression> const &, bool const is_statement);
     runtime::obj::symbol gen(analyze::expr::local_reference const &, bool const is_statement);
     runtime::obj::symbol gen(analyze::expr::function<analyze::expression> const &, bool const is_statement);
+    runtime::obj::symbol gen(analyze::expr::let<analyze::expression> const &, bool const is_statement);
     runtime::obj::symbol gen(analyze::expr::if_<analyze::expression> const &, bool const is_statement);
     runtime::obj::symbol gen(analyze::expr::native_raw<analyze::expression> const &, bool const is_statement);
 

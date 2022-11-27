@@ -69,9 +69,22 @@ namespace jank::analyze::expr
       CHECK(let_expr->frame->locals.size() == 1);
       CHECK(let_expr->body.body.size() == 1);
     }
+
+    SUBCASE("Exception to self-referenced binding: shadowing")
+    {
+      read::lex::processor l_prc{ "(def a 1) (let* [a a])" };
+      read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+      processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
+
+      auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
+      auto const expr(*(++boost::get<function<expression>>(fn_expr.data).arities[0].body.body.begin()));
+      auto const *let_expr(boost::get<let<expression>>(&expr.data));
+      CHECK(let_expr != nullptr);
+      CHECK(let_expr->frame->locals.size() == 1);
+      CHECK(let_expr->body.body.size() == 0);
+    }
   }
 
-  /* TODO: Odd number of elements. */
   TEST_CASE("Misuse")
   {
     runtime::context rt_ctx;
@@ -93,13 +106,20 @@ namespace jank::analyze::expr
       CHECK(an_prc.result(an_ctx).is_err());
     }
 
-    /* TODO: This is allowed when it exists outside the let. */
     SUBCASE("Self-referenced binding")
     {
       read::lex::processor l_prc{ "(let* [a a])" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
       CHECK_THROWS(an_prc.result(an_ctx));
+    }
+
+    SUBCASE("Odd number of elements")
+    {
+      read::lex::processor l_prc{ "(let* [a :a b])" };
+      read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+      processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
+      CHECK(an_prc.result(an_ctx).is_err());
     }
   }
 }

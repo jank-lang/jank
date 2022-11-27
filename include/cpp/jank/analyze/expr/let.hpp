@@ -12,6 +12,7 @@ namespace jank::analyze::expr
   struct let
   {
     using pair_type = std::pair<runtime::obj::symbol_ptr, E>;
+
     /* Stable references. */
     std::list<pair_type> pairs;
     do_<E> body;
