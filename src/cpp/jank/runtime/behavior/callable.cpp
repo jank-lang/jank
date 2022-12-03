@@ -10,7 +10,7 @@ namespace jank::runtime
   {
     auto const * const c(source->as_callable());
     if(c == nullptr)
-    { throw std::runtime_error{ "not callable: " + *source->to_string().data }; }
+    { throw std::runtime_error{ "not callable: " + source->to_string().data }; }
     return c;
   }
 

@@ -8,11 +8,11 @@ namespace jank::runtime::obj
   template <typename S>
   void separate(symbol &sym, S &&s)
   {
-    auto const found(s.data->find('/'));
+    auto const found(s.data.find('/'));
     if(found != std::string::npos)
     {
-      sym.ns = s.data->substr(0, found);
-      sym.name = s.data->substr(found + 1);
+      sym.ns = s.data.substr(0, found);
+      sym.name = s.data.substr(found + 1);
     }
     else
     { sym.name = std::forward<S>(s); }
@@ -50,7 +50,7 @@ namespace jank::runtime::obj
   }
   runtime::detail::string_type symbol::to_string() const
   {
-    if(ns.length > 0)
+    if(!ns.empty())
     { return ns + "/" + name; }
     return name;
   }

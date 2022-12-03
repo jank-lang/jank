@@ -170,7 +170,7 @@ namespace jank::analyze
 
     auto const var(ctx.find_var(sym));
     if(var.is_none())
-    { return err(error{ "unbound symbol: " + *sym->to_string().data }); }
+    { return err(error{ "unbound symbol: " + sym->to_string().data }); }
 
     current_frame->lift_var(var.unwrap().first);
     return std::make_shared<expression>
@@ -443,21 +443,21 @@ namespace jank::analyze
     constexpr std::string_view interp_start{ "#{" }, interp_end{ "}#" };
     for(size_t it{}; it != std::string::npos; )
     {
-      auto const next_start(code_str->data.data->find(interp_start, it));
+      auto const next_start(code_str->data.data.find(interp_start, it));
       if(next_start == std::string::npos)
       {
         /* This is the final chunk. */
-        chunks.emplace_back(std::string_view{ code_str->data.data->data() + it });
+        chunks.emplace_back(std::string_view{ code_str->data.data.data() + it });
         break;
       }
-      auto const next_end(code_str->data.data->find(interp_end, next_start));
+      auto const next_end(code_str->data.data.find(interp_end, next_start));
       if(next_end == std::string::npos)
       { return err(error{ "no matching }$ found for native/raw interpolation" }); }
 
       read::lex::processor l_prc
       {
         {
-          code_str->data.data->data() + next_start + interp_start.size(),
+          code_str->data.data.data() + next_start + interp_start.size(),
           next_end - next_start - interp_end.size()
         }
       };
@@ -470,7 +470,7 @@ namespace jank::analyze
       { return result.expect_err_move(); }
 
       if(next_start - it > 0)
-      { chunks.emplace_back(std::string_view{ code_str->data.data->data() + it, next_start - it }); }
+      { chunks.emplace_back(std::string_view{ code_str->data.data.data() + it, next_start - it }); }
       chunks.emplace_back(result.expect_ok());
       it = next_end + interp_end.size();
 

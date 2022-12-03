@@ -80,7 +80,7 @@ namespace jank::runtime
   detail::string_type munge(detail::string_type const &o)
   {
     std::string munged;
-    for(auto const &c : *o.data)
+    for(auto const &c : o.data)
     {
       auto const &replacement(munge_chars.find(c));
       if(replacement != munge_chars.end())

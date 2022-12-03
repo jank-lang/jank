@@ -375,7 +375,7 @@ namespace jank::codegen
     {
       auto const * const code(boost::get<runtime::detail::string_type>(&chunk));
       if(code != nullptr)
-      { format_to(inserter, "{}", *code->data); }
+      { format_to(inserter, "{}", code->data); }
       else
       { format_to(inserter, "{}", interpolated_chunk_tmps[interpolated_chunk_it++].name); }
     }
