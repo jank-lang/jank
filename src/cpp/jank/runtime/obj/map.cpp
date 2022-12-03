@@ -1,13 +1,12 @@
 #include <iostream>
 #include <sstream>
 
-#include <jank/runtime/seq.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/hash.hpp>
 #include <jank/runtime/obj/function.hpp>
 #include <jank/runtime/obj/map.hpp>
 #include <jank/runtime/obj/vector.hpp>
-#include <jank/runtime/behavior/seq.hpp>
+#include <jank/runtime/behavior/seqable.hpp>
 
 namespace jank::runtime::obj
 {

@@ -21,8 +21,6 @@
 #include <jank/runtime/detail/list_type.hpp>
 #include <jank/runtime/detail/string_type.hpp>
 #include <jank/runtime/detail/map_type.hpp>
-#include <jank/runtime/behavior/seq.hpp>
-#include <jank/runtime/behavior/callable.hpp>
 
 namespace jank::runtime
 {
@@ -44,7 +42,6 @@ namespace jank::runtime
   }
   namespace behavior
   {
-    /* TODO: Remove includes? */
     struct callable;
     struct seqable;
   }

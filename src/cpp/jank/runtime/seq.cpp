@@ -7,7 +7,7 @@
 #include <jank/runtime/obj/function.hpp>
 #include <jank/runtime/obj/vector.hpp>
 #include <jank/runtime/obj/map.hpp>
-#include <jank/runtime/behavior/seq.hpp>
+#include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 
 namespace jank::runtime

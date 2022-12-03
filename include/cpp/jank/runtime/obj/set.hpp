@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/behavior/seq.hpp>
+#include <jank/runtime/behavior/seqable.hpp>
 
 namespace jank::runtime::obj
 {

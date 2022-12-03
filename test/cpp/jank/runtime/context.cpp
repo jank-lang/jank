@@ -1,4 +1,5 @@
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/behavior/callable.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #include <doctest/doctest.h>
