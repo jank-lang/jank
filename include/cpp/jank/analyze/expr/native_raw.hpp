@@ -12,7 +12,7 @@ namespace jank::analyze::expr
   template <typename E>
   struct native_raw
   {
-    using chunk_t = boost::variant<runtime::detail::string_type, E>;
+    using chunk_t = boost::variant<runtime::detail::string_type, std::shared_ptr<E>>;
 
     std::vector<chunk_t> chunks;
   };

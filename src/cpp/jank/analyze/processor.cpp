@@ -78,7 +78,7 @@ namespace jank::analyze
   processor::expression_result processor::result(context &ctx)
   {
     if(parse_current == parse_end)
-    { return ok(none); }
+    { return err(error{ "already retrieved result" }); }
 
     /* We wrap all of the expressions we get in an anonymous fn so that we can call it easily.
      * This also simplifies codegen, since we only ever codegen a single fn, even if that fn
@@ -131,7 +131,7 @@ namespace jank::analyze
       auto value_result(analyze(value_opt.unwrap(), current_frame, ctx));
       if(value_result.is_err())
       { return value_result; }
-      value_expr = some(std::make_shared<expression>(value_result.expect_ok().unwrap()));
+      value_expr = some(value_result.expect_ok());
     }
 
     auto const qualified_sym(current_frame->lift_var(boost::static_pointer_cast<runtime::obj::symbol>(sym_obj)));
@@ -145,15 +145,15 @@ namespace jank::analyze
     else
     { ctx.vars.emplace(qualified_sym, value_expr); }
 
-    return
-    {
+    return std::make_shared<expression>
+    (
       expr::def<expression>
       {
         qualified_sym,
         value_expr,
         current_frame
       }
-    };
+    );
   }
 
   processor::expression_result processor::analyze_symbol
@@ -164,7 +164,8 @@ namespace jank::analyze
     if(found_local.is_some())
     {
       local_frame::register_captures(found_local.unwrap());
-      return { expr::local_reference{ sym, found_local.unwrap().binding } };
+      return std::make_shared<expression>
+      (expr::local_reference{ sym, found_local.unwrap().binding });
     }
 
     auto const var(ctx.find_var(sym));
@@ -172,7 +173,8 @@ namespace jank::analyze
     { return err(error{ "unbound symbol: " + *sym->to_string().data }); }
 
     current_frame->lift_var(var.unwrap().first);
-    return { expr::var_deref<expression>{ var.unwrap().first, current_frame } };
+    return std::make_shared<expression>
+    (expr::var_deref<expression>{ var.unwrap().first, current_frame });
   }
 
   result<expr::function_arity<expression>, error> processor::analyze_fn_arity
@@ -224,9 +226,7 @@ namespace jank::analyze
       auto form(analyze(item, frame, ctx));
       if(form.is_err())
       { return form.expect_err_move(); }
-      else if(form.expect_ok().is_none())
-      { return err(read::error{ "expected fn body value" }); }
-      body_do.body.emplace_back(std::move(form.expect_ok_move().unwrap()));
+      body_do.body.emplace_back(form.expect_ok());
     }
 
     return
@@ -317,7 +317,7 @@ namespace jank::analyze
       }
     }
 
-    return { expr::function<expression> { none, std::move(arities) } };
+    return std::make_shared<expression>(expr::function<expression> { none, std::move(arities) });
   }
 
   processor::expression_result processor::analyze_let
@@ -357,16 +357,16 @@ namespace jank::analyze
 
       auto const sym_ptr(boost::static_pointer_cast<runtime::obj::symbol>(sym_obj));
       /* TODO: Return errors. */
-      auto it(ret.pairs.emplace_back(sym_ptr, analyze(val, ret.frame, ctx).expect_ok().unwrap()));
-      ret.frame->locals.emplace(sym_ptr, local_binding{ sym_ptr, some(std::ref(it.second)) });
+      auto it(ret.pairs.emplace_back(sym_ptr, analyze(val, ret.frame, ctx).expect_ok()));
+      ret.frame->locals.emplace(sym_ptr, local_binding{ sym_ptr, some(it.second) });
       /* TODO: Rename shadowed bindings? */
     }
 
     for(auto const &item : o->data.rest().rest())
     /* TODO: Return errors. */
-    { ret.body.body.emplace_back(analyze(item, ret.frame, ctx).expect_ok().unwrap()); }
+    { ret.body.body.emplace_back(analyze(item, ret.frame, ctx).expect_ok()); }
 
-    return { std::move(ret) };
+    return std::make_shared<expression>(std::move(ret));
   }
 
   processor::expression_result processor::analyze_if
@@ -399,18 +399,18 @@ namespace jank::analyze
       auto else_expr(analyze(else_, current_frame, ctx));
       if(else_expr.is_err())
       { return else_expr.expect_err_move(); }
-      else_expr_opt = std::make_shared<expression>(else_expr.expect_ok_move().unwrap());
+      else_expr_opt = else_expr.expect_ok();
     }
 
-    return
-    {
+    return std::make_shared<expression>
+    (
       expr::if_<expression>
       {
-        std::make_shared<expression>(condition_expr.expect_ok_move().unwrap()),
-        std::make_shared<expression>(then_expr.expect_ok_move().unwrap()),
+        condition_expr.expect_ok(),
+        then_expr.expect_ok(),
         else_expr_opt
       }
-    };
+    );
   }
 
   processor::expression_result processor::analyze_quote
@@ -433,7 +433,7 @@ namespace jank::analyze
     if(code_str == nullptr)
     { return err(error{ "invalid native/raw: expects string of C++ code" }); }
     if(code_str->data.empty())
-    { return { expr::native_raw<expression>{ } }; }
+    { return std::make_shared<expression>(expr::native_raw<expression>{ }); }
 
     /* native/raw expressions are broken up into chunks of either literal C++ code or
      * interpolated jank code, the latter needing to also be analyzed. */
@@ -471,21 +471,21 @@ namespace jank::analyze
 
       if(next_start - it > 0)
       { chunks.emplace_back(std::string_view{ code_str->data.data->data() + it, next_start - it }); }
-      chunks.emplace_back(result.expect_ok_move().unwrap());
+      chunks.emplace_back(result.expect_ok());
       it = next_end + interp_end.size();
 
       if(++parsed_it != p_prc.end())
       { return err(error{ "invalid native/raw: only one expression per interpolation" }); }
     }
 
-    return { expr::native_raw<expression>{ std::move(chunks) } };
+    return std::make_shared<expression>(expr::native_raw<expression>{ std::move(chunks) });
   }
 
   processor::expression_result processor::analyze_primitive_literal
   (runtime::object_ptr const &o, local_frame_ptr &current_frame, context &)
   {
     current_frame->lift_constant(o);
-    return { expr::primitive_literal<expression>{ o, current_frame } };
+    return std::make_shared<expression>(expr::primitive_literal<expression>{ o, current_frame });
   }
 
   /* TODO: Test for this. */
@@ -493,35 +493,35 @@ namespace jank::analyze
   (runtime::obj::vector_ptr const &o, local_frame_ptr &current_frame, context &ctx)
   {
     /* TODO: Detect literal and act accordingly. */
-    std::vector<expression> exprs;
+    std::vector<expression_ptr> exprs;
     exprs.reserve(o->count());
     for(auto d = o->seq(); d != nullptr; d = d->next())
     /* TODO: Return errors. */
-    { exprs.emplace_back(analyze(d->first(), current_frame, ctx).expect_ok().unwrap()); }
-    return { expr::vector<expression>{ std::move(exprs) } };
+    { exprs.emplace_back(analyze(d->first(), current_frame, ctx).expect_ok()); }
+    return std::make_shared<expression>(expr::vector<expression>{ std::move(exprs) });
   }
 
   processor::expression_result processor::analyze_map
   (runtime::obj::map_ptr const &o, local_frame_ptr &current_frame, context &ctx)
   {
     /* TODO: Detect literal and act accordingly. */
-    std::vector<std::pair<expression, expression>> exprs;
+    std::vector<std::pair<expression_ptr, expression_ptr>> exprs;
     exprs.reserve(o->data.size());
     for(auto const &kv : o->data)
     /* TODO: Return errors. */
     {
-      auto const k_expr(analyze(kv.first, current_frame, ctx).expect_ok().unwrap());
-      auto const v_expr(analyze(kv.second, current_frame, ctx).expect_ok().unwrap());
+      auto const k_expr(analyze(kv.first, current_frame, ctx).expect_ok());
+      auto const v_expr(analyze(kv.second, current_frame, ctx).expect_ok());
       exprs.emplace_back(k_expr, v_expr);
     }
 
     /* TODO: Uniqueness check. */
-    return { expr::map<expression>{ std::move(exprs) } };
+    return std::make_shared<expression>(expr::map<expression>{ std::move(exprs) });
   }
 
   /* This is largely a hack until we have type information for these things. */
   result<option<size_t>, error> match_fn_call
-  (expression_ptr const &source, std::vector<expression> const &args, context &ctx)
+  (expression_ptr const &source, std::vector<expression_ptr> const &args, context &ctx)
   {
     expr::function<expression> const *fn{};
     boost::apply_visitor
@@ -541,7 +541,7 @@ namespace jank::analyze
         {
           if(arg.binding.value_expr.is_none())
           { return; }
-          fn = boost::get<expr::function<expression>>(&arg.binding.value_expr.unwrap().get().data);
+          fn = boost::get<expr::function<expression>>(&arg.binding.value_expr.unwrap()->data);
         }
         else if constexpr(std::is_same_v<T, expr::function<expression>>)
         { fn = &arg; }
@@ -563,7 +563,7 @@ namespace jank::analyze
     option<size_t> required_packed_args{};
     auto const found_concrete(arity_map.find(lookup));
     if(found_concrete != arity_map.end())
-    { required_packed_args = 0; }
+    { required_packed_args = static_cast<size_t>(0); }
     else
     {
       for(size_t packed_args{}; packed_args <= arg_count; ++packed_args)
@@ -606,34 +606,34 @@ namespace jank::analyze
       if(sym_result.is_err())
       { return sym_result; }
 
-      source = std::make_shared<expression>(sym_result.expect_ok().unwrap());
+      source = sym_result.expect_ok();
     }
     else
     {
       auto callable_expr(analyze(first, current_frame, ctx));
       if(callable_expr.is_err())
       { return callable_expr; }
-      source = std::make_shared<expression>(callable_expr.expect_ok().unwrap());
+      source = callable_expr.expect_ok();
     }
 
     /* TODO: Verify source is callable. */
 
-    std::vector<expression> arg_exprs;
+    std::vector<expression_ptr> arg_exprs;
     arg_exprs.reserve(count - 1);
     for(auto const &s : o->data.rest())
     {
       auto arg_expr(analyze(s, current_frame, ctx));
       if(arg_expr.is_err())
       { return arg_expr; }
-      arg_exprs.emplace_back(arg_expr.expect_ok().unwrap());
+      arg_exprs.emplace_back(arg_expr.expect_ok());
     }
 
     auto const match_result(match_fn_call(source, arg_exprs, ctx));
     if(match_result.is_err())
     { return match_result.expect_err(); }
 
-    return
-    {
+    return std::make_shared<expression>
+    (
       expr::call<expression>
       {
         source,
@@ -641,7 +641,7 @@ namespace jank::analyze
         arg_exprs,
         match_result.expect_ok()
       }
-    };
+    );
   }
 
   processor::expression_result processor::analyze(runtime::object_ptr const &o, context &ctx)

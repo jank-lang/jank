@@ -8,7 +8,5 @@ namespace jank::analyze::expr
 {
   template <typename E>
   struct vector
-  {
-    std::vector<E> data_exprs;
-  };
+  { std::vector<std::shared_ptr<E>> data_exprs; };
 }

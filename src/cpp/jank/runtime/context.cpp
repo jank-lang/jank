@@ -133,7 +133,7 @@ namespace jank::runtime
     {
       *this,
       an_ctx,
-      an_prc.result(an_ctx).expect_ok_move().unwrap()
+      an_prc.result(an_ctx).expect_ok_move()
     };
 
     return jit_prc.eval(*this, cg_prc).expect_ok().unwrap();

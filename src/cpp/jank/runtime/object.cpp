@@ -1,6 +1,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/string.hpp>
+#include <jank/runtime/obj/list.hpp>
 
 namespace jank::runtime
 {

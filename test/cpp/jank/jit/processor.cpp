@@ -60,7 +60,7 @@ namespace jank::jit
       {
         rt_ctx,
         an_ctx,
-        an_prc.result(an_ctx).expect_ok_move().unwrap()
+        an_prc.result(an_ctx).expect_ok_move()
       };
       //std::cout << cg_prc.declaration_str() << std::endl;
       //std::cout << cg_prc.expression_str() << std::endl;

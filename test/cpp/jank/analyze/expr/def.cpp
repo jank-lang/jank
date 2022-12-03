@@ -20,9 +20,9 @@ namespace jank::analyze::expr
     context an_ctx{ rt_ctx };
     processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-    auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
-    auto const expr(boost::get<function<expression>>(fn_expr.data).arities[0].body.body.front());
-    auto const *def_expr(boost::get<def<expression>>(&expr.data));
+    auto const fn_expr(an_prc.result(an_ctx).expect_ok());
+    auto const expr(boost::get<function<expression>>(fn_expr->data).arities[0].body.body.front());
+    auto const *def_expr(boost::get<def<expression>>(&expr->data));
     CHECK(def_expr != nullptr);
     CHECK(def_expr->name != nullptr);
     CHECK(def_expr->name->equal(runtime::obj::symbol{ "clojure.core", "*meow-meow*" }));
@@ -37,9 +37,9 @@ namespace jank::analyze::expr
     context an_ctx{ rt_ctx };
     processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-    auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
-    auto const expr(boost::get<function<expression>>(fn_expr.data).arities[0].body.body.front());
-    auto const *def_expr(boost::get<def<expression>>(&expr.data));
+    auto const fn_expr(an_prc.result(an_ctx).expect_ok());
+    auto const expr(boost::get<function<expression>>(fn_expr->data).arities[0].body.body.front());
+    auto const *def_expr(boost::get<def<expression>>(&expr->data));
     CHECK(def_expr != nullptr);
     CHECK(def_expr->name != nullptr);
     CHECK(def_expr->name->equal(runtime::obj::symbol{ "clojure.core", "foo" }));

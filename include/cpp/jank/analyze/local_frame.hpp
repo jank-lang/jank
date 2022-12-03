@@ -25,7 +25,7 @@ namespace jank::analyze
   struct local_binding
   {
     runtime::obj::symbol_ptr name;
-    option<std::reference_wrapper<expression>> value_expr;
+    option<std::shared_ptr<expression>> value_expr;
   };
 
   struct local_frame : std::enable_shared_from_this<local_frame>

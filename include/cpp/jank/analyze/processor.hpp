@@ -48,8 +48,7 @@ namespace jank::analyze
 
   struct processor
   {
-    /* TODO: Get rid of option. */
-    using expression_result = result<option<expression>, error>;
+    using expression_result = result<expression_ptr, error>;
 
     processor() = delete;
     processor

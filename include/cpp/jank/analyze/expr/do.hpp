@@ -1,13 +1,10 @@
 #pragma once
 
-#include <list>
+#include <vector>
 
 namespace jank::analyze::expr
 {
   template <typename E>
   struct do_
-  {
-    /* Stable references. */
-    std::list<E> body;
-  };
+  { std::vector<std::shared_ptr<E>> body; };
 }

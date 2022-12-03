@@ -2,6 +2,7 @@
 
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/obj/function.hpp>
+#include <jank/runtime/obj/list.hpp>
 
 namespace jank::runtime
 {

@@ -15,9 +15,9 @@ namespace jank::analyze::expr
     context an_ctx{ rt_ctx };
     processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-    auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
-    auto const expr(boost::get<function<expression>>(fn_expr.data).arities[0].body.body.front());
-    auto const *typed_expr(boost::get<if_<expression>>(&expr.data));
+    auto const fn_expr(an_prc.result(an_ctx).expect_ok());
+    auto const expr(boost::get<function<expression>>(fn_expr->data).arities[0].body.body.front());
+    auto const *typed_expr(boost::get<if_<expression>>(&expr->data));
     CHECK(typed_expr != nullptr);
     CHECK(typed_expr->condition != nullptr);
     CHECK(typed_expr->then != nullptr);
@@ -32,9 +32,9 @@ namespace jank::analyze::expr
     context an_ctx{ rt_ctx };
     processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-    auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
-    auto const expr(boost::get<function<expression>>(fn_expr.data).arities[0].body.body.front());
-    auto const *typed_expr(boost::get<if_<expression>>(&expr.data));
+    auto const fn_expr(an_prc.result(an_ctx).expect_ok());
+    auto const expr(boost::get<function<expression>>(fn_expr->data).arities[0].body.body.front());
+    auto const *typed_expr(boost::get<if_<expression>>(&expr->data));
     CHECK(typed_expr != nullptr);
     CHECK(typed_expr->condition != nullptr);
     CHECK(typed_expr->then != nullptr);
@@ -49,9 +49,9 @@ namespace jank::analyze::expr
     context an_ctx{ rt_ctx };
     processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-    auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
-    auto const expr(boost::get<function<expression>>(fn_expr.data).arities[0].body.body.front());
-    auto const *typed_expr(boost::get<if_<expression>>(&expr.data));
+    auto const fn_expr(an_prc.result(an_ctx).expect_ok());
+    auto const expr(boost::get<function<expression>>(fn_expr->data).arities[0].body.body.front());
+    auto const *typed_expr(boost::get<if_<expression>>(&expr->data));
     CHECK(typed_expr != nullptr);
     CHECK(typed_expr->condition != nullptr);
     CHECK(typed_expr->then != nullptr);

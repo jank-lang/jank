@@ -26,9 +26,14 @@
        also-inc inc
        kw->str (fn* [kw]
                  (str kw))]
-  (inc -7)
-  ;(assert (= (inc -7) (also-inc -7)))
+  (assert (= (inc -7) (also-inc -7)))
   ;(assert (= ":foo" (kw->str :foo)))
   )
+
+; Let within let.
+(let* [a 5
+       b (let* [c -2]
+           (+ a c))]
+  (assert (= b 3)))
 
 :success

@@ -20,12 +20,18 @@ namespace jank::codegen
     (
       runtime::context &rt_ctx,
       analyze::context &an_ctx,
-      analyze::expression const &expr
+      analyze::expression_ptr const &expr
+    );
+    processor
+    (
+      runtime::context &rt_ctx,
+      analyze::context &an_ctx,
+      analyze::expr::function<analyze::expression> const &expr
     );
     processor(processor const &) = delete;
     processor(processor &&) noexcept = default;
 
-    runtime::obj::symbol gen(analyze::expression const &, bool const is_statement);
+    runtime::obj::symbol gen(analyze::expression_ptr const &, bool const is_statement);
     runtime::obj::symbol gen(analyze::expr::def<analyze::expression> const &, bool const is_statement);
     runtime::obj::symbol gen(analyze::expr::var_deref<analyze::expression> const &, bool const is_statement);
     runtime::obj::symbol gen(analyze::expr::call<analyze::expression> const &, bool const is_statement);
@@ -35,6 +41,7 @@ namespace jank::codegen
     runtime::obj::symbol gen(analyze::expr::local_reference const &, bool const is_statement);
     runtime::obj::symbol gen(analyze::expr::function<analyze::expression> const &, bool const is_statement);
     runtime::obj::symbol gen(analyze::expr::let<analyze::expression> const &, bool const is_statement);
+    runtime::obj::symbol gen(analyze::expr::do_<analyze::expression> const &, bool const is_statement);
     runtime::obj::symbol gen(analyze::expr::if_<analyze::expression> const &, bool const is_statement);
     runtime::obj::symbol gen(analyze::expr::native_raw<analyze::expression> const &, bool const is_statement);
 
@@ -46,10 +53,10 @@ namespace jank::codegen
 
     runtime::context &rt_ctx;
     analyze::context &an_ctx;
-    analyze::expr::function<analyze::expression> root_expression;
+    analyze::expression_ptr root_expr;
+    analyze::expr::function<analyze::expression> const &root_fn;
 
-    mutable runtime::obj::symbol struct_name;
-    mutable bool need_semi_colon{ true };
+    runtime::obj::symbol struct_name;
     fmt::memory_buffer header_buffer;
     fmt::memory_buffer body_buffer;
     fmt::memory_buffer footer_buffer;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <list>
+#include <vector>
 
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/analyze/expr/do.hpp>
@@ -11,10 +11,9 @@ namespace jank::analyze::expr
   template <typename E>
   struct let
   {
-    using pair_type = std::pair<runtime::obj::symbol_ptr, E>;
+    using pair_type = std::pair<runtime::obj::symbol_ptr, std::shared_ptr<E>>;
 
-    /* Stable references. */
-    std::list<pair_type> pairs;
+    std::vector<pair_type> pairs;
     do_<E> body;
     local_frame_ptr frame;
   };

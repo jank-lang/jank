@@ -38,9 +38,9 @@ namespace jank::analyze::expr
     context an_ctx{ rt_ctx };
     processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-    auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
-    auto const expr(boost::get<function<expression>>(fn_expr.data).arities[0].body.body.front());
-    auto const *native_raw_expr(boost::get<native_raw<expression>>(&expr.data));
+    auto const fn_expr(an_prc.result(an_ctx).expect_ok());
+    auto const expr(boost::get<function<expression>>(fn_expr->data).arities[0].body.body.front());
+    auto const *native_raw_expr(boost::get<native_raw<expression>>(&expr->data));
     CHECK(native_raw_expr != nullptr);
     CHECK(native_raw_expr->chunks.empty());
   }
@@ -53,9 +53,9 @@ namespace jank::analyze::expr
     context an_ctx{ rt_ctx };
     processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-    auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
-    auto const expr(boost::get<function<expression>>(fn_expr.data).arities[0].body.body.front());
-    auto const *native_raw_expr(boost::get<native_raw<expression>>(&expr.data));
+    auto const fn_expr(an_prc.result(an_ctx).expect_ok());
+    auto const expr(boost::get<function<expression>>(fn_expr->data).arities[0].body.body.front());
+    auto const *native_raw_expr(boost::get<native_raw<expression>>(&expr->data));
     CHECK(native_raw_expr != nullptr);
     CHECK(native_raw_expr->chunks.size() == 1);
     CHECK(boost::get<runtime::detail::string_type>(native_raw_expr->chunks[0]) == "std::cout << 77;");
@@ -71,9 +71,9 @@ namespace jank::analyze::expr
       context an_ctx{ rt_ctx };
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
-      auto const fn_expr(an_prc.result(an_ctx).expect_ok().unwrap());
-      auto const expr(*(++boost::get<function<expression>>(fn_expr.data).arities[0].body.body.begin()));
-      auto const *native_raw_expr(boost::get<native_raw<expression>>(&expr.data));
+      auto const fn_expr(an_prc.result(an_ctx).expect_ok());
+      auto const expr(*(++boost::get<function<expression>>(fn_expr->data).arities[0].body.body.begin()));
+      auto const *native_raw_expr(boost::get<native_raw<expression>>(&expr->data));
       CHECK(native_raw_expr != nullptr);
       CHECK(native_raw_expr->chunks.size() == 3);
       CHECK(boost::get<runtime::detail::string_type>(native_raw_expr->chunks[0]) == "std::cout << ");
@@ -81,7 +81,7 @@ namespace jank::analyze::expr
       (
         boost::get<analyze::expr::var_deref<analyze::expression>>
         (
-          boost::get<analyze::expression>(native_raw_expr->chunks[1]).data
+          boost::get<analyze::expression_ptr>(native_raw_expr->chunks[1])->data
         ).qualified_name->equal(runtime::obj::symbol{ "clojure.core", "a" })
       );
       CHECK(boost::get<runtime::detail::string_type>(native_raw_expr->chunks[2]) == " << std::endl;");

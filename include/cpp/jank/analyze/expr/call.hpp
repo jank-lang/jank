@@ -13,7 +13,7 @@ namespace jank::analyze::expr
     /* Var, local, or callable. */
     std::shared_ptr<E> source;
     runtime::obj::list_ptr args;
-    std::vector<E> arg_exprs;
+    std::vector<std::shared_ptr<E>> arg_exprs;
     option<size_t> required_packed_args{};
   };
 }
