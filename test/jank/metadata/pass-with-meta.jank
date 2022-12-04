@@ -1,20 +1,20 @@
 (def m {:wow 1})
 
 ; Metadatable
-(assert (= {} (with-meta {} m)))
-(assert (= m (meta (with-meta {} m))))
+(assert (= {:status :good} (with-meta {:status :good} m)))
+(assert (= m (meta (with-meta {:status :good} m))))
 
-(assert (= [] (with-meta [] m)))
-(assert (= m (meta (with-meta [] m))))
+(assert (= [:a :b] (with-meta [:a :b] m)))
+(assert (= m (meta (with-meta [:a :b] m))))
 
 (assert (= 'foo (with-meta 'foo m)))
 (assert (= m (meta (with-meta 'foo m))))
 
+(assert (= "foo" (with-meta "foo" m)))
+(assert (= m (meta (with-meta "foo" m))))
+
 ; TODO: List literals
 ;(assert (= m (meta (with-meta [] m))))
-
-; TODO: String literals
-;(assert (= m (meta (with-meta "" m))))
 
 ; TODO: Set literals
 ;(assert (= m (meta (with-meta #{} m))))

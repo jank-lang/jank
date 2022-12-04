@@ -2,12 +2,10 @@
 (assert (= nil (meta {})))
 (assert (= nil (meta [])))
 (assert (= nil (meta 'foo)))
+(assert (= nil (meta "")))
 
 ; TODO: List literals
 ;(assert (= nil (meta '())))
-
-; TODO: String literals
-;(assert (= nil (meta "")))
 
 ; TODO: Set literals
 ;(assert (= nil (meta #{})))

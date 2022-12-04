@@ -4,6 +4,7 @@
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/codegen/processor.hpp>
+#include <jank/codegen/escape.hpp>
 
 /* The strategy for codegen to C++ is quite simple. Codegen always happens on a
  * single fn, which generates a single C++ struct. Top-level expressions and
@@ -74,6 +75,15 @@ namespace jank::codegen
           d->sym.ns,
           d->sym.name,
           d->resolved
+        );
+      }
+      else if(auto const * const d = o->as_string())
+      {
+        format_to
+        (
+          inserter,
+          "jank::runtime::make_box<jank::runtime::obj::string>({})",
+          escaped(d->data)
         );
       }
       else

@@ -660,10 +660,8 @@ namespace jank::analyze
     { return analyze_map(boost::static_pointer_cast<runtime::obj::map>(o), current_frame, ctx); }
     else if(o->as_set())
     { return err(error{ "unimplemented analysis: set" }); }
-    else if(o->as_number() || o->as_boolean() || o->as_keyword() || o->as_nil())
+    else if(o->as_number() || o->as_boolean() || o->as_keyword() || o->as_nil() || o->as_string())
     { return analyze_primitive_literal(o, current_frame, ctx); }
-    else if(o->as_string())
-    { return err(error{ "unimplemented analysis: string" }); }
     else if(o->as_symbol())
     { return analyze_symbol(boost::static_pointer_cast<runtime::obj::symbol>(o), current_frame, ctx); }
     else
