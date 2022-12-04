@@ -7,13 +7,14 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/symbol.hpp>
+#include <jank/runtime/behavior/metadatable.hpp>
 
 namespace jank::runtime
 {
   struct ns;
   using ns_ptr = detail::box_type<ns>;
 
-  struct var : object, pool_item_base<var>
+  struct var : object, pool_item_base<var>, behavior::metadatable
   {
     var(var const&) = delete;
     var(var &&) noexcept = default;
@@ -28,6 +29,9 @@ namespace jank::runtime
     detail::integer_type to_hash() const override;
 
     var const* as_var() const override;
+
+    object_ptr with_meta(object_ptr const &m) const override;
+    behavior::metadatable const* as_metadatable() const override;
 
     bool operator ==(var const &rhs) const;
 

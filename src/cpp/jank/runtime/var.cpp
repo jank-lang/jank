@@ -36,6 +36,17 @@ namespace jank::runtime
   var const* var::as_var() const
   { return this; }
 
+  object_ptr var::with_meta(object_ptr const &m) const
+  {
+    validate_meta(m);
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+    const_cast<var*>(this)->meta = m;
+    return ptr_from_this();
+  }
+
+  behavior::metadatable const* var::as_metadatable() const
+  { return this; }
+
   object_ptr var::get_root() const
   { return *root.lock_shared(); }
 

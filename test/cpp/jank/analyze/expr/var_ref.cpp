@@ -16,7 +16,7 @@ namespace jank::analyze::expr
 
     SUBCASE("Missing")
     {
-      read::lex::processor l_prc{ "foo" };
+      read::lex::processor l_prc{ "(var foo)" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
@@ -27,16 +27,16 @@ namespace jank::analyze::expr
     {
       rt_ctx.eval_string("(def foo 1)", an_ctx, jit_prc);
 
-      read::lex::processor l_prc{ "foo" };
+      read::lex::processor l_prc{ "(var foo)" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
       auto const fn_expr(an_prc.result(an_ctx).expect_ok());
       auto const expr(boost::get<function<expression>>(fn_expr->data).arities[0].body.body.front());
-      auto const *var_deref_expr(boost::get<var_deref<expression>>(&expr->data));
-      CHECK(var_deref_expr != nullptr);
-      CHECK(var_deref_expr->qualified_name != nullptr);
-      CHECK(*var_deref_expr->qualified_name == runtime::obj::symbol{ "clojure.core", "foo" });
+      auto const *var_ref_expr(boost::get<var_ref<expression>>(&expr->data));
+      CHECK(var_ref_expr != nullptr);
+      CHECK(var_ref_expr->qualified_name != nullptr);
+      CHECK(*var_ref_expr->qualified_name == runtime::obj::symbol{ "clojure.core", "foo" });
     }
   }
 
@@ -48,7 +48,7 @@ namespace jank::analyze::expr
 
     SUBCASE("Missing")
     {
-      read::lex::processor l_prc{ "clojure.core/foo" };
+      read::lex::processor l_prc{ "(var clojure.core/foo)" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
@@ -59,16 +59,16 @@ namespace jank::analyze::expr
     {
       rt_ctx.eval_string("(def foo 1)", an_ctx, jit_prc);
 
-      read::lex::processor l_prc{ "clojure.core/foo" };
+      read::lex::processor l_prc{ "(var clojure.core/foo)" };
       read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
       processor an_prc{ rt_ctx, p_prc.begin(), p_prc.end() };
 
       auto const fn_expr(an_prc.result(an_ctx).expect_ok());
       auto const expr(boost::get<function<expression>>(fn_expr->data).arities[0].body.body.front());
-      auto const *var_deref_expr(boost::get<var_deref<expression>>(&expr->data));
-      CHECK(var_deref_expr != nullptr);
-      CHECK(var_deref_expr->qualified_name != nullptr);
-      CHECK(*var_deref_expr->qualified_name == runtime::obj::symbol{ "clojure.core", "foo" });
+      auto const *var_ref_expr(boost::get<var_ref<expression>>(&expr->data));
+      CHECK(var_ref_expr != nullptr);
+      CHECK(var_ref_expr->qualified_name != nullptr);
+      CHECK(*var_ref_expr->qualified_name == runtime::obj::symbol{ "clojure.core", "foo" });
     }
   }
 }

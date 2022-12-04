@@ -167,6 +167,12 @@ namespace jank::codegen
     return ret_tmp;
   }
 
+  runtime::obj::symbol processor::gen(analyze::expr::var_ref<analyze::expression> const &expr, bool const)
+  {
+    auto const &var(expr.frame->find_lifted_var(expr.qualified_name).unwrap().get());
+    return var.native_name.name;
+  }
+
   runtime::obj::symbol processor::gen(analyze::expr::call<analyze::expression> const &expr, bool const)
   {
     /* It's worth noting that there's extra scope wrapped around the generated
@@ -443,9 +449,9 @@ namespace jank::codegen
         jank::runtime::object_ptr with_meta(jank::runtime::object_ptr const &m) const override
         {{
           validate_meta(m);
-          auto ret(jank::runtime::make_box<{}>(*this));
-          ret->meta = m;
-          return ret;
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+          const_cast<{}*>(this)->meta = m;
+          return ptr_from_this();
         }}
         jank::runtime::behavior::metadatable const* as_metadatable() const override
         {{ return this; }}

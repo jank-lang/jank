@@ -231,7 +231,7 @@ namespace jank::runtime
       auto const locked_thread_states(thread_states.lock_shared());
       /* Our read lock here is on the container; we're returning a mutable item, but
          that's because the item itself is thread-local. */
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast,-warnings-as-error):
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast):
       found = const_cast<std::unordered_map<std::thread::id, thread_state>&>(*locked_thread_states).find(this_id);
       if(found != locked_thread_states->end())
       { return found->second; }

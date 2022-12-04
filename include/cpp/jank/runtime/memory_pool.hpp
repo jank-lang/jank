@@ -151,6 +151,9 @@ namespace jank::runtime
 
     boost::intrusive_ptr<T> ptr_from_this()
     { return { static_cast<T*>(this), true }; }
+    boost::intrusive_ptr<T> ptr_from_this() const
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+    { return const_cast<T*>(static_cast<T const*>(this))->ptr_from_this(); }
 
     pool<T> *owner_pool{};
     size_t reference_count{};

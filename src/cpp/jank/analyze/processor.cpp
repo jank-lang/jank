@@ -71,6 +71,7 @@ namespace jank::analyze
       { symbol::create("let*"), make_fn(&processor::analyze_let) },
       { symbol::create("if"), make_fn(&processor::analyze_if) },
       { symbol::create("quote"), make_fn(&processor::analyze_quote) },
+      { symbol::create("var"), make_fn(&processor::analyze_var) },
       { symbol::create("native/raw"), make_fn(&processor::analyze_native_raw) },
     };
   }
@@ -420,6 +421,28 @@ namespace jank::analyze
     { return err(error{ "invalid quote: expects one argument" }); }
 
     return analyze_primitive_literal(o->data.rest().first().unwrap(), current_frame, ctx);
+  }
+
+  processor::expression_result processor::analyze_var
+  (runtime::obj::list_ptr const &o, local_frame_ptr &current_frame, context &ctx)
+  {
+    if(o->count() != 2)
+    { return err(error{ "invalid var reference: expects one argument" }); }
+
+    auto const &arg(o->data.rest().first().unwrap());
+    auto const * const arg_sym(arg->as_symbol());
+    if(arg_sym == nullptr)
+    { return err(error{ "invalid var reference: expects a symbol" }); }
+
+    auto const found_var(ctx.find_var(boost::static_pointer_cast<runtime::obj::symbol>(arg)));
+    if(found_var.is_none())
+    { return err(error{ "invalid var reference: var not found" }); }
+    auto const &var_expr(found_var.unwrap().second);
+    if(var_expr.is_none())
+    { return err(error{ "invalid var reference: var not found" }); }
+
+    return std::make_shared<expression>
+    (expr::var_ref<expression>{ found_var.unwrap().first, var_expr.unwrap(), current_frame });
   }
 
   processor::expression_result processor::analyze_native_raw

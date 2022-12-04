@@ -6,6 +6,7 @@
 
 #include <jank/analyze/expr/def.hpp>
 #include <jank/analyze/expr/var_deref.hpp>
+#include <jank/analyze/expr/var_ref.hpp>
 #include <jank/analyze/expr/call.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/analyze/expr/vector.hpp>
@@ -19,7 +20,6 @@
 
 namespace jank::analyze
 {
-  /* TODO: Wrap all of these in shared_ptrs for reference tracking. */
   struct expression
   {
     using E = expression;
@@ -27,6 +27,7 @@ namespace jank::analyze
     <
       boost::recursive_wrapper<expr::def<E>>,
       expr::var_deref<E>,
+      expr::var_ref<E>,
       boost::recursive_wrapper<expr::call<E>>,
       expr::primitive_literal<E>,
       expr::vector<E>,

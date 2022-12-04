@@ -216,6 +216,7 @@ if(jank_tests)
     test/cpp/jank/runtime/context.cpp
     test/cpp/jank/analyze/expr/def.cpp
     test/cpp/jank/analyze/expr/var_deref.cpp
+    test/cpp/jank/analyze/expr/var_ref.cpp
     test/cpp/jank/analyze/expr/function.cpp
     test/cpp/jank/analyze/expr/call.cpp
     test/cpp/jank/analyze/expr/let.cpp
