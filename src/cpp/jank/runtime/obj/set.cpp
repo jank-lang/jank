@@ -33,4 +33,18 @@ namespace jank::runtime::obj
   //{ return make_box<basic_iterator_wrapper<detail::set_type::iterator>>(data.begin()); }
   //iterator_ptr set::end() const
   //{ return make_box<basic_iterator_wrapper<detail::set_type::iterator>>(data.end()); }
+
+  size_t set::count() const
+  { return data.size(); }
+
+  object_ptr set::with_meta(object_ptr const &m) const
+  {
+    validate_meta(m);
+    auto ret(make_box<set>(data));
+    ret->meta = m;
+    return ret;
+  }
+
+  behavior::metadatable const* set::as_metadatable() const
+  { return this; }
 }

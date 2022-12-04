@@ -88,4 +88,18 @@ namespace jank::runtime::obj
     { return nullptr; }
     return make_box<map_iterator_wrapper<runtime::detail::map_type::const_iterator>>(data.begin(), data.end());
   }
+
+  size_t map::count() const
+  { return data.size(); }
+
+  object_ptr map::with_meta(object_ptr const &m) const
+  {
+    validate_meta(m);
+    auto ret(make_box<map>(data));
+    ret->meta = m;
+    return ret;
+  }
+
+  behavior::metadatable const* map::as_metadatable() const
+  { return this; }
 }

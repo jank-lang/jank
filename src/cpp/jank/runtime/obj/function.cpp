@@ -76,4 +76,15 @@ namespace jank::runtime::obj
   { return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9); }
   object_ptr function::call(object_ptr const &arg1, object_ptr const &arg2, object_ptr const &arg3, object_ptr const &arg4, object_ptr const &arg5, object_ptr const &arg6, object_ptr const &arg7, object_ptr const &arg8, object_ptr const &arg9, object_ptr const &arg10) const
   { return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10); }
+
+  object_ptr function::with_meta(object_ptr const &m) const
+  {
+    validate_meta(m);
+    auto ret(make_box<function>(data));
+    ret->meta = m;
+    return ret;
+  }
+
+  behavior::metadatable const* function::as_metadatable() const
+  { return this; }
 }

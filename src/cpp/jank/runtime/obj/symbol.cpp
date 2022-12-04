@@ -61,6 +61,17 @@ namespace jank::runtime::obj
   symbol const* symbol::as_symbol() const
   { return this; }
 
+  object_ptr symbol::with_meta(object_ptr const &m) const
+  {
+    validate_meta(m);
+    auto ret(make_box<symbol>(ns, name));
+    ret->meta = m;
+    return ret;
+  }
+
+  behavior::metadatable const* symbol::as_metadatable() const
+  { return this; }
+
   bool symbol::operator ==(symbol const &rhs) const
   { return ns == rhs.ns && name == rhs.name; }
 }

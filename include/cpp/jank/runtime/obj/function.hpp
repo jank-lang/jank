@@ -4,6 +4,7 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/behavior/metadatable.hpp>
 
 namespace jank::runtime::obj
 {
@@ -37,7 +38,7 @@ namespace jank::runtime::obj
   struct invalid_arity
   { };
 
-  struct function : object, behavior::callable, pool_item_base<function>
+  struct function : object, behavior::callable, pool_item_base<function>, behavior::metadatable
   {
     function() = default;
     function(function &&) = default;
@@ -66,6 +67,9 @@ namespace jank::runtime::obj
     object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const override;
     object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const override;
     object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const override;
+
+    object_ptr with_meta(object_ptr const &m) const override;
+    behavior::metadatable const* as_metadatable() const override;
 
     detail::function_type data;
   };

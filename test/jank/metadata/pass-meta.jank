@@ -1,0 +1,21 @@
+; Metadatable
+(assert (= nil (meta {})))
+(assert (= nil (meta [])))
+(assert (= nil (meta 'foo)))
+
+; TODO: List literals
+;(assert (= nil (meta '())))
+
+; TODO: String literals
+;(assert (= nil (meta "")))
+
+; TODO: Set literals
+;(assert (= nil (meta #{})))
+
+; Non-metadatable
+(assert (= nil (meta true)))
+(assert (= nil (meta false)))
+(assert (= nil (meta 100)))
+(assert (= nil (meta -500.05)))
+
+:success

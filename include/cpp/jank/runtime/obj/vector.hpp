@@ -3,10 +3,11 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/behavior/countable.hpp>
+#include <jank/runtime/behavior/metadatable.hpp>
 
 namespace jank::runtime::obj
 {
-  struct vector : object, behavior::seqable, behavior::countable, pool_item_base<vector>
+  struct vector : object, behavior::seqable, behavior::countable, pool_item_base<vector>, behavior::metadatable
   {
     vector() = default;
     vector(vector &&) = default;
@@ -33,6 +34,9 @@ namespace jank::runtime::obj
 
     behavior::sequence_ptr seq() const override;
     size_t count() const override;
+
+    object_ptr with_meta(object_ptr const &m) const override;
+    behavior::metadatable const* as_metadatable() const override;
 
     runtime::detail::vector_type data;
   };

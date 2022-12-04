@@ -1,11 +1,13 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/behavior/countable.hpp>
+#include <jank/runtime/behavior/metadatable.hpp>
 
 namespace jank::runtime::obj
 {
   /* TODO: Seqable. */
-  struct string : object, pool_item_base<string>
+  struct string : object, pool_item_base<string>, behavior::countable, behavior::metadatable
   {
     string() = default;
     string(string &&) = default;
@@ -19,6 +21,11 @@ namespace jank::runtime::obj
     runtime::detail::integer_type to_hash() const override;
 
     string const* as_string() const override;
+
+    size_t count() const override;
+
+    object_ptr with_meta(object_ptr const &m) const override;
+    behavior::metadatable const* as_metadatable() const override;
 
     runtime::detail::string_type data;
   };

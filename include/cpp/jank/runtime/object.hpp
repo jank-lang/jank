@@ -17,6 +17,8 @@
 #include <immer/memory_policy.hpp>
 
 #include <jank/runtime/memory_pool.hpp>
+#include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/runtime/detail/type.hpp>
 #include <jank/runtime/detail/list_type.hpp>
 #include <jank/runtime/detail/string_type.hpp>
@@ -92,6 +94,8 @@ namespace jank::runtime
     virtual obj::function const* as_function() const
     { return nullptr; }
     virtual behavior::callable const* as_callable() const
+    { return nullptr; }
+    virtual behavior::metadatable const* as_metadatable() const
     { return nullptr; }
   };
 

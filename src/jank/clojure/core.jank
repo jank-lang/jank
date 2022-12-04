@@ -106,3 +106,20 @@
 ; Miscellaneous.
 ; TODO: This should be a macro.
 (def assert)
+
+; Metadata
+(def meta
+  (fn* [o]
+    (native/raw "auto const * const md(#{ o }#->as_metadatable());
+                 if(md == nullptr || md->meta.is_none())
+                 { __value = #{ nil }#; }
+                 else
+                 { __value = md->meta.unwrap(); }")))
+(def with-meta
+  (fn* [o m]
+    o
+    (native/raw "auto const * const md(#{ o }#->as_metadatable());
+                 // TODO: Standard exception handling.
+                 if(md == nullptr)
+                 { throw #{ :not-metadatable }#; }
+                 __value = md->with_meta(#{ m }#);")))

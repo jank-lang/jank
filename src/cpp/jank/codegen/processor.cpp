@@ -409,9 +409,10 @@ namespace jank::codegen
       inserter,
       R"(
         struct {0}
-          : jank::runtime::object,
-            jank::runtime::pool_item_base<{0}>,
-            jank::runtime::behavior::callable
+          : jank::runtime::object
+          , jank::runtime::pool_item_base<{0}>
+          , jank::runtime::behavior::callable
+          , jank::runtime::behavior::metadatable
         {{
       )",
       runtime::munge(struct_name.name)
@@ -429,7 +430,17 @@ namespace jank::codegen
         {{ return reinterpret_cast<jank::runtime::detail::integer_type>(this); }}
         jank::runtime::behavior::callable const* as_callable() const override
         {{ return this; }}
-      )"
+        jank::runtime::object_ptr with_meta(jank::runtime::object_ptr const &m) const override
+        {{
+          validate_meta(m);
+          auto ret(jank::runtime::make_box<{}>(*this));
+          ret->meta = m;
+          return ret;
+        }}
+        jank::runtime::behavior::metadatable const* as_metadatable() const override
+        {{ return this; }}
+      )",
+      runtime::munge(struct_name.name)
     );
 
     bool needs_member_init{};

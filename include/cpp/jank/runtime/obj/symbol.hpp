@@ -4,10 +4,11 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/hash.hpp>
+#include <jank/runtime/behavior/metadatable.hpp>
 
 namespace jank::runtime::obj
 {
-  struct symbol : object, pool_item_base<symbol>
+  struct symbol : object, pool_item_base<symbol>, behavior::metadatable
   {
     symbol() = default;
     symbol(symbol &&) = default;
@@ -27,6 +28,9 @@ namespace jank::runtime::obj
     runtime::detail::integer_type to_hash() const override;
 
     symbol const* as_symbol() const override;
+
+    object_ptr with_meta(object_ptr const &m) const override;
+    behavior::metadatable const* as_metadatable() const override;
 
     bool operator ==(symbol const &rhs) const;
 

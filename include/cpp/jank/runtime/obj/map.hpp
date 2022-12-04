@@ -2,10 +2,12 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
+#include <jank/runtime/behavior/countable.hpp>
+#include <jank/runtime/behavior/metadatable.hpp>
 
 namespace jank::runtime::obj
 {
-  struct map : object, behavior::seqable, pool_item_base<map>
+  struct map : object, behavior::seqable, pool_item_base<map>, behavior::countable, behavior::metadatable
   {
     map() = default;
     map(map &&) = default;
@@ -26,6 +28,11 @@ namespace jank::runtime::obj
     seqable const* as_seqable() const override;
 
     behavior::sequence_ptr seq() const override;
+
+    size_t count() const override;
+
+    object_ptr with_meta(object_ptr const &m) const override;
+    behavior::metadatable const* as_metadatable() const override;
 
     runtime::detail::map_type data;
   };

@@ -93,7 +93,9 @@ namespace jank::analyze
       auto const state(rt_ctx.get_thread_state());
       qualified_sym->ns = state.current_ns->get_root()->as_ns()->name->name;
     }
-    lifted_var lv{ runtime::munge(qualified_sym->name), qualified_sym };
+    /* We use unique native names, just so var names don't clash with the underlying C++ API. */
+    lifted_var lv
+    { analyze::context::unique_name(runtime::munge(qualified_sym->name)), qualified_sym };
     closest_fn.lifted_vars.emplace(qualified_sym, std::move(lv));
     return qualified_sym;
   }
