@@ -43,8 +43,6 @@ namespace jank::runtime
   { return make_box<obj::integer>(i); }
   object_ptr make_box(detail::real_type const r)
   { return make_box<obj::real>(r); }
-  object_ptr make_box(detail::string_type const &s)
-  { return make_box<obj::string>(s); }
   object_ptr make_box(std::string_view const &s)
   { return make_box<obj::string>(s); }
   object_ptr make_box(detail::list_type const &l)

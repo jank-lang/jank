@@ -161,7 +161,6 @@ namespace jank::runtime
   object_ptr make_box(int const);
   object_ptr make_box(detail::integer_type const);
   object_ptr make_box(detail::real_type const);
-  object_ptr make_box(detail::string_type const &);
   object_ptr make_box(std::string_view const &);
   object_ptr make_box(detail::list_type const &);
 }
