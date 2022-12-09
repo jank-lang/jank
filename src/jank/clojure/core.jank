@@ -44,8 +44,18 @@
   (fn* [o]
     (native/raw "__value = make_box(#{ o }#->as_string() != nullptr)")))
 (def str
-  (fn* [o]
-    (native/raw "__value = make_box(#{ o }#->to_string())")))
+  (fn*
+    ([]
+     "")
+    ([o]
+     (native/raw "__value = make_box(#{ o }#->to_string());"))
+    ([o & args]
+     (native/raw "
+                 std::string ret(#{ o }#->to_string().data);
+                 auto const * const l(#{ args }#->as_list());
+                 for(auto const &elem : l->data)
+                 { ret += elem->to_string().data; }
+                 __value = make_box(ret);"))))
 
 ;; Other.
 (def keyword?
