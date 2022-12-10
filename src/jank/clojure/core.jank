@@ -127,9 +127,17 @@
                  { __value = md->meta.unwrap(); }")))
 (def with-meta
   (fn* [o m]
-    o
     (native/raw "auto const * const md(#{ o }#->as_metadatable());
                  // TODO: Standard exception handling.
                  if(md == nullptr)
                  { throw #{ :not-metadatable }#; }
                  __value = md->with_meta(#{ m }#);")))
+(def reset-meta!
+  (fn* [o m]
+    (native/raw "auto const * const md(#{ o }#->as_metadatable());
+                 // TODO: Standard exception handling.
+                 if(md == nullptr)
+                 { throw #{ :not-metadatable }#; }
+                 behavior::metadatable::validate_meta(#{ m }#);
+                 const_cast<behavior::metadatable*>(md)->meta = #{ m }#;
+                 __value = #{ m }#;")))
