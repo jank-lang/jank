@@ -10,6 +10,7 @@
 #include <jank/analyze/processor.hpp>
 #include <jank/util/mapped_file.hpp>
 #include <jank/codegen/processor.hpp>
+#include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
 
 namespace jank::runtime
@@ -68,6 +69,25 @@ namespace jank::runtime
     intern_var(equal_sym).expect_ok()->set_root(obj::function::create(&_gen_equal_));
   }
 
+  context::context(context const &ctx)
+  {
+    *namespaces.lock().get() = *ctx.namespaces.lock_shared().get();
+    *keywords.lock().get() = *ctx.keywords.lock_shared().get();
+    *thread_states.lock().get() = *ctx.thread_states.lock_shared().get();
+  }
+
+  obj::symbol_ptr context::qualify_symbol(obj::symbol_ptr const &sym)
+  {
+    obj::symbol_ptr qualified_sym{ sym };
+    if(qualified_sym->ns.empty())
+    {
+      auto const t_state(get_thread_state());
+      auto const * const current_ns(t_state.current_ns->get_root()->as_ns());
+      qualified_sym = runtime::obj::symbol::create(current_ns->name->name, sym->name);
+    }
+    return qualified_sym;
+  }
+
   option<var_ptr> context::find_var(obj::symbol_ptr const &sym)
   {
     if(!sym->ns.empty())
@@ -109,34 +129,42 @@ namespace jank::runtime
     return none;
   }
 
-  void context::eval_prelude(analyze::context &an_ctx, jit::processor const &jit_prc)
+  void context::eval_prelude(jit::processor const &jit_prc)
   {
     /* TODO: Know the location of this in any installation. */
-    eval_file("src/jank/clojure/core.jank", an_ctx, jit_prc);
+    eval_file("src/jank/clojure/core.jank", jit_prc);
   }
 
   object_ptr context::eval_file
-  (std::string_view const &path, analyze::context &an_ctx, jit::processor const &jit_prc)
+  (std::string_view const &path, jit::processor const &jit_prc)
   {
     auto const file(util::map_file(path));
-    return eval_string({ file.expect_ok().head, file.expect_ok().size }, an_ctx, jit_prc);
+    return eval_string({ file.expect_ok().head, file.expect_ok().size }, jit_prc);
   }
 
   object_ptr context::eval_string
-  (std::string_view const &code, analyze::context &an_ctx, jit::processor const &jit_prc)
+  (std::string_view const &code, jit::processor const &jit_prc)
   {
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-    jank::analyze::processor an_prc
-    { *this, p_prc.begin(), p_prc.end() };
-    codegen::processor cg_prc
-    {
-      *this,
-      an_ctx,
-      an_prc.result(an_ctx).expect_ok_move()
-    };
+    jank::analyze::processor an_prc{ *this };
 
-    return jit_prc.eval(*this, cg_prc).expect_ok().unwrap();
+    object_ptr ret;
+    for(auto const &form : p_prc)
+    {
+      auto const expr(an_prc.analyze(form.expect_ok()));
+      ret = evaluate::eval(*this, jit_prc, expr.expect_ok());
+    }
+
+    return ret;
+  }
+
+  obj::symbol context::unique_name()
+  { return unique_name("gen"); }
+  obj::symbol context::unique_name(std::string_view const &prefix)
+  {
+    static std::atomic_size_t index{ 1 };
+    return { "", prefix.data() + std::to_string(index++) };
   }
 
   void context::dump() const
@@ -168,11 +196,14 @@ namespace jank::runtime
     return result.first->second;
   }
 
-  result<var_ptr, std::string> context::intern_var(detail::string_type const &ns, detail::string_type const &name)
+  result<var_ptr, std::string> context::intern_var
+  (detail::string_type const &ns, detail::string_type const &name)
   { return intern_var(runtime::obj::symbol::create(ns, name)); }
   result<var_ptr, std::string> context::intern_var(obj::symbol_ptr const &qualified_sym)
   {
-    assert(!qualified_sym->ns.empty());
+    if(qualified_sym->ns.empty())
+    { return err("can't intern var; sym isn't qualified"); }
+
     auto locked_namespaces(namespaces.lock());
     auto const found_ns(locked_namespaces->find(runtime::obj::symbol::create(qualified_sym->ns)));
     if(found_ns == locked_namespaces->end())
@@ -183,7 +214,8 @@ namespace jank::runtime
     if(found_var != locked_vars->end())
     { return ok(found_var->second); }
 
-    auto const ns_res(locked_vars->insert({qualified_sym, var::create(found_ns->second, qualified_sym)}));
+    auto const ns_res
+    (locked_vars->insert({qualified_sym, var::create(found_ns->second, qualified_sym)}));
     return ok(ns_res.first->second);
   }
 
@@ -231,8 +263,9 @@ namespace jank::runtime
       auto const locked_thread_states(thread_states.lock_shared());
       /* Our read lock here is on the container; we're returning a mutable item, but
          that's because the item itself is thread-local. */
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast):
-      found = const_cast<std::unordered_map<std::thread::id, thread_state>&>(*locked_thread_states).find(this_id);
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+      found = const_cast
+      <std::unordered_map<std::thread::id, thread_state>&>(*locked_thread_states).find(this_id);
       if(found != locked_thread_states->end())
       { return found->second; }
     }

@@ -1,0 +1,9 @@
+(def even-or-odd
+  (fn* [n]
+    (if (even? n)
+      :even
+      :odd)))
+(assert (= :even (even-or-odd 0)))
+(assert (= :odd (even-or-odd 1)))
+
+:success

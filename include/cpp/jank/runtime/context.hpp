@@ -10,9 +10,6 @@
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 
-namespace jank::analyze
-{ struct context; }
-
 namespace jank::jit
 { struct processor; }
 
@@ -21,7 +18,7 @@ namespace jank::runtime
   struct context
   {
     context();
-    context(context const&) = delete;
+    context(context const&);
     context(context &&) = delete;
 
     void dump() const;
@@ -29,15 +26,21 @@ namespace jank::runtime
     ns_ptr intern_ns(obj::symbol_ptr const &);
     result<var_ptr, std::string> intern_var(obj::symbol_ptr const &);
     result<var_ptr, std::string> intern_var(detail::string_type const &ns, detail::string_type const &name);
+    obj::symbol_ptr qualify_symbol(obj::symbol_ptr const &);
     option<var_ptr> find_var(obj::symbol_ptr const &);
     option<object_ptr> find_local(obj::symbol_ptr const &);
 
     obj::keyword_ptr intern_keyword(obj::symbol const &sym, bool const resolved);
     obj::keyword_ptr intern_keyword(std::string_view const &ns, std::string_view const &name, bool resolved);
 
-    void eval_prelude(analyze::context &, jit::processor const &);
-    object_ptr eval_file(std::string_view const &path, analyze::context &, jit::processor const &);
-    object_ptr eval_string(std::string_view const &code, analyze::context &, jit::processor const &);
+    void eval_prelude(jit::processor const &);
+    object_ptr eval_file(std::string_view const &path, jit::processor const &);
+    object_ptr eval_string(std::string_view const &code, jit::processor const &);
+
+    /* Generates a unique name for use with anything from codgen structs,
+     * lifted vars, to shadowed locals. */
+    static obj::symbol unique_name();
+    static obj::symbol unique_name(std::string_view const &prefix);
 
     libguarded::shared_guarded<std::unordered_map<obj::symbol_ptr, detail::box_type<ns>>> namespaces;
     libguarded::shared_guarded<std::unordered_map<obj::symbol, obj::keyword_ptr>> keywords;

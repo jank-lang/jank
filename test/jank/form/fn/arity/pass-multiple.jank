@@ -1,0 +1,10 @@
+(def add
+  (fn*
+    ([] 0)
+    ([a] a)
+    ([a b] (+ a b))))
+(assert (= (add) 0))
+(assert (= (add -500) -500))
+(assert (= (add -500 50) -450))
+
+:success

@@ -130,6 +130,19 @@ namespace jank
       assert(set);
       return *reinterpret_cast<T const*>(data);
     }
+    T& unwrap_or(T &fallback)
+    {
+      if(set)
+      { return *reinterpret_cast<T*>(data); }
+      return fallback;
+    }
+    /* We don't take const& and return it since that's just asking for lifetime issues. */
+    T unwrap_or(T fallback) const
+    {
+      if(set)
+      { return *reinterpret_cast<T const*>(data); }
+      return std::move(fallback);
+    }
 
     bool operator !=(option<T> const &rhs) const
     {

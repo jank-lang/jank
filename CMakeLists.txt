@@ -119,6 +119,7 @@ set_target_properties(jank_cling_lib PROPERTIES LINK_FLAGS -s)
 add_library(
   jank_lib STATIC
   src/cpp/jank/util/mapped_file.cpp
+  src/cpp/jank/util/scope_exit.cpp
   src/cpp/jank/read/lex.cpp
   src/cpp/jank/read/parse.cpp
   src/cpp/jank/runtime/util.cpp
@@ -141,6 +142,7 @@ add_library(
   src/cpp/jank/runtime/behavior/metadatable.cpp
   src/cpp/jank/analyze/processor.cpp
   src/cpp/jank/analyze/local_frame.cpp
+  src/cpp/jank/evaluate.cpp
   src/cpp/jank/codegen/processor.cpp
   src/cpp/jank/jit/processor.cpp
 )
@@ -214,16 +216,6 @@ if(jank_tests)
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/runtime/detail/list_type.cpp
     test/cpp/jank/runtime/context.cpp
-    test/cpp/jank/analyze/expr/def.cpp
-    test/cpp/jank/analyze/expr/var_deref.cpp
-    test/cpp/jank/analyze/expr/var_ref.cpp
-    test/cpp/jank/analyze/expr/function.cpp
-    test/cpp/jank/analyze/expr/call.cpp
-    test/cpp/jank/analyze/expr/let.cpp
-    test/cpp/jank/analyze/expr/if.cpp
-    test/cpp/jank/analyze/expr/primitive_literal.cpp
-    test/cpp/jank/analyze/expr/map.cpp
-    test/cpp/jank/analyze/expr/native_raw.cpp
     test/cpp/jank/jit/processor.cpp
   )
   add_executable(jank::test_exe ALIAS jank_test_exe)

@@ -1,0 +1,4 @@
+(def variadic
+  (fn*
+    ([a & args] 2)
+    ([a b & args] args)))

@@ -1,0 +1,6 @@
+{:name "kvothe"
+ :associates {"aurie" {}
+              "simmon" {}}
+ :inventory [{:name "apple"}]}
+
+:success

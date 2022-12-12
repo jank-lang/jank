@@ -9,7 +9,6 @@ namespace jank::analyze::expr
   struct var_ref
   {
     runtime::obj::symbol_ptr qualified_name;
-    std::shared_ptr<E> var;
     local_frame_ptr frame;
   };
 }

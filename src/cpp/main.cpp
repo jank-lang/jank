@@ -25,30 +25,11 @@ int main(int const argc, char const **argv)
   char const *file{ argv[1] };
 
   jank::runtime::context rt_ctx;
-  jank::analyze::context an_ctx{ rt_ctx };
-  //auto start = std::chrono::high_resolution_clock::now();
   jank::jit::processor jit_prc;
-  //auto end = std::chrono::high_resolution_clock::now();
-  //std::chrono::duration<double> diff = end - start;
-  //std::cout << "jit startup time: " << diff.count() << "s" << std::endl;
 
-  rt_ctx.eval_prelude(an_ctx, jit_prc);
+  rt_ctx.eval_prelude(jit_prc);
 
-  auto const mfile(jank::util::map_file(file));
-  jank::read::lex::processor l_prc{ { mfile.expect_ok().head, mfile.expect_ok().size } };
-  jank::read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-  jank::analyze::processor an_prc
-  { rt_ctx, p_prc.begin(), p_prc.end() };
-  jank::codegen::processor cg_prc
-  {
-    rt_ctx,
-    an_ctx,
-    an_prc.result(an_ctx).expect_ok_move()
-  };
-  std::cout << cg_prc.declaration_str() << std::endl;
-  std::cout << cg_prc.expression_str() << std::endl;
-
-  std::cout << jit_prc.eval(rt_ctx, cg_prc).expect_ok().unwrap()->to_string() << std::endl;
+  std::cout << rt_ctx.eval_file(file, jit_prc)->to_string() << std::endl;
 
   //std::string line;
   //std::cout << "> " << std::flush;

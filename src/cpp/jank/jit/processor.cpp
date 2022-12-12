@@ -41,12 +41,12 @@ namespace jank::jit
     interpreter = std::make_unique<cling::Interpreter>(args.size(), args.data(), LLVMDIR);
   }
 
-  result<option<runtime::object_ptr>, std::string>  processor::eval
+  result<option<runtime::object_ptr>, std::string> processor::eval
   (runtime::context &, codegen::processor &cg_prc) const
   {
     interpreter->process(cg_prc.declaration_str());
 
-    auto const expr(cg_prc.expression_str());
+    auto const expr(cg_prc.expression_str(false));
     if(expr.empty())
     { return ok(none); }
 

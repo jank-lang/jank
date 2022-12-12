@@ -8,6 +8,11 @@ namespace jank::runtime
 {
   using object_ptr = detail::box_type<struct object>;
 
+  namespace obj
+  { using list_ptr = detail::box_type<struct list>; }
+
+  constexpr size_t const max_params{ 10 };
+
   struct variadic_tag
   { };
 
@@ -26,6 +31,7 @@ namespace jank::runtime
   object_ptr dynamic_call(object_ptr const &source, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&);
   object_ptr dynamic_call(object_ptr const &source, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&);
   object_ptr dynamic_call(object_ptr const &source, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&);
+  object_ptr dynamic_call(object_ptr const &source, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, obj::list_ptr const &);
 
   namespace behavior
   {
@@ -43,10 +49,7 @@ namespace jank::runtime
       virtual object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const;
       virtual object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const;
 
-      /* Returns the number of fixed params before the 'rest' args, for
-       * variadic arities. If this callable doesn't have a variadic arity, this
-       * should return none. The name here comes from Clojure's compiler. */
-      virtual option<size_t> get_required_arity() const;
+      virtual option<size_t> get_variadic_arg_position() const;
     };
     using callable_ptr = detail::box_type<callable>;
   }

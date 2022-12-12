@@ -1,8 +1,12 @@
 #include <filesystem>
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/filesystem.hpp>
+
+#include <fmt/color.h>
 
 #include <jank/util/mapped_file.hpp>
+#include <jank/util/scope_exit.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/obj/number.hpp>
@@ -12,8 +16,6 @@
 #include <jank/analyze/processor.hpp>
 #include <jank/jit/processor.hpp>
 
-#include <boost/filesystem.hpp>
-
 #include <cling/Interpreter/Interpreter.h>
 #include <cling/Interpreter/Value.h>
 
@@ -22,11 +24,26 @@
 
 namespace jank::jit
 {
+  struct failure
+  {
+    boost::filesystem::path path;
+    std::string error;
+  };
+
   TEST_CASE("Files")
   {
     auto const cardinal_result
     (runtime::obj::keyword::create(runtime::obj::symbol{ "", "success" }, true));
     jit::processor jit_prc;
+    runtime::context rt_ctx;
+    rt_ctx.eval_prelude(jit_prc);
+
+    /* The functionality I want here is too complex for doctest to handle. Output should be
+     * swallowed for expected scenarios, including expected failures, but the output should
+     * be shown whenever something unexpected happens, so it can be debugged. On top of that,
+     * individual failures being reported would be helpful. Thus all the manual tracking in
+     * here. The outcome is nice, though. */
+    std::vector<failure> failures;
 
     for(auto const &dir_entry : boost::filesystem::recursive_directory_iterator("test/jank"))
     {
@@ -44,56 +61,94 @@ namespace jank::jit
         dir_entry
       );
 
-      std::cout << "testing file " << dir_entry << std::endl;
+      runtime::context test_rt_ctx{ rt_ctx };
+      bool passed{ true };
+      std::stringstream captured_output;
 
-      runtime::context rt_ctx;
-      analyze::context an_ctx{ rt_ctx };
+      fmt::print("testing file {} => ", dir_entry.path().string());
 
-      rt_ctx.eval_prelude(an_ctx, jit_prc);
-
-      auto const mfile(util::map_file(dir_entry.path().string()));
-      read::lex::processor l_prc{ { mfile.expect_ok().head, mfile.expect_ok().size } };
-      read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-      analyze::processor an_prc
-      { rt_ctx, p_prc.begin(), p_prc.end() };
-      codegen::processor cg_prc
-      {
-        rt_ctx,
-        an_ctx,
-        an_prc.result(an_ctx).expect_ok_move()
-      };
-      //std::cout << cg_prc.declaration_str() << std::endl;
-      //std::cout << cg_prc.expression_str() << std::endl;
-
-      /* Silence ouptut when running these. This include compilation errors from Cling, since we're
-       * going to intentionally make that happen. */
-      std::stringstream new_cout, new_cerr;
-      std::streambuf * const old_cout{ std::cout.rdbuf(new_cout.rdbuf()) };
-      std::streambuf * const old_cerr{ std::cerr.rdbuf(new_cerr.rdbuf()) };
       try
       {
-        auto const result(jit_prc.eval(rt_ctx, cg_prc));
+        /* Silence ouptut when running these. This include compilation errors from Cling, since we're
+         * going to intentionally make that happen. */
+        std::streambuf * const old_cout{ std::cout.rdbuf(captured_output.rdbuf()) };
+        std::streambuf * const old_cerr{ std::cerr.rdbuf(captured_output.rdbuf()) };
+        util::scope_exit const _
+        {
+          [=]()
+          {
+            std::cout.rdbuf(old_cout);
+            std::cerr.rdbuf(old_cerr);
+          }
+        };
+
+        auto const result(test_rt_ctx.eval_file(dir_entry.path().string(), jit_prc));
         if(!expect_success)
-        { CHECK_MESSAGE(result.is_err(), "Test passed when a failure was expected: ", dir_entry); }
+        {
+          failures.push_back
+          (
+            {
+              dir_entry.path(),
+              fmt::format
+              (
+                "Test failure was expected, but it passed with {}",
+                (result == nullptr ? "nullptr" : result->to_string())
+              )
+            }
+          );
+          passed = false;
+        }
         else
         {
-          CHECK(result.is_ok());
-          CHECK(result.expect_ok().is_some());
-          CHECK_MESSAGE
-          (
-            result.expect_ok().unwrap()->equal(cardinal_result),
-            "Test file expected to result in :success but did not: ", dir_entry
-          );
+          if(result == nullptr)
+          {
+            failures.push_back({ dir_entry.path(), "Returned object is null" });
+            passed = false;
+          }
+          else if(!result->equal(cardinal_result))
+          {
+            failures.push_back
+            ({ dir_entry.path(), fmt::format("Result is not :success: {}", result->to_string()) });
+            passed = false;
+          }
+        }
+      }
+      catch(std::exception const &e)
+      {
+        if(expect_success)
+        {
+          failures.push_back({ dir_entry.path(), fmt::format("Exception thrown: {}", e.what()) });
+          passed = false;
         }
       }
       catch(...)
       {
-        CHECK_MESSAGE
-        (!expect_success, "Test file expected to pass, but did not: ", dir_entry);
+        if(expect_success)
+        {
+          failures.push_back({ dir_entry.path(), "Unknown exception thrown" });
+          passed = false;
+        }
       }
 
-      std::cout.rdbuf(old_cout);
-      std::cerr.rdbuf(old_cerr);
+      if(passed)
+      { fmt::print(fmt::fg(fmt::color::green), "success\n"); }
+      else
+      {
+        fmt::print(fmt::fg(fmt::color::red), "failure\n");
+        std::cerr << captured_output.rdbuf() << std::endl;
+      }
+    }
+
+    CHECK(failures.empty());
+    for(auto const &f : failures)
+    {
+      fmt::print
+      (
+        "{}: {} {}\n",
+        fmt::styled("failure", fmt::fg(fmt::color::red)),
+        f.path.string(),
+        f.error
+      );
     }
   }
 }

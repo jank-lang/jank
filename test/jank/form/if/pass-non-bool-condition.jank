@@ -1,0 +1,5 @@
+(assert (= :fine (if [:ok]
+                   :fine)))
+(assert (= :fine (if "good?"
+                   :fine)))
+:success

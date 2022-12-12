@@ -1,0 +1,7 @@
+(def variadic
+  (fn*
+    ([& args] args)))
+(assert (= (variadic) []))
+(assert (= (variadic 1 2 3 4 5) [1 2 3 4 5]))
+
+:success

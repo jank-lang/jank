@@ -1,0 +1,5 @@
+(assert (= 1 ((fn* [] 1))))
+
+(assert (= [:a :b] ((fn* [a b] [a b]) :a :b)))
+
+:success

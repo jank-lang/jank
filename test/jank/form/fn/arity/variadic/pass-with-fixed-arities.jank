@@ -1,0 +1,12 @@
+(def variadic
+  (fn*
+    ([] 0)
+    ([a] 1)
+    ([a b] 2)
+    ([a b & args] args)))
+(assert (= (variadic) 0))
+(assert (= (variadic :meow) 1))
+(assert (= (variadic 'wow 'two) 2))
+(assert (= (variadic 'wow 'two {} nil :meow) [{} nil :meow]))
+
+:success

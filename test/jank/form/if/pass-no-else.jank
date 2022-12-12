@@ -1,0 +1,6 @@
+(assert (= :yes (if true
+                  :yes)))
+(assert (= nil (if false
+                 :yes)))
+
+:success

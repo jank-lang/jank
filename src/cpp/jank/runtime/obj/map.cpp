@@ -17,6 +17,9 @@ namespace jank::runtime::obj
     : data{ d }
   { }
 
+  runtime::detail::box_type<map> map::create(runtime::detail::map_type const &o)
+  { return make_box<map>(o); }
+
   /* TODO: Optimize this. */
   template <typename It>
   struct map_iterator_wrapper : behavior::sequence, pool_item_base<map_iterator_wrapper<It>>

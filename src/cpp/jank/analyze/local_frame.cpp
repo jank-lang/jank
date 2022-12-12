@@ -58,7 +58,7 @@ namespace jank::analyze
       { return none; }
     }
 
-    __builtin_unreachable();
+    throw "unable to find local";
   }
 
   void local_frame::register_captures(find_result const &result)
@@ -74,7 +74,8 @@ namespace jank::analyze
     else if(frame.parent.is_some())
     { return find_closest_fn_frame(*frame.parent.unwrap()); }
 
-    __builtin_unreachable();
+    /* Default to the root frame, if there is no fn frame. */
+    return frame;
   }
   local_frame& find_closest_fn_frame(local_frame &frame)
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast): Avoiding duplication.
@@ -95,7 +96,7 @@ namespace jank::analyze
     }
     /* We use unique native names, just so var names don't clash with the underlying C++ API. */
     lifted_var lv
-    { analyze::context::unique_name(runtime::munge(qualified_sym->name)), qualified_sym };
+    { runtime::context::unique_name(runtime::munge(qualified_sym->name)), qualified_sym };
     closest_fn.lifted_vars.emplace(qualified_sym, std::move(lv));
     return qualified_sym;
   }
@@ -116,7 +117,7 @@ namespace jank::analyze
     auto const &found(closest_fn.lifted_constants.find(constant));
     if(found != closest_fn.lifted_constants.end())
     { return; }
-    lifted_constant l{ analyze::context::unique_name("const"), constant };
+    lifted_constant l{ runtime::context::unique_name("const"), constant };
     closest_fn.lifted_constants.emplace(constant, std::move(l));
   }
 

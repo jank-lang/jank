@@ -11,9 +11,8 @@ namespace jank::analyze::expr
   struct call
   {
     /* Var, local, or callable. */
-    std::shared_ptr<E> source;
+    std::shared_ptr<E> source_expr;
     runtime::obj::list_ptr args;
     std::vector<std::shared_ptr<E>> arg_exprs;
-    option<size_t> required_packed_args{};
   };
 }

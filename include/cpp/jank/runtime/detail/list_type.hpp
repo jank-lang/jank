@@ -105,10 +105,22 @@ namespace jank::runtime::detail
     iterator end() const
     { return { nullptr }; }
 
-    list_type_impl<T> cons(T const &t)
+    list_type_impl<T> cons(T const &t) const
     { return { std::make_shared<value_type>(t, data, size()) }; }
-    list_type_impl<T> cons(T &&t)
+    list_type_impl<T> cons(T &&t) const
     { return { std::make_shared<value_type>(std::move(t), data, size()) }; }
+
+    list_type_impl<T> into(list_type_impl<T> const &head) const
+    {
+      if(head.data == nullptr)
+      { return *this; }
+
+      auto tail(head.data);
+      while(tail->rest != nullptr)
+      { tail = tail->rest; }
+      tail->rest = data;
+      return head;
+    }
 
     size_t size() const
     { return data ? data->length : 0; }

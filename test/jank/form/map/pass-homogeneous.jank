@@ -1,0 +1,6 @@
+{:foo :bar
+ 1 2
+ "1" 2
+ true false}
+
+:success

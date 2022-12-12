@@ -20,6 +20,8 @@ namespace jank::runtime::obj
     { }
     ~map() = default;
 
+    static runtime::detail::box_type<map> create(runtime::detail::map_type const &);
+
     runtime::detail::boolean_type equal(object const &) const override;
     runtime::detail::string_type to_string() const override;
     runtime::detail::integer_type to_hash() const override;

@@ -1,0 +1,5 @@
+nil
+
+(assert (= nil nil))
+
+:success

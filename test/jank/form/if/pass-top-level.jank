@@ -1,0 +1,5 @@
+(if {:this-is-truthy :yep}
+  (assert true)
+  (assert false))
+
+:success

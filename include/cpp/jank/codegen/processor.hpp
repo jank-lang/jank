@@ -19,18 +19,17 @@ namespace jank::codegen
     processor
     (
       runtime::context &rt_ctx,
-      analyze::context &an_ctx,
       analyze::expression_ptr const &expr
     );
     processor
     (
       runtime::context &rt_ctx,
-      analyze::context &an_ctx,
       analyze::expr::function<analyze::expression> const &expr
     );
     processor(processor const &) = delete;
     processor(processor &&) noexcept = default;
 
+    /* TODO: remove is_statement */
     runtime::obj::symbol gen(analyze::expression_ptr const &, bool const is_statement);
     runtime::obj::symbol gen(analyze::expr::def<analyze::expression> const &, bool const is_statement);
     runtime::obj::symbol gen(analyze::expr::var_deref<analyze::expression> const &, bool const is_statement);
@@ -53,7 +52,6 @@ namespace jank::codegen
     std::string expression_str(bool const auto_call = true);
 
     runtime::context &rt_ctx;
-    analyze::context &an_ctx;
     analyze::expression_ptr root_expr;
     analyze::expr::function<analyze::expression> const &root_fn;
 

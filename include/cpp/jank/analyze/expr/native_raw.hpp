@@ -3,6 +3,7 @@
 #include <boost/variant.hpp>
 
 #include <jank/runtime/obj/string.hpp>
+#include <jank/analyze/local_frame.hpp>
 
 namespace jank::analyze::expr
 {
@@ -15,5 +16,6 @@ namespace jank::analyze::expr
     using chunk_t = boost::variant<runtime::detail::string_type, std::shared_ptr<E>>;
 
     std::vector<chunk_t> chunks;
+    local_frame_ptr frame;
   };
 }
