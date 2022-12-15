@@ -4,6 +4,7 @@
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/obj/vector.hpp>
 #include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/util.hpp>
 #include <jank/codegen/processor.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/evaluate.hpp>

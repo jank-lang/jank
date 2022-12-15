@@ -1,5 +1,6 @@
 #pragma once
 
+#include <jank/runtime/detail/type.hpp>
 #include <jank/option.hpp>
 
 namespace jank::runtime

@@ -39,12 +39,13 @@ namespace jank::jit
       )
     );
     interpreter = std::make_unique<cling::Interpreter>(args.size(), args.data(), LLVMDIR);
+    interpreter->setDefaultOptLevel(1);
   }
 
   result<option<runtime::object_ptr>, std::string> processor::eval
   (runtime::context &, codegen::processor &cg_prc) const
   {
-    interpreter->process(cg_prc.declaration_str());
+    interpreter->declare(cg_prc.declaration_str());
 
     auto const expr(cg_prc.expression_str(false));
     if(expr.empty())
@@ -58,24 +59,8 @@ namespace jank::jit
 
     auto const *ret_val(v.simplisticCastAs<runtime::object_ptr*>());
     return ok(*ret_val);
-
-    /* TODO: Just return the fn to be called once the Cling bug is fixed. */
-
-    //auto const ret_val(v.simplisticCastAs<runtime::object*>());
-    //if(ret_val == nullptr)
-    //{ return err("JIT evaluation returned nullptr"); }
-    //std::cout << ret_val->to_string() << std::endl;
-    //auto const callable(ret_val->as_callable());
-    //if(callable == nullptr)
-    //{ return err("Returned JIT object is not callable"); }
-    //return ok(some(callable->call()));
   }
 
-  //void processor::eval_string(std::string const &s) const
-  //{
-  //  cling::Value v;
-  //  auto const result(interpreter->evaluate(s, v));
-  //  if(result != cling::Interpreter::CompilationResult::kSuccess)
-  //  { return; }
-  //}
+  void processor::eval_string(std::string const &s) const
+  { interpreter->process(s); }
 }
