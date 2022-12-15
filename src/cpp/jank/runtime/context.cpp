@@ -152,7 +152,7 @@ namespace jank::runtime
     object_ptr ret;
     for(auto const &form : p_prc)
     {
-      auto const expr(an_prc.analyze(form.expect_ok()));
+      auto const expr(an_prc.analyze(form.expect_ok(), analyze::expression_type::statement));
       ret = evaluate::eval(*this, jit_prc, expr.expect_ok());
     }
 
