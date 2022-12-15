@@ -446,3 +446,6 @@ be flexible enough to hand over ownership to native land or acquire it.
 
 ## Performance
 Interesting things with Roc: https://www.roc-lang.org 
+
+## Error output
+Fancy: https://github.com/mimoo/noname
