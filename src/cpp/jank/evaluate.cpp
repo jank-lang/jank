@@ -19,7 +19,7 @@ namespace jank::evaluate
    * root frame. So, when wrapping this expr, we give the fn the root frame, but change its
    * type to a fn frame. */
   template <typename E>
-  analyze::expr::function<analyze::expression> wrap_expression(E const &expr)
+  analyze::expr::function<analyze::expression> wrap_expression(E expr)
   {
     analyze::expr::function<analyze::expression> wrapper;
     analyze::expr::function_arity<analyze::expression> arity;
@@ -27,8 +27,10 @@ namespace jank::evaluate
     while(arity.frame->parent.is_some())
     { arity.frame = arity.frame->parent.unwrap(); }
     arity.frame->type = analyze::local_frame::frame_type::fn;
+    expr.expr_type = analyze::expression_type::return_statement;
     /* TODO: Avoid allocation by using existing shared_ptr */
     arity.body.body.push_back(std::make_shared<analyze::expression>(expr));
+    arity.fn_ctx = std::make_shared<analyze::expr::function_context>();
     wrapper.arities.emplace_back(std::move(arity));
     return wrapper;
   }
@@ -202,6 +204,15 @@ namespace jank::evaluate
     jank::codegen::processor cg_prc{ rt_ctx, expr };
     return jit_prc.eval(rt_ctx, cg_prc).expect_ok().unwrap();
   }
+
+  runtime::object_ptr eval
+  (
+    runtime::context &,
+    jit::processor const &,
+    analyze::expr::recur<analyze::expression> const &
+  )
+  /* Recur will always be in a fn or loop, which will be JIT compiled. */
+  { throw "unsupported eval: recur"; }
 
   runtime::object_ptr eval
   (

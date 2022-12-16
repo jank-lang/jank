@@ -12,6 +12,7 @@
 #include <jank/analyze/expr/vector.hpp>
 #include <jank/analyze/expr/map.hpp>
 #include <jank/analyze/expr/function.hpp>
+#include <jank/analyze/expr/recur.hpp>
 #include <jank/analyze/expr/local_reference.hpp>
 #include <jank/analyze/expr/let.hpp>
 #include <jank/analyze/expr/do.hpp>
@@ -25,19 +26,20 @@ namespace jank::analyze
     using E = expression;
     using value_type = boost::variant
     <
-      boost::recursive_wrapper<expr::def<E>>,
+      expr::def<E>,
       expr::var_deref<E>,
       expr::var_ref<E>,
-      boost::recursive_wrapper<expr::call<E>>,
+      expr::call<E>,
       expr::primitive_literal<E>,
       expr::vector<E>,
       expr::map<E>,
-      boost::recursive_wrapper<expr::function<E>>,
+      expr::function<E>,
+      expr::recur<E>,
       expr::local_reference,
       expr::let<E>,
       expr::do_<E>,
       expr::if_<E>,
-      boost::recursive_wrapper<expr::native_raw<E>>
+      expr::native_raw<E>
     >;
 
     expression() = default;

@@ -1,0 +1,9 @@
+(def tail
+  (fn* [n]
+    (if (< 0 n)
+      (do
+        (assert (< 0 n))
+        (recur (+ n -1)))
+      n)))
+
+:success

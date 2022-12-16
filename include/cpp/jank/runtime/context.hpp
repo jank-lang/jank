@@ -39,8 +39,10 @@ namespace jank::runtime
 
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */
-    static obj::symbol unique_name();
-    static obj::symbol unique_name(std::string_view const &prefix);
+    static std::string unique_string();
+    static std::string unique_string(std::string_view const &prefix);
+    static obj::symbol unique_symbol();
+    static obj::symbol unique_symbol(std::string_view const &prefix);
 
     libguarded::shared_guarded<std::unordered_map<obj::symbol_ptr, detail::box_type<ns>>> namespaces;
     libguarded::shared_guarded<std::unordered_map<obj::symbol, obj::keyword_ptr>> keywords;

@@ -29,21 +29,81 @@ namespace jank::codegen
     processor(processor const &) = delete;
     processor(processor &&) noexcept = default;
 
-    /* TODO: remove is_statement */
-    runtime::obj::symbol gen(analyze::expression_ptr const &, bool const is_statement);
-    runtime::obj::symbol gen(analyze::expr::def<analyze::expression> const &, bool const is_statement);
-    runtime::obj::symbol gen(analyze::expr::var_deref<analyze::expression> const &, bool const is_statement);
-    runtime::obj::symbol gen(analyze::expr::var_ref<analyze::expression> const &, bool const is_statement);
-    runtime::obj::symbol gen(analyze::expr::call<analyze::expression> const &, bool const is_statement);
-    runtime::obj::symbol gen(analyze::expr::primitive_literal<analyze::expression> const &, bool const is_statement);
-    runtime::obj::symbol gen(analyze::expr::vector<analyze::expression> const &, bool const is_statement);
-    runtime::obj::symbol gen(analyze::expr::map<analyze::expression> const &, bool const is_statement);
-    runtime::obj::symbol gen(analyze::expr::local_reference const &, bool const is_statement);
-    runtime::obj::symbol gen(analyze::expr::function<analyze::expression> const &, bool const is_statement);
-    runtime::obj::symbol gen(analyze::expr::let<analyze::expression> const &, bool const is_statement);
-    runtime::obj::symbol gen(analyze::expr::do_<analyze::expression> const &, bool const is_statement);
-    runtime::obj::symbol gen(analyze::expr::if_<analyze::expression> const &, bool const is_statement);
-    runtime::obj::symbol gen(analyze::expr::native_raw<analyze::expression> const &, bool const is_statement);
+    option<std::string> gen
+    (
+      analyze::expression_ptr const &,
+      analyze::expr::function_arity<analyze::expression> const &
+    );
+    option<std::string> gen
+    (
+      analyze::expr::def<analyze::expression> const &,
+      analyze::expr::function_arity<analyze::expression> const &
+    );
+    option<std::string> gen
+    (
+      analyze::expr::var_deref<analyze::expression> const &,
+      analyze::expr::function_arity<analyze::expression> const &
+    );
+    option<std::string> gen
+    (
+      analyze::expr::var_ref<analyze::expression> const &,
+      analyze::expr::function_arity<analyze::expression> const &
+    );
+    option<std::string> gen
+    (
+      analyze::expr::call<analyze::expression> const &,
+      analyze::expr::function_arity<analyze::expression> const &
+    );
+    option<std::string> gen
+    (
+      analyze::expr::primitive_literal<analyze::expression> const &,
+      analyze::expr::function_arity<analyze::expression> const &
+    );
+    option<std::string> gen
+    (
+      analyze::expr::vector<analyze::expression> const &,
+      analyze::expr::function_arity<analyze::expression> const &
+    );
+    option<std::string> gen
+    (
+      analyze::expr::map<analyze::expression> const &,
+      analyze::expr::function_arity<analyze::expression> const &
+    );
+    option<std::string> gen
+    (
+      analyze::expr::local_reference const &,
+      analyze::expr::function_arity<analyze::expression> const &
+    );
+    option<std::string> gen
+    (
+      analyze::expr::function<analyze::expression> const &,
+      analyze::expr::function_arity<analyze::expression> const &
+    );
+    option<std::string> gen
+    (
+      analyze::expr::recur<analyze::expression> const &,
+      analyze::expr::function_arity<analyze::expression> const &
+    );
+    option<std::string> gen
+    (
+      analyze::expr::let<analyze::expression> const &,
+      analyze::expr::function_arity<analyze::expression> const &
+    );
+    option<std::string> gen
+    (
+      analyze::expr::do_<analyze::expression> const &,
+      analyze::expr::function_arity<analyze::expression> const &
+    );
+    option<std::string> gen
+    (
+      analyze::expr::if_<analyze::expression> const &,
+      analyze::expr::function_arity<analyze::expression> const &
+    );
+    option<std::string> gen
+    (
+      analyze::expr::native_raw<analyze::expression> const &,
+      analyze::expr::function_arity<analyze::expression> const &
+    );
 
     std::string declaration_str();
     void build_header();

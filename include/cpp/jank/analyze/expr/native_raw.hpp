@@ -4,6 +4,7 @@
 
 #include <jank/runtime/obj/string.hpp>
 #include <jank/analyze/local_frame.hpp>
+#include <jank/analyze/expression_base.hpp>
 
 namespace jank::analyze::expr
 {
@@ -11,7 +12,7 @@ namespace jank::analyze::expr
    * interpolated jank code, but that string is split up into its various pieces
    * for easier codegen. */
   template <typename E>
-  struct native_raw
+  struct native_raw : expression_base
   {
     using chunk_t = boost::variant<runtime::detail::string_type, std::shared_ptr<E>>;
 

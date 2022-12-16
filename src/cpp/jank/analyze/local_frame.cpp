@@ -96,7 +96,7 @@ namespace jank::analyze
     }
     /* We use unique native names, just so var names don't clash with the underlying C++ API. */
     lifted_var lv
-    { runtime::context::unique_name(runtime::munge(qualified_sym->name)), qualified_sym };
+    { runtime::context::unique_symbol(runtime::munge(qualified_sym->name)), qualified_sym };
     closest_fn.lifted_vars.emplace(qualified_sym, std::move(lv));
     return qualified_sym;
   }
@@ -117,7 +117,7 @@ namespace jank::analyze
     auto const &found(closest_fn.lifted_constants.find(constant));
     if(found != closest_fn.lifted_constants.end())
     { return; }
-    lifted_constant l{ runtime::context::unique_name("const"), constant };
+    lifted_constant l{ runtime::context::unique_symbol("const"), constant };
     closest_fn.lifted_constants.emplace(constant, std::move(l));
   }
 

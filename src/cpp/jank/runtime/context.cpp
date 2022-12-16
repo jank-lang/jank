@@ -67,6 +67,10 @@ namespace jank::runtime
     /* TODO: Remove this once it can be defined in jank. */
     auto const equal_sym(obj::symbol::create("clojure.core/="));
     intern_var(equal_sym).expect_ok()->set_root(obj::function::create(&_gen_equal_));
+
+    /* TODO: Remove this once it can be defined in jank. */
+    auto const lt_sym(obj::symbol::create("clojure.core/<"));
+    intern_var(lt_sym).expect_ok()->set_root(obj::function::create(&obj::_gen_less_));
   }
 
   context::context(context const &ctx)
@@ -135,15 +139,15 @@ namespace jank::runtime
     eval_file("src/jank/clojure/core.jank", jit_prc);
   }
 
-  object_ptr context::eval_file
-  (std::string_view const &path, jit::processor const &jit_prc)
+  object_ptr context::eval_file(std::string_view const &path, jit::processor const &jit_prc)
   {
     auto const file(util::map_file(path));
+    if(file.is_err())
+    { throw std::runtime_error{ fmt::format("unable to map file {} due to {}", path, file.expect_err()) }; }
     return eval_string({ file.expect_ok().head, file.expect_ok().size }, jit_prc);
   }
 
-  object_ptr context::eval_string
-  (std::string_view const &code, jit::processor const &jit_prc)
+  object_ptr context::eval_string(std::string_view const &code, jit::processor const &jit_prc)
   {
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
@@ -159,13 +163,17 @@ namespace jank::runtime
     return ret;
   }
 
-  obj::symbol context::unique_name()
-  { return unique_name("gen"); }
-  obj::symbol context::unique_name(std::string_view const &prefix)
+  std::string context::unique_string()
+  { return unique_string("gen"); }
+  std::string context::unique_string(std::string_view const &prefix)
   {
     static std::atomic_size_t index{ 1 };
-    return { "", prefix.data() + std::to_string(index++) };
+    return prefix.data() + std::to_string(index++);
   }
+  obj::symbol context::unique_symbol()
+  { return unique_symbol("gen"); }
+  obj::symbol context::unique_symbol(std::string_view const &prefix)
+  { return { "", unique_string(prefix) }; }
 
   void context::dump() const
   {
@@ -221,7 +229,8 @@ namespace jank::runtime
 
   obj::keyword_ptr context::intern_keyword(obj::symbol const &sym, bool const resolved)
   { return intern_keyword(sym.ns, sym.name, resolved); }
-  obj::keyword_ptr context::intern_keyword(std::string_view const &ns, std::string_view const &name, bool resolved)
+  obj::keyword_ptr context::intern_keyword
+  (std::string_view const &ns, std::string_view const &name, bool resolved)
   {
     obj::symbol sym{ ns, name };
     if(!resolved)

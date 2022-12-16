@@ -11,6 +11,7 @@
 (def *)
 (def /)
 (def =)
+(def <)
 
 ;; Numbers.
 (def integer?
@@ -38,6 +39,30 @@
       (native/raw "__value = make_box(#{ o }#->as_integer()->data % 2 == 1)")
       ; TODO: throw an error
       false)))
+
+;; Collections.
+(def empty?
+  (fn* [o]
+    (native/raw "
+                auto const * const seqable(#{ o }#->as_seqable());
+                if(!seqable)
+                { throw #{ :not-seqable }#; }
+                auto const &seq(seqable->seq());
+                return make_box(seq == nullptr);
+                ")))
+
+;; Lists.
+(def first
+  (fn* [o]
+    (native/raw "
+                auto const * const seqable(#{ o }#->as_seqable());
+                if(!seqable)
+                { throw #{ :not-seqable }#; }
+                auto const &seq(seqable->seq());
+                if(!seq)
+                { return #{ nil }#; }
+                return seq->first();
+                ")))
 
 ;; Strings.
 (def string?

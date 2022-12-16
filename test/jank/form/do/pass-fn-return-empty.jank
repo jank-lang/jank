@@ -1,0 +1,7 @@
+(def do-fn
+  (fn* []
+    (do)))
+
+(assert (= nil (do-fn)))
+
+:success

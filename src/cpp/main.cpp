@@ -21,13 +21,28 @@ int main(int const argc, char const **argv)
     std::cerr << "Usage: " << argv[0] << " <file>\n";
     return 1;
   }
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+  char const *file{ argv[1] };
 
   jank::runtime::context rt_ctx;
   jank::jit::processor jit_prc;
 
   rt_ctx.eval_prelude(jit_prc);
 
-  std::cout << rt_ctx.eval_file(argv[1], jit_prc)->to_string() << std::endl;
+  //{
+  //  auto const mfile(jank::util::map_file(file));
+  //  jank::read::lex::processor l_prc{ { mfile.expect_ok().head, mfile.expect_ok().size } };
+  //  jank::read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+  //  jank::analyze::processor an_prc{ rt_ctx };
+  //  jank::codegen::processor cg_prc
+  //  {
+  //    rt_ctx,
+  //    an_prc.analyze(p_prc.begin(), p_prc.end()).expect_ok_move()
+  //  };
+  //  std::cout << cg_prc.declaration_str() << std::endl;
+  //}
+
+  std::cout << rt_ctx.eval_file(file, jit_prc)->to_string() << std::endl;
 
   //std::string line;
   //std::cout << "> " << std::flush;

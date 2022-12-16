@@ -21,13 +21,6 @@ namespace jank::analyze
     file
   };
 
-  enum class expression_type
-  {
-    expression,
-    statement,
-    return_statement
-  };
-
   using error = read::error;
 
   struct processor
@@ -42,28 +35,130 @@ namespace jank::analyze
     expression_result analyze
     (
       read::parse::processor::iterator,
-      read::parse::processor::iterator const &,
-      expression_type
+      read::parse::processor::iterator const &
     );
     expression_result analyze(runtime::object_ptr const &, expression_type);
-    expression_result analyze(runtime::object_ptr const &, local_frame_ptr &, expression_type);
-    expression_result analyze_call(runtime::obj::list_ptr const &, local_frame_ptr &, expression_type);
-    expression_result analyze_def(runtime::obj::list_ptr const &, local_frame_ptr &, expression_type);
-    expression_result analyze_symbol(runtime::obj::symbol_ptr const &, local_frame_ptr &, expression_type);
-    expression_result analyze_fn(runtime::obj::list_ptr const &, local_frame_ptr &, expression_type);
+    expression_result analyze
+    (
+      runtime::object_ptr const &,
+      local_frame_ptr &,
+      expression_type,
+      option<expr::function_context_ptr> const&
+    );
+    expression_result analyze_call
+    (
+      runtime::obj::list_ptr const &,
+      local_frame_ptr &,
+      expression_type,
+      option<expr::function_context_ptr> const&
+    );
+    expression_result analyze_def
+    (
+      runtime::obj::list_ptr const &,
+      local_frame_ptr &,
+      expression_type,
+      option<expr::function_context_ptr> const&
+    );
+    expression_result analyze_symbol
+    (
+      runtime::obj::symbol_ptr const &,
+      local_frame_ptr &,
+      expression_type,
+      option<expr::function_context_ptr> const&
+    );
+    expression_result analyze_fn
+    (
+      runtime::obj::list_ptr const &,
+      local_frame_ptr &,
+      expression_type,
+      option<expr::function_context_ptr> const&
+    );
+    expression_result analyze_recur
+    (
+      runtime::obj::list_ptr const &,
+      local_frame_ptr &,
+      expression_type,
+      option<expr::function_context_ptr> const&
+    );
+    expression_result analyze_do
+    (
+      runtime::obj::list_ptr const &,
+      local_frame_ptr &,
+      expression_type,
+      option<expr::function_context_ptr> const&
+    );
     jank::result<expr::function_arity<expression>, error> analyze_fn_arity
-    (runtime::obj::list_ptr const &, local_frame_ptr &);
-    expression_result analyze_let(runtime::obj::list_ptr const &, local_frame_ptr &, expression_type);
-    expression_result analyze_if(runtime::obj::list_ptr const &, local_frame_ptr &, expression_type);
-    expression_result analyze_quote(runtime::obj::list_ptr const &, local_frame_ptr &, expression_type);
-    expression_result analyze_var(runtime::obj::list_ptr const &, local_frame_ptr &, expression_type);
-    expression_result analyze_native_raw(runtime::obj::list_ptr const &, local_frame_ptr &, expression_type);
-    expression_result analyze_primitive_literal(runtime::object_ptr const &, local_frame_ptr &, expression_type);
-    expression_result analyze_vector(runtime::obj::vector_ptr const &, local_frame_ptr &, expression_type);
-    expression_result analyze_map(runtime::obj::map_ptr const &, local_frame_ptr &, expression_type);
+    (
+      runtime::obj::list_ptr const &,
+      local_frame_ptr &
+    );
+    expression_result analyze_let
+    (
+      runtime::obj::list_ptr const &,
+      local_frame_ptr &,
+      expression_type,
+      option<expr::function_context_ptr> const&
+    );
+    expression_result analyze_if
+    (
+      runtime::obj::list_ptr const &,
+      local_frame_ptr &,
+      expression_type,
+      option<expr::function_context_ptr> const&
+    );
+    expression_result analyze_quote
+    (
+      runtime::obj::list_ptr const &,
+      local_frame_ptr &,
+      expression_type,
+      option<expr::function_context_ptr> const&
+    );
+    expression_result analyze_var
+    (
+      runtime::obj::list_ptr const &,
+      local_frame_ptr &,
+      expression_type,
+      option<expr::function_context_ptr> const&
+    );
+    expression_result analyze_native_raw
+    (
+      runtime::obj::list_ptr const &,
+      local_frame_ptr &,
+      expression_type,
+      option<expr::function_context_ptr> const&
+    );
+    expression_result analyze_primitive_literal
+    (
+      runtime::object_ptr const &,
+      local_frame_ptr &,
+      expression_type,
+      option<expr::function_context_ptr> const&
+    );
+    expression_result analyze_vector
+    (
+      runtime::obj::vector_ptr const &,
+      local_frame_ptr &,
+      expression_type,
+      option<expr::function_context_ptr> const&
+    );
+    expression_result analyze_map
+    (
+      runtime::obj::map_ptr const &,
+      local_frame_ptr &,
+      expression_type,
+      option<expr::function_context_ptr> const&
+    );
 
     using special_function_type = std::function
-    <expression_result (runtime::obj::list_ptr const &, local_frame_ptr &, expression_type)>;
+    <
+      expression_result
+      (
+        runtime::obj::list_ptr const &,
+        local_frame_ptr &,
+        expression_type,
+        option<expr::function_context_ptr> const&
+      )
+    >;
 
     std::unordered_map<runtime::obj::symbol_ptr, special_function_type> specials;
     runtime::context &rt_ctx;

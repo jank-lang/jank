@@ -21,13 +21,15 @@ namespace jank::analyze
     using runtime::obj::symbol;
     auto const make_fn = [this](auto const fn) -> decltype(specials)::mapped_type
     {
-      return [this, fn](auto const &list, auto &current_frame, auto expr_type)
-      { return (this->*fn)(list, current_frame, expr_type); };
+      return [this, fn](auto const &list, auto &current_frame, auto expr_type, auto fn_ctx)
+      { return (this->*fn)(list, current_frame, expr_type, fn_ctx); };
     };
     specials =
     {
       { symbol::create("def"), make_fn(&processor::analyze_def) },
       { symbol::create("fn*"), make_fn(&processor::analyze_fn) },
+      { symbol::create("recur"), make_fn(&processor::analyze_recur) },
+      { symbol::create("do"), make_fn(&processor::analyze_do) },
       { symbol::create("let*"), make_fn(&processor::analyze_let) },
       { symbol::create("if"), make_fn(&processor::analyze_if) },
       { symbol::create("quote"), make_fn(&processor::analyze_quote) },
@@ -39,8 +41,7 @@ namespace jank::analyze
   processor::expression_result processor::analyze
   (
     read::parse::processor::iterator parse_current,
-    read::parse::processor::iterator const &parse_end,
-    expression_type const expr_type
+    read::parse::processor::iterator const &parse_end
   )
   {
     if(parse_current == parse_end)
@@ -59,11 +60,16 @@ namespace jank::analyze
       fn.push_back(parse_current->expect_ok());
     }
     auto fn_list(runtime::obj::list::create(fn.rbegin(), fn.rend()));
-    return analyze(std::move(fn_list), expr_type);
+    return analyze(std::move(fn_list), expression_type::expression);
   }
 
   processor::expression_result processor::analyze_def
-  (runtime::obj::list_ptr const &l, local_frame_ptr &current_frame, expression_type const)
+  (
+    runtime::obj::list_ptr const &l,
+    local_frame_ptr &current_frame,
+    expression_type const expr_type,
+    option<expr::function_context_ptr> const &fn_ctx
+  )
   {
     auto const length(l->count());
     if(length != 2 && length != 3)
@@ -94,7 +100,7 @@ namespace jank::analyze
 
     if(has_value)
     {
-      auto value_result(analyze(value_opt.unwrap(), current_frame, expression_type::expression));
+      auto value_result(analyze(value_opt.unwrap(), current_frame, expression_type::expression, fn_ctx));
       if(value_result.is_err())
       { return value_result; }
       value_expr = some(value_result.expect_ok());
@@ -105,6 +111,7 @@ namespace jank::analyze
     (
       expr::def<expression>
       {
+        { expr_type },
         qualified_sym,
         value_expr,
         current_frame
@@ -113,7 +120,12 @@ namespace jank::analyze
   }
 
   processor::expression_result processor::analyze_symbol
-  (runtime::obj::symbol_ptr const &sym, local_frame_ptr &current_frame, expression_type const)
+  (
+    runtime::obj::symbol_ptr const &sym,
+    local_frame_ptr &current_frame,
+    expression_type const expr_type,
+    option<expr::function_context_ptr> const&
+  )
   {
     /* TODO: Assert it doesn't start with __. */
     auto const found_local(current_frame->find_capture(sym));
@@ -121,7 +133,7 @@ namespace jank::analyze
     {
       local_frame::register_captures(found_local.unwrap());
       return std::make_shared<expression>
-      (expr::local_reference{ sym, found_local.unwrap().binding });
+      (expr::local_reference{ { expr_type }, sym, found_local.unwrap().binding });
     }
 
     auto const qualified_sym(rt_ctx.qualify_symbol(sym));
@@ -131,11 +143,14 @@ namespace jank::analyze
 
     current_frame->lift_var(qualified_sym);
     return std::make_shared<expression>
-    (expr::var_deref<expression>{ qualified_sym, current_frame });
+    (expr::var_deref<expression>{ { expr_type }, qualified_sym, current_frame });
   }
 
   result<expr::function_arity<expression>, error> processor::analyze_fn_arity
-  (runtime::obj::list_ptr const &list, local_frame_ptr &current_frame)
+  (
+    runtime::obj::list_ptr const &list,
+    local_frame_ptr &current_frame
+  )
   {
     auto const params_obj(list->data.first().unwrap());
     auto const * const params(params_obj->as_vector());
@@ -189,6 +204,9 @@ namespace jank::analyze
       );
     }
 
+    auto fn_ctx(std::make_shared<expr::function_context>());
+    fn_ctx->is_variadic = is_variadic;
+    fn_ctx->param_count = param_symbols.size();
     expr::do_<expression> body_do;
     size_t const form_count{ list->count() - 1 };
     size_t i{};
@@ -196,7 +214,7 @@ namespace jank::analyze
     {
       auto const expr_type
       ((++i == form_count) ? expression_type::return_statement : expression_type::statement);
-      auto form(analyze(item, frame, expr_type));
+      auto form(analyze(item, frame, expr_type, fn_ctx));
       if(form.is_err())
       { return form.expect_err_move(); }
       body_do.body.emplace_back(form.expect_ok());
@@ -205,12 +223,22 @@ namespace jank::analyze
     return
     {
       expr::function_arity<expression>
-      { std::move(param_symbols), is_variadic, std::move(body_do), std::move(frame) }
+      {
+        std::move(param_symbols),
+        std::move(body_do),
+        std::move(frame),
+        std::move(fn_ctx)
+      }
     };
   }
 
   processor::expression_result processor::analyze_fn
-  (runtime::obj::list_ptr const &list, local_frame_ptr &current_frame, expression_type const)
+  (
+    runtime::obj::list_ptr const &list,
+    local_frame_ptr &current_frame,
+    expression_type const expr_type,
+    option<expr::function_context_ptr> const&
+  )
   {
     auto const length(list->count());
     if(length < 2)
@@ -256,7 +284,7 @@ namespace jank::analyze
     size_t variadic_arity{};
     for(auto const &arity : arities)
     {
-      found_variadic += static_cast<int>(arity.is_variadic);
+      found_variadic += static_cast<int>(arity.fn_ctx->is_variadic);
       variadic_arity = arity.params.size();
     }
     if(found_variadic > 1)
@@ -268,7 +296,7 @@ namespace jank::analyze
     {
       for(auto const &arity : arities)
       {
-        if(!arity.is_variadic && arity.params.size() >= variadic_arity)
+        if(!arity.fn_ctx->is_variadic && arity.params.size() >= variadic_arity)
         { return err(error{ "invalid fn: fixed arity has >= params than variadic arity" }); }
       }
     }
@@ -284,20 +312,101 @@ namespace jank::analyze
         if
         (
           base->params.size() == other->params.size()
-          && base->is_variadic == other->is_variadic
+          && base->fn_ctx->is_variadic == other->fn_ctx->is_variadic
         )
         { return err(error{ "invalid fn: duplicate arity definition" }); }
       }
     }
 
-    return std::make_shared<expression>(expr::function<expression> { none, std::move(arities) });
+    return std::make_shared<expression>(expr::function<expression> { { expr_type }, none, std::move(arities) });
+  }
+
+  processor::expression_result processor::analyze_recur
+  (
+    runtime::obj::list_ptr const &list,
+    local_frame_ptr &current_frame,
+    expression_type const expr_type,
+    option<expr::function_context_ptr> const &fn_ctx
+  )
+  {
+    if(fn_ctx.is_none())
+    { return err(error{ "unable to use recur outside of a function or loop" }); }
+    else if(expr_type != expression_type::return_statement)
+    { return err(error{ "recur used outside of tail position" }); }
+
+    /* Minus one to remove recur symbol. */
+    auto const arg_count(list->count() - 1);
+    if(fn_ctx.unwrap()->param_count != arg_count)
+    {
+      return err
+      (
+        error
+        {
+          fmt::format
+          (
+            "invalid number of args passed to recur; expected {}, found {}",
+            fn_ctx.unwrap()->param_count,
+            arg_count
+          )
+        }
+      );
+    }
+
+
+    std::vector<expression_ptr> arg_exprs;
+    arg_exprs.reserve(arg_count);
+    for(auto const &form : list->data.rest())
+    {
+      auto arg_expr(analyze(form, current_frame, expression_type::expression, fn_ctx));
+      if(arg_expr.is_err())
+      { return arg_expr; }
+      arg_exprs.emplace_back(arg_expr.expect_ok());
+    }
+
+    fn_ctx.unwrap()->is_tail_recursive = true;
+
+    return std::make_shared<expression>
+    (
+      expr::recur<expression>
+      {
+        { expr_type },
+        runtime::obj::list::create(list->data.rest()),
+        arg_exprs
+      }
+    );
+  }
+
+  processor::expression_result processor::analyze_do
+  (
+    runtime::obj::list_ptr const &list,
+    local_frame_ptr &current_frame,
+    expression_type const expr_type,
+    option<expr::function_context_ptr> const &fn_ctx
+  )
+  {
+    expr::do_<expression> ret;
+    ret.expr_type = expr_type;
+    size_t const form_count{ list->count() - 1 };
+    size_t i{};
+    for(auto const &item : list->data.rest())
+    {
+      auto const form_type
+      ((++i == form_count) ? expr_type : expression_type::statement);
+      auto form(analyze(item, current_frame, form_type, fn_ctx));
+      if(form.is_err())
+      { return form.expect_err_move(); }
+      ret.body.emplace_back(form.expect_ok());
+    }
+
+    return std::make_shared<expression>(std::move(ret));
   }
 
   processor::expression_result processor::analyze_let
   (
     runtime::obj::list_ptr const &o,
     local_frame_ptr &current_frame,
-    expression_type const expr_type
+    expression_type const expr_type,
+    option<expr::function_context_ptr> const &fn_ctx
   )
   {
     if(o->count() < 2)
@@ -314,6 +423,7 @@ namespace jank::analyze
 
     expr::let<expression> ret
     {
+      { expr_type },
       {},
       {},
       std::make_shared<local_frame>
@@ -329,7 +439,7 @@ namespace jank::analyze
       { return err(error{ "invalid let* binding: left hand must be an unqualified symbol" }); }
 
       auto const sym_ptr(boost::static_pointer_cast<runtime::obj::symbol>(sym_obj));
-      auto res(analyze(val, ret.frame, expression_type::expression));
+      auto res(analyze(val, ret.frame, expression_type::expression, fn_ctx));
       if(res.is_err())
       { return res.expect_err_move(); }
       auto it(ret.pairs.emplace_back(sym_ptr, res.expect_ok_move()));
@@ -342,7 +452,7 @@ namespace jank::analyze
     {
       auto const form_type
       ((++i == form_count) ? expr_type : expression_type::statement);
-      auto res(analyze(item, ret.frame, form_type));
+      auto res(analyze(item, ret.frame, form_type, fn_ctx));
       if(res.is_err())
       { return res.expect_err_move(); }
       ret.body.body.emplace_back(res.expect_ok_move());
@@ -355,7 +465,8 @@ namespace jank::analyze
   (
     runtime::obj::list_ptr const &o,
     local_frame_ptr &current_frame,
-    expression_type const expr_type
+    expression_type const expr_type,
+    option<expr::function_context_ptr> const &fn_ctx
   )
   {
     auto const form_count(o->count());
@@ -365,12 +476,12 @@ namespace jank::analyze
     { return err(error{ "invalid if: expects at most three forms" }); }
 
     auto const condition(o->data.rest().first().unwrap());
-    auto condition_expr(analyze(condition, current_frame, expression_type::expression));
+    auto condition_expr(analyze(condition, current_frame, expression_type::expression, fn_ctx));
     if(condition_expr.is_err())
     { return condition_expr.expect_err_move(); }
 
     auto const then(o->data.rest().rest().first().unwrap());
-    auto then_expr(analyze(then, current_frame, expr_type));
+    auto then_expr(analyze(then, current_frame, expr_type, fn_ctx));
     if(then_expr.is_err())
     { return then_expr.expect_err_move(); }
 
@@ -378,7 +489,7 @@ namespace jank::analyze
     if(form_count == 4)
     {
       auto const else_(o->data.rest().rest().rest().first().unwrap());
-      auto else_expr(analyze(else_, current_frame, expr_type));
+      auto else_expr(analyze(else_, current_frame, expr_type, fn_ctx));
       if(else_expr.is_err())
       { return else_expr.expect_err_move(); }
       else_expr_opt = else_expr.expect_ok();
@@ -388,6 +499,7 @@ namespace jank::analyze
     (
       expr::if_<expression>
       {
+        { expr_type },
         condition_expr.expect_ok(),
         then_expr.expect_ok(),
         else_expr_opt
@@ -396,16 +508,26 @@ namespace jank::analyze
   }
 
   processor::expression_result processor::analyze_quote
-  (runtime::obj::list_ptr const &o, local_frame_ptr &current_frame, expression_type const expr_type)
+  (
+    runtime::obj::list_ptr const &o,
+    local_frame_ptr &current_frame,
+    expression_type const expr_type,
+    option<expr::function_context_ptr> const &fn_ctx
+  )
   {
     if(o->count() != 2)
     { return err(error{ "invalid quote: expects one argument" }); }
 
-    return analyze_primitive_literal(o->data.rest().first().unwrap(), current_frame, expr_type);
+    return analyze_primitive_literal(o->data.rest().first().unwrap(), current_frame, expr_type, fn_ctx);
   }
 
   processor::expression_result processor::analyze_var
-  (runtime::obj::list_ptr const &o, local_frame_ptr &current_frame, expression_type const)
+  (
+    runtime::obj::list_ptr const &o,
+    local_frame_ptr &current_frame,
+    expression_type const expr_type,
+    option<expr::function_context_ptr> const&
+  )
   {
     if(o->count() != 2)
     { return err(error{ "invalid var reference: expects one argument" }); }
@@ -420,11 +542,16 @@ namespace jank::analyze
     if(found_var.is_none())
     { return err(error{ "invalid var reference: var not found" }); }
 
-    return std::make_shared<expression>(expr::var_ref<expression>{ qualified_sym, current_frame });
+    return std::make_shared<expression>(expr::var_ref<expression>{ { expr_type }, qualified_sym, current_frame });
   }
 
   processor::expression_result processor::analyze_native_raw
-  (runtime::obj::list_ptr const &o, local_frame_ptr &current_frame, expression_type const expr_type)
+  (
+    runtime::obj::list_ptr const &o,
+    local_frame_ptr &current_frame,
+    expression_type const expr_type,
+    option<expr::function_context_ptr> const &fn_ctx
+  )
   {
     if(o->count() != 2)
     { return err(error{ "invalid native/raw: expects one argument" }); }
@@ -434,7 +561,7 @@ namespace jank::analyze
     if(code_str == nullptr)
     { return err(error{ "invalid native/raw: expects string of C++ code" }); }
     if(code_str->data.empty())
-    { return std::make_shared<expression>(expr::native_raw<expression>{ {}, current_frame }); }
+    { return std::make_shared<expression>(expr::native_raw<expression>{ { expr_type }, {}, current_frame }); }
 
     /* native/raw expressions are broken up into chunks of either literal C++ code or
      * interpolated jank code, the latter needing to also be analyzed. */
@@ -466,7 +593,7 @@ namespace jank::analyze
       auto parsed_it(p_prc.begin());
       if(parsed_it->is_err())
       { return parsed_it->expect_err_move(); }
-      auto result(analyze(parsed_it->expect_ok(), current_frame, expr_type));
+      auto result(analyze(parsed_it->expect_ok(), current_frame, expression_type::expression, fn_ctx));
       if(result.is_err())
       { return result.expect_err_move(); }
 
@@ -480,61 +607,82 @@ namespace jank::analyze
     }
 
     return std::make_shared<expression>
-    (expr::native_raw<expression>{ std::move(chunks), current_frame });
+    (expr::native_raw<expression>{ { expr_type }, std::move(chunks), current_frame });
   }
 
   processor::expression_result processor::analyze_primitive_literal
-  (runtime::object_ptr const &o, local_frame_ptr &current_frame, expression_type const)
+  (
+    runtime::object_ptr const &o,
+    local_frame_ptr &current_frame,
+    expression_type const expr_type,
+    option<expr::function_context_ptr> const&
+  )
   {
     current_frame->lift_constant(o);
-    return std::make_shared<expression>(expr::primitive_literal<expression>{ o, current_frame });
+    return std::make_shared<expression>
+    (expr::primitive_literal<expression>{ { expr_type }, o, current_frame });
   }
 
   /* TODO: Test for this. */
   processor::expression_result processor::analyze_vector
-  (runtime::obj::vector_ptr const &o, local_frame_ptr &current_frame, expression_type const)
+  (
+    runtime::obj::vector_ptr const &o,
+    local_frame_ptr &current_frame,
+    expression_type const expr_type,
+    option<expr::function_context_ptr> const &fn_ctx
+  )
   {
     /* TODO: Detect literal and act accordingly. */
     std::vector<expression_ptr> exprs;
     exprs.reserve(o->count());
     for(auto d = o->seq(); d != nullptr; d = d->next())
     {
-      auto res(analyze(d->first(), current_frame, expression_type::expression));
+      auto res(analyze(d->first(), current_frame, expression_type::expression, fn_ctx));
       if(res.is_err())
       { return res.expect_err_move(); }
       exprs.emplace_back(res.expect_ok_move());
     }
-    return std::make_shared<expression>(expr::vector<expression>{ std::move(exprs) });
+    return std::make_shared<expression>(expr::vector<expression>{ { expr_type }, std::move(exprs) });
   }
 
   processor::expression_result processor::analyze_map
-  (runtime::obj::map_ptr const &o, local_frame_ptr &current_frame, expression_type const)
+  (
+    runtime::obj::map_ptr const &o,
+    local_frame_ptr &current_frame,
+    expression_type const expr_type,
+    option<expr::function_context_ptr> const &fn_ctx
+  )
   {
     /* TODO: Detect literal and act accordingly. */
     std::vector<std::pair<expression_ptr, expression_ptr>> exprs;
     exprs.reserve(o->data.size());
     for(auto const &kv : o->data)
     {
-      auto k_expr(analyze(kv.first, current_frame, expression_type::expression));
+      auto k_expr(analyze(kv.first, current_frame, expression_type::expression, fn_ctx));
       if(k_expr.is_err())
       { return k_expr.expect_err_move(); }
-      auto v_expr(analyze(kv.second, current_frame, expression_type::expression));
+      auto v_expr(analyze(kv.second, current_frame, expression_type::expression, fn_ctx));
       if(v_expr.is_err())
       { return v_expr.expect_err_move(); }
       exprs.emplace_back(k_expr.expect_ok_move(), v_expr.expect_ok_move());
     }
 
     /* TODO: Uniqueness check. */
-    return std::make_shared<expression>(expr::map<expression>{ std::move(exprs) });
+    return std::make_shared<expression>(expr::map<expression>{ { expr_type }, std::move(exprs) });
   }
 
   processor::expression_result processor::analyze_call
-  (runtime::obj::list_ptr const &o, local_frame_ptr &current_frame, expression_type const expr_type)
+  (
+    runtime::obj::list_ptr const &o,
+    local_frame_ptr &current_frame,
+    expression_type const expr_type,
+    option<expr::function_context_ptr> const &fn_ctx
+  )
   {
     /* An empty list evaluates to a list, not a call. */
     auto const count(o->count());
     if(count == 0)
-    { return analyze_primitive_literal(o, current_frame, expr_type); }
+    { return analyze_primitive_literal(o, current_frame, expr_type, fn_ctx); }
 
     auto const first(o->data.first().unwrap());
     expression_ptr source;
@@ -543,9 +691,9 @@ namespace jank::analyze
       auto const sym(boost::static_pointer_cast<runtime::obj::symbol>(first));
       auto const found_special(specials.find(sym));
       if(found_special != specials.end())
-      { return found_special->second(o, current_frame, expr_type); }
+      { return found_special->second(o, current_frame, expr_type, fn_ctx); }
 
-      auto sym_result(analyze_symbol(sym, current_frame, expression_type::expression));
+      auto sym_result(analyze_symbol(sym, current_frame, expression_type::expression, fn_ctx));
       if(sym_result.is_err())
       { return sym_result; }
 
@@ -553,7 +701,7 @@ namespace jank::analyze
     }
     else
     {
-      auto callable_expr(analyze(first, current_frame, expression_type::expression));
+      auto callable_expr(analyze(first, current_frame, expression_type::expression, fn_ctx));
       if(callable_expr.is_err())
       { return callable_expr; }
       source = callable_expr.expect_ok();
@@ -565,7 +713,7 @@ namespace jank::analyze
     arg_exprs.reserve(count - 1);
     for(auto const &s : o->data.rest())
     {
-      auto arg_expr(analyze(s, current_frame, expression_type::expression));
+      auto arg_expr(analyze(s, current_frame, expression_type::expression, fn_ctx));
       if(arg_expr.is_err())
       { return arg_expr; }
       arg_exprs.emplace_back(arg_expr.expect_ok());
@@ -575,6 +723,7 @@ namespace jank::analyze
     (
       expr::call<expression>
       {
+        { expr_type },
         source,
         runtime::obj::list::create(o->data.rest()),
         arg_exprs
@@ -587,29 +736,31 @@ namespace jank::analyze
     runtime::object_ptr const &o,
     expression_type const expr_type
   )
-  { return analyze(o, root_frame, expr_type); }
+  { return analyze(o, root_frame, expr_type, none); }
 
   processor::expression_result processor::analyze
   (
     runtime::object_ptr const &o,
     local_frame_ptr &current_frame,
-    expression_type const expr_type
+    expression_type const expr_type,
+    option<expr::function_context_ptr> const& fn_ctx
   )
   {
-    assert(o);
+    if(o == nullptr)
+    { return err(error{ "unexpected nullptr" }); }
 
     if(o->as_list())
-    { return analyze_call(boost::static_pointer_cast<runtime::obj::list>(o), current_frame, expr_type); }
+    { return analyze_call(boost::static_pointer_cast<runtime::obj::list>(o), current_frame, expr_type, fn_ctx); }
     else if(o->as_vector())
-    { return analyze_vector(boost::static_pointer_cast<runtime::obj::vector>(o), current_frame, expr_type); }
+    { return analyze_vector(boost::static_pointer_cast<runtime::obj::vector>(o), current_frame, expr_type, fn_ctx); }
     else if(o->as_map())
-    { return analyze_map(boost::static_pointer_cast<runtime::obj::map>(o), current_frame, expr_type); }
+    { return analyze_map(boost::static_pointer_cast<runtime::obj::map>(o), current_frame, expr_type, fn_ctx); }
     else if(o->as_set())
     { return err(error{ "unimplemented analysis: set" }); }
     else if(o->as_number() || o->as_boolean() || o->as_keyword() || o->as_nil() || o->as_string())
-    { return analyze_primitive_literal(o, current_frame, expr_type); }
+    { return analyze_primitive_literal(o, current_frame, expr_type, fn_ctx); }
     else if(o->as_symbol())
-    { return analyze_symbol(boost::static_pointer_cast<runtime::obj::symbol>(o), current_frame, expr_type); }
+    { return analyze_symbol(boost::static_pointer_cast<runtime::obj::symbol>(o), current_frame, expr_type, fn_ctx); }
     else
     {
       std::cerr << "unsupported analysis of " << o->to_string() << std::endl;

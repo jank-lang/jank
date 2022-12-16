@@ -1,0 +1,7 @@
+(def tail
+  (fn*
+    ([n]
+     (if (< 0 n)
+       (recur (+ n -1) 0)
+       n))
+    ([x y])))

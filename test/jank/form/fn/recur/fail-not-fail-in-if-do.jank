@@ -1,0 +1,7 @@
+(def not-tail
+  (fn* [n]
+    (if (< 0 n)
+      (do
+        (recur (+ n -1))
+        n)
+      n)))

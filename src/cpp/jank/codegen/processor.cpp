@@ -35,16 +35,20 @@
  * println->call(thing_result, if_result);
  * ```
  *
- * TODO: This could be optimized, in some cases, but let's do that when the
- * profiler tells us to.
+ * This is optimized by knowing what position every expression in, so trivial expressions used
+ * as arguments, for example, don't need to be first stored in temporaries.
  */
 
 namespace jank::codegen
 {
   namespace detail
   {
-    void gen_constant(runtime::object_ptr const &, std::ostream &)
-    { }
+    /* Tail recursive fns generate into a while(true) which mutates the params on each loop.
+     * But our runtime requires params to be const&, so we can't mutate them; we need to shadow
+     * them. So, for tail recursive fns, we name the params with this suffix and then define
+     * the actual param names as mutable locals outside of the while loop. */
+    constexpr std::string_view const recur_suffix{ "__recur" };
+
     void gen_constant(runtime::object_ptr const &o, fmt::memory_buffer &buffer)
     {
       auto inserter(std::back_inserter(buffer));
@@ -99,7 +103,7 @@ namespace jank::codegen
     : rt_ctx{ rt_ctx },
       root_expr{ expr },
       root_fn{ boost::get<analyze::expr::function<analyze::expression>>(expr->data) },
-      struct_name{ runtime::context::unique_name() }
+      struct_name{ runtime::context::unique_string() }
   { }
 
   processor::processor
@@ -109,189 +113,344 @@ namespace jank::codegen
   )
     : rt_ctx{ rt_ctx },
       root_fn{ expr },
-      struct_name{ runtime::context::unique_name() }
+      struct_name{ runtime::context::unique_string() }
   { }
 
-  runtime::obj::symbol processor::gen(analyze::expression_ptr const &ex, bool const is_statement)
+  option<std::string> processor::gen
+  (
+    analyze::expression_ptr const &ex,
+    analyze::expr::function_arity<analyze::expression> const &fn_arity
+  )
   {
-    runtime::obj::symbol ret;
+    option<std::string> ret;
     boost::apply_visitor
     (
-      [this, is_statement, &ret](auto const &typed_ex)
-      { ret = gen(typed_ex, is_statement); },
+      [this, fn_arity, &ret](auto const &typed_ex)
+      { ret = gen(typed_ex, fn_arity); },
       ex->data
     );
     return ret;
   }
 
-  runtime::obj::symbol processor::gen(analyze::expr::def<analyze::expression> const &expr, bool const)
+  option<std::string> processor::gen
+  (
+    analyze::expr::def<analyze::expression> const &expr,
+    analyze::expr::function_arity<analyze::expression> const &fn_arity
+  )
   {
     auto inserter(std::back_inserter(body_buffer));
     auto const &var(expr.frame->find_lifted_var(expr.name).unwrap().get());
     auto const &munged_name(runtime::munge(var.native_name.name));
-    auto ret_tmp(runtime::context::unique_name(munged_name));
+    auto ret_tmp(runtime::context::unique_string(munged_name));
 
     /* Forward declarations just intern the var and evaluate to it. */
     if(expr.value.is_none())
+    { return munged_name.data; }
+
+    auto const val(gen(expr.value.unwrap(), fn_arity).unwrap());
+    switch(expr.expr_type)
     {
-      format_to
-      (
-        inserter,
-        "var_ptr const &{}{{{}}};",
-        ret_tmp.name,
-        munged_name
-      );
-      return ret_tmp;
+      case analyze::expression_type::expression:
+      {
+        return fmt::format
+        (
+          "{}->set_root({})",
+          runtime::munge(var.native_name.name),
+          val
+        );
+      }
+      case analyze::expression_type::return_statement:
+      { format_to(inserter, "return "); }
+      case analyze::expression_type::statement:
+      {
+        format_to
+        (
+          inserter,
+          "{}->set_root({});",
+          runtime::munge(var.native_name.name),
+          val
+        );
+        return none;
+      }
     }
-
-    auto const &val_tmp(gen(expr.value.unwrap(), false));
-    format_to
-    (
-      inserter,
-      "var_ptr const &{}{{{}->set_root({})}};",
-      ret_tmp.name,
-      runtime::munge(var.native_name.name),
-      val_tmp.name
-    );
-    return ret_tmp;
   }
 
-  runtime::obj::symbol processor::gen(analyze::expr::var_deref<analyze::expression> const &expr, bool const)
-  {
-    auto inserter(std::back_inserter(body_buffer));
-    auto const &var(expr.frame->find_lifted_var(expr.qualified_name).unwrap().get());
-    auto ret_tmp(runtime::context::unique_name(var.native_name.name));
-    format_to(inserter, "auto const &{}({}->get_root());", ret_tmp.name, var.native_name.name);
-    return ret_tmp;
-  }
-
-  runtime::obj::symbol processor::gen(analyze::expr::var_ref<analyze::expression> const &expr, bool const)
+  option<std::string> processor::gen
+  (
+    analyze::expr::var_deref<analyze::expression> const &expr,
+    analyze::expr::function_arity<analyze::expression> const &
+  )
   {
     auto const &var(expr.frame->find_lifted_var(expr.qualified_name).unwrap().get());
-    return var.native_name.name;
+    switch(expr.expr_type)
+    {
+      case analyze::expression_type::expression:
+      { return fmt::format("{}->get_root()", var.native_name.name); }
+      case analyze::expression_type::return_statement:
+      {
+        auto inserter(std::back_inserter(body_buffer));
+        format_to(inserter, "return {}->get_root();", var.native_name.name);
+        return none;
+      }
+      /* Statement of a var deref is a nop. */
+      case analyze::expression_type::statement:
+      { return none; }
+    }
   }
 
-  runtime::obj::symbol processor::gen(analyze::expr::call<analyze::expression> const &expr, bool const)
+  option<std::string> processor::gen
+  (
+    analyze::expr::var_ref<analyze::expression> const &expr,
+    analyze::expr::function_arity<analyze::expression> const &
+  )
+  {
+    auto const &var(expr.frame->find_lifted_var(expr.qualified_name).unwrap().get());
+    switch(expr.expr_type)
+    {
+      case analyze::expression_type::expression:
+      { return var.native_name.name.data; }
+      case analyze::expression_type::return_statement:
+      {
+        auto inserter(std::back_inserter(body_buffer));
+        format_to(inserter, "return {};", var.native_name.name);
+        return none;
+      }
+      /* Statement of a var ref is a nop. */
+      case analyze::expression_type::statement:
+      { return none; }
+    }
+  }
+
+  option<std::string> processor::gen
+  (
+    analyze::expr::call<analyze::expression> const &expr,
+    analyze::expr::function_arity<analyze::expression> const &fn_arity
+  )
   {
     /* It's worth noting that there's extra scope wrapped around the generated
      * arg values. This ensures that the args are only retained for the duration
-     * of the call. Otherwise, a large, long-running fn could lead to a lot of
+     * of the call. Otherwise, a fn with a lot of calls could lead to growing
      * memory bloat. */
     auto inserter(std::back_inserter(body_buffer));
-    auto ret_tmp(runtime::context::unique_name("call"));
+    auto ret_tmp(runtime::context::unique_string("call"));
 
-    auto const &source_tmp(gen(expr.source_expr, false));
-    format_to(inserter, "object_ptr {}; {{", ret_tmp.name);
-    std::vector<runtime::obj::symbol> arg_tmps;
+    auto const &source_tmp(gen(expr.source_expr, fn_arity));
+    format_to(inserter, "object_ptr {}; {{", ret_tmp);
+    std::vector<std::string> arg_tmps;
     arg_tmps.reserve(expr.arg_exprs.size());
     for(auto const &arg_expr : expr.arg_exprs)
-    { arg_tmps.emplace_back(gen(arg_expr, false)); }
+    { arg_tmps.emplace_back(gen(arg_expr, fn_arity).unwrap()); }
 
     format_to
-    (inserter, "{} = jank::runtime::dynamic_call({}", ret_tmp.name, source_tmp.name);
+    (inserter, "{} = jank::runtime::dynamic_call({}", ret_tmp, source_tmp.unwrap());
     for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
-    { format_to(inserter, ", {}", arg_tmps[i].name); }
+    { format_to(inserter, ", {}", arg_tmps[i]); }
     if(arg_tmps.size() > runtime::max_params)
     {
       format_to(inserter, "jank::runtime::obj::list::create(");
       for(size_t i{ runtime::max_params }; i < arg_tmps.size(); ++i)
-      { format_to(inserter, ", {}", arg_tmps[i].name); }
+      { format_to(inserter, ", {}", arg_tmps[i]); }
       format_to(inserter, ")");
     }
     format_to(inserter, "); }}");
 
+    if(expr.expr_type == analyze::expression_type::return_statement)
+    {
+      format_to(inserter, "return {};", ret_tmp);
+      return none;
+    }
+
     return ret_tmp;
   }
 
-  runtime::obj::symbol processor::gen(analyze::expr::primitive_literal<analyze::expression> const &expr, bool const)
+  option<std::string> processor::gen
+  (
+    analyze::expr::primitive_literal<analyze::expression> const &expr,
+    analyze::expr::function_arity<analyze::expression> const &
+  )
   {
     auto const &constant(expr.frame->find_lifted_constant(expr.data).unwrap().get());
-    return constant.native_name;
+    switch(expr.expr_type)
+    {
+      case analyze::expression_type::expression:
+      { return constant.native_name.name.data; }
+      case analyze::expression_type::return_statement:
+      {
+        auto inserter(std::back_inserter(body_buffer));
+        format_to(inserter, "return {};", constant.native_name.name.data);
+        return none;
+      }
+      /* Statement of a var deref is a nop. */
+      case analyze::expression_type::statement:
+      { return none; }
+    }
   }
 
-  runtime::obj::symbol processor::gen
-  (analyze::expr::vector<analyze::expression> const &expr, bool const)
+  option<std::string> processor::gen
+  (
+    analyze::expr::vector<analyze::expression> const &expr,
+    analyze::expr::function_arity<analyze::expression> const &fn_arity
+  )
   {
-    std::vector<runtime::obj::symbol> data_tmps;
+    std::vector<std::string> data_tmps;
     data_tmps.reserve(expr.data_exprs.size());
     for(auto const &data_expr : expr.data_exprs)
-    { data_tmps.emplace_back(gen(data_expr, false)); }
+    { data_tmps.emplace_back(gen(data_expr, fn_arity).unwrap()); }
 
     auto inserter(std::back_inserter(body_buffer));
-    auto ret_tmp(runtime::context::unique_name("vec"));
+    auto ret_tmp(runtime::context::unique_string("vec"));
     format_to
-    (inserter, "auto const &{}(jank::runtime::make_box<jank::runtime::obj::vector>(", ret_tmp.name);
+    (inserter, "auto const &{}(jank::runtime::make_box<jank::runtime::obj::vector>(", ret_tmp);
     for(auto it(data_tmps.begin()); it != data_tmps.end();)
     {
-      format_to(inserter, "{}", it->name);
+      format_to(inserter, "{}", *it);
       if(++it != data_tmps.end())
       { format_to(inserter, ", "); }
     }
     format_to(inserter, "));");
+
+    if(expr.expr_type == analyze::expression_type::return_statement)
+    {
+      format_to(inserter, "return {};", ret_tmp);
+      return none;
+    }
+
     return ret_tmp;
   }
 
-  runtime::obj::symbol processor::gen(analyze::expr::map<analyze::expression> const &expr, bool const)
+  option<std::string> processor::gen
+  (
+    analyze::expr::map<analyze::expression> const &expr,
+    analyze::expr::function_arity<analyze::expression> const &fn_arity
+  )
   {
-    std::vector<std::pair<runtime::obj::symbol, runtime::obj::symbol>> data_tmps;
+    std::vector<std::pair<std::string, std::string>> data_tmps;
     data_tmps.reserve(expr.data_exprs.size());
     for(auto const &data_expr : expr.data_exprs)
-    { data_tmps.emplace_back(gen(data_expr.first, false), gen(data_expr.second, false)); }
+    {
+      data_tmps.emplace_back
+      (gen(data_expr.first, fn_arity).unwrap(), gen(data_expr.second, fn_arity).unwrap());
+    }
 
     auto inserter(std::back_inserter(body_buffer));
-    auto ret_tmp(runtime::context::unique_name("map"));
+    auto ret_tmp(runtime::context::unique_string("map"));
     format_to
     (
       inserter,
       "auto const &{}(jank::runtime::make_box<jank::runtime::obj::map>(std::in_place ",
-      ret_tmp.name
+      ret_tmp
     );
     for(auto const &data_tmp : data_tmps)
     {
-      format_to(inserter, ", {}", data_tmp.first.name);
-      format_to(inserter, ", {}", data_tmp.second.name);
+      format_to(inserter, ", {}", data_tmp.first);
+      format_to(inserter, ", {}", data_tmp.second);
     }
     format_to(inserter, "));");
+
+    if(expr.expr_type == analyze::expression_type::return_statement)
+    {
+      format_to(inserter, "return {};", ret_tmp);
+      return none;
+    }
+
     return ret_tmp;
   }
 
-  runtime::obj::symbol processor::gen(analyze::expr::local_reference const &expr, bool const)
-  { return { "", runtime::munge(expr.name->name) }; }
+  option<std::string> processor::gen
+  (
+    analyze::expr::local_reference const &expr,
+    analyze::expr::function_arity<analyze::expression> const &
+  )
+  {
+    switch(expr.expr_type)
+    {
+      case analyze::expression_type::expression:
+      { return runtime::munge(expr.name->name).data; }
+      case analyze::expression_type::return_statement:
+      {
+        auto inserter(std::back_inserter(body_buffer));
+        format_to(inserter, "return {};", runtime::munge(expr.name->name).data);
+        return none;
+      }
+      /* Statement of a local ref is a nop. */
+      case analyze::expression_type::statement:
+      { return none; }
+    }
+  }
 
-  runtime::obj::symbol processor::gen
-  (analyze::expr::function<analyze::expression> const &expr, bool const)
+  option<std::string> processor::gen
+  (
+    analyze::expr::function<analyze::expression> const &expr,
+    analyze::expr::function_arity<analyze::expression> const &
+  )
   {
     /* Since each codegen proc handles one callable struct, we create a new one for this fn. */
     processor prc{ rt_ctx, expr };
-    auto ret_tmp(runtime::context::unique_name("fn"));
 
     auto header_inserter(std::back_inserter(header_buffer));
-    auto body_inserter(std::back_inserter(body_buffer));
     format_to(header_inserter, "{}", prc.declaration_str());
-    format_to(body_inserter, "auto const &{}({});", ret_tmp.name, prc.expression_str(false));
-    return ret_tmp;
+    switch(expr.expr_type)
+    {
+      case analyze::expression_type::expression:
+      { return prc.expression_str(false); }
+      case analyze::expression_type::return_statement:
+      {
+        auto body_inserter(std::back_inserter(body_buffer));
+        format_to(body_inserter, "return {};", prc.expression_str(false));
+        return none;
+      }
+      /* Statement of a fn literal is a nop. */
+      case analyze::expression_type::statement:
+      { return none; }
+    }
   }
 
-  runtime::obj::symbol processor::gen(analyze::expr::let<analyze::expression> const &expr, bool const)
+  option<std::string> processor::gen
+  (
+    analyze::expr::recur<analyze::expression> const &expr,
+    analyze::expr::function_arity<analyze::expression> const &fn_arity
+  )
   {
     auto inserter(std::back_inserter(body_buffer));
-    auto ret_tmp(runtime::context::unique_name("let"));
-    format_to(inserter, "object_ptr {}{{ jank::runtime::JANK_NIL }}; {{", ret_tmp.name);
+
+    std::vector<std::string> arg_tmps;
+    arg_tmps.reserve(expr.arg_exprs.size());
+    for(auto const &arg_expr : expr.arg_exprs)
+    { arg_tmps.emplace_back(gen(arg_expr, fn_arity).unwrap()); }
+
+    auto arg_tmp_it(arg_tmps.begin());
+    for(auto const &param : fn_arity.params)
+    {
+      format_to(inserter, "{} = {};", runtime::munge(param->name), *arg_tmp_it);
+      ++arg_tmp_it;
+    }
+    return none;
+  }
+
+  option<std::string> processor::gen
+  (
+    analyze::expr::let<analyze::expression> const &expr,
+    analyze::expr::function_arity<analyze::expression> const &fn_arity
+  )
+  {
+    auto inserter(std::back_inserter(body_buffer));
+    auto ret_tmp(runtime::context::unique_string("let"));
+    format_to(inserter, "object_ptr {}{{ jank::runtime::JANK_NIL }}; {{", ret_tmp);
     for(auto const &pair : expr.pairs)
     {
-      auto const &val_tmp(gen(pair.second, false));
+      auto const &val_tmp(gen(pair.second, fn_arity));
       auto const &munged_name(runtime::munge(pair.first->name));
       /* Every binding is wrapped in its own scope, to allow shadowing. */
-      format_to(inserter, "{{ object_ptr {}{{ {} }};", munged_name, val_tmp.name);
+      format_to(inserter, "{{ object_ptr {}{{ {} }};", munged_name, val_tmp.unwrap());
     }
 
     for(auto it(expr.body.body.begin()); it != expr.body.body.end(); )
     {
-      auto const &val_tmp(gen(*it, false));
+      auto const &val_tmp(gen(*it, fn_arity));
 
       /* We ignore all values but the last. */
-      if(++it == expr.body.body.end())
-      { format_to(inserter, "{} = {};", ret_tmp.name, val_tmp.name); }
+      if(++it == expr.body.body.end() && val_tmp.is_some())
+      { format_to(inserter, "{} = {};", ret_tmp, val_tmp.unwrap()); }
     }
     for(auto const &_ : expr.pairs)
     {
@@ -300,49 +459,94 @@ namespace jank::codegen
     }
     format_to(inserter, "}}");
 
+    if(expr.expr_type == analyze::expression_type::return_statement)
+    {
+      format_to(inserter, "return {};", ret_tmp);
+      return none;
+    }
+
     return ret_tmp;
   }
 
-  runtime::obj::symbol processor::gen(analyze::expr::do_<analyze::expression> const &, bool const)
+  option<std::string> processor::gen
+  (
+    analyze::expr::do_<analyze::expression> const &expr,
+    analyze::expr::function_arity<analyze::expression> const &arity
+  )
   {
-    return { "", "JANK_NIL" };
+    option<std::string> last;
+    for(auto const &form : expr.body)
+    { last = gen(form, arity); }
+
+    switch(expr.expr_type)
+    {
+      case analyze::expression_type::expression:
+      { return last; }
+      case analyze::expression_type::return_statement:
+      {
+        auto inserter(std::back_inserter(body_buffer));
+        if(last.is_none())
+        { format_to(inserter, "return jank::runtime::JANK_NIL;"); }
+        else
+        { format_to(inserter, "return {};", last.unwrap()); }
+        return none;
+      }
+      /* Statement of a fn literal is a nop. */
+      case analyze::expression_type::statement:
+      { return none; }
+    }
   }
 
-  runtime::obj::symbol processor::gen(analyze::expr::if_<analyze::expression> const &expr, bool const)
+  option<std::string> processor::gen
+  (
+    analyze::expr::if_<analyze::expression> const &expr,
+    analyze::expr::function_arity<analyze::expression> const &fn_arity
+  )
   {
     auto inserter(std::back_inserter(body_buffer));
-    auto ret_tmp(runtime::context::unique_name("if"));
-    format_to(inserter, "object_ptr {};", ret_tmp.name);
-    auto const &condition_tmp(gen(expr.condition, false));
-    format_to(inserter, "if(jank::runtime::detail::truthy({})) {{", condition_tmp.name);
-    auto const &then_tmp(gen(expr.then, false));
-    format_to(inserter, "{} = {}; }}", ret_tmp.name, then_tmp.name);
+    auto ret_tmp(runtime::context::unique_string("if"));
+    format_to(inserter, "object_ptr {};", ret_tmp);
+    auto const &condition_tmp(gen(expr.condition, fn_arity));
+    format_to(inserter, "if(jank::runtime::detail::truthy({})) {{", condition_tmp.unwrap());
+    auto const &then_tmp(gen(expr.then, fn_arity));
+    if(then_tmp.is_some())
+    { format_to(inserter, "{} = {}; }}", ret_tmp, then_tmp.unwrap()); }
+    else
+    { format_to(inserter, "}}"); }
+
     if(expr.else_.is_some())
     {
       format_to(inserter, "else {{");
-      auto const &else_tmp(gen(expr.else_.unwrap(), false));
-      format_to(inserter, "{} = {}; }}", ret_tmp.name, else_tmp.name);
+      auto const &else_tmp(gen(expr.else_.unwrap(), fn_arity));
+      if(else_tmp.is_some())
+      { format_to(inserter, "{} = {}; }}", ret_tmp, else_tmp.unwrap()); }
+      else
+      { format_to(inserter, "}}"); }
     }
+
     return ret_tmp;
   }
 
-  runtime::obj::symbol processor::gen
-  (analyze::expr::native_raw<analyze::expression> const &expr, bool const)
+  option<std::string> processor::gen
+  (
+    analyze::expr::native_raw<analyze::expression> const &expr,
+    analyze::expr::function_arity<analyze::expression> const &fn_arity
+  )
   {
     auto inserter(std::back_inserter(body_buffer));
-    auto ret_tmp(runtime::context::unique_name("native"));
+    auto ret_tmp(runtime::context::unique_string("native"));
 
-    std::vector<runtime::obj::symbol> interpolated_chunk_tmps;
+    std::vector<std::string> interpolated_chunk_tmps;
     interpolated_chunk_tmps.reserve((expr.chunks.size() / 2) + 1);
     for(auto const &chunk : expr.chunks)
     {
       auto const * const chunk_expr(boost::get<analyze::expression_ptr>(&chunk));
       if(chunk_expr == nullptr)
       { continue; }
-      interpolated_chunk_tmps.emplace_back(gen(*chunk_expr, false));
+      interpolated_chunk_tmps.emplace_back(gen(*chunk_expr, fn_arity).unwrap());
     }
 
-    format_to(inserter, "object_ptr {};", ret_tmp.name);
+    format_to(inserter, "object_ptr {};", ret_tmp);
     format_to(inserter, "{{ object_ptr __value{{ JANK_NIL }};");
     size_t interpolated_chunk_it{};
     for(auto const &chunk : expr.chunks)
@@ -351,9 +555,16 @@ namespace jank::codegen
       if(code != nullptr)
       { format_to(inserter, "{}", code->data); }
       else
-      { format_to(inserter, "{}", interpolated_chunk_tmps[interpolated_chunk_it++].name); }
+      { format_to(inserter, "{}", interpolated_chunk_tmps[interpolated_chunk_it++]); }
     }
-    format_to(inserter, ";{} = __value; }}", ret_tmp.name);
+    format_to(inserter, ";{} = __value; }}", ret_tmp);
+
+    if(expr.expr_type == analyze::expression_type::return_statement)
+    {
+      format_to(inserter, "return {};", ret_tmp);
+      return none;
+    }
+
     return ret_tmp;
   }
 
@@ -531,8 +742,12 @@ namespace jank::codegen
     option<size_t> variadic_arg_position;
     for(auto const &arity : root_fn.arities)
     {
-      if(arity.is_variadic)
+      if(arity.fn_ctx->is_variadic)
       { variadic_arg_position = arity.params.size() - 1; }
+
+      std::string_view recur_suffix;
+      if(arity.fn_ctx->is_tail_recursive)
+      { recur_suffix = detail::recur_suffix; }
 
       format_to(inserter, "jank::runtime::object_ptr call(");
       bool param_comma{};
@@ -541,9 +756,10 @@ namespace jank::codegen
         format_to
         (
           inserter,
-          "{} jank::runtime::object_ptr const &{}",
+          "{} jank::runtime::object_ptr const &{}{}",
           (param_comma ? ", " : ""),
-          runtime::munge(param->name)
+          runtime::munge(param->name),
+          recur_suffix
         );
         param_comma = true;
       }
@@ -557,15 +773,39 @@ namespace jank::codegen
         )"
       );
 
-      for(auto it(arity.body.body.begin()); it != arity.body.body.end();)
+      if(arity.fn_ctx->is_tail_recursive)
       {
-        auto const &form(*it);
-        auto const &val_tmp(gen(form, true));
-        if(++it == arity.body.body.end())
-        { format_to(inserter, "return {};", val_tmp.name); }
+        format_to(inserter, "{{");
+
+        for(auto const &param : arity.params)
+        {
+          format_to
+          (
+            inserter,
+            "jank::runtime::object_ptr {0}{{ {0}{1} }};",
+            runtime::munge(param->name),
+            recur_suffix
+          );
+        }
+
+        format_to
+        (
+          inserter,
+          R"(
+            while(true)
+            {{
+          )"
+        );
       }
+
+      for(auto const &form : arity.body.body)
+      { gen(form, arity); }
+
       if(arity.body.body.empty())
       { format_to(inserter, "return jank::runtime::JANK_NIL;"); }
+
+      if(arity.fn_ctx->is_tail_recursive)
+      { format_to(inserter, "}} }}"); }
 
       format_to(inserter, "}}");
     }
@@ -598,7 +838,7 @@ namespace jank::codegen
       {
         /* TODO: There's a Cling bug here which prevents us from returning the fn object itself,
          * to be called in non-JIT code. If we call it here and return the result, it works fine. */
-        auto tmp_name(runtime::context::unique_name());
+        auto tmp_name(runtime::context::unique_string());
         format_to
         (
           inserter,
@@ -606,7 +846,7 @@ namespace jank::codegen
             {0} {1}{{ *reinterpret_cast<jank::runtime::context*>({2})
           )",
           runtime::munge(struct_name.name),
-          runtime::munge(tmp_name.name),
+          tmp_name,
           fmt::ptr(&rt_ctx)
         );
 
@@ -622,7 +862,7 @@ namespace jank::codegen
         (
           inserter,
           "{}.call();",
-          runtime::munge(tmp_name.name)
+          tmp_name
         );
       }
       else

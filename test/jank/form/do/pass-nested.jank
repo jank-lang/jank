@@ -1,0 +1,10 @@
+(assert (= 1 (do
+               (do
+                 (do
+                   (do
+                     (do
+                       (do
+                         (do
+                           1)))))))))
+
+:success

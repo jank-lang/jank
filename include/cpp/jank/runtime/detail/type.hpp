@@ -6,7 +6,12 @@
 
 namespace jank::runtime::detail
 {
-  using memory_policy = immer::memory_policy<immer::free_list_heap_policy<immer::cpp_heap>, immer::refcount_policy, immer::default_lock_policy>;
+  using memory_policy = immer::memory_policy
+  <
+    immer::free_list_heap_policy<immer::cpp_heap>,
+    immer::refcount_policy,
+    immer::default_lock_policy
+  >;
   using integer_type = long long;
   using real_type = long double;
   using boolean_type = bool;

@@ -37,6 +37,7 @@ namespace jank::jit
     jit::processor jit_prc;
     runtime::context rt_ctx;
     rt_ctx.eval_prelude(jit_prc);
+    size_t test_count{};
 
     /* The functionality I want here is too complex for doctest to handle. Output should be
      * swallowed for expected scenarios, including expected failures, but the output should
@@ -54,12 +55,15 @@ namespace jank::jit
       (boost::algorithm::starts_with(dir_entry.path().filename().string(), "pass-"));
       auto const expect_failure
       (boost::algorithm::starts_with(dir_entry.path().filename().string(), "fail-"));
+      auto const allow_failure
+      (boost::algorithm::starts_with(dir_entry.path().filename().string(), "warn-"));
       CHECK_MESSAGE
       (
-        (expect_success || expect_failure),
-        "Test file needs to begin with pass- or fail-: ",
+        (expect_success || expect_failure || allow_failure),
+        "Test file needs to begin with pass- or fail- or warn-: ",
         dir_entry
       );
+      ++test_count;
 
       runtime::context test_rt_ctx{ rt_ctx };
       bool passed{ true };
@@ -130,7 +134,9 @@ namespace jank::jit
         }
       }
 
-      if(passed)
+      if(allow_failure)
+      { fmt::print(fmt::fg(fmt::color::orange), "allowed failure\n"); }
+      else if(passed)
       { fmt::print(fmt::fg(fmt::color::green), "success\n"); }
       else
       {
@@ -150,5 +156,6 @@ namespace jank::jit
         f.error
       );
     }
+    fmt::print("tested {} jank files\n", test_count);
   }
 }

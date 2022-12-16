@@ -1,0 +1,6 @@
+(def tail
+  (fn*
+    ([n & args]
+     (if (< 0 n)
+       (recur (+ n -1) 0 1)
+       n))))
