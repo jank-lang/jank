@@ -3,8 +3,8 @@
     ([& args] args)))
 (def spy
   (fn* [v]
-   (println v)
-   v))
+    (println v)
+    v))
 (assert (= (spy (variadic 1 2 3 4 5 6 7 8 9)) [1 2 3 4 5 6 7 8 9]))
 (assert (= (spy (variadic 1 2 3 4 5 6 7 8 9 10)) [1 2 3 4 5 6 7 8 9 10]))
 (assert (= (spy (variadic 1 2 3 4 5 6 7 8 9 10 11)) [1 2 3 4 5 6 7 8 9 10 11]))

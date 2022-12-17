@@ -20,15 +20,35 @@ namespace jank::runtime::obj
   runtime::detail::box_type<map> map::create(runtime::detail::map_type const &o)
   { return make_box<map>(o); }
 
-  /* TODO: Optimize this. */
   template <typename It>
   struct map_iterator_wrapper : behavior::sequence, pool_item_base<map_iterator_wrapper<It>>
   {
     map_iterator_wrapper() = default;
-    map_iterator_wrapper(It const &b, It const &e)
-      : begin{ b }
-      , end{ e }
+    map_iterator_wrapper(object_ptr const &c, It const &b, It const &e)
+      : coll{ c }, begin{ b }, end{ e }
     { }
+
+    runtime::detail::string_type to_string() const override
+    {
+      std::stringstream ss;
+      ss << "(";
+      for(auto i(begin); i != end; ++i)
+      {
+        ss << "[" << *i->first << " " << *i->second << "]";
+        auto n(i);
+        if(++n != end)
+        { ss << " "; }
+      }
+      ss << ")";
+      return ss.str();
+    }
+    runtime::detail::integer_type to_hash() const override
+    { return reinterpret_cast<runtime::detail::integer_type>(this); }
+
+    behavior::seqable const* as_seqable() const override
+    { return this; }
+    sequence_ptr seq() const override
+    { return pool_item_base<map_iterator_wrapper<It>>::ptr_from_this(); }
 
     object_ptr first() const override
     { return make_box<vector>(runtime::detail::vector_type{ begin->first, begin->second }); }
@@ -39,10 +59,19 @@ namespace jank::runtime::obj
 
       if(n == end)
       { return nullptr; }
+      /* No point allocating a new wrapper if we're the only one referencing this. Just update
+       * in place. This can be the difference of thousands of allocations per iteration. */
+      if(pool_item_base<map_iterator_wrapper<It>>::reference_count == 1)
+      {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+        const_cast<map_iterator_wrapper<It>*>(this)->begin = n;
+        return pool_item_base<map_iterator_wrapper<It>>::ptr_from_this();
+      }
 
-      return make_box<map_iterator_wrapper<It>>(n, end);
+      return make_box<map_iterator_wrapper<It>>(coll, n, end);
     }
 
+    object_ptr coll;
     It begin, end;
   };
 
@@ -89,7 +118,7 @@ namespace jank::runtime::obj
   {
     if(data.size() == 0)
     { return nullptr; }
-    return make_box<map_iterator_wrapper<runtime::detail::map_type::const_iterator>>(data.begin(), data.end());
+    return make_box<map_iterator_wrapper<runtime::detail::map_type::const_iterator>>(ptr_from_this(), data.begin(), data.end());
   }
 
   size_t map::count() const

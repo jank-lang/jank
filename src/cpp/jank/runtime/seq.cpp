@@ -1,6 +1,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <fmt/core.h>
+
 #include <jank/runtime/seq.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/hash.hpp>
@@ -12,6 +14,17 @@
 
 namespace jank::runtime
 {
+  object_ptr seq(object_ptr const &s)
+  {
+    auto const * const sable(s->as_seqable());
+    if(!sable)
+    { throw std::runtime_error{ fmt::format("not seqable: {}", s->to_string()) }; }
+    auto const &ret(sable->seq());
+    if(!ret)
+    { return JANK_NIL; }
+    return ret;
+  }
+
   /* TODO: Laziness. */
   object_ptr mapv(object_ptr const &f, object_ptr const &seq)
   {

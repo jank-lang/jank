@@ -90,6 +90,19 @@ namespace jank::codegen
           escaped(d->data)
         );
       }
+      else if(auto const * const d = o->as_list())
+      {
+        auto ret_tmp(runtime::context::unique_string("vec"));
+        format_to
+        (inserter, "jank::runtime::make_box<jank::runtime::obj::list>(", ret_tmp);
+        for(auto it(d->data.begin()); it != d->data.end();)
+        {
+          gen_constant(*it, buffer);
+          if(++it != d->data.end())
+          { format_to(inserter, ", "); }
+        }
+        format_to(inserter, ")");
+      }
       else
       { std::cerr << "unimplemented constant codegen: " << *o << std::endl; }
     }

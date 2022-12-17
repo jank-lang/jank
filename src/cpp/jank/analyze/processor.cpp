@@ -580,7 +580,7 @@ namespace jank::analyze
       }
       auto const next_end(code_str->data.data.find(interp_end, next_start));
       if(next_end == std::string::npos)
-      { return err(error{ "no matching }$ found for native/raw interpolation" }); }
+      { return err(error{ fmt::format("no matching {} found for native/raw interpolation", interp_end) }); }
 
       read::lex::processor l_prc
       {

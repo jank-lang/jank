@@ -139,11 +139,11 @@ namespace jank::read::parse
         (
           r.expect_ok()->equal
           (
-            runtime::obj::list
-            {
+            runtime::obj::list::create
+            (
               runtime::obj::symbol::create("quote"),
               runtime::obj::symbol::create(s.first, s.second)
-            }
+            )
           )
         );
       }
@@ -212,7 +212,7 @@ namespace jank::read::parse
         auto const r(p.next());
         CHECK(r.is_ok());
         CHECK(r.expect_ok() != nullptr);
-        CHECK(r.expect_ok()->equal(runtime::obj::list{}));
+        CHECK(r.expect_ok()->equal(runtime::obj::list::create()));
       }
     }
 
@@ -228,13 +228,13 @@ namespace jank::read::parse
         (
           r.expect_ok()->equal
           (
-            runtime::obj::list
-            {
+            runtime::obj::list::create
+            (
               runtime::make_box<runtime::obj::integer>(1 * i),
               runtime::make_box<runtime::obj::integer>(2 * i),
               runtime::make_box<runtime::obj::integer>(3 * i),
-              runtime::make_box<runtime::obj::integer>(4 * i),
-            }
+              runtime::make_box<runtime::obj::integer>(4 * i)
+            )
           )
         );
       }
@@ -250,12 +250,12 @@ namespace jank::read::parse
       (
         r1.expect_ok()->equal
         (
-          runtime::obj::list
-          {
+          runtime::obj::list::create
+          (
             runtime::make_box<runtime::obj::symbol>("def"),
             runtime::make_box<runtime::obj::symbol>("foo-bar"),
-            runtime::make_box<runtime::obj::integer>(1),
-          }
+            runtime::make_box<runtime::obj::integer>(1)
+          )
         )
       );
       auto const r2(p.next());
@@ -294,7 +294,7 @@ namespace jank::read::parse
         auto const r(p.next());
         CHECK(r.is_ok());
         CHECK(r.expect_ok() != nullptr);
-        CHECK(r.expect_ok()->equal(runtime::obj::vector{}));
+        CHECK(r.expect_ok()->equal(runtime::obj::vector::create()));
       }
     }
 
@@ -310,8 +310,8 @@ namespace jank::read::parse
         (
           r.expect_ok()->equal
           (
-            runtime::obj::vector
-            {
+            runtime::obj::vector::create
+            (
               runtime::detail::vector_type
               {
                 runtime::make_box<runtime::obj::integer>(1 * i),
@@ -319,7 +319,7 @@ namespace jank::read::parse
                 runtime::make_box<runtime::obj::integer>(3 * i),
                 runtime::make_box<runtime::obj::integer>(4 * i),
               }
-            }
+            )
           )
         );
       }

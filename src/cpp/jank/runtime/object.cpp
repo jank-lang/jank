@@ -17,6 +17,9 @@ namespace jank::runtime
     object_ptr JANK_FALSE{ make_box<boolean>(false) };
   }
 
+  detail::boolean_type object::equal(object const &rhs) const
+  { return to_hash() == rhs.to_hash(); }
+
   detail::boolean_type object::equal(object_ptr const &rhs) const
   { return rhs && equal(*rhs); }
 

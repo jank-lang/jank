@@ -54,7 +54,7 @@ namespace jank::runtime
   using object_ptr = detail::box_type<struct object>;
   struct object : virtual pool_item_common_base
   {
-    virtual detail::boolean_type equal(object const &) const = 0;
+    virtual detail::boolean_type equal(object const &) const;
     detail::boolean_type equal(object_ptr const &) const;
     virtual detail::string_type to_string() const = 0;
     virtual detail::integer_type to_hash() const = 0;

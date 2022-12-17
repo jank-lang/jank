@@ -27,8 +27,6 @@ namespace jank::runtime::obj
   //}
   //set const* set::as_set() const
   //{ return this; }
-  //seqable const* set::as_seqable() const
-  //{ return this; }
   //iterator_ptr set::begin() const
   //{ return make_box<basic_iterator_wrapper<detail::set_type::iterator>>(data.begin()); }
   //iterator_ptr set::end() const

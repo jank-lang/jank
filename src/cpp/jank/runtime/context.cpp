@@ -7,6 +7,7 @@
 #include <jank/runtime/obj/string.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/util.hpp>
+#include <jank/runtime/seq.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/util/mapped_file.hpp>
 #include <jank/codegen/processor.hpp>
@@ -71,6 +72,10 @@ namespace jank::runtime
     /* TODO: Remove this once it can be defined in jank. */
     auto const lt_sym(obj::symbol::create("clojure.core/<"));
     intern_var(lt_sym).expect_ok()->set_root(obj::function::create(&obj::_gen_less_));
+
+    /* TODO: Remove this once it can be defined in jank. */
+    auto const seq_sym(obj::symbol::create("clojure.core/seq"));
+    intern_var(seq_sym).expect_ok()->set_root(obj::function::create(&seq));
   }
 
   context::context(context const &ctx)

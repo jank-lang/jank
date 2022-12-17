@@ -40,6 +40,18 @@
       ; TODO: throw an error
       false)))
 
+; Relations.
+;; Miscellaneous.
+(def true?
+  (fn* [o]
+    (native/raw "__value = #{ o }#->equal(*#{ true }#) ? #{ true }# : #{ false }#")))
+(def false?
+  (fn* [o]
+    (native/raw "__value = #{ o }#->equal(*#{ false }#) ? #{ true }# : #{ false }#")))
+(def nil?
+  (fn* [o]
+    (native/raw "__value = #{ o }#->equal(*#{ nil }#) ? #{ true }# : #{ false }#")))
+
 ;; Collections.
 (def empty?
   (fn* [o]
@@ -48,26 +60,65 @@
                 if(!seqable)
                 { throw #{ :not-seqable }#; }
                 auto const &seq(seqable->seq());
-                return make_box(seq == nullptr);
+                __value = make_box(seq == nullptr);
                 ")))
 
 ;; Lists.
 (def first
   (fn* [o]
-    (native/raw "
-                auto const * const seqable(#{ o }#->as_seqable());
-                if(!seqable)
-                { throw #{ :not-seqable }#; }
-                auto const &seq(seqable->seq());
-                if(!seq)
-                { return #{ nil }#; }
-                return seq->first();
-                ")))
+    (if (nil? o)
+      nil
+      (native/raw "
+                  auto const * const seqable(#{ o }#->as_seqable());
+                  if(!seqable)
+                  { throw #{ :not-seqable }#; }
+                  auto const &seq(seqable->seq());
+                  if(!seq)
+                  { __value = #{ nil }#; }
+                  else
+                  { __value = seq->first(); }
+                  "))))
+(def next
+  (fn* [o]
+    (if (nil? o)
+      nil
+      (native/raw "
+                  auto const * const seqable(#{ o }#->as_seqable());
+                  if(!seqable)
+                  { throw #{ :not-seqable }#; }
+                  auto const &seq(seqable->seq());
+                  if(!seq)
+                  { __value = #{ '() }#; }
+                  else
+                  { __value = seq->next(); }
+                  "))))
+(def rest
+  (fn* [o]
+    (if (nil? o)
+      '()
+      (native/raw "
+                  auto const * const seqable(#{ o }#->as_seqable());
+                  if(!seqable)
+                  { throw #{ :not-seqable }#; }
+                  auto const &seq(seqable->seq());
+                  if(!seq)
+                  { __value = #{ '() }#; }
+                  else
+                  {
+                   __value = seq->next();
+                   if(__value == nullptr)
+                   { __value = #{ '() }#; }
+                  }"))))
+
+;; Other.
+(def hash
+  (fn* [o]
+    (native/raw "__value = make_box(#{ o }#->to_hash());")))
 
 ;; Strings.
 (def string?
   (fn* [o]
-    (native/raw "__value = make_box(#{ o }#->as_string() != nullptr)")))
+    (native/raw "__value = make_box(#{ o }#->as_string() != nullptr);")))
 (def str
   (fn*
     ([]
@@ -120,15 +171,6 @@
   (fn* [o]
     (native/raw "std::cout << #{ o }#->to_string() << std::endl;
                  __value = #{ nil }#")))
-
-; Relations.
-;; Miscellaneous.
-(def true?
-  (fn* [o]
-    (native/raw "__value = #{ o }#->equal(*#{ true }#) ? #{ true }# : #{ false }#")))
-(def false?
-  (fn* [o]
-    (native/raw "__value = #{ o }#->equal(*#{ false }#) ? #{ true }# : #{ false }#")))
 
 ; Functions.
 (def ifn?
