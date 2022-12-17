@@ -141,6 +141,7 @@ namespace jank::read::parse
           (
             runtime::obj::list::create
             (
+              std::in_place,
               runtime::obj::symbol::create("quote"),
               runtime::obj::symbol::create(s.first, s.second)
             )
@@ -212,7 +213,7 @@ namespace jank::read::parse
         auto const r(p.next());
         CHECK(r.is_ok());
         CHECK(r.expect_ok() != nullptr);
-        CHECK(r.expect_ok()->equal(runtime::obj::list::create()));
+        CHECK(r.expect_ok()->equal(runtime::obj::list::create(std::in_place)));
       }
     }
 
@@ -230,6 +231,7 @@ namespace jank::read::parse
           (
             runtime::obj::list::create
             (
+              std::in_place,
               runtime::make_box<runtime::obj::integer>(1 * i),
               runtime::make_box<runtime::obj::integer>(2 * i),
               runtime::make_box<runtime::obj::integer>(3 * i),
@@ -252,6 +254,7 @@ namespace jank::read::parse
         (
           runtime::obj::list::create
           (
+            std::in_place,
             runtime::make_box<runtime::obj::symbol>("def"),
             runtime::make_box<runtime::obj::symbol>("foo-bar"),
             runtime::make_box<runtime::obj::integer>(1)

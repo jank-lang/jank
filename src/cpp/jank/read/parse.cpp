@@ -184,6 +184,7 @@ namespace jank::read::parse
 
     return runtime::obj::list::create
     (
+      std::in_place,
       runtime::obj::symbol::create("quote"),
       val_result.expect_ok_move()
     );

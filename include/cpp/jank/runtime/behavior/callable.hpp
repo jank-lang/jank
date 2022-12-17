@@ -33,6 +33,8 @@ namespace jank::runtime
   object_ptr dynamic_call(object_ptr const &source, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&);
   object_ptr dynamic_call(object_ptr const &source, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, obj::list_ptr const &);
 
+  object_ptr apply_to(object_ptr const &source, object_ptr const &args);
+
   namespace behavior
   {
     struct callable : virtual pool_item_common_base

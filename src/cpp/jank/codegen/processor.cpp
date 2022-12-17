@@ -94,12 +94,11 @@ namespace jank::codegen
       {
         auto ret_tmp(runtime::context::unique_string("vec"));
         format_to
-        (inserter, "jank::runtime::make_box<jank::runtime::obj::list>(", ret_tmp);
-        for(auto it(d->data.begin()); it != d->data.end();)
+        (inserter, "jank::runtime::obj::list::create(std::in_place", ret_tmp);
+        for(auto const &form : d->data)
         {
-          gen_constant(*it, buffer);
-          if(++it != d->data.end())
-          { format_to(inserter, ", "); }
+          format_to(inserter, ", ");
+          gen_constant(form, buffer);
         }
         format_to(inserter, ")");
       }

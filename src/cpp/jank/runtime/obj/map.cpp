@@ -59,14 +59,6 @@ namespace jank::runtime::obj
 
       if(n == end)
       { return nullptr; }
-      /* No point allocating a new wrapper if we're the only one referencing this. Just update
-       * in place. This can be the difference of thousands of allocations per iteration. */
-      if(pool_item_base<map_iterator_wrapper<It>>::reference_count == 1)
-      {
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-        const_cast<map_iterator_wrapper<It>*>(this)->begin = n;
-        return pool_item_base<map_iterator_wrapper<It>>::ptr_from_this();
-      }
 
       return make_box<map_iterator_wrapper<It>>(coll, n, end);
     }

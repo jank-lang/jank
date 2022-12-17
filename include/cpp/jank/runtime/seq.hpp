@@ -1,9 +1,16 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/behavior/seqable.hpp>
 
 namespace jank::runtime
 {
+  namespace detail
+  {
+    size_t sequence_length(behavior::sequence_ptr const &s);
+    size_t sequence_length(behavior::sequence_ptr const &s, size_t const max);
+  }
+
   object_ptr seq(object_ptr const &s);
   object_ptr mapv(object_ptr const &f, object_ptr const &seq);
   object_ptr reduce(object_ptr const &f, object_ptr const &initial, object_ptr const &seq);

@@ -3,8 +3,10 @@
 #include <fmt/core.h>
 
 #include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/obj/function.hpp>
 #include <jank/runtime/obj/list.hpp>
+#include <jank/runtime/seq.hpp>
 
 namespace jank::runtime
 {
@@ -16,7 +18,6 @@ namespace jank::runtime
     return c;
   }
 
-  /* TODO: For all of these, rework variadic_arg_position to variadic_arg_position. */
   object_ptr dynamic_call(object_ptr const &source)
   {
     auto const * const c(assert_callable(source));
@@ -25,7 +26,7 @@ namespace jank::runtime
     {
       case 0:
         /* TODO: Empty list constant. */
-        return c->call(runtime::obj::list::create());
+        return c->call(runtime::obj::list::create(std::in_place));
       default:
         return c->call();
     }
@@ -37,7 +38,7 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(a1));
+        return c->call(runtime::obj::list::create(std::in_place, a1));
       default:
         return c->call(a1);
     }
@@ -49,9 +50,9 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(a1, a2));
+        return c->call(runtime::obj::list::create(std::in_place, a1, a2));
       case 1:
-        return c->call(a1, runtime::obj::list::create(a2));
+        return c->call(a1, runtime::obj::list::create(std::in_place, a2));
       default:
         return c->call(a1, a2);
     }
@@ -63,11 +64,11 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(a1, a2, a3));
+        return c->call(runtime::obj::list::create(std::in_place, a1, a2, a3));
       case 1:
-        return c->call(a1, runtime::obj::list::create(a2, a3));
+        return c->call(a1, runtime::obj::list::create(std::in_place, a2, a3));
       case 2:
-        return c->call(a1, a2, runtime::obj::list::create(a3));
+        return c->call(a1, a2, runtime::obj::list::create(std::in_place, a3));
       default:
         return c->call(a1, a2, a3);
     }
@@ -79,13 +80,13 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(a1, a2, a3, a4));
+        return c->call(runtime::obj::list::create(std::in_place, a1, a2, a3, a4));
       case 1:
-        return c->call(a1, runtime::obj::list::create(a2, a3, a4));
+        return c->call(a1, runtime::obj::list::create(std::in_place, a2, a3, a4));
       case 2:
-        return c->call(a1, a2, runtime::obj::list::create(a3, a4));
+        return c->call(a1, a2, runtime::obj::list::create(std::in_place, a3, a4));
       case 3:
-        return c->call(a1, a2, a3, runtime::obj::list::create(a4));
+        return c->call(a1, a2, a3, runtime::obj::list::create(std::in_place, a4));
       default:
         return c->call(a1, a2, a3, a4);
     }
@@ -97,17 +98,17 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(a1, a2, a3, a4, a5));
+        return c->call(runtime::obj::list::create(std::in_place, a1, a2, a3, a4, a5));
       case 1:
-        return c->call(a1, runtime::obj::list::create(a2, a3, a4, a5));
+        return c->call(a1, runtime::obj::list::create(std::in_place, a2, a3, a4, a5));
       case 2:
-        return c->call(a1, a2, runtime::obj::list::create(a3, a4, a5));
+        return c->call(a1, a2, runtime::obj::list::create(std::in_place, a3, a4, a5));
       case 3:
-        return c->call(a1, a2, a3, runtime::obj::list::create(a4, a5));
+        return c->call(a1, a2, a3, runtime::obj::list::create(std::in_place, a4, a5));
       case 4:
-        return c->call(a1, a2, a3, a4, runtime::obj::list::create(a5));
+        return c->call(a1, a2, a3, a4, runtime::obj::list::create(std::in_place, a5));
       case 5:
-        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create());
+        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create(std::in_place));
       default:
         return c->call(a1, a2, a3, a4, a5);
     }
@@ -119,17 +120,17 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(a1, a2, a3, a4, a5, a6));
+        return c->call(runtime::obj::list::create(std::in_place, a1, a2, a3, a4, a5, a6));
       case 1:
-        return c->call(a1, runtime::obj::list::create(a2, a3, a4, a5, a6));
+        return c->call(a1, runtime::obj::list::create(std::in_place, a2, a3, a4, a5, a6));
       case 2:
-        return c->call(a1, a2, runtime::obj::list::create(a3, a4, a5, a6));
+        return c->call(a1, a2, runtime::obj::list::create(std::in_place, a3, a4, a5, a6));
       case 3:
-        return c->call(a1, a2, a3, runtime::obj::list::create(a4, a5, a6));
+        return c->call(a1, a2, a3, runtime::obj::list::create(std::in_place, a4, a5, a6));
       case 4:
-        return c->call(a1, a2, a3, a4, runtime::obj::list::create(a5, a6));
+        return c->call(a1, a2, a3, a4, runtime::obj::list::create(std::in_place, a5, a6));
       case 5:
-        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create(a6));
+        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create(std::in_place, a6));
       default:
         return c->call(a1, a2, a3, a4, a5, a6);
     }
@@ -141,19 +142,19 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(a1, a2, a3, a4, a5, a6, a7));
+        return c->call(runtime::obj::list::create(std::in_place, a1, a2, a3, a4, a5, a6, a7));
       case 1:
-        return c->call(a1, runtime::obj::list::create(a2, a3, a4, a5, a6, a7));
+        return c->call(a1, runtime::obj::list::create(std::in_place, a2, a3, a4, a5, a6, a7));
       case 2:
-        return c->call(a1, a2, runtime::obj::list::create(a3, a4, a5, a6, a7));
+        return c->call(a1, a2, runtime::obj::list::create(std::in_place, a3, a4, a5, a6, a7));
       case 3:
-        return c->call(a1, a2, a3, runtime::obj::list::create(a4, a5, a6, a7));
+        return c->call(a1, a2, a3, runtime::obj::list::create(std::in_place, a4, a5, a6, a7));
       case 4:
-        return c->call(a1, a2, a3, a4, runtime::obj::list::create(a5, a6, a7));
+        return c->call(a1, a2, a3, a4, runtime::obj::list::create(std::in_place, a5, a6, a7));
       case 5:
-        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create(a6, a7));
+        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create(std::in_place, a6, a7));
       case 6:
-        return c->call(a1, a2, a3, a4, a5, a6, runtime::obj::list::create(a7));
+        return c->call(a1, a2, a3, a4, a5, a6, runtime::obj::list::create(std::in_place, a7));
       default:
         return c->call(a1, a2, a3, a4, a5, a6, a7);
     }
@@ -165,21 +166,21 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(a1, a2, a3, a4, a5, a6, a7, a8));
+        return c->call(runtime::obj::list::create(std::in_place, a1, a2, a3, a4, a5, a6, a7, a8));
       case 1:
-        return c->call(a1, runtime::obj::list::create(a2, a3, a4, a5, a6, a7, a8));
+        return c->call(a1, runtime::obj::list::create(std::in_place, a2, a3, a4, a5, a6, a7, a8));
       case 2:
-        return c->call(a1, a2, runtime::obj::list::create(a3, a4, a5, a6, a7, a8));
+        return c->call(a1, a2, runtime::obj::list::create(std::in_place, a3, a4, a5, a6, a7, a8));
       case 3:
-        return c->call(a1, a2, a3, runtime::obj::list::create(a4, a5, a6, a7, a8));
+        return c->call(a1, a2, a3, runtime::obj::list::create(std::in_place, a4, a5, a6, a7, a8));
       case 4:
-        return c->call(a1, a2, a3, a4, runtime::obj::list::create(a5, a6, a7, a8));
+        return c->call(a1, a2, a3, a4, runtime::obj::list::create(std::in_place, a5, a6, a7, a8));
       case 5:
-        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create(a6, a7, a8));
+        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create(std::in_place, a6, a7, a8));
       case 6:
-        return c->call(a1, a2, a3, a4, a5, a6, runtime::obj::list::create(a7, a8));
+        return c->call(a1, a2, a3, a4, a5, a6, runtime::obj::list::create(std::in_place, a7, a8));
       case 7:
-        return c->call(a1, a2, a3, a4, a5, a6, a7, runtime::obj::list::create(a8));
+        return c->call(a1, a2, a3, a4, a5, a6, a7, runtime::obj::list::create(std::in_place, a8));
       default:
         return c->call(a1, a2, a3, a4, a5, a6, a7, a8);
     }
@@ -191,23 +192,23 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(a1, a2, a3, a4, a5, a6, a7, a8, a9));
+        return c->call(runtime::obj::list::create(std::in_place, a1, a2, a3, a4, a5, a6, a7, a8, a9));
       case 1:
-        return c->call(a1, runtime::obj::list::create(a2, a3, a4, a5, a6, a7, a8, a9));
+        return c->call(a1, runtime::obj::list::create(std::in_place, a2, a3, a4, a5, a6, a7, a8, a9));
       case 2:
-        return c->call(a1, a2, runtime::obj::list::create(a3, a4, a5, a6, a7, a8, a9));
+        return c->call(a1, a2, runtime::obj::list::create(std::in_place, a3, a4, a5, a6, a7, a8, a9));
       case 3:
-        return c->call(a1, a2, a3, runtime::obj::list::create(a4, a5, a6, a7, a8, a9));
+        return c->call(a1, a2, a3, runtime::obj::list::create(std::in_place, a4, a5, a6, a7, a8, a9));
       case 4:
-        return c->call(a1, a2, a3, a4, runtime::obj::list::create(a5, a6, a7, a8, a9));
+        return c->call(a1, a2, a3, a4, runtime::obj::list::create(std::in_place, a5, a6, a7, a8, a9));
       case 5:
-        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create(a6, a7, a8, a9));
+        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create(std::in_place, a6, a7, a8, a9));
       case 6:
-        return c->call(a1, a2, a3, a4, a5, a6, runtime::obj::list::create(a7, a8, a9));
+        return c->call(a1, a2, a3, a4, a5, a6, runtime::obj::list::create(std::in_place, a7, a8, a9));
       case 7:
-        return c->call(a1, a2, a3, a4, a5, a6, a7, runtime::obj::list::create(a8, a9));
+        return c->call(a1, a2, a3, a4, a5, a6, a7, runtime::obj::list::create(std::in_place, a8, a9));
       case 8:
-        return c->call(a1, a2, a3, a4, a5, a6, a7, a8, runtime::obj::list::create(a9));
+        return c->call(a1, a2, a3, a4, a5, a6, a7, a8, runtime::obj::list::create(std::in_place, a9));
       default:
         return c->call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
     }
@@ -219,25 +220,25 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10));
+        return c->call(runtime::obj::list::create(std::in_place, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10));
       case 1:
-        return c->call(a1, runtime::obj::list::create(a2, a3, a4, a5, a6, a7, a8, a9, a10));
+        return c->call(a1, runtime::obj::list::create(std::in_place, a2, a3, a4, a5, a6, a7, a8, a9, a10));
       case 2:
-        return c->call(a1, a2, runtime::obj::list::create(a3, a4, a5, a6, a7, a8, a9, a10));
+        return c->call(a1, a2, runtime::obj::list::create(std::in_place, a3, a4, a5, a6, a7, a8, a9, a10));
       case 3:
-        return c->call(a1, a2, a3, runtime::obj::list::create(a4, a5, a6, a7, a8, a9, a10));
+        return c->call(a1, a2, a3, runtime::obj::list::create(std::in_place, a4, a5, a6, a7, a8, a9, a10));
       case 4:
-        return c->call(a1, a2, a3, a4, runtime::obj::list::create(a5, a6, a7, a8, a9, a10));
+        return c->call(a1, a2, a3, a4, runtime::obj::list::create(std::in_place, a5, a6, a7, a8, a9, a10));
       case 5:
-        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create(a6, a7, a8, a9, a10));
+        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create(std::in_place, a6, a7, a8, a9, a10));
       case 6:
-        return c->call(a1, a2, a3, a4, a5, a6, runtime::obj::list::create(a7, a8, a9, a10));
+        return c->call(a1, a2, a3, a4, a5, a6, runtime::obj::list::create(std::in_place, a7, a8, a9, a10));
       case 7:
-        return c->call(a1, a2, a3, a4, a5, a6, a7, runtime::obj::list::create(a8, a9, a10));
+        return c->call(a1, a2, a3, a4, a5, a6, a7, runtime::obj::list::create(std::in_place, a8, a9, a10));
       case 8:
-        return c->call(a1, a2, a3, a4, a5, a6, a7, a8, runtime::obj::list::create(a9, a10));
+        return c->call(a1, a2, a3, a4, a5, a6, a7, a8, runtime::obj::list::create(std::in_place, a9, a10));
       case 9:
-        return c->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, runtime::obj::list::create(a10));
+        return c->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, runtime::obj::list::create(std::in_place, a10));
       default:
         return c->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
@@ -270,6 +271,130 @@ namespace jank::runtime
         return c->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, runtime::obj::list::create(rest->data.into(runtime::detail::list_type{ a10 })));
       default:
         throw std::runtime_error{ fmt::format("unsupported arity: {}", 10 + rest->count()) };
+    }
+  }
+
+  object_ptr apply_to(object_ptr const &source, object_ptr const &args)
+  {
+    auto s(args->as_seqable()->seq());
+    auto const length(detail::sequence_length(s, max_params + 1));
+    switch(length)
+    {
+      case 0:
+        return dynamic_call(source);
+      case 1:
+        return dynamic_call(source, s->first());
+      case 2:
+        return dynamic_call(source, s->first(), s->next()->first());
+      case 3:
+        return dynamic_call
+        (
+          source,
+          s->first(),
+          s->next()->first(),
+          s->next()->next()->first()
+        );
+      case 4:
+        return dynamic_call
+        (
+          source,
+          s->first(),
+          s->next()->first(),
+          s->next()->next()->first(),
+          s->next()->next()->next()->first()
+        );
+      case 5:
+        return dynamic_call
+        (
+          source,
+          s->first(),
+          s->next()->first(),
+          s->next()->next()->first(),
+          s->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->first()
+        );
+      case 6:
+        return dynamic_call
+        (
+          source,
+          s->first(),
+          s->next()->first(),
+          s->next()->next()->first(),
+          s->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->first()
+        );
+      case 7:
+        return dynamic_call
+        (
+          source,
+          s->first(),
+          s->next()->first(),
+          s->next()->next()->first(),
+          s->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->next()->first()
+        );
+      case 8:
+        return dynamic_call
+        (
+          source,
+          s->first(),
+          s->next()->first(),
+          s->next()->next()->first(),
+          s->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->next()->next()->first()
+        );
+      case 9:
+        return dynamic_call
+        (
+          source,
+          s->first(),
+          s->next()->first(),
+          s->next()->next()->first(),
+          s->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->next()->next()->next()->first()
+        );
+      case 10:
+        return dynamic_call
+        (
+          source,
+          s->first(),
+          s->next()->first(),
+          s->next()->next()->first(),
+          s->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->next()->next()->next()->next()->first()
+        );
+      default:
+        return dynamic_call
+        (
+          source,
+          s->first(),
+          s->next()->first(),
+          s->next()->next()->first(),
+          s->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->next()->next()->next()->first(),
+          s->next()->next()->next()->next()->next()->next()->next()->next()->next()->first(),
+          obj::list::create
+          (s->next()->next()->next()->next()->next()->next()->next()->next()->next()->next())
+        );
     }
   }
 

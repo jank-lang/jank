@@ -59,7 +59,7 @@ namespace jank::analyze
       { return err(parse_current->expect_err_move()); }
       fn.push_back(parse_current->expect_ok());
     }
-    auto fn_list(runtime::obj::list::create(fn.rbegin(), fn.rend()));
+    auto fn_list(runtime::obj::list::create(std::in_place, fn.rbegin(), fn.rend()));
     return analyze(std::move(fn_list), expression_type::expression);
   }
 
@@ -725,7 +725,7 @@ namespace jank::analyze
       {
         { expr_type },
         source,
-        runtime::obj::list::create(o->data.rest()),
+        runtime::obj::list::create(std::in_place, o->data.rest()),
         arg_exprs
       }
     );

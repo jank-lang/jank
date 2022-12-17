@@ -14,6 +14,19 @@
 
 namespace jank::runtime
 {
+  namespace detail
+  {
+    size_t sequence_length(behavior::sequence_ptr const &s)
+    { return sequence_length(s, std::numeric_limits<size_t>::max()); }
+    size_t sequence_length(behavior::sequence_ptr const &s, size_t const max)
+    {
+      size_t length{};
+      for(auto i(s); i != nullptr && length < max; i = i->next())
+      { ++length; }
+      return length;
+    }
+  }
+
   object_ptr seq(object_ptr const &s)
   {
     auto const * const sable(s->as_seqable());

@@ -17,6 +17,13 @@ namespace jank::runtime::obj
 
   list_ptr list::create(runtime::detail::list_type const &l)
   { return make_box<list>(l); }
+  list_ptr list::create(behavior::sequence_ptr const &s)
+  {
+    std::vector<object_ptr> v;
+    for(auto i(s); i != nullptr; i = i->next())
+    { v.emplace_back(i->first()); }
+    return make_box<list>(runtime::detail::list_type{ v.rbegin(), v.rend() });
+  }
 
   runtime::detail::boolean_type list::equal(object const &o) const
   {

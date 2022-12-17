@@ -21,8 +21,9 @@ namespace jank::runtime::obj
     ~list() = default;
 
     static runtime::detail::box_type<list> create(runtime::detail::list_type const &l);
+    static runtime::detail::box_type<list> create(behavior::sequence_ptr const &s);
     template <typename... Args>
-    static runtime::detail::box_type<list> create(Args &&...args)
+    static runtime::detail::box_type<list> create(std::in_place_t, Args &&...args)
     { return make_box<list>(std::forward<Args>(args)...); }
 
     runtime::detail::boolean_type equal(object const &) const override;
