@@ -23,6 +23,9 @@ namespace jank::runtime
   detail::boolean_type object::equal(object_ptr const &rhs) const
   { return rhs && equal(*rhs); }
 
+  bool object::operator <(object const &rhs) const
+  { return to_hash() < rhs.to_hash(); }
+
   detail::boolean_type obj::nil::equal(object const &o) const
   {
     auto const *n(o.as_nil());

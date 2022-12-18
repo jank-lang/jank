@@ -59,6 +59,8 @@ namespace jank::runtime
     virtual detail::string_type to_string() const = 0;
     virtual detail::integer_type to_hash() const = 0;
 
+    bool operator <(object const &) const;
+
     /* TODO: Benchmark what it's like to store a pointer of each type instead; no more dynamic dispactch. */
     /* TODO: Benchmark the impact of using option here. */
     virtual var const* as_var() const

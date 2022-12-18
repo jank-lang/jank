@@ -161,6 +161,7 @@ namespace jank::analyze
     { std::make_shared<local_frame>(local_frame::frame_type::fn, current_frame->rt_ctx, current_frame) };
     std::vector<runtime::obj::symbol_ptr> param_symbols;
     param_symbols.reserve(params->data.size());
+    std::set<runtime::obj::symbol> unique_param_symbols;
 
     bool is_variadic{};
     for(auto it(params->data.begin()); it != params->data.end(); ++it)
@@ -177,12 +178,32 @@ namespace jank::analyze
         { return err(error{ "invalid function; parameters contain mutliple &" }); }
         else if(it + 1 == params->data.end())
         { return err(error{ "invalid function; missing symbol after &" }); }
+        else if(it + 2 != params->data.end())
+        { return err(error{ "invalid function; param after rest args" }); }
 
         is_variadic = true;
         continue;
       }
 
       auto const sym_ptr(boost::static_pointer_cast<runtime::obj::symbol>(p));
+      auto unique_res(unique_param_symbols.emplace(*sym_ptr));
+      if(!unique_res.second)
+      {
+        /* TODO: Output a warning here. */
+        for(auto &param : param_symbols)
+        {
+          if(param->equal(*sym_ptr))
+          {
+            /* C++ doesn't allow multiple params with the same name, but it does allow params
+             * without any name. So, if we have a param shadowing another, we just remove the
+             * name of the one being shadowed. This is better than generating a new name for
+             * it, since we don't want it referenced at all. */
+            param->name = "";
+            break;
+          }
+        }
+      }
+
       frame->locals.emplace(sym_ptr, local_binding{ sym_ptr, none });
       param_symbols.emplace_back(sym_ptr);
     }
