@@ -659,7 +659,7 @@ namespace jank::analyze
     /* TODO: Detect literal and act accordingly. */
     std::vector<expression_ptr> exprs;
     exprs.reserve(o->count());
-    for(auto d = o->seq(); d != nullptr; d = d->next())
+    for(auto d = o->seq(); d != nullptr; d = d->next_in_place())
     {
       auto res(analyze(d->first(), current_frame, expression_type::expression, fn_ctx));
       if(res.is_err())

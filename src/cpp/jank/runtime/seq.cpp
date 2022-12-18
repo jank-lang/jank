@@ -20,8 +20,10 @@ namespace jank::runtime
     { return sequence_length(s, std::numeric_limits<size_t>::max()); }
     size_t sequence_length(behavior::sequence_ptr const &s, size_t const max)
     {
-      size_t length{};
-      for(auto i(s); i != nullptr && length < max; i = i->next())
+      if(s == nullptr)
+      { return 0; }
+      size_t length{ 1 };
+      for(auto i(s->next()); i != nullptr && length < max; i = i->next_in_place())
       { ++length; }
       return length;
     }
@@ -59,7 +61,7 @@ namespace jank::runtime
 
     detail::vector_transient_type ret;
 
-    for(auto s(sable->seq()); s != nullptr; s = s->next())
+    for(auto s(sable->seq()); s != nullptr; s = s->next_in_place())
     { ret.push_back(func->call(s->first())); }
 
     return make_box<obj::vector>(ret.persistent());
@@ -85,7 +87,7 @@ namespace jank::runtime
 
     object_ptr acc{ initial };
 
-    for(auto s(sable->seq()); s != nullptr; s = s->next())
+    for(auto s(sable->seq()); s != nullptr; s = s->next_in_place())
     { acc = func->call(acc, s->first()); }
 
     return acc;
@@ -117,7 +119,7 @@ namespace jank::runtime
     {
       detail::vector_transient_type partition;
 
-      for(size_t k{}; k < partition_size && s != nullptr; ++k, s = s->next())
+      for(size_t k{}; k < partition_size && s != nullptr; ++k, s = s->next_in_place())
       { partition.push_back(s->first()); }
 
       ret.push_back(make_box<obj::vector>(partition.persistent()));
@@ -167,7 +169,7 @@ namespace jank::runtime
     /* TODO: Optimize this by supporting a better interface. */
     detail::vector_transient_type in_order, reverse_order;
 
-    for(auto s(sable->seq()); s != nullptr; s = s->next())
+    for(auto s(sable->seq()); s != nullptr; s = s->next_in_place())
     { in_order.push_back(s->first()); }
     for(auto it(in_order.rbegin()); it != in_order.rend(); ++it)
     { reverse_order.push_back(*it); }

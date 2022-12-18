@@ -93,7 +93,7 @@
                    if(!seq)
                    { __value = #{ '() }#; }
                    else
-                   { __value = seq->next(); }"))))
+                   { __value = seq->next_in_place(); }"))))
 (def rest
   (fn* [o]
     (if (nil? o)
@@ -106,7 +106,7 @@
                    { __value = #{ '() }#; }
                    else
                    {
-                    __value = seq->next();
+                    __value = seq->next_in_place();
                     if(__value == nullptr)
                     { __value = #{ '() }#; }
                    }"))))

@@ -26,7 +26,7 @@ namespace jank::runtime::obj
 
     /* TODO: Optimize using better interfaces. */
     auto seq(s->seq());
-    for(auto it(data.begin()); it != data.end(); ++it, seq = seq->next())
+    for(auto it(data.begin()); it != data.end(); ++it, seq = seq->next_in_place())
     {
       if(seq == nullptr || !(*it)->equal(*seq->first()))
       { return false; }

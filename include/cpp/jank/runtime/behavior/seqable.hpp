@@ -20,6 +20,14 @@ namespace jank::runtime::behavior
     virtual ~sequence() = default;
     virtual object_ptr first() const = 0;
     virtual sequence_ptr next() const = 0;
+    /* Each call to next() allocates a new sequence_ptr, since it's polymorphic. When iterating
+     * over a large sequence, this can mean a _lot_ of allocations. However, if you own the
+     * sequence_ptr you have, typically meaning it wasn't a parameter, then you can mutate it
+     * in place using this function. No allocations will happen.
+     *
+     * If you don't own your sequence_ptr, you can call next() on it once, to get one you
+     * do own, and then next_in_place() on that to your heart's content. */
+    virtual sequence_ptr next_in_place() = 0;
   };
   using sequence_ptr = sequence::sequence_ptr;
 
@@ -58,6 +66,15 @@ namespace jank::runtime::behavior
       if(begin == end)
       { return JANK_NIL; }
       return *begin;
+    }
+    sequence_ptr next_in_place() override
+    {
+      ++begin;
+
+      if(begin == end)
+      { return nullptr; }
+
+      return basic_iterator_wrapper<It>::ptr_from_this();
     }
     sequence_ptr next() const override
     {

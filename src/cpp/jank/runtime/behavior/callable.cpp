@@ -276,7 +276,7 @@ namespace jank::runtime
 
   object_ptr apply_to(object_ptr const &source, object_ptr const &args)
   {
-    auto s(args->as_seqable()->seq());
+    auto const &s(args->as_seqable()->seq());
     auto const length(detail::sequence_length(s, max_params + 1));
     switch(length)
     {
@@ -285,115 +285,114 @@ namespace jank::runtime
       case 1:
         return dynamic_call(source, s->first());
       case 2:
-        return dynamic_call(source, s->first(), s->next()->first());
+        return dynamic_call(source, s->first(), s->next_in_place()->first());
       case 3:
         return dynamic_call
         (
           source,
           s->first(),
-          s->next()->first(),
-          s->next()->next()->first()
+          s->next_in_place()->first(),
+          s->next_in_place()->first()
         );
       case 4:
         return dynamic_call
         (
           source,
           s->first(),
-          s->next()->first(),
-          s->next()->next()->first(),
-          s->next()->next()->next()->first()
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first()
         );
       case 5:
         return dynamic_call
         (
           source,
           s->first(),
-          s->next()->first(),
-          s->next()->next()->first(),
-          s->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->first()
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first()
         );
       case 6:
         return dynamic_call
         (
           source,
           s->first(),
-          s->next()->first(),
-          s->next()->next()->first(),
-          s->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->first()
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first()
         );
       case 7:
         return dynamic_call
         (
           source,
           s->first(),
-          s->next()->first(),
-          s->next()->next()->first(),
-          s->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->next()->first()
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first()
         );
       case 8:
         return dynamic_call
         (
           source,
           s->first(),
-          s->next()->first(),
-          s->next()->next()->first(),
-          s->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->next()->next()->first()
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first()
         );
       case 9:
         return dynamic_call
         (
           source,
           s->first(),
-          s->next()->first(),
-          s->next()->next()->first(),
-          s->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->next()->next()->next()->first()
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first()
         );
       case 10:
         return dynamic_call
         (
           source,
           s->first(),
-          s->next()->first(),
-          s->next()->next()->first(),
-          s->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->next()->next()->next()->next()->first()
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first()
         );
       default:
         return dynamic_call
         (
           source,
           s->first(),
-          s->next()->first(),
-          s->next()->next()->first(),
-          s->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->next()->next()->next()->first(),
-          s->next()->next()->next()->next()->next()->next()->next()->next()->next()->first(),
-          obj::list::create
-          (s->next()->next()->next()->next()->next()->next()->next()->next()->next()->next())
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          s->next_in_place()->first(),
+          obj::list::create(s->next_in_place())
         );
     }
   }

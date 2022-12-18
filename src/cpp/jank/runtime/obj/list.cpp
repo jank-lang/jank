@@ -19,8 +19,12 @@ namespace jank::runtime::obj
   { return make_box<list>(l); }
   list_ptr list::create(behavior::sequence_ptr const &s)
   {
+    if(s == nullptr)
+    { return make_box<list>(); }
+
     std::vector<object_ptr> v;
-    for(auto i(s); i != nullptr; i = i->next())
+    v.emplace_back(s->first());
+    for(auto i(s->next()); i != nullptr; i = i->next_in_place())
     { v.emplace_back(i->first()); }
     return make_box<list>(runtime::detail::list_type{ v.rbegin(), v.rend() });
   }
@@ -33,7 +37,7 @@ namespace jank::runtime::obj
 
     /* TODO: Optimize using better interfaces. */
     auto seq(s->seq());
-    for(auto it(data.begin()); it != data.end(); ++it, seq = seq->next())
+    for(auto it(data.begin()); it != data.end(); ++it, seq = seq->next_in_place())
     {
       if(seq == nullptr || !(*it)->equal(*seq->first()))
       { return false; }
