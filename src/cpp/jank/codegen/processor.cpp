@@ -612,6 +612,7 @@ namespace jank::codegen
           , jank::runtime::behavior::callable
           , jank::runtime::behavior::metadatable
         {{
+          jank::runtime::context &__rt_ctx;
       )",
       runtime::munge(struct_name.name)
     );
@@ -641,13 +642,8 @@ namespace jank::codegen
       runtime::munge(struct_name.name)
     );
 
-    bool needs_member_init{};
-
     for(auto const &arity : root_fn.arities)
     {
-      needs_member_init |= !arity.frame->lifted_vars.empty()
-                           || !arity.frame->lifted_constants.empty()
-                           || !arity.frame->captures.empty();
       for(auto const &v : arity.frame->lifted_vars)
       {
 
@@ -695,12 +691,8 @@ namespace jank::codegen
       }
     }
 
-    format_to(inserter, ")");
+    format_to(inserter, ") : __rt_ctx{{ __rt_ctx }}");
 
-    if(needs_member_init)
-    { format_to(inserter, " : "); }
-
-    bool need_member_init_comma{};
     for(auto const &arity : root_fn.arities)
     {
       for(auto const &v : arity.frame->lifted_vars)
@@ -708,13 +700,11 @@ namespace jank::codegen
         format_to
         (
           inserter,
-          R"({0}{1}{{ __rt_ctx.intern_var("{2}", "{3}").expect_ok() }})",
-          (need_member_init_comma ? "," : ""),
+          R"(, {0}{{ __rt_ctx.intern_var("{1}", "{2}").expect_ok() }})",
           runtime::munge(v.second.native_name.name),
           v.second.var_name->ns,
           v.second.var_name->name
         );
-        need_member_init_comma = true;
       }
 
       for(auto const &v : arity.frame->lifted_constants)
@@ -722,13 +712,11 @@ namespace jank::codegen
         format_to
         (
           inserter,
-          "{0}{1}{{",
-          (need_member_init_comma ? "," : ""),
+          ", {0}{{",
           runtime::munge(v.second.native_name.name)
         );
         detail::gen_constant(v.second.data, header_buffer);
         format_to(inserter, "}}");
-        need_member_init_comma = true;
       }
 
       for(auto const &v : arity.frame->captures)
@@ -736,11 +724,9 @@ namespace jank::codegen
         format_to
         (
           inserter,
-          "{0}{1}{{ {1} }}",
-          (need_member_init_comma ? "," : ""),
+          ", {0}{{ {0} }}",
           runtime::munge(v.first->name)
         );
-        need_member_init_comma = true;
       }
     }
 

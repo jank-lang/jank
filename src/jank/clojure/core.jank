@@ -4,6 +4,14 @@
 (def *ns*)
 (def in-ns)
 
+; Macros.
+(def macroexpand-1
+  (fn* [form]
+    (native/raw "__value = __rt_ctx.macroexpand1(#{ form }#);")))
+(def macroexpand
+  (fn* [form]
+    (native/raw "__value = __rt_ctx.macroexpand(#{ form }#);")))
+
 ; Primitives.
 ;; Arithmetic.
 (def +)

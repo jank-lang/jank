@@ -106,7 +106,9 @@ namespace jank::analyze
       value_expr = some(value_result.expect_ok());
     }
 
-    auto const qualified_sym(current_frame->lift_var(boost::static_pointer_cast<runtime::obj::symbol>(sym_obj)));
+    auto const &var_sym(boost::static_pointer_cast<runtime::obj::symbol>(sym_obj));
+    auto const qualified_sym(current_frame->lift_var(var_sym));
+    rt_ctx.intern_var(qualified_sym);
     return std::make_shared<expression>
     (
       expr::def<expression>
@@ -141,6 +143,7 @@ namespace jank::analyze
     if(var.is_none())
     { return err(error{ "unbound symbol: " + sym->to_string().data }); }
 
+    rt_ctx.intern_var(qualified_sym);
     current_frame->lift_var(qualified_sym);
     return std::make_shared<expression>
     (expr::var_deref<expression>{ { expr_type }, qualified_sym, current_frame });
@@ -186,11 +189,11 @@ namespace jank::analyze
       }
 
       auto const sym_ptr(boost::static_pointer_cast<runtime::obj::symbol>(p));
-      auto unique_res(unique_param_symbols.emplace(*sym_ptr));
+      auto const unique_res(unique_param_symbols.emplace(*sym_ptr));
       if(!unique_res.second)
       {
         /* TODO: Output a warning here. */
-        for(auto &param : param_symbols)
+        for(auto const &param : param_symbols)
         {
           if(param->equal(*sym_ptr))
           {
@@ -719,13 +722,17 @@ namespace jank::analyze
       { return sym_result; }
 
       source = sym_result.expect_ok();
+
+      auto const &expanded(rt_ctx.macroexpand(o));
+      if(expanded != o)
+      { return analyze(expanded, current_frame, expr_type, fn_ctx); }
     }
     else
     {
       auto callable_expr(analyze(first, current_frame, expression_type::expression, fn_ctx));
       if(callable_expr.is_err())
       { return callable_expr; }
-      source = callable_expr.expect_ok();
+      source = callable_expr.expect_ok_move();
     }
 
     /* TODO: Verify source is callable. */

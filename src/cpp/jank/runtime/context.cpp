@@ -92,7 +92,7 @@ namespace jank::runtime
     {
       auto const t_state(get_thread_state());
       auto const * const current_ns(t_state.current_ns->get_root()->as_ns());
-      qualified_sym = runtime::obj::symbol::create(current_ns->name->name, sym->name);
+      qualified_sym = obj::symbol::create(current_ns->name->name, sym->name);
     }
     return qualified_sym;
   }
@@ -105,7 +105,7 @@ namespace jank::runtime
       ns_ptr ns;
       {
         auto const locked_namespaces(namespaces.lock_shared());
-        auto const found(locked_namespaces->find(runtime::obj::symbol::create("", sym->ns)));
+        auto const found(locked_namespaces->find(obj::symbol::create("", sym->ns)));
         if(found == locked_namespaces->end())
         { return none; }
         ns = found->second;
@@ -125,7 +125,7 @@ namespace jank::runtime
       auto const t_state(get_thread_state());
       auto const * const current_ns(t_state.current_ns->get_root()->as_ns());
       auto const locked_vars(current_ns->vars.lock_shared());
-      auto const qualified_sym(runtime::obj::symbol::create(current_ns->name->name, sym->name));
+      auto const qualified_sym(obj::symbol::create(current_ns->name->name, sym->name));
       auto const found(locked_vars->find(qualified_sym));
       if(found == locked_vars->end())
       { return none; }
@@ -211,14 +211,14 @@ namespace jank::runtime
 
   result<var_ptr, std::string> context::intern_var
   (detail::string_type const &ns, detail::string_type const &name)
-  { return intern_var(runtime::obj::symbol::create(ns, name)); }
+  { return intern_var(obj::symbol::create(ns, name)); }
   result<var_ptr, std::string> context::intern_var(obj::symbol_ptr const &qualified_sym)
   {
     if(qualified_sym->ns.empty())
     { return err("can't intern var; sym isn't qualified"); }
 
     auto locked_namespaces(namespaces.lock());
-    auto const found_ns(locked_namespaces->find(runtime::obj::symbol::create(qualified_sym->ns)));
+    auto const found_ns(locked_namespaces->find(obj::symbol::create(qualified_sym->ns)));
     if(found_ns == locked_namespaces->end())
     { return err("can't intern var; namespace doesn't exist"); }
 
@@ -259,6 +259,39 @@ namespace jank::runtime
 
     auto const res(locked_keywords->insert({sym, obj::keyword::create(sym, resolved)}));
     return res.first->second;
+  }
+
+  object_ptr context::macroexpand1(object_ptr const &o)
+  {
+    auto const * const list(o->as_list());
+    if(!list)
+    { return o; }
+    if(list->data.data->length == 0)
+    { return o; }
+
+    auto const var(find_var(boost::static_pointer_cast<obj::symbol>(list->data.first().unwrap())));
+    /* Not a var, so not a macro. */
+    if(var.is_none())
+    { return o; }
+    /* No meta means no :macro set. */
+    else if(var.unwrap()->meta.is_none())
+    { return o; }
+
+    auto const &meta(boost::static_pointer_cast<obj::map>(var.unwrap()->meta.unwrap()));
+    auto const * const found_meta(meta->data.find(intern_keyword("", "meta", true)));
+    if(!found_meta || (*found_meta)->equal(obj::JANK_FALSE))
+    { return o; }
+
+    auto const &args(obj::list::create(list->data.rest().cons(JANK_NIL).cons(o)));
+    return apply_to(var.unwrap()->get_root(), args);
+  }
+
+  object_ptr context::macroexpand(object_ptr const &o)
+  {
+    auto const &expanded(macroexpand1(o));
+    if(expanded != o)
+    { return macroexpand(expanded); }
+    return o;
   }
 
   context::thread_state::thread_state(context &ctx)
