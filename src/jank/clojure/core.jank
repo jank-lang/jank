@@ -227,7 +227,7 @@
                  { throw #{ :not-callable }#; }
 
                  ankerl::nanobench::Config config;
-                 config.mTimeUnit = std::chrono::milliseconds{ 1 };
+                 //config.mTimeUnit = std::chrono::milliseconds{ 1 };
                  //config.mTimeUnitName = TODO
                  config.mMinEpochIterations = 500;
                  config.mOut = &std::cout;
