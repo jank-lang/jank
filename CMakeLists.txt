@@ -185,7 +185,11 @@ set_target_properties(jank_lib PROPERTIES ENABLE_EXPORTS 1)
 # ---- libjank.a ----
 
 # ---- jank executable ----
-add_executable(jank_exe src/cpp/main.cpp)
+add_executable(
+  jank_exe
+  src/cpp/main.cpp
+  src/cpp/nanobench.cpp
+)
 add_executable(jank::exe ALIAS jank_exe)
 
 set_property(TARGET jank_exe PROPERTY OUTPUT_NAME jank)
@@ -212,6 +216,7 @@ if(jank_tests)
   add_executable(
     jank_test_exe
     test/cpp/main.cpp
+    src/cpp/nanobench.cpp
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/runtime/detail/list_type.cpp
@@ -234,9 +239,6 @@ if(jank_tests)
 
   find_package(doctest REQUIRED)
   target_link_libraries(jank_test_exe PRIVATE jank_lib Boost::boost doctest::doctest)
-  if(jank_enable_pch)
-    target_precompile_headers(jank_test_exe REUSE_FROM jank_lib)
-  endif()
 
   # Symbol exporting for JIT.
   set_target_properties(jank_test_exe PROPERTIES ENABLE_EXPORTS 1)

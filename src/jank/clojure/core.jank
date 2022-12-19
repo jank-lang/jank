@@ -216,3 +216,28 @@
                  behavior::metadatable::validate_meta(#{ m }#);
                  const_cast<behavior::metadatable*>(md)->meta = #{ m }#;
                  __value = #{ m }#;")))
+
+;; jank.compiler things.
+(def benchmark
+  ; TODO: Options, following what criterium offers.
+  (fn* [label fun]
+    (native/raw "auto const * const label_str(#{ (str label) }#->as_string());
+                 auto const * const callable(#{ fun }#->as_callable());
+                 if(!callable)
+                 { throw #{ :not-callable }#; }
+
+                 ankerl::nanobench::Config config;
+                 config.mTimeUnit = std::chrono::milliseconds{ 1 };
+                 //config.mTimeUnitName = TODO
+                 config.mMinEpochIterations = 500;
+                 config.mOut = &std::cout;
+
+                 ankerl::nanobench::Bench().config(config).run
+                 (
+                  label_str->data.data,
+                  [&]
+                  {
+                    object_ptr res{ callable->call() };
+                    ankerl::nanobench::doNotOptimizeAway(res);
+                  }
+                 );")))

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <nanobench.h>
+
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/function.hpp>
 #include <jank/runtime/obj/map.hpp>

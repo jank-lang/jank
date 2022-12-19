@@ -67,15 +67,6 @@ namespace jank::runtime::behavior
       { return JANK_NIL; }
       return *begin;
     }
-    sequence_ptr next_in_place() override
-    {
-      ++begin;
-
-      if(begin == end)
-      { return nullptr; }
-
-      return basic_iterator_wrapper<It>::ptr_from_this();
-    }
     sequence_ptr next() const override
     {
       auto n(begin);
@@ -85,6 +76,15 @@ namespace jank::runtime::behavior
       { return nullptr; }
 
       return make_box<basic_iterator_wrapper<It>>(coll, n, end);
+    }
+    sequence_ptr next_in_place() override
+    {
+      ++begin;
+
+      if(begin == end)
+      { return nullptr; }
+
+      return basic_iterator_wrapper<It>::ptr_from_this();
     }
 
     object_ptr coll;
