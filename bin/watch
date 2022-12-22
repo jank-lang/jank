@@ -4,4 +4,4 @@ set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-git ls-files -cdmo --exclude-standard | entr bash -c "${here}/test $* || true";
+git ls-files -cdmo --exclude-standard | entr bash -c "$* || true";

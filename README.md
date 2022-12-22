@@ -53,7 +53,7 @@ You then need to provide it to `./bin/configure` by using `-Djank_cling_build_di
 * `./bin/configure` -- For setting up the project.
 * `./bin/compile` -- For one-off compilation.
 * `./bin/test` -- For one-off testing.
-* `./bin/watch-tests` -- For hot reloading tests on save.
+* `./bin/watch` -- For hot reloading on save.
 * `./bin/install` -- For packaging.
 
 #### Release
@@ -70,7 +70,9 @@ To make a debug build, specify the build type when configuring.
 ```bash
 $ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_cling_build_dir=cling-build -Djank_tests=on
 $ ./bin/compile
-$ ./bin/watch-tests
+
+# When developing, continuously run the tests locally.
+$ ./bin/watch ./bin/test
 ```
 
 ### Packaging
