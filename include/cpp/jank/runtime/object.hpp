@@ -46,6 +46,7 @@ namespace jank::runtime
   {
     struct callable;
     struct seqable;
+    struct countable;
   }
 
   struct var;
@@ -98,6 +99,8 @@ namespace jank::runtime
     virtual behavior::callable const* as_callable() const
     { return nullptr; }
     virtual behavior::metadatable const* as_metadatable() const
+    { return nullptr; }
+    virtual behavior::countable const* as_countable() const
     { return nullptr; }
   };
 

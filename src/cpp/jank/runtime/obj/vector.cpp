@@ -67,7 +67,7 @@ namespace jank::runtime::obj
     return make_box
     <
       behavior::basic_iterator_wrapper<runtime::detail::vector_type::iterator>
-    >(ptr_from_this(), data.begin(), data.end());
+    >(ptr_from_this(), data.begin(), data.end(), data.size());
   }
   size_t vector::count() const
   { return data.size(); }

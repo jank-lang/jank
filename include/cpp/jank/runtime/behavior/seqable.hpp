@@ -4,6 +4,7 @@
 
 #include <jank/runtime/memory_pool.hpp>
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/behavior/countable.hpp>
 
 namespace jank::runtime::behavior
 {
@@ -32,12 +33,15 @@ namespace jank::runtime::behavior
   using sequence_ptr = sequence::sequence_ptr;
 
   template <typename It>
-  struct basic_iterator_wrapper : sequence, pool_item_base<basic_iterator_wrapper<It>>
+  struct basic_iterator_wrapper : sequence, countable, pool_item_base<basic_iterator_wrapper<It>>
   {
     basic_iterator_wrapper() = default;
-    basic_iterator_wrapper(object_ptr const &c, It const &b, It const &e)
-      : coll{ c }, begin{ b }, end { e }
-    { }
+    basic_iterator_wrapper(object_ptr const &c, It const &b, It const &e, size_t const s)
+      : coll{ c }, begin{ b }, end{ e }, size{ s }
+    {
+      if(begin == end)
+      { throw std::runtime_error{ "basic_iterator_wrapper for empty sequence" }; }
+    }
 
     detail::string_type to_string() const override
     {
@@ -61,12 +65,13 @@ namespace jank::runtime::behavior
     sequence_ptr seq() const override
     { return pool_item_base<basic_iterator_wrapper<It>>::ptr_from_this(); }
 
+    behavior::countable const* as_countable() const override
+    { return this; }
+    size_t count() const override
+    { return size; }
+
     object_ptr first() const override
-    {
-      if(begin == end)
-      { return JANK_NIL; }
-      return *begin;
-    }
+    { return *begin; }
     sequence_ptr next() const override
     {
       auto n(begin);
@@ -75,7 +80,7 @@ namespace jank::runtime::behavior
       if(n == end)
       { return nullptr; }
 
-      return make_box<basic_iterator_wrapper<It>>(coll, n, end);
+      return make_box<basic_iterator_wrapper<It>>(coll, n, end, size);
     }
     sequence_ptr next_in_place() override
     {
@@ -89,5 +94,6 @@ namespace jank::runtime::behavior
 
     object_ptr coll;
     It begin, end;
+    size_t size{};
   };
 }

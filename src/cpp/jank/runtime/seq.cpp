@@ -22,6 +22,9 @@ namespace jank::runtime
     {
       if(s == nullptr)
       { return 0; }
+      else if(auto const * const c = s->as_countable())
+      { return c->count(); }
+
       size_t length{ 1 };
       for(auto i(s->next()); i != nullptr && length < max; i = i->next_in_place())
       { ++length; }
