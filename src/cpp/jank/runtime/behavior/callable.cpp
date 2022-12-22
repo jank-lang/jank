@@ -7,6 +7,7 @@
 #include <jank/runtime/obj/function.hpp>
 #include <jank/runtime/obj/list.hpp>
 #include <jank/runtime/seq.hpp>
+#include <jank/util/make_array.hpp>
 
 namespace jank::runtime
 {
@@ -26,7 +27,7 @@ namespace jank::runtime
     {
       case 0:
         /* TODO: Empty list constant. */
-        return c->call(runtime::obj::list::create(std::in_place));
+        return c->call(make_box<obj::list>());
       default:
         return c->call();
     }
@@ -38,7 +39,7 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(std::in_place, a1));
+        return c->call(make_box<behavior::array_sequence<1>>(util::make_array(a1)));
       default:
         return c->call(a1);
     }
@@ -50,9 +51,9 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(std::in_place, a1, a2));
+        return c->call(make_box<behavior::array_sequence<2>>(util::make_array(a1, a2)));
       case 1:
-        return c->call(a1, runtime::obj::list::create(std::in_place, a2));
+        return c->call(a1, make_box<behavior::array_sequence<1>>(util::make_array(a2)));
       default:
         return c->call(a1, a2);
     }
@@ -64,11 +65,11 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(std::in_place, a1, a2, a3));
+        return c->call(make_box<behavior::array_sequence<3>>(util::make_array(a1, a2, a3)));
       case 1:
-        return c->call(a1, runtime::obj::list::create(std::in_place, a2, a3));
+        return c->call(a1, make_box<behavior::array_sequence<2>>(util::make_array(a2, a3)));
       case 2:
-        return c->call(a1, a2, runtime::obj::list::create(std::in_place, a3));
+        return c->call(a1, a2, make_box<behavior::array_sequence<1>>(util::make_array(a3)));
       default:
         return c->call(a1, a2, a3);
     }
@@ -80,13 +81,13 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(std::in_place, a1, a2, a3, a4));
+        return c->call(make_box<behavior::array_sequence<4>>(util::make_array(a1, a2, a3, a4)));
       case 1:
-        return c->call(a1, runtime::obj::list::create(std::in_place, a2, a3, a4));
+        return c->call(a1, make_box<behavior::array_sequence<3>>(util::make_array(a2, a3, a4)));
       case 2:
-        return c->call(a1, a2, runtime::obj::list::create(std::in_place, a3, a4));
+        return c->call(a1, a2, make_box<behavior::array_sequence<2>>(util::make_array(a3, a4)));
       case 3:
-        return c->call(a1, a2, a3, runtime::obj::list::create(std::in_place, a4));
+        return c->call(a1, a2, a3, make_box<behavior::array_sequence<1>>(util::make_array(a4)));
       default:
         return c->call(a1, a2, a3, a4);
     }
@@ -98,17 +99,15 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(std::in_place, a1, a2, a3, a4, a5));
+        return c->call(make_box<behavior::array_sequence<5>>(util::make_array(a1, a2, a3, a4, a5)));
       case 1:
-        return c->call(a1, runtime::obj::list::create(std::in_place, a2, a3, a4, a5));
+        return c->call(a1, make_box<behavior::array_sequence<4>>(util::make_array(a2, a3, a4, a5)));
       case 2:
-        return c->call(a1, a2, runtime::obj::list::create(std::in_place, a3, a4, a5));
+        return c->call(a1, a2, make_box<behavior::array_sequence<3>>(util::make_array(a3, a4, a5)));
       case 3:
-        return c->call(a1, a2, a3, runtime::obj::list::create(std::in_place, a4, a5));
+        return c->call(a1, a2, a3, make_box<behavior::array_sequence<2>>(util::make_array(a4, a5)));
       case 4:
-        return c->call(a1, a2, a3, a4, runtime::obj::list::create(std::in_place, a5));
-      case 5:
-        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create(std::in_place));
+        return c->call(a1, a2, a3, a4, make_box<behavior::array_sequence<1>>(util::make_array(a5)));
       default:
         return c->call(a1, a2, a3, a4, a5);
     }
@@ -120,17 +119,17 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(std::in_place, a1, a2, a3, a4, a5, a6));
+        return c->call(make_box<behavior::array_sequence<6>>(util::make_array(a1, a2, a3, a4, a5, a6)));
       case 1:
-        return c->call(a1, runtime::obj::list::create(std::in_place, a2, a3, a4, a5, a6));
+        return c->call(a1, make_box<behavior::array_sequence<5>>(util::make_array(a2, a3, a4, a5, a6)));
       case 2:
-        return c->call(a1, a2, runtime::obj::list::create(std::in_place, a3, a4, a5, a6));
+        return c->call(a1, a2, make_box<behavior::array_sequence<4>>(util::make_array(a3, a4, a5, a6)));
       case 3:
-        return c->call(a1, a2, a3, runtime::obj::list::create(std::in_place, a4, a5, a6));
+        return c->call(a1, a2, a3, make_box<behavior::array_sequence<3>>(util::make_array(a4, a5, a6)));
       case 4:
-        return c->call(a1, a2, a3, a4, runtime::obj::list::create(std::in_place, a5, a6));
+        return c->call(a1, a2, a3, a4, make_box<behavior::array_sequence<2>>(util::make_array(a5, a6)));
       case 5:
-        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create(std::in_place, a6));
+        return c->call(a1, a2, a3, a4, a5, make_box<behavior::array_sequence<1>>(util::make_array(a6)));
       default:
         return c->call(a1, a2, a3, a4, a5, a6);
     }
@@ -142,19 +141,19 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(std::in_place, a1, a2, a3, a4, a5, a6, a7));
+        return c->call(make_box<behavior::array_sequence<7>>(util::make_array(a1, a2, a3, a4, a5, a6, a7)));
       case 1:
-        return c->call(a1, runtime::obj::list::create(std::in_place, a2, a3, a4, a5, a6, a7));
+        return c->call(a1, make_box<behavior::array_sequence<6>>(util::make_array(a2, a3, a4, a5, a6, a7)));
       case 2:
-        return c->call(a1, a2, runtime::obj::list::create(std::in_place, a3, a4, a5, a6, a7));
+        return c->call(a1, a2, make_box<behavior::array_sequence<5>>(util::make_array(a3, a4, a5, a6, a7)));
       case 3:
-        return c->call(a1, a2, a3, runtime::obj::list::create(std::in_place, a4, a5, a6, a7));
+        return c->call(a1, a2, a3, make_box<behavior::array_sequence<4>>(util::make_array(a4, a5, a6, a7)));
       case 4:
-        return c->call(a1, a2, a3, a4, runtime::obj::list::create(std::in_place, a5, a6, a7));
+        return c->call(a1, a2, a3, a4, make_box<behavior::array_sequence<3>>(util::make_array(a5, a6, a7)));
       case 5:
-        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create(std::in_place, a6, a7));
+        return c->call(a1, a2, a3, a4, a5, make_box<behavior::array_sequence<2>>(util::make_array(a6, a7)));
       case 6:
-        return c->call(a1, a2, a3, a4, a5, a6, runtime::obj::list::create(std::in_place, a7));
+        return c->call(a1, a2, a3, a4, a5, a6, make_box<behavior::array_sequence<1>>(util::make_array(a7)));
       default:
         return c->call(a1, a2, a3, a4, a5, a6, a7);
     }
@@ -166,21 +165,21 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(std::in_place, a1, a2, a3, a4, a5, a6, a7, a8));
+        return c->call(make_box<behavior::array_sequence<8>>(util::make_array(a1, a2, a3, a4, a5, a6, a7, a8)));
       case 1:
-        return c->call(a1, runtime::obj::list::create(std::in_place, a2, a3, a4, a5, a6, a7, a8));
+        return c->call(a1, make_box<behavior::array_sequence<7>>(util::make_array(a2, a3, a4, a5, a6, a7, a8)));
       case 2:
-        return c->call(a1, a2, runtime::obj::list::create(std::in_place, a3, a4, a5, a6, a7, a8));
+        return c->call(a1, a2, make_box<behavior::array_sequence<6>>(util::make_array(a3, a4, a5, a6, a7, a8)));
       case 3:
-        return c->call(a1, a2, a3, runtime::obj::list::create(std::in_place, a4, a5, a6, a7, a8));
+        return c->call(a1, a2, a3, make_box<behavior::array_sequence<5>>(util::make_array(a4, a5, a6, a7, a8)));
       case 4:
-        return c->call(a1, a2, a3, a4, runtime::obj::list::create(std::in_place, a5, a6, a7, a8));
+        return c->call(a1, a2, a3, a4, make_box<behavior::array_sequence<4>>(util::make_array(a5, a6, a7, a8)));
       case 5:
-        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create(std::in_place, a6, a7, a8));
+        return c->call(a1, a2, a3, a4, a5, make_box<behavior::array_sequence<3>>(util::make_array(a6, a7, a8)));
       case 6:
-        return c->call(a1, a2, a3, a4, a5, a6, runtime::obj::list::create(std::in_place, a7, a8));
+        return c->call(a1, a2, a3, a4, a5, a6, make_box<behavior::array_sequence<2>>(util::make_array(a7, a8)));
       case 7:
-        return c->call(a1, a2, a3, a4, a5, a6, a7, runtime::obj::list::create(std::in_place, a8));
+        return c->call(a1, a2, a3, a4, a5, a6, a7, make_box<behavior::array_sequence<1>>(util::make_array(a8)));
       default:
         return c->call(a1, a2, a3, a4, a5, a6, a7, a8);
     }
@@ -192,23 +191,23 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(std::in_place, a1, a2, a3, a4, a5, a6, a7, a8, a9));
+        return c->call(make_box<behavior::array_sequence<9>>(util::make_array(a1, a2, a3, a4, a5, a6, a7, a8, a9)));
       case 1:
-        return c->call(a1, runtime::obj::list::create(std::in_place, a2, a3, a4, a5, a6, a7, a8, a9));
+        return c->call(a1, make_box<behavior::array_sequence<8>>(util::make_array(a2, a3, a4, a5, a6, a7, a8, a9)));
       case 2:
-        return c->call(a1, a2, runtime::obj::list::create(std::in_place, a3, a4, a5, a6, a7, a8, a9));
+        return c->call(a1, a2, make_box<behavior::array_sequence<7>>(util::make_array(a3, a4, a5, a6, a7, a8, a9)));
       case 3:
-        return c->call(a1, a2, a3, runtime::obj::list::create(std::in_place, a4, a5, a6, a7, a8, a9));
+        return c->call(a1, a2, a3, make_box<behavior::array_sequence<6>>(util::make_array(a4, a5, a6, a7, a8, a9)));
       case 4:
-        return c->call(a1, a2, a3, a4, runtime::obj::list::create(std::in_place, a5, a6, a7, a8, a9));
+        return c->call(a1, a2, a3, a4, make_box<behavior::array_sequence<5>>(util::make_array(a5, a6, a7, a8, a9)));
       case 5:
-        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create(std::in_place, a6, a7, a8, a9));
+        return c->call(a1, a2, a3, a4, a5, make_box<behavior::array_sequence<4>>(util::make_array(a6, a7, a8, a9)));
       case 6:
-        return c->call(a1, a2, a3, a4, a5, a6, runtime::obj::list::create(std::in_place, a7, a8, a9));
+        return c->call(a1, a2, a3, a4, a5, a6, make_box<behavior::array_sequence<3>>(util::make_array(a7, a8, a9)));
       case 7:
-        return c->call(a1, a2, a3, a4, a5, a6, a7, runtime::obj::list::create(std::in_place, a8, a9));
+        return c->call(a1, a2, a3, a4, a5, a6, a7, make_box<behavior::array_sequence<2>>(util::make_array(a8, a9)));
       case 8:
-        return c->call(a1, a2, a3, a4, a5, a6, a7, a8, runtime::obj::list::create(std::in_place, a9));
+        return c->call(a1, a2, a3, a4, a5, a6, a7, a8, make_box<behavior::array_sequence<1>>(util::make_array(a9)));
       default:
         return c->call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
     }
@@ -220,25 +219,25 @@ namespace jank::runtime
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
       case 0:
-        return c->call(runtime::obj::list::create(std::in_place, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10));
+        return c->call(make_box<behavior::array_sequence<10>>(util::make_array(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)));
       case 1:
-        return c->call(a1, runtime::obj::list::create(std::in_place, a2, a3, a4, a5, a6, a7, a8, a9, a10));
+        return c->call(a1, make_box<behavior::array_sequence<9>>(util::make_array(a2, a3, a4, a5, a6, a7, a8, a9, a10)));
       case 2:
-        return c->call(a1, a2, runtime::obj::list::create(std::in_place, a3, a4, a5, a6, a7, a8, a9, a10));
+        return c->call(a1, a2, make_box<behavior::array_sequence<8>>(util::make_array(a3, a4, a5, a6, a7, a8, a9, a10)));
       case 3:
-        return c->call(a1, a2, a3, runtime::obj::list::create(std::in_place, a4, a5, a6, a7, a8, a9, a10));
+        return c->call(a1, a2, a3, make_box<behavior::array_sequence<7>>(util::make_array(a4, a5, a6, a7, a8, a9, a10)));
       case 4:
-        return c->call(a1, a2, a3, a4, runtime::obj::list::create(std::in_place, a5, a6, a7, a8, a9, a10));
+        return c->call(a1, a2, a3, a4, make_box<behavior::array_sequence<6>>(util::make_array(a5, a6, a7, a8, a9, a10)));
       case 5:
-        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create(std::in_place, a6, a7, a8, a9, a10));
+        return c->call(a1, a2, a3, a4, a5, make_box<behavior::array_sequence<5>>(util::make_array(a6, a7, a8, a9, a10)));
       case 6:
-        return c->call(a1, a2, a3, a4, a5, a6, runtime::obj::list::create(std::in_place, a7, a8, a9, a10));
+        return c->call(a1, a2, a3, a4, a5, a6, make_box<behavior::array_sequence<4>>(util::make_array(a7, a8, a9, a10)));
       case 7:
-        return c->call(a1, a2, a3, a4, a5, a6, a7, runtime::obj::list::create(std::in_place, a8, a9, a10));
+        return c->call(a1, a2, a3, a4, a5, a6, a7, make_box<behavior::array_sequence<3>>(util::make_array(a8, a9, a10)));
       case 8:
-        return c->call(a1, a2, a3, a4, a5, a6, a7, a8, runtime::obj::list::create(std::in_place, a9, a10));
+        return c->call(a1, a2, a3, a4, a5, a6, a7, a8, make_box<behavior::array_sequence<2>>(util::make_array(a9, a10)));
       case 9:
-        return c->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, runtime::obj::list::create(std::in_place, a10));
+        return c->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, make_box<behavior::array_sequence<1>>(util::make_array(a10)));
       default:
         return c->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
@@ -249,26 +248,87 @@ namespace jank::runtime
     auto const &variadic_arg_position(c->get_variadic_arg_position());
     switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
     {
+      /* TODO: Optimize this with a faster seq? */
       case 0:
-        return c->call(runtime::obj::list::create(rest->data.into(runtime::detail::list_type{ a1, a2, a3, a4, a5, a6, a7, a8, a9, a10 })));
+      {
+        std::vector<object_ptr> packed;
+        packed.reserve(10 + rest->count());
+        packed.insert(packed.end(), { a1, a2, a3, a4, a5, a6, a7, a8, a9, a10 });
+        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        return c->call(make_box<behavior::vector_sequence>(std::move(packed)));
+      }
       case 1:
-        return c->call(a1, runtime::obj::list::create(rest->data.into(runtime::detail::list_type{ a2, a3, a4, a5, a6, a7, a8, a9, a10 })));
+      {
+        std::vector<object_ptr> packed;
+        packed.reserve(10 + rest->count());
+        packed.insert(packed.end(), { a2, a3, a4, a5, a6, a7, a8, a9, a10 });
+        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        return c->call(a1, make_box<behavior::vector_sequence>(std::move(packed)));
+      }
       case 2:
-        return c->call(a1, a2, runtime::obj::list::create(rest->data.into(runtime::detail::list_type{ a3, a4, a5, a6, a7, a8, a9, a10 })));
+      {
+        std::vector<object_ptr> packed;
+        packed.reserve(10 + rest->count());
+        packed.insert(packed.end(), { a3, a4, a5, a6, a7, a8, a9, a10 });
+        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        return c->call(a1, a2, make_box<behavior::vector_sequence>(std::move(packed)));
+      }
       case 3:
-        return c->call(a1, a2, a3, runtime::obj::list::create(rest->data.into(runtime::detail::list_type{ a4, a5, a6, a7, a8, a9, a10 })));
+      {
+        std::vector<object_ptr> packed;
+        packed.reserve(10 + rest->count());
+        packed.insert(packed.end(), { a4, a5, a6, a7, a8, a9, a10 });
+        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        return c->call(a1, a2, a3, make_box<behavior::vector_sequence>(std::move(packed)));
+      }
       case 4:
-        return c->call(a1, a2, a3, a4, runtime::obj::list::create(rest->data.into(runtime::detail::list_type{ a5, a6, a7, a8, a9, a10 })));
+      {
+        std::vector<object_ptr> packed;
+        packed.reserve(10 + rest->count());
+        packed.insert(packed.end(), { a5, a6, a7, a8, a9, a10 });
+        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        return c->call(a1, a2, a3, a4, make_box<behavior::vector_sequence>(std::move(packed)));
+      }
       case 5:
-        return c->call(a1, a2, a3, a4, a5, runtime::obj::list::create(rest->data.into(runtime::detail::list_type{ a6, a7, a8, a9, a10 })));
+      {
+        std::vector<object_ptr> packed;
+        packed.reserve(10 + rest->count());
+        packed.insert(packed.end(), { a6, a7, a8, a9, a10 });
+        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        return c->call(a1, a2, a3, a4, a5, make_box<behavior::vector_sequence>(std::move(packed)));
+      }
       case 6:
-        return c->call(a1, a2, a3, a4, a5, a6, runtime::obj::list::create(rest->data.into(runtime::detail::list_type{ a7, a8, a9, a10 })));
+      {
+        std::vector<object_ptr> packed;
+        packed.reserve(10 + rest->count());
+        packed.insert(packed.end(), { a7, a8, a9, a10 });
+        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        return c->call(a1, a2, a3, a4, a5, a6, make_box<behavior::vector_sequence>(std::move(packed)));
+      }
       case 7:
-        return c->call(a1, a2, a3, a4, a5, a6, a7, runtime::obj::list::create(rest->data.into(runtime::detail::list_type{ a8, a9, a10 })));
+      {
+        std::vector<object_ptr> packed;
+        packed.reserve(10 + rest->count());
+        packed.insert(packed.end(), { a8, a9, a10 });
+        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        return c->call(a1, a2, a3, a4, a5, a6, a7, make_box<behavior::vector_sequence>(std::move(packed)));
+      }
       case 8:
-        return c->call(a1, a2, a3, a4, a5, a6, a7, a8, runtime::obj::list::create(rest->data.into(runtime::detail::list_type{ a9, a10 })));
+      {
+        std::vector<object_ptr> packed;
+        packed.reserve(10 + rest->count());
+        packed.insert(packed.end(), { a9, a10 });
+        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        return c->call(a1, a2, a3, a4, a5, a6, a7, a8, make_box<behavior::vector_sequence>(std::move(packed)));
+      }
       case 9:
-        return c->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, runtime::obj::list::create(rest->data.into(runtime::detail::list_type{ a10 })));
+      {
+        std::vector<object_ptr> packed;
+        packed.reserve(10 + rest->count());
+        packed.insert(packed.end(), { a10 });
+        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        return c->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, make_box<behavior::vector_sequence>(std::move(packed)));
+      }
       default:
         throw std::runtime_error{ fmt::format("unsupported arity: {}", 10 + rest->count()) };
     }

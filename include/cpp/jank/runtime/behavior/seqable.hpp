@@ -96,4 +96,136 @@ namespace jank::runtime::behavior
     It begin, end;
     size_t size{};
   };
+
+  template <size_t N>
+  struct array_sequence : sequence, countable, pool_item_base<array_sequence<N>>
+  {
+    array_sequence() = default;
+    array_sequence(std::array<object_ptr, N> const &arr, size_t const index)
+      : arr{ arr }, index{ index }
+    { }
+    array_sequence(std::array<object_ptr, N> &&arr, size_t const index)
+      : arr{ std::move(arr) }, index{ index }
+    { }
+    array_sequence(std::array<object_ptr, N> &&arr)
+      : arr{ std::move(arr) }
+    { }
+
+    detail::string_type to_string() const override
+    {
+      std::stringstream ss;
+      ss << "(";
+      for(auto i(index); i != N; ++i)
+      {
+        ss << *arr[i];
+        if(i + 1 != N)
+        { ss << " "; }
+      }
+      ss << ")";
+      return ss.str();
+    }
+    detail::integer_type to_hash() const override
+    { return reinterpret_cast<detail::integer_type>(this); }
+
+    behavior::seqable const* as_seqable() const override
+    { return this; }
+    sequence_ptr seq() const override
+    { return pool_item_base<array_sequence<N>>::ptr_from_this(); }
+
+    behavior::countable const* as_countable() const override
+    { return this; }
+    size_t count() const override
+    { return N; }
+
+    object_ptr first() const override
+    { return arr[index]; }
+    sequence_ptr next() const override
+    {
+      auto n(index);
+      ++n;
+
+      if(n == N)
+      { return nullptr; }
+
+      return make_box<array_sequence<N>>(arr, n);
+    }
+    sequence_ptr next_in_place() override
+    {
+      ++index;
+
+      if(index == N)
+      { return nullptr; }
+
+      return array_sequence<N>::ptr_from_this();
+    }
+
+    std::array<object_ptr, N> arr;
+    size_t index{};
+  };
+
+  /* TODO: Move impl to cpp. */
+  struct vector_sequence : sequence, countable, pool_item_base<vector_sequence>
+  {
+    vector_sequence() = default;
+    vector_sequence(std::vector<object_ptr> const &arr, size_t const index)
+      : arr{ arr }, index{ index }
+    { }
+    vector_sequence(std::vector<object_ptr> &&arr, size_t const index)
+      : arr{ std::move(arr) }, index{ index }
+    { }
+    vector_sequence(std::vector<object_ptr> &&arr)
+      : arr{ std::move(arr) }
+    { }
+
+    detail::string_type to_string() const override
+    {
+      std::stringstream ss;
+      ss << "(";
+      for(auto i(index); i != arr.size(); ++i)
+      {
+        ss << *arr[i];
+        if(i + 1 != arr.size())
+        { ss << " "; }
+      }
+      ss << ")";
+      return ss.str();
+    }
+    detail::integer_type to_hash() const override
+    { return reinterpret_cast<detail::integer_type>(this); }
+
+    behavior::seqable const* as_seqable() const override
+    { return this; }
+    sequence_ptr seq() const override
+    { return pool_item_base<vector_sequence>::ptr_from_this(); }
+
+    behavior::countable const* as_countable() const override
+    { return this; }
+    size_t count() const override
+    { return arr.size(); }
+
+    object_ptr first() const override
+    { return arr[index]; }
+    sequence_ptr next() const override
+    {
+      auto n(index);
+      ++n;
+
+      if(n == arr.size())
+      { return nullptr; }
+
+      return make_box<vector_sequence>(arr, n);
+    }
+    sequence_ptr next_in_place() override
+    {
+      ++index;
+
+      if(index == arr.size())
+      { return nullptr; }
+
+      return vector_sequence::ptr_from_this();
+    }
+
+    std::vector<object_ptr> arr;
+    size_t index{};
+  };
 }

@@ -90,7 +90,7 @@ namespace jank::runtime
 
       T * const result{ first_item->get_data() };
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
-      new (result) T(std::forward<Args>(args)...);
+      new (result) T{ std::forward<Args>(args)... };
       result->owner_pool = this;
 
       return result;
