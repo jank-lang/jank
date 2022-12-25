@@ -656,16 +656,27 @@ namespace jank::analyze
     option<expr::function_context_ptr> const &fn_ctx
   )
   {
-    /* TODO: Detect literal and act accordingly. */
     std::vector<expression_ptr> exprs;
     exprs.reserve(o->count());
+    bool literal{ true };
     for(auto d = o->seq(); d != nullptr; d = d->next_in_place())
     {
       auto res(analyze(d->first(), current_frame, expression_type::expression, fn_ctx));
       if(res.is_err())
       { return res.expect_err_move(); }
       exprs.emplace_back(res.expect_ok_move());
+      if(!boost::get<expr::primitive_literal<expression>>(&exprs.back()->data))
+      { literal = false; }
     }
+
+    if(literal)
+    {
+      /* TODO: Order lifted constants. Use sub constants during codegen. */
+      current_frame->lift_constant(o);
+      return std::make_shared<expression>
+      (expr::primitive_literal<expression>{ { expr_type }, o, current_frame });
+    }
+
     return std::make_shared<expression>(expr::vector<expression>{ { expr_type }, std::move(exprs) });
   }
 
