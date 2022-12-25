@@ -42,7 +42,9 @@ Note that you must compile Cling/Clang/LLVM. This can take an hour or two,
 depending on your machine. Building jank itself should take less than a minute.
 
 ```
-$ ./bin/build-cling
+$ mkdir -p build
+$ cd build
+$ ../bin/build-cling
 $ export CC=$PWD/cling-build/bin/clang; export CXX=$PWD/cling-build/bin/clang++;
 ```
 
