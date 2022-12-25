@@ -234,6 +234,7 @@
                  //config.mTimeUnitName = TODO
                  config.mMinEpochIterations = 500;
                  config.mOut = &std::cout;
+                 config.mWarmup = 300;
 
                  ankerl::nanobench::Bench().config(config).run
                  (
