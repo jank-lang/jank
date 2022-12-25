@@ -127,13 +127,14 @@
     ([o]
      (native/raw "__value = make_box(#{ o }#->to_string());"))
     ([o & args]
-     (native/raw "std::string ret(#{ o }#->to_string().data);
+     (native/raw "fmt::memory_buffer buff;
+                  buff.reserve(16);
                   auto const &seq(#{ args }#->as_seqable()->seq());
-                  ret += seq->first()->to_string();
+                  #{ o }#->to_string(buff);
+                  seq->first()->to_string(buff);
                   for(auto it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
-                  { ret += it->first()->to_string().data; }
-                  __value = make_box(ret);
-                  "))))
+                  { it->first()->to_string(buff); }
+                  __value = make_box<obj::string>(std::string{ buff.data(), buff.size() });"))))
 
 ;; Other.
 (def keyword?

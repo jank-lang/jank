@@ -7,5 +7,6 @@ namespace jank::runtime::behavior
   {
     assert(m != nullptr);
     assert(m->as_map() != nullptr);
+    static_cast<void>(m);
   }
 }

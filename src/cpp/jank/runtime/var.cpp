@@ -1,3 +1,5 @@
+#include <fmt/compile.h>
+
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/hash.hpp>
@@ -26,9 +28,18 @@ namespace jank::runtime
 
     return n == v->n && name == v->name;
   }
+
+  void to_string_impl(obj::symbol_ptr const &name, fmt::memory_buffer &buff)
+  { format_to(std::back_inserter(buff), FMT_COMPILE("#'{}/{}"), name->ns.data, name->name.data); }
+  void var::to_string(fmt::memory_buffer &buff) const
+  { to_string_impl(name, buff); }
   runtime::detail::string_type var::to_string() const
   /* TODO: Maybe cache this. */
-  { return "#'" + name->to_string(); }
+  {
+    fmt::memory_buffer buff;
+    to_string_impl(name, buff);
+    return std::string{ buff.data(), buff.size() };
+  }
   runtime::detail::integer_type var::to_hash() const
   /* TODO: Cache this. */
   { return detail::hash_combine(n->name->to_hash(), name->to_hash()); }

@@ -28,6 +28,7 @@ namespace jank::runtime::obj
 
     runtime::detail::boolean_type equal(object const &) const override;
     runtime::detail::string_type to_string() const override;
+    void to_string(fmt::memory_buffer &buff) const override;
     runtime::detail::integer_type to_hash() const override;
 
     list const* as_list() const override;

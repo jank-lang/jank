@@ -33,20 +33,13 @@ namespace jank::runtime::obj
     }
     return true;
   }
+  void vector::to_string(fmt::memory_buffer &buff) const
+  { return behavior::detail::to_string(data.begin(), data.end(), '[', ']', buff); }
   runtime::detail::string_type vector::to_string() const
   {
-    auto const end(data.end());
-    std::stringstream ss;
-    ss << "[";
-    for(auto i(data.begin()); i != end; ++i)
-    {
-      ss << **i;
-      auto n(i);
-      if(++n != end)
-      { ss << " "; }
-    }
-    ss << "]";
-    return ss.str();
+    fmt::memory_buffer buff;
+    behavior::detail::to_string(data.begin(), data.end(), '[', ']', buff);
+    return std::string{ buff.data(), buff.size() };
   }
   /* TODO: Cache this. */
   runtime::detail::integer_type vector::to_hash() const

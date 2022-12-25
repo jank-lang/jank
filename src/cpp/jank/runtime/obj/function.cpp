@@ -19,6 +19,8 @@ namespace jank::runtime::obj
     auto const *d(o.as_function());
     return d == this;
   }
+  void function::to_string(fmt::memory_buffer &buff) const
+  { format_to(std::back_inserter(buff), "function"); }
   runtime::detail::string_type function::to_string() const
   /* TODO: Optimize. */
   { return "function"; }

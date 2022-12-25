@@ -26,6 +26,7 @@ namespace jank::runtime
 
     detail::boolean_type equal(object const &) const override;
     detail::string_type to_string() const override;
+    void to_string(fmt::memory_buffer &buff) const override;
     detail::integer_type to_hash() const override;
 
     var const* as_var() const override;

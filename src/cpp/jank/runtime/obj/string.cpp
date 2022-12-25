@@ -1,6 +1,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <fmt/compile.h>
+
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/hash.hpp>
 #include <jank/runtime/obj/function.hpp>
@@ -25,6 +27,8 @@ namespace jank::runtime::obj
   }
   runtime::detail::string_type string::to_string() const
   { return data; }
+  void string::to_string(fmt::memory_buffer &buff) const
+  { format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data); }
   runtime::detail::integer_type string::to_hash() const
   { return data.to_hash(); }
   string const* string::as_string() const

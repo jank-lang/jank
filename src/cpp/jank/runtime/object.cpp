@@ -1,3 +1,5 @@
+#include <fmt/compile.h>
+
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/string.hpp>
@@ -22,6 +24,9 @@ namespace jank::runtime
 
   detail::boolean_type object::equal(object_ptr const &rhs) const
   { return rhs && equal(*rhs); }
+
+  void object::to_string(fmt::memory_buffer &buffer) const
+  { fmt::format_to(std::back_inserter(buffer), FMT_COMPILE("{}"), to_string()); }
 
   bool object::operator <(object const &rhs) const
   { return to_hash() < rhs.to_hash(); }

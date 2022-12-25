@@ -25,8 +25,21 @@ namespace jank::runtime::obj
 
     return resolved == s->resolved && sym == s->sym;
   }
+
+
+  void to_string_impl(symbol const &sym, fmt::memory_buffer &buff)
+  {
+    std::back_inserter(buff) = ':';
+    sym.to_string(buff);
+  }
+  void keyword::to_string(fmt::memory_buffer &buff) const
+  { return to_string_impl(sym, buff); }
   runtime::detail::string_type keyword::to_string() const
-  { return ":" + sym.to_string(); }
+  {
+    fmt::memory_buffer buff;
+    to_string_impl(sym, buff);
+    return std::string{ buff.data(), buff.size() };
+  }
   runtime::detail::integer_type keyword::to_hash() const
   /* TODO: Cache this. */
   { return runtime::detail::hash_combine(sym.to_hash(), hash_magic); }

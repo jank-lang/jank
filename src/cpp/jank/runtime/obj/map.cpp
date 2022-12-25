@@ -28,19 +28,30 @@ namespace jank::runtime::obj
       : coll{ c }, begin{ b }, end{ e }
     { }
 
-    runtime::detail::string_type to_string() const override
+    void to_string_impl(fmt::memory_buffer &buff) const
     {
-      std::stringstream ss;
-      ss << "(";
+      auto inserter(std::back_inserter(buff));
+      format_to(inserter, "(");
       for(auto i(begin); i != end; ++i)
       {
-        ss << "[" << *i->first << " " << *i->second << "]";
+        format_to(inserter, "[");
+        (*i).first->to_string(buff);
+        format_to(inserter, " ");
+        (*i).second->to_string(buff);
+        format_to(inserter, "]");
         auto n(i);
         if(++n != end)
-        { ss << " "; }
+        { format_to(inserter, " "); }
       }
-      ss << ")";
-      return ss.str();
+      format_to(inserter, ")");
+    }
+    void to_string(fmt::memory_buffer &buff) const override
+    { return to_string_impl(buff); }
+    runtime::detail::string_type to_string() const override
+    {
+      fmt::memory_buffer buff;
+      to_string_impl(buff);
+      return std::string{ buff.data(), buff.size() };
     }
     runtime::detail::integer_type to_hash() const override
     { return reinterpret_cast<runtime::detail::integer_type>(this); }
@@ -93,21 +104,37 @@ namespace jank::runtime::obj
 
     return to_hash() == m->to_hash();
   }
-  runtime::detail::string_type map::to_string() const
-  {
-    auto const end(data.end());
 
-    std::stringstream ss;
-    ss << "{";
-    for(auto i(data.begin()); i != end; ++i)
+  void to_string_impl
+  (
+    runtime::detail::map_type::const_iterator const &begin,
+    runtime::detail::map_type::const_iterator const &end,
+    fmt::memory_buffer &buff
+  )
+  {
+    auto inserter(std::back_inserter(buff));
+    inserter = '{';
+    for(auto i(begin); i != end; ++i)
     {
-      ss << *i->first << " " << *i->second;
+      i->first->to_string(buff);
+      inserter = ' ';
+      i->second->to_string(buff);
       auto n(i);
       if(++n != end)
-      { ss << ", "; }
+      {
+        inserter = ',';
+        inserter = ' ';
+      }
     }
-    ss << "}";
-    return ss.str();
+    inserter = '}';
+  }
+  void map::to_string(fmt::memory_buffer &buff) const
+  { to_string_impl(data.begin(), data.end(), buff); }
+  runtime::detail::string_type map::to_string() const
+  {
+    fmt::memory_buffer buff;
+    to_string_impl(data.begin(), data.end(), buff);
+    return std::string{ buff.data(), buff.size() };
   }
   /* TODO: Cache this. */
   runtime::detail::integer_type map::to_hash() const

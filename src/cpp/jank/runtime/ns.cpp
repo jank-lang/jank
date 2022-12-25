@@ -20,6 +20,8 @@ namespace jank::runtime
   runtime::detail::string_type ns::to_string() const
   /* TODO: Maybe cache this. */
   { return name->to_string(); }
+  void ns::to_string(fmt::memory_buffer &buff) const
+  { name->to_string(buff); }
   runtime::detail::integer_type ns::to_hash() const
   /* TODO: Cache this. */
   { return name->to_hash(); }

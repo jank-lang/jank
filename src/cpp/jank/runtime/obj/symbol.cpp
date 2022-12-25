@@ -1,6 +1,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <fmt/compile.h>
+
 #include <jank/runtime/obj/symbol.hpp>
 
 namespace jank::runtime::obj
@@ -48,11 +50,26 @@ namespace jank::runtime::obj
 
     return ns == s->ns && name == s->name;
   }
-  runtime::detail::string_type symbol::to_string() const
+
+  void to_string_impl
+  (
+    runtime::detail::string_type const &ns,
+    runtime::detail::string_type const &name,
+    fmt::memory_buffer &buff
+  )
   {
     if(!ns.empty())
-    { return ns + "/" + name; }
-    return name;
+    { format_to(std::back_inserter(buff), FMT_COMPILE("{}/{}"), ns.data, name.data); }
+    else
+    { format_to(std::back_inserter(buff), FMT_COMPILE("{}"), name.data); }
+  }
+  void symbol::to_string(fmt::memory_buffer &buff) const
+  { to_string_impl(ns, name, buff); }
+  runtime::detail::string_type symbol::to_string() const
+  {
+    fmt::memory_buffer buff;
+    to_string_impl(ns, name, buff);
+    return std::string{ buff.data(), buff.size() };
   }
   runtime::detail::integer_type symbol::to_hash() const
   /* TODO: Cache this. */

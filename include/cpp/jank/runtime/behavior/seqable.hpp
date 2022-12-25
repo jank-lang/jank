@@ -33,6 +33,24 @@ namespace jank::runtime::behavior
   };
   using sequence_ptr = sequence::sequence_ptr;
 
+  namespace detail
+  {
+    template <typename It>
+    void to_string(It const &begin, It const &end, char const open, char const close, fmt::memory_buffer &buff)
+    {
+      auto inserter(std::back_inserter(buff));
+      inserter = open;
+      for(auto i(begin); i != end; ++i)
+      {
+        (*i)->to_string(buff);
+        auto n(i);
+        if(++n != end)
+        { inserter = ' '; }
+      }
+      inserter = close;
+    }
+  }
+
   template <typename It>
   struct basic_iterator_wrapper : sequence, countable, pool_item_base<basic_iterator_wrapper<It>>
   {
@@ -44,22 +62,16 @@ namespace jank::runtime::behavior
       { throw std::runtime_error{ "basic_iterator_wrapper for empty sequence" }; }
     }
 
-    detail::string_type to_string() const override
+    void to_string(fmt::memory_buffer &buff) const override
+    { return detail::to_string(begin, end, '(', ')', buff); }
+    runtime::detail::string_type to_string() const override
     {
-      std::stringstream ss;
-      ss << "(";
-      for(auto i(begin); i != end; ++i)
-      {
-        ss << **i;
-        auto n(i);
-        if(++n != end)
-        { ss << " "; }
-      }
-      ss << ")";
-      return ss.str();
+      fmt::memory_buffer buff;
+      detail::to_string(begin, end, '(', ')', buff);
+      return std::string{ buff.data(), buff.size() };
     }
-    detail::integer_type to_hash() const override
-    { return reinterpret_cast<detail::integer_type>(this); }
+    runtime::detail::integer_type to_hash() const override
+    { return reinterpret_cast<runtime::detail::integer_type>(this); }
 
     behavior::seqable const* as_seqable() const override
     { return this; }
@@ -121,21 +133,16 @@ namespace jank::runtime::behavior
       : arr{ std::move(arr) }
     { }
 
-    detail::string_type to_string() const override
+    void to_string(fmt::memory_buffer &buff) const override
+    { return detail::to_string(arr.begin() + index, arr.end(), '(', ')', buff); }
+    runtime::detail::string_type to_string() const override
     {
-      std::stringstream ss;
-      ss << "(";
-      for(auto i(index); i != N; ++i)
-      {
-        ss << *arr[i];
-        if(i + 1 != N)
-        { ss << " "; }
-      }
-      ss << ")";
-      return ss.str();
+      fmt::memory_buffer buff;
+      detail::to_string(arr.begin() + index, arr.end(), '(', ')', buff);
+      return std::string{ buff.data(), buff.size() };
     }
-    detail::integer_type to_hash() const override
-    { return reinterpret_cast<detail::integer_type>(this); }
+    runtime::detail::integer_type to_hash() const override
+    { return reinterpret_cast<runtime::detail::integer_type>(this); }
 
     behavior::seqable const* as_seqable() const override
     { return this; }
@@ -196,21 +203,16 @@ namespace jank::runtime::behavior
       : arr{ std::move(arr) }
     { }
 
-    detail::string_type to_string() const override
+    void to_string(fmt::memory_buffer &buff) const override
+    { return detail::to_string(arr.begin() + index, arr.end(), '(', ')', buff); }
+    runtime::detail::string_type to_string() const override
     {
-      std::stringstream ss;
-      ss << "(";
-      for(auto i(index); i != arr.size(); ++i)
-      {
-        ss << *arr[i];
-        if(i + 1 != arr.size())
-        { ss << " "; }
-      }
-      ss << ")";
-      return ss.str();
+      fmt::memory_buffer buff;
+      detail::to_string(arr.begin() + index, arr.end(), '(', ')', buff);
+      return std::string{ buff.data(), buff.size() };
     }
-    detail::integer_type to_hash() const override
-    { return reinterpret_cast<detail::integer_type>(this); }
+    runtime::detail::integer_type to_hash() const override
+    { return reinterpret_cast<runtime::detail::integer_type>(this); }
 
     behavior::seqable const* as_seqable() const override
     { return this; }

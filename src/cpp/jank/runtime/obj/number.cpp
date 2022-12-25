@@ -2,6 +2,8 @@
 #include <random>
 #include <cmath>
 
+#include <fmt/compile.h>
+
 #include <jank/runtime/obj/number.hpp>
 
 namespace jank::runtime::obj
@@ -19,9 +21,17 @@ namespace jank::runtime::obj
 
     return data == b->data;
   }
+
+  void to_string_impl(bool const data, fmt::memory_buffer &buff)
+  { format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data ? "true" : "false"); }
+  void boolean::to_string(fmt::memory_buffer &buff) const
+  { return to_string_impl(data, buff); }
   runtime::detail::string_type boolean::to_string() const
-  /* TODO: Optimize. */
-  { return data ? "true" : "false"; }
+  {
+    fmt::memory_buffer buff;
+    to_string_impl(data, buff);
+    return std::string{ buff.data(), buff.size() };
+  }
   runtime::detail::integer_type boolean::to_hash() const
   { return data ? 1 : 0; }
   boolean const* boolean::as_boolean() const
@@ -43,8 +53,9 @@ namespace jank::runtime::obj
     return data == i->data;
   }
   runtime::detail::string_type integer::to_string() const
-  /* TODO: Optimize by rendering into string_type. */
-  { return std::to_string(data); }
+  { return fmt::format(FMT_COMPILE("{}"), data); }
+  void integer::to_string(fmt::memory_buffer &buff) const
+  { fmt::format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data); }
   runtime::detail::integer_type integer::to_hash() const
   { return data; }
   runtime::detail::integer_type integer::get_integer() const
@@ -71,8 +82,9 @@ namespace jank::runtime::obj
     return hasher(data) == hasher(r->data);
   }
   runtime::detail::string_type real::to_string() const
-  /* TODO: Optimize by rendering into string_type. */
-  { return std::to_string(data); }
+  { return fmt::format(FMT_COMPILE("{}"), data); }
+  void real::to_string(fmt::memory_buffer &buff) const
+  { fmt::format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data); }
   runtime::detail::integer_type real::to_hash() const
   { return static_cast<runtime::detail::integer_type>(data); }
   runtime::detail::integer_type real::get_integer() const

@@ -8,6 +8,8 @@
 #include <map>
 #include <string_view>
 
+#include <fmt/format.h>
+
 #include <immer/vector.hpp>
 #include <immer/vector_transient.hpp>
 #include <immer/map.hpp>
@@ -58,6 +60,7 @@ namespace jank::runtime
     virtual detail::boolean_type equal(object const &) const;
     detail::boolean_type equal(object_ptr const &) const;
     virtual detail::string_type to_string() const = 0;
+    virtual void to_string(fmt::memory_buffer &buffer) const;
     virtual detail::integer_type to_hash() const = 0;
 
     bool operator <(object const &) const;
