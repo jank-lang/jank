@@ -71,6 +71,15 @@ namespace jank::runtime::obj
 
       return map_iterator_wrapper<It>::ptr_from_this();
     }
+    object_ptr next_in_place_first() override
+    {
+      ++begin;
+
+      if(begin == end)
+      { return nullptr; }
+
+      return make_box<vector>(runtime::detail::vector_type{ begin->first, begin->second });
+    }
 
     object_ptr coll;
     It begin, end;

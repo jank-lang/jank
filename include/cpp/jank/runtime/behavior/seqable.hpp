@@ -29,6 +29,7 @@ namespace jank::runtime::behavior
      * If you don't own your sequence_ptr, you can call next() on it once, to get one you
      * do own, and then next_in_place() on that to your heart's content. */
     virtual sequence_ptr next_in_place() = 0;
+    virtual object_ptr next_in_place_first() = 0;
   };
   using sequence_ptr = sequence::sequence_ptr;
 
@@ -90,6 +91,15 @@ namespace jank::runtime::behavior
       { return nullptr; }
 
       return basic_iterator_wrapper<It>::ptr_from_this();
+    }
+    object_ptr next_in_place_first() override
+    {
+      ++begin;
+
+      if(begin == end)
+      { return nullptr; }
+
+      return *begin;
     }
 
     object_ptr coll;
@@ -158,6 +168,15 @@ namespace jank::runtime::behavior
 
       return array_sequence<N>::ptr_from_this();
     }
+    object_ptr next_in_place_first() override
+    {
+      ++index;
+
+      if(index == N)
+      { return nullptr; }
+
+      return arr[index];
+    }
 
     std::array<object_ptr, N> arr;
     size_t index{};
@@ -223,6 +242,15 @@ namespace jank::runtime::behavior
       { return nullptr; }
 
       return vector_sequence::ptr_from_this();
+    }
+    object_ptr next_in_place_first() override
+    {
+      ++index;
+
+      if(index == arr.size())
+      { return nullptr; }
+
+      return arr[index];
     }
 
     std::vector<object_ptr> arr;
