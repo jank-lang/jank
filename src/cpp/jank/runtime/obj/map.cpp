@@ -73,14 +73,14 @@ namespace jank::runtime::obj
 
       return make_box<map_iterator_wrapper<It>>(coll, n, end);
     }
-    behavior::sequence_ptr next_in_place() override
+    behavior::sequence* next_in_place() override
     {
       ++begin;
 
       if(begin == end)
       { return nullptr; }
 
-      return map_iterator_wrapper<It>::ptr_from_this();
+      return this;
     }
     object_ptr next_in_place_first() override
     {
