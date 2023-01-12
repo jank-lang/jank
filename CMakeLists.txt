@@ -167,20 +167,19 @@ target_compile_options(jank_lib PRIVATE ${jank_compiler_flags})
 target_compile_options(jank_lib PUBLIC -DLLVMDIR="${jank_llvm_root}")
 target_link_options(jank_lib PRIVATE ${jank_linker_flags})
 
-find_package(Boost REQUIRED COMPONENTS filesystem)
 find_package(Immer CONFIG REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
-find_path(LIBGUARDED_INCLUDE_DIRS "libguarded/shared_guarded.hpp")
+find_package(folly CONFIG REQUIRED)
+find_package(Boost REQUIRED COMPONENTS filesystem)
 target_compile_options(jank_lib PUBLIC -DHAVE_CXX14=1)
 
-target_include_directories(jank_lib SYSTEM PRIVATE ${LIBGUARDED_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 
-target_link_libraries(jank_lib PRIVATE jank_cling_lib immer fmt::fmt Boost::boost Boost::filesystem)
+target_link_libraries(jank_lib PRIVATE jank_cling_lib immer fmt::fmt Folly::folly Folly::folly_deps)
 
 set_target_properties(jank_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
 

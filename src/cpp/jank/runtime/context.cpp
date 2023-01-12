@@ -21,7 +21,7 @@ namespace jank::runtime
     auto &t_state(get_thread_state());
     auto const core(intern_ns(obj::symbol::create("clojure.core")));
     {
-      auto const locked_core_vars(core->vars.lock());
+      auto const locked_core_vars(core->vars.wlock());
       auto const ns_sym(obj::symbol::create("clojure.core/*ns*"));
       auto const ns_res(locked_core_vars->insert({ns_sym, var::create(core, ns_sym, core)}));
       t_state.current_ns = ns_res.first->second;
@@ -80,9 +80,9 @@ namespace jank::runtime
 
   context::context(context const &ctx)
   {
-    *namespaces.lock().get() = *ctx.namespaces.lock_shared().get();
-    *keywords.lock().get() = *ctx.keywords.lock_shared().get();
-    *thread_states.lock().get() = *ctx.thread_states.lock_shared().get();
+    *namespaces.wlock() = *ctx.namespaces.rlock();
+    *keywords.wlock() = *ctx.keywords.rlock();
+    *thread_states.wlock() = *ctx.thread_states.rlock();
   }
 
   obj::symbol_ptr context::qualify_symbol(obj::symbol_ptr const &sym)
@@ -104,7 +104,7 @@ namespace jank::runtime
       /* TODO: This is the issue. Diff it with intern_var. */
       ns_ptr ns;
       {
-        auto const locked_namespaces(namespaces.lock_shared());
+        auto const locked_namespaces(namespaces.rlock());
         auto const found(locked_namespaces->find(obj::symbol::create("", sym->ns)));
         if(found == locked_namespaces->end())
         { return none; }
@@ -112,7 +112,7 @@ namespace jank::runtime
       }
 
       {
-        auto const locked_vars(ns->vars.lock_shared());
+        auto const locked_vars(ns->vars.rlock());
         auto const found(locked_vars->find(sym));
         if(found == locked_vars->end())
         { return none; }
@@ -124,7 +124,7 @@ namespace jank::runtime
     {
       auto const t_state(get_thread_state());
       auto const * const current_ns(t_state.current_ns->get_root()->as_ns());
-      auto const locked_vars(current_ns->vars.lock_shared());
+      auto const locked_vars(current_ns->vars.rlock());
       auto const qualified_sym(obj::symbol::create(current_ns->name->name, sym->name));
       auto const found(locked_vars->find(qualified_sym));
       if(found == locked_vars->end())
@@ -183,11 +183,11 @@ namespace jank::runtime
   void context::dump() const
   {
     std::cout << "context dump" << std::endl;
-    auto locked_namespaces(namespaces.lock_shared());
+    auto locked_namespaces(namespaces.rlock());
     for(auto const &p : *locked_namespaces)
     {
       std::cout << "  " << p.second->name->to_string() << std::endl;
-      auto locked_vars(p.second->vars.lock_shared());
+      auto locked_vars(p.second->vars.rlock());
       for(auto const &vp : *locked_vars)
       {
         if(vp.second->get_root() == nullptr)
@@ -200,7 +200,7 @@ namespace jank::runtime
 
   ns_ptr context::intern_ns(obj::symbol_ptr const &sym)
   {
-    auto locked_namespaces(namespaces.lock());
+    auto locked_namespaces(namespaces.wlock());
     auto const found(locked_namespaces->find(sym));
     if(found != locked_namespaces->end())
     { return found->second; }
@@ -217,12 +217,12 @@ namespace jank::runtime
     if(qualified_sym->ns.empty())
     { return err("can't intern var; sym isn't qualified"); }
 
-    auto locked_namespaces(namespaces.lock());
+    auto locked_namespaces(namespaces.wlock());
     auto const found_ns(locked_namespaces->find(obj::symbol::create(qualified_sym->ns)));
     if(found_ns == locked_namespaces->end())
     { return err("can't intern var; namespace doesn't exist"); }
 
-    auto locked_vars(found_ns->second->vars.lock());
+    auto locked_vars(found_ns->second->vars.wlock());
     auto const found_var(locked_vars->find(qualified_sym));
     if(found_var != locked_vars->end())
     { return ok(found_var->second); }
@@ -252,7 +252,7 @@ namespace jank::runtime
       }
     }
 
-    auto locked_keywords(keywords.lock());
+    auto locked_keywords(keywords.wlock());
     auto const found(locked_keywords->find(sym));
     if(found != locked_keywords->end())
     { return found->second; }
@@ -303,11 +303,11 @@ namespace jank::runtime
   context::thread_state& context::get_thread_state(option<thread_state> init)
   {
     auto const this_id(std::this_thread::get_id());
-    decltype(thread_states)::handle::element_type::iterator found;
+    decltype(thread_states)::DataType::iterator found;
 
     /* Assume it's there and use a read lock. */
     {
-      auto const locked_thread_states(thread_states.lock_shared());
+      auto const locked_thread_states(thread_states.rlock());
       /* Our read lock here is on the container; we're returning a mutable item, but
          that's because the item itself is thread-local. */
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
@@ -319,7 +319,7 @@ namespace jank::runtime
 
     /* If it's not there, use a write lock and put it there (but check again first). */
     {
-      auto const locked_thread_states(thread_states.lock());
+      auto const locked_thread_states(thread_states.wlock());
       found = locked_thread_states->find(this_id);
       if(found != locked_thread_states->end())
       { return found->second; }
