@@ -2,14 +2,15 @@
   "name": "jank",
   "version-semver": "0.1.0",
   "dependencies": [
-    "immer",
-    "libguarded",
-    "boost-smart-ptr",
-    "boost-variant",
     "boost-algorithm",
     "boost-filesystem",
-    "magic-enum",
-    "fmt"
+    "boost-smart-ptr",
+    "boost-variant",
+    "fmt",
+    "folly",
+    "immer",
+    "libguarded",
+    "magic-enum"
   ],
   "default-features": [],
   "features": {
