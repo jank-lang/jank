@@ -35,7 +35,7 @@ namespace jank::runtime::obj
   size_t set::count() const
   { return data.size(); }
 
-  object_ptr set::with_meta(object_ptr const &m) const
+  object_ptr set::with_meta(object_ptr m) const
   {
     validate_meta(m);
     auto ret(make_box<set>(data));

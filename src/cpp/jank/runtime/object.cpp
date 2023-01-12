@@ -22,7 +22,7 @@ namespace jank::runtime
   detail::boolean_type object::equal(object const &rhs) const
   { return to_hash() == rhs.to_hash(); }
 
-  detail::boolean_type object::equal(object_ptr const &rhs) const
+  detail::boolean_type object::equal(object_ptr rhs) const
   { return rhs && equal(*rhs); }
 
   void object::to_string(fmt::memory_buffer &buffer) const

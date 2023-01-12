@@ -14,15 +14,15 @@ namespace jank::runtime
   struct ns;
   using ns_ptr = detail::box_type<ns>;
 
-  struct var : object, pool_item_base<var>, behavior::metadatable
+  struct var : object, behavior::metadatable
   {
     var(var const&) = delete;
     var(var &&) noexcept = default;
     var(ns_ptr const &n, obj::symbol_ptr const &s);
-    var(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr const &o);
+    var(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr o);
 
     static detail::box_type<var> create(ns_ptr const &n, obj::symbol_ptr const &s);
-    static detail::box_type<var> create(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr const &root);
+    static detail::box_type<var> create(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr root);
 
     detail::boolean_type equal(object const &) const override;
     detail::string_type to_string() const override;
@@ -31,13 +31,13 @@ namespace jank::runtime
 
     var const* as_var() const override;
 
-    object_ptr with_meta(object_ptr const &m) const override;
+    object_ptr with_meta(object_ptr m) const override;
     behavior::metadatable const* as_metadatable() const override;
 
     bool operator ==(var const &rhs) const;
 
     object_ptr get_root() const;
-    detail::box_type<var> set_root(object_ptr const &r);
+    detail::box_type<var> set_root(object_ptr r);
 
     ns_ptr n;
     /* TODO: Make sure this gets fully qualified. */

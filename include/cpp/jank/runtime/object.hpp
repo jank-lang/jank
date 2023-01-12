@@ -18,7 +18,6 @@
 #include <immer/set_transient.hpp>
 #include <immer/memory_policy.hpp>
 
-#include <jank/runtime/memory_pool.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/runtime/detail/type.hpp>
@@ -54,11 +53,12 @@ namespace jank::runtime
   struct var;
   struct ns;
 
-  using object_ptr = detail::box_type<struct object>;
-  struct object : virtual pool_item_common_base
+  //using object_ptr = detail::box_type<struct object>;
+  using object_ptr = struct object*;
+  struct object : virtual gc
   {
     virtual detail::boolean_type equal(object const &) const;
-    detail::boolean_type equal(object_ptr const &) const;
+    detail::boolean_type equal(object_ptr) const;
     virtual detail::string_type to_string() const = 0;
     virtual void to_string(fmt::memory_buffer &buffer) const;
     virtual detail::integer_type to_hash() const = 0;
@@ -115,15 +115,15 @@ namespace jank::runtime
   {
     struct object_ptr_equal
     {
-      static bool equal(object_ptr const &l, object_ptr const &r)
+      static bool equal(object_ptr l, object_ptr r)
       { return l == r || l->equal(*r); }
 
-      inline bool operator()(object_ptr const &l, object_ptr const &r) const
+      inline bool operator()(object_ptr l, object_ptr r) const
       { return equal(l, r); }
     };
     struct object_ptr_less
     {
-      inline bool operator()(object_ptr const &l, object_ptr const &r) const
+      inline bool operator()(object_ptr l, object_ptr r) const
       {
         auto const l_hash(l->to_hash());
         auto const r_hash(r->to_hash());
@@ -144,7 +144,7 @@ namespace jank::runtime
 
   namespace obj
   {
-    struct nil : object, pool_item_base<nil>
+    struct nil : object
     {
       nil() = default;
       nil(nil &&) noexcept = default;
@@ -171,6 +171,16 @@ namespace jank::runtime
   object_ptr make_box(detail::real_type const);
   object_ptr make_box(std::string_view const &);
   object_ptr make_box(detail::list_type const &);
+
+  template <typename T>
+  inline T* make_box(T* const &o)
+  { return o; }
+  template <typename C>
+  C* make_box()
+  { return new (GC) C{}; }
+  template <typename C, typename... Args>
+  C* make_box(Args &&... args)
+  { return new (GC) C{ std::forward<Args>(args)... }; }
 }
 
 namespace std
@@ -185,7 +195,7 @@ namespace std
   template <>
   struct hash<jank::runtime::object_ptr>
   {
-    size_t operator()(jank::runtime::object_ptr const &o) const noexcept
+    size_t operator()(jank::runtime::object_ptr o) const noexcept
     {
       static auto hasher(std::hash<jank::runtime::object>{});
       return hasher(*o);
@@ -195,7 +205,7 @@ namespace std
   template <>
   struct equal_to<jank::runtime::object_ptr>
   {
-    bool operator()(jank::runtime::object_ptr const &lhs, jank::runtime::object_ptr const &rhs) const noexcept
+    bool operator()(jank::runtime::object_ptr lhs, jank::runtime::object_ptr rhs) const noexcept
     {
       if(!lhs)
       { return !rhs; }

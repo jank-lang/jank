@@ -2,13 +2,12 @@
 
 #include <sstream>
 
-#include <jank/runtime/memory_pool.hpp>
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/countable.hpp>
 
 namespace jank::runtime::behavior
 {
-  struct seqable
+  struct seqable : virtual gc
   {
     virtual ~seqable() = default;
     virtual detail::box_type<struct sequence> seq() const = 0;
@@ -52,7 +51,7 @@ namespace jank::runtime::behavior
   }
 
   template <typename It>
-  struct basic_iterator_wrapper : sequence, countable, pool_item_base<basic_iterator_wrapper<It>>
+  struct basic_iterator_wrapper : sequence, countable
   {
     basic_iterator_wrapper() = default;
     basic_iterator_wrapper(object_ptr const &c, It const &b, It const &e, size_t const s)
@@ -76,7 +75,7 @@ namespace jank::runtime::behavior
     behavior::seqable const* as_seqable() const override
     { return this; }
     sequence_ptr seq() const override
-    { return pool_item_base<basic_iterator_wrapper<It>>::ptr_from_this(); }
+    { return static_cast<sequence_ptr>(const_cast<basic_iterator_wrapper<It>*>(this)); }
 
     behavior::countable const* as_countable() const override
     { return this; }
@@ -114,13 +113,13 @@ namespace jank::runtime::behavior
       return *begin;
     }
 
-    object_ptr coll;
+    object_ptr coll{};
     It begin, end;
     size_t size{};
   };
 
   template <size_t N>
-  struct array_sequence : sequence, countable, pool_item_base<array_sequence<N>>
+  struct array_sequence : sequence, countable
   {
     array_sequence() = default;
     array_sequence(std::array<object_ptr, N> const &arr, size_t const index)
@@ -131,6 +130,10 @@ namespace jank::runtime::behavior
     { }
     array_sequence(std::array<object_ptr, N> &&arr)
       : arr{ std::move(arr) }
+    { }
+    template <typename ...Args>
+    array_sequence(object_ptr first, Args ... rest)
+      : arr{ first, rest... }
     { }
 
     void to_string(fmt::memory_buffer &buff) const override
@@ -147,7 +150,7 @@ namespace jank::runtime::behavior
     behavior::seqable const* as_seqable() const override
     { return this; }
     sequence_ptr seq() const override
-    { return pool_item_base<array_sequence<N>>::ptr_from_this(); }
+    { return static_cast<sequence_ptr>(const_cast<array_sequence*>(this)); }
 
     behavior::countable const* as_countable() const override
     { return this; }
@@ -190,7 +193,7 @@ namespace jank::runtime::behavior
   };
 
   /* TODO: Move impl to cpp. */
-  struct vector_sequence : sequence, countable, pool_item_base<vector_sequence>
+  struct vector_sequence : sequence, countable
   {
     vector_sequence() = default;
     vector_sequence(std::vector<object_ptr> const &arr, size_t const index)
@@ -217,7 +220,7 @@ namespace jank::runtime::behavior
     behavior::seqable const* as_seqable() const override
     { return this; }
     sequence_ptr seq() const override
-    { return pool_item_base<vector_sequence>::ptr_from_this(); }
+    { return static_cast<sequence_ptr>(const_cast<vector_sequence*>(this)); }
 
     behavior::countable const* as_countable() const override
     { return this; }

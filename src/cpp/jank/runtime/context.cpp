@@ -28,9 +28,9 @@ namespace jank::runtime
     }
 
     auto const in_ns_sym(obj::symbol::create("clojure.core/in-ns"));
-    std::function<object_ptr (object_ptr const&)> in_ns_fn
+    std::function<object_ptr (object_ptr)> in_ns_fn
     (
-      [this](object_ptr const &sym)
+      [this](object_ptr sym)
       {
         auto const * const s(sym->as_symbol());
         if(!s)
@@ -38,21 +38,21 @@ namespace jank::runtime
           /* TODO: throw?. */
           return JANK_NIL;
         }
-        auto const typed_sym(boost::static_pointer_cast<obj::symbol>(sym));
+        auto const typed_sym(static_cast<obj::symbol*>(sym));
         auto const new_ns(intern_ns(typed_sym));
         get_thread_state().current_ns->set_root(new_ns);
         return JANK_NIL;
       }
-    );
+   );
     auto in_ns_var(intern_var(in_ns_sym).expect_ok());
     in_ns_var->set_root(obj::function::create(in_ns_fn));
     t_state.in_ns = in_ns_var;
 
     /* TODO: Remove this once it can be defined in jank. */
     auto const assert_sym(obj::symbol::create("clojure.core/assert"));
-    std::function<object_ptr (object_ptr const&)> assert_fn
+    std::function<object_ptr (object_ptr)> assert_fn
     (
-      [](object_ptr const &o)
+      [](object_ptr o)
       {
         if(!o || !detail::truthy(o))
         { throw std::runtime_error{ "assertion failed" }; }
@@ -261,7 +261,7 @@ namespace jank::runtime
     return res.first->second;
   }
 
-  object_ptr context::macroexpand1(object_ptr const &o)
+  object_ptr context::macroexpand1(object_ptr o)
   {
     auto const * const list(o->as_list());
     if(!list)
@@ -269,7 +269,7 @@ namespace jank::runtime
     if(list->data.data->length == 0)
     { return o; }
 
-    auto const var(find_var(boost::static_pointer_cast<obj::symbol>(list->data.first().unwrap())));
+    auto const var(find_var(static_cast<obj::symbol*>(list->data.first().unwrap())));
     /* Not a var, so not a macro. */
     if(var.is_none())
     { return o; }
@@ -277,7 +277,7 @@ namespace jank::runtime
     else if(var.unwrap()->meta.is_none())
     { return o; }
 
-    auto const &meta(boost::static_pointer_cast<obj::map>(var.unwrap()->meta.unwrap()));
+    auto const &meta(static_cast<obj::map*>(var.unwrap()->meta.unwrap()));
     auto const * const found_meta(meta->data.find(intern_keyword("", "meta", true)));
     if(!found_meta || (*found_meta)->equal(obj::JANK_FALSE))
     { return o; }
@@ -286,7 +286,7 @@ namespace jank::runtime
     return apply_to(var.unwrap()->get_root(), args);
   }
 
-  object_ptr context::macroexpand(object_ptr const &o)
+  object_ptr context::macroexpand(object_ptr o)
   {
     auto const &expanded(macroexpand1(o));
     if(expanded != o)

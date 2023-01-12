@@ -97,7 +97,7 @@ namespace jank::evaluate
     analyze::expr::call<analyze::expression> const &expr
   )
   {
-    auto const source(eval(rt_ctx, jit_prc, expr.source_expr));
+    auto * const source(eval(rt_ctx, jit_prc, expr.source_expr));
     auto const * const callable(source->as_callable());
     if(!callable)
     {
@@ -221,7 +221,7 @@ namespace jank::evaluate
     analyze::expr::do_<analyze::expression> const &expr
   )
   {
-    runtime::object_ptr ret;
+    runtime::object_ptr ret{};
     for(auto const &form : expr.body)
     { ret = eval(rt_ctx, jit_prc, form); }
     return ret;
@@ -242,7 +242,7 @@ namespace jank::evaluate
     analyze::expr::if_<analyze::expression> const &expr
   )
   {
-    auto const condition(eval(rt_ctx, jit_prc, expr.condition));
+    auto * const condition(eval(rt_ctx, jit_prc, expr.condition));
     if(runtime::detail::truthy(condition))
     { return eval(rt_ctx, jit_prc, expr.then); }
     else if(expr.else_.is_some())

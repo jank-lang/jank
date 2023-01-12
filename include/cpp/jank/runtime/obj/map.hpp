@@ -7,7 +7,7 @@
 
 namespace jank::runtime::obj
 {
-  struct map : object, behavior::seqable, pool_item_base<map>, behavior::countable, behavior::metadatable
+  struct map : object, behavior::seqable, behavior::countable, behavior::metadatable
   {
     map() = default;
     map(map &&) = default;
@@ -34,10 +34,10 @@ namespace jank::runtime::obj
 
     size_t count() const override;
 
-    object_ptr with_meta(object_ptr const &m) const override;
+    object_ptr with_meta(object_ptr m) const override;
     behavior::metadatable const* as_metadatable() const override;
 
     runtime::detail::map_type data;
   };
-  using map_ptr = runtime::detail::box_type<map>;
+  using map_ptr = map*;
 }

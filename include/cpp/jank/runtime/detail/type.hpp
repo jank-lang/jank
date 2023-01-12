@@ -2,8 +2,6 @@
 
 #include <immer/memory_policy.hpp>
 
-#include <boost/smart_ptr/intrusive_ptr.hpp>
-
 namespace jank::runtime::detail
 {
   using memory_policy = immer::memory_policy
@@ -16,8 +14,9 @@ namespace jank::runtime::detail
   using real_type = long double;
   using boolean_type = bool;
 
+  /* TODO: Custom ptr in debug which checks for nullptr usage. */
   template <typename T>
-  using box_type = boost::intrusive_ptr<T>;
+  using box_type = T*;
 }
 
 /* XXX: string_type.hpp includes this file to learn about integer types, but we also include it

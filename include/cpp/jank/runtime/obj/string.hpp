@@ -7,7 +7,7 @@
 namespace jank::runtime::obj
 {
   /* TODO: Seqable. */
-  struct string : object, pool_item_base<string>, behavior::countable, behavior::metadatable
+  struct string : object, behavior::countable, behavior::metadatable
   {
     string() = default;
     string(string &&) = default;
@@ -25,7 +25,7 @@ namespace jank::runtime::obj
 
     size_t count() const override;
 
-    object_ptr with_meta(object_ptr const &m) const override;
+    object_ptr with_meta(object_ptr m) const override;
     behavior::metadatable const* as_metadatable() const override;
 
     runtime::detail::string_type data;

@@ -26,7 +26,7 @@
  * roughly this C++:
  *
  * ```c++
- * object_ptr const &thing_result(thing->call());
+ * object_ptr thing_result(thing->call());
  * object_ptr if_result;
  * if(foo)
  * { if_result = bar; }
@@ -49,7 +49,7 @@ namespace jank::codegen
      * the actual param names as mutable locals outside of the while loop. */
     constexpr std::string_view const recur_suffix{ "__recur" };
 
-    void gen_constant(runtime::object_ptr const &o, fmt::memory_buffer &buffer)
+    void gen_constant(runtime::object_ptr o, fmt::memory_buffer &buffer)
     {
       auto inserter(std::back_inserter(buffer));
       if(o->as_nil())
@@ -623,7 +623,6 @@ namespace jank::codegen
       R"(
         struct {0}
           : jank::runtime::object
-          , jank::runtime::pool_item_base<{0}>
           , jank::runtime::behavior::callable
           , jank::runtime::behavior::metadatable
         {{
@@ -644,12 +643,12 @@ namespace jank::codegen
         {{ return reinterpret_cast<jank::runtime::detail::integer_type>(this); }}
         jank::runtime::behavior::callable const* as_callable() const override
         {{ return this; }}
-        jank::runtime::object_ptr with_meta(jank::runtime::object_ptr const &m) const override
+        jank::runtime::object_ptr with_meta(jank::runtime::object_ptr m) const override
         {{
           validate_meta(m);
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-          const_cast<{}*>(this)->meta = m;
-          return ptr_from_this();
+          const_cast<{0}*>(this)->meta = m;
+          return const_cast<{0}*>(this);
         }}
         jank::runtime::behavior::metadatable const* as_metadatable() const override
         {{ return this; }}
@@ -701,7 +700,7 @@ namespace jank::codegen
         format_to
         (
           inserter,
-          ", jank::runtime::object_ptr const &{0}", runtime::munge(v.first->name)
+          ", jank::runtime::object_ptr {0}", runtime::munge(v.first->name)
         );
       }
     }
@@ -769,7 +768,7 @@ namespace jank::codegen
         format_to
         (
           inserter,
-          "{} jank::runtime::object_ptr const &{}{}",
+          "{} jank::runtime::object_ptr {}{}",
           (param_comma ? ", " : ""),
           runtime::munge(param->name),
           recur_suffix

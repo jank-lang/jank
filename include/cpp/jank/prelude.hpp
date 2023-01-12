@@ -1,5 +1,9 @@
 #pragma once
 
+#include <gc/gc.h>
+#include <gc/gc_cpp.h>
+#include <gc/gc_allocator.h>
+
 #include <nanobench.h>
 
 #include <jank/runtime/obj/number.hpp>

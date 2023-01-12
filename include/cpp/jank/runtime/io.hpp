@@ -4,13 +4,13 @@
 
 namespace jank::runtime
 {
-  inline object_ptr print(object_ptr const &o)
+  inline object_ptr print(object_ptr o)
   {
     std::cout << *o;
     return JANK_NIL;
   }
 
-  inline object_ptr println(object_ptr const &o)
+  inline object_ptr println(object_ptr o)
   {
     print(o);
     std::cout << "\n";

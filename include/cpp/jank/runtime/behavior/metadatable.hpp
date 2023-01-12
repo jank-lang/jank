@@ -5,19 +5,19 @@
 
 namespace jank::runtime
 {
-  using object_ptr = detail::box_type<struct object>;
+  using object_ptr = struct object*;
 
   namespace behavior
   {
-    struct metadatable
+    struct metadatable : virtual gc
     {
       virtual ~metadatable() = default;
 
       /* This can't be defined in the base, since it needs to clone the current object.
        * That requires knowledge of the most derived type. */
-      virtual object_ptr with_meta(object_ptr const &) const = 0;
+      virtual object_ptr with_meta(object_ptr) const = 0;
 
-      static void validate_meta(object_ptr const &);
+      static void validate_meta(object_ptr);
 
       option<object_ptr> meta;
     };

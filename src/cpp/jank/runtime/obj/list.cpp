@@ -71,12 +71,12 @@ namespace jank::runtime::obj
     return make_box
     <
       behavior::basic_iterator_wrapper<runtime::detail::list_type::iterator>
-    >(ptr_from_this(), data.begin(), data.end(), data.size());
+    >(const_cast<list*>(this), data.begin(), data.end(), data.size());
   }
   size_t list::count() const
   { return data.size(); }
 
-  object_ptr list::with_meta(object_ptr const &m) const
+  object_ptr list::with_meta(object_ptr m) const
   {
     validate_meta(m);
     auto ret(make_box<list>(data));

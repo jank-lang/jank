@@ -7,32 +7,32 @@ namespace jank::runtime
 {
   namespace detail
   {
-    bool truthy(object_ptr const &o);
+    bool truthy(object_ptr o);
   }
 
-  object_ptr identity(object_ptr const &o);
+  object_ptr identity(object_ptr o);
 
   /* some? */
-  object_ptr some_gen_qmark_(object_ptr const &o);
+  object_ptr some_gen_qmark_(object_ptr o);
 
   /* nil? */
-  object_ptr nil_gen_qmark_(object_ptr const &o);
+  object_ptr nil_gen_qmark_(object_ptr o);
 
   /* truthy? */
-  object_ptr truthy_gen_qmark_(object_ptr const &o);
+  object_ptr truthy_gen_qmark_(object_ptr o);
 
   /* = */
-  object_ptr _gen_equal_(object_ptr const &l, object_ptr const &r);
+  object_ptr _gen_equal_(object_ptr l, object_ptr r);
 
   /* not= */
-  object_ptr not_gen_equal_(object_ptr const &l, object_ptr const &r);
+  object_ptr not_gen_equal_(object_ptr l, object_ptr r);
 
   /* TODO: This should be the `and` macro. */
-  object_ptr all(object_ptr const &l, object_ptr const &r);
+  object_ptr all(object_ptr l, object_ptr r);
 
   /* TODO: This should be the `or` macro. */
-  object_ptr either(object_ptr const &l, object_ptr const &r);
+  object_ptr either(object_ptr l, object_ptr r);
 
   detail::string_type munge(detail::string_type const &o);
-  object_ptr munge(object_ptr const &o);
+  object_ptr munge(object_ptr o);
 }

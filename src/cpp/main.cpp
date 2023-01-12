@@ -21,6 +21,9 @@ int main(int const argc, char const **argv)
     std::cerr << "Usage: " << argv[0] << " <file>\n";
     return 1;
   }
+
+  GC_INIT();
+
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
   char const *file{ argv[1] };
 

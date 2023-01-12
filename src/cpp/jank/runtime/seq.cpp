@@ -32,7 +32,7 @@ namespace jank::runtime
     }
   }
 
-  object_ptr seq(object_ptr const &s)
+  object_ptr seq(object_ptr s)
   {
     auto const * const sable(s->as_seqable());
     if(!sable)
@@ -44,7 +44,7 @@ namespace jank::runtime
   }
 
   /* TODO: Laziness. */
-  object_ptr mapv(object_ptr const &f, object_ptr const &seq)
+  object_ptr mapv(object_ptr f, object_ptr seq)
   {
     auto const * const sable(seq->as_seqable());
     if(!sable)
@@ -70,7 +70,7 @@ namespace jank::runtime
     return make_box<obj::vector>(ret.persistent());
   }
 
-  object_ptr reduce(object_ptr const &f, object_ptr const &initial, object_ptr const &seq)
+  object_ptr reduce(object_ptr f, object_ptr initial, object_ptr seq)
   {
     auto const * const sable(seq->as_seqable());
     if(!sable)
@@ -97,7 +97,7 @@ namespace jank::runtime
   }
 
   /* TODO: Laziness */
-  object_ptr partition_gen_minus_all(object_ptr const &n, object_ptr const &seq)
+  object_ptr partition_gen_minus_all(object_ptr n, object_ptr seq)
   {
     auto const * const i(n->as_integer());
     if(!i)
@@ -132,7 +132,7 @@ namespace jank::runtime
   }
 
   /* TODO: Laziness */
-  object_ptr range(object_ptr const &start, object_ptr const &end)
+  object_ptr range(object_ptr start, object_ptr end)
   {
     auto const * const s(start->as_integer());
     auto const * const e(end->as_integer());
@@ -159,7 +159,7 @@ namespace jank::runtime
     return make_box<obj::vector>(ret.persistent());
   }
 
-  object_ptr reverse(object_ptr const &seq)
+  object_ptr reverse(object_ptr seq)
   {
     auto const * const sable(seq->as_seqable());
     if(!sable)
@@ -181,7 +181,7 @@ namespace jank::runtime
   }
 
   /* TODO: Associative interface. */
-  object_ptr get(object_ptr const &o, object_ptr const &key)
+  object_ptr get(object_ptr o, object_ptr key)
   {
     auto const * const m(o->as_map());
     if(m)
@@ -215,7 +215,7 @@ namespace jank::runtime
   }
 
   /* TODO: Persistent collection interface. */
-  object_ptr conj(object_ptr const &o, object_ptr const &val)
+  object_ptr conj(object_ptr o, object_ptr val)
   {
     auto const * const m(o->as_map());
     if(m)
@@ -244,7 +244,7 @@ namespace jank::runtime
     return JANK_NIL;
   }
 
-  object_ptr assoc(object_ptr const &o, object_ptr const &key, object_ptr const &val)
+  object_ptr assoc(object_ptr o, object_ptr key, object_ptr val)
   {
     auto const * const m(o->as_map());
     if(m)

@@ -9,7 +9,7 @@
 namespace jank::runtime::obj
 {
   /* The correct way to create a keyword for normal use is through interning via the RT context. */
-  struct keyword : object, pool_item_base<keyword>
+  struct keyword : object
   {
     keyword() = default;
     keyword(keyword &&) = default;
@@ -38,7 +38,7 @@ namespace jank::runtime::obj
     /* Clojure uses this. No idea. https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/Keyword.java */
     static constexpr size_t hash_magic{ 0x9e3779b9 };
   };
-  using keyword_ptr = runtime::detail::box_type<obj::keyword>;
+  using keyword_ptr = obj::keyword*;
 }
 
 namespace std

@@ -60,12 +60,12 @@ namespace jank::runtime::obj
     return make_box
     <
       behavior::basic_iterator_wrapper<runtime::detail::vector_type::iterator>
-    >(ptr_from_this(), data.begin(), data.end(), data.size());
+    >(const_cast<vector*>(this), data.begin(), data.end(), data.size());
   }
   size_t vector::count() const
   { return data.size(); }
 
-  object_ptr vector::with_meta(object_ptr const &m) const
+  object_ptr vector::with_meta(object_ptr m) const
   {
     validate_meta(m);
     auto ret(make_box<vector>(data));
