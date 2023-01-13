@@ -9,13 +9,13 @@ using namespace std::string_view_literals;
 
 namespace jank::read
 {
-  error::error(size_t const s, std::string const &m)
+  error::error(size_t const s, runtime::detail::string_type const &m)
     : start{ s }, end{ s }, message{ m }
   { }
-  error::error(size_t const s, size_t const e, std::string const &m)
+  error::error(size_t const s, size_t const e, runtime::detail::string_type const &m)
     : start{ s }, end{ e }, message{ m }
   { }
-  error::error(std::string const &m)
+  error::error(runtime::detail::string_type const &m)
     : message{ m }
   { }
 
@@ -25,7 +25,7 @@ namespace jank::read
   { return start != rhs.start || end != rhs.end || message != rhs.message; }
 
   std::ostream& operator <<(std::ostream &os, error const &e)
-  { return os << "error(" << e.start << " - " << e.end << ", " << std::quoted(e.message) << ")"; }
+  { return os << "error(" << e.start << " - " << e.end << ", \"" << e.message << "\")"; }
 
   namespace lex
   {

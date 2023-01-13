@@ -4,6 +4,8 @@
 #include <memory>
 #include <cstring>
 
+#include <folly/FBString.h>
+
 #include <immer/box.hpp>
 #include <immer/memory_policy.hpp>
 
@@ -31,8 +33,14 @@ namespace jank::runtime::detail
     string_type_impl(std::string &&s)
       : data{ std::move(s) }
     { }
-    string_type_impl(std::string_view const &s)
+    string_type_impl(folly::fbstring const &s)
       : data{ s }
+    { }
+    string_type_impl(folly::fbstring &&s)
+      : data{ std::move(s) }
+    { }
+    string_type_impl(std::string_view const &s)
+      : data{ s.data(), s.size() }
     { }
     string_type_impl(char const * const s, size_t const l)
       : data{ s, l }
@@ -43,6 +51,8 @@ namespace jank::runtime::detail
     string_type_impl<MP>& operator=(string_type_impl<MP> &&) = default;
 
     bool operator==(string_type_impl const &s) const
+    { return to_hash() == s.to_hash(); }
+    bool operator!=(string_type_impl const &s) const
     { return to_hash() == s.to_hash(); }
 
     bool empty() const
@@ -67,8 +77,10 @@ namespace jank::runtime::detail
 
     operator std::string_view() const
     { return { data }; }
+    operator std::string() const
+    { return { data.data(), data.size() }; }
 
-    std::string data;
+    folly::fbstring data;
     mutable detail::integer_type hash{};
 
     template <typename M>

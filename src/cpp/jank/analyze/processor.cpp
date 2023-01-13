@@ -595,14 +595,14 @@ namespace jank::analyze
     constexpr std::string_view interp_start{ "#{" }, interp_end{ "}#" };
     for(size_t it{}; it != std::string::npos; )
     {
-      auto const next_start(code_str->data.data.find(interp_start, it));
+      auto const next_start(code_str->data.data.find(interp_start.data(), it));
       if(next_start == std::string::npos)
       {
         /* This is the final chunk. */
         chunks.emplace_back(std::string_view{ code_str->data.data.data() + it });
         break;
       }
-      auto const next_end(code_str->data.data.find(interp_end, next_start));
+      auto const next_end(code_str->data.data.find(interp_end.data(), next_start));
       if(next_end == std::string::npos)
       { return err(error{ fmt::format("no matching {} found for native/raw interpolation", interp_end) }); }
 

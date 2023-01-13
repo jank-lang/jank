@@ -238,7 +238,7 @@
 
                  ankerl::nanobench::Bench().config(config).run
                  (
-                  label_str->data.data,
+                  label_str->data,
                   [&]
                   {
                     object_ptr res{ callable->call() };
