@@ -7,7 +7,7 @@
 
 namespace jank::runtime::obj
 {
-  struct set : object, behavior::seqable, pool_item_base<set>, behavior::countable, behavior::metadatable
+  struct set : object, behavior::seqable, behavior::countable, behavior::metadatable
   {
     set() = default;
     set(set &&) = default;
@@ -28,7 +28,7 @@ namespace jank::runtime::obj
 
     size_t count() const override;
 
-    object_ptr with_meta(object_ptr const &m) const override;
+    object_ptr with_meta(object_ptr m) const override;
     behavior::metadatable const* as_metadatable() const override;
 
     runtime::detail::set_type data;

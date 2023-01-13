@@ -7,7 +7,7 @@
 
 namespace jank::runtime::obj
 {
-  struct list : object, behavior::seqable, behavior::countable, pool_item_base<list>, behavior::metadatable
+  struct list : object, behavior::seqable, behavior::countable, behavior::metadatable
   {
     list() = default;
     list(list &&) = default;
@@ -37,10 +37,10 @@ namespace jank::runtime::obj
     behavior::sequence_ptr seq() const override;
     size_t count() const override;
 
-    object_ptr with_meta(object_ptr const &m) const override;
+    object_ptr with_meta(object_ptr m) const override;
     behavior::metadatable const* as_metadatable() const override;
 
     runtime::detail::list_type data;
   };
-  using list_ptr = runtime::detail::box_type<list>;
+  using list_ptr = list*;
 }

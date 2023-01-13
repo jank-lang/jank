@@ -38,7 +38,7 @@ namespace jank::runtime::obj
   struct invalid_arity
   { };
 
-  struct function : object, behavior::callable, pool_item_base<function>, behavior::metadatable
+  struct function : object, behavior::callable, behavior::metadatable
   {
     function() = default;
     function(function &&) = default;
@@ -58,18 +58,18 @@ namespace jank::runtime::obj
     behavior::callable const* as_callable() const override;
 
     object_ptr call() const override;
-    object_ptr call(object_ptr const&) const override;
-    object_ptr call(object_ptr const&, object_ptr const&) const override;
-    object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&) const override;
-    object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const override;
-    object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const override;
-    object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const override;
-    object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const override;
-    object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const override;
-    object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const override;
-    object_ptr call(object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&, object_ptr const&) const override;
+    object_ptr call(object_ptr) const override;
+    object_ptr call(object_ptr, object_ptr) const override;
+    object_ptr call(object_ptr, object_ptr, object_ptr) const override;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr) const override;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const override;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const override;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const override;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const override;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const override;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const override;
 
-    object_ptr with_meta(object_ptr const &m) const override;
+    object_ptr with_meta(object_ptr m) const override;
     behavior::metadatable const* as_metadatable() const override;
 
     detail::function_type data;

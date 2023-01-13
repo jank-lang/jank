@@ -129,10 +129,10 @@
     ([o & args]
      (native/raw "fmt::memory_buffer buff;
                   buff.reserve(16);
-                  auto const &seq(#{ args }#->as_seqable()->seq());
+                  auto * const seq(static_cast<behavior::sequence*>(const_cast<behavior::seqable*>(#{ args }#->as_seqable())));
                   #{ o }#->to_string(buff);
                   seq->first()->to_string(buff);
-                  for(auto it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
+                  for(auto *it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
                   { it->first()->to_string(buff); }
                   __value = make_box<obj::string>(std::string{ buff.data(), buff.size() });"))))
 
@@ -238,7 +238,7 @@
 
                  ankerl::nanobench::Bench().config(config).run
                  (
-                  label_str->data.data,
+                  label_str->data,
                   [&]
                   {
                     object_ptr res{ callable->call() };

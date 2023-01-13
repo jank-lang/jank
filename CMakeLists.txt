@@ -128,7 +128,6 @@ add_library(
   src/cpp/jank/read/parse.cpp
   src/cpp/jank/runtime/util.cpp
   src/cpp/jank/runtime/seq.cpp
-  src/cpp/jank/runtime/memory_pool.cpp
   src/cpp/jank/runtime/object.cpp
   src/cpp/jank/runtime/context.cpp
   src/cpp/jank/runtime/ns.cpp
@@ -172,6 +171,7 @@ find_package(magic_enum CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(folly CONFIG REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem)
+find_package(BDWgc CONFIG REQUIRED)
 target_compile_options(jank_lib PUBLIC -DHAVE_CXX14=1)
 
 target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
@@ -179,7 +179,12 @@ target_include_directories(jank_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 
-target_link_libraries(jank_lib PRIVATE jank_cling_lib immer fmt::fmt Folly::folly Folly::folly_deps)
+target_link_libraries(
+  jank_lib PRIVATE
+  jank_cling_lib immer fmt::fmt
+  Folly::folly Folly::folly_deps
+  BDWgc::gc BDWgc::cord BDWgc::gccpp BDWgc::gctba
+)
 
 set_target_properties(jank_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
 

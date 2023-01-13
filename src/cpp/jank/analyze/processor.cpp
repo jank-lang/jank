@@ -106,7 +106,7 @@ namespace jank::analyze
       value_expr = some(value_result.expect_ok());
     }
 
-    auto const &var_sym(boost::static_pointer_cast<runtime::obj::symbol>(sym_obj));
+    auto const &var_sym(static_cast<runtime::obj::symbol*>(sym_obj));
     auto const qualified_sym(current_frame->lift_var(var_sym));
     rt_ctx.intern_var(qualified_sym);
     return std::make_shared<expression>
@@ -188,7 +188,7 @@ namespace jank::analyze
         continue;
       }
 
-      auto const sym_ptr(boost::static_pointer_cast<runtime::obj::symbol>(p));
+      auto const sym_ptr(static_cast<runtime::obj::symbol*>(p));
       auto const unique_res(unique_param_symbols.emplace(*sym_ptr));
       if(!unique_res.second)
       {
@@ -293,7 +293,7 @@ namespace jank::analyze
         auto result
         (
           analyze_fn_arity
-          (boost::static_pointer_cast<runtime::obj::list>(arity_list), current_frame)
+          (static_cast<runtime::obj::list*>(arity_list), current_frame)
         );
         if(result.is_err())
         { return result.expect_err_move(); }
@@ -462,7 +462,7 @@ namespace jank::analyze
       if(sym == nullptr || !sym->ns.empty())
       { return err(error{ "invalid let* binding: left hand must be an unqualified symbol" }); }
 
-      auto const sym_ptr(boost::static_pointer_cast<runtime::obj::symbol>(sym_obj));
+      auto const sym_ptr(static_cast<runtime::obj::symbol*>(sym_obj));
       auto res(analyze(val, ret.frame, expression_type::expression, fn_ctx));
       if(res.is_err())
       { return res.expect_err_move(); }
@@ -561,7 +561,7 @@ namespace jank::analyze
     if(arg_sym == nullptr)
     { return err(error{ "invalid var reference: expects a symbol" }); }
 
-    auto const qualified_sym(rt_ctx.qualify_symbol(boost::static_pointer_cast<runtime::obj::symbol>(arg)));
+    auto const qualified_sym(rt_ctx.qualify_symbol(static_cast<runtime::obj::symbol*>(arg)));
     auto const found_var(rt_ctx.find_var(qualified_sym));
     if(found_var.is_none())
     { return err(error{ "invalid var reference: var not found" }); }
@@ -595,14 +595,14 @@ namespace jank::analyze
     constexpr std::string_view interp_start{ "#{" }, interp_end{ "}#" };
     for(size_t it{}; it != std::string::npos; )
     {
-      auto const next_start(code_str->data.data.find(interp_start, it));
+      auto const next_start(code_str->data.data.find(interp_start.data(), it));
       if(next_start == std::string::npos)
       {
         /* This is the final chunk. */
         chunks.emplace_back(std::string_view{ code_str->data.data.data() + it });
         break;
       }
-      auto const next_end(code_str->data.data.find(interp_end, next_start));
+      auto const next_end(code_str->data.data.find(interp_end.data(), next_start));
       if(next_end == std::string::npos)
       { return err(error{ fmt::format("no matching {} found for native/raw interpolation", interp_end) }); }
 
@@ -636,7 +636,7 @@ namespace jank::analyze
 
   processor::expression_result processor::analyze_primitive_literal
   (
-    runtime::object_ptr const &o,
+    runtime::object_ptr o,
     local_frame_ptr &current_frame,
     expression_type const expr_type,
     option<expr::function_context_ptr> const&
@@ -723,7 +723,7 @@ namespace jank::analyze
     expression_ptr source;
     if(first->as_symbol())
     {
-      auto const sym(boost::static_pointer_cast<runtime::obj::symbol>(first));
+      auto const sym(static_cast<runtime::obj::symbol*>(first));
       auto const found_special(specials.find(sym));
       if(found_special != specials.end())
       { return found_special->second(o, current_frame, expr_type, fn_ctx); }
@@ -772,14 +772,14 @@ namespace jank::analyze
 
   processor::expression_result processor::analyze
   (
-    runtime::object_ptr const &o,
+    runtime::object_ptr o,
     expression_type const expr_type
   )
   { return analyze(o, root_frame, expr_type, none); }
 
   processor::expression_result processor::analyze
   (
-    runtime::object_ptr const &o,
+    runtime::object_ptr o,
     local_frame_ptr &current_frame,
     expression_type const expr_type,
     option<expr::function_context_ptr> const& fn_ctx
@@ -789,17 +789,17 @@ namespace jank::analyze
     { return err(error{ "unexpected nullptr" }); }
 
     if(o->as_list())
-    { return analyze_call(boost::static_pointer_cast<runtime::obj::list>(o), current_frame, expr_type, fn_ctx); }
+    { return analyze_call(static_cast<runtime::obj::list*>(o), current_frame, expr_type, fn_ctx); }
     else if(o->as_vector())
-    { return analyze_vector(boost::static_pointer_cast<runtime::obj::vector>(o), current_frame, expr_type, fn_ctx); }
+    { return analyze_vector(static_cast<runtime::obj::vector*>(o), current_frame, expr_type, fn_ctx); }
     else if(o->as_map())
-    { return analyze_map(boost::static_pointer_cast<runtime::obj::map>(o), current_frame, expr_type, fn_ctx); }
+    { return analyze_map(static_cast<runtime::obj::map*>(o), current_frame, expr_type, fn_ctx); }
     else if(o->as_set())
     { return err(error{ "unimplemented analysis: set" }); }
     else if(o->as_number() || o->as_boolean() || o->as_keyword() || o->as_nil() || o->as_string())
     { return analyze_primitive_literal(o, current_frame, expr_type, fn_ctx); }
     else if(o->as_symbol())
-    { return analyze_symbol(boost::static_pointer_cast<runtime::obj::symbol>(o), current_frame, expr_type, fn_ctx); }
+    { return analyze_symbol(static_cast<runtime::obj::symbol*>(o), current_frame, expr_type, fn_ctx); }
     else
     {
       std::cerr << "unsupported analysis of " << o->to_string() << std::endl;

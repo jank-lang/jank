@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  struct number
+  struct number : virtual gc
   {
     virtual ~number() = default;
 
@@ -12,7 +12,7 @@ namespace jank::runtime::obj
     virtual runtime::detail::real_type get_real() const = 0;
   };
 
-  struct boolean : object, pool_item_base<boolean>
+  struct boolean : object
   {
     boolean() = default;
     boolean(boolean &&) noexcept = default;
@@ -29,7 +29,7 @@ namespace jank::runtime::obj
     runtime::detail::boolean_type data{};
   };
 
-  struct integer : object, number, pool_item_base<integer>
+  struct integer : object, number
   {
     integer() = default;
     integer(integer &&) noexcept = default;
@@ -52,7 +52,7 @@ namespace jank::runtime::obj
     runtime::detail::integer_type data{};
   };
 
-  struct real : object, number, pool_item_base<real>
+  struct real : object, number
   {
     real() = default;
     real(real &&) noexcept = default;
@@ -74,21 +74,21 @@ namespace jank::runtime::obj
   };
 
   object_ptr rand();
-  object_ptr _gen_plus_(object_ptr const &l, object_ptr const &r);
-  object_ptr _gen_minus_(object_ptr const &l, object_ptr const &r);
-  object_ptr _gen_asterisk_(object_ptr const &l, object_ptr const &r);
-  object_ptr div(object_ptr const &l, object_ptr const &r);
-  object_ptr mod(object_ptr const &l, object_ptr const &r);
-  object_ptr _gen_less_(object_ptr const &l, object_ptr const &r);
-  object_ptr _gen_less__gen_equal_(object_ptr const &l, object_ptr const &r);
-  object_ptr _gen_minus__gen_greater_int(object_ptr const &o);
-  object_ptr _gen_minus__gen_greater_float(object_ptr const &o);
-  object_ptr inc(object_ptr const &n);
-  object_ptr dec(object_ptr const &n);
-  object_ptr sqrt(object_ptr const &o);
-  object_ptr tan(object_ptr const &o);
-  object_ptr pow(object_ptr const &l, object_ptr const &r);
-  object_ptr abs(object_ptr const &n);
-  object_ptr min(object_ptr const &l, object_ptr const &r);
-  object_ptr max(object_ptr const &l, object_ptr const &r);
+  object_ptr _gen_plus_(object_ptr l, object_ptr r);
+  object_ptr _gen_minus_(object_ptr l, object_ptr r);
+  object_ptr _gen_asterisk_(object_ptr l, object_ptr r);
+  object_ptr div(object_ptr l, object_ptr r);
+  object_ptr mod(object_ptr l, object_ptr r);
+  object_ptr _gen_less_(object_ptr l, object_ptr r);
+  object_ptr _gen_less__gen_equal_(object_ptr l, object_ptr r);
+  object_ptr _gen_minus__gen_greater_int(object_ptr o);
+  object_ptr _gen_minus__gen_greater_float(object_ptr o);
+  object_ptr inc(object_ptr n);
+  object_ptr dec(object_ptr n);
+  object_ptr sqrt(object_ptr o);
+  object_ptr tan(object_ptr o);
+  object_ptr pow(object_ptr l, object_ptr r);
+  object_ptr abs(object_ptr n);
+  object_ptr min(object_ptr l, object_ptr r);
+  object_ptr max(object_ptr l, object_ptr r);
 }

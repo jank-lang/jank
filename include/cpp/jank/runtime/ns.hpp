@@ -14,7 +14,7 @@ namespace jank::runtime
   struct var;
   struct context;
 
-  struct ns : object, pool_item_base<ns>
+  struct ns : object
   {
     ns(obj::symbol_ptr const &name, context const &c)
       : name{ name }, ctx{ c }

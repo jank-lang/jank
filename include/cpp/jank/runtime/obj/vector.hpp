@@ -7,7 +7,7 @@
 
 namespace jank::runtime::obj
 {
-  struct vector : object, behavior::seqable, behavior::countable, pool_item_base<vector>, behavior::metadatable
+  struct vector : object, behavior::seqable, behavior::countable, behavior::metadatable
   {
     vector() = default;
     vector(vector &&) = default;
@@ -36,10 +36,10 @@ namespace jank::runtime::obj
     behavior::sequence_ptr seq() const override;
     size_t count() const override;
 
-    object_ptr with_meta(object_ptr const &m) const override;
+    object_ptr with_meta(object_ptr m) const override;
     behavior::metadatable const* as_metadatable() const override;
 
     runtime::detail::vector_type data;
   };
-  using vector_ptr = runtime::detail::box_type<vector>;
+  using vector_ptr = vector*;
 }

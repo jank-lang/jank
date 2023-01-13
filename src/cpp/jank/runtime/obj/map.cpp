@@ -21,10 +21,10 @@ namespace jank::runtime::obj
   { return make_box<map>(o); }
 
   template <typename It>
-  struct map_iterator_wrapper : behavior::sequence, pool_item_base<map_iterator_wrapper<It>>
+  struct map_iterator_wrapper : behavior::sequence
   {
     map_iterator_wrapper() = default;
-    map_iterator_wrapper(object_ptr const &c, It const &b, It const &e)
+    map_iterator_wrapper(object_ptr c, It const &b, It const &e)
       : coll{ c }, begin{ b }, end{ e }
     { }
 
@@ -59,7 +59,7 @@ namespace jank::runtime::obj
     behavior::seqable const* as_seqable() const override
     { return this; }
     sequence_ptr seq() const override
-    { return pool_item_base<map_iterator_wrapper<It>>::ptr_from_this(); }
+    { return static_cast<sequence_ptr>(const_cast<map_iterator_wrapper<It>*>(this)); }
 
     object_ptr first() const override
     { return make_box<vector>(runtime::detail::vector_type{ begin->first, begin->second }); }
@@ -155,13 +155,13 @@ namespace jank::runtime::obj
   {
     if(data.size() == 0)
     { return nullptr; }
-    return make_box<map_iterator_wrapper<runtime::detail::map_type::const_iterator>>(ptr_from_this(), data.begin(), data.end());
+    return make_box<map_iterator_wrapper<runtime::detail::map_type::const_iterator>>(const_cast<map*>(this), data.begin(), data.end());
   }
 
   size_t map::count() const
   { return data.size(); }
 
-  object_ptr map::with_meta(object_ptr const &m) const
+  object_ptr map::with_meta(object_ptr m) const
   {
     validate_meta(m);
     auto ret(make_box<map>(data));

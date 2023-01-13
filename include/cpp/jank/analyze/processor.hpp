@@ -37,10 +37,10 @@ namespace jank::analyze
       read::parse::processor::iterator,
       read::parse::processor::iterator const &
     );
-    expression_result analyze(runtime::object_ptr const &, expression_type);
+    expression_result analyze(runtime::object_ptr, expression_type);
     expression_result analyze
     (
-      runtime::object_ptr const &,
+      runtime::object_ptr,
       local_frame_ptr &,
       expression_type,
       option<expr::function_context_ptr> const&
@@ -129,7 +129,7 @@ namespace jank::analyze
     );
     expression_result analyze_primitive_literal
     (
-      runtime::object_ptr const &,
+      runtime::object_ptr,
       local_frame_ptr &,
       expression_type,
       option<expr::function_context_ptr> const&

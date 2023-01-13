@@ -9,7 +9,7 @@ namespace jank::runtime
   var::var(ns_ptr const &n, obj::symbol_ptr const &s)
     : n{ n }, name{ s }
   { }
-  var::var(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr const &o)
+  var::var(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr o)
     : n{ n }, name{ s }, root{ o }
   { }
 
@@ -17,7 +17,7 @@ namespace jank::runtime
   detail::box_type<var> var::create(ns_ptr const &n, obj::symbol_ptr const &s)
   { return make_box<var>(n, s); }
 
-  detail::box_type<var> var::create(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr const &root)
+  detail::box_type<var> var::create(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr root)
   { return make_box<var>(n, s, root); }
 
   runtime::detail::boolean_type var::equal(object const &o) const
@@ -47,12 +47,12 @@ namespace jank::runtime
   var const* var::as_var() const
   { return this; }
 
-  object_ptr var::with_meta(object_ptr const &m) const
+  object_ptr var::with_meta(object_ptr m) const
   {
     validate_meta(m);
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     const_cast<var*>(this)->meta = m;
-    return ptr_from_this();
+    return const_cast<var*>(this);
   }
 
   behavior::metadatable const* var::as_metadatable() const
@@ -61,9 +61,9 @@ namespace jank::runtime
   object_ptr var::get_root() const
   { return *root.rlock(); }
 
-  var_ptr var::set_root(object_ptr const &r)
+  var_ptr var::set_root(object_ptr r)
   {
     *root.wlock() = r;
-    return ptr_from_this();
+    return this;
   }
 }

@@ -84,16 +84,16 @@ namespace jank::read
 {
   struct error
   {
-    error(size_t const s, std::string const &m);
-    error(size_t const s, size_t const e, std::string const &m);
-    error(std::string const &m);
+    error(size_t const s, runtime::detail::string_type const &m);
+    error(size_t const s, size_t const e, runtime::detail::string_type const &m);
+    error(runtime::detail::string_type const &m);
 
     bool operator ==(error const &rhs) const;
     bool operator !=(error const &rhs) const;
 
     size_t start{};
     size_t end{};
-    std::string message;
+    runtime::detail::string_type message;
   };
   std::ostream& operator <<(std::ostream &os, error const &e);
 }

@@ -228,7 +228,7 @@ namespace jank::runtime::obj
   number_ops const& real_ops::with(real_ops const &) const
   { return r_ops; }
 
-  number_ops& left_ops(object_ptr const &n)
+  number_ops& left_ops(object_ptr n)
   {
     if(auto const * const i = n->as_integer())
     {
@@ -245,7 +245,7 @@ namespace jank::runtime::obj
     throw runtime::detail::string_type{ "(left_ops) not a number: " } + n->to_string();
   }
 
-  number_ops& right_ops(object_ptr const &n)
+  number_ops& right_ops(object_ptr n)
   {
     if(auto const * const i = n->as_integer())
     {
@@ -270,41 +270,41 @@ namespace jank::runtime::obj
   }
 
   /* + */
-  object_ptr _gen_plus_(object_ptr const &l, object_ptr const &r)
+  object_ptr _gen_plus_(object_ptr l, object_ptr r)
   { return right_ops(r).combine(left_ops(l)).add(); }
 
   /* - */
-  object_ptr _gen_minus_(object_ptr const &l, object_ptr const &r)
+  object_ptr _gen_minus_(object_ptr l, object_ptr r)
   { return right_ops(r).combine(left_ops(l)).subtract(); }
 
   /* * */
-  object_ptr _gen_asterisk_(object_ptr const &l, object_ptr const &r)
+  object_ptr _gen_asterisk_(object_ptr l, object_ptr r)
   { return right_ops(r).combine(left_ops(l)).multiply(); }
 
   /* TODO: Rename to / once the parser supports it. */
   /* / */
-  object_ptr div(object_ptr const &l, object_ptr const &r)
+  object_ptr div(object_ptr l, object_ptr r)
   { return right_ops(r).combine(left_ops(l)).divide(); }
 
-  object_ptr mod(object_ptr const &l, object_ptr const &r)
+  object_ptr mod(object_ptr l, object_ptr r)
   { return right_ops(r).combine(left_ops(l)).remainder(); }
 
   /* < */
-  object_ptr _gen_less_(object_ptr const &l, object_ptr const &r)
+  object_ptr _gen_less_(object_ptr l, object_ptr r)
   {
     return make_box<boolean>
     (right_ops(r).combine(left_ops(l)).lt());
   }
 
   /* <= */
-  object_ptr _gen_less__gen_equal_(object_ptr const &l, object_ptr const &r)
+  object_ptr _gen_less__gen_equal_(object_ptr l, object_ptr r)
   {
     return make_box<boolean>
     (right_ops(r).combine(left_ops(l)).lte());
   }
 
   /* ->int */
-  object_ptr _gen_minus__gen_greater_int(object_ptr const &o)
+  object_ptr _gen_minus__gen_greater_int(object_ptr o)
   {
     auto const * const n(o->as_number());
     if(!n)
@@ -317,7 +317,7 @@ namespace jank::runtime::obj
   }
 
   /* ->float */
-  object_ptr _gen_minus__gen_greater_float(object_ptr const &o)
+  object_ptr _gen_minus__gen_greater_float(object_ptr o)
   {
     auto const * const n(o->as_number());
     if(!n)
@@ -329,13 +329,13 @@ namespace jank::runtime::obj
     return make_box<real>(n->get_real());
   }
 
-  object_ptr inc(object_ptr const &n)
+  object_ptr inc(object_ptr n)
   { return left_ops(n).inc(); }
 
-  object_ptr dec(object_ptr const &n)
+  object_ptr dec(object_ptr n)
   { return left_ops(n).dec(); }
 
-  object_ptr sqrt(object_ptr const &o)
+  object_ptr sqrt(object_ptr o)
   {
     auto const * const n(o->as_number());
     if(!n)
@@ -347,7 +347,7 @@ namespace jank::runtime::obj
     return make_box<real>(std::sqrt(n->get_real()));
   }
 
-  object_ptr tan(object_ptr const &o)
+  object_ptr tan(object_ptr o)
   {
     auto const * const n(o->as_number());
     if(!n)
@@ -359,7 +359,7 @@ namespace jank::runtime::obj
     return make_box<real>(std::tan(n->get_real()));
   }
 
-  object_ptr pow(object_ptr const &l, object_ptr const &r)
+  object_ptr pow(object_ptr l, object_ptr r)
   {
     auto const * const l_num(l->as_number());
     auto const * const r_num(r->as_number());
@@ -372,12 +372,12 @@ namespace jank::runtime::obj
     return make_box<real>(std::pow(l_num->get_real(), r_num->get_real()));
   }
 
-  object_ptr abs(object_ptr const &n)
+  object_ptr abs(object_ptr n)
   { return left_ops(n).abs(); }
 
-  object_ptr min(object_ptr const &l, object_ptr const &r)
+  object_ptr min(object_ptr l, object_ptr r)
   { return right_ops(r).combine(left_ops(l)).min(); }
 
-  object_ptr max(object_ptr const &l, object_ptr const &r)
+  object_ptr max(object_ptr l, object_ptr r)
   { return right_ops(r).combine(left_ops(l)).max(); }
 }

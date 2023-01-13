@@ -33,8 +33,8 @@ namespace jank::runtime
     obj::keyword_ptr intern_keyword(obj::symbol const &sym, bool const resolved);
     obj::keyword_ptr intern_keyword(std::string_view const &ns, std::string_view const &name, bool resolved);
 
-    object_ptr macroexpand1(object_ptr const &list);
-    object_ptr macroexpand(object_ptr const &list);
+    object_ptr macroexpand1(object_ptr list);
+    object_ptr macroexpand(object_ptr list);
 
     void eval_prelude(jit::processor const &);
     object_ptr eval_file(std::string_view const &path, jit::processor const &);

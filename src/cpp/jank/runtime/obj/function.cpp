@@ -33,7 +33,7 @@ namespace jank::runtime::obj
 
   template <size_t N, typename... Args>
   struct build_arity
-  { using type = typename build_arity<N - 1, Args..., object_ptr const &>::type; };
+  { using type = typename build_arity<N - 1, Args..., object_ptr>::type; };
   template <typename... Args>
   struct build_arity<0, Args...>
   { using type = object_ptr (Args const&...); };
@@ -58,28 +58,28 @@ namespace jank::runtime::obj
 
   object_ptr function::call() const
   { return apply_function(*this); }
-  object_ptr function::call(object_ptr const &arg1) const
+  object_ptr function::call(object_ptr arg1) const
   { return apply_function(*this, arg1); }
-  object_ptr function::call(object_ptr const &arg1, object_ptr const &arg2) const
+  object_ptr function::call(object_ptr arg1, object_ptr arg2) const
   { return apply_function(*this, arg1, arg2); }
-  object_ptr function::call(object_ptr const &arg1, object_ptr const &arg2, object_ptr const &arg3) const
+  object_ptr function::call(object_ptr arg1, object_ptr arg2, object_ptr arg3) const
   { return apply_function(*this, arg1, arg2, arg3); }
-  object_ptr function::call(object_ptr const &arg1, object_ptr const &arg2, object_ptr const &arg3, object_ptr const &arg4) const
+  object_ptr function::call(object_ptr arg1, object_ptr arg2, object_ptr arg3, object_ptr arg4) const
   { return apply_function(*this, arg1, arg2, arg3, arg4); }
-  object_ptr function::call(object_ptr const &arg1, object_ptr const &arg2, object_ptr const &arg3, object_ptr const &arg4, object_ptr const &arg5) const
+  object_ptr function::call(object_ptr arg1, object_ptr arg2, object_ptr arg3, object_ptr arg4, object_ptr arg5) const
   { return apply_function(*this, arg1, arg2, arg3, arg4, arg5); }
-  object_ptr function::call(object_ptr const &arg1, object_ptr const &arg2, object_ptr const &arg3, object_ptr const &arg4, object_ptr const &arg5, object_ptr const &arg6) const
+  object_ptr function::call(object_ptr arg1, object_ptr arg2, object_ptr arg3, object_ptr arg4, object_ptr arg5, object_ptr arg6) const
   { return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6); }
-  object_ptr function::call(object_ptr const &arg1, object_ptr const &arg2, object_ptr const &arg3, object_ptr const &arg4, object_ptr const &arg5, object_ptr const &arg6, object_ptr const &arg7) const
+  object_ptr function::call(object_ptr arg1, object_ptr arg2, object_ptr arg3, object_ptr arg4, object_ptr arg5, object_ptr arg6, object_ptr arg7) const
   { return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6, arg7); }
-  object_ptr function::call(object_ptr const &arg1, object_ptr const &arg2, object_ptr const &arg3, object_ptr const &arg4, object_ptr const &arg5, object_ptr const &arg6, object_ptr const &arg7, object_ptr const &arg8) const
+  object_ptr function::call(object_ptr arg1, object_ptr arg2, object_ptr arg3, object_ptr arg4, object_ptr arg5, object_ptr arg6, object_ptr arg7, object_ptr arg8) const
   { return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8); }
-  object_ptr function::call(object_ptr const &arg1, object_ptr const &arg2, object_ptr const &arg3, object_ptr const &arg4, object_ptr const &arg5, object_ptr const &arg6, object_ptr const &arg7, object_ptr const &arg8, object_ptr const &arg9) const
+  object_ptr function::call(object_ptr arg1, object_ptr arg2, object_ptr arg3, object_ptr arg4, object_ptr arg5, object_ptr arg6, object_ptr arg7, object_ptr arg8, object_ptr arg9) const
   { return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9); }
-  object_ptr function::call(object_ptr const &arg1, object_ptr const &arg2, object_ptr const &arg3, object_ptr const &arg4, object_ptr const &arg5, object_ptr const &arg6, object_ptr const &arg7, object_ptr const &arg8, object_ptr const &arg9, object_ptr const &arg10) const
+  object_ptr function::call(object_ptr arg1, object_ptr arg2, object_ptr arg3, object_ptr arg4, object_ptr arg5, object_ptr arg6, object_ptr arg7, object_ptr arg8, object_ptr arg9, object_ptr arg10) const
   { return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10); }
 
-  object_ptr function::with_meta(object_ptr const &m) const
+  object_ptr function::with_meta(object_ptr m) const
   {
     validate_meta(m);
     auto ret(make_box<function>(data));

@@ -8,7 +8,7 @@
 
 namespace jank::runtime::obj
 {
-  struct symbol : object, pool_item_base<symbol>, behavior::metadatable
+  struct symbol : object, behavior::metadatable
   {
     symbol() = default;
     symbol(symbol &&) = default;
@@ -30,7 +30,7 @@ namespace jank::runtime::obj
 
     symbol const* as_symbol() const override;
 
-    object_ptr with_meta(object_ptr const &m) const override;
+    object_ptr with_meta(object_ptr m) const override;
     behavior::metadatable const* as_metadatable() const override;
 
     bool operator ==(symbol const &rhs) const;
@@ -41,7 +41,7 @@ namespace jank::runtime::obj
     runtime::detail::string_type ns;
     runtime::detail::string_type name;
   };
-  using symbol_ptr = runtime::detail::box_type<obj::symbol>;
+  using symbol_ptr = obj::symbol*;
 }
 
 namespace std

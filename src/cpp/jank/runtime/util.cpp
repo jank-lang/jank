@@ -7,7 +7,7 @@ namespace jank::runtime
 {
   namespace detail
   {
-    bool truthy(object_ptr const &o)
+    bool truthy(object_ptr o)
     {
       if(o->as_nil())
       { return false; }
@@ -18,35 +18,35 @@ namespace jank::runtime
     }
   }
 
-  object_ptr identity(object_ptr const &o)
+  object_ptr identity(object_ptr o)
   { return o; }
 
   /* some? */
-  object_ptr some_gen_qmark_(object_ptr const &o)
+  object_ptr some_gen_qmark_(object_ptr o)
   { return make_box<obj::boolean>(o->as_nil() == nullptr); }
 
   /* nil? */
-  object_ptr nil_gen_qmark_(object_ptr const &o)
+  object_ptr nil_gen_qmark_(object_ptr o)
   { return make_box<obj::boolean>(o->as_nil() != nullptr); }
 
   /* truthy? */
-  object_ptr truthy_gen_qmark_(object_ptr const &o)
+  object_ptr truthy_gen_qmark_(object_ptr o)
   { return make_box<obj::boolean>(detail::truthy(o)); }
 
   /* = */
-  object_ptr _gen_equal_(object_ptr const &l, object_ptr const &r)
+  object_ptr _gen_equal_(object_ptr l, object_ptr r)
   { return make_box<obj::boolean>(l->equal(*r)); }
 
   /* not= */
-  object_ptr not_gen_equal_(object_ptr const &l, object_ptr const &r)
+  object_ptr not_gen_equal_(object_ptr l, object_ptr r)
   { return make_box<obj::boolean>(!l->equal(*r)); }
 
   /* TODO: This should be the `and` macro. */
-  object_ptr all(object_ptr const &l, object_ptr const &r)
+  object_ptr all(object_ptr l, object_ptr r)
   { return make_box<obj::boolean>(detail::truthy(l) && detail::truthy(r));}
 
   /* TODO: This should be the `or` macro. */
-  object_ptr either(object_ptr const &l, object_ptr const &r)
+  object_ptr either(object_ptr l, object_ptr r)
   { return detail::truthy(l) ? l : r;}
 
   static std::unordered_map<char, std::string_view> const munge_chars
@@ -93,7 +93,7 @@ namespace jank::runtime
   }
 
   /* TODO: Support symbols and other data; Clojure takes in anything and passes it through str. */
-  object_ptr munge(object_ptr const &o)
+  object_ptr munge(object_ptr o)
   {
     auto const * const str(o->as_string());
     if(str == nullptr)

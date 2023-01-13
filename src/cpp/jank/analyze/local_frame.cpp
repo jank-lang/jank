@@ -111,7 +111,7 @@ namespace jank::analyze
     return none;
   }
 
-  void local_frame::lift_constant(runtime::object_ptr const &constant)
+  void local_frame::lift_constant(runtime::object_ptr constant)
   {
     auto &closest_fn(find_closest_fn_frame(*this));
     auto const &found(closest_fn.lifted_constants.find(constant));
@@ -122,7 +122,7 @@ namespace jank::analyze
   }
 
   option<std::reference_wrapper<lifted_constant const>> local_frame::find_lifted_constant
-  (runtime::object_ptr const &o) const
+  (runtime::object_ptr o) const
   {
     auto const &closest_fn(find_closest_fn_frame(*this));
     auto const &found(closest_fn.lifted_constants.find(o));

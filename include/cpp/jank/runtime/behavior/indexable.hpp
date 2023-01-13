@@ -15,7 +15,7 @@ namespace jank::runtime
       virtual ~indexable() = default;
 
       virtual object_ptr nth(size_t const i) const = 0;
-      virtual object_ptr nth(size_t const i, object_ptr const &fallback) const = 0;
+      virtual object_ptr nth(size_t const i, object_ptr fallback) const = 0;
     };
   }
 }

@@ -65,9 +65,9 @@ namespace jank::analyze
     option<std::reference_wrapper<lifted_var const>> find_lifted_var
     (runtime::obj::symbol_ptr const &) const;
 
-    void lift_constant(runtime::object_ptr const &);
+    void lift_constant(runtime::object_ptr);
     option<std::reference_wrapper<lifted_constant const>> find_lifted_constant
-    (runtime::object_ptr const &) const;
+    (runtime::object_ptr) const;
 
     frame_type type;
     option<std::shared_ptr<local_frame>> parent;

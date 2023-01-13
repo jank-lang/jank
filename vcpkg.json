@@ -2,6 +2,7 @@
   "name": "jank",
   "version-semver": "0.1.0",
   "dependencies": [
+    "bdwgc",
     "boost-algorithm",
     "boost-filesystem",
     "boost-smart-ptr",

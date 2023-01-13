@@ -57,8 +57,8 @@ namespace jank::jit
     if(result != cling::Interpreter::CompilationResult::kSuccess)
     { return err("compilation error"); }
 
-    auto const *ret_val(v.simplisticCastAs<runtime::object_ptr*>());
-    return ok(*ret_val);
+    auto * const ret_val(v.simplisticCastAs<runtime::object_ptr>());
+    return ok(ret_val);
   }
 
   void processor::eval_string(std::string const &s) const
