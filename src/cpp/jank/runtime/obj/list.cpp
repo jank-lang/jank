@@ -35,7 +35,6 @@ namespace jank::runtime::obj
     if(!s)
     { return false; }
 
-    /* TODO: Optimize using better interfaces. */
     auto seq(s->seq());
     for(auto it(data.begin()); it != data.end(); ++it, seq = seq->next_in_place())
     {

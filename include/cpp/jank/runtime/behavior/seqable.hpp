@@ -17,7 +17,6 @@ namespace jank::runtime::behavior
   {
     using sequence_ptr = detail::box_type<sequence>;
 
-    virtual ~sequence() = default;
     virtual object_ptr first() const = 0;
     virtual sequence_ptr next() const = 0;
     /* Each call to next() allocates a new sequence_ptr, since it's polymorphic. When iterating
