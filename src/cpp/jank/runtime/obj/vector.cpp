@@ -8,6 +8,72 @@
 
 namespace jank::runtime::obj
 {
+  struct vector_sequence : behavior::sequence, behavior::countable
+  {
+    vector_sequence() = default;
+    vector_sequence(vector_ptr v)
+      : vec{ v }
+    { }
+    vector_sequence(vector_ptr v, size_t i)
+      : vec{ v }, index{ i }
+    { }
+
+    void to_string(fmt::memory_buffer &buff) const override
+    { return behavior::detail::to_string(vec->data.begin() + index, vec->data.end(), '[', ']', buff); }
+    runtime::detail::string_type to_string() const override
+    {
+      fmt::memory_buffer buff;
+      behavior::detail::to_string(vec->data.begin() + index, vec->data.end(), '[', ']', buff);
+      return folly::fbstring{ buff.data(), buff.size() };
+    }
+    runtime::detail::integer_type to_hash() const override
+    { return reinterpret_cast<runtime::detail::integer_type>(this); }
+
+    behavior::seqable const* as_seqable() const override
+    { return this; }
+    sequence_ptr seq() const override
+    { return static_cast<sequence_ptr>(const_cast<vector_sequence*>(this)); }
+
+    behavior::countable const* as_countable() const override
+    { return this; }
+    size_t count() const override
+    { return vec->data.size(); }
+
+    object_ptr first() const override
+    { return vec->data[index]; }
+    sequence_ptr next() const override
+    {
+      auto n(index);
+      ++n;
+
+      if(n == vec->data.size())
+      { return nullptr; }
+
+      return make_box<vector_sequence>(vec, n);
+    }
+    sequence_ptr next_in_place() override
+    {
+      ++index;
+
+      if(index == vec->data.size())
+      { return nullptr; }
+
+      return this;
+    }
+    object_ptr next_in_place_first() override
+    {
+      ++index;
+
+      if(index == vec->data.size())
+      { return nullptr; }
+
+      return vec->data[index];
+    }
+
+    vector_ptr vec;
+    size_t index{};
+  };
+
   vector::vector(runtime::detail::vector_type &&d)
     : data{ std::move(d) }
   { }
@@ -57,10 +123,7 @@ namespace jank::runtime::obj
   {
     if(data.empty())
     { return nullptr; }
-    return make_box
-    <
-      behavior::basic_iterator_wrapper<runtime::detail::vector_type::iterator>
-    >(const_cast<vector*>(this), data.begin(), data.end(), data.size());
+    return make_box<vector_sequence>(const_cast<vector*>(this));
   }
   size_t vector::count() const
   { return data.size(); }

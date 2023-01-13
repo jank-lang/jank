@@ -27,7 +27,7 @@ namespace jank::runtime::behavior
      *
      * If you don't own your sequence_ptr, you can call next() on it once, to get one you
      * do own, and then next_in_place() on that to your heart's content. */
-    virtual sequence* next_in_place() = 0;
+    virtual sequence_ptr next_in_place() = 0;
     virtual object_ptr next_in_place_first() = 0;
   };
   using sequence_ptr = sequence::sequence_ptr;
@@ -67,7 +67,7 @@ namespace jank::runtime::behavior
     {
       fmt::memory_buffer buff;
       detail::to_string(begin, end, '(', ')', buff);
-      return std::string{ buff.data(), buff.size() };
+      return folly::fbstring{ buff.data(), buff.size() };
     }
     runtime::detail::integer_type to_hash() const override
     { return reinterpret_cast<runtime::detail::integer_type>(this); }
@@ -94,7 +94,7 @@ namespace jank::runtime::behavior
 
       return make_box<basic_iterator_wrapper<It>>(coll, n, end, size);
     }
-    sequence* next_in_place() override
+    sequence_ptr next_in_place() override
     {
       ++begin;
 
@@ -142,7 +142,7 @@ namespace jank::runtime::behavior
     {
       fmt::memory_buffer buff;
       detail::to_string(arr.begin() + index, arr.end(), '(', ')', buff);
-      return std::string{ buff.data(), buff.size() };
+      return folly::fbstring{ buff.data(), buff.size() };
     }
     runtime::detail::integer_type to_hash() const override
     { return reinterpret_cast<runtime::detail::integer_type>(this); }
@@ -169,7 +169,7 @@ namespace jank::runtime::behavior
 
       return make_box<array_sequence<N>>(arr, n);
     }
-    sequence* next_in_place() override
+    sequence_ptr next_in_place() override
     {
       ++index;
 
@@ -212,7 +212,7 @@ namespace jank::runtime::behavior
     {
       fmt::memory_buffer buff;
       detail::to_string(arr.begin() + index, arr.end(), '(', ')', buff);
-      return std::string{ buff.data(), buff.size() };
+      return folly::fbstring{ buff.data(), buff.size() };
     }
     runtime::detail::integer_type to_hash() const override
     { return reinterpret_cast<runtime::detail::integer_type>(this); }
@@ -239,7 +239,7 @@ namespace jank::runtime::behavior
 
       return make_box<vector_sequence>(arr, n);
     }
-    sequence* next_in_place() override
+    sequence_ptr next_in_place() override
     {
       ++index;
 
