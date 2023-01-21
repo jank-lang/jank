@@ -22,10 +22,10 @@ namespace jank::runtime
 
     static ns_ptr create(obj::symbol_ptr const &n, context const &c);
 
-    detail::boolean_type equal(object const &) const override;
-    detail::string_type to_string() const override;
+    native_bool equal(object const &) const override;
+    native_string to_string() const override;
     void to_string(fmt::memory_buffer &buff) const override;
-    detail::integer_type to_hash() const override;
+    native_integer to_hash() const override;
 
     ns const* as_ns() const override;
 
@@ -35,7 +35,7 @@ namespace jank::runtime
     folly::Synchronized<std::unordered_map<obj::symbol_ptr, var_ptr>> vars;
     context const &ctx;
   };
-  using ns_ptr = detail::box_type<ns>;
+  using ns_ptr = native_box<ns>;
 }
 
 namespace std

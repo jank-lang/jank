@@ -1,6 +1,5 @@
 #pragma once
 
-#include <vector>
 #include <list>
 
 #include <jank/runtime/obj/symbol.hpp>
@@ -18,12 +17,12 @@ namespace jank::analyze::expr
     bool is_tail_recursive{};
     /* TODO: is_pure */
   };
-  using function_context_ptr = std::shared_ptr<function_context>;
+  using function_context_ptr = native_box<function_context>;
 
   template <typename E>
   struct function_arity
   {
-    std::vector<runtime::obj::symbol_ptr> params;
+    native_vector<runtime::obj::symbol_ptr> params;
     do_<E> body;
     local_frame_ptr frame;
     function_context_ptr fn_ctx;
@@ -41,8 +40,8 @@ namespace jank::analyze::expr
   template <typename E>
   struct function : expression_base
   {
-    option<std::string> name;
-    std::vector<function_arity<E>> arities;
+    option<native_string> name;
+    native_vector<function_arity<E>> arities;
   };
 }
 

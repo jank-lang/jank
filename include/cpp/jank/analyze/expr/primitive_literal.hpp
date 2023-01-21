@@ -1,8 +1,5 @@
 #pragma once
 
-#include <vector>
-
-#include <jank/runtime/object.hpp>
 #include <jank/analyze/local_frame.hpp>
 #include <jank/analyze/expression_base.hpp>
 

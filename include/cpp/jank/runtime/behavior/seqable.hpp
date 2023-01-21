@@ -1,8 +1,5 @@
 #pragma once
 
-#include <sstream>
-
-#include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/countable.hpp>
 
 namespace jank::runtime::behavior
@@ -10,12 +7,12 @@ namespace jank::runtime::behavior
   struct seqable : virtual gc
   {
     virtual ~seqable() = default;
-    virtual detail::box_type<struct sequence> seq() const = 0;
+    virtual native_box<struct sequence> seq() const = 0;
   };
 
   struct sequence : virtual object, seqable
   {
-    using sequence_ptr = detail::box_type<sequence>;
+    using sequence_ptr = native_box<sequence>;
 
     virtual object_ptr first() const = 0;
     virtual sequence_ptr next() const = 0;
@@ -62,14 +59,14 @@ namespace jank::runtime::behavior
 
     void to_string(fmt::memory_buffer &buff) const override
     { return detail::to_string(begin, end, '(', ')', buff); }
-    runtime::detail::string_type to_string() const override
+    native_string to_string() const override
     {
       fmt::memory_buffer buff;
       detail::to_string(begin, end, '(', ')', buff);
-      return folly::fbstring{ buff.data(), buff.size() };
+      return native_string{ buff.data(), buff.size() };
     }
-    runtime::detail::integer_type to_hash() const override
-    { return reinterpret_cast<runtime::detail::integer_type>(this); }
+    native_integer to_hash() const override
+    { return reinterpret_cast<native_integer>(this); }
 
     behavior::seqable const* as_seqable() const override
     { return this; }
@@ -91,7 +88,7 @@ namespace jank::runtime::behavior
       if(n == end)
       { return nullptr; }
 
-      return make_box<basic_iterator_wrapper<It>>(coll, n, end, size);
+      return jank::make_box<basic_iterator_wrapper<It>>(coll, n, end, size);
     }
     sequence_ptr next_in_place() override
     {
@@ -137,14 +134,14 @@ namespace jank::runtime::behavior
 
     void to_string(fmt::memory_buffer &buff) const override
     { return detail::to_string(arr.begin() + index, arr.end(), '(', ')', buff); }
-    runtime::detail::string_type to_string() const override
+    native_string to_string() const override
     {
       fmt::memory_buffer buff;
       detail::to_string(arr.begin() + index, arr.end(), '(', ')', buff);
-      return folly::fbstring{ buff.data(), buff.size() };
+      return native_string{ buff.data(), buff.size() };
     }
-    runtime::detail::integer_type to_hash() const override
-    { return reinterpret_cast<runtime::detail::integer_type>(this); }
+    native_integer to_hash() const override
+    { return reinterpret_cast<native_integer>(this); }
 
     behavior::seqable const* as_seqable() const override
     { return this; }
@@ -166,7 +163,7 @@ namespace jank::runtime::behavior
       if(n == N)
       { return nullptr; }
 
-      return make_box<array_sequence<N>>(arr, n);
+      return jank::make_box<array_sequence<N>>(arr, n);
     }
     sequence_ptr next_in_place() override
     {
@@ -195,26 +192,26 @@ namespace jank::runtime::behavior
   struct vector_sequence : sequence, countable
   {
     vector_sequence() = default;
-    vector_sequence(std::vector<object_ptr> const &arr, size_t const index)
+    vector_sequence(native_vector<object_ptr> const &arr, size_t const index)
       : arr{ arr }, index{ index }
     { }
-    vector_sequence(std::vector<object_ptr> &&arr, size_t const index)
+    vector_sequence(native_vector<object_ptr> &&arr, size_t const index)
       : arr{ std::move(arr) }, index{ index }
     { }
-    vector_sequence(std::vector<object_ptr> &&arr)
+    vector_sequence(native_vector<object_ptr> &&arr)
       : arr{ std::move(arr) }
     { }
 
     void to_string(fmt::memory_buffer &buff) const override
     { return detail::to_string(arr.begin() + index, arr.end(), '(', ')', buff); }
-    runtime::detail::string_type to_string() const override
+    native_string to_string() const override
     {
       fmt::memory_buffer buff;
       detail::to_string(arr.begin() + index, arr.end(), '(', ')', buff);
-      return folly::fbstring{ buff.data(), buff.size() };
+      return native_string{ buff.data(), buff.size() };
     }
-    runtime::detail::integer_type to_hash() const override
-    { return reinterpret_cast<runtime::detail::integer_type>(this); }
+    native_integer to_hash() const override
+    { return reinterpret_cast<native_integer>(this); }
 
     behavior::seqable const* as_seqable() const override
     { return this; }
@@ -236,7 +233,7 @@ namespace jank::runtime::behavior
       if(n == arr.size())
       { return nullptr; }
 
-      return make_box<vector_sequence>(arr, n);
+      return jank::make_box<vector_sequence>(arr, n);
     }
     sequence_ptr next_in_place() override
     {
@@ -257,7 +254,7 @@ namespace jank::runtime::behavior
       return arr[index];
     }
 
-    std::vector<object_ptr> arr;
+    native_vector<object_ptr> arr;
     size_t index{};
   };
 }

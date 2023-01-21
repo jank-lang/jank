@@ -7,9 +7,9 @@
 namespace jank::runtime
 {
   ns_ptr ns::create(obj::symbol_ptr const &n, context const &c)
-  { return make_box<ns>(n, c); }
+  { return jank::make_box<ns>(n, c); }
 
-  runtime::detail::boolean_type ns::equal(object const &o) const
+  native_bool ns::equal(object const &o) const
   {
     auto const *v(o.as_ns());
     if(!v)
@@ -17,12 +17,12 @@ namespace jank::runtime
 
     return name == v->name;
   }
-  runtime::detail::string_type ns::to_string() const
+  native_string ns::to_string() const
   /* TODO: Maybe cache this. */
   { return name->to_string(); }
   void ns::to_string(fmt::memory_buffer &buff) const
   { name->to_string(buff); }
-  runtime::detail::integer_type ns::to_hash() const
+  native_integer ns::to_hash() const
   /* TODO: Cache this. */
   { return name->to_hash(); }
 

@@ -4,8 +4,17 @@
 #include <gc/gc_cpp.h>
 #include <gc/gc_allocator.h>
 
+#include <immer/heap/gc_heap.hpp>
+#include <immer/heap/heap_policy.hpp>
+#include <immer/memory_policy.hpp>
+
+#include <boost/unordered_map.hpp>
+
 #include <nanobench.h>
 
+#include <jank/type.hpp>
+#include <jank/native_box.hpp>
+#include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/function.hpp>
 #include <jank/runtime/obj/map.hpp>

@@ -25,10 +25,10 @@ namespace jank::analyze
   struct local_binding
   {
     runtime::obj::symbol_ptr name;
-    option<std::shared_ptr<expression>> value_expr;
+    option<native_box<expression>> value_expr;
   };
 
-  struct local_frame : std::enable_shared_from_this<local_frame>
+  struct local_frame : gc
   {
     enum class frame_type
     {
@@ -44,7 +44,7 @@ namespace jank::analyze
     (
       frame_type const &type,
       runtime::context &ctx,
-      option<std::shared_ptr<local_frame>> const &p
+      option<native_box<local_frame>> const &p
     );
 
     local_frame& operator=(local_frame const &rhs);
@@ -53,7 +53,7 @@ namespace jank::analyze
     struct find_result
     {
       local_binding &binding;
-      std::vector<std::shared_ptr<local_frame>> crossed_fns;
+      native_vector<native_box<local_frame>> crossed_fns;
     };
 
     /* This is used to find both captures and regular locals, since it's
@@ -70,12 +70,12 @@ namespace jank::analyze
     (runtime::object_ptr) const;
 
     frame_type type;
-    option<std::shared_ptr<local_frame>> parent;
-    std::unordered_map<runtime::obj::symbol_ptr, local_binding> locals;
-    std::unordered_map<runtime::obj::symbol_ptr, local_binding> captures;
-    std::unordered_map<runtime::obj::symbol_ptr, lifted_var> lifted_vars;
-    std::unordered_map<runtime::object_ptr, lifted_constant> lifted_constants;
+    option<native_box<local_frame>> parent;
+    native_unordered_map<runtime::obj::symbol_ptr, local_binding> locals;
+    native_unordered_map<runtime::obj::symbol_ptr, local_binding> captures;
+    native_unordered_map<runtime::obj::symbol_ptr, lifted_var> lifted_vars;
+    native_unordered_map<runtime::object_ptr, lifted_constant> lifted_constants;
     runtime::context &rt_ctx;
   };
-  using local_frame_ptr = std::shared_ptr<local_frame>;
+  using local_frame_ptr = native_box<local_frame>;
 }

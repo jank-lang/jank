@@ -13,7 +13,7 @@ namespace jank::analyze::expr
   struct def : expression_base
   {
     runtime::obj::symbol_ptr name;
-    option<std::shared_ptr<E>> value;
+    option<native_box<E>> value;
     local_frame_ptr frame;
   };
 }

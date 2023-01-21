@@ -8,29 +8,29 @@
 
 namespace jank::runtime::obj
 {
-  set::set(runtime::detail::set_type &&d)
+  set::set(runtime::detail::persistent_set &&d)
     : data{ std::move(d) }
   { }
-  set::set(runtime::detail::set_type const &d)
+  set::set(runtime::detail::persistent_set const &d)
     : data{ d }
   { }
 
   ///***** set *****/
-  //detail::boolean_type set::equal(object const &) const
+  //native_bool set::equal(object const &) const
   //{
   //}
-  //detail::string_type set::to_string() const
+  //native_string set::to_string() const
   //{
   //}
-  //detail::integer_type set::to_hash() const
+  //native_integer set::to_hash() const
   //{
   //}
   //set const* set::as_set() const
   //{ return this; }
   //iterator_ptr set::begin() const
-  //{ return make_box<basic_iterator_wrapper<detail::set_type::iterator>>(data.begin()); }
+  //{ return jank::make_box<basic_iterator_wrapper<detail::set_type::iterator>>(data.begin()); }
   //iterator_ptr set::end() const
-  //{ return make_box<basic_iterator_wrapper<detail::set_type::iterator>>(data.end()); }
+  //{ return jank::make_box<basic_iterator_wrapper<detail::set_type::iterator>>(data.end()); }
 
   size_t set::count() const
   { return data.size(); }
@@ -38,7 +38,7 @@ namespace jank::runtime::obj
   object_ptr set::with_meta(object_ptr m) const
   {
     validate_meta(m);
-    auto ret(make_box<set>(data));
+    auto ret(jank::make_box<set>(data));
     ret->meta = m;
     return ret;
   }

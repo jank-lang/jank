@@ -1,6 +1,5 @@
 #pragma once
 
-#include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/number.hpp>
 
 namespace jank::runtime
@@ -33,6 +32,6 @@ namespace jank::runtime
   /* TODO: This should be the `or` macro. */
   object_ptr either(object_ptr l, object_ptr r);
 
-  detail::string_type munge(detail::string_type const &o);
+  native_string munge(native_string const &o);
   object_ptr munge(object_ptr o);
 }

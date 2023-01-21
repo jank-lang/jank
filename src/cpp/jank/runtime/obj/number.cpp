@@ -9,11 +9,11 @@
 namespace jank::runtime::obj
 {
   /***** boolean *****/
-  boolean::boolean(runtime::detail::boolean_type const d)
+  boolean::boolean(native_bool const d)
     : data{ d }
   { }
 
-  runtime::detail::boolean_type boolean::equal(object const &o) const
+  native_bool boolean::equal(object const &o) const
   {
     auto const *b(o.as_boolean());
     if(!b)
@@ -26,25 +26,25 @@ namespace jank::runtime::obj
   { format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data ? "true" : "false"); }
   void boolean::to_string(fmt::memory_buffer &buff) const
   { return to_string_impl(data, buff); }
-  runtime::detail::string_type boolean::to_string() const
+  native_string boolean::to_string() const
   {
     fmt::memory_buffer buff;
     to_string_impl(data, buff);
-    return std::string{ buff.data(), buff.size() };
+    return native_string{ buff.data(), buff.size() };
   }
-  runtime::detail::integer_type boolean::to_hash() const
+  native_integer boolean::to_hash() const
   { return data ? 1 : 0; }
   boolean const* boolean::as_boolean() const
   { return this; }
 
   /***** integer *****/
-  integer::integer(runtime::detail::integer_type const d)
+  integer::integer(native_integer const d)
     : data{ d }
   { }
 
-  runtime::detail::box_type<integer> integer::create(runtime::detail::integer_type const &n)
-  { return make_box<integer>(n); }
-  runtime::detail::boolean_type integer::equal(object const &o) const
+  native_box<integer> integer::create(native_integer const &n)
+  { return jank::make_box<integer>(n); }
+  native_bool integer::equal(object const &o) const
   {
     auto const *i(o.as_integer());
     if(!i)
@@ -52,15 +52,15 @@ namespace jank::runtime::obj
 
     return data == i->data;
   }
-  runtime::detail::string_type integer::to_string() const
+  native_string integer::to_string() const
   { return fmt::format(FMT_COMPILE("{}"), data); }
   void integer::to_string(fmt::memory_buffer &buff) const
   { fmt::format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data); }
-  runtime::detail::integer_type integer::to_hash() const
+  native_integer integer::to_hash() const
   { return data; }
-  runtime::detail::integer_type integer::get_integer() const
+  native_integer integer::get_integer() const
   { return data; }
-  runtime::detail::real_type integer::get_real() const
+  native_real integer::get_real() const
   { return data; }
   integer const* integer::as_integer() const
   { return this; }
@@ -68,28 +68,28 @@ namespace jank::runtime::obj
   { return this; }
 
   /***** real *****/
-  real::real(runtime::detail::real_type const d)
+  real::real(native_real const d)
     : data{ d }
   { }
 
-  runtime::detail::boolean_type real::equal(object const &o) const
+  native_bool real::equal(object const &o) const
   {
     auto const *r(o.as_real());
     if(!r)
     { return false; }
 
-    std::hash<runtime::detail::real_type> hasher{};
+    std::hash<native_real> hasher{};
     return hasher(data) == hasher(r->data);
   }
-  runtime::detail::string_type real::to_string() const
+  native_string real::to_string() const
   { return fmt::format(FMT_COMPILE("{}"), data); }
   void real::to_string(fmt::memory_buffer &buff) const
   { fmt::format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data); }
-  runtime::detail::integer_type real::to_hash() const
-  { return static_cast<runtime::detail::integer_type>(data); }
-  runtime::detail::integer_type real::get_integer() const
-  { return static_cast<runtime::detail::integer_type>(data); }
-  runtime::detail::real_type real::get_real() const
+  native_integer real::to_hash() const
+  { return static_cast<native_integer>(data); }
+  native_integer real::get_integer() const
+  { return static_cast<native_integer>(data); }
+  native_real real::get_real() const
   { return data; }
   real const* real::as_real() const
   { return this; }
@@ -118,10 +118,10 @@ namespace jank::runtime::obj
     virtual object_ptr abs() const = 0;
     virtual object_ptr min() const = 0;
     virtual object_ptr max() const = 0;
-    virtual runtime::detail::boolean_type lt() const = 0;
-    virtual runtime::detail::boolean_type lte() const = 0;
-    virtual runtime::detail::boolean_type gte() const = 0;
-    virtual runtime::detail::boolean_type equal() const = 0;
+    virtual native_bool lt() const = 0;
+    virtual native_bool lte() const = 0;
+    virtual native_bool gte() const = 0;
+    virtual native_bool equal() const = 0;
   };
 
   struct integer_ops : number_ops
@@ -131,37 +131,37 @@ namespace jank::runtime::obj
     number_ops const& with(integer_ops const&) const override;
     number_ops const& with(real_ops const&) const override;
     object_ptr add() const override
-    { return make_box<integer>(left + right); }
+    { return jank::make_box<integer>(left + right); }
     object_ptr subtract() const override
-    { return make_box<integer>(left - right); }
+    { return jank::make_box<integer>(left - right); }
     object_ptr multiply() const override
-    { return make_box<integer>(left * right); }
+    { return jank::make_box<integer>(left * right); }
     object_ptr divide() const override
-    { return make_box<integer>(left / right); }
+    { return jank::make_box<integer>(left / right); }
     object_ptr remainder() const override
-    { return make_box<integer>(left % right); }
+    { return jank::make_box<integer>(left % right); }
     object_ptr inc() const override
-    { return make_box<integer>(left + 1); }
+    { return jank::make_box<integer>(left + 1); }
     object_ptr dec() const override
-    { return make_box<integer>(left - 1); }
+    { return jank::make_box<integer>(left - 1); }
     object_ptr negate() const override
-    { return make_box<integer>(-left); }
+    { return jank::make_box<integer>(-left); }
     object_ptr abs() const override
-    { return make_box<integer>(std::labs(left)); }
+    { return jank::make_box<integer>(std::labs(left)); }
     object_ptr min() const override
-    { return make_box<integer>(std::min(left, right)); }
+    { return jank::make_box<integer>(std::min(left, right)); }
     object_ptr max() const override
-    { return make_box<integer>(std::max(left, right)); }
-    runtime::detail::boolean_type lt() const override
+    { return jank::make_box<integer>(std::max(left, right)); }
+    native_bool lt() const override
     { return left < right; }
-    runtime::detail::boolean_type lte() const override
+    native_bool lte() const override
     { return left <= right; }
-    runtime::detail::boolean_type gte() const override
+    native_bool gte() const override
     { return left >= right; }
-    runtime::detail::boolean_type equal() const override
+    native_bool equal() const override
     { return left == right; }
 
-    runtime::detail::integer_type left{}, right{};
+    native_integer left{}, right{};
   };
 
   struct real_ops : number_ops
@@ -171,40 +171,40 @@ namespace jank::runtime::obj
     number_ops const& with(integer_ops const&) const override;
     number_ops const& with(real_ops const&) const override;
     object_ptr add() const override
-    { return make_box<real>(left + right); }
+    { return jank::make_box<real>(left + right); }
     object_ptr subtract() const override
-    { return make_box<real>(left - right); }
+    { return jank::make_box<real>(left - right); }
     object_ptr multiply() const override
-    { return make_box<real>(left * right); }
+    { return jank::make_box<real>(left * right); }
     object_ptr divide() const override
-    { return make_box<real>(left / right); }
+    { return jank::make_box<real>(left / right); }
     object_ptr remainder() const override
-    { return make_box<real>(std::fmod(left, right)); }
+    { return jank::make_box<real>(std::fmod(left, right)); }
     object_ptr inc() const override
-    { return make_box<real>(left + 1); }
+    { return jank::make_box<real>(left + 1); }
     object_ptr dec() const override
-    { return make_box<real>(right + 1); }
+    { return jank::make_box<real>(right + 1); }
     object_ptr negate() const override
-    { return make_box<real>(-left); }
+    { return jank::make_box<real>(-left); }
     object_ptr abs() const override
-    { return make_box<real>(std::fabs(left)); }
+    { return jank::make_box<real>(std::fabs(left)); }
     object_ptr min() const override
-    { return make_box<real>(std::min(left, right)); }
+    { return jank::make_box<real>(std::min(left, right)); }
     object_ptr max() const override
-    { return make_box<real>(std::max(left, right)); }
-    runtime::detail::boolean_type lt() const override
+    { return jank::make_box<real>(std::max(left, right)); }
+    native_bool lt() const override
     { return left < right; }
-    runtime::detail::boolean_type lte() const override
+    native_bool lte() const override
     { return left <= right; }
-    runtime::detail::boolean_type gte() const override
+    native_bool gte() const override
     { return left >= right; }
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
-    runtime::detail::boolean_type equal() const override
+    native_bool equal() const override
     { return left == right; }
 #pragma clang diagnostic pop
 
-    runtime::detail::real_type left{}, right{};
+    native_real left{}, right{};
   };
 
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): These are thread-local.
@@ -242,7 +242,7 @@ namespace jank::runtime::obj
     }
 
     /* TODO: Exception type. */
-    throw runtime::detail::string_type{ "(left_ops) not a number: " } + n->to_string();
+    throw native_string{ "(left_ops) not a number: " } + n->to_string();
   }
 
   number_ops& right_ops(object_ptr n)
@@ -259,14 +259,14 @@ namespace jank::runtime::obj
     }
 
     /* TODO: Exception type. */
-    throw runtime::detail::string_type{ "(right_ops) not a number: " } + n->to_string();
+    throw native_string{ "(right_ops) not a number: " } + n->to_string();
   }
 
   object_ptr rand()
   {
-    static std::uniform_real_distribution<runtime::detail::real_type> distribution(0.0, 1.0);
+    static std::uniform_real_distribution<native_real> distribution(0.0, 1.0);
     static std::mt19937 generator;
-    return make_box<real>(distribution(generator));
+    return jank::make_box<real>(distribution(generator));
   }
 
   /* + */
@@ -292,14 +292,14 @@ namespace jank::runtime::obj
   /* < */
   object_ptr _gen_less_(object_ptr l, object_ptr r)
   {
-    return make_box<boolean>
+    return jank::make_box<boolean>
     (right_ops(r).combine(left_ops(l)).lt());
   }
 
   /* <= */
   object_ptr _gen_less__gen_equal_(object_ptr l, object_ptr r)
   {
-    return make_box<boolean>
+    return jank::make_box<boolean>
     (right_ops(r).combine(left_ops(l)).lte());
   }
 
@@ -313,7 +313,7 @@ namespace jank::runtime::obj
       std::cout << "(->int) not a number: " << *o << std::endl;
       return JANK_NIL;
     }
-    return make_box<integer>(n->get_integer());
+    return jank::make_box<integer>(n->get_integer());
   }
 
   /* ->float */
@@ -326,7 +326,7 @@ namespace jank::runtime::obj
       std::cout << "(->float) not a number: " << *o << std::endl;
       return JANK_NIL;
     }
-    return make_box<real>(n->get_real());
+    return jank::make_box<real>(n->get_real());
   }
 
   object_ptr inc(object_ptr n)
@@ -344,7 +344,7 @@ namespace jank::runtime::obj
       std::cout << "(sqrt) not a number: " << *o << std::endl;
       return JANK_NIL;
     }
-    return make_box<real>(std::sqrt(n->get_real()));
+    return jank::make_box<real>(std::sqrt(n->get_real()));
   }
 
   object_ptr tan(object_ptr o)
@@ -356,7 +356,7 @@ namespace jank::runtime::obj
       std::cout << "(tan) not a number: " << *o << std::endl;
       return JANK_NIL;
     }
-    return make_box<real>(std::tan(n->get_real()));
+    return jank::make_box<real>(std::tan(n->get_real()));
   }
 
   object_ptr pow(object_ptr l, object_ptr r)
@@ -369,7 +369,7 @@ namespace jank::runtime::obj
       std::cout << "(pow) not a number: " << *l << " and " << *r << std::endl;
       return JANK_NIL;
     }
-    return make_box<real>(std::pow(l_num->get_real(), r_num->get_real()));
+    return jank::make_box<real>(std::pow(l_num->get_real(), r_num->get_real()));
   }
 
   object_ptr abs(object_ptr n)

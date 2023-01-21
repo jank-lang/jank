@@ -21,7 +21,7 @@
 
 namespace jank::analyze
 {
-  struct expression
+  struct expression : gc
   {
     using E = expression;
     using value_type = boost::variant
@@ -63,5 +63,5 @@ namespace jank::analyze
     value_type data;
   };
   /* TODO: Use something non-nullable. */
-  using expression_ptr = std::shared_ptr<expression>;
+  using expression_ptr = native_box<expression>;
 }

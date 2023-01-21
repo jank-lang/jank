@@ -2,7 +2,6 @@
 
 #include <iostream>
 
-#include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 
@@ -47,12 +46,12 @@ namespace jank::runtime::obj
     function(detail::function_type const &d);
     ~function() = default;
 
-    static runtime::detail::box_type<function> create(detail::function_type const &d);
+    static native_box<function> create(detail::function_type const &d);
 
-    runtime::detail::boolean_type equal(object const &) const override;
-    runtime::detail::string_type to_string() const override;
+    native_bool equal(object const &) const override;
+    native_string to_string() const override;
     void to_string(fmt::memory_buffer &buff) const override;
-    runtime::detail::integer_type to_hash() const override;
+    native_integer to_hash() const override;
 
     function const* as_function() const override;
     behavior::callable const* as_callable() const override;
@@ -74,7 +73,7 @@ namespace jank::runtime::obj
 
     detail::function_type data;
   };
-  using function_ptr = runtime::detail::box_type<function>;
+  using function_ptr = native_box<function>;
 
   namespace detail
   {

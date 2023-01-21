@@ -27,7 +27,7 @@ namespace jank::jit
   struct failure
   {
     boost::filesystem::path path;
-    std::string error;
+    native_string error;
   };
 
   TEST_CASE("Files")
@@ -44,7 +44,7 @@ namespace jank::jit
      * be shown whenever something unexpected happens, so it can be debugged. On top of that,
      * individual failures being reported would be helpful. Thus all the manual tracking in
      * here. The outcome is nice, though. */
-    std::vector<failure> failures;
+    native_vector<failure> failures;
 
     for(auto const &dir_entry : boost::filesystem::recursive_directory_iterator("test/jank"))
     {

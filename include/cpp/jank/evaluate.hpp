@@ -1,6 +1,5 @@
 #pragma once
 
-#include <jank/runtime/object.hpp>
 #include <jank/analyze/expression.hpp>
 
 namespace jank::evaluate

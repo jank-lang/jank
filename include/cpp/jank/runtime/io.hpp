@@ -1,7 +1,5 @@
 #pragma once
 
-#include <jank/runtime/object.hpp>
-
 namespace jank::runtime
 {
   inline object_ptr print(object_ptr o)

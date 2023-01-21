@@ -2,7 +2,6 @@
 
 #include <functional>
 
-#include <jank/runtime/object.hpp>
 #include <jank/runtime/hash.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 
@@ -13,20 +12,15 @@ namespace jank::runtime::obj
     symbol() = default;
     symbol(symbol &&) = default;
     symbol(symbol const &) = default;
-    symbol(runtime::detail::string_type const &d);
-    symbol(runtime::detail::string_type &&d);
-    symbol(runtime::detail::string_type const &ns, runtime::detail::string_type const &n);
-    symbol(runtime::detail::string_type &&ns, runtime::detail::string_type &&n);
+    symbol(native_string const &d);
+    symbol(native_string &&d);
+    symbol(native_string const &ns, native_string const &n);
+    symbol(native_string &&ns, native_string &&n);
 
-    static runtime::detail::box_type<symbol> create(runtime::detail::string_type const &n);
-    static runtime::detail::box_type<symbol> create(runtime::detail::string_type &&n);
-    static runtime::detail::box_type<symbol> create(runtime::detail::string_type const &ns, runtime::detail::string_type const &name);
-    static runtime::detail::box_type<symbol> create(runtime::detail::string_type &&ns, runtime::detail::string_type &&name);
-
-    runtime::detail::boolean_type equal(object const &) const override;
-    runtime::detail::string_type to_string() const override;
+    native_bool equal(object const &) const override;
+    native_string to_string() const override;
     void to_string(fmt::memory_buffer &buff) const override;
-    runtime::detail::integer_type to_hash() const override;
+    native_integer to_hash() const override;
 
     symbol const* as_symbol() const override;
 
@@ -38,8 +32,8 @@ namespace jank::runtime::obj
     symbol& operator =(symbol const &) = default;
     symbol& operator =(symbol &&) = default;
 
-    runtime::detail::string_type ns;
-    runtime::detail::string_type name;
+    native_string ns;
+    native_string name;
   };
   using symbol_ptr = obj::symbol*;
 }
@@ -66,7 +60,11 @@ namespace std
   template <>
   struct equal_to<jank::runtime::obj::symbol_ptr>
   {
-    bool operator()(jank::runtime::obj::symbol_ptr const &lhs, jank::runtime::obj::symbol_ptr const &rhs) const noexcept
+    bool operator()
+    (
+      jank::runtime::obj::symbol_ptr const &lhs,
+      jank::runtime::obj::symbol_ptr const &rhs
+    ) const noexcept
     {
       if(!lhs)
       { return !rhs; }

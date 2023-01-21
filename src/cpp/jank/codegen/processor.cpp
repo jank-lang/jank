@@ -47,7 +47,7 @@ namespace jank::codegen
      * But our runtime requires params to be const&, so we can't mutate them; we need to shadow
      * them. So, for tail recursive fns, we name the params with this suffix and then define
      * the actual param names as mutable locals outside of the while loop. */
-    constexpr std::string_view const recur_suffix{ "__recur" };
+    constexpr native_string_view const recur_suffix{ "__recur" };
 
     void gen_constant(runtime::object_ptr o, fmt::memory_buffer &buffer)
     {
@@ -55,17 +55,17 @@ namespace jank::codegen
       if(o->as_nil())
       { format_to(inserter, "jank::runtime::JANK_NIL"); }
       else if(auto const * const d = o->as_boolean())
-      { format_to(inserter, "jank::runtime::make_box<jank::runtime::obj::boolean>({})", d->data); }
+      { format_to(inserter, "jank::make_box<jank::runtime::obj::boolean>({})", d->data); }
       else if(auto const * const d = o->as_integer())
-      { format_to(inserter, "jank::runtime::make_box<jank::runtime::obj::integer>({})", d->data); }
+      { format_to(inserter, "jank::make_box<jank::runtime::obj::integer>({})", d->data); }
       else if(auto const * const d = o->as_real())
-      { format_to(inserter, "jank::runtime::make_box<jank::runtime::obj::real>({})", d->data); }
+      { format_to(inserter, "jank::make_box<jank::runtime::obj::real>({})", d->data); }
       else if(auto const * const d = o->as_symbol())
       {
         format_to
         (
           inserter,
-          R"(jank::runtime::make_box<jank::runtime::obj::symbol>("{}", "{}"))",
+          R"(jank::make_box<jank::runtime::obj::symbol>("{}", "{}"))",
           d->ns,
           d->name
         );
@@ -86,7 +86,7 @@ namespace jank::codegen
         format_to
         (
           inserter,
-          "jank::runtime::make_box<jank::runtime::obj::string>({})",
+          "jank::make_box<jank::runtime::obj::string>({})",
           escaped(d->data)
         );
       }
@@ -94,7 +94,7 @@ namespace jank::codegen
       {
         auto ret_tmp(runtime::context::unique_string("vec"));
         format_to
-        (inserter, "jank::runtime::make_box<jank::runtime::obj::list>(", ret_tmp);
+        (inserter, "jank::make_box<jank::runtime::obj::list>(", ret_tmp);
         for(auto const &form : d->data)
         {
           format_to(inserter, ", ");
@@ -106,7 +106,7 @@ namespace jank::codegen
       {
         auto ret_tmp(runtime::context::unique_string("vec"));
         format_to
-        (inserter, "jank::runtime::make_box<jank::runtime::obj::vector>(", ret_tmp);
+        (inserter, "jank::make_box<jank::runtime::obj::vector>(", ret_tmp);
         bool need_comma{};
         for(auto const &form : d->data)
         {
@@ -143,13 +143,13 @@ namespace jank::codegen
       struct_name{ runtime::context::unique_string() }
   { }
 
-  option<std::string> processor::gen
+  option<native_string> processor::gen
   (
     analyze::expression_ptr const &ex,
     analyze::expr::function_arity<analyze::expression> const &fn_arity
   )
   {
-    option<std::string> ret;
+    option<native_string> ret;
     boost::apply_visitor
     (
       [this, fn_arity, &ret](auto const &typed_ex)
@@ -159,7 +159,7 @@ namespace jank::codegen
     return ret;
   }
 
-  option<std::string> processor::gen
+  option<native_string> processor::gen
   (
     analyze::expr::def<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &fn_arity
@@ -172,7 +172,7 @@ namespace jank::codegen
 
     /* Forward declarations just intern the var and evaluate to it. */
     if(expr.value.is_none())
-    { return munged_name.data; }
+    { return munged_name; }
 
     auto const val(gen(expr.value.unwrap(), fn_arity).unwrap());
     switch(expr.expr_type)
@@ -202,7 +202,7 @@ namespace jank::codegen
     }
   }
 
-  option<std::string> processor::gen
+  option<native_string> processor::gen
   (
     analyze::expr::var_deref<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &
@@ -225,7 +225,7 @@ namespace jank::codegen
     }
   }
 
-  option<std::string> processor::gen
+  option<native_string> processor::gen
   (
     analyze::expr::var_ref<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &
@@ -235,7 +235,7 @@ namespace jank::codegen
     switch(expr.expr_type)
     {
       case analyze::expression_type::expression:
-      { return var.native_name.name.data; }
+      { return var.native_name.name; }
       case analyze::expression_type::return_statement:
       {
         auto inserter(std::back_inserter(body_buffer));
@@ -248,7 +248,7 @@ namespace jank::codegen
     }
   }
 
-  option<std::string> processor::gen
+  option<native_string> processor::gen
   (
     analyze::expr::call<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &fn_arity
@@ -263,7 +263,7 @@ namespace jank::codegen
 
     auto const &source_tmp(gen(expr.source_expr, fn_arity));
     format_to(inserter, "object_ptr {}; {{", ret_tmp);
-    std::vector<std::string> arg_tmps;
+    native_vector<native_string> arg_tmps;
     arg_tmps.reserve(expr.arg_exprs.size());
     for(auto const &arg_expr : expr.arg_exprs)
     { arg_tmps.emplace_back(gen(arg_expr, fn_arity).unwrap()); }
@@ -274,7 +274,7 @@ namespace jank::codegen
     { format_to(inserter, ", {}", arg_tmps[i]); }
     if(arg_tmps.size() > runtime::max_params)
     {
-      format_to(inserter, "jank::runtime::obj::list::create(");
+      format_to(inserter, "jank::make_box<jank::runtime::obj::list>(");
       for(size_t i{ runtime::max_params }; i < arg_tmps.size(); ++i)
       { format_to(inserter, ", {}", arg_tmps[i]); }
       format_to(inserter, ")");
@@ -290,7 +290,7 @@ namespace jank::codegen
     return ret_tmp;
   }
 
-  option<std::string> processor::gen
+  option<native_string> processor::gen
   (
     analyze::expr::primitive_literal<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &
@@ -300,11 +300,11 @@ namespace jank::codegen
     switch(expr.expr_type)
     {
       case analyze::expression_type::expression:
-      { return constant.native_name.name.data; }
+      { return constant.native_name.name; }
       case analyze::expression_type::return_statement:
       {
         auto inserter(std::back_inserter(body_buffer));
-        format_to(inserter, "return {};", constant.native_name.name.data);
+        format_to(inserter, "return {};", constant.native_name.name);
         return none;
       }
       /* Statement of a var deref is a nop. */
@@ -313,13 +313,13 @@ namespace jank::codegen
     }
   }
 
-  option<std::string> processor::gen
+  option<native_string> processor::gen
   (
     analyze::expr::vector<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &fn_arity
   )
   {
-    std::vector<std::string> data_tmps;
+    native_vector<native_string> data_tmps;
     data_tmps.reserve(expr.data_exprs.size());
     for(auto const &data_expr : expr.data_exprs)
     { data_tmps.emplace_back(gen(data_expr, fn_arity).unwrap()); }
@@ -327,7 +327,7 @@ namespace jank::codegen
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::context::unique_string("vec"));
     format_to
-    (inserter, "auto const &{}(jank::runtime::make_box<jank::runtime::obj::vector>(", ret_tmp);
+    (inserter, "auto const &{}(jank::make_box<jank::runtime::obj::vector>(", ret_tmp);
     for(auto it(data_tmps.begin()); it != data_tmps.end();)
     {
       format_to(inserter, "{}", *it);
@@ -345,13 +345,13 @@ namespace jank::codegen
     return ret_tmp;
   }
 
-  option<std::string> processor::gen
+  option<native_string> processor::gen
   (
     analyze::expr::map<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &fn_arity
   )
   {
-    std::vector<std::pair<std::string, std::string>> data_tmps;
+    native_vector<std::pair<native_string, native_string>> data_tmps;
     data_tmps.reserve(expr.data_exprs.size());
     for(auto const &data_expr : expr.data_exprs)
     {
@@ -364,7 +364,7 @@ namespace jank::codegen
     format_to
     (
       inserter,
-      "auto const &{}(jank::runtime::make_box<jank::runtime::obj::map>(std::in_place ",
+      "auto const &{}(jank::make_box<jank::runtime::obj::map>(std::in_place ",
       ret_tmp
     );
     for(auto const &data_tmp : data_tmps)
@@ -383,7 +383,7 @@ namespace jank::codegen
     return ret_tmp;
   }
 
-  option<std::string> processor::gen
+  option<native_string> processor::gen
   (
     analyze::expr::local_reference const &expr,
     analyze::expr::function_arity<analyze::expression> const &
@@ -392,11 +392,11 @@ namespace jank::codegen
     switch(expr.expr_type)
     {
       case analyze::expression_type::expression:
-      { return runtime::munge(expr.name->name).data; }
+      { return runtime::munge(expr.name->name); }
       case analyze::expression_type::return_statement:
       {
         auto inserter(std::back_inserter(body_buffer));
-        format_to(inserter, "return {};", runtime::munge(expr.name->name).data);
+        format_to(inserter, "return {};", runtime::munge(expr.name->name));
         return none;
       }
       /* Statement of a local ref is a nop. */
@@ -405,7 +405,7 @@ namespace jank::codegen
     }
   }
 
-  option<std::string> processor::gen
+  option<native_string> processor::gen
   (
     analyze::expr::function<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &
@@ -432,7 +432,7 @@ namespace jank::codegen
     }
   }
 
-  option<std::string> processor::gen
+  option<native_string> processor::gen
   (
     analyze::expr::recur<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &fn_arity
@@ -440,7 +440,7 @@ namespace jank::codegen
   {
     auto inserter(std::back_inserter(body_buffer));
 
-    std::vector<std::string> arg_tmps;
+    native_vector<native_string> arg_tmps;
     arg_tmps.reserve(expr.arg_exprs.size());
     for(auto const &arg_expr : expr.arg_exprs)
     { arg_tmps.emplace_back(gen(arg_expr, fn_arity).unwrap()); }
@@ -454,7 +454,7 @@ namespace jank::codegen
     return none;
   }
 
-  option<std::string> processor::gen
+  option<native_string> processor::gen
   (
     analyze::expr::let<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &fn_arity
@@ -495,13 +495,13 @@ namespace jank::codegen
     return ret_tmp;
   }
 
-  option<std::string> processor::gen
+  option<native_string> processor::gen
   (
     analyze::expr::do_<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &arity
   )
   {
-    option<std::string> last;
+    option<native_string> last;
     for(auto const &form : expr.body)
     { last = gen(form, arity); }
 
@@ -524,7 +524,7 @@ namespace jank::codegen
     }
   }
 
-  option<std::string> processor::gen
+  option<native_string> processor::gen
   (
     analyze::expr::if_<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &fn_arity
@@ -554,7 +554,7 @@ namespace jank::codegen
     return ret_tmp;
   }
 
-  option<std::string> processor::gen
+  option<native_string> processor::gen
   (
     analyze::expr::native_raw<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &fn_arity
@@ -563,7 +563,7 @@ namespace jank::codegen
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::context::unique_string("native"));
 
-    std::vector<std::string> interpolated_chunk_tmps;
+    native_vector<native_string> interpolated_chunk_tmps;
     interpolated_chunk_tmps.reserve((expr.chunks.size() / 2) + 1);
     for(auto const &chunk : expr.chunks)
     {
@@ -578,9 +578,9 @@ namespace jank::codegen
     size_t interpolated_chunk_it{};
     for(auto const &chunk : expr.chunks)
     {
-      auto const * const code(boost::get<runtime::detail::string_type>(&chunk));
+      auto const * const code(boost::get<native_string>(&chunk));
       if(code != nullptr)
-      { format_to(inserter, "{}", code->data); }
+      { format_to(inserter, "{}", *code); }
       else
       { format_to(inserter, "{}", interpolated_chunk_tmps[interpolated_chunk_it++]); }
     }
@@ -595,7 +595,7 @@ namespace jank::codegen
     return ret_tmp;
   }
 
-  std::string processor::declaration_str()
+  native_string processor::declaration_str()
   {
     if(!generated_declaration)
     {
@@ -605,11 +605,11 @@ namespace jank::codegen
       generated_declaration = true;
     }
 
-    std::string ret;
+    native_string ret;
     ret.reserve(header_buffer.size() + body_buffer.size() + footer_buffer.size());
-    ret += std::string_view{ header_buffer.data(), header_buffer.size() };
-    ret += std::string_view{ body_buffer.data(), body_buffer.size() };
-    ret += std::string_view{ footer_buffer.data(), footer_buffer.size() };
+    ret += native_string_view{ header_buffer.data(), header_buffer.size() };
+    ret += native_string_view{ body_buffer.data(), body_buffer.size() };
+    ret += native_string_view{ footer_buffer.data(), footer_buffer.size() };
     //std::cout << ret << std::endl;
     return ret;
   }
@@ -635,12 +635,12 @@ namespace jank::codegen
     (
       inserter,
       R"(
-        jank::runtime::detail::boolean_type equal(object const &rhs) const override
+        jank::native_bool equal(object const &rhs) const override
         {{ return this == &rhs; }}
-        jank::runtime::detail::string_type to_string() const override
+        jank::native_string to_string() const override
         {{ return "jit function"; }}
-        jank::runtime::detail::integer_type to_hash() const override
-        {{ return reinterpret_cast<jank::runtime::detail::integer_type>(this); }}
+        jank::native_integer to_hash() const override
+        {{ return reinterpret_cast<jank::native_integer>(this); }}
         jank::runtime::behavior::callable const* as_callable() const override
         {{ return this; }}
         jank::runtime::object_ptr with_meta(jank::runtime::object_ptr m) const override
@@ -757,7 +757,7 @@ namespace jank::codegen
       if(arity.fn_ctx->is_variadic)
       { variadic_arg_position = arity.params.size() - 1; }
 
-      std::string_view recur_suffix;
+      native_string_view recur_suffix;
       if(arity.fn_ctx->is_tail_recursive)
       { recur_suffix = detail::recur_suffix; }
 
@@ -840,7 +840,7 @@ namespace jank::codegen
   }
 
   /* TODO: Something better than a default arg. */
-  std::string processor::expression_str(bool const auto_call)
+  native_string processor::expression_str(bool const auto_call)
   {
     if(!generated_expression)
     {
@@ -882,7 +882,7 @@ namespace jank::codegen
         format_to
         (
           inserter,
-          "jank::runtime::make_box<{0}>(std::ref(*reinterpret_cast<jank::runtime::context*>({1}))",
+          "jank::make_box<{0}>(std::ref(*reinterpret_cast<jank::runtime::context*>({1}))",
           runtime::munge(struct_name.name),
           fmt::ptr(&rt_ctx)
         );

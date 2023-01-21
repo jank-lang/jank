@@ -19,15 +19,15 @@ namespace jank::runtime
   context::context()
   {
     auto &t_state(get_thread_state());
-    auto const core(intern_ns(obj::symbol::create("clojure.core")));
+    auto const core(intern_ns(jank::make_box<obj::symbol>("clojure.core")));
     {
       auto const locked_core_vars(core->vars.wlock());
-      auto const ns_sym(obj::symbol::create("clojure.core/*ns*"));
-      auto const ns_res(locked_core_vars->insert({ns_sym, var::create(core, ns_sym, core)}));
+      auto const ns_sym(jank::make_box<obj::symbol>("clojure.core/*ns*"));
+      auto const ns_res(locked_core_vars->insert({ns_sym, jank::make_box<var>(core, ns_sym, core)}));
       t_state.current_ns = ns_res.first->second;
     }
 
-    auto const in_ns_sym(obj::symbol::create("clojure.core/in-ns"));
+    auto const in_ns_sym(jank::make_box<obj::symbol>("clojure.core/in-ns"));
     std::function<object_ptr (object_ptr)> in_ns_fn
     (
       [this](object_ptr sym)
@@ -49,7 +49,7 @@ namespace jank::runtime
     t_state.in_ns = in_ns_var;
 
     /* TODO: Remove this once it can be defined in jank. */
-    auto const assert_sym(obj::symbol::create("clojure.core/assert"));
+    auto const assert_sym(jank::make_box<obj::symbol>("clojure.core/assert"));
     std::function<object_ptr (object_ptr)> assert_fn
     (
       [](object_ptr o)
@@ -62,19 +62,19 @@ namespace jank::runtime
     intern_var(assert_sym).expect_ok()->set_root(obj::function::create(assert_fn));
 
     /* TODO: Remove this once it can be defined in jank. */
-    auto const plus_sym(obj::symbol::create("clojure.core/+"));
+    auto const plus_sym(jank::make_box<obj::symbol>("clojure.core/+"));
     intern_var(plus_sym).expect_ok()->set_root(obj::function::create(&obj::_gen_plus_));
 
     /* TODO: Remove this once it can be defined in jank. */
-    auto const equal_sym(obj::symbol::create("clojure.core/="));
+    auto const equal_sym(jank::make_box<obj::symbol>("clojure.core/="));
     intern_var(equal_sym).expect_ok()->set_root(obj::function::create(&_gen_equal_));
 
     /* TODO: Remove this once it can be defined in jank. */
-    auto const lt_sym(obj::symbol::create("clojure.core/<"));
+    auto const lt_sym(jank::make_box<obj::symbol>("clojure.core/<"));
     intern_var(lt_sym).expect_ok()->set_root(obj::function::create(&obj::_gen_less_));
 
     /* TODO: Remove this once it can be defined in jank. */
-    auto const seq_sym(obj::symbol::create("clojure.core/seq"));
+    auto const seq_sym(jank::make_box<obj::symbol>("clojure.core/seq"));
     intern_var(seq_sym).expect_ok()->set_root(obj::function::create(&seq));
   }
 
@@ -92,7 +92,7 @@ namespace jank::runtime
     {
       auto const t_state(get_thread_state());
       auto const * const current_ns(t_state.current_ns->get_root()->as_ns());
-      qualified_sym = obj::symbol::create(current_ns->name->name, sym->name);
+      qualified_sym = jank::make_box<obj::symbol>(current_ns->name->name, sym->name);
     }
     return qualified_sym;
   }
@@ -102,10 +102,10 @@ namespace jank::runtime
     if(!sym->ns.empty())
     {
       /* TODO: This is the issue. Diff it with intern_var. */
-      ns_ptr ns;
+      ns_ptr ns{};
       {
         auto const locked_namespaces(namespaces.rlock());
-        auto const found(locked_namespaces->find(obj::symbol::create("", sym->ns)));
+        auto const found(locked_namespaces->find(jank::make_box<obj::symbol>("", sym->ns)));
         if(found == locked_namespaces->end())
         { return none; }
         ns = found->second;
@@ -125,7 +125,7 @@ namespace jank::runtime
       auto const t_state(get_thread_state());
       auto const * const current_ns(t_state.current_ns->get_root()->as_ns());
       auto const locked_vars(current_ns->vars.rlock());
-      auto const qualified_sym(obj::symbol::create(current_ns->name->name, sym->name));
+      auto const qualified_sym(jank::make_box<obj::symbol>(current_ns->name->name, sym->name));
       auto const found(locked_vars->find(qualified_sym));
       if(found == locked_vars->end())
       { return none; }
@@ -144,7 +144,7 @@ namespace jank::runtime
     eval_file("src/jank/clojure/core.jank", jit_prc);
   }
 
-  object_ptr context::eval_file(std::string_view const &path, jit::processor const &jit_prc)
+  object_ptr context::eval_file(native_string_view const &path, jit::processor const &jit_prc)
   {
     auto const file(util::map_file(path));
     if(file.is_err())
@@ -152,7 +152,7 @@ namespace jank::runtime
     return eval_string({ file.expect_ok().head, file.expect_ok().size }, jit_prc);
   }
 
-  object_ptr context::eval_string(std::string_view const &code, jit::processor const &jit_prc)
+  object_ptr context::eval_string(native_string_view const &code, jit::processor const &jit_prc)
   {
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
@@ -168,16 +168,16 @@ namespace jank::runtime
     return ret;
   }
 
-  std::string context::unique_string()
+  native_string context::unique_string()
   { return unique_string("gen"); }
-  std::string context::unique_string(std::string_view const &prefix)
+  native_string context::unique_string(native_string_view const &prefix)
   {
     static std::atomic_size_t index{ 1 };
     return prefix.data() + std::to_string(index++);
   }
   obj::symbol context::unique_symbol()
   { return unique_symbol("gen"); }
-  obj::symbol context::unique_symbol(std::string_view const &prefix)
+  obj::symbol context::unique_symbol(native_string_view const &prefix)
   { return { "", unique_string(prefix) }; }
 
   void context::dump() const
@@ -205,20 +205,20 @@ namespace jank::runtime
     if(found != locked_namespaces->end())
     { return found->second; }
 
-    auto const result(locked_namespaces->emplace(sym, make_box<ns>(sym, *this)));
+    auto const result(locked_namespaces->emplace(sym, jank::make_box<ns>(sym, *this)));
     return result.first->second;
   }
 
-  result<var_ptr, std::string> context::intern_var
-  (detail::string_type const &ns, detail::string_type const &name)
-  { return intern_var(obj::symbol::create(ns, name)); }
-  result<var_ptr, std::string> context::intern_var(obj::symbol_ptr const &qualified_sym)
+  result<var_ptr, native_string> context::intern_var
+  (native_string const &ns, native_string const &name)
+  { return intern_var(jank::make_box<obj::symbol>(ns, name)); }
+  result<var_ptr, native_string> context::intern_var(obj::symbol_ptr const &qualified_sym)
   {
     if(qualified_sym->ns.empty())
     { return err("can't intern var; sym isn't qualified"); }
 
     auto locked_namespaces(namespaces.wlock());
-    auto const found_ns(locked_namespaces->find(obj::symbol::create(qualified_sym->ns)));
+    auto const found_ns(locked_namespaces->find(jank::make_box<obj::symbol>(qualified_sym->ns)));
     if(found_ns == locked_namespaces->end())
     { return err("can't intern var; namespace doesn't exist"); }
 
@@ -228,14 +228,14 @@ namespace jank::runtime
     { return ok(found_var->second); }
 
     auto const ns_res
-    (locked_vars->insert({qualified_sym, var::create(found_ns->second, qualified_sym)}));
+    (locked_vars->insert({qualified_sym, jank::make_box<var>(found_ns->second, qualified_sym)}));
     return ok(ns_res.first->second);
   }
 
   obj::keyword_ptr context::intern_keyword(obj::symbol const &sym, bool const resolved)
   { return intern_keyword(sym.ns, sym.name, resolved); }
   obj::keyword_ptr context::intern_keyword
-  (std::string_view const &ns, std::string_view const &name, bool resolved)
+  (native_string_view const &ns, native_string_view const &name, bool resolved)
   {
     obj::symbol sym{ ns, name };
     if(!resolved)
@@ -282,7 +282,7 @@ namespace jank::runtime
     if(!found_meta || (*found_meta)->equal(obj::JANK_FALSE))
     { return o; }
 
-    auto const &args(obj::list::create(list->data.rest().cons(JANK_NIL).cons(o)));
+    auto const &args(jank::make_box<obj::list>(list->data.rest().cons(JANK_NIL).cons(o)));
     return apply_to(var.unwrap()->get_root(), args);
   }
 
@@ -312,7 +312,7 @@ namespace jank::runtime
          that's because the item itself is thread-local. */
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
       found = const_cast
-      <std::unordered_map<std::thread::id, thread_state>&>(*locked_thread_states).find(this_id);
+      <native_unordered_map<std::thread::id, thread_state>&>(*locked_thread_states).find(this_id);
       if(found != locked_thread_states->end())
       { return found->second; }
     }

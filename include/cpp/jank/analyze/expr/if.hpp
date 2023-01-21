@@ -10,8 +10,8 @@ namespace jank::analyze::expr
   template <typename E>
   struct if_ : expression_base
   {
-    std::shared_ptr<E> condition;
-    std::shared_ptr<E> then;
-    option<std::shared_ptr<E>> else_;
+    native_box<E> condition;
+    native_box<E> then;
+    option<native_box<E>> else_;
   };
 }

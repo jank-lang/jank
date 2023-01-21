@@ -29,87 +29,87 @@ namespace jank::codegen
     processor(processor const &) = delete;
     processor(processor &&) noexcept = default;
 
-    option<std::string> gen
+    option<native_string> gen
     (
       analyze::expression_ptr const &,
       analyze::expr::function_arity<analyze::expression> const &
     );
-    option<std::string> gen
+    option<native_string> gen
     (
       analyze::expr::def<analyze::expression> const &,
       analyze::expr::function_arity<analyze::expression> const &
     );
-    option<std::string> gen
+    option<native_string> gen
     (
       analyze::expr::var_deref<analyze::expression> const &,
       analyze::expr::function_arity<analyze::expression> const &
     );
-    option<std::string> gen
+    option<native_string> gen
     (
       analyze::expr::var_ref<analyze::expression> const &,
       analyze::expr::function_arity<analyze::expression> const &
     );
-    option<std::string> gen
+    option<native_string> gen
     (
       analyze::expr::call<analyze::expression> const &,
       analyze::expr::function_arity<analyze::expression> const &
     );
-    option<std::string> gen
+    option<native_string> gen
     (
       analyze::expr::primitive_literal<analyze::expression> const &,
       analyze::expr::function_arity<analyze::expression> const &
     );
-    option<std::string> gen
+    option<native_string> gen
     (
       analyze::expr::vector<analyze::expression> const &,
       analyze::expr::function_arity<analyze::expression> const &
     );
-    option<std::string> gen
+    option<native_string> gen
     (
       analyze::expr::map<analyze::expression> const &,
       analyze::expr::function_arity<analyze::expression> const &
     );
-    option<std::string> gen
+    option<native_string> gen
     (
       analyze::expr::local_reference const &,
       analyze::expr::function_arity<analyze::expression> const &
     );
-    option<std::string> gen
+    option<native_string> gen
     (
       analyze::expr::function<analyze::expression> const &,
       analyze::expr::function_arity<analyze::expression> const &
     );
-    option<std::string> gen
+    option<native_string> gen
     (
       analyze::expr::recur<analyze::expression> const &,
       analyze::expr::function_arity<analyze::expression> const &
     );
-    option<std::string> gen
+    option<native_string> gen
     (
       analyze::expr::let<analyze::expression> const &,
       analyze::expr::function_arity<analyze::expression> const &
     );
-    option<std::string> gen
+    option<native_string> gen
     (
       analyze::expr::do_<analyze::expression> const &,
       analyze::expr::function_arity<analyze::expression> const &
     );
-    option<std::string> gen
+    option<native_string> gen
     (
       analyze::expr::if_<analyze::expression> const &,
       analyze::expr::function_arity<analyze::expression> const &
     );
-    option<std::string> gen
+    option<native_string> gen
     (
       analyze::expr::native_raw<analyze::expression> const &,
       analyze::expr::function_arity<analyze::expression> const &
     );
 
-    std::string declaration_str();
+    native_string declaration_str();
     void build_header();
     void build_body();
     void build_footer();
-    std::string expression_str(bool const auto_call = true);
+    native_string expression_str(bool const auto_call = true);
 
     runtime::context &rt_ctx;
     analyze::expression_ptr root_expr;

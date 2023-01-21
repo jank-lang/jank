@@ -11,21 +11,21 @@ namespace jank::runtime::obj
     : data{ d }
   { }
 
-  runtime::detail::box_type<function> function::create(detail::function_type const &d)
-  { return make_box<function>(d); }
+  native_box<function> function::create(detail::function_type const &d)
+  { return jank::make_box<function>(d); }
 
-  runtime::detail::boolean_type function::equal(object const &o) const
+  native_bool function::equal(object const &o) const
   {
     auto const *d(o.as_function());
     return d == this;
   }
   void function::to_string(fmt::memory_buffer &buff) const
   { format_to(std::back_inserter(buff), "function"); }
-  runtime::detail::string_type function::to_string() const
+  native_string function::to_string() const
   /* TODO: Optimize. */
   { return "function"; }
-  runtime::detail::integer_type function::to_hash() const
-  { return reinterpret_cast<runtime::detail::integer_type>(this); }
+  native_integer function::to_hash() const
+  { return reinterpret_cast<native_integer>(this); }
   function const* function::as_function() const
   { return this; }
   behavior::callable const* function::as_callable() const
@@ -82,7 +82,7 @@ namespace jank::runtime::obj
   object_ptr function::with_meta(object_ptr m) const
   {
     validate_meta(m);
-    auto ret(make_box<function>(data));
+    auto ret(jank::make_box<function>(data));
     ret->meta = m;
     return ret;
   }

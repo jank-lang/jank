@@ -2,7 +2,6 @@
 
 #include <ostream>
 #include <memory>
-#include <vector>
 
 #include <immer/box.hpp>
 #include <immer/memory_policy.hpp>
@@ -22,17 +21,17 @@ namespace jank::runtime::detail
     { }
     list_node(T &&t) : first{ std::move(t) }, length{ 1 }
     { }
-    list_node(T const &t, std::shared_ptr<list_node<T>> const &r, size_t const s)
+    list_node(T const &t, native_box<list_node<T>> const &r, size_t const s)
       : first{ t }, rest{ r }, length{ s + 1 }
     { }
-    list_node(T &&t, std::shared_ptr<list_node<T>> const &r, size_t const s)
+    list_node(T &&t, native_box<list_node<T>> const &r, size_t const s)
       : first{ std::move(t) }, rest{ r }, length{ s + 1 }
     { }
 
     T first;
     /* TODO: This should ultimately be able to point to anything which
      * implements the equivalent of IPersistentList. */
-    std::shared_ptr<list_node<T>> rest;
+    native_box<list_node<T>> rest;
     size_t length{};
   };
 
@@ -62,7 +61,7 @@ namespace jank::runtime::detail
         if(!latest)
         /* TODO: panic */
         { std::abort(); }
-        return latest.get();
+        return latest;
       }
       iterator& operator ++()
       {
@@ -77,13 +76,13 @@ namespace jank::runtime::detail
       bool operator !=(iterator const &rhs) const
       { return latest != rhs.latest; }
 
-      std::shared_ptr<list_type_impl<T>::value_type> latest;
+      native_box<list_type_impl<T>::value_type> latest;
     };
 
     list_type_impl() = default;
     list_type_impl(list_type_impl<T> const &) = default;
     list_type_impl(list_type_impl<T> &&) noexcept = default;
-    list_type_impl(std::shared_ptr<value_type> const &d) : data{ d }
+    list_type_impl(native_box<value_type> const &d) : data{ d }
     { }
 
     list_type_impl(std::initializer_list<T> const &vs)
@@ -94,7 +93,7 @@ namespace jank::runtime::detail
     {
       size_t length{};
       for(auto it(rb); it != re; ++it)
-      { data = std::make_shared<value_type>(*it, data, length++); }
+      { data = make_box<value_type>(*it, data, length++); }
     }
 
     list_type_impl& operator=(list_type_impl<T> const &) = default;
@@ -106,9 +105,9 @@ namespace jank::runtime::detail
     { return { nullptr }; }
 
     list_type_impl<T> cons(T const &t) const
-    { return { std::make_shared<value_type>(t, data, size()) }; }
+    { return { make_box<value_type>(t, data, size()) }; }
     list_type_impl<T> cons(T &&t) const
-    { return { std::make_shared<value_type>(std::move(t), data, size()) }; }
+    { return { make_box<value_type>(std::move(t), data, size()) }; }
 
     list_type_impl<T> into(list_type_impl<T> const &head) const
     {
@@ -134,6 +133,6 @@ namespace jank::runtime::detail
     list_type_impl<T> rest() const
     { return data ? list_type_impl<T>{ data->rest } : list_type_impl<T>{}; }
 
-    std::shared_ptr<value_type> data;
+    native_box<value_type> data;
   };
 }

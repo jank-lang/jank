@@ -3,7 +3,6 @@
 #include <jank/result.hpp>
 #include <jank/option.hpp>
 #include <jank/read/lex.hpp>
-#include <jank/runtime/object.hpp>
 
 /* TODO: Rename file to processor. */
 namespace jank::read::parse

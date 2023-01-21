@@ -13,11 +13,11 @@ namespace jank::runtime::obj
   { }
 
   keyword_ptr keyword::create(symbol const &s, bool const resolved)
-  { return make_box<keyword>(s, resolved); }
+  { return jank::make_box<keyword>(s, resolved); }
   keyword_ptr keyword::create(symbol &&s, bool const resolved)
-  { return make_box<keyword>(std::move(s), resolved); }
+  { return jank::make_box<keyword>(std::move(s), resolved); }
 
-  runtime::detail::boolean_type keyword::equal(object const &o) const
+  native_bool keyword::equal(object const &o) const
   {
     auto const *s(o.as_keyword());
     if(!s)
@@ -34,13 +34,13 @@ namespace jank::runtime::obj
   }
   void keyword::to_string(fmt::memory_buffer &buff) const
   { return to_string_impl(sym, buff); }
-  runtime::detail::string_type keyword::to_string() const
+  native_string keyword::to_string() const
   {
     fmt::memory_buffer buff;
     to_string_impl(sym, buff);
-    return std::string{ buff.data(), buff.size() };
+    return native_string{ buff.data(), buff.size() };
   }
-  runtime::detail::integer_type keyword::to_hash() const
+  native_integer keyword::to_hash() const
   /* TODO: Cache this. */
   { return runtime::detail::hash_combine(sym.to_hash(), hash_magic); }
 

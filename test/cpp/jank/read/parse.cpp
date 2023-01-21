@@ -1,6 +1,5 @@
 #include <unistd.h>
 
-#include <vector>
 #include <array>
 #include <iostream>
 
@@ -88,7 +87,7 @@ namespace jank::read::parse
     {
       auto const r(p.next());
       CHECK(r.is_ok());
-      CHECK(r.expect_ok()->equal(runtime::obj::string{ runtime::detail::string_type{ s } }));
+      CHECK(r.expect_ok()->equal(runtime::obj::string{ native_string{ s } }));
     }
   }
 
@@ -102,7 +101,7 @@ namespace jank::read::parse
       {
         auto const r(p.next());
         CHECK(r.is_ok());
-        CHECK(r.expect_ok()->equal(runtime::obj::symbol{ "", runtime::detail::string_type{ s } }));
+        CHECK(r.expect_ok()->equal(runtime::obj::symbol{ "", native_string{ s } }));
       }
     }
 
@@ -112,7 +111,7 @@ namespace jank::read::parse
       processor p{ lp.begin(), lp.end() };
       auto const r(p.next());
       CHECK(r.is_ok());
-      CHECK(r.expect_ok()->equal(runtime::obj::symbol{ "", runtime::detail::string_type{ "/" } }));
+      CHECK(r.expect_ok()->equal(runtime::obj::symbol{ "", native_string{ "/" } }));
     }
 
     SUBCASE("Qualified")
@@ -139,11 +138,10 @@ namespace jank::read::parse
         (
           r.expect_ok()->equal
           (
-            runtime::obj::list::create
+            jank::make_box<runtime::obj::list>
             (
-              std::in_place,
-              runtime::obj::symbol::create("quote"),
-              runtime::obj::symbol::create(s.first, s.second)
+              make_box<runtime::obj::symbol>("quote"),
+              make_box<runtime::obj::symbol>(s.first, s.second)
             )
           )
         );
@@ -161,7 +159,7 @@ namespace jank::read::parse
       {
         auto const r(p.next());
         CHECK(r.is_ok());
-        CHECK(r.expect_ok()->equal(runtime::obj::keyword{ runtime::obj::symbol{ "", runtime::detail::string_type{ s } }, true }));
+        CHECK(r.expect_ok()->equal(runtime::obj::keyword{ runtime::obj::symbol{ "", native_string{ s } }, true }));
       }
     }
 
@@ -185,7 +183,7 @@ namespace jank::read::parse
       {
         auto const r(p.next());
         CHECK(r.is_ok());
-        CHECK(r.expect_ok()->equal(runtime::obj::keyword{ runtime::obj::symbol{ "", runtime::detail::string_type{ s } }, false }));
+        CHECK(r.expect_ok()->equal(runtime::obj::keyword{ runtime::obj::symbol{ "", native_string{ s } }, false }));
       }
     }
 
@@ -213,7 +211,7 @@ namespace jank::read::parse
         auto const r(p.next());
         CHECK(r.is_ok());
         CHECK(r.expect_ok() != nullptr);
-        CHECK(r.expect_ok()->equal(runtime::obj::list::create(std::in_place)));
+        CHECK(r.expect_ok()->equal(jank::make_box<runtime::obj::list>()));
       }
     }
 
@@ -229,13 +227,12 @@ namespace jank::read::parse
         (
           r.expect_ok()->equal
           (
-            runtime::obj::list::create
+            jank::make_box<runtime::obj::list>
             (
-              std::in_place,
-              runtime::make_box<runtime::obj::integer>(1 * i),
-              runtime::make_box<runtime::obj::integer>(2 * i),
-              runtime::make_box<runtime::obj::integer>(3 * i),
-              runtime::make_box<runtime::obj::integer>(4 * i)
+              make_box<runtime::obj::integer>(1 * i),
+              make_box<runtime::obj::integer>(2 * i),
+              make_box<runtime::obj::integer>(3 * i),
+              make_box<runtime::obj::integer>(4 * i)
             )
           )
         );
@@ -252,18 +249,17 @@ namespace jank::read::parse
       (
         r1.expect_ok()->equal
         (
-          runtime::obj::list::create
+          jank::make_box<runtime::obj::list>
           (
-            std::in_place,
-            runtime::make_box<runtime::obj::symbol>("def"),
-            runtime::make_box<runtime::obj::symbol>("foo-bar"),
-            runtime::make_box<runtime::obj::integer>(1)
+            make_box<runtime::obj::symbol>("def"),
+            make_box<runtime::obj::symbol>("foo-bar"),
+            make_box<runtime::obj::integer>(1)
           )
         )
       );
       auto const r2(p.next());
       CHECK(r2.is_ok());
-      CHECK(r2.expect_ok()->equal(runtime::make_box<runtime::obj::symbol>("foo-bar")));
+      CHECK(r2.expect_ok()->equal(make_box<runtime::obj::symbol>("foo-bar")));
     }
 
     SUBCASE("Extra close")
@@ -297,7 +293,7 @@ namespace jank::read::parse
         auto const r(p.next());
         CHECK(r.is_ok());
         CHECK(r.expect_ok() != nullptr);
-        CHECK(r.expect_ok()->equal(runtime::obj::vector::create()));
+        CHECK(r.expect_ok()->equal(make_box<runtime::obj::vector>()));
       }
     }
 
@@ -315,12 +311,12 @@ namespace jank::read::parse
           (
             runtime::obj::vector::create
             (
-              runtime::detail::vector_type
+              runtime::detail::peristent_vector
               {
-                runtime::make_box<runtime::obj::integer>(1 * i),
-                runtime::make_box<runtime::obj::integer>(2 * i),
-                runtime::make_box<runtime::obj::integer>(3 * i),
-                runtime::make_box<runtime::obj::integer>(4 * i),
+                make_box<runtime::obj::integer>(1 * i),
+                make_box<runtime::obj::integer>(2 * i),
+                make_box<runtime::obj::integer>(3 * i),
+                make_box<runtime::obj::integer>(4 * i),
               }
             )
           )
@@ -378,10 +374,10 @@ namespace jank::read::parse
             runtime::obj::map
             {
               std::in_place,
-              runtime::make_box<runtime::obj::integer>(1 * i),
-              runtime::make_box<runtime::obj::integer>(2 * i),
-              runtime::make_box<runtime::obj::integer>(3 * i),
-              runtime::make_box<runtime::obj::integer>(4 * i),
+              make_box<runtime::obj::integer>(1 * i),
+              make_box<runtime::obj::integer>(2 * i),
+              make_box<runtime::obj::integer>(3 * i),
+              make_box<runtime::obj::integer>(4 * i),
             }
           )
         );
@@ -402,12 +398,12 @@ namespace jank::read::parse
           runtime::obj::map
           {
             std::in_place,
-            runtime::make_box<runtime::obj::keyword>(runtime::obj::symbol{ "foo" }, true),
-            runtime::make_box<runtime::obj::boolean>(true),
-            runtime::make_box<runtime::obj::integer>(1),
-            runtime::make_box<runtime::obj::keyword>(runtime::obj::symbol{ "one" }, true),
-            runtime::make_box<runtime::obj::string>("meow"),
-            runtime::make_box<runtime::obj::string>("meow"),
+            make_box<runtime::obj::keyword>(runtime::obj::symbol{ "foo" }, true),
+            make_box<runtime::obj::boolean>(true),
+            make_box<runtime::obj::integer>(1),
+            make_box<runtime::obj::keyword>(runtime::obj::symbol{ "one" }, true),
+            make_box<runtime::obj::string>("meow"),
+            make_box<runtime::obj::string>("meow"),
           }
         )
       );

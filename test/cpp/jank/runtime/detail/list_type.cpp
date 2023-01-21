@@ -1,10 +1,8 @@
 #include <unistd.h>
 
-#include <vector>
 #include <array>
 #include <iostream>
 
-#include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/list_type.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */

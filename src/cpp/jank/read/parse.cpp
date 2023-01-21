@@ -67,7 +67,7 @@ namespace jank::read::parse
         case lex::token_kind::close_paren:
         case lex::token_kind::close_curly_bracket:
           if(expected_closer != token.kind)
-          { return err(error{ token.pos, std::string{ "unexpected closing character" } }); }
+          { return err(error{ token.pos, native_string{ "unexpected closing character" } }); }
           ++token_current;
           expected_closer = none;
           return ok(nullptr);
@@ -91,7 +91,7 @@ namespace jank::read::parse
           return ok(nullptr);
         default:
         {
-          std::string msg{ "unexpected token kind: " };
+          native_string msg{ "unexpected token kind: " };
           msg += magic_enum::enum_name(token.kind);
           return err(error{ token.pos, msg });
         }
@@ -106,7 +106,7 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_paren);
 
-    runtime::detail::vector_transient_type ret;
+    runtime::detail::transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
     {
       if(it.latest.unwrap().is_err())
@@ -117,7 +117,7 @@ namespace jank::read::parse
     { return err(error{ start_token.pos, "Unterminated list" }); }
 
     expected_closer = prev_expected_closer;
-    return runtime::make_box<runtime::obj::list>(ret.rbegin(), ret.rend());
+    return make_box<runtime::obj::list>(ret.rbegin(), ret.rend());
   }
 
   processor::object_result processor::parse_vector()
@@ -127,7 +127,7 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_square_bracket);
 
-    runtime::detail::vector_transient_type ret;
+    runtime::detail::transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
     {
       if(it.latest.unwrap().is_err())
@@ -138,7 +138,7 @@ namespace jank::read::parse
     { return err(error{ start_token.pos, "Unterminated vector" }); }
 
     expected_closer = prev_expected_closer;
-    return runtime::make_box<runtime::obj::vector>(ret.persistent());
+    return make_box<runtime::obj::vector>(ret.persistent());
   }
 
   processor::object_result processor::parse_map()
@@ -149,7 +149,7 @@ namespace jank::read::parse
     expected_closer = some(lex::token_kind::close_curly_bracket);
 
     /* TODO: Map transient. */
-    runtime::detail::map_type ret;
+    runtime::detail::persistent_map ret;
     for(auto it(begin()); it != end(); ++it)
     {
       if(it.latest.unwrap().is_err())
@@ -169,7 +169,7 @@ namespace jank::read::parse
     { return err(error{ start_token.pos, "Unterminated map" }); }
 
     expected_closer = prev_expected_closer;
-    return runtime::make_box<runtime::obj::map>(ret);
+    return make_box<runtime::obj::map>(ret);
   }
 
   processor::object_result processor::parse_quote()
@@ -180,12 +180,11 @@ namespace jank::read::parse
     if(val_result.is_err())
     { return val_result; }
     else if(val_result.expect_ok() == nullptr)
-    { return err(error{ start_token.pos, std::string{ "invalid value after quote" } }); }
+    { return err(error{ start_token.pos, native_string{ "invalid value after quote" } }); }
 
-    return runtime::obj::list::create
+    return jank::make_box<runtime::obj::list>
     (
-      std::in_place,
-      runtime::obj::symbol::create("quote"),
+      jank::make_box<runtime::obj::symbol>("quote"),
       val_result.expect_ok_move()
     );
   }
@@ -193,7 +192,7 @@ namespace jank::read::parse
   processor::object_result processor::parse_nil()
   {
     ++token_current;
-    return ok(runtime::make_box<runtime::obj::nil>());
+    return ok(make_box<runtime::obj::nil>());
   }
 
   processor::object_result processor::parse_boolean()
@@ -201,17 +200,17 @@ namespace jank::read::parse
     auto const token((*token_current).expect_ok());
     ++token_current;
     auto const b(boost::get<bool>(token.data));
-    return ok(runtime::make_box<runtime::obj::boolean>(b));
+    return ok(make_box<runtime::obj::boolean>(b));
   }
 
   processor::object_result processor::parse_symbol()
   {
     auto const token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(boost::get<std::string_view>(token.data));
+    auto const sv(boost::get<native_string_view>(token.data));
     auto const slash(sv.find('/'));
-    std::string ns, name;
-    if(slash != std::string::npos)
+    native_string ns, name;
+    if(slash != native_string::npos)
     {
       /* If it's only a slash, that a name. Otherwise, it's a ns/name separator. */
       if(sv.size() == 1)
@@ -224,19 +223,19 @@ namespace jank::read::parse
     }
     else
     { name = sv; }
-    return ok(runtime::make_box<runtime::obj::symbol>(ns, name));
+    return ok(make_box<runtime::obj::symbol>(ns, name));
   }
 
   processor::object_result processor::parse_keyword()
   {
     auto const token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(boost::get<std::string_view>(token.data));
+    auto const sv(boost::get<native_string_view>(token.data));
     bool const resolved{ sv[0] != ':' };
 
     auto const slash(sv.find('/'));
-    std::string ns, name;
-    if(slash != std::string::npos)
+    native_string ns, name;
+    if(slash != native_string::npos)
     {
       if(resolved)
       { ns = sv.substr(0, slash); }
@@ -253,22 +252,22 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return ok(runtime::make_box<runtime::obj::integer>(boost::get<runtime::detail::integer_type>(token.data)));
+    return ok(make_box<runtime::obj::integer>(boost::get<native_integer>(token.data)));
   }
 
   processor::object_result processor::parse_real()
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return ok(runtime::make_box<runtime::obj::real>(boost::get<runtime::detail::real_type>(token.data)));
+    return ok(make_box<runtime::obj::real>(boost::get<native_real>(token.data)));
   }
 
   processor::object_result processor::parse_string()
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    auto const sv(boost::get<std::string_view>(token.data));
-    return ok(runtime::make_box<runtime::obj::string>(std::string{ sv.data(), sv.size() }));
+    auto const sv(boost::get<native_string_view>(token.data));
+    return ok(make_box<runtime::obj::string>(native_string{ sv.data(), sv.size() }));
   }
 
   processor::iterator processor::begin()

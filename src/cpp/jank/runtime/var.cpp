@@ -6,6 +6,7 @@
 
 namespace jank::runtime
 {
+  /* TODO: If ns already has var, don't make a new one. */
   var::var(ns_ptr const &n, obj::symbol_ptr const &s)
     : n{ n }, name{ s }
   { }
@@ -13,14 +14,7 @@ namespace jank::runtime
     : n{ n }, name{ s }, root{ o }
   { }
 
-  /* TODO: If ns already has var, don't make a new one. */
-  detail::box_type<var> var::create(ns_ptr const &n, obj::symbol_ptr const &s)
-  { return make_box<var>(n, s); }
-
-  detail::box_type<var> var::create(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr root)
-  { return make_box<var>(n, s, root); }
-
-  runtime::detail::boolean_type var::equal(object const &o) const
+  native_bool var::equal(object const &o) const
   {
     auto const *v(o.as_var());
     if(!v)
@@ -30,17 +24,17 @@ namespace jank::runtime
   }
 
   void to_string_impl(obj::symbol_ptr const &name, fmt::memory_buffer &buff)
-  { format_to(std::back_inserter(buff), FMT_COMPILE("#'{}/{}"), name->ns.data, name->name.data); }
+  { format_to(std::back_inserter(buff), FMT_COMPILE("#'{}/{}"), name->ns, name->name); }
   void var::to_string(fmt::memory_buffer &buff) const
   { to_string_impl(name, buff); }
-  runtime::detail::string_type var::to_string() const
+  native_string var::to_string() const
   /* TODO: Maybe cache this. */
   {
     fmt::memory_buffer buff;
     to_string_impl(name, buff);
-    return std::string{ buff.data(), buff.size() };
+    return native_string{ buff.data(), buff.size() };
   }
-  runtime::detail::integer_type var::to_hash() const
+  native_integer var::to_hash() const
   /* TODO: Cache this. */
   { return detail::hash_combine(n->name->to_hash(), name->to_hash()); }
 

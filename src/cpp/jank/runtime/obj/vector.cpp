@@ -20,14 +20,14 @@ namespace jank::runtime::obj
 
     void to_string(fmt::memory_buffer &buff) const override
     { return behavior::detail::to_string(vec->data.begin() + index, vec->data.end(), '[', ']', buff); }
-    runtime::detail::string_type to_string() const override
+    native_string to_string() const override
     {
       fmt::memory_buffer buff;
       behavior::detail::to_string(vec->data.begin() + index, vec->data.end(), '[', ']', buff);
-      return folly::fbstring{ buff.data(), buff.size() };
+      return { buff.data(), buff.size() };
     }
-    runtime::detail::integer_type to_hash() const override
-    { return reinterpret_cast<runtime::detail::integer_type>(this); }
+    native_integer to_hash() const override
+    { return reinterpret_cast<native_integer>(this); }
 
     behavior::seqable const* as_seqable() const override
     { return this; }
@@ -49,7 +49,7 @@ namespace jank::runtime::obj
       if(n == vec->data.size())
       { return nullptr; }
 
-      return make_box<vector_sequence>(vec, n);
+      return jank::make_box<vector_sequence>(vec, n);
     }
     sequence_ptr next_in_place() override
     {
@@ -74,17 +74,17 @@ namespace jank::runtime::obj
     size_t index{};
   };
 
-  vector::vector(runtime::detail::vector_type &&d)
+  vector::vector(runtime::detail::peristent_vector &&d)
     : data{ std::move(d) }
   { }
-  vector::vector(runtime::detail::vector_type const &d)
+  vector::vector(runtime::detail::peristent_vector const &d)
     : data{ d }
   { }
 
-  vector_ptr vector::create(runtime::detail::vector_type const &o)
-  { return make_box<vector>(o); }
+  vector_ptr vector::create(runtime::detail::peristent_vector const &o)
+  { return jank::make_box<vector>(o); }
 
-  runtime::detail::boolean_type vector::equal(object const &o) const
+  native_bool vector::equal(object const &o) const
   {
     auto const *s(o.as_seqable());
     if(!s)
@@ -100,16 +100,16 @@ namespace jank::runtime::obj
   }
   void vector::to_string(fmt::memory_buffer &buff) const
   { return behavior::detail::to_string(data.begin(), data.end(), '[', ']', buff); }
-  runtime::detail::string_type vector::to_string() const
+  native_string vector::to_string() const
   {
     fmt::memory_buffer buff;
     behavior::detail::to_string(data.begin(), data.end(), '[', ']', buff);
-    return std::string{ buff.data(), buff.size() };
+    return native_string{ buff.data(), buff.size() };
   }
   /* TODO: Cache this. */
-  runtime::detail::integer_type vector::to_hash() const
+  native_integer vector::to_hash() const
   {
-    auto seed(static_cast<runtime::detail::integer_type>(data.size()));
+    auto seed(static_cast<native_integer>(data.size()));
     for(auto const &e : data)
     { seed = runtime::detail::hash_combine(seed, *e); }
     return seed;
@@ -122,7 +122,7 @@ namespace jank::runtime::obj
   {
     if(data.empty())
     { return nullptr; }
-    return make_box<vector_sequence>(const_cast<vector*>(this));
+    return jank::make_box<vector_sequence>(const_cast<vector*>(this));
   }
   size_t vector::count() const
   { return data.size(); }
@@ -130,7 +130,7 @@ namespace jank::runtime::obj
   object_ptr vector::with_meta(object_ptr m) const
   {
     validate_meta(m);
-    auto ret(make_box<vector>(data));
+    auto ret(jank::make_box<vector>(data));
     ret->meta = m;
     return ret;
   }

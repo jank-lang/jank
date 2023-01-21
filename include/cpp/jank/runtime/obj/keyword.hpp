@@ -2,7 +2,6 @@
 
 #include <functional>
 
-#include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/hash.hpp>
 
@@ -18,13 +17,13 @@ namespace jank::runtime::obj
     keyword(symbol &&s, bool const resolved);
     ~keyword() = default;
 
-    static runtime::detail::box_type<keyword> create(symbol const &s, bool const resolved);
-    static runtime::detail::box_type<keyword> create(symbol &&s, bool const resolved);
+    static native_box<keyword> create(symbol const &s, bool const resolved);
+    static native_box<keyword> create(symbol &&s, bool const resolved);
 
-    runtime::detail::boolean_type equal(object const &) const override;
-    runtime::detail::string_type to_string() const override;
+    native_bool equal(object const &) const override;
+    native_string to_string() const override;
     void to_string(fmt::memory_buffer &buff) const override;
-    runtime::detail::integer_type to_hash() const override;
+    native_integer to_hash() const override;
 
     keyword const* as_keyword() const override;
 

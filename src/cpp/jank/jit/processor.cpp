@@ -34,7 +34,7 @@ namespace jank::jit
       jank::util::make_array
       (
         "clang++", "-std=c++17",
-        "-DHAVE_CXX14=1",
+        "-DHAVE_CXX14=1", "-DIMMER_HAS_LIBGC=1",
         "-include-pch", pch_path_str.c_str()
       )
     );
@@ -42,18 +42,18 @@ namespace jank::jit
     interpreter->setDefaultOptLevel(1);
   }
 
-  result<option<runtime::object_ptr>, std::string> processor::eval
+  result<option<runtime::object_ptr>, native_string> processor::eval
   (runtime::context &, codegen::processor &cg_prc) const
   {
-    interpreter->declare(cg_prc.declaration_str());
+    /* TODO: Improve Cling to accept string_views instead. */
+    interpreter->declare(static_cast<std::string>(cg_prc.declaration_str()));
 
     auto const expr(cg_prc.expression_str(false));
     if(expr.empty())
     { return ok(none); }
 
-    /* TODO: Check if the memory for his value needs to be released. */
     cling::Value v;
-    auto const result(interpreter->evaluate(expr, v));
+    auto const result(interpreter->evaluate(static_cast<std::string>(expr), v));
     if(result != cling::Interpreter::CompilationResult::kSuccess)
     { return err("compilation error"); }
 
@@ -61,6 +61,6 @@ namespace jank::jit
     return ok(ret_val);
   }
 
-  void processor::eval_string(std::string const &s) const
-  { interpreter->process(s); }
+  void processor::eval_string(native_string const &s) const
+  { interpreter->process(static_cast<std::string>(s)); }
 }

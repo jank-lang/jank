@@ -23,33 +23,33 @@ namespace jank::runtime
 
   /* some? */
   object_ptr some_gen_qmark_(object_ptr o)
-  { return make_box<obj::boolean>(o->as_nil() == nullptr); }
+  { return jank::make_box<obj::boolean>(o->as_nil() == nullptr); }
 
   /* nil? */
   object_ptr nil_gen_qmark_(object_ptr o)
-  { return make_box<obj::boolean>(o->as_nil() != nullptr); }
+  { return jank::make_box<obj::boolean>(o->as_nil() != nullptr); }
 
   /* truthy? */
   object_ptr truthy_gen_qmark_(object_ptr o)
-  { return make_box<obj::boolean>(detail::truthy(o)); }
+  { return jank::make_box<obj::boolean>(detail::truthy(o)); }
 
   /* = */
   object_ptr _gen_equal_(object_ptr l, object_ptr r)
-  { return make_box<obj::boolean>(l->equal(*r)); }
+  { return jank::make_box<obj::boolean>(l->equal(*r)); }
 
   /* not= */
   object_ptr not_gen_equal_(object_ptr l, object_ptr r)
-  { return make_box<obj::boolean>(!l->equal(*r)); }
+  { return jank::make_box<obj::boolean>(!l->equal(*r)); }
 
   /* TODO: This should be the `and` macro. */
   object_ptr all(object_ptr l, object_ptr r)
-  { return make_box<obj::boolean>(detail::truthy(l) && detail::truthy(r));}
+  { return jank::make_box<obj::boolean>(detail::truthy(l) && detail::truthy(r));}
 
   /* TODO: This should be the `or` macro. */
   object_ptr either(object_ptr l, object_ptr r)
   { return detail::truthy(l) ? l : r;}
 
-  static std::unordered_map<char, std::string_view> const munge_chars
+  static native_unordered_map<char, native_string_view> const munge_chars
   {
     { '-', "_" },
     { ':', "_COLON_" },
@@ -77,10 +77,10 @@ namespace jank::runtime
     { '?', "_QMARK_" }
   };
 
-  detail::string_type munge(detail::string_type const &o)
+  native_string munge(native_string const &o)
   {
-    std::string munged;
-    for(auto const &c : o.data)
+    native_string munged;
+    for(auto const &c : o)
     {
       auto const &replacement(munge_chars.find(c));
       if(replacement != munge_chars.end())
@@ -99,6 +99,6 @@ namespace jank::runtime
     if(str == nullptr)
     { throw "munging only supported for strings right now"; }
 
-    return make_box<obj::string>(munge(str->data));
+    return jank::make_box<obj::string>(munge(str->data));
   }
 }

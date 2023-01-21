@@ -12,7 +12,7 @@ namespace jank::analyze
   (
     frame_type const &type,
     runtime::context &rt_ctx,
-    option<std::shared_ptr<local_frame>> const &p
+    option<native_box<local_frame>> const &p
   ) : type{ type }, parent{ p }, rt_ctx{ rt_ctx }
   { }
 
@@ -43,7 +43,7 @@ namespace jank::analyze
   {
     decltype(local_frame::find_result::crossed_fns) crossed_fns;
 
-    for(local_frame_ptr it{ shared_from_this() }; it != nullptr; )
+    for(local_frame_ptr it{ this }; it != nullptr; )
     {
       auto const result(it->locals.find(sym));
       if(result != it->locals.end())
@@ -88,7 +88,7 @@ namespace jank::analyze
     if(found != closest_fn.lifted_vars.end())
     { return found->first; }
 
-    auto qualified_sym(runtime::make_box<runtime::obj::symbol>(*sym));
+    auto qualified_sym(make_box<runtime::obj::symbol>(*sym));
     if(qualified_sym->ns.empty())
     {
       auto const state(rt_ctx.get_thread_state());

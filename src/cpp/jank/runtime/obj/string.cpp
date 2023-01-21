@@ -10,14 +10,14 @@
 
 namespace jank::runtime::obj
 {
-  string::string(runtime::detail::string_type const &d)
+  string::string(native_string const &d)
     : data{ d }
   { }
-  string::string(runtime::detail::string_type &&d)
+  string::string(native_string &&d)
     : data{ std::move(d) }
   { }
 
-  runtime::detail::boolean_type string::equal(object const &o) const
+  native_bool string::equal(object const &o) const
   {
     auto const *s(o.as_string());
     if(!s)
@@ -25,11 +25,11 @@ namespace jank::runtime::obj
 
     return data == s->data;
   }
-  runtime::detail::string_type string::to_string() const
+  native_string string::to_string() const
   { return data; }
   void string::to_string(fmt::memory_buffer &buff) const
   { format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data); }
-  runtime::detail::integer_type string::to_hash() const
+  native_integer string::to_hash() const
   { return data.to_hash(); }
   string const* string::as_string() const
   { return this; }
@@ -40,7 +40,7 @@ namespace jank::runtime::obj
   object_ptr string::with_meta(object_ptr m) const
   {
     validate_meta(m);
-    auto * const ret(make_box<string>(data));
+    auto * const ret(jank::make_box<string>(data));
     ret->meta = m;
     return ret;
   }

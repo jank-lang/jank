@@ -28,9 +28,9 @@ namespace jank::evaluate
     { arity.frame = arity.frame->parent.unwrap(); }
     arity.frame->type = analyze::local_frame::frame_type::fn;
     expr.expr_type = analyze::expression_type::return_statement;
-    /* TODO: Avoid allocation by using existing shared_ptr */
-    arity.body.body.push_back(std::make_shared<analyze::expression>(expr));
-    arity.fn_ctx = std::make_shared<analyze::expr::function_context>();
+    /* TODO: Avoid allocation by using existing ptr. */
+    arity.body.body.push_back(jank::make_box<analyze::expression>(expr));
+    arity.fn_ctx = jank::make_box<analyze::expr::function_context>();
     wrapper.arities.emplace_back(std::move(arity));
     return wrapper;
   }
@@ -106,7 +106,7 @@ namespace jank::evaluate
       throw "call error";
     }
 
-    std::vector<runtime::object_ptr> arg_vals;
+    native_vector<runtime::object_ptr> arg_vals;
     arg_vals.reserve(expr.arg_exprs.size());
     for(auto const &arg_expr: expr.arg_exprs)
     { arg_vals.emplace_back(eval(rt_ctx, jit_prc, arg_expr)); }
@@ -139,10 +139,10 @@ namespace jank::evaluate
       default:
       {
         /* TODO: This could be optimized; making lists sucks right now. */
-        runtime::detail::list_type all{ arg_vals.rbegin(), arg_vals.rend() };
+        runtime::detail::persistent_list all{ arg_vals.rbegin(), arg_vals.rend() };
         for(size_t i{}; i < 10; ++i)
         { all = all.rest(); }
-        return runtime::dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3], arg_vals[4], arg_vals[5], arg_vals[6], arg_vals[7], arg_vals[8], arg_vals[9], runtime::obj::list::create(all));
+        return runtime::dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3], arg_vals[4], arg_vals[5], arg_vals[6], arg_vals[7], arg_vals[8], arg_vals[9], jank::make_box<runtime::obj::list>(all));
       }
     }
   }
@@ -166,7 +166,7 @@ namespace jank::evaluate
     analyze::expr::vector<analyze::expression> const &expr
   )
   {
-    runtime::detail::vector_transient_type ret;
+    runtime::detail::transient_vector ret;
     for(auto const &e : expr.data_exprs)
     { ret.push_back(eval(rt_ctx, jit_prc, e)); }
     return runtime::obj::vector::create(ret.persistent());
@@ -179,7 +179,7 @@ namespace jank::evaluate
     analyze::expr::map<analyze::expression> const &expr
   )
   {
-    runtime::detail::map_type ret;
+    runtime::detail::persistent_map ret;
     for(auto const &e : expr.data_exprs)
     { ret.data.emplace_back(eval(rt_ctx, jit_prc, e.first), eval(rt_ctx, jit_prc, e.second)); }
     return runtime::obj::map::create(ret);

@@ -8,28 +8,26 @@
 
 namespace jank::runtime::obj
 {
-  list::list(runtime::detail::list_type &&d)
+  list::list(runtime::detail::persistent_list &&d)
     : data{ std::move(d) }
   { }
-  list::list(runtime::detail::list_type const &d)
+  list::list(runtime::detail::persistent_list const &d)
     : data{ d }
   { }
 
-  list_ptr list::create(runtime::detail::list_type const &l)
-  { return make_box<list>(l); }
   list_ptr list::create(behavior::sequence_ptr const &s)
   {
     if(s == nullptr)
-    { return make_box<list>(); }
+    { return jank::make_box<list>(); }
 
-    std::vector<object_ptr> v;
+    native_vector<object_ptr> v;
     v.emplace_back(s->first());
     for(auto i(s->next()); i != nullptr; i = i->next_in_place())
     { v.emplace_back(i->first()); }
-    return make_box<list>(runtime::detail::list_type{ v.rbegin(), v.rend() });
+    return jank::make_box<list>(runtime::detail::persistent_list{ v.rbegin(), v.rend() });
   }
 
-  runtime::detail::boolean_type list::equal(object const &o) const
+  native_bool list::equal(object const &o) const
   {
     auto const *s(o.as_seqable());
     if(!s)
@@ -45,16 +43,16 @@ namespace jank::runtime::obj
   }
   void list::to_string(fmt::memory_buffer &buff) const
   { return behavior::detail::to_string(data.begin(), data.end(), '(', ')', buff); }
-  runtime::detail::string_type list::to_string() const
+  native_string list::to_string() const
   {
     fmt::memory_buffer buff;
     behavior::detail::to_string(data.begin(), data.end(), '(', ')', buff);
-    return std::string{ buff.data(), buff.size() };
+    return native_string{ buff.data(), buff.size() };
   }
   /* TODO: Cache this. */
-  runtime::detail::integer_type list::to_hash() const
+  native_integer list::to_hash() const
   {
-    auto seed(static_cast<runtime::detail::integer_type>(data.size()));
+    auto seed(static_cast<native_integer>(data.size()));
     for(auto const &e : data)
     { seed = runtime::detail::hash_combine(seed, *e); }
     return seed;
@@ -67,9 +65,9 @@ namespace jank::runtime::obj
   {
     if(data.size() == 0)
     { return nullptr; }
-    return make_box
+    return jank::make_box
     <
-      behavior::basic_iterator_wrapper<runtime::detail::list_type::iterator>
+      behavior::basic_iterator_wrapper<runtime::detail::persistent_list::iterator>
     >(const_cast<list*>(this), data.begin(), data.end(), data.size());
   }
   size_t list::count() const
@@ -78,7 +76,7 @@ namespace jank::runtime::obj
   object_ptr list::with_meta(object_ptr m) const
   {
     validate_meta(m);
-    auto ret(make_box<list>(data));
+    auto ret(jank::make_box<list>(data));
     ret->meta = m;
     return ret;
   }

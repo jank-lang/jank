@@ -1,5 +1,4 @@
 #include <jank/runtime/behavior/metadatable.hpp>
-#include <jank/runtime/object.hpp>
 
 namespace jank::runtime::behavior
 {

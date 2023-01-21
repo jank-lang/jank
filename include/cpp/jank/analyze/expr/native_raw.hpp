@@ -14,9 +14,9 @@ namespace jank::analyze::expr
   template <typename E>
   struct native_raw : expression_base
   {
-    using chunk_t = boost::variant<runtime::detail::string_type, std::shared_ptr<E>>;
+    using chunk_t = boost::variant<native_string, native_box<E>>;
 
-    std::vector<chunk_t> chunks;
+    native_vector<chunk_t> chunks;
     local_frame_ptr frame;
   };
 }

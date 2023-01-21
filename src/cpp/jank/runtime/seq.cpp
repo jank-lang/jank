@@ -62,12 +62,12 @@ namespace jank::runtime
       return JANK_NIL;
     }
 
-    detail::vector_transient_type ret;
+    detail::transient_vector ret;
 
     for(auto s(sable->seq()); s != nullptr; s = s->next_in_place())
     { ret.push_back(func->call(s->first())); }
 
-    return make_box<obj::vector>(ret.persistent());
+    return jank::make_box<obj::vector>(ret.persistent());
   }
 
   object_ptr reduce(object_ptr f, object_ptr initial, object_ptr seq)
@@ -116,19 +116,19 @@ namespace jank::runtime
       return JANK_NIL;
     }
 
-    detail::vector_transient_type ret;
+    detail::transient_vector ret;
 
     for(auto s(sable->seq()); s != nullptr;)
     {
-      detail::vector_transient_type partition;
+      detail::transient_vector partition;
 
       for(size_t k{}; k < partition_size && s != nullptr; ++k, s = s->next_in_place())
       { partition.push_back(s->first()); }
 
-      ret.push_back(make_box<obj::vector>(partition.persistent()));
+      ret.push_back(jank::make_box<obj::vector>(partition.persistent()));
     }
 
-    return make_box<obj::vector>(ret.persistent());
+    return jank::make_box<obj::vector>(ret.persistent());
   }
 
   /* TODO: Laziness */
@@ -153,10 +153,10 @@ namespace jank::runtime
       return JANK_NIL;
     }
 
-    detail::vector_transient_type ret;
+    detail::transient_vector ret;
     for(auto i(start_int); i < end_int; ++i)
-    { ret.push_back(make_box<obj::integer>(i)); }
-    return make_box<obj::vector>(ret.persistent());
+    { ret.push_back(jank::make_box<obj::integer>(i)); }
+    return jank::make_box<obj::vector>(ret.persistent());
   }
 
   object_ptr reverse(object_ptr seq)
@@ -170,14 +170,14 @@ namespace jank::runtime
     }
 
     /* TODO: Optimize this by supporting a better interface. */
-    detail::vector_transient_type in_order, reverse_order;
+    detail::transient_vector in_order, reverse_order;
 
     for(auto s(sable->seq()); s != nullptr; s = s->next_in_place())
     { in_order.push_back(s->first()); }
     for(auto it(in_order.rbegin()); it != in_order.rend(); ++it)
     { reverse_order.push_back(*it); }
 
-    return make_box<obj::vector>(reverse_order.persistent());
+    return jank::make_box<obj::vector>(reverse_order.persistent());
   }
 
   /* TODO: Associative interface. */
@@ -228,9 +228,9 @@ namespace jank::runtime
           std::cout << "(conj) invalid map entry: " << *val << std::endl;
           return JANK_NIL;
         }
-        detail::map_type copy{ m->data };
+        detail::persistent_map copy{ m->data };
         copy.insert_or_assign(v->data[0], v->data[1]);
-        return make_box<obj::map>(std::move(copy));
+        return jank::make_box<obj::map>(std::move(copy));
       }
       else
       { return JANK_NIL; }
@@ -238,7 +238,7 @@ namespace jank::runtime
 
     auto const * const v(o->as_vector());
     if(v)
-    { return make_box<obj::vector>(v->data.push_back(val)); }
+    { return jank::make_box<obj::vector>(v->data.push_back(val)); }
 
     std::cout << "(conj) unsupported for: " << *o << std::endl;
     return JANK_NIL;
@@ -249,9 +249,9 @@ namespace jank::runtime
     auto const * const m(o->as_map());
     if(m)
     {
-      detail::map_type copy{ m->data };
+      detail::persistent_map copy{ m->data };
       copy.insert_or_assign(key, val);
-      return make_box<obj::map>(std::move(copy));
+      return jank::make_box<obj::map>(std::move(copy));
     }
 
     auto const * const v(o->as_vector());
@@ -273,9 +273,9 @@ namespace jank::runtime
         return JANK_NIL;
       }
       else if(static_cast<size_t>(n->data) == size)
-      { return make_box<obj::vector>(v->data.push_back(val)); }
+      { return jank::make_box<obj::vector>(v->data.push_back(val)); }
 
-      return make_box<obj::vector>(v->data.set(n->data, val));
+      return jank::make_box<obj::vector>(v->data.set(n->data, val));
     }
 
     std::cout << "(get) not associative: " << *o << std::endl;

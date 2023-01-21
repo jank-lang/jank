@@ -5,14 +5,13 @@
 
 #include <folly/Synchronized.h>
 
-#include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 
 namespace jank::runtime
 {
   struct ns;
-  using ns_ptr = detail::box_type<ns>;
+  using ns_ptr = native_box<ns>;
 
   struct var : object, behavior::metadatable
   {
@@ -21,13 +20,10 @@ namespace jank::runtime
     var(ns_ptr const &n, obj::symbol_ptr const &s);
     var(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr o);
 
-    static detail::box_type<var> create(ns_ptr const &n, obj::symbol_ptr const &s);
-    static detail::box_type<var> create(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr root);
-
-    detail::boolean_type equal(object const &) const override;
-    detail::string_type to_string() const override;
+    native_bool equal(object const &) const override;
+    native_string to_string() const override;
     void to_string(fmt::memory_buffer &buff) const override;
-    detail::integer_type to_hash() const override;
+    native_integer to_hash() const override;
 
     var const* as_var() const override;
 
@@ -37,7 +33,7 @@ namespace jank::runtime
     bool operator ==(var const &rhs) const;
 
     object_ptr get_root() const;
-    detail::box_type<var> set_root(object_ptr r);
+    native_box<var> set_root(object_ptr r);
 
     ns_ptr n;
     /* TODO: Make sure this gets fully qualified. */
@@ -46,5 +42,5 @@ namespace jank::runtime
   private:
     folly::Synchronized<object_ptr> root;
   };
-  using var_ptr = detail::box_type<var>;
+  using var_ptr = native_box<var>;
 }

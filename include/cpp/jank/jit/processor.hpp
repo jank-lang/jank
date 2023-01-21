@@ -14,9 +14,9 @@ namespace jank::jit
   {
     processor();
 
-    result<option<runtime::object_ptr>, std::string> eval
+    result<option<runtime::object_ptr>, native_string> eval
     (runtime::context &rt_ctx, codegen::processor &cg_prc) const;
-    void eval_string(std::string const &s) const;
+    void eval_string(native_string const &s) const;
 
     std::unique_ptr<cling::Interpreter> interpreter;
   };

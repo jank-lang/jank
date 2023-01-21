@@ -1,6 +1,5 @@
 #pragma once
 
-#include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/countable.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 
@@ -12,14 +11,14 @@ namespace jank::runtime::obj
     string() = default;
     string(string &&) = default;
     string(string const &) = default;
-    string(runtime::detail::string_type const &d);
-    string(runtime::detail::string_type &&d);
+    string(native_string const &d);
+    string(native_string &&d);
     ~string() = default;
 
-    runtime::detail::boolean_type equal(object const &) const override;
-    runtime::detail::string_type to_string() const override;
+    native_bool equal(object const &) const override;
+    native_string to_string() const override;
     void to_string(fmt::memory_buffer &buff) const override;
-    runtime::detail::integer_type to_hash() const override;
+    native_integer to_hash() const override;
 
     string const* as_string() const override;
 
@@ -28,7 +27,7 @@ namespace jank::runtime::obj
     object_ptr with_meta(object_ptr m) const override;
     behavior::metadatable const* as_metadatable() const override;
 
-    runtime::detail::string_type data;
+    native_string data;
   };
-  using string_ptr = runtime::detail::box_type<string>;
+  using string_ptr = native_box<string>;
 }

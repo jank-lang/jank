@@ -1,6 +1,5 @@
 #pragma once
 
-#include <jank/runtime/detail/type.hpp>
 #include <jank/option.hpp>
 
 namespace jank::runtime
@@ -52,6 +51,6 @@ namespace jank::runtime
 
       virtual option<size_t> get_variadic_arg_position() const;
     };
-    using callable_ptr = detail::box_type<callable>;
+    using callable_ptr = native_box<callable>;
   }
 }

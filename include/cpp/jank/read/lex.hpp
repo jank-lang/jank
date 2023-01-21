@@ -6,7 +6,6 @@
 
 #include <jank/result.hpp>
 #include <jank/option.hpp>
-#include <jank/runtime/detail/type.hpp>
 
 namespace jank::read::lex
 {
@@ -41,15 +40,15 @@ namespace jank::read::lex
   {
     token(token_kind const k);
     token(size_t const p, token_kind const k);
-    token(size_t const p, token_kind const k, runtime::detail::integer_type const);
-    token(size_t const p, token_kind const k, runtime::detail::real_type const);
-    token(size_t const p, token_kind const k, std::string_view const);
+    token(size_t const p, token_kind const k, native_integer const);
+    token(size_t const p, token_kind const k, native_real const);
+    token(size_t const p, token_kind const k, native_string_view const);
     token(size_t const p, token_kind const k, bool const);
 
     token(size_t const p, size_t const s, token_kind const k);
-    token(size_t const p, size_t const s, token_kind const k, runtime::detail::integer_type const);
-    token(size_t const p, size_t const s, token_kind const k, runtime::detail::real_type const);
-    token(size_t const p, size_t const s, token_kind const k, std::string_view const);
+    token(size_t const p, size_t const s, token_kind const k, native_integer const);
+    token(size_t const p, size_t const s, token_kind const k, native_real const);
+    token(size_t const p, size_t const s, token_kind const k, native_string_view const);
     token(size_t const p, size_t const s, token_kind const k, bool const);
 
     bool operator ==(token const &rhs) const;
@@ -70,10 +69,10 @@ namespace jank::read::lex
     boost::variant
     <
       no_data,
-      runtime::detail::integer_type,
-      runtime::detail::real_type,
-      std::string_view,
-      runtime::detail::boolean_type
+      native_integer,
+      native_real,
+      native_string_view,
+      native_bool
     > data;
   };
   std::ostream& operator <<(std::ostream &os, token const &t);
@@ -84,16 +83,16 @@ namespace jank::read
 {
   struct error
   {
-    error(size_t const s, runtime::detail::string_type const &m);
-    error(size_t const s, size_t const e, runtime::detail::string_type const &m);
-    error(runtime::detail::string_type const &m);
+    error(size_t const s, native_string const &m);
+    error(size_t const s, size_t const e, native_string const &m);
+    error(native_string const &m);
 
     bool operator ==(error const &rhs) const;
     bool operator !=(error const &rhs) const;
 
     size_t start{};
     size_t end{};
-    runtime::detail::string_type message;
+    native_string message;
   };
   std::ostream& operator <<(std::ostream &os, error const &e);
 }
@@ -120,7 +119,7 @@ namespace jank::read::lex
       processor &p;
     };
 
-    processor(std::string_view const &f);
+    processor(native_string_view const &f);
 
     result<token, error> next();
     option<char> peek() const;
@@ -132,6 +131,6 @@ namespace jank::read::lex
     size_t pos{};
     /* Whether or not the previous token requires a space after it. */
     bool require_space{};
-    std::string_view file;
+    native_string_view file;
   };
 }

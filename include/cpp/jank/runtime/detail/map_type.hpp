@@ -2,7 +2,6 @@
 
 #include <ostream>
 #include <memory>
-#include <vector>
 
 #include <jank/runtime/hash.hpp>
 
@@ -13,7 +12,7 @@ namespace jank::runtime::detail
   template <typename K, typename V>
   struct map_type_impl
   {
-    using value_type = std::vector<std::pair<K, V>>;
+    using value_type = native_vector<std::pair<K, V>>;
     using iterator = typename value_type::iterator;
     using const_iterator = typename value_type::const_iterator;
 

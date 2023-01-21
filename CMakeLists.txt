@@ -122,6 +122,7 @@ set_target_properties(jank_cling_lib PROPERTIES LINK_FLAGS -s)
 
 add_library(
   jank_lib STATIC
+  src/cpp/jank/native_box.cpp
   src/cpp/jank/util/mapped_file.cpp
   src/cpp/jank/util/scope_exit.cpp
   src/cpp/jank/read/lex.cpp
@@ -163,7 +164,7 @@ set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 
 target_compile_features(jank_lib PUBLIC cxx_std_17)
 target_compile_options(jank_lib PRIVATE ${jank_compiler_flags})
-target_compile_options(jank_lib PUBLIC -DLLVMDIR="${jank_llvm_root}")
+target_compile_options(jank_lib PUBLIC -DLLVMDIR="${jank_llvm_root}" -DIMMER_HAS_LIBGC=1)
 target_link_options(jank_lib PRIVATE ${jank_linker_flags})
 
 find_package(Immer CONFIG REQUIRED)

@@ -13,7 +13,7 @@ namespace jank::analyze
   { return expr_type != expression_type::expression; }
 
   /* Common base class for every expression. */
-  struct expression_base
+  struct expression_base : gc
   {
     /* TODO: Add frame here. */
     expression_type expr_type{};

@@ -4,7 +4,6 @@
 
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/list.hpp>
 #include <jank/runtime/obj/vector.hpp>

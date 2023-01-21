@@ -134,7 +134,7 @@
                   seq->first()->to_string(buff);
                   for(auto *it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
                   { it->first()->to_string(buff); }
-                  __value = make_box<obj::string>(std::string{ buff.data(), buff.size() });"))))
+                  __value = make_box<obj::string>(native_string{ buff.data(), buff.size() });"))))
 
 ;; Other.
 (def keyword?
@@ -238,7 +238,7 @@
 
                  ankerl::nanobench::Bench().config(config).run
                  (
-                  label_str->data,
+                  static_cast<std::string>(label_str->data),
                   [&]
                   {
                     object_ptr res{ callable->call() };

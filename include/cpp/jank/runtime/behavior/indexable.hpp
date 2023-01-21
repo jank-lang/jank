@@ -2,11 +2,9 @@
 
 #include <cstdlib> // size_t
 
-#include <jank/runtime/detail/type.hpp>
-
 namespace jank::runtime
 {
-  using object_ptr = detail::box_type<struct object>;
+  using object_ptr = native_box<struct object>;
 
   namespace behavior
   {

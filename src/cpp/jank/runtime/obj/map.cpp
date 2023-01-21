@@ -10,15 +10,15 @@
 
 namespace jank::runtime::obj
 {
-  map::map(runtime::detail::map_type &&d)
+  map::map(runtime::detail::persistent_map &&d)
     : data{ std::move(d) }
   { }
-  map::map(runtime::detail::map_type const &d)
+  map::map(runtime::detail::persistent_map const &d)
     : data{ d }
   { }
 
-  runtime::detail::box_type<map> map::create(runtime::detail::map_type const &o)
-  { return make_box<map>(o); }
+  native_box<map> map::create(runtime::detail::persistent_map const &o)
+  { return jank::make_box<map>(o); }
 
   template <typename It>
   struct map_iterator_wrapper : behavior::sequence
@@ -47,14 +47,14 @@ namespace jank::runtime::obj
     }
     void to_string(fmt::memory_buffer &buff) const override
     { return to_string_impl(buff); }
-    runtime::detail::string_type to_string() const override
+    native_string to_string() const override
     {
       fmt::memory_buffer buff;
       to_string_impl(buff);
-      return std::string{ buff.data(), buff.size() };
+      return native_string{ buff.data(), buff.size() };
     }
-    runtime::detail::integer_type to_hash() const override
-    { return reinterpret_cast<runtime::detail::integer_type>(this); }
+    native_integer to_hash() const override
+    { return reinterpret_cast<native_integer>(this); }
 
     behavior::seqable const* as_seqable() const override
     { return this; }
@@ -62,7 +62,7 @@ namespace jank::runtime::obj
     { return static_cast<sequence_ptr>(const_cast<map_iterator_wrapper<It>*>(this)); }
 
     object_ptr first() const override
-    { return make_box<vector>(runtime::detail::vector_type{ begin->first, begin->second }); }
+    { return jank::make_box<vector>(runtime::detail::peristent_vector{ begin->first, begin->second }); }
     behavior::sequence_ptr next() const override
     {
       auto n(begin);
@@ -71,7 +71,7 @@ namespace jank::runtime::obj
       if(n == end)
       { return nullptr; }
 
-      return make_box<map_iterator_wrapper<It>>(coll, n, end);
+      return jank::make_box<map_iterator_wrapper<It>>(coll, n, end);
     }
     behavior::sequence* next_in_place() override
     {
@@ -89,14 +89,14 @@ namespace jank::runtime::obj
       if(begin == end)
       { return nullptr; }
 
-      return make_box<vector>(runtime::detail::vector_type{ begin->first, begin->second });
+      return jank::make_box<vector>(runtime::detail::peristent_vector{ begin->first, begin->second });
     }
 
     object_ptr coll;
     It begin, end;
   };
 
-  runtime::detail::boolean_type map::equal(object const &o) const
+  native_bool map::equal(object const &o) const
   {
     auto const *m(o.as_map());
     if(!m)
@@ -107,8 +107,8 @@ namespace jank::runtime::obj
 
   void to_string_impl
   (
-    runtime::detail::map_type::const_iterator const &begin,
-    runtime::detail::map_type::const_iterator const &end,
+    runtime::detail::persistent_map::const_iterator const &begin,
+    runtime::detail::persistent_map::const_iterator const &end,
     fmt::memory_buffer &buff
   )
   {
@@ -130,16 +130,16 @@ namespace jank::runtime::obj
   }
   void map::to_string(fmt::memory_buffer &buff) const
   { to_string_impl(data.begin(), data.end(), buff); }
-  runtime::detail::string_type map::to_string() const
+  native_string map::to_string() const
   {
     fmt::memory_buffer buff;
     to_string_impl(data.begin(), data.end(), buff);
-    return std::string{ buff.data(), buff.size() };
+    return native_string{ buff.data(), buff.size() };
   }
   /* TODO: Cache this. */
-  runtime::detail::integer_type map::to_hash() const
+  native_integer map::to_hash() const
   {
-    auto seed(static_cast<runtime::detail::integer_type>(data.size()));
+    auto seed(static_cast<native_integer>(data.size()));
     for(auto const &e : data)
     {
       seed = runtime::detail::hash_combine(seed, *e.first);
@@ -155,7 +155,7 @@ namespace jank::runtime::obj
   {
     if(data.size() == 0)
     { return nullptr; }
-    return make_box<map_iterator_wrapper<runtime::detail::map_type::const_iterator>>(const_cast<map*>(this), data.begin(), data.end());
+    return jank::make_box<map_iterator_wrapper<runtime::detail::persistent_map::const_iterator>>(const_cast<map*>(this), data.begin(), data.end());
   }
 
   size_t map::count() const
@@ -164,7 +164,7 @@ namespace jank::runtime::obj
   object_ptr map::with_meta(object_ptr m) const
   {
     validate_meta(m);
-    auto ret(make_box<map>(data));
+    auto ret(jank::make_box<map>(data));
     ret->meta = m;
     return ret;
   }

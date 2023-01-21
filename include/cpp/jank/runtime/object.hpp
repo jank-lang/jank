@@ -20,9 +20,7 @@
 
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
-#include <jank/runtime/detail/type.hpp>
 #include <jank/runtime/detail/list_type.hpp>
-#include <jank/runtime/detail/string_type.hpp>
 #include <jank/runtime/detail/map_type.hpp>
 
 namespace jank::runtime
@@ -53,15 +51,18 @@ namespace jank::runtime
   struct var;
   struct ns;
 
-  //using object_ptr = detail::box_type<struct object>;
-  using object_ptr = struct object*;
+  //using object_ptr = box_type<struct object>;
+  //using object_ptr = struct object*;
+  using object_ptr = native_box<object>;
   struct object : virtual gc
   {
-    virtual detail::boolean_type equal(object const &) const;
-    detail::boolean_type equal(object_ptr) const;
-    virtual detail::string_type to_string() const = 0;
+    //using object_ptr = native_box<object>;
+
+    virtual native_bool equal(object const &) const;
+    native_bool equal(object_ptr) const;
+    virtual native_string to_string() const = 0;
     virtual void to_string(fmt::memory_buffer &buffer) const;
-    virtual detail::integer_type to_hash() const = 0;
+    virtual native_integer to_hash() const = 0;
 
     bool operator <(object const &) const;
 
@@ -131,15 +132,15 @@ namespace jank::runtime
       }
     };
 
-    using list_type = list_type_impl<object_ptr>;
-    using vector_type = immer::vector<object_ptr, detail::memory_policy>;
-    using vector_transient_type = vector_type::transient_type;
-    using set_type = immer::set<object_ptr, std::hash<object_ptr>, std::equal_to<>, detail::memory_policy>;
-    using set_transient_type = set_type::transient_type;
-    //using map_type = immer::map<object_ptr, object_ptr, std::hash<object_ptr>, object_ptr_equal, detail::memory_policy>;
-    //using map_type = std::map<object_ptr, object_ptr, object_ptr_less>;
-    using map_type = map_type_impl<object_ptr, object_ptr>;
-    //using map_transient_type = map_type::transient_type;
+    using persistent_list = list_type_impl<object_ptr>;
+    using peristent_vector = immer::vector<object_ptr, memory_policy>;
+    using transient_vector = peristent_vector::transient_type;
+    using persistent_set = immer::set<object_ptr, std::hash<object_ptr>, std::equal_to<>, memory_policy>;
+    using transient_set = persistent_set::transient_type;
+    //using persistent_map = immer::map<object_ptr, object_ptr, std::hash<object_ptr>, object_ptr_equal, detail::memory_policy>;
+    //using persistent_map = std::map<object_ptr, object_ptr, object_ptr_less>;
+    using persistent_map = map_type_impl<object_ptr, object_ptr>;
+    //using transient_map = map_type::transient_type;
   }
 
   namespace obj
@@ -151,9 +152,9 @@ namespace jank::runtime
       nil(nil const &) = default;
       ~nil() = default;
 
-      runtime::detail::boolean_type equal(object const &) const override;
-      runtime::detail::string_type to_string() const override;
-      runtime::detail::integer_type to_hash() const override;
+      native_bool equal(object const &) const override;
+      native_string to_string() const override;
+      native_integer to_hash() const override;
 
       nil const* as_nil() const override;
     };
@@ -163,24 +164,13 @@ namespace jank::runtime
   }
   extern object_ptr JANK_NIL; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
-
   object_ptr make_box(std::nullptr_t const &);
-  object_ptr make_box(bool const);
+  object_ptr make_box(native_bool const);
   object_ptr make_box(int const);
-  object_ptr make_box(detail::integer_type const);
-  object_ptr make_box(detail::real_type const);
-  object_ptr make_box(std::string_view const &);
-  object_ptr make_box(detail::list_type const &);
-
-  template <typename T>
-  inline T* make_box(T* const &o)
-  { return o; }
-  template <typename C>
-  C* make_box()
-  { return new (GC) C{}; }
-  template <typename C, typename... Args>
-  C* make_box(Args &&... args)
-  { return new (GC) C{ std::forward<Args>(args)... }; }
+  object_ptr make_box(native_integer const);
+  object_ptr make_box(native_real const);
+  object_ptr make_box(native_string_view const &);
+  object_ptr make_box(detail::list_type_impl<object_ptr> const &);
 }
 
 namespace std

@@ -1,5 +1,4 @@
 #include <iostream>
-#include <vector>
 #include <filesystem>
 
 #include <cling/Interpreter/Interpreter.h>

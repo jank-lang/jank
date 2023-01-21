@@ -1,15 +1,13 @@
 #pragma once
 
-#include <jank/runtime/object.hpp>
-
 namespace jank::runtime::obj
 {
   struct number : virtual gc
   {
     virtual ~number() = default;
 
-    virtual runtime::detail::integer_type get_integer() const = 0;
-    virtual runtime::detail::real_type get_real() const = 0;
+    virtual native_integer get_integer() const = 0;
+    virtual native_real get_real() const = 0;
   };
 
   struct boolean : object
@@ -17,16 +15,16 @@ namespace jank::runtime::obj
     boolean() = default;
     boolean(boolean &&) noexcept = default;
     boolean(boolean const &) = default;
-    boolean(runtime::detail::boolean_type const d);
+    boolean(native_bool const d);
 
-    runtime::detail::boolean_type equal(object const &) const override;
-    runtime::detail::string_type to_string() const override;
+    native_bool equal(object const &) const override;
+    native_string to_string() const override;
     void to_string(fmt::memory_buffer &buff) const override;
-    runtime::detail::integer_type to_hash() const override;
+    native_integer to_hash() const override;
 
     boolean const* as_boolean() const override;
 
-    runtime::detail::boolean_type data{};
+    native_bool data{};
   };
 
   struct integer : object, number
@@ -34,22 +32,22 @@ namespace jank::runtime::obj
     integer() = default;
     integer(integer &&) noexcept = default;
     integer(integer const &) = default;
-    integer(runtime::detail::integer_type const d);
+    integer(native_integer const d);
 
-    static runtime::detail::box_type<integer> create(runtime::detail::integer_type const &n);
+    static native_box<integer> create(native_integer const &n);
 
-    runtime::detail::boolean_type equal(object const &) const override;
-    runtime::detail::string_type to_string() const override;
+    native_bool equal(object const &) const override;
+    native_string to_string() const override;
     void to_string(fmt::memory_buffer &) const override;
-    runtime::detail::integer_type to_hash() const override;
+    native_integer to_hash() const override;
 
-    runtime::detail::integer_type get_integer() const override;
-    runtime::detail::real_type get_real() const override;
+    native_integer get_integer() const override;
+    native_real get_real() const override;
 
     integer const* as_integer() const override;
     number const* as_number() const override;
 
-    runtime::detail::integer_type data{};
+    native_integer data{};
   };
 
   struct real : object, number
@@ -57,20 +55,20 @@ namespace jank::runtime::obj
     real() = default;
     real(real &&) noexcept = default;
     real(real const &) = default;
-    real(runtime::detail::real_type const d);
+    real(native_real const d);
 
-    runtime::detail::boolean_type equal(object const &) const override;
-    runtime::detail::string_type to_string() const override;
+    native_bool equal(object const &) const override;
+    native_string to_string() const override;
     void to_string(fmt::memory_buffer &buff) const override;
-    runtime::detail::integer_type to_hash() const override;
+    native_integer to_hash() const override;
 
-    runtime::detail::integer_type get_integer() const override;
-    runtime::detail::real_type get_real() const override;
+    native_integer get_integer() const override;
+    native_real get_real() const override;
 
     real const* as_real() const override;
     number const* as_number() const override;
 
-    runtime::detail::real_type data{};
+    native_real data{};
   };
 
   object_ptr rand();
