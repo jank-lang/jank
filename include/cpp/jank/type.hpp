@@ -9,8 +9,10 @@ namespace jank
   using memory_policy = immer::memory_policy
   <
     immer::heap_policy<immer::gc_heap>,
-    immer::refcount_policy,
-    immer::default_lock_policy
+    immer::no_refcount_policy,
+    immer::default_lock_policy,
+    immer::gc_transience_policy,
+    false
   >;
 
   using native_integer = long long;
