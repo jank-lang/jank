@@ -10,7 +10,7 @@ namespace jank::analyze::expr
   template <typename E>
   struct recur : expression_base
   {
-    runtime::obj::list_ptr args;
+    runtime::obj::list_ptr args{};
     native_vector<native_box<E>> arg_exprs;
   };
 }

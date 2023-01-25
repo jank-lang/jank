@@ -56,8 +56,6 @@ namespace jank::runtime::obj
     native_integer to_hash() const override
     { return reinterpret_cast<native_integer>(this); }
 
-    behavior::seqable const* as_seqable() const override
-    { return this; }
     sequence_ptr seq() const override
     { return static_cast<sequence_ptr>(const_cast<map_iterator_wrapper<It>*>(this)); }
 

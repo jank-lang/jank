@@ -14,6 +14,6 @@ namespace jank::analyze::expr
 
     native_vector<pair_type> pairs;
     do_<E> body;
-    local_frame_ptr frame;
+    local_frame_ptr frame{};
   };
 }

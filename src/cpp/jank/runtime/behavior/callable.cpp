@@ -254,7 +254,7 @@ namespace jank::runtime
         native_vector<object_ptr> packed;
         packed.reserve(10 + rest->count());
         packed.insert(packed.end(), { a1, a2, a3, a4, a5, a6, a7, a8, a9, a10 });
-        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        std::copy(rest->data.begin(), rest->data.end(), packed.end());
         return c->call(jank::make_box<behavior::vector_sequence>(std::move(packed)));
       }
       case 1:
@@ -262,7 +262,7 @@ namespace jank::runtime
         native_vector<object_ptr> packed;
         packed.reserve(10 + rest->count());
         packed.insert(packed.end(), { a2, a3, a4, a5, a6, a7, a8, a9, a10 });
-        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        std::copy(rest->data.begin(), rest->data.end(), packed.end());
         return c->call(a1, jank::make_box<behavior::vector_sequence>(std::move(packed)));
       }
       case 2:
@@ -270,7 +270,7 @@ namespace jank::runtime
         native_vector<object_ptr> packed;
         packed.reserve(10 + rest->count());
         packed.insert(packed.end(), { a3, a4, a5, a6, a7, a8, a9, a10 });
-        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        std::copy(rest->data.begin(), rest->data.end(), packed.end());
         return c->call(a1, a2, jank::make_box<behavior::vector_sequence>(std::move(packed)));
       }
       case 3:
@@ -278,7 +278,7 @@ namespace jank::runtime
         native_vector<object_ptr> packed;
         packed.reserve(10 + rest->count());
         packed.insert(packed.end(), { a4, a5, a6, a7, a8, a9, a10 });
-        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        std::copy(rest->data.begin(), rest->data.end(), packed.end());
         return c->call(a1, a2, a3, jank::make_box<behavior::vector_sequence>(std::move(packed)));
       }
       case 4:
@@ -286,7 +286,7 @@ namespace jank::runtime
         native_vector<object_ptr> packed;
         packed.reserve(10 + rest->count());
         packed.insert(packed.end(), { a5, a6, a7, a8, a9, a10 });
-        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        std::copy(rest->data.begin(), rest->data.end(), packed.end());
         return c->call(a1, a2, a3, a4, jank::make_box<behavior::vector_sequence>(std::move(packed)));
       }
       case 5:
@@ -294,7 +294,7 @@ namespace jank::runtime
         native_vector<object_ptr> packed;
         packed.reserve(10 + rest->count());
         packed.insert(packed.end(), { a6, a7, a8, a9, a10 });
-        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        std::copy(rest->data.begin(), rest->data.end(), packed.end());
         return c->call(a1, a2, a3, a4, a5, jank::make_box<behavior::vector_sequence>(std::move(packed)));
       }
       case 6:
@@ -302,7 +302,7 @@ namespace jank::runtime
         native_vector<object_ptr> packed;
         packed.reserve(10 + rest->count());
         packed.insert(packed.end(), { a7, a8, a9, a10 });
-        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        std::copy(rest->data.begin(), rest->data.end(), packed.end());
         return c->call(a1, a2, a3, a4, a5, a6, jank::make_box<behavior::vector_sequence>(std::move(packed)));
       }
       case 7:
@@ -310,7 +310,7 @@ namespace jank::runtime
         native_vector<object_ptr> packed;
         packed.reserve(10 + rest->count());
         packed.insert(packed.end(), { a8, a9, a10 });
-        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        std::copy(rest->data.begin(), rest->data.end(), packed.end());
         return c->call(a1, a2, a3, a4, a5, a6, a7, jank::make_box<behavior::vector_sequence>(std::move(packed)));
       }
       case 8:
@@ -318,7 +318,7 @@ namespace jank::runtime
         native_vector<object_ptr> packed;
         packed.reserve(10 + rest->count());
         packed.insert(packed.end(), { a9, a10 });
-        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        std::copy(rest->data.begin(), rest->data.end(), packed.end());
         return c->call(a1, a2, a3, a4, a5, a6, a7, a8, jank::make_box<behavior::vector_sequence>(std::move(packed)));
       }
       case 9:
@@ -326,7 +326,7 @@ namespace jank::runtime
         native_vector<object_ptr> packed;
         packed.reserve(10 + rest->count());
         packed.insert(packed.end(), { a10 });
-        packed.insert(packed.end(), rest->data.begin(), rest->data.end());
+        std::copy(rest->data.begin(), rest->data.end(), packed.end());
         return c->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, jank::make_box<behavior::vector_sequence>(std::move(packed)));
       }
       default:

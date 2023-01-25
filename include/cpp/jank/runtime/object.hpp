@@ -51,13 +51,9 @@ namespace jank::runtime
   struct var;
   struct ns;
 
-  //using object_ptr = box_type<struct object>;
-  //using object_ptr = struct object*;
   using object_ptr = native_box<object>;
   struct object : virtual gc
   {
-    //using object_ptr = native_box<object>;
-
     virtual native_bool equal(object const &) const;
     native_bool equal(object_ptr) const;
     virtual native_string to_string() const = 0;

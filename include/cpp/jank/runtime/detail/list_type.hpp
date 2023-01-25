@@ -133,6 +133,6 @@ namespace jank::runtime::detail
     list_type_impl<T> rest() const
     { return data ? list_type_impl<T>{ data->rest } : list_type_impl<T>{}; }
 
-    native_box<value_type> data;
+    native_box<value_type> data{};
   };
 }

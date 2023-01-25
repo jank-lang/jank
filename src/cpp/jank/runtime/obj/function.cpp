@@ -36,7 +36,7 @@ namespace jank::runtime::obj
   { using type = typename build_arity<N - 1, Args..., object_ptr>::type; };
   template <typename... Args>
   struct build_arity<0, Args...>
-  { using type = object_ptr (Args const&...); };
+  { using type = object_ptr (Args...); };
 
   template <typename... Args>
   object_ptr apply_function(function const &f, Args &&... args)
@@ -47,11 +47,7 @@ namespace jank::runtime::obj
 
     auto const * const func_ptr(f.data.template get<function_type>());
     if(!func_ptr)
-    {
-      /* TODO: Throw error. */
-      std::cout << "invalid function arity; expected " << arg_count << std::endl;
-      return JANK_NIL;
-    }
+    { throw std::runtime_error{ fmt::format("invalid function arity; tried {}", arg_count) }; }
 
     return (*func_ptr)(std::forward<Args>(args)...);
   }

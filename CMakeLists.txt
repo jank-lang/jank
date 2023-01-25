@@ -17,8 +17,6 @@ cmake_path(ABSOLUTE_PATH jank_cling_build_dir OUTPUT_VARIABLE jank_cling_build_d
 set(CMAKE_C_COMPILER "${jank_cling_build_dir_absolute}/bin/clang")
 set(CMAKE_CXX_COMPILER "${jank_cling_build_dir_absolute}/bin/clang++")
 
-# TODO: Disable PCH during analysis builds
-
 include(cmake/vcpkg.cmake)
 
 # LTO is explicitly not used, since it leads to runtime symbol lookup issues with the JIT.

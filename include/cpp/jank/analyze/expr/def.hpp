@@ -12,8 +12,8 @@ namespace jank::analyze::expr
   template <typename E>
   struct def : expression_base
   {
-    runtime::obj::symbol_ptr name;
+    runtime::obj::symbol_ptr name{};
     option<native_box<E>> value;
-    local_frame_ptr frame;
+    local_frame_ptr frame{};
   };
 }

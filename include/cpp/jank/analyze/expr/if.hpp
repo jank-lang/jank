@@ -10,8 +10,8 @@ namespace jank::analyze::expr
   template <typename E>
   struct if_ : expression_base
   {
-    native_box<E> condition;
-    native_box<E> then;
+    native_box<E> condition{};
+    native_box<E> then{};
     option<native_box<E>> else_;
   };
 }

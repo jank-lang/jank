@@ -25,6 +25,28 @@ namespace jank::runtime::behavior
      * do own, and then next_in_place() on that to your heart's content. */
     virtual sequence_ptr next_in_place() = 0;
     virtual object_ptr next_in_place_first() = 0;
+
+    behavior::seqable const* as_seqable() const override
+    { return this; }
+
+    native_bool equal(object const &o) const override
+    {
+      auto const *o_seqable(o.as_seqable());
+      if(!o_seqable)
+      { return false; }
+
+      auto o_seq(o_seqable->seq());
+      auto this_seq(seq());
+      while(this_seq != nullptr && o_seq != nullptr)
+      {
+        if(!this_seq->first()->equal(*o_seq->first()))
+        { return false; }
+
+        this_seq = this_seq->next_in_place();
+        o_seq = o_seq->next_in_place();
+      }
+      return true;
+    }
   };
   using sequence_ptr = sequence::sequence_ptr;
 
@@ -68,8 +90,6 @@ namespace jank::runtime::behavior
     native_integer to_hash() const override
     { return reinterpret_cast<native_integer>(this); }
 
-    behavior::seqable const* as_seqable() const override
-    { return this; }
     sequence_ptr seq() const override
     { return static_cast<sequence_ptr>(const_cast<basic_iterator_wrapper<It>*>(this)); }
 
@@ -143,8 +163,6 @@ namespace jank::runtime::behavior
     native_integer to_hash() const override
     { return reinterpret_cast<native_integer>(this); }
 
-    behavior::seqable const* as_seqable() const override
-    { return this; }
     sequence_ptr seq() const override
     { return static_cast<sequence_ptr>(const_cast<array_sequence*>(this)); }
 
@@ -213,8 +231,6 @@ namespace jank::runtime::behavior
     native_integer to_hash() const override
     { return reinterpret_cast<native_integer>(this); }
 
-    behavior::seqable const* as_seqable() const override
-    { return this; }
     sequence_ptr seq() const override
     { return static_cast<sequence_ptr>(const_cast<vector_sequence*>(this)); }
 

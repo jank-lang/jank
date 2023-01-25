@@ -17,6 +17,6 @@ namespace jank::analyze::expr
     using chunk_t = boost::variant<native_string, native_box<E>>;
 
     native_vector<chunk_t> chunks;
-    local_frame_ptr frame;
+    local_frame_ptr frame{};
   };
 }

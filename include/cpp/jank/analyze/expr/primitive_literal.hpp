@@ -8,7 +8,7 @@ namespace jank::analyze::expr
   template <typename E>
   struct primitive_literal : expression_base
   {
-    runtime::object_ptr data;
-    local_frame_ptr frame;
+    runtime::object_ptr data{};
+    local_frame_ptr frame{};
   };
 }
