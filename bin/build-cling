@@ -33,11 +33,11 @@ srcdir="${PWD}"
 
 # Cling latest
 llvm_url="http://root.cern.ch/git/llvm.git"
-llvm_branch="cling-patches"
+llvm_branch="cling-patches-rrelease_13"
 clang_url="http://root.cern.ch/git/clang.git"
-clang_branch="cling-patches"
+clang_branch="cling-patches-rrelease_13"
 cling_url="http://root.cern.ch/git/cling.git"
-cling_branch="v0.9"
+cling_branch="master"
 
 # $1 == Repo URL
 # $2 == Repo branch
