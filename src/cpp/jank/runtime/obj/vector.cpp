@@ -19,11 +19,25 @@ namespace jank::runtime::obj
     { }
 
     void to_string(fmt::memory_buffer &buff) const override
-    { return behavior::detail::to_string(vec->data.begin() + index, vec->data.end(), '[', ']', buff); }
+    {
+      return behavior::detail::to_string
+      (
+        vec->data.begin() + static_cast<decltype(vector::data)::difference_type>(index),
+        vec->data.end(),
+        '[', ']',
+        buff
+      );
+    }
     native_string to_string() const override
     {
       fmt::memory_buffer buff;
-      behavior::detail::to_string(vec->data.begin() + index, vec->data.end(), '[', ']', buff);
+      behavior::detail::to_string
+      (
+        vec->data.begin() + static_cast<decltype(vector::data)::difference_type>(index),
+        vec->data.end(),
+        '[', ']',
+        buff
+      );
       return { buff.data(), buff.size() };
     }
     native_integer to_hash() const override
@@ -68,7 +82,7 @@ namespace jank::runtime::obj
       return vec->data[index];
     }
 
-    vector_ptr vec;
+    vector_ptr vec{};
     size_t index{};
   };
 

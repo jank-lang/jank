@@ -39,7 +39,11 @@ namespace jank::jit
       )
     );
     interpreter = std::make_unique<cling::Interpreter>(args.size(), args.data(), LLVMDIR);
-    interpreter->setDefaultOptLevel(1);
+    /* TODO: Optimization >0 doesn't work with the latest Cling LLVM 13.
+     * 1. https://github.com/root-project/cling/issues/483
+     * 2. https://github.com/root-project/cling/issues/484
+     */
+    //interpreter->setDefaultOptLevel(1);
   }
 
   result<option<runtime::object_ptr>, native_string> processor::eval

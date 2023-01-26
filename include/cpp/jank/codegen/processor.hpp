@@ -112,7 +112,7 @@ namespace jank::codegen
     native_string expression_str(bool const auto_call = true);
 
     runtime::context &rt_ctx;
-    analyze::expression_ptr root_expr;
+    analyze::expression_ptr root_expr{};
     analyze::expr::function<analyze::expression> const &root_fn;
 
     runtime::obj::symbol struct_name;

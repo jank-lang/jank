@@ -469,9 +469,7 @@ namespace jank::analyze
 
     expr::let<expression> ret
     {
-      expression_base{ {}, expr_type },
-      {},
-      {},
+      expr_type,
       make_box<local_frame>
       (local_frame::frame_type::let, current_frame->rt_ctx, current_frame)
     };
@@ -795,7 +793,7 @@ namespace jank::analyze
     { return analyze_primitive_literal(o, current_frame, expr_type, fn_ctx); }
 
     auto const first(o->data.first().unwrap());
-    expression_ptr source;
+    expression_ptr source{};
     if(first->as_symbol())
     {
       auto const sym(static_cast<runtime::obj::symbol*>(first));

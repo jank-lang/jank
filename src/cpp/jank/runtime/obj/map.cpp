@@ -90,7 +90,7 @@ namespace jank::runtime::obj
       return jank::make_box<vector>(runtime::detail::peristent_vector{ begin->first, begin->second });
     }
 
-    object_ptr coll;
+    object_ptr coll{};
     It begin, end;
   };
 

@@ -158,7 +158,7 @@ namespace jank::runtime
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
     jank::analyze::processor an_prc{ *this };
 
-    object_ptr ret;
+    object_ptr ret{};
     for(auto const &form : p_prc)
     {
       auto const expr(an_prc.analyze(form.expect_ok(), analyze::expression_type::statement));
@@ -264,17 +264,12 @@ namespace jank::runtime
   object_ptr context::macroexpand1(object_ptr o)
   {
     auto const * const list(o->as_list());
-    if(!list)
-    { return o; }
-    if(list->data.data->length == 0)
+    if(!list || list->data.data->length == 0)
     { return o; }
 
     auto const var(find_var(static_cast<obj::symbol*>(list->data.first().unwrap())));
-    /* Not a var, so not a macro. */
-    if(var.is_none())
-    { return o; }
-    /* No meta means no :macro set. */
-    else if(var.unwrap()->meta.is_none())
+    /* None means it's not a var, so not a macro. No meta means no :macro set. */
+    if(var.is_none() || var.unwrap()->meta.is_none())
     { return o; }
 
     auto const &meta(static_cast<obj::map*>(var.unwrap()->meta.unwrap()));

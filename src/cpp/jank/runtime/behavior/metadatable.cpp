@@ -4,8 +4,9 @@ namespace jank::runtime::behavior
 {
   void metadatable::validate_meta(object_ptr m)
   {
-    assert(m != nullptr);
-    assert(m->as_map() != nullptr);
+    if(m == nullptr || m->as_map() == nullptr)
+    { throw std::runtime_error{ fmt::format("invalid meta: {}", m ? m->to_string() : "nullptr") }; }
+
     static_cast<void>(m);
   }
 }

@@ -100,7 +100,6 @@ find_package(
   NO_DEFAULT_PATH
 )
 
-option(jank_enable_pch "Enable precompiled header creation" ON)
 set(jank_llvm_root ${LLVM_BINARY_DIR})
 
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
@@ -153,10 +152,9 @@ target_include_directories(
     jank_lib ${warning_guard}
     PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/cpp>"
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
 )
-if(jank_enable_pch)
-  target_precompile_headers(jank_lib PUBLIC ${PROJECT_SOURCE_DIR}/include/cpp/jank/prelude.hpp)
-endif()
+target_precompile_headers(jank_lib PUBLIC ${PROJECT_SOURCE_DIR}/include/cpp/jank/prelude.hpp)
 
 set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 
@@ -195,7 +193,7 @@ set_target_properties(jank_lib PROPERTIES ENABLE_EXPORTS 1)
 add_executable(
   jank_exe
   src/cpp/main.cpp
-  src/cpp/nanobench.cpp
+  third-party/nanobench/src/nanobench.cpp
 )
 add_executable(jank::exe ALIAS jank_exe)
 
@@ -223,7 +221,7 @@ if(jank_tests)
   add_executable(
     jank_test_exe
     test/cpp/main.cpp
-    src/cpp/nanobench.cpp
+    third-party/nanobench/src/nanobench.cpp
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/runtime/detail/list_type.cpp

@@ -42,7 +42,7 @@ namespace jank::evaluate
     analyze::expression_ptr const &ex
   )
   {
-    runtime::object_ptr ret;
+    runtime::object_ptr ret{};
     boost::apply_visitor
     (
       [&rt_ctx, &jit_prc, &ret](auto const &typed_ex)

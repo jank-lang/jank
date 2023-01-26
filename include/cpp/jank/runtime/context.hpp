@@ -33,8 +33,8 @@ namespace jank::runtime
     obj::keyword_ptr intern_keyword(obj::symbol const &sym, bool const resolved);
     obj::keyword_ptr intern_keyword(native_string_view const &ns, native_string_view const &name, bool resolved);
 
-    object_ptr macroexpand1(object_ptr list);
-    object_ptr macroexpand(object_ptr list);
+    object_ptr macroexpand1(object_ptr o);
+    object_ptr macroexpand(object_ptr o);
 
     void eval_prelude(jit::processor const &);
     object_ptr eval_file(native_string_view const &path, jit::processor const &);
@@ -56,8 +56,8 @@ namespace jank::runtime
       thread_state(thread_state const&) = default;
       thread_state(context &ctx);
 
-      var_ptr current_ns;
-      var_ptr in_ns;
+      var_ptr current_ns{};
+      var_ptr in_ns{};
       context &rt_ctx;
     };
 

@@ -5,17 +5,20 @@ modernize-*,\
 bugprone-*,\
 performance-*,\
 readability-*,\
+-clang-analyzer-cplusplus.NewDeleteLeaks,\
 -modernize-use-trailing-return-type,\
 -modernize-use-nodiscard,\
 -modernize-pass-by-value,\
+-modernize-avoid-c-arrays,\
 -cppcoreguidelines-non-private-member-variables-in-classes,\
 -cppcoreguidelines-avoid-c-arrays,\
--modernize-avoid-c-arrays,\
 -cppcoreguidelines-avoid-magic-numbers,\
 -cppcoreguidelines-pro-type-reinterpret-cast,\
 -cppcoreguidelines-special-member-functions,\
 -cppcoreguidelines-pro-type-union-access,\
 -cppcoreguidelines-pro-bounds-pointer-arithmetic,\
+-cppcoreguidelines-pro-type-static-cast-downcast,\
+-cppcoreguidelines-pro-type-const-cast,\
 -bugprone-easily-swappable-parameters,\
 -bugprone-reserved-identifier,\
 -readability-implicit-bool-conversion,\
@@ -27,8 +30,10 @@ readability-*,\
 -readability-uppercase-literal-suffix,\
 -readability-avoid-const-params-in-decls,\
 -readability-convert-member-functions-to-static,\
--readability-isolate-declaration,
--performance-noexcept-move-constructor"
+-readability-isolate-declaration,\
+-readability-qualified-auto,\
+-performance-noexcept-move-constructor,\
+-performance-move-const-arg"
 
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'

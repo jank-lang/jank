@@ -46,6 +46,7 @@ namespace jank::util
     /* MAP_FAILED is a macro which does a C-style cast. */
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wold-style-cast"
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast,performance-no-int-to-ptr)
     if(head == MAP_FAILED)
 #pragma clang diagnostic pop
     { return err("unable to map file"); }

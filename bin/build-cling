@@ -32,12 +32,15 @@ echo "Using ${make_j} cores to build"
 srcdir="${PWD}"
 
 # Cling latest
-llvm_url="http://root.cern.ch/git/llvm.git"
-llvm_branch="cling-patches-rrelease_13"
+root_llvm_url="http://root.cern.ch/git/llvm.git"
+root_llvm_branch="cling-patches-rrelease_13"
 clang_url="http://root.cern.ch/git/clang.git"
 clang_branch="cling-patches-rrelease_13"
 cling_url="http://root.cern.ch/git/cling.git"
 cling_branch="master"
+cling_commit="da247bd77a92f0793abe95e10b373dbca7a7e5f1"
+upstream_llvm_url="https://github.com/llvm/llvm-project"
+upstream_llvm_branch="release/13.x"
 
 # $1 == Repo URL
 # $2 == Repo branch
@@ -49,7 +52,7 @@ function prepare()
 {
   if [ ! -d "$srcdir/llvm" ];
   then
-    shallow_clone "${llvm_url}" "${llvm_branch}" "${srcdir}"/llvm
+    shallow_clone "${root_llvm_url}" "${root_llvm_branch}" "${srcdir}"/llvm
   fi
 
   if [ ! -d "$srcdir/clang" ];
@@ -59,7 +62,10 @@ function prepare()
 
   if [ ! -d "$srcdir/cling" ];
   then
-    shallow_clone "${cling_url}" "${cling_branch}" "${srcdir}"/cling
+    git clone -b "${cling_branch}" --shallow-submodules --single-branch "${cling_url}" "${srcdir}"/cling
+    pushd "${srcdir}"/cling
+      git checkout "${cling_commit}"
+    popd
   fi
 
   if [ ! -h "$srcdir/llvm/tools/clang" ];
@@ -70,6 +76,17 @@ function prepare()
   if [ ! -h "$srcdir/llvm/tools/cling" ];
   then
     ln -sf "$srcdir/cling" "$srcdir/llvm/tools/cling"
+  fi
+
+  # Root's LLVM doesn't have the extra tools, such as clang-tidy. But we can't
+  # rely on the system's clang-tidy to be the same version as what we're using,
+  # so we need to build it ourselves. That means cloning the upstream LLVM and
+  # checking out the corresponding branch. Fortunately, we can just link this
+  # into root's LLVM compilation and everything works.
+  if [ ! -d "$srcdir/llvm-extra" ];
+  then
+    shallow_clone "${upstream_llvm_url}" "${upstream_llvm_branch}" "${srcdir}"/llvm-extra
+    ln -sf "$srcdir/llvm-extra/clang-tools-extra" "$srcdir/clang-tools-extra"
   fi
 }
 
@@ -87,6 +104,7 @@ function build()
         -DLLVM_ENABLE_SPHINX=OFF \
         -DLLVM_ENABLE_DOXYGEN=OFF \
         -DLLVM_ENABLE_LIBCXX=OFF \
+        -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" \
         -DFFI_INCLUDE_DIR="$(pkg-config --cflags-only-I libffi | cut -c3-)" \
         -DCLING_CXX_HEADERS=ON \
         "$srcdir/llvm"

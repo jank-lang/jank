@@ -24,8 +24,8 @@ namespace jank::analyze::expr
   {
     native_vector<runtime::obj::symbol_ptr> params;
     do_<E> body;
-    local_frame_ptr frame;
-    function_context_ptr fn_ctx;
+    local_frame_ptr frame{};
+    function_context_ptr fn_ctx{};
   };
 
   struct arity_key

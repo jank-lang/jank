@@ -12,6 +12,9 @@ namespace jank::analyze::expr
   {
     using pair_type = std::pair<runtime::obj::symbol_ptr, native_box<E>>;
 
+    let(expression_type const type, local_frame_ptr const f)
+      : expression_base{ gc{}, type }, frame{ f }
+    { }
     native_vector<pair_type> pairs;
     do_<E> body;
     local_frame_ptr frame{};
