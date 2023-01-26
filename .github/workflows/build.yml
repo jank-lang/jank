@@ -40,7 +40,7 @@ jobs:
         with:
           packages: curl git zip build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev
           # Update this whenever the package list changes.
-          version: 2022/11/19--13.06.50
+          version: 2022.11.19--13.06.50
       - if: runner.os == 'macOS'
         name: Install brew packages
         run: HOMEBREW_NO_AUTO_UPDATE=1 brew install curl git zip openssl double-conversion pkg-config ninja python cmake gnupg zlib
