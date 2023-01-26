@@ -1,0 +1,4 @@
+# Clang-tidy needs at least one check, so I just chose one which isn't going to
+# raise an issue with nanobench. Since this is a third party lib we're
+# compiling in, I don't want to be bothered with its tidiness.
+Checks: cppcoreguidelines-avoid-goto
