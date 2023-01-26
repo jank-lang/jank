@@ -19,9 +19,15 @@ while getopts ":hj:" opt; do
       ;;
     \?)
       echo "Invalid option: ${OPTARG}" 1>&2
+      exit 1
       ;;
     :)
       echo "Invalid option: ${OPTARG} requires an argument" 1>&2
+      exit 1
+      ;;
+    *)
+      echo "Unexpected input: ${OPTARG}" 1>&2
+      exit 1
       ;;
   esac
 done
@@ -50,17 +56,17 @@ function shallow_clone()
 
 function prepare()
 {
-  if [ ! -d "$srcdir/llvm" ];
+  if [[ ! -d "${srcdir}/llvm" ]];
   then
     shallow_clone "${root_llvm_url}" "${root_llvm_branch}" "${srcdir}"/llvm
   fi
 
-  if [ ! -d "$srcdir/clang" ];
+  if [[ ! -d "${srcdir}/clang" ]];
   then
     shallow_clone "${clang_url}" "${clang_branch}" "${srcdir}"/clang
   fi
 
-  if [ ! -d "$srcdir/cling" ];
+  if [[ ! -d "${srcdir}/cling" ]];
   then
     git clone -b "${cling_branch}" --shallow-submodules --single-branch "${cling_url}" "${srcdir}"/cling
     pushd "${srcdir}"/cling
@@ -68,14 +74,14 @@ function prepare()
     popd
   fi
 
-  if [ ! -h "$srcdir/llvm/tools/clang" ];
+  if [[ ! -h "${srcdir}/llvm/tools/clang" ]];
   then
-    ln -sf "$srcdir/clang" "$srcdir/llvm/tools/clang"
+    ln -sf "${srcdir}/clang" "${srcdir}/llvm/tools/clang"
   fi
 
-  if [ ! -h "$srcdir/llvm/tools/cling" ];
+  if [[ ! -h "${srcdir}/llvm/tools/cling" ]];
   then
-    ln -sf "$srcdir/cling" "$srcdir/llvm/tools/cling"
+    ln -sf "${srcdir}/cling" "${srcdir}/llvm/tools/cling"
   fi
 
   # Root's LLVM doesn't have the extra tools, such as clang-tidy. But we can't
@@ -83,17 +89,20 @@ function prepare()
   # so we need to build it ourselves. That means cloning the upstream LLVM and
   # checking out the corresponding branch. Fortunately, we can just link this
   # into root's LLVM compilation and everything works.
-  if [ ! -d "$srcdir/llvm-extra" ];
+  if [[ ! -d "${srcdir}/llvm-extra" ]];
   then
     shallow_clone "${upstream_llvm_url}" "${upstream_llvm_branch}" "${srcdir}"/llvm-extra
-    ln -sf "$srcdir/llvm-extra/clang-tools-extra" "$srcdir/clang-tools-extra"
+    ln -sf "${srcdir}/llvm-extra/clang-tools-extra" "${srcdir}/clang-tools-extra"
   fi
 }
 
 function build()
 {
-  mkdir -p "$srcdir/cling-build"
-  cd "$srcdir/cling-build"
+  mkdir -p "${srcdir}/cling-build"
+  cd "${srcdir}/cling-build"
+
+  local ffi_include_dir
+  ffi_include_dir="$(pkg-config --cflags-only-I libffi | cut -c3-)"
 
   cmake -DCMAKE_BUILD_TYPE=Release \
         -DLLVM_TARGETS_TO_BUILD="host;NVPTX" \
@@ -105,9 +114,9 @@ function build()
         -DLLVM_ENABLE_DOXYGEN=OFF \
         -DLLVM_ENABLE_LIBCXX=OFF \
         -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" \
-        -DFFI_INCLUDE_DIR="$(pkg-config --cflags-only-I libffi | cut -c3-)" \
+        -DFFI_INCLUDE_DIR="${ffi_include_dir}" \
         -DCLING_CXX_HEADERS=ON \
-        "$srcdir/llvm"
+        "${srcdir}/llvm"
 
   make -j"${make_j}" -C tools/clang
   make -j"${make_j}" -C tools/cling

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+#here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+#
+#for script in find "${here}"/bin -type f;
+#do
+#  echo "${script}"
+#done
+find bin -type f -exec shellcheck -o all {} +
