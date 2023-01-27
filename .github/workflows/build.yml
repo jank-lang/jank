@@ -51,7 +51,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ${{ github.workspace }}/build/cling-build
+            ${{ github.workspace }}/build
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('bin/build-cling') }}
       - name: Compile and test
         run: ${{ github.workspace }}/bin/ci/test -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
