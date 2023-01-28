@@ -31,24 +31,15 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - if: runner.os == 'Linux'
-        name: Install apt packages
-        run: sudo apt-get install -y curl git zip build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev
-      - if: runner.os == 'macOS'
-        name: Install brew packages
-        run: HOMEBREW_NO_AUTO_UPDATE=1 brew install curl git zip openssl double-conversion pkg-config ninja python cmake gnupg zlib
-      - name: Cache vcpkg packages
-        uses: actions/cache@v3
+      - uses: ./.github/actions/build
+        id: build
         with:
-          path: |
-            ~/.cache/vcpkg
-            ${{ github.workspace }}/build/vcpkg_installed
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('vcpkg.json') }}
-      - name: Cache Cling
-        uses: actions/cache@v3
+          release: ${{ matrix.build_type == 'Release' }}
+      - name: Update latest release
+        if: success() && ${{ matrix.build_type == 'Release' }}
+        uses: pyTooling/Actions/releaser@main
         with:
-          path: |
-            ${{ github.workspace }}/build
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('bin/build-cling') }}
-      - name: Compile and test
-        run: ${{ github.workspace }}/bin/ci/test -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          tag: latest
+          rm: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: ${{ steps.build.outputs.release_archive }}

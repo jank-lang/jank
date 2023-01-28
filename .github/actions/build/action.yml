@@ -1,0 +1,49 @@
+name: "Build & Test"
+
+inputs:
+  release:
+    description: Whether or not to release
+    required: true
+    default: 'false'
+
+outputs:
+  release_archive:
+    description: Archive of binaries and resources for distribution
+    value: ${{ steps.release.outputs.archive }}
+
+runs:
+  using: "composite"
+  steps:
+    - if: runner.os == 'Linux'
+      name: Install apt packages
+      shell: bash
+      run: sudo apt-get install -y curl git zip build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev
+    - if: runner.os == 'macOS'
+      name: Install brew packages
+      shell: bash
+      run: HOMEBREW_NO_AUTO_UPDATE=1 brew install curl git zip openssl double-conversion pkg-config ninja python cmake gnupg zlib
+    - name: Cache vcpkg packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/vcpkg
+          ${{ github.workspace }}/build/vcpkg_installed
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('vcpkg.json') }}
+    - name: Cache Cling
+      uses: actions/cache@v3
+      with:
+        path: |
+          ${{ github.workspace }}/build
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('bin/build-cling') }}
+    - name: Compile and test
+      shell: bash
+      run: ${{ github.workspace }}/bin/ci/test -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+    - if: ${{ inputs.release }}
+      name: Release
+      id: release
+      shell: bash
+      run: |
+        export DESTDIR=jank-$(echo ${{ runner.os }} | tr '[:upper:]' '[:lower:]')-$(date +'%Y%m%d')-$(git rev-parse --short $GITHUB_SHA)
+        ${{ github.workspace }}/bin/install
+        tar czf $DESTDIR.tar.gz $DESTDIR/
+        echo "archive=$DESTDIR.tar.gz" >> $GITHUB_OUTPUT
