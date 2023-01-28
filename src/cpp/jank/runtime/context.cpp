@@ -80,7 +80,9 @@ namespace jank::runtime
 
   context::context(context const &ctx)
   {
-    *namespaces.wlock() = *ctx.namespaces.rlock();
+    auto ns_lock(namespaces.wlock());
+    for(auto const &ns : *ctx.namespaces.rlock())
+    { ns_lock->insert({ ns.first, ns.second->clone() }); }
     *keywords.wlock() = *ctx.keywords.rlock();
     *thread_states.wlock() = *ctx.thread_states.rlock();
   }

@@ -60,4 +60,7 @@ namespace jank::runtime
     *root.wlock() = r;
     return this;
   }
+
+  var_ptr var::clone() const
+  { return jank::make_box<var>(n, name, get_root()); }
 }

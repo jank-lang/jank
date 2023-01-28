@@ -16,9 +16,12 @@ namespace jank::runtime
 
   struct ns : object
   {
+    using ns_ptr = native_box<ns>;
+
     ns(obj::symbol_ptr const &name, context const &c)
       : name{ name }, ctx{ c }
     { }
+    virtual ~ns() = default;
 
     static ns_ptr create(obj::symbol_ptr const &n, context const &c);
 
@@ -30,6 +33,8 @@ namespace jank::runtime
     ns const* as_ns() const override;
 
     bool operator ==(ns const &rhs) const;
+
+    ns_ptr clone() const;
 
     obj::symbol_ptr name;
     folly::Synchronized<std::unordered_map<obj::symbol_ptr, var_ptr>> vars;

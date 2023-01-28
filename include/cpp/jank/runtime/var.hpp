@@ -15,6 +15,8 @@ namespace jank::runtime
 
   struct var : object, behavior::metadatable
   {
+    using var_ptr = native_box<var>;
+
     var(var const&) = delete;
     var(var &&) noexcept = default;
     var(ns_ptr const &n, obj::symbol_ptr const &s);
@@ -34,6 +36,8 @@ namespace jank::runtime
 
     object_ptr get_root() const;
     native_box<var> set_root(object_ptr r);
+
+    var_ptr clone() const;
 
     ns_ptr n;
     /* TODO: Make sure this gets fully qualified. */

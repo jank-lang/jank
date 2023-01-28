@@ -31,4 +31,14 @@ namespace jank::runtime
 
   bool ns::operator ==(ns const &rhs) const
   { return name == rhs.name; }
+
+  ns_ptr ns::clone() const
+  {
+    auto ret(jank::make_box<ns>(name, ctx));
+    auto const ret_locked_vars(ret->vars.wlock());
+    auto const locked_vars(vars.rlock());
+    for(auto const & var : *locked_vars)
+    { ret_locked_vars->insert({var.first, var.second->clone()}); }
+    return ret;
+  }
 }
