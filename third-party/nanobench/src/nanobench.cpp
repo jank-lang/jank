@@ -1,6 +1,6 @@
-//  XXX: nanobench is not included using vcpkg since its approach to compilation
-//  doesn't work correctly with jank's combination of pre-compiled headers and JIT compilation.
-//  I've found it's much saner to just include the source directly.
+// XXX: nanobench uses a single header for both .hpp and .cpp inclusion, based on
+// whether a define has been set. This doesn't work with jank's pre-compiled
+// headers, so I've manually split the two up and included them here.
 //
 //
 //  __   _ _______ __   _  _____  ______  _______ __   _ _______ _     _

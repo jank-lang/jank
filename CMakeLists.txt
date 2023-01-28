@@ -190,11 +190,36 @@ set_target_properties(jank_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
 set_target_properties(jank_lib PROPERTIES ENABLE_EXPORTS 1)
 # ---- libjank.a ----
 
+# ---- libnanobench.a ----
+# nanobench uses a single header for both .hpp and .cpp inclusion, based on
+# whether a define has been set. This doesn't work with jank's pre-compiled
+# headers, so I've manually split the two up and included them here.
+
+add_library(
+  nanobench_lib STATIC
+  third-party/nanobench/src/nanobench.cpp
+)
+
+target_include_directories(
+    nanobench_lib ${warning_guard}
+    PUBLIC
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
+)
+
+set_property(TARGET nanobench_lib PROPERTY OUTPUT_NAME nanobench)
+
+target_compile_features(nanobench_lib PUBLIC cxx_std_17)
+
+set_target_properties(nanobench_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
+
+# Symbol exporting for JIT.
+set_target_properties(nanobench_lib PROPERTIES ENABLE_EXPORTS 1)
+# ---- libnanobench.a ----
+
 # ---- jank executable ----
 add_executable(
   jank_exe
   src/cpp/main.cpp
-  third-party/nanobench/src/nanobench.cpp
 )
 add_executable(jank::exe ALIAS jank_exe)
 
@@ -213,7 +238,12 @@ target_include_directories(jank_exe SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_exe SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
 target_include_directories(jank_exe SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 
-target_link_libraries(jank_exe PRIVATE jank_lib Boost::boost)
+target_link_libraries(
+  jank_exe PUBLIC
+  jank_lib
+  -Wl,--whole-archive nanobench_lib -Wl,--no-whole-archive
+  Boost::boost
+)
 set_target_properties(jank_exe PROPERTIES LINK_FLAGS_RELEASE -s)
 # ---- jank executable ----
 
@@ -222,7 +252,6 @@ if(jank_tests)
   add_executable(
     jank_test_exe
     test/cpp/main.cpp
-    third-party/nanobench/src/nanobench.cpp
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/runtime/detail/list_type.cpp
@@ -244,7 +273,13 @@ if(jank_tests)
   target_include_directories(jank_test_exe SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 
   find_package(doctest REQUIRED)
-  target_link_libraries(jank_test_exe PRIVATE jank_lib Boost::boost doctest::doctest)
+  target_link_libraries(
+    jank_test_exe PUBLIC
+    jank_lib
+    -Wl,--whole-archive nanobench_lib -Wl,--no-whole-archive
+    Boost::boost
+    doctest::doctest
+  )
 
   # Symbol exporting for JIT.
   set_target_properties(jank_test_exe PROPERTIES ENABLE_EXPORTS 1)
