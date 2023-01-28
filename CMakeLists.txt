@@ -51,10 +51,6 @@ if(
   )
 endif()
 
-include(cmake/variables.cmake)
-include(cmake/coverage.cmake)
-include(cmake/analysis.cmake)
-
 set(
   jank_compiler_flags
   -Wall -Wextra -Wpedantic
@@ -71,6 +67,10 @@ set(jank_linker_flags "" #-stdlib=libc++ -lc++abi
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   list(APPEND jank_compiler_flags -Werror)
 endif()
+
+include(cmake/variables.cmake)
+include(cmake/coverage.cmake)
+include(cmake/analysis.cmake)
 
 # Enable easier tooling during development.
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)

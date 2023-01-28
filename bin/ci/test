@@ -13,23 +13,9 @@ fi
 export CC="${cling_dir}/bin/clang"
 export CXX="${cling_dir}/bin/clang++"
 
-# We do a separate analysis build because PCH usage currently breaks
-# clang-tidy. The reason is that clang-tidy is not the same version of clang as
-# what we're using to compile jank. Unfortunately, the Cling build doesn't
-# include clang-tidy, so we'd need to manually clone it and compile the right
-# branch alongside LLVM. That's for another day.
-if [[ "${ANALYSIS:-off}" == "on" ]];
-then
-  ./bin/configure -GNinja \
-                  -Djank_tests=on \
-                  -Djank_analysis=on \
-                  -Djank_cling_build_dir="${cling_dir}" \
-                  "$@"
-  ./bin/compile
-fi
-
 ./bin/configure -GNinja \
                 -Djank_tests=on \
+                -Djank_analysis="${ANALYSIS:-off}"  \
                 -Djank_cling_build_dir="${cling_dir}" \
                 "$@"
 ./bin/compile
