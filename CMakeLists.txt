@@ -176,6 +176,7 @@ target_include_directories(jank_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 
+target_link_directories(jank_lib SYSTEM PRIVATE ${jank_cling_build_dir}/build-compiler-rt/lib/linux)
 target_link_libraries(
   jank_lib PRIVATE
   jank_cling_lib immer fmt::fmt

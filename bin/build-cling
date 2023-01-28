@@ -93,6 +93,7 @@ function prepare()
   then
     shallow_clone "${upstream_llvm_url}" "${upstream_llvm_branch}" "${srcdir}"/llvm-extra
     ln -sf "${srcdir}/llvm-extra/clang-tools-extra" "${srcdir}/clang-tools-extra"
+    ln -sf "${srcdir}/llvm-extra/compiler-rt" "${srcdir}/compiler-rt"
   fi
 }
 
@@ -120,6 +121,20 @@ function build()
 
   make -j"${make_j}" -C tools/clang
   make -j"${make_j}" -C tools/cling
+  make -j"${make_j}" -C tools/llvm-profdata
+  make -j"${make_j}" -C tools/llvm-cov
+  make -j"${make_j}" -C tools/llvm-config
+
+  # I'm not sure why including compiler-rt in the LLVM projects doesn't build this fully. Also
+  # not sure of the currect way to get the libs where Cling wants them, but,
+  # hey, this works. For me.
+  mkdir -p build-compiler-rt
+  pushd build-compiler-rt
+    cmake ../../compiler-rt -DLLVM_CONFIG_PATH="${srcdir}"/cling-build/bin/llvm-config
+    make -j"${make_j}"
+    # TODO: macOS support.
+    cp lib/linux/libclang_rt.profile-x86_64.a "${srcdir}"/cling-build/lib/clang/13.0.0/lib/linux/
+  popd
 }
 
 prepare

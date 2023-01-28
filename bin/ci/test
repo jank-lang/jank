@@ -28,8 +28,8 @@ then
                   -Djank_cling_build_dir="${cling_dir}" \
                   "$@"
   LLVM_PROFILE_FILE=build/test.profraw ./bin/test
-  llvm-profdata-14 merge --sparse build/test.profraw -o build/test.profdata
-  llvm-cov-14 show ./build/jank-test --instr-profile build/test.profdata > coverage.txt
+  "${cling_dir}/bin/llvm-profdata" merge --sparse build/test.profraw -o build/test.profdata
+  "${cling_dir}/bin/llvm-cov" show ./build/jank-test --instr-profile build/test.profdata > coverage.txt
   bash <(curl -s https://codecov.io/bash || true) -f coverage.txt
 else
   ./bin/test
