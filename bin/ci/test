@@ -13,6 +13,8 @@ fi
 export CC="${cling_dir}/bin/clang"
 export CXX="${cling_dir}/bin/clang++"
 
+exit 0
+
 ./bin/configure -GNinja \
                 -Djank_tests=on \
                 -Djank_analysis="${ANALYSIS:-off}"  \

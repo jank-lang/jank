@@ -133,6 +133,7 @@ function build()
     cmake ../../compiler-rt -DLLVM_CONFIG_PATH="${srcdir}"/cling-build/bin/llvm-config
     make -j"${make_j}"
     # TODO: macOS support.
+    mkdir -p "${srcdir}"/cling-build/lib/clang/13.0.0/lib/linux/
     cp lib/linux/libclang_rt.profile-x86_64.a "${srcdir}"/cling-build/lib/clang/13.0.0/lib/linux/
   popd
 }
