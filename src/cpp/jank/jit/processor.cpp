@@ -21,6 +21,16 @@ namespace jank::jit
     return none;
   }
 
+  option<boost::filesystem::path> find_llvm_resource_path()
+  {
+    auto jank_path(jank::util::process_location().unwrap().parent_path());
+
+    if(boost::filesystem::exists(jank_path / "../lib/clang"))
+    { return jank_path / ".."; }
+
+    return JANK_CLING_BUILD_DIR;
+  }
+
   processor::processor()
   {
     auto const pch_path(find_pch());
@@ -28,6 +38,12 @@ namespace jank::jit
     /* TODO: Better error handling. */
     { throw std::runtime_error{ "unable to find PCH path for JIT" }; }
     auto const &pch_path_str(pch_path.unwrap().string());
+
+    auto const llvm_resource_path(find_llvm_resource_path());
+    if(llvm_resource_path.is_none())
+    /* TODO: Better error handling. */
+    { throw std::runtime_error{ "unable to find LLVM resource path" }; }
+    auto const &llvm_resource_path_str(llvm_resource_path.unwrap().string());
 
     auto const args
     (
@@ -38,7 +54,8 @@ namespace jank::jit
         "-include-pch", pch_path_str.c_str()
       )
     );
-    interpreter = std::make_unique<cling::Interpreter>(args.size(), args.data(), LLVMDIR);
+    interpreter = std::make_unique<cling::Interpreter>(args.size(), args.data(), llvm_resource_path_str.c_str());
+
     /* TODO: Optimization >0 doesn't work with the latest Cling LLVM 13.
      * 1. https://github.com/root-project/cling/issues/483
      * 2. https://github.com/root-project/cling/issues/484

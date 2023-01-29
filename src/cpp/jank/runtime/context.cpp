@@ -150,7 +150,7 @@ namespace jank::runtime
   {
     auto const file(util::map_file(path));
     if(file.is_err())
-    { throw std::runtime_error{ fmt::format("unable to map file {} due to {}", path, file.expect_err()) }; }
+    { throw std::runtime_error{ fmt::format("unable to map file {} due to error: {}", path, file.expect_err()) }; }
     return eval_string({ file.expect_ok().head, file.expect_ok().size }, jit_prc);
   }
 

@@ -14,6 +14,10 @@ install(
   FILES ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/jank_lib.dir/cmake_pch.hxx.pch
   DESTINATION include
 )
+install(
+  DIRECTORY ${jank_cling_build_dir}/lib/clang
+  DESTINATION lib
+)
 
 # So vcpkg puts all of the headers we need for all of our dependencies
 # into one include prefix based on our target triplet. This is excellent,

@@ -100,8 +100,6 @@ find_package(
   NO_DEFAULT_PATH
 )
 
-set(jank_llvm_root ${LLVM_BINARY_DIR})
-
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
@@ -160,7 +158,7 @@ set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 
 target_compile_features(jank_lib PUBLIC cxx_std_17)
 target_compile_options(jank_lib PRIVATE ${jank_compiler_flags})
-target_compile_options(jank_lib PUBLIC -DLLVMDIR="${jank_llvm_root}" -DIMMER_HAS_LIBGC=1)
+target_compile_options(jank_lib PUBLIC -DJANK_CLING_BUILD_DIR="${jank_cling_build_dir_absolute}" -DIMMER_HAS_LIBGC=1)
 target_link_options(jank_lib PRIVATE ${jank_linker_flags})
 
 find_package(Immer CONFIG REQUIRED)
@@ -229,7 +227,7 @@ set_property(TARGET jank_exe PROPERTY OUTPUT_NAME jank)
 set_target_properties(jank_exe PROPERTIES ENABLE_EXPORTS 1)
 
 target_compile_features(jank_exe PRIVATE cxx_std_17)
-target_compile_options(jank_exe PUBLIC -DLLVMDIR="${jank_llvm_root}")
+target_compile_options(jank_exe PUBLIC -DJANK_CLING_BUILD_DIR="${jank_cling_build_dir_absolute}")
 target_compile_options(jank_exe PRIVATE ${jank_compiler_flags})
 target_link_options(jank_exe PRIVATE ${jank_linker_flags})
 
