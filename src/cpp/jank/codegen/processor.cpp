@@ -827,7 +827,7 @@ namespace jank::codegen
       format_to
       (
         inserter,
-        "jank::option<size_t> get_variadic_arg_position() const override{{ return {}; }}",
+        "jank::option<size_t> get_variadic_arg_position() const override{{ return static_cast<size_t>({}); }}",
         variadic_arg_position.unwrap()
       );
     }

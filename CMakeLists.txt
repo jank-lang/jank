@@ -56,6 +56,8 @@ set(
   -Wall -Wextra -Wpedantic
   -Wfloat-equal -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor
   -Wold-style-cast -Wno-gnu-case-range
+  -DJANK_CLING_BUILD_DIR="${jank_cling_build_dir_absolute}"
+  -DIMMER_HAS_LIBGC=1 -DHAVE_CXX14=1
   # XXX: Can't use -Ofast with Clang 9, due to this issue:
   # https://github.com/cms-sw/cmssw/issues/24935
   # TODO: Anything above -O1 causes linker issues with static thread_local in immer.
@@ -157,8 +159,10 @@ target_precompile_headers(jank_lib PUBLIC ${PROJECT_SOURCE_DIR}/include/cpp/jank
 set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 
 target_compile_features(jank_lib PUBLIC cxx_std_17)
-target_compile_options(jank_lib PRIVATE ${jank_compiler_flags})
-target_compile_options(jank_lib PUBLIC -DJANK_CLING_BUILD_DIR="${jank_cling_build_dir_absolute}" -DIMMER_HAS_LIBGC=1)
+target_compile_options(jank_lib PUBLIC ${jank_compiler_flags})
+list(JOIN jank_compiler_flags " " jank_compiler_flags_str)
+string(REPLACE "\"" "\\\"" jank_compiler_flags_str ${jank_compiler_flags_str})
+target_compile_options(jank_lib PUBLIC -DJANK_COMPILER_FLAGS="${jank_compiler_flags_str}")
 target_link_options(jank_lib PRIVATE ${jank_linker_flags})
 
 find_package(Immer CONFIG REQUIRED)
@@ -167,7 +171,6 @@ find_package(fmt CONFIG REQUIRED)
 find_package(folly CONFIG REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem)
 find_package(BDWgc CONFIG REQUIRED)
-target_compile_options(jank_lib PUBLIC -DHAVE_CXX14=1)
 
 target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
@@ -227,8 +230,7 @@ set_property(TARGET jank_exe PROPERTY OUTPUT_NAME jank)
 set_target_properties(jank_exe PROPERTIES ENABLE_EXPORTS 1)
 
 target_compile_features(jank_exe PRIVATE cxx_std_17)
-target_compile_options(jank_exe PUBLIC -DJANK_CLING_BUILD_DIR="${jank_cling_build_dir_absolute}")
-target_compile_options(jank_exe PRIVATE ${jank_compiler_flags})
+target_compile_options(jank_exe PUBLIC ${jank_compiler_flags})
 target_link_options(jank_exe PRIVATE ${jank_linker_flags})
 
 target_include_directories(jank_exe SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
@@ -261,7 +263,7 @@ if(jank_tests)
   set_property(TARGET jank_test_exe PROPERTY OUTPUT_NAME jank-test)
 
   target_compile_features(jank_test_exe PRIVATE cxx_std_17)
-  target_compile_options(jank_test_exe PRIVATE ${jank_compiler_flags})
+  target_compile_options(jank_test_exe PUBLIC ${jank_compiler_flags})
   target_compile_options(jank_test_exe PRIVATE -DDOCTEST_CONFIG_SUPER_FAST_ASSERTS)
   target_link_options(jank_test_exe PRIVATE ${jank_linker_flags})
 

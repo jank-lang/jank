@@ -11,12 +11,16 @@ install(
   ARCHIVE DESTINATION lib
 )
 install(
-  FILES ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/jank_lib.dir/cmake_pch.hxx.pch
-  DESTINATION include
-)
-install(
   DIRECTORY ${jank_cling_build_dir}/lib/clang
   DESTINATION lib
+)
+install(
+  PROGRAMS ${jank_cling_build_dir}/bin/clang++ ${jank_cling_build_dir}/bin/clang-13
+  DESTINATION bin
+)
+install(
+  PROGRAMS ${CMAKE_SOURCE_DIR}/bin/build-pch
+  DESTINATION bin
 )
 
 # So vcpkg puts all of the headers we need for all of our dependencies
@@ -24,9 +28,25 @@ install(
 # since we need to package all of those headers along with jank. Why?
 # Because JIT compilation means that any headers we need at compile-time
 # we'll also need at run-time.
-file(GLOB_RECURSE jank_includes ${CMAKE_SOURCE_DIR}/include/cpp/*)
-file(GLOB_RECURSE vcpkg_includes ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include/*)
-set(jank_public_headers ${jank_includes} ${vcpkg_includes})
+file(
+  GLOB_RECURSE jank_includes
+  ${CMAKE_SOURCE_DIR}/include/cpp/*
+)
+file(
+  GLOB_RECURSE vcpkg_includes
+  ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include/*
+)
+file(
+  GLOB_RECURSE third_party_includes
+  ${CMAKE_SOURCE_DIR}/third-party/nanobench/include/*
+  ${CMAKE_BINARY_DIR}/llvm/tools/cling/include/*
+  ${CMAKE_BINARY_DIR}/llvm/tools/clang/include/*
+  ${CMAKE_BINARY_DIR}/llvm/include/*
+  ${jank_cling_build_dir}/tools/cling/include/*
+  ${jank_cling_build_dir}/tools/clang/include/*
+  ${jank_cling_build_dir}/include/*
+)
+set(jank_public_headers ${jank_includes} ${vcpkg_includes} ${third_party_includes})
 
 # Normal installation doesn't keep directory information, so
 # we do it ourselves.

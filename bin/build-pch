@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+include="${1}"
+shift
+flags=$*
+
+# shellcheck disable=SC2086
+"${here}/clang++" -I "${include}" \
+                  -I "${include}/cpp" \
+                  ${flags} \
+                  -std=gnu++17 \
+                  -w \
+                  -fpch-instantiate-templates \
+                  -emit-pch \
+                  -x c++-header \
+                  -o "${include}"/cpp/jank/prelude.hpp.pch \
+                  -c "${include}"/cpp/jank/prelude.hpp \

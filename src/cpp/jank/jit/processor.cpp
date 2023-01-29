@@ -1,3 +1,5 @@
+#include <cstdlib>
+
 #include <cling/Interpreter/Value.h>
 
 #include <jank/util/process_location.hpp>
@@ -14,16 +16,36 @@ namespace jank::jit
     if(boost::filesystem::exists(dev_path))
     { return std::move(dev_path); }
 
-    auto installed_path(jank_path / "../include/cmake_pch.hxx.pch");
+    auto installed_path(jank_path / "../include/cpp/jank/prelude.hpp.pch");
     if(boost::filesystem::exists(installed_path))
     { return std::move(installed_path); }
 
     return none;
   }
 
+  option<boost::filesystem::path> build_pch()
+  {
+    auto const jank_path(jank::util::process_location().unwrap().parent_path());
+    auto const script_path(jank_path / "build-pch");
+    auto const include_path(jank_path / "../include");
+    auto const command
+    (script_path.string() + " " + include_path.string() + " " + std::string{ JANK_COMPILER_FLAGS });
+
+    std::cerr << "Note: Looks like your first run. Building pre-compiled header… " << std::flush;
+
+    if(std::system(command.c_str()) != 0)
+    {
+      std::cerr << "failed to build using this script: " << script_path << std::endl;
+      return none;
+    }
+
+    std::cerr << "done!" << std::endl;
+    return jank_path / "../include/cpp/jank/prelude.hpp.pch";
+  }
+
   option<boost::filesystem::path> find_llvm_resource_path()
   {
-    auto jank_path(jank::util::process_location().unwrap().parent_path());
+    auto const jank_path(jank::util::process_location().unwrap().parent_path());
 
     if(boost::filesystem::exists(jank_path / "../lib/clang"))
     { return jank_path / ".."; }
@@ -33,10 +55,15 @@ namespace jank::jit
 
   processor::processor()
   {
-    auto const pch_path(find_pch());
+    auto pch_path(find_pch());
     if(pch_path.is_none())
-    /* TODO: Better error handling. */
-    { throw std::runtime_error{ "unable to find PCH path for JIT" }; }
+    {
+      pch_path = build_pch();
+
+      /* TODO: Better error handling. */
+      if(pch_path.is_none())
+      { throw std::runtime_error{ "unable to find and also unable to build PCH" }; }
+    }
     auto const &pch_path_str(pch_path.unwrap().string());
 
     auto const llvm_resource_path(find_llvm_resource_path());
