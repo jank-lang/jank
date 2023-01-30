@@ -14,6 +14,10 @@ For the current progress of jank and its usability, see the tables here: https:/
 The current tl;dr for jank's usability is: **getting there, but not ready for
 use yet**.
 
+## Latest binaries
+There are pre-compiled binaries for Ubuntu 22.04, which are built to follow the
+`main` branch. You can download a tarball with everything you need here: https://github.com/jank-lang/jank/releases/tag/latest
+
 ## Building locally
 ### Dependencies
 For Debian-based distros, this should be all you need:
