@@ -43,7 +43,7 @@ runs:
       id: release
       shell: bash
       run: |
-        export DESTDIR=jank-$(echo ${{ runner.os }} | tr '[:upper:]' '[:lower:]')-$(date +'%Y%m%d')-$(git rev-parse --short $GITHUB_SHA)
+        export DESTDIR=jank-${{ matrix.os }}-$(date +'%Y-%m-%d').$(git rev-parse --short $GITHUB_SHA)
         ${{ github.workspace }}/bin/install
         tar czf $DESTDIR.tar.gz $DESTDIR/
         echo "archive=$DESTDIR.tar.gz" >> $GITHUB_OUTPUT
