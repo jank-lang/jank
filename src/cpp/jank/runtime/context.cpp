@@ -9,10 +9,11 @@
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/seq.hpp>
 #include <jank/analyze/processor.hpp>
-#include <jank/util/mapped_file.hpp>
 #include <jank/codegen/processor.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
+#include <jank/util/mapped_file.hpp>
+#include <jank/util/process_location.hpp>
 
 namespace jank::runtime
 {
@@ -142,8 +143,9 @@ namespace jank::runtime
 
   void context::eval_prelude(jit::processor const &jit_prc)
   {
-    /* TODO: Know the location of this in any installation. */
-    eval_file("src/jank/clojure/core.jank", jit_prc);
+    auto const jank_path(jank::util::process_location().unwrap().parent_path());
+    auto const src_path(jank_path / "../src/jank/clojure/core.jank");
+    eval_file(src_path.string(), jit_prc);
   }
 
   object_ptr context::eval_file(native_string_view const &path, jit::processor const &jit_prc)

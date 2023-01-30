@@ -12,7 +12,8 @@
 
 namespace jank::util
 {
-  option<boost::filesystem::path> process_location()
+  /* TODO: Put this in a cpp file. */
+  inline option<boost::filesystem::path> process_location()
 #if defined(__APPLE__)
   {
     uint32_t path_length{};

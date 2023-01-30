@@ -55,6 +55,9 @@ namespace jank::jit
 
   processor::processor()
   {
+    /* TODO: Pass this into each fn below so we only do this once on startup. */
+    auto const jank_path(jank::util::process_location().unwrap().parent_path());
+
     auto pch_path(find_pch());
     if(pch_path.is_none())
     {
@@ -72,13 +75,16 @@ namespace jank::jit
     { throw std::runtime_error{ "unable to find LLVM resource path" }; }
     auto const &llvm_resource_path_str(llvm_resource_path.unwrap().string());
 
+    auto const include_path(jank_path / "../include");
+
     auto const args
     (
       jank::util::make_array
       (
         "clang++", "-std=c++17",
         "-DHAVE_CXX14=1", "-DIMMER_HAS_LIBGC=1",
-        "-include-pch", pch_path_str.c_str()
+        "-include-pch", pch_path_str.c_str(),
+        "-isystem", include_path.c_str()
       )
     );
     interpreter = std::make_unique<cling::Interpreter>(args.size(), args.data(), llvm_resource_path_str.c_str());
