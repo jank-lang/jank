@@ -139,8 +139,10 @@ add_library(
   src/cpp/jank/runtime/obj/map.cpp
   src/cpp/jank/runtime/obj/set.cpp
   src/cpp/jank/runtime/obj/string.cpp
+  src/cpp/jank/runtime/obj/cons.cpp
   src/cpp/jank/runtime/behavior/callable.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
+  src/cpp/jank/runtime/behavior/seqable.cpp
   src/cpp/jank/analyze/processor.cpp
   src/cpp/jank/analyze/local_frame.cpp
   src/cpp/jank/evaluate.cpp

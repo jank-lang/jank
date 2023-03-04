@@ -54,6 +54,7 @@ namespace jank::runtime::obj
       return native_string{ buff.data(), buff.size() };
     }
     native_integer to_hash() const override
+    /* TODO: Hash from contents. */
     { return reinterpret_cast<native_integer>(this); }
 
     sequence_ptr seq() const override

@@ -110,6 +110,16 @@
                     if(__value == nullptr)
                     { __value = #{ '() }#; }
                    }"))))
+(def cons
+  (fn* [head tail]
+    (native/raw "auto const * const seqable_tail(#{ tail }#->as_seqable());
+                 if(seqable_tail)
+                 { __value = make_box<jank::runtime::obj::cons>(#{ head }#, seqable_tail->seq()); }
+                 else if(#{ tail }#->as_nil())
+                 { __value = make_box<jank::runtime::obj::cons>(#{ head }#, nullptr); }
+                 else
+                 { throw #{ :invalid-cons-tail }#; }
+                 ")))
 
 ;; Other.
 (def hash

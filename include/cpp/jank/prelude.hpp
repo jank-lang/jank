@@ -22,6 +22,7 @@
 #include <jank/runtime/obj/vector.hpp>
 #include <jank/runtime/obj/set.hpp>
 #include <jank/runtime/obj/string.hpp>
+#include <jank/runtime/obj/cons.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/context.hpp>

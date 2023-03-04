@@ -1,6 +1,10 @@
 #pragma once
 
+#include "jank/native_box.hpp"
 #include <jank/runtime/behavior/countable.hpp>
+
+namespace jank::runtime::obj
+{ struct cons; }
 
 namespace jank::runtime::behavior
 {
@@ -25,28 +29,10 @@ namespace jank::runtime::behavior
      * do own, and then next_in_place() on that to your heart's content. */
     virtual sequence_ptr next_in_place() = 0;
     virtual object_ptr next_in_place_first() = 0;
+    native_box<obj::cons> cons(object_ptr head) const;
 
-    behavior::seqable const* as_seqable() const override
-    { return this; }
-
-    native_bool equal(object const &o) const override
-    {
-      auto const *o_seqable(o.as_seqable());
-      if(!o_seqable)
-      { return false; }
-
-      auto o_seq(o_seqable->seq());
-      auto this_seq(seq());
-      while(this_seq != nullptr && o_seq != nullptr)
-      {
-        if(!this_seq->first()->equal(*o_seq->first()))
-        { return false; }
-
-        this_seq = this_seq->next_in_place();
-        o_seq = o_seq->next_in_place();
-      }
-      return true;
-    }
+    behavior::seqable const* as_seqable() const override;
+    native_bool equal(object const &o) const override;
   };
   using sequence_ptr = sequence::sequence_ptr;
 

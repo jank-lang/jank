@@ -22,6 +22,10 @@ pom.xml.asc
 # C++
 .ccls-cache
 .gdb_history
+.cache
+.cpcache
+inst
+deb-cache
 /build
 /build-*
 coverage.txt

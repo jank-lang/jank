@@ -146,7 +146,7 @@ namespace jank::runtime
       nil() = default;
       nil(nil &&) noexcept = default;
       nil(nil const &) = default;
-      ~nil() = default;
+      virtual ~nil() = default;
 
       native_bool equal(object const &) const override;
       native_string to_string() const override;

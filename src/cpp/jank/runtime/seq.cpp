@@ -16,9 +16,9 @@ namespace jank::runtime
 {
   namespace detail
   {
-    size_t sequence_length(behavior::sequence_ptr const &s)
+    size_t sequence_length(behavior::sequence_ptr const s)
     { return sequence_length(s, std::numeric_limits<size_t>::max()); }
-    size_t sequence_length(behavior::sequence_ptr const &s, size_t const max)
+    size_t sequence_length(behavior::sequence_ptr const s, size_t const max)
     {
       if(s == nullptr)
       { return 0; }
@@ -29,6 +29,29 @@ namespace jank::runtime
       for(auto i(s->next()); i != nullptr && length < max; i = i->next_in_place())
       { ++length; }
       return length;
+    }
+
+    native_string to_string(behavior::sequence_ptr const s)
+    {
+      fmt::memory_buffer buff;
+      to_string(s, buff);
+      return native_string{ buff.data(), buff.size() };
+    }
+    void to_string(behavior::sequence_ptr const s, fmt::memory_buffer &buff)
+    {
+      auto inserter(std::back_inserter(buff));
+      if(!s)
+      { fmt::format_to(inserter, "()"); }
+
+      fmt::format_to(inserter, "(");
+      s->first()->to_string(buff);
+
+      for(auto i(s->next()); i != nullptr; i = i->next_in_place())
+      {
+        fmt::format_to(inserter, " ");
+        i->first()->to_string(buff);
+      }
+      fmt::format_to(inserter, ")");
     }
   }
 

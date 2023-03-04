@@ -6,8 +6,10 @@ namespace jank::runtime
 {
   namespace detail
   {
-    size_t sequence_length(behavior::sequence_ptr const &s);
-    size_t sequence_length(behavior::sequence_ptr const &s, size_t const max);
+    size_t sequence_length(behavior::sequence_ptr const s);
+    size_t sequence_length(behavior::sequence_ptr const s, size_t const max);
+    native_string to_string(behavior::sequence_ptr const s);
+    void to_string(behavior::sequence_ptr const s, fmt::memory_buffer &buff);
   }
 
   object_ptr seq(object_ptr s);
