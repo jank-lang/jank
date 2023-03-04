@@ -118,8 +118,11 @@
                  else if(#{ tail }#->as_nil())
                  { __value = make_box<jank::runtime::obj::cons>(#{ head }#, nullptr); }
                  else
-                 { throw #{ :invalid-cons-tail }#; }
-                 ")))
+                 { throw #{ :invalid-cons-tail }#; }")))
+(def list
+  (fn* [& items]
+    (native/raw "auto * const seq(static_cast<behavior::sequence*>(const_cast<behavior::seqable*>(#{ items }#->as_seqable())));
+                 __value = jank::runtime::obj::list::create(seq);")))
 
 ;; Other.
 (def hash
