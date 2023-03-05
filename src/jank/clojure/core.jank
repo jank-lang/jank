@@ -255,6 +255,9 @@
         (cons 'do body)
         nil))
 
+(defmacro fn [args & body]
+  (cons 'fn* (cons args body)))
+
 ;; jank.compiler things.
 (def benchmark
   ; TODO: Options, following what criterium offers.
