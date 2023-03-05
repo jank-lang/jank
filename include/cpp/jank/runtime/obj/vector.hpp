@@ -19,8 +19,9 @@ namespace jank::runtime::obj
     { }
     ~vector() = default;
 
-    /* TODO: Remove. */
+    /* TODO: Remove; dupe of ctor. */
     static native_box<vector> create(runtime::detail::peristent_vector const &);
+    static native_box<vector> create(behavior::sequence_ptr const &s);
 
     native_bool equal(object const &) const override;
     native_string to_string() const override;
@@ -38,5 +39,5 @@ namespace jank::runtime::obj
 
     runtime::detail::peristent_vector data;
   };
-  using vector_ptr = vector*;
+  using vector_ptr = native_box<vector>;
 }

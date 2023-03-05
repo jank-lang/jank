@@ -44,9 +44,7 @@ namespace jank::runtime
       { fmt::format_to(inserter, "()"); }
 
       fmt::format_to(inserter, "(");
-      s->first()->to_string(buff);
-
-      for(auto i(s->next()); i != nullptr; i = i->next_in_place())
+      for(auto i(s); i != nullptr; i = i->next())
       {
         fmt::format_to(inserter, " ");
         i->first()->to_string(buff);

@@ -277,8 +277,8 @@ namespace jank::runtime
     { return o; }
 
     auto const &meta(static_cast<obj::map*>(var.unwrap()->meta.unwrap()));
-    auto const * const found_meta(meta->data.find(intern_keyword("", "meta", true)));
-    if(!found_meta || (*found_meta)->equal(obj::JANK_FALSE))
+    auto const * const found_macro(meta->data.find(intern_keyword("", "macro", true)));
+    if(!found_macro || (*found_macro)->equal(obj::JANK_FALSE))
     { return o; }
 
     auto const &args(jank::make_box<obj::list>(list->data.rest().cons(JANK_NIL).cons(o)));
@@ -291,6 +291,21 @@ namespace jank::runtime
     if(expanded != o)
     { return macroexpand(expanded); }
     return o;
+  }
+
+  object_ptr context::println(object_ptr args)
+  {
+    fmt::memory_buffer buff;
+    auto inserter(std::back_inserter(buff));
+    auto * const seq(static_cast<behavior::sequence*>(const_cast<behavior::seqable*>(args->as_seqable())));
+    seq->first()->to_string(buff);
+    for(auto *it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
+    {
+      fmt::format_to(inserter, std::string{ 1, ' ' });
+      it->first()->to_string(buff);
+    }
+    std::cout << native_string_view{ buff.data(), buff.size() } << std::endl;
+    return JANK_NIL;
   }
 
   context::thread_state::thread_state(context &ctx)

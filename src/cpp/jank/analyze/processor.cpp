@@ -873,6 +873,10 @@ namespace jank::analyze
     { return analyze_primitive_literal(o, current_frame, expr_type, fn_ctx); }
     else if(o->as_symbol())
     { return analyze_symbol(static_cast<runtime::obj::symbol*>(o), current_frame, expr_type, fn_ctx); }
+    /* This is used when building code from macros; they may end up being other forms of sequences
+     * and not just lists. */
+    if(auto s = o->as_seqable())
+    { return analyze_call(runtime::obj::list::create(s->seq()), current_frame, expr_type, fn_ctx); }
     else
     {
       std::cerr << "unsupported analysis of " << o->to_string() << std::endl;

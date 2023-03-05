@@ -97,6 +97,18 @@ namespace jank::runtime::obj
   vector_ptr vector::create(runtime::detail::peristent_vector const &o)
   { return jank::make_box<vector>(o); }
 
+  vector_ptr vector::create(behavior::sequence_ptr const &s)
+  {
+    if(s == nullptr)
+    { return jank::make_box<vector>(); }
+
+    runtime::detail::transient_vector v;
+    v.push_back(s->first());
+    for(auto i(s->next()); i != nullptr; i = i->next_in_place())
+    { v.push_back(i->first()); }
+    return jank::make_box<vector>(v.persistent());
+  }
+
   native_bool vector::equal(object const &o) const
   {
     auto const *s(o.as_seqable());

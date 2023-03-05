@@ -37,5 +37,5 @@ namespace jank::runtime::obj
 
     runtime::detail::persistent_list data;
   };
-  using list_ptr = list*;
+  using list_ptr = native_box<list>;
 }

@@ -51,7 +51,9 @@ namespace jank::runtime::obj
 
     /* TODO: Do this without going through the seq twice? */
     hash = 1 + runtime::detail::sequence_length(tail);
-    for(auto i(tail); i != nullptr; i = i->next_in_place())
+    auto next(tail->next());
+    hash = runtime::detail::hash_combine(hash, next);
+    for(auto i(next->next()); i != nullptr; i = i->next_in_place())
     { hash = runtime::detail::hash_combine(hash, i); }
     return static_cast<native_integer>(hash);
   }

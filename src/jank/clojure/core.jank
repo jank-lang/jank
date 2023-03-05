@@ -1,4 +1,4 @@
-; The layout of this file rougly matches: https://clojure.org/api/cheatsheet
+; The layout of this file roughly matches: https://clojure.org/api/cheatsheet
 
 ; Namespace management.
 (def *ns*)
@@ -123,6 +123,10 @@
   (fn* [& items]
     (native/raw "auto * const seq(static_cast<behavior::sequence*>(const_cast<behavior::seqable*>(#{ items }#->as_seqable())));
                  __value = jank::runtime::obj::list::create(seq);")))
+(def vec
+  (fn* [coll]
+    (native/raw "auto * const seq(static_cast<behavior::sequence*>(const_cast<behavior::seqable*>(#{ coll }#->as_seqable())));
+                 __value = jank::runtime::obj::vector::create(seq);")))
 
 ;; Other.
 (def hash
@@ -190,11 +194,13 @@
 (def print
   (fn* [o]
     (native/raw "std::cout << #{ o }#->to_string();
-                 __value = #{ nil }#")))
+                 __value = #{ nil }#;")))
 (def println
-  (fn* [o]
-    (native/raw "std::cout << #{ o }#->to_string() << std::endl;
-                 __value = #{ nil }#")))
+  (fn* [& args]
+    ; TODO: Move println back into here once I sort out two things:
+    ; 1. Escaped strings, so I can do the space in between each
+    ; 2. The linker errors showing up when using fmt::format_to here
+    (native/raw "__value = __rt_ctx.println(#{ args }#);")))
 
 ; Functions.
 (def ifn?
@@ -232,6 +238,22 @@
                  behavior::metadatable::validate_meta(#{ m }#);
                  const_cast<behavior::metadatable*>(md)->meta = #{ m }#;
                  __value = #{ m }#;")))
+
+(def defn
+  (fn* [&form &env fn-name fn-args & body]
+    (list 'def fn-name (cons 'fn* (cons fn-args body)))))
+(reset-meta! (var defn) {:macro true})
+
+(defn defmacro [&form &env fn-name fn-args & body]
+  (list 'do
+        (list 'def fn-name (cons 'fn* (cons (vec (cons '&form (cons '&env fn-args))) body)))
+        (list 'reset-meta! (list 'var fn-name) {:macro true})))
+(reset-meta! (var defmacro) {:macro true})
+
+(defmacro when [condition & body]
+  (list 'if condition
+        (cons 'do body)
+        nil))
 
 ;; jank.compiler things.
 (def benchmark
