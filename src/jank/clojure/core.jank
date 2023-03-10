@@ -48,6 +48,18 @@
       ; TODO: throw an error
       false)))
 
+;; Random.
+(def rand)
+(def rand
+  (fn*
+    ([]
+     (native/raw "static std::random_device rd;
+                  static std::mt19937 gen(rd());
+                  static std::uniform_real_distribution<native_real> dis(0.0, 1.0);
+                  __value = make_box(dis(gen));"))
+    ([n]
+     (* (rand) n))))
+
 ; Relations.
 ;; Miscellaneous.
 (def true?
@@ -261,7 +273,7 @@
 ;; jank.compiler things.
 (def benchmark
   ; TODO: Options, following what criterium offers.
-  (fn* [label fun]
+  (fn [label fun]
     (native/raw "auto const * const label_str(#{ (str label) }#->as_string());
                  auto const * const callable(#{ fun }#->as_callable());
                  if(!callable)

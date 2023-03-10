@@ -67,6 +67,24 @@ namespace jank::runtime
     intern_var(plus_sym).expect_ok()->set_root(obj::function::create(&obj::_gen_plus_));
 
     /* TODO: Remove this once it can be defined in jank. */
+    {
+      auto const sym(jank::make_box<obj::symbol>("clojure.core/-"));
+      intern_var(sym).expect_ok()->set_root(obj::function::create(&obj::_gen_minus_));
+    }
+
+    /* TODO: Remove this once it can be defined in jank. */
+    {
+      auto const sym(jank::make_box<obj::symbol>("clojure.core/*"));
+      intern_var(sym).expect_ok()->set_root(obj::function::create(&obj::_gen_asterisk_));
+    }
+
+    /* TODO: Remove this once it can be defined in jank. */
+    {
+      auto const sym(jank::make_box<obj::symbol>("clojure.core//"));
+      intern_var(sym).expect_ok()->set_root(obj::function::create(&obj::div));
+    }
+
+    /* TODO: Remove this once it can be defined in jank. */
     auto const equal_sym(jank::make_box<obj::symbol>("clojure.core/="));
     intern_var(equal_sym).expect_ok()->set_root(obj::function::create(&_gen_equal_));
 
@@ -226,6 +244,7 @@ namespace jank::runtime
     if(found_ns == locked_namespaces->end())
     { return err("can't intern var; namespace doesn't exist"); }
 
+    /* TODO: Read lock, then upgrade as needed. */
     auto locked_vars(found_ns->second->vars.wlock());
     auto const found_var(locked_vars->find(qualified_sym));
     if(found_var != locked_vars->end())
