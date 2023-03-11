@@ -33,6 +33,15 @@
   (fn* [o]
     (native/raw "__value = make_box(#{ o }#->as_number() != nullptr)")))
 
+(def int
+  (fn* [o]
+    (native/raw "auto const * const n(#{ o }#->as_number());
+                 __value = make_box(n->get_integer());")))
+(def float
+  (fn* [o]
+    (native/raw "auto const * const n(#{ o }#->as_number());
+                 __value = make_box(n->get_real());")))
+
 (def even?
   (fn* [o]
     (if (integer? o)
@@ -81,7 +90,7 @@
       (native/raw "auto const * const seqable(#{ o }#->as_seqable());
                    if(!seqable)
                    { throw #{ :not-seqable }#; }
-                   auto const &seq(seqable->seq());
+                   auto const seq(seqable->seq());
                    __value = make_box(seq == nullptr);"))))
 
 ;; Lists.
@@ -92,7 +101,7 @@
       (native/raw "auto const * const seqable(#{ o }#->as_seqable());
                    if(!seqable)
                    { throw #{ :not-seqable }#; }
-                   auto const &seq(seqable->seq());
+                   auto const seq(seqable->seq());
                    if(!seq)
                    { __value = #{ nil }#; }
                    else
@@ -104,7 +113,7 @@
       (native/raw "auto const * const seqable(#{ o }#->as_seqable());
                    if(!seqable)
                    { throw #{ :not-seqable }#; }
-                   auto const &seq(seqable->seq());
+                   auto const seq(seqable->seq());
                    if(!seq)
                    { __value = #{ nil }#; }
                    else
@@ -126,7 +135,7 @@
       (native/raw "auto const * const seqable(#{ o }#->as_seqable());
                    if(!seqable)
                    { throw #{ :not-seqable }#; }
-                   auto const &seq(seqable->seq());
+                   auto const seq(seqable->seq());
                    if(!seq)
                    { __value = #{ '() }#; }
                    else
@@ -182,12 +191,12 @@
 (def get
   (fn*
     ([m k]
-     (native/raw "auto res(#{ m }#->as_associatively_readable());
+     (native/raw "auto const res(#{ m }#->as_associatively_readable());
                   if(!res)
                   { throw #{ :not-associatively-readable }#; }
                   __value = res->get(#{ k }#);"))
     ([m k fallback]
-     (native/raw "auto res(#{ m }#->as_associatively_readable());
+     (native/raw "auto const res(#{ m }#->as_associatively_readable());
                   if(!res)
                   { throw #{ :not-associatively-readable }#; }
                   __value = res->get(#{ k }#, #{ fallback }#);"))))
@@ -196,7 +205,7 @@
 (def assoc
   (fn*
     ([map key val]
-     (native/raw "auto res(#{ map }#->as_associatively_writable());
+     (native/raw "auto const res(#{ map }#->as_associatively_writable());
                   if(!res)
                   { throw #{ :not-associatively-writable }#; }
                   __value = res->assoc(#{ key }#, #{ val }#);"))
