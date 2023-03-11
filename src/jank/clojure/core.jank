@@ -4,14 +4,6 @@
 (def *ns*)
 (def in-ns)
 
-; Macros.
-(def macroexpand-1
-  (fn* [form]
-    (native/raw "__value = __rt_ctx.macroexpand1(#{ form }#);")))
-(def macroexpand
-  (fn* [form]
-    (native/raw "__value = __rt_ctx.macroexpand(#{ form }#);")))
-
 ; Primitives.
 ;; Arithmetic.
 (def +)
@@ -20,6 +12,12 @@
 (def /)
 (def =)
 (def <)
+(def inc
+  (fn* [n]
+    (+ 1 n)))
+(def dec
+  (fn* [n]
+    (- n 1)))
 
 ;; Numbers.
 (def integer?
@@ -296,6 +294,7 @@
                  const_cast<behavior::metadatable*>(md)->meta = #{ m }#;
                  __value = #{ m }#;")))
 
+; Macros.
 (def defn
   (fn* [&form &env fn-name fn-args & body]
     (list 'def fn-name (cons 'fn* (cons fn-args body)))))
@@ -314,6 +313,11 @@
 
 (defmacro fn [args & body]
   (cons 'fn* (cons args body)))
+
+(defn macroexpand-1 [form]
+  (native/raw "__value = __rt_ctx.macroexpand1(#{ form }#);"))
+(defn macroexpand [form]
+  (native/raw "__value = __rt_ctx.macroexpand(#{ form }#);"))
 
 ;; jank.compiler things.
 (def benchmark
