@@ -307,7 +307,7 @@ namespace jank::codegen
         format_to(inserter, "return {};", constant.native_name.name);
         return none;
       }
-      /* Statement of a var deref is a nop. */
+      /* Statement of a literal is a nop. */
       case analyze::expression_type::statement:
       { return none; }
     }
@@ -451,6 +451,7 @@ namespace jank::codegen
       format_to(inserter, "{} = {};", runtime::munge(param->name), *arg_tmp_it);
       ++arg_tmp_it;
     }
+    format_to(inserter, "continue;");
     return none;
   }
 
@@ -518,7 +519,7 @@ namespace jank::codegen
         { format_to(inserter, "return {};", last.unwrap()); }
         return none;
       }
-      /* Statement of a fn literal is a nop. */
+      /* TODO:correct? */
       case analyze::expression_type::statement:
       { return none; }
     }

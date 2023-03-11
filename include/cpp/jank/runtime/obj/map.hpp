@@ -3,10 +3,18 @@
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/behavior/countable.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
+#include <jank/runtime/behavior/associatively_readable.hpp>
+#include <jank/runtime/behavior/associatively_writable.hpp>
 
 namespace jank::runtime::obj
 {
-  struct map : object, behavior::seqable, behavior::countable, behavior::metadatable
+  struct map
+    :
+      object,
+      behavior::seqable, behavior::countable,
+      behavior::metadatable,
+      behavior::associatively_readable,
+      behavior::associatively_writable
   {
     map() = default;
     map(map &&) = default;
@@ -35,6 +43,13 @@ namespace jank::runtime::obj
 
     object_ptr with_meta(object_ptr m) const override;
     behavior::metadatable const* as_metadatable() const override;
+
+    behavior::associatively_readable const* as_associatively_readable() const override;
+    object_ptr get(object_ptr key) const override;
+    object_ptr get(object_ptr key, object_ptr fallback) const override;
+
+    behavior::associatively_writable const* as_associatively_writable() const override;
+    object_ptr assoc(object_ptr key, object_ptr val) const override;
 
     runtime::detail::persistent_map data;
   };

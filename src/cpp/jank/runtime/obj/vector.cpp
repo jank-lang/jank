@@ -162,4 +162,35 @@ namespace jank::runtime::obj
 
   behavior::metadatable const* vector::as_metadatable() const
   { return this; }
+
+  behavior::associatively_readable const* vector::as_associatively_readable() const
+  { return this; }
+  object_ptr vector::get(object_ptr const key) const
+  {
+    if(auto const i = key->as_integer())
+    {
+      if(data.size() <= static_cast<size_t>(i->data))
+      { return JANK_NIL; }
+      return data[i->data];
+    }
+    else
+    {
+      throw std::runtime_error
+      { fmt::format("get on a vector must be an integer; found {}", key->to_string()) };
+    }
+  }
+  object_ptr vector::get(object_ptr const key, object_ptr const fallback) const
+  {
+    if(auto const i = key->as_integer())
+    {
+      if(data.size() <= static_cast<size_t>(i->data))
+      { return fallback; }
+      return data[i->data];
+    }
+    else
+    {
+      throw std::runtime_error
+      { fmt::format("get on a vector must be an integer; found {}", key->to_string()) };
+    }
+  }
 }

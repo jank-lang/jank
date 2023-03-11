@@ -160,7 +160,7 @@ namespace jank::runtime::obj
   size_t map::count() const
   { return data.size(); }
 
-  object_ptr map::with_meta(object_ptr m) const
+  object_ptr map::with_meta(object_ptr const m) const
   {
     validate_meta(m);
     auto ret(jank::make_box<map>(data));
@@ -170,4 +170,30 @@ namespace jank::runtime::obj
 
   behavior::metadatable const* map::as_metadatable() const
   { return this; }
+
+  behavior::associatively_readable const* map::as_associatively_readable() const
+  { return this; }
+  object_ptr map::get(object_ptr const key) const
+  {
+    auto res(data.find(key));
+    if(res)
+    { return *res; }
+    return JANK_NIL;
+  }
+  object_ptr map::get(object_ptr const key, object_ptr const fallback) const
+  {
+    auto res(data.find(key));
+    if(res)
+    { return *res; }
+    return fallback;
+  }
+
+  behavior::associatively_writable const* map::as_associatively_writable() const
+  { return this; }
+  object_ptr map::assoc(object_ptr key, object_ptr val) const
+  {
+    auto copy(data);
+    copy.insert_or_assign(key, val);
+    return create(std::move(copy));
+  }
 }

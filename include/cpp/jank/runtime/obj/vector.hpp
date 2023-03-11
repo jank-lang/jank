@@ -3,10 +3,16 @@
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/behavior/countable.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
+#include <jank/runtime/behavior/associatively_readable.hpp>
 
 namespace jank::runtime::obj
 {
-  struct vector : object, behavior::seqable, behavior::countable, behavior::metadatable
+  struct vector
+    :
+      object,
+      behavior::seqable, behavior::countable,
+      behavior::metadatable,
+      behavior::associatively_readable
   {
     vector() = default;
     vector(vector &&) = default;
@@ -36,6 +42,10 @@ namespace jank::runtime::obj
 
     object_ptr with_meta(object_ptr m) const override;
     behavior::metadatable const* as_metadatable() const override;
+
+    behavior::associatively_readable const* as_associatively_readable() const override;
+    object_ptr get(object_ptr key) const override;
+    object_ptr get(object_ptr key, object_ptr fallback) const override;
 
     runtime::detail::peristent_vector data;
   };

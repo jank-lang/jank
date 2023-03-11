@@ -1,6 +1,6 @@
 #pragma once
 
-#include "jank/native_box.hpp"
+#include <jank/native_box.hpp>
 #include <jank/runtime/behavior/countable.hpp>
 
 namespace jank::runtime::obj

@@ -68,6 +68,9 @@
 (def false?
   (fn* [o]
     (native/raw "__value = #{ o }#->equal(*#{ false }#) ? #{ true }# : #{ false }#")))
+(def not
+  (fn* [o]
+    (native/raw "__value = #{ o }#->equal(*#{ false }#) ? #{ true }# : #{ false }#")))
 (def nil?
   (fn* [o]
     (native/raw "__value = #{ o }#->equal(*#{ nil }#) ? #{ true }# : #{ false }#")))
@@ -75,11 +78,13 @@
 ;; Collections.
 (def empty?
   (fn* [o]
-    (native/raw "auto const * const seqable(#{ o }#->as_seqable());
-                 if(!seqable)
-                 { throw #{ :not-seqable }#; }
-                 auto const &seq(seqable->seq());
-                 __value = make_box(seq == nullptr);")))
+    (if (nil? o)
+      true
+      (native/raw "auto const * const seqable(#{ o }#->as_seqable());
+                   if(!seqable)
+                   { throw #{ :not-seqable }#; }
+                   auto const &seq(seqable->seq());
+                   __value = make_box(seq == nullptr);"))))
 
 ;; Lists.
 (def first
@@ -103,9 +108,19 @@
                    { throw #{ :not-seqable }#; }
                    auto const &seq(seqable->seq());
                    if(!seq)
-                   { __value = #{ '() }#; }
+                   { __value = #{ nil }#; }
                    else
-                   { __value = seq->next_in_place(); }"))))
+                   {
+                     __value = seq->next();
+                     if(!__value)
+                     { __value = #{ nil }#; }
+                   }"))))
+(def nnext
+  (fn* [o]
+    (next (next o))))
+(def second
+  (fn* [o]
+    (first (next o))))
 (def rest
   (fn* [o]
     (if (nil? o)
@@ -164,6 +179,36 @@
                   for(auto *it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
                   { it->first()->to_string(buff); }
                   __value = make_box<obj::string>(native_string{ buff.data(), buff.size() });"))))
+
+;; Maps.
+(def get
+  (fn*
+    ([m k]
+     (native/raw "auto res(#{ m }#->as_associatively_readable());
+                  if(!res)
+                  { throw #{ :not-associatively-readable }#; }
+                  __value = res->get(#{ k }#);"))
+    ([m k fallback]
+     (native/raw "auto res(#{ m }#->as_associatively_readable());
+                  if(!res)
+                  { throw #{ :not-associatively-readable }#; }
+                  __value = res->get(#{ k }#, #{ fallback }#);"))))
+
+(def assoc)
+(def assoc
+  (fn*
+    ([map key val]
+     (native/raw "auto res(#{ map }#->as_associatively_writable());
+                  if(!res)
+                  { throw #{ :not-associatively-writable }#; }
+                  __value = res->assoc(#{ key }#, #{ val }#);"))
+    ([map key val & kvs]
+     (let* [res (assoc map key val)]
+       (if (empty? kvs)
+         res
+         (do
+           (assert (not (empty? (next kvs)))); "assoc expects even number of args after the first"
+           (recur res (first kvs) (second kvs) (nnext kvs))))))))
 
 ;; Other.
 (def keyword?

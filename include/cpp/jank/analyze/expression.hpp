@@ -58,8 +58,6 @@ namespace jank::analyze
       : data{ std::forward<T>(t) }
     { }
 
-    /* TODO: Keep track of references to this expression using weak_ptrs. */
-
     value_type data;
   };
   /* TODO: Use something non-nullable. */
