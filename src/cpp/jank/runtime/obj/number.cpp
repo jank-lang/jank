@@ -96,40 +96,13 @@ namespace jank::runtime::obj
   number const* real::as_number() const
   { return this; }
 
-  struct integer_ops;
-  struct real_ops;
-  struct number_ops
-  {
-    virtual ~number_ops() = default;
-
-    virtual number_ops const& combine(number_ops const&) const = 0;
-    virtual number_ops const& with(integer_ops const&) const = 0;
-    virtual number_ops const& with(real_ops const&) const = 0;
-
-    /* TODO: Return number_ptr */
-    virtual object_ptr add() const = 0;
-    virtual object_ptr subtract() const = 0;
-    virtual object_ptr multiply() const = 0;
-    virtual object_ptr divide() const = 0;
-    virtual object_ptr remainder() const = 0;
-    virtual object_ptr inc() const = 0;
-    virtual object_ptr dec() const = 0;
-    virtual object_ptr negate() const = 0;
-    virtual object_ptr abs() const = 0;
-    virtual object_ptr min() const = 0;
-    virtual object_ptr max() const = 0;
-    virtual native_bool lt() const = 0;
-    virtual native_bool lte() const = 0;
-    virtual native_bool gte() const = 0;
-    virtual native_bool equal() const = 0;
-  };
-
   struct integer_ops : number_ops
   {
     number_ops const& combine(number_ops const &l) const override
     { return l.with(*this); }
     number_ops const& with(integer_ops const&) const override;
     number_ops const& with(real_ops const&) const override;
+
     object_ptr add() const override
     { return jank::make_box<integer>(left + right); }
     object_ptr subtract() const override
@@ -160,6 +133,12 @@ namespace jank::runtime::obj
     { return left >= right; }
     native_bool equal() const override
     { return left == right; }
+    native_bool is_positive() const override
+    { return left > 0; }
+    native_bool is_negative() const override
+    { return left < 0; }
+    native_bool is_zero() const override
+    { return left == 0; }
 
     native_integer left{}, right{};
   };
@@ -170,6 +149,7 @@ namespace jank::runtime::obj
     { return l.with(*this); }
     number_ops const& with(integer_ops const&) const override;
     number_ops const& with(real_ops const&) const override;
+
     object_ptr add() const override
     { return jank::make_box<real>(left + right); }
     object_ptr subtract() const override
@@ -202,6 +182,15 @@ namespace jank::runtime::obj
 #pragma clang diagnostic ignored "-Wfloat-equal"
     native_bool equal() const override
     { return left == right; }
+#pragma clang diagnostic pop
+    native_bool is_positive() const override
+    { return left > 0; }
+    native_bool is_negative() const override
+    { return left < 0; }
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+    native_bool is_zero() const override
+    { return left == 0; }
 #pragma clang diagnostic pop
 
     native_real left{}, right{};
@@ -261,119 +250,6 @@ namespace jank::runtime::obj
     /* TODO: Exception type. */
     throw native_string{ "(right_ops) not a number: " } + n->to_string();
   }
-
-  object_ptr rand()
-  {
-    static std::uniform_real_distribution<native_real> distribution(0.0, 1.0);
-    static std::mt19937 generator;
-    return jank::make_box<real>(distribution(generator));
-  }
-
-  /* + */
-  object_ptr _gen_plus_(object_ptr l, object_ptr r)
-  { return right_ops(r).combine(left_ops(l)).add(); }
-
-  /* - */
-  object_ptr _gen_minus_(object_ptr l, object_ptr r)
-  { return right_ops(r).combine(left_ops(l)).subtract(); }
-
-  /* * */
-  object_ptr _gen_asterisk_(object_ptr l, object_ptr r)
-  { return right_ops(r).combine(left_ops(l)).multiply(); }
-
-  /* TODO: Rename to / once the parser supports it. */
-  /* / */
-  object_ptr div(object_ptr l, object_ptr r)
-  { return right_ops(r).combine(left_ops(l)).divide(); }
-
-  object_ptr mod(object_ptr l, object_ptr r)
-  { return right_ops(r).combine(left_ops(l)).remainder(); }
-
-  /* < */
-  object_ptr _gen_less_(object_ptr l, object_ptr r)
-  {
-    return jank::make_box<boolean>
-    (right_ops(r).combine(left_ops(l)).lt());
-  }
-
-  /* <= */
-  object_ptr _gen_less__gen_equal_(object_ptr l, object_ptr r)
-  {
-    return jank::make_box<boolean>
-    (right_ops(r).combine(left_ops(l)).lte());
-  }
-
-  /* ->int */
-  object_ptr _gen_minus__gen_greater_int(object_ptr o)
-  {
-    auto const * const n(o->as_number());
-    if(!n)
-    {
-      /* TODO: Throw error. */
-      std::cout << "(->int) not a number: " << *o << std::endl;
-      return JANK_NIL;
-    }
-    return jank::make_box<integer>(n->get_integer());
-  }
-
-  /* ->float */
-  object_ptr _gen_minus__gen_greater_float(object_ptr o)
-  {
-    auto const * const n(o->as_number());
-    if(!n)
-    {
-      /* TODO: Throw error. */
-      std::cout << "(->float) not a number: " << *o << std::endl;
-      return JANK_NIL;
-    }
-    return jank::make_box<real>(n->get_real());
-  }
-
-  object_ptr inc(object_ptr n)
-  { return left_ops(n).inc(); }
-
-  object_ptr dec(object_ptr n)
-  { return left_ops(n).dec(); }
-
-  object_ptr sqrt(object_ptr o)
-  {
-    auto const * const n(o->as_number());
-    if(!n)
-    {
-      /* TODO: Throw error. */
-      std::cout << "(sqrt) not a number: " << *o << std::endl;
-      return JANK_NIL;
-    }
-    return jank::make_box<real>(std::sqrt(n->get_real()));
-  }
-
-  object_ptr tan(object_ptr o)
-  {
-    auto const * const n(o->as_number());
-    if(!n)
-    {
-      /* TODO: Throw error. */
-      std::cout << "(tan) not a number: " << *o << std::endl;
-      return JANK_NIL;
-    }
-    return jank::make_box<real>(std::tan(n->get_real()));
-  }
-
-  object_ptr pow(object_ptr l, object_ptr r)
-  {
-    auto const * const l_num(l->as_number());
-    auto const * const r_num(r->as_number());
-    if(!l_num || !r_num)
-    {
-      /* TODO: Throw error. */
-      std::cout << "(pow) not a number: " << *l << " and " << *r << std::endl;
-      return JANK_NIL;
-    }
-    return jank::make_box<real>(std::pow(l_num->get_real(), r_num->get_real()));
-  }
-
-  object_ptr abs(object_ptr n)
-  { return left_ops(n).abs(); }
 
   object_ptr min(object_ptr l, object_ptr r)
   { return right_ops(r).combine(left_ops(l)).min(); }

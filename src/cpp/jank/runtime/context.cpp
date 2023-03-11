@@ -63,36 +63,6 @@ namespace jank::runtime
     intern_var(assert_sym).expect_ok()->set_root(obj::function::create(assert_fn));
 
     /* TODO: Remove this once it can be defined in jank. */
-    auto const plus_sym(jank::make_box<obj::symbol>("clojure.core/+"));
-    intern_var(plus_sym).expect_ok()->set_root(obj::function::create(&obj::_gen_plus_));
-
-    /* TODO: Remove this once it can be defined in jank. */
-    {
-      auto const sym(jank::make_box<obj::symbol>("clojure.core/-"));
-      intern_var(sym).expect_ok()->set_root(obj::function::create(&obj::_gen_minus_));
-    }
-
-    /* TODO: Remove this once it can be defined in jank. */
-    {
-      auto const sym(jank::make_box<obj::symbol>("clojure.core/*"));
-      intern_var(sym).expect_ok()->set_root(obj::function::create(&obj::_gen_asterisk_));
-    }
-
-    /* TODO: Remove this once it can be defined in jank. */
-    {
-      auto const sym(jank::make_box<obj::symbol>("clojure.core//"));
-      intern_var(sym).expect_ok()->set_root(obj::function::create(&obj::div));
-    }
-
-    /* TODO: Remove this once it can be defined in jank. */
-    auto const equal_sym(jank::make_box<obj::symbol>("clojure.core/="));
-    intern_var(equal_sym).expect_ok()->set_root(obj::function::create(&_gen_equal_));
-
-    /* TODO: Remove this once it can be defined in jank. */
-    auto const lt_sym(jank::make_box<obj::symbol>("clojure.core/<"));
-    intern_var(lt_sym).expect_ok()->set_root(obj::function::create(&obj::_gen_less_));
-
-    /* TODO: Remove this once it can be defined in jank. */
     auto const seq_sym(jank::make_box<obj::symbol>("clojure.core/seq"));
     intern_var(seq_sym).expect_ok()->set_root(obj::function::create(&seq));
   }

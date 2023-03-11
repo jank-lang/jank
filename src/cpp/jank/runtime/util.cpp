@@ -33,10 +33,6 @@ namespace jank::runtime
   object_ptr truthy_gen_qmark_(object_ptr o)
   { return jank::make_box<obj::boolean>(detail::truthy(o)); }
 
-  /* = */
-  object_ptr _gen_equal_(object_ptr l, object_ptr r)
-  { return jank::make_box<obj::boolean>(l->equal(*r)); }
-
   /* not= */
   object_ptr not_gen_equal_(object_ptr l, object_ptr r)
   { return jank::make_box<obj::boolean>(!l->equal(*r)); }

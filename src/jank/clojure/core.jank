@@ -4,69 +4,6 @@
 (def *ns*)
 (def in-ns)
 
-; Primitives.
-;; Arithmetic.
-(def +)
-(def -)
-(def *)
-(def /)
-(def =)
-(def <)
-(def inc
-  (fn* [n]
-    (+ 1 n)))
-(def dec
-  (fn* [n]
-    (- n 1)))
-
-;; Numbers.
-(def integer?
-  (fn* [o]
-    (native/raw "__value = make_box(#{ o }#->as_integer() != nullptr)")))
-(def float?
-  (fn* [o]
-    (native/raw "__value = make_box(#{ o }#->as_real() != nullptr)")))
-(def boolean?
-  (fn* [o]
-    (native/raw "__value = make_box(#{ o }#->as_boolean() != nullptr)")))
-(def number?
-  (fn* [o]
-    (native/raw "__value = make_box(#{ o }#->as_number() != nullptr)")))
-
-(def int
-  (fn* [o]
-    (native/raw "auto const * const n(#{ o }#->as_number());
-                 __value = make_box(n->get_integer());")))
-(def float
-  (fn* [o]
-    (native/raw "auto const * const n(#{ o }#->as_number());
-                 __value = make_box(n->get_real());")))
-
-(def even?
-  (fn* [o]
-    (if (integer? o)
-      (native/raw "__value = make_box(#{ o }#->as_integer()->data % 2 == 0)")
-      ; TODO: throw an error
-      false)))
-(def odd?
-  (fn* [o]
-    (if (integer? o)
-      (native/raw "__value = make_box(#{ o }#->as_integer()->data % 2 == 1)")
-      ; TODO: throw an error
-      false)))
-
-;; Random.
-(def rand)
-(def rand
-  (fn*
-    ([]
-     (native/raw "static std::random_device rd;
-                  static std::mt19937 gen(rd());
-                  static std::uniform_real_distribution<native_real> dis(0.0, 1.0);
-                  __value = make_box(dis(gen));"))
-    ([n]
-     (* (rand) n))))
-
 ; Relations.
 ;; Miscellaneous.
 (def true?
@@ -162,11 +99,6 @@
     (native/raw "auto * const seq(static_cast<behavior::sequence*>(const_cast<behavior::seqable*>(#{ coll }#->as_seqable())));
                  __value = jank::runtime::obj::vector::create(seq);")))
 
-;; Other.
-(def hash
-  (fn* [o]
-    (native/raw "__value = make_box(#{ o }#->to_hash());")))
-
 ;; Strings.
 (def string?
   (fn* [o]
@@ -201,6 +133,11 @@
                   { throw #{ :not-associatively-readable }#; }
                   __value = res->get(#{ k }#, #{ fallback }#);"))))
 
+;; Other.
+(def hash
+  (fn* [o]
+    (native/raw "__value = make_box(#{ o }#->to_hash());")))
+
 (def assoc)
 (def assoc
   (fn*
@@ -217,7 +154,233 @@
            (assert (not (empty? (next kvs)))); "assoc expects even number of args after the first"
            (recur res (first kvs) (second kvs) (nnext kvs))))))))
 
-;; Other.
+; Primitives.
+;; Arithmetic.
+(def +
+  (fn*
+    ([]
+     0)
+    ([x]
+     x)
+    ([l r]
+     (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).add();"))
+    ([l r & args]
+     (let* [res (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).add();")]
+       (if (empty? args)
+         res
+         (recur res (first args) (next args)))))))
+
+(def -)
+(def -
+  (fn*
+    ([x]
+     (- 0 x))
+    ([l r]
+     (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).subtract();"))
+    ([l r & args]
+     (let* [res (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).subtract();")]
+       (if (empty? args)
+         res
+         (recur res (first args) (next args)))))))
+
+(def *
+  (fn*
+    ([]
+     1)
+    ([x]
+     x)
+    ([l r]
+     (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).multiply();"))
+    ([l r & args]
+     (let* [res (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).multiply();")]
+       (if (empty? args)
+         res
+         (recur res (first args) (next args)))))))
+
+(def /)
+(def /
+  (fn*
+    ([x]
+     (/ 1 x))
+    ([l r]
+     (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).divide();"))
+    ([l r & args]
+     (let* [res (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).divide();")]
+       (if (empty? args)
+         res
+         (recur res (first args) (next args)))))))
+
+(def =
+  (fn*
+    ([x]
+     true)
+    ([l r]
+     (native/raw "__value = make_box(#{ l }#->equal(*#{ r }#));"))
+    ([l r & args]
+     (if (native/raw "__value = make_box(#{ l }#->equal(*#{ r }#));")
+       (if (next args)
+         (recur r (first args) (next args))
+         (native/raw "__value = make_box(#{ r }#->equal(*#{ (first args) }#));"))
+       false))))
+
+(def <
+  (fn*
+    ([x]
+     true)
+    ([l r]
+     (native/raw "__value = make_box(obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).lt());"))
+    ([l r & args]
+     (if (native/raw "__value = make_box(obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).lt());")
+       (if (next args)
+         (recur r (first args) (next args))
+         (native/raw "__value = make_box(obj::right_ops(#{ (first args) }#).combine(obj::left_ops(#{ r }#)).lt());"))
+       false))))
+
+(def <=
+  (fn*
+    ([x]
+     true)
+    ([l r]
+     (native/raw "__value = make_box(obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).lte());"))
+    ([l r & args]
+     (if (native/raw "__value = make_box(obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).lte());")
+       (if (next args)
+         (recur r (first args) (next args))
+         (native/raw "__value = make_box(obj::right_ops(#{ (first args) }#).combine(obj::left_ops(#{ r }#)).lte());"))
+       false))))
+
+(def >
+  (fn*
+    ([x]
+     true)
+    ([l r]
+     (native/raw "__value = make_box(obj::right_ops(#{ l }#).combine(obj::left_ops(#{ r }#)).lt());"))
+    ([l r & args]
+     (if (native/raw "__value = make_box(obj::right_ops(#{ l }#).combine(obj::left_ops(#{ r }#)).lt());")
+       (if (next args)
+         (recur r (first args) (next args))
+         (native/raw "__value = make_box(obj::right_ops(#{ r }#).combine(obj::left_ops(#{ (first args) }#)).lt());"))
+       false))))
+
+(def >=
+  (fn*
+    ([x]
+     true)
+    ([l r]
+     (native/raw "__value = make_box(obj::right_ops(#{ l }#).combine(obj::left_ops(#{ r }#)).lte());"))
+    ([l r & args]
+     (if (native/raw "__value = make_box(obj::right_ops(#{ l }#).combine(obj::left_ops(#{ r }#)).lte());")
+       (if (next args)
+         (recur r (first args) (next args))
+         (native/raw "__value = make_box(obj::right_ops(#{ r }#).combine(obj::left_ops(#{ (first args) }#)).lte());"))
+       false))))
+
+(def min
+  (fn*
+    ([x]
+     x)
+    ([l r]
+     (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).min();"))
+    ([l r & args]
+     (let* [res (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).min();")]
+       (if (empty? args)
+         res
+         (recur res (first args) (next args)))))))
+
+(def max
+  (fn*
+    ([x]
+     x)
+    ([l r]
+     (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).max();"))
+    ([l r & args]
+     (let* [res (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).max();")]
+       (if (empty? args)
+         res
+         (recur res (first args) (next args)))))))
+
+(def inc
+  (fn* [n]
+    (native/raw "__value = obj::left_ops(#{ n }#).inc();")))
+(def dec
+  (fn* [n]
+    (native/raw "__value = obj::left_ops(#{ n }#).dec();")))
+
+(def pos?
+  (fn* [n]
+    (native/raw "__value = make_box(obj::left_ops(#{ n }#).is_positive());")))
+(def neg?
+  (fn* [n]
+    (native/raw "__value = make_box(obj::left_ops(#{ n }#).is_negative());")))
+(def zero?
+  (fn* [n]
+    (native/raw "__value = make_box(obj::left_ops(#{ n }#).is_zero());")))
+
+(def rem
+  (fn* [num div]
+    (native/raw "__value = obj::right_ops(#{ div }#).combine(obj::left_ops(#{ num }#)).remainder();")))
+(def mod
+  (fn* [num div]
+    (let* [m (rem num div)]
+      ; TODO: Could use an or here, if we had it.
+      (if (zero? m)
+        m
+        (if (= (pos? num) (pos? div))
+          m
+          (+ m div))))))
+
+;; Numbers.
+(def integer?
+  (fn* [o]
+    (native/raw "__value = make_box(#{ o }#->as_integer() != nullptr)")))
+(def float?
+  (fn* [o]
+    (native/raw "__value = make_box(#{ o }#->as_real() != nullptr)")))
+(def boolean?
+  (fn* [o]
+    (native/raw "__value = make_box(#{ o }#->as_boolean() != nullptr)")))
+(def number?
+  (fn* [o]
+    (native/raw "__value = make_box(#{ o }#->as_number() != nullptr)")))
+
+(def int
+  (fn* [o]
+    (native/raw "auto const * const n(#{ o }#->as_number());
+                 if(!n)
+                 { throw #{ :not-a-number }#; }
+                 __value = make_box(n->get_integer());")))
+(def float
+  (fn* [o]
+    (native/raw "auto const * const n(#{ o }#->as_number());
+                 if(!n)
+                 { throw #{ :not-a-number }#; }
+                 __value = make_box(n->get_real());")))
+
+(def even?
+  (fn* [o]
+    (if (integer? o)
+      (native/raw "__value = make_box(#{ o }#->as_integer()->data % 2 == 0)")
+      ; TODO: throw an error
+      false)))
+(def odd?
+  (fn* [o]
+    (if (integer? o)
+      (native/raw "__value = make_box(#{ o }#->as_integer()->data % 2 == 1)")
+      ; TODO: throw an error
+      false)))
+
+; Random.
+(def rand)
+(def rand
+  (fn*
+    ([]
+     (native/raw "static std::mt19937 gen;
+                  static std::uniform_real_distribution<native_real> dis(0.0, 1.0);
+                  __value = make_box(dis(gen));"))
+    ([n]
+     (* (rand) n))))
+
+; Keywords.
 (def keyword?
   (fn* [o]
     (native/raw "__value = make_box(#{ o }#->as_keyword() != nullptr)")))
@@ -353,3 +516,28 @@
                     ankerl::nanobench::doNotOptimizeAway(res);
                   }
                  );")))
+
+;; Extra things that usually come from Java.
+(defn tan [o]
+  (native/raw "auto const n(#{ o }#->as_number());
+               if(!n)
+               { throw #{ :not-a-number }#; }
+               __value = make_box(std::tan(n->get_real()));"))
+
+(defn sqrt [o]
+  (native/raw "auto const n(#{ o }#->as_number());
+               if(!n)
+               { throw #{ :not-a-number }#; }
+               __value = make_box(std::sqrt(n->get_real()));"))
+
+(defn abs [o]
+  (native/raw "__value = obj::left_ops(#{ o }#).abs();"))
+
+(defn pow [x y]
+  (native/raw "auto const l(#{ x }#->as_number());
+               if(!l)
+               { throw #{ :not-a-number }#; }
+               auto const r(#{ y }#->as_number());
+               if(!r)
+               { throw #{ :not-a-number }#; }
+               __value = make_box(std::pow(l->get_real(), r->get_real()));"))

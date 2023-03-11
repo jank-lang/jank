@@ -6,6 +6,7 @@ namespace jank::runtime::obj
   {
     virtual ~number() = default;
 
+    /* TODO: Should this be called to_integer/to_number to be consistent with to_string? */
     virtual native_integer get_integer() const = 0;
     virtual native_real get_real() const = 0;
   };
@@ -13,6 +14,7 @@ namespace jank::runtime::obj
   struct boolean : object
   {
     boolean() = default;
+    virtual ~boolean() = default;
     boolean(boolean &&) noexcept = default;
     boolean(boolean const &) = default;
     boolean(native_bool const d);
@@ -71,7 +73,40 @@ namespace jank::runtime::obj
     native_real data{};
   };
 
-  object_ptr rand();
+  /* TODO: Find a better namespace for these. */
+  struct integer_ops;
+  struct real_ops;
+  struct number_ops
+  {
+    virtual ~number_ops() = default;
+
+    virtual number_ops const& combine(number_ops const&) const = 0;
+    virtual number_ops const& with(integer_ops const&) const = 0;
+    virtual number_ops const& with(real_ops const&) const = 0;
+
+    /* TODO: Return number_ptr? */
+    virtual object_ptr add() const = 0;
+    virtual object_ptr subtract() const = 0;
+    virtual object_ptr multiply() const = 0;
+    virtual object_ptr divide() const = 0;
+    virtual object_ptr remainder() const = 0;
+    virtual object_ptr inc() const = 0;
+    virtual object_ptr dec() const = 0;
+    virtual object_ptr negate() const = 0;
+    virtual object_ptr abs() const = 0;
+    virtual object_ptr min() const = 0;
+    virtual object_ptr max() const = 0;
+    virtual native_bool lt() const = 0;
+    virtual native_bool lte() const = 0;
+    virtual native_bool gte() const = 0;
+    virtual native_bool equal() const = 0;
+    virtual native_bool is_positive() const = 0;
+    virtual native_bool is_negative() const = 0;
+    virtual native_bool is_zero() const = 0;
+  };
+
+  number_ops& left_ops(object_ptr n);
+  number_ops& right_ops(object_ptr n);
   object_ptr _gen_plus_(object_ptr l, object_ptr r);
   object_ptr _gen_minus_(object_ptr l, object_ptr r);
   object_ptr _gen_asterisk_(object_ptr l, object_ptr r);
@@ -79,14 +114,6 @@ namespace jank::runtime::obj
   object_ptr mod(object_ptr l, object_ptr r);
   object_ptr _gen_less_(object_ptr l, object_ptr r);
   object_ptr _gen_less__gen_equal_(object_ptr l, object_ptr r);
-  object_ptr _gen_minus__gen_greater_int(object_ptr o);
-  object_ptr _gen_minus__gen_greater_float(object_ptr o);
-  object_ptr inc(object_ptr n);
-  object_ptr dec(object_ptr n);
-  object_ptr sqrt(object_ptr o);
-  object_ptr tan(object_ptr o);
-  object_ptr pow(object_ptr l, object_ptr r);
-  object_ptr abs(object_ptr n);
   object_ptr min(object_ptr l, object_ptr r);
   object_ptr max(object_ptr l, object_ptr r);
 }
