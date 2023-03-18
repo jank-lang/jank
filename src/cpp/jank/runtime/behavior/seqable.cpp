@@ -16,6 +16,7 @@ namespace jank::runtime::behavior
     { return false; }
 
     auto o_seq(o_seqable->seq());
+    /* TODO: We already have a seq for this; use that? */
     auto this_seq(seq());
     while(this_seq != nullptr && o_seq != nullptr)
     {
@@ -26,5 +27,16 @@ namespace jank::runtime::behavior
       o_seq = o_seq->next_in_place();
     }
     return true;
+  }
+
+  native_integer sequence::to_hash() const
+  {
+    if(hash != 0)
+    { return static_cast<native_integer>(hash); }
+
+    for(auto it(this); it != nullptr; it = it->next())
+    { hash = runtime::detail::hash_combine(hash, *it->first()); }
+
+    return static_cast<native_integer>(hash);
   }
 }

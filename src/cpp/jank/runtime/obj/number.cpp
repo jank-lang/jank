@@ -251,6 +251,24 @@ namespace jank::runtime::obj
     throw native_string{ "(right_ops) not a number: " } + n->to_string();
   }
 
+  object_ptr add(object_ptr l, object_ptr r)
+  { return right_ops(r).combine(left_ops(l)).add(); }
+
+  object_ptr sub(object_ptr l, object_ptr r)
+  { return right_ops(r).combine(left_ops(l)).subtract(); }
+
+  object_ptr div(object_ptr l, object_ptr r)
+  { return right_ops(r).combine(left_ops(l)).divide(); }
+
+  object_ptr rem(object_ptr l, object_ptr r)
+  { return right_ops(r).combine(left_ops(l)).remainder(); }
+
+  bool lt(object_ptr l, object_ptr r)
+  { return right_ops(r).combine(left_ops(l)).lt(); }
+
+  bool lte(object_ptr l, object_ptr r)
+  { return right_ops(r).combine(left_ops(l)).lte(); }
+
   object_ptr min(object_ptr l, object_ptr r)
   { return right_ops(r).combine(left_ops(l)).min(); }
 

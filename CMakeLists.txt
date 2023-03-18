@@ -140,6 +140,7 @@ add_library(
   src/cpp/jank/runtime/obj/set.cpp
   src/cpp/jank/runtime/obj/string.cpp
   src/cpp/jank/runtime/obj/cons.cpp
+  src/cpp/jank/runtime/obj/range.cpp
   src/cpp/jank/runtime/behavior/callable.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
   src/cpp/jank/runtime/behavior/seqable.cpp
@@ -243,7 +244,7 @@ target_include_directories(jank_exe SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 
 target_link_libraries(
   jank_exe PUBLIC
-  jank_lib
+  -Wl,--whole-archive jank_lib -Wl,--no-whole-archive
   -Wl,--whole-archive nanobench_lib -Wl,--no-whole-archive
   Boost::boost
 )
@@ -278,7 +279,7 @@ if(jank_tests)
   find_package(doctest REQUIRED)
   target_link_libraries(
     jank_test_exe PUBLIC
-    jank_lib
+    -Wl,--whole-archive jank_lib -Wl,--no-whole-archive
     -Wl,--whole-archive nanobench_lib -Wl,--no-whole-archive
     Boost::boost
     doctest::doctest

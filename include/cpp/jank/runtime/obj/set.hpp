@@ -6,7 +6,11 @@
 
 namespace jank::runtime::obj
 {
-  struct set : object, behavior::seqable, behavior::countable, behavior::metadatable
+  struct set
+    :
+      virtual object,
+      behavior::seqable, behavior::countable,
+      behavior::metadatable
   {
     set() = default;
     set(set &&) = default;

@@ -107,13 +107,12 @@ namespace jank::runtime::obj
 
   number_ops& left_ops(object_ptr n);
   number_ops& right_ops(object_ptr n);
-  object_ptr _gen_plus_(object_ptr l, object_ptr r);
-  object_ptr _gen_minus_(object_ptr l, object_ptr r);
-  object_ptr _gen_asterisk_(object_ptr l, object_ptr r);
+  object_ptr add(object_ptr l, object_ptr r);
+  object_ptr sub(object_ptr l, object_ptr r);
   object_ptr div(object_ptr l, object_ptr r);
-  object_ptr mod(object_ptr l, object_ptr r);
-  object_ptr _gen_less_(object_ptr l, object_ptr r);
-  object_ptr _gen_less__gen_equal_(object_ptr l, object_ptr r);
+  object_ptr rem(object_ptr l, object_ptr r);
+  bool lt(object_ptr l, object_ptr r);
+  bool lte(object_ptr l, object_ptr r);
   object_ptr min(object_ptr l, object_ptr r);
   object_ptr max(object_ptr l, object_ptr r);
 }

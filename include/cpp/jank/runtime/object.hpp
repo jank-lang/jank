@@ -113,9 +113,7 @@ namespace jank::runtime
     { return nullptr; }
   };
 
-  inline std::ostream& operator<<(std::ostream &os, object const &o)
-  /* TODO: Optimize this by using virtual dispatch to write into the stream, rather than allocating a string. */
-  { return os << o.to_string(); }
+  std::ostream& operator<<(std::ostream &os, object const &o);
 
   namespace detail
   {

@@ -34,6 +34,9 @@ namespace jank::runtime::behavior
 
     behavior::seqable const* as_seqable() const override;
     native_bool equal(object const &o) const override;
+    native_integer to_hash() const override;
+
+    mutable size_t hash{};
   };
   using sequence_ptr = sequence::sequence_ptr;
 

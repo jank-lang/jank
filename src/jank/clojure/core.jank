@@ -458,9 +458,18 @@
     (native/raw "__value = make_box(#{ o }#->as_symbol() != nullptr)")))
 
 ; Sequences.
-;; Associative.
-;;; Common.
-; TODO: get
+
+(def range
+  (fn*
+    ([]
+     ; TODO: (iterate inc 0)
+     [])
+    ([end]
+     (native/raw "__value = make_box<obj::range>(#{ end }#);"))
+    ([start end]
+     (native/raw "__value = make_box<obj::range>(#{ start }#, #{ end }#);"))
+    ([start end step]
+     (native/raw "__value = make_box<obj::range>(#{ start }#, #{ end }#, #{ step }#);"))))
 
 ; TODO: Higher arities. Needs clojure.core/spread, which needs clojure.core/cons.
 (def apply
