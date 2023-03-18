@@ -44,7 +44,12 @@ int main(int const argc, char const **argv)
   //  std::cout << cg_prc.declaration_str() << std::endl;
   //}
 
-  std::cout << rt_ctx.eval_file(file, jit_prc)->to_string() << std::endl;
+  try
+  { std::cout << rt_ctx.eval_file(file, jit_prc)->to_string() << std::endl; }
+  catch(std::exception const &e)
+  { fmt::print("Exception: {}", e.what()); }
+  catch(jank::runtime::object_ptr const o)
+  { fmt::print("Exception: {}", o->to_string()); }
 
   //std::string line;
   //std::cout << "> " << std::flush;

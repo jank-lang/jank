@@ -30,6 +30,18 @@
                    auto const seq(seqable->seq());
                    __value = make_box(seq == nullptr);"))))
 
+(def count
+  (fn* [o]
+    (if (nil? o)
+      0
+      ; TODO: Interfacef or counting without turning into seq first.
+      (native/raw "auto const * const seqable(#{ o }#->as_seqable());
+                   if(!seqable)
+                   { throw #{ :not-seqable }#; }
+                   auto const seq(seqable->seq());
+                   /* TODO: Unsigned */
+                   __value = make_box<obj::integer>(runtime::detail::sequence_length(seq));"))))
+
 ;; Lists.
 (def first
   (fn* [o]
@@ -83,21 +95,44 @@
                    }"))))
 (def cons
   (fn* [head tail]
-    (native/raw "auto const * const seqable_tail(#{ tail }#->as_seqable());
-                 if(seqable_tail)
+    (native/raw "if(auto const seqable_tail = #{ tail }#->as_seqable())
                  { __value = make_box<jank::runtime::obj::cons>(#{ head }#, seqable_tail->seq()); }
                  else if(#{ tail }#->as_nil())
                  { __value = make_box<jank::runtime::obj::cons>(#{ head }#, nullptr); }
                  else
-                 { throw #{ :invalid-cons-tail }#; }")))
+                 { throw #{ [:invalid-cons-tail tail] }#; }")))
 (def list
   (fn* [& items]
     (native/raw "auto * const seq(static_cast<behavior::sequence*>(const_cast<behavior::seqable*>(#{ items }#->as_seqable())));
                  __value = jank::runtime::obj::list::create(seq);")))
+
+;; Vectors.
 (def vec
   (fn* [coll]
     (native/raw "auto * const seq(static_cast<behavior::sequence*>(const_cast<behavior::seqable*>(#{ coll }#->as_seqable())));
                  __value = jank::runtime::obj::vector::create(seq);")))
+
+(def conj)
+(def conj
+  (fn*
+    ([]
+     [])
+    ([coll]
+     coll)
+    ([coll x]
+     (native/raw "if(#{ coll }#->as_nil())
+                  { __value = make_box<jank::runtime::obj::list>(#{ x }#); }
+                  else if(auto const consable = #{ coll }#->as_consable())
+                  { __value = consable->cons(#{ x }#); }
+                  else if(auto const seqable = #{ coll }#->as_seqable())
+                  { __value = seqable->seq()->cons(#{ x }#); }
+                  else
+                  { throw #{ :not-seqable }#; }"))
+    ([coll x & args]
+     (let* [res (conj coll x)]
+       (if (empty? args)
+         res
+         (recur res (first args) (next args)))))))
 
 ;; Strings.
 (def string?
@@ -153,6 +188,24 @@
          (do
            (assert (not (empty? (next kvs)))); "assoc expects even number of args after the first"
            (recur res (first kvs) (second kvs) (nnext kvs))))))))
+
+(def reduce*)
+(def reduce*
+  (fn*
+    ([f coll]
+     (let* [s (seq coll)]
+       (if s
+         (reduce* f (first s) (next s))
+         (f))))
+    ([f val coll]
+     (let* [s (seq coll)]
+       (if s
+         (recur f (f val (first s)) (next s))
+         val)))))
+
+(def reverse
+  (fn* [coll]
+    (reduce* conj () coll)))
 
 ; Primitives.
 ;; Arithmetic.

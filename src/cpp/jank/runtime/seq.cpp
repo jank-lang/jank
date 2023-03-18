@@ -44,23 +44,31 @@ namespace jank::runtime
       { fmt::format_to(inserter, "()"); }
 
       fmt::format_to(inserter, "(");
+      bool needs_space{};
       for(auto i(s); i != nullptr; i = i->next())
       {
-        fmt::format_to(inserter, " ");
+        if(needs_space)
+        { fmt::format_to(inserter, " "); }
         i->first()->to_string(buff);
+        needs_space = true;
       }
       fmt::format_to(inserter, ")");
     }
   }
 
-  object_ptr seq(object_ptr s)
+  object_ptr seq(object_ptr const s)
   {
+    if(s->as_nil())
+    { return s; }
+
     auto const * const sable(s->as_seqable());
     if(!sable)
     { throw std::runtime_error{ fmt::format("not seqable: {}", s->to_string()) }; }
+
     auto const &ret(sable->seq());
     if(!ret)
     { return JANK_NIL; }
+
     return ret;
   }
 

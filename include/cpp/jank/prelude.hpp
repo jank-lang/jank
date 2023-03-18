@@ -30,3 +30,4 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/hash.hpp>
 #include <jank/runtime/util.hpp>
+#include <jank/runtime/seq.hpp>

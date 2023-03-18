@@ -152,6 +152,16 @@ namespace jank::runtime::obj
   size_t vector::count() const
   { return data.size(); }
 
+  behavior::consable const* vector::as_consable() const
+  { return this; }
+  native_box<behavior::consable> vector::cons(object_ptr head) const
+  {
+    auto vec(data.push_back(head));
+    auto ret(create(std::move(vec)));
+    std::cout << "vector cons " << head->to_string() << " " << ret->to_string() << std::endl;
+    return ret;
+  }
+
   object_ptr vector::with_meta(object_ptr m) const
   {
     validate_meta(m);

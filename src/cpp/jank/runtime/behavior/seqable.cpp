@@ -3,7 +3,7 @@
 
 namespace jank::runtime::behavior
 {
-  native_box<obj::cons> sequence::cons(object_ptr head) const
+  native_box<consable> sequence::cons(object_ptr head) const
   { return jank::make_box<obj::cons>(head, const_cast<sequence_ptr>(this)); }
 
   behavior::seqable const* sequence::as_seqable() const

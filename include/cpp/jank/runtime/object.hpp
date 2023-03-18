@@ -20,8 +20,6 @@
 
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
-#include <jank/runtime/behavior/associatively_readable.hpp>
-#include <jank/runtime/behavior/associatively_writable.hpp>
 #include <jank/runtime/detail/list_type.hpp>
 #include <jank/runtime/detail/map_type.hpp>
 
@@ -48,6 +46,9 @@ namespace jank::runtime
     struct callable;
     struct seqable;
     struct countable;
+    struct associatively_readable;
+    struct associatively_writable;
+    struct consable;
   }
 
   struct var;
@@ -107,6 +108,8 @@ namespace jank::runtime
     virtual behavior::associatively_readable const* as_associatively_readable() const
     { return nullptr; }
     virtual behavior::associatively_writable const* as_associatively_writable() const
+    { return nullptr; }
+    virtual behavior::consable const* as_consable() const
     { return nullptr; }
   };
 

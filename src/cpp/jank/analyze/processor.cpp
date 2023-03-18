@@ -300,14 +300,15 @@ namespace jank::analyze
     {
       for(auto it(list->data.rest()); it.size() > 0; it = it.rest())
       {
-        auto arity_list(it.first().unwrap());
-        if(arity_list->as_list() == nullptr)
+        auto arity_list_obj(it.first().unwrap());
+        auto arity_list(arity_list_obj->as_list());
+        if(arity_list == nullptr)
         { return err(error{ "invalid fn: expected arity list" }); }
 
         auto result
         (
           analyze_fn_arity
-          (static_cast<runtime::obj::list*>(arity_list), current_frame)
+          (const_cast<runtime::obj::list*>(arity_list), current_frame)
         );
         if(result.is_err())
         { return result.expect_err_move(); }
@@ -861,10 +862,10 @@ namespace jank::analyze
     if(o == nullptr)
     { return err(error{ "unexpected nullptr" }); }
 
-    if(o->as_list())
-    { return analyze_call(static_cast<runtime::obj::list*>(o), current_frame, expr_type, fn_ctx); }
-    else if(o->as_vector())
-    { return analyze_vector(static_cast<runtime::obj::vector*>(o), current_frame, expr_type, fn_ctx); }
+    if(auto const d = o->as_list())
+    { return analyze_call(const_cast<runtime::obj::list*>(d), current_frame, expr_type, fn_ctx); }
+    else if(auto const d = o->as_vector())
+    { return analyze_vector(const_cast<runtime::obj::vector*>(d), current_frame, expr_type, fn_ctx); }
     else if(o->as_map())
     { return analyze_map(static_cast<runtime::obj::map*>(o), current_frame, expr_type, fn_ctx); }
     else if(o->as_set())

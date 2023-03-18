@@ -2,6 +2,7 @@
 
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/behavior/countable.hpp>
+#include <jank/runtime/behavior/consable.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/runtime/behavior/associatively_readable.hpp>
 
@@ -9,8 +10,8 @@ namespace jank::runtime::obj
 {
   struct vector
     :
-      object,
-      behavior::seqable, behavior::countable,
+      virtual object,
+      behavior::seqable, behavior::countable, behavior::consable,
       behavior::metadatable,
       behavior::associatively_readable
   {
@@ -39,6 +40,9 @@ namespace jank::runtime::obj
 
     behavior::sequence_ptr seq() const override;
     size_t count() const override;
+
+    behavior::consable const* as_consable() const override;
+    native_box<behavior::consable> cons(object_ptr head) const override;
 
     object_ptr with_meta(object_ptr m) const override;
     behavior::metadatable const* as_metadatable() const override;

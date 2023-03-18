@@ -73,6 +73,15 @@ namespace jank::runtime::obj
   size_t list::count() const
   { return data.size(); }
 
+  behavior::consable const* list::as_consable() const
+  { return this; }
+  native_box<behavior::consable> list::cons(object_ptr head) const
+  {
+    auto l(data.cons(head));
+    auto ret(jank::runtime::make_box(std::move(l))->as_list());
+    return const_cast<list*>(ret);
+  }
+
   object_ptr list::with_meta(object_ptr m) const
   {
     validate_meta(m);

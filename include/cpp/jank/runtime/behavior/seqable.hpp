@@ -2,6 +2,7 @@
 
 #include <jank/native_box.hpp>
 #include <jank/runtime/behavior/countable.hpp>
+#include <jank/runtime/behavior/consable.hpp>
 
 namespace jank::runtime::obj
 { struct cons; }
@@ -14,7 +15,7 @@ namespace jank::runtime::behavior
     virtual native_box<struct sequence> seq() const = 0;
   };
 
-  struct sequence : virtual object, seqable
+  struct sequence : virtual object, seqable, consable
   {
     using sequence_ptr = native_box<sequence>;
 
@@ -29,7 +30,7 @@ namespace jank::runtime::behavior
      * do own, and then next_in_place() on that to your heart's content. */
     virtual sequence_ptr next_in_place() = 0;
     virtual object_ptr next_in_place_first() = 0;
-    native_box<obj::cons> cons(object_ptr head) const;
+    native_box<consable> cons(object_ptr head) const override;
 
     behavior::seqable const* as_seqable() const override;
     native_bool equal(object const &o) const override;
