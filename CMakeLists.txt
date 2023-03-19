@@ -141,6 +141,7 @@ add_library(
   src/cpp/jank/runtime/obj/string.cpp
   src/cpp/jank/runtime/obj/cons.cpp
   src/cpp/jank/runtime/obj/range.cpp
+  src/cpp/jank/runtime/obj/iterator.cpp
   src/cpp/jank/runtime/behavior/callable.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
   src/cpp/jank/runtime/behavior/seqable.cpp

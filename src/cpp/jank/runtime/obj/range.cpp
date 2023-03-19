@@ -31,14 +31,12 @@ namespace jank::runtime::obj
 
     /* TODO: Why can't I use make_box here? */
     auto const ret(new (GC) range{ next_start, end, step });
+    cached_next = ret;
     return ret;
   }
 
   behavior::sequence_ptr range::next_in_place()
   {
-    if(cached_next)
-    { return cached_next; }
-
     auto next_start(add(start, step));
     if(!lt(next_start, end))
     { return nullptr; }
@@ -50,9 +48,6 @@ namespace jank::runtime::obj
 
   object_ptr range::next_in_place_first()
   {
-    if(cached_next)
-    { return cached_next; }
-
     auto next_start(add(start, step));
     if(!lt(next_start, end))
     { return nullptr; }

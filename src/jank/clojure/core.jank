@@ -459,17 +459,39 @@
 
 ; Sequences.
 
+(def iterate
+  (fn*
+    [f x]
+    (native/raw "auto callable(#{ f }#->as_callable());
+                 if(!callable)
+                 { throw #{ :not-callable }#; }
+                 __value = make_box<obj::iterator>(const_cast<behavior::callable*>(callable), #{ x }#);")))
+
 (def range
   (fn*
     ([]
-     ; TODO: (iterate inc 0)
-     [])
+     (iterate inc 0))
     ([end]
      (native/raw "__value = make_box<obj::range>(#{ end }#);"))
     ([start end]
      (native/raw "__value = make_box<obj::range>(#{ start }#, #{ end }#);"))
     ([start end step]
      (native/raw "__value = make_box<obj::range>(#{ start }#, #{ end }#, #{ step }#);"))))
+
+(def take
+  (fn*
+    ; TODO: Transducer.
+    ([n]
+     )
+    ([n coll]
+     ; TODO: Lazy version once we have lazy-seq.
+     (let* [take* (fn* [n coll acc]
+                    (if (zero? n)
+                      acc
+                      (if (empty? coll)
+                        acc
+                        (recur (dec n) (next coll) (conj acc (first coll))))))]
+       (take* n coll [])))))
 
 ; TODO: Higher arities. Needs clojure.core/spread, which needs clojure.core/cons.
 (def apply

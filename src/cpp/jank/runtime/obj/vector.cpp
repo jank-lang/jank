@@ -158,7 +158,6 @@ namespace jank::runtime::obj
   {
     auto vec(data.push_back(head));
     auto ret(create(std::move(vec)));
-    std::cout << "vector cons " << head->to_string() << " " << ret->to_string() << std::endl;
     return ret;
   }
 

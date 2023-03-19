@@ -4,11 +4,9 @@
 
 namespace jank::runtime::obj
 {
-  struct range : behavior::sequence
+  struct iterator : behavior::sequence
   {
-    range(object_ptr const end);
-    range(object_ptr const start, object_ptr const end);
-    range(object_ptr const start, object_ptr const end, object_ptr const step);
+    iterator(behavior::callable_ptr const fn, object_ptr const start);
 
     behavior::sequence_ptr seq() const override;
     object_ptr first() const override;
@@ -20,9 +18,9 @@ namespace jank::runtime::obj
     native_string to_string() const override;
 
     /* TODO: Support chunking. */
-    object_ptr start{};
-    object_ptr end{};
-    object_ptr step{};
+    behavior::callable_ptr fn{};
+    object_ptr current{};
+    object_ptr previous{};
     mutable behavior::sequence_ptr cached_next{};
   };
 }
