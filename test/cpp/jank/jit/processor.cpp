@@ -32,10 +32,9 @@ namespace jank::jit
 
   TEST_CASE("Files")
   {
-    auto const cardinal_result
-    (runtime::obj::keyword::create(runtime::obj::symbol{ "", "success" }, true));
     jit::processor jit_prc;
     runtime::context rt_ctx;
+    auto const cardinal_result(rt_ctx.intern_keyword(runtime::obj::symbol{ "", "success" }, true));
     rt_ctx.eval_prelude(jit_prc);
     size_t test_count{};
 

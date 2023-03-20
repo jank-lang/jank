@@ -147,7 +147,7 @@ namespace jank::runtime
   object_ptr context::eval_string(native_string_view const &code, jit::processor const &jit_prc)
   {
     read::lex::processor l_prc{ code };
-    read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+    read::parse::processor p_prc{ *this, l_prc.begin(), l_prc.end() };
     jank::analyze::processor an_prc{ *this };
 
     object_ptr ret{};
@@ -235,7 +235,7 @@ namespace jank::runtime
     {
       /* The ns will be an ns alias. */
       if(!ns.empty())
-      { throw "unimplemented: auto-resolved ns aliases"; }
+      { throw std::runtime_error{ "unimplemented: auto-resolved ns aliases" }; }
       else
       {
         auto const t_state(get_thread_state());

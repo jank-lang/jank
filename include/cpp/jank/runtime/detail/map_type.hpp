@@ -66,7 +66,7 @@ namespace jank::runtime::detail
     {
       for(auto &kv : data)
       {
-        if(kv.first == key || kv.first->to_hash() == key->to_hash())
+        if(kv.first == key || kv.first->equal(*key))
         { return &kv.second; }
       }
       return nullptr;
@@ -75,7 +75,7 @@ namespace jank::runtime::detail
     {
       for(auto const &kv : data)
       {
-        if(kv.first == key || kv.first->to_hash() == key->to_hash())
+        if(kv.first == key || kv.first->equal(*key))
         { return &kv.second; }
       }
       return nullptr;

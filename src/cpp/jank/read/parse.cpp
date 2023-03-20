@@ -34,8 +34,13 @@ namespace jank::read::parse
     return *this;
   }
 
-  processor::processor(lex::processor::iterator const &b, lex::processor::iterator const &e)
-    : token_current{ b }, token_end{ e }
+  processor::processor
+  (
+    runtime::context &rt_ctx,
+    lex::processor::iterator const &b,
+    lex::processor::iterator const &e
+  )
+    : rt_ctx{ rt_ctx }, token_current{ b }, token_end{ e }
   { }
 
   processor::object_result processor::next()
@@ -245,7 +250,7 @@ namespace jank::read::parse
     }
     else
     { name = sv.substr(resolved ? 0 : 1); }
-    return ok(runtime::obj::keyword::create(runtime::obj::symbol{ ns, name }, resolved));
+    return ok(rt_ctx.intern_keyword(runtime::obj::symbol{ ns, name }, resolved));
   }
 
   processor::object_result processor::parse_integer()

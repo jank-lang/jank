@@ -4,6 +4,9 @@
 #include <jank/option.hpp>
 #include <jank/read/lex.hpp>
 
+namespace jank::runtime
+{ struct context; }
+
 /* TODO: Rename file to processor. */
 namespace jank::read::parse
 {
@@ -33,7 +36,12 @@ namespace jank::read::parse
       processor &p;
     };
 
-    processor(lex::processor::iterator const &b, lex::processor::iterator const &e);
+    processor
+    (
+      runtime::context &rt_ctx,
+      lex::processor::iterator const &b,
+      lex::processor::iterator const &e
+    );
 
     object_result next();
     object_result parse_list();
@@ -51,6 +59,7 @@ namespace jank::read::parse
     iterator begin();
     iterator end();
 
+    runtime::context &rt_ctx;
     lex::processor::iterator token_current, token_end;
     option<lex::token_kind> expected_closer;
   };

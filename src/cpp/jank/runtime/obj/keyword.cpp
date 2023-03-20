@@ -17,15 +17,9 @@ namespace jank::runtime::obj
   keyword_ptr keyword::create(symbol &&s, bool const resolved)
   { return jank::make_box<keyword>(std::move(s), resolved); }
 
+  /* Keywords are interned, so we can always count on identity equality. */
   native_bool keyword::equal(object const &o) const
-  {
-    auto const *s(o.as_keyword());
-    if(!s)
-    { return false; }
-
-    return resolved == s->resolved && sym == s->sym;
-  }
-
+  { return this == &o; }
 
   void to_string_impl(symbol const &sym, fmt::memory_buffer &buff)
   {
@@ -41,8 +35,7 @@ namespace jank::runtime::obj
     return native_string{ buff.data(), buff.size() };
   }
   native_integer keyword::to_hash() const
-  /* TODO: Cache this. */
-  { return runtime::detail::hash_combine(sym.to_hash(), hash_magic); }
+  { return reinterpret_cast<native_integer>(this); }
 
   keyword const* keyword::as_keyword() const
   { return this; }

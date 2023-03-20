@@ -652,7 +652,7 @@ namespace jank::analyze
           next_end - next_start - interp_end.size()
         }
       };
-      read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+      read::parse::processor p_prc{ rt_ctx, l_prc.begin(), l_prc.end() };
       auto parsed_it(p_prc.begin());
       if(parsed_it->is_err())
       { return parsed_it->expect_err_move(); }
