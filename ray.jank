@@ -1,345 +1,366 @@
-(def print+space (fn [data]
-                   (print data) (print " ")))
+; TODO: jank can't have `or` yet, due to no
+; syntax quoting in macros. This program doesn't
+; require anything other than logical or on two bools, though.
+(defn either [l r]
+  (if l
+    l
+    r))
 
-(def rand-real (fn [min max]
-                 (+ min (* (- max min) (rand)))))
-(def clamp (fn [n min max]
-             (if (< n min)
-               min
-               (if (< max n)
-                 max
-                 n))))
+; TODO: No proper `and` macro yet.
+(defn and [l r]
+  (if l
+    r
+    false))
+
+; TODO: Also since jank doesn't have syntax
+; quoting, as well as loop, there is no proper doseq.
+; This one generates an anonymous fn with a recur in
+; it, since jank can do that, and just calls it immediately.
+(defmacro doseq [bindings & body]
+  (let [binding-name (first bindings)
+        binding-seq (second bindings)]
+    (list (list 'fn '[__gen_acc]
+                (list 'if (list 'empty? '__gen_acc)
+                      nil
+                      (cons 'let
+                            (cons (conj [binding-name] (list 'first '__gen_acc))
+                                  (conj (vec body) (list 'recur (list 'next '__gen_acc)))))))
+          binding-seq)))
+
+(defn print+space [data]
+  (print data) (print " "))
+
+(defn rand-real [min max]
+  (+ min (* (- max min) (rand))))
+(defn clamp [n min max]
+  (if (< n min)
+    min
+    (if (< max n)
+      max
+      n)))
 (def pi 3.1415926535897932385)
-(def degrees->radians (fn [deg]
-                        (div (* deg pi) 180.0)))
+(defn degrees->radians [deg]
+  (/ (* deg pi) 180.0))
 
-(def vec3-create (fn [r g b]
-                   {"r" r
-                    "g" g
-                    "b" b}))
-(def vec3-scale (fn [l n]
-                  {"r" (* (get l "r") n)
-                   "g" (* (get l "g") n)
-                   "b" (* (get l "b") n)}))
-(def vec3-add (fn [l r]
-                {"r" (+ (get l "r") (get r "r"))
-                 "g" (+ (get l "g") (get r "g"))
-                 "b" (+ (get l "b") (get r "b"))}))
-(def vec3-sub (fn [l r]
-                {"r" (- (get l "r") (get r "r"))
-                 "g" (- (get l "g") (get r "g"))
-                 "b" (- (get l "b") (get r "b"))}))
-(def vec3-mul (fn [l r]
-                {"r" (* (get l "r") (get r "r"))
-                 "g" (* (get l "g") (get r "g"))
-                 "b" (* (get l "b") (get r "b"))}))
-(def vec3-div (fn [l n]
-                {"r" (div (get l "r") n)
-                 "g" (div (get l "g") n)
-                 "b" (div (get l "b") n)}))
-(def vec3-length-squared (fn [v]
-                           (+ (+ (* (get v "r") (get v "r"))
-                                 (* (get v "g") (get v "g")))
-                              (* (get v "b") (get v "b")))))
-(def vec3-length (fn [v]
-                   (sqrt (vec3-length-squared v))))
-(def vec3-dot (fn [l r]
-                (+ (+ (* (get l "r") (get r "r"))
-                      (* (get l "g") (get r "g")))
-                   (* (get l "b") (get r "b")))))
-(def vec3-cross (fn [l r]
-                  (vec3-create (- (* (get l "g") (get r "b"))
-                                  (* (get l "b") (get r "g")))
-                               (- (* (get l "b") (get r "r"))
-                                  (* (get l "r") (get r "b")))
-                               (- (* (get l "r") (get r "g"))
-                                  (* (get l "g") (get r "r"))))))
-(def vec3-normalize (fn [v]
-                      (vec3-div v (vec3-length v))))
-(def vec3-rand (fn []
-                 (vec3-create (rand) (rand) (rand))))
-(def vec3-rand+clamp (fn [min max]
-                       (vec3-create (rand-real min max) (rand-real min max) (rand-real min max))))
-(def vec3-rand-in-sphere (fn []
-                           (def v (vec3-rand+clamp -1 1))
-                           (if (< 1.0 (vec3-length-squared v))
-                             v
-                             (vec3-rand-in-sphere))))
-(def vec3-rand-unit-in-sphere (fn []
-                                (vec3-normalize (vec3-rand-in-sphere))))
-(def vec3-rand-in-unit-disk (fn []
-                              (def p (vec3-create (rand-real -1 1) (rand-real -1 1) 0))
-                              (if (< 1 (vec3-length-squared p))
-                                (vec3-rand-in-unit-disk)
-                                p)))
-(def vec3-near-zero? (fn [v]
-                       (def epsilon 0.0000008)
-                       (all (all (< (abs (get v "r")) epsilon)
-                                 (< (abs (get v "g")) epsilon))
-                            (< (abs (get v "b")) epsilon))))
+(defn vec3-create [r g b]
+  {"r" r
+   "g" g
+   "b" b})
+(defn vec3-scale [l n]
+  {"r" (* (get l "r") n)
+   "g" (* (get l "g") n)
+   "b" (* (get l "b") n)})
+(defn vec3-add [l r]
+  {"r" (+ (get l "r") (get r "r"))
+   "g" (+ (get l "g") (get r "g"))
+   "b" (+ (get l "b") (get r "b"))})
+(defn vec3-sub [l r]
+  {"r" (- (get l "r") (get r "r"))
+   "g" (- (get l "g") (get r "g"))
+   "b" (- (get l "b") (get r "b"))})
+(defn vec3-mul [l r]
+  {"r" (* (get l "r") (get r "r"))
+   "g" (* (get l "g") (get r "g"))
+   "b" (* (get l "b") (get r "b"))})
+(defn vec3-div [l n]
+  {"r" (/ (get l "r") n)
+   "g" (/ (get l "g") n)
+   "b" (/ (get l "b") n)})
+(defn vec3-length-squared [v]
+  (+ (+ (* (get v "r") (get v "r"))
+        (* (get v "g") (get v "g")))
+     (* (get v "b") (get v "b"))))
+(defn vec3-length [v]
+  (sqrt (vec3-length-squared v)))
+(defn vec3-dot [l r]
+  (+ (+ (* (get l "r") (get r "r"))
+        (* (get l "g") (get r "g")))
+     (* (get l "b") (get r "b"))))
+(defn vec3-cross [l r]
+  (vec3-create (- (* (get l "g") (get r "b"))
+                  (* (get l "b") (get r "g")))
+               (- (* (get l "b") (get r "r"))
+                  (* (get l "r") (get r "b")))
+               (- (* (get l "r") (get r "g"))
+                  (* (get l "g") (get r "r")))))
+(defn vec3-normalize [v]
+  (vec3-div v (vec3-length v)))
+(defn vec3-rand []
+  (vec3-create (rand) (rand) (rand)))
+(defn vec3-rand+clamp [min max]
+  (vec3-create (rand-real min max) (rand-real min max) (rand-real min max)))
+(defn vec3-rand-in-sphere []
+  (let [v (vec3-rand+clamp -1 1)]
+    (if (< 1.0 (vec3-length-squared v))
+      v
+      (vec3-rand-in-sphere))))
+(defn vec3-rand-unit-in-sphere []
+  (vec3-normalize (vec3-rand-in-sphere)))
+(defn vec3-rand-in-unit-disk []
+  (let [p (vec3-create (rand-real -1 1) (rand-real -1 1) 0)]
+    (if (< 1 (vec3-length-squared p))
+      (vec3-rand-in-unit-disk)
+      p)))
+(defn vec3-near-zero? [v]
+  (let [epsilon 0.0000008]
+    (and (and (< (abs (get v "r")) epsilon)
+              (< (abs (get v "g")) epsilon))
+         (< (abs (get v "b")) epsilon))))
 
-(def vec3-reflect (fn [v n]
-                    (vec3-sub v (vec3-scale n (* 2 (vec3-dot v n))))))
-(def vec3-refract (fn [uv n etai-over-etat]
-                    (def cos-theta (min (vec3-dot (vec3-sub (vec3-create 0 0 0)
-                                                            uv)
-                                                  n)
-                                        1.0))
-                    (def r-out-perp (vec3-scale (vec3-add uv (vec3-scale n cos-theta))
-                                                etai-over-etat))
-                    (def r-out-parallel (vec3-scale n (- 0.0 (sqrt (abs (- 1.0 (vec3-length-squared r-out-perp)))))))
-                    (vec3-add r-out-perp r-out-parallel)))
-(def vec3-print (fn [v samples-per-pixel]
-                  (def scale (div 1.0 samples-per-pixel))
-                  (def r (sqrt (* scale (get v "r"))))
-                  (def g (sqrt (* scale (get v "g"))))
-                  (def b (sqrt (* scale (get v "b"))))
-                  (print+space (->int (* 256 (clamp r 0.0 0.999))))
-                  (print+space (->int (* 256 (clamp g 0.0 0.999))))
-                  (print+space (->int (* 256 (clamp b 0.0 0.999))))))
+(defn vec3-reflect [v n]
+  (vec3-sub v (vec3-scale n (* 2 (vec3-dot v n)))))
+(defn vec3-refract [uv n etai-over-etat]
+  (let [cos-theta (min (vec3-dot (vec3-sub (vec3-create 0 0 0)
+                                           uv)
+                                 n)
+                       1.0)
+        r-out-perp (vec3-scale (vec3-add uv (vec3-scale n cos-theta))
+                               etai-over-etat)
+        r-out-parallel (vec3-scale n (- 0.0 (sqrt (abs (- 1.0 (vec3-length-squared r-out-perp))))))]
+    (vec3-add r-out-perp r-out-parallel)))
+(defn vec3-print [v samples-per-pixel]
+  (let [scale (/ 1.0 samples-per-pixel)
+        r (sqrt (* scale (get v "r")))
+        g (sqrt (* scale (get v "g")))
+        b (sqrt (* scale (get v "b")))]
+    (print+space (int (* 256 (clamp r 0.0 0.999))))
+    (print+space (int (* 256 (clamp g 0.0 0.999))))
+    (print+space (int (* 256 (clamp b 0.0 0.999))))))
 
-(def ray-create (fn [origin direction]
-                  {"origin" origin
-                   "direction" direction}))
-(def ray-at (fn [r t]
-              (vec3-add (get r "origin") (vec3-scale (get r "direction") t))))
+(defn ray-create [origin direction]
+  {"origin" origin
+   "direction" direction})
+(defn ray-at [r t]
+  (vec3-add (get r "origin") (vec3-scale (get r "direction") t)))
 
-(def reflectance (fn [cosine ref-idx]
-                   (def r (div (- 1 ref-idx)
-                               (+ 1 ref-idx)))
-                   (def r2 (* r r))
-                   (* (+ r2 (- 1 r2))
-                      (pow (- 1 cosine) 5))))
+(defn reflectance [cosine ref-idx]
+  (let [r (/ (- 1 ref-idx)
+             (+ 1 ref-idx))
+        r2 (* r r)]
+    (* (+ r2 (- 1 r2))
+       (pow (- 1 cosine) 5))))
 
-(def hit-info-create (fn [point normal t material front-face?]
-                       {"point" point
-                        "normal" normal
-                        "t" t
-                        "material" material
-                        "front-face?" front-face?}))
+(defn hit-info-create [point normal t material front-face?]
+  {"point" point
+   "normal" normal
+   "t" t
+   "material" material
+   "front-face?" front-face?})
 
-(def hit-sphere (fn [hittable t-min t-max ray]
-                  (def center (get hittable "center"))
-                  (def radius (get hittable "radius"))
-                  (def oc (vec3-sub (get ray "origin") center))
-                  (def a (vec3-length-squared (get ray "direction")))
-                  (def half-b (vec3-dot oc (get ray "direction")))
-                  (def c (- (vec3-length-squared oc) (* radius radius)))
-                  (def discriminant (- (* half-b half-b) (* a c)))
-                  (if (< discriminant 0)
-                    nil
-                    (do
-                      (def sqrt-d (sqrt discriminant))
-                      (def root (do
-                                  (def root (div (- (- 0 half-b) sqrt-d) a))
-                                  (if (either (< root t-min) (< t-max root))
-                                    (div (+ (- 0 half-b) sqrt-d) a)
-                                    root)))
-                      (if (either (< root t-min) (< t-max root))
-                        nil
-                        (do
-                          (def point (ray-at ray root))
-                          (def outward-normal (vec3-div (vec3-sub point center) radius))
-                          (def front-face? (< (vec3-dot (get ray "direction") outward-normal) 0.0))
-                          (hit-info-create point
-                                           (if front-face?
-                                             outward-normal
-                                             (vec3-sub (vec3-create 0 0 0) outward-normal))
-                                           root
-                                           (get hittable "material")
-                                           front-face?)))))))
+(defn hit-sphere [hittable t-min t-max ray]
+  (let [center (get hittable "center")
+        radius (get hittable "radius")
+        oc (vec3-sub (get ray "origin") center)
+        a (vec3-length-squared (get ray "direction"))
+        half-b (vec3-dot oc (get ray "direction"))
+        c (- (vec3-length-squared oc) (* radius radius))
+        discriminant (- (* half-b half-b) (* a c))]
+    (if (< discriminant 0)
+      nil
+      (let [sqrt-d (sqrt discriminant)
+            root (let [root (/ (- (- 0 half-b) sqrt-d) a)]
+                   (if (either (< root t-min) (< t-max root))
+                     (/ (+ (- 0 half-b) sqrt-d) a)
+                     root))]
+        (if (either (< root t-min) (< t-max root))
+          nil
+          (let [point (ray-at ray root)
+                outward-normal (vec3-div (vec3-sub point center) radius)
+                front-face? (< (vec3-dot (get ray "direction") outward-normal) 0.0)]
+            (hit-info-create point
+                             (if front-face?
+                               outward-normal
+                               (vec3-sub (vec3-create 0 0 0) outward-normal))
+                             root
+                             (get hittable "material")
+                             front-face?)))))))
 
-(def hit-all (fn [t-min t-max ray hittables]
-               (get (reduce (fn [acc hittable]
-                              (def hit-info (hit-sphere hittable
-                                                        t-min
-                                                        (get acc "closest-so-far")
-                                                        ray))
-                              (if (some? hit-info)
-                                (assoc (assoc acc "hit-info" hit-info)
-                                       "closest-so-far" (get hit-info "t"))
-                                acc))
-                            {"closest-so-far" t-max
-                             "hit-info" nil}
-                            hittables)
-                    "hit-info")))
-
-(def scatter-lambertian (fn [ray hit-info]
-                          (def scatter-direction (do
-                                                   (def dir (vec3-add (get hit-info "normal")
-                                                                      (vec3-rand-unit-in-sphere)))
-                                                   (if (vec3-near-zero? dir)
-                                                     (get hit-info "normal")
-                                                     dir)))
-                          (def scattered (ray-create (get hit-info "point") scatter-direction))
-                          (def attenuation (get (get hit-info "material") "albedo"))
-                          {"ray" scattered
-                           "attenuation" attenuation}))
-
-(def scatter-metal (fn [ray hit-info]
-                     (def material (get hit-info "material"))
-                     (def reflected (vec3-reflect (vec3-normalize (get ray "direction"))
-                                                  (get hit-info "normal")))
-                     (def scattered (ray-create (get hit-info "point")
-                                                (vec3-add reflected
-                                                          (vec3-scale (vec3-rand-unit-in-sphere)
-                                                                      (get material "fuzz")))))
-                     (def attenuation (get material "albedo"))
-                     (def res {"ray" scattered
-                               "attenuation" attenuation})
-                     (if (< 0 (vec3-dot (get scattered "direction") (get hit-info "normal")))
-                       res
-                       nil)))
-
-(def scatter-dialetric (fn [ray hit-info]
-                         (def material (get hit-info "material"))
-                         (def attenuation (vec3-create 1 1 1))
-                         (def index-of-refraction (get material "index-of-refraction"))
-                         (def refraction-ratio (if (get hit-info "front-face?")
-                                                 (div 1.0 index-of-refraction)
-                                                 index-of-refraction))
-                         (def unit-direction (vec3-normalize (get ray "direction")))
-
-                         (def normal (get hit-info "normal"))
-                         (def cos-theta (min (vec3-dot (vec3-sub (vec3-create 0 0 0)
-                                                                 unit-direction)
-                                                       normal)
-                                             1.0))
-                         (def sin-theta (sqrt (- 1.0 (* cos-theta cos-theta))))
-                         (def cannot-refract? (< 1.0 (* refraction-ratio sin-theta)))
-                         (def direction (if (either cannot-refract?
-                                                    (< (rand) (reflectance cos-theta refraction-ratio)))
-                                          (vec3-reflect unit-direction normal)
-                                          (vec3-refract unit-direction normal refraction-ratio)))
-                         {"ray" (ray-create (get hit-info "point") direction)
-                          "attenuation" attenuation}))
-
-(def ray-cast (fn [r max-ray-bounces hittables]
-                (if (< max-ray-bounces 0)
-                  (vec3-create 0 0 0)
-                  (do
-                    (def normalize-direction (vec3-normalize (get r "direction")))
-                    (def t (* 0.5 (+ (get normalize-direction "g") 1.0)))
-                    (def hit-info (hit-all 0.001 99999999 r hittables))
+(defn hit-all [t-min t-max ray hittables]
+  (get (reduce* (fn [acc hittable]
+                  (let [hit-info (hit-sphere hittable
+                                             t-min
+                                             (get acc "closest-so-far")
+                                             ray)]
                     (if (some? hit-info)
-                      (do
-                        (def material (get hit-info "material"))
-                        (def scatter-fn (get material "scatter"))
-                        (def scattered (scatter-fn r hit-info))
-                        (if (some? scattered)
-                          (vec3-mul (ray-cast (get scattered "ray")
-                                              (dec max-ray-bounces)
-                                              hittables)
-                                    (get scattered "attenuation"))
-                          (vec3-create 0 0 0)))
-                      (vec3-add (vec3-scale (vec3-create 1.0 1.0 1.0) (- 1.0 t))
-                                (vec3-scale (vec3-create 0.5 0.7 1.0) t)))))))
+                      (assoc (assoc acc "hit-info" hit-info)
+                             "closest-so-far" (get hit-info "t"))
+                      acc)))
+                {"closest-so-far" t-max
+                 "hit-info" nil}
+                hittables)
+       "hit-info"))
 
-(def write-ppm (fn [width height samples-per-pixel data]
-                 (println "P3")
-                 (print+space width) (println height)
-                 (println 255)
-                 (mapv (fn [row]
-                         (mapv (fn [v]
-                                 (vec3-print v samples-per-pixel))
-                               row)
-                         (println ""))
-                       data)
-                 (flush)))
+(defn scatter-lambertian [ray hit-info]
+  (let [scatter-direction (let [dir (vec3-add (get hit-info "normal")
+                                              (vec3-rand-unit-in-sphere))]
+                            (if (vec3-near-zero? dir)
+                              (get hit-info "normal")
+                              dir))
+        scattered (ray-create (get hit-info "point") scatter-direction)
+        attenuation (get (get hit-info "material") "albedo")]
+    {"ray" scattered
+     "attenuation" attenuation}))
 
-(def rand-scene! (fn []
-                   (reduce (fn [acc i]
-                             (def x (- (mod i 21) 10))
-                             (def z (- (div i 21) 6))
-                             (def choose-mat (rand))
-                             (def center (vec3-create (+ x (* 0.9 (rand)))
-                                                      0.2
-                                                      (+ z (* 0.9 (rand)))))
-                             (if (< 0.9 (vec3-length (vec3-sub center (vec3-create 4 0.2 0))))
-                               (conj acc (if (< choose-mat 0.8)
-                                           {"center" center
-                                            "radius" 0.2
-                                            "material" {"albedo" (vec3-mul (vec3-rand) (vec3-rand))
-                                                        "scatter" scatter-lambertian}}
-                                           (if (< choose-mat 0.95)
-                                             {"center" center
-                                              "radius" 0.2
-                                              "material" {"albedo" (vec3-rand+clamp 0.5 1)
-                                                          "fuzz" (rand-real 0 0.5)
-                                                          "scatter" scatter-metal}}
-                                             {"center" center
-                                              "radius" 0.2
-                                              "material" {"index-of-refraction" 1.5
-                                                          "scatter" scatter-dialetric}})))
-                               acc))
-                           [{"center" (vec3-create 0 -1000 0)
-                             "radius" 1000
-                             "material" {"albedo" (vec3-create 0.5 0.5 0.5)
-                                         "scatter" scatter-lambertian}}
-                            {"center" (vec3-create -4 1 0)
-                             "radius" 1
-                             "material" {"albedo" (vec3-create 0.4 0.2 0.1)
-                                         "scatter" scatter-lambertian}}
-                            {"center" (vec3-create 0 1 0)
-                             "radius" 1
-                             "material" {"index-of-refraction" 1.5
-                                         "scatter" scatter-dialetric}}
-                            {"center" (vec3-create 4 1 0)
-                             "radius" 1
-                             "material" {"albedo" (vec3-create 0.7 0.6 0.5)
-                                         "fuzz" 0
-                                         "scatter" scatter-metal}}]
-                           (range 0 200))))
+(defn scatter-metal [ray hit-info]
+  (let [material (get hit-info "material")
+        reflected (vec3-reflect (vec3-normalize (get ray "direction"))
+                                (get hit-info "normal"))
+        scattered (ray-create (get hit-info "point")
+                              (vec3-add reflected
+                                        (vec3-scale (vec3-rand-unit-in-sphere)
+                                                    (get material "fuzz"))))
+        attenuation (get material "albedo")
+        res {"ray" scattered
+             "attenuation" attenuation}]
+    (if (< 0 (vec3-dot (get scattered "direction") (get hit-info "normal")))
+      res
+      nil)))
 
-(let [aspect-ratio (div 3.0 2.0)
-      image-width 100
-      image-height (->int (div image-width aspect-ratio))
-      samples-per-pixel 1
-      max-ray-bounces 10
+(defn scatter-dialetric [ray hit-info]
+  (let [material (get hit-info "material")
+        attenuation (vec3-create 1 1 1)
+        index-of-refraction (get material "index-of-refraction")
+        refraction-ratio (if (get hit-info "front-face?")
+                           (/ 1.0 index-of-refraction)
+                           index-of-refraction)
+        unit-direction (vec3-normalize (get ray "direction"))
 
-      look-from (vec3-create 13 2 3)
-      look-at (vec3-create 0 0 0)
-      aperture 0.1
-      lens-radius (div aperture 2)
-      focus-distance 10
-      camera-up (vec3-create 0 1 0)
-      field-of-view 20
-      field-of-view-theta (degrees->radians field-of-view)
-      viewport-height (* 2 (tan (div field-of-view-theta 2.0)))
-      viewport-width (* aspect-ratio viewport-height)
-      camera-w (vec3-normalize (vec3-sub look-from look-at))
-      camera-u (vec3-normalize (vec3-cross camera-up camera-w))
-      camera-v (vec3-cross camera-w camera-u)
+        normal (get hit-info "normal")
+        cos-theta (min (vec3-dot (vec3-sub (vec3-create 0 0 0)
+                                           unit-direction)
+                                 normal)
+                       1.0)
+        sin-theta (sqrt (- 1.0 (* cos-theta cos-theta)))
+        cannot-refract? (< 1.0 (* refraction-ratio sin-theta))
+        direction (if (either cannot-refract?
+                          (< (rand) (reflectance cos-theta refraction-ratio)))
+                    (vec3-reflect unit-direction normal)
+                    (vec3-refract unit-direction normal refraction-ratio))]
+    {"ray" (ray-create (get hit-info "point") direction)
+     "attenuation" attenuation}))
 
-      focal-length 1.0
-      origin look-from
-      horizontal (vec3-scale camera-u (* viewport-width focus-distance))
-      vertical (vec3-scale camera-v (* viewport-height focus-distance))
-      lower-left-corner (vec3-sub (vec3-sub (vec3-sub origin (vec3-div horizontal 2))
-                                            (vec3-div vertical 2))
-                                  (vec3-scale camera-w focus-distance))
+(defn ray-cast [r max-ray-bounces hittables]
+  (if (< max-ray-bounces 0)
+    (vec3-create 0 0 0)
+    (let [normalize-direction (vec3-normalize (get r "direction"))
+          t (* 0.5 (+ (get normalize-direction "g") 1.0))
+          hit-info (hit-all 0.001 99999999 r hittables)]
+      (if (some? hit-info)
+        (let [material (get hit-info "material")
+              scatter-fn (get material "scatter")
+              scattered (scatter-fn r hit-info)]
+          (if (some? scattered)
+            (vec3-mul (ray-cast (get scattered "ray")
+                                (dec max-ray-bounces)
+                                hittables)
+                      (get scattered "attenuation"))
+            (vec3-create 0 0 0)))
+        (vec3-add (vec3-scale (vec3-create 1.0 1.0 1.0) (- 1.0 t))
+                  (vec3-scale (vec3-create 0.5 0.7 1.0) t))))))
 
-      hittables (rand-scene!)
-      y-counter (reverse (range 0 image-height))
-      x-counter (range 0 image-width)
-      sample-counter (range 0 samples-per-pixel)
-      data (mapv (fn [y]
-                   (mapv (fn [x]
-                           (reduce (fn [acc sample]
-                                     (def u (div (+ x (rand)) (- image-width 1)))
-                                     (def v (div (+ y (rand)) (- image-height 1)))
-                                     (def rd (vec3-scale (vec3-rand-in-unit-disk) lens-radius))
-                                     (def offset (+ (* u (get rd "r"))
-                                                    (* v (get rd "g"))))
-                                     (def ray (ray-create origin
+(defn rand-scene! []
+  (reduce* (fn [acc i]
+             (let [x (- (mod i 21) 10)
+                   z (- (/ i 21) 6)
+                   choose-mat (rand)
+                   center (vec3-create (+ x (* 0.9 (rand)))
+                                       0.2
+                                       (+ z (* 0.9 (rand))))]
+               (if (< 0.9 (vec3-length (vec3-sub center (vec3-create 4 0.2 0))))
+                 (conj acc (if (< choose-mat 0.8)
+                             {"center" center
+                              "radius" 0.2
+                              "material" {"albedo" (vec3-mul (vec3-rand) (vec3-rand))
+                                          "scatter" scatter-lambertian}}
+                             (if (< choose-mat 0.95)
+                               {"center" center
+                                "radius" 0.2
+                                "material" {"albedo" (vec3-rand+clamp 0.5 1)
+                                            "fuzz" (rand-real 0 0.5)
+                                            "scatter" scatter-metal}}
+                               {"center" center
+                                "radius" 0.2
+                                "material" {"index-of-refraction" 1.5
+                                            "scatter" scatter-dialetric}})))
+                 acc)))
+           [{"center" (vec3-create 0 -1000 0)
+             "radius" 1000
+             "material" {"albedo" (vec3-create 0.5 0.5 0.5)
+                         "scatter" scatter-lambertian}}
+            {"center" (vec3-create -4 1 0)
+             "radius" 1
+             "material" {"albedo" (vec3-create 0.4 0.2 0.1)
+                         "scatter" scatter-lambertian}}
+            {"center" (vec3-create 0 1 0)
+             "radius" 1
+             "material" {"index-of-refraction" 1.5
+                         "scatter" scatter-dialetric}}
+            {"center" (vec3-create 4 1 0)
+             "radius" 1
+             "material" {"albedo" (vec3-create 0.7 0.6 0.5)
+                         "fuzz" 0
+                         "scatter" scatter-metal}}]
+           (range 0 200)))
+
+(defn -main []
+  (do ;prof/profile
+      (let [aspect-ratio (/ 3.0 2.0)
+            image-width 10
+            image-height (int (/ image-width aspect-ratio))
+            samples-per-pixel 2
+            max-ray-bounces 10
+
+            look-from (vec3-create 13 2 3)
+            look-at (vec3-create 0 0 0)
+            ;look-from (vec3-create 3 3 2)
+            ;look-at (vec3-create 0 0 -1)
+            aperture 0.1
+            ;aperture 2.0
+            lens-radius (/ aperture 2)
+            focus-distance 10
+            ;focus-distance (vec3-length (vec3-sub look-from look-at))
+            camera-up (vec3-create 0 1 0)
+            field-of-view 20
+            field-of-view-theta (degrees->radians field-of-view)
+            viewport-height (* 2 (tan (/ field-of-view-theta 2.0)))
+            viewport-width (* aspect-ratio viewport-height)
+            _ (vec3-sub look-from look-at)
+            camera-w (vec3-normalize (vec3-sub look-from look-at))
+            camera-u (vec3-normalize (vec3-cross camera-up camera-w))
+            camera-v (vec3-cross camera-w camera-u)
+
+            origin look-from
+            horizontal (vec3-scale camera-u (* viewport-width focus-distance))
+            vertical (vec3-scale camera-v (* viewport-height focus-distance))
+            lower-left-corner (vec3-sub (vec3-sub (vec3-sub origin (vec3-div horizontal 2))
+                                                  (vec3-div vertical 2))
+                                        (vec3-scale camera-w focus-distance))
+
+            hittables (rand-scene!)
+            y-counter (reverse (range 0 image-height))
+            x-counter (range 0 image-width)
+            sample-counter (range 0 samples-per-pixel)]
+
+        (println "P3")
+        (print+space image-width) (println image-height)
+        (println 255)
+        (doseq [y y-counter]
+          (doseq [x x-counter]
+            (let [sample (reduce* (fn [acc _sample-count]
+                                    (let [u (/ (+ x (rand)) (- image-width 1))
+                                          v (/ (+ y (rand)) (- image-height 1))
+                                          rd (vec3-scale (vec3-rand-in-unit-disk) lens-radius)
+                                          offset (vec3-create 0 0 0)
+                                          ray (ray-create (vec3-add origin offset)
                                                           (vec3-sub (vec3-add (vec3-add lower-left-corner
                                                                                         (vec3-scale horizontal u))
                                                                               (vec3-scale vertical v))
-                                                                    origin)))
-                                     (vec3-add acc (ray-cast ray max-ray-bounces hittables)))
-                                   (vec3-create 0 0 0)
-                                   sample-counter))
-                         x-counter))
-                 y-counter)]
-  (write-ppm image-width image-height samples-per-pixel data)
-  (println "meow"))
+                                                                    (vec3-sub origin offset)))]
+                                      (vec3-add acc (ray-cast ray max-ray-bounces hittables))))
+                                  (vec3-create 0 0 0)
+                                  sample-counter)]
+              (vec3-print sample samples-per-pixel))))
+
+        (println "meow"))))
+
+(benchmark "ray" -main)
