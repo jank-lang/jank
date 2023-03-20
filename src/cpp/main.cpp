@@ -21,7 +21,7 @@ int main(int const argc, char const **argv)
     return 1;
   }
 
-  GC_INIT();
+  GC_enable_incremental();
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
   char const *file{ argv[1] };
