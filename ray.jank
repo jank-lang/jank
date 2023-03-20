@@ -43,46 +43,46 @@
   (/ (* deg pi) 180.0))
 
 (defn vec3-create [r g b]
-  {"r" r
-   "g" g
-   "b" b})
+  {:r r
+   :g g
+   :b b})
 (defn vec3-scale [l n]
-  {"r" (* (get l "r") n)
-   "g" (* (get l "g") n)
-   "b" (* (get l "b") n)})
+  {:r (* (get l :r) n)
+   :g (* (get l :g) n)
+   :b (* (get l :b) n)})
 (defn vec3-add [l r]
-  {"r" (+ (get l "r") (get r "r"))
-   "g" (+ (get l "g") (get r "g"))
-   "b" (+ (get l "b") (get r "b"))})
+  {:r (+ (get l :r) (get r :r))
+   :g (+ (get l :g) (get r :g))
+   :b (+ (get l :b) (get r :b))})
 (defn vec3-sub [l r]
-  {"r" (- (get l "r") (get r "r"))
-   "g" (- (get l "g") (get r "g"))
-   "b" (- (get l "b") (get r "b"))})
+  {:r (- (get l :r) (get r :r))
+   :g (- (get l :g) (get r :g))
+   :b (- (get l :b) (get r :b))})
 (defn vec3-mul [l r]
-  {"r" (* (get l "r") (get r "r"))
-   "g" (* (get l "g") (get r "g"))
-   "b" (* (get l "b") (get r "b"))})
+  {:r (* (get l :r) (get r :r))
+   :g (* (get l :g) (get r :g))
+   :b (* (get l :b) (get r :b))})
 (defn vec3-div [l n]
-  {"r" (/ (get l "r") n)
-   "g" (/ (get l "g") n)
-   "b" (/ (get l "b") n)})
+  {:r (/ (get l :r) n)
+   :g (/ (get l :g) n)
+   :b (/ (get l :b) n)})
 (defn vec3-length-squared [v]
-  (+ (+ (* (get v "r") (get v "r"))
-        (* (get v "g") (get v "g")))
-     (* (get v "b") (get v "b"))))
+  (+ (+ (* (get v :r) (get v :r))
+        (* (get v :g) (get v :g)))
+     (* (get v :b) (get v :b))))
 (defn vec3-length [v]
   (sqrt (vec3-length-squared v)))
 (defn vec3-dot [l r]
-  (+ (+ (* (get l "r") (get r "r"))
-        (* (get l "g") (get r "g")))
-     (* (get l "b") (get r "b"))))
+  (+ (+ (* (get l :r) (get r :r))
+        (* (get l :g) (get r :g)))
+     (* (get l :b) (get r :b))))
 (defn vec3-cross [l r]
-  (vec3-create (- (* (get l "g") (get r "b"))
-                  (* (get l "b") (get r "g")))
-               (- (* (get l "b") (get r "r"))
-                  (* (get l "r") (get r "b")))
-               (- (* (get l "r") (get r "g"))
-                  (* (get l "g") (get r "r")))))
+  (vec3-create (- (* (get l :g) (get r :b))
+                  (* (get l :b) (get r :g)))
+               (- (* (get l :b) (get r :r))
+                  (* (get l :r) (get r :b)))
+               (- (* (get l :r) (get r :g))
+                  (* (get l :g) (get r :r)))))
 (defn vec3-normalize [v]
   (vec3-div v (vec3-length v)))
 (defn vec3-rand []
@@ -103,9 +103,9 @@
       p)))
 (defn vec3-near-zero? [v]
   (let [epsilon 0.0000008]
-    (and (and (< (abs (get v "r")) epsilon)
-              (< (abs (get v "g")) epsilon))
-         (< (abs (get v "b")) epsilon))))
+    (and (and (< (abs (get v :r)) epsilon)
+              (< (abs (get v :g)) epsilon))
+         (< (abs (get v :b)) epsilon))))
 
 (defn vec3-reflect [v n]
   (vec3-sub v (vec3-scale n (* 2 (vec3-dot v n)))))
@@ -120,18 +120,18 @@
     (vec3-add r-out-perp r-out-parallel)))
 (defn vec3-print [v samples-per-pixel]
   (let [scale (/ 1.0 samples-per-pixel)
-        r (sqrt (* scale (get v "r")))
-        g (sqrt (* scale (get v "g")))
-        b (sqrt (* scale (get v "b")))]
+        r (sqrt (* scale (get v :r)))
+        g (sqrt (* scale (get v :g)))
+        b (sqrt (* scale (get v :b)))]
     (print+space (int (* 256 (clamp r 0.0 0.999))))
     (print+space (int (* 256 (clamp g 0.0 0.999))))
     (print+space (int (* 256 (clamp b 0.0 0.999))))))
 
 (defn ray-create [origin direction]
-  {"origin" origin
-   "direction" direction})
+  {:origin origin
+   :direction direction})
 (defn ray-at [r t]
-  (vec3-add (get r "origin") (vec3-scale (get r "direction") t)))
+  (vec3-add (get r :origin) (vec3-scale (get r :direction) t)))
 
 (defn reflectance [cosine ref-idx]
   (let [r (/ (- 1 ref-idx)
@@ -141,18 +141,18 @@
        (pow (- 1 cosine) 5))))
 
 (defn hit-info-create [point normal t material front-face?]
-  {"point" point
-   "normal" normal
-   "t" t
-   "material" material
-   "front-face?" front-face?})
+  {:point point
+   :normal normal
+   :t t
+   :material material
+   :front-face? front-face?})
 
 (defn hit-sphere [hittable t-min t-max ray]
-  (let [center (get hittable "center")
-        radius (get hittable "radius")
-        oc (vec3-sub (get ray "origin") center)
-        a (vec3-length-squared (get ray "direction"))
-        half-b (vec3-dot oc (get ray "direction"))
+  (let [center (get hittable :center)
+        radius (get hittable :radius)
+        oc (vec3-sub (get ray :origin) center)
+        a (vec3-length-squared (get ray :direction))
+        half-b (vec3-dot oc (get ray :direction))
         c (- (vec3-length-squared oc) (* radius radius))
         discriminant (- (* half-b half-b) (* a c))]
     (if (< discriminant 0)
@@ -166,66 +166,66 @@
           nil
           (let [point (ray-at ray root)
                 outward-normal (vec3-div (vec3-sub point center) radius)
-                front-face? (< (vec3-dot (get ray "direction") outward-normal) 0.0)]
+                front-face? (< (vec3-dot (get ray :direction) outward-normal) 0.0)]
             (hit-info-create point
                              (if front-face?
                                outward-normal
                                (vec3-sub (vec3-create 0 0 0) outward-normal))
                              root
-                             (get hittable "material")
+                             (get hittable :material)
                              front-face?)))))))
 
 (defn hit-all [t-min t-max ray hittables]
   (get (reduce* (fn [acc hittable]
                   (let [hit-info (hit-sphere hittable
                                              t-min
-                                             (get acc "closest-so-far")
+                                             (get acc :closest-so-far)
                                              ray)]
                     (if (some? hit-info)
-                      (assoc (assoc acc "hit-info" hit-info)
-                             "closest-so-far" (get hit-info "t"))
+                      (assoc (assoc acc :hit-info hit-info)
+                             :closest-so-far (get hit-info :t))
                       acc)))
-                {"closest-so-far" t-max
-                 "hit-info" nil}
+                {:closest-so-far t-max
+                 :hit-info nil}
                 hittables)
-       "hit-info"))
+       :hit-info))
 
 (defn scatter-lambertian [ray hit-info]
-  (let [scatter-direction (let [dir (vec3-add (get hit-info "normal")
+  (let [scatter-direction (let [dir (vec3-add (get hit-info :normal)
                                               (vec3-rand-unit-in-sphere))]
                             (if (vec3-near-zero? dir)
-                              (get hit-info "normal")
+                              (get hit-info :normal)
                               dir))
-        scattered (ray-create (get hit-info "point") scatter-direction)
-        attenuation (get (get hit-info "material") "albedo")]
-    {"ray" scattered
-     "attenuation" attenuation}))
+        scattered (ray-create (get hit-info :point) scatter-direction)
+        attenuation (get (get hit-info :material) :albedo)]
+    {:ray scattered
+     :attenuation attenuation}))
 
 (defn scatter-metal [ray hit-info]
-  (let [material (get hit-info "material")
-        reflected (vec3-reflect (vec3-normalize (get ray "direction"))
-                                (get hit-info "normal"))
-        scattered (ray-create (get hit-info "point")
+  (let [material (get hit-info :material)
+        reflected (vec3-reflect (vec3-normalize (get ray :direction))
+                                (get hit-info :normal))
+        scattered (ray-create (get hit-info :point)
                               (vec3-add reflected
                                         (vec3-scale (vec3-rand-unit-in-sphere)
-                                                    (get material "fuzz"))))
-        attenuation (get material "albedo")
-        res {"ray" scattered
-             "attenuation" attenuation}]
-    (if (< 0 (vec3-dot (get scattered "direction") (get hit-info "normal")))
+                                                    (get material :fuzz))))
+        attenuation (get material :albedo)
+        res {:ray scattered
+             :attenuation attenuation}]
+    (if (< 0 (vec3-dot (get scattered :direction) (get hit-info :normal)))
       res
       nil)))
 
 (defn scatter-dialetric [ray hit-info]
-  (let [material (get hit-info "material")
+  (let [material (get hit-info :material)
         attenuation (vec3-create 1 1 1)
-        index-of-refraction (get material "index-of-refraction")
-        refraction-ratio (if (get hit-info "front-face?")
+        index-of-refraction (get material :index-of-refraction)
+        refraction-ratio (if (get hit-info :front-face?)
                            (/ 1.0 index-of-refraction)
                            index-of-refraction)
-        unit-direction (vec3-normalize (get ray "direction"))
+        unit-direction (vec3-normalize (get ray :direction))
 
-        normal (get hit-info "normal")
+        normal (get hit-info :normal)
         cos-theta (min (vec3-dot (vec3-sub (vec3-create 0 0 0)
                                            unit-direction)
                                  normal)
@@ -233,27 +233,27 @@
         sin-theta (sqrt (- 1.0 (* cos-theta cos-theta)))
         cannot-refract? (< 1.0 (* refraction-ratio sin-theta))
         direction (if (either cannot-refract?
-                          (< (rand) (reflectance cos-theta refraction-ratio)))
+                              (< (rand) (reflectance cos-theta refraction-ratio)))
                     (vec3-reflect unit-direction normal)
                     (vec3-refract unit-direction normal refraction-ratio))]
-    {"ray" (ray-create (get hit-info "point") direction)
-     "attenuation" attenuation}))
+    {:ray (ray-create (get hit-info :point) direction)
+     :attenuation attenuation}))
 
 (defn ray-cast [r max-ray-bounces hittables]
   (if (< max-ray-bounces 0)
     (vec3-create 0 0 0)
-    (let [normalize-direction (vec3-normalize (get r "direction"))
-          t (* 0.5 (+ (get normalize-direction "g") 1.0))
+    (let [normalize-direction (vec3-normalize (get r :direction))
+          t (* 0.5 (+ (get normalize-direction :g) 1.0))
           hit-info (hit-all 0.001 99999999 r hittables)]
       (if (some? hit-info)
-        (let [material (get hit-info "material")
-              scatter-fn (get material "scatter")
+        (let [material (get hit-info :material)
+              scatter-fn (get material :scatter)
               scattered (scatter-fn r hit-info)]
           (if (some? scattered)
-            (vec3-mul (ray-cast (get scattered "ray")
+            (vec3-mul (ray-cast (get scattered :ray)
                                 (dec max-ray-bounces)
                                 hittables)
-                      (get scattered "attenuation"))
+                      (get scattered :attenuation))
             (vec3-create 0 0 0)))
         (vec3-add (vec3-scale (vec3-create 1.0 1.0 1.0) (- 1.0 t))
                   (vec3-scale (vec3-create 0.5 0.7 1.0) t))))))
@@ -268,38 +268,38 @@
                                        (+ z (* 0.9 (rand))))]
                (if (< 0.9 (vec3-length (vec3-sub center (vec3-create 4 0.2 0))))
                  (conj acc (if (< choose-mat 0.8)
-                             {"center" center
-                              "radius" 0.2
-                              "material" {"albedo" (vec3-mul (vec3-rand) (vec3-rand))
-                                          "scatter" scatter-lambertian}}
+                             {:center center
+                              :radius 0.2
+                              :material {:albedo (vec3-mul (vec3-rand) (vec3-rand))
+                                         :scatter scatter-lambertian}}
                              (if (< choose-mat 0.95)
-                               {"center" center
-                                "radius" 0.2
-                                "material" {"albedo" (vec3-rand+clamp 0.5 1)
-                                            "fuzz" (rand-real 0 0.5)
-                                            "scatter" scatter-metal}}
-                               {"center" center
-                                "radius" 0.2
-                                "material" {"index-of-refraction" 1.5
-                                            "scatter" scatter-dialetric}})))
+                               {:center center
+                                :radius 0.2
+                                :material {:albedo (vec3-rand+clamp 0.5 1)
+                                           :fuzz (rand-real 0 0.5)
+                                           :scatter scatter-metal}}
+                               {:center center
+                                :radius 0.2
+                                :material {:index-of-refraction 1.5
+                                           :scatter scatter-dialetric}})))
                  acc)))
-           [{"center" (vec3-create 0 -1000 0)
-             "radius" 1000
-             "material" {"albedo" (vec3-create 0.5 0.5 0.5)
-                         "scatter" scatter-lambertian}}
-            {"center" (vec3-create -4 1 0)
-             "radius" 1
-             "material" {"albedo" (vec3-create 0.4 0.2 0.1)
-                         "scatter" scatter-lambertian}}
-            {"center" (vec3-create 0 1 0)
-             "radius" 1
-             "material" {"index-of-refraction" 1.5
-                         "scatter" scatter-dialetric}}
-            {"center" (vec3-create 4 1 0)
-             "radius" 1
-             "material" {"albedo" (vec3-create 0.7 0.6 0.5)
-                         "fuzz" 0
-                         "scatter" scatter-metal}}]
+           [{:center (vec3-create 0 -1000 0)
+             :radius 1000
+             :material {:albedo (vec3-create 0.5 0.5 0.5)
+                        :scatter scatter-lambertian}}
+            {:center (vec3-create -4 1 0)
+             :radius 1
+             :material {:albedo (vec3-create 0.4 0.2 0.1)
+                        :scatter scatter-lambertian}}
+            {:center (vec3-create 0 1 0)
+             :radius 1
+             :material {:index-of-refraction 1.5
+                        :scatter scatter-dialetric}}
+            {:center (vec3-create 4 1 0)
+             :radius 1
+             :material {:albedo (vec3-create 0.7 0.6 0.5)
+                        :fuzz 0
+                        :scatter scatter-metal}}]
            (range 0 200)))
 
 (defn -main []
