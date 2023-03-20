@@ -50,6 +50,8 @@ int main(int const argc, char const **argv)
   { fmt::print("Exception: {}", e.what()); }
   catch(jank::runtime::object_ptr const o)
   { fmt::print("Exception: {}", o->to_string()); }
+  catch(jank::read::error const &e)
+  { fmt::print("Read error: {}", e.message); }
 
   //std::string line;
   //std::cout << "> " << std::flush;

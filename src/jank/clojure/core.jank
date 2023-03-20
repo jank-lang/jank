@@ -18,6 +18,9 @@
 (def nil?
   (fn* [o]
     (native/raw "__value = #{ o }#->equal(*#{ nil }#) ? #{ true }# : #{ false }#")))
+(def some?
+  (fn* [o]
+    (native/raw "__value = #{ o }#->equal(*#{ nil }#) ? #{ false }# : #{ true }#")))
 
 ;; Collections.
 (def empty?
@@ -553,7 +556,10 @@
 ; Macros.
 (def defn
   (fn* [&form &env fn-name fn-args & body]
-    (list 'def fn-name (cons 'fn* (cons fn-args body)))))
+    (list 'do
+          ; TODO: Remove this once fn* supports naming.
+          (list 'def fn-name)
+          (list 'def fn-name (cons 'fn* (cons fn-args body))))))
 (reset-meta! (var defn) {:macro true})
 
 (defn defmacro [&form &env fn-name fn-args & body]
@@ -569,6 +575,9 @@
 
 (defmacro fn [args & body]
   (cons 'fn* (cons args body)))
+
+(defmacro let [args & body]
+  (cons 'let* (cons args body)))
 
 (defn macroexpand-1 [form]
   (native/raw "__value = __rt_ctx.macroexpand1(#{ form }#);"))
