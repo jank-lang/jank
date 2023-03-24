@@ -111,6 +111,19 @@ namespace jank::codegen
     void build_footer();
     native_string expression_str(bool const auto_call = true);
 
+
+    void format_clojure_core_get
+    (
+      native_string const &ret_tmp,
+      native_vector<native_string> const &arg_tmps
+    );
+    void format_dynamic_call
+    (
+      native_string const &ret_tmp,
+      native_string const &source_tmp,
+      native_vector<native_string> const &arg_tmps
+    );
+
     runtime::context &rt_ctx;
     analyze::expression_ptr root_expr{};
     analyze::expr::function<analyze::expression> const &root_fn;

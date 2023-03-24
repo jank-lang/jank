@@ -161,15 +161,9 @@
 (def get
   (fn*
     ([m k]
-     (native/raw "auto const res(#{ m }#->as_associatively_readable());
-                  if(!res)
-                  { throw #{ :not-associatively-readable }#; }
-                  __value = res->get(#{ k }#);"))
+     (native/raw "__value = jank::runtime::get(#{ m }#, #{ k }#);"))
     ([m k fallback]
-     (native/raw "auto const res(#{ m }#->as_associatively_readable());
-                  if(!res)
-                  { throw #{ :not-associatively-readable }#; }
-                  __value = res->get(#{ k }#, #{ fallback }#);"))))
+     (native/raw "__value = jank::runtime::get(#{ m }#, #{ k }#, #{ fallback }#);"))))
 
 ;; Other.
 (def hash

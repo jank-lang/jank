@@ -248,6 +248,49 @@ namespace jank::codegen
     }
   }
 
+  void processor::format_clojure_core_get
+  (
+    native_string const &ret_tmp,
+    native_vector<native_string> const &arg_tmps
+  )
+  {
+    /* TODO: Assert arg count. */
+    auto inserter(std::back_inserter(body_buffer));
+    format_to
+    (inserter, "{} = jank::runtime::get(", ret_tmp);
+    bool need_comma{};
+    for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
+    {
+      if(need_comma)
+      { format_to(inserter, ", "); }
+      format_to(inserter, "{}", arg_tmps[i]); 
+      need_comma = true;
+    }
+    format_to(inserter, ");");
+  }
+
+  void processor::format_dynamic_call
+  (
+    native_string const &ret_tmp,
+    native_string const &source_tmp,
+    native_vector<native_string> const &arg_tmps
+  )
+  {
+    auto inserter(std::back_inserter(body_buffer));
+    format_to
+    (inserter, "{} = jank::runtime::dynamic_call({}", ret_tmp, source_tmp);
+    for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
+    { format_to(inserter, ", {}", arg_tmps[i]); }
+    if(arg_tmps.size() > runtime::max_params)
+    {
+      format_to(inserter, "jank::make_box<jank::runtime::obj::list>(");
+      for(size_t i{ runtime::max_params }; i < arg_tmps.size(); ++i)
+      { format_to(inserter, ", {}", arg_tmps[i]); }
+      format_to(inserter, ")");
+    }
+    format_to(inserter, ");");
+  }
+
   option<native_string> processor::gen
   (
     analyze::expr::call<analyze::expression> const &expr,
@@ -261,25 +304,32 @@ namespace jank::codegen
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::context::unique_string("call"));
 
-    auto const &source_tmp(gen(expr.source_expr, fn_arity));
     format_to(inserter, "object_ptr {}; {{", ret_tmp);
     native_vector<native_string> arg_tmps;
     arg_tmps.reserve(expr.arg_exprs.size());
     for(auto const &arg_expr : expr.arg_exprs)
     { arg_tmps.emplace_back(gen(arg_expr, fn_arity).unwrap()); }
 
-    format_to
-    (inserter, "{} = jank::runtime::dynamic_call({}", ret_tmp, source_tmp.unwrap());
-    for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
-    { format_to(inserter, ", {}", arg_tmps[i]); }
-    if(arg_tmps.size() > runtime::max_params)
+    /* Clojure's codegen actually skips vars for certain calls to clojure.core
+     * fns; this is not the same as direct linking, which uses `invokeStatic`
+     * instead. Rather, this makes calls to `get` become `RT.get`, calls to `+` become
+     * `Numbers.add`, and so on. We do the same thing here. */
+    if(auto const * const ref = boost::get<analyze::expr::var_deref<analyze::expression>>(&expr.source_expr->data))
     {
-      format_to(inserter, "jank::make_box<jank::runtime::obj::list>(");
-      for(size_t i{ runtime::max_params }; i < arg_tmps.size(); ++i)
-      { format_to(inserter, ", {}", arg_tmps[i]); }
-      format_to(inserter, ")");
+      if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "get" }))
+      { format_clojure_core_get(ret_tmp, arg_tmps); }
+      else
+      {
+        auto const &source_tmp(gen(expr.source_expr, fn_arity));
+        format_dynamic_call(ret_tmp, source_tmp.unwrap(), arg_tmps);
+      }
     }
-    format_to(inserter, "); }}");
+    else
+    {
+      auto const &source_tmp(gen(expr.source_expr, fn_arity));
+      format_dynamic_call(ret_tmp, source_tmp.unwrap(), arg_tmps);
+    }
+    format_to(inserter, "}}");
 
     if(expr.expr_type == analyze::expression_type::return_statement)
     {
@@ -632,6 +682,7 @@ namespace jank::codegen
       runtime::munge(struct_name.name)
     );
 
+    /* TODO: Inherit from a jit_function base which has all of this. */
     format_to
     (
       inserter,
