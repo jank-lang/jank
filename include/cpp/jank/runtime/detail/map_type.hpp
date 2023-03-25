@@ -7,6 +7,9 @@
 
 namespace jank::runtime::detail
 {
+  struct in_place_unique
+  { };
+
   /* This is a short map, storing a vector of pairs. This is only until immer has proper
    * support for short maps and map transients. */
   template <typename K, typename V>
@@ -29,6 +32,12 @@ namespace jank::runtime::detail
     {
       static_assert(sizeof...(args) % 2 == 0, "odd number of map initializer values");
       insert_all( std::forward<Args>(args)...);
+    }
+    template <typename... Args>
+    map_type_impl(in_place_unique, Args &&...args)
+    {
+      static_assert(sizeof...(args) % 2 == 0, "odd number of map initializer values");
+      insert_all_unique( std::forward<Args>(args)...);
     }
     ~map_type_impl() = default;
 
@@ -60,6 +69,24 @@ namespace jank::runtime::detail
     {
       data.reserve(data.size() + sizeof...(args));
       insert_all_impl(std::forward<Args>(args)...);
+    }
+
+    void insert_all_unique_impl()
+    { }
+    template <typename NK, typename NV, typename... Args>
+    void insert_all_unique_impl(NK &&key, NV &&val, Args &&... args)
+    {
+      data.emplace_back(std::forward<NK>(key), std::forward<NV>(val));
+      insert_all(std::forward<Args>(args)...);
+    }
+    template <typename NK>
+    void insert_all_unique_impl(NK)
+    { static_assert(static_cast<NK*>(nullptr), "odd number of values passed to map initialization"); }
+    template <typename... Args>
+    void insert_all_unique(Args &&... args)
+    {
+      data.reserve(data.size() + sizeof...(args));
+      insert_all_unique_impl(std::forward<Args>(args)...);
     }
 
     V* find(K const &key)

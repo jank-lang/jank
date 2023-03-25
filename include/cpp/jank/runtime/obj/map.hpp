@@ -25,6 +25,10 @@ namespace jank::runtime::obj
     map(std::in_place_t, Args &&...args)
       : data{ std::in_place, std::forward<Args>(args)... }
     { }
+    template <typename... Args>
+    map(runtime::detail::in_place_unique, Args &&...args)
+      : data{ runtime::detail::in_place_unique{}, std::forward<Args>(args)... }
+    { }
     ~map() = default;
 
     static native_box<map> create(runtime::detail::persistent_map const &);

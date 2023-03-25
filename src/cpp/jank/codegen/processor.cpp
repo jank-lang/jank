@@ -465,7 +465,7 @@ namespace jank::codegen
     format_to
     (
       inserter,
-      "auto const &{}(jank::make_box<jank::runtime::obj::map>(std::in_place ",
+      "auto const &{}(jank::make_box<jank::runtime::obj::map>(jank::runtime::detail::in_place_unique{{}} ",
       ret_tmp
     );
     for(auto const &data_tmp : data_tmps)
