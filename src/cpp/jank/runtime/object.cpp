@@ -8,14 +8,14 @@ namespace jank::runtime
 {
   /* TODO: Replace these with non-static values. */
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-  object_ptr JANK_NIL{ jank::make_box<obj::nil>() };
+  obj::nil_ptr JANK_NIL{ jank::make_box<obj::nil>() };
 
   namespace obj
   {
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-    object_ptr JANK_TRUE{ jank::make_box<boolean>(true) };
+    boolean_ptr JANK_TRUE{ jank::make_box<boolean>(true) };
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-    object_ptr JANK_FALSE{ jank::make_box<boolean>(false) };
+    boolean_ptr JANK_FALSE{ jank::make_box<boolean>(false) };
   }
 
   native_bool object::equal(object const &rhs) const
@@ -47,18 +47,18 @@ namespace jank::runtime
   /* TODO: Optimize this by using virtual dispatch to write into the stream, rather than allocating a string. */
   { return os << o.to_string(); }
 
-  object_ptr make_box(std::nullptr_t const &)
+  obj::nil_ptr make_box(std::nullptr_t const &)
   { return JANK_NIL; }
-  object_ptr make_box(native_bool const b)
+  obj::boolean_ptr make_box(native_bool const b)
   { return b ? obj::JANK_TRUE : obj::JANK_FALSE; }
-  object_ptr make_box(int const i)
+  obj::integer_ptr make_box(int const i)
   { return jank::make_box<obj::integer>(native_integer{ i }); }
-  object_ptr make_box(native_integer const i)
+  obj::integer_ptr make_box(native_integer const i)
   { return jank::make_box<obj::integer>(i); }
-  object_ptr make_box(native_real const r)
+  obj::real_ptr make_box(native_real const r)
   { return jank::make_box<obj::real>(r); }
-  object_ptr make_box(native_string_view const &s)
+  obj::string_ptr make_box(native_string_view const &s)
   { return jank::make_box<obj::string>(s); }
-  object_ptr make_box(detail::persistent_list const &l)
+  obj::list_ptr make_box(detail::persistent_list const &l)
   { return jank::make_box<obj::list>(l); }
 }

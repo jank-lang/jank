@@ -10,6 +10,7 @@ namespace jank::runtime::obj
     virtual native_integer get_integer() const = 0;
     virtual native_real get_real() const = 0;
   };
+  using number_ptr = native_box<number>;
 
   struct boolean : object
   {
@@ -28,6 +29,7 @@ namespace jank::runtime::obj
 
     native_bool data{};
   };
+  using boolean_ptr = native_box<boolean>;
 
   struct integer : object, number
   {
@@ -51,6 +53,7 @@ namespace jank::runtime::obj
 
     native_integer data{};
   };
+  using integer_ptr = native_box<integer>;
 
   struct real : object, number
   {
@@ -72,6 +75,7 @@ namespace jank::runtime::obj
 
     native_real data{};
   };
+  using real_ptr = native_box<real>;
 
   /* TODO: Find a better namespace for these. */
   struct integer_ops;
@@ -118,4 +122,5 @@ namespace jank::runtime::obj
   bool lte(object_ptr l, object_ptr r);
   object_ptr min(object_ptr l, object_ptr r);
   object_ptr max(object_ptr l, object_ptr r);
+  object_ptr abs(object_ptr l);
 }

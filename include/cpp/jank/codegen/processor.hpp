@@ -116,12 +116,10 @@ namespace jank::codegen
     (
       native_string_view const &start,
       native_string_view const &end,
-      native_string const &ret_tmp,
       native_vector<native_string> const &arg_tmps
     );
     void format_dynamic_call
     (
-      native_string const &ret_tmp,
       native_string const &source_tmp,
       native_vector<native_string> const &arg_tmps
     );

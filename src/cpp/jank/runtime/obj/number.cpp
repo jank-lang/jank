@@ -217,7 +217,7 @@ namespace jank::runtime::obj
   number_ops const& real_ops::with(real_ops const &) const
   { return r_ops; }
 
-  number_ops& left_ops(object_ptr n)
+  number_ops& left_ops(object_ptr const n)
   {
     if(auto const * const i = n->as_integer())
     {
@@ -234,7 +234,7 @@ namespace jank::runtime::obj
     throw native_string{ "(left_ops) not a number: " } + n->to_string();
   }
 
-  number_ops& right_ops(object_ptr n)
+  number_ops& right_ops(object_ptr const n)
   {
     if(auto const * const i = n->as_integer())
     {
@@ -251,19 +251,19 @@ namespace jank::runtime::obj
     throw native_string{ "(right_ops) not a number: " } + n->to_string();
   }
 
-  object_ptr add(object_ptr l, object_ptr r)
+  object_ptr add(object_ptr const l, object_ptr const r)
   { return right_ops(r).combine(left_ops(l)).add(); }
 
-  object_ptr sub(object_ptr l, object_ptr r)
+  object_ptr sub(object_ptr const l, object_ptr const r)
   { return right_ops(r).combine(left_ops(l)).subtract(); }
 
-  object_ptr div(object_ptr l, object_ptr r)
+  object_ptr div(object_ptr const l, object_ptr const r)
   { return right_ops(r).combine(left_ops(l)).divide(); }
 
-  object_ptr mul(object_ptr l, object_ptr r)
+  object_ptr mul(object_ptr const l, object_ptr const r)
   { return right_ops(r).combine(left_ops(l)).multiply(); }
 
-  object_ptr rem(object_ptr l, object_ptr r)
+  object_ptr rem(object_ptr const l, object_ptr const r)
   { return right_ops(r).combine(left_ops(l)).remainder(); }
 
   object_ptr rand()
@@ -273,15 +273,18 @@ namespace jank::runtime::obj
     return make_box(dis(gen));
   }
 
-  bool lt(object_ptr l, object_ptr r)
+  bool lt(object_ptr const l, object_ptr const r)
   { return right_ops(r).combine(left_ops(l)).lt(); }
 
-  bool lte(object_ptr l, object_ptr r)
+  bool lte(object_ptr const l, object_ptr const r)
   { return right_ops(r).combine(left_ops(l)).lte(); }
 
-  object_ptr min(object_ptr l, object_ptr r)
+  object_ptr min(object_ptr const l, object_ptr const r)
   { return right_ops(r).combine(left_ops(l)).min(); }
 
-  object_ptr max(object_ptr l, object_ptr r)
+  object_ptr max(object_ptr const l, object_ptr const r)
   { return right_ops(r).combine(left_ops(l)).max(); }
+
+  object_ptr abs(object_ptr const l)
+  { return left_ops(l).abs(); }
 }

@@ -161,19 +161,20 @@ namespace jank::runtime
 
       nil const* as_nil() const override;
     };
+    using nil_ptr = native_box<nil>;
 
-    extern object_ptr JANK_TRUE; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-    extern object_ptr JANK_FALSE; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+    extern native_box<boolean> JANK_TRUE; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+    extern native_box<boolean> JANK_FALSE; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
   }
-  extern object_ptr JANK_NIL; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+  extern obj::nil_ptr JANK_NIL; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
-  object_ptr make_box(std::nullptr_t const &);
-  object_ptr make_box(native_bool const);
-  object_ptr make_box(int const);
-  object_ptr make_box(native_integer const);
-  object_ptr make_box(native_real const);
-  object_ptr make_box(native_string_view const &);
-  object_ptr make_box(detail::list_type_impl<object_ptr> const &);
+  obj::nil_ptr make_box(std::nullptr_t const &);
+  native_box<obj::boolean> make_box(native_bool const b);
+  native_box<obj::integer> make_box(int const i);
+  native_box<obj::integer> make_box(native_integer const i);
+  native_box<obj::real> make_box(native_real const r);
+  native_box<obj::string> make_box(native_string_view const &s);
+  native_box<obj::list> make_box(detail::persistent_list const &l);
 }
 
 namespace std
