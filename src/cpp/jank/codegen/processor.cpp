@@ -248,25 +248,27 @@ namespace jank::codegen
     }
   }
 
-  void processor::format_clojure_core_get
+  void processor::format_elided_var
   (
+    native_string_view const &start,
+    native_string_view const &end,
     native_string const &ret_tmp,
     native_vector<native_string> const &arg_tmps
   )
   {
-    /* TODO: Assert arg count. */
+    /* TODO: Assert arg count when we know it. */
     auto inserter(std::back_inserter(body_buffer));
     format_to
-    (inserter, "{} = jank::runtime::get(", ret_tmp);
+    (inserter, "{} = {}", ret_tmp, start);
     bool need_comma{};
     for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
     {
       if(need_comma)
       { format_to(inserter, ", "); }
-      format_to(inserter, "{}", arg_tmps[i]); 
+      format_to(inserter, "{}", arg_tmps[i]);
       need_comma = true;
     }
-    format_to(inserter, ");");
+    format_to(inserter, "{};", end);
   }
 
   void processor::format_dynamic_call
@@ -314,11 +316,60 @@ namespace jank::codegen
      * fns; this is not the same as direct linking, which uses `invokeStatic`
      * instead. Rather, this makes calls to `get` become `RT.get`, calls to `+` become
      * `Numbers.add`, and so on. We do the same thing here. */
+    bool elided{};
     if(auto const * const ref = boost::get<analyze::expr::var_deref<analyze::expression>>(&expr.source_expr->data))
     {
       if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "get" }))
-      { format_clojure_core_get(ret_tmp, arg_tmps); }
-      else
+      {
+        format_elided_var("jank::runtime::get(", ")", ret_tmp, arg_tmps);
+        elided = true;
+      }
+      else if(arg_tmps.size() == 2)
+      {
+        if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "+" }))
+        {
+          format_elided_var("jank::runtime::obj::add(", ")", ret_tmp, arg_tmps);
+          elided = true;
+        }
+        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "-" }))
+        {
+          format_elided_var("jank::runtime::obj::sub(", ")", ret_tmp, arg_tmps);
+          elided = true;
+        }
+        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "*" }))
+        {
+          format_elided_var("jank::runtime::obj::mul(", ")", ret_tmp, arg_tmps);
+          elided = true;
+        }
+        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "/" }))
+        {
+          format_elided_var("jank::runtime::obj::div(", ")", ret_tmp, arg_tmps);
+          elided = true;
+        }
+        /* TODO: Only box if needed. */
+        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "<" }))
+        {
+          format_elided_var("jank::runtime::make_box(jank::runtime::obj::lt(", "))", ret_tmp, arg_tmps);
+          elided = true;
+        }
+        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "<=" }))
+        {
+          format_elided_var("jank::runtime::make_box(jank::runtime::obj::lte(", "))", ret_tmp, arg_tmps);
+          elided = true;
+        }
+        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", ">" }))
+        {
+          format_elided_var("jank::runtime::make_box(jank::runtime::obj::gt(", "))", ret_tmp, arg_tmps);
+          elided = true;
+        }
+        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", ">=" }))
+        {
+          format_elided_var("jank::runtime::make_box(jank::runtime::obj::gte(", "))", ret_tmp, arg_tmps);
+          elided = true;
+        }
+      }
+
+      if(!elided)
       {
         auto const &source_tmp(gen(expr.source_expr, fn_arity));
         format_dynamic_call(ret_tmp, source_tmp.unwrap(), arg_tmps);

@@ -424,9 +424,7 @@
 (def rand
   (fn*
     ([]
-     (native/raw "static std::mt19937 gen;
-                  static std::uniform_real_distribution<native_real> dis(0.0, 1.0);
-                  __value = make_box(dis(gen));"))
+     (native/raw "__value = jank::runtime::obj::rand();"))
     ([n]
      (* (rand) n))))
 

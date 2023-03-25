@@ -112,8 +112,10 @@ namespace jank::codegen
     native_string expression_str(bool const auto_call = true);
 
 
-    void format_clojure_core_get
+    void format_elided_var
     (
+      native_string_view const &start,
+      native_string_view const &end,
       native_string const &ret_tmp,
       native_vector<native_string> const &arg_tmps
     );

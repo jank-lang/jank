@@ -110,7 +110,10 @@ namespace jank::runtime::obj
   object_ptr add(object_ptr l, object_ptr r);
   object_ptr sub(object_ptr l, object_ptr r);
   object_ptr div(object_ptr l, object_ptr r);
+  object_ptr mul(object_ptr l, object_ptr r);
   object_ptr rem(object_ptr l, object_ptr r);
+  object_ptr rand();
+  object_ptr rand(object_ptr n);
   bool lt(object_ptr l, object_ptr r);
   bool lte(object_ptr l, object_ptr r);
   object_ptr min(object_ptr l, object_ptr r);

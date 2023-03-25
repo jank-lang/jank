@@ -260,8 +260,18 @@ namespace jank::runtime::obj
   object_ptr div(object_ptr l, object_ptr r)
   { return right_ops(r).combine(left_ops(l)).divide(); }
 
+  object_ptr mul(object_ptr l, object_ptr r)
+  { return right_ops(r).combine(left_ops(l)).multiply(); }
+
   object_ptr rem(object_ptr l, object_ptr r)
   { return right_ops(r).combine(left_ops(l)).remainder(); }
+
+  object_ptr rand()
+  {
+    static std::mt19937 gen;
+    static std::uniform_real_distribution<native_real> dis(0.0, 1.0);
+    return make_box(dis(gen));
+  }
 
   bool lt(object_ptr l, object_ptr r)
   { return right_ops(r).combine(left_ops(l)).lt(); }
