@@ -111,16 +111,91 @@ namespace jank::runtime::obj
 
   number_ops& left_ops(object_ptr n);
   number_ops& right_ops(object_ptr n);
+
   object_ptr add(object_ptr l, object_ptr r);
+  object_ptr add(integer_ptr l, object_ptr r);
+  object_ptr add(object_ptr l, integer_ptr r);
+  integer_ptr add(integer_ptr l, integer_ptr r);
+  real_ptr add(real_ptr l, real_ptr r);
+  real_ptr add(real_ptr l, object_ptr r);
+  real_ptr add(object_ptr l, real_ptr r);
+  real_ptr add(real_ptr l, integer_ptr r);
+  real_ptr add(integer_ptr l, real_ptr r);
+
   object_ptr sub(object_ptr l, object_ptr r);
+  object_ptr sub(integer_ptr l, object_ptr r);
+  object_ptr sub(object_ptr l, integer_ptr r);
+  integer_ptr sub(integer_ptr l, integer_ptr r);
+  real_ptr sub(real_ptr l, real_ptr r);
+  real_ptr sub(real_ptr l, object_ptr r);
+  real_ptr sub(object_ptr l, real_ptr r);
+  real_ptr sub(real_ptr l, integer_ptr r);
+  real_ptr sub(integer_ptr l, real_ptr r);
+
   object_ptr div(object_ptr l, object_ptr r);
+  object_ptr div(integer_ptr l, object_ptr r);
+  object_ptr div(object_ptr l, integer_ptr r);
+  integer_ptr div(integer_ptr l, integer_ptr r);
+  real_ptr div(real_ptr l, real_ptr r);
+  real_ptr div(real_ptr l, object_ptr r);
+  real_ptr div(object_ptr l, real_ptr r);
+  real_ptr div(real_ptr l, integer_ptr r);
+  real_ptr div(integer_ptr l, real_ptr r);
+
   object_ptr mul(object_ptr l, object_ptr r);
+  object_ptr mul(integer_ptr l, object_ptr r);
+  object_ptr mul(object_ptr l, integer_ptr r);
+  integer_ptr mul(integer_ptr l, integer_ptr r);
+  real_ptr mul(real_ptr l, real_ptr r);
+  real_ptr mul(real_ptr l, object_ptr r);
+  real_ptr mul(object_ptr l, real_ptr r);
+  real_ptr mul(real_ptr l, integer_ptr r);
+  real_ptr mul(integer_ptr l, real_ptr r);
+
+  bool lt(object_ptr l, object_ptr r);
+  bool lt(integer_ptr l, object_ptr r);
+  bool lt(object_ptr l, integer_ptr r);
+  bool lt(integer_ptr const l, integer_ptr const r);
+  bool lt(real_ptr const l, real_ptr const r);
+  bool lt(real_ptr l, object_ptr r);
+  bool lt(object_ptr l, real_ptr r);
+  bool lt(real_ptr l, integer_ptr r);
+  bool lt(integer_ptr l, real_ptr r);
+
+  bool lte(object_ptr l, object_ptr r);
+  bool lte(integer_ptr l, object_ptr r);
+  bool lte(object_ptr l, integer_ptr r);
+  bool lte(integer_ptr const l, integer_ptr const r);
+  bool lte(real_ptr const l, real_ptr const r);
+  bool lte(real_ptr l, object_ptr r);
+  bool lte(object_ptr l, real_ptr r);
+  bool lte(real_ptr l, integer_ptr r);
+  bool lte(integer_ptr l, real_ptr r);
+
+  object_ptr min(object_ptr l, object_ptr r);
+  object_ptr min(integer_ptr l, object_ptr r);
+  object_ptr min(object_ptr l, integer_ptr r);
+  integer_ptr min(integer_ptr l, integer_ptr r);
+  real_ptr min(real_ptr l, real_ptr r);
+  real_ptr min(real_ptr l, object_ptr r);
+  real_ptr min(object_ptr l, real_ptr r);
+  real_ptr min(real_ptr l, integer_ptr r);
+  real_ptr min(integer_ptr l, real_ptr r);
+
+  object_ptr max(object_ptr l, object_ptr r);
+  object_ptr max(integer_ptr l, object_ptr r);
+  object_ptr max(object_ptr l, integer_ptr r);
+  integer_ptr max(integer_ptr l, integer_ptr r);
+  real_ptr max(real_ptr l, real_ptr r);
+  real_ptr max(real_ptr l, object_ptr r);
+  real_ptr max(object_ptr l, real_ptr r);
+  real_ptr max(real_ptr l, integer_ptr r);
+  real_ptr max(integer_ptr l, real_ptr r);
+
+  object_ptr abs(object_ptr l);
+  integer_ptr abs(integer_ptr l);
+  real_ptr abs(real_ptr l);
+
   object_ptr rem(object_ptr l, object_ptr r);
   object_ptr rand();
-  object_ptr rand(object_ptr n);
-  bool lt(object_ptr l, object_ptr r);
-  bool lte(object_ptr l, object_ptr r);
-  object_ptr min(object_ptr l, object_ptr r);
-  object_ptr max(object_ptr l, object_ptr r);
-  object_ptr abs(object_ptr l);
 }
