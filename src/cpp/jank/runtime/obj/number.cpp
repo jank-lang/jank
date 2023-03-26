@@ -96,6 +96,8 @@ namespace jank::runtime::obj
   number const* real::as_number() const
   { return this; }
 
+  /***** math ops *****/
+
   struct integer_ops : number_ops
   {
     number_ops const& combine(number_ops const &l) const override
@@ -234,13 +236,13 @@ namespace jank::runtime::obj
     throw native_string{ "(left_ops) not a number: " } + n->to_string();
   }
 
-  number_ops& left_ops(obj::integer_ptr const n)
+  integer_ops& left_ops(obj::integer_ptr const n)
   {
     i_ops.left = n->data;
     return i_ops;
   }
 
-  number_ops& left_ops(obj::real_ptr const n)
+  real_ops& left_ops(obj::real_ptr const n)
   {
     r_ops.left = n->data;
     return r_ops;
@@ -263,96 +265,117 @@ namespace jank::runtime::obj
     throw native_string{ "(right_ops) not a number: " } + n->to_string();
   }
 
-  number_ops& right_ops(obj::integer_ptr const n)
+  integer_ops& right_ops(obj::integer_ptr const n)
   {
     i_ops.right = n->data;
     return i_ops;
   }
 
-  number_ops& right_ops(obj::real_ptr const n)
+  real_ops& right_ops(obj::real_ptr const n)
   {
     r_ops.right = n->data;
     return r_ops;
   }
 
+  /* This version of `with` avoids two dynamic dispatches per operation, so it's
+   * preferable over `number_ops.combine`. */
+  integer_ops const& with(integer_ops const &, integer_ops const &)
+  { return i_ops; }
+  real_ops const& with(real_ops const &, real_ops const &)
+  { return r_ops; }
+  real_ops const& with(integer_ops const &, real_ops const &)
+  {
+    r_ops.left = i_ops.left;
+    return r_ops;
+  }
+  real_ops const& with(real_ops const &, integer_ops const &)
+  {
+    r_ops.right = i_ops.right;
+    return r_ops;
+  }
+  number_ops const& with(number_ops const &l, number_ops const &r)
+  { return r.combine(l); }
+
+  /**************** v2 ops *****************/
+
   object_ptr add(object_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).add(); }
+  { return with(left_ops(l), right_ops(r)).add(); }
   object_ptr add(integer_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).add(); }
+  { return with(left_ops(l), right_ops(r)).add(); }
   object_ptr add(object_ptr const l, integer_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).add(); }
+  { return with(left_ops(l), right_ops(r)).add(); }
   integer_ptr add(integer_ptr const l, integer_ptr const r)
   { return jank::make_box<integer>(l->data + r->data); }
   real_ptr add(real_ptr const l, real_ptr const r)
   { return jank::make_box<real>(l->data + r->data); }
   real_ptr add(real_ptr const l, object_ptr const r)
-  { return static_cast<real_ptr>(right_ops(r).combine(left_ops(l)).add()); }
+  { return static_cast<real_ptr>(with(left_ops(l), right_ops(r)).add()); }
   real_ptr add(object_ptr const l, real_ptr const r)
-  { return static_cast<real_ptr>(right_ops(r).combine(left_ops(l)).add()); }
+  { return static_cast<real_ptr>(with(left_ops(l), right_ops(r)).add()); }
   real_ptr add(real_ptr const l, integer_ptr const r)
   { return jank::make_box<real>(l->data + r->data); }
   real_ptr add(integer_ptr const l, real_ptr const r)
   { return jank::make_box<real>(l->data + r->data); }
 
   object_ptr sub(object_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).subtract(); }
+  { return with(left_ops(l), right_ops(r)).subtract(); }
   object_ptr sub(integer_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).subtract(); }
+  { return with(left_ops(l), right_ops(r)).subtract(); }
   object_ptr sub(object_ptr const l, integer_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).subtract(); }
+  { return with(left_ops(l), right_ops(r)).subtract(); }
   integer_ptr sub(integer_ptr const l, integer_ptr const r)
   { return jank::make_box<integer>(l->data - r->data); }
   real_ptr sub(real_ptr const l, real_ptr const r)
   { return jank::make_box<real>(l->data - r->data); }
   real_ptr sub(real_ptr const l, object_ptr const r)
-  { return static_cast<real_ptr>(right_ops(r).combine(left_ops(l)).subtract()); }
+  { return static_cast<real_ptr>(with(left_ops(l), right_ops(r)).subtract()); }
   real_ptr sub(object_ptr const l, real_ptr const r)
-  { return static_cast<real_ptr>(right_ops(r).combine(left_ops(l)).subtract()); }
+  { return static_cast<real_ptr>(with(left_ops(l), right_ops(r)).subtract()); }
   real_ptr sub(real_ptr const l, integer_ptr const r)
   { return jank::make_box<real>(l->data - r->data); }
   real_ptr sub(integer_ptr const l, real_ptr const r)
   { return jank::make_box<real>(l->data - r->data); }
 
   object_ptr div(object_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).divide(); }
+  { return with(left_ops(l), right_ops(r)).divide(); }
   object_ptr div(integer_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).divide(); }
+  { return with(left_ops(l), right_ops(r)).divide(); }
   object_ptr div(object_ptr const l, integer_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).divide(); }
+  { return with(left_ops(l), right_ops(r)).divide(); }
   integer_ptr div(integer_ptr const l, integer_ptr const r)
   { return jank::make_box<integer>(l->data / r->data); }
   real_ptr div(real_ptr const l, real_ptr const r)
   { return jank::make_box<real>(l->data / r->data); }
   real_ptr div(real_ptr const l, object_ptr const r)
-  { return static_cast<real_ptr>(right_ops(r).combine(left_ops(l)).divide()); }
+  { return static_cast<real_ptr>(with(left_ops(l), right_ops(r)).divide()); }
   real_ptr div(object_ptr const l, real_ptr const r)
-  { return static_cast<real_ptr>(right_ops(r).combine(left_ops(l)).divide()); }
+  { return static_cast<real_ptr>(with(left_ops(l), right_ops(r)).divide()); }
   real_ptr div(real_ptr const l, integer_ptr const r)
   { return jank::make_box<real>(l->data / r->data); }
   real_ptr div(integer_ptr const l, real_ptr const r)
   { return jank::make_box<real>(l->data / r->data); }
 
   object_ptr mul(object_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).multiply(); }
+  { return with(left_ops(l), right_ops(r)).multiply(); }
   object_ptr mul(integer_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).multiply(); }
+  { return with(left_ops(l), right_ops(r)).multiply(); }
   object_ptr mul(object_ptr const l, integer_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).multiply(); }
+  { return with(left_ops(l), right_ops(r)).multiply(); }
   integer_ptr mul(integer_ptr const l, integer_ptr const r)
   { return jank::make_box<integer>(l->data * r->data); }
   real_ptr mul(real_ptr const l, real_ptr const r)
   { return jank::make_box<real>(l->data * r->data); }
   real_ptr mul(real_ptr const l, object_ptr const r)
-  { return static_cast<real_ptr>(right_ops(r).combine(left_ops(l)).multiply()); }
+  { return static_cast<real_ptr>(with(left_ops(l), right_ops(r)).multiply()); }
   real_ptr mul(object_ptr const l, real_ptr const r)
-  { return static_cast<real_ptr>(right_ops(r).combine(left_ops(l)).multiply()); }
+  { return static_cast<real_ptr>(with(left_ops(l), right_ops(r)).multiply()); }
   real_ptr mul(real_ptr const l, integer_ptr const r)
   { return jank::make_box<real>(l->data * r->data); }
   real_ptr mul(integer_ptr const l, real_ptr const r)
   { return jank::make_box<real>(l->data * r->data); }
 
   object_ptr rem(object_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).remainder(); }
+  { return with(left_ops(l), right_ops(r)).remainder(); }
 
   object_ptr rand()
   {
@@ -362,76 +385,76 @@ namespace jank::runtime::obj
   }
 
   bool lt(object_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).lt(); }
+  { return with(left_ops(l), right_ops(r)).lt(); }
   bool lt(integer_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).lt(); }
+  { return with(left_ops(l), right_ops(r)).lt(); }
   bool lt(object_ptr const l, integer_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).lt(); }
+  { return with(left_ops(l), right_ops(r)).lt(); }
   bool lt(integer_ptr const l, integer_ptr const r)
   { return l->data < r->data; }
   bool lt(real_ptr const l, real_ptr const r)
   { return l->data < r->data; }
   bool lt(real_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).lt(); }
+  { return with(left_ops(l), right_ops(r)).lt(); }
   bool lt(object_ptr const l, real_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).lt(); }
+  { return with(left_ops(l), right_ops(r)).lt(); }
   bool lt(real_ptr const l, integer_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).lt(); }
+  { return with(left_ops(l), right_ops(r)).lt(); }
   bool lt(integer_ptr const l, real_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).lt(); }
+  { return with(left_ops(l), right_ops(r)).lt(); }
 
   bool lte(object_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).lte(); }
+  { return with(left_ops(l), right_ops(r)).lte(); }
   bool lte(integer_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).lte(); }
+  { return with(left_ops(l), right_ops(r)).lte(); }
   bool lte(object_ptr const l, integer_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).lte(); }
+  { return with(left_ops(l), right_ops(r)).lte(); }
   bool lte(integer_ptr const l, integer_ptr const r)
   { return l->data <= r->data; }
   bool lte(real_ptr const l, real_ptr const r)
   { return l->data <= r->data; }
   bool lte(real_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).lte(); }
+  { return with(left_ops(l), right_ops(r)).lte(); }
   bool lte(object_ptr const l, real_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).lte(); }
+  { return with(left_ops(l), right_ops(r)).lte(); }
   bool lte(real_ptr const l, integer_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).lte(); }
+  { return with(left_ops(l), right_ops(r)).lte(); }
   bool lte(integer_ptr const l, real_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).lte(); }
+  { return with(left_ops(l), right_ops(r)).lte(); }
 
   object_ptr min(object_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).min(); }
+  { return with(left_ops(l), right_ops(r)).min(); }
   object_ptr min(integer_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).min(); }
+  { return with(left_ops(l), right_ops(r)).min(); }
   object_ptr min(object_ptr const l, integer_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).min(); }
+  { return with(left_ops(l), right_ops(r)).min(); }
   integer_ptr min(integer_ptr const l, integer_ptr const r)
   { return jank::make_box<integer>(std::min(l->data, r->data)); }
   real_ptr min(real_ptr const l, real_ptr const r)
   { return jank::make_box<real>(std::min(l->data, r->data)); }
   real_ptr min(real_ptr const l, object_ptr const r)
-  { return static_cast<real_ptr>(right_ops(r).combine(left_ops(l)).min()); }
+  { return static_cast<real_ptr>(with(left_ops(l), right_ops(r)).min()); }
   real_ptr min(object_ptr const l, real_ptr const r)
-  { return static_cast<real_ptr>(right_ops(r).combine(left_ops(l)).min()); }
+  { return static_cast<real_ptr>(with(left_ops(l), right_ops(r)).min()); }
   real_ptr min(real_ptr const l, integer_ptr const r)
   { return jank::make_box<real>(std::min(l->data, static_cast<native_real>(r->data))); }
   real_ptr min(integer_ptr const l, real_ptr const r)
   { return jank::make_box<real>(std::min(static_cast<native_real>(l->data), r->data)); }
 
   object_ptr max(object_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).max(); }
+  { return with(left_ops(l), right_ops(r)).max(); }
   object_ptr max(integer_ptr const l, object_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).max(); }
+  { return with(left_ops(l), right_ops(r)).max(); }
   object_ptr max(object_ptr const l, integer_ptr const r)
-  { return right_ops(r).combine(left_ops(l)).max(); }
+  { return with(left_ops(l), right_ops(r)).max(); }
   integer_ptr max(integer_ptr const l, integer_ptr const r)
   { return jank::make_box<integer>(std::max(l->data, r->data)); }
   real_ptr max(real_ptr const l, real_ptr const r)
   { return jank::make_box<real>(std::max(l->data, r->data)); }
   real_ptr max(real_ptr const l, object_ptr const r)
-  { return static_cast<real_ptr>(right_ops(r).combine(left_ops(l)).max()); }
+  { return static_cast<real_ptr>(with(left_ops(l), right_ops(r)).max()); }
   real_ptr max(object_ptr const l, real_ptr const r)
-  { return static_cast<real_ptr>(right_ops(r).combine(left_ops(l)).max()); }
+  { return static_cast<real_ptr>(with(left_ops(l), right_ops(r)).max()); }
   real_ptr max(real_ptr const l, integer_ptr const r)
   { return jank::make_box<real>(std::max(l->data, static_cast<native_real>(r->data))); }
   real_ptr max(integer_ptr const l, real_ptr const r)
