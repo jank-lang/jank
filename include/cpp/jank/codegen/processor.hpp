@@ -32,77 +32,92 @@ namespace jank::codegen
     option<native_string> gen
     (
       analyze::expression_ptr const &,
-      analyze::expr::function_arity<analyze::expression> const &
+      analyze::expr::function_arity<analyze::expression> const &,
+      bool box_needed
     );
     option<native_string> gen
     (
       analyze::expr::def<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &
+      analyze::expr::function_arity<analyze::expression> const &,
+      bool box_needed
     );
     option<native_string> gen
     (
       analyze::expr::var_deref<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &
+      analyze::expr::function_arity<analyze::expression> const &,
+      bool box_needed
     );
     option<native_string> gen
     (
       analyze::expr::var_ref<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &
+      analyze::expr::function_arity<analyze::expression> const &,
+      bool box_needed
     );
     option<native_string> gen
     (
       analyze::expr::call<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &
+      analyze::expr::function_arity<analyze::expression> const &,
+      bool box_needed
     );
     option<native_string> gen
     (
       analyze::expr::primitive_literal<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &
+      analyze::expr::function_arity<analyze::expression> const &,
+      bool box_needed
     );
     option<native_string> gen
     (
       analyze::expr::vector<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &
+      analyze::expr::function_arity<analyze::expression> const &,
+      bool box_needed
     );
     option<native_string> gen
     (
       analyze::expr::map<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &
+      analyze::expr::function_arity<analyze::expression> const &,
+      bool box_needed
     );
     option<native_string> gen
     (
       analyze::expr::local_reference const &,
-      analyze::expr::function_arity<analyze::expression> const &
+      analyze::expr::function_arity<analyze::expression> const &,
+      bool box_needed
     );
     option<native_string> gen
     (
       analyze::expr::function<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &
+      analyze::expr::function_arity<analyze::expression> const &,
+      bool box_needed
     );
     option<native_string> gen
     (
       analyze::expr::recur<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &
+      analyze::expr::function_arity<analyze::expression> const &,
+      bool box_needed
     );
     option<native_string> gen
     (
       analyze::expr::let<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &
+      analyze::expr::function_arity<analyze::expression> const &,
+      bool box_needed
     );
     option<native_string> gen
     (
       analyze::expr::do_<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &
+      analyze::expr::function_arity<analyze::expression> const &,
+      bool box_needed
     );
     option<native_string> gen
     (
       analyze::expr::if_<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &
+      analyze::expr::function_arity<analyze::expression> const &,
+      bool box_needed
     );
     option<native_string> gen
     (
       analyze::expr::native_raw<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &
+      analyze::expr::function_arity<analyze::expression> const &,
+      bool box_needed
     );
 
     native_string declaration_str();
@@ -116,12 +131,19 @@ namespace jank::codegen
     (
       native_string_view const &start,
       native_string_view const &end,
-      native_vector<native_string> const &arg_tmps
+      native_string_view const &ret_tmp,
+      native_vector<native_box<analyze::expression>> const &arg_exprs,
+      analyze::expr::function_arity<analyze::expression> const &fn_arity,
+      bool arg_box_needed,
+      bool ret_box_needed
     );
     void format_dynamic_call
     (
       native_string const &source_tmp,
-      native_vector<native_string> const &arg_tmps
+      native_string_view const &ret_tmp,
+      native_vector<native_box<analyze::expression>> const &arg_exprs,
+      analyze::expr::function_arity<analyze::expression> const &fn_arity,
+      bool arg_box_needed
     );
 
     runtime::context &rt_ctx;
