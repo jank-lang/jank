@@ -272,19 +272,28 @@ namespace jank::analyze
 
   processor::expression_result processor::analyze_fn
   (
-    runtime::obj::list_ptr const &list,
+    runtime::obj::list_ptr const &full_list,
     local_frame_ptr &current_frame,
     expression_type const expr_type,
     option<expr::function_context_ptr> const&
   )
   {
-    auto const length(list->count());
+    auto const length(full_list->count());
     if(length < 2)
     { return err(error{ "fn missing forms" }); }
+    auto list(full_list);
+
+    option<native_string> name;
+    auto first_elem(list->data.rest().first().unwrap());
+    if(auto const s = first_elem->as_symbol())
+    {
+      name = s->name;
+      first_elem = list->data.rest().rest().first().unwrap();
+      list = make_box(list->data.rest());
+    }
 
     native_vector<expr::function_arity<expression>> arities;
 
-    auto const first_elem(list->data.rest().first().unwrap());
     if(first_elem->as_vector() != nullptr)
     {
       auto result
@@ -362,7 +371,7 @@ namespace jank::analyze
       expr::function<expression>
       {
         expression_base{ {}, expr_type },
-        none,
+        name,
         std::move(arities)
       }
     );

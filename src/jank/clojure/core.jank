@@ -551,7 +551,7 @@
     (list 'do
           ; TODO: Remove this once fn* supports naming.
           (list 'def fn-name)
-          (list 'def fn-name (cons 'fn* (cons fn-args body))))))
+          (list 'def fn-name (cons 'fn* (cons fn-name (cons fn-args body)))))))
 (reset-meta! (var defn) {:macro true})
 
 (defn defmacro [&form &env fn-name fn-args & body]

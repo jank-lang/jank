@@ -161,7 +161,7 @@ namespace jank::codegen
     : rt_ctx{ rt_ctx },
       root_expr{ expr },
       root_fn{ boost::get<analyze::expr::function<analyze::expression>>(expr->data) },
-      struct_name{ runtime::context::unique_string() }
+      struct_name{ runtime::context::unique_string(root_fn.name.unwrap_or("fn")) }
   { }
 
   processor::processor
@@ -171,7 +171,7 @@ namespace jank::codegen
   )
     : rt_ctx{ rt_ctx },
       root_fn{ expr },
-      struct_name{ runtime::context::unique_string() }
+      struct_name{ runtime::context::unique_string(root_fn.name.unwrap_or("fn")) }
   { }
 
   option<native_string> processor::gen

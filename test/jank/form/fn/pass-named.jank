@@ -1,0 +1,3 @@
+(assert (= nil ((fn* foo-bar []))))
+
+:success

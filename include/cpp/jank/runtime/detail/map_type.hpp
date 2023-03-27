@@ -31,13 +31,13 @@ namespace jank::runtime::detail
     map_type_impl(std::in_place_t, Args &&...args)
     {
       static_assert(sizeof...(args) % 2 == 0, "odd number of map initializer values");
-      insert_all( std::forward<Args>(args)...);
+      insert_all(std::forward<Args>(args)...);
     }
     template <typename... Args>
     map_type_impl(in_place_unique, Args &&...args)
     {
       static_assert(sizeof...(args) % 2 == 0, "odd number of map initializer values");
-      insert_all_unique( std::forward<Args>(args)...);
+      insert_all_unique(std::forward<Args>(args)...);
     }
     ~map_type_impl() = default;
 
