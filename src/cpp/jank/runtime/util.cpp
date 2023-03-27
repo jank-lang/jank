@@ -7,7 +7,7 @@ namespace jank::runtime
 {
   namespace detail
   {
-    bool truthy(object_ptr o)
+    bool truthy(object_ptr const o)
     {
       if(o->as_nil())
       { return false; }
@@ -16,34 +16,13 @@ namespace jank::runtime
 
       return true;
     }
+    bool truthy(obj::nil_ptr)
+    { return false; }
+    bool truthy(obj::boolean_ptr const o)
+    { return o->data; }
+    bool truthy(native_bool const o)
+    { return o; }
   }
-
-  object_ptr identity(object_ptr o)
-  { return o; }
-
-  /* some? */
-  object_ptr some_gen_qmark_(object_ptr o)
-  { return jank::make_box<obj::boolean>(o->as_nil() == nullptr); }
-
-  /* nil? */
-  object_ptr nil_gen_qmark_(object_ptr o)
-  { return jank::make_box<obj::boolean>(o->as_nil() != nullptr); }
-
-  /* truthy? */
-  object_ptr truthy_gen_qmark_(object_ptr o)
-  { return jank::make_box<obj::boolean>(detail::truthy(o)); }
-
-  /* not= */
-  object_ptr not_gen_equal_(object_ptr l, object_ptr r)
-  { return jank::make_box<obj::boolean>(!l->equal(*r)); }
-
-  /* TODO: This should be the `and` macro. */
-  object_ptr all(object_ptr l, object_ptr r)
-  { return jank::make_box<obj::boolean>(detail::truthy(l) && detail::truthy(r));}
-
-  /* TODO: This should be the `or` macro. */
-  object_ptr either(object_ptr l, object_ptr r)
-  { return detail::truthy(l) ? l : r;}
 
   static native_unordered_map<char, native_string_view> const munge_chars
   {

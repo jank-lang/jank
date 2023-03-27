@@ -78,7 +78,7 @@ namespace jank::runtime::obj
   native_box<behavior::consable> list::cons(object_ptr head) const
   {
     auto l(data.cons(head));
-    auto ret(jank::runtime::make_box(std::move(l))->as_list());
+    auto ret(jank::make_box(std::move(l))->as_list());
     return const_cast<list*>(ret);
   }
 

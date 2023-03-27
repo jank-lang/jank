@@ -134,11 +134,11 @@
   (vec3-add (get r :origin) (vec3-scale (get r :direction) t)))
 
 (defn reflectance [cosine ref-idx]
-  (let [r (/ (- 1 ref-idx)
-             (+ 1 ref-idx))
+  (let [r (/ (- 1.0 ref-idx)
+             (+ 1.0 ref-idx))
         r2 (* r r)]
-    (* (+ r2 (- 1 r2))
-       (pow (- 1 cosine) 5))))
+    (* (+ r2 (- 1.0 r2))
+       (pow (- 1.0 cosine) 5.0))))
 
 (defn hit-info-create [point normal t material front-face?]
   {:point point

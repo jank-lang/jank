@@ -424,7 +424,7 @@
 (def rand
   (fn*
     ([]
-     (native/raw "__value = jank::runtime::obj::rand();"))
+     (native/raw "__value = make_box(jank::runtime::obj::rand());"))
     ([n]
      (* (rand) n))))
 

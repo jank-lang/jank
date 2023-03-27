@@ -167,14 +167,11 @@ namespace jank::runtime
     extern native_box<boolean> JANK_FALSE; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
   }
   extern obj::nil_ptr JANK_NIL; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+}
 
-  obj::nil_ptr make_box(std::nullptr_t const &);
-  native_box<obj::boolean> make_box(native_bool const b);
-  native_box<obj::integer> make_box(int const i);
-  native_box<obj::integer> make_box(native_integer const i);
-  native_box<obj::real> make_box(native_real const r);
-  native_box<obj::string> make_box(native_string_view const &s);
-  native_box<obj::list> make_box(detail::persistent_list const &l);
+namespace jank
+{
+  native_box<runtime::obj::list> make_box(runtime::detail::persistent_list const &l);
 }
 
 namespace std

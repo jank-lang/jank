@@ -46,19 +46,4 @@ namespace jank::runtime
   std::ostream& operator<<(std::ostream &os, object const &o)
   /* TODO: Optimize this by using virtual dispatch to write into the stream, rather than allocating a string. */
   { return os << o.to_string(); }
-
-  obj::nil_ptr make_box(std::nullptr_t const &)
-  { return JANK_NIL; }
-  obj::boolean_ptr make_box(native_bool const b)
-  { return b ? obj::JANK_TRUE : obj::JANK_FALSE; }
-  obj::integer_ptr make_box(int const i)
-  { return jank::make_box<obj::integer>(native_integer{ i }); }
-  obj::integer_ptr make_box(native_integer const i)
-  { return jank::make_box<obj::integer>(i); }
-  obj::real_ptr make_box(native_real const r)
-  { return jank::make_box<obj::real>(r); }
-  obj::string_ptr make_box(native_string_view const &s)
-  { return jank::make_box<obj::string>(s); }
-  obj::list_ptr make_box(detail::persistent_list const &l)
-  { return jank::make_box<obj::list>(l); }
 }

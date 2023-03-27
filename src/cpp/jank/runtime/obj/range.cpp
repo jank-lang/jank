@@ -5,10 +5,10 @@
 namespace jank::runtime::obj
 {
   range::range(object_ptr const end)
-    : start{ jank::runtime::make_box(0) }, end{ end }, step{ jank::runtime::make_box(1) }
+    : start{ jank::make_box(0) }, end{ end }, step{ jank::make_box(1) }
   { }
   range::range(object_ptr const start, object_ptr const end)
-    : start{ start }, end{ end }, step{ jank::runtime::make_box(1) }
+    : start{ start }, end{ end }, step{ jank::make_box(1) }
   { }
   range::range(object_ptr const start, object_ptr const end, object_ptr const step)
     : start{ start }, end{ end }, step{ step }
