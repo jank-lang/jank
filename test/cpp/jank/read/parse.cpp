@@ -401,11 +401,17 @@ namespace jank::read::parse
           (
             runtime::obj::map
             {
-              std::in_place,
-              make_box<runtime::obj::integer>(1 * i),
-              make_box<runtime::obj::integer>(2 * i),
-              make_box<runtime::obj::integer>(3 * i),
-              make_box<runtime::obj::integer>(4 * i),
+              runtime::detail::in_place_unique{},
+              runtime::obj::map::value_type::value_type{
+                {
+                  make_box<runtime::obj::integer>(1 * i),
+                  make_box<runtime::obj::integer>(2 * i),
+                },
+                {
+                  make_box<runtime::obj::integer>(3 * i),
+                  make_box<runtime::obj::integer>(4 * i),
+                }
+              }
             }
           )
         );
@@ -426,13 +432,21 @@ namespace jank::read::parse
         (
           runtime::obj::map
           {
-            std::in_place,
-            rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }, true),
-            make_box<runtime::obj::boolean>(true),
-            make_box<runtime::obj::integer>(1),
-            rt_ctx.intern_keyword(runtime::obj::symbol{ "one" }, true),
-            make_box<runtime::obj::string>("meow"),
-            make_box<runtime::obj::string>("meow"),
+            runtime::detail::in_place_unique{},
+            runtime::obj::map::value_type::value_type{
+              {
+                rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }, true),
+                make_box<runtime::obj::boolean>(true),
+              },
+              {
+                make_box<runtime::obj::integer>(1),
+                rt_ctx.intern_keyword(runtime::obj::symbol{ "one" }, true),
+              },
+              {
+                make_box<runtime::obj::string>("meow"),
+                make_box<runtime::obj::string>("meow"),
+              }
+            }
           }
         )
       );

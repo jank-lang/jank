@@ -175,16 +175,16 @@ namespace jank::runtime::obj
   { return this; }
   object_ptr map::get(object_ptr const key) const
   {
-    auto res(data.find(key));
+    auto const res(data.find(key));
     if(res)
-    { return *res; }
+    { return res; }
     return JANK_NIL;
   }
   object_ptr map::get(object_ptr const key, object_ptr const fallback) const
   {
-    auto res(data.find(key));
+    auto const res(data.find(key));
     if(res)
-    { return *res; }
+    { return res; }
     return fallback;
   }
 

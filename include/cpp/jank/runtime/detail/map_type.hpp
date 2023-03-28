@@ -22,88 +22,61 @@ namespace jank::runtime::detail
     map_type_impl() = default;
     map_type_impl(map_type_impl const &s) = default;
     map_type_impl(map_type_impl &&s) noexcept = default;
-    map_type_impl(std::initializer_list<std::pair<K, V>> &&kvs)
-    {
-      for(auto &&kv : kvs)
-      { insert_or_assign(std::move(kv.first), std::move(kv.second)); }
-    }
-    template <typename... Args>
-    map_type_impl(std::in_place_t, Args &&...args)
-    {
-      static_assert(sizeof...(args) % 2 == 0, "odd number of map initializer values");
-      insert_all(std::forward<Args>(args)...);
-    }
-    template <typename... Args>
-    map_type_impl(in_place_unique, Args &&...args)
-    {
-      static_assert(sizeof...(args) % 2 == 0, "odd number of map initializer values");
-      insert_all_unique(std::forward<Args>(args)...);
-    }
+    map_type_impl(in_place_unique, value_type &&kvs)
+      : data{ std::move(kvs) }
+    { }
     ~map_type_impl() = default;
 
     template <typename NK, typename NV>
     void insert_or_assign(NK &&key, NV &&val)
     {
-      if(auto * const found = find(key))
+      if(auto * const found = find_ref(key))
       { *found = std::forward<NV>(val); }
       else
       { data.emplace_back(std::forward<NK>(key), std::forward<NV>(val)); }
     }
+    template <typename NK, typename NV>
+    void insert_unique(NK &&key, NV &&val)
+    { data.emplace_back(std::forward<NK>(key), std::forward<NV>(val)); }
 
-    void insert_all_impl()
-    { }
-    template <typename NK, typename NV, typename... Args>
-    void insert_all_impl(NK &&key, NV &&val, Args &&... args)
+    V find(K const &key) const
     {
-      if(V * const found = find(key))
-      { *found = std::forward<NV>(val); }
-      else
-      { data.emplace_back(std::forward<NK>(key), std::forward<NV>(val)); }
-      insert_all(std::forward<Args>(args)...);
-    }
-    template <typename NK>
-    void insert_all_impl(NK)
-    { static_assert(static_cast<NK*>(nullptr), "odd number of values passed to map initialization"); }
-    template <typename... Args>
-    void insert_all(Args &&... args)
-    {
-      data.reserve(data.size() + sizeof...(args));
-      insert_all_impl(std::forward<Args>(args)...);
-    }
-
-    void insert_all_unique_impl()
-    { }
-    template <typename NK, typename NV, typename... Args>
-    void insert_all_unique_impl(NK &&key, NV &&val, Args &&... args)
-    {
-      data.emplace_back(std::forward<NK>(key), std::forward<NV>(val));
-      insert_all(std::forward<Args>(args)...);
-    }
-    template <typename NK>
-    void insert_all_unique_impl(NK)
-    { static_assert(static_cast<NK*>(nullptr), "odd number of values passed to map initialization"); }
-    template <typename... Args>
-    void insert_all_unique(Args &&... args)
-    {
-      data.reserve(data.size() + sizeof...(args));
-      insert_all_unique_impl(std::forward<Args>(args)...);
-    }
-
-    V* find(K const &key)
-    {
-      for(auto &kv : data)
+      if(auto const kw = key->as_keyword())
       {
-        if(kv.first == key || kv.first->equal(*key))
-        { return &kv.second; }
+        for(auto const &kv : data)
+        {
+          if(kv.first == key)
+          { return kv.second; }
+        }
+      }
+      else
+      {
+        for(auto const &kv : data)
+        {
+          if(kv.first->equal(*key))
+          { return kv.second; }
+        }
       }
       return nullptr;
     }
-    V const* find(K const &key) const
+
+    V* find_ref(K const &key)
     {
-      for(auto const &kv : data)
+      if(auto const kw = key->as_keyword())
       {
-        if(kv.first == key || kv.first->equal(*key))
-        { return &kv.second; }
+        for(auto &kv : data)
+        {
+          if(kv.first == key)
+          { return &kv.second; }
+        }
+      }
+      else
+      {
+        for(auto &kv : data)
+        {
+          if(kv.first->equal(*key))
+          { return &kv.second; }
+        }
       }
       return nullptr;
     }

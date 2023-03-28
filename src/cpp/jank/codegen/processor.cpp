@@ -536,15 +536,19 @@ namespace jank::codegen
     format_to
     (
       inserter,
-      "auto const {}(jank::make_box<jank::runtime::obj::map>(jank::runtime::detail::in_place_unique{{}} ",
+      "auto const {}(jank::make_box<jank::runtime::obj::map>(jank::runtime::detail::in_place_unique{{}}, native_vector<std::pair<jank::runtime::object_ptr, jank::runtime::object_ptr>>{{",
       ret_tmp
     );
+    bool need_comma{};
     for(auto const &data_tmp : data_tmps)
     {
-      format_to(inserter, ", {}", data_tmp.first);
-      format_to(inserter, ", {}", data_tmp.second);
+      if(need_comma)
+      { format_to(inserter, ", "); }
+      format_to(inserter, "{{ {}", data_tmp.first);
+      format_to(inserter, ", {} }}", data_tmp.second);
+      need_comma = true;
     }
-    format_to(inserter, "));");
+    format_to(inserter, "}}));");
 
     if(expr.expr_type == analyze::expression_type::return_statement)
     {

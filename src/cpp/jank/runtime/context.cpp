@@ -267,7 +267,7 @@ namespace jank::runtime
 
     auto const &meta(static_cast<obj::map*>(var.unwrap()->meta.unwrap()));
     auto const * const found_macro(meta->data.find(intern_keyword("", "macro", true)));
-    if(!found_macro || (*found_macro)->equal(obj::JANK_FALSE))
+    if(!found_macro || found_macro->equal(obj::JANK_FALSE))
     { return o; }
 
     auto const &args(jank::make_box<obj::list>(list->data.rest().cons(JANK_NIL).cons(o)));
