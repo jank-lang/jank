@@ -93,7 +93,7 @@ namespace jank::jit
      * 1. https://github.com/root-project/cling/issues/483
      * 2. https://github.com/root-project/cling/issues/484
      */
-    //interpreter->setDefaultOptLevel(1);
+    interpreter->setDefaultOptLevel(1);
   }
 
   result<option<runtime::object_ptr>, native_string> processor::eval
