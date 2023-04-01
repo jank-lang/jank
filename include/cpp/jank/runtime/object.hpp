@@ -149,7 +149,7 @@ namespace jank::runtime
 
   namespace obj
   {
-    struct nil : object
+    struct nil : object, behavior::associatively_readable
     {
       nil() = default;
       nil(nil &&) noexcept = default;
@@ -161,6 +161,10 @@ namespace jank::runtime
       native_integer to_hash() const override;
 
       nil const* as_nil() const override;
+
+      behavior::associatively_readable const* as_associatively_readable() const override;
+      object_ptr get(object_ptr const key) const override;
+      object_ptr get(object_ptr const key, object_ptr const fallback) const override;
     };
     using nil_ptr = native_box<nil>;
 

@@ -225,6 +225,7 @@ namespace jank::runtime
     return ok(ns_res.first->second);
   }
 
+  /* TODO: Swap these. The other one makes a symbol anyway. */
   obj::keyword_ptr context::intern_keyword(obj::symbol const &sym, bool const resolved)
   { return intern_keyword(sym.ns, sym.name, resolved); }
   obj::keyword_ptr context::intern_keyword

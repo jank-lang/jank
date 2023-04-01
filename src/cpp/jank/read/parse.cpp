@@ -146,6 +146,7 @@ namespace jank::read::parse
     return make_box<runtime::obj::vector>(ret.persistent());
   }
 
+  /* TODO: Uniqueness check. */
   processor::object_result processor::parse_map()
   {
     auto const start_token(token_current.latest.unwrap().expect_ok());

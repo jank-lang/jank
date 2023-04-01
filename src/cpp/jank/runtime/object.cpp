@@ -43,6 +43,13 @@ namespace jank::runtime
   obj::nil const* obj::nil::as_nil() const
   { return this; }
 
+  behavior::associatively_readable const* obj::nil::as_associatively_readable() const
+  { return this; }
+  object_ptr obj::nil::get(object_ptr const) const
+  { return JANK_NIL; }
+  object_ptr obj::nil::get(object_ptr const, object_ptr const fallback) const
+  { return fallback; }
+
   std::ostream& operator<<(std::ostream &os, object const &o)
   /* TODO: Optimize this by using virtual dispatch to write into the stream, rather than allocating a string. */
   { return os << o.to_string(); }
