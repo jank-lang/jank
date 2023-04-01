@@ -195,7 +195,7 @@ namespace jank::runtime::obj
 
   behavior::associatively_writable const* map::as_associatively_writable() const
   { return this; }
-  object_ptr map::assoc(object_ptr key, object_ptr val) const
+  object_ptr map::assoc(object_ptr const key, object_ptr const val) const
   {
     auto copy(data.clone());
     copy.insert_or_assign(key, val);

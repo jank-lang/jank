@@ -61,7 +61,7 @@ set(
   # XXX: Can't use -Ofast with Clang 9, due to this issue:
   # https://github.com/cms-sw/cmssw/issues/24935
   # TODO: Anything above -O1 causes linker issues with static thread_local in immer.
-  $<$<CONFIG:RELEASE>:-O0 -ggdb3>
+  $<$<CONFIG:RELEASE>:-O1 -ggdb3>
   #-stdlib=libc++
 )
 set(jank_linker_flags "" #-stdlib=libc++ -lc++abi
