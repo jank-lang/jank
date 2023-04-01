@@ -72,6 +72,86 @@ namespace jank::runtime
     return ret;
   }
 
+  object_ptr first(object_ptr const s)
+  {
+    if(s == JANK_NIL)
+    { return s; }
+
+    auto const * const seqable(s->as_seqable());
+    if(!seqable)
+    { throw std::runtime_error{ fmt::format("not seqable: {}", s->to_string()) }; }
+
+    auto const seq(seqable->seq());
+    if(!seq)
+    { return JANK_NIL; }
+
+    return seq->first();
+  }
+
+  object_ptr first(behavior::seqable_ptr const s)
+  {
+    auto const seq(s->seq());
+    if(!seq)
+    { return JANK_NIL; }
+
+    return seq->first();
+  }
+
+  object_ptr next(object_ptr const s)
+  {
+    if(s == JANK_NIL)
+    { return s; }
+
+    auto const * const seqable(s->as_seqable());
+    if(!seqable)
+    { throw std::runtime_error{ fmt::format("not seqable: {}", s->to_string()) }; }
+
+    auto const seq(seqable->seq());
+    if(!seq)
+    { return JANK_NIL; }
+    else
+    {
+      auto const ret(seq->next());
+      if(!ret)
+      { return JANK_NIL; }
+      return ret;
+    }
+  }
+
+  object_ptr next(behavior::seqable_ptr const s)
+  {
+    auto const seq(s->seq());
+    if(!seq)
+    { return JANK_NIL; }
+    else
+    {
+      auto const ret(seq->next());
+      if(!ret)
+      { return JANK_NIL; }
+      return ret;
+    }
+  }
+
+  object_ptr conj(object_ptr const s, object_ptr const o)
+  {
+    if(s->as_nil())
+    { return make_box<jank::runtime::obj::list>(o); }
+    else if(auto const consable = s->as_consable())
+    { return consable->cons(o); }
+    else if(auto const seqable = s->as_seqable())
+    { return seqable->seq()->cons(o); }
+    else
+    { throw std::runtime_error{ fmt::format("not seqable: {}", s->to_string()) }; }
+  }
+
+  object_ptr assoc(object_ptr const m, object_ptr const k, object_ptr const v)
+  {
+    auto const res(m->as_associatively_writable());
+    if(!res)
+    { throw std::runtime_error{ fmt::format("not associatively writable: {}", m->to_string()) }; }
+    return res->assoc(k, v);
+  }
+
   object_ptr get(object_ptr const o, object_ptr const key)
   {
     assert(o);

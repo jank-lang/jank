@@ -130,7 +130,7 @@ namespace jank::runtime::detail
   template <typename K, typename V>
   struct map_type_impl
   {
-    using value_type = object_ptr*;
+    using value_type = V*;
 
     map_type_impl() = default;
     map_type_impl(map_type_impl const &s) = default;

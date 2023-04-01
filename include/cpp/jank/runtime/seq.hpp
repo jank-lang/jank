@@ -13,6 +13,12 @@ namespace jank::runtime
   }
 
   object_ptr seq(object_ptr s);
+  object_ptr first(object_ptr s);
+  object_ptr first(behavior::seqable_ptr const s);
+  object_ptr next(object_ptr s);
+  object_ptr next(behavior::seqable_ptr const s);
+  object_ptr conj(object_ptr s, object_ptr o);
+  object_ptr assoc(object_ptr m, object_ptr k, object_ptr v);
   object_ptr get(object_ptr o, object_ptr key);
   object_ptr get(object_ptr o, object_ptr key, object_ptr fallback);
 }

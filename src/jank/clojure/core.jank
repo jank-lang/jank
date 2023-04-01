@@ -48,32 +48,10 @@
 ;; Lists.
 (def first
   (fn* [o]
-    (if (nil? o)
-      nil
-      (native/raw "auto const * const seqable(#{ o }#->as_seqable());
-                   if(!seqable)
-                   { throw #{ :not-seqable }#; }
-                   auto const seq(seqable->seq());
-                   if(!seq)
-                   { __value = #{ nil }#; }
-                   else
-                   { __value = seq->first(); }"))))
+    (native/raw "__value = jank::runtime::first(#{ o }#);")))
 (def next
   (fn* [o]
-    (if (nil? o)
-      nil
-      (native/raw "auto const * const seqable(#{ o }#->as_seqable());
-                   if(!seqable)
-                   { throw #{ :not-seqable }#; }
-                   auto const seq(seqable->seq());
-                   if(!seq)
-                   { __value = #{ nil }#; }
-                   else
-                   {
-                     __value = seq->next();
-                     if(!__value)
-                     { __value = #{ nil }#; }
-                   }"))))
+    (native/raw "__value = jank::runtime::next(#{ o }#);")))
 (def nnext
   (fn* [o]
     (next (next o))))
@@ -123,14 +101,7 @@
     ([coll]
      coll)
     ([coll x]
-     (native/raw "if(#{ coll }#->as_nil())
-                  { __value = make_box<jank::runtime::obj::list>(#{ x }#); }
-                  else if(auto const consable = #{ coll }#->as_consable())
-                  { __value = consable->cons(#{ x }#); }
-                  else if(auto const seqable = #{ coll }#->as_seqable())
-                  { __value = seqable->seq()->cons(#{ x }#); }
-                  else
-                  { throw #{ :not-seqable }#; }"))
+     (native/raw "__value = jank::runtime::conj(#{ coll }#, #{ x }#);"))
     ([coll x & args]
      (let* [res (conj coll x)]
        (if (empty? args)
@@ -174,10 +145,7 @@
 (def assoc
   (fn*
     ([map key val]
-     (native/raw "auto const res(#{ map }#->as_associatively_writable());
-                  if(!res)
-                  { throw #{ :not-associatively-writable }#; }
-                  __value = res->assoc(#{ key }#, #{ val }#);"))
+     (native/raw "__value = jank::runtime::assoc(#{ map }#, #{ key }#, #{ val }#);"))
     ([map key val & kvs]
      (let* [res (assoc map key val)]
        (if (empty? kvs)
@@ -499,14 +467,13 @@
 ; Input/output.
 (def print
   (fn* [o]
-    (native/raw "std::cout << #{ o }#->to_string();
-                 __value = #{ nil }#;")))
+    (native/raw "__value = jank::runtime::context::print(#{ o }#);")))
 (def println
   (fn* [& args]
     ; TODO: Move println back into here once I sort out two things:
     ; 1. Escaped strings, so I can do the space in between each
     ; 2. The linker errors showing up when using fmt::format_to here
-    (native/raw "__value = __rt_ctx.println(#{ args }#);")))
+    (native/raw "__value = jank::runtime::context::println(#{ args }#->as_seqable());")))
 
 ; Functions.
 (def ifn?

@@ -14,6 +14,7 @@ namespace jank::runtime::behavior
     virtual ~seqable() = default;
     virtual native_box<struct sequence> seq() const = 0;
   };
+  using seqable_ptr = native_box<seqable const>;
 
   struct sequence : virtual object, seqable, consable
   {

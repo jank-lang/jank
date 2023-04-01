@@ -283,18 +283,42 @@ namespace jank::runtime
     return o;
   }
 
-  object_ptr context::println(object_ptr args)
+  object_ptr context::print(object_ptr const o)
+  {
+    auto const s(o->to_string());
+    std::fwrite(s.data(), 1, s.size(), stdout);
+    return JANK_NIL;
+  }
+
+  object_ptr context::print(object_ptr const o, behavior::seqable_ptr const more)
   {
     fmt::memory_buffer buff;
     auto inserter(std::back_inserter(buff));
-    auto * const seq(static_cast<behavior::sequence*>(const_cast<behavior::seqable*>(args->as_seqable())));
+    auto * const seq(static_cast<behavior::sequence*>(const_cast<behavior::seqable*>(more)));
+    o->to_string(buff);
     seq->first()->to_string(buff);
     for(auto *it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
     {
       fmt::format_to(inserter, std::string{ 1, ' ' });
       it->first()->to_string(buff);
     }
-    std::cout << native_string_view{ buff.data(), buff.size() } << std::endl;
+    std::fwrite(buff.data(), 1, buff.size(), stdout);
+    return JANK_NIL;
+  }
+
+  object_ptr context::println(behavior::seqable_ptr const more)
+  {
+    fmt::memory_buffer buff;
+    auto inserter(std::back_inserter(buff));
+    auto * const seq(static_cast<behavior::sequence*>(const_cast<behavior::seqable*>(more)));
+    seq->first()->to_string(buff);
+    for(auto *it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
+    {
+      fmt::format_to(inserter, std::string{ 1, ' ' });
+      it->first()->to_string(buff);
+    }
+    std::fwrite(buff.data(), 1, buff.size(), stdout);
+    std::putc('\n', stdout);
     return JANK_NIL;
   }
 

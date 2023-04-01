@@ -36,7 +36,9 @@ namespace jank::runtime
     object_ptr macroexpand1(object_ptr o);
     object_ptr macroexpand(object_ptr o);
 
-    object_ptr println(object_ptr args);
+    static object_ptr print(object_ptr o);
+    static object_ptr print(object_ptr o, behavior::seqable_ptr more);
+    static object_ptr println(behavior::seqable_ptr more);
 
     void eval_prelude(jit::processor const &);
     object_ptr eval_file(native_string_view const &path, jit::processor const &);
