@@ -16,6 +16,7 @@
 
 #include <jank/type.hpp>
 #include <jank/native_box.hpp>
+#include <jank/util/make_array.hpp>
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/function.hpp>

@@ -2,8 +2,8 @@
 
 #include <jank/native_box.hpp>
 
-namespace jank::runtime::obj
-{ struct cons; }
+namespace jank::runtime::behavior
+{ struct sequence; }
 
 namespace jank::runtime::behavior
 {

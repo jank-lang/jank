@@ -20,8 +20,11 @@ namespace jank::util
     template <typename... Args>
     struct make_array_helper<void, Args...> : std::common_type<Args...>
     {
-      static_assert(std::conjunction_v<not_ref_wrapper<Args>...>,
-                    "Args cannot contain reference_wrappers when D is void");
+      static_assert
+      (
+        std::conjunction_v<not_ref_wrapper<Args>...>,
+        "Args cannot contain reference_wrappers when D is void"
+      );
     };
 
     template <typename D, typename... Args>

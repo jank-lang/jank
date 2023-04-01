@@ -4,7 +4,7 @@
 
 namespace jank::runtime::behavior
 {
-  struct countable : virtual gc
+  struct countable
   {
     virtual ~countable() = default;
 

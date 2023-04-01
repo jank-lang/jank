@@ -20,6 +20,7 @@
 
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
+#include <jank/runtime/behavior/associatively_readable.hpp>
 #include <jank/runtime/detail/list_type.hpp>
 #include <jank/runtime/detail/map_type.hpp>
 
@@ -55,7 +56,7 @@ namespace jank::runtime
   struct ns;
 
   using object_ptr = native_box<object>;
-  struct object : virtual gc
+  struct object : gc
   {
     virtual native_bool equal(object const &) const;
     native_bool equal(object_ptr) const;

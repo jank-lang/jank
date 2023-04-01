@@ -12,11 +12,6 @@ namespace jank::runtime::obj
     : sym{ std::move(s) }, resolved{ resolved }
   { }
 
-  keyword_ptr keyword::create(symbol const &s, bool const resolved)
-  { return jank::make_box<keyword>(s, resolved); }
-  keyword_ptr keyword::create(symbol &&s, bool const resolved)
-  { return jank::make_box<keyword>(std::move(s), resolved); }
-
   /* Keywords are interned, so we can always count on identity equality. */
   native_bool keyword::equal(object const &o) const
   { return this == &o; }

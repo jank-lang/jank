@@ -25,6 +25,14 @@ namespace jank
     { throw std::runtime_error{ "unable to allocate box" }; }
     return ret;
   }
+  template <typename T, typename... Args>
+  native_box<T> make_array_box(Args &&... args)
+  {
+    auto const ret(new (GC) T[sizeof...(Args)]{ std::forward<Args>(args)... });
+    if(!ret)
+    { throw std::runtime_error{ "unable to allocate array box" }; }
+    return ret;
+  }
 
   namespace runtime::obj
   {

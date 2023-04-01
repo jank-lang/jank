@@ -536,7 +536,7 @@ namespace jank::codegen
     format_to
     (
       inserter,
-      "auto const {}(jank::make_box<jank::runtime::obj::map>(jank::runtime::detail::in_place_unique{{}}, native_vector<std::pair<jank::runtime::object_ptr, jank::runtime::object_ptr>>{{",
+      "auto const {}(jank::make_box<jank::runtime::obj::map>(jank::runtime::detail::in_place_unique{{}}, jank::make_array_box<object_ptr>(",
       ret_tmp
     );
     bool need_comma{};
@@ -544,11 +544,11 @@ namespace jank::codegen
     {
       if(need_comma)
       { format_to(inserter, ", "); }
-      format_to(inserter, "{{ {}", data_tmp.first);
-      format_to(inserter, ", {} }}", data_tmp.second);
+      format_to(inserter, "{}", data_tmp.first);
+      format_to(inserter, ", {}", data_tmp.second);
       need_comma = true;
     }
-    format_to(inserter, "}}));");
+    format_to(inserter, "),{}));", data_tmps.size() * 2);
 
     if(expr.expr_type == analyze::expression_type::return_statement)
     {

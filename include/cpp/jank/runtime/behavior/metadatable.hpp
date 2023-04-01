@@ -8,7 +8,7 @@ namespace jank::runtime
 
   namespace behavior
   {
-    struct metadatable : virtual gc
+    struct metadatable
     {
       virtual ~metadatable() = default;
 

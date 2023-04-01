@@ -250,7 +250,7 @@ namespace jank::runtime
     if(found != locked_keywords->end())
     { return found->second; }
 
-    auto const res(locked_keywords->insert({sym, obj::keyword::create(sym, resolved)}));
+    auto const res(locked_keywords->insert({sym, make_box<obj::keyword>(sym, resolved)}));
     return res.first->second;
   }
 

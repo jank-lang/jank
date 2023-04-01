@@ -2,7 +2,7 @@
 
 namespace jank::runtime::obj
 {
-  struct number : virtual gc
+  struct number
   {
     virtual ~number() = default;
 

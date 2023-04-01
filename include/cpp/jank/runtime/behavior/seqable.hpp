@@ -9,7 +9,7 @@ namespace jank::runtime::obj
 
 namespace jank::runtime::behavior
 {
-  struct seqable : virtual gc
+  struct seqable
   {
     virtual ~seqable() = default;
     virtual native_box<struct sequence> seq() const = 0;

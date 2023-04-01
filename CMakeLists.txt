@@ -105,7 +105,7 @@ find_package(
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
-target_link_directories(jank_cling_lib SYSTEM PRIVATE ${LLVM_LIBRARY_DIRS})
+target_link_directories(jank_cling_lib PRIVATE ${LLVM_LIBRARY_DIRS})
 target_link_libraries(jank_cling_lib PRIVATE -Wl,--whole-archive clingInterpreter -Wl,--no-whole-archive)
 
 set_target_properties(jank_cling_lib PROPERTIES LINK_FLAGS -s)
@@ -182,7 +182,7 @@ target_include_directories(jank_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 
-target_link_directories(jank_lib SYSTEM PRIVATE ${jank_cling_build_dir}/build-compiler-rt/lib/linux)
+target_link_directories(jank_lib PRIVATE ${jank_cling_build_dir}/build-compiler-rt/lib/linux)
 target_link_libraries(
   jank_lib PRIVATE
   jank_cling_lib immer fmt::fmt

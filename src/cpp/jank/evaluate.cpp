@@ -179,10 +179,17 @@ namespace jank::evaluate
     analyze::expr::map<analyze::expression> const &expr
   )
   {
+    /* TODO: Optimize with a transient or something. */
     runtime::detail::persistent_map ret;
     for(auto const &e : expr.data_exprs)
-    { ret.data.emplace_back(eval(rt_ctx, jit_prc, e.first), eval(rt_ctx, jit_prc, e.second)); }
-    return runtime::obj::map::create(ret);
+    {
+      ret.insert_or_assign
+      (
+        eval(rt_ctx, jit_prc, e.first),
+        eval(rt_ctx, jit_prc, e.second)
+      );
+    }
+    return runtime::obj::map::create(std::move(ret));
   }
 
   runtime::object_ptr eval

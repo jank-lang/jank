@@ -61,7 +61,10 @@ namespace jank::runtime::obj
     { return static_cast<sequence_ptr>(const_cast<map_iterator_wrapper<It>*>(this)); }
 
     object_ptr first() const override
-    { return jank::make_box<vector>(runtime::detail::peristent_vector{ begin->first, begin->second }); }
+    {
+      auto const pair(*begin);
+      return jank::make_box<vector>(runtime::detail::peristent_vector{ pair.first, pair.second });
+    }
     behavior::sequence_ptr next() const override
     {
       auto n(begin);
@@ -88,7 +91,8 @@ namespace jank::runtime::obj
       if(begin == end)
       { return nullptr; }
 
-      return jank::make_box<vector>(runtime::detail::peristent_vector{ begin->first, begin->second });
+      auto const pair(*begin);
+      return jank::make_box<vector>(runtime::detail::peristent_vector{ pair.first, pair.second });
     }
 
     object_ptr coll{};
@@ -115,9 +119,10 @@ namespace jank::runtime::obj
     inserter = '{';
     for(auto i(begin); i != end; ++i)
     {
-      i->first->to_string(buff);
+      auto const pair(*i);
+      pair.first->to_string(buff);
       inserter = ' ';
-      i->second->to_string(buff);
+      pair.second->to_string(buff);
       auto n(i);
       if(++n != end)
       {
@@ -192,7 +197,7 @@ namespace jank::runtime::obj
   { return this; }
   object_ptr map::assoc(object_ptr key, object_ptr val) const
   {
-    auto copy(data);
+    auto copy(data.clone());
     copy.insert_or_assign(key, val);
     return create(std::move(copy));
   }

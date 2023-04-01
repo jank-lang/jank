@@ -35,7 +35,7 @@ namespace jank::runtime
 
   namespace behavior
   {
-    struct callable : virtual gc
+    struct callable
     {
       virtual object_ptr call() const;
       virtual object_ptr call(object_ptr) const;

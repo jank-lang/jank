@@ -17,9 +17,6 @@ namespace jank::runtime::obj
     keyword(symbol &&s, bool const resolved);
     ~keyword() = default;
 
-    static native_box<keyword> create(symbol const &s, bool const resolved);
-    static native_box<keyword> create(symbol &&s, bool const resolved);
-
     native_bool equal(object const &) const override;
     native_string to_string() const override;
     void to_string(fmt::memory_buffer &buff) const override;
