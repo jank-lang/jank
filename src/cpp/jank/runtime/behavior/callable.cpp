@@ -22,8 +22,8 @@ namespace jank::runtime
   object_ptr dynamic_call(object_ptr source)
   {
     auto const * const c(assert_callable(source));
-    auto const &variadic_arg_position(c->get_variadic_arg_position());
-    switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
+    auto const variadic_arg_position(c->get_variadic_arg_position());
+    switch(variadic_arg_position)
     {
       case 0:
         /* TODO: Empty list constant. */
@@ -35,8 +35,8 @@ namespace jank::runtime
   object_ptr dynamic_call(object_ptr source, object_ptr a1)
   {
     auto const * const c(assert_callable(source));
-    auto const &variadic_arg_position(c->get_variadic_arg_position());
-    switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
+    auto const variadic_arg_position(c->get_variadic_arg_position());
+    switch(variadic_arg_position)
     {
       case 0:
         return c->call(jank::make_box<behavior::array_sequence<1>>(a1));
@@ -47,8 +47,8 @@ namespace jank::runtime
   object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2)
   {
     auto const * const c(assert_callable(source));
-    auto const &variadic_arg_position(c->get_variadic_arg_position());
-    switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
+    auto const variadic_arg_position(c->get_variadic_arg_position());
+    switch(variadic_arg_position)
     {
       case 0:
         return c->call(jank::make_box<behavior::array_sequence<2>>(a1, a2));
@@ -61,8 +61,8 @@ namespace jank::runtime
   object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2, object_ptr a3)
   {
     auto const * const c(assert_callable(source));
-    auto const &variadic_arg_position(c->get_variadic_arg_position());
-    switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
+    auto const variadic_arg_position(c->get_variadic_arg_position());
+    switch(variadic_arg_position)
     {
       case 0:
         return c->call(jank::make_box<behavior::array_sequence<3>>(a1, a2, a3));
@@ -77,8 +77,8 @@ namespace jank::runtime
   object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2, object_ptr a3, object_ptr a4)
   {
     auto const * const c(assert_callable(source));
-    auto const &variadic_arg_position(c->get_variadic_arg_position());
-    switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
+    auto const variadic_arg_position(c->get_variadic_arg_position());
+    switch(variadic_arg_position)
     {
       case 0:
         return c->call(jank::make_box<behavior::array_sequence<4>>(a1, a2, a3, a4));
@@ -95,8 +95,8 @@ namespace jank::runtime
   object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2, object_ptr a3, object_ptr a4, object_ptr a5)
   {
     auto const * const c(assert_callable(source));
-    auto const &variadic_arg_position(c->get_variadic_arg_position());
-    switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
+    auto const variadic_arg_position(c->get_variadic_arg_position());
+    switch(variadic_arg_position)
     {
       case 0:
         return c->call(jank::make_box<behavior::array_sequence<5>>(a1, a2, a3, a4, a5));
@@ -115,8 +115,8 @@ namespace jank::runtime
   object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2, object_ptr a3, object_ptr a4, object_ptr a5, object_ptr a6)
   {
     auto const * const c(assert_callable(source));
-    auto const &variadic_arg_position(c->get_variadic_arg_position());
-    switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
+    auto const variadic_arg_position(c->get_variadic_arg_position());
+    switch(variadic_arg_position)
     {
       case 0:
         return c->call(jank::make_box<behavior::array_sequence<6>>(a1, a2, a3, a4, a5, a6));
@@ -137,8 +137,8 @@ namespace jank::runtime
   object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2, object_ptr a3, object_ptr a4, object_ptr a5, object_ptr a6, object_ptr a7)
   {
     auto const * const c(assert_callable(source));
-    auto const &variadic_arg_position(c->get_variadic_arg_position());
-    switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
+    auto const variadic_arg_position(c->get_variadic_arg_position());
+    switch(variadic_arg_position)
     {
       case 0:
         return c->call(jank::make_box<behavior::array_sequence<7>>(a1, a2, a3, a4, a5, a6, a7));
@@ -161,8 +161,8 @@ namespace jank::runtime
   object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2, object_ptr a3, object_ptr a4, object_ptr a5, object_ptr a6, object_ptr a7, object_ptr a8)
   {
     auto const * const c(assert_callable(source));
-    auto const &variadic_arg_position(c->get_variadic_arg_position());
-    switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
+    auto const variadic_arg_position(c->get_variadic_arg_position());
+    switch(variadic_arg_position)
     {
       case 0:
         return c->call(jank::make_box<behavior::array_sequence<8>>(a1, a2, a3, a4, a5, a6, a7, a8));
@@ -187,8 +187,8 @@ namespace jank::runtime
   object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2, object_ptr a3, object_ptr a4, object_ptr a5, object_ptr a6, object_ptr a7, object_ptr a8, object_ptr a9)
   {
     auto const * const c(assert_callable(source));
-    auto const &variadic_arg_position(c->get_variadic_arg_position());
-    switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
+    auto const variadic_arg_position(c->get_variadic_arg_position());
+    switch(variadic_arg_position)
     {
       case 0:
         return c->call(jank::make_box<behavior::array_sequence<9>>(a1, a2, a3, a4, a5, a6, a7, a8, a9));
@@ -215,8 +215,8 @@ namespace jank::runtime
   object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2, object_ptr a3, object_ptr a4, object_ptr a5, object_ptr a6, object_ptr a7, object_ptr a8, object_ptr a9, object_ptr a10)
   {
     auto const * const c(assert_callable(source));
-    auto const &variadic_arg_position(c->get_variadic_arg_position());
-    switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
+    auto const variadic_arg_position(c->get_variadic_arg_position());
+    switch(variadic_arg_position)
     {
       case 0:
         return c->call(jank::make_box<behavior::array_sequence<10>>(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10));
@@ -245,8 +245,8 @@ namespace jank::runtime
   object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2, object_ptr a3, object_ptr a4, object_ptr a5, object_ptr a6, object_ptr a7, object_ptr a8, object_ptr a9, object_ptr a10, obj::list_ptr rest)
   {
     auto const * const c(assert_callable(source));
-    auto const &variadic_arg_position(c->get_variadic_arg_position());
-    switch(variadic_arg_position.unwrap_or(std::numeric_limits<size_t>::max()))
+    auto const variadic_arg_position(c->get_variadic_arg_position());
+    switch(variadic_arg_position)
     {
       /* TODO: Optimize this with a faster seq? */
       case 0:
@@ -482,7 +482,7 @@ namespace jank::runtime
     object_ptr callable::call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const
     { throw obj::invalid_arity<10>{}; }
 
-    option<size_t> callable::get_variadic_arg_position() const
-    { return none; }
+    size_t callable::get_variadic_arg_position() const
+    { return std::numeric_limits<size_t>::max(); }
   }
 }

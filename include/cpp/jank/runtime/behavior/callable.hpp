@@ -49,7 +49,7 @@ namespace jank::runtime
       virtual object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const;
       virtual object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const;
 
-      virtual option<size_t> get_variadic_arg_position() const;
+      virtual size_t get_variadic_arg_position() const;
     };
     using callable_ptr = native_box<callable>;
   }

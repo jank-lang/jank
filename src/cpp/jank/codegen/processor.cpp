@@ -1102,7 +1102,7 @@ namespace jank::codegen
       format_to
       (
         inserter,
-        "jank::option<size_t> get_variadic_arg_position() const final{{ return static_cast<size_t>({}); }}",
+        "size_t get_variadic_arg_position() const final{{ return static_cast<size_t>({}); }}",
         variadic_arg_position.unwrap()
       );
     }
