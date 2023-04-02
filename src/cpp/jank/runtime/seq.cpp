@@ -56,6 +56,11 @@ namespace jank::runtime
     }
   }
 
+  native_bool is_nil(object_ptr const o)
+  { return (o == JANK_NIL); }
+  native_bool is_some(object_ptr const o)
+  { return (o != JANK_NIL); }
+
   object_ptr seq(object_ptr const s)
   {
     if(s->as_nil())

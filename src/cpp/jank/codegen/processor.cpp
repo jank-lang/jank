@@ -369,11 +369,19 @@ namespace jank::codegen
         format_elided_var("jank::runtime::get(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, false);
         elided = true;
       }
+      else if(expr.arg_exprs.empty())
+      {
+        if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "rand" }))
+        {
+          format_elided_var("jank::runtime::obj::rand(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, box_needed);
+          elided = true;
+        }
+      }
       else if(expr.arg_exprs.size() == 1)
       {
         if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "print" }))
         {
-          format_elided_var("jank::runtime::context::print(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, box_needed);
+          format_elided_var("jank::runtime::context::print(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, false);
           elided = true;
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "abs" }))
@@ -393,17 +401,27 @@ namespace jank::codegen
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "seq" }))
         {
-          format_elided_var("jank::runtime::seq(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, box_needed);
+          format_elided_var("jank::runtime::seq(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, false);
           elided = true;
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "first" }))
         {
-          format_elided_var("jank::runtime::first(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, box_needed);
+          format_elided_var("jank::runtime::first(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, false);
           elided = true;
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "next" }))
         {
-          format_elided_var("jank::runtime::next(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, box_needed);
+          format_elided_var("jank::runtime::next(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, false);
+          elided = true;
+        }
+        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "nil?" }))
+        {
+          format_elided_var("jank::runtime::is_nil(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, box_needed);
+          elided = true;
+        }
+        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "some?" }))
+        {
+          format_elided_var("jank::runtime::is_some(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, box_needed);
           elided = true;
         }
       }
@@ -466,7 +484,7 @@ namespace jank::codegen
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "conj" }))
         {
-          format_elided_var("jank::runtime::conj(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, box_needed);
+          format_elided_var("jank::runtime::conj(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, false);
           elided = true;
         }
       }
@@ -474,7 +492,7 @@ namespace jank::codegen
       {
         if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "assoc" }))
         {
-          format_elided_var("jank::runtime::assoc(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, box_needed);
+          format_elided_var("jank::runtime::assoc(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, false);
           elided = true;
         }
       }

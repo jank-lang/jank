@@ -10,4 +10,5 @@ namespace jank::runtime::behavior
     virtual object_ptr get(object_ptr key) const = 0;
     virtual object_ptr get(object_ptr key, object_ptr fallback) const = 0;
   };
+  using associatively_readable_ptr = native_box<associatively_readable>;
 }

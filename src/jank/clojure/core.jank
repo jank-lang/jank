@@ -17,10 +17,10 @@
     (native/raw "__value = #{ o }#->equal(*#{ false }#) ? #{ true }# : #{ false }#")))
 (def nil?
   (fn* [o]
-    (native/raw "__value = #{ o }#->equal(*#{ nil }#) ? #{ true }# : #{ false }#")))
+    (native/raw "__value = (o == JANK_NIL) ? #{ true }# : #{ false }#")))
 (def some?
   (fn* [o]
-    (native/raw "__value = #{ o }#->equal(*#{ nil }#) ? #{ false }# : #{ true }#")))
+    (native/raw "__value = (o == JANK_NIL) ? #{ false }# : #{ true }#")))
 
 ;; Collections.
 (def empty?

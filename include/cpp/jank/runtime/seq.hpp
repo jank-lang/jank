@@ -12,6 +12,8 @@ namespace jank::runtime
     void to_string(behavior::sequence_ptr const s, fmt::memory_buffer &buff);
   }
 
+  native_bool is_nil(object_ptr o);
+  native_bool is_some(object_ptr o);
   object_ptr seq(object_ptr s);
   object_ptr first(object_ptr s);
   object_ptr first(behavior::seqable_ptr const s);
