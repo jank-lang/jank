@@ -123,9 +123,9 @@
         r (sqrt (* scale (get v :r)))
         g (sqrt (* scale (get v :g)))
         b (sqrt (* scale (get v :b)))]
-    (print+space (int (* 256 (clamp r 0.0 0.999))))
-    (print+space (int (* 256 (clamp g 0.0 0.999))))
-    (print+space (int (* 256 (clamp b 0.0 0.999))))))
+    (print+space (int (* 256.0 (clamp r 0.0 0.999))))
+    (print+space (int (* 256.0 (clamp g 0.0 0.999))))
+    (print+space (int (* 256.0 (clamp b 0.0 0.999))))))
 
 (defn ray-create [origin direction]
   {:origin origin
