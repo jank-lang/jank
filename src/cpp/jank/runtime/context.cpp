@@ -266,7 +266,7 @@ namespace jank::runtime
     if(var.is_none() || var.unwrap()->meta.is_none())
     { return o; }
 
-    auto const &meta(static_cast<obj::map*>(var.unwrap()->meta.unwrap()));
+    auto const meta(var.unwrap()->meta.unwrap());
     auto const * const found_macro(meta->data.find(intern_keyword("", "macro", true)));
     if(!found_macro || found_macro->equal(obj::JANK_FALSE))
     { return o; }

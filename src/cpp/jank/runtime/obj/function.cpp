@@ -75,11 +75,11 @@ namespace jank::runtime::obj
   object_ptr function::call(object_ptr arg1, object_ptr arg2, object_ptr arg3, object_ptr arg4, object_ptr arg5, object_ptr arg6, object_ptr arg7, object_ptr arg8, object_ptr arg9, object_ptr arg10) const
   { return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10); }
 
-  object_ptr function::with_meta(object_ptr m) const
+  object_ptr function::with_meta(object_ptr const m) const
   {
-    validate_meta(m);
+    auto const meta(validate_meta(m));
     auto ret(jank::make_box<function>(data));
-    ret->meta = m;
+    ret->meta = meta;
     return ret;
   }
 

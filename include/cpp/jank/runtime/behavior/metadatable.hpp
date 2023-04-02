@@ -4,7 +4,10 @@
 
 namespace jank::runtime
 {
-  using object_ptr = struct object*;
+  using object_ptr = native_box<struct object>;
+
+  namespace obj
+  { using map_ptr = native_box<struct map>; }
 
   namespace behavior
   {
@@ -16,9 +19,9 @@ namespace jank::runtime
        * That requires knowledge of the most derived type. */
       virtual object_ptr with_meta(object_ptr) const = 0;
 
-      static void validate_meta(object_ptr);
+      static obj::map_ptr validate_meta(object_ptr);
 
-      option<object_ptr> meta;
+      option<obj::map_ptr> meta;
     };
   }
 }

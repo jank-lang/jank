@@ -84,9 +84,9 @@ namespace jank::runtime::obj
 
   object_ptr list::with_meta(object_ptr m) const
   {
-    validate_meta(m);
+    auto const meta(validate_meta(m));
     auto ret(jank::make_box<list>(data));
-    ret->meta = m;
+    ret->meta = meta;
     return ret;
   }
 

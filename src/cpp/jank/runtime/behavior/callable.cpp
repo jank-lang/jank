@@ -11,7 +11,7 @@
 
 namespace jank::runtime
 {
-  behavior::callable const* assert_callable(object_ptr source)
+  behavior::callable const* assert_callable(object_ptr const source)
   {
     auto const * const c(source->as_callable());
     if(c == nullptr)

@@ -41,11 +41,11 @@ namespace jank::runtime
   var const* var::as_var() const
   { return this; }
 
-  object_ptr var::with_meta(object_ptr m) const
+  object_ptr var::with_meta(object_ptr const m) const
   {
-    validate_meta(m);
+    auto const meta(validate_meta(m));
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-    const_cast<var*>(this)->meta = m;
+    const_cast<var*>(this)->meta = meta;
     return const_cast<var*>(this);
   }
 

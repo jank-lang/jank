@@ -68,11 +68,11 @@ namespace jank::runtime::obj
   symbol const* symbol::as_symbol() const
   { return this; }
 
-  object_ptr symbol::with_meta(object_ptr m) const
+  object_ptr symbol::with_meta(object_ptr const m) const
   {
-    validate_meta(m);
+    auto const meta(validate_meta(m));
     auto ret(jank::make_box<symbol>(ns, name));
-    ret->meta = m;
+    ret->meta = meta;
     return ret;
   }
 

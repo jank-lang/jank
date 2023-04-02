@@ -2,11 +2,15 @@
 
 namespace jank::runtime::behavior
 {
-  void metadatable::validate_meta(object_ptr m)
+  obj::map_ptr metadatable::validate_meta(object_ptr const m)
   {
-    if(m == nullptr || m->as_map() == nullptr)
-    { throw std::runtime_error{ fmt::format("invalid meta: {}", m ? m->to_string() : "nullptr") }; }
+    if(!m)
+    { throw std::runtime_error{ fmt::format("invalid meta: nullptr") }; }
 
-    static_cast<void>(m);
+    obj::map_ptr const ret{ const_cast<obj::map_ptr>(m->as_map()) };
+    if(!ret)
+    { throw std::runtime_error{ fmt::format("invalid meta: {}", m->to_string()) }; }
+
+    return ret;
   }
 }

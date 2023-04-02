@@ -903,9 +903,9 @@ namespace jank::codegen
         {{ return this; }}
         jank::runtime::object_ptr with_meta(jank::runtime::object_ptr const m) const final
         {{
-          validate_meta(m);
+          auto const meta(validate_meta(m));
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-          const_cast<{0}*>(this)->meta = m;
+          const_cast<{0}*>(this)->meta = meta;
           return const_cast<{0}*>(this);
         }}
         jank::runtime::behavior::metadatable const* as_metadatable() const final

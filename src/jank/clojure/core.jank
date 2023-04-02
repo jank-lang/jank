@@ -508,8 +508,8 @@
                  // TODO: Standard exception handling.
                  if(md == nullptr)
                  { throw #{ :not-metadatable }#; }
-                 behavior::metadatable::validate_meta(#{ m }#);
-                 const_cast<behavior::metadatable*>(md)->meta = #{ m }#;
+                 auto const meta(behavior::metadatable::validate_meta(#{ m }#));
+                 const_cast<behavior::metadatable*>(md)->meta = meta;
                  __value = #{ m }#;")))
 
 ; Macros.
