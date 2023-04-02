@@ -18,7 +18,7 @@ namespace jank::runtime::obj
       : vec{ v }, index{ i }
     { }
 
-    void to_string(fmt::memory_buffer &buff) const override
+    void to_string(fmt::memory_buffer &buff) const final
     {
       return behavior::detail::to_string
       (
@@ -28,7 +28,7 @@ namespace jank::runtime::obj
         buff
       );
     }
-    native_string to_string() const override
+    native_string to_string() const final
     {
       fmt::memory_buffer buff;
       behavior::detail::to_string
@@ -40,21 +40,21 @@ namespace jank::runtime::obj
       );
       return { buff.data(), buff.size() };
     }
-    native_integer to_hash() const override
+    native_integer to_hash() const final
     /* TODO: Hash from contents. */
     { return reinterpret_cast<native_integer>(this); }
 
-    sequence_ptr seq() const override
+    sequence_ptr seq() const final
     { return static_cast<sequence_ptr>(const_cast<vector_sequence*>(this)); }
 
-    behavior::countable const* as_countable() const override
+    behavior::countable const* as_countable() const final
     { return this; }
-    size_t count() const override
+    size_t count() const final
     { return vec->data.size(); }
 
-    object_ptr first() const override
+    object_ptr first() const final
     { return vec->data[index]; }
-    sequence_ptr next() const override
+    sequence_ptr next() const final
     {
       auto n(index);
       ++n;
@@ -64,7 +64,7 @@ namespace jank::runtime::obj
 
       return jank::make_box<vector_sequence>(vec, n);
     }
-    sequence_ptr next_in_place() override
+    sequence_ptr next_in_place() final
     {
       ++index;
 
@@ -73,7 +73,7 @@ namespace jank::runtime::obj
 
       return this;
     }
-    object_ptr next_in_place_first() override
+    object_ptr next_in_place_first() final
     {
       ++index;
 

@@ -20,12 +20,12 @@ namespace jank::runtime::obj
     boolean(boolean const &) = default;
     boolean(native_bool const d);
 
-    native_bool equal(object const &) const override;
-    native_string to_string() const override;
-    void to_string(fmt::memory_buffer &buff) const override;
-    native_integer to_hash() const override;
+    native_bool equal(object const &) const final;
+    native_string to_string() const final;
+    void to_string(fmt::memory_buffer &buff) const final;
+    native_integer to_hash() const final;
 
-    boolean const* as_boolean() const override;
+    boolean const* as_boolean() const final;
 
     native_bool data{};
   };
@@ -40,16 +40,16 @@ namespace jank::runtime::obj
 
     static native_box<integer> create(native_integer const &n);
 
-    native_bool equal(object const &) const override;
-    native_string to_string() const override;
-    void to_string(fmt::memory_buffer &) const override;
-    native_integer to_hash() const override;
+    native_bool equal(object const &) const final;
+    native_string to_string() const final;
+    void to_string(fmt::memory_buffer &) const final;
+    native_integer to_hash() const final;
 
-    native_integer get_integer() const override;
-    native_real get_real() const override;
+    native_integer get_integer() const final;
+    native_real get_real() const final;
 
-    integer const* as_integer() const override;
-    number const* as_number() const override;
+    integer const* as_integer() const final;
+    number const* as_number() const final;
 
     native_integer data{};
   };
@@ -62,16 +62,16 @@ namespace jank::runtime::obj
     real(real const &) = default;
     real(native_real const d);
 
-    native_bool equal(object const &) const override;
-    native_string to_string() const override;
-    void to_string(fmt::memory_buffer &buff) const override;
-    native_integer to_hash() const override;
+    native_bool equal(object const &) const final;
+    native_string to_string() const final;
+    void to_string(fmt::memory_buffer &buff) const final;
+    native_integer to_hash() const final;
 
-    native_integer get_integer() const override;
-    native_real get_real() const override;
+    native_integer get_integer() const final;
+    native_real get_real() const final;
 
-    real const* as_real() const override;
-    number const* as_number() const override;
+    real const* as_real() const final;
+    number const* as_number() const final;
 
     native_real data{};
   };

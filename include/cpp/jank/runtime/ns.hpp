@@ -25,12 +25,12 @@ namespace jank::runtime
 
     static ns_ptr create(obj::symbol_ptr const &n, context const &c);
 
-    native_bool equal(object const &) const override;
-    native_string to_string() const override;
-    void to_string(fmt::memory_buffer &buff) const override;
-    native_integer to_hash() const override;
+    native_bool equal(object const &) const final;
+    native_string to_string() const final;
+    void to_string(fmt::memory_buffer &buff) const final;
+    native_integer to_hash() const final;
 
-    ns const* as_ns() const override;
+    ns const* as_ns() const final;
 
     bool operator ==(ns const &rhs) const;
 

@@ -48,28 +48,28 @@ namespace jank::runtime::obj
 
     static native_box<function> create(detail::function_type const &d);
 
-    native_bool equal(object const &) const override;
-    native_string to_string() const override;
-    void to_string(fmt::memory_buffer &buff) const override;
-    native_integer to_hash() const override;
+    native_bool equal(object const &) const final;
+    native_string to_string() const final;
+    void to_string(fmt::memory_buffer &buff) const final;
+    native_integer to_hash() const final;
 
-    function const* as_function() const override;
-    behavior::callable const* as_callable() const override;
+    function const* as_function() const final;
+    behavior::callable const* as_callable() const final;
 
-    object_ptr call() const override;
-    object_ptr call(object_ptr) const override;
-    object_ptr call(object_ptr, object_ptr) const override;
-    object_ptr call(object_ptr, object_ptr, object_ptr) const override;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr) const override;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const override;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const override;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const override;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const override;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const override;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const override;
+    object_ptr call() const final;
+    object_ptr call(object_ptr) const final;
+    object_ptr call(object_ptr, object_ptr) const final;
+    object_ptr call(object_ptr, object_ptr, object_ptr) const final;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr) const final;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const final;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const final;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const final;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const final;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const final;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const final;
 
-    object_ptr with_meta(object_ptr m) const override;
-    behavior::metadatable const* as_metadatable() const override;
+    object_ptr with_meta(object_ptr m) const final;
+    behavior::metadatable const* as_metadatable() const final;
 
     detail::function_type data;
   };

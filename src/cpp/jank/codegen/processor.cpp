@@ -875,22 +875,22 @@ namespace jank::codegen
     (
       inserter,
       R"(
-        jank::native_bool equal(object const &rhs) const override
+        jank::native_bool equal(object const &rhs) const final
         {{ return this == &rhs; }}
-        jank::native_string to_string() const override
+        jank::native_string to_string() const final
         {{ return "jit function"; }}
-        jank::native_integer to_hash() const override
+        jank::native_integer to_hash() const final
         {{ return reinterpret_cast<jank::native_integer>(this); }}
-        jank::runtime::behavior::callable const* as_callable() const override
+        jank::runtime::behavior::callable const* as_callable() const final
         {{ return this; }}
-        jank::runtime::object_ptr with_meta(jank::runtime::object_ptr const m) const override
+        jank::runtime::object_ptr with_meta(jank::runtime::object_ptr const m) const final
         {{
           validate_meta(m);
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
           const_cast<{0}*>(this)->meta = m;
           return const_cast<{0}*>(this);
         }}
-        jank::runtime::behavior::metadatable const* as_metadatable() const override
+        jank::runtime::behavior::metadatable const* as_metadatable() const final
         {{ return this; }}
       )",
       runtime::munge(struct_name.name)
@@ -1025,7 +1025,7 @@ namespace jank::codegen
       (
         inserter,
         R"(
-          ) const override {{
+          ) const final {{
           using namespace jank;
           using namespace jank::runtime;
         )"
@@ -1073,7 +1073,7 @@ namespace jank::codegen
       format_to
       (
         inserter,
-        "jank::option<size_t> get_variadic_arg_position() const override{{ return static_cast<size_t>({}); }}",
+        "jank::option<size_t> get_variadic_arg_position() const final{{ return static_cast<size_t>({}); }}",
         variadic_arg_position.unwrap()
       );
     }

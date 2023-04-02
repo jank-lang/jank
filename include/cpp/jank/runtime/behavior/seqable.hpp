@@ -31,10 +31,10 @@ namespace jank::runtime::behavior
      * do own, and then next_in_place() on that to your heart's content. */
     virtual sequence_ptr next_in_place() = 0;
     virtual object_ptr next_in_place_first() = 0;
-    native_box<consable> cons(object_ptr head) const override;
+    native_box<consable> cons(object_ptr head) const final;
 
-    behavior::seqable const* as_seqable() const override;
-    native_bool equal(object const &o) const override;
+    behavior::seqable const* as_seqable() const final;
+    native_bool equal(object const &o) const final;
     native_integer to_hash() const override;
 
     mutable size_t hash{};
@@ -70,28 +70,28 @@ namespace jank::runtime::behavior
       { throw std::runtime_error{ "basic_iterator_wrapper for empty sequence" }; }
     }
 
-    void to_string(fmt::memory_buffer &buff) const override
+    void to_string(fmt::memory_buffer &buff) const final
     { return detail::to_string(begin, end, '(', ')', buff); }
-    native_string to_string() const override
+    native_string to_string() const final
     {
       fmt::memory_buffer buff;
       detail::to_string(begin, end, '(', ')', buff);
       return native_string{ buff.data(), buff.size() };
     }
-    native_integer to_hash() const override
+    native_integer to_hash() const final
     { return reinterpret_cast<native_integer>(this); }
 
-    sequence_ptr seq() const override
+    sequence_ptr seq() const final
     { return static_cast<sequence_ptr>(const_cast<basic_iterator_wrapper<It>*>(this)); }
 
-    behavior::countable const* as_countable() const override
+    behavior::countable const* as_countable() const final
     { return this; }
-    size_t count() const override
+    size_t count() const final
     { return size; }
 
-    object_ptr first() const override
+    object_ptr first() const final
     { return *begin; }
-    sequence_ptr next() const override
+    sequence_ptr next() const final
     {
       auto n(begin);
       ++n;
@@ -101,7 +101,7 @@ namespace jank::runtime::behavior
 
       return jank::make_box<basic_iterator_wrapper<It>>(coll, n, end, size);
     }
-    sequence_ptr next_in_place() override
+    sequence_ptr next_in_place() final
     {
       ++begin;
 
@@ -110,7 +110,7 @@ namespace jank::runtime::behavior
 
       return this;
     }
-    object_ptr next_in_place_first() override
+    object_ptr next_in_place_first() final
     {
       ++begin;
 
@@ -143,28 +143,28 @@ namespace jank::runtime::behavior
       : arr{ first, rest... }
     { }
 
-    void to_string(fmt::memory_buffer &buff) const override
+    void to_string(fmt::memory_buffer &buff) const final
     { return detail::to_string(arr.begin() + index, arr.end(), '(', ')', buff); }
-    native_string to_string() const override
+    native_string to_string() const final
     {
       fmt::memory_buffer buff;
       detail::to_string(arr.begin() + index, arr.end(), '(', ')', buff);
       return native_string{ buff.data(), buff.size() };
     }
-    native_integer to_hash() const override
+    native_integer to_hash() const final
     { return reinterpret_cast<native_integer>(this); }
 
-    sequence_ptr seq() const override
+    sequence_ptr seq() const final
     { return static_cast<sequence_ptr>(const_cast<array_sequence*>(this)); }
 
-    behavior::countable const* as_countable() const override
+    behavior::countable const* as_countable() const final
     { return this; }
-    size_t count() const override
+    size_t count() const final
     { return N; }
 
-    object_ptr first() const override
+    object_ptr first() const final
     { return arr[index]; }
-    sequence_ptr next() const override
+    sequence_ptr next() const final
     {
       auto n(index);
       ++n;
@@ -174,7 +174,7 @@ namespace jank::runtime::behavior
 
       return jank::make_box<array_sequence<N>>(arr, n);
     }
-    sequence_ptr next_in_place() override
+    sequence_ptr next_in_place() final
     {
       ++index;
 
@@ -183,7 +183,7 @@ namespace jank::runtime::behavior
 
       return this;
     }
-    object_ptr next_in_place_first() override
+    object_ptr next_in_place_first() final
     {
       ++index;
 
@@ -211,28 +211,28 @@ namespace jank::runtime::behavior
       : arr{ std::move(arr) }
     { }
 
-    void to_string(fmt::memory_buffer &buff) const override
+    void to_string(fmt::memory_buffer &buff) const final
     { return detail::to_string(arr.begin() + index, arr.end(), '(', ')', buff); }
-    native_string to_string() const override
+    native_string to_string() const final
     {
       fmt::memory_buffer buff;
       detail::to_string(arr.begin() + index, arr.end(), '(', ')', buff);
       return native_string{ buff.data(), buff.size() };
     }
-    native_integer to_hash() const override
+    native_integer to_hash() const final
     { return reinterpret_cast<native_integer>(this); }
 
-    sequence_ptr seq() const override
+    sequence_ptr seq() const final
     { return static_cast<sequence_ptr>(const_cast<vector_sequence*>(this)); }
 
-    behavior::countable const* as_countable() const override
+    behavior::countable const* as_countable() const final
     { return this; }
-    size_t count() const override
+    size_t count() const final
     { return arr.size(); }
 
-    object_ptr first() const override
+    object_ptr first() const final
     { return arr[index]; }
-    sequence_ptr next() const override
+    sequence_ptr next() const final
     {
       auto n(index);
       ++n;
@@ -242,7 +242,7 @@ namespace jank::runtime::behavior
 
       return jank::make_box<vector_sequence>(arr, n);
     }
-    sequence_ptr next_in_place() override
+    sequence_ptr next_in_place() final
     {
       ++index;
 
@@ -251,7 +251,7 @@ namespace jank::runtime::behavior
 
       return this;
     }
-    object_ptr next_in_place_first() override
+    object_ptr next_in_place_first() final
     {
       ++index;
 

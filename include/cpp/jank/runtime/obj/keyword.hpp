@@ -17,12 +17,12 @@ namespace jank::runtime::obj
     keyword(symbol &&s, bool const resolved);
     ~keyword() = default;
 
-    native_bool equal(object const &) const override;
-    native_string to_string() const override;
-    void to_string(fmt::memory_buffer &buff) const override;
-    native_integer to_hash() const override;
+    native_bool equal(object const &) const final;
+    native_string to_string() const final;
+    void to_string(fmt::memory_buffer &buff) const final;
+    native_integer to_hash() const final;
 
-    keyword const* as_keyword() const override;
+    keyword const* as_keyword() const final;
 
     bool operator ==(keyword const &rhs) const;
 

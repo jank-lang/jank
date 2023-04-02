@@ -26,22 +26,22 @@ namespace jank::runtime::obj
 
     static native_box<list> create(behavior::sequence_ptr const &s);
 
-    native_bool equal(object const &) const override;
-    native_string to_string() const override;
-    void to_string(fmt::memory_buffer &buff) const override;
-    native_integer to_hash() const override;
+    native_bool equal(object const &) const final;
+    native_string to_string() const final;
+    void to_string(fmt::memory_buffer &buff) const final;
+    native_integer to_hash() const final;
 
-    list const* as_list() const override;
-    behavior::seqable const* as_seqable() const override;
+    list const* as_list() const final;
+    behavior::seqable const* as_seqable() const final;
 
-    behavior::sequence_ptr seq() const override;
-    size_t count() const override;
+    behavior::sequence_ptr seq() const final;
+    size_t count() const final;
 
-    behavior::consable const* as_consable() const override;
-    native_box<behavior::consable> cons(object_ptr head) const override;
+    behavior::consable const* as_consable() const final;
+    native_box<behavior::consable> cons(object_ptr head) const final;
 
-    object_ptr with_meta(object_ptr m) const override;
-    behavior::metadatable const* as_metadatable() const override;
+    object_ptr with_meta(object_ptr m) const final;
+    behavior::metadatable const* as_metadatable() const final;
 
     runtime::detail::persistent_list data;
   };

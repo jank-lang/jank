@@ -45,27 +45,27 @@ namespace jank::runtime::obj
       }
       format_to(inserter, ")");
     }
-    void to_string(fmt::memory_buffer &buff) const override
+    void to_string(fmt::memory_buffer &buff) const final
     { return to_string_impl(buff); }
-    native_string to_string() const override
+    native_string to_string() const final
     {
       fmt::memory_buffer buff;
       to_string_impl(buff);
       return native_string{ buff.data(), buff.size() };
     }
-    native_integer to_hash() const override
+    native_integer to_hash() const final
     /* TODO: Hash from contents. */
     { return reinterpret_cast<native_integer>(this); }
 
-    sequence_ptr seq() const override
+    sequence_ptr seq() const final
     { return static_cast<sequence_ptr>(const_cast<map_iterator_wrapper<It>*>(this)); }
 
-    object_ptr first() const override
+    object_ptr first() const final
     {
       auto const pair(*begin);
       return jank::make_box<vector>(runtime::detail::peristent_vector{ pair.first, pair.second });
     }
-    behavior::sequence_ptr next() const override
+    behavior::sequence_ptr next() const final
     {
       auto n(begin);
       ++n;
@@ -75,7 +75,7 @@ namespace jank::runtime::obj
 
       return jank::make_box<map_iterator_wrapper<It>>(coll, n, end);
     }
-    behavior::sequence* next_in_place() override
+    behavior::sequence* next_in_place() final
     {
       ++begin;
 
@@ -84,7 +84,7 @@ namespace jank::runtime::obj
 
       return this;
     }
-    object_ptr next_in_place_first() override
+    object_ptr next_in_place_first() final
     {
       ++begin;
 

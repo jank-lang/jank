@@ -22,15 +22,15 @@ namespace jank::runtime
     var(ns_ptr const &n, obj::symbol_ptr const &s);
     var(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr o);
 
-    native_bool equal(object const &) const override;
-    native_string to_string() const override;
-    void to_string(fmt::memory_buffer &buff) const override;
-    native_integer to_hash() const override;
+    native_bool equal(object const &) const final;
+    native_string to_string() const final;
+    void to_string(fmt::memory_buffer &buff) const final;
+    native_integer to_hash() const final;
 
-    var const* as_var() const override;
+    var const* as_var() const final;
 
-    object_ptr with_meta(object_ptr m) const override;
-    behavior::metadatable const* as_metadatable() const override;
+    object_ptr with_meta(object_ptr m) const final;
+    behavior::metadatable const* as_metadatable() const final;
 
     bool operator ==(var const &rhs) const;
 

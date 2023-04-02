@@ -100,60 +100,60 @@ namespace jank::runtime::obj
 
   struct integer_ops : number_ops
   {
-    number_ops const& combine(number_ops const &l) const override
+    number_ops const& combine(number_ops const &l) const final
     { return l.with(*this); }
-    number_ops const& with(integer_ops const&) const override;
-    number_ops const& with(real_ops const&) const override;
+    number_ops const& with(integer_ops const&) const final;
+    number_ops const& with(real_ops const&) const final;
 
-    object_ptr add() const override
+    object_ptr add() const final
     { return jank::make_box<integer>(left + right); }
-    native_real add_real() const override
+    native_real add_real() const final
     { return left + right; }
-    object_ptr subtract() const override
+    object_ptr subtract() const final
     { return jank::make_box<integer>(left - right); }
-    native_real sub_real() const override
+    native_real sub_real() const final
     { return left - right; }
-    object_ptr multiply() const override
+    object_ptr multiply() const final
     { return jank::make_box<integer>(left * right); }
-    native_real mul_real() const override
+    native_real mul_real() const final
     { return left * right; }
-    object_ptr divide() const override
+    object_ptr divide() const final
     { return jank::make_box<integer>(left / right); }
-    native_real div_real() const override
+    native_real div_real() const final
     { return static_cast<native_real>(left) / right; }
-    object_ptr remainder() const override
+    object_ptr remainder() const final
     { return jank::make_box<integer>(left % right); }
-    object_ptr inc() const override
+    object_ptr inc() const final
     { return jank::make_box<integer>(left + 1); }
-    object_ptr dec() const override
+    object_ptr dec() const final
     { return jank::make_box<integer>(left - 1); }
-    object_ptr negate() const override
+    object_ptr negate() const final
     { return jank::make_box<integer>(-left); }
-    object_ptr abs() const override
+    object_ptr abs() const final
     { return jank::make_box<integer>(std::labs(left)); }
-    object_ptr min() const override
+    object_ptr min() const final
     { return jank::make_box<integer>(std::min(left, right)); }
-    native_real min_real() const override
+    native_real min_real() const final
     { return std::min(left, right); }
-    object_ptr max() const override
+    object_ptr max() const final
     { return jank::make_box<integer>(std::max(left, right)); }
-    native_real max_real() const override
+    native_real max_real() const final
     { return std::max(left, right); }
-    native_real pow() const override
+    native_real pow() const final
     { return std::pow(left, right); }
-    native_bool lt() const override
+    native_bool lt() const final
     { return left < right; }
-    native_bool lte() const override
+    native_bool lte() const final
     { return left <= right; }
-    native_bool gte() const override
+    native_bool gte() const final
     { return left >= right; }
-    native_bool equal() const override
+    native_bool equal() const final
     { return left == right; }
-    native_bool is_positive() const override
+    native_bool is_positive() const final
     { return left > 0; }
-    native_bool is_negative() const override
+    native_bool is_negative() const final
     { return left < 0; }
-    native_bool is_zero() const override
+    native_bool is_zero() const final
     { return left == 0; }
 
     native_integer left{}, right{};
@@ -161,65 +161,65 @@ namespace jank::runtime::obj
 
   struct real_ops : number_ops
   {
-    number_ops const& combine(number_ops const &l) const override
+    number_ops const& combine(number_ops const &l) const final
     { return l.with(*this); }
-    number_ops const& with(integer_ops const&) const override;
-    number_ops const& with(real_ops const&) const override;
+    number_ops const& with(integer_ops const&) const final;
+    number_ops const& with(real_ops const&) const final;
 
-    object_ptr add() const override
+    object_ptr add() const final
     { return jank::make_box<real>(left + right); }
-    native_real add_real() const override
+    native_real add_real() const final
     { return left + right; }
-    object_ptr subtract() const override
+    object_ptr subtract() const final
     { return jank::make_box<real>(left - right); }
-    native_real sub_real() const override
+    native_real sub_real() const final
     { return left - right; }
-    object_ptr multiply() const override
+    object_ptr multiply() const final
     { return jank::make_box<real>(left * right); }
-    native_real mul_real() const override
+    native_real mul_real() const final
     { return left * right; }
-    object_ptr divide() const override
+    object_ptr divide() const final
     { return jank::make_box<real>(left / right); }
-    native_real div_real() const override
+    native_real div_real() const final
     { return left / right; }
-    object_ptr remainder() const override
+    object_ptr remainder() const final
     { return jank::make_box<real>(std::fmod(left, right)); }
-    object_ptr inc() const override
+    object_ptr inc() const final
     { return jank::make_box<real>(left + 1); }
-    object_ptr dec() const override
+    object_ptr dec() const final
     { return jank::make_box<real>(right + 1); }
-    object_ptr negate() const override
+    object_ptr negate() const final
     { return jank::make_box<real>(-left); }
-    object_ptr abs() const override
+    object_ptr abs() const final
     { return jank::make_box<real>(std::fabs(left)); }
-    object_ptr min() const override
+    object_ptr min() const final
     { return jank::make_box<real>(std::min(left, right)); }
-    native_real min_real() const override
+    native_real min_real() const final
     { return std::min(left, right); }
-    object_ptr max() const override
+    object_ptr max() const final
     { return jank::make_box<real>(std::max(left, right)); }
-    native_real max_real() const override
+    native_real max_real() const final
     { return std::max(left, right); }
-    native_real pow() const override
+    native_real pow() const final
     { return std::pow(left, right); }
-    native_bool lt() const override
+    native_bool lt() const final
     { return left < right; }
-    native_bool lte() const override
+    native_bool lte() const final
     { return left <= right; }
-    native_bool gte() const override
+    native_bool gte() const final
     { return left >= right; }
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
-    native_bool equal() const override
+    native_bool equal() const final
     { return left == right; }
 #pragma clang diagnostic pop
-    native_bool is_positive() const override
+    native_bool is_positive() const final
     { return left > 0; }
-    native_bool is_negative() const override
+    native_bool is_negative() const final
     { return left < 0; }
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
-    native_bool is_zero() const override
+    native_bool is_zero() const final
     { return left == 0; }
 #pragma clang diagnostic pop
 

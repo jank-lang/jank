@@ -8,14 +8,14 @@ namespace jank::runtime::obj
   {
     iterator(behavior::callable_ptr const fn, object_ptr const start);
 
-    behavior::sequence_ptr seq() const override;
-    object_ptr first() const override;
-    behavior::sequence_ptr next() const override;
-    behavior::sequence_ptr next_in_place() override;
-    object_ptr next_in_place_first() override;
+    behavior::sequence_ptr seq() const final;
+    object_ptr first() const final;
+    behavior::sequence_ptr next() const final;
+    behavior::sequence_ptr next_in_place() final;
+    object_ptr next_in_place_first() final;
 
-    void to_string(fmt::memory_buffer &buff) const override;
-    native_string to_string() const override;
+    void to_string(fmt::memory_buffer &buff) const final;
+    native_string to_string() const final;
 
     /* TODO: Support chunking. */
     behavior::callable_ptr fn{};

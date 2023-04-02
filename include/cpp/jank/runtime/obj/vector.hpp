@@ -30,26 +30,26 @@ namespace jank::runtime::obj
     static native_box<vector> create(runtime::detail::peristent_vector const &);
     static native_box<vector> create(behavior::sequence_ptr const &s);
 
-    native_bool equal(object const &) const override;
-    native_string to_string() const override;
-    void to_string(fmt::memory_buffer &buff) const override;
-    native_integer to_hash() const override;
+    native_bool equal(object const &) const final;
+    native_string to_string() const final;
+    void to_string(fmt::memory_buffer &buff) const final;
+    native_integer to_hash() const final;
 
-    vector const* as_vector() const override;
-    behavior::seqable const* as_seqable() const override;
+    vector const* as_vector() const final;
+    behavior::seqable const* as_seqable() const final;
 
-    behavior::sequence_ptr seq() const override;
-    size_t count() const override;
+    behavior::sequence_ptr seq() const final;
+    size_t count() const final;
 
-    behavior::consable const* as_consable() const override;
-    native_box<behavior::consable> cons(object_ptr head) const override;
+    behavior::consable const* as_consable() const final;
+    native_box<behavior::consable> cons(object_ptr head) const final;
 
-    object_ptr with_meta(object_ptr m) const override;
-    behavior::metadatable const* as_metadatable() const override;
+    object_ptr with_meta(object_ptr m) const final;
+    behavior::metadatable const* as_metadatable() const final;
 
-    behavior::associatively_readable const* as_associatively_readable() const override;
-    object_ptr get(object_ptr key) const override;
-    object_ptr get(object_ptr key, object_ptr fallback) const override;
+    behavior::associatively_readable const* as_associatively_readable() const final;
+    object_ptr get(object_ptr key) const final;
+    object_ptr get(object_ptr key, object_ptr fallback) const final;
 
     runtime::detail::peristent_vector data;
   };

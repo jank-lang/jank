@@ -156,15 +156,15 @@ namespace jank::runtime
       nil(nil const &) = default;
       virtual ~nil() = default;
 
-      native_bool equal(object const &) const override;
-      native_string to_string() const override;
-      native_integer to_hash() const override;
+      native_bool equal(object const &) const final;
+      native_string to_string() const final;
+      native_integer to_hash() const final;
 
-      nil const* as_nil() const override;
+      nil const* as_nil() const final;
 
-      behavior::associatively_readable const* as_associatively_readable() const override;
-      object_ptr get(object_ptr const key) const override;
-      object_ptr get(object_ptr const key, object_ptr const fallback) const override;
+      behavior::associatively_readable const* as_associatively_readable() const final;
+      object_ptr get(object_ptr const key) const final;
+      object_ptr get(object_ptr const key, object_ptr const fallback) const final;
     };
     using nil_ptr = native_box<nil>;
 
