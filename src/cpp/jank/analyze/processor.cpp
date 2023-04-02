@@ -150,8 +150,15 @@ namespace jank::analyze
     if(var.is_none())
     { return err(error{ "unbound symbol: " + sym->to_string() }); }
 
-    rt_ctx.intern_var(qualified_sym);
-    current_frame->lift_var(qualified_sym);
+    /* Macros aren't lifted, since they're not used during runtime. */
+    auto const unwrapped_var(var.unwrap());
+    auto const macro_kw(rt_ctx.intern_keyword("", "macro", true));
+    if
+    (
+      unwrapped_var->meta.is_none() ||
+      unwrapped_var->meta.unwrap()->get(macro_kw) == runtime::JANK_NIL
+    )
+    { current_frame->lift_var(qualified_sym); }
     return make_box<expression>
     (
       expr::var_deref<expression>
