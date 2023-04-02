@@ -19,7 +19,7 @@ namespace jank::runtime
     return c;
   }
 
-  object_ptr dynamic_call(object_ptr source)
+  object_ptr dynamic_call(object_ptr const source)
   {
     auto const * const c(assert_callable(source));
     auto const variadic_arg_position(c->get_variadic_arg_position());
@@ -32,7 +32,7 @@ namespace jank::runtime
         return c->call();
     }
   }
-  object_ptr dynamic_call(object_ptr source, object_ptr a1)
+  object_ptr dynamic_call(object_ptr const source, object_ptr const a1)
   {
     auto const * const c(assert_callable(source));
     auto const variadic_arg_position(c->get_variadic_arg_position());
@@ -44,7 +44,7 @@ namespace jank::runtime
         return c->call(a1);
     }
   }
-  object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2)
+  object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2)
   {
     auto const * const c(assert_callable(source));
     auto const variadic_arg_position(c->get_variadic_arg_position());
@@ -58,7 +58,7 @@ namespace jank::runtime
         return c->call(a1, a2);
     }
   }
-  object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2, object_ptr a3)
+  object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3)
   {
     auto const * const c(assert_callable(source));
     auto const variadic_arg_position(c->get_variadic_arg_position());
@@ -74,7 +74,7 @@ namespace jank::runtime
         return c->call(a1, a2, a3);
     }
   }
-  object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2, object_ptr a3, object_ptr a4)
+  object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3, object_ptr const a4)
   {
     auto const * const c(assert_callable(source));
     auto const variadic_arg_position(c->get_variadic_arg_position());
@@ -92,7 +92,7 @@ namespace jank::runtime
         return c->call(a1, a2, a3, a4);
     }
   }
-  object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2, object_ptr a3, object_ptr a4, object_ptr a5)
+  object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3, object_ptr const a4, object_ptr const a5)
   {
     auto const * const c(assert_callable(source));
     auto const variadic_arg_position(c->get_variadic_arg_position());
@@ -112,7 +112,7 @@ namespace jank::runtime
         return c->call(a1, a2, a3, a4, a5);
     }
   }
-  object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2, object_ptr a3, object_ptr a4, object_ptr a5, object_ptr a6)
+  object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3, object_ptr const a4, object_ptr const a5, object_ptr const a6)
   {
     auto const * const c(assert_callable(source));
     auto const variadic_arg_position(c->get_variadic_arg_position());
@@ -134,7 +134,7 @@ namespace jank::runtime
         return c->call(a1, a2, a3, a4, a5, a6);
     }
   }
-  object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2, object_ptr a3, object_ptr a4, object_ptr a5, object_ptr a6, object_ptr a7)
+  object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3, object_ptr const a4, object_ptr const a5, object_ptr const a6, object_ptr const a7)
   {
     auto const * const c(assert_callable(source));
     auto const variadic_arg_position(c->get_variadic_arg_position());
@@ -158,7 +158,7 @@ namespace jank::runtime
         return c->call(a1, a2, a3, a4, a5, a6, a7);
     }
   }
-  object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2, object_ptr a3, object_ptr a4, object_ptr a5, object_ptr a6, object_ptr a7, object_ptr a8)
+  object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3, object_ptr const a4, object_ptr const a5, object_ptr const a6, object_ptr const a7, object_ptr const a8)
   {
     auto const * const c(assert_callable(source));
     auto const variadic_arg_position(c->get_variadic_arg_position());
@@ -184,7 +184,7 @@ namespace jank::runtime
         return c->call(a1, a2, a3, a4, a5, a6, a7, a8);
     }
   }
-  object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2, object_ptr a3, object_ptr a4, object_ptr a5, object_ptr a6, object_ptr a7, object_ptr a8, object_ptr a9)
+  object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3, object_ptr const a4, object_ptr const a5, object_ptr const a6, object_ptr const a7, object_ptr const a8, object_ptr const a9)
   {
     auto const * const c(assert_callable(source));
     auto const variadic_arg_position(c->get_variadic_arg_position());
@@ -212,7 +212,7 @@ namespace jank::runtime
         return c->call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
     }
   }
-  object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2, object_ptr a3, object_ptr a4, object_ptr a5, object_ptr a6, object_ptr a7, object_ptr a8, object_ptr a9, object_ptr a10)
+  object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3, object_ptr const a4, object_ptr const a5, object_ptr const a6, object_ptr const a7, object_ptr const a8, object_ptr const a9, object_ptr const a10)
   {
     auto const * const c(assert_callable(source));
     auto const variadic_arg_position(c->get_variadic_arg_position());
@@ -242,7 +242,7 @@ namespace jank::runtime
         return c->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
   }
-  object_ptr dynamic_call(object_ptr source, object_ptr a1, object_ptr a2, object_ptr a3, object_ptr a4, object_ptr a5, object_ptr a6, object_ptr a7, object_ptr a8, object_ptr a9, object_ptr a10, obj::list_ptr rest)
+  object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3, object_ptr const a4, object_ptr const a5, object_ptr const a6, object_ptr const a7, object_ptr const a8, object_ptr const a9, object_ptr const a10, obj::list_ptr rest)
   {
     auto const * const c(assert_callable(source));
     auto const variadic_arg_position(c->get_variadic_arg_position());
@@ -334,7 +334,7 @@ namespace jank::runtime
     }
   }
 
-  object_ptr apply_to(object_ptr source, object_ptr args)
+  object_ptr apply_to(object_ptr const source, object_ptr const args)
   {
     auto const &s(args->as_seqable()->seq());
     auto const length(detail::sequence_length(s, max_params + 1));
