@@ -50,16 +50,24 @@ namespace jank::codegen
     constexpr native_string_view const recur_suffix{ "__recur" };
 
     /* TODO: Consider making this a virtual fn on object, to return the C++ name. */
-    native_string_view gen_constant_type(runtime::object_ptr const o)
+    native_string_view gen_constant_type(runtime::object_ptr const o, bool const boxed)
     {
       if(o->as_nil())
       { return "jank::runtime::obj::nil_ptr"; }
       else if(auto const * const d = o->as_boolean())
       { return "jank::runtime::obj::boolean_ptr"; }
       else if(auto const * const d = o->as_integer())
-      { return "jank::runtime::obj::integer_ptr"; }
+      {
+        if(boxed)
+        { return "jank::runtime::obj::integer_ptr"; }
+        return "jank::native_integer";
+      }
       else if(auto const * const d = o->as_real())
-      { return "jank::runtime::obj::real_ptr"; }
+      {
+        if(boxed)
+        { return "jank::runtime::obj::real_ptr"; }
+        return "jank::native_real";
+      }
       else if(auto const * const d = o->as_symbol())
       { return "jank::runtime::obj::symbol_ptr"; }
       else if(auto const * const d = o->as_keyword())
@@ -80,8 +88,14 @@ namespace jank::codegen
       { return "jank::runtime::object_ptr"; }
     }
 
-    void gen_constant(runtime::object_ptr const o, fmt::memory_buffer &buffer)
+    void gen_constant(runtime::object_ptr const o, fmt::memory_buffer &buffer, bool const boxed)
     {
+      if(!boxed)
+      {
+        o->to_string(buffer);
+        return;
+      }
+
       auto inserter(std::back_inserter(buffer));
       if(o->as_nil())
       { format_to(inserter, "jank::runtime::JANK_NIL"); }
@@ -129,7 +143,7 @@ namespace jank::codegen
         for(auto const &form : d->data)
         {
           format_to(inserter, ", ");
-          gen_constant(form, buffer);
+          gen_constant(form, buffer, true);
         }
         format_to(inserter, ")");
       }
@@ -143,7 +157,7 @@ namespace jank::codegen
         {
           if(need_comma)
           { format_to(inserter, ", "); }
-          gen_constant(form, buffer);
+          gen_constant(form, buffer, true);
           need_comma = true;
         }
         format_to(inserter, ")");
@@ -517,14 +531,18 @@ namespace jank::codegen
   (
     analyze::expr::primitive_literal<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &,
-    bool const
+    bool const box_needed
   )
   {
     auto const &constant(expr.frame->find_lifted_constant(expr.data).unwrap().get());
     switch(expr.expr_type)
     {
       case analyze::expression_type::expression:
-      { return constant.native_name.name; }
+      {
+        if(!box_needed && constant.unboxed_native_name.is_some())
+        { return constant.unboxed_native_name.unwrap().name; }
+        return constant.native_name.name;
+      }
       case analyze::expression_type::return_statement:
       {
         auto inserter(std::back_inserter(body_buffer));
@@ -910,14 +928,26 @@ namespace jank::codegen
 
       for(auto const &v : arity.frame->lifted_constants)
       {
-        /* TODO: More useful types here. */
         format_to
         (
           inserter,
           "{} const {};",
-          detail::gen_constant_type(v.second.data),
+          detail::gen_constant_type(v.second.data, true),
           runtime::munge(v.second.native_name.name)
         );
+
+        if(v.second.unboxed_native_name.is_some())
+        {
+          format_to
+          (
+            inserter,
+            "static constexpr {} const {}{{ ",
+            detail::gen_constant_type(v.second.data, false),
+            runtime::munge(v.second.unboxed_native_name.unwrap().name)
+          );
+          detail::gen_constant(v.second.data, header_buffer, false);
+          format_to(inserter, "}};");
+        }
       }
 
       /* TODO: More useful types here. */
@@ -966,7 +996,6 @@ namespace jank::codegen
         );
       }
 
-      /* TODO: Also generate unboxed constants for some types. */
       for(auto const &v : arity.frame->lifted_constants)
       {
         format_to
@@ -975,7 +1004,7 @@ namespace jank::codegen
           ", {0}{{",
           runtime::munge(v.second.native_name.name)
         );
-        detail::gen_constant(v.second.data, header_buffer);
+        detail::gen_constant(v.second.data, header_buffer, true);
         format_to(inserter, "}}");
       }
 

@@ -16,9 +16,12 @@ namespace jank::analyze
     runtime::obj::symbol_ptr var_name{};
   };
 
+  /* TODO: Track constant usages to figure out if boxing is needed at all,
+   * rather than just doing both. */
   struct lifted_constant
   {
     runtime::obj::symbol native_name;
+    option<runtime::obj::symbol> unboxed_native_name;
     runtime::object_ptr data{};
   };
 
@@ -58,7 +61,7 @@ namespace jank::analyze
 
     /* This is used to find both captures and regular locals, since it's
      * impossible to know which one a sym is without finding it. */
-    option<find_result> find_capture(runtime::obj::symbol_ptr const &sym);
+    option<find_result> find_capture(runtime::obj::symbol_ptr sym);
     static void register_captures(find_result const &result);
 
     runtime::obj::symbol_ptr lift_var(runtime::obj::symbol_ptr const &);

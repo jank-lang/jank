@@ -39,7 +39,7 @@ namespace jank::analyze
     return *this;
   }
 
-  option<local_frame::find_result> local_frame::find_capture(runtime::obj::symbol_ptr const &sym)
+  option<local_frame::find_result> local_frame::find_capture(runtime::obj::symbol_ptr const sym)
   {
     decltype(local_frame::find_result::crossed_fns) crossed_fns;
 
@@ -111,18 +111,24 @@ namespace jank::analyze
     return none;
   }
 
-  void local_frame::lift_constant(runtime::object_ptr constant)
+  void local_frame::lift_constant(runtime::object_ptr const constant)
   {
     auto &closest_fn(find_closest_fn_frame(*this));
     auto const &found(closest_fn.lifted_constants.find(constant));
     if(found != closest_fn.lifted_constants.end())
     { return; }
-    lifted_constant l{ runtime::context::unique_symbol("const"), constant };
+
+    auto name(runtime::context::unique_symbol("const"));
+    option<runtime::obj::symbol> unboxed_name;
+    if(constant->as_number())
+    { unboxed_name = runtime::obj::symbol{ name.ns, name.name + "__unboxed" }; }
+
+    lifted_constant l{ std::move(name), std::move(unboxed_name), constant };
     closest_fn.lifted_constants.emplace(constant, std::move(l));
   }
 
   option<std::reference_wrapper<lifted_constant const>> local_frame::find_lifted_constant
-  (runtime::object_ptr o) const
+  (runtime::object_ptr const o) const
   {
     auto const &closest_fn(find_closest_fn_frame(*this));
     auto const &found(closest_fn.lifted_constants.find(o));
