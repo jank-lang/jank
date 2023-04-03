@@ -124,7 +124,7 @@ namespace jank::codegen
     void build_header();
     void build_body();
     void build_footer();
-    native_string expression_str(bool const auto_call = true);
+    native_string expression_str(bool box_needed, bool const auto_call);
 
 
     void format_elided_var
@@ -136,6 +136,14 @@ namespace jank::codegen
       analyze::expr::function_arity<analyze::expression> const &fn_arity,
       bool arg_box_needed,
       bool ret_box_needed
+    );
+    void format_direct_call
+    (
+      native_string const &source_tmp,
+      native_string_view const &ret_tmp,
+      native_vector<native_box<analyze::expression>> const &arg_exprs,
+      analyze::expr::function_arity<analyze::expression> const &fn_arity,
+      bool arg_box_needed
     );
     void format_dynamic_call
     (

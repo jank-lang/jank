@@ -32,6 +32,7 @@ int main(int const argc, char const **argv)
 
   rt_ctx.eval_prelude(jit_prc);
 
+  /* TODO: This doesn't handle macros properly, I think. */
   //{
   //  auto const mfile(jank::util::map_file(file));
   //  jank::read::lex::processor l_prc{ { mfile.expect_ok().head, mfile.expect_ok().size } };

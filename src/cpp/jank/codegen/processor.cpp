@@ -330,6 +330,35 @@ namespace jank::codegen
     format_to(inserter, "{}{});", end, (ret_box_needed ? ")" : ""));
   }
 
+  void processor::format_direct_call
+  (
+    native_string const &source_tmp,
+    native_string_view const &ret_tmp,
+    native_vector<native_box<analyze::expression>> const &arg_exprs,
+    analyze::expr::function_arity<analyze::expression> const &fn_arity,
+    bool const arg_box_needed
+  )
+  {
+    native_vector<native_string> arg_tmps;
+    arg_tmps.reserve(arg_exprs.size());
+    for(auto const &arg_expr : arg_exprs)
+    { arg_tmps.emplace_back(gen(arg_expr, fn_arity, arg_box_needed).unwrap()); }
+
+    auto inserter(std::back_inserter(body_buffer));
+    format_to
+    (inserter, "auto const {}({}.call(", ret_tmp, source_tmp);
+
+    bool need_comma{};
+    for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
+    {
+      if(need_comma)
+      { format_to(inserter, ", "); }
+      format_to(inserter, "{}", arg_tmps[i]);
+      need_comma = true;
+    }
+    format_to(inserter, "));");
+  }
+
   void processor::format_dynamic_call
   (
     native_string const &source_tmp,
@@ -511,6 +540,21 @@ namespace jank::codegen
         }
       }
     }
+    else if(auto const * const fn = boost::get<analyze::expr::function<analyze::expression>>(&expr.source_expr->data))
+    {
+      bool variadic{};
+      for(auto const &arity: fn->arities)
+      {
+        if(arity.fn_ctx->is_variadic)
+        { variadic = true; }
+      }
+      if(!variadic)
+      {
+        auto const &source_tmp(gen(expr.source_expr, fn_arity, false));
+        format_direct_call(source_tmp.unwrap(), ret_tmp, expr.arg_exprs, fn_arity, true);
+        elided = true;
+      }
+    }
 
     if(!elided)
     {
@@ -658,7 +702,7 @@ namespace jank::codegen
   (
     analyze::expr::function<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &,
-    bool const
+    bool const box_needed
   )
   {
     /* Since each codegen proc handles one callable struct, we create a new one for this fn. */
@@ -669,11 +713,11 @@ namespace jank::codegen
     switch(expr.expr_type)
     {
       case analyze::expression_type::expression:
-      { return prc.expression_str(false); }
+      { return prc.expression_str(box_needed, false); }
       case analyze::expression_type::return_statement:
       {
         auto body_inserter(std::back_inserter(body_buffer));
-        format_to(body_inserter, "return {};", prc.expression_str(false));
+        format_to(body_inserter, "return {};", prc.expression_str(box_needed, false));
         return none;
       }
       /* Statement of a fn literal is a nop. */
@@ -1114,8 +1158,7 @@ namespace jank::codegen
     format_to(inserter, "}};");
   }
 
-  /* TODO: Something better than a default arg. */
-  native_string processor::expression_str(bool const auto_call)
+  native_string processor::expression_str(bool const box_needed, bool const auto_call)
   {
     if(!generated_expression)
     {
@@ -1154,13 +1197,28 @@ namespace jank::codegen
       }
       else
       {
-        format_to
-        (
-          inserter,
-          "jank::make_box<{0}>(std::ref(*reinterpret_cast<jank::runtime::context*>({1}))",
-          runtime::munge(struct_name.name),
-          fmt::ptr(&rt_ctx)
-        );
+        native_string_view close = ")";
+        if(box_needed)
+        {
+          format_to
+          (
+            inserter,
+            "jank::make_box<{0}>(std::ref(*reinterpret_cast<jank::runtime::context*>({1}))",
+            runtime::munge(struct_name.name),
+            fmt::ptr(&rt_ctx)
+          );
+        }
+        else
+        {
+          format_to
+          (
+            inserter,
+            "{0}{{ std::ref(*reinterpret_cast<jank::runtime::context*>({1}))",
+            runtime::munge(struct_name.name),
+            fmt::ptr(&rt_ctx)
+          );
+          close = "}";
+        }
 
         for(auto const &arity : root_fn.arities)
         {
@@ -1168,7 +1226,7 @@ namespace jank::codegen
           { format_to(inserter, ", {0}", runtime::munge(v.first->name)); }
         }
 
-        format_to(inserter, ")");
+        format_to(inserter, "{}", close);
       }
 
       generated_expression = true;

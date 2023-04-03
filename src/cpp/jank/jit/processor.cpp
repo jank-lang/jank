@@ -102,7 +102,7 @@ namespace jank::jit
     /* TODO: Improve Cling to accept string_views instead. */
     interpreter->declare(static_cast<std::string>(cg_prc.declaration_str()));
 
-    auto const expr(cg_prc.expression_str(false));
+    auto const expr(cg_prc.expression_str(true, false));
     if(expr.empty())
     { return ok(none); }
 
