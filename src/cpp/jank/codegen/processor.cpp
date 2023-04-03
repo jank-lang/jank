@@ -416,7 +416,7 @@ namespace jank::codegen
       {
         if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "rand" }))
         {
-          format_elided_var("jank::runtime::obj::rand(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, box_needed);
+          format_elided_var("jank::runtime::obj::rand(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
         }
       }
