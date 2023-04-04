@@ -9,6 +9,8 @@ namespace jank::runtime::obj
 
   behavior::sequence_ptr cons::seq() const
   { return static_cast<sequence_ptr>(const_cast<cons*>(this)); }
+  behavior::sequence_ptr cons::fresh_seq() const
+  { return jank::make_box<cons>(head, tail); }
 
   object_ptr cons::first() const
   { return head; }

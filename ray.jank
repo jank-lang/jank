@@ -337,9 +337,9 @@
                                         (vec3-scale camera-w focus-distance))
 
             hittables (rand-scene!)
-            y-counter (reverse (range 0 image-height))
-            x-counter (range 0 image-width)
-            sample-counter (range 0 samples-per-pixel)]
+            y-counter (reverse (range image-height))
+            x-counter (range image-width)
+            sample-counter (range samples-per-pixel)]
 
         (println "P3")
         (print+space image-width) (println image-height)

@@ -58,6 +58,15 @@ namespace jank::runtime::obj
       behavior::basic_iterator_wrapper<runtime::detail::persistent_set::iterator>
     >(const_cast<set*>(this), data.begin(), data.end(), data.size());
   }
+  behavior::sequence_ptr set::fresh_seq() const
+  {
+    if(data.empty())
+    { return nullptr; }
+    return jank::make_box
+    <
+      behavior::basic_iterator_wrapper<runtime::detail::persistent_set::iterator>
+    >(const_cast<set*>(this), data.begin(), data.end(), data.size());
+  }
 
   size_t set::count() const
   { return data.size(); }

@@ -70,6 +70,15 @@ namespace jank::runtime::obj
       behavior::basic_iterator_wrapper<runtime::detail::persistent_list::iterator>
     >(const_cast<list*>(this), data.begin(), data.end(), data.size());
   }
+  behavior::sequence_ptr list::fresh_seq() const
+  {
+    if(data.size() == 0)
+    { return nullptr; }
+    return jank::make_box
+    <
+      behavior::basic_iterator_wrapper<runtime::detail::persistent_list::iterator>
+    >(const_cast<list*>(this), data.begin(), data.end(), data.size());
+  }
   size_t list::count() const
   { return data.size(); }
 

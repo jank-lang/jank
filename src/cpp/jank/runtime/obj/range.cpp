@@ -16,6 +16,8 @@ namespace jank::runtime::obj
 
   behavior::sequence_ptr range::seq() const
   { return static_cast<sequence_ptr>(const_cast<range*>(this)); }
+  behavior::sequence_ptr range::fresh_seq() const
+  { return jank::make_box<range>(start, end, step); }
 
   object_ptr range::first() const
   { return start; }
@@ -29,8 +31,7 @@ namespace jank::runtime::obj
     if(!lt(next_start, end))
     { return nullptr; }
 
-    /* TODO: Why can't I use make_box here? */
-    auto const ret(new (GC) range{ next_start, end, step });
+    auto const ret(jank::make_box<range>(next_start, end, step));
     cached_next = ret;
     return ret;
   }

@@ -37,7 +37,7 @@
   (fn* [o]
     (if (nil? o)
       0
-      ; TODO: Interfacef or counting without turning into seq first.
+      ; TODO: Interface for counting without turning into seq first.
       (native/raw "auto const * const seqable(#{ o }#->as_seqable());
                    if(!seqable)
                    { throw #{ :not-seqable }#; }
@@ -52,9 +52,12 @@
 (def next
   (fn* [o]
     (native/raw "__value = jank::runtime::next(#{ o }#);")))
+(def next-in-place
+  (fn* [o]
+    (native/raw "__value = jank::runtime::next_in_place(#{ o }#);")))
 (def nnext
   (fn* [o]
-    (next (next o))))
+    (next-in-place (next o))))
 (def second
   (fn* [o]
     (first (next o))))
@@ -163,10 +166,9 @@
          (reduce* f (first s) (next s))
          (f))))
     ([f val coll]
-     (let* [s (seq coll)]
-       (if s
-         (recur f (f val (first s)) (next s))
-         val)))))
+     (native/raw "__value = #{ val }#;
+                  for(auto it(#{ coll }#->as_seqable()->fresh_seq()); it != nullptr; it = it->next_in_place())
+                  { __value = dynamic_call(f, __value, it->first()); }"))))
 
 (def reverse
   (fn* [coll]

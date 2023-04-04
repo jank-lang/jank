@@ -9,6 +9,8 @@ namespace jank::runtime::obj
 
   behavior::sequence_ptr iterator::seq() const
   { return static_cast<sequence_ptr>(const_cast<iterator*>(this)); }
+  behavior::sequence_ptr iterator::fresh_seq() const
+  { return jank::make_box<iterator>(fn, current); }
 
   object_ptr iterator::first() const
   { return current; }
@@ -19,8 +21,7 @@ namespace jank::runtime::obj
     { return cached_next; }
 
     auto const next(fn->call(current));
-    /* TODO: Why can't I use make_box here? */
-    auto const ret(new (GC) iterator{ fn, next });
+    auto const ret(jank::make_box<iterator>(fn, next));
     cached_next = ret;
 
     return ret;

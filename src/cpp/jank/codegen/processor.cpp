@@ -447,6 +447,11 @@ namespace jank::codegen
           format_elided_var("jank::runtime::seq(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, false);
           elided = true;
         }
+        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "fresh_seq" }))
+        {
+          format_elided_var("jank::runtime::fresh_seq(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, false);
+          elided = true;
+        }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "first" }))
         {
           format_elided_var("jank::runtime::first(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, false);
@@ -455,6 +460,11 @@ namespace jank::codegen
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "next" }))
         {
           format_elided_var("jank::runtime::next(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, false);
+          elided = true;
+        }
+        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "next_in_place" }))
+        {
+          format_elided_var("jank::runtime::next_in_place(", ")", ret_tmp, expr.arg_exprs, fn_arity, true, false);
           elided = true;
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "nil?" }))

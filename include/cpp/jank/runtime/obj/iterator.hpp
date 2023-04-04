@@ -9,6 +9,7 @@ namespace jank::runtime::obj
     iterator(behavior::callable_ptr const fn, object_ptr const start);
 
     behavior::sequence_ptr seq() const final;
+    behavior::sequence_ptr fresh_seq() const final;
     object_ptr first() const final;
     behavior::sequence_ptr next() const final;
     behavior::sequence_ptr next_in_place() final;

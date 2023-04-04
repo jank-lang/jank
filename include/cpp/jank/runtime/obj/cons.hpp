@@ -9,6 +9,7 @@ namespace jank::runtime::obj
     cons(object_ptr const head, behavior::sequence_ptr const tail);
 
     behavior::sequence_ptr seq() const final;
+    behavior::sequence_ptr fresh_seq() const final;
     object_ptr first() const final;
     behavior::sequence_ptr next() const final;
     behavior::sequence_ptr next_in_place() final;

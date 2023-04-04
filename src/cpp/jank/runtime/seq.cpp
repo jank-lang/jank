@@ -76,6 +76,30 @@ namespace jank::runtime
 
     return ret;
   }
+  object_ptr seq(behavior::seqable_ptr const s)
+  {
+    auto const &ret(s->seq());
+    if(!ret)
+    { return JANK_NIL; }
+
+    return ret;
+  }
+
+  object_ptr fresh_seq(object_ptr const s)
+  {
+    if(s->as_nil())
+    { return s; }
+
+    auto const * const sable(s->as_seqable());
+    if(!sable)
+    { throw std::runtime_error{ fmt::format("not seqable: {}", s->to_string()) }; }
+
+    auto const &ret(sable->fresh_seq());
+    if(!ret)
+    { return JANK_NIL; }
+
+    return ret;
+  }
 
   object_ptr first(object_ptr const s)
   {
@@ -137,6 +161,41 @@ namespace jank::runtime
     }
   }
 
+  object_ptr next_in_place(object_ptr const s)
+  {
+    if(s == JANK_NIL)
+    { return s; }
+
+    auto const * const seqable(s->as_seqable());
+    if(!seqable)
+    { throw std::runtime_error{ fmt::format("not seqable: {}", s->to_string()) }; }
+
+    auto const seq(seqable->seq());
+    if(!seq)
+    { return JANK_NIL; }
+    else
+    {
+      auto const ret(seq->next_in_place());
+      if(!ret)
+      { return JANK_NIL; }
+      return ret;
+    }
+  }
+
+  object_ptr next_in_place(behavior::seqable_ptr const s)
+  {
+    auto const seq(s->seq());
+    if(!seq)
+    { return JANK_NIL; }
+    else
+    {
+      auto const ret(seq->next_in_place());
+      if(!ret)
+      { return JANK_NIL; }
+      return ret;
+    }
+  }
+
   object_ptr conj(object_ptr const s, object_ptr const o)
   {
     if(s->as_nil())
@@ -159,7 +218,6 @@ namespace jank::runtime
 
   object_ptr get(object_ptr const o, object_ptr const key)
   {
-    assert(o);
     auto const res(o->as_associatively_readable());
     if(!res)
     { throw std::runtime_error{ fmt::format("not associatively readable: {}", o->to_string()) }; }
@@ -168,7 +226,6 @@ namespace jank::runtime
 
   object_ptr get(object_ptr const o, object_ptr const key, object_ptr const fallback)
   {
-    assert(o);
     auto const res(o->as_associatively_readable());
     if(!res)
     { throw std::runtime_error{ fmt::format("not associatively readable: {}", o->to_string()) }; }

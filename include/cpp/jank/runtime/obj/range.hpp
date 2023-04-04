@@ -11,6 +11,7 @@ namespace jank::runtime::obj
     range(object_ptr const start, object_ptr const end, object_ptr const step);
 
     behavior::sequence_ptr seq() const final;
+    behavior::sequence_ptr fresh_seq() const final;
     object_ptr first() const final;
     behavior::sequence_ptr next() const final;
     behavior::sequence_ptr next_in_place() final;

@@ -64,7 +64,10 @@ namespace jank::runtime
 
     /* TODO: Remove this once it can be defined in jank. */
     auto const seq_sym(jank::make_box<obj::symbol>("clojure.core/seq"));
-    intern_var(seq_sym).expect_ok()->set_root(obj::function::create(&seq));
+    intern_var(seq_sym).expect_ok()->set_root(obj::function::create(static_cast<object_ptr (*)(object_ptr)>(&seq)));
+
+    auto const fresh_seq_sym(jank::make_box<obj::symbol>("clojure.core/fresh-seq"));
+    intern_var(fresh_seq_sym).expect_ok()->set_root(obj::function::create(&fresh_seq));
   }
 
   context::context(context const &ctx)

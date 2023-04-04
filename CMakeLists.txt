@@ -58,9 +58,6 @@ set(
   -Wold-style-cast -Wno-gnu-case-range
   -DJANK_CLING_BUILD_DIR="${jank_cling_build_dir_absolute}"
   -DIMMER_HAS_LIBGC=1 -DHAVE_CXX14=1
-  # XXX: Can't use -Ofast with Clang 9, due to this issue:
-  # https://github.com/cms-sw/cmssw/issues/24935
-  # TODO: Anything above -O1 causes linker issues with static thread_local in immer.
   $<$<CONFIG:RELEASE>:-O3>
   #-stdlib=libc++
 )

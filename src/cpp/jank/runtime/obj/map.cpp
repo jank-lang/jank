@@ -59,6 +59,8 @@ namespace jank::runtime::obj
 
     sequence_ptr seq() const final
     { return static_cast<sequence_ptr>(const_cast<map_iterator_wrapper<It>*>(this)); }
+    behavior::sequence_ptr fresh_seq() const final
+    { return jank::make_box<map_iterator_wrapper<It>>(coll, begin, end); }
 
     object_ptr first() const final
     {
@@ -156,6 +158,12 @@ namespace jank::runtime::obj
   behavior::seqable const* map::as_seqable() const
   { return this; }
   behavior::sequence_ptr map::seq() const
+  {
+    if(data.size() == 0)
+    { return nullptr; }
+    return jank::make_box<map_iterator_wrapper<runtime::detail::persistent_map::const_iterator>>(const_cast<map*>(this), data.begin(), data.end());
+  }
+  behavior::sequence_ptr map::fresh_seq() const
   {
     if(data.size() == 0)
     { return nullptr; }

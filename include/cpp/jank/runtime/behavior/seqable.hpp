@@ -13,6 +13,7 @@ namespace jank::runtime::behavior
   {
     virtual ~seqable() = default;
     virtual native_box<struct sequence> seq() const = 0;
+    virtual native_box<struct sequence> fresh_seq() const = 0;
   };
   using seqable_ptr = native_box<seqable const>;
 
@@ -83,6 +84,8 @@ namespace jank::runtime::behavior
 
     sequence_ptr seq() const final
     { return static_cast<sequence_ptr>(const_cast<basic_iterator_wrapper<It>*>(this)); }
+    sequence_ptr fresh_seq() const final
+    { return jank::make_box<basic_iterator_wrapper<It>>(coll, begin, end, size); }
 
     behavior::countable const* as_countable() const final
     { return this; }
@@ -156,6 +159,8 @@ namespace jank::runtime::behavior
 
     sequence_ptr seq() const final
     { return static_cast<sequence_ptr>(const_cast<array_sequence*>(this)); }
+    sequence_ptr fresh_seq() const final
+    { return jank::make_box<array_sequence<N>>(arr, index); }
 
     behavior::countable const* as_countable() const final
     { return this; }
@@ -224,6 +229,8 @@ namespace jank::runtime::behavior
 
     sequence_ptr seq() const final
     { return static_cast<sequence_ptr>(const_cast<vector_sequence*>(this)); }
+    sequence_ptr fresh_seq() const final
+    { return jank::make_box<vector_sequence>(arr, index); }
 
     behavior::countable const* as_countable() const final
     { return this; }

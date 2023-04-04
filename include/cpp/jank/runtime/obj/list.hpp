@@ -35,6 +35,7 @@ namespace jank::runtime::obj
     behavior::seqable const* as_seqable() const final;
 
     behavior::sequence_ptr seq() const final;
+    behavior::sequence_ptr fresh_seq() const final;
     size_t count() const final;
 
     behavior::consable const* as_consable() const final;

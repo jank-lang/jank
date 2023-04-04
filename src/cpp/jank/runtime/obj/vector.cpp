@@ -46,6 +46,8 @@ namespace jank::runtime::obj
 
     sequence_ptr seq() const final
     { return static_cast<sequence_ptr>(const_cast<vector_sequence*>(this)); }
+    behavior::sequence_ptr fresh_seq() const final
+    { return jank::make_box<vector_sequence>(vec, index); }
 
     behavior::countable const* as_countable() const final
     { return this; }
@@ -144,6 +146,12 @@ namespace jank::runtime::obj
   behavior::seqable const* vector::as_seqable() const
   { return this; }
   behavior::sequence_ptr vector::seq() const
+  {
+    if(data.empty())
+    { return nullptr; }
+    return jank::make_box<vector_sequence>(const_cast<vector*>(this));
+  }
+  behavior::sequence_ptr vector::fresh_seq() const
   {
     if(data.empty())
     { return nullptr; }
