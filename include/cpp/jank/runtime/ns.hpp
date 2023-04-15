@@ -19,7 +19,7 @@ namespace jank::runtime
     using ns_ptr = native_box<ns>;
 
     ns(obj::symbol_ptr const &name, context const &c)
-      : name{ name }, ctx{ c }
+      : name{ name }, rt_ctx{ c }
     { }
     virtual ~ns() = default;
 
@@ -36,9 +36,9 @@ namespace jank::runtime
 
     ns_ptr clone() const;
 
-    obj::symbol_ptr name;
-    folly::Synchronized<std::unordered_map<obj::symbol_ptr, var_ptr>> vars;
-    context const &ctx;
+    obj::symbol_ptr name{};
+    folly::Synchronized<native_unordered_map<obj::symbol_ptr, var_ptr>> vars;
+    context const &rt_ctx;
   };
   using ns_ptr = native_box<ns>;
 }

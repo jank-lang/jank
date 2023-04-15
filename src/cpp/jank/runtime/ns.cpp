@@ -34,7 +34,7 @@ namespace jank::runtime
 
   ns_ptr ns::clone() const
   {
-    auto ret(jank::make_box<ns>(name, ctx));
+    auto ret(jank::make_box<ns>(name, rt_ctx));
     auto const ret_locked_vars(ret->vars.wlock());
     auto const locked_vars(vars.rlock());
     for(auto const & var : *locked_vars)
