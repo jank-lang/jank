@@ -36,7 +36,8 @@ project(
 )
 
 set(jank_required_compiler_id "Clang")
-set(jank_required_compiler_version "13.0.0")
+#set(jank_required_compiler_version "13.0.0")
+set(jank_required_compiler_version "9.0.1")
 
 if(
   NOT CMAKE_CXX_COMPILER_ID STREQUAL jank_required_compiler_id
