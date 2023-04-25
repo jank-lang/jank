@@ -296,3 +296,34 @@ if(NOT CMAKE_SKIP_INSTALL_RULES)
   include(cmake/install.cmake)
 endif()
 # ---- Install rules ----
+
+## ---- new-obj-model executable ----
+#add_executable(
+#  new_obj_model_exe
+#  new-obj-model/src/main.cpp
+#)
+#add_executable(new_obj_model::exe ALIAS new_obj_model_exe)
+#
+#set_property(TARGET new_obj_model_exe PROPERTY OUTPUT_NAME new-obj-model)
+#
+## Symbol exporting for JIT.
+#set_target_properties(new_obj_model_exe PROPERTIES ENABLE_EXPORTS 1)
+#
+#target_compile_features(new_obj_model_exe PRIVATE cxx_std_17)
+#target_compile_options(new_obj_model_exe PUBLIC ${jank_compiler_flags})
+#target_link_options(new_obj_model_exe PRIVATE ${jank_linker_flags})
+#
+#target_include_directories(new_obj_model_exe PUBLIC new-obj-model/include)
+#target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
+#target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
+#target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
+#target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
+#
+#target_link_libraries(
+#  new_obj_model_exe PUBLIC
+#  -Wl,--whole-archive jank_lib -Wl,--no-whole-archive
+#  -Wl,--whole-archive nanobench_lib -Wl,--no-whole-archive
+#  Boost::boost
+#)
+#set_target_properties(new_obj_model_exe PROPERTIES LINK_FLAGS_RELEASE -s)
+## ---- new-obj-model executable ----
