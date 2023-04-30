@@ -449,3 +449,57 @@ Interesting things with Roc: https://www.roc-lang.org
 
 ## Error output
 Fancy: https://github.com/mimoo/noname
+
+## The cost of types
+### Their points
+* I originally presented to benefits of types
+  * Correctness and documentation
+    * Rich shat on this primarily, saying he's never seen any proof that static
+      typing adds value for flexible systems (though he concedes later it can
+      add value to rigid systems)
+  * Performance
+    * Rich ultimately said that these optimizations are best done dynamically,
+      using something like Hotspot, rather than statically
+      * Where you need to optimize may change between each run of your program
+* Rich's use case for spec was not to be a busted type system
+* People choose to poor concrete on their feet
+* Using types to help you refactor is inherently bad (Rich said "bad" a lot)
+  * Any place the type system would fail after refactoring is a place which is
+    lacking in flexibility
+  * To order shoes, we don't use a show cart, shoe credit card, put them into a
+    shoe box, on a shoe box truck, and deliver them to your shoe box door
+* We need to design systems not for the current shape of the data, but for the
+  shape of the data over time
+  * spec2 aims to do this better
+* Rich says there ARE domains where this rigidity is desired and beneficial
+  * Rich mentioned security, such as cryptography, where flexibility is not the goal
+  * However, when I presented that instances of such black/white decisions are
+    so rare in this world, Rich said that it is indeed black and white
+  * Eric Normand jumped in here to say it's a soundness issue
+    * If you're going to statically type anything, it's wasted unless you
+      statically type everything
+* Both Rich and Eric kept using the word "cost" for static types, as though
+  there was an agreed upon, fixed cost
+  * I challenged them on this, but didn't get much
+* Rich said many bright young minds are wasted on this
+  * He said it's a waste of time and that I should work on something else
+  * I asked him if that's what he told Ambrose, but he said that Ambrose was
+    working on his PhD and that's what he wanted to do, do Rich gave him the
+    blessing
+* Finally, Rich said multiple times
+  * Know what problem you're trying to solve
+  * Know the cost it will take to solve that problem
+
+### My thoughts
+* I see this metaphor
+  * Flexible systems are a river
+    * The shape is constantly changing everywhere
+  * Gradually typed systems are a river with some damns
+    * The shape is constantly changing in many places, but it's held in a rigid
+      shape in some places
+* How low can the actual cost go?
+  * I'm confident that I can fork clojure, add in a system which understands
+    specs and optimizes your code when you spec your fns, and then secretly
+    merge it into main (with help)
+    * Rich would be opposed to this, in theory, but he wouldn't notice it in
+      practice, which means the cost is 0
