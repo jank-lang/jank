@@ -26,7 +26,7 @@ jobs:
       CXX: ${{ matrix.cxx }}
       CODECOV: ${{ matrix.codecov }}
       ANALYSIS: ${{ matrix.analysis }}
-    timeout-minutes: 180 # 3h
+    timeout-minutes: 240 # 4h
     steps:
       - uses: actions/checkout@v3
         with:
