@@ -43,7 +43,7 @@
                    { throw #{ :not-seqable }#; }
                    auto const seq(seqable->seq());
                    /* TODO: Unsigned */
-                   __value = make_box<obj::integer>(runtime::detail::sequence_length(seq));"))))
+                   __value = make_box(runtime::detail::sequence_length(seq));"))))
 
 ;; Lists.
 (def first
