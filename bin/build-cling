@@ -39,14 +39,14 @@ srcdir="${PWD}"
 
 # Cling latest
 root_llvm_url="http://root.cern.ch/git/llvm.git"
-root_llvm_branch="cling-patches"
+root_llvm_branch="cling-patches-rrelease_13"
 clang_url="http://root.cern.ch/git/clang.git"
-clang_branch="cling-patches"
+clang_branch="cling-patches-rrelease_13"
 cling_url="http://root.cern.ch/git/cling.git"
-cling_branch="v0.9"
-cling_commit="f3768a4c43b0f3b23eccc6075fa178861a002a10"
+cling_branch="master"
+cling_commit="da247bd77a92f0793abe95e10b373dbca7a7e5f1"
 upstream_llvm_url="https://github.com/llvm/llvm-project"
-upstream_llvm_branch="release/9.x"
+upstream_llvm_branch="release/13.x"
 
 # $1 == Repo URL
 # $2 == Repo branch

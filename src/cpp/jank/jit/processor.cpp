@@ -84,8 +84,9 @@ namespace jank::jit
         "clang++", "-std=c++17",
         "-DHAVE_CXX14=1", "-DIMMER_HAS_LIBGC=1",
         "-include-pch", pch_path_str.c_str(),
-        "-isystem", include_path.c_str(),
-        "-O2", "-ffast-math", "-march=native"
+        "-isystem", include_path.c_str()
+
+        //"-O0", "-ffast-math", "-march=native"
       )
     );
     interpreter = std::make_unique<cling::Interpreter>(args.size(), args.data(), llvm_resource_path_str.c_str());

@@ -36,8 +36,8 @@ project(
 )
 
 set(jank_required_compiler_id "Clang")
-#set(jank_required_compiler_version "13.0.0")
-set(jank_required_compiler_version "9.0.1")
+set(jank_required_compiler_version "13.0.0")
+#set(jank_required_compiler_version "9.0.1")
 
 if(
   NOT CMAKE_CXX_COMPILER_ID STREQUAL jank_required_compiler_id
@@ -59,7 +59,7 @@ set(
   -Wold-style-cast -Wno-gnu-case-range
   -DJANK_CLING_BUILD_DIR="${jank_cling_build_dir_absolute}"
   -DIMMER_HAS_LIBGC=1 -DHAVE_CXX14=1
-  $<$<CONFIG:RELEASE>:-O3>
+  $<$<CONFIG:RELEASE>:-O0>
   #-stdlib=libc++
 )
 set(jank_linker_flags "" #-stdlib=libc++ -lc++abi
