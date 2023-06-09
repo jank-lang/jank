@@ -10,8 +10,10 @@
 
 namespace jank::analyze::expr
 {
-  struct function_context
+  struct function_context : gc
   {
+    static constexpr bool pointer_free{ true };
+
     size_t param_count{};
     bool is_variadic{};
     bool is_tail_recursive{};

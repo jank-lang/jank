@@ -6,6 +6,8 @@ namespace jank::runtime::obj
 {
   struct iterator : behavior::sequence
   {
+    static constexpr bool pointer_free{ false };
+
     iterator(behavior::callable_ptr const fn, object_ptr const start);
 
     behavior::sequence_ptr seq() const final;

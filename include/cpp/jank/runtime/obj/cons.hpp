@@ -6,6 +6,8 @@ namespace jank::runtime::obj
 {
   struct cons : behavior::sequence
   {
+    static constexpr bool pointer_free{ false };
+
     cons(object_ptr const head, behavior::sequence_ptr const tail);
 
     behavior::sequence_ptr seq() const final;

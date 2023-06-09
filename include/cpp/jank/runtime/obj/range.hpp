@@ -6,6 +6,8 @@ namespace jank::runtime::obj
 {
   struct range : behavior::sequence
   {
+    static constexpr bool pointer_free{ false };
+
     range(object_ptr const end);
     range(object_ptr const start, object_ptr const end);
     range(object_ptr const start, object_ptr const end, object_ptr const step);

@@ -40,6 +40,8 @@ namespace jank::analyze
       let
     };
 
+    static constexpr bool pointer_free{ false };
+
     local_frame() = delete;
     local_frame(local_frame const &) = default;
     local_frame(local_frame &&) noexcept = default;

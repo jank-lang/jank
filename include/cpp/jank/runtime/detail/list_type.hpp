@@ -14,6 +14,8 @@ namespace jank::runtime::detail
   template <typename T>
   struct list_node
   {
+    static constexpr bool pointer_free{ false };
+
     list_node() = default;
     list_node(list_node const &) = default;
     list_node(list_node &&) noexcept = default;

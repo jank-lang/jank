@@ -937,6 +937,8 @@ namespace jank::codegen
           , jank::runtime::behavior::callable
           , jank::runtime::behavior::metadatable
         {{
+          static constexpr bool pointer_free{{ false }};
+
           jank::runtime::context &__rt_ctx;
       )",
       runtime::munge(struct_name.name)

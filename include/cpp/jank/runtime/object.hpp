@@ -151,6 +151,8 @@ namespace jank::runtime
   {
     struct nil : object, behavior::associatively_readable
     {
+      static constexpr bool pointer_free{ true };
+
       nil() = default;
       nil(nil &&) noexcept = default;
       nil(nil const &) = default;

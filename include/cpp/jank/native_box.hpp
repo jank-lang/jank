@@ -12,7 +12,12 @@ namespace jank
   template <typename T>
   native_box<T> make_box()
   {
-    auto const ret(new (GC) T{});
+    native_box<T> ret;
+    if constexpr(T::pointer_free)
+    { ret = new (PointerFreeGC) T{ }; }
+    else
+    { ret = new (GC) T{ }; }
+
     if(!ret)
     { throw std::runtime_error{ "unable to allocate box" }; }
     return ret;
@@ -20,7 +25,12 @@ namespace jank
   template <typename T, typename... Args>
   native_box<T> make_box(Args &&... args)
   {
-    auto const ret(new (GC) T{ std::forward<Args>(args)... });
+    native_box<T> ret;
+    if constexpr(T::pointer_free)
+    { ret = new (PointerFreeGC) T{ std::forward<Args>(args)... }; }
+    else
+    { ret = new (GC) T{ std::forward<Args>(args)... }; }
+
     if(!ret)
     { throw std::runtime_error{ "unable to allocate box" }; }
     return ret;

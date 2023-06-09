@@ -39,6 +39,8 @@ namespace jank::runtime::obj
 
   struct function : object, behavior::callable, behavior::metadatable
   {
+    static constexpr bool pointer_free{ true };
+
     function() = default;
     function(function &&) = default;
     function(function const &) = default;

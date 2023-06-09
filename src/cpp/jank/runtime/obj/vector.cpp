@@ -10,6 +10,8 @@ namespace jank::runtime::obj
 {
   struct vector_sequence : behavior::sequence, behavior::countable
   {
+    static constexpr bool pointer_free{ false };
+
     vector_sequence() = default;
     vector_sequence(vector_ptr v)
       : vec{ v }

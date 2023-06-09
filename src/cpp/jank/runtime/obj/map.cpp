@@ -23,6 +23,8 @@ namespace jank::runtime::obj
   template <typename It>
   struct map_iterator_wrapper : behavior::sequence
   {
+    static constexpr bool pointer_free{ false };
+
     map_iterator_wrapper() = default;
     map_iterator_wrapper(object_ptr c, It const &b, It const &e)
       : coll{ c }, begin{ b }, end{ e }

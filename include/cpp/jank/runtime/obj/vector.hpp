@@ -15,6 +15,8 @@ namespace jank::runtime::obj
       behavior::metadatable,
       behavior::associatively_readable
   {
+    static constexpr bool pointer_free{ false };
+
     vector() = default;
     vector(vector &&) = default;
     vector(vector const &) = default;
