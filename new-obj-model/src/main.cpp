@@ -2,16 +2,16 @@
 #include <gc/gc_cpp.h>
 #include <nanobench.h>
 
-#include <old.hpp>
-#include <new.hpp>
+#include <jank/obj-model/inheritance/object.hpp>
+#include <jank/obj-model/bitfield/object.hpp>
 
 int main()
 {
-  GC_enable_incremental();
+  GC_enable();
 
-  std::cout << "object size [] " << sizeof(new_model::typed_object<new_model::behavior_type_none, new_model::storage_type_none>::data) << std::endl;
-  std::cout << "object size [int] " << sizeof(new_model::typed_object<new_model::behavior_type_none, new_model::storage_type_integer>::data) << std::endl;
-  std::cout << "object size [int, map] " << sizeof(new_model::typed_object<new_model::behavior_type_none, new_model::storage_type_integer | new_model::storage_type_map>::data) << std::endl;
+  std::cout << "object size [] " << sizeof(jank::obj_model::bitfield::typed_object<jank::obj_model::bitfield::behavior_type_none, jank::obj_model::bitfield::storage_type_none>::data) << std::endl;
+  std::cout << "object size [int] " << sizeof(jank::obj_model::bitfield::typed_object<jank::obj_model::bitfield::behavior_type_none, jank::obj_model::bitfield::storage_type_integer>::data) << std::endl;
+  std::cout << "object size [int, map] " << sizeof(jank::obj_model::bitfield::typed_object<jank::obj_model::bitfield::behavior_type_none, jank::obj_model::bitfield::storage_type_integer | jank::obj_model::bitfield::storage_type_map>::data) << std::endl;
 
   ankerl::nanobench::Config config;
   config.mMinEpochIterations = 1000000;
@@ -20,20 +20,41 @@ int main()
 
   ankerl::nanobench::Bench().config(config).run
   (
-    "old map ctor",
+    "[inheritance] empty map ctor",
     [&]
     {
-      auto const ret(new (GC) old_model::map{});
+      auto const ret(new (GC) jank::obj_model::inheritance::map{});
       ankerl::nanobench::doNotOptimizeAway(ret);
     }
   );
 
   ankerl::nanobench::Bench().config(config).run
   (
-    "new map ctor",
+    "[inheritance] ctor {nil nil}",
     [&]
     {
-      auto const ret(new_model::make_object<new_model::behavior_type_map, new_model::storage_type_map | new_model::storage_type_metadatable>());
+      auto const ret(new (GC) jank::obj_model::inheritance::map{ jank::runtime::detail::in_place_unique{}, new (GC) jank::runtime::object_ptr[2]{ jank::runtime::JANK_NIL, jank::runtime::JANK_NIL }, 2 });;
+      ankerl::nanobench::doNotOptimizeAway(ret);
+    }
+  );
+
+  auto const nil(jank::obj_model::bitfield::make_object<jank::obj_model::bitfield::behavior_type_nil, jank::obj_model::bitfield::storage_type_none>());
+  ankerl::nanobench::Bench().config(config).run
+  (
+    "[bitfield] empty map ctor",
+    [&]
+    {
+      auto const ret(jank::obj_model::bitfield::make_object<jank::obj_model::bitfield::behavior_type_map, jank::obj_model::bitfield::storage_type_map | jank::obj_model::bitfield::storage_type_metadatable>());
+      ankerl::nanobench::doNotOptimizeAway(ret);
+    }
+  );
+
+  ankerl::nanobench::Bench().config(config).run
+  (
+    "new int",
+    [&]
+    {
+      auto const ret(new (PointerFreeGC) int{});
       ankerl::nanobench::doNotOptimizeAway(ret);
     }
   );

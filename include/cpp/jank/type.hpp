@@ -37,6 +37,9 @@ namespace jank
   <K, V, Hash, Pred, native_allocator<std::pair<K const, V>>>;
 }
 
+/* TODO: Folly strings leak memory, since they're not using the GC and the GC isn't
+ * running destructors. */
+
 /* XXX: native_string.hpp includes this file to learn about integer types, but we also include it
  * to forward our string type. Pragma once allows this to work, but we need to make sure the order
  * is right. */

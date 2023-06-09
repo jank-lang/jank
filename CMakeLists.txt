@@ -36,8 +36,8 @@ project(
 )
 
 set(jank_required_compiler_id "Clang")
-set(jank_required_compiler_version "13.0.0")
-#set(jank_required_compiler_version "9.0.1")
+#set(jank_required_compiler_version "13.0.0")
+set(jank_required_compiler_version "9.0.1")
 
 if(
   NOT CMAKE_CXX_COMPILER_ID STREQUAL jank_required_compiler_id
@@ -59,7 +59,7 @@ set(
   -Wold-style-cast -Wno-gnu-case-range
   -DJANK_CLING_BUILD_DIR="${jank_cling_build_dir_absolute}"
   -DIMMER_HAS_LIBGC=1 -DHAVE_CXX14=1
-  $<$<CONFIG:RELEASE>:-O0>
+  $<$<CONFIG:RELEASE>:-O3>
   #-stdlib=libc++
 )
 set(jank_linker_flags "" #-stdlib=libc++ -lc++abi
@@ -297,33 +297,33 @@ if(NOT CMAKE_SKIP_INSTALL_RULES)
 endif()
 # ---- Install rules ----
 
-## ---- new-obj-model executable ----
-#add_executable(
-#  new_obj_model_exe
-#  new-obj-model/src/main.cpp
-#)
-#add_executable(new_obj_model::exe ALIAS new_obj_model_exe)
-#
-#set_property(TARGET new_obj_model_exe PROPERTY OUTPUT_NAME new-obj-model)
-#
-## Symbol exporting for JIT.
-#set_target_properties(new_obj_model_exe PROPERTIES ENABLE_EXPORTS 1)
-#
-#target_compile_features(new_obj_model_exe PRIVATE cxx_std_17)
-#target_compile_options(new_obj_model_exe PUBLIC ${jank_compiler_flags})
-#target_link_options(new_obj_model_exe PRIVATE ${jank_linker_flags})
-#
-#target_include_directories(new_obj_model_exe PUBLIC new-obj-model/include)
-#target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
-#target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
-#target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
-#target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
-#
-#target_link_libraries(
-#  new_obj_model_exe PUBLIC
-#  -Wl,--whole-archive jank_lib -Wl,--no-whole-archive
-#  -Wl,--whole-archive nanobench_lib -Wl,--no-whole-archive
-#  Boost::boost
-#)
-#set_target_properties(new_obj_model_exe PROPERTIES LINK_FLAGS_RELEASE -s)
-## ---- new-obj-model executable ----
+# ---- new-obj-model executable ----
+add_executable(
+  new_obj_model_exe
+  new-obj-model/src/main.cpp
+)
+add_executable(new_obj_model::exe ALIAS new_obj_model_exe)
+
+set_property(TARGET new_obj_model_exe PROPERTY OUTPUT_NAME new-obj-model)
+
+# Symbol exporting for JIT.
+set_target_properties(new_obj_model_exe PROPERTIES ENABLE_EXPORTS 1)
+
+target_compile_features(new_obj_model_exe PRIVATE cxx_std_17)
+target_compile_options(new_obj_model_exe PUBLIC ${jank_compiler_flags})
+target_link_options(new_obj_model_exe PRIVATE ${jank_linker_flags})
+
+target_include_directories(new_obj_model_exe PUBLIC new-obj-model/include)
+target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
+target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
+target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
+target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
+
+target_link_libraries(
+  new_obj_model_exe PUBLIC
+  -Wl,--whole-archive jank_lib -Wl,--no-whole-archive
+  -Wl,--whole-archive nanobench_lib -Wl,--no-whole-archive
+  Boost::boost
+)
+set_target_properties(new_obj_model_exe PROPERTIES LINK_FLAGS_RELEASE -s)
+# ---- new-obj-model executable ----

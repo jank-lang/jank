@@ -3,7 +3,9 @@
 #include <cstddef>
 #include <utility>
 
-namespace new_model
+#include <jank/runtime/detail/map_type.hpp>
+
+namespace jank::obj_model::bitfield
 {
   enum behavior_type
   {
@@ -30,7 +32,15 @@ namespace new_model
     storage_type_integer = (1 << 0),
     storage_type_real = (1 << 1),
     storage_type_map = (1 << 2),
-    storage_type_metadatable = (1 << 3)
+    storage_type_metadatable = (1 << 3),
+
+    storage_type_composite_map = storage_type_map | storage_type_metadatable
+  };
+
+  struct object
+  {
+    behavior_type behavior{};
+    storage_type storage{};
   };
 
   template <typename Head, typename Tail>
@@ -86,14 +96,14 @@ namespace new_model
   template <>
   struct storage_base<storage_type_map>
   {
-    using type = void*;
+    using type = runtime::detail::persistent_map;
     static constexpr int const value{ storage_type_map };
   };
 
   template <>
   struct storage_base<storage_type_metadatable>
   {
-    using type = void*;
+    using type = object*;
     static constexpr int const value{ storage_type_metadatable };
   };
 
@@ -120,12 +130,6 @@ namespace new_model
     using type = typename storage_base_tuple_impl<Min, std::make_integer_sequence<int, Max - Min>>::type;
   };
 
-  struct object
-  {
-    behavior_type behavior{};
-    storage_type storage{};
-  };
-
   template <int B, int S>
   struct typed_object : gc
   {
@@ -140,18 +144,33 @@ namespace new_model
       storage_base<storage_type_metadatable>
     >::type data{};
 
-    typename filter
-    <
-      is_storage_enabled<S>,
-      storage_base_tuple<storage_type_min_bit, storage_type_max_bit>::type
-    >::type _data{};
+    /* TODO: Make this work. */
+    //typename filter
+    //<
+    //  is_storage_enabled<S>,
+    //  storage_base_tuple<storage_type_min_bit, storage_type_max_bit>::type
+    //>::type _data{};
   };
 
-  template <int B, int S>
-  auto make_object()
+  template <>
+  struct typed_object<behavior_type_nil, storage_type_composite_map> : gc
+  {
+    object base{};
+    storage_base<storage_type_map>::type map{};
+    storage_base<storage_type_metadatable>::type meta{};
+  };
+
+  template <>
+  struct typed_object<behavior_type_map, storage_type_none> : gc
+  {
+    object base{};
+  };
+
+  template <int B, int S, typename... Args>
+  auto make_object(Args && ...args)
   {
     using T = typed_object<B, S>;
-    static_assert(offsetof(T, base) == 0);
-    return new (GC) typed_object<B, S>{ {}, { static_cast<behavior_type>(B), static_cast<storage_type>(S) }, {} };
+    static_assert(offsetof(T, base) == 0, "object base; needs to be the first member of each typed object");
+    return new (GC) typed_object<B, S>{ {}, { static_cast<behavior_type>(B), static_cast<storage_type>(S) }, std::forward<Args>(args)... };
   }
 }
