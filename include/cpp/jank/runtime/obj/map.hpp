@@ -18,6 +18,8 @@ namespace jank::runtime::obj
   {
     using value_type = runtime::detail::persistent_map;
 
+    static constexpr bool pointer_free{ false };
+
     map() = default;
     map(map &&) = default;
     map(map const &) = default;

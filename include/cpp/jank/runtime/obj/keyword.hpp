@@ -10,6 +10,8 @@ namespace jank::runtime::obj
   /* The correct way to create a keyword for normal use is through interning via the RT context. */
   struct keyword : object
   {
+    static constexpr bool pointer_free{ true };
+
     keyword() = default;
     keyword(keyword &&) = default;
     keyword(keyword const &) = default;

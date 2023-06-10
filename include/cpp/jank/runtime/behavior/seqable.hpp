@@ -63,6 +63,8 @@ namespace jank::runtime::behavior
   template <typename It>
   struct basic_iterator_wrapper : sequence, countable
   {
+    static constexpr bool pointer_free{ false };
+
     basic_iterator_wrapper() = default;
     basic_iterator_wrapper(object_ptr const &c, It const &b, It const &e, size_t const s)
       : coll{ c }, begin{ b }, end{ e }, size{ s }
@@ -131,6 +133,8 @@ namespace jank::runtime::behavior
   template <size_t N>
   struct array_sequence : sequence, countable
   {
+    static constexpr bool pointer_free{ false };
+
     array_sequence() = default;
     array_sequence(std::array<object_ptr, N> const &arr, size_t const index)
       : arr{ arr }, index{ index }
@@ -205,6 +209,8 @@ namespace jank::runtime::behavior
   /* TODO: Move impl to cpp. */
   struct vector_sequence : sequence, countable
   {
+    static constexpr bool pointer_free{ false };
+
     vector_sequence() = default;
     vector_sequence(native_vector<object_ptr> const &arr, size_t const index)
       : arr{ arr }, index{ index }

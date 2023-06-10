@@ -13,6 +13,8 @@ namespace jank::runtime::obj
       behavior::seqable, behavior::countable, behavior::consable,
       behavior::metadatable
   {
+    static constexpr bool pointer_free{ false };
+
     list() = default;
     list(list &&) = default;
     list(list const &) = default;

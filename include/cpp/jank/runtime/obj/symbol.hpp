@@ -9,6 +9,8 @@ namespace jank::runtime::obj
 {
   struct symbol : object, behavior::metadatable
   {
+    static constexpr bool pointer_free{ true };
+
     symbol() = default;
     symbol(symbol &&) = default;
     symbol(symbol const &) = default;

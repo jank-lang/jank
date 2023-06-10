@@ -17,6 +17,8 @@ namespace jank::runtime
   {
     using var_ptr = native_box<var>;
 
+    static constexpr bool pointer_free{ false };
+
     var(var const&) = delete;
     var(var &&) noexcept = default;
     var(ns_ptr const &n, obj::symbol_ptr const &s);

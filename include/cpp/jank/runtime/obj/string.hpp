@@ -8,6 +8,8 @@ namespace jank::runtime::obj
   /* TODO: Seqable. */
   struct string : object, behavior::countable, behavior::metadatable
   {
+    static constexpr bool pointer_free{ true };
+
     string() = default;
     string(string &&) = default;
     string(string const &) = default;

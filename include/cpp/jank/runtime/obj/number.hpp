@@ -14,6 +14,8 @@ namespace jank::runtime::obj
 
   struct boolean : object
   {
+    static constexpr bool pointer_free{ true };
+
     boolean() = default;
     virtual ~boolean() = default;
     boolean(boolean &&) noexcept = default;
@@ -33,6 +35,8 @@ namespace jank::runtime::obj
 
   struct integer : object, number
   {
+    static constexpr bool pointer_free{ true };
+
     integer() = default;
     integer(integer &&) noexcept = default;
     integer(integer const &) = default;
@@ -57,6 +61,8 @@ namespace jank::runtime::obj
 
   struct real : object, number
   {
+    static constexpr bool pointer_free{ true };
+
     real() = default;
     real(real &&) noexcept = default;
     real(real const &) = default;

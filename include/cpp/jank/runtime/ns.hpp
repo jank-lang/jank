@@ -18,6 +18,8 @@ namespace jank::runtime
   {
     using ns_ptr = native_box<ns>;
 
+    static constexpr bool pointer_free{ false };
+
     ns(obj::symbol_ptr const &name, context const &c)
       : name{ name }, rt_ctx{ c }
     { }
