@@ -1,7 +1,7 @@
 name: "Build & Test"
 
 inputs:
-  release:
+  update_release:
     description: Whether or not to release
     required: true
     default: 'false'
@@ -38,7 +38,7 @@ runs:
     - name: Compile and test
       shell: bash
       run: ${{ github.workspace }}/bin/ci/test -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-    - if: ${{ inputs.release }}
+    - if: ${{ inputs.update_release }}
       name: Release
       id: release
       shell: bash
