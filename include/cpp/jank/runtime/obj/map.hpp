@@ -44,6 +44,7 @@ namespace jank::runtime::obj
     behavior::sequence_ptr seq() const final;
     behavior::sequence_ptr fresh_seq() const final;
 
+    behavior::countable const* as_countable() const final;
     size_t count() const final;
 
     object_ptr with_meta(object_ptr m) const final;

@@ -172,6 +172,8 @@ namespace jank::runtime::obj
     return jank::make_box<map_iterator_wrapper<runtime::detail::persistent_map::const_iterator>>(const_cast<map*>(this), data.begin(), data.end());
   }
 
+  behavior::countable const* map::as_countable() const
+  { return this; }
   size_t map::count() const
   { return data.size(); }
 

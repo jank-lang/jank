@@ -44,6 +44,7 @@ int main(int const argc, char const **argv)
   //    an_prc.analyze(p_prc.begin(), p_prc.end()).expect_ok_move()
   //  };
   //  std::cout << cg_prc.declaration_str() << std::endl;
+  //  return 0;
   //}
 
   try
