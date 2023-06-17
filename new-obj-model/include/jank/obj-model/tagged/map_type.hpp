@@ -5,10 +5,10 @@
 
 #include <jank/runtime/hash.hpp>
 
-#include <jank/obj-model/bitfield/unerase.hpp>
-#include <jank/obj-model/bitfield/keyword.hpp>
+#include <jank/obj-model/tagged/unerase.hpp>
+#include <jank/obj-model/tagged/keyword.hpp>
 
-namespace jank::obj_model::bitfield
+namespace jank::obj_model::tagged
 {
   struct in_place_unique
   { };
@@ -152,7 +152,7 @@ namespace jank::obj_model::bitfield
     }
     void insert_or_assign(K const key, V const val)
     {
-      unerase_type_fn
+      unerase_type
       (
         key,
         [&](auto * const typed_key)
@@ -190,7 +190,7 @@ namespace jank::obj_model::bitfield
     V find(K const key) const
     {
       V found{};
-      unerase_type_fn
+      unerase_type
       (
         key,
         [&](auto * const typed_key)

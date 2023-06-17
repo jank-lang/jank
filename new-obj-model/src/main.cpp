@@ -4,10 +4,10 @@
 
 #include <jank/obj-model/inheritance/object.hpp>
 
-#include <jank/obj-model/bitfield/object.hpp>
-#include <jank/obj-model/bitfield/unerase.hpp>
-#include <jank/obj-model/bitfield/map.hpp>
-#include <jank/obj-model/bitfield/keyword.hpp>
+#include <jank/obj-model/tagged/object.hpp>
+#include <jank/obj-model/tagged/unerase.hpp>
+#include <jank/obj-model/tagged/map.hpp>
+#include <jank/obj-model/tagged/keyword.hpp>
 
 void benchmark_inheritance(ankerl::nanobench::Config const &config)
 {
@@ -64,11 +64,11 @@ void benchmark_inheritance(ankerl::nanobench::Config const &config)
 
 void benchmark_bitfield(ankerl::nanobench::Config const &config)
 {
-  using namespace jank::obj_model::bitfield;
+  using namespace jank::obj_model::tagged;
 
   ankerl::nanobench::Bench().config(config).run
   (
-    "[bitfield] empty map ctor",
+    "[tagged] empty map ctor",
     [&]
     {
       auto const ret(static_map::create());
@@ -79,7 +79,7 @@ void benchmark_bitfield(ankerl::nanobench::Config const &config)
   auto const nil(static_nil::create());
   ankerl::nanobench::Bench().config(config).run
   (
-    "[bitfield] ctor {:a :b}",
+    "[tagged] ctor {:a :b}",
     [&]
     {
       auto const ret(static_map::create(nil, nil));
@@ -93,10 +93,10 @@ void benchmark_bitfield(ankerl::nanobench::Config const &config)
   size_t c{};
   ankerl::nanobench::Bench().config(config).run
   (
-    "[bitfield] map count",
+    "[tagged] map count",
     [&]
     {
-      unerase_type_fn
+      unerase_type
       (
         map,
         [&](auto * const typed_map)
@@ -113,7 +113,7 @@ void benchmark_bitfield(ankerl::nanobench::Config const &config)
   object_ptr res{};
   ankerl::nanobench::Bench().config(config).run
   (
-    "[bitfield] map get",
+    "[tagged] map get",
     [&]
     {
       unerase_type
