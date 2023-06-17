@@ -45,11 +45,9 @@ void benchmark_inheritance(ankerl::nanobench::Config const &config)
   (
     "[inheritance] map count",
     [&]
-    {
-      c = m->as_countable()->count();
-      ankerl::nanobench::doNotOptimizeAway(c);
-    }
+    { c = m->as_countable()->count(); }
   );
+  assert(c == 2);
 
   jank::runtime::object_ptr found{};
   ankerl::nanobench::Bench().config(config).run
@@ -105,14 +103,12 @@ void benchmark_bitfield(ankerl::nanobench::Config const &config)
         {
           using T = std::decay_t<decltype(typed_map)>;
           if constexpr(std::is_same_v<T, static_map*>)
-          {
-            c = typed_map->count();
-            ankerl::nanobench::doNotOptimizeAway(c);
-          }
+          { c = typed_map->count(); }
         }
       );
     }
   );
+  assert(c == 2);
 
   object_ptr res{};
   ankerl::nanobench::Bench().config(config).run
