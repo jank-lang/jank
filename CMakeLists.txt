@@ -104,7 +104,7 @@ target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 target_link_directories(jank_cling_lib PRIVATE ${LLVM_LIBRARY_DIRS})
-target_link_libraries(jank_cling_lib PRIVATE -Wl,--whole-archive clingInterpreter -Wl,--no-whole-archive)
+target_link_libraries(jank_cling_lib PRIVATE -Wl,-force_load clingInterpreter -Wl,-noall_load)
 
 set_target_properties(jank_cling_lib PROPERTIES LINK_FLAGS -s)
 # ---- libjankcling.so ----
@@ -243,8 +243,8 @@ target_include_directories(jank_exe SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 
 target_link_libraries(
   jank_exe PUBLIC
-  -Wl,--whole-archive jank_lib -Wl,--no-whole-archive
-  -Wl,--whole-archive nanobench_lib -Wl,--no-whole-archive
+  -Wl,-force_load jank_lib -Wl,-noall_load
+  -Wl,-force_load nanobench_lib -Wl,-noall_load
   Boost::boost
 )
 set_target_properties(jank_exe PROPERTIES LINK_FLAGS_RELEASE -s)
@@ -278,8 +278,8 @@ if(jank_tests)
   find_package(doctest REQUIRED)
   target_link_libraries(
     jank_test_exe PUBLIC
-    -Wl,--whole-archive jank_lib -Wl,--no-whole-archive
-    -Wl,--whole-archive nanobench_lib -Wl,--no-whole-archive
+    -Wl,-force_load jank_lib -Wl,-noall_load
+    -Wl,-force_load nanobench_lib -Wl,-noall_load
     Boost::boost
     doctest::doctest
   )
