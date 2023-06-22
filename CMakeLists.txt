@@ -39,6 +39,12 @@ set(jank_required_compiler_id "Clang")
 set(jank_required_compiler_version "13.0.0")
 #set(jank_required_compiler_version "9.0.1")
 
+# We need different flags for linking whole libraries on different OSes.
+# We need to be mindful to wrap each library with ${jank_link_whole_start} and ${jank_link_whole_end}.
+# For example:
+#   ${jank_link_whole_start} jank_lib ${jank_link_whole_end}
+#   ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
+#
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
   set(jank_link_whole_start "-Wl,--whole-archive")
   set(jank_link_whole_end "-Wl,--no-whole-archive")
