@@ -39,6 +39,22 @@ set(jank_required_compiler_id "Clang")
 set(jank_required_compiler_version "13.0.0")
 #set(jank_required_compiler_version "9.0.1")
 
+# We need different flags for linking whole libraries on different OSes.
+# We need to be mindful to wrap each library with ${jank_link_whole_start} and ${jank_link_whole_end}.
+# For example:
+#   ${jank_link_whole_start} jank_lib ${jank_link_whole_end}
+#   ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
+#
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+  set(jank_link_whole_start "-Wl,--whole-archive")
+  set(jank_link_whole_end "-Wl,--no-whole-archive")
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+  set(jank_link_whole_start "-Wl,-force_load")
+  set(jank_link_whole_end "")
+else()
+  message(FATAL_ERROR "Unsupported OS: " ${CMAKE_SYSTEM_NAME})
+endif()
+
 if(
   NOT CMAKE_CXX_COMPILER_ID STREQUAL jank_required_compiler_id
   OR
@@ -104,7 +120,7 @@ target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 target_link_directories(jank_cling_lib PRIVATE ${LLVM_LIBRARY_DIRS})
-target_link_libraries(jank_cling_lib PRIVATE -Wl,--whole-archive clingInterpreter -Wl,--no-whole-archive)
+target_link_libraries(jank_cling_lib PRIVATE ${jank_link_whole_start} clingInterpreter ${jank_link_whole_end})
 
 set_target_properties(jank_cling_lib PROPERTIES LINK_FLAGS -s)
 # ---- libjankcling.so ----
@@ -243,8 +259,8 @@ target_include_directories(jank_exe SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 
 target_link_libraries(
   jank_exe PUBLIC
-  -Wl,--whole-archive jank_lib -Wl,--no-whole-archive
-  -Wl,--whole-archive nanobench_lib -Wl,--no-whole-archive
+  ${jank_link_whole_start} jank_lib ${jank_link_whole_end}
+  ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
   Boost::boost
 )
 set_target_properties(jank_exe PROPERTIES LINK_FLAGS_RELEASE -s)
@@ -278,8 +294,8 @@ if(jank_tests)
   find_package(doctest REQUIRED)
   target_link_libraries(
     jank_test_exe PUBLIC
-    -Wl,--whole-archive jank_lib -Wl,--no-whole-archive
-    -Wl,--whole-archive nanobench_lib -Wl,--no-whole-archive
+    ${jank_link_whole_start} jank_lib ${jank_link_whole_end}
+    ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
     Boost::boost
     doctest::doctest
   )
