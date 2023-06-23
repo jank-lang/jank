@@ -28,6 +28,7 @@
 #include <jank/runtime/obj/cons.hpp>
 #include <jank/runtime/obj/range.hpp>
 #include <jank/runtime/obj/iterator.hpp>
+#include <jank/runtime/obj/jit_function.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/context.hpp>
