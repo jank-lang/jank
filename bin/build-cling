@@ -132,9 +132,24 @@ function build()
   pushd build-compiler-rt
     cmake ../../compiler-rt -DLLVM_CONFIG_PATH="${srcdir}"/cling-build/bin/llvm-config
     make -j"${make_j}"
-    # TODO: macOS support.
-    mkdir -p "${srcdir}"/cling-build/lib/clang/13.0.0/lib/linux/
-    cp lib/linux/libclang_rt.profile-x86_64.a "${srcdir}"/cling-build/lib/clang/13.0.0/lib/linux/
+
+    case "${OSTYPE}"
+    in
+      linux-gnu*)
+      mkdir -p "${srcdir}"/cling-build/lib/clang/13.0.0/lib/linux/
+      cp lib/linux/libclang_rt.profile-x86_64.a "${srcdir}"/cling-build/lib/clang/13.0.0/lib/linux/
+      ;;
+
+      darwin*)
+      mkdir -p "${srcdir}"/cling-build/lib/clang/13.0.0/lib/darwin/
+      cp lib/darwin/libclang_rt.profile_osx.a "${srcdir}"/cling-build/lib/clang/13.0.0/lib/darwin/
+      ;;
+
+      *)
+      echo "Unsupported platform: ${OSTYPE}" >&2
+      exit 1
+      ;;
+    esac
   popd
 }
 

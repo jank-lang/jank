@@ -932,40 +932,9 @@ namespace jank::codegen
     (
       inserter,
       R"(
-        struct {0}
-          : jank::runtime::object
-          , jank::runtime::behavior::callable
-          , jank::runtime::behavior::metadatable
+        struct {0} : jank::runtime::obj::jit_function
         {{
-          static constexpr bool pointer_free{{ false }};
-
           jank::runtime::context &__rt_ctx;
-      )",
-      runtime::munge(struct_name.name)
-    );
-
-    /* TODO: Inherit from a jit_function base which has all of this. */
-    format_to
-    (
-      inserter,
-      R"(
-        jank::native_bool equal(object const &rhs) const final
-        {{ return this == &rhs; }}
-        jank::native_string to_string() const final
-        {{ return "jit function"; }}
-        jank::native_integer to_hash() const final
-        {{ return reinterpret_cast<jank::native_integer>(this); }}
-        jank::runtime::behavior::callable const* as_callable() const final
-        {{ return this; }}
-        jank::runtime::object_ptr with_meta(jank::runtime::object_ptr const m) const final
-        {{
-          auto const meta(validate_meta(m));
-          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-          const_cast<{0}*>(this)->meta = meta;
-          return const_cast<{0}*>(this);
-        }}
-        jank::runtime::behavior::metadatable const* as_metadatable() const final
-        {{ return this; }}
       )",
       runtime::munge(struct_name.name)
     );

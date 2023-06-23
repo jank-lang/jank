@@ -1,6 +1,7 @@
 #pragma once
 
 #include <folly/FBVector.h>
+#include <map>
 
 namespace jank
 {
