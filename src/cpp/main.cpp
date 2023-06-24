@@ -22,6 +22,7 @@ int main(int const argc, char const **argv)
   }
 
   GC_enable();
+  /* TODO: This crashes now, with LLVM13. Looks like it's cleaning up things it shouldn't. */
   //GC_enable_incremental();
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
