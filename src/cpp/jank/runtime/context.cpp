@@ -39,7 +39,7 @@ namespace jank::runtime
           /* TODO: throw?. */
           return JANK_NIL;
         }
-        auto const typed_sym(static_cast<obj::symbol*>(sym));
+        auto const typed_sym(const_cast<obj::symbol_ptr>(s));
         auto const new_ns(intern_ns(typed_sym));
         get_thread_state().current_ns->set_root(new_ns);
         return JANK_NIL;
