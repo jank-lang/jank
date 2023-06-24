@@ -187,7 +187,7 @@ target_link_options(jank_lib PRIVATE ${jank_linker_flags})
 find_package(Immer CONFIG REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
-find_path(LIBGUARDED_INCLUDE_DIRS "libguarded/shared_guarded.hpp")
+find_package(folly CONFIG REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem)
 find_package(BDWgc CONFIG REQUIRED)
 
@@ -200,7 +200,7 @@ target_link_directories(jank_lib PRIVATE ${jank_cling_build_dir}/build-compiler-
 target_link_libraries(
   jank_lib PRIVATE
   jank_cling_lib immer fmt::fmt
-  Boost::boost Boost::filesystem
+  Folly::folly Folly::folly_deps
   BDWgc::gc BDWgc::cord BDWgc::gccpp BDWgc::gctba
 )
 

@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <mutex>
 
-#include <libguarded/shared_guarded.hpp>
+#include <folly/Synchronized.h>
 
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/var.hpp>
@@ -39,7 +39,7 @@ namespace jank::runtime
     ns_ptr clone() const;
 
     obj::symbol_ptr name{};
-    libguarded::shared_guarded<native_unordered_map<obj::symbol_ptr, var_ptr>> vars;
+    folly::Synchronized<native_unordered_map<obj::symbol_ptr, var_ptr>> vars;
     context const &rt_ctx;
   };
   using ns_ptr = native_box<ns>;

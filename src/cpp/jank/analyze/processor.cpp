@@ -655,8 +655,7 @@ namespace jank::analyze
       if(next_start == native_string::npos)
       {
         /* This is the final chunk. */
-        auto s(native_string_view{ code_str->data.data() + it });
-        chunks.push_back(native_string{ s.data(), s.size() });
+        chunks.emplace_back(native_string_view{ code_str->data.data() + it });
         break;
       }
       auto const next_end(code_str->data.find(interp_end.data(), next_start));
@@ -679,10 +678,7 @@ namespace jank::analyze
       { return result.expect_err_move(); }
 
       if(next_start - it > 0)
-      {
-        auto s(native_string_view{ code_str->data.data() + it, next_start - it });
-        chunks.push_back(native_string{ s.data(), s.size() });
-      }
+      { chunks.emplace_back(native_string_view{ code_str->data.data() + it, next_start - it }); }
       chunks.emplace_back(result.expect_ok());
       it = next_end + interp_end.size();
 

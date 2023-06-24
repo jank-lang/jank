@@ -30,10 +30,7 @@ namespace jank::runtime::obj
   void string::to_string(fmt::memory_buffer &buff) const
   { format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data); }
   native_integer string::to_hash() const
-  {
-    static std::hash<native_string> hasher{};
-    return hasher(data);
-  }
+  { return data.to_hash(); }
   string const* string::as_string() const
   { return this; }
 

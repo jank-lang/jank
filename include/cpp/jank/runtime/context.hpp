@@ -3,7 +3,7 @@
 #include <mutex>
 #include <unordered_map>
 
-#include <libguarded/shared_guarded.hpp>
+#include <folly/Synchronized.h>
 
 #include <jank/result.hpp>
 #include <jank/runtime/ns.hpp>
@@ -51,8 +51,8 @@ namespace jank::runtime
     static obj::symbol unique_symbol();
     static obj::symbol unique_symbol(native_string_view const &prefix);
 
-    libguarded::shared_guarded<native_unordered_map<obj::symbol_ptr, ns_ptr>> namespaces;
-    libguarded::shared_guarded<native_unordered_map<obj::symbol, obj::keyword_ptr>> keywords;
+    folly::Synchronized<native_unordered_map<obj::symbol_ptr, ns_ptr>> namespaces;
+    folly::Synchronized<native_unordered_map<obj::symbol, obj::keyword_ptr>> keywords;
 
     /* TODO: This can be forward declared and moved to the cpp. */
     struct thread_state
@@ -68,6 +68,6 @@ namespace jank::runtime
     thread_state& get_thread_state();
     thread_state& get_thread_state(option<thread_state> init);
 
-    libguarded::shared_guarded<native_unordered_map<std::thread::id, thread_state>> thread_states;
+    folly::Synchronized<native_unordered_map<std::thread::id, thread_state>> thread_states;
   };
 }

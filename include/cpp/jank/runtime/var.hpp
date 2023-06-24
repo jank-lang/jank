@@ -3,7 +3,7 @@
 #include <functional>
 #include <mutex>
 
-#include <libguarded/shared_guarded.hpp>
+#include <folly/Synchronized.h>
 
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
@@ -46,7 +46,7 @@ namespace jank::runtime
     obj::symbol_ptr name;
 
   private:
-    libguarded::shared_guarded<object_ptr> root;
+    folly::Synchronized<object_ptr> root;
   };
   using var_ptr = native_box<var>;
 }

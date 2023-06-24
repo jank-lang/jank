@@ -63,10 +63,7 @@ namespace jank::runtime::obj
   }
   native_integer symbol::to_hash() const
   /* TODO: Cache this. */
-  {
-    static auto hasher(std::hash<native_string>{});
-    return static_cast<size_t>(runtime::detail::hash_combine(hasher(ns), hasher(name)));
-  }
+  { return runtime::detail::hash_combine(ns.to_hash(), name.to_hash()); }
 
   symbol const* symbol::as_symbol() const
   { return this; }
