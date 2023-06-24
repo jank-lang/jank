@@ -92,9 +92,6 @@ function build()
   make -j"${make_j}" -C tools/llvm-cov
   make -j"${make_j}" -C tools/llvm-config
 
-  # I'm not sure why including compiler-rt in the LLVM projects doesn't build this fully. Also
-  # not sure of the currect way to get the libs where Cling wants them, but,
-  # hey, this works. For me.
   mkdir -p build-compiler-rt
   pushd build-compiler-rt
     cmake ../../llvm/compiler-rt -DLLVM_CONFIG_PATH="${srcdir}"/cling-build/bin/llvm-config
@@ -103,22 +100,28 @@ function build()
     case "${OSTYPE}"
     in
       linux-gnu*)
-      mkdir -p "${srcdir}"/cling-build/lib/clang/13.0.0/lib/linux/
-      cp lib/linux/libclang_rt.profile-x86_64.a "${srcdir}"/cling-build/lib/clang/13.0.0/lib/linux/
-      ;;
+        mkdir -p "${srcdir}"/cling-build/lib/clang/13.0.0/lib/linux/
+        for rt in profile asan asan_cxx ubsan_standalone ubsan_standalone_cxx;
+        do
+          cp "lib/linux/libclang_rt.${rt}-x86_64.a" "${srcdir}"/cling-build/lib/clang/13.0.0/lib/linux/
+        done
+        ;;
 
       darwin*)
-      mkdir -p "${srcdir}"/cling-build/lib/clang/13.0.0/lib/darwin/
-      cp lib/darwin/libclang_rt.profile_osx.a "${srcdir}"/cling-build/lib/clang/13.0.0/lib/darwin/
-      ;;
+        mkdir -p "${srcdir}"/cling-build/lib/clang/13.0.0/lib/darwin/
+        cp lib/darwin/libclang_rt.profile_osx.a lib/darwin/libclang_rt.asan_osx.a lib/darwin/libclang_rt.asan_cxx_osx.a "${srcdir}"/cling-build/lib/clang/13.0.0/lib/darwin/
+        ;;
 
       *)
-      echo "Unsupported platform: ${OSTYPE}" >&2
-      exit 1
-      ;;
+        echo "Unsupported platform: ${OSTYPE}" >&2
+        exit 1
+        ;;
     esac
   popd
 }
 
 prepare
 build
+
+echo
+echo "Cling/Clang/LLVM successfully compiled. You can now build jank."
