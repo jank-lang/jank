@@ -53,11 +53,11 @@ namespace jank::runtime
   { return this; }
 
   object_ptr var::get_root() const
-  { return *root.rlock(); }
+  { return *root.lock_shared(); }
 
   var_ptr var::set_root(object_ptr r)
   {
-    *root.wlock() = r;
+    *root.lock() = r;
     return this;
   }
 

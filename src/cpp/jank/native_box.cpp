@@ -15,7 +15,7 @@ namespace jank
   native_box<runtime::obj::real> make_box(native_real const r)
   { return make_box<runtime::obj::real>(r); }
   native_box<runtime::obj::string> make_box(native_string_view const &s)
-  { return make_box<runtime::obj::string>(s); }
+  { return make_box<runtime::obj::string>(s.data()); }
   runtime::obj::list_ptr make_box(runtime::detail::persistent_list const &l)
   { return make_box<runtime::obj::list>(l); }
 }

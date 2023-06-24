@@ -8,7 +8,6 @@
     "boost-smart-ptr",
     "boost-variant",
     "fmt",
-    "folly",
     "immer",
     "libguarded",
     "magic-enum"

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <folly/FBVector.h>
 #include <map>
 
 namespace jank
@@ -22,7 +21,7 @@ namespace jank
   using native_string_view = std::string_view;
 
   template <typename T>
-  using native_vector = folly::fbvector<T, native_allocator<T>>;
+  using native_vector = std::vector<T, native_allocator<T>>;
   template <typename K, typename V>
   using native_map = std::map<K, V, native_allocator<std::pair<K const, V>>>;
 
@@ -36,9 +35,11 @@ namespace jank
   >
   using native_unordered_map = boost::unordered_map
   <K, V, Hash, Pred, native_allocator<std::pair<K const, V>>>;
+
+  using native_string = std::string;
 }
 
 /* XXX: native_string.hpp includes this file to learn about integer types, but we also include it
  * to forward our string type. Pragma once allows this to work, but we need to make sure the order
  * is right. */
-#include <jank/native_string.hpp>
+//#include <jank/native_string.hpp>

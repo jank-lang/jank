@@ -46,7 +46,10 @@ namespace std
   struct hash<jank::runtime::obj::symbol>
   {
     size_t operator()(jank::runtime::obj::symbol const &o) const noexcept
-    { return static_cast<size_t>(jank::runtime::detail::hash_combine(o.ns.to_hash(), o.name.to_hash())); }
+    {
+      static auto hasher(std::hash<jank::native_string>{});
+      return static_cast<size_t>(jank::runtime::detail::hash_combine(hasher(o.ns), hasher(o.name)));
+    }
   };
 
   template <>
