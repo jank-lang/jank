@@ -39,7 +39,7 @@ namespace jank::runtime
           /* TODO: throw?. */
           return JANK_NIL;
         }
-        auto const typed_sym(static_cast<obj::symbol*>(sym));
+        auto const typed_sym(const_cast<obj::symbol_ptr>(s));
         auto const new_ns(intern_ns(typed_sym));
         get_thread_state().current_ns->set_root(new_ns);
         return JANK_NIL;
@@ -264,7 +264,11 @@ namespace jank::runtime
     if(!list || list->data.data->length == 0)
     { return o; }
 
-    auto const var(find_var(static_cast<obj::symbol*>(list->data.first().unwrap())));
+    auto const first_sym(list->data.first().unwrap()->as_symbol());
+    if(!first_sym)
+    { return o; }
+
+    auto const var(find_var(const_cast<obj::symbol_ptr>(first_sym)));
     /* None means it's not a var, so not a macro. No meta means no :macro set. */
     if(var.is_none() || var.unwrap()->meta.is_none())
     { return o; }
