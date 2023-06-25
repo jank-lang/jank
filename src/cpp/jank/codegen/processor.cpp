@@ -128,7 +128,7 @@ namespace jank::codegen
       }
       else if(auto const * const d = o->as_string())
       {
-        format_to
+        fmt::format_to
         (
           inserter,
           "jank::make_box<jank::runtime::obj::string>({})",

@@ -23,8 +23,6 @@ namespace jank::read::parse
       using pointer = value_type*;
       using reference = value_type&;
 
-      iterator(iterator const&) = default;
-
       value_type operator *() const;
       pointer operator ->();
       iterator& operator ++();
