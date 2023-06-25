@@ -112,7 +112,7 @@ namespace jank::jit
     if(result != cling::Interpreter::CompilationResult::kSuccess)
     { return err("compilation error"); }
 
-    auto * const ret_val(v.simplisticCastAs<runtime::object_ptr>());
+    auto * const ret_val(v.castAs<runtime::object_ptr>());
     return ok(ret_val);
   }
 

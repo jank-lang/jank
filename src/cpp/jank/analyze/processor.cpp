@@ -107,7 +107,7 @@ namespace jank::analyze
       value_expr = some(value_result.expect_ok());
     }
 
-    auto const &var_sym(static_cast<runtime::obj::symbol*>(sym_obj));
+    auto const &var_sym(const_cast<runtime::obj::symbol_ptr>(sym));
     auto const qualified_sym(current_frame->lift_var(var_sym));
     rt_ctx.intern_var(qualified_sym);
     return make_box<expression>
@@ -210,7 +210,7 @@ namespace jank::analyze
         continue;
       }
 
-      auto const sym_ptr(static_cast<runtime::obj::symbol*>(p));
+      auto const sym_ptr(const_cast<runtime::obj::symbol_ptr>(sym));
       auto const unique_res(unique_param_symbols.emplace(*sym_ptr));
       if(!unique_res.second)
       {
@@ -500,7 +500,7 @@ namespace jank::analyze
       if(sym == nullptr || !sym->ns.empty())
       { return err(error{ "invalid let* binding: left hand must be an unqualified symbol" }); }
 
-      auto const sym_ptr(static_cast<runtime::obj::symbol*>(sym_obj));
+      auto const sym_ptr(const_cast<runtime::obj::symbol_ptr>(sym));
       auto res(analyze(val, ret.frame, expression_type::expression, fn_ctx));
       if(res.is_err())
       { return res.expect_err_move(); }
@@ -599,7 +599,7 @@ namespace jank::analyze
     if(arg_sym == nullptr)
     { return err(error{ "invalid var reference: expects a symbol" }); }
 
-    auto const qualified_sym(rt_ctx.qualify_symbol(static_cast<runtime::obj::symbol*>(arg)));
+    auto const qualified_sym(rt_ctx.qualify_symbol(const_cast<runtime::obj::symbol_ptr>(arg_sym)));
     auto const found_var(rt_ctx.find_var(qualified_sym));
     if(found_var.is_none())
     { return err(error{ "invalid var reference: var not found" }); }
@@ -812,9 +812,8 @@ namespace jank::analyze
 
     auto const first(o->data.first().unwrap());
     expression_ptr source{};
-    if(first->as_symbol())
+    if(auto const sym = const_cast<runtime::obj::symbol_ptr>(first->as_symbol()))
     {
-      auto const sym(static_cast<runtime::obj::symbol*>(first));
       auto const found_special(specials.find(sym));
       if(found_special != specials.end())
       { return found_special->second(o, current_frame, expr_type, fn_ctx); }
@@ -883,14 +882,14 @@ namespace jank::analyze
     { return analyze_call(const_cast<runtime::obj::list*>(d), current_frame, expr_type, fn_ctx); }
     else if(auto const d = o->as_vector())
     { return analyze_vector(const_cast<runtime::obj::vector*>(d), current_frame, expr_type, fn_ctx); }
-    else if(o->as_map())
-    { return analyze_map(static_cast<runtime::obj::map*>(o), current_frame, expr_type, fn_ctx); }
+    else if(auto const d = o->as_map())
+    { return analyze_map(const_cast<runtime::obj::map*>(d), current_frame, expr_type, fn_ctx); }
     else if(o->as_set())
     { return err(error{ "unimplemented analysis: set" }); }
     else if(o->as_number() || o->as_boolean() || o->as_keyword() || o->as_nil() || o->as_string())
     { return analyze_primitive_literal(o, current_frame, expr_type, fn_ctx); }
-    else if(o->as_symbol())
-    { return analyze_symbol(static_cast<runtime::obj::symbol*>(o), current_frame, expr_type, fn_ctx); }
+    else if(auto const d = o->as_symbol())
+    { return analyze_symbol(const_cast<runtime::obj::symbol_ptr>(d), current_frame, expr_type, fn_ctx); }
     /* This is used when building code from macros; they may end up being other forms of sequences
      * and not just lists. */
     if(auto s = o->as_seqable())

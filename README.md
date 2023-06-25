@@ -49,24 +49,20 @@ depending on your machine. Building jank itself should take less than a minute.
 $ mkdir -p build
 $ cd build
 $ ../bin/build-cling
-$ export CC=$PWD/cling-build/bin/clang; export CXX=$PWD/cling-build/bin/clang++;
+$ cd -
+$ export CC=$PWD/build/cling-build/bin/clang; export CXX=$PWD/build/cling-build/bin/clang++;
 ```
 
-You then need to provide it to `./bin/configure` by using `-Djank_cling_build_dir=cling-build`.
+At this point, you're ready to build jank.
 
 
 ### Compiling jank
-* `./bin/configure` -- For setting up the project.
-* `./bin/compile` -- For one-off compilation.
-* `./bin/test` -- For one-off testing.
-* `./bin/watch` -- For hot reloading on save.
-* `./bin/install` -- For packaging.
 
 #### Release
 A typical release build just needs the following:
 
 ```bash
-$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_cling_build_dir=cling-build
+$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_cling_build_dir=build/cling-build
 $ ./bin/compile
 ```
 
@@ -74,7 +70,7 @@ $ ./bin/compile
 To make a debug build, specify the build type when configuring.
 
 ```bash
-$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_cling_build_dir=cling-build -Djank_tests=on
+$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_cling_build_dir=build/cling-build -Djank_tests=on
 $ ./bin/compile
 
 # When developing, continuously run the tests locally.
@@ -87,7 +83,7 @@ Note that this includes a lot of header files, which are necessary for jank's
 JIT compilation.
 
 ```bash
-$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_cling_build_dir=cling-build
+$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_cling_build_dir=build/cling-build
 $ ./bin/install
 ```
 

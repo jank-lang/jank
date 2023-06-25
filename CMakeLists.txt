@@ -75,10 +75,13 @@ set(
   -Wold-style-cast -Wno-gnu-case-range
   -DJANK_CLING_BUILD_DIR="${jank_cling_build_dir_absolute}"
   -DIMMER_HAS_LIBGC=1 -DHAVE_CXX14=1
-  $<$<CONFIG:RELEASE>:-O3>
+  $<$<CONFIG:Release>:-O3>
   #-stdlib=libc++
-)
-set(jank_linker_flags "" #-stdlib=libc++ -lc++abi
+)z
+set(
+  jank_linker_flags
+  -L${jank_cling_build_dir}/build-compiler-rt/lib/linux
+  #-stdlib=libc++ -lc++abi
   )
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   list(APPEND jank_compiler_flags -Werror)
@@ -115,6 +118,8 @@ find_package(
         "${jank_cling_build_dir}/lib/cmake/cling"
   NO_DEFAULT_PATH
 )
+
+list(APPEND CLING_INCLUDE_DIRS ${jank_cling_build_dir}/build-compiler-rt/include)
 
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
