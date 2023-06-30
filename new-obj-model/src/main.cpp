@@ -1,3 +1,5 @@
+#include <concepts>
+
 #include <gc/gc.h>
 #include <gc/gc_cpp.h>
 #include <nanobench.h>
@@ -8,6 +10,7 @@
 #include <jank/obj-model/tagged/unerase.hpp>
 #include <jank/obj-model/tagged/map.hpp>
 #include <jank/obj-model/tagged/keyword.hpp>
+#include <jank/obj-model/tagged/associatively_readable.hpp>
 
 void benchmark_inheritance(ankerl::nanobench::Config const &config)
 {
@@ -62,7 +65,7 @@ void benchmark_inheritance(ankerl::nanobench::Config const &config)
   assert(found);
 }
 
-void benchmark_bitfield(ankerl::nanobench::Config const &config)
+void benchmark_tagged(ankerl::nanobench::Config const &config)
 {
   using namespace jank::obj_model::tagged;
 
@@ -122,13 +125,14 @@ void benchmark_bitfield(ankerl::nanobench::Config const &config)
         [&](auto * const typed_map)
         {
           using T = std::decay_t<decltype(typed_map)>;
-          if constexpr(std::is_same_v<T, static_map*>)
+          if constexpr(jank::obj_model::tagged::associatively_readable<T>)
           { res = typed_map->get(erase_type(kw_a)); }
         }
       );
     }
   );
   assert(res);
+
 }
 
 int main()
@@ -141,7 +145,7 @@ int main()
   config.mWarmup = 10000;
 
   benchmark_inheritance(config);
-  benchmark_bitfield(config);
+  benchmark_tagged(config);
 
   ankerl::nanobench::Bench().config(config).run
   (

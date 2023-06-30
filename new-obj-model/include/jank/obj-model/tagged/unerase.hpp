@@ -6,6 +6,7 @@
 
 namespace jank::obj_model::tagged
 {
+  /* TODO: Rename to visit. */
   template <typename F>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline void unerase_type(object *const erased, F &&fn)
