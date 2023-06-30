@@ -306,7 +306,7 @@ namespace jank::runtime
     seq->first()->to_string(buff);
     for(auto *it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
     {
-      fmt::format_to(inserter, std::string{ 1, ' ' });
+      fmt::format_to(inserter, " ");
       it->first()->to_string(buff);
     }
     std::fwrite(buff.data(), 1, buff.size(), stdout);
@@ -321,7 +321,7 @@ namespace jank::runtime
     seq->first()->to_string(buff);
     for(auto *it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
     {
-      fmt::format_to(inserter, std::string{ 1, ' ' });
+      fmt::format_to(inserter, " ");
       it->first()->to_string(buff);
     }
     std::fwrite(buff.data(), 1, buff.size(), stdout);

@@ -30,6 +30,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <format>
 
 #include <fmt/format.h>
 #include <folly/CPortability.h>
@@ -2733,4 +2734,15 @@ struct fmt::formatter<folly::string> : private formatter<fmt::string_view> {
 namespace jank
 {
   using native_string = folly::string;
+}
+
+namespace std
+{
+  template <>
+  struct formatter<jank::native_string> : formatter<std::string_view>
+  {
+    template<class FormatContext>
+    auto format(jank::native_string const &s, FormatContext &fc) const
+    { return formatter<std::string_view>::format({ s.data(), s.size() }, fc); }
+  };
 }

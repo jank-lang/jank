@@ -35,6 +35,8 @@ project(
     LANGUAGES C CXX
 )
 
+set(jank_cxx_standard cxx_std_20)
+
 set(jank_required_compiler_id "Clang")
 set(jank_required_compiler_version "13.0.0")
 
@@ -107,7 +109,7 @@ add_library(jank_cling_lib SHARED "${CMAKE_CURRENT_BINARY_DIR}/null.cpp")
 
 set_property(TARGET jank_cling_lib PROPERTY OUTPUT_NAME jankcling)
 
-target_compile_features(jank_cling_lib PUBLIC cxx_std_17)
+target_compile_features(jank_cling_lib PUBLIC ${jank_cxx_standard})
 
 find_package(LLVM REQUIRED CONFIG HINTS "${jank_cling_build_dir}/lib/cmake/llvm" NO_DEFAULT_PATH)
 find_package(Clang REQUIRED CONFIG HINTS "${jank_cling_build_dir}/lib/cmake/clang" NO_DEFAULT_PATH)
@@ -181,7 +183,7 @@ target_precompile_headers(jank_lib PUBLIC ${PROJECT_SOURCE_DIR}/include/cpp/jank
 
 set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 
-target_compile_features(jank_lib PUBLIC cxx_std_17)
+target_compile_features(jank_lib PUBLIC ${jank_cxx_standard})
 target_compile_options(jank_lib PUBLIC ${jank_compiler_flags})
 list(JOIN jank_compiler_flags " " jank_compiler_flags_str)
 string(REPLACE "\"" "\\\"" jank_compiler_flags_str ${jank_compiler_flags_str})
@@ -232,7 +234,7 @@ target_include_directories(
 
 set_property(TARGET nanobench_lib PROPERTY OUTPUT_NAME nanobench)
 
-target_compile_features(nanobench_lib PUBLIC cxx_std_17)
+target_compile_features(nanobench_lib PUBLIC ${jank_cxx_standard})
 
 set_target_properties(nanobench_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
 
@@ -252,7 +254,7 @@ set_property(TARGET jank_exe PROPERTY OUTPUT_NAME jank)
 # Symbol exporting for JIT.
 set_target_properties(jank_exe PROPERTIES ENABLE_EXPORTS 1)
 
-target_compile_features(jank_exe PRIVATE cxx_std_17)
+target_compile_features(jank_exe PRIVATE ${jank_cxx_standard})
 target_compile_options(jank_exe PUBLIC ${jank_compiler_flags})
 target_link_options(jank_exe PRIVATE ${jank_linker_flags})
 
@@ -285,7 +287,7 @@ if(jank_tests)
 
   set_property(TARGET jank_test_exe PROPERTY OUTPUT_NAME jank-test)
 
-  target_compile_features(jank_test_exe PRIVATE cxx_std_17)
+  target_compile_features(jank_test_exe PRIVATE ${jank_cxx_standard})
   target_compile_options(jank_test_exe PUBLIC ${jank_compiler_flags})
   target_compile_options(jank_test_exe PRIVATE -DDOCTEST_CONFIG_SUPER_FAST_ASSERTS)
   target_link_options(jank_test_exe PRIVATE ${jank_linker_flags})
