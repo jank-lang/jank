@@ -12,6 +12,11 @@
 #include <jank/obj-model/tagged/keyword.hpp>
 #include <jank/obj-model/tagged/associatively_readable.hpp>
 
+#include <jank/obj-model/variant/object.hpp>
+#include <jank/obj-model/variant/map.hpp>
+#include <jank/obj-model/variant/keyword.hpp>
+#include <jank/obj-model/variant/associatively_readable.hpp>
+
 void benchmark_inheritance(ankerl::nanobench::Config const &config)
 {
   using namespace jank::obj_model::inheritance;
@@ -29,12 +34,13 @@ void benchmark_inheritance(ankerl::nanobench::Config const &config)
     }
   );
 
+  auto arr(new (GC) jank::runtime::object_ptr[2]{ jank::runtime::JANK_NIL, jank::runtime::JANK_NIL });
   ankerl::nanobench::Bench().config(config).run
   (
     "[inheritance] ctor {:a :b}",
     [&]
     {
-      auto const ret(new (GC) map{ jank::runtime::detail::in_place_unique{}, new (GC) jank::runtime::object_ptr[2]{ jank::runtime::JANK_NIL, jank::runtime::JANK_NIL }, 2 });;
+      auto const ret(new (GC) map{ jank::runtime::detail::in_place_unique{}, arr, 2 });;
       ankerl::nanobench::doNotOptimizeAway(ret);
     }
   );
@@ -79,19 +85,19 @@ void benchmark_tagged(ankerl::nanobench::Config const &config)
     }
   );
 
-  auto const nil(static_nil::create());
+  auto const kw_a(static_keyword::create(jank::runtime::obj::symbol{ "", "a" }, true));
+  auto const kw_b(static_keyword::create(jank::runtime::obj::symbol{ "", "b" }, true));
+  auto arr(jank::make_array_box<object_ptr>(erase_type(kw_a), erase_type(kw_b)));
   ankerl::nanobench::Bench().config(config).run
   (
     "[tagged] ctor {:a :b}",
     [&]
     {
-      auto const ret(static_map::create(nil, nil));
+      auto const ret(static_map::create(arr, 2));
       ankerl::nanobench::doNotOptimizeAway(ret);
     }
   );
 
-  auto const kw_a(static_keyword::create(jank::runtime::obj::symbol{ "", "a" }, true));
-  auto const kw_b(static_keyword::create(jank::runtime::obj::symbol{ "", "b" }, true));
   auto const map(erase_type(static_map::create(kw_a, kw_b)));
   size_t c{};
   ankerl::nanobench::Bench().config(config).run
@@ -106,12 +112,16 @@ void benchmark_tagged(ankerl::nanobench::Config const &config)
         {
           using T = std::decay_t<decltype(typed_map)>;
           if constexpr(std::is_same_v<T, static_map*>)
-          { c = typed_map->count(); }
+          {
+            c = typed_map->count();
+            ankerl::nanobench::doNotOptimizeAway(c);
+          }
         }
       );
     }
   );
-  assert(c == 2);
+  if(c != 1)
+  { throw std::runtime_error{ "optimized away" }; }
 
   object_ptr res{};
   ankerl::nanobench::Bench().config(config).run
@@ -124,15 +134,95 @@ void benchmark_tagged(ankerl::nanobench::Config const &config)
         map,
         [&](auto * const typed_map)
         {
-          using T = std::decay_t<decltype(typed_map)>;
+          using T = std::decay_t<std::remove_pointer_t<decltype(typed_map)>>;
           if constexpr(jank::obj_model::tagged::associatively_readable<T>)
-          { res = typed_map->get(erase_type(kw_a)); }
+          {
+            res = typed_map->get(erase_type(kw_a));
+            ankerl::nanobench::doNotOptimizeAway(res);
+          }
         }
       );
     }
   );
-  assert(res);
+  if(!res)
+  { throw std::runtime_error{ "optimized away" }; }
+}
 
+void benchmark_variant(ankerl::nanobench::Config const &config)
+{
+  using namespace jank::obj_model::variant;
+
+  ankerl::nanobench::Bench().config(config).run
+  (
+    "[variant] empty map ctor",
+    [&]
+    {
+      auto const ret(make_object<object_type::map>());
+      ankerl::nanobench::doNotOptimizeAway(ret);
+    }
+  );
+
+  auto const nil(make_object<object_type::nil>());
+  ankerl::nanobench::Bench().config(config).run
+  (
+    "[variant] ctor {:a :b}",
+    [&]
+    {
+      auto const ret(make_object<object_type::map>(nil, nil));
+      ankerl::nanobench::doNotOptimizeAway(ret);
+    }
+  );
+
+  auto const kw_a(make_object<object_type::keyword>(jank::runtime::obj::symbol{ "", "a" }, true));
+  auto const kw_b(make_object<object_type::keyword>(jank::runtime::obj::symbol{ "", "b" }, true));
+  auto const map(erase_type(make_object<object_type::map>(kw_a, kw_b)));
+  size_t c{};
+  ankerl::nanobench::Bench().config(config).run
+  (
+    "[variant] map count",
+    [&]
+    {
+      boost::apply_visitor
+      (
+        [&](auto const &typed_map)
+        {
+          using T = std::decay_t<decltype(typed_map)>;
+          if constexpr(std::is_same_v<T, static_map>)
+          {
+            c = typed_map.count();
+            ankerl::nanobench::doNotOptimizeAway(c);
+          }
+        },
+        map->data
+      );
+    }
+  );
+  if(c != 1)
+  { throw std::runtime_error{ "optimized away" }; }
+
+  object_ptr res{};
+  ankerl::nanobench::Bench().config(config).run
+  (
+    "[variant] map get",
+    [&]
+    {
+      boost::apply_visitor
+      (
+        [&](auto const &typed_map)
+        {
+          using T = std::decay_t<std::remove_pointer_t<decltype(typed_map)>>;
+          if constexpr(jank::obj_model::variant::associatively_readable<T>)
+          {
+            res = typed_map.get(erase_type(kw_a));
+            ankerl::nanobench::doNotOptimizeAway(res);
+          }
+        },
+        map->data
+      );
+    }
+  );
+  if(!res)
+  { throw std::runtime_error{ "optimized away" }; }
 }
 
 int main()
@@ -146,10 +236,11 @@ int main()
 
   benchmark_inheritance(config);
   benchmark_tagged(config);
+  benchmark_variant(config);
 
   ankerl::nanobench::Bench().config(config).run
   (
-    "new int",
+    "new boxed int",
     [&]
     {
       auto const ret(jank::make_box(1044));

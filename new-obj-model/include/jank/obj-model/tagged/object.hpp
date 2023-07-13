@@ -24,9 +24,12 @@ namespace jank::obj_model::tagged
 
   template <typename T>
   object_ptr erase_type(T * const t)
-  { return &t->base; }
-  inline object_ptr erase_type(object * const t)
-  { return t; }
+  {
+    if constexpr(std::is_same_v<T, object>)
+    { return t; }
+    else
+    { return &t->base; }
+  }
 
   using static_nil = typed_object<object_type::nil>;
   template <>

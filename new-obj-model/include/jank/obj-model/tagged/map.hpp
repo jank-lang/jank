@@ -11,9 +11,12 @@ namespace jank::obj_model::tagged
   {
     static auto create()
     { return new (GC) static_map{ }; }
-    template <typename ...Args>
-    static auto create(Args &&...args)
-    { return new (GC) static_map{ {}, { object_type::map }, { in_place_unique{}, jank::make_array_box<object_ptr>(erase_type(std::forward<Args>(args))...), sizeof...(Args) }, {} }; }
+    static auto create(object_ptr *arr, size_t const n)
+    { return new (GC) static_map{ {}, { object_type::map }, { in_place_unique{}, arr, n }, {} }; }
+    template <typename T, typename ...Args>
+    requires (!std::same_as<std::decay_t<T>, object_ptr*>)
+    static auto create(T &&t, Args &&...args)
+    { return new (GC) static_map{ {}, { object_type::map }, { in_place_unique{}, jank::make_array_box<object_ptr>(erase_type(std::forward<T>(t)), erase_type(std::forward<Args>(args))...), 1 + sizeof...(Args) }, {} }; }
 
     object_ptr get(object_ptr key) const
     {

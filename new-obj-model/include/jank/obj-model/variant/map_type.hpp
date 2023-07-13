@@ -5,7 +5,9 @@
 
 #include <jank/runtime/hash.hpp>
 
-namespace jank::runtime::detail
+#include <jank/obj-model/variant/keyword.hpp>
+
+namespace jank::obj_model::variant
 {
   struct in_place_unique
   { };
@@ -136,7 +138,7 @@ namespace jank::runtime::detail
     map_type_impl(map_type_impl const &s) = default;
     map_type_impl(map_type_impl &&s) noexcept = default;
     template <typename L, typename E = std::enable_if_t<std::is_integral_v<L>>>
-    map_type_impl(in_place_unique, value_type kvs, L const l)
+    map_type_impl(in_place_unique, value_type &&kvs, L const l)
       : data{ std::move(kvs) }, length{ static_cast<decltype(length)>(l) }
     { }
     ~map_type_impl() = default;
@@ -149,52 +151,75 @@ namespace jank::runtime::detail
     }
     void insert_or_assign(K const key, V const val)
     {
-      if(auto const kw = key->as_keyword())
-      {
-        for(size_t i{}; i < length; i += 2)
+      boost::apply_visitor
+      (
+        [&](auto const &typed_key)
         {
-          if(data[i] == key)
+          using T = std::decay_t<decltype(typed_key)>;
+          if constexpr(std::is_same_v<T, static_keyword>)
           {
-            data[i + 1] = val;
-            hash = 0;
-            return;
+            for(size_t i{}; i < length; i += 2)
+            {
+              if(data[i] == key)
+              {
+                data[i + 1] = val;
+                hash = 0;
+                return;
+              }
+            }
           }
-        }
-      }
-      else
-      {
-        for(size_t i{}; i < length; i += 2)
-        {
-          if(data[i]->equal(*key))
+          else
           {
-            data[i + 1] = val;
-            hash = 0;
-            return;
+            //for(size_t i{}; i < length; i += 2)
+            //{
+            //  if(data[i]->equal(*key))
+            //  {
+            //    data[i + 1] = val;
+            //    hash = 0;
+            //    return;
+            //  }
+            //}
           }
-        }
-      }
+        },
+        key->data
+      );
       insert_unique(key, val);
     }
 
     V find(K const key) const
     {
-      if(auto const kw = key->as_keyword())
-      {
-        for(size_t i{}; i < length; i += 2)
+      V found{};
+      boost::apply_visitor
+      (
+        [&](auto const &typed_key)
         {
-          if(data[i] == key)
-          { return data[i + 1]; }
-        }
-      }
-      else
-      {
-        for(size_t i{}; i < length; i += 2)
-        {
-          if(data[i]->equal(*key))
-          { return data[i + 1]; }
-        }
-      }
-      return nullptr;
+          using T = std::decay_t<decltype(typed_key)>;
+          if constexpr(std::is_same_v<T, static_keyword>)
+          {
+            for(size_t i{}; i < length; i += 2)
+            {
+              if(data[i] == key)
+              {
+                found = data[i + 1];
+                return;
+              }
+            }
+          }
+          else
+          {
+            //for(size_t i{}; i < length; i += 2)
+            //{
+            //  if(data[i]->equal(*key))
+            //  {
+            //    found = data[i + 1];
+            //    return;
+            //  }
+            //}
+          }
+        },
+        key->data
+      );
+      return found;
     }
 
     size_t to_hash() const
@@ -242,7 +267,7 @@ namespace jank::runtime::detail
         return *this;
       }
 
-      object_ptr const* data{};
+      V const* data{};
       size_t index{};
     };
     using const_iterator = iterator;
@@ -262,8 +287,8 @@ namespace jank::runtime::detail
     map_type_impl<K, V> clone() const
     {
       map_type_impl<K, V> ret{ *this };
-      ret.data = new (GC) object_ptr[length];
-      memcpy(ret.data, data, length * sizeof(object_ptr));
+      ret.data = new (GC) V*[length];
+      memcpy(ret.data, data, length * sizeof(V*));
       return ret;
     }
 

@@ -139,7 +139,7 @@ namespace jank::obj_model::tagged
     map_type_impl(map_type_impl const &s) = default;
     map_type_impl(map_type_impl &&s) noexcept = default;
     template <typename L, typename E = std::enable_if_t<std::is_integral_v<L>>>
-    map_type_impl(in_place_unique, value_type &&kvs, L const l)
+    map_type_impl(in_place_unique, value_type kvs, L const l)
       : data{ std::move(kvs) }, length{ static_cast<decltype(length)>(l) }
     { }
     ~map_type_impl() = default;
