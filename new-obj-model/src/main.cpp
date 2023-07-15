@@ -105,17 +105,15 @@ void benchmark_tagged(ankerl::nanobench::Config const &config)
     "[tagged] map count",
     [&]
     {
-      unerase_type
+      c = unerase_type<size_t>
       (
         map,
-        [&](auto * const typed_map)
+        [&](auto * const typed_map) -> size_t
         {
           using T = std::decay_t<decltype(typed_map)>;
           if constexpr(std::is_same_v<T, static_map*>)
-          {
-            c = typed_map->count();
-            ankerl::nanobench::doNotOptimizeAway(c);
-          }
+          { return typed_map->count(); }
+          return 0;
         }
       );
     }
@@ -129,17 +127,15 @@ void benchmark_tagged(ankerl::nanobench::Config const &config)
     "[tagged] map get",
     [&]
     {
-      unerase_type
+      res = unerase_type<object_ptr>
       (
         map,
-        [&](auto * const typed_map)
+        [kw_a](auto * const typed_map) -> object_ptr
         {
           using T = std::decay_t<std::remove_pointer_t<decltype(typed_map)>>;
           if constexpr(jank::obj_model::tagged::associatively_readable<T>)
-          {
-            res = typed_map->get(erase_type(kw_a));
-            ankerl::nanobench::doNotOptimizeAway(res);
-          }
+          { return typed_map->get(erase_type(kw_a)); }
+          return nullptr;
         }
       );
     }

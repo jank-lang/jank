@@ -152,7 +152,7 @@ namespace jank::obj_model::tagged
     }
     void insert_or_assign(K const key, V const val)
     {
-      unerase_type
+      unerase_type<void>
       (
         key,
         [&](auto * const typed_key)
@@ -190,7 +190,7 @@ namespace jank::obj_model::tagged
     V find(K const key) const
     {
       V found{};
-      unerase_type
+      unerase_type<void>
       (
         key,
         [&](auto * const typed_key)
