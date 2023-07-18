@@ -7,23 +7,23 @@
 namespace jank::obj_model::tagged
 {
   /* TODO: Rename to visit. */
-  template <typename R, typename F>
+  template <typename R, typename F, typename ...Args>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline R unerase_type(object *const erased, F &&fn)
+  inline R unerase_type(object *const erased, F &&fn, Args ...args)
   {
     switch(erased->type)
     {
       case jank::obj_model::tagged::object_type::nil:
       {
-        return fn(reinterpret_cast<static_nil*>(erased));
+        return fn(reinterpret_cast<static_nil*>(erased), args...);
       } break;
       case jank::obj_model::tagged::object_type::keyword:
       {
-        return fn(reinterpret_cast<static_keyword*>(erased));
+        return fn(reinterpret_cast<static_keyword*>(erased), args...);
       } break;
       case jank::obj_model::tagged::object_type::map:
       {
-        return fn(reinterpret_cast<static_map*>(erased));
+        return fn(reinterpret_cast<static_map*>(erased), args...);
       } break;
       default:
       {

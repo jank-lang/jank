@@ -189,38 +189,43 @@ namespace jank::obj_model::tagged
 
     V find(K const key) const
     {
-      V found{};
-      unerase_type<void>
-      (
-        key,
-        [&](auto * const typed_key)
+      if(key->type == object_type::keyword)
+      {
+        for(size_t i{}; i < length; i += 2)
         {
-          using T = std::decay_t<decltype(typed_key)>;
-          if constexpr(std::is_same_v<T, static_keyword*>)
-          {
-            for(size_t i{}; i < length; i += 2)
-            {
-              if(data[i] == key)
-              {
-                found = data[i + 1];
-                return;
-              }
-            }
-          }
-          else
-          {
-            //for(size_t i{}; i < length; i += 2)
-            //{
-            //  if(data[i]->equal(*key))
-            //  {
-            //    found = data[i + 1];
-            //    return;
-            //  }
-            //}
-          }
+          if(data[i] == key)
+          { return data[i + 1]; }
         }
-      );
-      return found;
+      }
+      //return unerase_type<V>
+      //(
+      //  key,
+      //  [](auto * const typed_key, auto thiz, auto key) -> V
+      //  {
+      //    using T = std::decay_t<decltype(typed_key)>;
+      //    if constexpr(std::is_same_v<T, static_keyword*>)
+      //    {
+      //      for(size_t i{}; i < thiz->length; i += 2)
+      //      {
+      //        if(thiz->data[i] == key)
+      //        { return thiz->data[i + 1]; }
+      //      }
+      //    }
+      //    else
+      //    {
+      //      //for(size_t i{}; i < length; i += 2)
+      //      //{
+      //      //  if(data[i]->equal(*key))
+      //      //  {
+      //      //    found = data[i + 1];
+      //      //    return;
+      //      //  }
+      //      //}
+      //    }
+      //  },
+      //  this,
+      //  key
+      //);
     }
 
     size_t to_hash() const

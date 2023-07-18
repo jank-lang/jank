@@ -130,13 +130,14 @@ void benchmark_tagged(ankerl::nanobench::Config const &config)
       res = unerase_type<object_ptr>
       (
         map,
-        [kw_a](auto * const typed_map) -> object_ptr
+        [](auto * const typed_map, auto * const kw_a) -> object_ptr
         {
           using T = std::decay_t<std::remove_pointer_t<decltype(typed_map)>>;
           if constexpr(jank::obj_model::tagged::associatively_readable<T>)
           { return typed_map->get(erase_type(kw_a)); }
           return nullptr;
-        }
+        },
+        kw_a
       );
     }
   );
