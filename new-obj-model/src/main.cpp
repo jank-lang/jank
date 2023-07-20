@@ -121,6 +121,31 @@ void benchmark_tagged(ankerl::nanobench::Config const &config)
   if(c != 1)
   { throw std::runtime_error{ "optimized away" }; }
 
+  {
+  intptr_t res{};
+  ankerl::nanobench::Bench().config(config).run
+  (
+    "[tagged] map get intptr_t",
+    [&]
+    {
+      res = unerase_type<intptr_t>
+      (
+        map,
+        [](auto * const typed_map, auto * const kw_a) -> intptr_t
+        {
+          using T = std::decay_t<std::remove_pointer_t<decltype(typed_map)>>;
+          if constexpr(jank::obj_model::tagged::associatively_readable<T>)
+          { return reinterpret_cast<intptr_t>(typed_map->get(erase_type(kw_a))); }
+          return 0;
+        },
+        kw_a
+      );
+    }
+  );
+  if(!reinterpret_cast<object_ptr>(res))
+  { throw std::runtime_error{ "optimized away" }; }
+  }
+
   object_ptr res{};
   ankerl::nanobench::Bench().config(config).run
   (
