@@ -3,7 +3,7 @@
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/obj/function.hpp>
+#include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/string.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/util.hpp>
@@ -31,43 +31,51 @@ namespace jank::runtime
     auto const in_ns_sym(jank::make_box<obj::symbol>("clojure.core/in-ns"));
     std::function<object_ptr (object_ptr)> in_ns_fn
     (
-      [this](object_ptr sym)
+      [this](object_ptr const sym)
       {
-        auto const * const s(sym->as_symbol());
-        if(!s)
-        {
-          /* TODO: throw?. */
-          return JANK_NIL;
-        }
-        auto const typed_sym(const_cast<obj::symbol_ptr>(s));
-        auto const new_ns(intern_ns(typed_sym));
-        get_thread_state().current_ns->set_root(new_ns);
-        return JANK_NIL;
+        return visit_object
+        (
+          sym,
+          [this](auto const typed_sym)
+          {
+            using T = typename decltype(typed_sym)::value_type;
+
+            if constexpr(std::same_as<T, obj::symbol>)
+            {
+              auto const new_ns(intern_ns(typed_sym));
+              get_thread_state().current_ns->set_root(new_ns);
+              return obj::nil::nil_const();
+            }
+            else
+            /* TODO: throw. */
+            { return obj::nil::nil_const(); }
+          }
+        );
       }
    );
     auto in_ns_var(intern_var(in_ns_sym).expect_ok());
-    in_ns_var->set_root(obj::function::create(in_ns_fn));
+    in_ns_var->set_root(make_box<obj::native_function_wrapper>(in_ns_fn));
     t_state.in_ns = in_ns_var;
 
     /* TODO: Remove this once it can be defined in jank. */
     auto const assert_sym(jank::make_box<obj::symbol>("clojure.core/assert"));
     std::function<object_ptr (object_ptr)> assert_fn
     (
-      [](object_ptr o)
+      [](object_ptr const o)
       {
         if(!o || !detail::truthy(o))
         { throw std::runtime_error{ "assertion failed" }; }
-        return JANK_NIL;
+        return obj::nil::nil_const();
       }
     );
-    intern_var(assert_sym).expect_ok()->set_root(obj::function::create(assert_fn));
+    intern_var(assert_sym).expect_ok()->set_root(make_box<obj::native_function_wrapper>(assert_fn));
 
     /* TODO: Remove this once it can be defined in jank. */
     auto const seq_sym(jank::make_box<obj::symbol>("clojure.core/seq"));
-    intern_var(seq_sym).expect_ok()->set_root(obj::function::create(static_cast<object_ptr (*)(object_ptr)>(&seq)));
+    intern_var(seq_sym).expect_ok()->set_root(make_box<obj::native_function_wrapper>(static_cast<object_ptr (*)(object_ptr)>(&seq)));
 
     auto const fresh_seq_sym(jank::make_box<obj::symbol>("clojure.core/fresh-seq"));
-    intern_var(fresh_seq_sym).expect_ok()->set_root(obj::function::create(&fresh_seq));
+    intern_var(fresh_seq_sym).expect_ok()->set_root(make_box<obj::native_function_wrapper>(&fresh_seq));
   }
 
   context::context(context const &ctx)
@@ -85,7 +93,7 @@ namespace jank::runtime
     if(qualified_sym->ns.empty())
     {
       auto const t_state(get_thread_state());
-      auto const * const current_ns(t_state.current_ns->get_root()->as_ns());
+      auto const current_ns(expect_object<ns>(t_state.current_ns->get_root()));
       qualified_sym = jank::make_box<obj::symbol>(current_ns->name->name, sym->name);
     }
     return qualified_sym;
@@ -117,7 +125,7 @@ namespace jank::runtime
     else
     {
       auto const t_state(get_thread_state());
-      auto const * const current_ns(t_state.current_ns->get_root()->as_ns());
+      auto const current_ns(expect_object<ns>(t_state.current_ns->get_root()));
       auto const locked_vars(current_ns->vars.rlock());
       auto const qualified_sym(jank::make_box<obj::symbol>(current_ns->name->name, sym->name));
       auto const found(locked_vars->find(qualified_sym));
@@ -127,6 +135,7 @@ namespace jank::runtime
       return { found->second };
     }
   }
+
   option<object_ptr> context::find_local(obj::symbol_ptr const &)
   {
     return none;
@@ -188,7 +197,7 @@ namespace jank::runtime
         if(vp.second->get_root() == nullptr)
         { std::cout << "    " << vp.second->to_string() << " = nil" << std::endl; }
         else
-        { std::cout << "    " << vp.second->to_string() << " = " << vp.second->get_root()->to_string() << std::endl; }
+        { std::cout << "    " << vp.second->to_string() << " = " << detail::to_string(vp.second->get_root()) << std::endl; }
       }
     }
   }
@@ -217,7 +226,7 @@ namespace jank::runtime
     if(found_ns == locked_namespaces->end())
     { return err("can't intern var; namespace doesn't exist"); }
 
-    /* TODO: Read lock, then upgrade as needed. */
+    /* TODO: Read lock, then upgrade as needed? Benchmark. */
     auto locked_vars(found_ns->second->vars.wlock());
     auto const found_var(locked_vars->find(qualified_sym));
     if(found_var != locked_vars->end())
@@ -243,7 +252,7 @@ namespace jank::runtime
       else
       {
         auto const t_state(get_thread_state());
-        auto const * const current_ns(t_state.current_ns->get_root()->as_ns());
+        auto const current_ns(expect_object<jank::runtime::ns>(t_state.current_ns->get_root()));
         sym.ns = current_ns->name->name;
         resolved = true;
       }
@@ -260,26 +269,39 @@ namespace jank::runtime
 
   object_ptr context::macroexpand1(object_ptr o)
   {
-    auto const * const list(o->as_list());
-    if(!list || list->data.data->length == 0)
-    { return o; }
+    return visit_object
+    (
+      o,
+      [this](auto const typed_o) -> object_ptr
+      {
+        using T = typename decltype(typed_o)::value_type;
 
-    auto const first_sym(list->data.first().unwrap()->as_symbol());
-    if(!first_sym)
-    { return o; }
+        if constexpr(!std::same_as<T, obj::list>)
+        { return typed_o; }
+        else
+        {
+          if(typed_o->data.data->length == 0)
+          { return typed_o; }
 
-    auto const var(find_var(const_cast<obj::symbol_ptr>(first_sym)));
-    /* None means it's not a var, so not a macro. No meta means no :macro set. */
-    if(var.is_none() || var.unwrap()->meta.is_none())
-    { return o; }
+          auto const first_sym_obj(typed_o->data.first().unwrap());
+          if(first_sym_obj->type != object_type::symbol)
+          { return typed_o; }
 
-    auto const meta(var.unwrap()->meta.unwrap());
-    auto const * const found_macro(meta->data.find(intern_keyword("", "macro", true)));
-    if(!found_macro || found_macro->equal(obj::JANK_FALSE))
-    { return o; }
+          auto const var(find_var(expect_object<obj::symbol>(first_sym_obj)));
+          /* None means it's not a var, so not a macro. No meta means no :macro set. */
+          if(var.is_none() || var.unwrap()->meta.is_none())
+          { return typed_o; }
 
-    auto const &args(jank::make_box<obj::list>(list->data.rest().cons(JANK_NIL).cons(o)));
-    return apply_to(var.unwrap()->get_root(), args);
+          auto const meta(var.unwrap()->meta.unwrap());
+          auto const found_macro(meta->data.find(intern_keyword("", "macro", true)));
+          if(!found_macro || detail::equal(found_macro, obj::boolean::false_const()))
+          { return typed_o; }
+
+          auto const &args(jank::make_box<obj::list>(typed_o->data.rest().cons(obj::nil::nil_const()).cons(typed_o)));
+          return apply_to(var.unwrap()->get_root(), args);
+        }
+      }
+    );
   }
 
   object_ptr context::macroexpand(object_ptr o)
@@ -292,41 +314,67 @@ namespace jank::runtime
 
   object_ptr context::print(object_ptr const o)
   {
-    auto const s(o->to_string());
+    auto const s(detail::to_string(o));
     std::fwrite(s.data(), 1, s.size(), stdout);
-    return JANK_NIL;
+    return obj::nil::nil_const();
   }
 
-  object_ptr context::print(object_ptr const o, behavior::seqable_ptr const more)
+  object_ptr context::print(object_ptr const o, object_ptr const more)
   {
-    fmt::memory_buffer buff;
-    auto inserter(std::back_inserter(buff));
-    auto * const seq(static_cast<behavior::sequence*>(const_cast<behavior::seqable*>(more)));
-    o->to_string(buff);
-    seq->first()->to_string(buff);
-    for(auto *it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
-    {
-      fmt::format_to(inserter, " ");
-      it->first()->to_string(buff);
-    }
-    std::fwrite(buff.data(), 1, buff.size(), stdout);
-    return JANK_NIL;
+    visit_object
+    (
+      more,
+      [o](auto const typed_more)
+      {
+        using T = typename decltype(typed_more)::value_type;
+
+        if constexpr(behavior::sequenceable<T>)
+        {
+          fmt::memory_buffer buff;
+          auto inserter(std::back_inserter(buff));
+          detail::to_string(o, buff);
+          detail::to_string(typed_more->first(), buff);
+          for(auto it(typed_more->next_in_place()); it != nullptr; it = it->next_in_place())
+          {
+            fmt::format_to(inserter, " ");
+            detail::to_string(it->first(), buff);
+          }
+          std::fwrite(buff.data(), 1, buff.size(), stdout);
+        }
+        else
+        { throw std::runtime_error{ fmt::format("expected a sequence: {}", typed_more->to_string()) }; }
+      }
+    );
+    return obj::nil::nil_const();
   }
 
-  object_ptr context::println(behavior::seqable_ptr const more)
+  object_ptr context::println(object_ptr const more)
   {
-    fmt::memory_buffer buff;
-    auto inserter(std::back_inserter(buff));
-    auto * const seq(static_cast<behavior::sequence*>(const_cast<behavior::seqable*>(more)));
-    seq->first()->to_string(buff);
-    for(auto *it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
-    {
-      fmt::format_to(inserter, " ");
-      it->first()->to_string(buff);
-    }
-    std::fwrite(buff.data(), 1, buff.size(), stdout);
-    std::putc('\n', stdout);
-    return JANK_NIL;
+    visit_object
+    (
+      more,
+      [](auto const typed_more)
+      {
+        using T = typename decltype(typed_more)::value_type;
+
+        if constexpr(behavior::sequenceable<T>)
+        {
+          fmt::memory_buffer buff;
+          auto inserter(std::back_inserter(buff));
+          detail::to_string(typed_more->first(), buff);
+          for(auto it(typed_more->next_in_place()); it != nullptr; it = it->next_in_place())
+          {
+            fmt::format_to(inserter, " ");
+            detail::to_string(it->first(), buff);
+          }
+          std::fwrite(buff.data(), 1, buff.size(), stdout);
+          std::putc('\n', stdout);
+        }
+        else
+        { throw std::runtime_error{ fmt::format("expected a sequence: {}", typed_more->to_string()) }; }
+      }
+    );
+    return obj::nil::nil_const();
   }
 
   context::thread_state::thread_state(context &ctx)
@@ -340,6 +388,7 @@ namespace jank::runtime
     auto const this_id(std::this_thread::get_id());
     decltype(thread_states)::DataType::iterator found;
 
+    /* TODO: Can this just use an upgrade lock? */
     /* Assume it's there and use a read lock. */
     {
       auto const locked_thread_states(thread_states.rlock());

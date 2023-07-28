@@ -3,213 +3,127 @@
 
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/hash.hpp>
-#include <jank/runtime/obj/function.hpp>
+#include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/vector.hpp>
 
-namespace jank::runtime::obj
+namespace jank::runtime
 {
-  struct vector_sequence : behavior::sequence, behavior::countable
-  {
-    static constexpr bool pointer_free{ false };
-
-    vector_sequence() = default;
-    vector_sequence(vector_ptr v)
-      : vec{ v }
-    { }
-    vector_sequence(vector_ptr v, size_t i)
-      : vec{ v }, index{ i }
-    { }
-
-    void to_string(fmt::memory_buffer &buff) const final
-    {
-      return behavior::detail::to_string
-      (
-        vec->data.begin() + static_cast<decltype(vector::data)::difference_type>(index),
-        vec->data.end(),
-        '[', ']',
-        buff
-      );
-    }
-    native_string to_string() const final
-    {
-      fmt::memory_buffer buff;
-      behavior::detail::to_string
-      (
-        vec->data.begin() + static_cast<decltype(vector::data)::difference_type>(index),
-        vec->data.end(),
-        '[', ']',
-        buff
-      );
-      return { buff.data(), buff.size() };
-    }
-    native_integer to_hash() const final
-    /* TODO: Hash from contents. */
-    { return reinterpret_cast<native_integer>(this); }
-
-    sequence_ptr seq() const final
-    { return static_cast<sequence_ptr>(const_cast<vector_sequence*>(this)); }
-    behavior::sequence_ptr fresh_seq() const final
-    { return jank::make_box<vector_sequence>(vec, index); }
-
-    behavior::countable const* as_countable() const final
-    { return this; }
-    size_t count() const final
-    { return vec->data.size(); }
-
-    object_ptr first() const final
-    { return vec->data[index]; }
-    sequence_ptr next() const final
-    {
-      auto n(index);
-      ++n;
-
-      if(n == vec->data.size())
-      { return nullptr; }
-
-      return jank::make_box<vector_sequence>(vec, n);
-    }
-    sequence_ptr next_in_place() final
-    {
-      ++index;
-
-      if(index == vec->data.size())
-      { return nullptr; }
-
-      return this;
-    }
-    object_ptr next_in_place_first() final
-    {
-      ++index;
-
-      if(index == vec->data.size())
-      { return nullptr; }
-
-      return vec->data[index];
-    }
-
-    vector_ptr vec{};
-    size_t index{};
-  };
-
-  vector::vector(runtime::detail::peristent_vector &&d)
+  obj::vector::static_object(runtime::detail::peristent_vector &&d)
     : data{ std::move(d) }
   { }
-  vector::vector(runtime::detail::peristent_vector const &d)
+
+  obj::vector::static_object(runtime::detail::peristent_vector const &d)
     : data{ d }
   { }
 
-  vector_ptr vector::create(runtime::detail::peristent_vector const &o)
-  { return jank::make_box<vector>(o); }
-
-  vector_ptr vector::create(behavior::sequence_ptr const &s)
+  obj::vector_ptr obj::vector::create(object_ptr const s)
   {
     if(s == nullptr)
-    { return jank::make_box<vector>(); }
+    { return jank::make_box<obj::vector>(); }
 
-    runtime::detail::transient_vector v;
-    v.push_back(s->first());
-    for(auto i(s->next()); i != nullptr; i = i->next_in_place())
-    { v.push_back(i->first()); }
-    return jank::make_box<vector>(v.persistent());
+    return visit_object
+    (
+      s,
+      [](auto const typed_s) -> obj::vector_ptr
+      {
+        using T = typename decltype(typed_s)::value_type;
+
+        if constexpr(behavior::sequenceable<T>)
+        {
+          runtime::detail::transient_vector v;
+          for(auto i(typed_s->fresh_seq()); i != nullptr; i = i->next_in_place())
+          { v.push_back(i->first()); }
+          return jank::make_box<obj::vector>(v.persistent());
+        }
+        else
+        { throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_s->to_string()) }; }
+      }
+    );
   }
 
-  native_bool vector::equal(object const &o) const
-  {
-    auto const *s(o.as_seqable());
-    if(!s)
-    { return false; }
+  native_bool obj::vector::equal(object const &o) const
+  { return detail::equal(o, data.begin(), data.end()); }
 
-    auto seq(s->seq());
-    for(auto it(data.begin()); it != data.end(); ++it, seq = seq->next_in_place())
-    {
-      if(seq == nullptr || !(*it)->equal(*seq->first()))
-      { return false; }
-    }
-    return true;
-  }
-  void vector::to_string(fmt::memory_buffer &buff) const
+  void obj::vector::to_string(fmt::memory_buffer &buff) const
   { return behavior::detail::to_string(data.begin(), data.end(), '[', ']', buff); }
-  native_string vector::to_string() const
+
+  native_string obj::vector::to_string() const
   {
     fmt::memory_buffer buff;
     behavior::detail::to_string(data.begin(), data.end(), '[', ']', buff);
     return native_string{ buff.data(), buff.size() };
   }
+
   /* TODO: Cache this. */
-  native_integer vector::to_hash() const
+  native_integer obj::vector::to_hash() const
   {
     auto seed(static_cast<native_integer>(data.size()));
     for(auto const &e : data)
     { seed = runtime::detail::hash_combine(seed, *e); }
     return seed;
   }
-  vector const* vector::as_vector() const
-  { return this; }
-  behavior::seqable const* vector::as_seqable() const
-  { return this; }
-  behavior::sequence_ptr vector::seq() const
+
+  obj::persistent_vector_sequence_ptr obj::vector::seq() const
   {
     if(data.empty())
     { return nullptr; }
-    return jank::make_box<vector_sequence>(const_cast<vector*>(this));
+    return jank::make_box<obj::persistent_vector_sequence>(const_cast<obj::vector*>(this));
   }
-  behavior::sequence_ptr vector::fresh_seq() const
+
+  obj::persistent_vector_sequence_ptr obj::vector::fresh_seq() const
   {
     if(data.empty())
     { return nullptr; }
-    return jank::make_box<vector_sequence>(const_cast<vector*>(this));
+    return jank::make_box<obj::persistent_vector_sequence>(const_cast<obj::vector*>(this));
   }
-  size_t vector::count() const
+
+  size_t obj::vector::count() const
   { return data.size(); }
 
-  behavior::consable const* vector::as_consable() const
-  { return this; }
-  native_box<behavior::consable> vector::cons(object_ptr head) const
+  obj::vector_ptr obj::vector::cons(object_ptr head) const
   {
     auto vec(data.push_back(head));
-    auto ret(create(std::move(vec)));
+    auto ret(make_box<obj::vector>(std::move(vec)));
     return ret;
   }
 
-  object_ptr vector::with_meta(object_ptr const m) const
+  object_ptr obj::vector::with_meta(object_ptr const m) const
   {
-    auto const meta(validate_meta(m));
-    auto ret(jank::make_box<vector>(data));
+    auto const meta(behavior::detail::validate_meta(m));
+    auto ret(jank::make_box<obj::vector>(data));
     ret->meta = meta;
     return ret;
   }
 
-  behavior::metadatable const* vector::as_metadatable() const
-  { return this; }
-
-  behavior::associatively_readable const* vector::as_associatively_readable() const
-  { return this; }
-  object_ptr vector::get(object_ptr const key) const
+  object_ptr obj::vector::get(object_ptr const key) const
   {
-    if(auto const i = key->as_integer())
+    if(key->type == object_type::integer)
     {
-      if(data.size() <= static_cast<size_t>(i->data))
-      { return JANK_NIL; }
-      return data[i->data];
+      auto const i(static_cast<size_t>(expect_object<obj::integer>(key)->data));
+      if(data.size() <= i)
+      { return obj::nil::nil_const(); }
+      return data[i];
     }
     else
     {
       throw std::runtime_error
-      { fmt::format("get on a vector must be an integer; found {}", key->to_string()) };
+      { fmt::format("get on a vector must be an integer; found {}", runtime::detail::to_string(key)) };
     }
   }
-  object_ptr vector::get(object_ptr const key, object_ptr const fallback) const
+
+  object_ptr obj::vector::get(object_ptr const key, object_ptr const fallback) const
   {
-    if(auto const i = key->as_integer())
+    if(key->type == object_type::integer)
     {
-      if(data.size() <= static_cast<size_t>(i->data))
+      auto const i(static_cast<size_t>(expect_object<obj::integer>(key)->data));
+      if(data.size() <= i)
       { return fallback; }
-      return data[i->data];
+      return data[i];
     }
     else
     {
       throw std::runtime_error
-      { fmt::format("get on a vector must be an integer; found {}", key->to_string()) };
+      { fmt::format("get on a vector must be an integer; found {}", runtime::detail::to_string(key)) };
     }
   }
 }

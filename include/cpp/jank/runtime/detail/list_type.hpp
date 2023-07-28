@@ -37,6 +37,7 @@ namespace jank::runtime::detail
     size_t length{};
   };
 
+  /* TODO: Rename to native_list. */
   template <typename T>
   struct list_type_impl
   {

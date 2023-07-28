@@ -49,121 +49,138 @@ namespace jank::codegen
      * the actual param names as mutable locals outside of the while loop. */
     constexpr native_string_view const recur_suffix{ "__recur" };
 
-    /* TODO: Consider making this a virtual fn on object, to return the C++ name. */
+    /* TODO: Consider making this a on the typed object: the C++ name. */
     native_string_view gen_constant_type(runtime::object_ptr const o, bool const boxed)
     {
-      if(o->as_nil())
-      { return "jank::runtime::obj::nil_ptr"; }
-      else if(auto const * const d = o->as_boolean())
-      { return "jank::runtime::obj::boolean_ptr"; }
-      else if(auto const * const d = o->as_integer())
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+      switch(o->type)
       {
-        if(boxed)
-        { return "jank::runtime::obj::integer_ptr"; }
-        return "jank::native_integer";
+        case jank::runtime::object_type::nil:
+        { return "jank::runtime::obj::nil_ptr"; }
+        case jank::runtime::object_type::boolean:
+        { return "jank::runtime::obj::boolean_ptr"; }
+        case jank::runtime::object_type::integer:
+        {
+          if(boxed)
+          { return "jank::runtime::obj::integer_ptr"; }
+          return "jank::native_integer";
+        }
+        case jank::runtime::object_type::real:
+        {
+          if(boxed)
+          { return "jank::runtime::obj::real_ptr"; }
+          return "jank::native_real";
+        }
+        case jank::runtime::object_type::symbol:
+        { return "jank::runtime::obj::symbol_ptr"; }
+        case jank::runtime::object_type::keyword:
+        { return "jank::runtime::obj::keyword_ptr"; }
+        case jank::runtime::object_type::string:
+        { return "jank::runtime::obj::string_ptr"; }
+        case jank::runtime::object_type::list:
+        { return "jank::runtime::obj::list_ptr"; }
+        case jank::runtime::object_type::vector:
+        { return "jank::runtime::obj::vector_ptr"; }
+        case jank::runtime::object_type::set:
+        { return "jank::runtime::obj::set_ptr"; }
+        case jank::runtime::object_type::map:
+        { return "jank::runtime::obj::map_ptr"; }
+        case jank::runtime::object_type::var:
+        { return "jank::runtime::var_ptr"; }
+        default:
+        { return "jank::runtime::object_ptr"; }
       }
-      else if(auto const * const d = o->as_real())
-      {
-        if(boxed)
-        { return "jank::runtime::obj::real_ptr"; }
-        return "jank::native_real";
-      }
-      else if(auto const * const d = o->as_symbol())
-      { return "jank::runtime::obj::symbol_ptr"; }
-      else if(auto const * const d = o->as_keyword())
-      { return "jank::runtime::obj::keyword_ptr"; }
-      else if(auto const * const d = o->as_string())
-      { return "jank::runtime::obj::string_ptr"; }
-      else if(auto const * const d = o->as_list())
-      { return "jank::runtime::obj::list_ptr"; }
-      else if(auto const * const d = o->as_vector())
-      { return "jank::runtime::obj::vector_ptr"; }
-      else if(auto const * const d = o->as_set())
-      { return "jank::runtime::obj::set_ptr"; }
-      else if(auto const * const d = o->as_map())
-      { return "jank::runtime::obj::map_ptr"; }
-      else if(auto const * const d = o->as_var())
-      { return "jank::runtime::var_ptr"; }
-      else
-      { return "jank::runtime::object_ptr"; }
+#pragma clang diagnostic pop
     }
 
     void gen_constant(runtime::object_ptr const o, fmt::memory_buffer &buffer, bool const boxed)
     {
       if(!boxed)
       {
-        o->to_string(buffer);
+        runtime::detail::to_string(o, buffer);
         return;
       }
 
       auto inserter(std::back_inserter(buffer));
-      if(o->as_nil())
-      { format_to(inserter, "jank::runtime::JANK_NIL"); }
-      else if(auto const * const d = o->as_boolean())
-      { format_to(inserter, "jank::make_box<jank::runtime::obj::boolean>({})", d->data); }
-      else if(auto const * const d = o->as_integer())
-      { format_to(inserter, "jank::make_box<jank::runtime::obj::integer>({})", d->data); }
-      else if(auto const * const d = o->as_real())
-      { format_to(inserter, "jank::make_box<jank::runtime::obj::real>({})", d->data); }
-      else if(auto const * const d = o->as_symbol())
-      {
-        format_to
-        (
-          inserter,
-          R"(jank::make_box<jank::runtime::obj::symbol>("{}", "{}"))",
-          d->ns,
-          d->name
-        );
-      }
-      else if(auto const * const d = o->as_keyword())
-      {
-        format_to
-        (
-          inserter,
-          R"(__rt_ctx.intern_keyword("{}", "{}", {}))",
-          d->sym.ns,
-          d->sym.name,
-          d->resolved
-        );
-      }
-      else if(auto const * const d = o->as_string())
-      {
-        fmt::format_to
-        (
-          inserter,
-          "jank::make_box<jank::runtime::obj::string>({})",
-          escaped(d->data)
-        );
-      }
-      else if(auto const * const d = o->as_list())
-      {
-        auto ret_tmp(runtime::context::unique_string("vec"));
-        format_to
-        (inserter, "jank::make_box<jank::runtime::obj::list>(", ret_tmp);
-        for(auto const &form : d->data)
+
+      runtime::visit_object
+      (
+        o,
+        [&](auto const typed_o)
         {
-          format_to(inserter, ", ");
-          gen_constant(form, buffer, true);
+          using T = typename decltype(typed_o)::value_type;
+
+          if constexpr(std::same_as<T, runtime::obj::nil>)
+          { fmt::format_to(inserter, "jank::runtime::obj::nil::nil_const()"); }
+          else if constexpr(std::same_as<T, runtime::obj::boolean>)
+          /* TODO: Use a constant here. */
+          { fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::boolean>({})", typed_o->data); }
+          else if constexpr(std::same_as<T, runtime::obj::integer>)
+          { fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::integer>({})", typed_o->data); }
+          else if constexpr(std::same_as<T, runtime::obj::real>)
+          { fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::real>({})", typed_o->data); }
+          else if constexpr(std::same_as<T, runtime::obj::symbol>)
+          {
+            fmt::format_to
+            (
+              inserter,
+              R"(jank::make_box<jank::runtime::obj::symbol>("{}", "{}"))",
+              typed_o->ns,
+              typed_o->name
+            );
+          }
+          else if constexpr(std::same_as<T, runtime::obj::keyword>)
+          {
+            fmt::format_to
+            (
+              inserter,
+              R"(__rt_ctx.intern_keyword("{}", "{}", {}))",
+              typed_o->sym.ns,
+              typed_o->sym.name,
+              typed_o->resolved
+            );
+          }
+          else if constexpr(std::same_as<T, runtime::obj::string>)
+          {
+            fmt::format_to
+            (
+              inserter,
+              "jank::make_box<jank::runtime::obj::string>({})",
+              escaped(typed_o->data)
+            );
+          }
+          else if constexpr(std::same_as<T, runtime::obj::list>)
+          {
+            auto ret_tmp(runtime::context::unique_string("vec"));
+            fmt::format_to
+            (inserter, "jank::make_box<jank::runtime::obj::list>(", ret_tmp);
+            for(auto const &form : typed_o->data)
+            {
+              fmt::format_to(inserter, ", ");
+              gen_constant(form, buffer, true);
+            }
+            fmt::format_to(inserter, ")");
+          }
+          else if constexpr(std::same_as<T, runtime::obj::vector>)
+          {
+            auto ret_tmp(runtime::context::unique_string("vec"));
+            fmt::format_to
+            (inserter, "jank::make_box<jank::runtime::obj::vector>(", ret_tmp);
+            bool need_comma{};
+            for(auto const &form : typed_o->data)
+            {
+              if(need_comma)
+              { fmt::format_to(inserter, ", "); }
+              gen_constant(form, buffer, true);
+              need_comma = true;
+            }
+            fmt::format_to(inserter, ")");
+          }
+          else
+          { throw std::runtime_error{ fmt::format("unimplemented constant codegen: {}\n", typed_o->to_string()) }; }
         }
-        format_to(inserter, ")");
-      }
-      else if(auto const * const d = o->as_vector())
-      {
-        auto ret_tmp(runtime::context::unique_string("vec"));
-        format_to
-        (inserter, "jank::make_box<jank::runtime::obj::vector>(", ret_tmp);
-        bool need_comma{};
-        for(auto const &form : d->data)
-        {
-          if(need_comma)
-          { format_to(inserter, ", "); }
-          gen_constant(form, buffer, true);
-          need_comma = true;
-        }
-        format_to(inserter, ")");
-      }
-      else
-      { std::cerr << "unimplemented constant codegen: " << *o << std::endl; }
+      );
     }
   }
 
@@ -234,10 +251,10 @@ namespace jank::codegen
         );
       }
       case analyze::expression_type::return_statement:
-      { format_to(inserter, "return "); }
+      { fmt::format_to(inserter, "return "); }
       case analyze::expression_type::statement:
       {
-        format_to
+        fmt::format_to
         (
           inserter,
           "{}->set_root({});",
@@ -264,7 +281,7 @@ namespace jank::codegen
       case analyze::expression_type::return_statement:
       {
         auto inserter(std::back_inserter(body_buffer));
-        format_to(inserter, "return {}->get_root();", var.native_name.name);
+        fmt::format_to(inserter, "return {}->get_root();", var.native_name.name);
         return none;
       }
       /* Statement of a var deref is a nop. */
@@ -288,7 +305,7 @@ namespace jank::codegen
       case analyze::expression_type::return_statement:
       {
         auto inserter(std::back_inserter(body_buffer));
-        format_to(inserter, "return {};", var.native_name.name);
+        fmt::format_to(inserter, "return {};", var.native_name.name);
         return none;
       }
       /* Statement of a var ref is a nop. */
@@ -318,16 +335,16 @@ namespace jank::codegen
     native_string_view ret_box;
     if(ret_box_needed)
     { ret_box = "jank::make_box("; }
-    format_to(inserter, "auto const {}({}{}", ret_tmp, ret_box, start);
+    fmt::format_to(inserter, "auto const {}({}{}", ret_tmp, ret_box, start);
     bool need_comma{};
     for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
     {
       if(need_comma)
-      { format_to(inserter, ", "); }
-      format_to(inserter, "{}", arg_tmps[i]);
+      { fmt::format_to(inserter, ", "); }
+      fmt::format_to(inserter, "{}", arg_tmps[i]);
       need_comma = true;
     }
-    format_to(inserter, "{}{});", end, (ret_box_needed ? ")" : ""));
+    fmt::format_to(inserter, "{}{});", end, (ret_box_needed ? ")" : ""));
   }
 
   void processor::format_direct_call
@@ -345,18 +362,18 @@ namespace jank::codegen
     { arg_tmps.emplace_back(gen(arg_expr, fn_arity, arg_box_needed).unwrap()); }
 
     auto inserter(std::back_inserter(body_buffer));
-    format_to
+    fmt::format_to
     (inserter, "auto const {}({}.call(", ret_tmp, source_tmp);
 
     bool need_comma{};
     for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
     {
       if(need_comma)
-      { format_to(inserter, ", "); }
-      format_to(inserter, "{}", arg_tmps[i]);
+      { fmt::format_to(inserter, ", "); }
+      fmt::format_to(inserter, "{}", arg_tmps[i]);
       need_comma = true;
     }
-    format_to(inserter, "));");
+    fmt::format_to(inserter, "));");
   }
 
   void processor::format_dynamic_call
@@ -374,18 +391,18 @@ namespace jank::codegen
     { arg_tmps.emplace_back(gen(arg_expr, fn_arity, arg_box_needed).unwrap()); }
 
     auto inserter(std::back_inserter(body_buffer));
-    format_to
+    fmt::format_to
     (inserter, "auto const {}(jank::runtime::dynamic_call({}", ret_tmp, source_tmp);
     for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
-    { format_to(inserter, ", {}", arg_tmps[i]); }
+    { fmt::format_to(inserter, ", {}", arg_tmps[i]); }
     if(arg_tmps.size() > runtime::max_params)
     {
-      format_to(inserter, "jank::make_box<jank::runtime::obj::list>(");
+      fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::list>(");
       for(size_t i{ runtime::max_params }; i < arg_tmps.size(); ++i)
-      { format_to(inserter, ", {}", arg_tmps[i]); }
-      format_to(inserter, ")");
+      { fmt::format_to(inserter, ", {}", arg_tmps[i]); }
+      fmt::format_to(inserter, ")");
     }
-    format_to(inserter, "));");
+    fmt::format_to(inserter, "));");
   }
 
   option<native_string> processor::gen
@@ -416,7 +433,7 @@ namespace jank::codegen
       {
         if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "rand" }))
         {
-          format_elided_var("jank::runtime::obj::rand(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
+          format_elided_var("jank::runtime::rand(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
         }
       }
@@ -429,17 +446,17 @@ namespace jank::codegen
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "abs" }))
         {
-          format_elided_var("jank::runtime::obj::abs(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
+          format_elided_var("jank::runtime::abs(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "sqrt" }))
         {
-          format_elided_var("jank::runtime::obj::sqrt(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
+          format_elided_var("jank::runtime::sqrt(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "int" }))
         {
-          format_elided_var("jank::runtime::obj::to_int(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
+          format_elided_var("jank::runtime::to_int(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "seq" }))
@@ -482,57 +499,57 @@ namespace jank::codegen
       {
         if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "+" }))
         {
-          format_elided_var("jank::runtime::obj::add(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
+          format_elided_var("jank::runtime::add(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "-" }))
         {
-          format_elided_var("jank::runtime::obj::sub(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
+          format_elided_var("jank::runtime::sub(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "*" }))
         {
-          format_elided_var("jank::runtime::obj::mul(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
+          format_elided_var("jank::runtime::mul(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "/" }))
         {
-          format_elided_var("jank::runtime::obj::div(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
+          format_elided_var("jank::runtime::div(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "<" }))
         {
-          format_elided_var("jank::runtime::obj::lt(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
+          format_elided_var("jank::runtime::lt(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "<=" }))
         {
-          format_elided_var("jank::runtime::obj::lte(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
+          format_elided_var("jank::runtime::lte(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", ">" }))
         {
-          format_elided_var("jank::runtime::obj::gt(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
+          format_elided_var("jank::runtime::gt(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", ">=" }))
         {
-          format_elided_var("jank::runtime::obj::gte(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
+          format_elided_var("jank::runtime::gte(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "min" }))
         {
-          format_elided_var("jank::runtime::obj::min(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
+          format_elided_var("jank::runtime::min(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "max" }))
         {
-          format_elided_var("jank::runtime::obj::max(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
+          format_elided_var("jank::runtime::max(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "pow" }))
         {
-          format_elided_var("jank::runtime::obj::pow(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
+          format_elided_var("jank::runtime::pow(", ")", ret_tmp, expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "conj" }))
@@ -574,7 +591,7 @@ namespace jank::codegen
 
     if(expr.expr_type == analyze::expression_type::return_statement)
     {
-      format_to(inserter, "return {};", ret_tmp);
+      fmt::format_to(inserter, "return {};", ret_tmp);
       return none;
     }
 
@@ -600,7 +617,7 @@ namespace jank::codegen
       case analyze::expression_type::return_statement:
       {
         auto inserter(std::back_inserter(body_buffer));
-        format_to(inserter, "return {};", constant.native_name.name);
+        fmt::format_to(inserter, "return {};", constant.native_name.name);
         return none;
       }
       /* Statement of a literal is a nop. */
@@ -623,19 +640,19 @@ namespace jank::codegen
 
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::context::unique_string("vec"));
-    format_to
+    fmt::format_to
     (inserter, "auto const {}(jank::make_box<jank::runtime::obj::vector>(", ret_tmp);
     for(auto it(data_tmps.begin()); it != data_tmps.end();)
     {
-      format_to(inserter, "{}", *it);
+      fmt::format_to(inserter, "{}", *it);
       if(++it != data_tmps.end())
-      { format_to(inserter, ", "); }
+      { fmt::format_to(inserter, ", "); }
     }
-    format_to(inserter, "));");
+    fmt::format_to(inserter, "));");
 
     if(expr.expr_type == analyze::expression_type::return_statement)
     {
-      format_to(inserter, "return {};", ret_tmp);
+      fmt::format_to(inserter, "return {};", ret_tmp);
       return none;
     }
 
@@ -659,7 +676,7 @@ namespace jank::codegen
 
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::context::unique_string("map"));
-    format_to
+    fmt::format_to
     (
       inserter,
       "auto const {}(jank::make_box<jank::runtime::obj::map>(jank::runtime::detail::in_place_unique{{}}, jank::make_array_box<object_ptr>(",
@@ -669,16 +686,16 @@ namespace jank::codegen
     for(auto const &data_tmp : data_tmps)
     {
       if(need_comma)
-      { format_to(inserter, ", "); }
-      format_to(inserter, "{}", data_tmp.first);
-      format_to(inserter, ", {}", data_tmp.second);
+      { fmt::format_to(inserter, ", "); }
+      fmt::format_to(inserter, "{}", data_tmp.first);
+      fmt::format_to(inserter, ", {}", data_tmp.second);
       need_comma = true;
     }
-    format_to(inserter, "),{}));", data_tmps.size() * 2);
+    fmt::format_to(inserter, "),{}));", data_tmps.size() * 2);
 
     if(expr.expr_type == analyze::expression_type::return_statement)
     {
-      format_to(inserter, "return {};", ret_tmp);
+      fmt::format_to(inserter, "return {};", ret_tmp);
       return none;
     }
 
@@ -699,7 +716,7 @@ namespace jank::codegen
       case analyze::expression_type::return_statement:
       {
         auto inserter(std::back_inserter(body_buffer));
-        format_to(inserter, "return {};", runtime::munge(expr.name->name));
+        fmt::format_to(inserter, "return {};", runtime::munge(expr.name->name));
         return none;
       }
       /* Statement of a local ref is a nop. */
@@ -719,7 +736,7 @@ namespace jank::codegen
     processor prc{ rt_ctx, expr };
 
     auto header_inserter(std::back_inserter(header_buffer));
-    format_to(header_inserter, "{}", prc.declaration_str());
+    fmt::format_to(header_inserter, "{}", prc.declaration_str());
     switch(expr.expr_type)
     {
       case analyze::expression_type::expression:
@@ -727,7 +744,7 @@ namespace jank::codegen
       case analyze::expression_type::return_statement:
       {
         auto body_inserter(std::back_inserter(body_buffer));
-        format_to(body_inserter, "return {};", prc.expression_str(box_needed, false));
+        fmt::format_to(body_inserter, "return {};", prc.expression_str(box_needed, false));
         return none;
       }
       /* Statement of a fn literal is a nop. */
@@ -753,10 +770,10 @@ namespace jank::codegen
     auto arg_tmp_it(arg_tmps.begin());
     for(auto const &param : fn_arity.params)
     {
-      format_to(inserter, "{} = {};", runtime::munge(param->name), *arg_tmp_it);
+      fmt::format_to(inserter, "{} = {};", runtime::munge(param->name), *arg_tmp_it);
       ++arg_tmp_it;
     }
-    format_to(inserter, "continue;");
+    fmt::format_to(inserter, "continue;");
     return none;
   }
 
@@ -769,13 +786,13 @@ namespace jank::codegen
   {
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::context::unique_string("let"));
-    format_to(inserter, "object_ptr {}{{ jank::runtime::JANK_NIL }}; {{", ret_tmp);
+    fmt::format_to(inserter, "object_ptr {}{{ jank::runtime::obj::nil::nil_const() }}; {{", ret_tmp);
     for(auto const &pair : expr.pairs)
     {
       auto const &val_tmp(gen(pair.second, fn_arity, true));
       auto const &munged_name(runtime::munge(pair.first->name));
       /* Every binding is wrapped in its own scope, to allow shadowing. */
-      format_to(inserter, "{{ auto const {}({});", munged_name, val_tmp.unwrap());
+      fmt::format_to(inserter, "{{ auto const {}({});", munged_name, val_tmp.unwrap());
     }
 
     for(auto it(expr.body.body.begin()); it != expr.body.body.end(); )
@@ -784,18 +801,18 @@ namespace jank::codegen
 
       /* We ignore all values but the last. */
       if(++it == expr.body.body.end() && val_tmp.is_some())
-      { format_to(inserter, "{} = {};", ret_tmp, val_tmp.unwrap()); }
+      { fmt::format_to(inserter, "{} = {};", ret_tmp, val_tmp.unwrap()); }
     }
     for(auto const &_ : expr.pairs)
     {
       static_cast<void>(_);
-      format_to(inserter, "}}");
+      fmt::format_to(inserter, "}}");
     }
-    format_to(inserter, "}}");
+    fmt::format_to(inserter, "}}");
 
     if(expr.expr_type == analyze::expression_type::return_statement)
     {
-      format_to(inserter, "return {};", ret_tmp);
+      fmt::format_to(inserter, "return {};", ret_tmp);
       return none;
     }
 
@@ -821,9 +838,9 @@ namespace jank::codegen
       {
         auto inserter(std::back_inserter(body_buffer));
         if(last.is_none())
-        { format_to(inserter, "return jank::runtime::JANK_NIL;"); }
+        { fmt::format_to(inserter, "return jank::runtime::obj::nil::nil_const();"); }
         else
-        { format_to(inserter, "return {};", last.unwrap()); }
+        { fmt::format_to(inserter, "return {};", last.unwrap()); }
         return none;
       }
       /* TODO:correct? */
@@ -842,23 +859,23 @@ namespace jank::codegen
   {
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::context::unique_string("if"));
-    format_to(inserter, "object_ptr {};", ret_tmp);
+    fmt::format_to(inserter, "object_ptr {};", ret_tmp);
     auto const &condition_tmp(gen(expr.condition, fn_arity, false));
-    format_to(inserter, "if(jank::runtime::detail::truthy({})) {{", condition_tmp.unwrap());
+    fmt::format_to(inserter, "if(jank::runtime::detail::truthy({})) {{", condition_tmp.unwrap());
     auto const &then_tmp(gen(expr.then, fn_arity, true));
     if(then_tmp.is_some())
-    { format_to(inserter, "{} = {}; }}", ret_tmp, then_tmp.unwrap()); }
+    { fmt::format_to(inserter, "{} = {}; }}", ret_tmp, then_tmp.unwrap()); }
     else
-    { format_to(inserter, "}}"); }
+    { fmt::format_to(inserter, "}}"); }
 
     if(expr.else_.is_some())
     {
-      format_to(inserter, "else {{");
+      fmt::format_to(inserter, "else {{");
       auto const &else_tmp(gen(expr.else_.unwrap(), fn_arity, true));
       if(else_tmp.is_some())
-      { format_to(inserter, "{} = {}; }}", ret_tmp, else_tmp.unwrap()); }
+      { fmt::format_to(inserter, "{} = {}; }}", ret_tmp, else_tmp.unwrap()); }
       else
-      { format_to(inserter, "}}"); }
+      { fmt::format_to(inserter, "}}"); }
     }
 
     return ret_tmp;
@@ -884,22 +901,22 @@ namespace jank::codegen
       interpolated_chunk_tmps.emplace_back(gen(*chunk_expr, fn_arity, true).unwrap());
     }
 
-    format_to(inserter, "object_ptr {};", ret_tmp);
-    format_to(inserter, "{{ object_ptr __value{{ JANK_NIL }};");
+    fmt::format_to(inserter, "object_ptr {};", ret_tmp);
+    fmt::format_to(inserter, "{{ object_ptr __value{{ obj::nil::nil_const() }};");
     size_t interpolated_chunk_it{};
     for(auto const &chunk : expr.chunks)
     {
       auto const * const code(boost::get<native_string>(&chunk));
       if(code != nullptr)
-      { format_to(inserter, "{}", *code); }
+      { fmt::format_to(inserter, "{}", *code); }
       else
-      { format_to(inserter, "{}", interpolated_chunk_tmps[interpolated_chunk_it++]); }
+      { fmt::format_to(inserter, "{}", interpolated_chunk_tmps[interpolated_chunk_it++]); }
     }
-    format_to(inserter, ";{} = __value; }}", ret_tmp);
+    fmt::format_to(inserter, ";{} = __value; }}", ret_tmp);
 
     if(expr.expr_type == analyze::expression_type::return_statement)
     {
-      format_to(inserter, "return {};", ret_tmp);
+      fmt::format_to(inserter, "return {};", ret_tmp);
       return none;
     }
 
@@ -928,7 +945,7 @@ namespace jank::codegen
   void processor::build_header()
   {
     auto inserter(std::back_inserter(header_buffer));
-    format_to
+    fmt::format_to
     (
       inserter,
       R"(
@@ -944,7 +961,7 @@ namespace jank::codegen
       for(auto const &v : arity.frame->lifted_vars)
       {
 
-        format_to
+        fmt::format_to
         (
           inserter,
           "jank::runtime::var_ptr const {0};", runtime::munge(v.second.native_name.name)
@@ -953,7 +970,7 @@ namespace jank::codegen
 
       for(auto const &v : arity.frame->lifted_constants)
       {
-        format_to
+        fmt::format_to
         (
           inserter,
           "{} const {};",
@@ -963,7 +980,7 @@ namespace jank::codegen
 
         if(v.second.unboxed_native_name.is_some())
         {
-          format_to
+          fmt::format_to
           (
             inserter,
             "static constexpr {} const {}{{ ",
@@ -971,14 +988,14 @@ namespace jank::codegen
             runtime::munge(v.second.unboxed_native_name.unwrap().name)
           );
           detail::gen_constant(v.second.data, header_buffer, false);
-          format_to(inserter, "}};");
+          fmt::format_to(inserter, "}};");
         }
       }
 
       /* TODO: More useful types here. */
       for(auto const &v : arity.frame->captures)
       {
-        format_to
+        fmt::format_to
         (
           inserter,
           "jank::runtime::object_ptr const {0};", runtime::munge(v.first->name)
@@ -986,7 +1003,7 @@ namespace jank::codegen
       }
     }
 
-    format_to
+    fmt::format_to
     (
       inserter,
       "{0}(jank::runtime::context &__rt_ctx", runtime::munge(struct_name.name)
@@ -997,7 +1014,7 @@ namespace jank::codegen
       for(auto const &v : arity.frame->captures)
       {
         /* TODO: More useful types here. */
-        format_to
+        fmt::format_to
         (
           inserter,
           ", jank::runtime::object_ptr {0}", runtime::munge(v.first->name)
@@ -1005,13 +1022,13 @@ namespace jank::codegen
       }
     }
 
-    format_to(inserter, ") : __rt_ctx{{ __rt_ctx }}");
+    fmt::format_to(inserter, ") : __rt_ctx{{ __rt_ctx }}");
 
     for(auto const &arity : root_fn.arities)
     {
       for(auto const &v : arity.frame->lifted_vars)
       {
-        format_to
+        fmt::format_to
         (
           inserter,
           R"(, {0}{{ __rt_ctx.intern_var("{1}", "{2}").expect_ok() }})",
@@ -1023,19 +1040,19 @@ namespace jank::codegen
 
       for(auto const &v : arity.frame->lifted_constants)
       {
-        format_to
+        fmt::format_to
         (
           inserter,
           ", {0}{{",
           runtime::munge(v.second.native_name.name)
         );
         detail::gen_constant(v.second.data, header_buffer, true);
-        format_to(inserter, "}}");
+        fmt::format_to(inserter, "}}");
       }
 
       for(auto const &v : arity.frame->captures)
       {
-        format_to
+        fmt::format_to
         (
           inserter,
           ", {0}{{ {0} }}",
@@ -1044,7 +1061,7 @@ namespace jank::codegen
       }
     }
 
-    format_to(inserter, "{{ }}");
+    fmt::format_to(inserter, "{{ }}");
   }
 
   void processor::build_body()
@@ -1061,11 +1078,11 @@ namespace jank::codegen
       if(arity.fn_ctx->is_tail_recursive)
       { recur_suffix = detail::recur_suffix; }
 
-      format_to(inserter, "jank::runtime::object_ptr call(");
+      fmt::format_to(inserter, "jank::runtime::object_ptr call(");
       bool param_comma{};
       for(auto const &param : arity.params)
       {
-        format_to
+        fmt::format_to
         (
           inserter,
           "{} jank::runtime::object_ptr const {}{}",
@@ -1075,7 +1092,7 @@ namespace jank::codegen
         );
         param_comma = true;
       }
-      format_to
+      fmt::format_to
       (
         inserter,
         R"(
@@ -1087,11 +1104,11 @@ namespace jank::codegen
 
       if(arity.fn_ctx->is_tail_recursive)
       {
-        format_to(inserter, "{{");
+        fmt::format_to(inserter, "{{");
 
         for(auto const &param : arity.params)
         {
-          format_to
+          fmt::format_to
           (
             inserter,
             "auto {0}({0}{1});",
@@ -1100,7 +1117,7 @@ namespace jank::codegen
           );
         }
 
-        format_to
+        fmt::format_to
         (
           inserter,
           R"(
@@ -1114,17 +1131,17 @@ namespace jank::codegen
       { gen(form, arity, true); }
 
       if(arity.body.body.empty())
-      { format_to(inserter, "return jank::runtime::JANK_NIL;"); }
+      { fmt::format_to(inserter, "return jank::runtime::obj::nil::nil_const();"); }
 
       if(arity.fn_ctx->is_tail_recursive)
-      { format_to(inserter, "}} }}"); }
+      { fmt::format_to(inserter, "}} }}"); }
 
-      format_to(inserter, "}}");
+      fmt::format_to(inserter, "}}");
     }
 
     if(variadic_arg_position.is_some())
     {
-      format_to
+      fmt::format_to
       (
         inserter,
         "size_t get_variadic_arg_position() const final{{ return static_cast<size_t>({}); }}",
@@ -1136,7 +1153,7 @@ namespace jank::codegen
   void processor::build_footer()
   {
     auto inserter(std::back_inserter(footer_buffer));
-    format_to(inserter, "}};");
+    fmt::format_to(inserter, "}};");
   }
 
   native_string processor::expression_str(bool const box_needed, bool const auto_call)
@@ -1147,10 +1164,11 @@ namespace jank::codegen
 
       if(auto_call)
       {
+        throw std::runtime_error{ "TODO: I think this can be removed" };
         /* TODO: There's a Cling bug here which prevents us from returning the fn object itself,
          * to be called in non-JIT code. If we call it here and return the result, it works fine. */
         auto tmp_name(runtime::context::unique_string());
-        format_to
+        fmt::format_to
         (
           inserter,
           R"(
@@ -1164,12 +1182,12 @@ namespace jank::codegen
         for(auto const &arity : root_fn.arities)
         {
           for(auto const &v : arity.frame->captures)
-          { format_to(inserter, ", {0}", runtime::munge(v.first->name)); }
+          { fmt::format_to(inserter, ", {0}", runtime::munge(v.first->name)); }
         }
 
-        format_to(inserter, "}};");
+        fmt::format_to(inserter, "}};");
 
-        format_to
+        fmt::format_to
         (
           inserter,
           "{}.call();",
@@ -1178,10 +1196,10 @@ namespace jank::codegen
       }
       else
       {
-        native_string_view close = ")";
+        native_string_view close = ").data";
         if(box_needed)
         {
-          format_to
+          fmt::format_to
           (
             inserter,
             "jank::make_box<{0}>(std::ref(*reinterpret_cast<jank::runtime::context*>({1}))",
@@ -1191,7 +1209,7 @@ namespace jank::codegen
         }
         else
         {
-          format_to
+          fmt::format_to
           (
             inserter,
             "{0}{{ std::ref(*reinterpret_cast<jank::runtime::context*>({1}))",
@@ -1204,10 +1222,10 @@ namespace jank::codegen
         for(auto const &arity : root_fn.arities)
         {
           for(auto const &v : arity.frame->captures)
-          { format_to(inserter, ", {0}", runtime::munge(v.first->name)); }
+          { fmt::format_to(inserter, ", {0}", runtime::munge(v.first->name)); }
         }
 
-        format_to(inserter, "{}", close);
+        fmt::format_to(inserter, "{}", close);
       }
 
       generated_expression = true;

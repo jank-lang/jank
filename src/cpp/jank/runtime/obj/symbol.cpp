@@ -5,13 +5,13 @@
 
 #include <jank/runtime/obj/symbol.hpp>
 
-namespace jank::runtime::obj
+namespace jank::runtime
 {
   template <typename S>
-  void separate(symbol &sym, S &&s)
+  void separate(obj::symbol &sym, S &&s)
   {
     auto const found(s.find('/'));
-    if(found != native_string::npos)
+    if(found != native_string::npos && s.size() > 1)
     {
       sym.ns = s.substr(0, found);
       sym.name = s.substr(found + 1);
@@ -20,26 +20,29 @@ namespace jank::runtime::obj
     { sym.name = std::forward<S>(s); }
   }
 
-  symbol::symbol(native_string const &d)
+  obj::symbol::static_object(native_string const &d)
   { separate(*this, d); }
-  symbol::symbol(native_string &&d)
+  obj::symbol::static_object(native_string &&d)
   { separate(*this, std::move(d)); }
 
-  symbol::symbol(native_string const &ns, native_string const &n)
+  obj::symbol::static_object(native_string const &ns, native_string const &n)
     : ns{ ns }, name{ n }
   { }
-  symbol::symbol(native_string &&ns, native_string &&n)
+  obj::symbol::static_object(native_string &&ns, native_string &&n)
     : ns{ std::move(ns) }, name{ std::move(n) }
   { }
 
-  native_bool symbol::equal(object const &o) const
+  native_bool obj::symbol::equal(object const &o) const
   {
-    auto const *s(o.as_symbol());
-    if(!s)
+    if(o.type != object_type::symbol)
     { return false; }
 
+    auto const s(expect_object<obj::symbol>(&o));
     return ns == s->ns && name == s->name;
   }
+
+  native_bool obj::symbol::equal(obj::symbol const &s) const
+  { return ns == s.ns && name == s.name; }
 
   void to_string_impl
   (
@@ -53,32 +56,29 @@ namespace jank::runtime::obj
     else
     { format_to(std::back_inserter(buff), FMT_COMPILE("{}"), name); }
   }
-  void symbol::to_string(fmt::memory_buffer &buff) const
+  void obj::symbol::to_string(fmt::memory_buffer &buff) const
   { to_string_impl(ns, name, buff); }
-  native_string symbol::to_string() const
+  native_string obj::symbol::to_string() const
   {
     fmt::memory_buffer buff;
     to_string_impl(ns, name, buff);
     return native_string{ buff.data(), buff.size() };
   }
-  native_integer symbol::to_hash() const
+  native_integer obj::symbol::to_hash() const
   /* TODO: Cache this. */
   { return runtime::detail::hash_combine(ns.to_hash(), name.to_hash()); }
 
-  symbol const* symbol::as_symbol() const
-  { return this; }
-
-  object_ptr symbol::with_meta(object_ptr const m) const
+  object_ptr obj::symbol::with_meta(object_ptr const m) const
   {
-    auto const meta(validate_meta(m));
-    auto ret(jank::make_box<symbol>(ns, name));
+    auto const meta(behavior::detail::validate_meta(m));
+    auto ret(jank::make_box<obj::symbol>(ns, name));
     ret->meta = meta;
     return ret;
   }
 
-  behavior::metadatable const* symbol::as_metadatable() const
-  { return this; }
-
-  bool symbol::operator ==(symbol const &rhs) const
+  bool obj::symbol::operator ==(obj::symbol const &rhs) const
   { return ns == rhs.ns && name == rhs.name; }
+
+  bool obj::symbol::operator <(obj::symbol const &rhs) const
+  { return to_hash() < rhs.to_hash(); }
 }

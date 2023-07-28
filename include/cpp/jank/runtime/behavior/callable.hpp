@@ -4,10 +4,13 @@
 
 namespace jank::runtime
 {
-  using object_ptr = struct object*;
+  using object_ptr = native_box<struct object>;
 
   namespace obj
-  { using list_ptr = struct list*; }
+  {
+    using list = static_object<object_type::list>;
+    using list_ptr = native_box<list>;
+  }
 
   constexpr size_t const max_params{ 10 };
 
@@ -35,8 +38,27 @@ namespace jank::runtime
 
   namespace behavior
   {
+    /* TODO: Is this needed? A non-callable function-like would need to define all call overloads? :( */
+    template <typename T>
+    concept function_like = requires(T * const t)
+    {
+      { t->call(object_ptr{}) } -> std::convertible_to<object_ptr>;
+      { t->call(object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
+      { t->call(object_ptr{}, object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
+      { t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
+      { t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
+      { t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
+      { t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
+      { t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
+      { t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
+
+      { t->get_variadic_arg_position() } -> std::convertible_to<size_t>;
+    };
+
     struct callable
     {
+      virtual ~callable() = default;
+
       virtual object_ptr call() const;
       virtual object_ptr call(object_ptr) const;
       virtual object_ptr call(object_ptr, object_ptr) const;

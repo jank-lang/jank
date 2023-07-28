@@ -147,11 +147,14 @@ add_library(
   src/cpp/jank/runtime/util.cpp
   src/cpp/jank/runtime/seq.cpp
   src/cpp/jank/runtime/object.cpp
+  src/cpp/jank/runtime/detail/object_util.cpp
   src/cpp/jank/runtime/context.cpp
   src/cpp/jank/runtime/ns.cpp
   src/cpp/jank/runtime/var.cpp
+  src/cpp/jank/runtime/obj/nil.cpp
   src/cpp/jank/runtime/obj/number.cpp
-  src/cpp/jank/runtime/obj/function.cpp
+  src/cpp/jank/runtime/obj/native_function_wrapper.cpp
+  src/cpp/jank/runtime/obj/jit_function.cpp
   src/cpp/jank/runtime/obj/symbol.cpp
   src/cpp/jank/runtime/obj/keyword.cpp
   src/cpp/jank/runtime/obj/list.cpp
@@ -162,10 +165,13 @@ add_library(
   src/cpp/jank/runtime/obj/cons.cpp
   src/cpp/jank/runtime/obj/range.cpp
   src/cpp/jank/runtime/obj/iterator.cpp
+  src/cpp/jank/runtime/obj/persistent_vector_sequence.cpp
+  src/cpp/jank/runtime/obj/persistent_map_sequence.cpp
+  src/cpp/jank/runtime/obj/native_array_sequence.cpp
+  src/cpp/jank/runtime/obj/native_vector_sequence.cpp
   src/cpp/jank/runtime/behavior/callable.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
-  src/cpp/jank/runtime/behavior/seqable.cpp
-  src/cpp/jank/runtime/behavior/consable.cpp
+  src/cpp/jank/runtime/math.cpp
   src/cpp/jank/analyze/processor.cpp
   src/cpp/jank/analyze/local_frame.cpp
   src/cpp/jank/evaluate.cpp
@@ -314,38 +320,38 @@ endif()
 # ---- Tests ----
 
 # ---- Install rules ----
-if(NOT CMAKE_SKIP_INSTALL_RULES)
-  include(cmake/install.cmake)
-endif()
+#if(NOT CMAKE_SKIP_INSTALL_RULES)
+#  include(cmake/install.cmake)
+#endif()
 # ---- Install rules ----
 
 # ---- new-obj-model executable ----
-add_executable(
-  new_obj_model_exe
-  new-obj-model/src/main.cpp
-)
-add_executable(new_obj_model::exe ALIAS new_obj_model_exe)
-
-set_property(TARGET new_obj_model_exe PROPERTY OUTPUT_NAME new-obj-model)
-
-# Symbol exporting for JIT.
-set_target_properties(new_obj_model_exe PROPERTIES ENABLE_EXPORTS 1)
-
-target_compile_features(new_obj_model_exe PRIVATE cxx_std_17)
-target_compile_options(new_obj_model_exe PUBLIC ${jank_compiler_flags})
-target_link_options(new_obj_model_exe PRIVATE ${jank_linker_flags})
-
-target_include_directories(new_obj_model_exe PUBLIC new-obj-model/include)
-target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
-target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
-target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
-target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
-
-target_link_libraries(
-  new_obj_model_exe PUBLIC
-  -Wl,--whole-archive jank_lib -Wl,--no-whole-archive
-  -Wl,--whole-archive nanobench_lib -Wl,--no-whole-archive
-  Boost::boost
-)
-set_target_properties(new_obj_model_exe PROPERTIES LINK_FLAGS_RELEASE -s)
+#add_executable(
+#  new_obj_model_exe
+#  new-obj-model/src/main.cpp
+#)
+#add_executable(new_obj_model::exe ALIAS new_obj_model_exe)
+#
+#set_property(TARGET new_obj_model_exe PROPERTY OUTPUT_NAME new-obj-model)
+#
+## Symbol exporting for JIT.
+#set_target_properties(new_obj_model_exe PROPERTIES ENABLE_EXPORTS 1)
+#
+#target_compile_features(new_obj_model_exe PRIVATE cxx_std_17)
+#target_compile_options(new_obj_model_exe PUBLIC ${jank_compiler_flags})
+#target_link_options(new_obj_model_exe PRIVATE ${jank_linker_flags})
+#
+#target_include_directories(new_obj_model_exe PUBLIC new-obj-model/include)
+#target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
+#target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
+#target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
+#target_include_directories(new_obj_model_exe SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
+#
+#target_link_libraries(
+#  new_obj_model_exe PUBLIC
+#  -Wl,--whole-archive jank_lib -Wl,--no-whole-archive
+#  -Wl,--whole-archive nanobench_lib -Wl,--no-whole-archive
+#  Boost::boost
+#)
+#set_target_properties(new_obj_model_exe PROPERTIES LINK_FLAGS_RELEASE -s)
 # ---- new-obj-model executable ----

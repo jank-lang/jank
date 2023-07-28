@@ -3,112 +3,30 @@
 
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/hash.hpp>
-#include <jank/runtime/obj/function.hpp>
+#include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/map.hpp>
 #include <jank/runtime/obj/vector.hpp>
-#include <jank/runtime/behavior/seqable.hpp>
 
-namespace jank::runtime::obj
+namespace jank::runtime
 {
-  map::map(runtime::detail::persistent_map &&d)
+  obj::map::static_object(native_box<obj::map> const meta)
+    : meta{ meta }
+  { }
+
+  obj::map::static_object(runtime::detail::persistent_map &&d)
     : data{ std::move(d) }
   { }
-  map::map(runtime::detail::persistent_map const &d)
+
+  obj::map::static_object(runtime::detail::persistent_map const &d)
     : data{ d }
   { }
 
-  native_box<map> map::create(runtime::detail::persistent_map const &o)
-  { return jank::make_box<map>(o); }
-
-  template <typename It>
-  struct map_iterator_wrapper : behavior::sequence
+  native_bool obj::map::equal(object const &o) const
   {
-    static constexpr bool pointer_free{ false };
-
-    map_iterator_wrapper() = default;
-    map_iterator_wrapper(object_ptr c, It const &b, It const &e)
-      : coll{ c }, begin{ b }, end{ e }
-    { }
-
-    void to_string_impl(fmt::memory_buffer &buff) const
-    {
-      auto inserter(std::back_inserter(buff));
-      format_to(inserter, "(");
-      for(auto i(begin); i != end; ++i)
-      {
-        format_to(inserter, "[");
-        (*i).first->to_string(buff);
-        format_to(inserter, " ");
-        (*i).second->to_string(buff);
-        format_to(inserter, "]");
-        auto n(i);
-        if(++n != end)
-        { format_to(inserter, " "); }
-      }
-      format_to(inserter, ")");
-    }
-    void to_string(fmt::memory_buffer &buff) const final
-    { return to_string_impl(buff); }
-    native_string to_string() const final
-    {
-      fmt::memory_buffer buff;
-      to_string_impl(buff);
-      return native_string{ buff.data(), buff.size() };
-    }
-    native_integer to_hash() const final
-    /* TODO: Hash from contents. */
-    { return reinterpret_cast<native_integer>(this); }
-
-    sequence_ptr seq() const final
-    { return static_cast<sequence_ptr>(const_cast<map_iterator_wrapper<It>*>(this)); }
-    behavior::sequence_ptr fresh_seq() const final
-    { return jank::make_box<map_iterator_wrapper<It>>(coll, begin, end); }
-
-    object_ptr first() const final
-    {
-      auto const pair(*begin);
-      return jank::make_box<vector>(runtime::detail::peristent_vector{ pair.first, pair.second });
-    }
-    behavior::sequence_ptr next() const final
-    {
-      auto n(begin);
-      ++n;
-
-      if(n == end)
-      { return nullptr; }
-
-      return jank::make_box<map_iterator_wrapper<It>>(coll, n, end);
-    }
-    behavior::sequence* next_in_place() final
-    {
-      ++begin;
-
-      if(begin == end)
-      { return nullptr; }
-
-      return this;
-    }
-    object_ptr next_in_place_first() final
-    {
-      ++begin;
-
-      if(begin == end)
-      { return nullptr; }
-
-      auto const pair(*begin);
-      return jank::make_box<vector>(runtime::detail::peristent_vector{ pair.first, pair.second });
-    }
-
-    object_ptr coll{};
-    It begin, end;
-  };
-
-  native_bool map::equal(object const &o) const
-  {
-    auto const *m(o.as_map());
-    if(!m)
+    if(o.type != object_type::map)
     { return false; }
 
+    auto const m(expect_object<obj::map>(&o));
     return to_hash() == m->to_hash();
   }
 
@@ -124,9 +42,9 @@ namespace jank::runtime::obj
     for(auto i(begin); i != end; ++i)
     {
       auto const pair(*i);
-      pair.first->to_string(buff);
+      runtime::detail::to_string(pair.first, buff);
       inserter = ' ';
-      pair.second->to_string(buff);
+      runtime::detail::to_string(pair.second, buff);
       auto n(i);
       if(++n != end)
       {
@@ -136,16 +54,16 @@ namespace jank::runtime::obj
     }
     inserter = '}';
   }
-  void map::to_string(fmt::memory_buffer &buff) const
+  void obj::map::to_string(fmt::memory_buffer &buff) const
   { to_string_impl(data.begin(), data.end(), buff); }
-  native_string map::to_string() const
+  native_string obj::map::to_string() const
   {
     fmt::memory_buffer buff;
     to_string_impl(data.begin(), data.end(), buff);
     return native_string{ buff.data(), buff.size() };
   }
   /* TODO: Cache this. */
-  native_integer map::to_hash() const
+  native_integer obj::map::to_hash() const
   {
     auto seed(static_cast<native_integer>(data.size()));
     for(auto const &e : data)
@@ -155,49 +73,40 @@ namespace jank::runtime::obj
     }
     return seed;
   }
-  map const* map::as_map() const
-  { return this; }
-  behavior::seqable const* map::as_seqable() const
-  { return this; }
-  behavior::sequence_ptr map::seq() const
+
+  obj::persistent_map_sequence_ptr obj::map::seq() const
   {
     if(data.size() == 0)
     { return nullptr; }
-    return jank::make_box<map_iterator_wrapper<runtime::detail::persistent_map::const_iterator>>(const_cast<map*>(this), data.begin(), data.end());
-  }
-  behavior::sequence_ptr map::fresh_seq() const
-  {
-    if(data.size() == 0)
-    { return nullptr; }
-    return jank::make_box<map_iterator_wrapper<runtime::detail::persistent_map::const_iterator>>(const_cast<map*>(this), data.begin(), data.end());
+    return jank::make_box<obj::persistent_map_sequence>(this, data.begin(), data.end());
   }
 
-  behavior::countable const* map::as_countable() const
-  { return this; }
-  size_t map::count() const
+  obj::persistent_map_sequence_ptr obj::map::fresh_seq() const
+  {
+    if(data.size() == 0)
+    { return nullptr; }
+    return jank::make_box<obj::persistent_map_sequence>(this, data.begin(), data.end());
+  }
+
+  size_t obj::map::count() const
   { return data.size(); }
 
-  object_ptr map::with_meta(object_ptr const m) const
+  object_ptr obj::map::with_meta(object_ptr const m) const
   {
-    auto const meta(validate_meta(m));
-    auto ret(jank::make_box<map>(data));
+    auto const meta(behavior::detail::validate_meta(m));
+    auto ret(make_box<obj::map>(data));
     ret->meta = meta;
     return ret;
   }
 
-  behavior::metadatable const* map::as_metadatable() const
-  { return this; }
-
-  behavior::associatively_readable const* map::as_associatively_readable() const
-  { return this; }
-  object_ptr map::get(object_ptr const key) const
+  object_ptr obj::map::get(object_ptr const key) const
   {
     auto const res(data.find(key));
     if(res)
     { return res; }
-    return JANK_NIL;
+    return obj::nil::nil_const();
   }
-  object_ptr map::get(object_ptr const key, object_ptr const fallback) const
+  object_ptr obj::map::get(object_ptr const key, object_ptr const fallback) const
   {
     auto const res(data.find(key));
     if(res)
@@ -205,12 +114,10 @@ namespace jank::runtime::obj
     return fallback;
   }
 
-  behavior::associatively_writable const* map::as_associatively_writable() const
-  { return this; }
-  object_ptr map::assoc(object_ptr const key, object_ptr const val) const
+  object_ptr obj::map::assoc(object_ptr const key, object_ptr const val) const
   {
     auto copy(data.clone());
     copy.insert_or_assign(key, val);
-    return create(std::move(copy));
+    return make_box<obj::map>(std::move(copy));
   }
 }

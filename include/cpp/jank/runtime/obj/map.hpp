@@ -1,63 +1,61 @@
 #pragma once
 
-#include <jank/runtime/behavior/seqable.hpp>
-#include <jank/runtime/behavior/countable.hpp>
-#include <jank/runtime/behavior/metadatable.hpp>
-#include <jank/runtime/behavior/associatively_readable.hpp>
-#include <jank/runtime/behavior/associatively_writable.hpp>
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/detail/object_util.hpp>
+#include <jank/runtime/detail/map_type.hpp>
+#include <jank/runtime/obj/persistent_map_sequence.hpp>
 
-namespace jank::runtime::obj
+namespace jank::runtime
 {
-  struct map
-    :
-      object,
-      behavior::seqable, behavior::countable,
-      behavior::metadatable,
-      behavior::associatively_readable,
-      behavior::associatively_writable
+  template <>
+  struct static_object<object_type::map> : gc
   {
     using value_type = runtime::detail::persistent_map;
 
     static constexpr bool pointer_free{ false };
 
-    map() = default;
-    map(map &&) = default;
-    map(map const &) = default;
-    map(runtime::detail::persistent_map &&d);
-    map(runtime::detail::persistent_map const &d);
+    static_object() = default;
+    static_object(static_object &&) = default;
+    static_object(static_object const &) = default;
+    static_object(native_box<static_object> meta);
+    static_object(runtime::detail::persistent_map &&d);
+    static_object(runtime::detail::persistent_map const &d);
     template <typename... Args>
-    map(runtime::detail::in_place_unique, Args &&...args)
+    static_object(runtime::detail::in_place_unique, Args &&...args)
       : data{ runtime::detail::in_place_unique{}, std::forward<Args>(args)... }
     { }
-    ~map() = default;
 
-    static native_box<map> create(runtime::detail::persistent_map const &);
+    /* behavior::objectable */
+    native_bool equal(object const &) const;
+    native_string to_string() const;
+    void to_string(fmt::memory_buffer &buff) const;
+    native_integer to_hash() const;
 
-    native_bool equal(object const &) const final;
-    native_string to_string() const final;
-    void to_string(fmt::memory_buffer &buff) const final;
-    native_integer to_hash() const final;
+    /* behavior::metadatable */
+    object_ptr with_meta(object_ptr m) const;
 
-    map const* as_map() const final;
-    seqable const* as_seqable() const final;
+    /* behavior::seqable */
+    obj::persistent_map_sequence_ptr seq() const;
+    obj::persistent_map_sequence_ptr fresh_seq() const;
 
-    behavior::sequence_ptr seq() const final;
-    behavior::sequence_ptr fresh_seq() const final;
+    /* behavior::countable */
+    size_t count() const;
 
-    behavior::countable const* as_countable() const final;
-    size_t count() const final;
+    /* behavior::associatively_readable */
+    object_ptr get(object_ptr key) const;
+    object_ptr get(object_ptr key, object_ptr fallback) const;
 
-    object_ptr with_meta(object_ptr m) const final;
-    behavior::metadatable const* as_metadatable() const final;
+    /* behavior::associatively_writable */
+    object_ptr assoc(object_ptr key, object_ptr val) const;
 
-    behavior::associatively_readable const* as_associatively_readable() const final;
-    object_ptr get(object_ptr key) const final;
-    object_ptr get(object_ptr key, object_ptr fallback) const final;
-
-    behavior::associatively_writable const* as_associatively_writable() const final;
-    object_ptr assoc(object_ptr key, object_ptr val) const final;
-
-    runtime::detail::persistent_map data;
+    object base{ object_type::map };
+    value_type data{};
+    option<obj::map_ptr> meta;
   };
-  using map_ptr = map*;
+
+  namespace obj
+  {
+    using map = static_object<object_type::map>;
+    using map_ptr = native_box<map>;
+  }
 }

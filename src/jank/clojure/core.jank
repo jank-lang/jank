@@ -4,102 +4,195 @@
 (def *ns*)
 (def in-ns)
 
+; Exceptions
+(def ex-info
+  (fn* ex-info [msg map]
+    {:error msg
+     :data map}))
+
 ; Relations.
 ;; Miscellaneous.
 (def true?
-  (fn* [o]
-    (native/raw "__value = #{ o }#->equal(*#{ true }#) ? #{ true }# : #{ false }#")))
+  (fn* true? [o]
+    (native/raw "__value = runtime::detail::equal(#{ o }#, #{ true }#) ? #{ true }# : #{ false }#")))
 (def false?
-  (fn* [o]
-    (native/raw "__value = #{ o }#->equal(*#{ false }#) ? #{ true }# : #{ false }#")))
+  (fn* false? [o]
+    (native/raw "__value = runtime::detail::equal(#{ o }#, #{ false }#) ? #{ true }# : #{ false }#")))
 (def not
-  (fn* [o]
-    (native/raw "__value = #{ o }#->equal(*#{ false }#) ? #{ true }# : #{ false }#")))
+  (fn* not [o]
+    (native/raw "__value = runtime::detail::equal(#{ o }#, #{ false }#) ? #{ true }# : #{ false }#")))
 (def nil?
-  (fn* [o]
-    (native/raw "__value = (o == JANK_NIL) ? #{ true }# : #{ false }#")))
+  (fn* nil? [o]
+    (native/raw "__value = (o == obj::nil::nil_const()) ? #{ true }# : #{ false }#")))
 (def some?
-  (fn* [o]
-    (native/raw "__value = (o == JANK_NIL) ? #{ false }# : #{ true }#")))
+  (fn* some? [o]
+    (native/raw "__value = (o == obj::nil::nil_const()) ? #{ false }# : #{ true }#")))
 
 ;; Collections.
 (def empty?
-  (fn* [o]
+  (fn* empty? [o]
     (if (nil? o)
       true
-      (native/raw "auto const * const seqable(#{ o }#->as_seqable());
-                   if(!seqable)
-                   { throw #{ :not-seqable }#; }
-                   auto const seq(seqable->seq());
-                   __value = make_box(seq == nullptr);"))))
+      (native/raw "__value = visit_object
+                   (
+                     #{ o }#,
+                     [=](auto const typed_o) -> obj::boolean_ptr
+                     {
+                       using T = typename decltype(typed_o)::value_type;
+
+                       if constexpr(behavior::seqable<T>)
+                       { return make_box(typed_o->seq() == nullptr); }
+                       else
+                       { throw #{ (ex-info :not-seqable {:o o}) }#; }
+                     }
+                   );"))))
 
 (def count
-  (fn* [o]
+  (fn* count [o]
     (if (nil? o)
       0
-      ; TODO: Interface for counting without turning into seq first.
-      (native/raw "auto const * const seqable(#{ o }#->as_seqable());
-                   if(!seqable)
-                   { throw #{ :not-seqable }#; }
-                   auto const seq(seqable->seq());
-                   /* TODO: Unsigned */
-                   __value = make_box(runtime::detail::sequence_length(seq));"))))
+      (native/raw "__value = make_box(runtime::detail::sequence_length(#{ o }#));"))))
 
-;; Lists.
+; Lists.
+; TODO: Can these be removed from the C++ source?
+;(def seq
+;  (fn* seq [o]
+;    (native/raw "__value = visit_object
+;                 (
+;                   #{ o }#,
+;                   [=](auto const typed_o) -> object_ptr
+;                   {
+;                     using T = typename decltype(typed_o)::value_type;
+;
+;                     if constexpr(std::same_as<T, obj::nil>)
+;                     { return typed_o; }
+;                     else if constexpr(behavior::seqable<T>)
+;                     {
+;                       auto const &ret(typed_o->seq());
+;                       if(!ret)
+;                       { return obj::nil::nil_const(); }
+;
+;                       return ret;
+;                     }
+;                     else
+;                     { throw #{ (ex-info :not-seqable {:o o}) }#; }
+;                   }
+;                 );")))
+;(def fresh-seq
+;  (fn* fresh-seq [o]
+;    (native/raw "__value = visit_object
+;                 (
+;                   #{ o }#,
+;                   [=](auto const typed_o) -> object_ptr
+;                   {
+;                     using T = typename decltype(typed_o)::value_type;
+;
+;                     if constexpr(std::same_as<T, obj::nil>)
+;                     { return typed_o; }
+;                     else if constexpr(behavior::seqable<T>)
+;                     {
+;                       auto const &ret(typed_o->seq());
+;                       if(!ret)
+;                       { return obj::nil::nil_const(); }
+;
+;                       return ret;
+;                     }
+;                     else
+;                     { throw #{ (ex-info :not-seqable {:o o}) }#; }
+;                   }
+;                 );")))
 (def first
-  (fn* [o]
+  (fn* first [o]
     (native/raw "__value = jank::runtime::first(#{ o }#);")))
 (def next
-  (fn* [o]
+  (fn* next [o]
     (native/raw "__value = jank::runtime::next(#{ o }#);")))
 (def next-in-place
-  (fn* [o]
+  (fn* next-in-place [o]
     (native/raw "__value = jank::runtime::next_in_place(#{ o }#);")))
 (def nnext
-  (fn* [o]
+  (fn* nnext [o]
     (next-in-place (next o))))
 (def second
-  (fn* [o]
+  (fn* second [o]
     (first (next o))))
 (def rest
-  (fn* [o]
+  (fn* rest [o]
     (if (nil? o)
       '()
-      (native/raw "auto const * const seqable(#{ o }#->as_seqable());
-                   if(!seqable)
-                   { throw #{ :not-seqable }#; }
-                   auto const seq(seqable->seq());
-                   if(!seq)
-                   { __value = #{ '() }#; }
-                   else
-                   {
-                    __value = seq->next_in_place();
-                    if(__value == nullptr)
-                    { __value = #{ '() }#; }
-                   }"))))
+      (native/raw "__value = visit_object
+                   (
+                     #{ o }#,
+                     [=](auto const typed_o) -> object_ptr
+                     {
+                       using T = typename decltype(typed_o)::value_type;
+
+                       if constexpr(behavior::seqable<T>)
+                       {
+                         auto const seq(typed_o->seq());
+                         if(!seq)
+                         { return #{ '() }#; }
+                         auto const ret(seq->next());
+                         if(ret == nullptr)
+                         { return #{ '() }#; }
+                         return ret;
+                       }
+                       else
+                       { throw #{ (ex-info :not-seqable {:o o}) }#; }
+                     }
+                   );"))))
 (def cons
-  (fn* [head tail]
-    (native/raw "if(auto const seqable_tail = #{ tail }#->as_seqable())
-                 { __value = make_box<jank::runtime::obj::cons>(#{ head }#, seqable_tail->seq()); }
-                 else if(#{ tail }#->as_nil())
-                 { __value = make_box<jank::runtime::obj::cons>(#{ head }#, nullptr); }
-                 else
-                 { throw #{ [:invalid-cons-tail tail] }#; }")))
+  (fn* cons [head tail]
+    (native/raw "__value = visit_object
+                 (
+                   #{ tail }#,
+                   [=](auto const typed_tail) -> object_ptr
+                   {
+                     using T = typename decltype(typed_tail)::value_type;
+
+                     if constexpr(behavior::seqable<T>)
+                     { return make_box<jank::runtime::obj::cons>(#{ head }#, typed_tail->seq()); }
+                     else
+                     { throw #{ (ex-info :invalid-cons-tail {:head head :tail tail}) }#; }
+                   }
+                 );")))
 (def list
-  (fn* [& items]
-    (native/raw "auto * const seq(static_cast<behavior::sequence*>(const_cast<behavior::seqable*>(#{ items }#->as_seqable())));
-                 __value = jank::runtime::obj::list::create(seq);")))
+  (fn* list [& items]
+    (native/raw "__value = visit_object
+                 (
+                   #{ items }#,
+                   [=](auto const typed_items) -> object_ptr
+                   {
+                     using T = typename decltype(typed_items)::value_type;
+
+                     if constexpr(behavior::seqable<T>)
+                     { return jank::runtime::obj::list::create(typed_items); }
+                     else
+                     { throw #{ (ex-info :invalid-seq {:items items}) }#; }
+                   }
+                 );")))
 
 ;; Vectors.
 (def vec
-  (fn* [coll]
-    (native/raw "auto * const seq(static_cast<behavior::sequence*>(const_cast<behavior::seqable*>(#{ coll }#->as_seqable())));
-                 __value = jank::runtime::obj::vector::create(seq);")))
+  (fn* vec [coll]
+    (native/raw "__value = visit_object
+                 (
+                   #{ coll }#,
+                   [=](auto const typed_coll) -> object_ptr
+                   {
+                     using T = typename decltype(typed_coll)::value_type;
+
+                     if constexpr(behavior::seqable<T>)
+                     { return jank::runtime::obj::vector::create(typed_coll); }
+                     else
+                     { throw #{ (ex-info :invalid-seq {:coll coll}) }#; }
+                   }
+                 );")))
 
 (def conj)
 (def conj
   (fn*
-    ([]
+    conj ([]
      [])
     ([coll]
      coll)
@@ -111,29 +204,42 @@
          res
          (recur res (first args) (next args)))))))
 
-;; Strings.
+; Strings.
 (def string?
-  (fn* [o]
-    (native/raw "__value = make_box(#{ o }#->as_string() != nullptr);")))
+  (fn* string? [o]
+    (native/raw "__value = make_box(#{ o }#->type == object_type::string);")))
 (def str
   (fn*
-    ([]
+    str ([]
      "")
     ([o]
-     (native/raw "__value = make_box(#{ o }#->to_string());"))
+     (native/raw "__value = make_box(runtime::detail::to_string(#{ o }#));"))
     ([o & args]
-     (native/raw "fmt::memory_buffer buff;
-                  buff.reserve(16);
-                  auto * const seq(static_cast<behavior::sequence*>(const_cast<behavior::seqable*>(#{ args }#->as_seqable())));
-                  #{ o }#->to_string(buff);
-                  seq->first()->to_string(buff);
-                  for(auto *it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
-                  { it->first()->to_string(buff); }
-                  __value = make_box<obj::string>(native_string{ buff.data(), buff.size() });"))))
+     (native/raw "__value = visit_object
+                 (
+                   #{ args }#,
+                   [=](auto const typed_args) -> object_ptr
+                   {
+                     using T = typename decltype(typed_args)::value_type;
+
+                     if constexpr(behavior::sequenceable<T>)
+                     {
+                       fmt::memory_buffer buff;
+                       buff.reserve(16);
+                       runtime::detail::to_string(#{ o }#, buff);
+                       runtime::detail::to_string(typed_args->first(), buff);
+                       for(auto it(typed_args->next_in_place()); it != nullptr; it = it->next_in_place())
+                       { runtime::detail::to_string(typed_args->first(), buff); }
+                       return make_box<obj::string>(native_string{ buff.data(), buff.size() });
+                     }
+                     else
+                     { throw #{ (ex-info :invalid-seq {:args args}) }#; }
+                   }
+                 );"))))
 
 ;; Maps.
 (def get
-  (fn*
+  (fn* get
     ([m k]
      (native/raw "__value = jank::runtime::get(#{ m }#, #{ k }#);"))
     ([m k fallback]
@@ -141,12 +247,12 @@
 
 ;; Other.
 (def hash
-  (fn* [o]
-    (native/raw "__value = make_box(#{ o }#->to_hash());")))
+  (fn* hash [o]
+    (native/raw "__value = make_box(runtime::detail::to_hash(#{ o }#));")))
 
 (def assoc)
 (def assoc
-  (fn*
+  (fn* assoc
     ([map key val]
      (native/raw "__value = jank::runtime::assoc(#{ map }#, #{ key }#, #{ val }#);"))
     ([map key val & kvs]
@@ -159,188 +265,203 @@
 
 (def reduce*)
 (def reduce*
-  (fn*
+  (fn* reduce*
     ([f coll]
      (let* [s (seq coll)]
        (if s
          (reduce* f (first s) (next s))
          (f))))
     ([f val coll]
-     (native/raw "__value = #{ val }#;
-                  for(auto it(#{ coll }#->as_seqable()->fresh_seq()); it != nullptr; it = it->next_in_place())
-                  { __value = dynamic_call(f, __value, it->first()); }"))))
+     (native/raw "__value = visit_object
+                 (
+                   #{ coll }#,
+                   [=](auto const typed_coll) -> object_ptr
+                   {
+                     using T = typename decltype(typed_coll)::value_type;
+
+                     if constexpr(behavior::seqable<T>)
+                     {
+                       object_ptr res{ #{ val }# };
+                       for(auto it(typed_coll->fresh_seq()); it != nullptr; it = it->next_in_place())
+                       { res = dynamic_call(#{ f }#, res, it->first()); }
+                       return res;
+                     }
+                     else
+                     { throw #{ (ex-info :invalid-seq {:coll coll}) }#; }
+                   }
+                 );"))))
 
 (def reverse
-  (fn* [coll]
+  (fn* reverse [coll]
     (reduce* conj () coll)))
 
 ; Primitives.
 ;; Arithmetic.
 (def +
-  (fn*
+  (fn* +
     ([]
      0)
     ([x]
      x)
     ([l r]
-     (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).add();"))
+     (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).add();"))
     ([l r & args]
-     (let* [res (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).add();")]
+     (let* [res (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).add();")]
        (if (empty? args)
          res
          (recur res (first args) (next args)))))))
 
 (def -)
 (def -
-  (fn*
+  (fn* -
     ([x]
      (- 0 x))
     ([l r]
-     (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).subtract();"))
+     (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).subtract();"))
     ([l r & args]
-     (let* [res (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).subtract();")]
+     (let* [res (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).subtract();")]
        (if (empty? args)
          res
          (recur res (first args) (next args)))))))
 
 (def *
-  (fn*
+  (fn* *
     ([]
      1)
     ([x]
      x)
     ([l r]
-     (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).multiply();"))
+     (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).multiply();"))
     ([l r & args]
-     (let* [res (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).multiply();")]
+     (let* [res (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).multiply();")]
        (if (empty? args)
          res
          (recur res (first args) (next args)))))))
 
 (def /)
 (def /
-  (fn*
+  (fn* _SLASH_
     ([x]
      (/ 1 x))
     ([l r]
-     (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).divide();"))
+     (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).divide();"))
     ([l r & args]
-     (let* [res (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).divide();")]
+     (let* [res (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).divide();")]
        (if (empty? args)
          res
          (recur res (first args) (next args)))))))
 
 (def =
-  (fn*
+  (fn* =
     ([x]
      true)
     ([l r]
-     (native/raw "__value = make_box(#{ l }#->equal(*#{ r }#));"))
+     (native/raw "__value = make_box(runtime::detail::equal(#{ l }#, #{ r }#));"))
     ([l r & args]
-     (if (native/raw "__value = make_box(#{ l }#->equal(*#{ r }#));")
+     (if (native/raw "__value = make_box(runtime::detail::equal(#{ l }#, #{ r }#));")
        (if (next args)
          (recur r (first args) (next args))
-         (native/raw "__value = make_box(#{ r }#->equal(*#{ (first args) }#));"))
+         (native/raw "__value = make_box(runtime::detail::equal(#{ r }#, #{ (first args) }#));"))
        false))))
 
 (def <
-  (fn*
+  (fn* <
     ([x]
      true)
     ([l r]
-     (native/raw "__value = make_box(obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).lt());"))
+     (native/raw "__value = make_box(right_ops(#{ r }#).combine(left_ops(#{ l }#)).lt());"))
     ([l r & args]
-     (if (native/raw "__value = make_box(obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).lt());")
+     (if (native/raw "__value = make_box(right_ops(#{ r }#).combine(left_ops(#{ l }#)).lt());")
        (if (next args)
          (recur r (first args) (next args))
-         (native/raw "__value = make_box(obj::right_ops(#{ (first args) }#).combine(obj::left_ops(#{ r }#)).lt());"))
+         (native/raw "__value = make_box(right_ops(#{ (first args) }#).combine(left_ops(#{ r }#)).lt());"))
        false))))
 
 (def <=
-  (fn*
+  (fn* <=
     ([x]
      true)
     ([l r]
-     (native/raw "__value = make_box(obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).lte());"))
+     (native/raw "__value = make_box(right_ops(#{ r }#).combine(left_ops(#{ l }#)).lte());"))
     ([l r & args]
-     (if (native/raw "__value = make_box(obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).lte());")
+     (if (native/raw "__value = make_box(right_ops(#{ r }#).combine(left_ops(#{ l }#)).lte());")
        (if (next args)
          (recur r (first args) (next args))
-         (native/raw "__value = make_box(obj::right_ops(#{ (first args) }#).combine(obj::left_ops(#{ r }#)).lte());"))
+         (native/raw "__value = make_box(right_ops(#{ (first args) }#).combine(left_ops(#{ r }#)).lte());"))
        false))))
 
 (def >
-  (fn*
+  (fn* >
     ([x]
      true)
     ([l r]
-     (native/raw "__value = make_box(obj::right_ops(#{ l }#).combine(obj::left_ops(#{ r }#)).lt());"))
+     (native/raw "__value = make_box(right_ops(#{ l }#).combine(left_ops(#{ r }#)).lt());"))
     ([l r & args]
-     (if (native/raw "__value = make_box(obj::right_ops(#{ l }#).combine(obj::left_ops(#{ r }#)).lt());")
+     (if (native/raw "__value = make_box(right_ops(#{ l }#).combine(left_ops(#{ r }#)).lt());")
        (if (next args)
          (recur r (first args) (next args))
-         (native/raw "__value = make_box(obj::right_ops(#{ r }#).combine(obj::left_ops(#{ (first args) }#)).lt());"))
+         (native/raw "__value = make_box(right_ops(#{ r }#).combine(left_ops(#{ (first args) }#)).lt());"))
        false))))
 
 (def >=
-  (fn*
+  (fn* >=
     ([x]
      true)
     ([l r]
-     (native/raw "__value = make_box(obj::right_ops(#{ l }#).combine(obj::left_ops(#{ r }#)).lte());"))
+     (native/raw "__value = make_box(right_ops(#{ l }#).combine(left_ops(#{ r }#)).lte());"))
     ([l r & args]
-     (if (native/raw "__value = make_box(obj::right_ops(#{ l }#).combine(obj::left_ops(#{ r }#)).lte());")
+     (if (native/raw "__value = make_box(right_ops(#{ l }#).combine(left_ops(#{ r }#)).lte());")
        (if (next args)
          (recur r (first args) (next args))
-         (native/raw "__value = make_box(obj::right_ops(#{ r }#).combine(obj::left_ops(#{ (first args) }#)).lte());"))
+         (native/raw "__value = make_box(right_ops(#{ r }#).combine(left_ops(#{ (first args) }#)).lte());"))
        false))))
 
 (def min
-  (fn*
+  (fn* min
     ([x]
      x)
     ([l r]
-     (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).min();"))
+     (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).min();"))
     ([l r & args]
-     (let* [res (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).min();")]
+     (let* [res (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).min();")]
        (if (empty? args)
          res
          (recur res (first args) (next args)))))))
 
 (def max
-  (fn*
+  (fn* max
     ([x]
      x)
     ([l r]
-     (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).max();"))
+     (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).max();"))
     ([l r & args]
-     (let* [res (native/raw "__value = obj::right_ops(#{ r }#).combine(obj::left_ops(#{ l }#)).max();")]
+     (let* [res (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).max();")]
        (if (empty? args)
          res
          (recur res (first args) (next args)))))))
 
 (def inc
-  (fn* [n]
-    (native/raw "__value = obj::left_ops(#{ n }#).inc();")))
+  (fn* inc [n]
+    (native/raw "__value = left_ops(#{ n }#).inc();")))
 (def dec
-  (fn* [n]
-    (native/raw "__value = obj::left_ops(#{ n }#).dec();")))
+  (fn* dec [n]
+    (native/raw "__value = left_ops(#{ n }#).dec();")))
 
 (def pos?
-  (fn* [n]
-    (native/raw "__value = make_box(obj::left_ops(#{ n }#).is_positive());")))
+  (fn* pos? [n]
+    (native/raw "__value = make_box(left_ops(#{ n }#).is_positive());")))
 (def neg?
-  (fn* [n]
-    (native/raw "__value = make_box(obj::left_ops(#{ n }#).is_negative());")))
+  (fn* neg? [n]
+    (native/raw "__value = make_box(left_ops(#{ n }#).is_negative());")))
 (def zero?
-  (fn* [n]
-    (native/raw "__value = make_box(obj::left_ops(#{ n }#).is_zero());")))
+  (fn* zero? [n]
+    (native/raw "__value = make_box(left_ops(#{ n }#).is_zero());")))
 
 (def rem
-  (fn* [num div]
-    (native/raw "__value = obj::right_ops(#{ div }#).combine(obj::left_ops(#{ num }#)).remainder();")))
+  (fn* rem [num div]
+    (native/raw "__value = right_ops(#{ div }#).combine(left_ops(#{ num }#)).remainder();")))
 (def mod
-  (fn* [num div]
+  (fn* mod [num div]
     (let* [m (rem num div)]
       ; TODO: Could use an or here, if we had it.
       (if (zero? m)
@@ -351,89 +472,217 @@
 
 ;; Numbers.
 (def integer?
-  (fn* [o]
-    (native/raw "__value = make_box(#{ o }#->as_integer() != nullptr)")))
+  (fn* integer? [o]
+    (native/raw "__value = make_box(#{ o }#->type == object_type::integer)")))
 (def float?
-  (fn* [o]
-    (native/raw "__value = make_box(#{ o }#->as_real() != nullptr)")))
+  (fn* float? [o]
+    (native/raw "__value = make_box(#{ o }#->type == object_type::real)")))
 (def boolean?
-  (fn* [o]
-    (native/raw "__value = make_box(#{ o }#->as_boolean() != nullptr)")))
+  (fn* boolean? [o]
+    (native/raw "__value = make_box(#{ o }#->type == object_type::boolean)")))
 (def number?
-  (fn* [o]
-    (native/raw "__value = make_box(#{ o }#->as_number() != nullptr)")))
+  (fn* number? [o]
+    (native/raw "__value = make_box
+                 (
+                   visit_object
+                   (
+                     #{ o }#,
+                     [=](auto const typed_o) -> native_bool
+                     {
+                       using T = typename decltype(typed_o)::value_type;
+
+                       if constexpr(behavior::numberable<T>)
+                       { return true; }
+                       else
+                       { return false; }
+                     }
+                   )
+                 );")))
 
 (def int
-  (fn* [o]
-    (native/raw "auto const * const n(#{ o }#->as_number());
-                 if(!n)
-                 { throw #{ :not-a-number }#; }
-                 __value = make_box(n->get_integer());")))
+  (fn* int [o]
+    (native/raw "__value = make_box
+                 (
+                   visit_object
+                   (
+                     #{ o }#,
+                     [=](auto const typed_o) -> native_integer
+                     {
+                       using T = typename decltype(typed_o)::value_type;
+
+                       if constexpr(behavior::numberable<T>)
+                       { return typed_o->to_integer(); }
+                       else
+                       { throw #{ (ex-info :not-a-number {:o o}) }#; }
+                     }
+                   )
+                 );")))
 (def float
-  (fn* [o]
-    (native/raw "auto const * const n(#{ o }#->as_number());
-                 if(!n)
-                 { throw #{ :not-a-number }#; }
-                 __value = make_box(n->get_real());")))
+  (fn* float [o]
+    (native/raw "__value = make_box
+                 (
+                   visit_object
+                   (
+                     #{ o }#,
+                     [=](auto const typed_o) -> native_real
+                     {
+                       using T = typename decltype(typed_o)::value_type;
+
+                       if constexpr(behavior::numberable<T>)
+                       { return typed_o->to_real(); }
+                       else
+                       { throw #{ (ex-info :not-a-number {:o o}) }#; }
+                     }
+                   )
+                 );")))
 
 (def even?
-  (fn* [o]
-    (if (integer? o)
-      (native/raw "__value = make_box(#{ o }#->as_integer()->data % 2 == 0)")
-      ; TODO: throw an error
-      false)))
-(def odd?
-  (fn* [o]
-    (if (integer? o)
-      (native/raw "__value = make_box(#{ o }#->as_integer()->data % 2 == 1)")
-      ; TODO: throw an error
-      false)))
+  (fn* even? [o]
+    (native/raw "__value = make_box
+                 (
+                   visit_object
+                   (
+                     #{ o }#,
+                     [=](auto const typed_o) -> native_bool
+                     {
+                       using T = typename decltype(typed_o)::value_type;
 
-; Random.
+                       if constexpr(std::is_same_v<T, obj::integer>)
+                       { return typed_o->data % 2 == 0; }
+                       else
+                       { throw #{ (ex-info :not-an-integer {:o o}) }#; }
+                     }
+                   )
+                 );")))
+(def odd?
+  (fn* odd? [o]
+    (native/raw "__value = make_box
+                 (
+                   visit_object
+                   (
+                     #{ o }#,
+                     [=](auto const typed_o) -> native_bool
+                     {
+                       using T = typename decltype(typed_o)::value_type;
+
+                       if constexpr(std::is_same_v<T, obj::integer>)
+                       { return typed_o->data % 2 == 1; }
+                       else
+                       { throw #{ (ex-info :not-an-integer {:o o}) }#; }
+                     }
+                   )
+                 );")))
+
+;; Random.
 (def rand)
 (def rand
-  (fn*
+  (fn* rand
     ([]
-     (native/raw "__value = make_box(jank::runtime::obj::rand());"))
+     (native/raw "__value = make_box(jank::runtime::rand());"))
     ([n]
      (* (rand) n))))
 
-; Keywords.
+;; Keywords.
 (def keyword?
-  (fn* [o]
-    (native/raw "__value = make_box(#{ o }#->as_keyword() != nullptr)")))
+  (fn* keyword? [o]
+    (native/raw "__value = make_box(#{ o }#->type == object_type::keyword)")))
 (def simple-keyword?
-  (fn* [o]
-    (native/raw "auto const * const k(#{ o }#->as_keyword());
-                 __value = make_box(k != nullptr && k->sym.ns.empty())")))
-(def qualified-keyword?
-  (fn* [o]
-    (native/raw "auto const * const k(#{ o }#->as_keyword());
-                 __value = make_box(k != nullptr && !k->sym.ns.empty())")))
-(def simple-symbol?
-  (fn* [o]
-    (native/raw "auto const * const sym(#{ o }#->as_symbol());
-                 __value = make_box(sym != nullptr && sym->ns.empty())")))
-(def qualified-symbol?
-  (fn* [o]
-    (native/raw "auto const * const sym(#{ o }#->as_symbol());
-                 __value = make_box(sym != nullptr && !sym->ns.empty())")))
-(def symbol?
-  (fn* [o]
-    (native/raw "__value = make_box(#{ o }#->as_symbol() != nullptr)")))
+  (fn* simple-keyword? [o]
+    (native/raw "__value = make_box
+                 (
+                   visit_object
+                   (
+                     #{ o }#,
+                     [=](auto const typed_o) -> native_bool
+                     {
+                       using T = typename decltype(typed_o)::value_type;
 
-; Sequences.
+                       if constexpr(std::is_same_v<T, obj::keyword>)
+                       { return typed_o->sym.ns.empty(); }
+                       else
+                       { return false; }
+                     }
+                   )
+                 );")))
+(def qualified-keyword?
+  (fn* qualified-keyword? [o]
+    (native/raw "__value = make_box
+                 (
+                   visit_object
+                   (
+                     #{ o }#,
+                     [=](auto const typed_o) -> native_bool
+                     {
+                       using T = typename decltype(typed_o)::value_type;
+
+                       if constexpr(std::is_same_v<T, obj::keyword>)
+                       { return !typed_o->sym.ns.empty(); }
+                       else
+                       { return false; }
+                     }
+                   )
+                 );")))
+(def simple-symbol?
+  (fn* simple-symbol? [o]
+    (native/raw "__value = make_box
+                 (
+                   visit_object
+                   (
+                     #{ o }#,
+                     [=](auto const typed_o) -> native_bool
+                     {
+                       using T = typename decltype(typed_o)::value_type;
+
+                       if constexpr(std::is_same_v<T, obj::symbol>)
+                       { return typed_o->ns.empty(); }
+                       else
+                       { return false; }
+                     }
+                   )
+                 );")))
+(def qualified-symbol?
+  (fn* qualified-symbol? [o]
+    (native/raw "__value = make_box
+                 (
+                   visit_object
+                   (
+                     #{ o }#,
+                     [=](auto const typed_o) -> native_bool
+                     {
+                       using T = typename decltype(typed_o)::value_type;
+
+                       if constexpr(std::is_same_v<T, obj::symbol>)
+                       { return !typed_o->ns.empty(); }
+                       else
+                       { return false; }
+                     }
+                   )
+                 );")))
+(def symbol?
+  (fn* symbol? [o]
+    (native/raw "__value = make_box(#{ o }#->type == object_type::symbol)")))
+
+;; Sequences.
 
 (def iterate
-  (fn*
+  (fn* iterate
     [f x]
-    (native/raw "auto callable(#{ f }#->as_callable());
-                 if(!callable)
-                 { throw #{ :not-callable }#; }
-                 __value = make_box<obj::iterator>(const_cast<behavior::callable*>(callable), #{ x }#);")))
+    (native/raw "__value = visit_object
+                 (
+                   #{ f }#,
+                   [=](auto const typed_f) -> object_ptr
+                   {
+                     using T = typename decltype(typed_f)::value_type;
+
+                     if constexpr(std::is_base_of_v<behavior::callable, T>)
+                     { return make_box<obj::iterator>(typed_f, #{ x }#); }
+                     else
+                     { throw #{ (ex-info :not-callable {:f f}) }#; }
+                   }
+                 );")))
 
 (def range
-  (fn*
+  (fn* range
     ([]
      (iterate inc 0))
     ([end]
@@ -444,13 +693,13 @@
      (native/raw "__value = make_box<obj::range>(#{ start }#, #{ end }#, #{ step }#);"))))
 
 (def take
-  (fn*
+  (fn* take
     ; TODO: Transducer.
     ([n]
      )
     ([n coll]
      ; TODO: Lazy version once we have lazy-seq.
-     (let* [take* (fn* [n coll acc]
+     (let* [take* (fn* take* [n coll acc]
                     (if (zero? n)
                       acc
                       (if (empty? coll)
@@ -460,63 +709,110 @@
 
 ; TODO: Higher arities. Needs clojure.core/spread, which needs clojure.core/cons.
 (def apply
-  (fn* [f args]
-    (native/raw "auto const * const c(#{ f }#->as_callable());
-                 if(!c)
-                 { throw #{ :not-callable }#; }
-                 __value = jank::runtime::apply_to(#{ f }#, #{ args }#);")))
+  (fn* apply [f args]
+    (native/raw "__value = runtime::apply_to(#{ f }#, #{ args }#);")))
 
-; Input/output.
+;; Input/output.
 (def print
-  (fn* [o]
+  (fn* print [o]
     (native/raw "__value = jank::runtime::context::print(#{ o }#);")))
 (def println
-  (fn* [& args]
+  (fn* println [& args]
     ; TODO: Move println back into here once I sort out two things:
     ; 1. Escaped strings, so I can do the space in between each
     ; 2. The linker errors showing up when using fmt::format_to here
-    (native/raw "__value = jank::runtime::context::println(#{ args }#->as_seqable());")))
+    (native/raw "__value = jank::runtime::context::println(#{ args }#);")))
 
-; Functions.
+;; Functions.
 (def ifn?
-  (fn* [o]
-    (native/raw "__value = make_box(#{ o }#->as_callable() != nullptr)")))
-(def fn?
-  (fn* [o]
-    (native/raw "__value = make_box(#{ o }#->as_function() != nullptr)")))
+  (fn* ifn? [o]
+    (native/raw "__value = make_box
+                 (
+                   visit_object
+                   (
+                     #{ o }#,
+                     [=](auto const typed_o) -> native_bool
+                     {
+                       using T = typename decltype(typed_o)::value_type;
 
-; Miscellaneous.
+                       if constexpr(std::is_base_of_v<behavior::callable, T>)
+                       { return true; }
+                       else
+                       { return false; }
+                     }
+                   )
+                 );")))
+(def fn?
+  (fn* fn? [o]
+    (native/raw "auto const fn
+                (
+                  #{ o }#->type == object_type::native_function_wrapper
+                  || #{ o }#->type == object_type::jit_function
+                );
+                __value = make_box(fn);")))
+
+;; Miscellaneous.
 ; TODO: This should be a macro.
 (def assert)
 
-; Metadata
+;; Metadata
 (def meta
-  (fn* [o]
-    (native/raw "auto const * const md(#{ o }#->as_metadatable());
-                 if(md == nullptr || md->meta.is_none())
-                 { __value = #{ nil }#; }
-                 else
-                 { __value = md->meta.unwrap(); }")))
-(def with-meta
-  (fn* [o m]
-    (native/raw "auto const * const md(#{ o }#->as_metadatable());
-                 // TODO: Standard exception handling.
-                 if(md == nullptr)
-                 { throw #{ :not-metadatable }#; }
-                 __value = md->with_meta(#{ m }#);")))
-(def reset-meta!
-  (fn* [o m]
-    (native/raw "auto const * const md(#{ o }#->as_metadatable());
-                 // TODO: Standard exception handling.
-                 if(md == nullptr)
-                 { throw #{ :not-metadatable }#; }
-                 auto const meta(behavior::metadatable::validate_meta(#{ m }#));
-                 const_cast<behavior::metadatable*>(md)->meta = meta;
-                 __value = #{ m }#;")))
+  (fn* meta [o]
+    (native/raw "__value = visit_object
+                 (
+                   #{ o }#,
+                   [=](auto const typed_o) -> object_ptr
+                   {
+                     using T = typename decltype(typed_o)::value_type;
 
-; Macros.
+                     if constexpr(behavior::metadatable<T>)
+                     {
+                       if(typed_o->meta.is_none())
+                       { return #{ nil }#; }
+                       return typed_o->meta.unwrap();
+                     }
+                     else
+                     { throw #{ nil }#; }
+                   }
+                 );")))
+(def with-meta
+  (fn* with-meta [o m]
+    (native/raw "__value = visit_object
+                 (
+                   #{ o }#,
+                   [=](auto const typed_o) -> object_ptr
+                   {
+                     using T = typename decltype(typed_o)::value_type;
+
+                     if constexpr(behavior::metadatable<T>)
+                     { return typed_o->with_meta(#{ m }#); }
+                     else
+                     { throw #{ (ex-info :not-metadatable {:o o}) }#; }
+                   }
+                 );")))
+(def reset-meta!
+  (fn* reset-meta! [o m]
+    (native/raw "__value = visit_object
+                 (
+                   #{ o }#,
+                   [=](auto const typed_o) -> object_ptr
+                   {
+                     using T = typename decltype(typed_o)::value_type;
+
+                     if constexpr(behavior::metadatable<T>)
+                     {
+                       auto const meta(behavior::detail::validate_meta(#{ m }#));
+                       typed_o->meta = meta;
+                       return #{ m }#;
+                     }
+                     else
+                     { throw #{ (ex-info :not-metadatable {:o o}) }#; }
+                   }
+                 );")))
+
+;; Macros.
 (def defn
-  (fn* [&form &env fn-name fn-args & body]
+  (fn* defn [&form &env fn-name fn-args & body]
     (list 'do
           ; TODO: Remove this once fn* supports naming.
           (list 'def fn-name)
@@ -549,49 +845,47 @@
 (def benchmark
   ; TODO: Options, following what criterium offers.
   (fn [label fun]
-    (native/raw "auto const * const label_str(#{ (str label) }#->as_string());
-                 auto const * const callable(#{ fun }#->as_callable());
-                 if(!callable)
-                 { throw #{ :not-callable }#; }
-
-                 ankerl::nanobench::Config config;
-                 //config.mTimeUnit = std::chrono::milliseconds{ 1 };
-                 //config.mTimeUnitName = TODO
-                 config.mMinEpochIterations = 500;
-                 config.mOut = &std::cout;
-                 config.mWarmup = 300;
-
-                 ankerl::nanobench::Bench().config(config).run
+    (native/raw "auto const label_str(expect_object<obj::string>(#{ (str label) }#));
+                 visit_object
                  (
-                  static_cast<std::string>(label_str->data),
-                  [&]
-                  {
-                    object_ptr res{ callable->call() };
-                    ankerl::nanobench::doNotOptimizeAway(res);
-                  }
+                   #{ fun }#,
+                   [=](auto const typed_fun)
+                   {
+                     using T = typename decltype(typed_fun)::value_type;
+
+                     if constexpr(std::is_base_of_v<behavior::callable, T>)
+                     {
+                       ankerl::nanobench::Config config;
+                       config.mTimeUnit = std::chrono::milliseconds{ 1 };
+                       //config.mTimeUnitName = TODO
+                       config.mMinEpochIterations = 20;
+                       config.mOut = &std::cout;
+                       config.mWarmup = 10;
+
+                       ankerl::nanobench::Bench().config(config).run
+                       (
+                         static_cast<std::string>(label_str->data),
+                         [&]
+                         {
+                           object_ptr res{ typed_fun->call() };
+                           ankerl::nanobench::doNotOptimizeAway(res);
+                         }
+                       );
+                     }
+                     else
+                     { throw #{ (ex-info :not-callable {:fun fun}) }#; }
+                   }
                  );")))
 
 ;; Extra things that usually come from Java.
 (defn tan [o]
-  (native/raw "auto const n(#{ o }#->as_number());
-               if(!n)
-               { throw #{ :not-a-number }#; }
-               __value = make_box(std::tan(n->get_real()));"))
+  (native/raw "__value = make_box(std::tan(runtime::detail::to_real(#{ o }#)));"))
 
 (defn sqrt [o]
-  (native/raw "auto const n(#{ o }#->as_number());
-               if(!n)
-               { throw #{ :not-a-number }#; }
-               __value = make_box(std::sqrt(n->get_real()));"))
+  (native/raw "__value = make_box(std::sqrt(runtime::detail::to_real(#{ o }#)));"))
 
 (defn abs [o]
-  (native/raw "__value = obj::left_ops(#{ o }#).abs();"))
+  (native/raw "__value = left_ops(#{ o }#).abs();"))
 
 (defn pow [x y]
-  (native/raw "auto const l(#{ x }#->as_number());
-               if(!l)
-               { throw #{ :not-a-number }#; }
-               auto const r(#{ y }#->as_number());
-               if(!r)
-               { throw #{ :not-a-number }#; }
-               __value = make_box(std::pow(l->get_real(), r->get_real()));"))
+  (native/raw "__value = make_box(std::pow(runtime::detail::to_real(#{ x }#), runtime::detail::to_real(#{ y }#)));"))

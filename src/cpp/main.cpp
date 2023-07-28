@@ -4,6 +4,8 @@
 #include <cling/Interpreter/Interpreter.h>
 #include <cling/Interpreter/Value.h>
 
+#include <jank/runtime/detail/object_util.hpp>
+
 #include <jank/util/mapped_file.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
@@ -21,6 +23,7 @@ int main(int const argc, char const **argv)
     return 1;
   }
 
+  GC_set_all_interior_pointers(1);
   GC_enable();
   /* TODO: This crashes now, with LLVM13. Looks like it's cleaning up things it shouldn't. */
   //GC_enable_incremental();
@@ -47,14 +50,15 @@ int main(int const argc, char const **argv)
     //    an_prc.analyze(p_prc.begin(), p_prc.end()).expect_ok_move()
     //  };
     //  std::cout << cg_prc.declaration_str() << std::endl;
+    //  return 0;
     //}
 
-    std::cout << rt_ctx.eval_file(file, jit_prc)->to_string() << std::endl;
+    std::cout << jank::runtime::detail::to_string(rt_ctx.eval_file(file, jit_prc)) << std::endl;
   }
   catch(std::exception const &e)
   { fmt::print("Exception: {}", e.what()); }
   catch(jank::runtime::object_ptr const o)
-  { fmt::print("Exception: {}", o->to_string()); }
+  { fmt::print("Exception: {}", jank::runtime::detail::to_string(o)); }
   catch(jank::native_string const &s)
   { fmt::print("Exception: {}", s); }
   catch(jank::read::error const &e)

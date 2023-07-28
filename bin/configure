@@ -11,4 +11,12 @@ build_dir="${here}/../build"
 export CC="${CC:-clang}"
 export CXX="${CXX:-clang++}"
 
-cmake -S . -B "${build_dir}" "$@"
+# If stdout is a terminal, let's get some colors enabled.
+if [[ -t 1 ]];
+then
+  export CMAKE_COLOR_DIAGNOSTICS=ON
+else
+  export CMAKE_COLOR_DIAGNOSTICS=OFF
+fi
+
+cmake -S . -B "${build_dir}" -DCMAKE_COLOR_DIAGNOSTICS="${CMAKE_COLOR_DIAGNOSTICS}" "$@"

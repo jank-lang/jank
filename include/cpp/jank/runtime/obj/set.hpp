@@ -1,42 +1,49 @@
 #pragma once
 
-#include <jank/runtime/behavior/seqable.hpp>
-#include <jank/runtime/behavior/countable.hpp>
-#include <jank/runtime/behavior/metadatable.hpp>
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/persistent_set_sequence.hpp>
 
-namespace jank::runtime::obj
+namespace jank::runtime
 {
-  struct set
-    :
-      virtual object,
-      behavior::seqable, behavior::countable,
-      behavior::metadatable
+  template <>
+  struct static_object<object_type::set> : gc
   {
+    using value_type = runtime::detail::persistent_set;
+
     static constexpr bool pointer_free{ false };
 
-    set() = default;
-    set(set &&) = default;
-    set(set const &) = default;
-    set(runtime::detail::persistent_set &&d);
-    set(runtime::detail::persistent_set const &d);
-    ~set() = default;
+    static_object() = default;
+    static_object(static_object &&) = default;
+    static_object(static_object const &) = default;
+    static_object(native_box<static_object> meta);
+    static_object(value_type &&d);
+    static_object(value_type const &d);
+    template <typename... Args>
+    static_object(Args &&...args)
+      : data{ std::forward<Args>(args)... }
+    { }
 
-    native_bool equal(object const &) const final;
-    native_string to_string() const final;
-    void to_string(fmt::memory_buffer &buff) const final;
-    native_integer to_hash() const final;
+    /* behavior::objectable */
+    native_bool equal(object const &) const;
+    native_string to_string() const;
+    void to_string(fmt::memory_buffer &buff) const;
+    native_integer to_hash() const;
 
-    set const* as_set() const final;
-    behavior::seqable const* as_seqable() const final;
+    /* behavior::metadatable */
+    object_ptr with_meta(object_ptr m) const;
 
-    behavior::sequence_ptr seq() const final;
-    behavior::sequence_ptr fresh_seq() const final;
+    /* behavior::seqable */
+    obj::persistent_set_sequence_ptr seq() const;
+    obj::persistent_set_sequence_ptr fresh_seq() const;
 
-    size_t count() const final;
+    /* behavior::countable */
+    size_t count() const;
 
-    object_ptr with_meta(object_ptr m) const final;
-    behavior::metadatable const* as_metadatable() const final;
+    /* behavior::consable */
+    native_box<static_object> cons(object_ptr head);
 
-    runtime::detail::persistent_set data;
+    object base{ object_type::set };
+    value_type data;
+    option<obj::map_ptr> meta;
   };
 }

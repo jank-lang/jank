@@ -3,6 +3,7 @@
 #include <fmt/core.h>
 
 #include <jank/runtime/util.hpp>
+#include <jank/runtime/behavior/numberable.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/local_frame.hpp>
 
@@ -92,7 +93,7 @@ namespace jank::analyze
     if(qualified_sym->ns.empty())
     {
       auto const state(rt_ctx.get_thread_state());
-      qualified_sym->ns = state.current_ns->get_root()->as_ns()->name->name;
+      qualified_sym->ns = runtime::expect_object<runtime::ns>(state.current_ns->get_root())->name->name;
     }
     /* We use unique native names, just so var names don't clash with the underlying C++ API. */
     lifted_var lv
@@ -119,9 +120,22 @@ namespace jank::analyze
     { return; }
 
     auto name(runtime::context::unique_symbol("const"));
-    option<runtime::obj::symbol> unboxed_name;
-    if(constant->as_number())
-    { unboxed_name = runtime::obj::symbol{ name.ns, name.name + "__unboxed" }; }
+    option<runtime::obj::symbol> unboxed_name
+    {
+      runtime::visit_object
+      (
+        constant,
+        [&](auto const typed_constant) -> option<runtime::obj::symbol>
+        {
+          using T = typename decltype(typed_constant)::value_type;
+
+          if constexpr(runtime::behavior::numberable<T>)
+          { return runtime::obj::symbol{ name.ns, name.name + "__unboxed" }; }
+          else
+          { return none; }
+        }
+      )
+    };
 
     lifted_constant l{ std::move(name), std::move(unboxed_name), constant };
     closest_fn.lifted_constants.emplace(constant, std::move(l));

@@ -4,24 +4,22 @@
 
 namespace jank::runtime
 {
-  using object_ptr = native_box<struct object>;
-
   namespace obj
-  { using map_ptr = native_box<struct map>; }
+  {
+    using map = static_object<object_type::map>;
+    using map_ptr = native_box<map>;
+  }
 
   namespace behavior
   {
-    struct metadatable
+    template <typename T>
+    concept metadatable = requires(T * const t)
     {
-      virtual ~metadatable() = default;
-
-      /* This can't be defined in the base, since it needs to clone the current object.
-       * That requires knowledge of the most derived type. */
-      virtual object_ptr with_meta(object_ptr) const = 0;
-
-      static obj::map_ptr validate_meta(object_ptr);
-
-      option<obj::map_ptr> meta;
+      { t->with_meta(object_ptr{}) } -> std::convertible_to<object_ptr>;
+      { t->meta } -> std::convertible_to<option<obj::map_ptr>>;
     };
+
+    namespace detail
+    { obj::map_ptr validate_meta(object_ptr const m); }
   }
 }

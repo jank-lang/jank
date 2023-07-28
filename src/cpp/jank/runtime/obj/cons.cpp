@@ -1,62 +1,117 @@
 #include <jank/runtime/obj/cons.hpp>
 #include <jank/runtime/seq.hpp>
 
-namespace jank::runtime::obj
+namespace jank::runtime
 {
-  cons::cons(object_ptr const head, behavior::sequence_ptr const tail)
+  obj::cons::static_object(object_ptr const head, object_ptr const tail)
     : head{ head }, tail{ tail }
   { }
 
-  behavior::sequence_ptr cons::seq() const
-  { return static_cast<sequence_ptr>(const_cast<cons*>(this)); }
-  behavior::sequence_ptr cons::fresh_seq() const
-  { return jank::make_box<cons>(head, tail); }
+  obj::cons_ptr obj::cons::seq()
+  { return this; }
+  obj::cons_ptr obj::cons::fresh_seq() const
+  { return jank::make_box<obj::cons>(head, tail); }
 
-  object_ptr cons::first() const
+  object_ptr obj::cons::first() const
   { return head; }
 
-  behavior::sequence_ptr cons::next() const
+  object_ptr obj::cons::next() const
   { return tail; }
 
-  behavior::sequence_ptr cons::next_in_place()
+  obj::cons_ptr obj::cons::next_in_place()
   {
     if(!tail)
     { return nullptr; }
 
-    head = tail->first();
-    /* TODO: Can this be in place? */
-    tail = tail->next();
+    visit_object
+    (
+      tail,
+      [&](auto const typed_tail)
+      {
+        using T = typename decltype(typed_tail)::value_type;
+
+        if constexpr(behavior::sequenceable<T>)
+        {
+          head = typed_tail->first();
+          /* TODO: Can this be in place? */
+          tail = typed_tail->next();
+        }
+        else
+        { throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_tail->to_string()) }; }
+      }
+    );
 
     return this;
   }
 
-  object_ptr cons::next_in_place_first()
+  object_ptr obj::cons::next_in_place_first()
   {
     if(!tail)
     { return nullptr; }
 
-    head = tail->first();
-    /* TODO: Can this be in place? */
-    tail = tail->next();
+    visit_object
+    (
+      tail,
+      [&](auto const typed_tail)
+      {
+        using T = typename decltype(typed_tail)::value_type;
+
+        if constexpr(behavior::sequenceable<T>)
+        {
+          head = typed_tail->first();
+          /* TODO: Can this be in place? */
+          tail = typed_tail->next();
+        }
+        else
+        { throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_tail->to_string()) }; }
+      }
+    );
 
     return head;
   }
 
-  void cons::to_string(fmt::memory_buffer &buff) const
+  native_bool obj::cons::equal(object const &o) const
+  {
+    return visit_object
+    (
+      &o,
+      [this](auto const typed_o)
+      {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(!behavior::seqable<T>)
+        { return false; }
+        else
+        {
+          auto seq(typed_o->fresh_seq());
+          for(auto it(fresh_seq()); it != nullptr; seq = seq->next_in_place(), seq = seq->next_in_place())
+          {
+            if(seq == nullptr || !runtime::detail::equal(it, seq->first()))
+            { return false; }
+          }
+          return true;
+        }
+      }
+    );
+  }
+
+  void obj::cons::to_string(fmt::memory_buffer &buff)
   { runtime::detail::to_string(seq(), buff); }
-  native_string cons::to_string() const
+
+  native_string obj::cons::to_string()
   { return runtime::detail::to_string(seq()); }
-  native_integer cons::to_hash() const
+
+  native_integer obj::cons::to_hash() const
   {
     if(hash != 0)
     { return static_cast<native_integer>(hash); }
 
-    /* TODO: Do this without going through the seq twice? */
-    hash = 1 + runtime::detail::sequence_length(tail);
-    auto next(tail->next());
-    hash = runtime::detail::hash_combine(hash, next);
-    for(auto i(next->next()); i != nullptr; i = i->next_in_place())
-    { hash = runtime::detail::hash_combine(hash, i); }
+    for(auto it(fresh_seq()); it != nullptr; it = it->next_in_place())
+    { hash = runtime::detail::hash_combine(hash, *it->first()); }
+
     return static_cast<native_integer>(hash);
   }
+
+  obj::cons_ptr obj::cons::cons(object_ptr head) const
+  { return make_box<obj::cons>(head, this); }
 }

@@ -2,27 +2,50 @@
 
 #include <jank/runtime/behavior/seqable.hpp>
 
-namespace jank::runtime::obj
+namespace jank::runtime
 {
-  struct cons : behavior::sequence
+  template <>
+  struct static_object<object_type::cons> : gc
   {
     static constexpr bool pointer_free{ false };
 
-    cons(object_ptr const head, behavior::sequence_ptr const tail);
+    static_object() = default;
+    static_object(static_object &&) = default;
+    static_object(static_object const &) = default;
+    static_object(object &&base);
+    static_object(object_ptr const head, object_ptr const tail);
 
-    behavior::sequence_ptr seq() const final;
-    behavior::sequence_ptr fresh_seq() const final;
-    object_ptr first() const final;
-    behavior::sequence_ptr next() const final;
-    behavior::sequence_ptr next_in_place() final;
-    object_ptr next_in_place_first() final;
+    /* behavior::objectable */
+    native_bool equal(object const &) const;
+    native_string to_string();
+    void to_string(fmt::memory_buffer &buff);
+    native_integer to_hash() const;
 
-    void to_string(fmt::memory_buffer &buff) const final;
-    native_string to_string() const final;
-    native_integer to_hash() const final;
+    /* behavior::metadatable */
+    object_ptr with_meta(object_ptr m) const;
 
+    /* behavior::seqable */
+    native_box<static_object> seq();
+    native_box<static_object> fresh_seq() const;
+
+    /* behavior::sequenceable */
+    object_ptr first() const;
+    object_ptr next() const;
+    native_box<static_object> next_in_place();
+    object_ptr next_in_place_first();
+
+    /* behavior::consable */
+    native_box<static_object> cons(object_ptr head) const;
+
+    object base{ object_type::cons };
     object_ptr head{};
-    behavior::sequence_ptr tail{};
+    object_ptr tail{};
     mutable size_t hash{};
   };
+
+  namespace obj
+  {
+    using cons = static_object<object_type::cons>;
+    using cons_ptr = native_box<cons>;
+  }
 }

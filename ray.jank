@@ -19,7 +19,7 @@
 (defmacro doseq [bindings & body]
   (let [binding-name (first bindings)
         binding-seq (second bindings)]
-    (list (list 'fn '[__gen_acc]
+    (list (list 'fn 'doseq '[__gen_acc]
                 (list 'if (list 'empty? '__gen_acc)
                       nil
                       (cons 'let
@@ -176,7 +176,7 @@
                              front-face?)))))))
 
 (defn hit-all [t-min t-max ray hittables]
-  (get (reduce* (fn [acc hittable]
+  (get (reduce* (fn hit-all-reduce [acc hittable]
                   (let [hit-info (hit-sphere hittable
                                              t-min
                                              (get acc :closest-so-far)
@@ -259,7 +259,7 @@
                   (vec3-scale (vec3-create 0.5 0.7 1.0) t))))))
 
 (defn rand-scene! []
-  (reduce* (fn [acc i]
+  (reduce* (fn rand-scene-reduce [acc i]
              (let [x (- (mod i 21) 10)
                    z (- (/ i 21) 6)
                    choose-mat (rand)
@@ -346,7 +346,7 @@
         (println 255)
         (doseq [y y-counter]
           (doseq [x x-counter]
-            (let [sample (reduce* (fn [acc _sample-count]
+            (let [sample (reduce* (fn main-reduce [acc _sample-count]
                                     (let [u (/ (+ x (rand)) (- image-width 1))
                                           v (/ (+ y (rand)) (- image-height 1))
                                           rd (vec3-scale (vec3-rand-in-unit-disk) lens-radius)

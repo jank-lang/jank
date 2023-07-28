@@ -9,17 +9,29 @@ namespace jank::runtime
   {
     bool truthy(object_ptr const o)
     {
-      if(o->as_nil())
+      if(!o)
       { return false; }
-      else if(auto const * const b = o->as_boolean())
-      { return b->data; }
 
-      return true;
+      return visit_object
+      (
+        o,
+        [](auto const typed_o)
+        {
+          using T = typename decltype(typed_o)::value_type;
+
+          if constexpr(std::same_as<T, obj::nil>)
+          { return false; }
+          else if constexpr(std::same_as<T, obj::boolean>)
+          { return typed_o->data; }
+          else
+          { return true; }
+        }
+      );
     }
     bool truthy(obj::nil_ptr)
     { return false; }
     bool truthy(obj::boolean_ptr const o)
-    { return o->data; }
+    { return o && o->data; }
     bool truthy(native_bool const o)
     { return o; }
   }
@@ -70,10 +82,18 @@ namespace jank::runtime
   /* TODO: Support symbols and other data; Clojure takes in anything and passes it through str. */
   object_ptr munge(object_ptr o)
   {
-    auto const * const str(o->as_string());
-    if(str == nullptr)
-    { throw "munging only supported for strings right now"; }
+    return visit_object
+    (
+      o,
+      [](auto const typed_o) -> object_ptr
+      {
+        using T = typename decltype(typed_o)::value_type;
 
-    return jank::make_box<obj::string>(munge(str->data));
+        if constexpr(std::same_as<T, obj::string>)
+        { return jank::make_box<obj::string>(munge(typed_o->data)); }
+        else
+        { throw "munging only supported for strings right now"; }
+      }
+    );
   }
 }

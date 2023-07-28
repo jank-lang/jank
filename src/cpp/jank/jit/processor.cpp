@@ -1,6 +1,7 @@
 #include <cstdlib>
 
 #include <cling/Interpreter/Value.h>
+#include <clang/AST/Type.h>
 
 #include <jank/util/process_location.hpp>
 #include <jank/util/make_array.hpp>
@@ -84,9 +85,9 @@ namespace jank::jit
         "clang++", "-std=c++17",
         "-DHAVE_CXX14=1", "-DIMMER_HAS_LIBGC=1",
         "-include-pch", pch_path_str.c_str(),
-        "-isystem", include_path.c_str()
+        "-isystem", include_path.c_str(),
 
-        //"-O0", "-ffast-math", "-march=native"
+        "-O2", "-ffast-math", "-march=native"
       )
     );
     interpreter = std::make_unique<cling::Interpreter>(args.size(), args.data(), llvm_resource_path_str.c_str());
@@ -108,11 +109,13 @@ namespace jank::jit
     { return ok(none); }
 
     cling::Value v;
-    auto const result(interpreter->evaluate(static_cast<std::string>(expr), v));
+    /* TODO: Format this for erasure during codegen. */
+    auto const result(interpreter->evaluate(fmt::format("&{}->base", expr), v));
     if(result != cling::Interpreter::CompilationResult::kSuccess)
     { return err("compilation error"); }
 
-    auto * const ret_val(v.castAs<runtime::object_ptr>());
+    // clang::QualType::getFromOpaquePtr(v.m_Type).getAsString()
+    auto const ret_val(v.castAs<runtime::object*>());
     return ok(ret_val);
   }
 
