@@ -6,9 +6,9 @@ namespace jank::runtime::detail
   {
     return visit_object
     (
-      o,
       [](auto const typed_o)
-      { return typed_o->to_string(); }
+      { return typed_o->to_string(); },
+      o
     );
   }
 
@@ -16,9 +16,9 @@ namespace jank::runtime::detail
   {
     visit_object
     (
-      o,
       [&](auto const typed_o)
-      { typed_o->to_string(buff); }
+      { typed_o->to_string(buff); },
+      o
     );
   }
 
@@ -26,9 +26,9 @@ namespace jank::runtime::detail
   {
     return visit_object
     (
-      o,
       [](auto const typed_o)
-      { return typed_o->to_hash(); }
+      { return typed_o->to_hash(); },
+      o
     );
   }
 
@@ -36,7 +36,6 @@ namespace jank::runtime::detail
   {
     return visit_object
     (
-      o,
       [](auto const typed_o) -> native_real
       {
         using T = typename decltype(typed_o)::value_type;
@@ -45,7 +44,8 @@ namespace jank::runtime::detail
         { return typed_o->to_real(); }
         else
         { throw std::runtime_error{ fmt::format("not a number: {}", typed_o->to_string()) }; }
-      }
+      },
+      o
     );
   }
 
@@ -53,9 +53,9 @@ namespace jank::runtime::detail
   {
     return visit_object
     (
-      lhs,
       [&](auto const typed_lhs)
-      { return typed_lhs->equal(*rhs); }
+      { return typed_lhs->equal(*rhs); },
+      lhs
     );
   }
 }
@@ -66,9 +66,9 @@ namespace std
   {
     return jank::runtime::visit_object
     (
-      o,
       [&](auto const typed_o)
-      { return typed_o->to_hash(); }
+      { return typed_o->to_hash(); },
+      o
     );
   }
 
@@ -87,9 +87,9 @@ namespace std
 
     return jank::runtime::visit_object
     (
-      lhs,
       [&](auto const typed_lhs)
-      { return typed_lhs->equal(*rhs); }
+      { return typed_lhs->equal(*rhs); },
+      lhs
     );
   }
 }

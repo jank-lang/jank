@@ -35,7 +35,6 @@
       true
       (native/raw "__value = visit_object
                    (
-                     #{ o }#,
                      [=](auto const typed_o) -> obj::boolean_ptr
                      {
                        using T = typename decltype(typed_o)::value_type;
@@ -44,7 +43,8 @@
                        { return make_box(typed_o->seq() == nullptr); }
                        else
                        { throw #{ (ex-info :not-seqable {:o o}) }#; }
-                     }
+                     },
+                     #{ o }#
                    );"))))
 
 (def count
@@ -59,7 +59,6 @@
 ;  (fn* seq [o]
 ;    (native/raw "__value = visit_object
 ;                 (
-;                   #{ o }#,
 ;                   [=](auto const typed_o) -> object_ptr
 ;                   {
 ;                     using T = typename decltype(typed_o)::value_type;
@@ -76,13 +75,13 @@
 ;                     }
 ;                     else
 ;                     { throw #{ (ex-info :not-seqable {:o o}) }#; }
-;                   }
+;                   },
+;                   #{ o }#
 ;                 );")))
 ;(def fresh-seq
 ;  (fn* fresh-seq [o]
 ;    (native/raw "__value = visit_object
 ;                 (
-;                   #{ o }#,
 ;                   [=](auto const typed_o) -> object_ptr
 ;                   {
 ;                     using T = typename decltype(typed_o)::value_type;
@@ -99,7 +98,8 @@
 ;                     }
 ;                     else
 ;                     { throw #{ (ex-info :not-seqable {:o o}) }#; }
-;                   }
+;                   },
+;                   #{ o }#
 ;                 );")))
 (def first
   (fn* first [o]
@@ -122,7 +122,6 @@
       '()
       (native/raw "__value = visit_object
                    (
-                     #{ o }#,
                      [=](auto const typed_o) -> object_ptr
                      {
                        using T = typename decltype(typed_o)::value_type;
@@ -139,13 +138,13 @@
                        }
                        else
                        { throw #{ (ex-info :not-seqable {:o o}) }#; }
-                     }
+                     },
+                     #{ o }#
                    );"))))
 (def cons
   (fn* cons [head tail]
     (native/raw "__value = visit_object
                  (
-                   #{ tail }#,
                    [=](auto const typed_tail) -> object_ptr
                    {
                      using T = typename decltype(typed_tail)::value_type;
@@ -154,13 +153,13 @@
                      { return make_box<jank::runtime::obj::cons>(#{ head }#, typed_tail->seq()); }
                      else
                      { throw #{ (ex-info :invalid-cons-tail {:head head :tail tail}) }#; }
-                   }
+                   },
+                   #{ tail }#
                  );")))
 (def list
   (fn* list [& items]
     (native/raw "__value = visit_object
                  (
-                   #{ items }#,
                    [=](auto const typed_items) -> object_ptr
                    {
                      using T = typename decltype(typed_items)::value_type;
@@ -169,7 +168,8 @@
                      { return jank::runtime::obj::list::create(typed_items); }
                      else
                      { throw #{ (ex-info :invalid-seq {:items items}) }#; }
-                   }
+                   },
+                   #{ items }#
                  );")))
 
 ;; Vectors.
@@ -177,7 +177,6 @@
   (fn* vec [coll]
     (native/raw "__value = visit_object
                  (
-                   #{ coll }#,
                    [=](auto const typed_coll) -> object_ptr
                    {
                      using T = typename decltype(typed_coll)::value_type;
@@ -186,7 +185,8 @@
                      { return jank::runtime::obj::vector::create(typed_coll); }
                      else
                      { throw #{ (ex-info :invalid-seq {:coll coll}) }#; }
-                   }
+                   },
+                   #{ coll }#
                  );")))
 
 (def conj)
@@ -217,7 +217,6 @@
     ([o & args]
      (native/raw "__value = visit_object
                  (
-                   #{ args }#,
                    [=](auto const typed_args) -> object_ptr
                    {
                      using T = typename decltype(typed_args)::value_type;
@@ -234,7 +233,8 @@
                      }
                      else
                      { throw #{ (ex-info :invalid-seq {:args args}) }#; }
-                   }
+                   },
+                   #{ args }#
                  );"))))
 
 ;; Maps.
@@ -274,7 +274,6 @@
     ([f val coll]
      (native/raw "__value = visit_object
                  (
-                   #{ coll }#,
                    [=](auto const typed_coll) -> object_ptr
                    {
                      using T = typename decltype(typed_coll)::value_type;
@@ -288,7 +287,8 @@
                      }
                      else
                      { throw #{ (ex-info :invalid-seq {:coll coll}) }#; }
-                   }
+                   },
+                   #{ coll }#
                  );"))))
 
 (def reverse
@@ -304,9 +304,9 @@
     ([x]
      x)
     ([l r]
-     (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).add();"))
+     (native/raw "__value = add(#{ l }#, #{ r }#);"))
     ([l r & args]
-     (let* [res (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).add();")]
+     (let* [res (native/raw "__value = add(#{ l }#, #{ r }#);")]
        (if (empty? args)
          res
          (recur res (first args) (next args)))))))
@@ -317,9 +317,9 @@
     ([x]
      (- 0 x))
     ([l r]
-     (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).subtract();"))
+     (native/raw "__value = sub(#{ l }#, #{ r }#);"))
     ([l r & args]
-     (let* [res (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).subtract();")]
+     (let* [res (native/raw "__value = sub(#{ l }#, #{ r }#);")]
        (if (empty? args)
          res
          (recur res (first args) (next args)))))))
@@ -331,9 +331,9 @@
     ([x]
      x)
     ([l r]
-     (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).multiply();"))
+     (native/raw "__value = mul(#{ l }#, #{ r }#);"))
     ([l r & args]
-     (let* [res (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).multiply();")]
+     (let* [res (native/raw "__value = mul(#{ l }#, #{ r }#);")]
        (if (empty? args)
          res
          (recur res (first args) (next args)))))))
@@ -344,9 +344,9 @@
     ([x]
      (/ 1 x))
     ([l r]
-     (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).divide();"))
+     (native/raw "__value = div(#{ l }#, #{ r }#);"))
     ([l r & args]
-     (let* [res (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).divide();")]
+     (let* [res (native/raw "__value = div(#{ l }#, #{ r }#);")]
        (if (empty? args)
          res
          (recur res (first args) (next args)))))))
@@ -369,12 +369,12 @@
     ([x]
      true)
     ([l r]
-     (native/raw "__value = make_box(right_ops(#{ r }#).combine(left_ops(#{ l }#)).lt());"))
+     (native/raw "__value = make_box(lt(#{ l }#, #{ r }#));"))
     ([l r & args]
-     (if (native/raw "__value = make_box(right_ops(#{ r }#).combine(left_ops(#{ l }#)).lt());")
+     (if (native/raw "__value = make_box(lt(#{ l }#, #{ r }#));")
        (if (next args)
          (recur r (first args) (next args))
-         (native/raw "__value = make_box(right_ops(#{ (first args) }#).combine(left_ops(#{ r }#)).lt());"))
+         (native/raw "__value = make_box(lt(#{ r }#, #{ (first args) }#));"))
        false))))
 
 (def <=
@@ -382,12 +382,12 @@
     ([x]
      true)
     ([l r]
-     (native/raw "__value = make_box(right_ops(#{ r }#).combine(left_ops(#{ l }#)).lte());"))
+     (native/raw "__value = make_box(lte(#{ l }#, #{ r }#));"))
     ([l r & args]
-     (if (native/raw "__value = make_box(right_ops(#{ r }#).combine(left_ops(#{ l }#)).lte());")
+     (if (native/raw "__value = make_box(lte(#{ l }#, #{ r }#));")
        (if (next args)
          (recur r (first args) (next args))
-         (native/raw "__value = make_box(right_ops(#{ (first args) }#).combine(left_ops(#{ r }#)).lte());"))
+         (native/raw "__value = make_box(lte(#{ r }#, #{ (first args) }#));"))
        false))))
 
 (def >
@@ -395,12 +395,12 @@
     ([x]
      true)
     ([l r]
-     (native/raw "__value = make_box(right_ops(#{ l }#).combine(left_ops(#{ r }#)).lt());"))
+     (native/raw "__value = make_box(lt(#{ r }#, #{ l }#));"))
     ([l r & args]
-     (if (native/raw "__value = make_box(right_ops(#{ l }#).combine(left_ops(#{ r }#)).lt());")
+     (if (native/raw "__value = make_box(lt(#{ r }#, #{ l }#));")
        (if (next args)
          (recur r (first args) (next args))
-         (native/raw "__value = make_box(right_ops(#{ r }#).combine(left_ops(#{ (first args) }#)).lt());"))
+         (native/raw "__value = make_box(lt(#{ (first args) }#, #{ r }#));"))
        false))))
 
 (def >=
@@ -408,12 +408,12 @@
     ([x]
      true)
     ([l r]
-     (native/raw "__value = make_box(right_ops(#{ l }#).combine(left_ops(#{ r }#)).lte());"))
+     (native/raw "__value = make_box(lte(#{ r }#, #{ l }#));"))
     ([l r & args]
-     (if (native/raw "__value = make_box(right_ops(#{ l }#).combine(left_ops(#{ r }#)).lte());")
+     (if (native/raw "__value = make_box(lte(#{ r }#, #{ l }#));")
        (if (next args)
          (recur r (first args) (next args))
-         (native/raw "__value = make_box(right_ops(#{ r }#).combine(left_ops(#{ (first args) }#)).lte());"))
+         (native/raw "__value = make_box(lte(#{ (first args) }#, #{ r }#));"))
        false))))
 
 (def min
@@ -421,9 +421,9 @@
     ([x]
      x)
     ([l r]
-     (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).min();"))
+     (native/raw "__value = min(#{ l }#, #{ r }#);"))
     ([l r & args]
-     (let* [res (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).min();")]
+     (let* [res (native/raw "__value = min(#{ l }#, #{ r }#);")]
        (if (empty? args)
          res
          (recur res (first args) (next args)))))))
@@ -433,33 +433,33 @@
     ([x]
      x)
     ([l r]
-     (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).max();"))
+     (native/raw "__value = max(#{ l }#, #{ r }#);"))
     ([l r & args]
-     (let* [res (native/raw "__value = right_ops(#{ r }#).combine(left_ops(#{ l }#)).max();")]
+     (let* [res (native/raw "__value = max(#{ l }#, #{ r }#);")]
        (if (empty? args)
          res
          (recur res (first args) (next args)))))))
 
 (def inc
   (fn* inc [n]
-    (native/raw "__value = left_ops(#{ n }#).inc();")))
+    (native/raw "__value = inc(#{ n }#);")))
 (def dec
   (fn* dec [n]
-    (native/raw "__value = left_ops(#{ n }#).dec();")))
+    (native/raw "__value = dec(#{ n }#);")))
 
 (def pos?
   (fn* pos? [n]
-    (native/raw "__value = make_box(left_ops(#{ n }#).is_positive());")))
+    (native/raw "__value = make_box(is_pos(#{ n }#));")))
 (def neg?
   (fn* neg? [n]
-    (native/raw "__value = make_box(left_ops(#{ n }#).is_negative());")))
+    (native/raw "__value = make_box(is_neg(#{ n }#));")))
 (def zero?
   (fn* zero? [n]
-    (native/raw "__value = make_box(left_ops(#{ n }#).is_zero());")))
+    (native/raw "__value = make_box(is_zero(#{ n }#));")))
 
 (def rem
   (fn* rem [num div]
-    (native/raw "__value = right_ops(#{ div }#).combine(left_ops(#{ num }#)).remainder();")))
+    (native/raw "__value = rem(#{ num }#, #{ div }#);")))
 (def mod
   (fn* mod [num div]
     (let* [m (rem num div)]
@@ -486,7 +486,6 @@
                  (
                    visit_object
                    (
-                     #{ o }#,
                      [=](auto const typed_o) -> native_bool
                      {
                        using T = typename decltype(typed_o)::value_type;
@@ -495,35 +494,20 @@
                        { return true; }
                        else
                        { return false; }
-                     }
+                     },
+                     #{ o }#
                    )
                  );")))
 
 (def int
   (fn* int [o]
-    (native/raw "__value = make_box
-                 (
-                   visit_object
-                   (
-                     #{ o }#,
-                     [=](auto const typed_o) -> native_integer
-                     {
-                       using T = typename decltype(typed_o)::value_type;
-
-                       if constexpr(behavior::numberable<T>)
-                       { return typed_o->to_integer(); }
-                       else
-                       { throw #{ (ex-info :not-a-number {:o o}) }#; }
-                     }
-                   )
-                 );")))
+    (native/raw "__value = make_box(to_int(#{ o }#));")))
 (def float
   (fn* float [o]
     (native/raw "__value = make_box
                  (
                    visit_object
                    (
-                     #{ o }#,
                      [=](auto const typed_o) -> native_real
                      {
                        using T = typename decltype(typed_o)::value_type;
@@ -532,7 +516,8 @@
                        { return typed_o->to_real(); }
                        else
                        { throw #{ (ex-info :not-a-number {:o o}) }#; }
-                     }
+                     },
+                     #{ o }#
                    )
                  );")))
 
@@ -542,7 +527,6 @@
                  (
                    visit_object
                    (
-                     #{ o }#,
                      [=](auto const typed_o) -> native_bool
                      {
                        using T = typename decltype(typed_o)::value_type;
@@ -551,7 +535,8 @@
                        { return typed_o->data % 2 == 0; }
                        else
                        { throw #{ (ex-info :not-an-integer {:o o}) }#; }
-                     }
+                     },
+                     #{ o }#
                    )
                  );")))
 (def odd?
@@ -560,7 +545,6 @@
                  (
                    visit_object
                    (
-                     #{ o }#,
                      [=](auto const typed_o) -> native_bool
                      {
                        using T = typename decltype(typed_o)::value_type;
@@ -569,7 +553,8 @@
                        { return typed_o->data % 2 == 1; }
                        else
                        { throw #{ (ex-info :not-an-integer {:o o}) }#; }
-                     }
+                     },
+                     #{ o }#
                    )
                  );")))
 
@@ -592,7 +577,6 @@
                  (
                    visit_object
                    (
-                     #{ o }#,
                      [=](auto const typed_o) -> native_bool
                      {
                        using T = typename decltype(typed_o)::value_type;
@@ -601,7 +585,8 @@
                        { return typed_o->sym.ns.empty(); }
                        else
                        { return false; }
-                     }
+                     },
+                     #{ o }#
                    )
                  );")))
 (def qualified-keyword?
@@ -610,7 +595,6 @@
                  (
                    visit_object
                    (
-                     #{ o }#,
                      [=](auto const typed_o) -> native_bool
                      {
                        using T = typename decltype(typed_o)::value_type;
@@ -619,7 +603,8 @@
                        { return !typed_o->sym.ns.empty(); }
                        else
                        { return false; }
-                     }
+                     },
+                     #{ o }#
                    )
                  );")))
 (def simple-symbol?
@@ -628,7 +613,6 @@
                  (
                    visit_object
                    (
-                     #{ o }#,
                      [=](auto const typed_o) -> native_bool
                      {
                        using T = typename decltype(typed_o)::value_type;
@@ -637,7 +621,8 @@
                        { return typed_o->ns.empty(); }
                        else
                        { return false; }
-                     }
+                     },
+                     #{ o }#
                    )
                  );")))
 (def qualified-symbol?
@@ -646,7 +631,6 @@
                  (
                    visit_object
                    (
-                     #{ o }#,
                      [=](auto const typed_o) -> native_bool
                      {
                        using T = typename decltype(typed_o)::value_type;
@@ -655,7 +639,8 @@
                        { return !typed_o->ns.empty(); }
                        else
                        { return false; }
-                     }
+                     },
+                     #{ o }#
                    )
                  );")))
 (def symbol?
@@ -669,7 +654,6 @@
     [f x]
     (native/raw "__value = visit_object
                  (
-                   #{ f }#,
                    [=](auto const typed_f) -> object_ptr
                    {
                      using T = typename decltype(typed_f)::value_type;
@@ -678,7 +662,8 @@
                      { return make_box<obj::iterator>(typed_f, #{ x }#); }
                      else
                      { throw #{ (ex-info :not-callable {:f f}) }#; }
-                   }
+                   },
+                   #{ f }#
                  );")))
 
 (def range
@@ -730,7 +715,6 @@
                  (
                    visit_object
                    (
-                     #{ o }#,
                      [=](auto const typed_o) -> native_bool
                      {
                        using T = typename decltype(typed_o)::value_type;
@@ -739,7 +723,8 @@
                        { return true; }
                        else
                        { return false; }
-                     }
+                     },
+                     #{ o }#
                    )
                  );")))
 (def fn?
@@ -760,7 +745,6 @@
   (fn* meta [o]
     (native/raw "__value = visit_object
                  (
-                   #{ o }#,
                    [=](auto const typed_o) -> object_ptr
                    {
                      using T = typename decltype(typed_o)::value_type;
@@ -773,13 +757,13 @@
                      }
                      else
                      { throw #{ nil }#; }
-                   }
+                   },
+                   #{ o }#
                  );")))
 (def with-meta
   (fn* with-meta [o m]
     (native/raw "__value = visit_object
                  (
-                   #{ o }#,
                    [=](auto const typed_o) -> object_ptr
                    {
                      using T = typename decltype(typed_o)::value_type;
@@ -788,13 +772,13 @@
                      { return typed_o->with_meta(#{ m }#); }
                      else
                      { throw #{ (ex-info :not-metadatable {:o o}) }#; }
-                   }
+                   },
+                   #{ o }#
                  );")))
 (def reset-meta!
   (fn* reset-meta! [o m]
     (native/raw "__value = visit_object
                  (
-                   #{ o }#,
                    [=](auto const typed_o) -> object_ptr
                    {
                      using T = typename decltype(typed_o)::value_type;
@@ -807,7 +791,8 @@
                      }
                      else
                      { throw #{ (ex-info :not-metadatable {:o o}) }#; }
-                   }
+                   },
+                   #{ o }#
                  );")))
 
 ;; Macros.
@@ -848,7 +833,6 @@
     (native/raw "auto const label_str(expect_object<obj::string>(#{ (str label) }#));
                  visit_object
                  (
-                   #{ fun }#,
                    [=](auto const typed_fun)
                    {
                      using T = typename decltype(typed_fun)::value_type;
@@ -874,7 +858,8 @@
                      }
                      else
                      { throw #{ (ex-info :not-callable {:fun fun}) }#; }
-                   }
+                   },
+                   #{ fun }#
                  );")))
 
 ;; Extra things that usually come from Java.
@@ -885,7 +870,7 @@
   (native/raw "__value = make_box(std::sqrt(runtime::detail::to_real(#{ o }#)));"))
 
 (defn abs [o]
-  (native/raw "__value = left_ops(#{ o }#).abs();"))
+  (native/raw "__value = abs(#{ o }#);"))
 
 (defn pow [x y]
   (native/raw "__value = make_box(std::pow(runtime::detail::to_real(#{ x }#), runtime::detail::to_real(#{ y }#)));"))

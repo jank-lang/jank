@@ -21,7 +21,6 @@ namespace jank::runtime::obj::detail
     {
       return visit_object
       (
-        &o,
         [this](auto const typed_o)
         {
           using T = typename decltype(typed_o)::value_type;
@@ -38,7 +37,8 @@ namespace jank::runtime::obj::detail
             }
             return true;
           }
-        }
+        },
+        &o
       );
     }
 

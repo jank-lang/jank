@@ -44,7 +44,6 @@ namespace jank::runtime
     {
       return visit_object
       (
-        &o,
         [](auto const typed_o, auto const begin, auto const end) -> native_bool
         {
           using T = typename decltype(typed_o)::value_type;
@@ -62,6 +61,7 @@ namespace jank::runtime
             return true;
           }
         },
+        &o,
         begin,
         end
       );

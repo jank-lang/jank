@@ -4,46 +4,6 @@
 
 namespace jank::runtime
 {
-  struct integer_ops;
-  struct real_ops;
-  struct number_ops
-  {
-    virtual ~number_ops() = default;
-
-    virtual number_ops const& combine(number_ops const&) const = 0;
-    virtual number_ops const& with(integer_ops const&) const = 0;
-    virtual number_ops const& with(real_ops const&) const = 0;
-
-    virtual object_ptr add() const = 0;
-    virtual native_real add_real() const = 0;
-    virtual object_ptr subtract() const = 0;
-    virtual native_real sub_real() const = 0;
-    virtual object_ptr multiply() const = 0;
-    virtual native_real mul_real() const = 0;
-    virtual object_ptr divide() const = 0;
-    virtual native_real div_real() const = 0;
-    virtual object_ptr remainder() const = 0;
-    virtual object_ptr inc() const = 0;
-    virtual object_ptr dec() const = 0;
-    virtual object_ptr negate() const = 0;
-    virtual object_ptr abs() const = 0;
-    virtual object_ptr min() const = 0;
-    virtual native_real min_real() const = 0;
-    virtual object_ptr max() const = 0;
-    virtual native_real max_real() const = 0;
-    virtual native_real pow() const = 0;
-    virtual native_bool lt() const = 0;
-    virtual native_bool lte() const = 0;
-    virtual native_bool gte() const = 0;
-    virtual native_bool equal() const = 0;
-    virtual native_bool is_positive() const = 0;
-    virtual native_bool is_negative() const = 0;
-    virtual native_bool is_zero() const = 0;
-  };
-
-  number_ops& left_ops(object_ptr n);
-  number_ops& right_ops(object_ptr n);
-
   object_ptr add(object_ptr l, object_ptr r);
   object_ptr add(obj::integer_ptr l, object_ptr r);
   object_ptr add(object_ptr l, obj::integer_ptr r);
@@ -128,47 +88,47 @@ namespace jank::runtime
   object_ptr mul(native_integer l, object_ptr r);
   native_integer mul(native_integer l, native_integer r);
 
-  bool lt(object_ptr l, object_ptr r);
-  bool lt(obj::integer_ptr l, object_ptr r);
-  bool lt(object_ptr l, obj::integer_ptr r);
-  bool lt(obj::integer_ptr const l, obj::integer_ptr const r);
-  bool lt(obj::real_ptr const l, obj::real_ptr const r);
-  bool lt(obj::real_ptr l, object_ptr r);
-  bool lt(object_ptr l, obj::real_ptr r);
-  bool lt(obj::real_ptr l, obj::integer_ptr r);
-  bool lt(obj::integer_ptr l, obj::real_ptr r);
+  native_bool lt(object_ptr l, object_ptr r);
+  native_bool lt(obj::integer_ptr l, object_ptr r);
+  native_bool lt(object_ptr l, obj::integer_ptr r);
+  native_bool lt(obj::integer_ptr const l, obj::integer_ptr const r);
+  native_bool lt(obj::real_ptr const l, obj::real_ptr const r);
+  native_bool lt(obj::real_ptr l, object_ptr r);
+  native_bool lt(object_ptr l, obj::real_ptr r);
+  native_bool lt(obj::real_ptr l, obj::integer_ptr r);
+  native_bool lt(obj::integer_ptr l, obj::real_ptr r);
 
-  bool lt(object_ptr l, native_real r);
-  bool lt(native_real l, object_ptr r);
-  bool lt(native_real l, native_real r);
+  native_bool lt(object_ptr l, native_real r);
+  native_bool lt(native_real l, object_ptr r);
+  native_bool lt(native_real l, native_real r);
 
-  bool lt(native_integer l, native_real r);
-  bool lt(native_real l, native_integer r);
+  native_bool lt(native_integer l, native_real r);
+  native_bool lt(native_real l, native_integer r);
 
-  bool lt(object_ptr l, native_integer r);
-  bool lt(native_integer l, object_ptr r);
-  bool lt(native_integer l, native_integer r);
+  native_bool lt(object_ptr l, native_integer r);
+  native_bool lt(native_integer l, object_ptr r);
+  native_bool lt(native_integer l, native_integer r);
 
-  bool lte(object_ptr l, object_ptr r);
-  bool lte(obj::integer_ptr l, object_ptr r);
-  bool lte(object_ptr l, obj::integer_ptr r);
-  bool lte(obj::integer_ptr const l, obj::integer_ptr const r);
-  bool lte(obj::real_ptr const l, obj::real_ptr const r);
-  bool lte(obj::real_ptr l, object_ptr r);
-  bool lte(object_ptr l, obj::real_ptr r);
-  bool lte(obj::real_ptr l, obj::integer_ptr r);
-  bool lte(obj::integer_ptr l, obj::real_ptr r);
+  native_bool lte(object_ptr l, object_ptr r);
+  native_bool lte(obj::integer_ptr l, object_ptr r);
+  native_bool lte(object_ptr l, obj::integer_ptr r);
+  native_bool lte(obj::integer_ptr const l, obj::integer_ptr const r);
+  native_bool lte(obj::real_ptr const l, obj::real_ptr const r);
+  native_bool lte(obj::real_ptr l, object_ptr r);
+  native_bool lte(object_ptr l, obj::real_ptr r);
+  native_bool lte(obj::real_ptr l, obj::integer_ptr r);
+  native_bool lte(obj::integer_ptr l, obj::real_ptr r);
 
-  bool lte(object_ptr l, native_real r);
-  bool lte(native_real l, object_ptr r);
-  bool lte(native_real l, native_real r);
+  native_bool lte(object_ptr l, native_real r);
+  native_bool lte(native_real l, object_ptr r);
+  native_bool lte(native_real l, native_real r);
 
-  bool lte(native_integer l, native_real r);
-  bool lte(native_real l, native_integer r);
+  native_bool lte(native_integer l, native_real r);
+  native_bool lte(native_real l, native_integer r);
 
-  bool lte(object_ptr l, native_integer r);
-  bool lte(native_integer l, object_ptr r);
-  bool lte(native_integer l, native_integer r);
+  native_bool lte(object_ptr l, native_integer r);
+  native_bool lte(native_integer l, object_ptr r);
+  native_bool lte(native_integer l, native_integer r);
 
   object_ptr min(object_ptr l, object_ptr r);
   object_ptr min(obj::integer_ptr l, object_ptr r);
@@ -246,6 +206,12 @@ namespace jank::runtime
   native_real pow(native_integer l, native_integer r);
 
   object_ptr rem(object_ptr l, object_ptr r);
+  object_ptr inc(object_ptr l);
+  object_ptr dec(object_ptr l);
+  native_bool is_zero(object_ptr l);
+  native_bool is_pos(object_ptr l);
+  native_bool is_neg(object_ptr l);
+
   native_real rand();
 
   native_integer to_int(object_ptr l);

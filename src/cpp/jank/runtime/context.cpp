@@ -35,7 +35,6 @@ namespace jank::runtime
       {
         return visit_object
         (
-          sym,
           [this](auto const typed_sym)
           {
             using T = typename decltype(typed_sym)::value_type;
@@ -49,7 +48,8 @@ namespace jank::runtime
             else
             /* TODO: throw. */
             { return obj::nil::nil_const(); }
-          }
+          },
+          sym
         );
       }
    );
@@ -271,7 +271,6 @@ namespace jank::runtime
   {
     return visit_object
     (
-      o,
       [this](auto const typed_o) -> object_ptr
       {
         using T = typename decltype(typed_o)::value_type;
@@ -300,7 +299,8 @@ namespace jank::runtime
           auto const &args(jank::make_box<obj::list>(typed_o->data.rest().cons(obj::nil::nil_const()).cons(typed_o)));
           return apply_to(var.unwrap()->get_root(), args);
         }
-      }
+      },
+      o
     );
   }
 
@@ -323,7 +323,6 @@ namespace jank::runtime
   {
     visit_object
     (
-      more,
       [o](auto const typed_more)
       {
         using T = typename decltype(typed_more)::value_type;
@@ -343,7 +342,8 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("expected a sequence: {}", typed_more->to_string()) }; }
-      }
+      },
+      more
     );
     return obj::nil::nil_const();
   }
@@ -352,7 +352,6 @@ namespace jank::runtime
   {
     visit_object
     (
-      more,
       [](auto const typed_more)
       {
         using T = typename decltype(typed_more)::value_type;
@@ -372,7 +371,8 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("expected a sequence: {}", typed_more->to_string()) }; }
-      }
+      },
+      more
     );
     return obj::nil::nil_const();
   }

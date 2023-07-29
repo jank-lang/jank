@@ -885,7 +885,6 @@ namespace jank::analyze
 
     return runtime::visit_object
     (
-      o,
       [&](auto const typed_o) -> processor::expression_result
       {
         using T = typename decltype(typed_o)::value_type;
@@ -923,7 +922,8 @@ namespace jank::analyze
           );
           return err(error{ "unimplemented analysis" });
         }
-      }
+      },
+      o
     );
   }
 }

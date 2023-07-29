@@ -25,7 +25,6 @@ namespace jank::runtime
 
     visit_object
     (
-      tail,
       [&](auto const typed_tail)
       {
         using T = typename decltype(typed_tail)::value_type;
@@ -38,7 +37,8 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_tail->to_string()) }; }
-      }
+      },
+      tail
     );
 
     return this;
@@ -51,7 +51,6 @@ namespace jank::runtime
 
     visit_object
     (
-      tail,
       [&](auto const typed_tail)
       {
         using T = typename decltype(typed_tail)::value_type;
@@ -64,7 +63,8 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_tail->to_string()) }; }
-      }
+      },
+      tail
     );
 
     return head;
@@ -74,7 +74,6 @@ namespace jank::runtime
   {
     return visit_object
     (
-      &o,
       [this](auto const typed_o)
       {
         using T = typename decltype(typed_o)::value_type;
@@ -91,7 +90,8 @@ namespace jank::runtime
           }
           return true;
         }
-      }
+      },
+      &o
     );
   }
 

@@ -100,7 +100,6 @@ namespace jank::evaluate
     auto const source(eval(rt_ctx, jit_prc, expr.source_expr));
     return runtime::visit_object
     (
-      source,
       [&](auto const typed_source) -> runtime::object_ptr
       {
         using T = typename decltype(typed_source)::value_type;
@@ -149,7 +148,8 @@ namespace jank::evaluate
         }
         else
         { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
-      }
+      },
+      source
     );
   }
 

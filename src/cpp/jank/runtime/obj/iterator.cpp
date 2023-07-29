@@ -64,7 +64,6 @@ namespace jank::runtime
   {
     return visit_object
     (
-      &o,
       [this](auto const typed_o)
       {
         using T = typename decltype(typed_o)::value_type;
@@ -81,7 +80,8 @@ namespace jank::runtime
           }
           return true;
         }
-      }
+      },
+      &o
     );
   }
 

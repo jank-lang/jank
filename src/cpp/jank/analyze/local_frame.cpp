@@ -124,7 +124,6 @@ namespace jank::analyze
     {
       runtime::visit_object
       (
-        constant,
         [&](auto const typed_constant) -> option<runtime::obj::symbol>
         {
           using T = typename decltype(typed_constant)::value_type;
@@ -133,7 +132,8 @@ namespace jank::analyze
           { return runtime::obj::symbol{ name.ns, name.name + "__unboxed" }; }
           else
           { return none; }
-        }
+        },
+        constant
       )
     };
 

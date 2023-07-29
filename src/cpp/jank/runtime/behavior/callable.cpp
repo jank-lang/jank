@@ -17,7 +17,6 @@ namespace jank::runtime
   {
     return visit_object
     (
-      source,
       [=](auto const typed_source) -> object_ptr
       {
         using T = typename decltype(typed_source)::value_type;
@@ -36,7 +35,8 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
-      }
+      },
+      source
     );
   }
 
@@ -45,7 +45,6 @@ namespace jank::runtime
   {
     return visit_object
     (
-      source,
       [=](auto const typed_source) -> object_ptr
       {
         using T = typename decltype(typed_source)::value_type;
@@ -63,14 +62,14 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
-      }
+      },
+      source
     );
   }
   object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2)
   {
     return visit_object
     (
-      source,
       [=](auto const typed_source) -> object_ptr
       {
         using T = typename decltype(typed_source)::value_type;
@@ -90,14 +89,14 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
-      }
+      },
+      source
     );
   }
   object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3)
   {
     return visit_object
     (
-      source,
       [=](auto const typed_source) -> object_ptr
       {
         using T = typename decltype(typed_source)::value_type;
@@ -119,14 +118,14 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
-      }
+      },
+      source
     );
   }
   object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3, object_ptr const a4)
   {
     return visit_object
     (
-      source,
       [=](auto const typed_source) -> object_ptr
       {
         using T = typename decltype(typed_source)::value_type;
@@ -150,14 +149,14 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
-      }
+      },
+      source
     );
   }
   object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3, object_ptr const a4, object_ptr const a5)
   {
     return visit_object
     (
-      source,
       [=](auto const typed_source) -> object_ptr
       {
         using T = typename decltype(typed_source)::value_type;
@@ -183,14 +182,14 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
-      }
+      },
+      source
     );
   }
   object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3, object_ptr const a4, object_ptr const a5, object_ptr const a6)
   {
     return visit_object
     (
-      source,
       [=](auto const typed_source) -> object_ptr
       {
         using T = typename decltype(typed_source)::value_type;
@@ -218,14 +217,14 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
-      }
+      },
+      source
     );
   }
   object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3, object_ptr const a4, object_ptr const a5, object_ptr const a6, object_ptr const a7)
   {
     return visit_object
     (
-      source,
       [=](auto const typed_source) -> object_ptr
       {
         using T = typename decltype(typed_source)::value_type;
@@ -255,14 +254,14 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
-      }
+      },
+      source
     );
   }
   object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3, object_ptr const a4, object_ptr const a5, object_ptr const a6, object_ptr const a7, object_ptr const a8)
   {
     return visit_object
     (
-      source,
       [=](auto const typed_source) -> object_ptr
       {
         using T = typename decltype(typed_source)::value_type;
@@ -294,14 +293,14 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
-      }
+      },
+      source
     );
   }
   object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3, object_ptr const a4, object_ptr const a5, object_ptr const a6, object_ptr const a7, object_ptr const a8, object_ptr const a9)
   {
     return visit_object
     (
-      source,
       [=](auto const typed_source) -> object_ptr
       {
         using T = typename decltype(typed_source)::value_type;
@@ -335,14 +334,14 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
-      }
+      },
+      source
     );
   }
   object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3, object_ptr const a4, object_ptr const a5, object_ptr const a6, object_ptr const a7, object_ptr const a8, object_ptr const a9, object_ptr const a10)
   {
     return visit_object
     (
-      source,
       [=](auto const typed_source) -> object_ptr
       {
         using T = typename decltype(typed_source)::value_type;
@@ -378,14 +377,14 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
-      }
+      },
+      source
     );
   }
   object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3, object_ptr const a4, object_ptr const a5, object_ptr const a6, object_ptr const a7, object_ptr const a8, object_ptr const a9, object_ptr const a10, obj::list_ptr rest)
   {
     return visit_object
     (
-      source,
       [=](auto const typed_source) -> object_ptr
       {
         using T = typename decltype(typed_source)::value_type;
@@ -482,7 +481,8 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
-      }
+      },
+      source
     );
   }
 
@@ -490,7 +490,6 @@ namespace jank::runtime
   {
     return visit_object
     (
-      args,
       [=](auto const typed_args) -> object_ptr
       {
         using T = typename decltype(typed_args)::value_type;
@@ -619,7 +618,8 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("not seqable: {}", typed_args->to_string()) }; }
-      }
+      },
+      args
     );
   }
 

@@ -364,3 +364,4 @@
         (println "meow"))))
 
 (benchmark "ray" -main)
+;(-main)

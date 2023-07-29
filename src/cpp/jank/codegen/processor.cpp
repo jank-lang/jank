@@ -106,7 +106,6 @@ namespace jank::codegen
 
       runtime::visit_object
       (
-        o,
         [&](auto const typed_o)
         {
           using T = typename decltype(typed_o)::value_type;
@@ -179,7 +178,8 @@ namespace jank::codegen
           }
           else
           { throw std::runtime_error{ fmt::format("unimplemented constant codegen: {}\n", typed_o->to_string()) }; }
-        }
+        },
+        o
       );
     }
   }

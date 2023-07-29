@@ -45,8 +45,8 @@ namespace jank::runtime
     native_integer to_integer() const;
     native_real to_real() const;
 
-    object base{ object_type::integer };
     native_integer data{};
+    object base{ object_type::integer };
   };
 
   template <>
@@ -69,8 +69,8 @@ namespace jank::runtime
     native_integer to_integer() const;
     native_real to_real() const;
 
-    object base{ object_type::real };
     native_real data{};
+    object base{ object_type::real };
   };
 
   namespace obj

@@ -14,7 +14,6 @@ namespace jank::runtime
 
       return visit_object
       (
-        o,
         [](auto const typed_o)
         {
           using T = typename decltype(typed_o)::value_type;
@@ -25,7 +24,8 @@ namespace jank::runtime
           { return typed_o->data; }
           else
           { return true; }
-        }
+        },
+        o
       );
     }
     bool truthy(obj::nil_ptr)
@@ -84,7 +84,6 @@ namespace jank::runtime
   {
     return visit_object
     (
-      o,
       [](auto const typed_o) -> object_ptr
       {
         using T = typename decltype(typed_o)::value_type;
@@ -93,7 +92,8 @@ namespace jank::runtime
         { return jank::make_box<obj::string>(munge(typed_o->data)); }
         else
         { throw "munging only supported for strings right now"; }
-      }
+      },
+      o
     );
   }
 }

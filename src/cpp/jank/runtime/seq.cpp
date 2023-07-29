@@ -29,7 +29,6 @@ namespace jank::runtime
 
       return visit_object
       (
-        s,
         [&](auto const typed_s) -> size_t
         {
           using T = typename decltype(typed_s)::value_type;
@@ -47,7 +46,8 @@ namespace jank::runtime
           }
           else
           { throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) }; }
-        }
+        },
+        s
       );
     }
   }
@@ -61,7 +61,6 @@ namespace jank::runtime
   {
     return visit_object
     (
-      s,
       [](auto const typed_s) -> object_ptr
       {
         using T = typename decltype(typed_s)::value_type;
@@ -78,7 +77,8 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) }; }
-      }
+      },
+      s
     );
   }
 
@@ -86,7 +86,6 @@ namespace jank::runtime
   {
     return visit_object
     (
-      s,
       [](auto const typed_s) -> object_ptr
       {
         using T = typename decltype(typed_s)::value_type;
@@ -103,7 +102,8 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) }; }
-      }
+      },
+      s
     );
   }
 
@@ -111,7 +111,6 @@ namespace jank::runtime
   {
     return visit_object
     (
-      s,
       [](auto const typed_s) -> object_ptr
       {
         using T = typename decltype(typed_s)::value_type;
@@ -130,7 +129,8 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) }; }
-      }
+      },
+      s
     );
   }
 
@@ -138,7 +138,6 @@ namespace jank::runtime
   {
     return visit_object
     (
-      s,
       [](auto const typed_s) -> object_ptr
       {
         using T = typename decltype(typed_s)::value_type;
@@ -167,7 +166,8 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) }; }
-      }
+      },
+      s
     );
   }
 
@@ -175,7 +175,6 @@ namespace jank::runtime
   {
     return visit_object
     (
-      s,
       [](auto const typed_s) -> object_ptr
       {
         using T = typename decltype(typed_s)::value_type;
@@ -194,7 +193,8 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) }; }
-      }
+      },
+      s
     );
   }
 
@@ -202,7 +202,6 @@ namespace jank::runtime
   {
     return visit_object
     (
-      s,
       [&](auto const typed_s) -> object_ptr
       {
         using T = typename decltype(typed_s)::value_type;
@@ -215,7 +214,8 @@ namespace jank::runtime
         { return typed_s->seq()->cons(o); }
         else
         { throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) }; }
-      }
+      },
+      s
     );
   }
 
@@ -223,7 +223,6 @@ namespace jank::runtime
   {
     return visit_object
     (
-      m,
       [&](auto const typed_m) -> object_ptr
       {
         using T = typename decltype(typed_m)::value_type;
@@ -232,7 +231,8 @@ namespace jank::runtime
         { return typed_m->assoc(k, v); }
         else
         { throw std::runtime_error{ fmt::format("not associatively writable: {}", typed_m->to_string()) }; }
-      }
+      },
+      m
     );
   }
 
@@ -240,7 +240,6 @@ namespace jank::runtime
   {
     return visit_object
     (
-      m,
       [&](auto const typed_m) -> object_ptr
       {
         using T = typename decltype(typed_m)::value_type;
@@ -249,7 +248,8 @@ namespace jank::runtime
         { return typed_m->get(key); }
         else
         { throw std::runtime_error{ fmt::format("not associatively readable: {}", typed_m->to_string()) }; }
-      }
+      },
+      m
     );
   }
 
@@ -257,7 +257,6 @@ namespace jank::runtime
   {
     return visit_object
     (
-      m,
       [&](auto const typed_m) -> object_ptr
       {
         using T = typename decltype(typed_m)::value_type;
@@ -266,7 +265,8 @@ namespace jank::runtime
         { return typed_m->get(key, fallback); }
         else
         { throw std::runtime_error{ fmt::format("not associatively readable: {}", typed_m->to_string()) }; }
-      }
+      },
+      m
     );
   }
 }

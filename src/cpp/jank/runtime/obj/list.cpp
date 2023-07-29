@@ -22,7 +22,6 @@ namespace jank::runtime
 
     return visit_object
     (
-      s,
       [](auto const typed_s) -> obj::list_ptr
       {
         using T = typename decltype(typed_s)::value_type;
@@ -36,7 +35,8 @@ namespace jank::runtime
         }
         else
         { throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_s->to_string()) }; }
-      }
+      },
+      s
     );
   }
 

@@ -3,283 +3,149 @@
 
 namespace jank::runtime
 {
-  struct integer_ops : number_ops
-  {
-    number_ops const& combine(number_ops const &l) const final
-    { return l.with(*this); }
-    number_ops const& with(integer_ops const&) const final;
-    number_ops const& with(real_ops const&) const final;
-
-    object_ptr add() const final
-    { return jank::make_box<obj::integer>(left + right); }
-    native_real add_real() const final
-    { return left + right; }
-    object_ptr subtract() const final
-    { return jank::make_box<obj::integer>(left - right); }
-    native_real sub_real() const final
-    { return left - right; }
-    object_ptr multiply() const final
-    { return jank::make_box<obj::integer>(left * right); }
-    native_real mul_real() const final
-    { return left * right; }
-    object_ptr divide() const final
-    { return jank::make_box<obj::integer>(left / right); }
-    native_real div_real() const final
-    { return static_cast<native_real>(left) / right; }
-    object_ptr remainder() const final
-    { return jank::make_box<obj::integer>(left % right); }
-    object_ptr inc() const final
-    { return jank::make_box<obj::integer>(left + 1); }
-    object_ptr dec() const final
-    { return jank::make_box<obj::integer>(left - 1); }
-    object_ptr negate() const final
-    { return jank::make_box<obj::integer>(-left); }
-    object_ptr abs() const final
-    { return jank::make_box<obj::integer>(std::labs(left)); }
-    object_ptr min() const final
-    { return jank::make_box<obj::integer>(std::min(left, right)); }
-    native_real min_real() const final
-    { return std::min(left, right); }
-    object_ptr max() const final
-    { return jank::make_box<obj::integer>(std::max(left, right)); }
-    native_real max_real() const final
-    { return std::max(left, right); }
-    native_real pow() const final
-    { return std::pow(left, right); }
-    native_bool lt() const final
-    { return left < right; }
-    native_bool lte() const final
-    { return left <= right; }
-    native_bool gte() const final
-    { return left >= right; }
-    native_bool equal() const final
-    { return left == right; }
-    native_bool is_positive() const final
-    { return left > 0; }
-    native_bool is_negative() const final
-    { return left < 0; }
-    native_bool is_zero() const final
-    { return left == 0; }
-
-    native_integer left{}, right{};
-  };
-
-  struct real_ops : number_ops
-  {
-    number_ops const& combine(number_ops const &l) const final
-    { return l.with(*this); }
-    number_ops const& with(integer_ops const&) const final;
-    number_ops const& with(real_ops const&) const final;
-
-    object_ptr add() const final
-    { return jank::make_box<obj::real>(left + right); }
-    native_real add_real() const final
-    { return left + right; }
-    object_ptr subtract() const final
-    { return jank::make_box<obj::real>(left - right); }
-    native_real sub_real() const final
-    { return left - right; }
-    object_ptr multiply() const final
-    { return jank::make_box<obj::real>(left * right); }
-    native_real mul_real() const final
-    { return left * right; }
-    object_ptr divide() const final
-    { return jank::make_box<obj::real>(left / right); }
-    native_real div_real() const final
-    { return left / right; }
-    object_ptr remainder() const final
-    { return jank::make_box<obj::real>(std::fmod(left, right)); }
-    object_ptr inc() const final
-    { return jank::make_box<obj::real>(left + 1); }
-    object_ptr dec() const final
-    { return jank::make_box<obj::real>(right + 1); }
-    object_ptr negate() const final
-    { return jank::make_box<obj::real>(-left); }
-    object_ptr abs() const final
-    { return jank::make_box<obj::real>(std::fabs(left)); }
-    object_ptr min() const final
-    { return jank::make_box<obj::real>(std::min(left, right)); }
-    native_real min_real() const final
-    { return std::min(left, right); }
-    object_ptr max() const final
-    { return jank::make_box<obj::real>(std::max(left, right)); }
-    native_real max_real() const final
-    { return std::max(left, right); }
-    native_real pow() const final
-    { return std::pow(left, right); }
-    native_bool lt() const final
-    { return left < right; }
-    native_bool lte() const final
-    { return left <= right; }
-    native_bool gte() const final
-    { return left >= right; }
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wfloat-equal"
-    native_bool equal() const final
-    { return left == right; }
-#pragma clang diagnostic pop
-    native_bool is_positive() const final
-    { return left > 0; }
-    native_bool is_negative() const final
-    { return left < 0; }
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wfloat-equal"
-    native_bool is_zero() const final
-    { return left == 0; }
-#pragma clang diagnostic pop
-
-    native_real left{}, right{};
-  };
-
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): These are thread-local.
-  static thread_local integer_ops i_ops;
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): These are thread-local.
-  static thread_local real_ops r_ops;
-
-  number_ops const& integer_ops::with(integer_ops const &) const
-  { return i_ops; }
-  number_ops const& integer_ops::with(real_ops const &) const
-  {
-    r_ops.left = left;
-    return r_ops;
-  }
-
-  number_ops const& real_ops::with(integer_ops const &r) const
-  {
-    r_ops.right = r.right;
-    return r_ops;
-  }
-  number_ops const& real_ops::with(real_ops const &) const
-  { return r_ops; }
-
-  number_ops& left_ops(object_ptr const n)
-  {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wswitch-enum"
-    switch(n->type)
-    {
-      case object_type::integer:
-      {
-        i_ops.left = expect_object<obj::integer>(n)->data;
-        return i_ops;
-      }
-      case object_type::real:
-      {
-        r_ops.left = expect_object<obj::real>(n)->data;
-        return r_ops;
-      }
-      default:
-      /* TODO: Exception type. */
-      { throw std::runtime_error{ fmt::format("(left_ops) not a number: {}", detail::to_string(n)) }; }
-    }
-#pragma clang diagnostic pop
-  }
-  integer_ops& left_ops(obj::integer_ptr const n)
-  {
-    i_ops.left = n->data;
-    return i_ops;
-  }
-  real_ops& left_ops(obj::real_ptr const n)
-  {
-    r_ops.left = n->data;
-    return r_ops;
-  }
-  integer_ops& left_ops(native_integer const n)
-  {
-    i_ops.left = n;
-    return i_ops;
-  }
-  real_ops& left_ops(native_real const n)
-  {
-    r_ops.left = n;
-    return r_ops;
-  }
-
-  number_ops& right_ops(object_ptr const n)
-  {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wswitch-enum"
-    switch(n->type)
-    {
-      case object_type::integer:
-      {
-        i_ops.right = expect_object<obj::integer>(n)->data;
-        return i_ops;
-      }
-      case object_type::real:
-      {
-        r_ops.right = expect_object<obj::real>(n)->data;
-        return r_ops;
-      }
-      default:
-      /* TODO: Exception type. */
-      { throw std::runtime_error{ fmt::format("(right_ops) not a number: {}", detail::to_string(n)) }; }
-    }
-#pragma clang diagnostic pop
-  }
-  integer_ops& right_ops(obj::integer_ptr const n)
-  {
-    i_ops.right = n->data;
-    return i_ops;
-  }
-  real_ops& right_ops(obj::real_ptr const n)
-  {
-    r_ops.right = n->data;
-    return r_ops;
-  }
-  integer_ops& right_ops(native_integer const n)
-  {
-    i_ops.right = n;
-    return i_ops;
-  }
-  real_ops& right_ops(native_real const n)
-  {
-    r_ops.right = n;
-    return r_ops;
-  }
-
-  /* This version of `with` avoids two dynamic dispatches per operation, so it's
-   * preferable over `number_ops.combine`. */
-  integer_ops const& with(integer_ops const &, integer_ops const &)
-  { return i_ops; }
-  real_ops const& with(real_ops const &, real_ops const &)
-  { return r_ops; }
-  real_ops const& with(integer_ops const &, real_ops const &)
-  {
-    r_ops.left = i_ops.left;
-    return r_ops;
-  }
-  real_ops const& with(real_ops const &, integer_ops const &)
-  {
-    r_ops.right = i_ops.right;
-    return r_ops;
-  }
-  number_ops const& with(number_ops const &l, number_ops const &r)
-  { return r.combine(l); }
-
   object_ptr add(object_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).add(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const r) -> object_ptr
+      {
+        using L = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<L>)
+        {
+          return visit_object
+          (
+            [](auto const typed_r, auto const typed_l) -> object_ptr
+            {
+              using R = typename decltype(typed_r)::value_type;
+
+              if constexpr(behavior::numberable<R>)
+              { return make_box(typed_l + typed_r->data); }
+              else
+              { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+            },
+            r,
+            typed_l->data
+          );
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   object_ptr add(obj::integer_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).add(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> object_ptr
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return make_box(typed_l + typed_r->data); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l->data
+    );
+  }
   object_ptr add(object_ptr const l, obj::integer_ptr const r)
-  { return with(left_ops(l), right_ops(r)).add(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> object_ptr
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return make_box(typed_l->data + typed_r); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r->data
+    );
+  }
   native_integer add(obj::integer_ptr const l, obj::integer_ptr const r)
   { return l->data + r->data; }
   native_real add(obj::real_ptr const l, obj::real_ptr const r)
   { return l->data + r->data; }
   native_real add(obj::real_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).add_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l + typed_r->data; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l->data
+    );
+  }
   native_real add(object_ptr const l, obj::real_ptr const r)
-  { return with(left_ops(l), right_ops(r)).add_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l->data + typed_r; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r->data
+    );
+  }
   native_real add(obj::real_ptr const l, obj::integer_ptr const r)
   { return l->data + r->data; }
   native_real add(obj::integer_ptr const l, obj::real_ptr const r)
   { return l->data + r->data; }
 
   native_real add(object_ptr const l, native_real const r)
-  { return with(left_ops(l), right_ops(r)).add_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l->data + typed_r; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   native_real add(native_real const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).add_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l + typed_r->data; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l
+    );
+  }
   native_real add(native_real const l, native_real const r)
   { return l + r; }
 
@@ -289,35 +155,185 @@ namespace jank::runtime
   { return l + r; }
 
   object_ptr add(object_ptr const l, native_integer const r)
-  { return with(left_ops(l), right_ops(r)).add(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> object_ptr
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return make_box(typed_l->data + typed_r); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   object_ptr add(native_integer const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).add(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> object_ptr
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return make_box(typed_l + typed_r->data); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l
+    );
+  }
   native_integer add(native_integer const l, native_integer const r)
   { return l + r; }
 
   object_ptr sub(object_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).subtract(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const r) -> object_ptr
+      {
+        using L = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<L>)
+        {
+          return visit_object
+          (
+            [](auto const typed_r, auto const typed_l) -> object_ptr
+            {
+              using R = typename decltype(typed_r)::value_type;
+
+              if constexpr(behavior::numberable<R>)
+              { return make_box(typed_l - typed_r->data); }
+              else
+              { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+            },
+            r,
+            typed_l->data
+          );
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   object_ptr sub(obj::integer_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).subtract(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> object_ptr
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return make_box(typed_l - typed_r->data); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l->data
+    );
+  }
   object_ptr sub(object_ptr const l, obj::integer_ptr const r)
-  { return with(left_ops(l), right_ops(r)).subtract(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> object_ptr
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return make_box(typed_l->data - typed_r); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r->data
+    );
+  }
   native_integer sub(obj::integer_ptr const l, obj::integer_ptr const r)
   { return l->data - r->data; }
   native_real sub(obj::real_ptr const l, obj::real_ptr const r)
   { return l->data - r->data; }
   native_real sub(obj::real_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).sub_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l - typed_r->data; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l->data
+    );
+  }
   native_real sub(object_ptr const l, obj::real_ptr const r)
-  { return with(left_ops(l), right_ops(r)).sub_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l->data - typed_r; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r->data
+    );
+  }
   native_real sub(obj::real_ptr const l, obj::integer_ptr const r)
   { return l->data - r->data; }
   native_real sub(obj::integer_ptr const l, obj::real_ptr const r)
   { return l->data - r->data; }
 
   native_real sub(object_ptr const l, native_real const r)
-  { return with(left_ops(l), right_ops(r)).sub_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l->data - typed_r; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   native_real sub(native_real const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).sub_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l - typed_r->data; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l
+    );
+  }
   native_real sub(native_real const l, native_real const r)
   { return l - r; }
 
@@ -327,35 +343,185 @@ namespace jank::runtime
   { return l - r; }
 
   object_ptr sub(object_ptr const l, native_integer const r)
-  { return with(left_ops(l), right_ops(r)).subtract(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> object_ptr
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return make_box(typed_l->data - typed_r); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   object_ptr sub(native_integer const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).subtract(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> object_ptr
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return make_box(typed_l - typed_r->data); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l
+    );
+  }
   native_integer sub(native_integer const l, native_integer const r)
   { return l - r; }
 
   object_ptr div(object_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).divide(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const r) -> object_ptr
+      {
+        using L = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<L>)
+        {
+          return visit_object
+          (
+            [](auto const typed_r, auto const typed_l) -> object_ptr
+            {
+              using R = typename decltype(typed_r)::value_type;
+
+              if constexpr(behavior::numberable<R>)
+              { return make_box(typed_l / typed_r->data); }
+              else
+              { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+            },
+            r,
+            typed_l->data
+          );
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   object_ptr div(obj::integer_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).divide(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> object_ptr
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return make_box(typed_l / typed_r->data); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l->data
+    );
+  }
   object_ptr div(object_ptr const l, obj::integer_ptr const r)
-  { return with(left_ops(l), right_ops(r)).divide(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> object_ptr
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return make_box(typed_l->data / typed_r); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r->data
+    );
+  }
   native_integer div(obj::integer_ptr const l, obj::integer_ptr const r)
   { return l->data / r->data; }
   native_real div(obj::real_ptr const l, obj::real_ptr const r)
   { return l->data / r->data; }
   native_real div(obj::real_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).div_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l / typed_r->data; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l->data
+    );
+  }
   native_real div(object_ptr const l, obj::real_ptr const r)
-  { return with(left_ops(l), right_ops(r)).div_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l->data / typed_r; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r->data
+    );
+  }
   native_real div(obj::real_ptr const l, obj::integer_ptr const r)
   { return l->data / r->data; }
   native_real div(obj::integer_ptr const l, obj::real_ptr const r)
   { return l->data / r->data; }
 
   native_real div(object_ptr const l, native_real const r)
-  { return with(left_ops(l), right_ops(r)).div_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l->data / typed_r; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   native_real div(native_real const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).div_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l / typed_r->data; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l
+    );
+  }
   native_real div(native_real const l, native_real const r)
   { return l / r; }
 
@@ -365,35 +531,185 @@ namespace jank::runtime
   { return l / r; }
 
   object_ptr div(object_ptr const l, native_integer const r)
-  { return with(left_ops(l), right_ops(r)).divide(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> object_ptr
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return make_box(typed_l->data / typed_r); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   object_ptr div(native_integer const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).divide(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> object_ptr
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return make_box(typed_l / typed_r->data); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l
+    );
+  }
   native_integer div(native_integer const l, native_integer const r)
   { return l / r; }
 
   object_ptr mul(object_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).multiply(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const r) -> object_ptr
+      {
+        using L = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<L>)
+        {
+          return visit_object
+          (
+            [](auto const typed_r, auto const typed_l) -> object_ptr
+            {
+              using R = typename decltype(typed_r)::value_type;
+
+              if constexpr(behavior::numberable<R>)
+              { return make_box(typed_l * typed_r->data); }
+              else
+              { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+            },
+            r,
+            typed_l->data
+          );
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   object_ptr mul(obj::integer_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).multiply(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> object_ptr
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return make_box(typed_l * typed_r->data); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l->data
+    );
+  }
   object_ptr mul(object_ptr const l, obj::integer_ptr const r)
-  { return with(left_ops(l), right_ops(r)).multiply(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> object_ptr
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return make_box(typed_l->data * typed_r); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r->data
+    );
+  }
   native_integer mul(obj::integer_ptr const l, obj::integer_ptr const r)
   { return l->data * r->data; }
   native_real mul(obj::real_ptr const l, obj::real_ptr const r)
   { return l->data * r->data; }
   native_real mul(obj::real_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).mul_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l * typed_r->data; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l->data
+    );
+  }
   native_real mul(object_ptr const l, obj::real_ptr const r)
-  { return with(left_ops(l), right_ops(r)).mul_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l->data * typed_r; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r->data
+    );
+  }
   native_real mul(obj::real_ptr const l, obj::integer_ptr const r)
   { return l->data * r->data; }
   native_real mul(obj::integer_ptr const l, obj::real_ptr const r)
   { return l->data * r->data; }
 
   native_real mul(object_ptr const l, native_real const r)
-  { return with(left_ops(l), right_ops(r)).mul_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l->data * typed_r; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   native_real mul(native_real const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).mul_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l * typed_r->data; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l
+    );
+  }
   native_real mul(native_real const l, native_real const r)
   { return l * r; }
 
@@ -403,14 +719,173 @@ namespace jank::runtime
   { return l * r; }
 
   object_ptr mul(object_ptr const l, native_integer const r)
-  { return with(left_ops(l), right_ops(r)).multiply(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> object_ptr
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return make_box(typed_l->data * typed_r); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   object_ptr mul(native_integer const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).multiply(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> object_ptr
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return make_box(typed_l * typed_r->data); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l
+    );
+  }
   native_integer mul(native_integer const l, native_integer const r)
   { return l * r; }
 
   object_ptr rem(object_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).remainder(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const r) -> object_ptr
+      {
+        using L = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<L>)
+        {
+          return visit_object
+          (
+            [](auto const typed_r, auto const typed_l) -> object_ptr
+            {
+              using R = typename decltype(typed_r)::value_type;
+
+              if constexpr(behavior::numberable<R>)
+              {
+                if constexpr(std::is_same_v<L, obj::real> || std::is_same_v<R, obj::real>)
+                { return make_box(std::fmod(typed_l, typed_r->data)); }
+                else
+                { return make_box(typed_l % typed_r->data); }
+              }
+              else
+              { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+            },
+            r,
+            typed_l->data
+          );
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
+
+  object_ptr inc(object_ptr const l)
+  {
+    return visit_object
+    (
+      [](auto const typed_l) -> object_ptr
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return make_box(typed_l->data + 1); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l
+    );
+  }
+
+  object_ptr dec(object_ptr const l)
+  {
+    return visit_object
+    (
+      [](auto const typed_l) -> object_ptr
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return make_box(typed_l->data - 1); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l
+    );
+  }
+
+  native_bool is_zero(object_ptr const l)
+  {
+    return visit_object
+    (
+      [](auto const typed_l) -> native_bool
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+        { return typed_l->data == 0; }
+#pragma clang diagnostic pop
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l
+    );
+  }
+
+  native_bool is_pos(object_ptr const l)
+  {
+    return visit_object
+    (
+      [](auto const typed_l) -> native_bool
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+        { return typed_l->data > 0; }
+#pragma clang diagnostic pop
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l
+    );
+  }
+
+  native_bool is_neg(object_ptr const l)
+  {
+    return visit_object
+    (
+      [](auto const typed_l) -> native_bool
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+        { return typed_l->data < 0; }
+#pragma clang diagnostic pop
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l
+    );
+  }
 
   native_real rand()
   {
@@ -419,29 +894,149 @@ namespace jank::runtime
     return dis(gen);
   }
 
-  bool lt(object_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).lt(); }
-  bool lt(obj::integer_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).lt(); }
-  bool lt(object_ptr const l, obj::integer_ptr const r)
-  { return with(left_ops(l), right_ops(r)).lt(); }
-  bool lt(obj::integer_ptr const l, obj::integer_ptr const r)
+  native_bool lt(object_ptr const l, object_ptr const r)
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const r) -> native_bool
+      {
+        using L = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<L>)
+        {
+          return visit_object
+          (
+            [](auto const typed_r, auto const typed_l) -> native_bool
+            {
+              using R = typename decltype(typed_r)::value_type;
+
+              if constexpr(behavior::numberable<R>)
+              { return typed_l < typed_r->data; }
+              else
+              { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+            },
+            r,
+            typed_l->data
+          );
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
+  native_bool lt(obj::integer_ptr const l, object_ptr const r)
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_bool
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l < typed_r->data; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l->data
+    );
+  }
+  native_bool lt(object_ptr const l, obj::integer_ptr const r)
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_bool
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l->data < typed_r; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r->data
+    );
+  }
+  native_bool lt(obj::integer_ptr const l, obj::integer_ptr const r)
   { return l->data < r->data; }
-  bool lt(obj::real_ptr const l, obj::real_ptr const r)
+  native_bool lt(obj::real_ptr const l, obj::real_ptr const r)
   { return l->data < r->data; }
-  bool lt(obj::real_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).lt(); }
-  bool lt(object_ptr const l, obj::real_ptr const r)
-  { return with(left_ops(l), right_ops(r)).lt(); }
-  bool lt(obj::real_ptr const l, obj::integer_ptr const r)
-  { return with(left_ops(l), right_ops(r)).lt(); }
-  bool lt(obj::integer_ptr const l, obj::real_ptr const r)
-  { return with(left_ops(l), right_ops(r)).lt(); }
+  native_bool lt(obj::real_ptr const l, object_ptr const r)
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l < typed_r->data; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l->data
+    );
+  }
+  native_bool lt(object_ptr const l, obj::real_ptr const r)
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l->data < typed_r; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r->data
+    );
+  }
+  native_bool lt(obj::real_ptr const l, obj::integer_ptr const r)
+  { return l->data < r->data; }
+  native_bool lt(obj::integer_ptr const l, obj::real_ptr const r)
+  { return l->data < r->data; }
 
   native_bool lt(object_ptr const l, native_real const r)
-  { return with(left_ops(l), right_ops(r)).lt(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l->data < typed_r; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   native_bool lt(native_real const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).lt(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l < typed_r->data; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l
+    );
+  }
   native_bool lt(native_real const l, native_real const r)
   { return l < r; }
 
@@ -451,73 +1046,394 @@ namespace jank::runtime
   { return l < r; }
 
   native_bool lt(object_ptr const l, native_integer const r)
-  { return with(left_ops(l), right_ops(r)).lt(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_bool
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l->data < typed_r; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   native_bool lt(native_integer const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).lt(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_bool
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l < typed_r->data; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l
+    );
+  }
   native_bool lt(native_integer const l, native_integer const r)
   { return l < r; }
 
-  bool lte(object_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).lte(); }
-  bool lte(obj::integer_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).lte(); }
-  bool lte(object_ptr const l, obj::integer_ptr const r)
-  { return with(left_ops(l), right_ops(r)).lte(); }
-  bool lte(obj::integer_ptr const l, obj::integer_ptr const r)
+  native_bool lte(object_ptr const l, object_ptr const r)
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const r) -> native_bool
+      {
+        using L = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<L>)
+        {
+          return visit_object
+          (
+            [](auto const typed_r, auto const typed_l) -> native_bool
+            {
+              using R = typename decltype(typed_r)::value_type;
+
+              if constexpr(behavior::numberable<R>)
+              { return typed_l <= typed_r->data; }
+              else
+              { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+            },
+            r,
+            typed_l->data
+          );
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
+  native_bool lte(obj::integer_ptr const l, object_ptr const r)
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_bool
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l <= typed_r->data; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l->data
+    );
+  }
+  native_bool lte(object_ptr const l, obj::integer_ptr const r)
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_bool
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l->data <= typed_r; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r->data
+    );
+  }
+  native_bool lte(obj::integer_ptr const l, obj::integer_ptr const r)
   { return l->data <= r->data; }
-  bool lte(obj::real_ptr const l, obj::real_ptr const r)
+  native_bool lte(obj::real_ptr const l, obj::real_ptr const r)
   { return l->data <= r->data; }
-  bool lte(obj::real_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).lte(); }
-  bool lte(object_ptr const l, obj::real_ptr const r)
-  { return with(left_ops(l), right_ops(r)).lte(); }
-  bool lte(obj::real_ptr const l, obj::integer_ptr const r)
-  { return with(left_ops(l), right_ops(r)).lte(); }
-  bool lte(obj::integer_ptr const l, obj::real_ptr const r)
-  { return with(left_ops(l), right_ops(r)).lte(); }
+  native_bool lte(obj::real_ptr const l, object_ptr const r)
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l <= typed_r->data; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l->data
+    );
+  }
+  native_bool lte(object_ptr const l, obj::real_ptr const r)
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l->data <= typed_r; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r->data
+    );
+  }
+  native_bool lte(obj::real_ptr const l, obj::integer_ptr const r)
+  { return l->data <= r->data; }
+  native_bool lte(obj::integer_ptr const l, obj::real_ptr const r)
+  { return l->data <= r->data; }
 
   native_bool lte(object_ptr const l, native_real const r)
-  { return with(left_ops(l), right_ops(r)).lte(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l->data <= typed_r; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   native_bool lte(native_real const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).lte(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l <= typed_r->data; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l
+    );
+  }
   native_bool lte(native_real const l, native_real const r)
-  { return l < r; }
+  { return l <= r; }
 
   native_bool lte(native_integer const l, native_real const r)
-  { return l < r; }
+  { return l <= r; }
   native_bool lte(native_real const l, native_integer const r)
-  { return l < r; }
+  { return l <= r; }
 
   native_bool lte(object_ptr const l, native_integer const r)
-  { return with(left_ops(l), right_ops(r)).lte(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_bool
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l->data <= typed_r; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   native_bool lte(native_integer const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).lte(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_bool
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        { return typed_l <= typed_r->data; }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l
+    );
+  }
   native_bool lte(native_integer const l, native_integer const r)
-  { return l < r; }
+  { return l <= r; }
 
   object_ptr min(object_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).min(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const r) -> object_ptr
+      {
+        using L = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<L>)
+        {
+          return visit_object
+          (
+            [](auto const typed_r, auto const typed_l) -> object_ptr
+            {
+              using R = typename decltype(typed_r)::value_type;
+
+              if constexpr(behavior::numberable<R>)
+              {
+                using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
+                return make_box(std::min(static_cast<C>(typed_l), static_cast<C>(typed_r->data)));
+              }
+              else
+              { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+            },
+            r,
+            typed_l->data
+          );
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   object_ptr min(obj::integer_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).min(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> object_ptr
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
+          return make_box(std::min(static_cast<C>(typed_l), static_cast<C>(typed_r->data)));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l->data
+    );
+  }
   object_ptr min(object_ptr const l, obj::integer_ptr const r)
-  { return with(left_ops(l), right_ops(r)).min(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> object_ptr
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
+          return make_box(std::min(static_cast<C>(typed_l->data), static_cast<C>(typed_r)));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r->data
+    );
+  }
   native_integer min(obj::integer_ptr const l, obj::integer_ptr const r)
   { return std::min(l->data, r->data); }
   native_real min(obj::real_ptr const l, obj::real_ptr const r)
   { return std::min(l->data, r->data); }
   native_real min(obj::real_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).min_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
+          return std::min(static_cast<C>(typed_l), static_cast<C>(typed_r->data));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l->data
+    );
+  }
   native_real min(object_ptr const l, obj::real_ptr const r)
-  { return with(left_ops(l), right_ops(r)).min_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
+          return std::min(static_cast<C>(typed_l->data), static_cast<C>(typed_r));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r->data
+    );
+  }
   native_real min(obj::real_ptr const l, obj::integer_ptr const r)
   { return std::min(l->data, static_cast<native_real>(r->data)); }
   native_real min(obj::integer_ptr const l, obj::real_ptr const r)
   { return std::min(static_cast<native_real>(l->data), r->data); }
 
   native_real min(object_ptr const l, native_real const r)
-  { return with(left_ops(l), right_ops(r)).min_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
+          return std::min(static_cast<C>(typed_l->data), static_cast<C>(typed_r));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   native_real min(native_real const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).min_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
+          return std::min(static_cast<C>(typed_l), static_cast<C>(typed_r->data));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l
+    );
+  }
   native_real min(native_real const l, native_real const r)
   { return std::min(l, r); }
 
@@ -527,35 +1443,212 @@ namespace jank::runtime
   { return std::min(l, static_cast<native_real>(r)); }
 
   object_ptr min(object_ptr const l, native_integer const r)
-  { return with(left_ops(l), right_ops(r)).min(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> object_ptr
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
+          return make_box(std::min(static_cast<C>(typed_l->data), static_cast<C>(typed_r)));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   object_ptr min(native_integer const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).min(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> object_ptr
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
+          return make_box(std::min(static_cast<C>(typed_l), static_cast<C>(typed_r->data)));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l
+    );
+  }
   native_integer min(native_integer const l, native_integer const r)
   { return std::min(l, r); }
 
   object_ptr max(object_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).max(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const r) -> object_ptr
+      {
+        using L = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<L>)
+        {
+          return visit_object
+          (
+            [](auto const typed_r, auto const typed_l) -> object_ptr
+            {
+              using R = typename decltype(typed_r)::value_type;
+
+              if constexpr(behavior::numberable<R>)
+              {
+                using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
+                return make_box(std::max(static_cast<C>(typed_l), static_cast<C>(typed_r->data)));
+              }
+              else
+              { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+            },
+            r,
+            typed_l->data
+          );
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   object_ptr max(obj::integer_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).max(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> object_ptr
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
+          return make_box(std::max(static_cast<C>(typed_l), static_cast<C>(typed_r->data)));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l->data
+    );
+  }
   object_ptr max(object_ptr const l, obj::integer_ptr const r)
-  { return with(left_ops(l), right_ops(r)).max(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> object_ptr
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
+          return make_box(std::max(static_cast<C>(typed_l->data), static_cast<C>(typed_r)));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r->data
+    );
+  }
   native_integer max(obj::integer_ptr const l, obj::integer_ptr const r)
   { return std::max(l->data, r->data); }
   native_real max(obj::real_ptr const l, obj::real_ptr const r)
   { return std::max(l->data, r->data); }
   native_real max(obj::real_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).max_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
+          return std::max(static_cast<C>(typed_l), static_cast<C>(typed_r->data));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l->data
+    );
+  }
   native_real max(object_ptr const l, obj::real_ptr const r)
-  { return with(left_ops(l), right_ops(r)).max_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
+          return std::max(static_cast<C>(typed_l->data), static_cast<C>(typed_r));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r->data
+    );
+  }
   native_real max(obj::real_ptr const l, obj::integer_ptr const r)
   { return std::max(l->data, static_cast<native_real>(r->data)); }
   native_real max(obj::integer_ptr const l, obj::real_ptr const r)
   { return std::max(static_cast<native_real>(l->data), r->data); }
 
   native_real max(object_ptr const l, native_real const r)
-  { return with(left_ops(l), right_ops(r)).max_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
+          return std::max(static_cast<C>(typed_l->data), static_cast<C>(typed_r));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   native_real max(native_real const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).max_real(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
+          return std::max(static_cast<C>(typed_l), static_cast<C>(typed_r->data));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l
+    );
+  }
   native_real max(native_real const l, native_real const r)
   { return std::max(l, r); }
 
@@ -565,14 +1658,67 @@ namespace jank::runtime
   { return std::max(l, static_cast<native_real>(r)); }
 
   object_ptr max(object_ptr const l, native_integer const r)
-  { return with(left_ops(l), right_ops(r)).max(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> object_ptr
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
+          return make_box(std::max(static_cast<C>(typed_l->data), static_cast<C>(typed_r)));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   object_ptr max(native_integer const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).max(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> object_ptr
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
+          return make_box(std::max(static_cast<C>(typed_l), static_cast<C>(typed_r->data)));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l
+    );
+  }
   native_integer max(native_integer const l, native_integer const r)
   { return std::max(l, r); }
 
   object_ptr abs(object_ptr const l)
-  { return left_ops(l).abs(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l) -> object_ptr
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(std::is_same_v<T, obj::integer>)
+        { return make_box(std::abs(typed_l->data)); }
+        if constexpr(std::is_same_v<T, obj::real>)
+        { return make_box(std::fabs(typed_l->data)); }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l
+    );
+  }
+
   native_integer abs(obj::integer_ptr const l)
   { return std::abs(l->data); }
   native_real abs(obj::real_ptr const l)
@@ -586,7 +1732,6 @@ namespace jank::runtime
   {
     return visit_object
     (
-      l,
       [](auto const typed_l) -> native_real
       {
         using T = typename decltype(typed_l)::value_type;
@@ -595,7 +1740,8 @@ namespace jank::runtime
         { return std::sqrt(typed_l->to_real()); }
         else
         { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
-      }
+      },
+      l
     );
   }
   native_real sqrt(obj::integer_ptr const l)
@@ -608,40 +1754,217 @@ namespace jank::runtime
   { return std::sqrt(l); }
 
   native_real pow(object_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).pow(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const r) -> native_real
+      {
+        using L = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<L>)
+        {
+          return visit_object
+          (
+            [](auto const typed_r, auto const typed_l) -> native_real
+            {
+              using R = typename decltype(typed_r)::value_type;
+
+              if constexpr(behavior::numberable<R>)
+              {
+                using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
+                return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r->data));
+              }
+              else
+              { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+            },
+            r,
+            typed_l->data
+          );
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   native_real pow(obj::integer_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).pow(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
+          return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r->data));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l->data
+    );
+  }
   native_real pow(object_ptr const l, obj::integer_ptr const r)
-  { return with(left_ops(l), right_ops(r)).pow(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
+          return std::pow(static_cast<C>(typed_l->data), static_cast<C>(typed_r));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r->data
+    );
+  }
   native_real pow(obj::integer_ptr const l, obj::integer_ptr const r)
   { return std::pow(l->data, r->data); }
   native_real pow(obj::real_ptr const l, obj::real_ptr const r)
   { return std::pow(l->data, r->data); }
   native_real pow(obj::real_ptr const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).pow(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
+          return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r->data));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l->data
+    );
+  }
   native_real pow(object_ptr const l, obj::real_ptr const r)
-  { return with(left_ops(l), right_ops(r)).pow(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
+          return std::pow(static_cast<C>(typed_l->data), static_cast<C>(typed_r));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r->data
+    );
+  }
   native_real pow(obj::real_ptr const l, obj::integer_ptr const r)
-  { return std::pow(l->data, r->data); }
+  { return std::pow(l->data, static_cast<native_real>(r->data)); }
   native_real pow(obj::integer_ptr const l, obj::real_ptr const r)
-  { return std::pow(l->data, r->data); }
+  { return std::pow(static_cast<native_real>(l->data), r->data); }
 
   native_real pow(object_ptr const l, native_real const r)
-  { return with(left_ops(l), right_ops(r)).pow(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
+          return std::pow(static_cast<C>(typed_l->data), static_cast<C>(typed_r));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   native_real pow(native_real const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).pow(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
+          return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r->data));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l
+    );
+  }
   native_real pow(native_real const l, native_real const r)
   { return std::pow(l, r); }
 
   native_real pow(native_integer const l, native_real const r)
-  { return std::pow(l, r); }
+  { return std::pow(static_cast<native_real>(l), r); }
   native_real pow(native_real const l, native_integer const r)
-  { return std::pow(l, r); }
+  { return std::pow(l, static_cast<native_real>(r)); }
 
   native_real pow(object_ptr const l, native_integer const r)
-  { return with(left_ops(l), right_ops(r)).pow(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_l, auto const typed_r) -> native_real
+      {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
+          return std::pow(static_cast<C>(typed_l->data), static_cast<C>(typed_r));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
+      },
+      l,
+      r
+    );
+  }
   native_real pow(native_integer const l, object_ptr const r)
-  { return with(left_ops(l), right_ops(r)).pow(); }
+  {
+    return visit_object
+    (
+      [](auto const typed_r, auto const typed_l) -> native_real
+      {
+        using T = typename decltype(typed_r)::value_type;
+
+        if constexpr(behavior::numberable<T>)
+        {
+          using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
+          return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r->data));
+        }
+        else
+        { throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) }; }
+      },
+      r,
+      l
+    );
+  }
   native_real pow(native_integer const l, native_integer const r)
   { return std::pow(l, r); }
 
@@ -649,7 +1972,6 @@ namespace jank::runtime
   {
     return visit_object
     (
-      l,
       [](auto const typed_l) -> native_integer
       {
         using T = typename decltype(typed_l)::value_type;
@@ -658,7 +1980,8 @@ namespace jank::runtime
         { return typed_l->to_integer(); }
         else
         { throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) }; }
-      }
+      },
+      l
     );
   }
   native_integer to_int(obj::integer_ptr const l)
