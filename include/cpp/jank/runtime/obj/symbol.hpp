@@ -25,6 +25,9 @@ namespace jank::runtime
     static_object(native_string const &ns, native_string const &n);
     static_object(native_string &&ns, native_string &&n);
 
+    static_object& operator=(static_object const&) = default;
+    static_object& operator=(static_object &&) = default;
+
     /* behavior::objectable */
     native_bool equal(object const &) const;
     native_string to_string() const;
