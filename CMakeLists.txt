@@ -320,9 +320,9 @@ endif()
 # ---- Tests ----
 
 # ---- Install rules ----
-#if(NOT CMAKE_SKIP_INSTALL_RULES)
-#  include(cmake/install.cmake)
-#endif()
+if(NOT CMAKE_SKIP_INSTALL_RULES)
+  include(cmake/install.cmake)
+endif()
 # ---- Install rules ----
 
 # ---- new-obj-model executable ----
