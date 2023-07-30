@@ -23,14 +23,49 @@ namespace jank
     using list = static_object<object_type::list>;
   }
 
-  native_box<runtime::obj::nil> make_box(std::nullptr_t const &);
-  native_box<runtime::obj::boolean> make_box(native_bool const b);
-  native_box<runtime::obj::integer> make_box(int const i);
-  native_box<runtime::obj::integer> make_box(native_integer const i);
-  native_box<runtime::obj::integer> make_box(size_t const i);
-  native_box<runtime::obj::real> make_box(native_real const r);
-  native_box<runtime::obj::string> make_box(native_string_view const &s);
-  native_box<runtime::obj::list> make_box(runtime::detail::persistent_list const &l);
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(std::nullptr_t const &)
+  { return runtime::obj::nil::nil_const(); }
+
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(native_bool const b)
+  { return b ? runtime::obj::boolean::true_const() : runtime::obj::boolean::false_const(); }
+
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(int const i)
+  { return make_box<runtime::obj::integer>(static_cast<native_integer>(i)); }
+
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(native_integer const i)
+  { return make_box<runtime::obj::integer>(i); }
+
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(size_t const i)
+  { return make_box<runtime::obj::integer>(static_cast<native_integer>(i)); }
+
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(native_real const r)
+  { return make_box<runtime::obj::real>(r); }
+
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(native_string_view const &s)
+  { return make_box<runtime::obj::string>(s); }
+
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(runtime::detail::persistent_list const &l)
+  { return make_box<runtime::obj::list>(l); }
+
+  template <typename T>
+  requires std::is_floating_point_v<T>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(T const d)
+  { return make_box<runtime::obj::real>(d); }
+
+  template <typename T>
+  requires std::is_integral_v<T>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(T const d)
+  { return make_box<runtime::obj::integer>(d); }
 }
 
 namespace std

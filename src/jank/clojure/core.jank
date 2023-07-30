@@ -840,11 +840,18 @@
                      if constexpr(std::is_base_of_v<behavior::callable, T>)
                      {
                        ankerl::nanobench::Config config;
-                       config.mTimeUnit = std::chrono::milliseconds{ 1 };
                        //config.mTimeUnitName = TODO
-                       config.mMinEpochIterations = 20;
                        config.mOut = &std::cout;
-                       config.mWarmup = 10;
+
+                       /* Ray tracing. */
+                       //config.mTimeUnit = std::chrono::milliseconds{ 1 };
+                       //config.mMinEpochIterations = 20;
+                       //config.mWarmup = 10;
+
+                       /* Smaller things. */
+                       config.mTimeUnit = std::chrono::nanoseconds{ 1 };
+                       config.mMinEpochIterations = 1000000;
+                       config.mWarmup = 1000;
 
                        ankerl::nanobench::Bench().config(config).run
                        (
