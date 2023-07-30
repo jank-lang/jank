@@ -893,6 +893,7 @@ namespace jank::codegen
 
     native_vector<native_string> interpolated_chunk_tmps;
     interpolated_chunk_tmps.reserve((expr.chunks.size() / 2) + 1);
+    // NOLINTNEXTLINE(clang-analyzer-core.NullDereference): Not sure what's up with this.
     for(auto const &chunk : expr.chunks)
     {
       auto const * const chunk_expr(boost::get<analyze::expression_ptr>(&chunk));

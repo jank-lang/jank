@@ -968,7 +968,7 @@ namespace jank::runtime
   {
     return visit_object
     (
-      [](auto const typed_r, auto const typed_l) -> native_real
+      [](auto const typed_r, auto const typed_l) -> native_bool
       {
         using T = typename decltype(typed_r)::value_type;
 
@@ -985,7 +985,7 @@ namespace jank::runtime
   {
     return visit_object
     (
-      [](auto const typed_l, auto const typed_r) -> native_real
+      [](auto const typed_l, auto const typed_r) -> native_bool
       {
         using T = typename decltype(typed_l)::value_type;
 
@@ -1007,7 +1007,7 @@ namespace jank::runtime
   {
     return visit_object
     (
-      [](auto const typed_l, auto const typed_r) -> native_real
+      [](auto const typed_l, auto const typed_r) -> native_bool
       {
         using T = typename decltype(typed_l)::value_type;
 
@@ -1024,7 +1024,7 @@ namespace jank::runtime
   {
     return visit_object
     (
-      [](auto const typed_r, auto const typed_l) -> native_real
+      [](auto const typed_r, auto const typed_l) -> native_bool
       {
         using T = typename decltype(typed_r)::value_type;
 
@@ -1156,7 +1156,7 @@ namespace jank::runtime
   {
     return visit_object
     (
-      [](auto const typed_r, auto const typed_l) -> native_real
+      [](auto const typed_r, auto const typed_l) -> native_bool
       {
         using T = typename decltype(typed_r)::value_type;
 
@@ -1173,7 +1173,7 @@ namespace jank::runtime
   {
     return visit_object
     (
-      [](auto const typed_l, auto const typed_r) -> native_real
+      [](auto const typed_l, auto const typed_r) -> native_bool
       {
         using T = typename decltype(typed_l)::value_type;
 
@@ -1195,7 +1195,7 @@ namespace jank::runtime
   {
     return visit_object
     (
-      [](auto const typed_l, auto const typed_r) -> native_real
+      [](auto const typed_l, auto const typed_r) -> native_bool
       {
         using T = typename decltype(typed_l)::value_type;
 
@@ -1212,7 +1212,7 @@ namespace jank::runtime
   {
     return visit_object
     (
-      [](auto const typed_r, auto const typed_l) -> native_real
+      [](auto const typed_r, auto const typed_l) -> native_bool
       {
         using T = typename decltype(typed_r)::value_type;
 
