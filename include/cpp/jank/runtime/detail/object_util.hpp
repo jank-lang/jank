@@ -52,6 +52,10 @@ namespace jank
   { return make_box<runtime::obj::string>(s); }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(char const * const s)
+  { return make_box<runtime::obj::string>(s); }
+
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(runtime::detail::persistent_list const &l)
   { return make_box<runtime::obj::list>(l); }
 

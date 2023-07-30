@@ -20,7 +20,7 @@ namespace jank::runtime
 
   native_string const& obj::native_function_wrapper::to_string() const
   {
-    static native_string const s{ "function" };
+    static native_string const s{ "native_function_wrapper" };
     return s;
   }
 

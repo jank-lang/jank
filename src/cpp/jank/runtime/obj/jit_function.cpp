@@ -9,7 +9,7 @@ namespace jank::runtime
   { return "jit function"; }
 
   void obj::jit_function::to_string(fmt::memory_buffer &buff)
-  { fmt::format_to(std::back_inserter(buff), "jit function"); }
+  { fmt::format_to(std::back_inserter(buff), "jit_function"); }
 
   native_integer obj::jit_function::to_hash() const
   { return reinterpret_cast<native_integer>(this); }

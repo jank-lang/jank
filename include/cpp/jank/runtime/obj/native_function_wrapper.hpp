@@ -40,7 +40,7 @@ namespace jank::runtime
 
   /* TODO: Rename to function_wrapper */
   template <>
-  struct static_object<object_type::native_function_wrapper> : gc
+  struct static_object<object_type::native_function_wrapper> : gc, behavior::callable
   {
     static constexpr bool pointer_free{ true };
 
@@ -57,17 +57,17 @@ namespace jank::runtime
     native_integer to_hash() const;
 
     /* behavior::callable */
-    object_ptr call() const;
-    object_ptr call(object_ptr) const;
-    object_ptr call(object_ptr, object_ptr) const;
-    object_ptr call(object_ptr, object_ptr, object_ptr) const;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr) const;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const;
+    object_ptr call() const final;
+    object_ptr call(object_ptr) const final;
+    object_ptr call(object_ptr, object_ptr) const final;
+    object_ptr call(object_ptr, object_ptr, object_ptr) const final;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr) const final;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const final;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const final;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const final;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const final;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const final;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const final;
 
     /* behavior::metadatable */
     object_ptr with_meta(object_ptr m) const;

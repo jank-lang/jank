@@ -756,7 +756,7 @@
                        return typed_o->meta.unwrap();
                      }
                      else
-                     { throw #{ nil }#; }
+                     { return #{ nil }#; }
                    },
                    #{ o }#
                  );")))

@@ -201,7 +201,7 @@ namespace jank::read::parse
   processor::object_result processor::parse_nil()
   {
     ++token_current;
-    return ok(make_box<runtime::obj::nil>());
+    return ok(runtime::obj::nil::nil_const());
   }
 
   processor::object_result processor::parse_boolean()

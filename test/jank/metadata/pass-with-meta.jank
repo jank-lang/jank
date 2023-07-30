@@ -10,11 +10,8 @@
 (assert (= 'foo (with-meta 'foo m)))
 (assert (= m (meta (with-meta 'foo m))))
 
-(assert (= "foo" (with-meta "foo" m)))
-(assert (= m (meta (with-meta "foo" m))))
-
-; TODO: List literals
-;(assert (= m (meta (with-meta [] m))))
+(assert (= m (meta (with-meta [] m))))
+(assert (= m (meta (with-meta '() m))))
 
 ; TODO: Set literals
 ;(assert (= m (meta (with-meta #{} m))))
