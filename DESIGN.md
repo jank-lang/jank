@@ -494,7 +494,7 @@ Fancy: https://github.com/mimoo/noname
 * I see this metaphor
   * Flexible systems are a river
     * The shape is constantly changing everywhere
-  * Gradually typed systems are a river with some damns
+  * Gradually typed systems are a river with some dams
     * The shape is constantly changing in many places, but it's held in a rigid
       shape in some places
 * How low can the actual cost go?
