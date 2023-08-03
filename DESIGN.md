@@ -503,3 +503,7 @@ Fancy: https://github.com/mimoo/noname
     merge it into main (with help)
     * Rich would be opposed to this, in theory, but he wouldn't notice it in
       practice, which means the cost is 0
+* Let's document the benefits of having more static type info
+  * Performance
+  * Correctness
+  * Tooling (autocomplete, suggestions, etc)

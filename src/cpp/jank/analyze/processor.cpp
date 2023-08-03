@@ -134,7 +134,7 @@ namespace jank::analyze
   )
   {
     /* TODO: Assert it doesn't start with __. */
-    auto const found_local(current_frame->find_capture(sym));
+    auto const found_local(current_frame->find_local_or_capture(sym));
     if(found_local.is_some())
     {
       local_frame::register_captures(found_local.unwrap());

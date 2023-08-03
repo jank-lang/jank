@@ -63,7 +63,7 @@ namespace jank::analyze
 
     /* This is used to find both captures and regular locals, since it's
      * impossible to know which one a sym is without finding it. */
-    option<find_result> find_capture(runtime::obj::symbol_ptr sym);
+    option<find_result> find_local_or_capture(runtime::obj::symbol_ptr sym);
     static void register_captures(find_result const &result);
 
     runtime::obj::symbol_ptr lift_var(runtime::obj::symbol_ptr const &);

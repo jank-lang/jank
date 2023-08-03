@@ -40,7 +40,7 @@ namespace jank::analyze
     return *this;
   }
 
-  option<local_frame::find_result> local_frame::find_capture(runtime::obj::symbol_ptr const sym)
+  option<local_frame::find_result> local_frame::find_local_or_capture(runtime::obj::symbol_ptr const sym)
   {
     decltype(local_frame::find_result::crossed_fns) crossed_fns;
 
@@ -59,7 +59,7 @@ namespace jank::analyze
       { return none; }
     }
 
-    throw "unable to find local";
+    throw std::runtime_error{ fmt::format("unable to find local: {}", sym->to_string()) };
   }
 
   void local_frame::register_captures(find_result const &result)
