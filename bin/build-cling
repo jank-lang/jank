@@ -70,7 +70,8 @@ function build()
   ffi_include_dir="$(pkg-config --cflags-only-I libffi | cut -c3-)"
 
   cmake -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_CXX_STANDARD=20 \
+        -DCMAKE_CXX_FLAGS="-w" \
+        -DCMAKE_CXX_STANDARD=17 \
         -DLLVM_TARGETS_TO_BUILD="host;NVPTX" \
         -DLLVM_BUILD_LLVM_DYLIB=OFF \
         -DLLVM_ENABLE_RTTI=ON \
