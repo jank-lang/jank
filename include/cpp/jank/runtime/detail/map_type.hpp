@@ -197,6 +197,7 @@ namespace jank::runtime::detail
           { return data[i + 1]; }
         }
       }
+      return nullptr;
     }
 
     size_t to_hash() const
