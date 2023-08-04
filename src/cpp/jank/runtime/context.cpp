@@ -293,7 +293,7 @@ namespace jank::runtime
 
           auto const meta(var.unwrap()->meta.unwrap());
           auto const found_macro(meta->data.find(intern_keyword("", "macro", true)));
-          if(!found_macro || detail::equal(found_macro, obj::boolean::false_const()))
+          if(!found_macro || !detail::truthy(found_macro))
           { return typed_o; }
 
           auto const &args(jank::make_box<obj::list>(typed_o->data.rest().cons(obj::nil::nil_const()).cons(typed_o)));
@@ -306,7 +306,7 @@ namespace jank::runtime
 
   object_ptr context::macroexpand(object_ptr o)
   {
-    auto const &expanded(macroexpand1(o));
+    auto const expanded(macroexpand1(o));
     if(expanded != o)
     { return macroexpand(expanded); }
     return o;
