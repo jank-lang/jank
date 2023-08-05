@@ -44,13 +44,3 @@ namespace jank::runtime
   using ns = static_object<object_type::ns>;
   using ns_ptr = native_box<ns>;
 }
-
-namespace std
-{
-  template <>
-  struct hash<jank::runtime::var>
-  {
-    size_t operator()(jank::runtime::var const &o) const noexcept
-    { return static_cast<size_t>(o.n->name->to_hash()); }
-  };
-}

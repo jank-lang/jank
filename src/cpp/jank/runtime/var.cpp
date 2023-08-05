@@ -24,6 +24,9 @@ namespace jank::runtime
     return n == v->n && name == v->name;
   }
 
+  native_bool var::equal(var const &v) const
+  { return n == v.n && name == v.name; }
+
   void to_string_impl(obj::symbol_ptr const &name, fmt::memory_buffer &buff)
   { format_to(std::back_inserter(buff), FMT_COMPILE("#'{}/{}"), name->ns, name->name); }
   void var::to_string(fmt::memory_buffer &buff) const

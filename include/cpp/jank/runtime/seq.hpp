@@ -79,4 +79,6 @@ namespace jank::runtime
   object_ptr assoc(object_ptr m, object_ptr k, object_ptr v);
   object_ptr get(object_ptr m, object_ptr key);
   object_ptr get(object_ptr m, object_ptr key, object_ptr fallback);
+  object_ptr get_in(object_ptr m, object_ptr keys);
+  object_ptr get_in(object_ptr m, object_ptr keys, object_ptr fallback);
 }

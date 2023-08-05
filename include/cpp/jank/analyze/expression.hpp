@@ -61,6 +61,18 @@ namespace jank::analyze
       : data{ std::forward<T>(t) }
     { }
 
+    expression_base_ptr get_base()
+    {
+      expression_base_ptr ret{};
+      boost::apply_visitor
+      (
+        [&ret](auto &typed_ex)
+        { ret = &typed_ex; },
+        data
+      );
+      return ret;
+    }
+
     value_type data;
   };
   /* TODO: Use something non-nullable. */

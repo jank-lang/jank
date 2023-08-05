@@ -6,6 +6,7 @@
 #include <folly/Synchronized.h>
 
 #include <jank/result.hpp>
+#include <jank/analyze/processor.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/obj/keyword.hpp>
@@ -69,5 +70,9 @@ namespace jank::runtime
     thread_state& get_thread_state(option<thread_state> init);
 
     folly::Synchronized<native_unordered_map<std::thread::id, thread_state>> thread_states;
+    /* The analyze processor is reused across evaluations so we can keep the semantic information
+     * of previous code. This is essential for REPL use. */
+    /* TODO: This needs to be synchronized. */
+    jank::analyze::processor an_prc{ *this };
   };
 }

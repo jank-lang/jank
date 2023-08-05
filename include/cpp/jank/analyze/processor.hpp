@@ -159,7 +159,8 @@ namespace jank::analyze
       )
     >;
 
-    std::unordered_map<runtime::obj::symbol_ptr, special_function_type> specials;
+    native_unordered_map<runtime::obj::symbol_ptr, special_function_type> specials;
+    native_unordered_map<runtime::var_ptr, expression_ptr> vars;
     runtime::context &rt_ctx;
     local_frame_ptr root_frame;
   };

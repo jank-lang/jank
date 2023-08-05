@@ -30,6 +30,9 @@ namespace jank::runtime
     void to_string(fmt::memory_buffer &buff) const;
     native_integer to_hash() const;
 
+    /* behavior::objectable extended */
+    native_bool equal(static_object const &) const;
+
     /* behavior::metadatable */
     object_ptr with_meta(object_ptr m);
 
@@ -52,4 +55,44 @@ namespace jank::runtime
 
   using var = static_object<object_type::var>;
   using var_ptr = native_box<var>;
+}
+
+namespace std
+{
+  template <>
+  struct hash<jank::runtime::var>
+  {
+    size_t operator()(jank::runtime::var const &o) const noexcept
+    {
+      static auto hasher(std::hash<jank::runtime::obj::symbol>{});
+      return hasher(*o.name);
+    }
+  };
+
+  template <>
+  struct hash<jank::runtime::var_ptr>
+  {
+    size_t operator()(jank::runtime::var_ptr const &o) const noexcept
+    {
+      static auto hasher(std::hash<jank::runtime::obj::symbol>{});
+      return hasher(*o->name);
+    }
+  };
+
+  template <>
+  struct equal_to<jank::runtime::var_ptr>
+  {
+    bool operator()
+    (
+      jank::runtime::var_ptr const &lhs,
+      jank::runtime::var_ptr const &rhs
+    ) const noexcept
+    {
+      if(!lhs)
+      { return !rhs; }
+      else if(!rhs)
+      { return !lhs; }
+      return lhs->equal(*rhs);
+    }
+  };
 }

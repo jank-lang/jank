@@ -4,7 +4,6 @@
 
 namespace jank
 {
-  /* TODO: Custom ptr in debug which checks for nullptr usage. */
   template <typename T>
   struct native_box
   {

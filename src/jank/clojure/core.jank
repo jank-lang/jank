@@ -326,6 +326,11 @@
    (native/raw "__value = jank::runtime::get(#{ m }#, #{ k }#);"))
   ([m k fallback]
    (native/raw "__value = jank::runtime::get(#{ m }#, #{ k }#, #{ fallback }#);")))
+(defn get-in
+  ([m ks]
+   (native/raw "__value = jank::runtime::get_in(#{ m }#, #{ ks }#);"))
+  ([m ks fallback]
+   (native/raw "__value = jank::runtime::get_in(#{ m }#, #{ ks }#, #{ fallback }#);")))
 
 ;; Other.
 (defn hash [o]
@@ -385,6 +390,8 @@
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
+(reset-meta! (var +) {:arities {2 {:supports-unboxed-input? true
+                                   :unboxed-output? true}}})
 
 (defn -
   ([x]
@@ -396,6 +403,8 @@
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
+(reset-meta! (var -) {:arities {2 {:supports-unboxed-input? true
+                                   :unboxed-output? true}}})
 
 (defn *
   ([]
@@ -409,6 +418,8 @@
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
+(reset-meta! (var *) {:arities {2 {:supports-unboxed-input? true
+                                   :unboxed-output? true}}})
 
 ; TODO: Symbol creation for generated names related to instances of this
 ; will result in a name like `/384`, which gets parsed as `384`. Fix the parsing
@@ -425,6 +436,8 @@
        (if (empty? args)
          res
          (recur res (first args) (next args)))))))
+(reset-meta! (var /) {:arities {2 {:supports-unboxed-input? true
+                                   :unboxed-output? true}}})
 
 (defn =
   ([x]
@@ -449,6 +462,8 @@
        (recur r (first args) (next args))
        (native/raw "__value = make_box(lt(#{ r }#, #{ (first args) }#));"))
      false)))
+(reset-meta! (var <) {:arities {2 {:supports-unboxed-input? true
+                                   :unboxed-output? true}}})
 
 (defn <=
   ([x]
@@ -461,6 +476,8 @@
        (recur r (first args) (next args))
        (native/raw "__value = make_box(lte(#{ r }#, #{ (first args) }#));"))
      false)))
+(reset-meta! (var <=) {:arities {2 {:supports-unboxed-input? true
+                                    :unboxed-output? true}}})
 
 (defn >
   ([x]
@@ -473,6 +490,8 @@
        (recur r (first args) (next args))
        (native/raw "__value = make_box(lt(#{ (first args) }#, #{ r }#));"))
      false)))
+(reset-meta! (var >) {:arities {2 {:supports-unboxed-input? true
+                                   :unboxed-output? true}}})
 
 (defn >=
   ([x]
@@ -485,6 +504,8 @@
        (recur r (first args) (next args))
        (native/raw "__value = make_box(lte(#{ (first args) }#, #{ r }#));"))
      false)))
+(reset-meta! (var >=) {:arities {2 {:supports-unboxed-input? true
+                                    :unboxed-output? true}}})
 
 (defn min
   ([x]
@@ -496,6 +517,8 @@
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
+(reset-meta! (var min) {:arities {2 {:supports-unboxed-input? true
+                                     :unboxed-output? true}}})
 
 (defn max
   ([x]
@@ -507,6 +530,8 @@
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
+(reset-meta! (var max) {:arities {2 {:supports-unboxed-input? true
+                                     :unboxed-output? true}}})
 
 (defn inc [n]
   (native/raw "__value = inc(#{ n }#);"))
@@ -830,3 +855,5 @@
 
 (defn pow [x y]
   (native/raw "__value = make_box(std::pow(runtime::detail::to_real(#{ x }#), runtime::detail::to_real(#{ y }#)));"))
+(reset-meta! (var pow) {:arities {2 {:supports-unboxed-input? true
+                                     :unboxed-output? true}}})

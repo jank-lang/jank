@@ -247,7 +247,7 @@ namespace jank::runtime
         if constexpr(behavior::associatively_readable<T>)
         { return typed_m->get(key); }
         else
-        { throw std::runtime_error{ fmt::format("not associatively readable: {}", typed_m->to_string()) }; }
+        { return obj::nil::nil_const(); }
       },
       m
     );
@@ -264,7 +264,82 @@ namespace jank::runtime
         if constexpr(behavior::associatively_readable<T>)
         { return typed_m->get(key, fallback); }
         else
-        { throw std::runtime_error{ fmt::format("not associatively readable: {}", typed_m->to_string()) }; }
+        { return obj::nil::nil_const(); }
+      },
+      m
+    );
+  }
+
+  object_ptr get_in(object_ptr m, object_ptr keys)
+  {
+    return visit_object
+    (
+      [&](auto const typed_m) -> object_ptr
+      {
+        using T = typename decltype(typed_m)::value_type;
+
+        if constexpr(behavior::associatively_readable<T>)
+        {
+          return visit_object
+          (
+            [&](auto const typed_keys) -> object_ptr
+            {
+              using T = typename decltype(typed_keys)::value_type;
+
+              if constexpr(behavior::seqable<T>)
+              {
+                object_ptr ret{ typed_m };
+                for(auto seq(typed_keys->fresh_seq()); seq != nullptr; seq = seq->next_in_place())
+                { ret = get(ret, seq->first()); }
+                return ret;
+              }
+              else
+              { throw std::runtime_error{ fmt::format("not seqable: {}", typed_keys->to_string()) }; }
+            },
+            keys
+          );
+        }
+        else
+        { return obj::nil::nil_const(); }
+      },
+      m
+    );
+  }
+
+  object_ptr get_in(object_ptr m, object_ptr keys, object_ptr fallback)
+  {
+    return visit_object
+    (
+      [&](auto const typed_m) -> object_ptr
+      {
+        using T = typename decltype(typed_m)::value_type;
+
+        if constexpr(behavior::associatively_readable<T>)
+        {
+          return visit_object
+          (
+            [&](auto const typed_keys) -> object_ptr
+            {
+              using T = typename decltype(typed_keys)::value_type;
+
+              if constexpr(behavior::seqable<T>)
+              {
+                object_ptr ret{ typed_m };
+                for(auto seq(typed_keys->fresh_seq()); seq != nullptr; seq = seq->next_in_place())
+                { ret = get(ret, seq->first()); }
+
+                if(ret == obj::nil::nil_const())
+                { return fallback; }
+                return ret;
+              }
+              else
+              { throw std::runtime_error{ fmt::format("not seqable: {}", typed_keys->to_string()) }; }
+            },
+            keys
+          );
+        }
+        else
+        { return obj::nil::nil_const(); }
       },
       m
     );

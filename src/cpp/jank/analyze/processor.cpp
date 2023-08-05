@@ -101,6 +101,11 @@ namespace jank::analyze
     if(value_opt.is_none())
     { has_value = false; }
 
+    auto const qualified_sym(current_frame->lift_var(sym));
+    auto const var(rt_ctx.intern_var(qualified_sym));
+    if(var.is_err())
+    { return var.expect_err(); }
+
     option<native_box<expression>> value_expr;
 
     if(has_value)
@@ -109,15 +114,15 @@ namespace jank::analyze
       if(value_result.is_err())
       { return value_result; }
       value_expr = some(value_result.expect_ok());
+
+      vars.insert_or_assign(var.expect_ok(), value_expr.unwrap());
     }
 
-    auto const qualified_sym(current_frame->lift_var(sym));
-    rt_ctx.intern_var(qualified_sym);
     return make_box<expression>
     (
       expr::def<expression>
       {
-        expression_base{ {}, expr_type },
+        expression_base{ {}, expr_type, true },
         qualified_sym,
         value_expr,
         current_frame
@@ -169,7 +174,8 @@ namespace jank::analyze
       {
         expression_base{ {}, expr_type },
         qualified_sym,
-        current_frame
+        current_frame,
+        unwrapped_var
       }
     );
   }
@@ -502,12 +508,11 @@ namespace jank::analyze
       if(sym_obj->type != runtime::object_type::symbol || !sym->ns.empty())
       { return err(error{ "invalid let* binding: left hand must be an unqualified symbol" }); }
 
-      auto const sym_ptr(sym);
       auto res(analyze(val, ret.frame, expression_type::expression, fn_ctx));
       if(res.is_err())
       { return res.expect_err_move(); }
-      auto it(ret.pairs.emplace_back(sym_ptr, res.expect_ok_move()));
-      ret.frame->locals.emplace(sym_ptr, local_binding{ sym_ptr, some(it.second) });
+      auto it(ret.pairs.emplace_back(sym, res.expect_ok_move()));
+      ret.frame->locals.emplace(sym, local_binding{ sym, some(it.second) });
     }
 
     size_t const form_count{ o->count() - 2 };
@@ -611,9 +616,10 @@ namespace jank::analyze
     (
       expr::var_ref<expression>
       {
-        expression_base{ {}, expr_type },
+        expression_base{ {}, expr_type, true },
         qualified_sym,
-        current_frame
+        current_frame,
+        found_var.unwrap()
       }
     );
   }
@@ -640,7 +646,7 @@ namespace jank::analyze
       (
         expr::native_raw<expression>
         {
-          expression_base{ {}, expr_type },
+          expression_base{ {}, expr_type, true },
           {},
           current_frame
         }
@@ -694,7 +700,7 @@ namespace jank::analyze
     (
       expr::native_raw<expression>
       {
-        expression_base{ {}, expr_type },
+        expression_base{ {}, expr_type, true },
         std::move(chunks),
         current_frame
       }
@@ -714,7 +720,7 @@ namespace jank::analyze
     (
       expr::primitive_literal<expression>
       {
-        expression_base{ {}, expr_type },
+        expression_base{ {}, expr_type, false },
         o,
         current_frame
       }
@@ -751,7 +757,7 @@ namespace jank::analyze
       (
         expr::primitive_literal<expression>
         {
-          expression_base{ {}, expr_type },
+          expression_base{ {}, expr_type, true },
           o,
           current_frame
         }
@@ -762,7 +768,7 @@ namespace jank::analyze
     (
       expr::vector<expression>
       {
-        expression_base{ {}, expr_type },
+        expression_base{ {}, expr_type, true },
         std::move(exprs)
       }
     );
@@ -795,7 +801,7 @@ namespace jank::analyze
     (
       expr::map<expression>
       {
-        expression_base{ {}, expr_type },
+        expression_base{ {}, expr_type, true },
         std::move(exprs)
       }
     );
@@ -814,8 +820,11 @@ namespace jank::analyze
     if(count == 0)
     { return analyze_primitive_literal(o, current_frame, expr_type, fn_ctx); }
 
+    auto const arg_count(count - 1);
+
     auto const first(o->data.first().unwrap());
     expression_ptr source{};
+    native_bool needs_box{ true };
     if(first->type == runtime::object_type::symbol)
     {
       auto const sym(runtime::expect_object<runtime::obj::symbol>(first));
@@ -827,11 +836,51 @@ namespace jank::analyze
       if(sym_result.is_err())
       { return sym_result; }
 
-      source = sym_result.expect_ok();
-
-      auto const &expanded(rt_ctx.macroexpand(o));
+      /* If this is a macro, recur so we can start over. */
+      auto const expanded(rt_ctx.macroexpand(o));
       if(expanded != o)
       { return analyze(expanded, current_frame, expr_type, fn_ctx); }
+
+      source = sym_result.expect_ok();
+      auto var_deref(boost::get<expr::var_deref<expression>>(&source->data));
+      if(var_deref && var_deref->var->meta.is_some())
+      {
+        auto const arity_meta
+        (
+          runtime::get_in
+          (
+            var_deref->var->meta.unwrap(),
+            make_box<runtime::obj::vector>
+            (
+              rt_ctx.intern_keyword("", "arities", true),
+              make_box(arg_count),
+              rt_ctx.intern_keyword("", "unboxed-output?", true)
+            )
+          )
+        );
+
+        if(runtime::detail::truthy(arity_meta))
+        {
+          auto const fn_res(vars.find(var_deref->var));
+          if(fn_res == vars.end())
+          { return err(error{ "ICE: undefined var" }); }
+
+          auto const fn(boost::get<expr::function<expression>>(&fn_res->second->data));
+          if(!fn)
+          { return err(error{ "unsupported `unboxed-output?` on non-function var" }); }
+
+          /* We need to be sure we're calling the exact arity that has been specified. Unboxed
+           * returns aren't supported for variadic calls right now. */
+          for(auto const &arity : fn->arities)
+          {
+            if(arity.fn_ctx->param_count == arg_count && !arity.fn_ctx->is_variadic)
+            {
+              needs_box = false;
+              break;
+            }
+          }
+        }
+      }
     }
     else
     {
@@ -841,10 +890,8 @@ namespace jank::analyze
       source = callable_expr.expect_ok_move();
     }
 
-    /* TODO: Verify source is callable. */
-
     native_vector<expression_ptr> arg_exprs;
-    arg_exprs.reserve(count - 1);
+    arg_exprs.reserve(arg_count);
     for(auto const &s : o->data.rest())
     {
       auto arg_expr(analyze(s, current_frame, expression_type::expression, fn_ctx));
@@ -857,7 +904,7 @@ namespace jank::analyze
     (
       expr::call<expression>
       {
-        expression_base{ {}, expr_type },
+        expression_base{ {}, expr_type, needs_box },
         source,
         jank::make_box<runtime::obj::list>(o->data.rest()),
         arg_exprs

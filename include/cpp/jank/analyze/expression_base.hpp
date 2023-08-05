@@ -17,5 +17,8 @@ namespace jank::analyze
   {
     /* TODO: Add frame here. */
     expression_type expr_type{};
+    bool needs_box{ true };
   };
+  /* TODO: native_box */
+  using expression_base_ptr = expression_base*;
 }

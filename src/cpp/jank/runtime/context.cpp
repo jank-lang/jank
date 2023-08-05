@@ -160,7 +160,6 @@ namespace jank::runtime
   {
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ *this, l_prc.begin(), l_prc.end() };
-    jank::analyze::processor an_prc{ *this };
 
     object_ptr ret{};
     for(auto const &form : p_prc)

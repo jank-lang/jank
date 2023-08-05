@@ -11,5 +11,6 @@ namespace jank::analyze::expr
   {
     runtime::obj::symbol_ptr qualified_name{};
     local_frame_ptr frame{};
+    runtime::var_ptr var{};
   };
 }
