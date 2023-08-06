@@ -38,16 +38,17 @@ int main(int const argc, char const **argv)
   {
     rt_ctx.eval_prelude(jit_prc);
 
-    /* TODO: This doesn't handle macros properly, I think. */
+    /* TODO: This doesn't handle macros properly, since it's not evaluating as it's analyzing.
+     * This isn't a problem normally, since we eval one form at a time. */
     //{
     //  auto const mfile(jank::util::map_file(file));
     //  jank::read::lex::processor l_prc{ { mfile.expect_ok().head, mfile.expect_ok().size } };
     //  jank::read::parse::processor p_prc{ rt_ctx, l_prc.begin(), l_prc.end() };
-    //  jank::analyze::processor an_prc{ rt_ctx };
+
     //  jank::codegen::processor cg_prc
     //  {
     //    rt_ctx,
-    //    an_prc.analyze(p_prc.begin(), p_prc.end()).expect_ok_move()
+    //    rt_ctx.an_prc.analyze(p_prc.begin(), p_prc.end()).expect_ok_move()
     //  };
     //  std::cout << cg_prc.declaration_str() << std::endl;
     //  return 0;

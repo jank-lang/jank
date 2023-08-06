@@ -70,6 +70,24 @@ namespace jank
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(T const d)
   { return make_box<runtime::obj::integer>(d); }
+
+  template <typename T>
+  requires runtime::behavior::objectable<T>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(T * const d)
+  { return d; }
+
+  template <typename T>
+  requires runtime::behavior::objectable<T>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(T const * const d)
+  { return d; }
+
+  template <typename T>
+  requires runtime::behavior::objectable<T>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(native_box<T> const &d)
+  { return d; }
 }
 
 namespace std

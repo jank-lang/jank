@@ -392,14 +392,15 @@ namespace jank::codegen
 
     auto inserter(std::back_inserter(body_buffer));
     fmt::format_to
-    (inserter, "auto const {}(jank::runtime::dynamic_call({}", ret_tmp, source_tmp);
+    (inserter, "auto const {}(jank::runtime::dynamic_call(make_box({})", ret_tmp, source_tmp);
     for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
-    { fmt::format_to(inserter, ", {}", arg_tmps[i]); }
+    { fmt::format_to(inserter, ", make_box({})", arg_tmps[i]); }
+    /* TODO: Test this. No way it works. */
     if(arg_tmps.size() > runtime::max_params)
     {
       fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::list>(");
       for(size_t i{ runtime::max_params }; i < arg_tmps.size(); ++i)
-      { fmt::format_to(inserter, ", {}", arg_tmps[i]); }
+      { fmt::format_to(inserter, ", make_box({})", arg_tmps[i]); }
       fmt::format_to(inserter, ")");
     }
     fmt::format_to(inserter, "));");
@@ -789,7 +790,7 @@ namespace jank::codegen
     fmt::format_to(inserter, "object_ptr {}{{ jank::runtime::obj::nil::nil_const() }}; {{", ret_tmp);
     for(auto const &pair : expr.pairs)
     {
-      auto const &val_tmp(gen(pair.second, fn_arity, true));
+      auto const &val_tmp(gen(pair.second, fn_arity, pair.second->get_base()->needs_box));
       auto const &munged_name(runtime::munge(pair.first->name));
       /* Every binding is wrapped in its own scope, to allow shadowing. */
       fmt::format_to(inserter, "{{ auto const {}({});", munged_name, val_tmp.unwrap());
@@ -801,7 +802,7 @@ namespace jank::codegen
 
       /* We ignore all values but the last. */
       if(++it == expr.body.body.end() && val_tmp.is_some())
-      { fmt::format_to(inserter, "{} = {};", ret_tmp, val_tmp.unwrap()); }
+      { fmt::format_to(inserter, "{} = make_box({});", ret_tmp, val_tmp.unwrap()); }
     }
     for(auto const &_ : expr.pairs)
     {
@@ -812,7 +813,7 @@ namespace jank::codegen
 
     if(expr.expr_type == analyze::expression_type::return_statement)
     {
-      fmt::format_to(inserter, "return {};", ret_tmp);
+      fmt::format_to(inserter, "return make_box({});", ret_tmp);
       return none;
     }
 
@@ -864,7 +865,7 @@ namespace jank::codegen
     fmt::format_to(inserter, "if(jank::runtime::detail::truthy({})) {{", condition_tmp.unwrap());
     auto const &then_tmp(gen(expr.then, fn_arity, true));
     if(then_tmp.is_some())
-    { fmt::format_to(inserter, "{} = {}; }}", ret_tmp, then_tmp.unwrap()); }
+    { fmt::format_to(inserter, "{} = make_box({}); }}", ret_tmp, then_tmp.unwrap()); }
     else
     { fmt::format_to(inserter, "}}"); }
 
@@ -873,7 +874,7 @@ namespace jank::codegen
       fmt::format_to(inserter, "else {{");
       auto const &else_tmp(gen(expr.else_.unwrap(), fn_arity, true));
       if(else_tmp.is_some())
-      { fmt::format_to(inserter, "{} = {}; }}", ret_tmp, else_tmp.unwrap()); }
+      { fmt::format_to(inserter, "{} = make_box({}); }}", ret_tmp, else_tmp.unwrap()); }
       else
       { fmt::format_to(inserter, "}}"); }
     }
@@ -1183,7 +1184,7 @@ namespace jank::codegen
         for(auto const &arity : root_fn.arities)
         {
           for(auto const &v : arity.frame->captures)
-          { fmt::format_to(inserter, ", {0}", runtime::munge(v.first->name)); }
+          { fmt::format_to(inserter, ", make_box({0})", runtime::munge(v.first->name)); }
         }
 
         fmt::format_to(inserter, "}};");
@@ -1223,7 +1224,7 @@ namespace jank::codegen
         for(auto const &arity : root_fn.arities)
         {
           for(auto const &v : arity.frame->captures)
-          { fmt::format_to(inserter, ", {0}", runtime::munge(v.first->name)); }
+          { fmt::format_to(inserter, ", make_box({0})", runtime::munge(v.first->name)); }
         }
 
         fmt::format_to(inserter, "{}", close);

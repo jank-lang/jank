@@ -295,7 +295,7 @@ namespace jank::runtime
           if(!found_macro || !detail::truthy(found_macro))
           { return typed_o; }
 
-          auto const &args(jank::make_box<obj::list>(typed_o->data.rest().cons(obj::nil::nil_const()).cons(typed_o)));
+          auto const &args(make_box<obj::list>(typed_o->data.rest().cons(obj::nil::nil_const()).cons(typed_o)));
           return apply_to(var.unwrap()->get_root(), args);
         }
       },
@@ -303,7 +303,7 @@ namespace jank::runtime
     );
   }
 
-  object_ptr context::macroexpand(object_ptr o)
+  object_ptr context::macroexpand(object_ptr const o)
   {
     auto const expanded(macroexpand1(o));
     if(expanded != o)

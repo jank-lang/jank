@@ -12,7 +12,7 @@ namespace jank::analyze
 
   struct lifted_var
   {
-    runtime::obj::symbol native_name;
+    runtime::obj::symbol native_name{};
     runtime::obj::symbol_ptr var_name{};
   };
 
@@ -20,15 +20,18 @@ namespace jank::analyze
    * rather than just doing both. */
   struct lifted_constant
   {
-    runtime::obj::symbol native_name;
-    option<runtime::obj::symbol> unboxed_native_name;
+    runtime::obj::symbol native_name{};
+    option<runtime::obj::symbol> unboxed_native_name{};
     runtime::object_ptr data{};
   };
 
   struct local_binding
   {
     runtime::obj::symbol_ptr name{};
-    option<native_box<expression>> value_expr;
+    option<native_box<expression>> value_expr{};
+    native_bool needs_box{ true };
+    native_bool boxed_usage{};
+    native_bool unboxed_usage{};
   };
 
   struct local_frame : gc

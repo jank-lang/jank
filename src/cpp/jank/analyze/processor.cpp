@@ -63,7 +63,7 @@ namespace jank::analyze
       { return err(parse_current->expect_err_move()); }
       fn.push_back(parse_current->expect_ok());
     }
-    auto fn_list(jank::make_box<runtime::obj::list>(fn.rbegin(), fn.rend()));
+    auto fn_list(make_box<runtime::obj::list>(fn.rbegin(), fn.rend()));
     return analyze(fn_list, expression_type::expression);
   }
 
@@ -147,7 +147,7 @@ namespace jank::analyze
       (
         expr::local_reference
         {
-          expression_base{ {}, expr_type },
+          expression_base{ {}, expr_type, false },
           sym,
           found_local.unwrap().binding
         }
@@ -512,7 +512,7 @@ namespace jank::analyze
       if(res.is_err())
       { return res.expect_err_move(); }
       auto it(ret.pairs.emplace_back(sym, res.expect_ok_move()));
-      ret.frame->locals.emplace(sym, local_binding{ sym, some(it.second) });
+      ret.frame->locals.emplace(sym, local_binding{ sym, some(it.second), it.second->get_base()->needs_box });
     }
 
     size_t const form_count{ o->count() - 2 };
@@ -863,7 +863,7 @@ namespace jank::analyze
         {
           auto const fn_res(vars.find(var_deref->var));
           if(fn_res == vars.end())
-          { return err(error{ "ICE: undefined var" }); }
+          { return err(error{ fmt::format("ICE: undefined var: {}", var_deref->var->to_string()) }); }
 
           auto const fn(boost::get<expr::function<expression>>(&fn_res->second->data));
           if(!fn)
