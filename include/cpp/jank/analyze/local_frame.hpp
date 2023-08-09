@@ -30,8 +30,8 @@ namespace jank::analyze
     runtime::obj::symbol_ptr name{};
     option<native_box<expression>> value_expr{};
     native_bool needs_box{ true };
-    native_bool boxed_usage{};
-    native_bool unboxed_usage{};
+    native_bool has_boxed_usage{};
+    native_bool has_unboxed_usage{};
   };
 
   struct local_frame : gc

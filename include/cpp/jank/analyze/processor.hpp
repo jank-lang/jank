@@ -42,49 +42,56 @@ namespace jank::analyze
       runtime::object_ptr,
       local_frame_ptr &,
       expression_type,
-      option<expr::function_context_ptr> const&
+      option<expr::function_context_ptr> const&,
+      native_bool needs_box
     );
     expression_result analyze_call
     (
       runtime::obj::list_ptr const &,
       local_frame_ptr &,
       expression_type,
-      option<expr::function_context_ptr> const&
+      option<expr::function_context_ptr> const&,
+      native_bool needs_box
     );
     expression_result analyze_def
     (
       runtime::obj::list_ptr const &,
       local_frame_ptr &,
       expression_type,
-      option<expr::function_context_ptr> const&
+      option<expr::function_context_ptr> const&,
+      native_bool needs_box
     );
     expression_result analyze_symbol
     (
       runtime::obj::symbol_ptr const &,
       local_frame_ptr &,
       expression_type,
-      option<expr::function_context_ptr> const&
+      option<expr::function_context_ptr> const&,
+      native_bool needs_box
     );
     expression_result analyze_fn
     (
       runtime::obj::list_ptr const &,
       local_frame_ptr &,
       expression_type,
-      option<expr::function_context_ptr> const&
+      option<expr::function_context_ptr> const&,
+      native_bool needs_box
     );
     expression_result analyze_recur
     (
       runtime::obj::list_ptr const &,
       local_frame_ptr &,
       expression_type,
-      option<expr::function_context_ptr> const&
+      option<expr::function_context_ptr> const&,
+      native_bool needs_box
     );
     expression_result analyze_do
     (
       runtime::obj::list_ptr const &,
       local_frame_ptr &,
       expression_type,
-      option<expr::function_context_ptr> const&
+      option<expr::function_context_ptr> const&,
+      native_bool needs_box
     );
     jank::result<expr::function_arity<expression>, error> analyze_fn_arity
     (
@@ -96,56 +103,64 @@ namespace jank::analyze
       runtime::obj::list_ptr const &,
       local_frame_ptr &,
       expression_type,
-      option<expr::function_context_ptr> const&
+      option<expr::function_context_ptr> const&,
+      native_bool needs_box
     );
     expression_result analyze_if
     (
       runtime::obj::list_ptr const &,
       local_frame_ptr &,
       expression_type,
-      option<expr::function_context_ptr> const&
+      option<expr::function_context_ptr> const&,
+      native_bool needs_box
     );
     expression_result analyze_quote
     (
       runtime::obj::list_ptr const &,
       local_frame_ptr &,
       expression_type,
-      option<expr::function_context_ptr> const&
+      option<expr::function_context_ptr> const&,
+      native_bool needs_box
     );
     expression_result analyze_var
     (
       runtime::obj::list_ptr const &,
       local_frame_ptr &,
       expression_type,
-      option<expr::function_context_ptr> const&
+      option<expr::function_context_ptr> const&,
+      native_bool needs_box
     );
     expression_result analyze_native_raw
     (
       runtime::obj::list_ptr const &,
       local_frame_ptr &,
       expression_type,
-      option<expr::function_context_ptr> const&
+      option<expr::function_context_ptr> const&,
+      native_bool needs_box
     );
     expression_result analyze_primitive_literal
     (
       runtime::object_ptr,
       local_frame_ptr &,
       expression_type,
-      option<expr::function_context_ptr> const&
+      option<expr::function_context_ptr> const&,
+      native_bool needs_box
     );
     expression_result analyze_vector
     (
       runtime::obj::vector_ptr const &,
       local_frame_ptr &,
       expression_type,
-      option<expr::function_context_ptr> const&
+      option<expr::function_context_ptr> const&,
+      native_bool needs_box
     );
     expression_result analyze_map
     (
       runtime::obj::map_ptr const &,
       local_frame_ptr &,
       expression_type,
-      option<expr::function_context_ptr> const&
+      option<expr::function_context_ptr> const&,
+      native_bool needs_box
     );
 
     using special_function_type = std::function
@@ -155,7 +170,8 @@ namespace jank::analyze
         runtime::obj::list_ptr const &,
         local_frame_ptr &,
         expression_type,
-        option<expr::function_context_ptr> const&
+        option<expr::function_context_ptr> const&,
+        native_bool
       )
     >;
 

@@ -507,3 +507,8 @@ Fancy: https://github.com/mimoo/noname
   * Performance
   * Correctness
   * Tooling (autocomplete, suggestions, etc)
+
+## Editor support
+### Inline C++
+* Foreign syntax regions
+* Narrowing: https://github.com/chrisbra/NrrwRgn
