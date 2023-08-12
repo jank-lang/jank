@@ -174,6 +174,7 @@ add_library(
   src/cpp/jank/runtime/math.cpp
   src/cpp/jank/analyze/processor.cpp
   src/cpp/jank/analyze/local_frame.cpp
+  src/cpp/jank/analyze/step/force_boxed.cpp
   src/cpp/jank/evaluate.cpp
   src/cpp/jank/codegen/processor.cpp
   src/cpp/jank/jit/processor.cpp
@@ -285,6 +286,7 @@ if(jank_tests)
     test/cpp/main.cpp
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
+    test/cpp/jank/analyze/box.cpp
     test/cpp/jank/runtime/detail/list_type.cpp
     test/cpp/jank/runtime/context.cpp
     test/cpp/jank/jit/processor.cpp

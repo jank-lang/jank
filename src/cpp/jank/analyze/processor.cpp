@@ -11,6 +11,7 @@
 #include <jank/runtime/behavior/numberable.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
+#include <jank/analyze/step/force_boxed.hpp>
 #include <jank/result.hpp>
 
 namespace jank::analyze
@@ -123,10 +124,9 @@ namespace jank::analyze
     (
       expr::def<expression>
       {
-        expression_base{ {}, expr_type, true },
+        expression_base{ {}, expr_type, current_frame, true },
         qualified_sym,
-        value_expr,
-        current_frame
+        value_expr
       }
     );
   }
@@ -137,14 +137,35 @@ namespace jank::analyze
     local_frame_ptr &current_frame,
     expression_type const expr_type,
     option<expr::function_context_ptr> const&,
-    native_bool const needs_box
+    native_bool needs_box
   )
   {
     /* TODO: Assert it doesn't start with __. */
-    auto const found_local(current_frame->find_local_or_capture(sym));
+    auto found_local(current_frame->find_local_or_capture(sym));
     if(found_local.is_some())
     {
       local_frame::register_captures(found_local.unwrap());
+
+      /* Since we're referring to a local, we're boxed if it is boxed. */
+      needs_box |= found_local.unwrap().binding.needs_box;
+
+      /* Captured locals are always boxed, even if the originating local is not. */
+      if(!found_local.unwrap().crossed_fns.empty())
+      {
+        needs_box = true;
+
+        /* Capturing counts as a boxed usage for the originating local. */
+        found_local.unwrap().binding.has_boxed_usage = true;
+
+        /* The first time we reference a captured local from within a function, we get here.
+         * We determine that we had to cross one or more function scopes to find the relevant
+         * local, so it's a new capture. We register the capture above, but we need to search
+         * again to get the binding within our current function, since the one we have now
+         * is the originating binding.
+         *
+         * All future lookups for this capatured local, in this function, will skip this branch. */
+        found_local = current_frame->find_local_or_capture(sym);
+      }
 
       if(needs_box)
       { found_local.unwrap().binding.has_boxed_usage = true; }
@@ -155,7 +176,7 @@ namespace jank::analyze
       (
         expr::local_reference
         {
-          expression_base{ {}, expr_type, false },
+          expression_base{ {}, expr_type, current_frame, needs_box },
           sym,
           found_local.unwrap().binding
         }
@@ -180,9 +201,8 @@ namespace jank::analyze
     (
       expr::var_deref<expression>
       {
-        expression_base{ {}, expr_type },
+        expression_base{ {}, expr_type, current_frame },
         qualified_sym,
-        current_frame,
         unwrapped_var
       }
     );
@@ -271,7 +291,7 @@ namespace jank::analyze
     auto fn_ctx(make_box<expr::function_context>());
     fn_ctx->is_variadic = is_variadic;
     fn_ctx->param_count = param_symbols.size();
-    expr::do_<expression> body_do;
+    expr::do_<expression> body_do{ expression_base{ {}, expression_type::return_statement, frame } };
     size_t const form_count{ list->count() - 1 };
     size_t i{};
     for(auto const &item : list->data.rest())
@@ -283,6 +303,12 @@ namespace jank::analyze
       { return form.expect_err_move(); }
       body_do.body.emplace_back(form.expect_ok());
     }
+
+    /* If it turns out this function uses recur, we need to ensure that its tail expression
+     * is boxed. This is because unboxed values may use IIFE for initialization, which will
+     * not work with the generated while/continue we use for recursion. */
+    if(fn_ctx->is_tail_recursive)
+    { body_do = step::force_boxed(std::move(body_do)); }
 
     return
     {
@@ -394,7 +420,7 @@ namespace jank::analyze
     (
       expr::function<expression>
       {
-        expression_base{ {}, expr_type },
+        expression_base{ {}, expr_type, current_frame },
         name,
         std::move(arities)
       }
@@ -450,7 +476,7 @@ namespace jank::analyze
     (
       expr::recur<expression>
       {
-        expression_base{ {}, expr_type },
+        expression_base{ {}, expr_type, current_frame },
         jank::make_box<runtime::obj::list>(list->data.rest()),
         arg_exprs
       }
@@ -466,8 +492,7 @@ namespace jank::analyze
     native_bool const needs_box
   )
   {
-    expr::do_<expression> ret;
-    ret.expr_type = expr_type;
+    expr::do_<expression> ret{ expression_base{ {}, expr_type, current_frame }, {} };
     size_t const form_count{ list->count() - 1 };
     size_t i{};
     for(auto const &item : list->data.rest())
@@ -522,6 +547,7 @@ namespace jank::analyze
     expr::let<expression> ret
     {
       expr_type,
+      needs_box,
       make_box<local_frame>
       (local_frame::frame_type::let, current_frame->rt_ctx, current_frame)
     };
@@ -538,7 +564,12 @@ namespace jank::analyze
       if(res.is_err())
       { return res.expect_err_move(); }
       auto it(ret.pairs.emplace_back(sym, res.expect_ok_move()));
-      ret.frame->locals.emplace(sym, local_binding{ sym, some(it.second), it.second->get_base()->needs_box });
+      ret.frame->locals.emplace
+      (
+        sym,
+        local_binding
+        { sym, some(it.second), current_frame, it.second->get_base()->needs_box }
+      );
     }
 
     size_t const form_count{ o->count() - 2 };
@@ -547,20 +578,11 @@ namespace jank::analyze
     {
       auto const last(++i == form_count);
       auto const form_type(last ? expr_type : expression_type::statement);
-      auto res
-      (
-        analyze
-        (
-          item,
-          ret.frame,
-          form_type,
-          fn_ctx,
-          form_type == expression_type::statement ? false : needs_box
-        )
-      );
+      auto res(analyze(item, ret.frame, form_type, fn_ctx, needs_box));
       if(res.is_err())
       { return res.expect_err_move(); }
 
+      /* Ultimately, whether or not this let is boxed is up to the last form. */
       if(last)
       { ret.needs_box = res.expect_ok_ptr()->data->get_base()->needs_box; }
 
@@ -579,6 +601,10 @@ namespace jank::analyze
     native_bool needs_box
   )
   {
+    /* We can't (yet) guarantee that each branch of an if returns the same unboxed type,
+     * so we're unable to unbox them. */
+    needs_box = true;
+
     auto const form_count(o->count());
     if(form_count < 3)
     { return err(error{ "invalid if: expects at least two forms" }); }
@@ -595,8 +621,6 @@ namespace jank::analyze
     if(then_expr.is_err())
     { return then_expr.expect_err_move(); }
 
-    needs_box |= then_expr.expect_ok()->get_base()->needs_box;
-
     option<expression_ptr> else_expr_opt;
     if(form_count == 4)
     {
@@ -606,14 +630,13 @@ namespace jank::analyze
       { return else_expr.expect_err_move(); }
 
       else_expr_opt = else_expr.expect_ok();
-      needs_box |= else_expr.expect_ok()->get_base()->needs_box;
     }
 
     return make_box<expression>
     (
       expr::if_<expression>
       {
-        expression_base{ {}, expr_type, needs_box },
+        expression_base{ {}, expr_type, current_frame, needs_box },
         condition_expr.expect_ok(),
         then_expr.expect_ok(),
         else_expr_opt
@@ -663,9 +686,8 @@ namespace jank::analyze
     (
       expr::var_ref<expression>
       {
-        expression_base{ {}, expr_type, true },
+        expression_base{ {}, expr_type, current_frame, true },
         qualified_sym,
-        current_frame,
         found_var.unwrap()
       }
     );
@@ -694,9 +716,8 @@ namespace jank::analyze
       (
         expr::native_raw<expression>
         {
-          expression_base{ {}, expr_type, true },
-          {},
-          current_frame
+          expression_base{ {}, expr_type, current_frame, true },
+          {}
         }
       );
     }
@@ -748,9 +769,8 @@ namespace jank::analyze
     (
       expr::native_raw<expression>
       {
-        expression_base{ {}, expr_type, true },
-        std::move(chunks),
-        current_frame
+        expression_base{ {}, expr_type, current_frame, true },
+        std::move(chunks)
       }
     );
   }
@@ -769,9 +789,8 @@ namespace jank::analyze
     (
       expr::primitive_literal<expression>
       {
-        expression_base{ {}, expr_type, needs_box },
-        o,
-        current_frame
+        expression_base{ {}, expr_type, current_frame, needs_box },
+        o
       }
     );
   }
@@ -807,9 +826,8 @@ namespace jank::analyze
       (
         expr::primitive_literal<expression>
         {
-          expression_base{ {}, expr_type, true },
-          o,
-          current_frame
+          expression_base{ {}, expr_type, current_frame, true },
+          o
         }
       );
     }
@@ -818,7 +836,7 @@ namespace jank::analyze
     (
       expr::vector<expression>
       {
-        expression_base{ {}, expr_type, true },
+        expression_base{ {}, expr_type, current_frame, true },
         std::move(exprs)
       }
     );
@@ -852,7 +870,7 @@ namespace jank::analyze
     (
       expr::map<expression>
       {
-        expression_base{ {}, expr_type, true },
+        expression_base{ {}, expr_type, current_frame, true },
         std::move(exprs)
       }
     );
@@ -876,7 +894,7 @@ namespace jank::analyze
 
     auto const first(o->data.first().unwrap());
     expression_ptr source{};
-    native_bool needs_ret_box{ needs_box };
+    native_bool needs_ret_box{ true };
     native_bool needs_arg_box{ true };
     if(first->type == runtime::object_type::symbol)
     {
@@ -899,7 +917,7 @@ namespace jank::analyze
 
       /* If this expression doesn't need to be boxed, based on where it's called, we can dig
        * into the call details itself to see if the function supports unboxed returns. Most don't. */
-      if(!needs_box && var_deref && var_deref->var->meta.is_some())
+      if(var_deref && var_deref->var->meta.is_some())
       {
         auto const arity_meta
         (
@@ -943,7 +961,7 @@ namespace jank::analyze
             if(arity.fn_ctx->param_count == arg_count && !arity.fn_ctx->is_variadic)
             {
               needs_arg_box = !supports_unboxed_input;
-              needs_ret_box = !supports_unboxed_output;
+              needs_ret_box = needs_box | !supports_unboxed_output;
               break;
             }
           }
@@ -972,7 +990,7 @@ namespace jank::analyze
     (
       expr::call<expression>
       {
-        expression_base{ {}, expr_type, needs_ret_box },
+        expression_base{ {}, expr_type, current_frame, needs_ret_box },
         source,
         jank::make_box<runtime::obj::list>(o->data.rest()),
         arg_exprs

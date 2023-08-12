@@ -12,6 +12,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/codegen/processor.hpp>
+#include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
 
 int main(int const argc, char const **argv)
@@ -38,19 +39,25 @@ int main(int const argc, char const **argv)
   {
     rt_ctx.eval_prelude(jit_prc);
 
-    /* TODO: This doesn't handle macros properly, since it's not evaluating as it's analyzing.
-     * This isn't a problem normally, since we eval one form at a time. */
     //{
     //  auto const mfile(jank::util::map_file(file));
-    //  jank::read::lex::processor l_prc{ { mfile.expect_ok().head, mfile.expect_ok().size } };
-    //  jank::read::parse::processor p_prc{ rt_ctx, l_prc.begin(), l_prc.end() };
+    //  auto const asts(rt_ctx.analyze_string({ mfile.expect_ok().head, mfile.expect_ok().size }, jit_prc));
 
-    //  jank::codegen::processor cg_prc
+    //  for(auto const &ast : asts)
     //  {
-    //    rt_ctx,
-    //    rt_ctx.an_prc.analyze(p_prc.begin(), p_prc.end()).expect_ok_move()
-    //  };
-    //  std::cout << cg_prc.declaration_str() << std::endl;
+    //    if(auto *f = boost::get<jank::analyze::expr::function<jank::analyze::expression>>(&ast->data))
+    //    {
+    //      jank::codegen::processor cg_prc{ rt_ctx, *f };
+    //      std::cout << cg_prc.declaration_str() << std::endl;
+    //    }
+    //    else
+    //    {
+    //      auto const wrapped(jank::evaluate::wrap_expression(ast));
+    //      jank::codegen::processor cg_prc{ rt_ctx, wrapped };
+    //      std::cout << cg_prc.declaration_str() << std::endl;
+    //    }
+    //  }
+
     //  return 0;
     //}
 

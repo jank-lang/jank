@@ -63,14 +63,22 @@ namespace jank::analyze
 
     expression_base_ptr get_base()
     {
-      expression_base_ptr ret{};
-      boost::apply_visitor
+      return boost::apply_visitor
       (
-        [&ret](auto &typed_ex)
-        { ret = &typed_ex; },
+        [](auto &typed_ex) -> expression_base_ptr
+        { return &typed_ex; },
         data
       );
-      return ret;
+    }
+
+    runtime::object_ptr to_runtime_data() const
+    {
+      return boost::apply_visitor
+      (
+        [](auto &typed_ex)
+        { return typed_ex.to_runtime_data(); },
+        data
+      );
     }
 
     value_type data;

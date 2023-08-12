@@ -7,6 +7,8 @@
 #include <jank/analyze/local_frame.hpp>
 #include <jank/analyze/expr/do.hpp>
 #include <jank/analyze/expression_base.hpp>
+#include <jank/detail/to_runtime_data.hpp>
+#include <jank/runtime/seq.hpp>
 
 namespace jank::analyze::expr
 {
@@ -28,6 +30,22 @@ namespace jank::analyze::expr
     do_<E> body;
     local_frame_ptr frame{};
     function_context_ptr fn_ctx{};
+
+    runtime::object_ptr to_runtime_data() const
+    {
+      runtime::object_ptr param_maps(make_box<runtime::obj::vector>());
+      for(auto const &e : params)
+      { param_maps = runtime::conj(param_maps, e); }
+
+      return runtime::obj::map::create_unique
+      (
+        make_box("__type"), make_box("expr::function_arity"),
+        make_box("params"), param_maps,
+        make_box("body"), detail::to_runtime_data(body),
+        make_box("frame"), detail::to_runtime_data(frame),
+        make_box("fn_ctx"), detail::to_runtime_data(fn_ctx)
+      );
+    }
   };
 
   struct arity_key
@@ -44,6 +62,20 @@ namespace jank::analyze::expr
   {
     option<native_string> name;
     native_vector<function_arity<E>> arities;
+
+    runtime::object_ptr to_runtime_data() const
+    {
+      runtime::object_ptr arity_maps(make_box<runtime::obj::vector>());
+      for(auto const &e : arities)
+      { arity_maps = runtime::conj(arity_maps, e.to_runtime_data()); }
+
+      return runtime::obj::map::create_unique
+      (
+        make_box("__type"), make_box("expr::function"),
+        make_box("name"), detail::to_runtime_data(name),
+        make_box("arities"), arity_maps
+      );
+    }
   };
 }
 

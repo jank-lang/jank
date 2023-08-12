@@ -849,9 +849,13 @@
 
 (defn sqrt [o]
   (native/raw "__value = make_box(std::sqrt(runtime::detail::to_real(#{ o }#)));"))
+(reset-meta! (var sqrt) {:arities {1 {:supports-unboxed-input? true
+                                      :unboxed-output? true}}})
 
 (defn abs [o]
   (native/raw "__value = abs(#{ o }#);"))
+(reset-meta! (var abs) {:arities {1 {:supports-unboxed-input? true
+                                     :unboxed-output? true}}})
 
 (defn pow [x y]
   (native/raw "__value = make_box(std::pow(runtime::detail::to_real(#{ x }#), runtime::detail::to_real(#{ y }#)));"))

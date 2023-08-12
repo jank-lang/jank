@@ -44,6 +44,7 @@ namespace jank::runtime
     void eval_prelude(jit::processor const &);
     object_ptr eval_file(native_string_view const &path, jit::processor const &);
     object_ptr eval_string(native_string_view const &code, jit::processor const &);
+    native_vector<analyze::expression_ptr> analyze_string(native_string_view const &code, jit::processor const &jit_prc, native_bool const eval = true);
 
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */

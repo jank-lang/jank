@@ -102,6 +102,9 @@ namespace jank::jit
   (runtime::context &, codegen::processor &cg_prc) const
   {
     /* TODO: Improve Cling to accept string_views instead. */
+    auto const str(cg_prc.declaration_str());
+    //fmt::println("{}", str);
+
     interpreter->declare(static_cast<std::string>(cg_prc.declaration_str()));
 
     auto const expr(cg_prc.expression_str(true, false));

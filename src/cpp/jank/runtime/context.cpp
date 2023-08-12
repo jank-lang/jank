@@ -161,11 +161,29 @@ namespace jank::runtime
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ *this, l_prc.begin(), l_prc.end() };
 
-    object_ptr ret{};
+    object_ptr ret{ obj::nil::nil_const() };
     for(auto const &form : p_prc)
     {
       auto const expr(an_prc.analyze(form.expect_ok(), analyze::expression_type::statement));
       ret = evaluate::eval(*this, jit_prc, expr.expect_ok());
+    }
+
+    assert(ret);
+    return ret;
+  }
+
+  native_vector<analyze::expression_ptr> context::analyze_string(native_string_view const &code, jit::processor const &jit_prc, native_bool const eval)
+  {
+    read::lex::processor l_prc{ code };
+    read::parse::processor p_prc{ *this, l_prc.begin(), l_prc.end() };
+
+    native_vector<analyze::expression_ptr> ret{};
+    for(auto const &form : p_prc)
+    {
+      auto const expr(an_prc.analyze(form.expect_ok(), analyze::expression_type::statement));
+      if(eval)
+      { evaluate::eval(*this, jit_prc, expr.expect_ok()); }
+      ret.push_back(expr.expect_ok());
     }
 
     return ret;

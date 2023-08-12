@@ -11,6 +11,9 @@
 
 namespace jank::evaluate
 {
+  template <typename T>
+  concept has_frame = requires(T const *t){ t->frame; };
+
   /* Some expressions don't make sense to eval outright and aren't fns that can be JIT compiled.
    * For those, we wrap them in a fn expression and then JIT compile and call them.
    *
@@ -23,16 +26,31 @@ namespace jank::evaluate
   {
     analyze::expr::function<analyze::expression> wrapper;
     analyze::expr::function_arity<analyze::expression> arity;
+
     arity.frame = expr.frame;
     while(arity.frame->parent.is_some())
     { arity.frame = arity.frame->parent.unwrap(); }
     arity.frame->type = analyze::local_frame::frame_type::fn;
     expr.expr_type = analyze::expression_type::return_statement;
     /* TODO: Avoid allocation by using existing ptr. */
-    arity.body.body.push_back(jank::make_box<analyze::expression>(expr));
-    arity.fn_ctx = jank::make_box<analyze::expr::function_context>();
+    arity.body.body.push_back(make_box<analyze::expression>(expr));
+    arity.fn_ctx = make_box<analyze::expr::function_context>();
+    arity.body.frame = arity.frame;
+
     wrapper.arities.emplace_back(std::move(arity));
+    wrapper.frame = expr.frame;
+
     return wrapper;
+  }
+
+  analyze::expr::function<analyze::expression> wrap_expression(analyze::expression_ptr const expr)
+  {
+    return boost::apply_visitor
+    (
+      [](auto const &typed_expr)
+      { return wrap_expression(typed_expr); },
+      expr->data
+    );
   }
 
   runtime::object_ptr eval
@@ -49,6 +67,8 @@ namespace jank::evaluate
       { ret = eval(rt_ctx, jit_prc, typed_ex); },
       ex->data
     );
+
+    assert(ret);
     return ret;
   }
 
@@ -142,7 +162,7 @@ namespace jank::evaluate
               runtime::detail::persistent_list all{ arg_vals.rbegin(), arg_vals.rend() };
               for(size_t i{}; i < 10; ++i)
               { all = all.rest(); }
-              return runtime::dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3], arg_vals[4], arg_vals[5], arg_vals[6], arg_vals[7], arg_vals[8], arg_vals[9], jank::make_box<runtime::obj::list>(all));
+              return runtime::dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3], arg_vals[4], arg_vals[5], arg_vals[6], arg_vals[7], arg_vals[8], arg_vals[9], make_box<runtime::obj::list>(all));
             }
           }
         }

@@ -10,10 +10,15 @@ namespace jank::analyze
 {
   struct expression;
 
+  namespace expr
+  { using function_context_ptr = native_box<struct function_context>; }
+
   struct lifted_var
   {
     runtime::obj::symbol native_name{};
     runtime::obj::symbol_ptr var_name{};
+
+    runtime::object_ptr to_runtime_data() const;
   };
 
   /* TODO: Track constant usages to figure out if boxing is needed at all,
@@ -23,15 +28,20 @@ namespace jank::analyze
     runtime::obj::symbol native_name{};
     option<runtime::obj::symbol> unboxed_native_name{};
     runtime::object_ptr data{};
+
+    runtime::object_ptr to_runtime_data() const;
   };
 
   struct local_binding
   {
     runtime::obj::symbol_ptr name{};
     option<native_box<expression>> value_expr{};
+    native_box<struct local_frame> originating_frame{};
     native_bool needs_box{ true };
     native_bool has_boxed_usage{};
     native_bool has_unboxed_usage{};
+
+    runtime::object_ptr to_runtime_data() const;
   };
 
   struct local_frame : gc
@@ -69,6 +79,12 @@ namespace jank::analyze
     option<find_result> find_local_or_capture(runtime::obj::symbol_ptr sym);
     static void register_captures(find_result const &result);
 
+    /* This can be used when you have a capture, but you want to trace it back to the
+     * originating local. */
+    option<find_result> find_originating_local(runtime::obj::symbol_ptr sym);
+
+    static native_bool within_same_fn(native_box<local_frame>, native_box<local_frame>);
+
     runtime::obj::symbol_ptr lift_var(runtime::obj::symbol_ptr const &);
     option<std::reference_wrapper<lifted_var const>> find_lifted_var
     (runtime::obj::symbol_ptr const &) const;
@@ -76,6 +92,11 @@ namespace jank::analyze
     void lift_constant(runtime::object_ptr);
     option<std::reference_wrapper<lifted_constant const>> find_lifted_constant
     (runtime::object_ptr) const;
+
+    static local_frame const& find_closest_fn_frame(local_frame const &frame);
+    static local_frame& find_closest_fn_frame(local_frame &frame);
+
+    runtime::object_ptr to_runtime_data() const;
 
     frame_type type;
     option<native_box<local_frame>> parent;

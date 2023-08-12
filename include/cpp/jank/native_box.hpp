@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fmt/ostream.h>
+
 #include <jank/runtime/object.hpp>
 
 namespace jank
@@ -149,8 +151,6 @@ namespace jank
   template <typename T, typename... Args>
   native_box<T> make_box(Args &&... args)
   {
-    //static_assert(offsetof(T, base) == 0, "object base needs to be the first member of each typed object");
-
     native_box<T> ret;
     if constexpr(T::pointer_free)
     { ret = new (PointerFreeGC) T{ std::forward<Args>(args)... }; }
@@ -164,12 +164,21 @@ namespace jank
   template <typename T, typename... Args>
   native_box<T> make_array_box(Args &&... args)
   {
-    //static_assert(offsetof(T, base) == 0, "object base needs to be the first member of each typed object");
-
     /* TODO: pointer_free? */
     auto const ret(new (GC) T[sizeof...(Args)]{ std::forward<Args>(args)... });
     if(!ret)
     { throw std::runtime_error{ "unable to allocate array box" }; }
     return ret;
   }
+
+  template <typename T>
+  std::ostream& operator<<(std::ostream &os, native_box<T> const &o)
+  { return os << "box(" << o.data << ")"; }
+}
+
+namespace fmt
+{
+  template <typename T>
+  struct formatter<jank::native_box<T>> : fmt::ostream_formatter
+  { };
 }

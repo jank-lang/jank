@@ -25,6 +25,17 @@ namespace jank::runtime
       : data{ runtime::detail::in_place_unique{}, std::forward<Args>(args)... }
     { }
 
+    template <typename... Args>
+    static native_box<static_object> create_unique(Args &&...args)
+    {
+      return make_box<static_object>
+      (
+        runtime::detail::in_place_unique{},
+        make_array_box<object_ptr>(std::forward<Args>(args)...),
+        sizeof...(args)
+      );
+    }
+
     /* behavior::objectable */
     native_bool equal(object const &) const;
     native_string to_string() const;
