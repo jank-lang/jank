@@ -642,6 +642,8 @@
    (native/raw "__value = make_box(jank::runtime::rand());"))
   ([n]
    (* (rand) n)))
+(reset-meta! (var rand) {:arities {0 {:supports-unboxed-input? true
+                                      :unboxed-output? true}}})
 
 ;; Keywords.
 (defn keyword? [o]
