@@ -87,7 +87,7 @@ namespace jank::jit
         "-include-pch", pch_path_str.c_str(),
         "-isystem", include_path.c_str(),
 
-        "-O2", "-ffast-math", "-march=native"
+        "-Ofast", "-ffast-math", "-march=native"
       )
     );
     interpreter = std::make_unique<cling::Interpreter>(args.size(), args.data(), llvm_resource_path_str.c_str());
