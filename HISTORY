@@ -9,3 +9,5 @@ Dec 2017 - Rewrite in Clojure, syntax changed to be a Clojure dialect
 May 2022 - Rewrite in C++, backed by cling
 Aug 2022 - Switch to Mozilla Public License 2.0
 Mar 2023 - Hit 1k Github starts
+Jun 2023 - $2k Clojurists Together sponsorship for new object model
+Sep 2023 - $2k Clojurists Together sponsorship for module/ns system
