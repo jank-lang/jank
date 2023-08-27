@@ -13,6 +13,7 @@
 #include <jank/runtime/obj/map.hpp>
 #include <jank/runtime/obj/string.hpp>
 #include <jank/runtime/obj/list.hpp>
+#include <jank/runtime/detail/object_util.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #include <doctest/doctest.h>
@@ -36,7 +37,7 @@ namespace jank::read::parse
     processor p{ rt_ctx, lp.begin(), lp.end() };
     auto const r(p.next());
     CHECK(r.is_ok());
-    CHECK(r.expect_ok()->equal(runtime::obj::nil{ }));
+    CHECK(runtime::detail::equal(r.expect_ok(), make_box(nullptr)));
   }
 
   TEST_CASE("Boolean")
@@ -46,9 +47,9 @@ namespace jank::read::parse
     processor p{ rt_ctx, lp.begin(), lp.end() };
     auto const t(p.next());
     CHECK(t.is_ok());
-    CHECK(t.expect_ok()->equal(runtime::obj::boolean{ true }));
+    CHECK(runtime::detail::equal(t.expect_ok(), make_box(true)));
     auto const f(p.next());
-    CHECK(f.expect_ok()->equal(runtime::obj::boolean{ false }));
+    CHECK(runtime::detail::equal(f.expect_ok(), make_box(false)));
   }
 
   TEST_CASE("Integer")
@@ -58,7 +59,7 @@ namespace jank::read::parse
     processor p{ rt_ctx, lp.begin(), lp.end() };
     auto const r(p.next());
     CHECK(r.is_ok());
-    CHECK(r.expect_ok()->equal(runtime::obj::integer{ 1234 }));
+    CHECK(runtime::detail::equal(r.expect_ok(), make_box(1234)));
   }
 
   TEST_CASE("Comments")
@@ -68,7 +69,7 @@ namespace jank::read::parse
     processor p{ rt_ctx, lp.begin(), lp.end() };
     auto const i(p.next());
     CHECK(i.is_ok());
-    CHECK(i.expect_ok()->equal(runtime::obj::integer{ 1234 }));
+    CHECK(runtime::detail::equal(i.expect_ok(), make_box(1234)));
 
     auto const eof(p.next());
     CHECK(eof.is_ok());
@@ -82,7 +83,7 @@ namespace jank::read::parse
     processor p{ rt_ctx, lp.begin(), lp.end() };
     auto const r(p.next());
     CHECK(r.is_ok());
-    CHECK(r.expect_ok()->equal(runtime::obj::real{ 12.34l }));
+    CHECK(runtime::detail::equal(r.expect_ok(), make_box(12.34l)));
   }
 
   TEST_CASE("String")
@@ -94,7 +95,7 @@ namespace jank::read::parse
     {
       auto const r(p.next());
       CHECK(r.is_ok());
-      CHECK(r.expect_ok()->equal(runtime::obj::string{ native_string{ s } }));
+      CHECK(runtime::detail::equal(r.expect_ok(), make_box(s)));
     }
   }
 
@@ -109,7 +110,7 @@ namespace jank::read::parse
       {
         auto const r(p.next());
         CHECK(r.is_ok());
-        CHECK(r.expect_ok()->equal(runtime::obj::symbol{ "", native_string{ s } }));
+        CHECK(runtime::detail::equal(r.expect_ok(), make_box<runtime::obj::symbol>("", s)));
       }
     }
 
@@ -120,7 +121,7 @@ namespace jank::read::parse
       processor p{ rt_ctx, lp.begin(), lp.end() };
       auto const r(p.next());
       CHECK(r.is_ok());
-      CHECK(r.expect_ok()->equal(runtime::obj::symbol{ "", native_string{ "/" } }));
+      CHECK(runtime::detail::equal(r.expect_ok(), make_box<runtime::obj::symbol>("", "/")));
     }
 
     SUBCASE("Qualified")
@@ -132,7 +133,7 @@ namespace jank::read::parse
       {
         auto const r(p.next());
         CHECK(r.is_ok());
-        CHECK(r.expect_ok()->equal(runtime::obj::symbol{ s.first, s.second }));
+        CHECK(runtime::detail::equal(r.expect_ok(), make_box<runtime::obj::symbol>(s.first, s.second)));
       }
     }
 
@@ -147,8 +148,9 @@ namespace jank::read::parse
         CHECK(r.is_ok());
         CHECK
         (
-          r.expect_ok()->equal
+          runtime::detail::equal
           (
+            r.expect_ok(),
             jank::make_box<runtime::obj::list>
             (
               make_box<runtime::obj::symbol>("quote"),
@@ -171,7 +173,7 @@ namespace jank::read::parse
       {
         auto const r(p.next());
         CHECK(r.is_ok());
-        CHECK(r.expect_ok()->equal(rt_ctx.intern_keyword(runtime::obj::symbol{ "", native_string{ s } }, true)));
+        CHECK(runtime::detail::equal(r.expect_ok(), rt_ctx.intern_keyword(runtime::obj::symbol{ "", s }, true)));
       }
     }
 
@@ -184,7 +186,7 @@ namespace jank::read::parse
       {
         auto const r(p.next());
         CHECK(r.is_ok());
-        CHECK(r.expect_ok()->equal(rt_ctx.intern_keyword(runtime::obj::symbol{ s.first, s.second }, true)));
+        CHECK(runtime::detail::equal(r.expect_ok(), rt_ctx.intern_keyword(runtime::obj::symbol{ s.first, s.second }, true)));
       }
     }
 
@@ -197,7 +199,7 @@ namespace jank::read::parse
       {
         auto const r(p.next());
         CHECK(r.is_ok());
-        CHECK(r.expect_ok()->equal(rt_ctx.intern_keyword(runtime::obj::symbol{ "", native_string{ s } }, false)));
+        CHECK(runtime::detail::equal(r.expect_ok(), rt_ctx.intern_keyword(runtime::obj::symbol{ "", native_string{ s } }, false)));
       }
     }
 
@@ -213,7 +215,7 @@ namespace jank::read::parse
     {
       auto const r(p.next());
       CHECK(r.is_ok());
-      CHECK(r.expect_ok()->equal(rt_ctx.intern_keyword(runtime::obj::symbol{ s.first, s.second }, false)));
+      CHECK(runtime::detail::equal(r.expect_ok(), rt_ctx.intern_keyword(runtime::obj::symbol{ s.first, s.second }, false)));
     }
   }
 
@@ -229,7 +231,7 @@ namespace jank::read::parse
         auto const r(p.next());
         CHECK(r.is_ok());
         CHECK(r.expect_ok() != nullptr);
-        CHECK(r.expect_ok()->equal(jank::make_box<runtime::obj::list>()));
+        CHECK(runtime::detail::equal(r.expect_ok(), jank::make_box<runtime::obj::list>()));
       }
     }
 
@@ -244,8 +246,9 @@ namespace jank::read::parse
         CHECK(r.is_ok());
         CHECK
         (
-          r.expect_ok()->equal
+          runtime::detail::equal
           (
+            r.expect_ok(),
             jank::make_box<runtime::obj::list>
             (
               make_box<runtime::obj::integer>(1 * i),
@@ -267,8 +270,9 @@ namespace jank::read::parse
       CHECK(r1.is_ok());
       CHECK
       (
-        r1.expect_ok()->equal
+        runtime::detail::equal
         (
+          r1.expect_ok(),
           jank::make_box<runtime::obj::list>
           (
             make_box<runtime::obj::symbol>("def"),
@@ -279,7 +283,7 @@ namespace jank::read::parse
       );
       auto const r2(p.next());
       CHECK(r2.is_ok());
-      CHECK(r2.expect_ok()->equal(make_box<runtime::obj::symbol>("foo-bar")));
+      CHECK(runtime::detail::equal(r2.expect_ok(), make_box<runtime::obj::symbol>("foo-bar")));
     }
 
     SUBCASE("Extra close")
@@ -289,7 +293,7 @@ namespace jank::read::parse
       processor p{ rt_ctx, lp.begin(), lp.end() };
       auto const r1(p.next());
       CHECK(r1.is_ok());
-      CHECK(r1.expect_ok()->equal(runtime::obj::integer{ 1 }));
+      CHECK(runtime::detail::equal(r1.expect_ok(), make_box(1)));
       auto const r2(p.next());
       CHECK(r2.is_err());
     }
@@ -316,7 +320,7 @@ namespace jank::read::parse
         auto const r(p.next());
         CHECK(r.is_ok());
         CHECK(r.expect_ok() != nullptr);
-        CHECK(r.expect_ok()->equal(make_box<runtime::obj::vector>()));
+        CHECK(runtime::detail::equal(r.expect_ok(), make_box<runtime::obj::vector>()));
       }
     }
 
@@ -331,9 +335,10 @@ namespace jank::read::parse
         CHECK(r.is_ok());
         CHECK
         (
-          r.expect_ok()->equal
+          runtime::detail::equal
           (
-            runtime::obj::vector::create
+            r.expect_ok(),
+            make_box<runtime::obj::vector>
             (
               runtime::detail::peristent_vector
               {
@@ -355,7 +360,7 @@ namespace jank::read::parse
       processor p{ rt_ctx, lp.begin(), lp.end() };
       auto const r1(p.next());
       CHECK(r1.is_ok());
-      CHECK(r1.expect_ok()->equal(runtime::obj::integer{ 1 }));
+      CHECK(runtime::detail::equal(r1.expect_ok(), make_box(1)));
       auto const r2(p.next());
       CHECK(r2.is_err());
     }
@@ -382,7 +387,7 @@ namespace jank::read::parse
         auto const r(p.next());
         CHECK(r.is_ok());
         CHECK(r.expect_ok() != nullptr);
-        CHECK(r.expect_ok()->equal(runtime::obj::map{}));
+        CHECK(runtime::detail::equal(r.expect_ok(), make_box<runtime::obj::map>()));
       }
     }
 
@@ -397,10 +402,11 @@ namespace jank::read::parse
         CHECK(r.is_ok());
         CHECK
         (
-          r.expect_ok()->equal
+          runtime::detail::equal
           (
-            runtime::obj::map
-            {
+            r.expect_ok(),
+            make_box<runtime::obj::map>
+            (
               runtime::detail::in_place_unique{},
               make_array_box<runtime::object_ptr>
               (
@@ -410,7 +416,7 @@ namespace jank::read::parse
                 make_box<runtime::obj::integer>(4 * i)
               ),
               4
-            }
+            )
           )
         );
       }
@@ -426,10 +432,11 @@ namespace jank::read::parse
       CHECK(r.expect_ok() != nullptr);
       CHECK
       (
-        r.expect_ok()->equal
+        runtime::detail::equal
         (
-          runtime::obj::map
-          {
+          r.expect_ok(),
+          make_box<runtime::obj::map>
+          (
             runtime::detail::in_place_unique{},
             make_array_box<runtime::object_ptr>
             (
@@ -441,7 +448,7 @@ namespace jank::read::parse
               make_box<runtime::obj::string>("meow")
             ),
             6
-          }
+          )
         )
       );
     }
@@ -462,7 +469,7 @@ namespace jank::read::parse
       processor p{ rt_ctx, lp.begin(), lp.end() };
       auto const r1(p.next());
       CHECK(r1.is_ok());
-      CHECK(r1.expect_ok()->equal(rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }, true)));
+      CHECK(runtime::detail::equal(r1.expect_ok(), rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }, true)));
       auto const r2(p.next());
       CHECK(r2.is_err());
     }

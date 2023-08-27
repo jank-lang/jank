@@ -12,7 +12,7 @@ namespace jank::runtime
     auto const locked_namespaces(ctx.namespaces.rlock());
     CHECK(locked_namespaces->find(jank::make_box<obj::symbol>("clojure.core")) != locked_namespaces->end());
     CHECK(locked_namespaces->find(jank::make_box<obj::symbol>("missing")) == locked_namespaces->end());
-    CHECK(ctx.get_thread_state().current_ns->get_root()->as_ns()->name->equal(obj::symbol("", "clojure.core")));
+    CHECK(expect_object<ns>(ctx.get_thread_state().current_ns->get_root())->name->equal(obj::symbol("", "clojure.core")));
   }
 
   TEST_CASE("Namespace changing")
@@ -20,14 +20,14 @@ namespace jank::runtime
     context ctx;
     {
       auto const locked_namespaces(ctx.namespaces.rlock());
-      CHECK(ctx.get_thread_state().current_ns->get_root()->as_ns()->name->equal(obj::symbol("", "clojure.core")));
+      CHECK(expect_object<ns>(ctx.get_thread_state().current_ns->get_root())->name->equal(obj::symbol("", "clojure.core")));
       CHECK(locked_namespaces->find(jank::make_box<obj::symbol>("test")) == locked_namespaces->end());
     }
-    ctx.get_thread_state().in_ns->get_root()->as_callable()->call(jank::make_box<obj::symbol>("test"));
+    expect_object<obj::native_function_wrapper>(ctx.get_thread_state().in_ns->get_root())->call(jank::make_box<obj::symbol>("test"));
     {
       auto const locked_namespaces(ctx.namespaces.rlock());
       CHECK(locked_namespaces->find(jank::make_box<obj::symbol>("test")) != locked_namespaces->end());
-      CHECK(ctx.get_thread_state().current_ns->get_root()->as_ns()->name->equal(obj::symbol("", "test")));
+      CHECK(expect_object<ns>(ctx.get_thread_state().current_ns->get_root())->name->equal(obj::symbol("", "test")));
     }
   }
 }

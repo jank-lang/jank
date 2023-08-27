@@ -15,7 +15,9 @@ namespace jank::analyze
   /* Common base class for every expression. */
   struct expression_base : gc
   {
-    /* TODO: Add frame here. */
     expression_type expr_type{};
+    local_frame_ptr frame{};
+    native_bool needs_box{ true };
   };
+  using expression_base_ptr = native_box<expression_base>;
 }

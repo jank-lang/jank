@@ -4,6 +4,8 @@
 
 namespace jank::evaluate
 {
+  analyze::expr::function<analyze::expression> wrap_expression(analyze::expression_ptr const expr);
+
   runtime::object_ptr eval
   (
     runtime::context &,

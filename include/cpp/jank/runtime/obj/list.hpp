@@ -1,52 +1,57 @@
 #pragma once
 
-#include <jank/runtime/behavior/seqable.hpp>
-#include <jank/runtime/behavior/countable.hpp>
-#include <jank/runtime/behavior/consable.hpp>
-#include <jank/runtime/behavior/metadatable.hpp>
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/persistent_list_sequence.hpp>
 
-namespace jank::runtime::obj
+namespace jank::runtime
 {
-  struct list
-    :
-      virtual object,
-      behavior::seqable, behavior::countable, behavior::consable,
-      behavior::metadatable
+  template <>
+  struct static_object<object_type::list> : gc
   {
+    using value_type = runtime::detail::persistent_list;
+
     static constexpr bool pointer_free{ false };
 
-    list() = default;
-    list(list &&) = default;
-    list(list const &) = default;
-    list(runtime::detail::persistent_list &&d);
-    list(runtime::detail::persistent_list const &d);
+    static native_box<static_object> create(object_ptr s);
+
+    static_object() = default;
+    static_object(static_object &&) = default;
+    static_object(static_object const &) = default;
+    static_object(object &&base);
+    static_object(value_type &&d);
+    static_object(value_type const &d);
     template <typename... Args>
-    list(Args &&...args)
+    static_object(Args &&...args)
       : data{ std::forward<Args>(args)... }
     { }
-    ~list() = default;
 
-    static native_box<list> create(behavior::sequence_ptr const &s);
+    /* behavior::objectable */
+    native_bool equal(object const &) const;
+    native_string to_string() const;
+    void to_string(fmt::memory_buffer &buff) const;
+    native_integer to_hash() const;
 
-    native_bool equal(object const &) const final;
-    native_string to_string() const final;
-    void to_string(fmt::memory_buffer &buff) const final;
-    native_integer to_hash() const final;
+    /* behavior::metadatable */
+    object_ptr with_meta(object_ptr m) const;
 
-    list const* as_list() const final;
-    behavior::seqable const* as_seqable() const final;
+    /* behavior::seqable */
+    obj::persistent_list_sequence_ptr seq() const;
+    obj::persistent_list_sequence_ptr fresh_seq() const;
 
-    behavior::sequence_ptr seq() const final;
-    behavior::sequence_ptr fresh_seq() const final;
-    size_t count() const final;
+    /* behavior::countable */
+    size_t count() const;
 
-    behavior::consable const* as_consable() const final;
-    native_box<behavior::consable> cons(object_ptr head) const final;
+    /* behavior::consable */
+    native_box<static_object> cons(object_ptr head) const;
 
-    object_ptr with_meta(object_ptr m) const final;
-    behavior::metadatable const* as_metadatable() const final;
-
-    runtime::detail::persistent_list data;
+    object base{ object_type::list };
+    value_type data;
+    option<obj::map_ptr> meta;
   };
-  using list_ptr = native_box<list>;
+
+  namespace obj
+  {
+    using list = static_object<object_type::list>;
+    using list_ptr = native_box<list>;
+  }
 }

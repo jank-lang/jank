@@ -1,43 +1,59 @@
 #pragma once
 
-#include <functional>
-
+#include <jank/runtime/object.hpp>
 #include <jank/runtime/hash.hpp>
-#include <jank/runtime/behavior/metadatable.hpp>
 
-namespace jank::runtime::obj
+namespace jank::runtime
 {
-  struct symbol : object, behavior::metadatable
+  namespace obj
+  {
+    using map = static_object<object_type::map>;
+    using map_ptr = native_box<map>;
+  }
+
+  template <>
+  struct static_object<object_type::symbol> : gc
   {
     static constexpr bool pointer_free{ true };
 
-    symbol() = default;
-    symbol(symbol &&) = default;
-    symbol(symbol const &) = default;
-    symbol(native_string const &d);
-    symbol(native_string &&d);
-    symbol(native_string const &ns, native_string const &n);
-    symbol(native_string &&ns, native_string &&n);
+    static_object() = default;
+    static_object(static_object &&) = default;
+    static_object(static_object const &) = default;
+    static_object(object &&base);
+    static_object(native_string const &d);
+    static_object(native_string &&d);
+    static_object(native_string const &ns, native_string const &n);
+    static_object(native_string &&ns, native_string &&n);
 
-    native_bool equal(object const &) const final;
-    native_string to_string() const final;
-    void to_string(fmt::memory_buffer &buff) const final;
-    native_integer to_hash() const final;
+    static_object& operator=(static_object const&) = default;
+    static_object& operator=(static_object &&) = default;
 
-    symbol const* as_symbol() const final;
+    /* behavior::objectable */
+    native_bool equal(object const &) const;
+    native_string to_string() const;
+    void to_string(fmt::memory_buffer &buff) const;
+    native_integer to_hash() const;
 
-    object_ptr with_meta(object_ptr m) const final;
-    behavior::metadatable const* as_metadatable() const final;
+    /* behavior::objectable extended */
+    native_bool equal(static_object const &) const;
 
-    bool operator ==(symbol const &rhs) const;
+    /* behavior::metadatable */
+    object_ptr with_meta(object_ptr m) const;
 
-    symbol& operator =(symbol const &) = default;
-    symbol& operator =(symbol &&) = default;
+    bool operator ==(static_object const &rhs) const;
+    bool operator <(static_object const &rhs) const;
 
+    object base{ object_type::symbol };
     native_string ns;
     native_string name;
+    option<obj::map_ptr> meta;
   };
-  using symbol_ptr = obj::symbol*;
+
+  namespace obj
+  {
+    using symbol = static_object<object_type::symbol>;
+    using symbol_ptr = native_box<symbol>;
+  }
 }
 
 namespace std

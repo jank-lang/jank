@@ -39,7 +39,6 @@ set(jank_cxx_standard cxx_std_20)
 
 set(jank_required_compiler_id "Clang")
 set(jank_required_compiler_version "13.0.0")
-#set(jank_required_compiler_version "9.0.1")
 
 # We need different flags for linking whole libraries on different OSes.
 # We need to be mindful to wrap each library with ${jank_link_whole_start} and ${jank_link_whole_end}.
@@ -148,11 +147,14 @@ add_library(
   src/cpp/jank/runtime/util.cpp
   src/cpp/jank/runtime/seq.cpp
   src/cpp/jank/runtime/object.cpp
+  src/cpp/jank/runtime/detail/object_util.cpp
   src/cpp/jank/runtime/context.cpp
   src/cpp/jank/runtime/ns.cpp
   src/cpp/jank/runtime/var.cpp
+  src/cpp/jank/runtime/obj/nil.cpp
   src/cpp/jank/runtime/obj/number.cpp
-  src/cpp/jank/runtime/obj/function.cpp
+  src/cpp/jank/runtime/obj/native_function_wrapper.cpp
+  src/cpp/jank/runtime/obj/jit_function.cpp
   src/cpp/jank/runtime/obj/symbol.cpp
   src/cpp/jank/runtime/obj/keyword.cpp
   src/cpp/jank/runtime/obj/list.cpp
@@ -163,12 +165,16 @@ add_library(
   src/cpp/jank/runtime/obj/cons.cpp
   src/cpp/jank/runtime/obj/range.cpp
   src/cpp/jank/runtime/obj/iterator.cpp
+  src/cpp/jank/runtime/obj/persistent_vector_sequence.cpp
+  src/cpp/jank/runtime/obj/persistent_map_sequence.cpp
+  src/cpp/jank/runtime/obj/native_array_sequence.cpp
+  src/cpp/jank/runtime/obj/native_vector_sequence.cpp
   src/cpp/jank/runtime/behavior/callable.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
-  src/cpp/jank/runtime/behavior/seqable.cpp
-  src/cpp/jank/runtime/behavior/consable.cpp
+  src/cpp/jank/runtime/math.cpp
   src/cpp/jank/analyze/processor.cpp
   src/cpp/jank/analyze/local_frame.cpp
+  src/cpp/jank/analyze/step/force_boxed.cpp
   src/cpp/jank/evaluate.cpp
   src/cpp/jank/codegen/processor.cpp
   src/cpp/jank/jit/processor.cpp
@@ -280,6 +286,7 @@ if(jank_tests)
     test/cpp/main.cpp
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
+    test/cpp/jank/analyze/box.cpp
     test/cpp/jank/runtime/detail/list_type.cpp
     test/cpp/jank/runtime/context.cpp
     test/cpp/jank/jit/processor.cpp

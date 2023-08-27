@@ -4,6 +4,7 @@
 #include <memory>
 
 #include <jank/runtime/hash.hpp>
+#include <jank/runtime/detail/object_util.hpp>
 
 namespace jank::runtime::detail
 {
@@ -125,8 +126,10 @@ namespace jank::runtime::detail
     }
   }
 
+  /* TODO: Rename to native_array_map. */
   /* This is a short map, storing a vector of pairs. This is only until immer has proper
    * support for short maps and map transients. */
+  /* TODO: Just use one template param. */
   template <typename K, typename V>
   struct map_type_impl
   {
@@ -136,7 +139,7 @@ namespace jank::runtime::detail
     map_type_impl(map_type_impl const &s) = default;
     map_type_impl(map_type_impl &&s) noexcept = default;
     template <typename L, typename E = std::enable_if_t<std::is_integral_v<L>>>
-    map_type_impl(in_place_unique, value_type &&kvs, L const l)
+    map_type_impl(in_place_unique, value_type kvs, L const l)
       : data{ std::move(kvs) }, length{ static_cast<decltype(length)>(l) }
     { }
     ~map_type_impl() = default;
@@ -149,7 +152,7 @@ namespace jank::runtime::detail
     }
     void insert_or_assign(K const key, V const val)
     {
-      if(auto const kw = key->as_keyword())
+      if(key->type == runtime::object_type::keyword)
       {
         for(size_t i{}; i < length; i += 2)
         {
@@ -165,7 +168,7 @@ namespace jank::runtime::detail
       {
         for(size_t i{}; i < length; i += 2)
         {
-          if(data[i]->equal(*key))
+          if(detail::equal(data[i], key))
           {
             data[i + 1] = val;
             hash = 0;
@@ -178,7 +181,7 @@ namespace jank::runtime::detail
 
     V find(K const key) const
     {
-      if(auto const kw = key->as_keyword())
+      if(key->type == runtime::object_type::keyword)
       {
         for(size_t i{}; i < length; i += 2)
         {
@@ -190,7 +193,7 @@ namespace jank::runtime::detail
       {
         for(size_t i{}; i < length; i += 2)
         {
-          if(data[i]->equal(*key))
+          if(detail::equal(data[i], key))
           { return data[i + 1]; }
         }
       }
@@ -242,7 +245,7 @@ namespace jank::runtime::detail
         return *this;
       }
 
-      object_ptr const* data{};
+      V const* data{};
       size_t index{};
     };
     using const_iterator = iterator;
@@ -262,8 +265,8 @@ namespace jank::runtime::detail
     map_type_impl<K, V> clone() const
     {
       map_type_impl<K, V> ret{ *this };
-      ret.data = new (GC) object_ptr[length];
-      memcpy(ret.data, data, length * sizeof(object_ptr));
+      ret.data = new (GC) V[length];
+      memcpy(ret.data, data, length * sizeof(V));
       return ret;
     }
 
@@ -271,4 +274,6 @@ namespace jank::runtime::detail
     size_t length{};
     mutable size_t hash{};
   };
+
+  using persistent_map = map_type_impl<object_ptr, object_ptr>;
 }

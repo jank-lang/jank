@@ -5,6 +5,8 @@
 #include <jank/runtime/obj/string.hpp>
 #include <jank/analyze/local_frame.hpp>
 #include <jank/analyze/expression_base.hpp>
+#include <jank/detail/to_runtime_data.hpp>
+#include <jank/runtime/seq.hpp>
 
 namespace jank::analyze::expr
 {
@@ -17,6 +19,36 @@ namespace jank::analyze::expr
     using chunk_t = boost::variant<native_string, native_box<E>>;
 
     native_vector<chunk_t> chunks;
-    local_frame_ptr frame{};
+
+    runtime::object_ptr to_runtime_data() const
+    {
+      runtime::object_ptr chunk_maps(make_box<runtime::obj::vector>());
+      for(auto const &e : chunks)
+      {
+        chunk_maps = runtime::conj
+        (
+          chunk_maps,
+          boost::apply_visitor
+          (
+            [](auto const &d) -> runtime::object_ptr
+            {
+              using T = std::decay_t<decltype(d)>;
+
+              if constexpr(std::same_as<T, native_string>)
+              { return make_box(d); }
+              else
+              { return d->to_runtime_data(); }
+            },
+            e
+          )
+        );
+      }
+
+      return runtime::obj::map::create_unique
+      (
+        make_box("__type"), make_box("expr::native_raw"),
+        make_box("chunks"), chunk_maps
+      );
+    }
   };
 }

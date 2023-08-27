@@ -11,46 +11,36 @@
 
 namespace jank::runtime
 {
-  struct var;
   struct context;
 
-  struct ns : object
+  template <>
+  struct static_object<object_type::ns> : gc
   {
-    using ns_ptr = native_box<ns>;
-
     static constexpr bool pointer_free{ false };
 
-    ns(obj::symbol_ptr const &name, context const &c)
+    static_object() = delete;
+    static_object(static_object &&) = default;
+    static_object(static_object const &) = default;
+    static_object(obj::symbol_ptr const &name, context const &c)
       : name{ name }, rt_ctx{ c }
     { }
-    virtual ~ns() = default;
 
-    static ns_ptr create(obj::symbol_ptr const &n, context const &c);
+    /* behavior::objectable */
+    native_bool equal(object const &) const;
+    native_string to_string() const;
+    void to_string(fmt::memory_buffer &buff) const;
+    native_integer to_hash() const;
 
-    native_bool equal(object const &) const final;
-    native_string to_string() const final;
-    void to_string(fmt::memory_buffer &buff) const final;
-    native_integer to_hash() const final;
+    bool operator ==(static_object const &rhs) const;
 
-    ns const* as_ns() const final;
+    native_box<static_object> clone() const;
 
-    bool operator ==(ns const &rhs) const;
-
-    ns_ptr clone() const;
-
+    object base{ object_type::ns };
     obj::symbol_ptr name{};
     folly::Synchronized<native_unordered_map<obj::symbol_ptr, var_ptr>> vars;
     context const &rt_ctx;
   };
-  using ns_ptr = native_box<ns>;
-}
 
-namespace std
-{
-  template <>
-  struct hash<jank::runtime::var>
-  {
-    size_t operator()(jank::runtime::var const &o) const noexcept
-    { return static_cast<size_t>(o.n->name->to_hash()); }
-  };
+  using ns = static_object<object_type::ns>;
+  using ns_ptr = native_box<ns>;
 }

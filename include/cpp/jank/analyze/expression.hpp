@@ -47,6 +47,7 @@ namespace jank::analyze
     expression() = default;
     expression(expression const &) = default;
     expression(expression &&) = default;
+
     template <typename T>
     expression
     (
@@ -59,6 +60,26 @@ namespace jank::analyze
     )
       : data{ std::forward<T>(t) }
     { }
+
+    expression_base_ptr get_base()
+    {
+      return boost::apply_visitor
+      (
+        [](auto &typed_ex) -> expression_base_ptr
+        { return &typed_ex; },
+        data
+      );
+    }
+
+    runtime::object_ptr to_runtime_data() const
+    {
+      return boost::apply_visitor
+      (
+        [](auto &typed_ex)
+        { return typed_ex.to_runtime_data(); },
+        data
+      );
+    }
 
     value_type data;
   };

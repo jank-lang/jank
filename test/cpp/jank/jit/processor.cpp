@@ -95,7 +95,7 @@ namespace jank::jit
               fmt::format
               (
                 "Test failure was expected, but it passed with {}",
-                (result == nullptr ? "nullptr" : result->to_string())
+                (result == nullptr ? "nullptr" : runtime::detail::to_string(result))
               )
             }
           );
@@ -108,10 +108,15 @@ namespace jank::jit
             failures.push_back({ dir_entry.path(), "Returned object is null" });
             passed = false;
           }
-          else if(!result->equal(cardinal_result))
+          else if(!runtime::detail::equal(result, cardinal_result))
           {
             failures.push_back
-            ({ dir_entry.path(), fmt::format("Result is not :success: {}", result->to_string()) });
+            (
+              {
+                dir_entry.path(),
+                fmt::format("Result is not :success: {}", runtime::detail::to_string(result))
+              }
+            );
             passed = false;
           }
         }
@@ -121,6 +126,20 @@ namespace jank::jit
         if(expect_success)
         {
           failures.push_back({ dir_entry.path(), fmt::format("Exception thrown: {}", e.what()) });
+          passed = false;
+        }
+      }
+      catch(runtime::object_ptr const e)
+      {
+        if(expect_success)
+        {
+          failures.push_back
+          (
+            {
+              dir_entry.path(),
+              fmt::format("Exception thrown: {}", runtime::detail::to_string(e))
+            }
+          );
           passed = false;
         }
       }

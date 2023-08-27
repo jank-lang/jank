@@ -4,8 +4,7 @@
 
 ; Interpolation will often by used for parameters.
 (def keyword? (fn* [o]
-                ; An explicit return is required in the last position of a fn.
-                (native/raw "__value = make_box(#{ o }#->as_keyword() != nullptr)")))
+                (native/raw "__value = make_box(#{ o }#->type == object_type::keyword)")))
 
 (assert (= (keyword? :meow) true))
 (assert (= (keyword? 1) false))
@@ -15,7 +14,7 @@
   (fn* [o]
     ; Interpolation can contain arbitrary jank code.
     ; It can also capture vars and locals, which lifts and captures them accordingly.
-    (native/raw "__value = #{ (keyword? o) }# ")))
+    (native/raw "__value = #{ (keyword? o) }#")))
 
 (assert (= (also-keyword? :meow) true))
 (assert (= (also-keyword? 1) false))

@@ -4,10 +4,9 @@
 
 namespace jank::runtime::behavior
 {
-  struct countable
+  template <typename T>
+  concept countable = requires(T * const t)
   {
-    virtual ~countable() = default;
-
-    virtual size_t count() const = 0;
+    { t->count() } -> std::convertible_to<size_t>;
   };
 }

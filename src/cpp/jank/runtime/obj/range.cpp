@@ -1,28 +1,29 @@
 #include <jank/runtime/obj/range.hpp>
 #include <jank/runtime/seq.hpp>
 #include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/math.hpp>
 
-namespace jank::runtime::obj
+namespace jank::runtime
 {
-  range::range(object_ptr const end)
+  obj::range::static_object(object_ptr const end)
     : start{ jank::make_box(0) }, end{ end }, step{ jank::make_box(1) }
   { }
-  range::range(object_ptr const start, object_ptr const end)
+  obj::range::static_object(object_ptr const start, object_ptr const end)
     : start{ start }, end{ end }, step{ jank::make_box(1) }
   { }
-  range::range(object_ptr const start, object_ptr const end, object_ptr const step)
+  obj::range::static_object(object_ptr const start, object_ptr const end, object_ptr const step)
     : start{ start }, end{ end }, step{ step }
   { }
 
-  behavior::sequence_ptr range::seq() const
-  { return static_cast<sequence_ptr>(const_cast<range*>(this)); }
-  behavior::sequence_ptr range::fresh_seq() const
-  { return jank::make_box<range>(start, end, step); }
+  obj::range_ptr obj::range::seq()
+  { return this; }
+  obj::range_ptr obj::range::fresh_seq() const
+  { return jank::make_box<obj::range>(start, end, step); }
 
-  object_ptr range::first() const
+  object_ptr obj::range::first() const
   { return start; }
 
-  behavior::sequence_ptr range::next() const
+  obj::range_ptr obj::range::next() const
   {
     if(cached_next)
     { return cached_next; }
@@ -31,12 +32,12 @@ namespace jank::runtime::obj
     if(!lt(next_start, end))
     { return nullptr; }
 
-    auto const ret(jank::make_box<range>(next_start, end, step));
+    auto const ret(jank::make_box<obj::range>(next_start, end, step));
     cached_next = ret;
     return ret;
   }
 
-  behavior::sequence_ptr range::next_in_place()
+  obj::range_ptr obj::range::next_in_place()
   {
     auto next_start(add(start, step));
     if(!lt(next_start, end))
@@ -47,7 +48,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  object_ptr range::next_in_place_first()
+  object_ptr obj::range::next_in_place_first()
   {
     auto next_start(add(start, step));
     if(!lt(next_start, end))
@@ -58,8 +59,47 @@ namespace jank::runtime::obj
     return start;
   }
 
-  void range::to_string(fmt::memory_buffer &buff) const
+  obj::cons_ptr obj::range::cons(object_ptr head) const
+  { return make_box<obj::cons>(head, this); }
+
+  native_bool obj::range::equal(object const &o) const
+  {
+    return visit_object
+    (
+      [this](auto const typed_o)
+      {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(!behavior::seqable<T>)
+        { return false; }
+        else
+        {
+          auto seq(typed_o->fresh_seq());
+          for(auto it(fresh_seq()); it != nullptr; seq = seq->next_in_place(), seq = seq->next_in_place())
+          {
+            if(seq == nullptr || !runtime::detail::equal(it, seq->first()))
+            { return false; }
+          }
+          return true;
+        }
+      },
+      &o
+    );
+  }
+
+  void obj::range::to_string(fmt::memory_buffer &buff)
   { runtime::detail::to_string(seq(), buff); }
-  native_string range::to_string() const
+
+  native_string obj::range::to_string()
   { return runtime::detail::to_string(seq()); }
+
+  native_integer obj::range::to_hash() const
+  {
+    size_t hash{};
+
+    for(auto it(fresh_seq()); it != nullptr; it = it->next_in_place())
+    { hash = runtime::detail::hash_combine(hash, *it->first()); }
+
+    return static_cast<native_integer>(hash);
+  }
 }

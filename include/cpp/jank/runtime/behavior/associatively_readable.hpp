@@ -4,11 +4,10 @@
 
 namespace jank::runtime::behavior
 {
-  struct associatively_readable
+  template <typename T>
+  concept associatively_readable = requires(T * const t)
   {
-    virtual ~associatively_readable() = default;
-    virtual object_ptr get(object_ptr key) const = 0;
-    virtual object_ptr get(object_ptr key, object_ptr fallback) const = 0;
+    { t->get(object_ptr{}) } -> std::convertible_to<object_ptr>;
+    { t->get(object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
   };
-  using associatively_readable_ptr = native_box<associatively_readable>;
 }

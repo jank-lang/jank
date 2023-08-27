@@ -1,13 +1,14 @@
 #pragma once
 
 #include <iostream>
+#include <any>
 
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 
-namespace jank::runtime::obj
+namespace jank::runtime
 {
-  namespace detail
+  namespace obj::detail
   {
     struct function_type
     {
@@ -37,27 +38,25 @@ namespace jank::runtime::obj
   struct invalid_arity
   { };
 
-  struct function : object, behavior::callable, behavior::metadatable
+  /* TODO: Rename to function_wrapper */
+  template <>
+  struct static_object<object_type::native_function_wrapper> : gc, behavior::callable
   {
     static constexpr bool pointer_free{ true };
 
-    function() = default;
-    function(function &&) = default;
-    function(function const &) = default;
-    function(detail::function_type &&d);
-    function(detail::function_type const &d);
-    ~function() = default;
+    static_object() = default;
+    static_object(static_object &&) = default;
+    static_object(static_object const &) = default;
+    static_object(obj::detail::function_type &&d);
+    static_object(obj::detail::function_type const &d);
 
-    static native_box<function> create(detail::function_type const &d);
+    /* behavior::objectable */
+    native_bool equal(object const &) const;
+    native_string const& to_string() const;
+    void to_string(fmt::memory_buffer &buff) const;
+    native_integer to_hash() const;
 
-    native_bool equal(object const &) const final;
-    native_string to_string() const final;
-    void to_string(fmt::memory_buffer &buff) const final;
-    native_integer to_hash() const final;
-
-    function const* as_function() const final;
-    behavior::callable const* as_callable() const final;
-
+    /* behavior::callable */
     object_ptr call() const final;
     object_ptr call(object_ptr) const final;
     object_ptr call(object_ptr, object_ptr) const final;
@@ -70,15 +69,23 @@ namespace jank::runtime::obj
     object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const final;
     object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const final;
 
-    object_ptr with_meta(object_ptr m) const final;
-    behavior::metadatable const* as_metadatable() const final;
+    /* behavior::metadatable */
+    object_ptr with_meta(object_ptr m) const;
 
-    detail::function_type data;
+    object base{ object_type::native_function_wrapper };
+    obj::detail::function_type data{};
+    option<obj::map_ptr> meta;
   };
-  using function_ptr = native_box<function>;
+
+  namespace obj
+  {
+    using native_function_wrapper = static_object<object_type::native_function_wrapper>;
+    using native_function_wrapper_ptr = native_box<native_function_wrapper>;
+  }
 
   namespace detail
   {
+    /* TODO: Is this needed, given dynamic_call? */
     template <typename F, typename... Args>
     object_ptr invoke(F const &f, Args &&... args)
     {
@@ -92,9 +99,9 @@ namespace jank::runtime::obj
         { return c->call(std::forward<Args>(args)...); }
         else
         {
-          /* TODO: Throw error. */
+          /* TODO: Better error. */
           std::cout << "(invoke) object is not callable: " << **f << std::endl;
-          return JANK_NIL;
+          throw std::runtime_error{ "object is not callable" };
         }
       }
     }

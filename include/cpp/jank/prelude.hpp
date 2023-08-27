@@ -15,23 +15,13 @@
 #include <nanobench.h>
 
 #include <jank/type.hpp>
-#include <jank/native_box.hpp>
 #include <jank/util/make_array.hpp>
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/number.hpp>
-#include <jank/runtime/obj/function.hpp>
-#include <jank/runtime/obj/map.hpp>
-#include <jank/runtime/obj/list.hpp>
-#include <jank/runtime/obj/vector.hpp>
-#include <jank/runtime/obj/set.hpp>
-#include <jank/runtime/obj/string.hpp>
-#include <jank/runtime/obj/cons.hpp>
-#include <jank/runtime/obj/range.hpp>
-#include <jank/runtime/obj/iterator.hpp>
-#include <jank/runtime/obj/jit_function.hpp>
-#include <jank/runtime/ns.hpp>
-#include <jank/runtime/var.hpp>
+#include <jank/runtime/detail/type.hpp>
+#include <jank/runtime/erasure.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/math.hpp>
 #include <jank/runtime/hash.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/seq.hpp>
+#include <jank/runtime/behavior/numberable.hpp>

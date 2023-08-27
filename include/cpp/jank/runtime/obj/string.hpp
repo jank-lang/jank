@@ -1,35 +1,38 @@
 #pragma once
 
-#include <jank/runtime/behavior/countable.hpp>
-#include <jank/runtime/behavior/metadatable.hpp>
+#include <jank/runtime/object.hpp>
 
-namespace jank::runtime::obj
+namespace jank::runtime
 {
   /* TODO: Seqable. */
-  struct string : object, behavior::countable, behavior::metadatable
+  template <>
+  struct static_object<object_type::string> : gc
   {
     static constexpr bool pointer_free{ true };
 
-    string() = default;
-    string(string &&) = default;
-    string(string const &) = default;
-    string(native_string const &d);
-    string(native_string &&d);
-    ~string() = default;
+    static_object() = default;
+    static_object(static_object &&) = default;
+    static_object(static_object const &) = default;
+    static_object(object &&base);
+    static_object(native_string const &d);
+    static_object(native_string &&d);
 
-    native_bool equal(object const &) const final;
-    native_string to_string() const final;
-    void to_string(fmt::memory_buffer &buff) const final;
-    native_integer to_hash() const final;
+    /* behavior::objectable */
+    native_bool equal(object const &) const;
+    native_string const& to_string() const;
+    void to_string(fmt::memory_buffer &buff) const;
+    native_integer to_hash() const;
 
-    string const* as_string() const final;
+    /* behavior::countable */
+    size_t count() const;
 
-    size_t count() const final;
-
-    object_ptr with_meta(object_ptr m) const final;
-    behavior::metadatable const* as_metadatable() const final;
-
+    object base{ object_type::string };
     native_string data;
   };
-  using string_ptr = native_box<string>;
+
+  namespace obj
+  {
+    using string = static_object<object_type::string>;
+    using string_ptr = native_box<string>;
+  }
 }

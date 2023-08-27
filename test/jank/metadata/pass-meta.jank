@@ -1,16 +1,14 @@
 ; Metadatable
 (assert (= nil (meta {})))
 (assert (= nil (meta [])))
+(assert (= nil (meta '())))
 (assert (= nil (meta 'foo)))
-(assert (= nil (meta "")))
-
-; TODO: List literals
-;(assert (= nil (meta '())))
 
 ; TODO: Set literals
 ;(assert (= nil (meta #{})))
 
 ; Non-metadatable
+(assert (= nil (meta "")))
 (assert (= nil (meta true)))
 (assert (= nil (meta false)))
 (assert (= nil (meta 100)))

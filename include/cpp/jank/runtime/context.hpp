@@ -6,6 +6,7 @@
 #include <folly/Synchronized.h>
 
 #include <jank/result.hpp>
+#include <jank/analyze/processor.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/obj/keyword.hpp>
@@ -37,12 +38,13 @@ namespace jank::runtime
     object_ptr macroexpand(object_ptr o);
 
     static object_ptr print(object_ptr o);
-    static object_ptr print(object_ptr o, behavior::seqable_ptr more);
-    static object_ptr println(behavior::seqable_ptr more);
+    static object_ptr print(object_ptr o, object_ptr more);
+    static object_ptr println(object_ptr more);
 
     void eval_prelude(jit::processor const &);
     object_ptr eval_file(native_string_view const &path, jit::processor const &);
     object_ptr eval_string(native_string_view const &code, jit::processor const &);
+    native_vector<analyze::expression_ptr> analyze_string(native_string_view const &code, jit::processor const &jit_prc, native_bool const eval = true);
 
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */
@@ -69,5 +71,9 @@ namespace jank::runtime
     thread_state& get_thread_state(option<thread_state> init);
 
     folly::Synchronized<native_unordered_map<std::thread::id, thread_state>> thread_states;
+    /* The analyze processor is reused across evaluations so we can keep the semantic information
+     * of previous code. This is essential for REPL use. */
+    /* TODO: This needs to be synchronized. */
+    jank::analyze::processor an_prc{ *this };
   };
 }

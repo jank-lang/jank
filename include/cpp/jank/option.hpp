@@ -5,6 +5,8 @@
 #include <type_traits>
 #include <ostream>
 
+#include <fmt/ostream.h>
+
 namespace jank
 {
   struct none_t
@@ -177,4 +179,11 @@ namespace jank
     { return os << "none"; }
     return os << "some(" << o.unwrap() << ")";
   }
+}
+
+namespace fmt
+{
+  template <typename T>
+  struct formatter<jank::option<T>> : fmt::ostream_formatter
+  { };
 }

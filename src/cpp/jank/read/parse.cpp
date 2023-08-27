@@ -188,17 +188,20 @@ namespace jank::read::parse
     else if(val_result.expect_ok() == nullptr)
     { return err(error{ start_token.pos, native_string{ "invalid value after quote" } }); }
 
-    return jank::make_box<runtime::obj::list>
+    return runtime::erase
     (
-      jank::make_box<runtime::obj::symbol>("quote"),
-      val_result.expect_ok_move()
+      jank::make_box<runtime::obj::list>
+      (
+        jank::make_box<runtime::obj::symbol>("quote"),
+        val_result.expect_ok_move()
+      )
     );
   }
 
   processor::object_result processor::parse_nil()
   {
     ++token_current;
-    return ok(make_box<runtime::obj::nil>());
+    return ok(runtime::obj::nil::nil_const());
   }
 
   processor::object_result processor::parse_boolean()
