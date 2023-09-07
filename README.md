@@ -90,15 +90,24 @@ $ ./bin/install
 ## Sponsors
 If you'd like your name, company, or logo here, you can sponsor this project.
 [![Sponsor](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&link=https://github.com/sponsors/jeaye&color=red)](https://github.com/sponsors/jeaye)
+<a href="https://www.clojuriststogether.org/">
+  <img src="https://www.clojuriststogether.org/header-logo.svg" height="100px">
+</a>
 
 ## In the news
 <table>
   <tr>
+    <td>Clojure Conj 2023</td>
     <td>The REPL Interview</td>
     <td>devmio Interview</td>
     <td>Compiler Spotlight</td>
   </tr>
   <tr>
+    <td>
+      <a href="https://www.youtube.com/watch?v=Yw4IAY4Nx_o">
+        <img src="https://i0.wp.com/2023.clojure-conj.org/wp-content/uploads/2019/06/clojure.png?resize=150%2C150&ssl=1" height="100px">
+      </a>
+    </td>
     <td>
       <a href="https://www.therepl.net/episodes/44/">
         <img src="https://user-images.githubusercontent.com/1057635/193151333-449385c2-9ddb-468e-b715-f149d173e310.svg" height="100px">
