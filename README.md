@@ -90,9 +90,20 @@ $ ./bin/install
 ## Sponsors
 If you'd like your name, company, or logo here, you can sponsor this project.
 [![Sponsor](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&link=https://github.com/sponsors/jeaye&color=red)](https://github.com/sponsors/jeaye)
-<a href="https://www.clojuriststogether.org/">
-  <img src="https://www.clojuriststogether.org/header-logo.svg" height="100px">
-</a>
+
+<br/>
+
+<p align="center">
+  <a href="https://www.clojuriststogether.org/">
+    <img src="https://www.clojuriststogether.org/header-logo.svg" height="100px">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://devcarbon.com/">
+    devcarbon.com
+  </a>
+</p>
 
 ## In the news
 <table>
