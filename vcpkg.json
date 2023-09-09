@@ -11,6 +11,7 @@
     "folly",
     "immer",
     "libguarded",
+    "libzippp",
     "magic-enum"
   ],
   "default-features": [],

@@ -82,6 +82,7 @@ namespace jank::jit
     (
       jank::util::make_array
       (
+        /* TODO: Path to clang++ from Cling build? Is this using the system clang++? */
         "clang++", "-std=c++17",
         "-DHAVE_CXX14=1", "-DIMMER_HAS_LIBGC=1",
         "-include-pch", pch_path_str.c_str(),
@@ -91,11 +92,6 @@ namespace jank::jit
       )
     );
     interpreter = std::make_unique<cling::Interpreter>(args.size(), args.data(), llvm_resource_path_str.c_str());
-
-    /* TODO: Optimization >0 doesn't work with the latest Cling LLVM 13.
-     * 1. https://github.com/root-project/cling/issues/483
-     * 2. https://github.com/root-project/cling/issues/484
-     */
   }
 
   result<option<runtime::object_ptr>, native_string> processor::eval
