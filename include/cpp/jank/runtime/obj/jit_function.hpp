@@ -7,8 +7,8 @@ namespace jank::runtime
 {
   namespace obj
   {
-    using map = static_object<object_type::map>;
-    using map_ptr = native_box<map>;
+    using persistent_array_map = static_object<object_type::persistent_array_map>;
+    using persistent_array_map_ptr = native_box<persistent_array_map>;
   }
 
   template <>
@@ -34,7 +34,7 @@ namespace jank::runtime
     /* TODO: Doesn't have an offset of 0. */
     object base{ object_type::jit_function };
     behavior::callable_ptr data{};
-    option<obj::map_ptr> meta;
+    option<object_ptr> meta;
   };
 
   namespace obj

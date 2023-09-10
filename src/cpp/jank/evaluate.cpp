@@ -159,7 +159,7 @@ namespace jank::evaluate
             default:
             {
               /* TODO: This could be optimized; making lists sucks right now. */
-              runtime::detail::persistent_list all{ arg_vals.rbegin(), arg_vals.rend() };
+              runtime::detail::native_persistent_list all{ arg_vals.rbegin(), arg_vals.rend() };
               for(size_t i{}; i < 10; ++i)
               { all = all.rest(); }
               return runtime::dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3], arg_vals[4], arg_vals[5], arg_vals[6], arg_vals[7], arg_vals[8], arg_vals[9], make_box<runtime::obj::list>(all));
@@ -195,7 +195,7 @@ namespace jank::evaluate
     analyze::expr::vector<analyze::expression> const &expr
   )
   {
-    runtime::detail::transient_vector ret;
+    runtime::detail::native_transient_vector ret;
     for(auto const &e : expr.data_exprs)
     { ret.push_back(eval(rt_ctx, jit_prc, e)); }
     return make_box<runtime::obj::vector>(ret.persistent());
@@ -208,8 +208,9 @@ namespace jank::evaluate
     analyze::expr::map<analyze::expression> const &expr
   )
   {
-    /* TODO: Optimize with a transient or something. */
-    runtime::detail::persistent_map ret;
+    /* TODO: Pre-allocate array. */
+    /* TODO: If there are more exprs than the max array map keys, we need a hash map. */
+    runtime::detail::native_array_map ret;
     for(auto const &e : expr.data_exprs)
     {
       ret.insert_or_assign
@@ -218,7 +219,7 @@ namespace jank::evaluate
         eval(rt_ctx, jit_prc, e.second)
       );
     }
-    return make_box<runtime::obj::map>(std::move(ret));
+    return make_box<runtime::obj::persistent_array_map>(std::move(ret));
   }
 
   runtime::object_ptr eval

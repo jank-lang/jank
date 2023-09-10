@@ -6,7 +6,7 @@
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/vector.hpp>
 #include <jank/runtime/obj/list.hpp>
-#include <jank/runtime/obj/map.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/set.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/keyword.hpp>
@@ -111,7 +111,7 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_paren);
 
-    runtime::detail::transient_vector ret;
+    runtime::detail::native_transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
     {
       if(it.latest.unwrap().is_err())
@@ -132,7 +132,7 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_square_bracket);
 
-    runtime::detail::transient_vector ret;
+    runtime::detail::native_transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
     {
       if(it.latest.unwrap().is_err())
@@ -154,8 +154,7 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_curly_bracket);
 
-    /* TODO: Map transient. */
-    runtime::detail::persistent_map ret;
+    runtime::detail::native_array_map ret;
     for(auto it(begin()); it != end(); ++it)
     {
       if(it.latest.unwrap().is_err())
@@ -175,7 +174,7 @@ namespace jank::read::parse
     { return err(error{ start_token.pos, "Unterminated map" }); }
 
     expected_closer = prev_expected_closer;
-    return make_box<runtime::obj::map>(ret);
+    return make_box<runtime::obj::persistent_array_map>(ret);
   }
 
   processor::object_result processor::parse_quote()

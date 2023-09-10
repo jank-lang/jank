@@ -8,11 +8,11 @@
 
 namespace jank::runtime
 {
-  obj::vector::static_object(runtime::detail::peristent_vector &&d)
+  obj::vector::static_object(runtime::detail::native_persistent_vector &&d)
     : data{ std::move(d) }
   { }
 
-  obj::vector::static_object(runtime::detail::peristent_vector const &d)
+  obj::vector::static_object(runtime::detail::native_persistent_vector const &d)
     : data{ d }
   { }
 
@@ -29,7 +29,7 @@ namespace jank::runtime
 
         if constexpr(behavior::sequenceable<T>)
         {
-          runtime::detail::transient_vector v;
+          runtime::detail::native_transient_vector v;
           for(auto i(typed_s->fresh_seq()); i != nullptr; i = i->next_in_place())
           { v.push_back(i->first()); }
           return jank::make_box<obj::vector>(v.persistent());

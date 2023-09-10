@@ -8,7 +8,7 @@ namespace jank::runtime
   template <>
   struct static_object<object_type::set> : gc
   {
-    using value_type = runtime::detail::persistent_set;
+    using value_type = runtime::detail::native_persistent_set;
 
     static constexpr bool pointer_free{ false };
 
@@ -44,6 +44,6 @@ namespace jank::runtime
 
     object base{ object_type::set };
     value_type data;
-    option<obj::map_ptr> meta;
+    option<object_ptr> meta;
   };
 }

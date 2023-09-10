@@ -136,7 +136,7 @@ namespace jank::runtime::module
 
   object_ptr file_entry::to_runtime_data() const
   {
-    return runtime::obj::map::create_unique
+    return runtime::obj::persistent_array_map::create_unique
     (
       make_box("__type"), make_box("module::file_entry"),
       make_box("archive_path"), jank::detail::to_runtime_data(archive_path),
@@ -146,14 +146,14 @@ namespace jank::runtime::module
 
   object_ptr loader::to_runtime_data() const
   {
-    runtime::object_ptr entry_maps(make_box<runtime::obj::map>());
+    runtime::object_ptr entry_maps(make_box<runtime::obj::persistent_array_map>());
     for(auto const &e : entries)
     {
       entry_maps = runtime::assoc
       (
         entry_maps,
         make_box(e.first),
-        runtime::obj::map::create_unique
+        runtime::obj::persistent_array_map::create_unique
         (
           make_box("jank"), jank::detail::to_runtime_data(e.second.jank),
           make_box("cljc"), jank::detail::to_runtime_data(e.second.cljc),
@@ -163,7 +163,7 @@ namespace jank::runtime::module
       );
     }
 
-    return runtime::obj::map::create_unique
+    return runtime::obj::persistent_array_map::create_unique
     (
       make_box("__type"), make_box("module::loader"),
       make_box("entries"), entry_maps

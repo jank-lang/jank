@@ -12,14 +12,16 @@
 #include <jank/runtime/obj/vector.hpp>
 #include <jank/runtime/obj/list.hpp>
 #include <jank/runtime/obj/set.hpp>
-#include <jank/runtime/obj/map.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
+#include <jank/runtime/obj/persistent_array_map_sequence.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
+#include <jank/runtime/obj/persistent_hash_map_sequence.hpp>
 #include <jank/runtime/obj/iterator.hpp>
 #include <jank/runtime/obj/range.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_vector_sequence.hpp>
 #include <jank/runtime/obj/persistent_list_sequence.hpp>
-#include <jank/runtime/obj/persistent_map_sequence.hpp>
 #include <jank/runtime/obj/persistent_set_sequence.hpp>
 #include <jank/runtime/obj/native_array_sequence.hpp>
 #include <jank/runtime/obj/native_vector_sequence.hpp>
@@ -120,9 +122,21 @@ namespace jank::runtime
       {
         return fn(expect_object<obj::list>(erased), std::forward<Args>(args)...);
       } break;
-      case object_type::map:
+      case object_type::persistent_array_map:
       {
-        return fn(expect_object<obj::map>(erased), std::forward<Args>(args)...);
+        return fn(expect_object<obj::persistent_array_map>(erased), std::forward<Args>(args)...);
+      } break;
+      case object_type::persistent_array_map_sequence:
+      {
+        return fn(expect_object<obj::persistent_array_map_sequence>(erased), std::forward<Args>(args)...);
+      } break;
+      case object_type::persistent_hash_map:
+      {
+        return fn(expect_object<obj::persistent_hash_map>(erased), std::forward<Args>(args)...);
+      } break;
+      case object_type::persistent_hash_map_sequence:
+      {
+        return fn(expect_object<obj::persistent_hash_map_sequence>(erased), std::forward<Args>(args)...);
       } break;
       case object_type::set:
       {
@@ -147,10 +161,6 @@ namespace jank::runtime
       case object_type::persistent_vector_sequence:
       {
         return fn(expect_object<obj::persistent_vector_sequence>(erased), std::forward<Args>(args)...);
-      } break;
-      case object_type::persistent_map_sequence:
-      {
-        return fn(expect_object<obj::persistent_map_sequence>(erased), std::forward<Args>(args)...);
       } break;
       case object_type::persistent_list_sequence:
       {

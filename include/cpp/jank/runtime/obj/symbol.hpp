@@ -7,8 +7,8 @@ namespace jank::runtime
 {
   namespace obj
   {
-    using map = static_object<object_type::map>;
-    using map_ptr = native_box<map>;
+    using persistent_array_map = static_object<object_type::persistent_array_map>;
+    using persistent_array_map_ptr = native_box<persistent_array_map>;
   }
 
   template <>
@@ -46,7 +46,7 @@ namespace jank::runtime
     object base{ object_type::symbol };
     native_string ns;
     native_string name;
-    option<obj::map_ptr> meta;
+    option<object_ptr> meta;
   };
 
   namespace obj

@@ -37,7 +37,7 @@ namespace jank::analyze::expr
       for(auto const &e : params)
       { param_maps = runtime::conj(param_maps, e); }
 
-      return runtime::obj::map::create_unique
+      return runtime::obj::persistent_array_map::create_unique
       (
         make_box("__type"), make_box("expr::function_arity"),
         make_box("params"), param_maps,
@@ -69,7 +69,7 @@ namespace jank::analyze::expr
       for(auto const &e : arities)
       { arity_maps = runtime::conj(arity_maps, e.to_runtime_data()); }
 
-      return runtime::obj::map::create_unique
+      return runtime::obj::persistent_array_map::create_unique
       (
         make_box("__type"), make_box("expr::function"),
         make_box("name"), detail::to_runtime_data(name),

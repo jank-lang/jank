@@ -74,7 +74,7 @@ namespace jank::runtime
 
     object base{ object_type::native_function_wrapper };
     obj::detail::function_type data{};
-    option<obj::map_ptr> meta;
+    option<object_ptr> meta;
   };
 
   namespace obj

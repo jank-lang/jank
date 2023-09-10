@@ -8,11 +8,11 @@
 
 namespace jank::runtime
 {
-  obj::set::static_object(runtime::detail::persistent_set &&d)
+  obj::set::static_object(runtime::detail::native_persistent_set &&d)
     : data{ std::move(d) }
   { }
 
-  obj::set::static_object(runtime::detail::persistent_set const &d)
+  obj::set::static_object(runtime::detail::native_persistent_set const &d)
     : data{ d }
   { }
 

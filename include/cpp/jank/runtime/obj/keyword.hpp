@@ -7,8 +7,8 @@ namespace jank::runtime
 {
   namespace obj
   {
-    using map = static_object<object_type::map>;
-    using map_ptr = native_box<map>;
+    using persistent_array_map = static_object<object_type::persistent_array_map>;
+    using persistent_array_map_ptr = native_box<persistent_array_map>;
   }
 
   /* The correct way to create a keyword for normal use is through interning via the RT context. */
@@ -39,7 +39,7 @@ namespace jank::runtime
 
     object base{ object_type::keyword };
     obj::symbol sym;
-    option<obj::map_ptr> meta;
+    option<object_ptr> meta;
     /* TODO: Remove this state and always use the RT context to resolve upon creation. */
     /* Not resolved means this is a :: keyword. If ns is set, when this is true, it's an ns alias.
      * Upon interning, this will be resolved. */

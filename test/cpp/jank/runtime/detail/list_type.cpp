@@ -3,7 +3,7 @@
 #include <array>
 #include <iostream>
 
-#include <jank/runtime/detail/list_type.hpp>
+#include <jank/runtime/detail/native_persistent_list.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #include <doctest/doctest.h>
@@ -12,7 +12,7 @@ namespace jank::runtime::detail
 {
   TEST_CASE("Empty")
   {
-    list_type_impl<int> l;
+    native_persistent_list_impl<int> l;
     CHECK(l.first().is_none());
     CHECK(l.rest().size() == 0);
     CHECK(l.size() == 0);
@@ -20,7 +20,7 @@ namespace jank::runtime::detail
 
   TEST_CASE("Unit")
   {
-    list_type_impl<int> l{ 10 };
+    native_persistent_list_impl<int> l{ 10 };
     CHECK(l.first() == 10);
     CHECK(l.rest().size() == 0);
     CHECK(l.size() == 1);
@@ -28,8 +28,8 @@ namespace jank::runtime::detail
 
   TEST_CASE("Cons")
   {
-    list_type_impl<int> l1{ 10 };
-    list_type_impl<int> l2{ l1.cons(20) };
+    native_persistent_list_impl<int> l1{ 10 };
+    native_persistent_list_impl<int> l2{ l1.cons(20) };
     CHECK(l2.first() == 20);
     CHECK(l2.size() == 2);
     CHECK(l2.rest().size() == 1);
@@ -41,7 +41,7 @@ namespace jank::runtime::detail
   {
     SUBCASE("Empty")
     {
-      list_type_impl<int> l;
+      native_persistent_list_impl<int> l;
       for(auto i : l)
       {
         static_cast<void>(i);
@@ -51,7 +51,7 @@ namespace jank::runtime::detail
 
     SUBCASE("Non-empty")
     {
-      list_type_impl<int> l{ 10, 20, 30 };
+      native_persistent_list_impl<int> l{ 10, 20, 30 };
       int c{ 1 };
       for(auto i : l)
       { CHECK(i == c++ * 10); }

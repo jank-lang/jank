@@ -47,7 +47,7 @@ namespace jank::runtime
     ns_ptr n;
     /* TODO: Make sure this gets fully qualified. */
     obj::symbol_ptr name;
-    option<obj::map_ptr> meta;
+    option<object_ptr> meta;
 
   private:
     folly::Synchronized<object_ptr> root;

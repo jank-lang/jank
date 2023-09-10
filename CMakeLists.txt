@@ -160,14 +160,14 @@ add_library(
   src/cpp/jank/runtime/obj/keyword.cpp
   src/cpp/jank/runtime/obj/list.cpp
   src/cpp/jank/runtime/obj/vector.cpp
-  src/cpp/jank/runtime/obj/map.cpp
+  src/cpp/jank/runtime/obj/persistent_vector_sequence.cpp
+  src/cpp/jank/runtime/obj/persistent_array_map.cpp
+  src/cpp/jank/runtime/obj/persistent_hash_map.cpp
   src/cpp/jank/runtime/obj/set.cpp
   src/cpp/jank/runtime/obj/string.cpp
   src/cpp/jank/runtime/obj/cons.cpp
   src/cpp/jank/runtime/obj/range.cpp
   src/cpp/jank/runtime/obj/iterator.cpp
-  src/cpp/jank/runtime/obj/persistent_vector_sequence.cpp
-  src/cpp/jank/runtime/obj/persistent_map_sequence.cpp
   src/cpp/jank/runtime/obj/native_array_sequence.cpp
   src/cpp/jank/runtime/obj/native_vector_sequence.cpp
   src/cpp/jank/runtime/behavior/callable.cpp

@@ -12,7 +12,7 @@ namespace jank::analyze
 {
   runtime::object_ptr lifted_var::to_runtime_data() const
   {
-    return runtime::obj::map::create_unique
+    return runtime::obj::persistent_array_map::create_unique
     (
       make_box("__type"), make_box("lifted_var"),
       make_box("native_name"), make_box<runtime::obj::symbol>(native_name),
@@ -22,7 +22,7 @@ namespace jank::analyze
 
   runtime::object_ptr lifted_constant::to_runtime_data() const
   {
-    return runtime::obj::map::create_unique
+    return runtime::obj::persistent_array_map::create_unique
     (
       make_box("__type"), make_box("lifted_constant"),
       make_box("native_name"), make_box<runtime::obj::symbol>(native_name),
@@ -33,7 +33,7 @@ namespace jank::analyze
 
   runtime::object_ptr local_binding::to_runtime_data() const
   {
-    return runtime::obj::map::create_unique
+    return runtime::obj::persistent_array_map::create_unique
     (
       make_box("__type"), make_box("local_binding"),
       make_box("name"), name,
@@ -212,7 +212,7 @@ namespace jank::analyze
 
   runtime::object_ptr local_frame::to_runtime_data() const
   {
-    return runtime::obj::map::create_unique
+    return runtime::obj::persistent_array_map::create_unique
     (
       make_box("__type"), make_box("local_frame"),
       make_box("type"), make_box(magic_enum::enum_name(type)),

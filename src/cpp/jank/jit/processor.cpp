@@ -87,7 +87,6 @@ namespace jank::jit
         "-DHAVE_CXX14=1", "-DIMMER_HAS_LIBGC=1",
         "-include-pch", pch_path_str.c_str(),
         "-isystem", include_path.c_str(),
-
         "-Ofast", "-ffast-math", "-march=native"
       )
     );

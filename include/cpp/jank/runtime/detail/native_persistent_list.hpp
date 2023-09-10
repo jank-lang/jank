@@ -37,9 +37,8 @@ namespace jank::runtime::detail
     size_t length{};
   };
 
-  /* TODO: Rename to native_list. */
   template <typename T>
-  struct list_type_impl
+  struct native_persistent_list_impl
   {
     using element_type = T;
     using value_type = list_node<T>;
@@ -79,40 +78,40 @@ namespace jank::runtime::detail
       bool operator !=(iterator const &rhs) const
       { return latest != rhs.latest; }
 
-      native_box<list_type_impl<T>::value_type> latest;
+      native_box<native_persistent_list_impl<T>::value_type> latest;
     };
 
-    list_type_impl() = default;
-    list_type_impl(list_type_impl<T> const &) = default;
-    list_type_impl(list_type_impl<T> &&) noexcept = default;
-    list_type_impl(native_box<value_type> const &d) : data{ d }
+    native_persistent_list_impl() = default;
+    native_persistent_list_impl(native_persistent_list_impl<T> const &) = default;
+    native_persistent_list_impl(native_persistent_list_impl<T> &&) noexcept = default;
+    native_persistent_list_impl(native_box<value_type> const &d) : data{ d }
     { }
 
-    list_type_impl(std::initializer_list<T> const &vs)
-      : list_type_impl(std::rbegin(vs), std::rend(vs))
+    native_persistent_list_impl(std::initializer_list<T> const &vs)
+      : native_persistent_list_impl(std::rbegin(vs), std::rend(vs))
     { }
     template <typename It>
-    list_type_impl(It const &rb, It const &re)
+    native_persistent_list_impl(It const &rb, It const &re)
     {
       size_t length{};
       for(auto it(rb); it != re; ++it)
       { data = make_box<value_type>(*it, data, length++); }
     }
 
-    list_type_impl& operator=(list_type_impl<T> const &) = default;
-    list_type_impl& operator=(list_type_impl<T> &&) noexcept = default;
+    native_persistent_list_impl& operator=(native_persistent_list_impl<T> const &) = default;
+    native_persistent_list_impl& operator=(native_persistent_list_impl<T> &&) noexcept = default;
 
     iterator begin() const
     { return { data }; }
     iterator end() const
     { return { nullptr }; }
 
-    list_type_impl<T> cons(T const &t) const
+    native_persistent_list_impl<T> cons(T const &t) const
     { return { make_box<value_type>(t, data, size()) }; }
-    list_type_impl<T> cons(T &&t) const
+    native_persistent_list_impl<T> cons(T &&t) const
     { return { make_box<value_type>(std::move(t), data, size()) }; }
 
-    list_type_impl<T> into(list_type_impl<T> const &head) const
+    native_persistent_list_impl<T> into(native_persistent_list_impl<T> const &head) const
     {
       if(head.data == nullptr)
       { return *this; }
@@ -133,9 +132,11 @@ namespace jank::runtime::detail
       { return some(data->first); }
       return none;
     }
-    list_type_impl<T> rest() const
-    { return data ? list_type_impl<T>{ data->rest } : list_type_impl<T>{}; }
+    native_persistent_list_impl<T> rest() const
+    { return data ? native_persistent_list_impl<T>{ data->rest } : native_persistent_list_impl<T>{}; }
 
     native_box<value_type> data{};
   };
+
+  using native_persistent_list = native_persistent_list_impl<object_ptr>;
 }

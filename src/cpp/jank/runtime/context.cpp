@@ -309,7 +309,7 @@ namespace jank::runtime
           { return typed_o; }
 
           auto const meta(var.unwrap()->meta.unwrap());
-          auto const found_macro(meta->data.find(intern_keyword("", "macro", true)));
+          auto const found_macro(get(meta, intern_keyword("", "macro", true)));
           if(!found_macro || !detail::truthy(found_macro))
           { return typed_o; }
 

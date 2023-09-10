@@ -7,7 +7,7 @@
 #include <fmt/core.h>
 
 #include <jank/runtime/obj/vector.hpp>
-#include <jank/runtime/obj/map.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/behavior/numberable.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
@@ -55,7 +55,7 @@ namespace jank::analyze
     /* We wrap all of the expressions we get in an anonymous fn so that we can call it easily.
      * This also simplifies codegen, since we only ever codegen a single fn, even if that fn
      * represents a ns, a single REPL expression, or an actual source fn. */
-    runtime::detail::transient_vector fn;
+    runtime::detail::native_transient_vector fn;
     fn.push_back(make_box<runtime::obj::symbol>("fn*"));
     fn.push_back(make_box<runtime::obj::vector>());
     for(; parse_current != parse_end; ++parse_current)
@@ -194,7 +194,7 @@ namespace jank::analyze
     if
     (
       unwrapped_var->meta.is_none() ||
-      unwrapped_var->meta.unwrap()->get(macro_kw) == runtime::obj::nil::nil_const()
+      get(unwrapped_var->meta.unwrap(), macro_kw) == runtime::obj::nil::nil_const()
     )
     { current_frame->lift_var(qualified_sym); }
     return make_box<expression>
@@ -844,7 +844,7 @@ namespace jank::analyze
 
   processor::expression_result processor::analyze_map
   (
-    runtime::obj::map_ptr const &o,
+    runtime::obj::persistent_array_map_ptr const &o,
     local_frame_ptr &current_frame,
     expression_type const expr_type,
     option<expr::function_context_ptr> const &fn_ctx,
@@ -1027,7 +1027,7 @@ namespace jank::analyze
         { return analyze_call(typed_o, current_frame, expr_type, fn_ctx, needs_box); }
         else if constexpr(std::same_as<T, runtime::obj::vector>)
         { return analyze_vector(typed_o, current_frame, expr_type, fn_ctx, needs_box); }
-        else if constexpr(std::same_as<T, runtime::obj::map>)
+        else if constexpr(std::same_as<T, runtime::obj::persistent_array_map>)
         { return analyze_map(typed_o, current_frame, expr_type, fn_ctx, needs_box); }
         else if constexpr(std::same_as<T, runtime::obj::set>)
         { return err(error{ "unimplemented analysis: set" }); }

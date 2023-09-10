@@ -8,7 +8,7 @@
 #include <jank/runtime/hash.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/vector.hpp>
-#include <jank/runtime/obj/map.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/behavior/countable.hpp>
@@ -56,6 +56,9 @@ namespace jank::runtime
   { return (o == obj::nil::nil_const()); }
   native_bool is_some(object_ptr const o)
   { return (o != obj::nil::nil_const()); }
+
+  native_bool is_map(object_ptr const o)
+  { return (o->type == object_type::persistent_hash_map || o->type == object_type::persistent_array_map); }
 
   object_ptr seq(object_ptr const s)
   {

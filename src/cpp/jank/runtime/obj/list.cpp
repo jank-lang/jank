@@ -8,10 +8,10 @@
 
 namespace jank::runtime
 {
-  obj::list::static_object(runtime::detail::persistent_list &&d)
+  obj::list::static_object(runtime::detail::native_persistent_list &&d)
     : data{ std::move(d) }
   { }
-  obj::list::static_object(runtime::detail::persistent_list const &d)
+  obj::list::static_object(runtime::detail::native_persistent_list const &d)
     : data{ d }
   { }
 
@@ -31,7 +31,7 @@ namespace jank::runtime
           native_vector<object_ptr> v;
           for(auto i(typed_s->fresh_seq()); i != nullptr; i = i->next_in_place())
           { v.emplace_back(i->first()); }
-          return jank::make_box<obj::list>(runtime::detail::persistent_list{ v.rbegin(), v.rend() });
+          return jank::make_box<obj::list>(runtime::detail::native_persistent_list{ v.rbegin(), v.rend() });
         }
         else
         { throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_s->to_string()) }; }

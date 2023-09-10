@@ -2,13 +2,14 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/persistent_list_sequence.hpp>
+#include <jank/runtime/detail/native_persistent_list.hpp>
 
 namespace jank::runtime
 {
   template <>
   struct static_object<object_type::list> : gc
   {
-    using value_type = runtime::detail::persistent_list;
+    using value_type = runtime::detail::native_persistent_list;
 
     static constexpr bool pointer_free{ false };
 
@@ -46,7 +47,7 @@ namespace jank::runtime
 
     object base{ object_type::list };
     value_type data;
-    option<obj::map_ptr> meta;
+    option<object_ptr> meta;
   };
 
   namespace obj

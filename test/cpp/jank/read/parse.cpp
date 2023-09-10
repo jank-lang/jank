@@ -10,7 +10,7 @@
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/vector.hpp>
-#include <jank/runtime/obj/map.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/string.hpp>
 #include <jank/runtime/obj/list.hpp>
 #include <jank/runtime/detail/object_util.hpp>
@@ -340,7 +340,7 @@ namespace jank::read::parse
             r.expect_ok(),
             make_box<runtime::obj::vector>
             (
-              runtime::detail::peristent_vector
+              runtime::detail::native_persistent_vector
               {
                 make_box<runtime::obj::integer>(1 * i),
                 make_box<runtime::obj::integer>(2 * i),
@@ -387,7 +387,7 @@ namespace jank::read::parse
         auto const r(p.next());
         CHECK(r.is_ok());
         CHECK(r.expect_ok() != nullptr);
-        CHECK(runtime::detail::equal(r.expect_ok(), make_box<runtime::obj::map>()));
+        CHECK(runtime::detail::equal(r.expect_ok(), make_box<runtime::obj::persistent_array_map>()));
       }
     }
 
@@ -405,7 +405,7 @@ namespace jank::read::parse
           runtime::detail::equal
           (
             r.expect_ok(),
-            make_box<runtime::obj::map>
+            make_box<runtime::obj::persistent_array_map>
             (
               runtime::detail::in_place_unique{},
               make_array_box<runtime::object_ptr>
@@ -435,7 +435,7 @@ namespace jank::read::parse
         runtime::detail::equal
         (
           r.expect_ok(),
-          make_box<runtime::obj::map>
+          make_box<runtime::obj::persistent_array_map>
           (
             runtime::detail::in_place_unique{},
             make_array_box<runtime::object_ptr>

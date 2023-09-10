@@ -7,7 +7,7 @@
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/list.hpp>
 #include <jank/runtime/obj/vector.hpp>
-#include <jank/runtime/obj/map.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/analyze/local_frame.hpp>
 #include <jank/analyze/expression.hpp>
 #include <jank/option.hpp>
@@ -156,7 +156,7 @@ namespace jank::analyze
     );
     expression_result analyze_map
     (
-      runtime::obj::map_ptr const &,
+      runtime::obj::persistent_array_map_ptr const &,
       local_frame_ptr &,
       expression_type,
       option<expr::function_context_ptr> const&,

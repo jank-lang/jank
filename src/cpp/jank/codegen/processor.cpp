@@ -90,8 +90,8 @@ namespace jank::codegen
         { return "jank::runtime::obj::vector_ptr"; }
         case jank::runtime::object_type::set:
         { return "jank::runtime::obj::set_ptr"; }
-        case jank::runtime::object_type::map:
-        { return "jank::runtime::obj::map_ptr"; }
+        case jank::runtime::object_type::persistent_array_map:
+        { return "jank::runtime::obj::persistent_array_map_ptr"; }
         case jank::runtime::object_type::var:
         { return "jank::runtime::var_ptr"; }
         default:
@@ -754,7 +754,7 @@ namespace jank::codegen
     fmt::format_to
     (
       inserter,
-      "auto const {}(jank::make_box<jank::runtime::obj::map>(jank::runtime::detail::in_place_unique{{}}, jank::make_array_box<object_ptr>(",
+      "auto const {}(jank::make_box<jank::runtime::obj::persistent_array_map>(jank::runtime::detail::in_place_unique{{}}, jank::make_array_box<object_ptr>(",
       ret_tmp
     );
     bool need_comma{};

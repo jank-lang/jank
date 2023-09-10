@@ -29,7 +29,7 @@ namespace jank::detail
   template <typename K, typename V>
   runtime::object_ptr to_runtime_data(native_unordered_map<K, V> const &m)
   {
-    runtime::object_ptr ret(make_box<runtime::obj::map>());
+    runtime::object_ptr ret(make_box<runtime::obj::persistent_array_map>());
     for(auto const &e : m)
     { ret = runtime::assoc(ret, to_runtime_data(e.first), to_runtime_data(e.second)); }
     return ret;
@@ -38,7 +38,7 @@ namespace jank::detail
   template <typename T>
   runtime::object_ptr to_runtime_data(option<T> const &m)
   {
-    return runtime::obj::map::create_unique
+    return runtime::obj::persistent_array_map::create_unique
     (
       make_box("__type"), make_box("option"),
       make_box("data"), (m.is_none() ? make_box("none") : to_runtime_data(m.unwrap()))
