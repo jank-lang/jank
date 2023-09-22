@@ -336,15 +336,20 @@ namespace jank::analyze
     { return err(error{ "fn missing forms" }); }
     auto list(full_list);
 
-    option<native_string> name;
+    native_string name;
     auto first_elem(list->data.rest().first().unwrap());
     if(first_elem->type == runtime::object_type::symbol)
     {
       auto const s(runtime::expect_object<runtime::obj::symbol>(first_elem));
-      name = s->name;
+      /* TODO: Remove the generated portion here once we support codegen for making all references
+       * to generated code use the fully qualified name. Right now, a jank fn named `min` will
+       * conflict with the RT `min` fn, for example. */
+      name = runtime::context::unique_string(s->name);
       first_elem = list->data.rest().rest().first().unwrap();
       list = make_box(list->data.rest());
     }
+    else
+    { name = runtime::context::unique_string("fn"); }
 
     native_vector<expr::function_arity<expression>> arities;
 

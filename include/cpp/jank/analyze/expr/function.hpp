@@ -60,7 +60,7 @@ namespace jank::analyze::expr
   template <typename E>
   struct function : expression_base
   {
-    option<native_string> name;
+    native_string name;
     native_vector<function_arity<E>> arities;
 
     runtime::object_ptr to_runtime_data() const
