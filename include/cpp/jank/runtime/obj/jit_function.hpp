@@ -19,7 +19,6 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(object &&base);
     static_object(object_ptr const fn, object_ptr const start);
 
     /* behavior::objectable */
@@ -31,7 +30,6 @@ namespace jank::runtime
     /* behavior::metadatable */
     object_ptr with_meta(object_ptr m);
 
-    /* TODO: Doesn't have an offset of 0. */
     object base{ object_type::jit_function };
     behavior::callable_ptr data{};
     option<object_ptr> meta;

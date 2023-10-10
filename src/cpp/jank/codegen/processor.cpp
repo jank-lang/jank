@@ -246,21 +246,29 @@ namespace jank::codegen
   processor::processor
   (
     runtime::context &rt_ctx,
-    analyze::expression_ptr const &expr
+    analyze::expression_ptr const &expr,
+    native_string_view const &module,
+    compilation_target const target
   )
     : rt_ctx{ rt_ctx },
       root_expr{ expr },
       root_fn{ boost::get<analyze::expr::function<analyze::expression>>(expr->data) },
+      module{ module },
+      target{ target },
       struct_name{ root_fn.name }
   { assert(root_fn.frame.data); }
 
   processor::processor
   (
     runtime::context &rt_ctx,
-    analyze::expr::function<analyze::expression> const &expr
+    analyze::expr::function<analyze::expression> const &expr,
+    native_string_view const &module,
+    compilation_target const target
   )
     : rt_ctx{ rt_ctx },
       root_fn{ expr },
+      module{ module },
+      target{ target },
       struct_name{ root_fn.name }
   { assert(root_fn.frame.data); }
 
@@ -814,10 +822,22 @@ namespace jank::codegen
   )
   {
     /* Since each codegen proc handles one callable struct, we create a new one for this fn. */
-    processor prc{ rt_ctx, expr };
+    processor prc
+    {
+      rt_ctx,
+      expr,
+      runtime::module::nest_module(module, runtime::munge(expr.name)),
+      rt_ctx.compiling ? compilation_target::function : compilation_target::repl
+    };
 
-    auto header_inserter(std::back_inserter(header_buffer));
-    fmt::format_to(header_inserter, "{}", prc.declaration_str());
+
+    /* If we're compiling, we'll create a separate file for this. */
+    if(target != compilation_target::ns)
+    {
+      auto header_inserter(std::back_inserter(header_buffer));
+      fmt::format_to(header_inserter, "{}", prc.declaration_str());
+    }
+
     switch(expr.expr_type)
     {
       case analyze::expression_type::statement:
@@ -1011,7 +1031,7 @@ namespace jank::codegen
       interpolated_chunk_tmps.emplace_back(gen(*chunk_expr, fn_arity, true).unwrap());
     }
 
-    fmt::format_to(inserter, "object_ptr {};", ret_tmp);
+    fmt::format_to(inserter, "object_ptr {}{{ obj::nil::nil_const() }};", ret_tmp);
     fmt::format_to(inserter, "{{ object_ptr __value{{ obj::nil::nil_const() }};");
     size_t interpolated_chunk_it{};
     for(auto const &chunk : expr.chunks)
@@ -1055,6 +1075,21 @@ namespace jank::codegen
   void processor::build_header()
   {
     auto inserter(std::back_inserter(header_buffer));
+
+    /* TODO: We don't want this for nested modules, but we do if they're in their own file.
+     * Do we need three module compilation targets? Top-level, nested, local?
+     *
+     * Local fns are within a struct already, so we can't enter the ns again. */
+    if(!runtime::module::is_nested_module(module))
+    {
+      fmt::format_to
+      (
+        inserter,
+        "namespace {} {{",
+        runtime::module::module_to_native_ns(module)
+      );
+    }
+
     fmt::format_to
     (
       inserter,
@@ -1263,11 +1298,19 @@ namespace jank::codegen
   void processor::build_footer()
   {
     auto inserter(std::back_inserter(footer_buffer));
+
+    /* Struct. */
     fmt::format_to(inserter, "}};");
+
+    /* Namespace. */
+    if(!runtime::module::is_nested_module(module))
+    { fmt::format_to(inserter, "}}"); }
   }
 
   native_string processor::expression_str(bool const box_needed, bool const auto_call)
   {
+    auto const module_ns(runtime::module::module_to_native_ns(module));
+
     if(!generated_expression)
     {
       auto inserter(std::back_inserter(expression_buffer));
@@ -1282,11 +1325,10 @@ namespace jank::codegen
         (
           inserter,
           R"(
-            {0} {1}{{ *reinterpret_cast<jank::runtime::context*>({2})
+            {0} {1}{{ __rt_ctx
           )",
-          runtime::munge(struct_name.name),
-          tmp_name,
-          fmt::ptr(&rt_ctx)
+          runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name)),
+          tmp_name
         );
 
         for(auto const &arity : root_fn.arities)
@@ -1316,9 +1358,8 @@ namespace jank::codegen
           fmt::format_to
           (
             inserter,
-            "jank::make_box<{0}>(std::ref(*reinterpret_cast<jank::runtime::context*>({1}))",
-            runtime::munge(struct_name.name),
-            fmt::ptr(&rt_ctx)
+            "jank::make_box<{0}>(__rt_ctx",
+            runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name))
           );
         }
         else
@@ -1326,9 +1367,8 @@ namespace jank::codegen
           fmt::format_to
           (
             inserter,
-            "{0}{{ std::ref(*reinterpret_cast<jank::runtime::context*>({1}))",
-            runtime::munge(struct_name.name),
-            fmt::ptr(&rt_ctx)
+            "{0}{{ rt_ctx",
+            runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name))
           );
           close = "}";
         }
@@ -1352,5 +1392,57 @@ namespace jank::codegen
       generated_expression = true;
     }
     return { expression_buffer.data(), expression_buffer.size() };
+  }
+
+  native_string processor::module_init_str(native_string_view const &module)
+  {
+    fmt::memory_buffer module_buffer;
+    auto inserter(std::back_inserter(module_buffer));
+
+    fmt::format_to
+    (
+      inserter,
+      "namespace {} {{",
+      runtime::module::module_to_native_ns(module)
+    );
+
+    fmt::format_to
+    (
+      inserter,
+      R"(
+        struct __ns__init
+        {{
+      )"
+    );
+
+    fmt::format_to(inserter, "static void __init(){{");
+    fmt::format_to(inserter, "constexpr auto const deps(jank::util::make_array<jank::native_string_view>(");
+    bool needs_comma{};
+    for(auto const &dep : rt_ctx.module_dependencies[module])
+    {
+      if(needs_comma)
+      { fmt::format_to(inserter, ", "); }
+      fmt::format_to(inserter, "\"{}\"", dep);
+      needs_comma = true;
+    }
+    fmt::format_to(inserter, "));");
+
+    fmt::format_to(inserter, "for(auto const &dep : deps){{");
+    fmt::format_to(inserter, "__rt_ctx.load_module(dep);");
+    fmt::format_to(inserter, "}}");
+
+    /* __init fn */
+    fmt::format_to(inserter, "}}");
+
+    /* Struct */
+    fmt::format_to(inserter, "}};");
+
+    /* Namespace */
+    fmt::format_to(inserter, "}}");
+
+    native_string ret;
+    ret.reserve(module_buffer.size());
+    ret += native_string_view{ module_buffer.data(), module_buffer.size() };
+    return ret;
   }
 }

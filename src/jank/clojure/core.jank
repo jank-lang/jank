@@ -863,3 +863,21 @@
   (native/raw "__value = make_box(std::pow(runtime::detail::to_real(#{ x }#), runtime::detail::to_real(#{ y }#)));"))
 (reset-meta! (var pow) {:arities {2 {:supports-unboxed-input? true
                                      :unboxed-output? true}}})
+
+; Namespaces (again).
+
+; TODO: Handle multiple paths
+; TODO: Handle relative paths
+(defn load [path]
+  (native/raw "__rt_ctx.load_module(runtime::detail::to_string(#{ path }#)).expect_ok();"))
+
+(defn compile [path]
+  (native/raw "__rt_ctx.compile_module(runtime::detail::to_string(#{ path }#)).expect_ok();"))
+
+; TODO: Handle multiple args
+; TODO: Handle vectors with flags
+(defn require [sym]
+  (native/raw "auto const &s(runtime::detail::to_string(#{ sym }#));
+               __rt_ctx.load_module(s).expect_ok() ;"))
+
+(println "Bottom of clojure.core")

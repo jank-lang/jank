@@ -4,6 +4,8 @@
 
 #include <boost/filesystem.hpp>
 
+#include <jank/util/mapped_file.hpp>
+#include <jank/util/process_location.hpp>
 #include <jank/runtime/module/loader.hpp>
 
 namespace jank::runtime::module
@@ -11,20 +13,90 @@ namespace jank::runtime::module
   /* This turns `foo_bar/spam/meow.cljc` into `foo-bar.spam.meow`. */
   native_string path_to_module(boost::filesystem::path const &path)
   {
-    static std::regex const underscore{ "_" };
+    //static std::regex const underscore{ "_" };
     static std::regex const slash{ "/" };
 
     auto const &s(path.string());
     std::string ret{ s, 0, s.size() - path.extension().size() };
-    ret = std::regex_replace(ret, underscore, "-");
+    //ret = std::regex_replace(ret, underscore, "-");
     ret = std::regex_replace(ret, slash, ".");
 
     return ret;
   }
 
-  void register_entry(native_unordered_map<native_string, loader::entry> &entries, file_entry const &entry)
+  boost::filesystem::path module_to_path(native_string_view const &module)
+  {
+    static std::regex const dash{ "-" };
+    static std::regex const dot{ "\\." };
+
+    std::string ret{ module };
+    ret = std::regex_replace(ret, dash, "_");
+    ret = std::regex_replace(ret, dot, "/");
+
+    return ret;
+  }
+
+  native_string module_to_native_ns(native_string_view const &module)
+  {
+    static std::regex const dash{ "-" };
+    static std::regex const dot{ "\\." };
+    static std::regex const last_module{ "\\$[a-zA-Z_0-9]+$" };
+    static std::regex const dollar{ "\\$" };
+
+    std::string ret{ module };
+    ret = std::regex_replace(ret, dash, "_");
+    ret = std::regex_replace(ret, dot, "::");
+    ret = std::regex_replace(ret, last_module, "");
+    ret = std::regex_replace(ret, dollar, "::");
+
+    return ret;
+  }
+
+  native_string nest_module(native_string const &module, native_string const &sub)
+  {
+    assert(!module.empty());
+    assert(!sub.empty());
+    return module + "$" + sub;
+  }
+
+  native_string nest_native_ns(native_string const &native_ns, native_string const &end)
+  {
+    assert(!native_ns.empty());
+    assert(!end.empty());
+    return fmt::format("::{}::{}", native_ns, end);
+  }
+
+  /* If it has two or more occurences of $, it's nested. */
+  native_bool is_nested_module(native_string const &module)
+  { return module.find_first_of('$') != module.find_last_of('$'); }
+
+  template <typename F>
+  void visit_jar_entry(file_entry const &entry, F const &fn)
+  {
+    auto const &path(entry.archive_path.unwrap());
+    libzippp::ZipArchive zf{ std::string{ path } };
+    auto success(zf.open(libzippp::ZipArchive::ReadOnly));
+    if(!success)
+    { throw std::runtime_error{ fmt::format("Failed to open jar on classpath: {}", path) }; }
+
+    auto const &zip_entry(zf.getEntry(std::string{ entry.path }));
+    fn(zip_entry.readAsText());
+  }
+
+  void register_entry
+  (
+    native_unordered_map<native_string, loader::entry> &entries,
+    boost::filesystem::path const &resource_path,
+    file_entry const &entry
+  )
   {
     boost::filesystem::path p{ entry.path };
+    /* We need the file path relative to the class path, since the class
+     * path portion is not included in part of the module name. For example,
+     * the file may live in `src/jank/clojure/core.jank` but the module
+     * should be `clojure.core`, not `src.jank.clojure.core`. */
+    auto const &module_path(p.lexically_relative(resource_path));
+
     auto const ext(p.extension().string());
     bool registered{};
     if(ext == ".jank")
@@ -32,7 +104,7 @@ namespace jank::runtime::module
       registered = true;
       loader::entry e;
       e.jank = entry;
-      auto res(entries.insert({ path_to_module(p), std::move(e) }));
+      auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
       if(!res.second)
       { res.first->second.jank = entry; }
     }
@@ -41,7 +113,7 @@ namespace jank::runtime::module
       registered = true;
       loader::entry e;
       e.cljc = entry;
-      auto res(entries.insert({ path_to_module(p), std::move(e) }));
+      auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
       if(!res.second)
       { res.first->second.cljc = entry; }
     }
@@ -50,7 +122,7 @@ namespace jank::runtime::module
       registered = true;
       loader::entry e;
       e.cpp = entry;
-      auto res(entries.insert({ path_to_module(p), std::move(e) }));
+      auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
       if(!res.second)
       { res.first->second.cpp = entry; }
     }
@@ -59,13 +131,15 @@ namespace jank::runtime::module
       registered = true;
       loader::entry e;
       e.pcm = entry;
-      auto res(entries.insert({ path_to_module(p), std::move(e) }));
+      auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
       if(!res.second)
       { res.first->second.pcm = entry; }
     }
 
     if(registered)
-    { fmt::println("register_entry {} {} {}", entry.archive_path, entry.path.string(), path_to_module(p)); }
+    {
+      //fmt::println("register_entry {} {} {}", entry.archive_path, entry.path, path_to_module(module_path));
+    }
   }
 
   void register_directory(native_unordered_map<native_string, loader::entry> &entries, boost::filesystem::path const &path)
@@ -73,13 +147,12 @@ namespace jank::runtime::module
     for(auto const &f : boost::filesystem::recursive_directory_iterator{ path })
     {
       if(boost::filesystem::is_regular_file(f))
-      { register_entry(entries, file_entry{ none, f.path() }); }
+      { register_entry(entries, path, file_entry{ none, f.path().string() }); }
     }
   }
 
   void register_jar(native_unordered_map<native_string, loader::entry> &entries, native_string_view const &path)
   {
-    fmt::println("register_jar {}", path);
     libzippp::ZipArchive zf{ std::string{ path } };
     auto success(zf.open(libzippp::ZipArchive::ReadOnly));
     if(!success)
@@ -93,26 +166,34 @@ namespace jank::runtime::module
     {
       auto const &name(entry.getName());
       if(!entry.isDirectory())
-      { register_entry(entries, { path, name }); }
+      { register_entry(entries, "", { path, name }); }
     }
   }
 
   void register_path(native_unordered_map<native_string, loader::entry> &entries, native_string_view const &path)
   {
-    fmt::println("register_path {}", path);
+    /* It's entirely possible to have empty entries in the classpath, mainly due to lazy string
+     * concatenation. We just ignore them. This means something like "::::" is valid. */
+    if(path.empty() || !boost::filesystem::exists(path))
+    { return; }
 
-    boost::filesystem::path p{ path };
+    boost::filesystem::path p{ boost::filesystem::canonical(path).lexically_normal() };
     if(boost::filesystem::is_directory(p))
     { register_directory(entries, p); }
     else if(p.extension().string() == ".jar")
     { register_jar(entries, path); }
+    /* If it's not a JAR or a directory, we just add it as a direct file entry. I don't think the
+     * JVM supports this, but I like that it allows us to put specific files in the path. */
     else
-    { register_entry(entries, { none, p }); }
+    { register_entry(entries, "", { none, p.string() }); }
   }
 
-  loader::loader(native_string_view const &paths)
+  loader::loader(context &rt_ctx, native_string_view const &ps)
+    : rt_ctx{ rt_ctx }, paths{ ps }
   {
-    fmt::println("BINGBONG loader: {}", paths);
+    auto const jank_path(jank::util::process_location().unwrap().parent_path());
+    paths += fmt::format(":{}", (jank_path / "../src/jank").string());
+    paths += fmt::format(":{}", rt_ctx.output_dir);
 
     size_t start{};
     size_t i{ paths.find(module_separator, start) };
@@ -140,9 +221,117 @@ namespace jank::runtime::module
     (
       make_box("__type"), make_box("module::file_entry"),
       make_box("archive_path"), jank::detail::to_runtime_data(archive_path),
-      make_box("path"), make_box(path.string())
+      make_box("path"), make_box(path)
     );
   }
+
+  native_bool loader::is_loaded(native_string_view const &module) const
+  { return loaded.contains(module); }
+
+  result<void, native_string> loader::load_ns(native_string_view const &module)
+  {
+    bool const compiling{ rt_ctx.compiling };
+    native_bool const needs_init{ !compiling && entries.contains(fmt::format("{}__init", module)) };
+    if(needs_init)
+    {
+      auto ret(load(fmt::format("{}__init", module)));
+      if(ret.is_err())
+      { return ret; }
+      rt_ctx.jit_prc.eval_string
+      (
+        fmt::format
+        (
+          "{}::__ns__init::__init();",
+          runtime::module::module_to_native_ns(module)
+        )
+      );
+    }
+
+    auto ret(load(module));
+    if(ret.is_err())
+    { return ret; }
+
+    if(needs_init)
+    {
+      rt_ctx.jit_prc.eval_string
+      (
+        fmt::format
+        (
+          "{}::__ns{{ __rt_ctx }}.call();",
+          runtime::module::module_to_native_ns(module)
+        )
+      );
+    }
+
+    return ok();
+  }
+
+  result<void, native_string> loader::load(native_string_view const &module)
+  {
+    auto const &entry(entries.find(module));
+    if(entry == entries.end())
+    { return err(fmt::format("ICE: unable to find module: {}", module)); }
+
+    if(entry->second.pcm.is_some())
+    { return load_pcm(entry->second.pcm.unwrap()); }
+    else if(entry->second.cpp.is_some())
+    { return load_cpp(entry->second.cpp.unwrap()); }
+    else if(entry->second.jank.is_some())
+    { return load_jank(entry->second.jank.unwrap()); }
+    else if(entry->second.cljc.is_some())
+    { return load_cljc(entry->second.cljc.unwrap()); }
+    else
+    { return err(fmt::format("ICE: no sources for registered module: {}", module)); }
+
+    loaded.emplace(module);
+
+    return ok();
+  }
+
+  result<void, native_string> loader::load_pcm(file_entry const &)
+  { return err("Not yet implemented: PCM loading"); }
+
+  result<void, native_string> loader::load_cpp(file_entry const &entry)
+  {
+    if(entry.archive_path.is_some())
+    {
+      visit_jar_entry
+      (
+        entry,
+        [&](auto const &str)
+        { rt_ctx.jit_prc.eval_string(str); }
+      );
+    }
+    else
+    {
+      auto const file(util::map_file(entry.path));
+      if(file.is_err())
+      { return err(fmt::format("unable to map file {} due to error: {}", entry.path, file.expect_err())); }
+      rt_ctx.jit_prc.eval_string({ file.expect_ok().head, file.expect_ok().size });
+    }
+
+    return ok();
+  }
+
+  result<void, native_string> loader::load_jank(file_entry const &entry)
+  {
+    if(entry.archive_path.is_some())
+    {
+      visit_jar_entry
+      (
+        entry,
+        [&](auto const &str)
+        { rt_ctx.eval_string(str); }
+      );
+    }
+    else
+    { rt_ctx.eval_file(entry.path); }
+
+    return ok();
+  }
+
+  result<void, native_string> loader::load_cljc(file_entry const &)
+  { return err("Not yet implemented: CLJC loading"); }
 
   object_ptr loader::to_runtime_data() const
   {

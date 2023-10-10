@@ -350,6 +350,7 @@ namespace jank::analyze
     }
     else
     { name = runtime::context::unique_string("fn"); }
+    name = runtime::munge(name);
 
     native_vector<expr::function_arity<expression>> arities;
 
@@ -421,15 +422,41 @@ namespace jank::analyze
       }
     }
 
-    return make_box<expression>
+    auto ret
     (
-      expr::function<expression>
-      {
-        expression_base{ {}, expr_type, current_frame },
-        name,
-        std::move(arities)
-      }
+      make_box<expression>
+      (
+        expr::function<expression>
+        {
+          expression_base{ {}, expr_type, current_frame },
+          name,
+          std::move(arities)
+        }
+      )
     );
+
+    if(rt_ctx.compiling)
+    {
+      /* Register this module as a dependency of the current module so we can generate
+       * code to load it. */
+      auto const &ns_sym(make_box<runtime::obj::symbol>("clojure.core/*ns*"));
+      auto const &ns_var(rt_ctx.find_var(ns_sym).unwrap());
+      auto const module
+      (
+        runtime::module::nest_module
+        (
+          runtime::detail::to_string(ns_var->get_root()),
+          runtime::munge(name)
+        )
+      );
+      rt_ctx.module_dependencies[rt_ctx.current_module].emplace_back(module);
+      fmt::println("module dep {} -> {}", rt_ctx.current_module, module);
+
+      codegen::processor cg_prc{ rt_ctx, ret, module, codegen::compilation_target::function };
+      rt_ctx.write_module(module, cg_prc.declaration_str());
+    }
+
+    return ret;
   }
 
   processor::expression_result processor::analyze_recur

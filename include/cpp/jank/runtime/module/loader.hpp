@@ -2,6 +2,12 @@
 
 #include <boost/filesystem/path.hpp>
 
+namespace jank::runtime
+{ struct context; }
+
+namespace jank::jit
+{ struct processor; }
+
 namespace jank::runtime::module
 {
   struct file_entry
@@ -12,8 +18,15 @@ namespace jank::runtime::module
     option<native_string> archive_path;
     /* If there's an archive path, this path is within the archive. Otherwise, it's the
      * filesystem path. */
-    boost::filesystem::path path;
+    native_string path;
   };
+
+  native_string path_to_module(boost::filesystem::path const &path);
+  boost::filesystem::path module_to_path(native_string_view const &module);
+  native_string module_to_native_ns(native_string_view const &module);
+  native_string nest_module(native_string const &module, native_string const &sub);
+  native_string nest_native_ns(native_string const &native_ns, native_string const &end);
+  native_bool is_nested_module(native_string const &module);
 
   struct loader
   {
@@ -29,10 +42,10 @@ namespace jank::runtime::module
     * subsequent matches are ignored. */
     struct entry
     {
+      option<file_entry> pcm;
+      option<file_entry> cpp;
       option<file_entry> jank;
       option<file_entry> cljc;
-      option<file_entry> cpp;
-      option<file_entry> pcm;
     };
 
     /* These separators match what the JVM does on each system. */
@@ -42,13 +55,23 @@ namespace jank::runtime::module
     static constexpr char module_separator{ ':' };
 #endif
 
-    loader() = default;
-    loader(native_string_view const &paths);
+    loader(context &rt_ctx, native_string_view const &paths);
+
+    native_bool is_loaded(native_string_view const &) const;
+    result<void, native_string> load_ns(native_string_view const &module);
+    result<void, native_string> load(native_string_view const &module);
+    result<void, native_string> load_pcm(file_entry const &entry);
+    result<void, native_string> load_cpp(file_entry const &entry);
+    result<void, native_string> load_jank(file_entry const &entry);
+    result<void, native_string> load_cljc(file_entry const &entry);
 
     object_ptr to_runtime_data() const;
 
+    context &rt_ctx;
+    native_string paths;
     /* This maps module strings to entries. Module strings are like fully qualified Java
      * class names. */
     native_unordered_map<native_string, entry> entries;
+    native_set<native_string> loaded;
   };
 }

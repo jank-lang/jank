@@ -1,5 +1,7 @@
 #include <exception>
 
+#include <fmt/compile.h>
+
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
@@ -17,18 +19,20 @@
 
 namespace jank::runtime
 {
-  context::context()
+  context::context(option<native_string_view> const &class_path)
+    : jit_prc{ *this }
+    , module_loader{ *this, class_path.unwrap_or("") }
   {
     auto &t_state(get_thread_state());
-    auto const core(intern_ns(jank::make_box<obj::symbol>("clojure.core")));
+    auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
     {
       auto const locked_core_vars(core->vars.wlock());
-      auto const ns_sym(jank::make_box<obj::symbol>("clojure.core/*ns*"));
-      auto const ns_res(locked_core_vars->insert({ns_sym, jank::make_box<var>(core, ns_sym, core)}));
+      auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));
+      auto const ns_res(locked_core_vars->insert({ns_sym, make_box<var>(core, ns_sym, core)}));
       t_state.current_ns = ns_res.first->second;
     }
 
-    auto const in_ns_sym(jank::make_box<obj::symbol>("clojure.core/in-ns"));
+    auto const in_ns_sym(make_box<obj::symbol>("clojure.core/in-ns"));
     std::function<object_ptr (object_ptr)> in_ns_fn
     (
       [this](object_ptr const sym)
@@ -52,13 +56,13 @@ namespace jank::runtime
           sym
         );
       }
-   );
+    );
     auto in_ns_var(intern_var(in_ns_sym).expect_ok());
     in_ns_var->set_root(make_box<obj::native_function_wrapper>(in_ns_fn));
     t_state.in_ns = in_ns_var;
 
     /* TODO: Remove this once it can be defined in jank. */
-    auto const assert_sym(jank::make_box<obj::symbol>("clojure.core/assert"));
+    auto const assert_sym(make_box<obj::symbol>("clojure.core/assert"));
     std::function<object_ptr (object_ptr)> assert_fn
     (
       [](object_ptr const o)
@@ -71,14 +75,19 @@ namespace jank::runtime
     intern_var(assert_sym).expect_ok()->set_root(make_box<obj::native_function_wrapper>(assert_fn));
 
     /* TODO: Remove this once it can be defined in jank. */
-    auto const seq_sym(jank::make_box<obj::symbol>("clojure.core/seq"));
+    auto const seq_sym(make_box<obj::symbol>("clojure.core/seq"));
     intern_var(seq_sym).expect_ok()->set_root(make_box<obj::native_function_wrapper>(static_cast<object_ptr (*)(object_ptr)>(&seq)));
 
-    auto const fresh_seq_sym(jank::make_box<obj::symbol>("clojure.core/fresh-seq"));
+    auto const fresh_seq_sym(make_box<obj::symbol>("clojure.core/fresh-seq"));
     intern_var(fresh_seq_sym).expect_ok()->set_root(make_box<obj::native_function_wrapper>(&fresh_seq));
   }
 
   context::context(context const &ctx)
+    : jit_prc{ *this }
+    , current_module{ ctx.current_module }
+    , module_dependencies{ ctx.module_dependencies }
+    , output_dir{ ctx.output_dir }
+    , module_loader{ *this, ctx.module_loader.paths }
   {
     auto ns_lock(namespaces.wlock());
     for(auto const &ns : *ctx.namespaces.rlock())
@@ -94,7 +103,7 @@ namespace jank::runtime
     {
       auto const t_state(get_thread_state());
       auto const current_ns(expect_object<ns>(t_state.current_ns->get_root()));
-      qualified_sym = jank::make_box<obj::symbol>(current_ns->name->name, sym->name);
+      qualified_sym = make_box<obj::symbol>(current_ns->name->name, sym->name);
     }
     return qualified_sym;
   }
@@ -107,7 +116,7 @@ namespace jank::runtime
       ns_ptr ns{};
       {
         auto const locked_namespaces(namespaces.rlock());
-        auto const found(locked_namespaces->find(jank::make_box<obj::symbol>("", sym->ns)));
+        auto const found(locked_namespaces->find(make_box<obj::symbol>("", sym->ns)));
         if(found == locked_namespaces->end())
         { return none; }
         ns = found->second;
@@ -127,7 +136,7 @@ namespace jank::runtime
       auto const t_state(get_thread_state());
       auto const current_ns(expect_object<ns>(t_state.current_ns->get_root()));
       auto const locked_vars(current_ns->vars.rlock());
-      auto const qualified_sym(jank::make_box<obj::symbol>(current_ns->name->name, sym->name));
+      auto const qualified_sym(make_box<obj::symbol>(current_ns->name->name, sym->name));
       auto const found(locked_vars->find(qualified_sym));
       if(found == locked_vars->end())
       { return none; }
@@ -141,38 +150,63 @@ namespace jank::runtime
     return none;
   }
 
-  void context::eval_prelude(jit::processor const &jit_prc)
+  /* TODO: Use module loader. */
+  void context::eval_prelude()
   {
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
     auto const src_path(jank_path / "../src/jank/clojure/core.jank");
-    eval_file(src_path.string(), jit_prc);
+    eval_file(src_path.string());
   }
 
-  object_ptr context::eval_file(native_string_view const &path, jit::processor const &jit_prc)
+  object_ptr context::eval_file(native_string_view const &path)
   {
     auto const file(util::map_file(path));
     if(file.is_err())
     { throw std::runtime_error{ fmt::format("unable to map file {} due to error: {}", path, file.expect_err()) }; }
-    return eval_string({ file.expect_ok().head, file.expect_ok().size }, jit_prc);
+    return eval_string({ file.expect_ok().head, file.expect_ok().size });
   }
 
-  object_ptr context::eval_string(native_string_view const &code, jit::processor const &jit_prc)
+  object_ptr context::eval_string(native_string_view const &code)
   {
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ *this, l_prc.begin(), l_prc.end() };
 
     object_ptr ret{ obj::nil::nil_const() };
+    native_vector<analyze::expression_ptr> exprs{};
     for(auto const &form : p_prc)
     {
       auto const expr(an_prc.analyze(form.expect_ok(), analyze::expression_type::statement));
       ret = evaluate::eval(*this, jit_prc, expr.expect_ok());
+      exprs.emplace_back(expr.expect_ok());
+    }
+
+    if(compiling)
+    {
+      auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc));
+      wrapped_exprs.name = "__ns";
+      auto const &module
+      (
+        expect_object<runtime::ns>
+        (intern_var("clojure.core", "*ns*").expect_ok()->get_root())->to_string()
+      );
+      codegen::processor cg_prc{ *this, wrapped_exprs, module, codegen::compilation_target::ns };
+      write_module
+      (
+        current_module,
+        cg_prc.declaration_str()
+      );
+      write_module
+      (
+        fmt::format("{}__init", current_module),
+        cg_prc.module_init_str(current_module)
+      );
     }
 
     assert(ret);
     return ret;
   }
 
-  native_vector<analyze::expression_ptr> context::analyze_string(native_string_view const &code, jit::processor const &jit_prc, native_bool const eval)
+  native_vector<analyze::expression_ptr> context::analyze_string(native_string_view const &code, native_bool const eval)
   {
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ *this, l_prc.begin(), l_prc.end() };
@@ -183,10 +217,64 @@ namespace jank::runtime
       auto const expr(an_prc.analyze(form.expect_ok(), analyze::expression_type::statement));
       if(eval)
       { evaluate::eval(*this, jit_prc, expr.expect_ok()); }
-      ret.push_back(expr.expect_ok());
+      ret.emplace_back(expr.expect_ok());
     }
 
     return ret;
+  }
+
+  result<void, native_string> context::load_module(native_string_view const &module)
+  {
+    /* TODO: Support reloading. */
+    if(module_loader.is_loaded(module) && !compiling)
+    {
+      fmt::println("Module already loaded: {}", module);
+      return ok();
+    }
+
+    try
+    {
+      /* TODO: Get a result from this and forward errors. */
+      if(module.find('$') == native_string::npos)
+      { module_loader.load_ns(module); }
+      else
+      { module_loader.load(module); }
+      return ok();
+    }
+    catch(std::exception const &e)
+    { return err(e.what()); }
+    catch(object_ptr const &e)
+    { return err(detail::to_string(e)); }
+  }
+
+  result<void, native_string> context::compile_module(native_string_view const &module)
+  {
+    module_dependencies.clear();
+
+    /* TODO: When `compiling` is a dynamic var, we need to push and finally pop here. */
+    auto const prev_compiling(compiling);
+    auto const prev_module(current_module);
+    compiling = true;
+    current_module = module;
+
+    auto res(load_module(module));
+
+    compiling = prev_compiling;
+    current_module = prev_module;
+    return res;
+  }
+
+  void context::write_module(native_string_view const &module, native_string_view const &contents) const
+  {
+    boost::filesystem::path const dir{ output_dir };
+    if(!boost::filesystem::exists(dir))
+    { boost::filesystem::create_directories(dir); }
+
+    {
+      std::ofstream ofs{ fmt::format("{}/{}.cpp", module::module_to_path(output_dir).string(), module) };
+      ofs << contents;
+      ofs.flush();
+    }
   }
 
   native_string context::unique_string()
@@ -194,7 +282,7 @@ namespace jank::runtime
   native_string context::unique_string(native_string_view const &prefix)
   {
     static std::atomic_size_t index{ 1 };
-    return prefix.data() + std::to_string(index++);
+    return fmt::format(FMT_COMPILE("{}_{}"), prefix.data(), index++);
   }
   obj::symbol context::unique_symbol()
   { return unique_symbol("gen"); }
@@ -226,20 +314,20 @@ namespace jank::runtime
     if(found != locked_namespaces->end())
     { return found->second; }
 
-    auto const result(locked_namespaces->emplace(sym, jank::make_box<ns>(sym, *this)));
+    auto const result(locked_namespaces->emplace(sym, make_box<ns>(sym, *this)));
     return result.first->second;
   }
 
   result<var_ptr, native_string> context::intern_var
   (native_string const &ns, native_string const &name)
-  { return intern_var(jank::make_box<obj::symbol>(ns, name)); }
+  { return intern_var(make_box<obj::symbol>(ns, name)); }
   result<var_ptr, native_string> context::intern_var(obj::symbol_ptr const &qualified_sym)
   {
     if(qualified_sym->ns.empty())
     { return err("can't intern var; sym isn't qualified"); }
 
     auto locked_namespaces(namespaces.wlock());
-    auto const found_ns(locked_namespaces->find(jank::make_box<obj::symbol>(qualified_sym->ns)));
+    auto const found_ns(locked_namespaces->find(make_box<obj::symbol>(qualified_sym->ns)));
     if(found_ns == locked_namespaces->end())
     { return err("can't intern var; namespace doesn't exist"); }
 
@@ -250,7 +338,7 @@ namespace jank::runtime
     { return ok(found_var->second); }
 
     auto const ns_res
-    (locked_vars->insert({qualified_sym, jank::make_box<var>(found_ns->second, qualified_sym)}));
+    (locked_vars->insert({qualified_sym, make_box<var>(found_ns->second, qualified_sym)}));
     return ok(ns_res.first->second);
   }
 

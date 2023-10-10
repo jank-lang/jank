@@ -54,7 +54,7 @@ namespace jank::jit
     return JANK_CLING_BUILD_DIR;
   }
 
-  processor::processor()
+  processor::processor(runtime::context &rt_ctx)
   {
     /* TODO: Pass this into each fn below so we only do this once on startup. */
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
@@ -91,10 +91,18 @@ namespace jank::jit
       )
     );
     interpreter = std::make_unique<cling::Interpreter>(args.size(), args.data(), llvm_resource_path_str.c_str());
+
+    eval_string
+    (
+      fmt::format
+      (
+        "auto &__rt_ctx(*reinterpret_cast<jank::runtime::context*>({}));",
+        fmt::ptr(&rt_ctx)
+      )
+    );
   }
 
-  result<option<runtime::object_ptr>, native_string> processor::eval
-  (runtime::context &, codegen::processor &cg_prc) const
+  result<option<runtime::object_ptr>, native_string> processor::eval(codegen::processor &cg_prc) const
   {
     /* TODO: Improve Cling to accept string_views instead. */
     auto const str(cg_prc.declaration_str());
@@ -118,5 +126,8 @@ namespace jank::jit
   }
 
   void processor::eval_string(native_string const &s) const
-  { interpreter->process(static_cast<std::string>(s)); }
+  {
+    //fmt::println("JIT eval string {}", s);
+    interpreter->process(static_cast<std::string>(s));
+  }
 }

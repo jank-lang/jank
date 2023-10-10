@@ -43,6 +43,13 @@ namespace jank::codegen
     native_string unboxed_name;
   };
 
+  enum class compilation_target
+  {
+    ns,
+    function,
+    repl
+  };
+
   /* Codegen processors render a single function expression to a C++ functor. REPL expressions
    * are wrapped in a nullary functor. These functors nest arbitrarily, if an expression has more
    * fn values of its own, each one rendered with its own codegen processor. */
@@ -52,12 +59,16 @@ namespace jank::codegen
     processor
     (
       runtime::context &rt_ctx,
-      analyze::expression_ptr const &expr
+      analyze::expression_ptr const &expr,
+      native_string_view const &module,
+      compilation_target target
     );
     processor
     (
       runtime::context &rt_ctx,
-      analyze::expr::function<analyze::expression> const &expr
+      analyze::expr::function<analyze::expression> const &expr,
+      native_string_view const &module,
+      compilation_target target
     );
     processor(processor const &) = delete;
     processor(processor &&) noexcept = default;
@@ -159,6 +170,7 @@ namespace jank::codegen
     void build_footer();
     native_string expression_str(bool box_needed, bool const auto_call);
 
+    native_string module_init_str(native_string_view const &module);
 
     void format_elided_var
     (
@@ -191,7 +203,9 @@ namespace jank::codegen
     /* This is stored just to keep the expression alive. */
     analyze::expression_ptr root_expr{};
     analyze::expr::function<analyze::expression> const &root_fn;
+    native_string module;
 
+    compilation_target target{};
     runtime::obj::symbol struct_name;
     fmt::memory_buffer header_buffer;
     fmt::memory_buffer body_buffer;

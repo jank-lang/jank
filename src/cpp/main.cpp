@@ -1,8 +1,12 @@
 #include <iostream>
 #include <filesystem>
 
+#include <boost/filesystem.hpp>
+
 #include <cling/Interpreter/Interpreter.h>
 #include <cling/Interpreter/Value.h>
+#include <clang/Frontend/CompilerInstance.h>
+#include <clang/Lex/Preprocessor.h>
 
 #include <jank/runtime/detail/object_util.hpp>
 
@@ -17,6 +21,12 @@
 
 int main(int const argc, char const **argv)
 {
+  /* TODO: Arg parsing:
+   * 1. Optimization level
+   * 2. Classpath
+   * 3. Compilation directory
+   * 4. Starting a repl
+   */
   if(argc < 2)
   {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
@@ -32,12 +42,12 @@ int main(int const argc, char const **argv)
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
   char const *file{ argv[1] };
 
-  jank::runtime::context rt_ctx;
-  jank::jit::processor jit_prc;
+  jank::runtime::context rt_ctx{ };
 
   try
   {
-    rt_ctx.eval_prelude(jit_prc);
+    //rt_ctx.eval_prelude();
+    rt_ctx.load_module("clojure.core").expect_ok();
 
     //{
     //  auto const mfile(jank::util::map_file(file));
@@ -61,7 +71,7 @@ int main(int const argc, char const **argv)
     //  return 0;
     //}
 
-    std::cout << jank::runtime::detail::to_string(rt_ctx.eval_file(file, jit_prc)) << std::endl;
+    std::cout << jank::runtime::detail::to_string(rt_ctx.eval_file(file)) << std::endl;
   }
   catch(std::exception const &e)
   { fmt::print("Exception: {}", e.what()); }

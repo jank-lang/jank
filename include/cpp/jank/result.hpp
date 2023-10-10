@@ -182,6 +182,8 @@ namespace jank
       std::cout << "error: expected ok result, but found: " << err << std::endl;
       throw err;
     }
+    void expect_ok() const
+    { assert_ok(); }
 
     E const& expect_err() const
     { return boost::get<E>(data); }

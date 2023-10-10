@@ -1,5 +1,7 @@
 #pragma once
 
+#include <boost/filesystem/path.hpp>
+
 #include <jank/runtime/seq.hpp>
 
 namespace jank::detail
@@ -25,6 +27,9 @@ namespace jank::detail
   { return make_box(d); }
   inline runtime::object_ptr to_runtime_data(runtime::obj::symbol const &d)
   { return make_box<runtime::obj::symbol>(d); }
+
+  inline runtime::object_ptr to_runtime_data(boost::filesystem::path const &p)
+  { return make_box(p.string()); }
 
   template <typename K, typename V>
   runtime::object_ptr to_runtime_data(native_unordered_map<K, V> const &m)

@@ -11,9 +11,6 @@
 
 namespace jank::evaluate
 {
-  template <typename T>
-  concept has_frame = requires(T const *t){ t->frame; };
-
   /* Some expressions don't make sense to eval outright and aren't fns that can be JIT compiled.
    * For those, we wrap them in a fn expression and then JIT compile and call them.
    *
@@ -39,8 +36,48 @@ namespace jank::evaluate
 
     wrapper.arities.emplace_back(std::move(arity));
     wrapper.frame = expr.frame;
+    wrapper.name = runtime::context::unique_string("repl_fn");
 
     return wrapper;
+  }
+
+  analyze::expr::function<analyze::expression> wrap_expressions
+  (
+    native_vector<analyze::expression_ptr> const &exprs,
+    analyze::processor const &an_prc
+  )
+  {
+    if(exprs.empty())
+    {
+      return wrap_expression
+      (
+        analyze::expr::primitive_literal<analyze::expression>
+        {
+          analyze::expression_base
+          { {}, analyze::expression_type::return_statement, an_prc.root_frame, true },
+          runtime::obj::nil::nil_const()
+        }
+      );
+    }
+    else
+    {
+      /* We'll cheat a little and build a fn using just the first expression. Then we can just
+       * add the rest. I'd rather do this than duplicate all of the wrapping logic. */
+      auto ret(wrap_expression(exprs[0]));
+      auto &body(ret.arities[0].body.body);
+      /* We normally wrap one expression, which is a return statement, but we'll be potentially
+       * adding more, so let's not make assumptions yet. */
+      body[0]->get_base()->expr_type = analyze::expression_type::statement;
+
+      for(auto const &expr : exprs)
+      { body.emplace_back(expr); }
+
+      /* Finally, mark the last body item as our return. */
+      auto const last_body_index(body.size() - 1);
+      body[last_body_index]->get_base()->expr_type = analyze::expression_type::return_statement;
+
+      return ret;
+    }
   }
 
   analyze::expr::function<analyze::expression> wrap_expression(analyze::expression_ptr const expr)
@@ -238,8 +275,17 @@ namespace jank::evaluate
     analyze::expr::function<analyze::expression> const &expr
   )
   {
-    jank::codegen::processor cg_prc{ rt_ctx, expr };
-    return jit_prc.eval(rt_ctx, cg_prc).expect_ok().unwrap();
+    auto const &module
+    (
+      runtime::module::nest_module
+      (
+        runtime::expect_object<runtime::ns>
+        (rt_ctx.intern_var("clojure.core", "*ns*").expect_ok()->get_root())->to_string(),
+        runtime::munge(expr.name)
+      )
+    );
+    codegen::processor cg_prc{ rt_ctx, expr, module, codegen::compilation_target::repl };
+    return jit_prc.eval(cg_prc).expect_ok().unwrap();
   }
 
   runtime::object_ptr eval
@@ -258,7 +304,7 @@ namespace jank::evaluate
     analyze::expr::do_<analyze::expression> const &expr
   )
   {
-    runtime::object_ptr ret{};
+    runtime::object_ptr ret{ runtime::obj::nil::nil_const() };
     for(auto const &form : expr.body)
     { ret = eval(rt_ctx, jit_prc, form); }
     return ret;
