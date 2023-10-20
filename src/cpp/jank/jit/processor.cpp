@@ -104,6 +104,7 @@ namespace jank::jit
 
   result<option<runtime::object_ptr>, native_string> processor::eval(codegen::processor &cg_prc) const
   {
+    jank::profile::timer timer{ "jit eval" };
     /* TODO: Improve Cling to accept string_views instead. */
     auto const str(cg_prc.declaration_str());
     //fmt::println("{}", str);
@@ -127,6 +128,7 @@ namespace jank::jit
 
   void processor::eval_string(native_string const &s) const
   {
+    jank::profile::timer timer{ "jit eval_string" };
     //fmt::println("JIT eval string {}", s);
     interpreter->process(static_cast<std::string>(s));
   }

@@ -78,6 +78,7 @@ namespace std
     return hasher(const_cast<jank::runtime::object*>(&o));
   }
 
+  // NOLINTNEXTLINE(bugprone-exception-escape): TODO: Sort this out.
   bool equal_to<jank::runtime::object_ptr>::operator()(jank::runtime::object_ptr const lhs, jank::runtime::object_ptr const rhs) const noexcept
   {
     if(!lhs)

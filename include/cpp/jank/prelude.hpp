@@ -15,6 +15,7 @@
 #include <nanobench.h>
 
 #include <jank/type.hpp>
+#include <jank/profile/time.hpp>
 #include <jank/util/make_array.hpp>
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/type.hpp>

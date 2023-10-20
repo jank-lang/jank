@@ -18,6 +18,7 @@ namespace jank::jit
 
     result<option<runtime::object_ptr>, native_string> eval(codegen::processor &cg_prc) const;
     void eval_string(native_string const &s) const;
+    void load_object(native_string_view const &path) const;
 
     std::unique_ptr<cling::Interpreter> interpreter;
   };

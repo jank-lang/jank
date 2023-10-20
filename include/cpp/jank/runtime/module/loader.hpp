@@ -55,15 +55,15 @@ namespace jank::runtime::module
     static constexpr char module_separator{ ':' };
 #endif
 
-    loader(context &rt_ctx, native_string_view const &paths);
+    loader(context &rt_ctx, native_string_view const &ps);
 
     native_bool is_loaded(native_string_view const &) const;
     result<void, native_string> load_ns(native_string_view const &module);
     result<void, native_string> load(native_string_view const &module);
-    result<void, native_string> load_pcm(file_entry const &entry);
-    result<void, native_string> load_cpp(file_entry const &entry);
-    result<void, native_string> load_jank(file_entry const &entry);
-    result<void, native_string> load_cljc(file_entry const &entry);
+    result<void, native_string> load_pcm(file_entry const &entry) const;
+    result<void, native_string> load_cpp(file_entry const &entry) const;
+    result<void, native_string> load_jank(file_entry const &entry) const;
+    result<void, native_string> load_cljc(file_entry const &entry) const;
 
     object_ptr to_runtime_data() const;
 

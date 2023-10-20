@@ -230,10 +230,12 @@ namespace jank::runtime::module
 
   result<void, native_string> loader::load_ns(native_string_view const &module)
   {
+    profile::timer timer{ "load_ns" };
     bool const compiling{ rt_ctx.compiling };
     native_bool const needs_init{ !compiling && entries.contains(fmt::format("{}__init", module)) };
     if(needs_init)
     {
+      profile::timer timer{ "load_ns __init" };
       auto ret(load(fmt::format("{}__init", module)));
       if(ret.is_err())
       { return ret; }
@@ -247,12 +249,16 @@ namespace jank::runtime::module
       );
     }
 
-    auto ret(load(module));
-    if(ret.is_err())
-    { return ret; }
+    {
+      profile::timer timer{ "load_ns compilation" };
+      auto res(load(module));
+      if(res.is_err())
+      { return res; }
+    }
 
     if(needs_init)
     {
+      profile::timer timer{ "load_ns effects" };
       rt_ctx.jit_prc.eval_string
       (
         fmt::format
@@ -288,10 +294,10 @@ namespace jank::runtime::module
     return ok();
   }
 
-  result<void, native_string> loader::load_pcm(file_entry const &)
+  result<void, native_string> loader::load_pcm(file_entry const &) const
   { return err("Not yet implemented: PCM loading"); }
 
-  result<void, native_string> loader::load_cpp(file_entry const &entry)
+  result<void, native_string> loader::load_cpp(file_entry const &entry) const
   {
     if(entry.archive_path.is_some())
     {
@@ -313,7 +319,7 @@ namespace jank::runtime::module
     return ok();
   }
 
-  result<void, native_string> loader::load_jank(file_entry const &entry)
+  result<void, native_string> loader::load_jank(file_entry const &entry) const
   {
     if(entry.archive_path.is_some())
     {
@@ -330,7 +336,7 @@ namespace jank::runtime::module
     return ok();
   }
 
-  result<void, native_string> loader::load_cljc(file_entry const &)
+  result<void, native_string> loader::load_cljc(file_entry const &) const
   { return err("Not yet implemented: CLJC loading"); }
 
   object_ptr loader::to_runtime_data() const

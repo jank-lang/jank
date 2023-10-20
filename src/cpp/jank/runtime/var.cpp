@@ -49,10 +49,14 @@ namespace jank::runtime
   }
 
   object_ptr var::get_root() const
-  { return *root.rlock(); }
+  {
+    jank::profile::timer timer{ "var get_root" };
+    return *root.rlock();
+  }
 
   var_ptr var::set_root(object_ptr r)
   {
+    jank::profile::timer timer{ "var set_root" };
     *root.wlock() = r;
     return this;
   }

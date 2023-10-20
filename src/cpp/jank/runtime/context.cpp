@@ -19,9 +19,14 @@
 
 namespace jank::runtime
 {
-  context::context(option<native_string_view> const &class_path)
+  context::context()
+    : context(cli_options{ })
+  { }
+
+  context::context(cli_options const &opts)
     : jit_prc{ *this }
-    , module_loader{ *this, class_path.unwrap_or("") }
+    , output_dir{ opts.compilation_path }
+    , module_loader{ *this, opts.class_path }
   {
     auto &t_state(get_thread_state());
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
@@ -110,6 +115,7 @@ namespace jank::runtime
 
   option<var_ptr> context::find_var(obj::symbol_ptr const &sym)
   {
+    profile::timer timer{ "rt find_var" };
     if(!sym->ns.empty())
     {
       /* TODO: This is the issue. Diff it with intern_var. */
@@ -168,6 +174,7 @@ namespace jank::runtime
 
   object_ptr context::eval_string(native_string_view const &code)
   {
+    profile::timer timer{ "rt eval_string" };
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ *this, l_prc.begin(), l_prc.end() };
 
@@ -208,6 +215,7 @@ namespace jank::runtime
 
   native_vector<analyze::expression_ptr> context::analyze_string(native_string_view const &code, native_bool const eval)
   {
+    profile::timer timer{ "rt analyze_string" };
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ *this, l_prc.begin(), l_prc.end() };
 
@@ -266,10 +274,13 @@ namespace jank::runtime
 
   void context::write_module(native_string_view const &module, native_string_view const &contents) const
   {
+    profile::timer timer{ "write_module" };
     boost::filesystem::path const dir{ output_dir };
     if(!boost::filesystem::exists(dir))
     { boost::filesystem::create_directories(dir); }
 
+    /* TODO: This needs to go into sub directories. Also, we should register these modules with
+     * the loader upon writing. */
     {
       std::ofstream ofs{ fmt::format("{}/{}.cpp", module::module_to_path(output_dir).string(), module) };
       ofs << contents;
@@ -323,6 +334,7 @@ namespace jank::runtime
   { return intern_var(make_box<obj::symbol>(ns, name)); }
   result<var_ptr, native_string> context::intern_var(obj::symbol_ptr const &qualified_sym)
   {
+    profile::timer timer{ "intern_var" };
     if(qualified_sym->ns.empty())
     { return err("can't intern var; sym isn't qualified"); }
 
@@ -348,6 +360,7 @@ namespace jank::runtime
   obj::keyword_ptr context::intern_keyword
   (native_string_view const &ns, native_string_view const &name, bool resolved)
   {
+    profile::timer timer{ "rt intern_keyword" };
     obj::symbol sym{ ns, name };
     if(!resolved)
     {
@@ -374,6 +387,7 @@ namespace jank::runtime
 
   object_ptr context::macroexpand1(object_ptr o)
   {
+    profile::timer timer{ "rt macroexpand1" };
     return visit_object
     (
       [this](auto const typed_o) -> object_ptr
@@ -490,6 +504,7 @@ namespace jank::runtime
   { return get_thread_state(none); }
   context::thread_state& context::get_thread_state(option<thread_state> init)
   {
+    profile::timer timer{ "rt get_thread_state" };
     auto const this_id(std::this_thread::get_id());
     decltype(thread_states)::DataType::iterator found;
 

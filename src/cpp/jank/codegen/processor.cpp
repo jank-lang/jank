@@ -1247,6 +1247,8 @@ namespace jank::codegen
         )"
       );
 
+      fmt::format_to(inserter, "jank::profile::timer __timer{{ \"{}\" }};", root_fn.name);
+
       if(arity.fn_ctx->is_tail_recursive)
       {
         fmt::format_to(inserter, "{{");
@@ -1416,6 +1418,7 @@ namespace jank::codegen
     );
 
     fmt::format_to(inserter, "static void __init(){{");
+    fmt::format_to(inserter, "jank::profile::timer __timer{{ \"ns __init\" }};");
     fmt::format_to(inserter, "constexpr auto const deps(jank::util::make_array<jank::native_string_view>(");
     bool needs_comma{};
     for(auto const &dep : rt_ctx.module_dependencies[module])

@@ -6,6 +6,7 @@
 #include <folly/Synchronized.h>
 
 #include <jank/result.hpp>
+#include <jank/detail/cli.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/runtime/module/loader.hpp>
 #include <jank/runtime/ns.hpp>
@@ -20,7 +21,8 @@ namespace jank::runtime
 {
   struct context
   {
-    context(option<native_string_view> const &class_path = none);
+    context();
+    context(cli_options const &opts);
     context(context const&);
     context(context &&) = delete;
 
@@ -92,7 +94,7 @@ namespace jank::runtime
     /* TODO: This needs to be a dynamic var. */
     native_string_view current_module;
     native_unordered_map<native_string, native_vector<native_string>> module_dependencies;
-    native_string output_dir{ "classes" };
+    native_string output_dir;
     module::loader module_loader;
   };
 }

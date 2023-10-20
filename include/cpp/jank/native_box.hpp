@@ -151,6 +151,7 @@ namespace jank
   template <typename T, typename... Args>
   native_box<T> make_box(Args &&... args)
   {
+    jank::profile::timer timer{ "make_box" };
     native_box<T> ret;
     if constexpr(T::pointer_free)
     { ret = new (PointerFreeGC) T{ std::forward<Args>(args)... }; }
