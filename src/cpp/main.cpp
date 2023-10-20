@@ -2,6 +2,7 @@
 #include <filesystem>
 
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <cling/Interpreter/Interpreter.h>
 #include <cling/Interpreter/Value.h>
@@ -10,7 +11,8 @@
 
 #include <CLI/CLI.hpp>
 
-#include <jank/runtime/detail/object_util.hpp>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 #include <jank/util/mapped_file.hpp>
 #include <jank/read/lex.hpp>
@@ -74,13 +76,22 @@ namespace jank
       rt_ctx.load_module("clojure.core").expect_ok();
     }
 
-    /* TODO: Readline with history. */
+    /* By default, RL will do tab completion for files. We disable that here. */
+    rl_bind_key('\t', rl_insert);
+
     /* TODO: Completion. */
     /* TODO: Syntax highlighting. */
-    std::string line;
-    std::cout << "> " << std::flush;
-    while(std::getline(std::cin, line))
+    /* TODO: Multi-line input. */
+    while(auto const buf = readline("> "))
     {
+      native_string line{ buf };
+      boost::trim(line);
+      if(line.empty())
+      { continue; }
+
+      /* TODO: Persist history to disk, á la .lein-repl-history. */
+      /* History is persisted for this session only. */
+      add_history(line.data());
       try
       {
         auto const res(rt_ctx.eval_string(line));
@@ -95,8 +106,6 @@ namespace jank
       { fmt::println("Exception: {}", s); }
       catch(jank::read::error const &e)
       { fmt::println("Read error: {}", e.message); }
-
-      std::cout << "> " << std::flush;
     }
   }
 }

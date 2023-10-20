@@ -13,7 +13,8 @@
     "immer",
     "libguarded",
     "libzippp",
-    "magic-enum"
+    "magic-enum",
+    "readline"
   ],
   "default-features": [],
   "features": {

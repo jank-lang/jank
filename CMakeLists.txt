@@ -210,7 +210,6 @@ find_package(CLI11 CONFIG REQUIRED)
 
 target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
-target_include_directories(jank_lib SYSTEM PRIVATE /home/jeaye/projects/jank/build/cling/lib)
 target_include_directories(jank_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 
@@ -222,6 +221,7 @@ target_link_libraries(
   BDWgc::gc BDWgc::cord BDWgc::gccpp BDWgc::gctba
   libzippp::libzippp
   CLI11::CLI11
+  readline
 )
 
 set_target_properties(jank_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
