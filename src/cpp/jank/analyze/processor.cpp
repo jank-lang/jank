@@ -959,6 +959,7 @@ namespace jank::analyze
             make_box<runtime::obj::vector>
             (
               rt_ctx.intern_keyword("", "arities", true),
+              /* NOTE: We don't support unboxed meta on variadic arities. */
               make_box(arg_count)
             )
           )
@@ -979,24 +980,19 @@ namespace jank::analyze
         if(supports_unboxed_input || supports_unboxed_output)
         {
           auto const fn_res(vars.find(var_deref->var));
-          if(fn_res == vars.end())
-          { return err(error{ fmt::format("ICE: undefined var: {}", var_deref->var->to_string()) }); }
-
-          auto const fn(boost::get<expr::function<expression>>(&fn_res->second->data));
-          if(!fn)
-          { return err(error{ "unsupported arity meta on non-function var" }); }
-
-          /* We need to be sure we're calling the exact arity that has been specified. Unboxed
-           * returns aren't supported for variadic calls right now. */
-          for(auto const &arity : fn->arities)
+          /* If we don't have a valid var_deref, we know the var exists, but we
+           * don't have an AST node for it. This means the var came in through
+           * a pre-compiled module. In that case, we can only rely on meta to
+           * tell us what we need. */
+          if(fn_res != vars.end())
           {
-            if(arity.fn_ctx->param_count == arg_count && !arity.fn_ctx->is_variadic)
-            {
-              needs_arg_box = !supports_unboxed_input;
-              needs_ret_box = needs_box | !supports_unboxed_output;
-              break;
-            }
+            auto const fn(boost::get<expr::function<expression>>(&fn_res->second->data));
+            if(!fn)
+            { return err(error{ "unsupported arity meta on non-function var" }); }
           }
+
+          needs_arg_box = !supports_unboxed_input;
+          needs_ret_box = needs_box | !supports_unboxed_output;
         }
       }
     }
