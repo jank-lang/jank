@@ -20,10 +20,10 @@
 namespace jank::runtime
 {
   context::context()
-    : context(cli_options{ })
+    : context(util::cli::options{ })
   { }
 
-  context::context(cli_options const &opts)
+  context::context(util::cli::options const &opts)
     : jit_prc{ *this }
     , output_dir{ opts.compilation_path }
     , module_loader{ *this, opts.class_path }

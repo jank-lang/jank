@@ -6,7 +6,7 @@
 #include <folly/Synchronized.h>
 
 #include <jank/result.hpp>
-#include <jank/detail/cli.hpp>
+#include <jank/util/cli.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/runtime/module/loader.hpp>
 #include <jank/runtime/ns.hpp>
@@ -22,7 +22,7 @@ namespace jank::runtime
   struct context
   {
     context();
-    context(cli_options const &opts);
+    context(util::cli::options const &opts);
     context(context const&);
     context(context &&) = delete;
 

@@ -140,6 +140,7 @@ set_target_properties(jank_cling_lib PROPERTIES LINK_FLAGS -s)
 add_library(
   jank_lib STATIC
   src/cpp/jank/native_box.cpp
+  src/cpp/jank/util/cli.cpp
   src/cpp/jank/util/mapped_file.cpp
   src/cpp/jank/util/scope_exit.cpp
   src/cpp/jank/profile/time.cpp

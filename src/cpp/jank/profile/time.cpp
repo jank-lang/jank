@@ -11,7 +11,7 @@ namespace jank::profile
   static auto now()
   { return std::chrono::steady_clock::now().time_since_epoch().count(); }
 
-  void configure(cli_options const &opts)
+  void configure(util::cli::options const &opts)
   {
     enabled = opts.profiler_enabled;
 

@@ -1,8 +1,17 @@
 #pragma once
 
-namespace jank
+#include <jank/result.hpp>
+
+namespace jank::util::cli
 {
-  struct cli_options
+  enum class command
+  {
+    run,
+    compile,
+    repl
+  };
+
+  struct options
   {
     /* Runtime. */
     native_string class_path;
@@ -22,5 +31,9 @@ namespace jank
 
     /* REPL command. */
     native_bool repl_server{};
+
+    command command{ command::repl };
   };
+
+  result<options, int> parse(int const argc, char const **argv);
 }

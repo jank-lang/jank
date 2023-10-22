@@ -1,10 +1,10 @@
 #pragma once
 
-#include <jank/detail/cli.hpp>
+#include <jank/util/cli.hpp>
 
 namespace jank::profile
 {
-  void configure(cli_options const &opts);
+  void configure(util::cli::options const &opts);
   void enter(native_string_view const &region);
   void exit(native_string_view const &region);
   void report(native_string_view const &boundary);
