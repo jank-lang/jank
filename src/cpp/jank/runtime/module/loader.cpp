@@ -278,16 +278,31 @@ namespace jank::runtime::module
     if(entry == entries.end())
     { return err(fmt::format("ICE: unable to find module: {}", module)); }
 
-    if(entry->second.pcm.is_some())
-    { return load_pcm(entry->second.pcm.unwrap()); }
-    else if(entry->second.cpp.is_some())
-    { return load_cpp(entry->second.cpp.unwrap()); }
-    else if(entry->second.jank.is_some())
-    { return load_jank(entry->second.jank.unwrap()); }
-    else if(entry->second.cljc.is_some())
-    { return load_cljc(entry->second.cljc.unwrap()); }
+    result<void, native_string> res
+    { err(fmt::format("no sources for registered module: {}", module)) };
+
+    bool const compiling{ rt_ctx.compiling };
+    if(compiling)
+    {
+      if(entry->second.jank.is_some())
+      { res = load_jank(entry->second.jank.unwrap()); }
+      else if(entry->second.cljc.is_some())
+      { res = load_cljc(entry->second.cljc.unwrap()); }
+    }
     else
-    { return err(fmt::format("ICE: no sources for registered module: {}", module)); }
+    {
+      if(entry->second.pcm.is_some())
+      { res = load_pcm(entry->second.pcm.unwrap()); }
+      else if(entry->second.cpp.is_some())
+      { res = load_cpp(entry->second.cpp.unwrap()); }
+      else if(entry->second.jank.is_some())
+      { res = load_jank(entry->second.jank.unwrap()); }
+      else if(entry->second.cljc.is_some())
+      { res = load_cljc(entry->second.cljc.unwrap()); }
+    }
+
+    if(res.is_err())
+    { return res; }
 
     loaded.emplace(module);
 
