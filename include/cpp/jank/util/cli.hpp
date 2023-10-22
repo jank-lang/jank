@@ -17,6 +17,7 @@ namespace jank::util::cli
     native_string class_path;
     native_bool profiler_enabled{};
     native_string profiler_file{ "jank.profile" };
+    native_bool gc_incremental{};
 
     /* Compilation. */
     native_string compilation_path{ "classes" };

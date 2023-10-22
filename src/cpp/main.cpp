@@ -118,10 +118,14 @@ try
    * like strings, use the GC for allocations. It can still be configured later. */
   GC_set_all_interior_pointers(1);
   GC_enable();
-  /* TODO: This crashes now, with LLVM13. Looks like it's cleaning up things it shouldn't. */
-  //GC_enable_incremental();
 
-  auto const opts(util::cli::parse(argc, argv).expect_ok());
+  auto const parse_result(util::cli::parse(argc, argv));
+  if(parse_result.is_err())
+  { return parse_result.expect_err(); }
+  auto const &opts(parse_result.expect_ok());
+
+  if(opts.gc_incremental)
+  { GC_enable_incremental(); }
 
   profile::configure(opts);
   profile::timer timer{ "main" };
