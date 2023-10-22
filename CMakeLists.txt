@@ -300,6 +300,7 @@ if(jank_tests)
     test/cpp/jank/jit/processor.cpp
   )
   add_executable(jank::test_exe ALIAS jank_test_exe)
+  add_dependencies(jank_test_exe jank_core_libraries)
 
   set_property(TARGET jank_test_exe PROPERTY OUTPUT_NAME jank-test)
 
@@ -328,6 +329,29 @@ if(jank_tests)
   add_test(NAME "Test" COMMAND jank_test_exe)
 endif()
 # ---- Tests ----
+
+# ---- Compiled Clojure libraries ----
+# We do a bit of a dance here, to have a custom command generate a file
+# which is a then a dependency of a custom target. This is because custom
+# targets *always* run, but we only want to compile our libs when they change,
+# or when we haven't yet done so.
+#
+# With this setup, we'll compile when the flag file doesn't exist (i.e. on
+# first build or after a clean) or when any of the jank sources for these libs
+# change.
+set(jank_core_libraries_flag ${CMAKE_BINARY_DIR}/classes/core-libraries)
+add_custom_command(
+  DEPENDS ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank
+  OUTPUT ${jank_core_libraries_flag}
+  COMMAND ${CMAKE_BINARY_DIR}/jank compile clojure.core
+  COMMAND touch ${jank_core_libraries_flag}
+)
+add_custom_target(
+  jank_core_libraries
+  DEPENDS ${jank_core_libraries_flag}
+)
+add_dependencies(jank_core_libraries jank_exe)
+# ---- Compiled Clojure libraries ----
 
 # ---- Install rules ----
 if(NOT CMAKE_SKIP_INSTALL_RULES)
