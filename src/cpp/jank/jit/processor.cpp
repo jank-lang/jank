@@ -56,7 +56,8 @@ namespace jank::jit
     return JANK_CLING_BUILD_DIR;
   }
 
-  processor::processor(runtime::context &rt_ctx)
+  processor::processor(runtime::context &rt_ctx, native_integer const optimization_level)
+    : optimization_level{ optimization_level }
   {
     /* TODO: Pass this into each fn below so we only do this once on startup. */
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
@@ -80,6 +81,24 @@ namespace jank::jit
 
     auto const include_path(jank_path / "../include");
 
+    native_string_view O{ "0" };
+    switch(optimization_level)
+    {
+      case 0:
+        break;
+      case 1:
+        O = "1";
+        break;
+      case 2:
+        O = "2";
+        break;
+      case 3:
+        O = "fast";
+        break;
+      default:
+        throw std::runtime_error{ fmt::format("invalid optimization level {}", optimization_level) };
+    }
+
     auto const args
     (
       jank::util::make_array
@@ -89,7 +108,7 @@ namespace jank::jit
         "-DHAVE_CXX14=1", "-DIMMER_HAS_LIBGC=1",
         "-include-pch", pch_path_str.c_str(),
         "-isystem", include_path.c_str(),
-        "-Ofast", "-ffast-math", "-march=native"
+        O.data(), "-march=native"
       )
     );
     interpreter = std::make_unique<cling::Interpreter>(args.size(), args.data(), llvm_resource_path_str.c_str());

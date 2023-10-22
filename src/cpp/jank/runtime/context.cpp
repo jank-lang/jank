@@ -24,7 +24,7 @@ namespace jank::runtime
   { }
 
   context::context(util::cli::options const &opts)
-    : jit_prc{ *this }
+    : jit_prc{ *this, opts.optimization_level }
     , output_dir{ opts.compilation_path }
     , module_loader{ *this, opts.class_path }
   {
@@ -88,7 +88,7 @@ namespace jank::runtime
   }
 
   context::context(context const &ctx)
-    : jit_prc{ *this }
+    : jit_prc{ *this, ctx.jit_prc.optimization_level }
     , current_module{ ctx.current_module }
     , module_dependencies{ ctx.module_dependencies }
     , output_dir{ ctx.output_dir }

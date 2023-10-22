@@ -21,7 +21,11 @@ namespace jank::util::cli
 
     /* Compilation. */
     native_string compilation_path{ "classes" };
+#ifdef JANK_RELEASE
+    native_integer optimization_level{ 3 };
+#else
     native_integer optimization_level{ 0 };
+#endif
 
     /* Run command. */
     native_string target_file;

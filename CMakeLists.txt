@@ -85,7 +85,9 @@ set(
   #-stdlib=libc++ -lc++abi
   )
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  list(APPEND jank_compiler_flags -Werror)
+  list(APPEND jank_compiler_flags -Werror -DJANK_DEBUG)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+  list(APPEND jank_compiler_flags -DJANK_RELEASE)
 endif()
 
 include(cmake/variables.cmake)

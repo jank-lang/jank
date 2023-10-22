@@ -6,18 +6,15 @@ namespace jank::util::cli
 {
   result<options, int> parse(int const argc, char const **argv)
   {
-    /* TODO: Apply global options to all subcommands. */
     CLI::App cli{ "jank compiler" };
     options opts;
 
     /* Runtime. */
     cli.add_option("--class-path", opts.class_path, fmt::format("A {} separated list of directories, JAR files, and ZIP files to search for modules", runtime::module::loader::module_separator));
+    cli.add_option("--output-dir", opts.compilation_path, "The base directory where compiled modules are written");
     cli.add_flag("--profile", opts.profiler_enabled, "Enable compiler and runtime profiling");
     cli.add_option("--profile-output", opts.profiler_file, "The file to write profile entries (will be overwritten)");
     cli.add_flag("--gc-incremental", opts.gc_incremental, "Enable incremental GC collection");
-
-    /* Compilation. */
-    cli.add_option("--output-dir", opts.compilation_path, "The base directory where compiled modules are written");
     cli.add_option("-O,--optimization", opts.optimization_level, "The optimization level to use")->check(CLI::Range(0, 3));
 
     /* Run subcommand. */
