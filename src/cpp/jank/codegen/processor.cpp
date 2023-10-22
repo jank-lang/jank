@@ -1369,7 +1369,7 @@ namespace jank::codegen
           fmt::format_to
           (
             inserter,
-            "{0}{{ rt_ctx",
+            "{0}{{ __rt_ctx",
             runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name))
           );
           close = "}";
