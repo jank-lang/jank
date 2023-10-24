@@ -59,6 +59,7 @@ namespace jank::jit
   processor::processor(runtime::context &rt_ctx, native_integer const optimization_level)
     : optimization_level{ optimization_level }
   {
+    profile::timer timer{ "jit ctor" };
     /* TODO: Pass this into each fn below so we only do this once on startup. */
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
 
@@ -125,14 +126,14 @@ namespace jank::jit
 
   result<option<runtime::object_ptr>, native_string> processor::eval(codegen::processor &cg_prc) const
   {
-    jank::profile::timer timer{ "jit eval" };
+    profile::timer timer{ "jit eval" };
     /* TODO: Improve Cling to accept string_views instead. */
     auto const str(cg_prc.declaration_str());
     //fmt::println("{}", str);
 
     interpreter->declare(static_cast<std::string>(cg_prc.declaration_str()));
 
-    auto const expr(cg_prc.expression_str(true, false));
+    auto const expr(cg_prc.expression_str(true));
     if(expr.empty())
     { return ok(none); }
 

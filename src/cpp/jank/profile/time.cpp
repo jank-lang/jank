@@ -9,7 +9,10 @@ namespace jank::profile
   static std::ofstream output;
 
   static auto now()
-  { return std::chrono::steady_clock::now().time_since_epoch().count(); }
+  {
+    using namespace std::chrono;
+    return duration_cast<nanoseconds>(steady_clock::now().time_since_epoch()).count();
+  }
 
   void configure(util::cli::options const &opts)
   {

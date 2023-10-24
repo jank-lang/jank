@@ -842,12 +842,12 @@ namespace jank::codegen
     {
       case analyze::expression_type::statement:
       case analyze::expression_type::expression:
-      /* TODO: Remove bool here and return a handle. */
-      { return prc.expression_str(box_needed, false); }
+      /* TODO: Return a handle. */
+      { return prc.expression_str(box_needed); }
       case analyze::expression_type::return_statement:
       {
         auto body_inserter(std::back_inserter(body_buffer));
-        fmt::format_to(body_inserter, "return {};", prc.expression_str(box_needed, false));
+        fmt::format_to(body_inserter, "return {};", prc.expression_str(box_needed));
         return none;
       }
     }
@@ -1309,7 +1309,7 @@ namespace jank::codegen
     { fmt::format_to(inserter, "}}"); }
   }
 
-  native_string processor::expression_str(bool const box_needed, bool const auto_call)
+  native_string processor::expression_str(bool const box_needed)
   {
     auto const module_ns(runtime::module::module_to_native_ns(module));
 
@@ -1317,79 +1317,41 @@ namespace jank::codegen
     {
       auto inserter(std::back_inserter(expression_buffer));
 
-      if(auto_call)
+      native_string_view close = ").data";
+      if(box_needed)
       {
-        throw std::runtime_error{ "TODO: I think this can be removed" };
-        /* TODO: There's a Cling bug here which prevents us from returning the fn object itself,
-         * to be called in non-JIT code. If we call it here and return the result, it works fine. */
-        auto tmp_name(runtime::context::unique_string());
         fmt::format_to
         (
           inserter,
-          R"(
-            {0} {1}{{ __rt_ctx
-          )",
-          runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name)),
-          tmp_name
-        );
-
-        for(auto const &arity : root_fn.arities)
-        {
-          for(auto const &v : arity.frame->captures)
-          {
-            auto const originating_local(root_fn.frame->find_local_or_capture(v.first));
-            handle h{ originating_local.unwrap().binding };
-            fmt::format_to(inserter, ", {0}", h.str(true));
-          }
-        }
-
-        fmt::format_to(inserter, "}};");
-
-        fmt::format_to
-        (
-          inserter,
-          "{}.call();",
-          tmp_name
+          "jank::make_box<{0}>(__rt_ctx",
+          runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name))
         );
       }
       else
       {
-        native_string_view close = ").data";
-        if(box_needed)
-        {
-          fmt::format_to
-          (
-            inserter,
-            "jank::make_box<{0}>(__rt_ctx",
-            runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name))
-          );
-        }
-        else
-        {
-          fmt::format_to
-          (
-            inserter,
-            "{0}{{ __rt_ctx",
-            runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name))
-          );
-          close = "}";
-        }
-
-        for(auto const &arity : root_fn.arities)
-        {
-          for(auto const &v : arity.frame->captures)
-          {
-            /* We're generating the inputs to the function ctor, which means we don't
-             * want the binding of the capture within the function; we want the one outside
-             * of it, which we're capturing. We need to reach further for that. */
-            auto const originating_local(root_fn.frame->find_local_or_capture(v.first));
-            handle h{ originating_local.unwrap().binding };
-            fmt::format_to(inserter, ", {0}", h.str(true));
-          }
-        }
-
-        fmt::format_to(inserter, "{}", close);
+        fmt::format_to
+        (
+          inserter,
+          "{0}{{ __rt_ctx",
+          runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name))
+        );
+        close = "}";
       }
+
+      for(auto const &arity : root_fn.arities)
+      {
+        for(auto const &v : arity.frame->captures)
+        {
+          /* We're generating the inputs to the function ctor, which means we don't
+            * want the binding of the capture within the function; we want the one outside
+            * of it, which we're capturing. We need to reach further for that. */
+          auto const originating_local(root_fn.frame->find_local_or_capture(v.first));
+          handle h{ originating_local.unwrap().binding };
+          fmt::format_to(inserter, ", {0}", h.str(true));
+        }
+      }
+
+      fmt::format_to(inserter, "{}", close);
 
       generated_expression = true;
     }

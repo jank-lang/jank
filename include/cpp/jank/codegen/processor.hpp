@@ -168,7 +168,7 @@ namespace jank::codegen
     void build_header();
     void build_body();
     void build_footer();
-    native_string expression_str(bool box_needed, bool const auto_call);
+    native_string expression_str(bool box_needed);
 
     native_string module_init_str(native_string_view const &module);
 
