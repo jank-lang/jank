@@ -339,20 +339,20 @@ endif()
 # or when we haven't yet done so.
 #
 # With this setup, we'll compile when the flag file doesn't exist (i.e. on
-# first build or after a clean) or when any of the jank sources for these libs
-# change.
+# first build or after a clean), when any of the jank sources for these libs
+# change, or whenever the jank binary changes.
 set(jank_core_libraries_flag ${CMAKE_BINARY_DIR}/classes/core-libraries)
 add_custom_command(
-  DEPENDS ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank
+  DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank
   OUTPUT ${jank_core_libraries_flag}
   COMMAND ${CMAKE_BINARY_DIR}/jank compile clojure.core
-  COMMAND touch ${jank_core_libraries_flag}
+  COMMAND mkdir -p ${CMAKE_BINARY_DIR}/classes; touch ${jank_core_libraries_flag}
 )
 add_custom_target(
   jank_core_libraries
+  ALL
   DEPENDS ${jank_core_libraries_flag}
 )
-add_dependencies(jank_core_libraries jank_exe)
 # ---- Compiled Clojure libraries ----
 
 # ---- Install rules ----
