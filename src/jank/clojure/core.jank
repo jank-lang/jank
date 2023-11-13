@@ -875,6 +875,33 @@
                                      :unboxed-output? true}}})
 
 ; Namespaces (again).
+(defn create-ns
+  [sym]
+  (assert (symbol? sym))
+  (native/raw "__value = __rt_ctx.intern_ns(expect_object<obj::symbol>(#{ sym }#));"))
+
+(defn find-ns
+  [sym]
+  (assert (symbol? sym))
+  (native/raw "__value = __rt_ctx.find_ns(expect_object<obj::symbol>(#{ sym }#)).unwrap_or(nullptr);
+               if(!__value)
+               { __value = obj::nil::nil_const(); }"))
+
+(defn remove-ns
+  [sym]
+  (assert (symbol? sym))
+  (native/raw "__value = __rt_ctx.remove_ns(expect_object<obj::symbol>(#{ sym }#)).unwrap_or(nullptr);
+               if(!__value)
+               { __value = obj::nil::nil_const(); }"))
+
+(defn the-ns
+  [ns-or-sym]
+  (if (native/raw "__value = make_box(#{ ns-or-sym }#->type == object_type::ns);")
+    ns-or-sym
+    (let [found (find-ns ns-or-sym)]
+      (if (nil? found)
+        (native/raw "throw #{ (ex-info :not-an-ns-or-sym {:value ns-or-sym}) }#;")
+        found))))
 
 ; TODO: Handle multiple paths
 ; TODO: Handle relative paths
@@ -897,5 +924,8 @@
       (native/raw "auto const &s(runtime::detail::to_string(#{ sym }#));
                   __rt_ctx.load_module(s).expect_ok() ;")
       (recur (rest libs)))))
+
+(defn alias [alias ns-sym]
+  "TODO")
 
 (println "Bottom of clojure.core")

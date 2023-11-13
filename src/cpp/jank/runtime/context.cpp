@@ -329,6 +329,28 @@ namespace jank::runtime
     return result.first->second;
   }
 
+  option<ns_ptr> context::remove_ns(obj::symbol_ptr const &sym)
+  {
+    auto locked_namespaces(namespaces.wlock());
+    auto const found(locked_namespaces->find(sym));
+    if(found != locked_namespaces->end())
+    {
+      auto const ret(found->second);
+      locked_namespaces->erase(found);
+      return ret;
+    }
+    return none;
+  }
+
+  option<ns_ptr> context::find_ns(obj::symbol_ptr const &sym)
+  {
+    auto locked_namespaces(namespaces.rlock());
+    auto const found(locked_namespaces->find(sym));
+    if(found != locked_namespaces->end())
+    { return found->second; }
+    return none;
+  }
+
   result<var_ptr, native_string> context::intern_var
   (native_string const &ns, native_string const &name)
   { return intern_var(make_box<obj::symbol>(ns, name)); }

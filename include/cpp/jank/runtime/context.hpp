@@ -29,11 +29,15 @@ namespace jank::runtime
     void dump() const;
 
     ns_ptr intern_ns(obj::symbol_ptr const &);
+    option<ns_ptr> remove_ns(obj::symbol_ptr const &);
+    option<ns_ptr> find_ns(obj::symbol_ptr const &);
+
+    obj::symbol_ptr qualify_symbol(obj::symbol_ptr const &);
+    option<object_ptr> find_local(obj::symbol_ptr const &);
+
     result<var_ptr, native_string> intern_var(obj::symbol_ptr const &);
     result<var_ptr, native_string> intern_var(native_string const &ns, native_string const &name);
-    obj::symbol_ptr qualify_symbol(obj::symbol_ptr const &);
     option<var_ptr> find_var(obj::symbol_ptr const &);
-    option<object_ptr> find_local(obj::symbol_ptr const &);
 
     obj::keyword_ptr intern_keyword(obj::symbol const &sym, bool const resolved);
     obj::keyword_ptr intern_keyword(native_string_view const &ns, native_string_view const &name, bool resolved);
