@@ -144,6 +144,12 @@
                    },
                    #{ tail }#
                  );")))
+
+(def list?
+  (fn* list? [o]
+    ; TODO: Visit and use a behavior for this check instead. It should apply to conses and others.
+    (native/raw "__value = make_box(#{ o }#->type == object_type::list);")))
+
 (def list
   (fn* list [& items]
     (native/raw "__value = visit_object
@@ -161,6 +167,10 @@
                  );")))
 
 ;; Vectors.
+(def vector?
+  (fn* vector? [o]
+    (native/raw "__value = make_box(#{ o }#->type == object_type::vector);")))
+
 (def vec
   (fn* vec [coll]
     (native/raw "__value = visit_object
@@ -874,10 +884,18 @@
 (defn compile [path]
   (native/raw "__rt_ctx.compile_module(runtime::detail::to_string(#{ path }#)).expect_ok();"))
 
-; TODO: Handle multiple args
-; TODO: Handle vectors with flags
-(defn require [sym]
-  (native/raw "auto const &s(runtime::detail::to_string(#{ sym }#));
-               __rt_ctx.load_module(s).expect_ok() ;"))
+; TODO: Handle vector flags
+(defn require [& libs]
+  (if (empty? libs)
+    nil
+    (let [lib (first libs)
+          sym (if (vector? lib)
+                (first lib)
+                (if (symbol? lib)
+                  lib
+                  (native/raw "throw #{ (ex-info :not-a-lib {:value lib}) }#;")))]
+      (native/raw "auto const &s(runtime::detail::to_string(#{ sym }#));
+                  __rt_ctx.load_module(s).expect_ok() ;")
+      (recur (rest libs)))))
 
 (println "Bottom of clojure.core")
