@@ -258,6 +258,7 @@
                  );")))
 
 ;; Macros.
+; TODO: There's a bug here if the body isn't specified. Runtime issue, not this macro.
 (def defn
   (fn* defn [&form &env fn-name fn-args & body]
     (list 'do
@@ -331,6 +332,12 @@
                 );")))
 
 ;; Maps.
+(defn hash-map
+  ([]
+   {})
+  ([& kvs]
+   (native/raw "__value = obj::persistent_hash_map::create_from_seq(#{ kvs }#);")))
+
 (defn get
   ([m k]
    (native/raw "__value = jank::runtime::get(#{ m }#, #{ k }#);"))
@@ -903,19 +910,27 @@
         (native/raw "throw #{ (ex-info :not-an-ns-or-sym {:value ns-or-sym}) }#;")
         found))))
 
-; TODO: Handle multiple paths
 ; TODO: Handle relative paths
-(defn load [path]
-  (native/raw "__rt_ctx.load_module(runtime::detail::to_string(#{ path }#)).expect_ok();"))
+(defn load [& paths]
+  (if (empty? paths)
+    nil
+    (let [path (first paths)]
+      ; TODO: Check for cyclic deps
+      (native/raw "__rt_ctx.load_module(runtime::detail::to_string(#{ path }#)).expect_ok();")
+      (recur (rest paths)))))
 
 (defn compile [path]
   (native/raw "__rt_ctx.compile_module(runtime::detail::to_string(#{ path }#)).expect_ok();"))
+
+(defn refer [ns-sym & filters]
+  2)
 
 ; TODO: Handle vector flags
 (defn require [& libs]
   (if (empty? libs)
     nil
     (let [lib (first libs)
+          ; TODO: Not just vectors; lists, too.
           sym (if (vector? lib)
                 (first lib)
                 (if (symbol? lib)

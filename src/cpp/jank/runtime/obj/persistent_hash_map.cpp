@@ -17,6 +17,48 @@ namespace jank::runtime
     transient.set(key, val);
     data = transient.persistent();
   }
+  obj::persistent_hash_map::static_object(value_type &&d)
+    : data{ std::move(d) }
+  { }
+  obj::persistent_hash_map::static_object(value_type const &d)
+    : data{ d }
+  { }
+
+  obj::persistent_hash_map_ptr obj::persistent_hash_map::create_from_seq(object_ptr const seq)
+  {
+    auto data = visit_object
+    (
+      [](auto const typed_seq) -> obj::persistent_hash_map::value_type
+      {
+        using T = typename decltype(typed_seq)::value_type;
+
+        if constexpr(behavior::seqable<T>)
+        {
+          detail::native_transient_hash_map transient;
+          for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
+          {
+            auto const key(it->first());
+            it = it->next_in_place();
+            if(!it)
+            {
+              throw std::runtime_error
+              { fmt::format("Odd number of elements: {}", typed_seq->to_string()) };
+            }
+            auto const val(it->first());
+            transient.set(key, val);
+          }
+          return transient.persistent();
+        }
+        else
+        {
+          throw std::runtime_error
+          { fmt::format("Not seqable: {}", typed_seq->to_string()) };
+        }
+      },
+      seq
+    );
+    return make_box<obj::persistent_hash_map>(std::move(data));
+  }
 
   object_ptr obj::persistent_hash_map::get(object_ptr const key) const
   {

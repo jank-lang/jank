@@ -26,12 +26,8 @@ namespace jank::runtime
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
     static_object(runtime::detail::native_array_map const &m, object_ptr key, object_ptr val);
-    static_object(value_type &&d)
-      : data{ std::move(d) }
-    { }
-    static_object(value_type const &d)
-      : data{ d }
-    { }
+    static_object(value_type &&d);
+    static_object(value_type const &d);
     template <typename... Args>
     static_object(runtime::detail::in_place_unique, Args &&...args)
       : data{ std::forward<Args>(args)... }
@@ -48,6 +44,8 @@ namespace jank::runtime
         std::forward<Args>(args)...
       );
     }
+
+    static native_box<static_object> create_from_seq(object_ptr const seq);
 
     /* behavior::associatively_readable */
     object_ptr get(object_ptr const key) const;

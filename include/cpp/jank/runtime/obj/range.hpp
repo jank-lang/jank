@@ -12,7 +12,6 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(object &&base);
     static_object(object_ptr const end);
     static_object(object_ptr const start, object_ptr const end);
     static_object(object_ptr const start, object_ptr const end, object_ptr const step);

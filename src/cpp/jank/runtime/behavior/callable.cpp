@@ -28,7 +28,7 @@ namespace jank::runtime
           {
             case 0:
               /* TODO: Empty list constant. */
-              return typed_source->call(jank::make_box<obj::list>());
+              return typed_source->call(make_box<obj::list>());
             default:
               return typed_source->call();
           }
@@ -55,7 +55,7 @@ namespace jank::runtime
           switch(variadic_arg_position)
           {
             case 0:
-              return typed_source->call(jank::make_box<obj::native_array_sequence>(a1));
+              return typed_source->call(make_box<obj::native_array_sequence>(a1));
             default:
               return typed_source->call(a1);
           }
@@ -80,9 +80,9 @@ namespace jank::runtime
           switch(variadic_arg_position)
           {
             case 0:
-              return typed_source->call(jank::make_box<obj::native_array_sequence>(a1, a2));
+              return typed_source->call(make_box<obj::native_array_sequence>(a1, a2));
             case 1:
-              return typed_source->call(a1, jank::make_box<obj::native_array_sequence>(a2));
+              return typed_source->call(a1, make_box<obj::native_array_sequence>(a2));
             default:
               return typed_source->call(a1, a2);
           }
@@ -107,11 +107,11 @@ namespace jank::runtime
           switch(variadic_arg_position)
           {
             case 0:
-              return typed_source->call(jank::make_box<obj::native_array_sequence>(a1, a2, a3));
+              return typed_source->call(make_box<obj::native_array_sequence>(a1, a2, a3));
             case 1:
-              return typed_source->call(a1, jank::make_box<obj::native_array_sequence>(a2, a3));
+              return typed_source->call(a1, make_box<obj::native_array_sequence>(a2, a3));
             case 2:
-              return typed_source->call(a1, a2, jank::make_box<obj::native_array_sequence>(a3));
+              return typed_source->call(a1, a2, make_box<obj::native_array_sequence>(a3));
             default:
               return typed_source->call(a1, a2, a3);
           }
@@ -136,13 +136,13 @@ namespace jank::runtime
           switch(variadic_arg_position)
           {
             case 0:
-              return typed_source->call(jank::make_box<obj::native_array_sequence>(a1, a2, a3, a4));
+              return typed_source->call(make_box<obj::native_array_sequence>(a1, a2, a3, a4));
             case 1:
-              return typed_source->call(a1, jank::make_box<obj::native_array_sequence>(a2, a3, a4));
+              return typed_source->call(a1, make_box<obj::native_array_sequence>(a2, a3, a4));
             case 2:
-              return typed_source->call(a1, a2, jank::make_box<obj::native_array_sequence>(a3, a4));
+              return typed_source->call(a1, a2, make_box<obj::native_array_sequence>(a3, a4));
             case 3:
-              return typed_source->call(a1, a2, a3, jank::make_box<obj::native_array_sequence>(a4));
+              return typed_source->call(a1, a2, a3, make_box<obj::native_array_sequence>(a4));
             default:
               return typed_source->call(a1, a2, a3, a4);
           }
@@ -167,15 +167,15 @@ namespace jank::runtime
           switch(variadic_arg_position)
           {
             case 0:
-              return typed_source->call(jank::make_box<obj::native_array_sequence>(a1, a2, a3, a4, a5));
+              return typed_source->call(make_box<obj::native_array_sequence>(a1, a2, a3, a4, a5));
             case 1:
-              return typed_source->call(a1, jank::make_box<obj::native_array_sequence>(a2, a3, a4, a5));
+              return typed_source->call(a1, make_box<obj::native_array_sequence>(a2, a3, a4, a5));
             case 2:
-              return typed_source->call(a1, a2, jank::make_box<obj::native_array_sequence>(a3, a4, a5));
+              return typed_source->call(a1, a2, make_box<obj::native_array_sequence>(a3, a4, a5));
             case 3:
-              return typed_source->call(a1, a2, a3, jank::make_box<obj::native_array_sequence>(a4, a5));
+              return typed_source->call(a1, a2, a3, make_box<obj::native_array_sequence>(a4, a5));
             case 4:
-              return typed_source->call(a1, a2, a3, a4, jank::make_box<obj::native_array_sequence>(a5));
+              return typed_source->call(a1, a2, a3, a4, make_box<obj::native_array_sequence>(a5));
             default:
               return typed_source->call(a1, a2, a3, a4, a5);
           }
@@ -200,17 +200,17 @@ namespace jank::runtime
           switch(variadic_arg_position)
           {
             case 0:
-              return typed_source->call(jank::make_box<obj::native_array_sequence>(a1, a2, a3, a4, a5, a6));
+              return typed_source->call(make_box<obj::native_array_sequence>(a1, a2, a3, a4, a5, a6));
             case 1:
-              return typed_source->call(a1, jank::make_box<obj::native_array_sequence>(a2, a3, a4, a5, a6));
+              return typed_source->call(a1, make_box<obj::native_array_sequence>(a2, a3, a4, a5, a6));
             case 2:
-              return typed_source->call(a1, a2, jank::make_box<obj::native_array_sequence>(a3, a4, a5, a6));
+              return typed_source->call(a1, a2, make_box<obj::native_array_sequence>(a3, a4, a5, a6));
             case 3:
-              return typed_source->call(a1, a2, a3, jank::make_box<obj::native_array_sequence>(a4, a5, a6));
+              return typed_source->call(a1, a2, a3, make_box<obj::native_array_sequence>(a4, a5, a6));
             case 4:
-              return typed_source->call(a1, a2, a3, a4, jank::make_box<obj::native_array_sequence>(a5, a6));
+              return typed_source->call(a1, a2, a3, a4, make_box<obj::native_array_sequence>(a5, a6));
             case 5:
-              return typed_source->call(a1, a2, a3, a4, a5, jank::make_box<obj::native_array_sequence>(a6));
+              return typed_source->call(a1, a2, a3, a4, a5, make_box<obj::native_array_sequence>(a6));
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6);
           }
@@ -235,19 +235,19 @@ namespace jank::runtime
           switch(variadic_arg_position)
           {
             case 0:
-              return typed_source->call(jank::make_box<obj::native_array_sequence>(a1, a2, a3, a4, a5, a6, a7));
+              return typed_source->call(make_box<obj::native_array_sequence>(a1, a2, a3, a4, a5, a6, a7));
             case 1:
-              return typed_source->call(a1, jank::make_box<obj::native_array_sequence>(a2, a3, a4, a5, a6, a7));
+              return typed_source->call(a1, make_box<obj::native_array_sequence>(a2, a3, a4, a5, a6, a7));
             case 2:
-              return typed_source->call(a1, a2, jank::make_box<obj::native_array_sequence>(a3, a4, a5, a6, a7));
+              return typed_source->call(a1, a2, make_box<obj::native_array_sequence>(a3, a4, a5, a6, a7));
             case 3:
-              return typed_source->call(a1, a2, a3, jank::make_box<obj::native_array_sequence>(a4, a5, a6, a7));
+              return typed_source->call(a1, a2, a3, make_box<obj::native_array_sequence>(a4, a5, a6, a7));
             case 4:
-              return typed_source->call(a1, a2, a3, a4, jank::make_box<obj::native_array_sequence>(a5, a6, a7));
+              return typed_source->call(a1, a2, a3, a4, make_box<obj::native_array_sequence>(a5, a6, a7));
             case 5:
-              return typed_source->call(a1, a2, a3, a4, a5, jank::make_box<obj::native_array_sequence>(a6, a7));
+              return typed_source->call(a1, a2, a3, a4, a5, make_box<obj::native_array_sequence>(a6, a7));
             case 6:
-              return typed_source->call(a1, a2, a3, a4, a5, a6, jank::make_box<obj::native_array_sequence>(a7));
+              return typed_source->call(a1, a2, a3, a4, a5, a6, make_box<obj::native_array_sequence>(a7));
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6, a7);
           }
@@ -272,21 +272,21 @@ namespace jank::runtime
           switch(variadic_arg_position)
           {
             case 0:
-              return typed_source->call(jank::make_box<obj::native_array_sequence>(a1, a2, a3, a4, a5, a6, a7, a8));
+              return typed_source->call(make_box<obj::native_array_sequence>(a1, a2, a3, a4, a5, a6, a7, a8));
             case 1:
-              return typed_source->call(a1, jank::make_box<obj::native_array_sequence>(a2, a3, a4, a5, a6, a7, a8));
+              return typed_source->call(a1, make_box<obj::native_array_sequence>(a2, a3, a4, a5, a6, a7, a8));
             case 2:
-              return typed_source->call(a1, a2, jank::make_box<obj::native_array_sequence>(a3, a4, a5, a6, a7, a8));
+              return typed_source->call(a1, a2, make_box<obj::native_array_sequence>(a3, a4, a5, a6, a7, a8));
             case 3:
-              return typed_source->call(a1, a2, a3, jank::make_box<obj::native_array_sequence>(a4, a5, a6, a7, a8));
+              return typed_source->call(a1, a2, a3, make_box<obj::native_array_sequence>(a4, a5, a6, a7, a8));
             case 4:
-              return typed_source->call(a1, a2, a3, a4, jank::make_box<obj::native_array_sequence>(a5, a6, a7, a8));
+              return typed_source->call(a1, a2, a3, a4, make_box<obj::native_array_sequence>(a5, a6, a7, a8));
             case 5:
-              return typed_source->call(a1, a2, a3, a4, a5, jank::make_box<obj::native_array_sequence>(a6, a7, a8));
+              return typed_source->call(a1, a2, a3, a4, a5, make_box<obj::native_array_sequence>(a6, a7, a8));
             case 6:
-              return typed_source->call(a1, a2, a3, a4, a5, a6, jank::make_box<obj::native_array_sequence>(a7, a8));
+              return typed_source->call(a1, a2, a3, a4, a5, a6, make_box<obj::native_array_sequence>(a7, a8));
             case 7:
-              return typed_source->call(a1, a2, a3, a4, a5, a6, a7, jank::make_box<obj::native_array_sequence>(a8));
+              return typed_source->call(a1, a2, a3, a4, a5, a6, a7, make_box<obj::native_array_sequence>(a8));
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8);
           }
@@ -311,23 +311,23 @@ namespace jank::runtime
           switch(variadic_arg_position)
           {
             case 0:
-              return typed_source->call(jank::make_box<obj::native_array_sequence>(a1, a2, a3, a4, a5, a6, a7, a8, a9));
+              return typed_source->call(make_box<obj::native_array_sequence>(a1, a2, a3, a4, a5, a6, a7, a8, a9));
             case 1:
-              return typed_source->call(a1, jank::make_box<obj::native_array_sequence>(a2, a3, a4, a5, a6, a7, a8, a9));
+              return typed_source->call(a1, make_box<obj::native_array_sequence>(a2, a3, a4, a5, a6, a7, a8, a9));
             case 2:
-              return typed_source->call(a1, a2, jank::make_box<obj::native_array_sequence>(a3, a4, a5, a6, a7, a8, a9));
+              return typed_source->call(a1, a2, make_box<obj::native_array_sequence>(a3, a4, a5, a6, a7, a8, a9));
             case 3:
-              return typed_source->call(a1, a2, a3, jank::make_box<obj::native_array_sequence>(a4, a5, a6, a7, a8, a9));
+              return typed_source->call(a1, a2, a3, make_box<obj::native_array_sequence>(a4, a5, a6, a7, a8, a9));
             case 4:
-              return typed_source->call(a1, a2, a3, a4, jank::make_box<obj::native_array_sequence>(a5, a6, a7, a8, a9));
+              return typed_source->call(a1, a2, a3, a4, make_box<obj::native_array_sequence>(a5, a6, a7, a8, a9));
             case 5:
-              return typed_source->call(a1, a2, a3, a4, a5, jank::make_box<obj::native_array_sequence>(a6, a7, a8, a9));
+              return typed_source->call(a1, a2, a3, a4, a5, make_box<obj::native_array_sequence>(a6, a7, a8, a9));
             case 6:
-              return typed_source->call(a1, a2, a3, a4, a5, a6, jank::make_box<obj::native_array_sequence>(a7, a8, a9));
+              return typed_source->call(a1, a2, a3, a4, a5, a6, make_box<obj::native_array_sequence>(a7, a8, a9));
             case 7:
-              return typed_source->call(a1, a2, a3, a4, a5, a6, a7, jank::make_box<obj::native_array_sequence>(a8, a9));
+              return typed_source->call(a1, a2, a3, a4, a5, a6, a7, make_box<obj::native_array_sequence>(a8, a9));
             case 8:
-              return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, jank::make_box<obj::native_array_sequence>(a9));
+              return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, make_box<obj::native_array_sequence>(a9));
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
           }
@@ -352,25 +352,25 @@ namespace jank::runtime
           switch(variadic_arg_position)
           {
             case 0:
-              return typed_source->call(jank::make_box<obj::native_array_sequence>(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10));
+              return typed_source->call(make_box<obj::native_array_sequence>(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10));
             case 1:
-              return typed_source->call(a1, jank::make_box<obj::native_array_sequence>(a2, a3, a4, a5, a6, a7, a8, a9, a10));
+              return typed_source->call(a1, make_box<obj::native_array_sequence>(a2, a3, a4, a5, a6, a7, a8, a9, a10));
             case 2:
-              return typed_source->call(a1, a2, jank::make_box<obj::native_array_sequence>(a3, a4, a5, a6, a7, a8, a9, a10));
+              return typed_source->call(a1, a2, make_box<obj::native_array_sequence>(a3, a4, a5, a6, a7, a8, a9, a10));
             case 3:
-              return typed_source->call(a1, a2, a3, jank::make_box<obj::native_array_sequence>(a4, a5, a6, a7, a8, a9, a10));
+              return typed_source->call(a1, a2, a3, make_box<obj::native_array_sequence>(a4, a5, a6, a7, a8, a9, a10));
             case 4:
-              return typed_source->call(a1, a2, a3, a4, jank::make_box<obj::native_array_sequence>(a5, a6, a7, a8, a9, a10));
+              return typed_source->call(a1, a2, a3, a4, make_box<obj::native_array_sequence>(a5, a6, a7, a8, a9, a10));
             case 5:
-              return typed_source->call(a1, a2, a3, a4, a5, jank::make_box<obj::native_array_sequence>(a6, a7, a8, a9, a10));
+              return typed_source->call(a1, a2, a3, a4, a5, make_box<obj::native_array_sequence>(a6, a7, a8, a9, a10));
             case 6:
-              return typed_source->call(a1, a2, a3, a4, a5, a6, jank::make_box<obj::native_array_sequence>(a7, a8, a9, a10));
+              return typed_source->call(a1, a2, a3, a4, a5, a6, make_box<obj::native_array_sequence>(a7, a8, a9, a10));
             case 7:
-              return typed_source->call(a1, a2, a3, a4, a5, a6, a7, jank::make_box<obj::native_array_sequence>(a8, a9, a10));
+              return typed_source->call(a1, a2, a3, a4, a5, a6, a7, make_box<obj::native_array_sequence>(a8, a9, a10));
             case 8:
-              return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, jank::make_box<obj::native_array_sequence>(a9, a10));
+              return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, make_box<obj::native_array_sequence>(a9, a10));
             case 9:
-              return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, jank::make_box<obj::native_array_sequence>(a10));
+              return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, make_box<obj::native_array_sequence>(a10));
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
           }
@@ -400,80 +400,80 @@ namespace jank::runtime
               native_vector<object_ptr> packed;
               packed.reserve(10 + rest->count());
               packed.insert(packed.end(), { a1, a2, a3, a4, a5, a6, a7, a8, a9, a10 });
-              std::copy(rest->data.begin(), rest->data.end(), packed.end());
-              return typed_source->call(jank::make_box<obj::native_vector_sequence>(std::move(packed)));
+              std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
+              return typed_source->call(make_box<obj::native_vector_sequence>(std::move(packed)));
             }
             case 1:
             {
               native_vector<object_ptr> packed;
-              packed.reserve(10 + rest->count());
+              packed.reserve(9 + rest->count());
               packed.insert(packed.end(), { a2, a3, a4, a5, a6, a7, a8, a9, a10 });
-              std::copy(rest->data.begin(), rest->data.end(), packed.end());
-              return typed_source->call(a1, jank::make_box<obj::native_vector_sequence>(std::move(packed)));
+              std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
+              return typed_source->call(a1, make_box<obj::native_vector_sequence>(std::move(packed)));
             }
             case 2:
             {
               native_vector<object_ptr> packed;
-              packed.reserve(10 + rest->count());
+              packed.reserve(8 + rest->count());
               packed.insert(packed.end(), { a3, a4, a5, a6, a7, a8, a9, a10 });
-              std::copy(rest->data.begin(), rest->data.end(), packed.end());
-              return typed_source->call(a1, a2, jank::make_box<obj::native_vector_sequence>(std::move(packed)));
+              std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
+              return typed_source->call(a1, a2, make_box<obj::native_vector_sequence>(std::move(packed)));
             }
             case 3:
             {
               native_vector<object_ptr> packed;
-              packed.reserve(10 + rest->count());
+              packed.reserve(7 + rest->count());
               packed.insert(packed.end(), { a4, a5, a6, a7, a8, a9, a10 });
-              std::copy(rest->data.begin(), rest->data.end(), packed.end());
-              return typed_source->call(a1, a2, a3, jank::make_box<obj::native_vector_sequence>(std::move(packed)));
+              std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
+              return typed_source->call(a1, a2, a3, make_box<obj::native_vector_sequence>(std::move(packed)));
             }
             case 4:
             {
               native_vector<object_ptr> packed;
-              packed.reserve(10 + rest->count());
+              packed.reserve(6 + rest->count());
               packed.insert(packed.end(), { a5, a6, a7, a8, a9, a10 });
-              std::copy(rest->data.begin(), rest->data.end(), packed.end());
-              return typed_source->call(a1, a2, a3, a4, jank::make_box<obj::native_vector_sequence>(std::move(packed)));
+              std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
+              return typed_source->call(a1, a2, a3, a4, make_box<obj::native_vector_sequence>(std::move(packed)));
             }
             case 5:
             {
               native_vector<object_ptr> packed;
-              packed.reserve(10 + rest->count());
+              packed.reserve(5 + rest->count());
               packed.insert(packed.end(), { a6, a7, a8, a9, a10 });
-              std::copy(rest->data.begin(), rest->data.end(), packed.end());
-              return typed_source->call(a1, a2, a3, a4, a5, jank::make_box<obj::native_vector_sequence>(std::move(packed)));
+              std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
+              return typed_source->call(a1, a2, a3, a4, a5, make_box<obj::native_vector_sequence>(std::move(packed)));
             }
             case 6:
             {
               native_vector<object_ptr> packed;
-              packed.reserve(10 + rest->count());
+              packed.reserve(4 + rest->count());
               packed.insert(packed.end(), { a7, a8, a9, a10 });
-              std::copy(rest->data.begin(), rest->data.end(), packed.end());
-              return typed_source->call(a1, a2, a3, a4, a5, a6, jank::make_box<obj::native_vector_sequence>(std::move(packed)));
+              std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
+              return typed_source->call(a1, a2, a3, a4, a5, a6, make_box<obj::native_vector_sequence>(std::move(packed)));
             }
             case 7:
             {
               native_vector<object_ptr> packed;
-              packed.reserve(10 + rest->count());
+              packed.reserve(3 + rest->count());
               packed.insert(packed.end(), { a8, a9, a10 });
-              std::copy(rest->data.begin(), rest->data.end(), packed.end());
-              return typed_source->call(a1, a2, a3, a4, a5, a6, a7, jank::make_box<obj::native_vector_sequence>(std::move(packed)));
+              std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
+              return typed_source->call(a1, a2, a3, a4, a5, a6, a7, make_box<obj::native_vector_sequence>(std::move(packed)));
             }
             case 8:
             {
               native_vector<object_ptr> packed;
-              packed.reserve(10 + rest->count());
+              packed.reserve(2 + rest->count());
               packed.insert(packed.end(), { a9, a10 });
-              std::copy(rest->data.begin(), rest->data.end(), packed.end());
-              return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, jank::make_box<obj::native_vector_sequence>(std::move(packed)));
+              std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
+              return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, make_box<obj::native_vector_sequence>(std::move(packed)));
             }
             case 9:
             {
               native_vector<object_ptr> packed;
-              packed.reserve(10 + rest->count());
+              packed.reserve(1 + rest->count());
               packed.insert(packed.end(), { a10 });
-              std::copy(rest->data.begin(), rest->data.end(), packed.end());
-              return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, jank::make_box<obj::native_vector_sequence>(std::move(packed)));
+              std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
+              return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, make_box<obj::native_vector_sequence>(std::move(packed)));
             }
             default:
               throw std::runtime_error{ fmt::format("unsupported arity: {}", 10 + rest->count()) };

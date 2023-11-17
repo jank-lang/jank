@@ -10,6 +10,8 @@ namespace jank::runtime
 
 namespace jank::runtime::obj::detail
 {
+  /* Array maps and hash maps share a lot of common code, so we have a common base.
+   * No virtual fns are used, so this structure won't survive release optimizations. */
   template <object_type OT, object_type ST, typename V>
   struct base_persistent_map : gc
   {
