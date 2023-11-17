@@ -190,7 +190,7 @@ namespace jank::analyze
 
     /* Macros aren't lifted, since they're not used during runtime. */
     auto const unwrapped_var(var.unwrap());
-    auto const macro_kw(rt_ctx.intern_keyword("", "macro", true));
+    auto const macro_kw(rt_ctx.intern_keyword("", "macro", true).expect_ok());
     if
     (
       unwrapped_var->meta.is_none() ||
@@ -958,7 +958,7 @@ namespace jank::analyze
             var_deref->var->meta.unwrap(),
             make_box<runtime::obj::vector>
             (
-              rt_ctx.intern_keyword("", "arities", true),
+              rt_ctx.intern_keyword("", "arities", true).expect_ok(),
               /* NOTE: We don't support unboxed meta on variadic arities. */
               make_box(arg_count)
             )
@@ -968,13 +968,13 @@ namespace jank::analyze
         native_bool const supports_unboxed_input
         (
           runtime::detail::truthy
-          (get(arity_meta, rt_ctx.intern_keyword("", "supports-unboxed-input?", true)))
+          (get(arity_meta, rt_ctx.intern_keyword("", "supports-unboxed-input?", true).expect_ok()))
         );
         native_bool const supports_unboxed_output
         (
           runtime::detail::truthy
           /* TODO: Rename key. */
-          (get(arity_meta, rt_ctx.intern_keyword("", "unboxed-output?", true)))
+          (get(arity_meta, rt_ctx.intern_keyword("", "unboxed-output?", true).expect_ok()))
         );
 
         if(supports_unboxed_input || supports_unboxed_output)

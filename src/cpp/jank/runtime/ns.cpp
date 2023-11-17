@@ -6,6 +6,30 @@
 
 namespace jank::runtime
 {
+  ns::static_object(obj::symbol_ptr const &name, context const &c)
+    : name{ name }, rt_ctx{ c }
+  { }
+
+  result<void, native_string> ns::add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns)
+  {
+    auto locked_aliases(aliases.wlock());
+    auto const found(locked_aliases->find(sym));
+    if(found != locked_aliases->end() && found->second != ns)
+    { return err(fmt::format("Alias already bound to a different ns: {}", sym->to_string())); }
+
+    locked_aliases->emplace(sym, ns);
+    return ok();
+  }
+
+  option<ns_ptr> ns::find_alias(obj::symbol_ptr const &sym)
+  {
+    auto locked_aliases(aliases.rlock());
+    auto const found(locked_aliases->find(sym));
+    if(found != locked_aliases->end())
+    { return found->second; }
+    return none;
+  }
+
   native_bool ns::equal(object const &o) const
   {
     if(o.type != object_type::ns)

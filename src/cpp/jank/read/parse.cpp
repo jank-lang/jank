@@ -181,7 +181,10 @@ namespace jank::read::parse
   {
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
+    auto const old_quoted(quoted);
+    quoted = true;
     auto val_result(next());
+    quoted = old_quoted;
     if(val_result.is_err())
     { return val_result; }
     else if(val_result.expect_ok() == nullptr)
@@ -189,9 +192,9 @@ namespace jank::read::parse
 
     return runtime::erase
     (
-      jank::make_box<runtime::obj::list>
+      make_box<runtime::obj::list>
       (
-        jank::make_box<runtime::obj::symbol>("quote"),
+        make_box<runtime::obj::symbol>("quote"),
         val_result.expect_ok_move()
       )
     );
@@ -220,12 +223,23 @@ namespace jank::read::parse
     native_string ns, name;
     if(slash != native_string::npos)
     {
-      /* If it's only a slash, that a name. Otherwise, it's a ns/name separator. */
+      /* If it's only a slash, it's a name. Otherwise, it's a ns/name separator. */
       if(sv.size() == 1)
       { name = sv; }
       else
       {
-        ns = sv.substr(0, slash);
+        auto const ns_portion(sv.substr(0, slash));
+        /* Quoted symbols can have any ns and it doesn't need to exist. */
+        if(quoted)
+        { ns = ns_portion; }
+        /* Normal symbols will have the ns resolved immediately. */
+        else
+        {
+          auto const resolved_ns(rt_ctx.resolve_ns(make_box<runtime::obj::symbol>(ns_portion)));
+          if(resolved_ns.is_none())
+          { return err(error{ token.pos, fmt::format("unknown namespace: {}", ns_portion) }); }
+          ns = resolved_ns.unwrap()->name->name;
+        }
         name = sv.substr(slash + 1);
       }
     }
@@ -239,6 +253,8 @@ namespace jank::read::parse
     auto const token((*token_current).expect_ok());
     ++token_current;
     auto const sv(boost::get<native_string_view>(token.data));
+    /* A :: keyword either resolves to the current ns or an alias, depending on
+     * whether or not it's qualified. */
     bool const resolved{ sv[0] != ':' };
 
     auto const slash(sv.find('/'));
@@ -253,7 +269,11 @@ namespace jank::read::parse
     }
     else
     { name = sv.substr(resolved ? 0 : 1); }
-    return ok(rt_ctx.intern_keyword(runtime::obj::symbol{ ns, name }, resolved));
+
+    auto const intern_res(rt_ctx.intern_keyword(runtime::obj::symbol{ ns, name }, resolved));
+    if(intern_res.is_err())
+    { return err(intern_res.expect_err()); }
+    return ok(intern_res.expect_ok());
   }
 
   processor::object_result processor::parse_integer()

@@ -60,5 +60,7 @@ namespace jank::read::parse
     runtime::context &rt_ctx;
     lex::processor::iterator token_current, token_end;
     option<lex::token_kind> expected_closer;
+    /* Whether or not the next form is considered quoted. */
+    native_bool quoted{};
   };
 }

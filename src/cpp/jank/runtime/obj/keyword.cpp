@@ -5,11 +5,11 @@
 
 namespace jank::runtime
 {
-  obj::keyword::static_object(obj::symbol const &s, bool const resolved)
-    : sym{ s }, resolved{ resolved }
+  obj::keyword::static_object(obj::symbol const &s)
+    : sym{ s }
   { }
-  obj::keyword::static_object(obj::symbol &&s, bool const resolved)
-    : sym{ std::move(s) }, resolved{ resolved }
+  obj::keyword::static_object(obj::symbol &&s)
+    : sym{ std::move(s) }
   { }
 
   /* Keywords are interned, so we can always count on identity equality. */
@@ -35,11 +35,11 @@ namespace jank::runtime
   object_ptr obj::keyword::with_meta(object_ptr m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(make_box<obj::keyword>(sym, resolved));
+    auto ret(make_box<obj::keyword>(sym));
     ret->meta = meta;
     return ret;
   }
 
   bool obj::keyword::operator ==(obj::keyword const &rhs) const
-  { return resolved == rhs.resolved && sym == rhs.sym; }
+  { return sym == rhs.sym; }
 }

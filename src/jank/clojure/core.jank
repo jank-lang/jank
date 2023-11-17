@@ -926,6 +926,12 @@
       (recur (rest libs)))))
 
 (defn alias [alias ns-sym]
-  "TODO")
+  (let [ns-obj (the-ns ns-sym)]
+    (assert (symbol? alias))
+    (native/raw "expect_object<ns>(#{ *ns* }#)->add_alias
+                 (
+                   expect_object<obj::symbol>(#{ alias }#),
+                   expect_object<ns>(#{ ns-obj }#)
+                 ).expect_ok();")))
 
 (println "Bottom of clojure.core")

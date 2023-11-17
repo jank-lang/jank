@@ -220,7 +220,7 @@ namespace jank::evaluate
     if(expr.data->type == runtime::object_type::keyword)
     {
       auto const d(runtime::expect_object<runtime::obj::keyword>(expr.data));
-      return rt_ctx.intern_keyword(d->sym, d->resolved);
+      return rt_ctx.intern_keyword(d->sym, true).expect_ok();
     }
     return expr.data;
   }

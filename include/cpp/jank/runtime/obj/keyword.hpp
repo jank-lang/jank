@@ -23,8 +23,8 @@ namespace jank::runtime
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
     static_object(object &&base);
-    static_object(obj::symbol const &s, bool resolved);
-    static_object(obj::symbol &&s, bool resolved);
+    static_object(obj::symbol const &s);
+    static_object(obj::symbol &&s);
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
@@ -40,10 +40,6 @@ namespace jank::runtime
     object base{ object_type::keyword };
     obj::symbol sym;
     option<object_ptr> meta;
-    /* TODO: Remove this state and always use the RT context to resolve upon creation. */
-    /* Not resolved means this is a :: keyword. If ns is set, when this is true, it's an ns alias.
-     * Upon interning, this will be resolved. */
-    bool resolved{ true };
   };
 
   namespace obj

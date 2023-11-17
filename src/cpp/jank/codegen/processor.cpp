@@ -140,10 +140,9 @@ namespace jank::codegen
             fmt::format_to
             (
               inserter,
-              R"(__rt_ctx.intern_keyword("{}", "{}", {}))",
+              R"(__rt_ctx.intern_keyword("{}", "{}", true).expect_ok())",
               typed_o->sym.ns,
-              typed_o->sym.name,
-              typed_o->resolved
+              typed_o->sym.name
             );
           }
           else if constexpr(std::same_as<T, runtime::obj::string>)

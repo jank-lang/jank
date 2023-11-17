@@ -37,6 +37,8 @@ namespace jank::runtime
       t_state.current_ns = ns_res.first->second;
     }
 
+    intern_ns(make_box<obj::symbol>("native"));
+
     auto const in_ns_sym(make_box<obj::symbol>("clojure.core/in-ns"));
     std::function<object_ptr (object_ptr)> in_ns_fn
     (
@@ -151,10 +153,11 @@ namespace jank::runtime
     }
   }
 
+  option<var_ptr> context::find_var(native_string const &ns, native_string const &name)
+  { return find_var(make_box<obj::symbol>(ns, name)); }
+
   option<object_ptr> context::find_local(obj::symbol_ptr const &)
-  {
-    return none;
-  }
+  { return none; }
 
   /* TODO: Use module loader. */
   void context::eval_prelude()
@@ -351,6 +354,20 @@ namespace jank::runtime
     return none;
   }
 
+  option<ns_ptr> context::resolve_ns(obj::symbol_ptr const &target)
+  {
+    auto const ns(current_ns());
+    auto const alias(ns->find_alias(target));
+    if(alias.is_some())
+    { return alias.unwrap(); }
+
+    return find_ns(target);
+  }
+
+  /* TODO: Cache this var. */
+  ns_ptr context::current_ns()
+  { return expect_object<ns>(find_var("clojure.core", "*ns*").unwrap()->get_root()); }
+
   result<var_ptr, native_string> context::intern_var
   (native_string const &ns, native_string const &name)
   { return intern_var(make_box<obj::symbol>(ns, name)); }
@@ -377,10 +394,10 @@ namespace jank::runtime
   }
 
   /* TODO: Swap these. The other one makes a symbol anyway. */
-  obj::keyword_ptr context::intern_keyword(obj::symbol const &sym, bool const resolved)
+  result<obj::keyword_ptr, native_string> context::intern_keyword(obj::symbol const &sym, bool const resolved)
   { return intern_keyword(sym.ns, sym.name, resolved); }
-  obj::keyword_ptr context::intern_keyword
-  (native_string_view const &ns, native_string_view const &name, bool resolved)
+  result<obj::keyword_ptr, native_string> context::intern_keyword
+  (native_string_view const &ns, native_string_view const &name, bool const resolved)
   {
     profile::timer timer{ "rt intern_keyword" };
     obj::symbol sym{ ns, name };
@@ -388,13 +405,17 @@ namespace jank::runtime
     {
       /* The ns will be an ns alias. */
       if(!ns.empty())
-      { throw std::runtime_error{ "unimplemented: auto-resolved ns aliases" }; }
+      {
+        auto const resolved_ns(resolve_ns(make_box<obj::symbol>(ns)));
+        if(resolved_ns.is_none())
+        { return err(fmt::format("Unable to resolve ns for keyword: {}", ns)); }
+        sym.ns = resolved_ns.unwrap()->name->name;
+      }
       else
       {
         auto const t_state(get_thread_state());
         auto const current_ns(expect_object<jank::runtime::ns>(t_state.current_ns->get_root()));
         sym.ns = current_ns->name->name;
-        resolved = true;
       }
     }
 
@@ -403,7 +424,7 @@ namespace jank::runtime
     if(found != locked_keywords->end())
     { return found->second; }
 
-    auto const res(locked_keywords->emplace(sym, make_box<obj::keyword>(sym, resolved)));
+    auto const res(locked_keywords->emplace(sym, make_box<obj::keyword>(sym)));
     return res.first->second;
   }
 
@@ -433,7 +454,7 @@ namespace jank::runtime
           { return typed_o; }
 
           auto const meta(var.unwrap()->meta.unwrap());
-          auto const found_macro(get(meta, intern_keyword("", "macro", true)));
+          auto const found_macro(get(meta, intern_keyword("", "macro", true).expect_ok()));
           if(!found_macro || !detail::truthy(found_macro))
           { return typed_o; }
 

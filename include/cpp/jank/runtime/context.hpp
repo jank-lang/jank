@@ -30,17 +30,26 @@ namespace jank::runtime
 
     ns_ptr intern_ns(obj::symbol_ptr const &);
     option<ns_ptr> remove_ns(obj::symbol_ptr const &);
+    /* Looks up a ns by its symbol. Does not resolve aliases. Does not intern. */
     option<ns_ptr> find_ns(obj::symbol_ptr const &);
+    /* Resolves a symbol which could be an alias to its ns, based on the aliases
+     * in the current ns. Does not intern. */
+    option<ns_ptr> resolve_ns(obj::symbol_ptr const &);
+    ns_ptr current_ns();
 
+    /* Adds the current ns to unqualified symbols and resolves the ns of qualified symbols.
+     * Does not intern. */
     obj::symbol_ptr qualify_symbol(obj::symbol_ptr const &);
     option<object_ptr> find_local(obj::symbol_ptr const &);
 
     result<var_ptr, native_string> intern_var(obj::symbol_ptr const &);
     result<var_ptr, native_string> intern_var(native_string const &ns, native_string const &name);
     option<var_ptr> find_var(obj::symbol_ptr const &);
+    option<var_ptr> find_var(native_string const &ns, native_string const &name);
 
-    obj::keyword_ptr intern_keyword(obj::symbol const &sym, bool const resolved);
-    obj::keyword_ptr intern_keyword(native_string_view const &ns, native_string_view const &name, bool resolved);
+    result<obj::keyword_ptr, native_string> intern_keyword(obj::symbol const &sym, bool const resolved);
+    result<obj::keyword_ptr, native_string> intern_keyword
+    (native_string_view const &ns, native_string_view const &name, bool resolved);
 
     object_ptr macroexpand1(object_ptr o);
     object_ptr macroexpand(object_ptr o);
