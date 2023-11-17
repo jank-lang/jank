@@ -881,28 +881,32 @@
 (reset-meta! (var pow) {:arities {2 {:supports-unboxed-input? true
                                      :unboxed-output? true}}})
 
+; Vars.
+(defn var? [o]
+  (native/raw "__value = make_box(#{ o }#->type == object_type::var);"))
+
+(defn var-get [v]
+  (assert (var? v))
+  (native/raw "__value = expect_object<var>(#{ v }#)->get_root();"))
+
 ; Namespaces (again).
-(defn create-ns
-  [sym]
+(defn create-ns [sym]
   (assert (symbol? sym))
   (native/raw "__value = __rt_ctx.intern_ns(expect_object<obj::symbol>(#{ sym }#));"))
 
-(defn find-ns
-  [sym]
+(defn find-ns [sym]
   (assert (symbol? sym))
   (native/raw "__value = __rt_ctx.find_ns(expect_object<obj::symbol>(#{ sym }#)).unwrap_or(nullptr);
                if(!__value)
                { __value = obj::nil::nil_const(); }"))
 
-(defn remove-ns
-  [sym]
+(defn remove-ns [sym]
   (assert (symbol? sym))
   (native/raw "__value = __rt_ctx.remove_ns(expect_object<obj::symbol>(#{ sym }#)).unwrap_or(nullptr);
                if(!__value)
                { __value = obj::nil::nil_const(); }"))
 
-(defn the-ns
-  [ns-or-sym]
+(defn the-ns [ns-or-sym]
   (if (native/raw "__value = make_box(#{ ns-or-sym }#->type == object_type::ns);")
     ns-or-sym
     (let [found (find-ns ns-or-sym)]
@@ -910,15 +914,26 @@
         (native/raw "throw #{ (ex-info :not-an-ns-or-sym {:value ns-or-sym}) }#;")
         found))))
 
-(defn ns-name
-  [ns-sym]
+(defn ns-name [ns-sym]
   (let [ns (the-ns ns-sym)]
     (native/raw "__value = expect_object<runtime::ns>(#{ ns }#)->name;")))
 
-(defn ns-map
-  [ns-sym]
+(defn ns-map [ns-sym]
   (let [ns (the-ns ns-sym)]
     (native/raw "__value = expect_object<runtime::ns>(#{ ns }#)->get_mappings();")))
+
+(defn ns-publics [ns-sym]
+  (let [ns (the-ns ns-sym)]
+    (reduce* (fn [acc kv]
+               (let [k (first kv)
+                     v (second kv)]
+                 (if (var? v)
+                   (if (native/raw "__value = make_box(#{ ns }# == expect_object<runtime::var>(#{ v }#)->n);")
+                     (assoc acc k v)
+                     acc)
+                   acc)))
+             {}
+             (ns-map ns))))
 
 ; TODO: Handle relative paths
 (defn load [& paths]
