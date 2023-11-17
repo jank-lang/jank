@@ -21,13 +21,22 @@ namespace jank::runtime
     return ok();
   }
 
-  option<ns_ptr> ns::find_alias(obj::symbol_ptr const &sym)
+  option<ns_ptr> ns::find_alias(obj::symbol_ptr const &sym) const
   {
     auto locked_aliases(aliases.rlock());
     auto const found(locked_aliases->find(sym));
     if(found != locked_aliases->end())
     { return found->second; }
     return none;
+  }
+
+  obj::persistent_hash_map_ptr ns::get_mappings() const
+  {
+    detail::native_transient_hash_map trans;
+    auto const locked_vars(vars.rlock());
+    for(auto const &v : *locked_vars)
+    { trans.set(v.first, v.second); }
+    return make_box<obj::persistent_hash_map>(std::move(trans));
   }
 
   native_bool ns::equal(object const &o) const

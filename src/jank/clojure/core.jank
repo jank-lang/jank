@@ -910,6 +910,16 @@
         (native/raw "throw #{ (ex-info :not-an-ns-or-sym {:value ns-or-sym}) }#;")
         found))))
 
+(defn ns-name
+  [ns-sym]
+  (let [ns (the-ns ns-sym)]
+    (native/raw "__value = expect_object<runtime::ns>(#{ ns }#)->name;")))
+
+(defn ns-map
+  [ns-sym]
+  (let [ns (the-ns ns-sym)]
+    (native/raw "__value = expect_object<runtime::ns>(#{ ns }#)->get_mappings();")))
+
 ; TODO: Handle relative paths
 (defn load [& paths]
   (if (empty? paths)
@@ -923,7 +933,11 @@
   (native/raw "__rt_ctx.compile_module(runtime::detail::to_string(#{ path }#)).expect_ok();"))
 
 (defn refer [ns-sym & filters]
-  2)
+  (let [ns (find-ns ns-sym)
+        _ (when (nil? ns)
+            (native/raw "throw #{ (ex-info :no-namespace {:value ns-sym}) }#;"))
+        filters (apply hash-map filters)]
+    nil))
 
 ; TODO: Handle vector flags
 (defn require [& libs]
