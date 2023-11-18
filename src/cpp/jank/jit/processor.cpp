@@ -154,4 +154,17 @@ namespace jank::jit
     //fmt::println("JIT eval string {}", s);
     interpreter->process(static_cast<std::string>(s));
   }
+
+  //void processor::load_object(native_string_view const &path) const
+  //{
+  //  auto buf(std::move(llvm::MemoryBuffer::getFile(path.data()).get()));
+  //  llvm::cantFail(interpreter->m_Executor->m_JIT->Jit->addObjectFile(std::move(buf)));
+  //  auto sym(interpreter->m_Executor->m_JIT->Jit->lookup("wow1"));
+  //  if(auto e = sym.takeError())
+  //  {
+  //    fmt::println("sym error: {}", toString(std::move(e)));
+  //    return;
+  //  }
+  //  reinterpret_cast<void (*)()>(sym->getAddress())();
+  //}
 }
