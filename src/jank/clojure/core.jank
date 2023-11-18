@@ -284,10 +284,53 @@
 (defmacro let [args & body]
   (cons 'let* (cons args body)))
 
+; TODO: Holdover until we have a proper `or`, dependent on syntax quoting.
+(defn or*
+  ([l]
+   l)
+  ([l r]
+   (if l
+     l
+     r))
+  ([l m r]
+   (if l
+     l
+     (if m
+       m
+       r))))
+
 (defn macroexpand-1 [form]
   (native/raw "__value = __rt_ctx.macroexpand1(#{ form }#);"))
 (defn macroexpand [form]
   (native/raw "__value = __rt_ctx.macroexpand(#{ form }#);"))
+
+; Utils.
+(defn reduce*
+  ([f coll]
+   (let [s (seq coll)]
+     (if s
+       (reduce* f (first s) (next s))
+       (f))))
+  ([f val coll]
+   (native/raw "__value = visit_object
+               (
+                [=](auto const typed_coll) -> object_ptr
+                {
+                 using T = typename decltype(typed_coll)::value_type;
+
+                 if constexpr(behavior::seqable<T>)
+                 {
+                  object_ptr res{ #{ val }# };
+                  for(auto it(typed_coll->fresh_seq()); it != nullptr; it = it->next_in_place())
+                  { res = dynamic_call(#{ f }#, res, it->first()); }
+                  return res;
+                  }
+                 else
+                 { throw #{ (ex-info :invalid-seq {:coll coll}) }#; }
+                 },
+                #{ coll }#
+                );")))
+
 
 ; Relations.
 ;; Miscellaneous.
@@ -338,6 +381,20 @@
   ([& kvs]
    (native/raw "__value = obj::persistent_hash_map::create_from_seq(#{ kvs }#);")))
 
+(defn keys [m]
+  ; TODO: Use a proper key seq instead.
+  (reduce* (fn [acc kv]
+             (conj acc (first kv)))
+           []
+           m))
+
+(defn vals [m]
+  ; TODO: Use a proper val seq instead.
+  (reduce* (fn [acc kv]
+             (conj acc (second kv)))
+           []
+           m))
+
 (defn get
   ([m k]
    (native/raw "__value = jank::runtime::get(#{ m }#, #{ k }#);"))
@@ -363,32 +420,6 @@
        (do
          (assert (not (empty? (next kvs)))); "assoc expects even number of args after the first"
          (recur res (first kvs) (second kvs) (nnext kvs)))))))
-
-(defn reduce*
-  ([f coll]
-   (let [s (seq coll)]
-     (if s
-       (reduce* f (first s) (next s))
-       (f))))
-  ([f val coll]
-   (native/raw "__value = visit_object
-               (
-                [=](auto const typed_coll) -> object_ptr
-                {
-                 using T = typename decltype(typed_coll)::value_type;
-
-                 if constexpr(behavior::seqable<T>)
-                 {
-                  object_ptr res{ #{ val }# };
-                  for(auto it(typed_coll->fresh_seq()); it != nullptr; it = it->next_in_place())
-                  { res = dynamic_call(#{ f }#, res, it->first()); }
-                  return res;
-                  }
-                 else
-                 { throw #{ (ex-info :invalid-seq {:coll coll}) }#; }
-                 },
-                #{ coll }#
-                );")))
 
 (defn reverse [coll]
   (reduce* conj () coll))
@@ -951,7 +982,12 @@
   (let [ns (find-ns ns-sym)
         _ (when (nil? ns)
             (native/raw "throw #{ (ex-info :no-namespace {:value ns-sym}) }#;"))
-        filters (apply hash-map filters)]
+        filters (apply hash-map filters)
+        publics (ns-publics ns)
+        to-import (if (= :all (get filters :refer))
+                    (keys publics)
+                    (or* (get filters :refer) (get filters :only) (keys publics)))
+        ]
     nil))
 
 ; TODO: Handle vector flags
