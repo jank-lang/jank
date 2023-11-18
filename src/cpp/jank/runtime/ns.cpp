@@ -30,6 +30,27 @@ namespace jank::runtime
     return none;
   }
 
+  result<void, native_string> ns::refer(obj::symbol_ptr const sym, var_ptr const var)
+  {
+    auto locked_vars(vars.wlock());
+    assert(sym->ns == name->name);
+    auto const res(locked_vars->emplace(sym, var));
+    if(!res.second)
+    {
+      return err
+      (
+        fmt::format
+        (
+          "{} already refers to {} in ns {}",
+          sym->to_string(),
+          res.first->first->to_string(),
+          to_string()
+        )
+      );
+    }
+    return ok();
+  }
+
   obj::persistent_hash_map_ptr ns::get_mappings() const
   {
     detail::native_transient_hash_map trans;

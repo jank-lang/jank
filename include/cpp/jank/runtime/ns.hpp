@@ -26,6 +26,8 @@ namespace jank::runtime
     result<void, native_string> add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns);
     option<ns_ptr> find_alias(obj::symbol_ptr const &sym) const;
 
+    result<void, native_string> refer(obj::symbol_ptr const sym, var_ptr const var);
+
     obj::persistent_hash_map_ptr get_mappings() const;
 
     /* behavior::objectable */

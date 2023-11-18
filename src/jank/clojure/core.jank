@@ -955,6 +955,7 @@
 
 (defn ns-publics [ns-sym]
   (let [ns (the-ns ns-sym)]
+    ; TODO: It may be faster to start with the whole map and dissoc.
     (reduce* (fn [acc kv]
                (let [k (first kv)
                      v (second kv)]
@@ -983,12 +984,22 @@
         _ (when (nil? ns)
             (native/raw "throw #{ (ex-info :no-namespace {:value ns-sym}) }#;"))
         filters (apply hash-map filters)
-        publics (ns-publics ns)
-        to-import (if (= :all (get filters :refer))
-                    (keys publics)
-                    (or* (get filters :refer) (get filters :only) (keys publics)))
-        ]
-    nil))
+        sym->var (ns-publics ns)
+        to-refer (if (= :all (get filters :refer))
+                   (keys sym->var)
+                   (or* (get filters :refer) (get filters :only) (keys sym->var)))]
+    ; TODO: Support :rename and :exclude
+    (reduce* (fn [acc sym]
+               (let [v (get sym->var sym)]
+                 (when (nil? v)
+                   (native/raw "throw #{ (ex-info :var-does-not-exist {:value sym}) }#;"))
+                 (native/raw "expect_object<runtime::ns>(#{ ns }#)->refer
+                              (
+                                expect_object<obj::symbol>(#{ sym }#),
+                                expect_object<var>(#{ v }#)
+                              ).expect_ok();")))
+             nil
+             to-refer)))
 
 ; TODO: Handle vector flags
 (defn require [& libs]
