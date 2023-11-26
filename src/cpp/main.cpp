@@ -30,38 +30,34 @@ namespace jank
       rt_ctx.load_module("clojure.core").expect_ok();
     }
 
-    //{
-    //  auto const mfile(util::map_file(file));
-    //  auto const asts(rt_ctx.analyze_string({ mfile.expect_ok().head, mfile.expect_ok().size }, jit_prc));
-
-    //  for(auto const &ast : asts)
-    //  {
-    //    if(auto *f = boost::get<analyze::expr::function<analyze::expression>>(&ast->data))
-    //    {
-    //      codegen::processor cg_prc{ rt_ctx, *f };
-    //      std::cout << cg_prc.declaration_str() << std::endl;
-    //    }
-    //    else
-    //    {
-    //      auto const wrapped(evaluate::wrap_expression(ast));
-    //      codegen::processor cg_prc{ rt_ctx, wrapped };
-    //      std::cout << cg_prc.declaration_str() << std::endl;
-    //    }
-    //  }
-
-    //  return 0;
-    //}
-
     {
       profile::timer timer{ "eval user code" };
       std::cout << runtime::detail::to_string(rt_ctx.eval_file(opts.target_file)) << std::endl;
     }
+
+    //{
+    //  ankerl::nanobench::Config config;
+    //  config.mMinEpochIterations = 5000000;
+    //  config.mOut = &std::cout;
+    //  config.mWarmup = 10000;
+
+    //  auto const hf1(rt_ctx.find_var("clojure.core", "highest-fixed-1").unwrap()->get_root());
+    //  auto const kw1(rt_ctx.intern_keyword("", "a", true).expect_ok());
+    //  auto const kw2(rt_ctx.intern_keyword("", "b", true).expect_ok());
+    //  ankerl::nanobench::Bench().config(config).run
+    //  (
+    //    "bitmap",
+    //    [&]
+    //    {
+    //      auto const ret(runtime::dynamic_call(hf1, kw1, kw2));
+    //      ankerl::nanobench::doNotOptimizeAway(ret);
+    //    }
+    //  );
+    //}
   }
 
   void compile(util::cli::options const &opts, runtime::context &rt_ctx)
-  {
-    rt_ctx.compile_module(opts.target_ns);
-  }
+  { rt_ctx.compile_module(opts.target_ns); }
 
   void repl(util::cli::options const &opts, runtime::context &rt_ctx)
   {

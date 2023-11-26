@@ -1,6 +1,6 @@
-#include <jank/util/cli.hpp>
-
 #include <CLI/CLI.hpp>
+
+#include <jank/util/cli.hpp>
 
 namespace jank::util::cli
 {
@@ -36,9 +36,7 @@ namespace jank::util::cli
     cli.require_subcommand(1);
     cli.failure_message(CLI::FailureMessage::help);
     try
-    {
-      cli.parse(argc, argv);
-    }
+    { cli.parse(argc, argv); }
     catch(CLI::ParseError const &e)
     { return err(cli.exit(e)); }
 

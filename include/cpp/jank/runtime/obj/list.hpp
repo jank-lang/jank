@@ -18,7 +18,6 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(object &&base);
     static_object(value_type &&d);
     static_object(value_type const &d);
     template <typename... Args>

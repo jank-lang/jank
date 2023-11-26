@@ -1212,11 +1212,14 @@ namespace jank::codegen
   {
     auto inserter(std::back_inserter(body_buffer));
 
-    option<size_t> variadic_arg_position;
+    analyze::expr::function_arity<analyze::expression> const *variadic_arity{};
+    analyze::expr::function_arity<analyze::expression> const *highest_fixed_arity{};
     for(auto const &arity : root_fn.arities)
     {
       if(arity.fn_ctx->is_variadic)
-      { variadic_arg_position = arity.params.size() - 1; }
+      { variadic_arity = &arity; }
+      else if(!highest_fixed_arity || highest_fixed_arity->fn_ctx->param_count < arity.fn_ctx->param_count)
+      { highest_fixed_arity = &arity; }
 
       native_string_view recur_suffix;
       if(arity.fn_ctx->is_tail_recursive)
@@ -1236,6 +1239,7 @@ namespace jank::codegen
         );
         param_comma = true;
       }
+
       fmt::format_to
       (
         inserter,
@@ -1285,13 +1289,23 @@ namespace jank::codegen
       fmt::format_to(inserter, "}}");
     }
 
-    if(variadic_arg_position.is_some())
+    if(variadic_arity)
     {
+      native_bool const variadic_ambiguous
+      {
+        highest_fixed_arity &&
+        highest_fixed_arity->fn_ctx->param_count == variadic_arity->fn_ctx->param_count - 1
+      };
+
       fmt::format_to
       (
         inserter,
-        "size_t get_variadic_arg_position() const final{{ return static_cast<size_t>({}); }}",
-        variadic_arg_position.unwrap()
+        R"(
+          jank::runtime::behavior::callable::arity_flag_t get_arity_flags() const final
+          {{ return jank::runtime::behavior::callable::build_arity_flags({}, true, {}); }}
+        )",
+        variadic_arity->fn_ctx->param_count - 1,
+        variadic_ambiguous
       );
     }
   }
