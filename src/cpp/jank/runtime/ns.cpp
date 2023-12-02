@@ -7,26 +7,29 @@
 namespace jank::runtime
 {
   ns::static_object(obj::symbol_ptr const &name, context const &c)
-    : name{ name }, vars{ obj::persistent_hash_map::empty() }, rt_ctx{ c }
+    : name{ name }
+    , vars{ obj::persistent_hash_map::empty() }
+    , aliases{ obj::persistent_hash_map::empty() }
+    , rt_ctx{ c }
   { }
 
   result<void, native_string> ns::add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns)
   {
     auto locked_aliases(aliases.wlock());
-    auto const found(locked_aliases->find(sym));
-    if(found != locked_aliases->end() && found->second != ns)
+    auto const found((*locked_aliases)->data.find(sym));
+    if(found && expect_object<var>(*found) != ns)
     { return err(fmt::format("Alias already bound to a different ns: {}", sym->to_string())); }
 
-    locked_aliases->emplace(sym, ns);
+    *locked_aliases = make_box<obj::persistent_hash_map>((*locked_aliases)->data.set(sym, ns));
     return ok();
   }
 
   option<ns_ptr> ns::find_alias(obj::symbol_ptr const &sym) const
   {
     auto locked_aliases(aliases.rlock());
-    auto const found(locked_aliases->find(sym));
-    if(found != locked_aliases->end())
-    { return found->second; }
+    auto const found((*locked_aliases)->data.find(sym));
+    if(found)
+    { return expect_object<ns>(*found); }
     return none;
   }
 
@@ -81,9 +84,8 @@ namespace jank::runtime
   ns_ptr ns::clone() const
   {
     auto ret(make_box<ns>(name, rt_ctx));
-    auto const ret_locked_vars(ret->vars.wlock());
-    auto const locked_vars(vars.rlock());
-    *ret_locked_vars = *locked_vars;;
+    *ret->vars.wlock() = *vars.rlock();
+    *ret->aliases.wlock() = *aliases.rlock();
     return ret;
   }
 }
