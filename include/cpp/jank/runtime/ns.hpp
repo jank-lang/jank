@@ -19,8 +19,6 @@ namespace jank::runtime
     static constexpr bool pointer_free{ false };
 
     static_object() = delete;
-    static_object(static_object &&) = default;
-    static_object(static_object const &) = default;
     static_object(obj::symbol_ptr const &name, context const &c);
 
     result<void, native_string> add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns);
@@ -45,7 +43,7 @@ namespace jank::runtime
     /* TODO: Clojure doesn't qualify these symbol keys, but we do. That changes the output of
      * fns like `ns-map`. */
     /* TODO: Both of these should be atomic boxes to hash maps. */
-    folly::Synchronized<native_unordered_map<obj::symbol_ptr, var_ptr>> vars;
+    folly::Synchronized<obj::persistent_hash_map_ptr> vars;
     folly::Synchronized<native_unordered_map<obj::symbol_ptr, ns_ptr>> aliases;
     context const &rt_ctx;
   };

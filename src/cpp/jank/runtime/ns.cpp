@@ -7,7 +7,7 @@
 namespace jank::runtime
 {
   ns::static_object(obj::symbol_ptr const &name, context const &c)
-    : name{ name }, rt_ctx{ c }
+    : name{ name }, vars{ obj::persistent_hash_map::empty() }, rt_ctx{ c }
   { }
 
   result<void, native_string> ns::add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns)
@@ -33,9 +33,9 @@ namespace jank::runtime
   result<void, native_string> ns::refer(obj::symbol_ptr const sym, var_ptr const var)
   {
     auto locked_vars(vars.wlock());
-    assert(sym->ns == name->name);
-    auto const res(locked_vars->emplace(sym, var));
-    if(!res.second)
+    /* TODO: Unqualify vars. */
+    //assert(sym->ns == name->name);
+    if(auto const found = (*locked_vars)->data.find(sym))
     {
       return err
       (
@@ -43,21 +43,19 @@ namespace jank::runtime
         (
           "{} already refers to {} in ns {}",
           sym->to_string(),
-          res.first->first->to_string(),
+          expect_object<runtime::var>(*found)->to_string(),
           to_string()
         )
       );
     }
+    *locked_vars = make_box<obj::persistent_hash_map>((*locked_vars)->data.set(sym, var));
     return ok();
   }
 
   obj::persistent_hash_map_ptr ns::get_mappings() const
   {
-    detail::native_transient_hash_map trans;
     auto const locked_vars(vars.rlock());
-    for(auto const &v : *locked_vars)
-    { trans.set(v.first, v.second); }
-    return make_box<obj::persistent_hash_map>(std::move(trans));
+    return *locked_vars;
   }
 
   native_bool ns::equal(object const &o) const
@@ -82,11 +80,10 @@ namespace jank::runtime
 
   ns_ptr ns::clone() const
   {
-    auto ret(jank::make_box<ns>(name, rt_ctx));
+    auto ret(make_box<ns>(name, rt_ctx));
     auto const ret_locked_vars(ret->vars.wlock());
     auto const locked_vars(vars.rlock());
-    for(auto const & var : *locked_vars)
-    { ret_locked_vars->insert({var.first, var.second->clone()}); }
+    *ret_locked_vars = *locked_vars;;
     return ret;
   }
 }

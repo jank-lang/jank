@@ -31,10 +31,13 @@ namespace jank::runtime
     auto &t_state(get_thread_state());
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
     {
-      auto const locked_core_vars(core->vars.wlock());
       auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));
-      auto const ns_res(locked_core_vars->insert({ns_sym, make_box<var>(core, ns_sym, core)}));
-      t_state.current_ns = ns_res.first->second;
+      auto const ns_var(make_box<var>(core, ns_sym, core));
+      t_state.current_ns = ns_var;
+      {
+        auto const locked_core_vars(core->vars.wlock());
+        *locked_core_vars = make_box<obj::persistent_hash_map>((*locked_core_vars)->data.set(ns_sym, ns_var));
+      }
     }
 
     intern_ns(make_box<obj::symbol>("native"));
@@ -132,11 +135,11 @@ namespace jank::runtime
 
       {
         auto const locked_vars(ns->vars.rlock());
-        auto const found(locked_vars->find(sym));
-        if(found == locked_vars->end())
+        auto const found((*locked_vars)->data.find(sym));
+        if(!found)
         { return none; }
 
-        return { found->second };
+        return { expect_object<var>(*found) };
       }
     }
     else
@@ -145,11 +148,11 @@ namespace jank::runtime
       auto const current_ns(expect_object<ns>(t_state.current_ns->get_root()));
       auto const locked_vars(current_ns->vars.rlock());
       auto const qualified_sym(make_box<obj::symbol>(current_ns->name->name, sym->name));
-      auto const found(locked_vars->find(qualified_sym));
-      if(found == locked_vars->end())
+      auto const found((*locked_vars)->data.find(qualified_sym));
+      if(!found)
       { return none; }
 
-      return { found->second };
+      return { expect_object<var>(*found) };
     }
   }
 
@@ -311,12 +314,13 @@ namespace jank::runtime
     {
       std::cout << "  " << p.second->name->to_string() << std::endl;
       auto locked_vars(p.second->vars.rlock());
-      for(auto const &vp : *locked_vars)
+      for(auto const &vp : (*locked_vars)->data)
       {
-        if(vp.second->get_root() == nullptr)
-        { std::cout << "    " << vp.second->to_string() << " = nil" << std::endl; }
+        auto const v(expect_object<var>(vp.second));
+        if(v->get_root() == nullptr)
+        { std::cout << "    " << v->to_string() << " = nil" << std::endl; }
         else
-        { std::cout << "    " << vp.second->to_string() << " = " << detail::to_string(vp.second->get_root()) << std::endl; }
+        { std::cout << "    " << v->to_string() << " = " << detail::to_string(v->get_root()) << std::endl; }
       }
     }
   }
@@ -371,6 +375,7 @@ namespace jank::runtime
   result<var_ptr, native_string> context::intern_var
   (native_string const &ns, native_string const &name)
   { return intern_var(make_box<obj::symbol>(ns, name)); }
+
   result<var_ptr, native_string> context::intern_var(obj::symbol_ptr const &qualified_sym)
   {
     profile::timer timer{ "intern_var" };
@@ -384,18 +389,19 @@ namespace jank::runtime
 
     /* TODO: Read lock, then upgrade as needed? Benchmark. */
     auto locked_vars(found_ns->second->vars.wlock());
-    auto const found_var(locked_vars->find(qualified_sym));
-    if(found_var != locked_vars->end())
-    { return ok(found_var->second); }
+    auto const found_var((*locked_vars)->data.find(qualified_sym));
+    if(found_var)
+    { return ok(expect_object<var>(*found_var)); }
 
-    auto const ns_res
-    (locked_vars->insert({qualified_sym, make_box<var>(found_ns->second, qualified_sym)}));
-    return ok(ns_res.first->second);
+    auto const new_var(make_box<var>(found_ns->second, qualified_sym));
+    *locked_vars = make_box<obj::persistent_hash_map>((*locked_vars)->data.set(qualified_sym, new_var));
+    return ok(new_var);
   }
 
   /* TODO: Swap these. The other one makes a symbol anyway. */
   result<obj::keyword_ptr, native_string> context::intern_keyword(obj::symbol const &sym, bool const resolved)
   { return intern_keyword(sym.ns, sym.name, resolved); }
+
   result<obj::keyword_ptr, native_string> context::intern_keyword
   (native_string_view const &ns, native_string_view const &name, bool const resolved)
   {
