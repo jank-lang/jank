@@ -21,6 +21,9 @@ namespace jank::runtime
     static_object() = delete;
     static_object(obj::symbol_ptr const &name, context const &c);
 
+    var_ptr intern_var(obj::symbol_ptr const &);
+    option<var_ptr> find_var(obj::symbol_ptr const &);
+
     result<void, native_string> add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns);
     option<ns_ptr> find_alias(obj::symbol_ptr const &sym) const;
 

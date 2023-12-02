@@ -49,7 +49,7 @@ namespace jank
     //    "bitmap",
     //    [&]
     //    {
-    //      auto const ret(runtime::dynamic_call(hf1, kw1, kw2));
+    //      auto const ret(runtime::dynamic_call(hf1, kw1));
     //      ankerl::nanobench::doNotOptimizeAway(ret);
     //    }
     //  );

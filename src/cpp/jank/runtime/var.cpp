@@ -50,17 +50,17 @@ namespace jank::runtime
 
   object_ptr var::get_root() const
   {
-    jank::profile::timer timer{ "var get_root" };
+    profile::timer timer{ "var get_root" };
     return *root.rlock();
   }
 
   var_ptr var::set_root(object_ptr r)
   {
-    jank::profile::timer timer{ "var set_root" };
+    profile::timer timer{ "var set_root" };
     *root.wlock() = r;
     return this;
   }
 
   var_ptr var::clone() const
-  { return jank::make_box<var>(n, name, get_root()); }
+  { return make_box<var>(n, name, get_root()); }
 }

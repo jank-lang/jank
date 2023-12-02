@@ -13,6 +13,34 @@ namespace jank::runtime
     , rt_ctx{ c }
   { }
 
+  var_ptr ns::intern_var(obj::symbol_ptr const &sym)
+  {
+    obj::symbol_ptr unqualified_sym{ sym };
+    if(!unqualified_sym->ns.empty())
+    { unqualified_sym = make_box<obj::symbol>("", sym->name); }
+
+    /* TODO: Read lock, then upgrade as needed? Benchmark. */
+    auto locked_vars(vars.wlock());
+    auto const found_var((*locked_vars)->data.find(unqualified_sym));
+    if(found_var)
+    { return expect_object<var>(*found_var); }
+
+    auto const new_var(make_box<var>(this, unqualified_sym));
+    *locked_vars = make_box<obj::persistent_hash_map>((*locked_vars)->data.set(unqualified_sym, new_var));
+    return new_var;
+  }
+
+  option<var_ptr> ns::find_var(obj::symbol_ptr const &sym)
+  {
+    assert(sym->ns.empty());
+    auto const locked_vars(vars.rlock());
+    auto const found((*locked_vars)->data.find(sym));
+    if(!found)
+    { return none; }
+
+    return { expect_object<var>(*found) };
+  }
+
   result<void, native_string> ns::add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns)
   {
     auto locked_aliases(aliases.wlock());
@@ -36,8 +64,6 @@ namespace jank::runtime
   result<void, native_string> ns::refer(obj::symbol_ptr const sym, var_ptr const var)
   {
     auto locked_vars(vars.wlock());
-    /* TODO: Unqualify vars. */
-    //assert(sym->ns == name->name);
     if(auto const found = (*locked_vars)->data.find(sym))
     {
       return err

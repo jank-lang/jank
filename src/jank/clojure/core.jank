@@ -989,11 +989,12 @@
                    (keys sym->var)
                    (or* (get filters :refer) (get filters :only) (keys sym->var)))]
     ; TODO: Support :rename and :exclude
+    ; TODO: Loop
     (reduce* (fn [acc sym]
                (let [v (get sym->var sym)]
                  (when (nil? v)
                    (native/raw "throw #{ (ex-info :var-does-not-exist {:value sym}) }#;"))
-                 (native/raw "expect_object<runtime::ns>(#{ ns }#)->refer
+                 (native/raw "expect_object<runtime::ns>(#{ *ns* }#)->refer
                               (
                                 expect_object<obj::symbol>(#{ sym }#),
                                 expect_object<var>(#{ v }#)

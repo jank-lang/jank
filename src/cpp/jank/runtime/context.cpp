@@ -32,12 +32,8 @@ namespace jank::runtime
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
     {
       auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));
-      auto const ns_var(make_box<var>(core, ns_sym, core));
-      t_state.current_ns = ns_var;
-      {
-        auto const locked_core_vars(core->vars.wlock());
-        *locked_core_vars = make_box<obj::persistent_hash_map>((*locked_core_vars)->data.set(ns_sym, ns_var));
-      }
+      t_state.current_ns = core->intern_var(ns_sym);
+      t_state.current_ns->set_root(core);
     }
 
     intern_ns(make_box<obj::symbol>("native"));
@@ -133,26 +129,13 @@ namespace jank::runtime
         ns = found->second;
       }
 
-      {
-        auto const locked_vars(ns->vars.rlock());
-        auto const found((*locked_vars)->data.find(sym));
-        if(!found)
-        { return none; }
-
-        return { expect_object<var>(*found) };
-      }
+      return ns->find_var(make_box<obj::symbol>("", sym->name));
     }
     else
     {
       auto const t_state(get_thread_state());
       auto const current_ns(expect_object<ns>(t_state.current_ns->get_root()));
-      auto const locked_vars(current_ns->vars.rlock());
-      auto const qualified_sym(make_box<obj::symbol>(current_ns->name->name, sym->name));
-      auto const found((*locked_vars)->data.find(qualified_sym));
-      if(!found)
-      { return none; }
-
-      return { expect_object<var>(*found) };
+      return current_ns->find_var(sym);
     }
   }
 
@@ -387,15 +370,7 @@ namespace jank::runtime
     if(found_ns == locked_namespaces->end())
     { return err("can't intern var; namespace doesn't exist"); }
 
-    /* TODO: Read lock, then upgrade as needed? Benchmark. */
-    auto locked_vars(found_ns->second->vars.wlock());
-    auto const found_var((*locked_vars)->data.find(qualified_sym));
-    if(found_var)
-    { return ok(expect_object<var>(*found_var)); }
-
-    auto const new_var(make_box<var>(found_ns->second, qualified_sym));
-    *locked_vars = make_box<obj::persistent_hash_map>((*locked_vars)->data.set(qualified_sym, new_var));
-    return ok(new_var);
+    return ok(found_ns->second->intern_var(qualified_sym));
   }
 
   /* TODO: Swap these. The other one makes a symbol anyway. */
