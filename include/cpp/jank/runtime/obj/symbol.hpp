@@ -40,6 +40,10 @@ namespace jank::runtime
     /* behavior::metadatable */
     object_ptr with_meta(object_ptr m) const;
 
+    /* behavior::nameable */
+    native_string const& get_name() const;
+    native_string const& get_namespace() const;
+
     bool operator ==(static_object const &rhs) const;
     bool operator <(static_object const &rhs) const;
 

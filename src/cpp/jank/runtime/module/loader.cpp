@@ -24,7 +24,7 @@ namespace jank::runtime::module
     return ret;
   }
 
-  boost::filesystem::path module_to_path(native_string_view const &module)
+  native_string module_to_path(native_string_view const &module)
   {
     static std::regex const dash{ "-" };
     static std::regex const dot{ "\\." };
@@ -276,7 +276,7 @@ namespace jank::runtime::module
   {
     auto const &entry(entries.find(module));
     if(entry == entries.end())
-    { return err(fmt::format("ICE: unable to find module: {}", module)); }
+    { return err(fmt::format("unable to find module: {}", module)); }
 
     result<void, native_string> res
     { err(fmt::format("no sources for registered module: {}", module)) };

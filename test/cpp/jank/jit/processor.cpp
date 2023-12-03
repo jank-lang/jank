@@ -34,7 +34,7 @@ namespace jank::jit
   {
     runtime::context rt_ctx;
     auto const cardinal_result(rt_ctx.intern_keyword(runtime::obj::symbol{ "", "success" }, true).expect_ok());
-    rt_ctx.load_module("clojure.core");
+    rt_ctx.load_module("/clojure.core");
     size_t test_count{};
 
     /* The functionality I want here is too complex for doctest to handle. Output should be

@@ -40,6 +40,12 @@ namespace jank::runtime
     return ret;
   }
 
+  native_string const& obj::keyword::get_name() const
+  { return sym.name; }
+
+  native_string const& obj::keyword::get_namespace() const
+  { return sym.ns; }
+
   bool obj::keyword::operator ==(obj::keyword const &rhs) const
   { return sym == rhs.sym; }
 }

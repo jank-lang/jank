@@ -76,6 +76,12 @@ namespace jank::runtime
     return ret;
   }
 
+  native_string const& obj::symbol::get_name() const
+  { return name; }
+
+  native_string const& obj::symbol::get_namespace() const
+  { return ns; }
+
   bool obj::symbol::operator ==(obj::symbol const &rhs) const
   { return ns == rhs.ns && name == rhs.name; }
 

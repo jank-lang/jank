@@ -27,7 +27,7 @@ namespace jank
   {
     {
       profile::timer timer{ "require clojure.core" };
-      rt_ctx.load_module("clojure.core").expect_ok();
+      rt_ctx.load_module("/clojure.core").expect_ok();
     }
 
     {
@@ -57,7 +57,7 @@ namespace jank
   }
 
   void compile(util::cli::options const &opts, runtime::context &rt_ctx)
-  { rt_ctx.compile_module(opts.target_ns); }
+  { rt_ctx.compile_module(opts.target_ns).expect_ok(); }
 
   void repl(util::cli::options const &opts, runtime::context &rt_ctx)
   {
@@ -67,7 +67,7 @@ namespace jank
 
     {
       profile::timer timer{ "require clojure.core" };
-      rt_ctx.load_module("clojure.core").expect_ok();
+      rt_ctx.load_module("/clojure.core").expect_ok();
     }
 
     /* By default, RL will do tab completion for files. We disable that here. */

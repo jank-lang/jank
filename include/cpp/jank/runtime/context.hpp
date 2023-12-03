@@ -64,7 +64,16 @@ namespace jank::runtime
     native_vector<analyze::expression_ptr> analyze_string(native_string_view const &code, native_bool const eval = true);
 
     /* Finds the specified module on the class path and loads it. If
-     * the module is already loaded, nothing is done. */
+     * the module is already loaded, nothing is done.
+     *
+     * Modules are considered absolute if they begin with a forward slash. Otherwise, they
+     * are considered relative to the current namespace.
+     *
+     * For example, if the current namespace is foo.bar, then:
+     *
+     * Module /meow.cat refers to module meow.cat
+     * Module meow.cat refers to foo.bar$meow.cat
+     */
     result<void, native_string> load_module(native_string_view const &module);
 
     /* Does all the same work as load_module, but also writes compiled files to the file system. */

@@ -258,7 +258,6 @@
                  );")))
 
 ;; Macros.
-; TODO: There's a bug here if the body isn't specified. Runtime issue, not this macro.
 (def defn
   (fn* defn [&form &env fn-name fn-args & body]
     (list 'do
@@ -272,6 +271,9 @@
         (list 'def fn-name (cons 'fn* (cons (vec (cons '&form (cons '&env fn-args))) body)))
         (list 'reset-meta! (list 'var fn-name) {:macro true})))
 (reset-meta! (var defmacro) {:macro true})
+
+(defmacro defn- [& args]
+  (cons 'defn args))
 
 (defmacro when [condition & body]
   (list 'if condition
@@ -374,6 +376,73 @@
                 #{ args }#
                 );")))
 
+(defn subs
+  ([s start]
+   (native/raw "__value = visit_object
+               (
+                 [=](auto const typed_s) -> obj::string_ptr
+                 {
+                   using T = typename decltype(typed_s)::value_type;
+
+                   if constexpr(std::is_same_v<T, obj::string>)
+                   { return typed_s->substring(to_int(#{ start }#)).expect_ok(); }
+                   else
+                   { throw #{ (ex-info :not-a-string {:s s}) }#; }
+                 },
+                 #{ s }#
+               );"))
+  ([s start end]
+   (native/raw "__value = visit_object
+               (
+                 [=](auto const typed_s) -> obj::string_ptr
+                 {
+                   using T = typename decltype(typed_s)::value_type;
+
+                   if constexpr(std::is_same_v<T, obj::string>)
+                   { return typed_s->substring(to_int(#{ start }#), to_int(#{ end }#)).expect_ok(); }
+                   else
+                   { throw #{ (ex-info :not-a-string {:s s}) }#; }
+                 },
+                 #{ s }#
+               );")))
+
+(defn- last-index-of [s c]
+  (native/raw "__value = make_box
+              (
+                visit_object
+                (
+                  [=](auto const typed_s) -> native_integer
+                  {
+                    using T = typename decltype(typed_s)::value_type;
+
+                    if constexpr(std::is_same_v<T, obj::string>)
+                    { return typed_s->last_index_of(#{ c }#); }
+                    else
+                    { throw #{ (ex-info :not-a-string {:s s}) }#; }
+                  },
+                  #{ s }#
+                )
+              );"))
+
+;; Sequences (again).
+(defn sequential? [o]
+  (native/raw "__value = make_box
+              (
+               visit_object
+               (
+                [=](auto const typed_o) -> native_bool
+                {
+                 using T = typename decltype(typed_o)::value_type;
+
+                 if constexpr(behavior::sequenceable<T>)
+                 { return true; }
+                 else
+                 { return false; }
+                 },
+                #{ o }#
+                )
+               );"))
+
 ;; Maps.
 (defn hash-map
   ([]
@@ -409,6 +478,44 @@
 ;; Other.
 (defn hash [o]
   (native/raw "__value = make_box(runtime::detail::to_hash(#{ o }#));"))
+
+(defn name [o]
+  (if (string? o)
+    o
+    (native/raw "__value = make_box
+                (
+                  visit_object
+                  (
+                    [=](auto const typed_o) -> native_string
+                    {
+                      using T = typename decltype(typed_o)::value_type;
+
+                      if constexpr(behavior::nameable<T>)
+                      { return typed_o->get_name(); }
+                      else
+                      { throw #{ (ex-info :not-nameable {:o o}) }#; }
+                    },
+                    #{ o }#
+                  )
+                );")))
+
+(defn namespace [o]
+  (native/raw "__value = make_box
+              (
+                visit_object
+                (
+                  [=](auto const typed_o) -> native_string
+                  {
+                    using T = typename decltype(typed_o)::value_type;
+
+                    if constexpr(behavior::nameable<T>)
+                    { return typed_o->get_namespace(); }
+                    else
+                    { throw #{ (ex-info :not-nameable {:o o}) }#; }
+                  },
+                  #{ o }#
+                )
+              );"))
 
 (defn assoc
   ([map key val]
@@ -956,9 +1063,11 @@
 (defn ns-publics [ns-sym]
   (let [ns (the-ns ns-sym)]
     ; TODO: It may be faster to start with the whole map and dissoc.
+    ; TODO: Good use case for transients.
     (reduce* (fn [acc kv]
                (let [k (first kv)
                      v (second kv)]
+                 ; TODO: Check for visibility.
                  (if (var? v)
                    (if (native/raw "__value = make_box(#{ ns }# == expect_object<runtime::var>(#{ v }#)->n);")
                      (assoc acc k v)
@@ -967,12 +1076,14 @@
              {}
              (ns-map ns))))
 
-; TODO: Handle relative paths
+(defn- root-resource [lib]
+  (str "/" (name lib)))
+
 (defn load [& paths]
   (if (empty? paths)
     nil
-    (let [path (first paths)]
-      ; TODO: Check for cyclic deps
+    (let [path (root-resource (first paths))]
+      ; TODO: Check for cyclic deps, once we have dynamic vars.
       (native/raw "__rt_ctx.load_module(runtime::detail::to_string(#{ path }#)).expect_ok();")
       (recur (rest paths)))))
 
@@ -1007,14 +1118,26 @@
   (if (empty? libs)
     nil
     (let [lib (first libs)
-          ; TODO: Not just vectors; lists, too.
-          sym (if (vector? lib)
+          sym (root-resource (if (sequential? lib)
+                               (first lib)
+                               (if (symbol? lib)
+                                 lib
+                                 (native/raw "throw #{ (ex-info :not-a-lib {:value lib}) }#;"))))]
+      (native/raw "auto const &s(runtime::detail::to_string(#{ sym }#));
+                  __rt_ctx.load_module(s).expect_ok() ;")
+      (recur (rest libs)))))
+
+(defn use [& libs]
+  (if (empty? libs)
+    nil
+    (let [lib (first libs)
+          sym (if (sequential? lib)
                 (first lib)
                 (if (symbol? lib)
                   lib
                   (native/raw "throw #{ (ex-info :not-a-lib {:value lib}) }#;")))]
-      (native/raw "auto const &s(runtime::detail::to_string(#{ sym }#));
-                  __rt_ctx.load_module(s).expect_ok() ;")
+      (require lib)
+      (refer sym)
       (recur (rest libs)))))
 
 (defn alias [alias ns-sym]

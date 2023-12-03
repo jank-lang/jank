@@ -32,7 +32,7 @@ namespace jank::analyze
     SUBCASE("Unboxed arithmetic")
     {
       runtime::context rt_ctx;
-      rt_ctx.load_module("clojure.core");
+      rt_ctx.load_module("/clojure.core");
 
       auto const res(rt_ctx.analyze_string("(let* [a 1 b (* a 2.0) c (/ b 2.0)])"));
       CHECK_EQ(res.size(), 1);
@@ -85,7 +85,7 @@ namespace jank::analyze
     SUBCASE("Captured, unboxed arithmetic usage")
     {
       runtime::context rt_ctx;
-      rt_ctx.load_module("clojure.core");
+      rt_ctx.load_module("/clojure.core");
 
       auto const res(rt_ctx.analyze_string("(let* [a 1 b (+ a 1.0) f (fn* [] a)] (f))"));
       CHECK_EQ(res.size(), 1);
@@ -107,7 +107,7 @@ namespace jank::analyze
     SUBCASE("Sub-expression of a boxed call which doesn't require boxed inputs")
     {
       runtime::context rt_ctx;
-      rt_ctx.load_module("clojure.core");
+      rt_ctx.load_module("/clojure.core");
 
       auto const res
       (

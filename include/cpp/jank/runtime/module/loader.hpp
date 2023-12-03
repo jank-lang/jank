@@ -22,7 +22,7 @@ namespace jank::runtime::module
   };
 
   native_string path_to_module(boost::filesystem::path const &path);
-  boost::filesystem::path module_to_path(native_string_view const &module);
+  native_string module_to_path(native_string_view const &module);
   native_string module_to_native_ns(native_string_view const &module);
   native_string nest_module(native_string const &module, native_string const &sub);
   native_string nest_native_ns(native_string const &native_ns, native_string const &end);

@@ -30,11 +30,9 @@ namespace jank::runtime
   {
     auto &t_state(get_thread_state());
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
-    {
-      auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));
-      t_state.current_ns = core->intern_var(ns_sym);
-      t_state.current_ns->set_root(core);
-    }
+    auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));
+    t_state.current_ns = core->intern_var(ns_sym);
+    t_state.current_ns->set_root(core);
 
     intern_ns(make_box<obj::symbol>("native"));
 
@@ -222,21 +220,30 @@ namespace jank::runtime
 
   result<void, native_string> context::load_module(native_string_view const &module)
   {
-    /* TODO: Support reloading. */
-    if(module_loader.is_loaded(module) && !compiling)
+    native_string absolute_module;
+    if(module.starts_with('/'))
+    { absolute_module = module.substr(1); }
+    else
     {
-      fmt::println("Module already loaded: {}", module);
+      auto const ns(current_ns());
+      absolute_module = module::nest_module(ns->to_string(), module);
+    }
+
+    /* TODO: Support reloading. */
+    if(module_loader.is_loaded(absolute_module) && !compiling)
+    {
+      fmt::println("Module already loaded: {}", absolute_module);
       return ok();
     }
 
     try
     {
-      /* TODO: Get a result from this and forward errors. */
-      if(module.find('$') == native_string::npos)
-      { module_loader.load_ns(module); }
+      result<void, native_string> res{ ok() };
+      if(absolute_module.find('$') == native_string::npos)
+      { res = module_loader.load_ns(absolute_module); }
       else
-      { module_loader.load(module); }
-      return ok();
+      { res = module_loader.load(absolute_module); }
+      return res;
     }
     catch(std::exception const &e)
     { return err(e.what()); }
@@ -254,7 +261,7 @@ namespace jank::runtime
     compiling = true;
     current_module = module;
 
-    auto res(load_module(module));
+    auto res(load_module(fmt::format("/{}", module)));
 
     compiling = prev_compiling;
     current_module = prev_module;
@@ -271,7 +278,7 @@ namespace jank::runtime
     /* TODO: This needs to go into sub directories. Also, we should register these modules with
      * the loader upon writing. */
     {
-      std::ofstream ofs{ fmt::format("{}/{}.cpp", module::module_to_path(output_dir).string(), module) };
+      std::ofstream ofs{ fmt::format("{}/{}.cpp", module::module_to_path(output_dir), module) };
       ofs << contents;
       ofs.flush();
     }
