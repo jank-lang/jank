@@ -285,14 +285,14 @@ namespace jank::runtime
   }
 
   native_string context::unique_string()
-  { return unique_string("gen"); }
+  { return unique_string("G_"); }
   native_string context::unique_string(native_string_view const &prefix)
   {
     static std::atomic_size_t index{ 1 };
     return fmt::format(FMT_COMPILE("{}_{}"), prefix.data(), index++);
   }
   obj::symbol context::unique_symbol()
-  { return unique_symbol("gen"); }
+  { return unique_symbol("G_"); }
   obj::symbol context::unique_symbol(native_string_view const &prefix)
   { return { "", unique_string(prefix) }; }
 

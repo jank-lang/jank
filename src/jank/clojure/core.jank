@@ -266,6 +266,16 @@
           (list 'def fn-name (cons 'fn* (cons fn-name (cons fn-args body)))))))
 (reset-meta! (var defn) {:macro true})
 
+; Returns a new symbol with a unique name. If a prefix string is
+; supplied, the name is prefix# where # is some unique number. If
+; prefix is not supplied, the prefix is 'G__'.
+(defn gensym
+  ([]
+   (native/raw "__value = make_box<obj::symbol>(runtime::context::unique_symbol());"))
+  ([prefix]
+   (native/raw "__value = make_box<obj::symbol>(runtime::context::unique_symbol(runtime::detail::to_string(#{ prefix }#)));")))
+
+; TODO: This doesn't support macros with overloads.
 (defn defmacro [&form &env fn-name fn-args & body]
   (list 'do
         (list 'def fn-name (cons 'fn* (cons (vec (cons '&form (cons '&env fn-args))) body)))
@@ -286,20 +296,41 @@
 (defmacro let [args & body]
   (cons 'let* (cons args body)))
 
-; TODO: Holdover until we have a proper `or`, dependent on syntax quoting.
+; TODO: Higher arities. Needs clojure.core/spread, which needs clojure.core/cons.
+(defn apply [f args]
+  (native/raw "__value = runtime::apply_to(#{ f }#, #{ args }#);"))
+
 (defn or*
-  ([l]
-   l)
-  ([l r]
-   (if l
-     l
-     r))
-  ([l m r]
-   (if l
-     l
-     (if m
-       m
-       r))))
+  ([]
+   nil)
+  ([x]
+   x)
+  ([x & more]
+   (let [x-res (gensym)]
+     (list 'let [x-res x]
+           (list 'if x-res
+                 x-res
+                 (cons 'or more))))))
+
+(defmacro or
+  [& args]
+  (apply or* args))
+
+(defn and*
+  ([]
+   true)
+  ([x]
+   x)
+  ([x & more]
+   (let [x-res (gensym)]
+     (list 'let [x-res x]
+           (list 'if x-res
+                 (cons 'and more)
+                 x-res)))))
+
+(defmacro and
+  [& args]
+  (apply and* args))
 
 (defn macroexpand-1 [form]
   (native/raw "__value = __rt_ctx.macroexpand1(#{ form }#);"))
@@ -443,6 +474,26 @@
                 )
                );"))
 
+(defn reverse [coll]
+  (reduce* conj () coll))
+
+; TODO: Lazy seqs
+(defn concat
+  ([]
+   '())
+  ([x]
+   (seq x))
+  ([x y]
+   (reduce* (fn [acc e]
+              (cons e acc))
+            y
+            (reverse x)))
+  ([x y & zs]
+   (let [r (concat x y)]
+     (if (empty? zs)
+       r
+       (recur r (first zs) (rest zs))))))
+
 ;; Maps.
 (defn hash-map
   ([]
@@ -527,9 +578,6 @@
        (do
          (assert (not (empty? (next kvs)))); "assoc expects even number of args after the first"
          (recur res (first kvs) (second kvs) (nnext kvs)))))))
-
-(defn reverse [coll]
-  (reduce* conj () coll))
 
 ; Primitives.
 ;; Arithmetic.
@@ -875,7 +923,6 @@
   (native/raw "__value = make_box(#{ o }#->type == object_type::symbol)"))
 
 ;; Sequences.
-
 (defn iterate [f x]
   (native/raw "__value = visit_object
               (
@@ -914,10 +961,6 @@
                      acc
                      (recur (dec n) (next coll) (conj acc (first coll))))))]
      (take* n coll []))))
-
-; TODO: Higher arities. Needs clojure.core/spread, which needs clojure.core/cons.
-(defn apply [f args]
-  (native/raw "__value = runtime::apply_to(#{ f }#, #{ args }#);"))
 
 ;; Input/output.
 (defn print [o]
@@ -1098,7 +1141,7 @@
         sym->var (ns-publics ns)
         to-refer (if (= :all (get filters :refer))
                    (keys sym->var)
-                   (or* (get filters :refer) (get filters :only) (keys sym->var)))]
+                   (or (get filters :refer) (get filters :only) (keys sym->var)))]
     ; TODO: Support :rename and :exclude
     ; TODO: Loop
     (reduce* (fn [acc sym]

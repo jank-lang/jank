@@ -231,7 +231,16 @@ namespace jank::analyze
     {
       auto const p(*it);
       if(p->type != runtime::object_type::symbol)
-      { return err(error{ "invalid parameter; must be a symbol" }); }
+      {
+        return err
+        (
+          error
+          {
+            fmt::format
+            ("invalid parameter; must be a symbol, not {}", runtime::detail::to_string(p))
+          }
+        );
+      }
 
       auto const sym(runtime::expect_object<runtime::obj::symbol>(p));
       if(!sym->ns.empty())

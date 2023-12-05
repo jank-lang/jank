@@ -57,7 +57,10 @@ namespace jank
   }
 
   void compile(util::cli::options const &opts, runtime::context &rt_ctx)
-  { rt_ctx.compile_module(opts.target_ns).expect_ok(); }
+  {
+    //rt_ctx.load_module("/clojure.core").expect_ok();
+    rt_ctx.compile_module(opts.target_ns).expect_ok();
+  }
 
   void repl(util::cli::options const &opts, runtime::context &rt_ctx)
   {

@@ -22,6 +22,7 @@ namespace jank
     using real = static_object<object_type::real>;
     using string = static_object<object_type::string>;
     using list = static_object<object_type::list>;
+    using symbol = static_object<object_type::symbol>;
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
