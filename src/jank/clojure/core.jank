@@ -1017,22 +1017,22 @@
                  //config.mTimeUnitName = TODO
                  config.mOut = &std::cout;
 
-                 /* Ray tracing. */
-                 //config.mTimeUnit = std::chrono::milliseconds{ 1 };
-                 //config.mMinEpochIterations = 20;
-                 //config.mWarmup = 10;
+                 /* Larger things. */
+                 config.mTimeUnit = std::chrono::milliseconds{ 1 };
+                 config.mMinEpochIterations = 20;
+                 config.mWarmup = 10;
 
                  /* Smaller things. */
-                 config.mTimeUnit = std::chrono::nanoseconds{ 1 };
-                 config.mMinEpochIterations = 1000000;
-                 config.mWarmup = 1000;
+                 //config.mTimeUnit = std::chrono::nanoseconds{ 1 };
+                 //config.mMinEpochIterations = 1000000;
+                 //config.mWarmup = 1000;
 
                  ankerl::nanobench::Bench().config(config).run
                  (
                   static_cast<std::string>(label_str->data),
                   [&]
                   {
-                   object_ptr res{ typed_fun->call() };
+                   auto const res(typed_fun->call());
                    ankerl::nanobench::doNotOptimizeAway(res);
                    }
                   );
