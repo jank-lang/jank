@@ -829,7 +829,6 @@ namespace jank::codegen
       rt_ctx.compiling ? compilation_target::function : compilation_target::repl
     };
 
-
     /* If we're compiling, we'll create a separate file for this. */
     if(target != compilation_target::ns)
     {
@@ -976,7 +975,6 @@ namespace jank::codegen
     }
   }
 
-  /* TODO: An if, in return position, without an else, will not return nil in the else. */
   option<handle> processor::gen
   (
     analyze::expr::if_<analyze::expression> const &expr,
@@ -987,7 +985,7 @@ namespace jank::codegen
     /* TODO: Handle unboxed results! */
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::context::unique_string("if"));
-    fmt::format_to(inserter, "object_ptr {};", ret_tmp);
+    fmt::format_to(inserter, "object_ptr {}{{ obj::nil::nil_const() }};", ret_tmp);
     auto const &condition_tmp(gen(expr.condition, fn_arity, false));
     fmt::format_to(inserter, "if(jank::runtime::detail::truthy({})) {{", condition_tmp.unwrap().str(false));
     auto const &then_tmp(gen(expr.then, fn_arity, true));
@@ -1005,6 +1003,10 @@ namespace jank::codegen
       else
       { fmt::format_to(inserter, "}}"); }
     }
+    /* If we don't have an else, but we're in return position, we need to be sure to return
+     * something, so we return nil. */
+    else if(expr.expr_type == analyze::expression_type::return_statement)
+    { fmt::format_to(inserter, "else {{ return {}; }}", ret_tmp); }
 
     return ret_tmp;
   }

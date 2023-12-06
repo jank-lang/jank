@@ -937,6 +937,7 @@ namespace jank::analyze
     expression_ptr source{};
     native_bool needs_ret_box{ true };
     native_bool needs_arg_box{ true };
+    /* TODO: If this is a recursive call, note that and skip the var lookup. */
     if(first->type == runtime::object_type::symbol)
     {
       auto const sym(runtime::expect_object<runtime::obj::symbol>(first));
