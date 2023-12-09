@@ -6,6 +6,8 @@
 
 namespace jank::runtime
 {
+  object_ptr seq(object_ptr s);
+
   template <>
   struct static_object<object_type::list> : gc
   {
@@ -24,6 +26,17 @@ namespace jank::runtime
     static_object(Args &&...args)
       : data{ std::forward<Args>(args)... }
     { }
+
+    static native_box<static_object> empty()
+    {
+      static auto const ret(make_box<static_object>());
+      return ret;
+    }
+    static auto empty_seq()
+    {
+      static auto const ret(runtime::seq(empty()));
+      return ret;
+    }
 
     /* behavior::objectable */
     native_bool equal(object const &) const;

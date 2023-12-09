@@ -416,7 +416,7 @@ namespace jank::runtime
     return res.first->second;
   }
 
-  object_ptr context::macroexpand1(object_ptr o)
+  object_ptr context::macroexpand1(object_ptr const o)
   {
     profile::timer timer{ "rt macroexpand1" };
     return visit_object

@@ -27,9 +27,9 @@ namespace jank::runtime
 
   /* behavior::seqable */
   obj::native_array_sequence_ptr obj::native_array_sequence::seq()
-  { return this; }
+  { return size == 0 ? nullptr : this; }
   obj::native_array_sequence_ptr obj::native_array_sequence::fresh_seq()
-  { return make_box<obj::native_array_sequence>(arr, index, size); }
+  { return size == 0 ? nullptr : make_box<obj::native_array_sequence>(arr, index, size); }
 
   /* behavior::countable */
   size_t obj::native_array_sequence::count() const
@@ -37,7 +37,10 @@ namespace jank::runtime
 
   /* behavior::sequence */
   object_ptr obj::native_array_sequence::first() const
-  { return arr ? arr[index] : nullptr; }
+  {
+    assert(index < size);
+    return arr[index];
+  }
   obj::native_array_sequence_ptr obj::native_array_sequence::next() const
   {
     auto n(index);
@@ -68,5 +71,5 @@ namespace jank::runtime
   }
 
   obj::cons_ptr obj::native_array_sequence::cons(object_ptr const head)
-  { return make_box<obj::cons>(head, this); }
+  { return make_box<obj::cons>(head, size == 0 ? nullptr : this); }
 }
