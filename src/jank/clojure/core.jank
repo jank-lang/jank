@@ -332,6 +332,19 @@
   [& args]
   (apply and* args))
 
+; Takes a set of test/expr pairs. It evaluates each test one at a
+; time.  If a test returns logical true, cond evaluates and returns
+; the value of the corresponding expr and doesn't evaluate any of the
+; other tests or exprs. (cond) returns nil.
+(defmacro cond [& clauses]
+  (when clauses
+    (list 'if (first clauses)
+          (if (next clauses)
+            (second clauses)
+            (let [err "cond requires an even number of forms"]
+              (list 'native/raw "throw #{ (ex-info :invalid-cond {:err err}) }#;")))
+          (cons 'clojure.core/cond (next (next clauses))))))
+
 (defn macroexpand-1 [form]
   (native/raw "__value = __rt_ctx.macroexpand1(#{ form }#);"))
 (defn macroexpand [form]

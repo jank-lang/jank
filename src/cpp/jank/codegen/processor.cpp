@@ -605,12 +605,14 @@ namespace jank::codegen
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", ">" }))
         {
+          /* TODO: Use lt and reverse args. */
           format_elided_var("jank::runtime::gt(", ")", ret_tmp.str(false), expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
           ret_tmp = { ret_tmp.unboxed_name, box_needed };
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", ">=" }))
         {
+          /* TODO: Use lte and reverse args. */
           format_elided_var("jank::runtime::gte(", ")", ret_tmp.str(false), expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
           ret_tmp = { ret_tmp.unboxed_name, box_needed };
