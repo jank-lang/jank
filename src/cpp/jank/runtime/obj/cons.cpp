@@ -5,7 +5,7 @@ namespace jank::runtime
 {
   obj::cons::static_object(object_ptr const head, object_ptr const tail)
     : head{ head }, tail{ tail }
-  { }
+  { assert(head); }
 
   obj::cons_ptr obj::cons::seq()
   { return this; }

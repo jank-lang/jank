@@ -4,10 +4,16 @@ namespace jank::runtime
 {
   obj::native_array_sequence::static_object(object_ptr * const arr, size_t const size)
     : arr{ arr }, size{ size }
-  { }
+  {
+    assert(arr);
+    assert(size > 0);
+  }
   obj::native_array_sequence::static_object(object_ptr * const arr, size_t const index, size_t const size)
     : arr{ arr }, index{ index }, size{ size }
-  { }
+  {
+    assert(arr);
+    assert(size > 0);
+  }
 
   /* behavior::objectable */
   native_bool obj::native_array_sequence::equal(object const &o) const
@@ -27,9 +33,9 @@ namespace jank::runtime
 
   /* behavior::seqable */
   obj::native_array_sequence_ptr obj::native_array_sequence::seq()
-  { return size == 0 ? nullptr : this; }
+  { return this; }
   obj::native_array_sequence_ptr obj::native_array_sequence::fresh_seq()
-  { return size == 0 ? nullptr : make_box<obj::native_array_sequence>(arr, index, size); }
+  { return make_box<obj::native_array_sequence>(arr, index, size); }
 
   /* behavior::countable */
   size_t obj::native_array_sequence::count() const
@@ -71,5 +77,5 @@ namespace jank::runtime
   }
 
   obj::cons_ptr obj::native_array_sequence::cons(object_ptr const head)
-  { return make_box<obj::cons>(head, size == 0 ? nullptr : this); }
+  { return make_box<obj::cons>(head, this); }
 }

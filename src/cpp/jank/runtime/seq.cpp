@@ -39,7 +39,7 @@ namespace jank::runtime
           { return typed_s->count(); }
           else if constexpr(behavior::seqable<T>)
           {
-            size_t length{ 1 };
+            size_t length{ 0 };
             for(auto i(typed_s->fresh_seq()); i != nullptr && length < max; i = i->next_in_place())
             { ++length; }
             return length;

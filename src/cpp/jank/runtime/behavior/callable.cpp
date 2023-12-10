@@ -548,7 +548,7 @@ namespace jank::runtime
 
         if constexpr(seqable<T>)
         {
-          auto const s(typed_args->seq());
+          auto const s(typed_args->fresh_seq());
           auto const length(runtime::detail::sequence_length(s, max_params + 1));
           switch(length)
           {

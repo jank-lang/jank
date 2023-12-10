@@ -19,7 +19,7 @@ namespace jank::runtime
   obj::vector_ptr obj::vector::create(object_ptr const s)
   {
     if(s == nullptr)
-    { return jank::make_box<obj::vector>(); }
+    { return make_box<obj::vector>(); }
 
     return visit_object
     (
@@ -32,7 +32,7 @@ namespace jank::runtime
           runtime::detail::native_transient_vector v;
           for(auto i(typed_s->fresh_seq()); i != nullptr; i = i->next_in_place())
           { v.push_back(i->first()); }
-          return jank::make_box<obj::vector>(v.persistent());
+          return make_box<obj::vector>(v.persistent());
         }
         else
         { throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_s->to_string()) }; }
@@ -67,14 +67,14 @@ namespace jank::runtime
   {
     if(data.empty())
     { return nullptr; }
-    return jank::make_box<obj::persistent_vector_sequence>(const_cast<obj::vector*>(this));
+    return make_box<obj::persistent_vector_sequence>(const_cast<obj::vector*>(this));
   }
 
   obj::persistent_vector_sequence_ptr obj::vector::fresh_seq() const
   {
     if(data.empty())
     { return nullptr; }
-    return jank::make_box<obj::persistent_vector_sequence>(const_cast<obj::vector*>(this));
+    return make_box<obj::persistent_vector_sequence>(const_cast<obj::vector*>(this));
   }
 
   size_t obj::vector::count() const
@@ -90,7 +90,7 @@ namespace jank::runtime
   object_ptr obj::vector::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(jank::make_box<obj::vector>(data));
+    auto ret(make_box<obj::vector>(data));
     ret->meta = meta;
     return ret;
   }

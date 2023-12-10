@@ -297,7 +297,7 @@
   (cons 'let* (cons args body)))
 
 ; TODO: Higher arities. Needs clojure.core/spread, which needs clojure.core/cons.
-(defn apply [f args]
+(defn apply* [f args]
   (native/raw "__value = runtime::apply_to(#{ f }#, #{ args }#);"))
 
 (defn or*
@@ -314,7 +314,7 @@
 
 (defmacro or
   [& args]
-  (apply or* args))
+  (apply* or* args))
 
 (defn and*
   ([]
@@ -330,7 +330,7 @@
 
 (defmacro and
   [& args]
-  (apply and* args))
+  (apply* and* args))
 
 ; Takes a set of test/expr pairs. It evaluates each test one at a
 ; time.  If a test returns logical true, cond evaluates and returns
@@ -349,6 +349,64 @@
   (native/raw "__value = __rt_ctx.macroexpand1(#{ form }#);"))
 (defn macroexpand [form]
   (native/raw "__value = __rt_ctx.macroexpand(#{ form }#);"))
+
+; Relations.
+;; Miscellaneous.
+(defn true? [o]
+  (native/raw "__value = runtime::detail::equal(#{ o }#, #{ true }#) ? #{ true }# : #{ false }#"))
+(defn false? [o]
+  (native/raw "__value = runtime::detail::equal(#{ o }#, #{ false }#) ? #{ true }# : #{ false }#"))
+(defn not [o]
+  (native/raw "__value = runtime::detail::equal(#{ o }#, #{ false }#) ? #{ true }# : #{ false }#"))
+(defn some? [o]
+  (native/raw "__value = (o == obj::nil::nil_const()) ? #{ false }# : #{ true }#"))
+
+; Functions.
+
+; Takes a fn f and returns a fn that takes the same arguments as f,
+; has the same effects, if any, and returns the opposite truth value.
+(defn complement [f]
+  ; TODO: borked?
+  f
+  ;(fn
+  ;  ([] (not (f)))
+  ;  ([x] (not (f x)))
+  ;  ([x y] (not (f x y)))
+  ;  ([x y & zs] (not (apply f x y zs))))
+  )
+
+(defn- spread [arglist]
+  (cond
+    (nil? arglist) nil
+    (nil? (next arglist)) (seq (first arglist))
+    :else (cons (first arglist) (spread (next arglist)))))
+
+; Creates a new seq containing the items prepended to the rest, the
+; last of which will be treated as a sequence.
+(defn list*
+  ([args]
+   (seq args))
+  ([a args]
+   (cons a args))
+  ([a b args]
+   (cons a (cons b args)))
+  ([a b c args]
+   (cons a (cons b (cons c args))))
+  ([a b c d & more]
+   (cons a (cons b (cons c (cons d (spread more)))))))
+
+; Applies fn f to the argument list formed by prepending intervening arguments to args.
+(defn apply
+  ([f args]
+   (native/raw "__value = runtime::apply_to(#{ f }#, #{ args }#);"))
+  ([f x args]
+   (native/raw "__value = runtime::apply_to(#{ f }#, #{ (list* x args) }#);"))
+  ([f x y args]
+   (native/raw "__value = runtime::apply_to(#{ f }#, #{ (list* x y args) }#);"))
+  ([f x y z args]
+   (native/raw "__value = runtime::apply_to(#{ f }#, #{ (list* x y z args) }#);"))
+  ([f a b c d & args]
+   (native/raw "__value = runtime::apply_to(#{ f }#, #{ (cons a (cons b (cons c (cons d (spread args))))) }#);")))
 
 ; Utils.
 (defn reduce*
@@ -377,18 +435,6 @@
                 #{ coll }#
                 );")))
 
-
-; Relations.
-;; Miscellaneous.
-(defn true? [o]
-  (native/raw "__value = runtime::detail::equal(#{ o }#, #{ true }#) ? #{ true }# : #{ false }#"))
-(defn false? [o]
-  (native/raw "__value = runtime::detail::equal(#{ o }#, #{ false }#) ? #{ true }# : #{ false }#"))
-(defn not [o]
-  (native/raw "__value = runtime::detail::equal(#{ o }#, #{ false }#) ? #{ true }# : #{ false }#"))
-(defn some? [o]
-  (native/raw "__value = (o == obj::nil::nil_const()) ? #{ false }# : #{ true }#"))
-
 ; Strings.
 (defn string? [o]
   (native/raw "__value = make_box(#{ o }#->type == object_type::string);"))
@@ -400,25 +446,29 @@
   ([o & args]
    (native/raw "__value = visit_object
                (
-                [=](auto const typed_args) -> object_ptr
-                {
-                 using T = typename decltype(typed_args)::value_type;
-
-                 if constexpr(behavior::sequenceable<T>)
+                 [=](auto const typed_args) -> object_ptr
                  {
-                  fmt::memory_buffer buff;
-                  buff.reserve(16);
-                  runtime::detail::to_string(#{ o }#, buff);
-                  runtime::detail::to_string(typed_args->first(), buff);
-                  for(auto it(typed_args->next_in_place()); it != nullptr; it = it->next_in_place())
-                  { runtime::detail::to_string(typed_args->first(), buff); }
-                  return make_box<obj::string>(native_string{ buff.data(), buff.size() });
-                  }
-                 else
-                 { throw #{ (ex-info :invalid-seq {:args args}) }#; }
+                   using T = typename decltype(typed_args)::value_type;
+
+                   if constexpr(behavior::sequenceable<T>)
+                   {
+                     fmt::memory_buffer buff;
+                     buff.reserve(16);
+                     runtime::detail::to_string(#{ o }#, buff);
+                     if(0 < runtime::detail::sequence_length(typed_args))
+                     {
+                       auto const fresh(typed_args->fresh_seq());
+                       runtime::detail::to_string(fresh->first(), buff);
+                       for(auto it(fresh->next_in_place()); it != nullptr; it = it->next_in_place())
+                       { runtime::detail::to_string(it->first(), buff); }
+                     }
+                     return make_box<obj::string>(native_string{ buff.data(), buff.size() });
+                   }
+                   else
+                   { throw #{ (ex-info :invalid-seq {:args args}) }#; }
                  },
-                #{ args }#
-                );")))
+                 #{ args }#
+               );")))
 
 (defn subs
   ([s start]
