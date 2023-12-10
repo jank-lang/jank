@@ -14,12 +14,12 @@ namespace jank::runtime
   { return detail::equal(o, arr, arr + size); }
 
   void obj::native_array_sequence::to_string(fmt::memory_buffer &buff) const
-  { return behavior::detail::to_string(arr + index, arr + size, '(', ')', buff); }
+  { return behavior::detail::to_string(arr + index, arr + size, "(", ')', buff); }
 
   native_string obj::native_array_sequence::to_string() const
   {
     fmt::memory_buffer buff;
-    behavior::detail::to_string(arr + index, arr + size, '(', ')', buff);
+    behavior::detail::to_string(arr + index, arr + size, "(", ')', buff);
     return native_string{ buff.data(), buff.size() };
   }
   native_integer obj::native_array_sequence::to_hash()

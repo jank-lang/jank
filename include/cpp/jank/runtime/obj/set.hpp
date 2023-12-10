@@ -40,7 +40,9 @@ namespace jank::runtime
     size_t count() const;
 
     /* behavior::consable */
-    native_box<static_object> cons(object_ptr head);
+    native_box<static_object> cons(object_ptr head) const;
+
+    native_bool contains(object_ptr o) const;
 
     object base{ object_type::set };
     value_type data;

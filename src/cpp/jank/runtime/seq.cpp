@@ -382,6 +382,8 @@ namespace jank::runtime
 
         if constexpr(behavior::associatively_readable<S>)
         { return typed_s->contains(key); }
+        if constexpr(std::same_as<S, obj::set>)
+        { return typed_s->contains(key); }
         else
         { return false; }
       },

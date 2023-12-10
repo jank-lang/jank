@@ -17,12 +17,12 @@ namespace jank::runtime
   { return detail::equal(o, data.begin(), data.end()); }
 
   void obj::native_vector_sequence::to_string(fmt::memory_buffer &buff) const
-  { return behavior::detail::to_string(data.begin(), data.end(), '(', ')', buff); }
+  { return behavior::detail::to_string(data.begin(), data.end(), "(", ')', buff); }
 
   native_string obj::native_vector_sequence::to_string() const
   {
     fmt::memory_buffer buff;
-    behavior::detail::to_string(data.begin(), data.end(), '(', ')', buff);
+    behavior::detail::to_string(data.begin(), data.end(), "(", ')', buff);
     return native_string{ buff.data(), buff.size() };
   }
 

@@ -19,7 +19,7 @@ namespace jank::runtime
     (
       vec->data.begin() + static_cast<decltype(obj::vector::data)::difference_type>(index),
       vec->data.end(),
-      '[', ']',
+      "[", ']',
       buff
     );
   }
@@ -30,7 +30,7 @@ namespace jank::runtime
     (
       vec->data.begin() + static_cast<decltype(obj::vector::data)::difference_type>(index),
       vec->data.end(),
-      '[', ']',
+      "[", ']',
       buff
     );
     return { buff.data(), buff.size() };

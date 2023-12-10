@@ -43,12 +43,12 @@ namespace jank::runtime::obj::detail
     }
 
     void to_string(fmt::memory_buffer &buff) const
-    { return behavior::detail::to_string(begin, end, '(', ')', buff); }
+    { return behavior::detail::to_string(begin, end, "(", ')', buff); }
 
     native_string to_string() const
     {
       fmt::memory_buffer buff;
-      behavior::detail::to_string(begin, end, '(', ')', buff);
+      behavior::detail::to_string(begin, end, "(", ')', buff);
       return native_string{ buff.data(), buff.size() };
     }
     native_integer to_hash() const

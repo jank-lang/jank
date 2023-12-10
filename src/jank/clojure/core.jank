@@ -572,6 +572,21 @@
            {}
            ks))
 
+; Sets.
+
+(defn set? [o]
+  (native/raw "__value = make_box(#{ o }#->type == object_type::set);"))
+
+; Returns a set of the distinct elements of coll.
+(defn set [coll]
+  (if (set? coll)
+    (with-meta coll nil)
+    ; TODO: Transient
+    (reduce* (fn [acc e]
+               (conj acc e))
+             (native/raw "__value = make_box<obj::set>();")
+             coll)))
+
 ;; Other.
 (defn hash [o]
   (native/raw "__value = make_box(runtime::detail::to_hash(#{ o }#));"))
