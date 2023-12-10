@@ -80,9 +80,33 @@ namespace jank::runtime
     return fallback;
   }
 
-  object_ptr obj::persistent_hash_map::assoc(object_ptr const key, object_ptr const val) const
+  object_ptr obj::persistent_hash_map::get_entry(object_ptr const key) const
+  {
+    auto const res(data.find(key));
+    if(res)
+    { return make_box<obj::vector>(key, *res); }
+    return obj::nil::nil_const();
+  }
+
+  native_bool obj::persistent_hash_map::contains(object_ptr const key) const
+  { return data.find(key); }
+
+  obj::persistent_hash_map_ptr obj::persistent_hash_map::assoc(object_ptr const key, object_ptr const val) const
   {
     auto copy(data.set(key, val));
+    return make_box<obj::persistent_hash_map>(std::move(copy));
+  }
+
+  obj::persistent_hash_map_ptr obj::persistent_hash_map::cons(object_ptr const head) const
+  {
+    if(head->type != object_type::vector)
+    { throw std::runtime_error{ fmt::format("invalid map entry: {}", runtime::detail::to_string(head)) }; }
+
+    auto const vec(expect_object<obj::vector>(head));
+    if(vec->count() != 2)
+    { throw std::runtime_error{ fmt::format("invalid map entry: {}", runtime::detail::to_string(head)) }; }
+
+    auto copy(data.set(vec->data[0], vec->data[1]));
     return make_box<obj::persistent_hash_map>(std::move(copy));
   }
 }

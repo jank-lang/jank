@@ -210,7 +210,7 @@ namespace jank::runtime
         using T = typename decltype(typed_s)::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
-        { return typed_s; }
+        { return make_box<obj::list>(o); }
         else if constexpr(behavior::consable<T>)
         { return typed_s->cons(o); }
         else if constexpr(behavior::seqable<T>)
@@ -345,6 +345,47 @@ namespace jank::runtime
         { return obj::nil::nil_const(); }
       },
       m
+    );
+  }
+
+  object_ptr find(object_ptr const s, object_ptr const key)
+  {
+    auto const nil(obj::nil::nil_const());
+    if(s == nullptr || s == nil)
+    { return nil; }
+
+    return visit_object
+    (
+      [&](auto const typed_s) -> object_ptr
+      {
+        using S = typename decltype(typed_s)::value_type;
+
+        if constexpr(behavior::associatively_readable<S>)
+        { return typed_s->get_entry(key); }
+        else
+        { return nil; }
+      },
+      s
+    );
+  }
+
+  native_bool contains(object_ptr const s, object_ptr const key)
+  {
+    if(s == nullptr || s == obj::nil::nil_const())
+    { return false; }
+
+    return visit_object
+    (
+      [&](auto const typed_s) -> native_bool
+      {
+        using S = typename decltype(typed_s)::value_type;
+
+        if constexpr(behavior::associatively_readable<S>)
+        { return typed_s->contains(key); }
+        else
+        { return false; }
+      },
+      s
     );
   }
 }

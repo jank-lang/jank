@@ -82,4 +82,6 @@ namespace jank::runtime
   object_ptr get(object_ptr m, object_ptr key, object_ptr fallback);
   object_ptr get_in(object_ptr m, object_ptr keys);
   object_ptr get_in(object_ptr m, object_ptr keys, object_ptr fallback);
+  object_ptr find(object_ptr s, object_ptr key);
+  native_bool contains(object_ptr s, object_ptr key);
 }

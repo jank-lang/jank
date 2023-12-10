@@ -115,8 +115,8 @@ namespace jank::runtime
   {
     if(key->type == object_type::integer)
     {
-      auto const i(static_cast<size_t>(expect_object<obj::integer>(key)->data));
-      if(data.size() <= i)
+      auto const i(expect_object<obj::integer>(key)->data);
+      if(i < 0 || data.size() <= static_cast<size_t>(i))
       { return fallback; }
       return data[i];
     }
@@ -125,5 +125,33 @@ namespace jank::runtime
       throw std::runtime_error
       { fmt::format("get on a vector must be an integer; found {}", runtime::detail::to_string(key)) };
     }
+  }
+
+  object_ptr obj::vector::get_entry(object_ptr const key) const
+  {
+    if(key->type == object_type::integer)
+    {
+      auto const i(expect_object<obj::integer>(key)->data);
+      if(i < 0 || data.size() <= static_cast<size_t>(i))
+      { return obj::nil::nil_const(); }
+      /* TODO: Map entry type? */
+      return make_box<obj::vector>(key, data[i]);
+    }
+    else
+    {
+      throw std::runtime_error
+      { fmt::format("get_entry on a vector must be an integer; found {}", runtime::detail::to_string(key)) };
+    }
+  }
+
+  native_bool obj::vector::contains(object_ptr const key) const
+  {
+    if(key->type == object_type::integer)
+    {
+      auto const i(expect_object<obj::integer>(key)->data);
+      return i >= 0 && static_cast<size_t>(i) < data.size();
+    }
+    else
+    { return false; }
   }
 }

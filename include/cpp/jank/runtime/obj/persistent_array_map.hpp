@@ -47,9 +47,14 @@ namespace jank::runtime
     /* behavior::associatively_readable */
     object_ptr get(object_ptr const key) const;
     object_ptr get(object_ptr const key, object_ptr const fallback) const;
+    object_ptr get_entry(object_ptr key) const;
+    native_bool contains(object_ptr key) const;
 
     /* behavior::associatively_writable */
     object_ptr assoc(object_ptr key, object_ptr val) const;
+
+    /* behavior::consable */
+    native_box<static_object> cons(object_ptr head) const;
 
     value_type data{};
   };

@@ -24,6 +24,17 @@ namespace jank::runtime
     return fallback;
   }
 
+  object_ptr obj::persistent_array_map::get_entry(object_ptr const key) const
+  {
+    auto const res(data.find(key));
+    if(res)
+    { return make_box<obj::vector>(key, res); }
+    return obj::nil::nil_const();
+  }
+
+  native_bool obj::persistent_array_map::contains(object_ptr const key) const
+  { return data.find(key); }
+
   object_ptr obj::persistent_array_map::assoc(object_ptr const key, object_ptr const val) const
   {
     /* If we've hit the max array map size, it's time to promote to a hash map.
@@ -41,5 +52,19 @@ namespace jank::runtime
       copy.insert_or_assign(key, val);
       return make_box<obj::persistent_array_map>(std::move(copy));
     }
+  }
+
+  obj::persistent_array_map_ptr obj::persistent_array_map::cons(object_ptr const head) const
+  {
+    if(head->type != object_type::vector)
+    { throw std::runtime_error{ fmt::format("invalid map entry: {}", runtime::detail::to_string(head)) }; }
+
+    auto const vec(expect_object<obj::vector>(head));
+    if(vec->count() != 2)
+    { throw std::runtime_error{ fmt::format("invalid map entry: {}", runtime::detail::to_string(head)) }; }
+
+    auto copy(data.clone());
+    copy.insert_or_assign(vec->data[0], vec->data[1]);
+    return make_box<obj::persistent_array_map>(std::move(copy));
   }
 }

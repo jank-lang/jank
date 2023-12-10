@@ -32,6 +32,12 @@ namespace jank::runtime
   object_ptr obj::nil::get(object_ptr const, object_ptr const fallback)
   { return fallback; }
 
+  object_ptr obj::nil::get_entry(object_ptr)
+  { return &base; }
+
+  native_bool obj::nil::contains(object_ptr) const
+  { return false; }
+
   obj::nil_ptr obj::nil::seq()
   { return nullptr; }
   obj::nil_ptr obj::nil::fresh_seq() const
