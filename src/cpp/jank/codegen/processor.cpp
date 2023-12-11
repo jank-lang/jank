@@ -1107,108 +1107,145 @@ namespace jank::codegen
       runtime::munge(struct_name.name)
     );
 
-    for(auto const &arity : root_fn.arities)
     {
-      for(auto const &v : arity.frame->lifted_vars)
+      /* TODO: Constants and vars are not shared across arities. We'd need stable names. */
+      native_set<native_integer> used_vars, used_constants, used_captures;
+      for(auto const &arity : root_fn.arities)
       {
-
-        fmt::format_to
-        (
-          inserter,
-          "jank::runtime::var_ptr const {0};", runtime::munge(v.second.native_name.name)
-        );
-      }
-
-      for(auto const &v : arity.frame->lifted_constants)
-      {
-        fmt::format_to
-        (
-          inserter,
-          "{} const {};",
-          detail::gen_constant_type(v.second.data, true),
-          runtime::munge(v.second.native_name.name)
-        );
-
-        if(v.second.unboxed_native_name.is_some())
+        for(auto const &v : arity.frame->lifted_vars)
         {
+          if(used_vars.contains(v.second.native_name.to_hash()))
+          { continue; }
+          used_vars.emplace(v.second.native_name.to_hash());
+
           fmt::format_to
           (
             inserter,
-            "static constexpr {} const {}{{ ",
-            detail::gen_constant_type(v.second.data, false),
-            runtime::munge(v.second.unboxed_native_name.unwrap().name)
+            "jank::runtime::var_ptr const {0};", runtime::munge(v.second.native_name.name)
           );
-          detail::gen_constant(v.second.data, header_buffer, false);
-          fmt::format_to(inserter, "}};");
+        }
+
+        for(auto const &v : arity.frame->lifted_constants)
+        {
+          if(used_constants.contains(v.second.native_name.to_hash()))
+          { continue; }
+          used_constants.emplace(v.second.native_name.to_hash());
+
+          fmt::format_to
+          (
+            inserter,
+            "{} const {};",
+            detail::gen_constant_type(v.second.data, true),
+            runtime::munge(v.second.native_name.name)
+          );
+
+          if(v.second.unboxed_native_name.is_some())
+          {
+            fmt::format_to
+            (
+              inserter,
+              "static constexpr {} const {}{{ ",
+              detail::gen_constant_type(v.second.data, false),
+              runtime::munge(v.second.unboxed_native_name.unwrap().name)
+            );
+            detail::gen_constant(v.second.data, header_buffer, false);
+            fmt::format_to(inserter, "}};");
+          }
+        }
+
+        /* TODO: More useful types here. */
+        for(auto const &v : arity.frame->captures)
+        {
+          if(used_captures.contains(v.first->to_hash()))
+          { continue; }
+          used_captures.emplace(v.first->to_hash());
+
+          fmt::format_to
+          (
+            inserter,
+            "jank::runtime::object_ptr const {0};", runtime::munge(v.first->name)
+          );
         }
       }
+    }
 
-      /* TODO: More useful types here. */
-      for(auto const &v : arity.frame->captures)
+    {
+      native_set<native_integer> used_captures;
+      fmt::format_to
+      (
+        inserter,
+        "{0}(jank::runtime::context &__rt_ctx", runtime::munge(struct_name.name)
+      );
+
+      for(auto const &arity : root_fn.arities)
       {
-        fmt::format_to
-        (
-          inserter,
-          "jank::runtime::object_ptr const {0};", runtime::munge(v.first->name)
-        );
+        for(auto const &v : arity.frame->captures)
+        {
+          if(used_captures.contains(v.first->to_hash()))
+          { continue; }
+          used_captures.emplace(v.first->to_hash());
+
+          /* TODO: More useful types here. */
+          fmt::format_to
+          (
+            inserter,
+            ", jank::runtime::object_ptr {0}", runtime::munge(v.first->name)
+          );
+        }
       }
     }
 
-    fmt::format_to
-    (
-      inserter,
-      "{0}(jank::runtime::context &__rt_ctx", runtime::munge(struct_name.name)
-    );
-
-    for(auto const &arity : root_fn.arities)
     {
-      for(auto const &v : arity.frame->captures)
-      {
-        /* TODO: More useful types here. */
-        fmt::format_to
-        (
-          inserter,
-          ", jank::runtime::object_ptr {0}", runtime::munge(v.first->name)
-        );
-      }
-    }
+      native_set<native_integer> used_vars, used_constants, used_captures;
+      fmt::format_to(inserter, ") : __rt_ctx{{ __rt_ctx }}");
 
-    fmt::format_to(inserter, ") : __rt_ctx{{ __rt_ctx }}");
-
-    for(auto const &arity : root_fn.arities)
-    {
-      for(auto const &v : arity.frame->lifted_vars)
+      for(auto const &arity : root_fn.arities)
       {
-        fmt::format_to
-        (
-          inserter,
-          R"(, {0}{{ __rt_ctx.intern_var("{1}", "{2}").expect_ok() }})",
-          runtime::munge(v.second.native_name.name),
-          v.second.var_name->ns,
-          v.second.var_name->name
-        );
-      }
+        for(auto const &v : arity.frame->lifted_vars)
+        {
+          if(used_vars.contains(v.second.native_name.to_hash()))
+          { continue; }
+          used_vars.emplace(v.second.native_name.to_hash());
 
-      for(auto const &v : arity.frame->lifted_constants)
-      {
-        fmt::format_to
-        (
-          inserter,
-          ", {0}{{",
-          runtime::munge(v.second.native_name.name)
-        );
-        detail::gen_constant(v.second.data, header_buffer, true);
-        fmt::format_to(inserter, "}}");
-      }
+          fmt::format_to
+          (
+            inserter,
+            R"(, {0}{{ __rt_ctx.intern_var("{1}", "{2}").expect_ok() }})",
+            runtime::munge(v.second.native_name.name),
+            v.second.var_name->ns,
+            v.second.var_name->name
+          );
+        }
 
-      for(auto const &v : arity.frame->captures)
-      {
-        fmt::format_to
-        (
-          inserter,
-          ", {0}{{ {0} }}",
-          runtime::munge(v.first->name)
-        );
+        for(auto const &v : arity.frame->lifted_constants)
+        {
+          if(used_constants.contains(v.second.native_name.to_hash()))
+          { continue; }
+          used_constants.emplace(v.second.native_name.to_hash());
+
+          fmt::format_to
+          (
+            inserter,
+            ", {0}{{",
+            runtime::munge(v.second.native_name.name)
+          );
+          detail::gen_constant(v.second.data, header_buffer, true);
+          fmt::format_to(inserter, "}}");
+        }
+
+        for(auto const &v : arity.frame->captures)
+        {
+          if(used_captures.contains(v.first->to_hash()))
+          { continue; }
+          used_captures.emplace(v.first->to_hash());
+
+          fmt::format_to
+          (
+            inserter,
+            ", {0}{{ {0} }}",
+            runtime::munge(v.first->name)
+          );
+        }
       }
     }
 
@@ -1358,10 +1395,15 @@ namespace jank::codegen
         close = "}";
       }
 
+      native_set<native_integer> used_captures;
       for(auto const &arity : root_fn.arities)
       {
         for(auto const &v : arity.frame->captures)
         {
+          if(used_captures.contains(v.first->to_hash()))
+          { continue; }
+          used_captures.emplace(v.first->to_hash());
+
           /* We're generating the inputs to the function ctor, which means we don't
             * want the binding of the capture within the function; we want the one outside
             * of it, which we're capturing. We need to reach further for that. */
