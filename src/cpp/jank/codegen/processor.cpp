@@ -458,12 +458,15 @@ namespace jank::codegen
     for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
     { fmt::format_to(inserter, ", {}", arg_tmps[i].str(true)); }
 
-    /* TODO: Test this. No way it works. */
-    if(arg_tmps.size() > runtime::max_params)
+    if(runtime::max_params < arg_tmps.size())
     {
-      fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::list>(");
+      fmt::format_to(inserter, ", jank::make_box<jank::runtime::obj::list>(");
+      native_bool comma{};
       for(size_t i{ runtime::max_params }; i < arg_tmps.size(); ++i)
-      { fmt::format_to(inserter, ", {}", arg_tmps[i].str(true)); }
+      {
+        fmt::format_to(inserter, "{} {}", comma ? "," : "", arg_tmps[i].str(true));
+        comma = true;
+      }
       fmt::format_to(inserter, ")");
     }
     fmt::format_to(inserter, "));");

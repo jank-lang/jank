@@ -432,7 +432,7 @@ namespace jank::runtime
       source
     );
   }
-  object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3, object_ptr const a4, object_ptr const a5, object_ptr const a6, object_ptr const a7, object_ptr const a8, object_ptr const a9, object_ptr const a10, obj::list_ptr rest)
+  object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2, object_ptr const a3, object_ptr const a4, object_ptr const a5, object_ptr const a6, object_ptr const a7, object_ptr const a8, object_ptr const a9, object_ptr const a10, obj::list_ptr const rest)
   {
     return visit_object
     (

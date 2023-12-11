@@ -76,7 +76,8 @@ namespace jank::analyze
     return *this;
   }
 
-  option<local_frame::find_result> find_local_impl(local_frame_ptr const start, runtime::obj::symbol_ptr sym, native_bool const allow_captures)
+  option<local_frame::find_result> find_local_impl
+  (local_frame_ptr const start, runtime::obj::symbol_ptr sym, native_bool const allow_captures)
   {
     decltype(local_frame::find_result::crossed_fns) crossed_fns;
 
@@ -114,9 +115,10 @@ namespace jank::analyze
     for(auto const &crossed_fn : result.crossed_fns)
     {
       auto res(crossed_fn->captures.emplace(result.binding.name, result.binding));
-      //static_cast<void>(res);
+      /* We know it needs a box, since it's captured. */
       res.first->second.needs_box = true;
       res.first->second.has_boxed_usage = true;
+      /* To start with, we assume it's only boxed. */
       res.first->second.has_unboxed_usage = false;
     }
   }

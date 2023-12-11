@@ -4,13 +4,13 @@ namespace jank::runtime
 {
   obj::native_vector_sequence::static_object(native_vector<object_ptr> const &data, size_t index)
     : data{ data }, index{ index }
-  { assert(!data.empty()); }
+  { assert(!this->data.empty()); }
   obj::native_vector_sequence::static_object(native_vector<object_ptr> &&data)
     : data{ std::move(data) }
-  { assert(!data.empty()); }
+  { assert(!this->data.empty()); }
   obj::native_vector_sequence::static_object(native_vector<object_ptr> &&data, size_t index)
     : data{ std::move(data) }, index{ index }
-  { assert(!data.empty()); }
+  { assert(!this->data.empty()); }
 
   /* behavior::objectable */
   native_bool obj::native_vector_sequence::equal(object const &o) const

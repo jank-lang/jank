@@ -31,8 +31,8 @@ namespace jank::detail
   inline runtime::object_ptr to_runtime_data(boost::filesystem::path const &p)
   { return make_box(p.string()); }
 
-  template <typename K, typename V>
-  runtime::object_ptr to_runtime_data(native_unordered_map<K, V> const &m)
+  template <typename K, typename V, typename H, typename C>
+  runtime::object_ptr to_runtime_data(native_unordered_map<K, V, H, C> const &m)
   {
     runtime::object_ptr ret(make_box<runtime::obj::persistent_array_map>());
     for(auto const &e : m)

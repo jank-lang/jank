@@ -189,8 +189,8 @@
 
 (def conj)
 (def conj
-  (fn*
-    conj ([]
+  (fn* conj
+    ([]
      [])
     ([coll]
      coll)
