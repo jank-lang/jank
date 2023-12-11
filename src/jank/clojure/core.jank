@@ -1438,7 +1438,7 @@
                         (concat acc [flag true]))
                       []
                       flags)
-        args (filter (complement keyword?) args)]
+        args (remove keyword? args)]
     ; TODO: Set syntax.
     (let [supported (set [:as :reload :reload-all :require :use :verbose :refer :as-alias])
           unsupported (seq (remove supported flags))]

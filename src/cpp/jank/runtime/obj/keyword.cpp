@@ -46,6 +46,12 @@ namespace jank::runtime
   native_string const& obj::keyword::get_namespace() const
   { return sym.ns; }
 
+  object_ptr obj::keyword::call(object_ptr const m) const
+  { return runtime::get(m, this); }
+
+  object_ptr obj::keyword::call(object_ptr const m, object_ptr const fallback) const
+  { return runtime::get(m, this, fallback); }
+
   bool obj::keyword::operator ==(obj::keyword const &rhs) const
   { return sym == rhs.sym; }
 }

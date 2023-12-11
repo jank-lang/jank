@@ -65,6 +65,14 @@ namespace jank::runtime
     return ret;
   }
 
+  object_ptr obj::set::call(object_ptr const o) const
+  {
+    auto const found(data.find(o));
+    if(!found)
+    { return obj::nil::nil_const(); }
+    return *found;
+  }
+
   native_bool obj::set::contains(object_ptr const o) const
   { return data.find(o); }
 }

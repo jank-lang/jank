@@ -109,4 +109,20 @@ namespace jank::runtime
     auto copy(data.set(vec->data[0], vec->data[1]));
     return make_box<obj::persistent_hash_map>(std::move(copy));
   }
+
+  object_ptr obj::persistent_hash_map::call(object_ptr const o) const
+  {
+    auto const found(data.find(o));
+    if(!found)
+    { return obj::nil::nil_const(); }
+    return *found;
+  }
+
+  object_ptr obj::persistent_hash_map::call(object_ptr const o, object_ptr const fallback) const
+  {
+    auto const found(data.find(o));
+    if(!found)
+    { return fallback; }
+    return *found;
+  }
 }

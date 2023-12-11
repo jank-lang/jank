@@ -39,6 +39,10 @@ namespace jank::runtime
     native_string const& get_name() const;
     native_string const& get_namespace() const;
 
+    /* behavior::callable */
+    object_ptr call(object_ptr) const;
+    object_ptr call(object_ptr, object_ptr) const;
+
     bool operator ==(static_object const &rhs) const;
 
     object base{ object_type::keyword };

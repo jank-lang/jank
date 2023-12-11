@@ -203,8 +203,38 @@ namespace jank::evaluate
             }
           }
         }
+        else if constexpr(std::same_as<T, runtime::obj::set>)
+        {
+          auto const s(expr.arg_exprs.size());
+          if(s != 1)
+          { throw std::runtime_error{ fmt::format("invalid call with {} args to: {}", s, typed_source->to_string()) }; }
+          return typed_source->call(eval(rt_ctx, jit_prc, expr.arg_exprs[0]));
+        }
+        else if constexpr
+        (
+          std::same_as<T, runtime::obj::keyword>
+          || std::same_as<T, runtime::obj::persistent_hash_map>
+          || std::same_as<T, runtime::obj::persistent_array_map>
+        )
+        {
+          auto const s(expr.arg_exprs.size());
+          switch(s)
+          {
+            case 1:
+              return typed_source->call(eval(rt_ctx, jit_prc, expr.arg_exprs[0]));
+            case 2:
+              return typed_source->call
+              (
+                eval(rt_ctx, jit_prc, expr.arg_exprs[0]),
+                eval(rt_ctx, jit_prc, expr.arg_exprs[1])
+              );
+            default:
+              throw std::runtime_error
+              { fmt::format("invalid call with {} args to: {}", s, typed_source->to_string()) };
+          }
+        }
         else
-        { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
+        { throw std::runtime_error{ fmt::format("invalid call with 0 args to: {}", expr.arg_exprs.size(), typed_source->to_string()) }; }
       },
       source
     );

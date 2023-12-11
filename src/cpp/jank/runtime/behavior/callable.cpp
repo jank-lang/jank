@@ -36,7 +36,7 @@ namespace jank::runtime
           }
         }
         else
-        { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
+        { throw std::runtime_error{ fmt::format("invalid call with 0 args to {}", typed_source->to_string()) }; }
       },
       source
     );
@@ -66,8 +66,16 @@ namespace jank::runtime
               return typed_source->call(a1);
           }
         }
+        else if constexpr
+        (
+          std::same_as<T, obj::set>
+          || std::same_as<T, obj::persistent_hash_map>
+          || std::same_as<T, obj::persistent_array_map>
+          || std::same_as<T, obj::keyword>
+        )
+        { return typed_source->call(a1); }
         else
-        { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
+        { throw std::runtime_error{ fmt::format("invalid call with 1 arg to: {}", typed_source->to_string()) }; }
       },
       source
     );
@@ -98,8 +106,15 @@ namespace jank::runtime
               return typed_source->call(a1, a2);
           }
         }
+        else if constexpr
+        (
+          std::same_as<T, obj::persistent_hash_map>
+          || std::same_as<T, obj::persistent_array_map>
+          || std::same_as<T, obj::keyword>
+        )
+        { return typed_source->call(a1, a2); }
         else
-        { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
+        { throw std::runtime_error{ fmt::format("invalid call with 2 args to: {}", typed_source->to_string()) }; }
       },
       source
     );
@@ -133,7 +148,7 @@ namespace jank::runtime
           }
         }
         else
-        { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
+        { throw std::runtime_error{ fmt::format("invalid call with 3 args to: {}", typed_source->to_string()) }; }
       },
       source
     );
@@ -169,7 +184,7 @@ namespace jank::runtime
           }
         }
         else
-        { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
+        { throw std::runtime_error{ fmt::format("invalid call with 4 args to: {}", typed_source->to_string()) }; }
       },
       source
     );
@@ -207,7 +222,7 @@ namespace jank::runtime
           }
         }
         else
-        { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
+        { throw std::runtime_error{ fmt::format("invalid call with 5 args to: {}", typed_source->to_string()) }; }
       },
       source
     );
@@ -247,7 +262,7 @@ namespace jank::runtime
           }
         }
         else
-        { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
+        { throw std::runtime_error{ fmt::format("invalid call with 6 args to: {}", typed_source->to_string()) }; }
       },
       source
     );
@@ -289,7 +304,7 @@ namespace jank::runtime
           }
         }
         else
-        { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
+        { throw std::runtime_error{ fmt::format("invalid call with 7 args to: {}", typed_source->to_string()) }; }
       },
       source
     );
@@ -333,7 +348,7 @@ namespace jank::runtime
           }
         }
         else
-        { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
+        { throw std::runtime_error{ fmt::format("invalid call with 8 args to: {}", typed_source->to_string()) }; }
       },
       source
     );
@@ -379,7 +394,7 @@ namespace jank::runtime
           }
         }
         else
-        { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
+        { throw std::runtime_error{ fmt::format("invalid call with 9 args to: {}", typed_source->to_string()) }; }
       },
       source
     );
@@ -427,7 +442,7 @@ namespace jank::runtime
           }
         }
         else
-        { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
+        { throw std::runtime_error{ fmt::format("invalid call with 10 args to: {}", typed_source->to_string()) }; }
       },
       source
     );
@@ -532,7 +547,17 @@ namespace jank::runtime
           }
         }
         else
-        { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
+        {
+          throw std::runtime_error
+          {
+            fmt::format
+            (
+              "invalid call with {} args to: {}",
+              10 + runtime::detail::sequence_length(rest),
+              typed_source->to_string()
+            )
+          };
+        }
       },
       source
     );
