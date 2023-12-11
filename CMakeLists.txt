@@ -191,7 +191,10 @@ target_include_directories(
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/cpp>"
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
 )
-target_precompile_headers(jank_lib PUBLIC ${PROJECT_SOURCE_DIR}/include/cpp/jank/prelude.hpp)
+target_precompile_headers(
+  jank_lib
+  PUBLIC ${PROJECT_SOURCE_DIR}/include/cpp/jank/prelude.hpp
+)
 
 set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 

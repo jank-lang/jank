@@ -363,18 +363,6 @@
 
 ; Functions.
 
-; Takes a fn f and returns a fn that takes the same arguments as f,
-; has the same effects, if any, and returns the opposite truth value.
-(defn complement [f]
-  ; TODO: borked?
-  f
-  ;(fn
-  ;  ([] (not (f)))
-  ;  ([x] (not (f x)))
-  ;  ([x y] (not (f x y)))
-  ;  ([x y & zs] (not (apply f x y zs))))
-  )
-
 (defn- spread [arglist]
   (cond
     (nil? arglist) nil
@@ -407,6 +395,17 @@
    (native/raw "__value = runtime::apply_to(#{ f }#, #{ (list* x y z args) }#);"))
   ([f a b c d & args]
    (native/raw "__value = runtime::apply_to(#{ f }#, #{ (cons a (cons b (cons c (cons d (spread args))))) }#);")))
+
+; Takes a fn f and returns a fn that takes the same arguments as f,
+; has the same effects, if any, and returns the opposite truth value.
+(defn complement [f]
+  ; TODO: Capturing `f` four times adds it as four separate captures.
+  ;(fn
+  ;  ([] (not (f)))
+  ;  ([x] (not (f x)))
+  ;  ([x y] (not (f x y)))
+  ;  ([x y & zs] (not (apply f x y zs))))
+  )
 
 ; Utils.
 (defn reduce*
@@ -500,6 +499,23 @@
                  #{ s }#
                );")))
 
+(defn- first-index-of [s c]
+  (native/raw "__value = make_box
+              (
+                visit_object
+                (
+                  [=](auto const typed_s) -> native_integer
+                  {
+                    using T = typename decltype(typed_s)::value_type;
+
+                    if constexpr(std::is_same_v<T, obj::string>)
+                    { return typed_s->first_index_of(#{ c }#); }
+                    else
+                    { throw #{ (ex-info :not-a-string {:s s}) }#; }
+                  },
+                  #{ s }#
+                )
+              );"))
 (defn- last-index-of [s c]
   (native/raw "__value = make_box
               (
@@ -556,6 +572,20 @@
      (if (empty? zs)
        r
        (recur r (first zs) (rest zs))))))
+
+; Repeatedly executes body (presumably for side-effects) with
+; bindings and filtering as provided by `for`.  Does not retain
+; the head of the sequence. Returns nil.
+; TODO: Support more bindings
+; TODO: Support `for` functionality
+(defmacro doseq [bindings & body]
+  (let [arg (first bindings)
+        s (second bindings)]
+    (list 'reduce* (concat (list 'fn ['_ arg])
+                           body
+                           [nil])
+          nil
+          s)))
 
 ;; Maps.
 (defn hash-map
@@ -1062,6 +1092,61 @@
                      (recur (dec n) (next coll) (conj acc (first coll))))))]
      (take* n coll []))))
 
+; Returns a lazy sequence consisting of the result of applying f to
+; the set of first items of each coll, followed by applying f to the
+; set of second items in each coll, until any one of the colls is
+; exhausted.  Any remaining items in other colls are ignored. Function
+; f should accept number-of-colls arguments. Returns a transducer when
+; no collection is provided.
+(defn map
+  ; TODO: Laziness; other arities.
+  ([f coll]
+   (reduce* (fn [acc e]
+              (conj acc (f e)))
+            []
+            coll)))
+
+; Returns a vector consisting of the result of applying f to the
+; set of first items of each coll, followed by applying f to the set
+; of second items in each coll, until any one of the colls is
+; exhausted.  Any remaining items in other colls are ignored. Function
+; f should accept number-of-colls arguments.
+; TODO: Needs `into` and a proper `map`
+(def mapv map)
+
+; Returns the result of applying concat to the result of applying map
+; to f and colls. Thus function f should return a collection. Returns
+; a transducer when no collections are provided
+(defn mapcat
+  ; TODO: Transducer.
+  ([f]
+   )
+  ; TODO: Variadic.
+  ([f coll]
+   (apply concat (map f coll))))
+
+; Returns a lazy sequence of the items in coll for which
+; (pred item) returns logical true. pred must be free of side-effects.
+; Returns a transducer when no collection is provided.
+(defn filter
+  ; TODO: Laziness; other arities.
+  ([f coll]
+   (reduce* (fn [acc e]
+              (if (f e)
+                (conj acc e)
+                acc))
+            []
+            coll)))
+
+; Returns a lazy sequence of the items in coll for which
+; (pred item) returns logical false. pred must be free of side-effects.
+; Returns a transducer when no collection is provided.
+(defn remove
+  ([pred]
+   (filter (complement pred)))
+  ([pred coll]
+   (filter (complement pred) coll)))
+
 ;; Input/output.
 (defn print [o]
   (native/raw "__value = jank::runtime::context::print(#{ o }#);"))
@@ -1219,19 +1304,32 @@
              {}
              (ns-map ns))))
 
+(defn- libspec? [x]
+  (or (symbol? x)
+      (and (vector? x)
+           (or (nil? (second x))
+               (keyword? (second x))))))
+
+(defn- prependss [x coll]
+  (if (symbol? x)
+    (cons x coll)
+    (concat x coll)))
+
 (defn- root-resource [lib]
   (str "/" (name lib)))
 
-(defn load [& paths]
-  (if (empty? paths)
-    nil
-    (let [path (root-resource (first paths))]
-      ; TODO: Check for cyclic deps, once we have dynamic vars.
-      (native/raw "__rt_ctx.load_module(runtime::detail::to_string(#{ path }#)).expect_ok();")
-      (recur (rest paths)))))
+(defn- throw-if [pred msg]
+  (when pred
+    (native/raw "throw #{ (ex-info :assertion-failure {:msg msg }) }#;")))
 
-(defn compile [path]
-  (native/raw "__rt_ctx.compile_module(runtime::detail::to_string(#{ path }#)).expect_ok();"))
+(defn alias [alias ns-sym]
+  (let [ns-obj (the-ns ns-sym)]
+    (assert (symbol? alias))
+    (native/raw "expect_object<ns>(#{ *ns* }#)->add_alias
+                 (
+                   expect_object<obj::symbol>(#{ alias }#),
+                   expect_object<ns>(#{ ns-obj }#)
+                 ).expect_ok();")))
 
 (defn refer [ns-sym & filters]
   (let [ns (find-ns ns-sym)
@@ -1256,40 +1354,115 @@
              nil
              to-refer)))
 
-; TODO: Handle vector flags
-(defn require [& libs]
-  (if (empty? libs)
+(defn load [& paths]
+  (if (empty? paths)
     nil
-    (let [lib (first libs)
-          sym (root-resource (if (sequential? lib)
-                               (first lib)
-                               (if (symbol? lib)
-                                 lib
-                                 (native/raw "throw #{ (ex-info :not-a-lib {:value lib}) }#;"))))]
-      (native/raw "auto const &s(runtime::detail::to_string(#{ sym }#));
-                  __rt_ctx.load_module(s).expect_ok() ;")
-      (recur (rest libs)))))
+    (let [path (first paths)]
+      ; TODO: Check for cyclic deps, once we have dynamic vars.
+      (native/raw "__rt_ctx.load_module(runtime::detail::to_string(#{ path }#)).expect_ok();")
+      (recur (rest paths)))))
 
-(defn use [& libs]
-  (if (empty? libs)
+; Loads a lib given its name. If `need-ns`, ensures that the associated
+; namespace exists after loading. If `require`, records the load so any
+; duplicate loads can be skipped.
+(defn- load-one [lib need-ns? require?]
+  (load (root-resource lib))
+  (throw-if (and need-ns? (not (find-ns lib)))
+            (str "namespace " lib " not found after loading " (root-resource lib)))
+  (when require?
     nil
-    (let [lib (first libs)
-          sym (if (sequential? lib)
-                (first lib)
-                (if (symbol? lib)
-                  lib
-                  (native/raw "throw #{ (ex-info :not-a-lib {:value lib}) }#;")))]
-      (require lib)
-      (refer sym)
-      (recur (rest libs)))))
+    ; TODO: Support this.
+    ;(dosync
+    ; (commute *loaded-libs* conj lib))
+    ))
 
-(defn alias [alias ns-sym]
-  (let [ns-obj (the-ns ns-sym)]
-    (assert (symbol? alias))
-    (native/raw "expect_object<ns>(#{ *ns* }#)->add_alias
-                 (
-                   expect_object<obj::symbol>(#{ alias }#),
-                   expect_object<ns>(#{ ns-obj }#)
-                 ).expect_ok();")))
+; Loads a lib given its name and forces a load of any libs it directly or
+; indirectly loads. If need-ns, ensures that the associated namespace
+; exists after loading. If require, records the load so any duplicate loads
+; can be skipped.
+(defn- load-all [lib need-ns? require?]
+  ; TODO: Port
+  ;(dosync
+  ; (commute *loaded-libs* #(reduce1 conj %1 %2)
+  ;          (binding [*loaded-libs* (ref (sorted-set))]
+  ;            (load-one lib need-ns require)
+  ;            @*loaded-libs*)))
+  nil)
+
+; Loads a lib with options
+(defn- load-lib [lib & options]
+  (let [opts (apply hash-map options)
+        ; TODO: Map destructuring.
+        as (:as opts)
+        reload (:reload opts)
+        reload-all (:reload-all opts)
+        require (:require opts)
+        use (:use opts)
+        verbose (:verbose opts)
+        as-alias (:as-alias opts)
+        ; TODO: Dynamic var
+        ;loaded (contains? @*loaded-libs* lib)
+        loaded? (native/raw "__value = make_box(__rt_ctx.module_loader.is_loaded(runtime::detail::to_string(#{ lib }#)));")
+        need-ns? (or as use)
+        load (cond reload-all load-all
+                   reload load-one
+                   (not loaded?) (cond need-ns? load-one
+                                       as-alias (fn [lib _need _require]
+                                                  (create-ns lib))
+                                       :else load-one))
+
+        filter-opts (select-keys opts [:exclude :only :rename :refer])
+        undefined-on-entry? (not (find-ns lib))]
+    (if load
+      (do ;try
+        (load lib need-ns? require)
+        ;(catch Exception e
+        ;  (when undefined-on-entry
+        ;    (remove-ns lib))
+        ;  (throw e))
+        )
+      (throw-if (and need-ns? (not (find-ns lib)))
+                (str "namespace " lib " not found")))
+    (when as
+      (alias as lib))
+    (when as-alias
+      (alias as-alias lib))
+    (when (or use (:refer filter-opts))
+      (apply refer lib (mapcat seq filter-opts)))))
+
+; Loads libs, interpreting libspecs, prefix lists, and flags for
+; forwarding to load-lib
+(defn- load-libs [& args]
+  (let [flags (filter keyword? args)
+        ; TODO: Implement these.
+        ;opts (interleave flags (repeat true))
+        opts (reduce* (fn [acc flag]
+                        (concat acc [flag true]))
+                      []
+                      flags)
+        args (filter (complement keyword?) args)]
+    ; TODO: Set syntax.
+    (let [supported (set [:as :reload :reload-all :require :use :verbose :refer :as-alias])
+          unsupported (seq (remove supported flags))]
+      (throw-if unsupported
+                (str "Unsupported option(s) supplied: " unsupported)))
+    (throw-if (not (seq args)) "Nothing specified to load")
+    (doseq [arg args]
+      (if (libspec? arg)
+        (apply load-lib nil (prependss arg opts))
+        (let [prefix (first arg)
+              args (rest args)]
+          (throw-if (nil? prefix) "prefix cannot be nil")
+          (doseq [arg args]
+            (apply load-lib prefix (prependss arg opts))))))))
+
+(defn compile [path]
+  (native/raw "__rt_ctx.compile_module(runtime::detail::to_string(#{ path }#)).expect_ok();"))
+
+(defn require [& args]
+  (apply load-libs :require args))
+
+(defn use [& args]
+  (apply load-libs :require :use args))
 
 (println "Bottom of clojure.core")

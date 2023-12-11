@@ -27,6 +27,7 @@ namespace jank::runtime
 
     /* Returns -1 when not found. Turns the arg into a string, so it accepts anything.
      * Searches for the whole string, not just a char. */
+    native_integer first_index_of(object_ptr const c) const;
     native_integer last_index_of(object_ptr const c) const;
 
     /* behavior::countable */

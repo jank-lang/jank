@@ -56,6 +56,15 @@ namespace jank::runtime
     return ok(make_box(data.substr(start, end)));
   }
 
+  native_integer obj::string::first_index_of(object_ptr const c) const
+  {
+    auto const s(runtime::detail::to_string(c));
+    auto const found(data.find_first_of(s));
+    if(found == native_string::npos)
+    { return -1; }
+    return static_cast<native_integer>(found);
+  }
+
   native_integer obj::string::last_index_of(object_ptr const c) const
   {
     auto const s(runtime::detail::to_string(c));
