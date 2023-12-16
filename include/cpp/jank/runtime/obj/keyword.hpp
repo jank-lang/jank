@@ -46,6 +46,7 @@ namespace jank::runtime
     bool operator ==(static_object const &rhs) const;
 
     object base{ object_type::keyword };
+    /* TODO: Box this. */
     obj::symbol sym;
     option<object_ptr> meta;
   };

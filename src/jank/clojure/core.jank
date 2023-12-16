@@ -588,6 +588,18 @@
           nil
           s)))
 
+; Returns the first logical true value of (pred x) for any x in coll,
+; else nil.  One common idiom is to use a set as pred, for example
+; this will return :fred if :fred is in the sequence, otherwise nil:
+; (some #{:fred} coll)
+(defn some [pred coll]
+  (let [s (seq coll)]
+    (when s
+      (or (pred (first s)) (recur pred (next s))))))
+
+(defn not-any? [pred coll]
+  (not (some pred coll)))
+
 ;; Maps.
 (defn hash-map
   ([]
@@ -785,6 +797,14 @@
        (native/raw "__value = make_box(runtime::detail::equal(#{ r }#, #{ (first args) }#));"))
      false)))
 
+(defn not=
+  ([x]
+   false)
+  ([x y]
+   (not (= x y)))
+  ([x y & more]
+   (not (apply = x y more))))
+
 (defn <
   ([x]
    true)
@@ -979,6 +999,10 @@
 (reset-meta! (var rand) {:arities {0 {:supports-unboxed-input? true
                                       :unboxed-output? true}}})
 
+; Vars.
+(defn var? [o]
+  (native/raw "__value = make_box(#{ o }#->type == object_type::var)"))
+
 ;; Keywords.
 (defn keyword? [o]
   (native/raw "__value = make_box(#{ o }#->type == object_type::keyword)"))
@@ -1052,6 +1076,20 @@
                );"))
 (defn symbol? [o]
   (native/raw "__value = make_box(#{ o }#->type == object_type::symbol)"))
+
+; Returns a Symbol with the given namespace and name. Arity-1 works
+; on strings, keywords, and vars.
+(defn symbol
+  ([o]
+   (cond
+     (symbol? o) o
+     ; TODO: Intern.
+     (string? o) (native/raw "__value = make_box<obj::symbol>(runtime::detail::to_string(#{ o }#));")
+     (var? o) (native/raw "__value = expect_object<runtime::var>(#{ o }#)->name;")
+     (keyword? o) (native/raw "__value = make_box<obj::symbol>(expect_object<obj::keyword>(#{ o }#)->sym) ;")
+     :else (native/raw "throw #{ (ex-info :cannot-convert-to-symbol {:o o}) }#;")))
+  ([ns o]
+   (native/raw "__value = make_box<obj::symbol>(runtime::detail::to_string(#{ ns }#), runtime::detail::to_string(#{ o }#));")))
 
 ;; Sequences.
 (defn iterate [f x]
@@ -1464,5 +1502,34 @@
 
 (defn use [& args]
   (apply load-libs :require :use args))
+
+
+; Sets *ns* to the namespace named by name (unevaluated), creating it
+; if needed. References can be zero or more of: (:refer-clojure ...)
+; (:require ...) (:use ...) (:import ...) (:load ...)
+; with the syntax of refer-clojure/require/use/import/load respectively.
+(defmacro ns [name & references]
+  (let [process-reference (fn [reference]
+                            (let [kname (first reference)
+                                  args (rest reference)]
+                              (cons (symbol "clojure.core" (clojure.core/name kname))
+                                    (map (fn [a]
+                                           (list 'quote a))
+                                         args))))
+        refer-full-clojure? (not-any? (fn [ref]
+                                        (= :refer-clojure (first ref)))
+                                      references)]
+    (list 'do
+          (list 'clojure.core/in-ns (list 'quote name))
+          ; TODO: with-loading-context
+          (concat '(do) ;with-loading-context
+                  (when (and (not= name 'clojure.core) refer-full-clojure?)
+                    [(list 'clojure.core/refer '(quote clojure.core))])
+                  (map process-reference references))
+          ; TODO: Dynamic vars
+          ;(if (= '~name 'clojure.core)
+          ;  nil
+          ;  (do (dosync (commute @#'*loaded-libs* conj '~name)) nil))
+          )))
 
 (println "Bottom of clojure.core")

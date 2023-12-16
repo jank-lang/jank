@@ -45,7 +45,6 @@ namespace jank::runtime
 
     object base{ object_type::var };
     ns_ptr n;
-    /* TODO: Make sure this gets fully qualified. */
     obj::symbol_ptr name;
     option<object_ptr> meta;
 
