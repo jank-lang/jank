@@ -228,6 +228,9 @@ namespace jank::runtime::module
   native_bool loader::is_loaded(native_string_view const &module) const
   { return loaded.contains(module); }
 
+  void loader::set_loaded(native_string_view const &module)
+  { loaded.emplace(module); }
+
   result<void, native_string> loader::load_ns(native_string_view const &module)
   {
     profile::timer timer{ "load_ns" };

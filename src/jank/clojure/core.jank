@@ -574,6 +574,26 @@
        r
        (recur r (first zs) (rest zs))))))
 
+; Creates a new vector containing the args.
+(defn vector
+  ([]
+   [])
+  ([a]
+   [a])
+  ([a b]
+   [a b])
+  ([a b c]
+   [a b c])
+  ([a b c d]
+   [a b c d])
+	([a b c d e]
+   [a b c d e])
+	([a b c d e f]
+   [a b c d e f])
+  ([a b c d e f & args]
+   ; TODO: LazilyPersistentVector
+   (vec (concat [a b c d e f] args))))
+
 ; Repeatedly executes body (presumably for side-effects) with
 ; bindings and filtering as provided by `for`.  Does not retain
 ; the head of the sequence. Returns nil.
@@ -1503,7 +1523,6 @@
 (defn use [& args]
   (apply load-libs :require :use args))
 
-
 ; Sets *ns* to the namespace named by name (unevaluated), creating it
 ; if needed. References can be zero or more of: (:refer-clojure ...)
 ; (:require ...) (:use ...) (:import ...) (:load ...)
@@ -1526,10 +1545,13 @@
                   (when (and (not= name 'clojure.core) refer-full-clojure?)
                     [(list 'clojure.core/refer '(quote clojure.core))])
                   (map process-reference references))
-          ; TODO: Dynamic vars
-          ;(if (= '~name 'clojure.core)
-          ;  nil
-          ;  (do (dosync (commute @#'*loaded-libs* conj '~name)) nil))
+          (list 'if (list '= (list 'quote name) (list 'quote 'clojure.core))
+            'nil
+            (list 'let (vector 'name (list 'quote name))
+              (list 'native/raw "__rt_ctx.module_loader.set_loaded(runtime::detail::to_string(#{ name }#));")
+              ; TODO: Dynamic vars
+              ;(dosync (commute @#'*loaded-libs* conj '~name))
+              'nil))
           )))
 
 (println "Bottom of clojure.core")

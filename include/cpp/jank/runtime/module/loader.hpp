@@ -58,6 +58,7 @@ namespace jank::runtime::module
     loader(context &rt_ctx, native_string_view const &ps);
 
     native_bool is_loaded(native_string_view const &) const;
+    void set_loaded(native_string_view const &);
     result<void, native_string> load_ns(native_string_view const &module);
     result<void, native_string> load(native_string_view const &module);
     result<void, native_string> load_pcm(file_entry const &entry) const;
@@ -69,6 +70,7 @@ namespace jank::runtime::module
 
     context &rt_ctx;
     native_string paths;
+    /* TODO: These will need synchonization. */
     /* This maps module strings to entries. Module strings are like fully qualified Java
      * class names. */
     native_unordered_map<native_string, entry> entries;

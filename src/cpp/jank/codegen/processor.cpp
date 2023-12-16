@@ -764,6 +764,7 @@ namespace jank::codegen
 
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::context::unique_string("map"));
+    /* TODO: Jump right to a hash map, if we have enough values. */
     fmt::format_to
     (
       inserter,
