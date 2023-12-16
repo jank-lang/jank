@@ -357,7 +357,10 @@
 (defn false? [o]
   (native/raw "__value = runtime::detail::equal(#{ o }#, #{ false }#) ? #{ true }# : #{ false }#"))
 (defn not [o]
-  (native/raw "__value = runtime::detail::equal(#{ o }#, #{ false }#) ? #{ true }# : #{ false }#"))
+  (native/raw "if(o == obj::nil::nil_const())
+               { __value = #{ true }#; }
+               else
+               { __value = runtime::detail::equal(#{ o }#, #{ false }#) ? #{ true }# : #{ false }#; }"))
 (defn some? [o]
   (native/raw "__value = (o == obj::nil::nil_const()) ? #{ false }# : #{ true }#"))
 
@@ -1332,23 +1335,26 @@
 (defn refer [ns-sym & filters]
   (let [ns (find-ns ns-sym)
         _ (when (nil? ns)
-            (native/raw "throw #{ (ex-info :no-namespace {:value ns-sym}) }#;"))
+            (native/raw "throw #{ (ex-info :unknown-namespace {:value ns-sym}) }#;"))
         filters (apply hash-map filters)
+        rename (or (:rename filters) {})
+        exclude? (set (:exclude filters))
         sym->var (ns-publics ns)
         to-refer (if (= :all (get filters :refer))
                    (keys sym->var)
                    (or (get filters :refer) (get filters :only) (keys sym->var)))]
-    ; TODO: Support :rename and :exclude
     ; TODO: Loop
     (reduce* (fn [acc sym]
-               (let [v (get sym->var sym)]
-                 (when (nil? v)
-                   (native/raw "throw #{ (ex-info :var-does-not-exist {:value sym}) }#;"))
-                 (native/raw "expect_object<runtime::ns>(#{ *ns* }#)->refer
-                              (
-                                expect_object<obj::symbol>(#{ sym }#),
-                                expect_object<var>(#{ v }#)
-                              ).expect_ok();")))
+               (when (not (exclude? sym))
+                 (let [v (get sym->var sym)
+                       sym (rename sym sym)]
+                   (when (nil? v)
+                     (native/raw "throw #{ (ex-info :var-does-not-exist {:value sym}) }#;"))
+                   (native/raw "expect_object<runtime::ns>(#{ *ns* }#)->refer
+                                (
+                                  expect_object<obj::symbol>(#{ sym }#),
+                                  expect_object<var>(#{ v }#)
+                                ).expect_ok();"))))
              nil
              to-refer)))
 
@@ -1360,8 +1366,8 @@
       (native/raw "__rt_ctx.load_module(runtime::detail::to_string(#{ path }#)).expect_ok();")
       (recur (rest paths)))))
 
-; Loads a lib given its name. If `need-ns`, ensures that the associated
-; namespace exists after loading. If `require`, records the load so any
+; Loads a lib given its name. If `need-ns?`, ensures that the associated
+; namespace exists after loading. If `require?`, records the load so any
 ; duplicate loads can be skipped.
 (defn- load-one [lib need-ns? require?]
   (load (root-resource lib))
@@ -1379,7 +1385,7 @@
 ; exists after loading. If require, records the load so any duplicate loads
 ; can be skipped.
 (defn- load-all [lib need-ns? require?]
-  ; TODO: Port
+  ; TODO: Port once we have dynamic vars
   ;(dosync
   ; (commute *loaded-libs* #(reduce1 conj %1 %2)
   ;          (binding [*loaded-libs* (ref (sorted-set))]
@@ -1412,6 +1418,7 @@
         filter-opts (select-keys opts [:exclude :only :rename :refer])
         undefined-on-entry? (not (find-ns lib))]
     (if load
+      ; TODO: Exception handling
       (do ;try
         (load lib need-ns? require)
         ;(catch Exception e
@@ -1432,7 +1439,7 @@
 ; forwarding to load-lib
 (defn- load-libs [& args]
   (let [flags (filter keyword? args)
-        ; TODO: Implement these.
+        ; TODO: Implement `interleave` and `repeat`.
         ;opts (interleave flags (repeat true))
         opts (reduce* (fn [acc flag]
                         (concat acc [flag true]))
@@ -1446,13 +1453,8 @@
                 (str "Unsupported option(s) supplied: " unsupported)))
     (throw-if (not (seq args)) "Nothing specified to load")
     (doseq [arg args]
-      (if (libspec? arg)
-        (apply load-lib nil (prependss arg opts))
-        (let [prefix (first arg)
-              args (rest args)]
-          (throw-if (nil? prefix) "prefix cannot be nil")
-          (doseq [arg args]
-            (apply load-lib prefix (prependss arg opts))))))))
+      (throw-if (not (libspec? arg)) (str "not a libspec: " arg))
+      (apply load-lib (prependss arg opts)))))
 
 (defn compile [path]
   (native/raw "__rt_ctx.compile_module(runtime::detail::to_string(#{ path }#)).expect_ok();"))

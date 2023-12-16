@@ -6,7 +6,7 @@
 
 namespace jank::runtime
 {
-  ns::static_object(obj::symbol_ptr const &name, context const &c)
+  ns::static_object(obj::symbol_ptr const &name, context &c)
     : name{ name }
     , vars{ obj::persistent_hash_map::empty() }
     , aliases{ obj::persistent_hash_map::empty() }
@@ -66,16 +66,24 @@ namespace jank::runtime
     auto locked_vars(vars.wlock());
     if(auto const found = (*locked_vars)->data.find(sym))
     {
-      return err
-      (
-        fmt::format
-        (
-          "{} already refers to {} in ns {}",
-          sym->to_string(),
-          expect_object<runtime::var>(*found)->to_string(),
-          to_string()
-        )
-      );
+      if(found->data->type == object_type::var)
+      {
+        auto const found_var(expect_object<runtime::var>(found->data));
+        auto const clojure_core(rt_ctx.find_ns(make_box<obj::symbol>("clojure.core")).unwrap());
+        if(var->n != found_var->n && (found_var->n != clojure_core))
+        {
+          return err
+          (
+            fmt::format
+            (
+              "{} already refers to {} in ns {}",
+              sym->to_string(),
+              expect_object<runtime::var>(*found)->to_string(),
+              to_string()
+            )
+          );
+        }
+      }
     }
     *locked_vars = make_box<obj::persistent_hash_map>((*locked_vars)->data.set(sym, var));
     return ok();

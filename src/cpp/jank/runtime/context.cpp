@@ -1,4 +1,5 @@
 #include <exception>
+#include <experimental/scope>
 
 #include <fmt/compile.h>
 
@@ -220,21 +221,20 @@ namespace jank::runtime
 
   result<void, native_string> context::load_module(native_string_view const &module)
   {
+    auto const ns(current_ns());
+
     native_string absolute_module;
     if(module.starts_with('/'))
     { absolute_module = module.substr(1); }
     else
-    {
-      auto const ns(current_ns());
-      absolute_module = module::nest_module(ns->to_string(), module);
-    }
+    { absolute_module = module::nest_module(ns->to_string(), module); }
 
-    /* TODO: Support reloading. */
-    if(module_loader.is_loaded(absolute_module) && !compiling)
+    /* TODO: Dynamic vars + thread local stacks will solve this better. */
+    std::experimental::scope_exit reset
     {
-      fmt::println("Module already loaded: {}", absolute_module);
-      return ok();
-    }
+      [=]()
+      { find_var("clojure.core", "*ns*").unwrap()->set_root(ns); }
+    };
 
     try
     {

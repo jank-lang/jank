@@ -19,7 +19,7 @@ namespace jank::runtime
     static constexpr bool pointer_free{ false };
 
     static_object() = delete;
-    static_object(obj::symbol_ptr const &name, context const &c);
+    static_object(obj::symbol_ptr const &name, context &c);
 
     var_ptr intern_var(obj::symbol_ptr const &);
     option<var_ptr> find_var(obj::symbol_ptr const &);
@@ -48,7 +48,7 @@ namespace jank::runtime
     /* TODO: Benchmark the use of atomics here. That's what Clojure uses. */
     folly::Synchronized<obj::persistent_hash_map_ptr> vars;
     folly::Synchronized<obj::persistent_hash_map_ptr> aliases;
-    context const &rt_ctx;
+    context &rt_ctx;
   };
 
   using ns = static_object<object_type::ns>;
