@@ -156,28 +156,29 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, runtime::obj::list>)
           {
-            auto ret_tmp(runtime::context::unique_string("vec"));
             fmt::format_to
-            (inserter, "jank::make_box<jank::runtime::obj::list>(", ret_tmp);
+            (inserter, "jank::make_box<jank::runtime::obj::list>(");
+            native_bool need_comma{};
             for(auto const &form : typed_o->data)
             {
-              fmt::format_to(inserter, ", ");
+              if(need_comma)
+              { fmt::format_to(inserter, ", "); }
+              need_comma = true;
               gen_constant(form, buffer, true);
             }
             fmt::format_to(inserter, ")");
           }
           else if constexpr(std::same_as<T, runtime::obj::vector>)
           {
-            auto ret_tmp(runtime::context::unique_string("vec"));
             fmt::format_to
-            (inserter, "jank::make_box<jank::runtime::obj::vector>(", ret_tmp);
+            (inserter, "jank::make_box<jank::runtime::obj::vector>(");
             bool need_comma{};
             for(auto const &form : typed_o->data)
             {
               if(need_comma)
               { fmt::format_to(inserter, ", "); }
-              gen_constant(form, buffer, true);
               need_comma = true;
+              gen_constant(form, buffer, true);
             }
             fmt::format_to(inserter, ")");
           }
