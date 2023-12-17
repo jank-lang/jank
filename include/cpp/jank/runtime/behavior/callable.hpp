@@ -64,7 +64,7 @@ namespace jank::runtime
        *
        * We cannot perform the correct call without all of this information. Since function calls
        * are on the hottest path there is, we pack all of this into a single byte. Questions
-       * 1 and 2 each get a bit and question 3 gets 4 bits to store the fixed arg count.
+       * 1 and 2 each get a bit and question 3 gets 6 bits to store the fixed arg count.
        *
        * From there, when we use it, we strip out the bit for question 2 and we switch/case on
        * the rest. This allows us to do a O(1) jump on the combination of whether it's variadic

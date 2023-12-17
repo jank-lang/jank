@@ -86,14 +86,14 @@ namespace jank::runtime::obj::detail
     {
       if(static_cast<parent_type const*>(this)->data.empty())
       { return nullptr; }
-      return jank::make_box<sequence_type>(static_cast<parent_type const*>(this), static_cast<parent_type const*>(this)->data.begin(), static_cast<parent_type const*>(this)->data.end());
+      return make_box<sequence_type>(static_cast<parent_type const*>(this), static_cast<parent_type const*>(this)->data.begin(), static_cast<parent_type const*>(this)->data.end());
     }
 
     native_box<sequence_type> fresh_seq() const
     {
       if(static_cast<parent_type const*>(this)->data.empty())
       { return nullptr; }
-      return jank::make_box<sequence_type>(static_cast<parent_type const*>(this), static_cast<parent_type const*>(this)->data.begin(), static_cast<parent_type const*>(this)->data.end());
+      return make_box<sequence_type>(static_cast<parent_type const*>(this), static_cast<parent_type const*>(this)->data.begin(), static_cast<parent_type const*>(this)->data.end());
     }
 
     /* behavior::countable */

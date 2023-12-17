@@ -17,7 +17,7 @@ namespace jank::runtime::obj::detail
     base_persistent_map_sequence(base_persistent_map_sequence const &) = default;
     base_persistent_map_sequence(object_ptr c, iterator_type const &b, iterator_type const &e)
       : coll{ c }, begin{ b }, end{ e }
-    { }
+    { assert(begin != end); }
 
     /* behavior::objectable */
     native_bool equal(object const &o) const

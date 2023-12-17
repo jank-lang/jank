@@ -32,11 +32,6 @@ namespace jank::runtime
       static auto const ret(make_box<static_object>());
       return ret;
     }
-    static auto empty_seq()
-    {
-      static auto const ret(runtime::seq(empty()));
-      return ret;
-    }
 
     /* behavior::objectable */
     native_bool equal(object const &) const;

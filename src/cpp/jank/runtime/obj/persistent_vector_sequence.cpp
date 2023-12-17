@@ -4,10 +4,10 @@ namespace jank::runtime
 {
   obj::persistent_vector_sequence::static_object(obj::vector_ptr v)
     : vec{ v }
-  { }
+  { assert(v->count() > 0); }
   obj::persistent_vector_sequence::static_object(obj::vector_ptr v, size_t i)
     : vec{ v }, index{ i }
-  { }
+  { assert(v->count() > 0); }
 
   /* behavior::objectable */
   native_bool obj::persistent_vector_sequence::equal(object const &o) const

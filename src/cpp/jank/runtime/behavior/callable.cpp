@@ -30,7 +30,7 @@ namespace jank::runtime
           switch(arity_flags)
           {
             case callable::mask_variadic_arity(0):
-              return typed_source->call(obj::list::empty_seq());
+              return typed_source->call(obj::nil::nil_const());
             default:
               return typed_source->call();
           }
@@ -61,7 +61,7 @@ namespace jank::runtime
               return typed_source->call(make_box<obj::native_array_sequence>(a1));
             case callable::mask_variadic_arity(1):
               if(!callable::is_variadic_ambiguous(arity_flags))
-              { return typed_source->call(a1, obj::list::empty_seq()); }
+              { return typed_source->call(a1, obj::nil::nil_const()); }
             default:
               return typed_source->call(a1);
           }
@@ -101,7 +101,7 @@ namespace jank::runtime
               return typed_source->call(a1, make_box<obj::native_array_sequence>(a2));
             case callable::mask_variadic_arity(2):
               if(!callable::is_variadic_ambiguous(arity_flags))
-              { return typed_source->call(a1, a2, obj::list::empty_seq()); }
+              { return typed_source->call(a1, a2, obj::nil::nil_const()); }
             default:
               return typed_source->call(a1, a2);
           }
@@ -142,7 +142,7 @@ namespace jank::runtime
               return typed_source->call(a1, a2, make_box<obj::native_array_sequence>(a3));
             case callable::mask_variadic_arity(3):
               if(!callable::is_variadic_ambiguous(arity_flags))
-              { return typed_source->call(a1, a2, a3, obj::list::empty_seq()); }
+              { return typed_source->call(a1, a2, a3, obj::nil::nil_const()); }
             default:
               return typed_source->call(a1, a2, a3);
           }
@@ -178,7 +178,7 @@ namespace jank::runtime
               return typed_source->call(a1, a2, a3, make_box<obj::native_array_sequence>(a4));
             case callable::mask_variadic_arity(4):
               if(!callable::is_variadic_ambiguous(arity_flags))
-              { return typed_source->call(a1, a2, a3, a4, obj::list::empty_seq()); }
+              { return typed_source->call(a1, a2, a3, a4, obj::nil::nil_const()); }
             default:
               return typed_source->call(a1, a2, a3, a4);
           }
@@ -216,7 +216,7 @@ namespace jank::runtime
               return typed_source->call(a1, a2, a3, a4, make_box<obj::native_array_sequence>(a5));
             case callable::mask_variadic_arity(5):
               if(!callable::is_variadic_ambiguous(arity_flags))
-              { return typed_source->call(a1, a2, a3, a4, a5, obj::list::empty_seq()); }
+              { return typed_source->call(a1, a2, a3, a4, a5, obj::nil::nil_const()); }
             default:
               return typed_source->call(a1, a2, a3, a4, a5);
           }
@@ -256,7 +256,7 @@ namespace jank::runtime
               return typed_source->call(a1, a2, a3, a4, a5, make_box<obj::native_array_sequence>(a6));
             case callable::mask_variadic_arity(6):
               if(!callable::is_variadic_ambiguous(arity_flags))
-              { return typed_source->call(a1, a2, a3, a4, a5, a6, obj::list::empty_seq()); }
+              { return typed_source->call(a1, a2, a3, a4, a5, a6, obj::nil::nil_const()); }
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6);
           }
@@ -298,7 +298,7 @@ namespace jank::runtime
               return typed_source->call(a1, a2, a3, a4, a5, a6, make_box<obj::native_array_sequence>(a7));
             case callable::mask_variadic_arity(7):
               if(!callable::is_variadic_ambiguous(arity_flags))
-              { return typed_source->call(a1, a2, a3, a4, a5, a6, a7, obj::list::empty_seq()); }
+              { return typed_source->call(a1, a2, a3, a4, a5, a6, a7, obj::nil::nil_const()); }
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6, a7);
           }
@@ -342,7 +342,7 @@ namespace jank::runtime
               return typed_source->call(a1, a2, a3, a4, a5, a6, a7, make_box<obj::native_array_sequence>(a8));
             case callable::mask_variadic_arity(8):
               if(!callable::is_variadic_ambiguous(arity_flags))
-              { return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, obj::list::empty_seq()); }
+              { return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, obj::nil::nil_const()); }
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8);
           }
@@ -388,7 +388,7 @@ namespace jank::runtime
               return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, make_box<obj::native_array_sequence>(a9));
             case callable::mask_variadic_arity(9):
               if(!callable::is_variadic_ambiguous(arity_flags))
-              { return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, obj::list::empty_seq()); }
+              { return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, obj::nil::nil_const()); }
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
           }
