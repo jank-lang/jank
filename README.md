@@ -11,7 +11,7 @@ https://jank-lang.org
 
 For the current progress of jank and its usability, see the tables here: https://jank-lang.org/progress/
 
-The current tl;dr for jank's usability is: **getting there, but not ready for
+The current tl;dr for jank's usability is: **still getting there, but not ready for
 use yet**.
 
 ## Latest binaries
