@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <set>
 #include <string_view>
 
 #include <folly/FBVector.h>
@@ -27,6 +28,8 @@ namespace jank
   using native_vector = folly::fbvector<T, native_allocator<T>>;
   template <typename K, typename V>
   using native_map = std::map<K, V, native_allocator<std::pair<K const, V>>>;
+  template <typename T>
+  using native_set = std::set<T, std::less<T>, native_allocator<T>>;
 
   /* TODO: Try out unordered_flat_map once vcpkg has boost 1.81.0. */
   template

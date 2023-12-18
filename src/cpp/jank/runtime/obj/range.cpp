@@ -6,10 +6,10 @@
 namespace jank::runtime
 {
   obj::range::static_object(object_ptr const end)
-    : start{ jank::make_box(0) }, end{ end }, step{ jank::make_box(1) }
+    : start{ make_box(0) }, end{ end }, step{ make_box(1) }
   { }
   obj::range::static_object(object_ptr const start, object_ptr const end)
-    : start{ start }, end{ end }, step{ jank::make_box(1) }
+    : start{ start }, end{ end }, step{ make_box(1) }
   { }
   obj::range::static_object(object_ptr const start, object_ptr const end, object_ptr const step)
     : start{ start }, end{ end }, step{ step }
@@ -18,7 +18,7 @@ namespace jank::runtime
   obj::range_ptr obj::range::seq()
   { return this; }
   obj::range_ptr obj::range::fresh_seq() const
-  { return jank::make_box<obj::range>(start, end, step); }
+  { return make_box<obj::range>(start, end, step); }
 
   object_ptr obj::range::first() const
   { return start; }
@@ -32,7 +32,7 @@ namespace jank::runtime
     if(!lt(next_start, end))
     { return nullptr; }
 
-    auto const ret(jank::make_box<obj::range>(next_start, end, step));
+    auto const ret(make_box<obj::range>(next_start, end, step));
     cached_next = ret;
     return ret;
   }
@@ -75,6 +75,7 @@ namespace jank::runtime
         else
         {
           auto seq(typed_o->fresh_seq());
+          /* TODO: No way this is correct. Also, this is common code; can it be shared? */
           for(auto it(fresh_seq()); it != nullptr; seq = seq->next_in_place(), seq = seq->next_in_place())
           {
             if(seq == nullptr || !runtime::detail::equal(it, seq->first()))

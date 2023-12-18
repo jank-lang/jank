@@ -11,9 +11,6 @@
 
 namespace jank::evaluate
 {
-  template <typename T>
-  concept has_frame = requires(T const *t){ t->frame; };
-
   /* Some expressions don't make sense to eval outright and aren't fns that can be JIT compiled.
    * For those, we wrap them in a fn expression and then JIT compile and call them.
    *
@@ -39,8 +36,48 @@ namespace jank::evaluate
 
     wrapper.arities.emplace_back(std::move(arity));
     wrapper.frame = expr.frame;
+    wrapper.name = runtime::context::unique_string("repl_fn");
 
     return wrapper;
+  }
+
+  analyze::expr::function<analyze::expression> wrap_expressions
+  (
+    native_vector<analyze::expression_ptr> const &exprs,
+    analyze::processor const &an_prc
+  )
+  {
+    if(exprs.empty())
+    {
+      return wrap_expression
+      (
+        analyze::expr::primitive_literal<analyze::expression>
+        {
+          analyze::expression_base
+          { {}, analyze::expression_type::return_statement, an_prc.root_frame, true },
+          runtime::obj::nil::nil_const()
+        }
+      );
+    }
+    else
+    {
+      /* We'll cheat a little and build a fn using just the first expression. Then we can just
+       * add the rest. I'd rather do this than duplicate all of the wrapping logic. */
+      auto ret(wrap_expression(exprs[0]));
+      auto &body(ret.arities[0].body.body);
+      /* We normally wrap one expression, which is a return statement, but we'll be potentially
+       * adding more, so let's not make assumptions yet. */
+      body[0]->get_base()->expr_type = analyze::expression_type::statement;
+
+      for(auto const &expr : exprs)
+      { body.emplace_back(expr); }
+
+      /* Finally, mark the last body item as our return. */
+      auto const last_body_index(body.size() - 1);
+      body[last_body_index]->get_base()->expr_type = analyze::expression_type::return_statement;
+
+      return ret;
+    }
   }
 
   analyze::expr::function<analyze::expression> wrap_expression(analyze::expression_ptr const expr)
@@ -159,15 +196,45 @@ namespace jank::evaluate
             default:
             {
               /* TODO: This could be optimized; making lists sucks right now. */
-              runtime::detail::persistent_list all{ arg_vals.rbegin(), arg_vals.rend() };
+              runtime::detail::native_persistent_list all{ arg_vals.rbegin(), arg_vals.rend() };
               for(size_t i{}; i < 10; ++i)
               { all = all.rest(); }
               return runtime::dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3], arg_vals[4], arg_vals[5], arg_vals[6], arg_vals[7], arg_vals[8], arg_vals[9], make_box<runtime::obj::list>(all));
             }
           }
         }
+        else if constexpr(std::same_as<T, runtime::obj::set>)
+        {
+          auto const s(expr.arg_exprs.size());
+          if(s != 1)
+          { throw std::runtime_error{ fmt::format("invalid call with {} args to: {}", s, typed_source->to_string()) }; }
+          return typed_source->call(eval(rt_ctx, jit_prc, expr.arg_exprs[0]));
+        }
+        else if constexpr
+        (
+          std::same_as<T, runtime::obj::keyword>
+          || std::same_as<T, runtime::obj::persistent_hash_map>
+          || std::same_as<T, runtime::obj::persistent_array_map>
+        )
+        {
+          auto const s(expr.arg_exprs.size());
+          switch(s)
+          {
+            case 1:
+              return typed_source->call(eval(rt_ctx, jit_prc, expr.arg_exprs[0]));
+            case 2:
+              return typed_source->call
+              (
+                eval(rt_ctx, jit_prc, expr.arg_exprs[0]),
+                eval(rt_ctx, jit_prc, expr.arg_exprs[1])
+              );
+            default:
+              throw std::runtime_error
+              { fmt::format("invalid call with {} args to: {}", s, typed_source->to_string()) };
+          }
+        }
         else
-        { throw std::runtime_error{ fmt::format("not callable: {}", typed_source->to_string()) }; }
+        { throw std::runtime_error{ fmt::format("invalid call with 0 args to: {}", expr.arg_exprs.size(), typed_source->to_string()) }; }
       },
       source
     );
@@ -183,7 +250,7 @@ namespace jank::evaluate
     if(expr.data->type == runtime::object_type::keyword)
     {
       auto const d(runtime::expect_object<runtime::obj::keyword>(expr.data));
-      return rt_ctx.intern_keyword(d->sym, d->resolved);
+      return rt_ctx.intern_keyword(d->sym, true).expect_ok();
     }
     return expr.data;
   }
@@ -195,7 +262,7 @@ namespace jank::evaluate
     analyze::expr::vector<analyze::expression> const &expr
   )
   {
-    runtime::detail::transient_vector ret;
+    runtime::detail::native_transient_vector ret;
     for(auto const &e : expr.data_exprs)
     { ret.push_back(eval(rt_ctx, jit_prc, e)); }
     return make_box<runtime::obj::vector>(ret.persistent());
@@ -208,8 +275,9 @@ namespace jank::evaluate
     analyze::expr::map<analyze::expression> const &expr
   )
   {
-    /* TODO: Optimize with a transient or something. */
-    runtime::detail::persistent_map ret;
+    /* TODO: Pre-allocate array. */
+    /* TODO: If there are more exprs than the max array map keys, we need a hash map. */
+    runtime::detail::native_array_map ret;
     for(auto const &e : expr.data_exprs)
     {
       ret.insert_or_assign
@@ -218,7 +286,7 @@ namespace jank::evaluate
         eval(rt_ctx, jit_prc, e.second)
       );
     }
-    return make_box<runtime::obj::map>(std::move(ret));
+    return make_box<runtime::obj::persistent_array_map>(std::move(ret));
   }
 
   runtime::object_ptr eval
@@ -237,8 +305,17 @@ namespace jank::evaluate
     analyze::expr::function<analyze::expression> const &expr
   )
   {
-    jank::codegen::processor cg_prc{ rt_ctx, expr };
-    return jit_prc.eval(rt_ctx, cg_prc).expect_ok().unwrap();
+    auto const &module
+    (
+      runtime::module::nest_module
+      (
+        runtime::expect_object<runtime::ns>
+        (rt_ctx.intern_var("clojure.core", "*ns*").expect_ok()->get_root())->to_string(),
+        runtime::munge(expr.name)
+      )
+    );
+    codegen::processor cg_prc{ rt_ctx, expr, module, codegen::compilation_target::repl };
+    return jit_prc.eval(cg_prc).expect_ok().unwrap();
   }
 
   runtime::object_ptr eval
@@ -257,7 +334,7 @@ namespace jank::evaluate
     analyze::expr::do_<analyze::expression> const &expr
   )
   {
-    runtime::object_ptr ret{};
+    runtime::object_ptr ret{ runtime::obj::nil::nil_const() };
     for(auto const &form : expr.body)
     { ret = eval(rt_ctx, jit_prc, form); }
     return ret;

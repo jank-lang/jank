@@ -70,6 +70,7 @@ namespace jank::runtime
 
   native_bool is_nil(object_ptr o);
   native_bool is_some(object_ptr o);
+  native_bool is_map(object_ptr o);
   object_ptr seq(object_ptr s);
   object_ptr fresh_seq(object_ptr s);
   object_ptr first(object_ptr s);
@@ -81,4 +82,6 @@ namespace jank::runtime
   object_ptr get(object_ptr m, object_ptr key, object_ptr fallback);
   object_ptr get_in(object_ptr m, object_ptr keys);
   object_ptr get_in(object_ptr m, object_ptr keys, object_ptr fallback);
+  object_ptr find(object_ptr s, object_ptr key);
+  native_bool contains(object_ptr s, object_ptr key);
 }

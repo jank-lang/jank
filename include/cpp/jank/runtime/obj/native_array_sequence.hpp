@@ -7,7 +7,7 @@ namespace jank::runtime
   {
     static constexpr bool pointer_free{ false };
 
-    static_object() = default;
+    static_object() = delete;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
     static_object(object_ptr * const arr, size_t const size);

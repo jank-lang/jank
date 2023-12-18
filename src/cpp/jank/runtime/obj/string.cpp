@@ -35,6 +35,45 @@ namespace jank::runtime
   native_integer obj::string::to_hash() const
   { return data.to_hash(); }
 
+  result<obj::string_ptr, native_string> obj::string::substring(native_integer start) const
+  { return substring(start, static_cast<native_integer>(data.size())); }
+
+  result<obj::string_ptr, native_string> obj::string::substring
+  (
+    native_integer const start,
+    native_integer const end
+  ) const
+  {
+    if(start < 0)
+    { return err(fmt::format("start index {} is less than 0", start)); }
+    if(end < 0)
+    { return err(fmt::format("end index {} is less than 0", start)); }
+    else if(static_cast<size_t>(start) > data.size())
+    { return err(fmt::format("start index {} is outside the bounds of {}", start, data.size())); }
+    else if(static_cast<size_t>(end) > data.size())
+    { return err(fmt::format("end index {} is outside the bounds of {}", end, data.size())); }
+
+    return ok(make_box(data.substr(start, end)));
+  }
+
+  native_integer obj::string::first_index_of(object_ptr const c) const
+  {
+    auto const s(runtime::detail::to_string(c));
+    auto const found(data.find_first_of(s));
+    if(found == native_string::npos)
+    { return -1; }
+    return static_cast<native_integer>(found);
+  }
+
+  native_integer obj::string::last_index_of(object_ptr const c) const
+  {
+    auto const s(runtime::detail::to_string(c));
+    auto const found(data.find_last_of(s));
+    if(found == native_string::npos)
+    { return -1; }
+    return static_cast<native_integer>(found);
+  }
+
   size_t obj::string::count() const
   { return data.size(); }
 }

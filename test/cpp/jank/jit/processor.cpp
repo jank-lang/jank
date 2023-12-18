@@ -32,10 +32,9 @@ namespace jank::jit
 
   TEST_CASE("Files")
   {
-    jit::processor jit_prc;
     runtime::context rt_ctx;
-    auto const cardinal_result(rt_ctx.intern_keyword(runtime::obj::symbol{ "", "success" }, true));
-    rt_ctx.eval_prelude(jit_prc);
+    auto const cardinal_result(rt_ctx.intern_keyword(runtime::obj::symbol{ "", "success" }, true).expect_ok());
+    rt_ctx.load_module("/clojure.core");
     size_t test_count{};
 
     /* The functionality I want here is too complex for doctest to handle. Output should be
@@ -85,7 +84,7 @@ namespace jank::jit
           }
         };
 
-        auto const result(test_rt_ctx.eval_file(dir_entry.path().string(), jit_prc));
+        auto const result(test_rt_ctx.eval_file(dir_entry.path().string()));
         if(!expect_success)
         {
           failures.push_back

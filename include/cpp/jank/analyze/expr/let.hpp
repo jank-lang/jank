@@ -36,7 +36,7 @@ namespace jank::analyze::expr
         );
       }
 
-      return runtime::obj::map::create_unique
+      return runtime::obj::persistent_array_map::create_unique
       (
         make_box("__type"), make_box("expr::let"),
         make_box("pairs"), pair_maps,

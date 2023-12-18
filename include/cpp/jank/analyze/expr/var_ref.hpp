@@ -15,7 +15,7 @@ namespace jank::analyze::expr
 
     runtime::object_ptr to_runtime_data() const
     {
-      return runtime::obj::map::create_unique
+      return runtime::obj::persistent_array_map::create_unique
       (
         make_box("__type"), make_box("expr::var_ref"),
         make_box("qualified_name"), qualified_name,

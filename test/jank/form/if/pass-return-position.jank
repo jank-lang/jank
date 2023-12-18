@@ -6,4 +6,11 @@
 (assert (= :even (even-or-odd 0)))
 (assert (= :odd (even-or-odd 1)))
 
+(def no-else
+  (fn* [n]
+    (if (even? n)
+      :even)))
+(assert (= :even (no-else 0)))
+(assert (= nil (no-else 1)))
+
 :success

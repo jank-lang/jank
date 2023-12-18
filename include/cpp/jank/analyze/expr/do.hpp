@@ -16,7 +16,7 @@ namespace jank::analyze::expr
       for(auto const &e : body)
       { body_maps = runtime::conj(body_maps, e->to_runtime_data()); }
 
-      return runtime::obj::map::create_unique
+      return runtime::obj::persistent_array_map::create_unique
       (
         make_box("__type"), make_box("expr::do"),
         make_box("body"), body_maps

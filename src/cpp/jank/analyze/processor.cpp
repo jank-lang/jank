@@ -7,7 +7,7 @@
 #include <fmt/core.h>
 
 #include <jank/runtime/obj/vector.hpp>
-#include <jank/runtime/obj/map.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/behavior/numberable.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
@@ -55,7 +55,7 @@ namespace jank::analyze
     /* We wrap all of the expressions we get in an anonymous fn so that we can call it easily.
      * This also simplifies codegen, since we only ever codegen a single fn, even if that fn
      * represents a ns, a single REPL expression, or an actual source fn. */
-    runtime::detail::transient_vector fn;
+    runtime::detail::native_transient_vector fn;
     fn.push_back(make_box<runtime::obj::symbol>("fn*"));
     fn.push_back(make_box<runtime::obj::vector>());
     for(; parse_current != parse_end; ++parse_current)
@@ -190,11 +190,11 @@ namespace jank::analyze
 
     /* Macros aren't lifted, since they're not used during runtime. */
     auto const unwrapped_var(var.unwrap());
-    auto const macro_kw(rt_ctx.intern_keyword("", "macro", true));
+    auto const macro_kw(rt_ctx.intern_keyword("", "macro", true).expect_ok());
     if
     (
       unwrapped_var->meta.is_none() ||
-      unwrapped_var->meta.unwrap()->get(macro_kw) == runtime::obj::nil::nil_const()
+      get(unwrapped_var->meta.unwrap(), macro_kw) == runtime::obj::nil::nil_const()
     )
     { current_frame->lift_var(qualified_sym); }
     return make_box<expression>
@@ -231,7 +231,16 @@ namespace jank::analyze
     {
       auto const p(*it);
       if(p->type != runtime::object_type::symbol)
-      { return err(error{ "invalid parameter; must be a symbol" }); }
+      {
+        return err
+        (
+          error
+          {
+            fmt::format
+            ("invalid parameter; must be a symbol, not {}", runtime::detail::to_string(p))
+          }
+        );
+      }
 
       auto const sym(runtime::expect_object<runtime::obj::symbol>(p));
       if(!sym->ns.empty())
@@ -336,15 +345,21 @@ namespace jank::analyze
     { return err(error{ "fn missing forms" }); }
     auto list(full_list);
 
-    option<native_string> name;
+    native_string name;
     auto first_elem(list->data.rest().first().unwrap());
     if(first_elem->type == runtime::object_type::symbol)
     {
       auto const s(runtime::expect_object<runtime::obj::symbol>(first_elem));
-      name = s->name;
+      /* TODO: Remove the generated portion here once we support codegen for making all references
+       * to generated code use the fully qualified name. Right now, a jank fn named `min` will
+       * conflict with the RT `min` fn, for example. */
+      name = runtime::context::unique_string(s->name);
       first_elem = list->data.rest().rest().first().unwrap();
       list = make_box(list->data.rest());
     }
+    else
+    { name = runtime::context::unique_string("fn"); }
+    name = runtime::munge(name);
 
     native_vector<expr::function_arity<expression>> arities;
 
@@ -416,15 +431,41 @@ namespace jank::analyze
       }
     }
 
-    return make_box<expression>
+    auto ret
     (
-      expr::function<expression>
-      {
-        expression_base{ {}, expr_type, current_frame },
-        name,
-        std::move(arities)
-      }
+      make_box<expression>
+      (
+        expr::function<expression>
+        {
+          expression_base{ {}, expr_type, current_frame },
+          name,
+          std::move(arities)
+        }
+      )
     );
+
+    if(rt_ctx.compiling)
+    {
+      /* Register this module as a dependency of the current module so we can generate
+       * code to load it. */
+      auto const &ns_sym(make_box<runtime::obj::symbol>("clojure.core/*ns*"));
+      auto const &ns_var(rt_ctx.find_var(ns_sym).unwrap());
+      auto const module
+      (
+        runtime::module::nest_module
+        (
+          runtime::detail::to_string(ns_var->get_root()),
+          runtime::munge(name)
+        )
+      );
+      rt_ctx.module_dependencies[rt_ctx.current_module].emplace_back(module);
+      fmt::println("module dep {} -> {}", rt_ctx.current_module, module);
+
+      codegen::processor cg_prc{ rt_ctx, ret, module, codegen::compilation_target::function };
+      rt_ctx.write_module(module, cg_prc.declaration_str());
+    }
+
+    return ret;
   }
 
   processor::expression_result processor::analyze_recur
@@ -844,7 +885,7 @@ namespace jank::analyze
 
   processor::expression_result processor::analyze_map
   (
-    runtime::obj::map_ptr const &o,
+    runtime::obj::persistent_array_map_ptr const &o,
     local_frame_ptr &current_frame,
     expression_type const expr_type,
     option<expr::function_context_ptr> const &fn_ctx,
@@ -896,6 +937,7 @@ namespace jank::analyze
     expression_ptr source{};
     native_bool needs_ret_box{ true };
     native_bool needs_arg_box{ true };
+    /* TODO: If this is a recursive call, note that and skip the var lookup. */
     if(first->type == runtime::object_type::symbol)
     {
       auto const sym(runtime::expect_object<runtime::obj::symbol>(first));
@@ -926,7 +968,8 @@ namespace jank::analyze
             var_deref->var->meta.unwrap(),
             make_box<runtime::obj::vector>
             (
-              rt_ctx.intern_keyword("", "arities", true),
+              rt_ctx.intern_keyword("", "arities", true).expect_ok(),
+              /* NOTE: We don't support unboxed meta on variadic arities. */
               make_box(arg_count)
             )
           )
@@ -935,36 +978,31 @@ namespace jank::analyze
         native_bool const supports_unboxed_input
         (
           runtime::detail::truthy
-          (get(arity_meta, rt_ctx.intern_keyword("", "supports-unboxed-input?", true)))
+          (get(arity_meta, rt_ctx.intern_keyword("", "supports-unboxed-input?", true).expect_ok()))
         );
         native_bool const supports_unboxed_output
         (
           runtime::detail::truthy
           /* TODO: Rename key. */
-          (get(arity_meta, rt_ctx.intern_keyword("", "unboxed-output?", true)))
+          (get(arity_meta, rt_ctx.intern_keyword("", "unboxed-output?", true).expect_ok()))
         );
 
         if(supports_unboxed_input || supports_unboxed_output)
         {
           auto const fn_res(vars.find(var_deref->var));
-          if(fn_res == vars.end())
-          { return err(error{ fmt::format("ICE: undefined var: {}", var_deref->var->to_string()) }); }
-
-          auto const fn(boost::get<expr::function<expression>>(&fn_res->second->data));
-          if(!fn)
-          { return err(error{ "unsupported arity meta on non-function var" }); }
-
-          /* We need to be sure we're calling the exact arity that has been specified. Unboxed
-           * returns aren't supported for variadic calls right now. */
-          for(auto const &arity : fn->arities)
+          /* If we don't have a valid var_deref, we know the var exists, but we
+           * don't have an AST node for it. This means the var came in through
+           * a pre-compiled module. In that case, we can only rely on meta to
+           * tell us what we need. */
+          if(fn_res != vars.end())
           {
-            if(arity.fn_ctx->param_count == arg_count && !arity.fn_ctx->is_variadic)
-            {
-              needs_arg_box = !supports_unboxed_input;
-              needs_ret_box = needs_box | !supports_unboxed_output;
-              break;
-            }
+            auto const fn(boost::get<expr::function<expression>>(&fn_res->second->data));
+            if(!fn)
+            { return err(error{ "unsupported arity meta on non-function var" }); }
           }
+
+          needs_arg_box = !supports_unboxed_input;
+          needs_ret_box = needs_box | !supports_unboxed_output;
         }
       }
     }
@@ -1027,7 +1065,7 @@ namespace jank::analyze
         { return analyze_call(typed_o, current_frame, expr_type, fn_ctx, needs_box); }
         else if constexpr(std::same_as<T, runtime::obj::vector>)
         { return analyze_vector(typed_o, current_frame, expr_type, fn_ctx, needs_box); }
-        else if constexpr(std::same_as<T, runtime::obj::map>)
+        else if constexpr(std::same_as<T, runtime::obj::persistent_array_map>)
         { return analyze_map(typed_o, current_frame, expr_type, fn_ctx, needs_box); }
         else if constexpr(std::same_as<T, runtime::obj::set>)
         { return err(error{ "unimplemented analysis: set" }); }

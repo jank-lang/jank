@@ -8,7 +8,7 @@ namespace jank::runtime
   template <>
   struct static_object<object_type::set> : gc
   {
-    using value_type = runtime::detail::persistent_set;
+    using value_type = runtime::detail::native_persistent_set;
 
     static constexpr bool pointer_free{ false };
 
@@ -40,10 +40,15 @@ namespace jank::runtime
     size_t count() const;
 
     /* behavior::consable */
-    native_box<static_object> cons(object_ptr head);
+    native_box<static_object> cons(object_ptr head) const;
+
+    /* behavior::callable */
+    object_ptr call(object_ptr) const;
+
+    native_bool contains(object_ptr o) const;
 
     object base{ object_type::set };
     value_type data;
-    option<obj::map_ptr> meta;
+    option<object_ptr> meta;
   };
 }

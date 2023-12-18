@@ -144,6 +144,12 @@
                    },
                    #{ tail }#
                  );")))
+
+(def list?
+  (fn* list? [o]
+    ; TODO: Visit and use a behavior for this check instead. It should apply to conses and others.
+    (native/raw "__value = make_box(#{ o }#->type == object_type::list);")))
+
 (def list
   (fn* list [& items]
     (native/raw "__value = visit_object
@@ -161,6 +167,10 @@
                  );")))
 
 ;; Vectors.
+(def vector?
+  (fn* vector? [o]
+    (native/raw "__value = make_box(#{ o }#->type == object_type::vector);")))
+
 (def vec
   (fn* vec [coll]
     (native/raw "__value = visit_object
@@ -179,8 +189,8 @@
 
 (def conj)
 (def conj
-  (fn*
-    conj ([]
+  (fn* conj
+    ([]
      [])
     ([coll]
      coll)
@@ -256,11 +266,24 @@
           (list 'def fn-name (cons 'fn* (cons fn-name (cons fn-args body)))))))
 (reset-meta! (var defn) {:macro true})
 
+; Returns a new symbol with a unique name. If a prefix string is
+; supplied, the name is prefix# where # is some unique number. If
+; prefix is not supplied, the prefix is 'G__'.
+(defn gensym
+  ([]
+   (native/raw "__value = make_box<obj::symbol>(runtime::context::unique_symbol());"))
+  ([prefix]
+   (native/raw "__value = make_box<obj::symbol>(runtime::context::unique_symbol(runtime::detail::to_string(#{ prefix }#)));")))
+
+; TODO: This doesn't support macros with overloads.
 (defn defmacro [&form &env fn-name fn-args & body]
   (list 'do
         (list 'def fn-name (cons 'fn* (cons (vec (cons '&form (cons '&env fn-args))) body)))
         (list 'reset-meta! (list 'var fn-name) {:macro true})))
 (reset-meta! (var defmacro) {:macro true})
+
+(defmacro defn- [& args]
+  (cons 'defn args))
 
 (defmacro when [condition & body]
   (list 'if condition
@@ -272,6 +295,55 @@
 
 (defmacro let [args & body]
   (cons 'let* (cons args body)))
+
+; TODO: Higher arities. Needs clojure.core/spread, which needs clojure.core/cons.
+(defn apply* [f args]
+  (native/raw "__value = runtime::apply_to(#{ f }#, #{ args }#);"))
+
+(defn or*
+  ([]
+   nil)
+  ([x]
+   x)
+  ([x & more]
+   (let [x-res (gensym)]
+     (list 'let [x-res x]
+           (list 'if x-res
+                 x-res
+                 (cons 'or more))))))
+
+(defmacro or
+  [& args]
+  (apply* or* args))
+
+(defn and*
+  ([]
+   true)
+  ([x]
+   x)
+  ([x & more]
+   (let [x-res (gensym)]
+     (list 'let [x-res x]
+           (list 'if x-res
+                 (cons 'and more)
+                 x-res)))))
+
+(defmacro and
+  [& args]
+  (apply* and* args))
+
+; Takes a set of test/expr pairs. It evaluates each test one at a
+; time.  If a test returns logical true, cond evaluates and returns
+; the value of the corresponding expr and doesn't evaluate any of the
+; other tests or exprs. (cond) returns nil.
+(defmacro cond [& clauses]
+  (when clauses
+    (list 'if (first clauses)
+          (if (next clauses)
+            (second clauses)
+            (let [err "cond requires an even number of forms"]
+              (list 'native/raw "throw #{ (ex-info :invalid-cond {:err err}) }#;")))
+          (cons 'clojure.core/cond (next (next clauses))))))
 
 (defn macroexpand-1 [form]
   (native/raw "__value = __rt_ctx.macroexpand1(#{ form }#);"))
@@ -285,68 +357,58 @@
 (defn false? [o]
   (native/raw "__value = runtime::detail::equal(#{ o }#, #{ false }#) ? #{ true }# : #{ false }#"))
 (defn not [o]
-  (native/raw "__value = runtime::detail::equal(#{ o }#, #{ false }#) ? #{ true }# : #{ false }#"))
+  (native/raw "if(o == obj::nil::nil_const())
+               { __value = #{ true }#; }
+               else
+               { __value = runtime::detail::equal(#{ o }#, #{ false }#) ? #{ true }# : #{ false }#; }"))
 (defn some? [o]
   (native/raw "__value = (o == obj::nil::nil_const()) ? #{ false }# : #{ true }#"))
 
-; Strings.
-(defn string? [o]
-  (native/raw "__value = make_box(#{ o }#->type == object_type::string);"))
-(defn str
-  ([]
-   "")
-  ([o]
-   (native/raw "__value = make_box(runtime::detail::to_string(#{ o }#));"))
-  ([o & args]
-   (native/raw "__value = visit_object
-               (
-                [=](auto const typed_args) -> object_ptr
-                {
-                 using T = typename decltype(typed_args)::value_type;
+; Functions.
 
-                 if constexpr(behavior::sequenceable<T>)
-                 {
-                  fmt::memory_buffer buff;
-                  buff.reserve(16);
-                  runtime::detail::to_string(#{ o }#, buff);
-                  runtime::detail::to_string(typed_args->first(), buff);
-                  for(auto it(typed_args->next_in_place()); it != nullptr; it = it->next_in_place())
-                  { runtime::detail::to_string(typed_args->first(), buff); }
-                  return make_box<obj::string>(native_string{ buff.data(), buff.size() });
-                  }
-                 else
-                 { throw #{ (ex-info :invalid-seq {:args args}) }#; }
-                 },
-                #{ args }#
-                );")))
+(defn- spread [arglist]
+  (cond
+    (nil? arglist) nil
+    (nil? (next arglist)) (seq (first arglist))
+    :else (cons (first arglist) (spread (next arglist)))))
 
-;; Maps.
-(defn get
-  ([m k]
-   (native/raw "__value = jank::runtime::get(#{ m }#, #{ k }#);"))
-  ([m k fallback]
-   (native/raw "__value = jank::runtime::get(#{ m }#, #{ k }#, #{ fallback }#);")))
-(defn get-in
-  ([m ks]
-   (native/raw "__value = jank::runtime::get_in(#{ m }#, #{ ks }#);"))
-  ([m ks fallback]
-   (native/raw "__value = jank::runtime::get_in(#{ m }#, #{ ks }#, #{ fallback }#);")))
+; Creates a new seq containing the items prepended to the rest, the
+; last of which will be treated as a sequence.
+(defn list*
+  ([args]
+   (seq args))
+  ([a args]
+   (cons a args))
+  ([a b args]
+   (cons a (cons b args)))
+  ([a b c args]
+   (cons a (cons b (cons c args))))
+  ([a b c d & more]
+   (cons a (cons b (cons c (cons d (spread more)))))))
 
-;; Other.
-(defn hash [o]
-  (native/raw "__value = make_box(runtime::detail::to_hash(#{ o }#));"))
+; Applies fn f to the argument list formed by prepending intervening arguments to args.
+(defn apply
+  ([f args]
+   (native/raw "__value = runtime::apply_to(#{ f }#, #{ args }#);"))
+  ([f x args]
+   (native/raw "__value = runtime::apply_to(#{ f }#, #{ (list* x args) }#);"))
+  ([f x y args]
+   (native/raw "__value = runtime::apply_to(#{ f }#, #{ (list* x y args) }#);"))
+  ([f x y z args]
+   (native/raw "__value = runtime::apply_to(#{ f }#, #{ (list* x y z args) }#);"))
+  ([f a b c d & args]
+   (native/raw "__value = runtime::apply_to(#{ f }#, #{ (cons a (cons b (cons c (cons d (spread args))))) }#);")))
 
-(defn assoc
-  ([map key val]
-   (native/raw "__value = jank::runtime::assoc(#{ map }#, #{ key }#, #{ val }#);"))
-  ([map key val & kvs]
-   (let [res (assoc map key val)]
-     (if (empty? kvs)
-       res
-       (do
-         (assert (not (empty? (next kvs)))); "assoc expects even number of args after the first"
-         (recur res (first kvs) (second kvs) (nnext kvs)))))))
+; Takes a fn f and returns a fn that takes the same arguments as f,
+; has the same effects, if any, and returns the opposite truth value.
+(defn complement [f]
+  (fn
+    ([] (not (f)))
+    ([x] (not (f x)))
+    ([x y] (not (f x y)))
+    ([x y & zs] (not (apply f x y zs)))))
 
+; Utils.
 (defn reduce*
   ([f coll]
    (let [s (seq coll)]
@@ -373,8 +435,312 @@
                 #{ coll }#
                 );")))
 
+; Strings.
+(defn string? [o]
+  (native/raw "__value = make_box(#{ o }#->type == object_type::string);"))
+(defn str
+  ([]
+   "")
+  ([o]
+   (native/raw "__value = make_box(runtime::detail::to_string(#{ o }#));"))
+  ([o & args]
+   (native/raw "__value = visit_object
+               (
+                 [=](auto const typed_args) -> object_ptr
+                 {
+                   using T = typename decltype(typed_args)::value_type;
+
+                   if constexpr(behavior::sequenceable<T>)
+                   {
+                     fmt::memory_buffer buff;
+                     buff.reserve(16);
+                     runtime::detail::to_string(#{ o }#, buff);
+                     if(0 < runtime::detail::sequence_length(typed_args))
+                     {
+                       auto const fresh(typed_args->fresh_seq());
+                       runtime::detail::to_string(fresh->first(), buff);
+                       for(auto it(fresh->next_in_place()); it != nullptr; it = it->next_in_place())
+                       { runtime::detail::to_string(it->first(), buff); }
+                     }
+                     return make_box<obj::string>(native_string{ buff.data(), buff.size() });
+                   }
+                   else
+                   { throw #{ (ex-info :invalid-seq {:args args}) }#; }
+                 },
+                 #{ args }#
+               );")))
+
+(defn subs
+  ([s start]
+   (native/raw "__value = visit_object
+               (
+                 [=](auto const typed_s) -> obj::string_ptr
+                 {
+                   using T = typename decltype(typed_s)::value_type;
+
+                   if constexpr(std::is_same_v<T, obj::string>)
+                   { return typed_s->substring(to_int(#{ start }#)).expect_ok(); }
+                   else
+                   { throw #{ (ex-info :not-a-string {:s s}) }#; }
+                 },
+                 #{ s }#
+               );"))
+  ([s start end]
+   (native/raw "__value = visit_object
+               (
+                 [=](auto const typed_s) -> obj::string_ptr
+                 {
+                   using T = typename decltype(typed_s)::value_type;
+
+                   if constexpr(std::is_same_v<T, obj::string>)
+                   { return typed_s->substring(to_int(#{ start }#), to_int(#{ end }#)).expect_ok(); }
+                   else
+                   { throw #{ (ex-info :not-a-string {:s s}) }#; }
+                 },
+                 #{ s }#
+               );")))
+
+(defn- first-index-of [s c]
+  (native/raw "__value = make_box
+              (
+                visit_object
+                (
+                  [=](auto const typed_s) -> native_integer
+                  {
+                    using T = typename decltype(typed_s)::value_type;
+
+                    if constexpr(std::is_same_v<T, obj::string>)
+                    { return typed_s->first_index_of(#{ c }#); }
+                    else
+                    { throw #{ (ex-info :not-a-string {:s s}) }#; }
+                  },
+                  #{ s }#
+                )
+              );"))
+(defn- last-index-of [s c]
+  (native/raw "__value = make_box
+              (
+                visit_object
+                (
+                  [=](auto const typed_s) -> native_integer
+                  {
+                    using T = typename decltype(typed_s)::value_type;
+
+                    if constexpr(std::is_same_v<T, obj::string>)
+                    { return typed_s->last_index_of(#{ c }#); }
+                    else
+                    { throw #{ (ex-info :not-a-string {:s s}) }#; }
+                  },
+                  #{ s }#
+                )
+              );"))
+
+;; Sequences (again).
+(defn sequential? [o]
+  (native/raw "__value = make_box
+              (
+               visit_object
+               (
+                [=](auto const typed_o) -> native_bool
+                {
+                 using T = typename decltype(typed_o)::value_type;
+
+                 if constexpr(behavior::sequenceable<T>)
+                 { return true; }
+                 else
+                 { return false; }
+                 },
+                #{ o }#
+                )
+               );"))
+
 (defn reverse [coll]
   (reduce* conj () coll))
+
+; TODO: Lazy seqs
+(defn concat
+  ([]
+   '())
+  ([x]
+   (seq x))
+  ([x y]
+   (reduce* (fn [acc e]
+              (cons e acc))
+            y
+            (reverse x)))
+  ([x y & zs]
+   (let [r (concat x y)]
+     (if (empty? zs)
+       r
+       (recur r (first zs) (rest zs))))))
+
+; Creates a new vector containing the args.
+(defn vector
+  ([]
+   [])
+  ([a]
+   [a])
+  ([a b]
+   [a b])
+  ([a b c]
+   [a b c])
+  ([a b c d]
+   [a b c d])
+	([a b c d e]
+   [a b c d e])
+	([a b c d e f]
+   [a b c d e f])
+  ([a b c d e f & args]
+   ; TODO: LazilyPersistentVector
+   (vec (concat [a b c d e f] args))))
+
+; Repeatedly executes body (presumably for side-effects) with
+; bindings and filtering as provided by `for`.  Does not retain
+; the head of the sequence. Returns nil.
+; TODO: Support more bindings
+; TODO: Support `for` functionality
+(defmacro doseq [bindings & body]
+  (let [arg (first bindings)
+        s (second bindings)]
+    (list 'reduce* (concat (list 'fn ['_ arg])
+                           body
+                           [nil])
+          nil
+          s)))
+
+; Returns the first logical true value of (pred x) for any x in coll,
+; else nil.  One common idiom is to use a set as pred, for example
+; this will return :fred if :fred is in the sequence, otherwise nil:
+; (some #{:fred} coll)
+(defn some [pred coll]
+  (let [s (seq coll)]
+    (when s
+      (or (pred (first s)) (recur pred (next s))))))
+
+(defn not-any? [pred coll]
+  (not (some pred coll)))
+
+;; Maps.
+(defn hash-map
+  ([]
+   {})
+  ([& kvs]
+   (native/raw "__value = obj::persistent_hash_map::create_from_seq(#{ kvs }#);")))
+
+(defn keys [m]
+  ; TODO: Use a proper key seq instead.
+  (reduce* (fn [acc kv]
+             (conj acc (first kv)))
+           []
+           m))
+
+(defn vals [m]
+  ; TODO: Use a proper val seq instead.
+  (reduce* (fn [acc kv]
+             (conj acc (second kv)))
+           []
+           m))
+
+(defn get
+  ([m k]
+   (native/raw "__value = jank::runtime::get(#{ m }#, #{ k }#);"))
+  ([m k fallback]
+   (native/raw "__value = jank::runtime::get(#{ m }#, #{ k }#, #{ fallback }#);")))
+(defn get-in
+  ([m ks]
+   (native/raw "__value = jank::runtime::get_in(#{ m }#, #{ ks }#);"))
+  ([m ks fallback]
+   (native/raw "__value = jank::runtime::get_in(#{ m }#, #{ ks }#, #{ fallback }#);")))
+
+(defn assoc
+  ([map key val]
+   (native/raw "__value = jank::runtime::assoc(#{ map }#, #{ key }#, #{ val }#);"))
+  ([map key val & kvs]
+   (let [res (assoc map key val)]
+     (if (empty? kvs)
+       res
+       (do
+         (assert (not (empty? (next kvs)))); "assoc expects even number of args after the first"
+         (recur res (first kvs) (second kvs) (nnext kvs)))))))
+
+; Returns true if key is present in the given collection, otherwise
+; returns false.  Note that for numerically indexed collections like
+; vectors and Java arrays, this tests if the numeric key is within the
+; range of indexes. 'contains?' operates constant or logarithmic time;
+; it will not perform a linear search for a value.  See also 'some'.
+(defn contains? [coll k]
+  (native/raw "__value = make_box(jank::runtime::contains(#{ coll }#, #{ k }#));"))
+
+; Returns the map entry for key, or nil if key not present.
+(defn find [coll k]
+  (native/raw "__value = jank::runtime::find(#{ coll }#, #{ k }#);"))
+
+; Returns a map containing only those entries in map whose key is in keys
+(defn select-keys [m ks]
+  (reduce* (fn [acc k]
+             (let [e (native/raw "__value = jank::runtime::find(#{ m }#, #{ k }#);")]
+               (if e
+                 (conj acc e)
+                 acc)))
+           {}
+           ks))
+
+; Sets.
+
+(defn set? [o]
+  (native/raw "__value = make_box(#{ o }#->type == object_type::set);"))
+
+; Returns a set of the distinct elements of coll.
+(defn set [coll]
+  (if (set? coll)
+    (with-meta coll nil)
+    ; TODO: Transient
+    (reduce* (fn [acc e]
+               (conj acc e))
+             (native/raw "__value = make_box<obj::set>();")
+             coll)))
+
+;; Other.
+(defn hash [o]
+  (native/raw "__value = make_box(runtime::detail::to_hash(#{ o }#));"))
+
+(defn name [o]
+  (if (string? o)
+    o
+    (native/raw "__value = make_box
+                (
+                  visit_object
+                  (
+                    [=](auto const typed_o) -> native_string
+                    {
+                      using T = typename decltype(typed_o)::value_type;
+
+                      if constexpr(behavior::nameable<T>)
+                      { return typed_o->get_name(); }
+                      else
+                      { throw #{ (ex-info :not-nameable {:o o}) }#; }
+                    },
+                    #{ o }#
+                  )
+                );")))
+
+(defn namespace [o]
+  (native/raw "__value = make_box
+              (
+                visit_object
+                (
+                  [=](auto const typed_o) -> native_string
+                  {
+                    using T = typename decltype(typed_o)::value_type;
+
+                    if constexpr(behavior::nameable<T>)
+                    { return typed_o->get_namespace(); }
+                    else
+                    { throw #{ (ex-info :not-nameable {:o o}) }#; }
+                  },
+                  #{ o }#
+                )
+              );"))
 
 ; Primitives.
 ;; Arithmetic.
@@ -450,6 +816,14 @@
        (recur r (first args) (next args))
        (native/raw "__value = make_box(runtime::detail::equal(#{ r }#, #{ (first args) }#));"))
      false)))
+
+(defn not=
+  ([x]
+   false)
+  ([x y]
+   (not (= x y)))
+  ([x y & more]
+   (not (apply = x y more))))
 
 (defn <
   ([x]
@@ -645,6 +1019,10 @@
 (reset-meta! (var rand) {:arities {0 {:supports-unboxed-input? true
                                       :unboxed-output? true}}})
 
+; Vars.
+(defn var? [o]
+  (native/raw "__value = make_box(#{ o }#->type == object_type::var)"))
+
 ;; Keywords.
 (defn keyword? [o]
   (native/raw "__value = make_box(#{ o }#->type == object_type::keyword)"))
@@ -719,8 +1097,21 @@
 (defn symbol? [o]
   (native/raw "__value = make_box(#{ o }#->type == object_type::symbol)"))
 
-;; Sequences.
+; Returns a Symbol with the given namespace and name. Arity-1 works
+; on strings, keywords, and vars.
+(defn symbol
+  ([o]
+   (cond
+     (symbol? o) o
+     ; TODO: Intern.
+     (string? o) (native/raw "__value = make_box<obj::symbol>(runtime::detail::to_string(#{ o }#));")
+     (var? o) (native/raw "__value = expect_object<runtime::var>(#{ o }#)->name;")
+     (keyword? o) (native/raw "__value = make_box<obj::symbol>(expect_object<obj::keyword>(#{ o }#)->sym) ;")
+     :else (native/raw "throw #{ (ex-info :cannot-convert-to-symbol {:o o}) }#;")))
+  ([ns o]
+   (native/raw "__value = make_box<obj::symbol>(runtime::detail::to_string(#{ ns }#), runtime::detail::to_string(#{ o }#));")))
 
+;; Sequences.
 (defn iterate [f x]
   (native/raw "__value = visit_object
               (
@@ -760,9 +1151,60 @@
                      (recur (dec n) (next coll) (conj acc (first coll))))))]
      (take* n coll []))))
 
-; TODO: Higher arities. Needs clojure.core/spread, which needs clojure.core/cons.
-(defn apply [f args]
-  (native/raw "__value = runtime::apply_to(#{ f }#, #{ args }#);"))
+; Returns a lazy sequence consisting of the result of applying f to
+; the set of first items of each coll, followed by applying f to the
+; set of second items in each coll, until any one of the colls is
+; exhausted.  Any remaining items in other colls are ignored. Function
+; f should accept number-of-colls arguments. Returns a transducer when
+; no collection is provided.
+(defn map
+  ; TODO: Laziness; other arities.
+  ([f coll]
+   (reduce* (fn [acc e]
+              (conj acc (f e)))
+            []
+            coll)))
+
+; Returns a vector consisting of the result of applying f to the
+; set of first items of each coll, followed by applying f to the set
+; of second items in each coll, until any one of the colls is
+; exhausted.  Any remaining items in other colls are ignored. Function
+; f should accept number-of-colls arguments.
+; TODO: Needs `into` and a proper `map`
+(def mapv map)
+
+; Returns the result of applying concat to the result of applying map
+; to f and colls. Thus function f should return a collection. Returns
+; a transducer when no collections are provided
+(defn mapcat
+  ; TODO: Transducer.
+  ([f]
+   )
+  ; TODO: Variadic.
+  ([f coll]
+   (apply concat (map f coll))))
+
+; Returns a lazy sequence of the items in coll for which
+; (pred item) returns logical true. pred must be free of side-effects.
+; Returns a transducer when no collection is provided.
+(defn filter
+  ; TODO: Laziness; other arities.
+  ([f coll]
+   (reduce* (fn [acc e]
+              (if (f e)
+                (conj acc e)
+                acc))
+            []
+            coll)))
+
+; Returns a lazy sequence of the items in coll for which
+; (pred item) returns logical false. pred must be free of side-effects.
+; Returns a transducer when no collection is provided.
+(defn remove
+  ([pred]
+   (filter (complement pred)))
+  ([pred coll]
+   (filter (complement pred) coll)))
 
 ;; Input/output.
 (defn print [o]
@@ -819,22 +1261,22 @@
                  //config.mTimeUnitName = TODO
                  config.mOut = &std::cout;
 
-                 /* Ray tracing. */
-                 //config.mTimeUnit = std::chrono::milliseconds{ 1 };
-                 //config.mMinEpochIterations = 20;
-                 //config.mWarmup = 10;
+                 /* Larger things. */
+                 config.mTimeUnit = std::chrono::milliseconds{ 1 };
+                 config.mMinEpochIterations = 20;
+                 config.mWarmup = 10;
 
                  /* Smaller things. */
-                 config.mTimeUnit = std::chrono::nanoseconds{ 1 };
-                 config.mMinEpochIterations = 1000000;
-                 config.mWarmup = 1000;
+                 //config.mTimeUnit = std::chrono::nanoseconds{ 1 };
+                 //config.mMinEpochIterations = 1000000;
+                 //config.mWarmup = 1000;
 
                  ankerl::nanobench::Bench().config(config).run
                  (
                   static_cast<std::string>(label_str->data),
                   [&]
                   {
-                   object_ptr res{ typed_fun->call() };
+                   auto const res(typed_fun->call());
                    ankerl::nanobench::doNotOptimizeAway(res);
                    }
                   );
@@ -863,3 +1305,253 @@
   (native/raw "__value = make_box(std::pow(runtime::detail::to_real(#{ x }#), runtime::detail::to_real(#{ y }#)));"))
 (reset-meta! (var pow) {:arities {2 {:supports-unboxed-input? true
                                      :unboxed-output? true}}})
+
+; Vars.
+(defn var? [o]
+  (native/raw "__value = make_box(#{ o }#->type == object_type::var);"))
+
+(defn var-get [v]
+  (assert (var? v))
+  (native/raw "__value = expect_object<var>(#{ v }#)->get_root();"))
+
+; Namespaces (again).
+(defn create-ns [sym]
+  (assert (symbol? sym))
+  (native/raw "__value = __rt_ctx.intern_ns(expect_object<obj::symbol>(#{ sym }#));"))
+
+(defn find-ns [sym]
+  (assert (symbol? sym))
+  (native/raw "__value = __rt_ctx.find_ns(expect_object<obj::symbol>(#{ sym }#)).unwrap_or(nullptr);
+               if(!__value)
+               { __value = obj::nil::nil_const(); }"))
+
+(defn remove-ns [sym]
+  (assert (symbol? sym))
+  (native/raw "__value = __rt_ctx.remove_ns(expect_object<obj::symbol>(#{ sym }#)).unwrap_or(nullptr);
+               if(!__value)
+               { __value = obj::nil::nil_const(); }"))
+
+(defn the-ns [ns-or-sym]
+  (if (native/raw "__value = make_box(#{ ns-or-sym }#->type == object_type::ns);")
+    ns-or-sym
+    (let [found (find-ns ns-or-sym)]
+      (if (nil? found)
+        (native/raw "throw #{ (ex-info :not-an-ns-or-sym {:value ns-or-sym}) }#;")
+        found))))
+
+(defn ns-name [ns-sym]
+  (let [ns (the-ns ns-sym)]
+    (native/raw "__value = expect_object<runtime::ns>(#{ ns }#)->name;")))
+
+(defn ns-map [ns-sym]
+  (let [ns (the-ns ns-sym)]
+    (native/raw "__value = expect_object<runtime::ns>(#{ ns }#)->get_mappings();")))
+
+(defn ns-publics [ns-sym]
+  (let [ns (the-ns ns-sym)]
+    ; TODO: It may be faster to start with the whole map and dissoc.
+    ; TODO: Good use case for transients.
+    (reduce* (fn [acc kv]
+               (let [k (first kv)
+                     v (second kv)]
+                 ; TODO: Check for visibility.
+                 (if (var? v)
+                   (if (native/raw "__value = make_box(#{ ns }# == expect_object<runtime::var>(#{ v }#)->n);")
+                     (assoc acc k v)
+                     acc)
+                   acc)))
+             {}
+             (ns-map ns))))
+
+(defn- libspec? [x]
+  (or (symbol? x)
+      (and (vector? x)
+           (or (nil? (second x))
+               (keyword? (second x))))))
+
+(defn- prependss [x coll]
+  (if (symbol? x)
+    (cons x coll)
+    (concat x coll)))
+
+(defn- root-resource [lib]
+  (str "/" (name lib)))
+
+(defn- throw-if [pred msg]
+  (when pred
+    (native/raw "throw #{ (ex-info :assertion-failure {:msg msg }) }#;")))
+
+(defn alias [alias ns-sym]
+  (let [ns-obj (the-ns ns-sym)]
+    (assert (symbol? alias))
+    (native/raw "expect_object<ns>(#{ *ns* }#)->add_alias
+                 (
+                   expect_object<obj::symbol>(#{ alias }#),
+                   expect_object<ns>(#{ ns-obj }#)
+                 ).expect_ok();")))
+
+(defn refer [ns-sym & filters]
+  (let [ns (find-ns ns-sym)
+        _ (when (nil? ns)
+            (native/raw "throw #{ (ex-info :unknown-namespace {:value ns-sym}) }#;"))
+        filters (apply hash-map filters)
+        rename (or (:rename filters) {})
+        exclude? (set (:exclude filters))
+        sym->var (ns-publics ns)
+        to-refer (if (= :all (get filters :refer))
+                   (keys sym->var)
+                   (or (get filters :refer) (get filters :only) (keys sym->var)))]
+    ; TODO: Loop
+    (reduce* (fn [acc sym]
+               (when (not (exclude? sym))
+                 (let [v (get sym->var sym)
+                       sym (rename sym sym)]
+                   (when (nil? v)
+                     (native/raw "throw #{ (ex-info :var-does-not-exist {:value sym}) }#;"))
+                   (native/raw "expect_object<runtime::ns>(#{ *ns* }#)->refer
+                                (
+                                  expect_object<obj::symbol>(#{ sym }#),
+                                  expect_object<var>(#{ v }#)
+                                ).expect_ok();"))))
+             nil
+             to-refer)))
+
+(defn load [& paths]
+  (if (empty? paths)
+    nil
+    (let [path (first paths)]
+      ; TODO: Check for cyclic deps, once we have dynamic vars.
+      (native/raw "__rt_ctx.load_module(runtime::detail::to_string(#{ path }#)).expect_ok();")
+      (recur (rest paths)))))
+
+; Loads a lib given its name. If `need-ns?`, ensures that the associated
+; namespace exists after loading. If `require?`, records the load so any
+; duplicate loads can be skipped.
+(defn- load-one [lib need-ns? require?]
+  (load (root-resource lib))
+  (throw-if (and need-ns? (not (find-ns lib)))
+            (str "namespace " lib " not found after loading " (root-resource lib)))
+  (when require?
+    nil
+    ; TODO: Support this.
+    ;(dosync
+    ; (commute *loaded-libs* conj lib))
+    ))
+
+; Loads a lib given its name and forces a load of any libs it directly or
+; indirectly loads. If need-ns, ensures that the associated namespace
+; exists after loading. If require, records the load so any duplicate loads
+; can be skipped.
+(defn- load-all [lib need-ns? require?]
+  ; TODO: Port once we have dynamic vars
+  ;(dosync
+  ; (commute *loaded-libs* #(reduce1 conj %1 %2)
+  ;          (binding [*loaded-libs* (ref (sorted-set))]
+  ;            (load-one lib need-ns require)
+  ;            @*loaded-libs*)))
+  nil)
+
+; Loads a lib with options
+(defn- load-lib [lib & options]
+  (let [opts (apply hash-map options)
+        ; TODO: Map destructuring.
+        as (:as opts)
+        reload (:reload opts)
+        reload-all (:reload-all opts)
+        require (:require opts)
+        use (:use opts)
+        verbose (:verbose opts)
+        as-alias (:as-alias opts)
+        ; TODO: Dynamic var
+        ;loaded (contains? @*loaded-libs* lib)
+        loaded? (native/raw "__value = make_box(__rt_ctx.module_loader.is_loaded(runtime::detail::to_string(#{ lib }#)));")
+        need-ns? (or as use)
+        load (cond reload-all load-all
+                   reload load-one
+                   (not loaded?) (cond need-ns? load-one
+                                       as-alias (fn [lib _need _require]
+                                                  (create-ns lib))
+                                       :else load-one))
+
+        filter-opts (select-keys opts [:exclude :only :rename :refer])
+        undefined-on-entry? (not (find-ns lib))]
+    (if load
+      ; TODO: Exception handling
+      (do ;try
+        (load lib need-ns? require)
+        ;(catch Exception e
+        ;  (when undefined-on-entry
+        ;    (remove-ns lib))
+        ;  (throw e))
+        )
+      (throw-if (and need-ns? (not (find-ns lib)))
+                (str "namespace " lib " not found")))
+    (when as
+      (alias as lib))
+    (when as-alias
+      (alias as-alias lib))
+    (when (or use (:refer filter-opts))
+      (apply refer lib (mapcat seq filter-opts)))))
+
+; Loads libs, interpreting libspecs, prefix lists, and flags for
+; forwarding to load-lib
+(defn- load-libs [& args]
+  (let [flags (filter keyword? args)
+        ; TODO: Implement `interleave` and `repeat`.
+        ;opts (interleave flags (repeat true))
+        opts (reduce* (fn [acc flag]
+                        (concat acc [flag true]))
+                      []
+                      flags)
+        args (remove keyword? args)]
+    ; TODO: Set syntax.
+    (let [supported (set [:as :reload :reload-all :require :use :verbose :refer :as-alias])
+          unsupported (seq (remove supported flags))]
+      (throw-if unsupported
+                (str "Unsupported option(s) supplied: " unsupported)))
+    (throw-if (not (seq args)) "Nothing specified to load")
+    (doseq [arg args]
+      (throw-if (not (libspec? arg)) (str "not a libspec: " arg))
+      (apply load-lib (prependss arg opts)))))
+
+(defn compile [path]
+  (native/raw "__rt_ctx.compile_module(runtime::detail::to_string(#{ path }#)).expect_ok();"))
+
+(defn require [& args]
+  (apply load-libs :require args))
+
+(defn use [& args]
+  (apply load-libs :require :use args))
+
+; Sets *ns* to the namespace named by name (unevaluated), creating it
+; if needed. References can be zero or more of: (:refer-clojure ...)
+; (:require ...) (:use ...) (:import ...) (:load ...)
+; with the syntax of refer-clojure/require/use/import/load respectively.
+(defmacro ns [name & references]
+  (let [process-reference (fn [reference]
+                            (let [kname (first reference)
+                                  args (rest reference)]
+                              (cons (symbol "clojure.core" (clojure.core/name kname))
+                                    (map (fn [a]
+                                           (list 'quote a))
+                                         args))))
+        refer-full-clojure? (not-any? (fn [ref]
+                                        (= :refer-clojure (first ref)))
+                                      references)]
+    (list 'do
+          (list 'clojure.core/in-ns (list 'quote name))
+          ; TODO: with-loading-context
+          (concat '(do) ;with-loading-context
+                  (when (and (not= name 'clojure.core) refer-full-clojure?)
+                    [(list 'clojure.core/refer '(quote clojure.core))])
+                  (map process-reference references))
+          (list 'if (list '= (list 'quote name) (list 'quote 'clojure.core))
+            'nil
+            (list 'let (vector 'name (list 'quote name))
+              (list 'native/raw "__rt_ctx.module_loader.set_loaded(runtime::detail::to_string(#{ name }#));")
+              ; TODO: Dynamic vars
+              ;(dosync (commute @#'*loaded-libs* conj '~name))
+              'nil))
+          )))
+
+(println "Bottom of clojure.core")

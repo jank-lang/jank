@@ -7,8 +7,8 @@ namespace jank::runtime
 {
   namespace obj
   {
-    using map = static_object<object_type::map>;
-    using map_ptr = native_box<map>;
+    using persistent_array_map = static_object<object_type::persistent_array_map>;
+    using persistent_array_map_ptr = native_box<persistent_array_map>;
   }
 
   template <>
@@ -40,13 +40,17 @@ namespace jank::runtime
     /* behavior::metadatable */
     object_ptr with_meta(object_ptr m) const;
 
+    /* behavior::nameable */
+    native_string const& get_name() const;
+    native_string const& get_namespace() const;
+
     bool operator ==(static_object const &rhs) const;
     bool operator <(static_object const &rhs) const;
 
     object base{ object_type::symbol };
     native_string ns;
     native_string name;
-    option<obj::map_ptr> meta;
+    option<object_ptr> meta;
   };
 
   namespace obj

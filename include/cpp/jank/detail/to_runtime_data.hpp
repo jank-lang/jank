@@ -1,5 +1,7 @@
 #pragma once
 
+#include <boost/filesystem/path.hpp>
+
 #include <jank/runtime/seq.hpp>
 
 namespace jank::detail
@@ -26,10 +28,13 @@ namespace jank::detail
   inline runtime::object_ptr to_runtime_data(runtime::obj::symbol const &d)
   { return make_box<runtime::obj::symbol>(d); }
 
-  template <typename K, typename V>
-  runtime::object_ptr to_runtime_data(native_unordered_map<K, V> const &m)
+  inline runtime::object_ptr to_runtime_data(boost::filesystem::path const &p)
+  { return make_box(p.string()); }
+
+  template <typename K, typename V, typename H, typename C>
+  runtime::object_ptr to_runtime_data(native_unordered_map<K, V, H, C> const &m)
   {
-    runtime::object_ptr ret(make_box<runtime::obj::map>());
+    runtime::object_ptr ret(make_box<runtime::obj::persistent_array_map>());
     for(auto const &e : m)
     { ret = runtime::assoc(ret, to_runtime_data(e.first), to_runtime_data(e.second)); }
     return ret;
@@ -38,7 +43,7 @@ namespace jank::detail
   template <typename T>
   runtime::object_ptr to_runtime_data(option<T> const &m)
   {
-    return runtime::obj::map::create_unique
+    return runtime::obj::persistent_array_map::create_unique
     (
       make_box("__type"), make_box("option"),
       make_box("data"), (m.is_none() ? make_box("none") : to_runtime_data(m.unwrap()))

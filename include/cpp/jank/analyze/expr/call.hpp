@@ -22,7 +22,7 @@ namespace jank::analyze::expr
       for(auto const &e : arg_exprs)
       { arg_expr_maps = runtime::conj(arg_expr_maps, e->to_runtime_data()); }
 
-      return runtime::obj::map::create_unique
+      return runtime::obj::persistent_array_map::create_unique
       (
         make_box("__type"), make_box("expr::call"),
         make_box("source_expr"), source_expr->to_runtime_data(),

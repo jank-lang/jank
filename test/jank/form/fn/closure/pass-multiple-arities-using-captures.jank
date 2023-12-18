@@ -1,0 +1,11 @@
+(defn complement [f]
+  (fn
+    ([] (not (f)))
+    ([x] (not (f x)))
+    ([x y] (not (f x y)))
+    ([x y & zs] (not (apply f x y zs)))))
+
+(assert (= true ((complement even?) 3)))
+(assert (= false ((complement even?) 4)))
+
+:success

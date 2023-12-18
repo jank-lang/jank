@@ -79,7 +79,7 @@ namespace jank::runtime::detail
             prev[2], prev[3],
             prev[4], prev[5],
             prev[6], prev[7],
-            prev[7], prev[8],
+            prev[8], prev[9],
             key, value
           }
         );
@@ -126,23 +126,27 @@ namespace jank::runtime::detail
     }
   }
 
-  /* TODO: Rename to native_array_map. */
   /* This is a short map, storing a vector of pairs. This is only until immer has proper
    * support for short maps and map transients. */
   /* TODO: Just use one template param. */
   template <typename K, typename V>
-  struct map_type_impl
+  struct native_array_map_impl
   {
     using value_type = V*;
 
-    map_type_impl() = default;
-    map_type_impl(map_type_impl const &s) = default;
-    map_type_impl(map_type_impl &&s) noexcept = default;
+    /* Array maps are fast only for a small number of keys. Clojure JVM uses a threshold of 8
+     * k/v pairs, thus 16 elements. We follow the same. */
+    /* TODO: Benchmark difference thresholds. */
+    static constexpr size_t max_size{ 8 };
+
+    native_array_map_impl() = default;
+    native_array_map_impl(native_array_map_impl const &s) = default;
+    native_array_map_impl(native_array_map_impl &&s) noexcept = default;
     template <typename L, typename E = std::enable_if_t<std::is_integral_v<L>>>
-    map_type_impl(in_place_unique, value_type kvs, L const l)
+    native_array_map_impl(in_place_unique, value_type kvs, L const l)
       : data{ std::move(kvs) }, length{ static_cast<decltype(length)>(l) }
     { }
-    ~map_type_impl() = default;
+    ~native_array_map_impl() = default;
 
     void insert_unique(K const key, V const val)
     {
@@ -223,9 +227,7 @@ namespace jank::runtime::detail
       using reference = value_type&;
 
       value_type operator *() const
-      {
-        return { data[index], data[index + 1] };
-      }
+      { return { data[index], data[index + 1] }; }
       iterator& operator ++()
       {
         index += 2;
@@ -252,19 +254,22 @@ namespace jank::runtime::detail
 
     iterator begin()
     { return iterator{ data, 0 }; }
-    iterator begin() const
-    { return iterator{ data, 0 }; }
+    const_iterator begin() const
+    { return const_iterator{ data, 0 }; }
     iterator end()
     { return iterator{ data, length }; }
-    iterator end() const
-    { return iterator{ data, length }; }
+    const_iterator end() const
+    { return const_iterator{ data, length }; }
 
     size_t size() const
     { return length / 2; }
 
-    map_type_impl<K, V> clone() const
+    bool empty() const
+    { return length == 0; }
+
+    native_array_map_impl<K, V> clone() const
     {
-      map_type_impl<K, V> ret{ *this };
+      native_array_map_impl<K, V> ret{ *this };
       ret.data = new (GC) V[length];
       memcpy(ret.data, data, length * sizeof(V));
       return ret;
@@ -275,5 +280,5 @@ namespace jank::runtime::detail
     mutable size_t hash{};
   };
 
-  using persistent_map = map_type_impl<object_ptr, object_ptr>;
+  using native_array_map = native_array_map_impl<object_ptr, object_ptr>;
 }

@@ -8,7 +8,7 @@ namespace jank::runtime
   template <>
   struct static_object<object_type::vector> : gc
   {
-    using value_type = runtime::detail::peristent_vector;
+    using value_type = runtime::detail::native_persistent_vector;
 
     static constexpr bool pointer_free{ false };
 
@@ -44,13 +44,15 @@ namespace jank::runtime
     /* behavior::associatively_readable */
     object_ptr get(object_ptr key) const;
     object_ptr get(object_ptr key, object_ptr fallback) const;
+    object_ptr get_entry(object_ptr key) const;
+    native_bool contains(object_ptr key) const;
 
     /* behavior::consable */
     native_box<static_object> cons(object_ptr head) const;
 
     object base{ object_type::vector };
     value_type data;
-    option<obj::map_ptr> meta;
+    option<object_ptr> meta;
   };
 
   namespace obj

@@ -90,8 +90,8 @@ namespace jank::codegen
         { return "jank::runtime::obj::vector_ptr"; }
         case jank::runtime::object_type::set:
         { return "jank::runtime::obj::set_ptr"; }
-        case jank::runtime::object_type::map:
-        { return "jank::runtime::obj::map_ptr"; }
+        case jank::runtime::object_type::persistent_array_map:
+        { return "jank::runtime::obj::persistent_array_map_ptr"; }
         case jank::runtime::object_type::var:
         { return "jank::runtime::var_ptr"; }
         default:
@@ -140,10 +140,9 @@ namespace jank::codegen
             fmt::format_to
             (
               inserter,
-              R"(__rt_ctx.intern_keyword("{}", "{}", {}))",
+              R"(__rt_ctx.intern_keyword("{}", "{}", true).expect_ok())",
               typed_o->sym.ns,
-              typed_o->sym.name,
-              typed_o->resolved
+              typed_o->sym.name
             );
           }
           else if constexpr(std::same_as<T, runtime::obj::string>)
@@ -157,28 +156,29 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, runtime::obj::list>)
           {
-            auto ret_tmp(runtime::context::unique_string("vec"));
             fmt::format_to
-            (inserter, "jank::make_box<jank::runtime::obj::list>(", ret_tmp);
+            (inserter, "jank::make_box<jank::runtime::obj::list>(");
+            native_bool need_comma{};
             for(auto const &form : typed_o->data)
             {
-              fmt::format_to(inserter, ", ");
+              if(need_comma)
+              { fmt::format_to(inserter, ", "); }
+              need_comma = true;
               gen_constant(form, buffer, true);
             }
             fmt::format_to(inserter, ")");
           }
           else if constexpr(std::same_as<T, runtime::obj::vector>)
           {
-            auto ret_tmp(runtime::context::unique_string("vec"));
             fmt::format_to
-            (inserter, "jank::make_box<jank::runtime::obj::vector>(", ret_tmp);
+            (inserter, "jank::make_box<jank::runtime::obj::vector>(");
             bool need_comma{};
             for(auto const &form : typed_o->data)
             {
               if(need_comma)
               { fmt::format_to(inserter, ", "); }
-              gen_constant(form, buffer, true);
               need_comma = true;
+              gen_constant(form, buffer, true);
             }
             fmt::format_to(inserter, ")");
           }
@@ -246,22 +246,30 @@ namespace jank::codegen
   processor::processor
   (
     runtime::context &rt_ctx,
-    analyze::expression_ptr const &expr
+    analyze::expression_ptr const &expr,
+    native_string_view const &module,
+    compilation_target const target
   )
     : rt_ctx{ rt_ctx },
       root_expr{ expr },
       root_fn{ boost::get<analyze::expr::function<analyze::expression>>(expr->data) },
-      struct_name{ runtime::context::unique_string(root_fn.name.unwrap_or("fn")) }
+      module{ module },
+      target{ target },
+      struct_name{ root_fn.name }
   { assert(root_fn.frame.data); }
 
   processor::processor
   (
     runtime::context &rt_ctx,
-    analyze::expr::function<analyze::expression> const &expr
+    analyze::expr::function<analyze::expression> const &expr,
+    native_string_view const &module,
+    compilation_target const target
   )
     : rt_ctx{ rt_ctx },
       root_fn{ expr },
-      struct_name{ runtime::context::unique_string(root_fn.name.unwrap_or("fn")) }
+      module{ module },
+      target{ target },
+      struct_name{ root_fn.name }
   { assert(root_fn.frame.data); }
 
   option<handle> processor::gen
@@ -451,12 +459,15 @@ namespace jank::codegen
     for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
     { fmt::format_to(inserter, ", {}", arg_tmps[i].str(true)); }
 
-    /* TODO: Test this. No way it works. */
-    if(arg_tmps.size() > runtime::max_params)
+    if(runtime::max_params < arg_tmps.size())
     {
-      fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::list>(");
+      fmt::format_to(inserter, ", jank::make_box<jank::runtime::obj::list>(");
+      native_bool comma{};
       for(size_t i{ runtime::max_params }; i < arg_tmps.size(); ++i)
-      { fmt::format_to(inserter, ", {}", arg_tmps[i].str(true)); }
+      {
+        fmt::format_to(inserter, "{} {}", comma ? "," : "", arg_tmps[i].str(true));
+        comma = true;
+      }
       fmt::format_to(inserter, ")");
     }
     fmt::format_to(inserter, "));");
@@ -598,12 +609,14 @@ namespace jank::codegen
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", ">" }))
         {
+          /* TODO: Use lt and reverse args. */
           format_elided_var("jank::runtime::gt(", ")", ret_tmp.str(false), expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
           ret_tmp = { ret_tmp.unboxed_name, box_needed };
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", ">=" }))
         {
+          /* TODO: Use lte and reverse args. */
           format_elided_var("jank::runtime::gte(", ")", ret_tmp.str(false), expr.arg_exprs, fn_arity, false, box_needed);
           elided = true;
           ret_tmp = { ret_tmp.unboxed_name, box_needed };
@@ -751,10 +764,11 @@ namespace jank::codegen
 
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::context::unique_string("map"));
+    /* TODO: Jump right to a hash map, if we have enough values. */
     fmt::format_to
     (
       inserter,
-      "auto const {}(jank::make_box<jank::runtime::obj::map>(jank::runtime::detail::in_place_unique{{}}, jank::make_array_box<object_ptr>(",
+      "auto const {}(jank::make_box<jank::runtime::obj::persistent_array_map>(jank::runtime::detail::in_place_unique{{}}, jank::make_array_box<object_ptr>(",
       ret_tmp
     );
     bool need_comma{};
@@ -814,20 +828,31 @@ namespace jank::codegen
   )
   {
     /* Since each codegen proc handles one callable struct, we create a new one for this fn. */
-    processor prc{ rt_ctx, expr };
+    processor prc
+    {
+      rt_ctx,
+      expr,
+      runtime::module::nest_module(module, runtime::munge(expr.name)),
+      rt_ctx.compiling ? compilation_target::function : compilation_target::repl
+    };
 
-    auto header_inserter(std::back_inserter(header_buffer));
-    fmt::format_to(header_inserter, "{}", prc.declaration_str());
+    /* If we're compiling, we'll create a separate file for this. */
+    if(target != compilation_target::ns)
+    {
+      auto header_inserter(std::back_inserter(header_buffer));
+      fmt::format_to(header_inserter, "{}", prc.declaration_str());
+    }
+
     switch(expr.expr_type)
     {
       case analyze::expression_type::statement:
       case analyze::expression_type::expression:
-      /* TODO: Remove bool here and return a handle. */
-      { return prc.expression_str(box_needed, false); }
+      /* TODO: Return a handle. */
+      { return prc.expression_str(box_needed); }
       case analyze::expression_type::return_statement:
       {
         auto body_inserter(std::back_inserter(body_buffer));
-        fmt::format_to(body_inserter, "return {};", prc.expression_str(box_needed, false));
+        fmt::format_to(body_inserter, "return {};", prc.expression_str(box_needed));
         return none;
       }
     }
@@ -957,7 +982,6 @@ namespace jank::codegen
     }
   }
 
-  /* TODO: An if, in return position, without an else, will not return nil in the else. */
   option<handle> processor::gen
   (
     analyze::expr::if_<analyze::expression> const &expr,
@@ -968,7 +992,7 @@ namespace jank::codegen
     /* TODO: Handle unboxed results! */
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::context::unique_string("if"));
-    fmt::format_to(inserter, "object_ptr {};", ret_tmp);
+    fmt::format_to(inserter, "object_ptr {}{{ obj::nil::nil_const() }};", ret_tmp);
     auto const &condition_tmp(gen(expr.condition, fn_arity, false));
     fmt::format_to(inserter, "if(jank::runtime::detail::truthy({})) {{", condition_tmp.unwrap().str(false));
     auto const &then_tmp(gen(expr.then, fn_arity, true));
@@ -986,6 +1010,10 @@ namespace jank::codegen
       else
       { fmt::format_to(inserter, "}}"); }
     }
+    /* If we don't have an else, but we're in return position, we need to be sure to return
+     * something, so we return nil. */
+    else if(expr.expr_type == analyze::expression_type::return_statement)
+    { fmt::format_to(inserter, "else {{ return {}; }}", ret_tmp); }
 
     return ret_tmp;
   }
@@ -1011,7 +1039,7 @@ namespace jank::codegen
       interpolated_chunk_tmps.emplace_back(gen(*chunk_expr, fn_arity, true).unwrap());
     }
 
-    fmt::format_to(inserter, "object_ptr {};", ret_tmp);
+    fmt::format_to(inserter, "object_ptr {}{{ obj::nil::nil_const() }};", ret_tmp);
     fmt::format_to(inserter, "{{ object_ptr __value{{ obj::nil::nil_const() }};");
     size_t interpolated_chunk_it{};
     for(auto const &chunk : expr.chunks)
@@ -1055,6 +1083,21 @@ namespace jank::codegen
   void processor::build_header()
   {
     auto inserter(std::back_inserter(header_buffer));
+
+    /* TODO: We don't want this for nested modules, but we do if they're in their own file.
+     * Do we need three module compilation targets? Top-level, nested, local?
+     *
+     * Local fns are within a struct already, so we can't enter the ns again. */
+    if(!runtime::module::is_nested_module(module))
+    {
+      fmt::format_to
+      (
+        inserter,
+        "namespace {} {{",
+        runtime::module::module_to_native_ns(module)
+      );
+    }
+
     fmt::format_to
     (
       inserter,
@@ -1066,108 +1109,145 @@ namespace jank::codegen
       runtime::munge(struct_name.name)
     );
 
-    for(auto const &arity : root_fn.arities)
     {
-      for(auto const &v : arity.frame->lifted_vars)
+      /* TODO: Constants and vars are not shared across arities. We'd need stable names. */
+      native_set<native_integer> used_vars, used_constants, used_captures;
+      for(auto const &arity : root_fn.arities)
       {
-
-        fmt::format_to
-        (
-          inserter,
-          "jank::runtime::var_ptr const {0};", runtime::munge(v.second.native_name.name)
-        );
-      }
-
-      for(auto const &v : arity.frame->lifted_constants)
-      {
-        fmt::format_to
-        (
-          inserter,
-          "{} const {};",
-          detail::gen_constant_type(v.second.data, true),
-          runtime::munge(v.second.native_name.name)
-        );
-
-        if(v.second.unboxed_native_name.is_some())
+        for(auto const &v : arity.frame->lifted_vars)
         {
+          if(used_vars.contains(v.second.native_name.to_hash()))
+          { continue; }
+          used_vars.emplace(v.second.native_name.to_hash());
+
           fmt::format_to
           (
             inserter,
-            "static constexpr {} const {}{{ ",
-            detail::gen_constant_type(v.second.data, false),
-            runtime::munge(v.second.unboxed_native_name.unwrap().name)
+            "jank::runtime::var_ptr const {0};", runtime::munge(v.second.native_name.name)
           );
-          detail::gen_constant(v.second.data, header_buffer, false);
-          fmt::format_to(inserter, "}};");
+        }
+
+        for(auto const &v : arity.frame->lifted_constants)
+        {
+          if(used_constants.contains(v.second.native_name.to_hash()))
+          { continue; }
+          used_constants.emplace(v.second.native_name.to_hash());
+
+          fmt::format_to
+          (
+            inserter,
+            "{} const {};",
+            detail::gen_constant_type(v.second.data, true),
+            runtime::munge(v.second.native_name.name)
+          );
+
+          if(v.second.unboxed_native_name.is_some())
+          {
+            fmt::format_to
+            (
+              inserter,
+              "static constexpr {} const {}{{ ",
+              detail::gen_constant_type(v.second.data, false),
+              runtime::munge(v.second.unboxed_native_name.unwrap().name)
+            );
+            detail::gen_constant(v.second.data, header_buffer, false);
+            fmt::format_to(inserter, "}};");
+          }
+        }
+
+        /* TODO: More useful types here. */
+        for(auto const &v : arity.frame->captures)
+        {
+          if(used_captures.contains(v.first->to_hash()))
+          { continue; }
+          used_captures.emplace(v.first->to_hash());
+
+          fmt::format_to
+          (
+            inserter,
+            "jank::runtime::object_ptr const {0};", runtime::munge(v.first->name)
+          );
         }
       }
+    }
 
-      /* TODO: More useful types here. */
-      for(auto const &v : arity.frame->captures)
+    {
+      native_set<native_integer> used_captures;
+      fmt::format_to
+      (
+        inserter,
+        "{0}(jank::runtime::context &__rt_ctx", runtime::munge(struct_name.name)
+      );
+
+      for(auto const &arity : root_fn.arities)
       {
-        fmt::format_to
-        (
-          inserter,
-          "jank::runtime::object_ptr const {0};", runtime::munge(v.first->name)
-        );
+        for(auto const &v : arity.frame->captures)
+        {
+          if(used_captures.contains(v.first->to_hash()))
+          { continue; }
+          used_captures.emplace(v.first->to_hash());
+
+          /* TODO: More useful types here. */
+          fmt::format_to
+          (
+            inserter,
+            ", jank::runtime::object_ptr {0}", runtime::munge(v.first->name)
+          );
+        }
       }
     }
 
-    fmt::format_to
-    (
-      inserter,
-      "{0}(jank::runtime::context &__rt_ctx", runtime::munge(struct_name.name)
-    );
-
-    for(auto const &arity : root_fn.arities)
     {
-      for(auto const &v : arity.frame->captures)
-      {
-        /* TODO: More useful types here. */
-        fmt::format_to
-        (
-          inserter,
-          ", jank::runtime::object_ptr {0}", runtime::munge(v.first->name)
-        );
-      }
-    }
+      native_set<native_integer> used_vars, used_constants, used_captures;
+      fmt::format_to(inserter, ") : __rt_ctx{{ __rt_ctx }}");
 
-    fmt::format_to(inserter, ") : __rt_ctx{{ __rt_ctx }}");
-
-    for(auto const &arity : root_fn.arities)
-    {
-      for(auto const &v : arity.frame->lifted_vars)
+      for(auto const &arity : root_fn.arities)
       {
-        fmt::format_to
-        (
-          inserter,
-          R"(, {0}{{ __rt_ctx.intern_var("{1}", "{2}").expect_ok() }})",
-          runtime::munge(v.second.native_name.name),
-          v.second.var_name->ns,
-          v.second.var_name->name
-        );
-      }
+        for(auto const &v : arity.frame->lifted_vars)
+        {
+          if(used_vars.contains(v.second.native_name.to_hash()))
+          { continue; }
+          used_vars.emplace(v.second.native_name.to_hash());
 
-      for(auto const &v : arity.frame->lifted_constants)
-      {
-        fmt::format_to
-        (
-          inserter,
-          ", {0}{{",
-          runtime::munge(v.second.native_name.name)
-        );
-        detail::gen_constant(v.second.data, header_buffer, true);
-        fmt::format_to(inserter, "}}");
-      }
+          fmt::format_to
+          (
+            inserter,
+            R"(, {0}{{ __rt_ctx.intern_var("{1}", "{2}").expect_ok() }})",
+            runtime::munge(v.second.native_name.name),
+            v.second.var_name->ns,
+            v.second.var_name->name
+          );
+        }
 
-      for(auto const &v : arity.frame->captures)
-      {
-        fmt::format_to
-        (
-          inserter,
-          ", {0}{{ {0} }}",
-          runtime::munge(v.first->name)
-        );
+        for(auto const &v : arity.frame->lifted_constants)
+        {
+          if(used_constants.contains(v.second.native_name.to_hash()))
+          { continue; }
+          used_constants.emplace(v.second.native_name.to_hash());
+
+          fmt::format_to
+          (
+            inserter,
+            ", {0}{{",
+            runtime::munge(v.second.native_name.name)
+          );
+          detail::gen_constant(v.second.data, header_buffer, true);
+          fmt::format_to(inserter, "}}");
+        }
+
+        for(auto const &v : arity.frame->captures)
+        {
+          if(used_captures.contains(v.first->to_hash()))
+          { continue; }
+          used_captures.emplace(v.first->to_hash());
+
+          fmt::format_to
+          (
+            inserter,
+            ", {0}{{ {0} }}",
+            runtime::munge(v.first->name)
+          );
+        }
       }
     }
 
@@ -1178,11 +1258,14 @@ namespace jank::codegen
   {
     auto inserter(std::back_inserter(body_buffer));
 
-    option<size_t> variadic_arg_position;
+    analyze::expr::function_arity<analyze::expression> const *variadic_arity{};
+    analyze::expr::function_arity<analyze::expression> const *highest_fixed_arity{};
     for(auto const &arity : root_fn.arities)
     {
       if(arity.fn_ctx->is_variadic)
-      { variadic_arg_position = arity.params.size() - 1; }
+      { variadic_arity = &arity; }
+      else if(!highest_fixed_arity || highest_fixed_arity->fn_ctx->param_count < arity.fn_ctx->param_count)
+      { highest_fixed_arity = &arity; }
 
       native_string_view recur_suffix;
       if(arity.fn_ctx->is_tail_recursive)
@@ -1202,6 +1285,7 @@ namespace jank::codegen
         );
         param_comma = true;
       }
+
       fmt::format_to
       (
         inserter,
@@ -1211,6 +1295,8 @@ namespace jank::codegen
           using namespace jank::runtime;
         )"
       );
+
+      fmt::format_to(inserter, "jank::profile::timer __timer{{ \"{}\" }};", root_fn.name);
 
       if(arity.fn_ctx->is_tail_recursive)
       {
@@ -1249,13 +1335,23 @@ namespace jank::codegen
       fmt::format_to(inserter, "}}");
     }
 
-    if(variadic_arg_position.is_some())
+    if(variadic_arity)
     {
+      native_bool const variadic_ambiguous
+      {
+        highest_fixed_arity &&
+        highest_fixed_arity->fn_ctx->param_count == variadic_arity->fn_ctx->param_count - 1
+      };
+
       fmt::format_to
       (
         inserter,
-        "size_t get_variadic_arg_position() const final{{ return static_cast<size_t>({}); }}",
-        variadic_arg_position.unwrap()
+        R"(
+          jank::runtime::behavior::callable::arity_flag_t get_arity_flags() const final
+          {{ return jank::runtime::behavior::callable::build_arity_flags({}, true, {}); }}
+        )",
+        variadic_arity->fn_ctx->param_count - 1,
+        variadic_ambiguous
       );
     }
   }
@@ -1263,94 +1359,119 @@ namespace jank::codegen
   void processor::build_footer()
   {
     auto inserter(std::back_inserter(footer_buffer));
+
+    /* Struct. */
     fmt::format_to(inserter, "}};");
+
+    /* Namespace. */
+    if(!runtime::module::is_nested_module(module))
+    { fmt::format_to(inserter, "}}"); }
   }
 
-  native_string processor::expression_str(bool const box_needed, bool const auto_call)
+  native_string processor::expression_str(bool const box_needed)
   {
+    auto const module_ns(runtime::module::module_to_native_ns(module));
+
     if(!generated_expression)
     {
       auto inserter(std::back_inserter(expression_buffer));
 
-      if(auto_call)
+      native_string_view close = ").data";
+      if(box_needed)
       {
-        throw std::runtime_error{ "TODO: I think this can be removed" };
-        /* TODO: There's a Cling bug here which prevents us from returning the fn object itself,
-         * to be called in non-JIT code. If we call it here and return the result, it works fine. */
-        auto tmp_name(runtime::context::unique_string());
         fmt::format_to
         (
           inserter,
-          R"(
-            {0} {1}{{ *reinterpret_cast<jank::runtime::context*>({2})
-          )",
-          runtime::munge(struct_name.name),
-          tmp_name,
-          fmt::ptr(&rt_ctx)
-        );
-
-        for(auto const &arity : root_fn.arities)
-        {
-          for(auto const &v : arity.frame->captures)
-          {
-            auto const originating_local(root_fn.frame->find_local_or_capture(v.first));
-            handle h{ originating_local.unwrap().binding };
-            fmt::format_to(inserter, ", {0}", h.str(true));
-          }
-        }
-
-        fmt::format_to(inserter, "}};");
-
-        fmt::format_to
-        (
-          inserter,
-          "{}.call();",
-          tmp_name
+          "jank::make_box<{0}>(__rt_ctx",
+          runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name))
         );
       }
       else
       {
-        native_string_view close = ").data";
-        if(box_needed)
-        {
-          fmt::format_to
-          (
-            inserter,
-            "jank::make_box<{0}>(std::ref(*reinterpret_cast<jank::runtime::context*>({1}))",
-            runtime::munge(struct_name.name),
-            fmt::ptr(&rt_ctx)
-          );
-        }
-        else
-        {
-          fmt::format_to
-          (
-            inserter,
-            "{0}{{ std::ref(*reinterpret_cast<jank::runtime::context*>({1}))",
-            runtime::munge(struct_name.name),
-            fmt::ptr(&rt_ctx)
-          );
-          close = "}";
-        }
-
-        for(auto const &arity : root_fn.arities)
-        {
-          for(auto const &v : arity.frame->captures)
-          {
-            /* We're generating the inputs to the function ctor, which means we don't
-             * want the binding of the capture within the function; we want the one outside
-             * of it, which we're capturing. We need to reach further for that. */
-            auto const originating_local(root_fn.frame->find_local_or_capture(v.first));
-            handle h{ originating_local.unwrap().binding };
-            fmt::format_to(inserter, ", {0}", h.str(true));
-          }
-        }
-
-        fmt::format_to(inserter, "{}", close);
+        fmt::format_to
+        (
+          inserter,
+          "{0}{{ __rt_ctx",
+          runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name))
+        );
+        close = "}";
       }
+
+      native_set<native_integer> used_captures;
+      for(auto const &arity : root_fn.arities)
+      {
+        for(auto const &v : arity.frame->captures)
+        {
+          if(used_captures.contains(v.first->to_hash()))
+          { continue; }
+          used_captures.emplace(v.first->to_hash());
+
+          /* We're generating the inputs to the function ctor, which means we don't
+            * want the binding of the capture within the function; we want the one outside
+            * of it, which we're capturing. We need to reach further for that. */
+          auto const originating_local(root_fn.frame->find_local_or_capture(v.first));
+          handle h{ originating_local.unwrap().binding };
+          fmt::format_to(inserter, ", {0}", h.str(true));
+        }
+      }
+
+      fmt::format_to(inserter, "{}", close);
 
       generated_expression = true;
     }
     return { expression_buffer.data(), expression_buffer.size() };
+  }
+
+  native_string processor::module_init_str(native_string_view const &module)
+  {
+    fmt::memory_buffer module_buffer;
+    auto inserter(std::back_inserter(module_buffer));
+
+    fmt::format_to
+    (
+      inserter,
+      "namespace {} {{",
+      runtime::module::module_to_native_ns(module)
+    );
+
+    fmt::format_to
+    (
+      inserter,
+      R"(
+        struct __ns__init
+        {{
+      )"
+    );
+
+    fmt::format_to(inserter, "static void __init(){{");
+    fmt::format_to(inserter, "jank::profile::timer __timer{{ \"ns __init\" }};");
+    fmt::format_to(inserter, "constexpr auto const deps(jank::util::make_array<jank::native_string_view>(");
+    bool needs_comma{};
+    for(auto const &dep : rt_ctx.module_dependencies[module])
+    {
+      if(needs_comma)
+      { fmt::format_to(inserter, ", "); }
+      fmt::format_to(inserter, "\"{}\"", dep);
+      needs_comma = true;
+    }
+    fmt::format_to(inserter, "));");
+
+    fmt::format_to(inserter, "for(auto const &dep : deps){{");
+    fmt::format_to(inserter, "__rt_ctx.load_module(dep);");
+    fmt::format_to(inserter, "}}");
+
+    /* __init fn */
+    fmt::format_to(inserter, "}}");
+
+    /* Struct */
+    fmt::format_to(inserter, "}};");
+
+    /* Namespace */
+    fmt::format_to(inserter, "}}");
+
+    native_string ret;
+    ret.reserve(module_buffer.size());
+    ret += native_string_view{ module_buffer.data(), module_buffer.size() };
+    return ret;
   }
 }

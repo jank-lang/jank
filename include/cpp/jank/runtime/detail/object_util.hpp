@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/detail/native_persistent_list.hpp>
 
 namespace jank::runtime::detail
 {
@@ -21,6 +22,7 @@ namespace jank
     using real = static_object<object_type::real>;
     using string = static_object<object_type::string>;
     using list = static_object<object_type::list>;
+    using symbol = static_object<object_type::symbol>;
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
@@ -56,7 +58,7 @@ namespace jank
   { return make_box<runtime::obj::string>(s); }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto make_box(runtime::detail::persistent_list const &l)
+  inline auto make_box(runtime::detail::native_persistent_list const &l)
   { return make_box<runtime::obj::list>(l); }
 
   template <typename T>
@@ -94,19 +96,13 @@ namespace std
 {
   template <>
   struct hash<jank::runtime::object_ptr>
-  {
-    size_t operator()(jank::runtime::object_ptr const o) const noexcept;
-  };
+  { size_t operator()(jank::runtime::object_ptr const o) const noexcept; };
 
   template <>
   struct hash<jank::runtime::object>
-  {
-    size_t operator()(jank::runtime::object const &o) const noexcept;
-  };
+  { size_t operator()(jank::runtime::object const &o) const noexcept; };
 
   template <>
   struct equal_to<jank::runtime::object_ptr>
-  {
-    bool operator()(jank::runtime::object_ptr const lhs, jank::runtime::object_ptr const rhs) const noexcept;
-  };
+  { bool operator()(jank::runtime::object_ptr const lhs, jank::runtime::object_ptr const rhs) const noexcept; };
 }

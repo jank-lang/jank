@@ -8,7 +8,7 @@
 #include <jank/runtime/hash.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/vector.hpp>
-#include <jank/runtime/obj/map.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/behavior/countable.hpp>
@@ -39,7 +39,7 @@ namespace jank::runtime
           { return typed_s->count(); }
           else if constexpr(behavior::seqable<T>)
           {
-            size_t length{ 1 };
+            size_t length{ 0 };
             for(auto i(typed_s->fresh_seq()); i != nullptr && length < max; i = i->next_in_place())
             { ++length; }
             return length;
@@ -56,6 +56,9 @@ namespace jank::runtime
   { return (o == obj::nil::nil_const()); }
   native_bool is_some(object_ptr const o)
   { return (o != obj::nil::nil_const()); }
+
+  native_bool is_map(object_ptr const o)
+  { return (o->type == object_type::persistent_hash_map || o->type == object_type::persistent_array_map); }
 
   object_ptr seq(object_ptr const s)
   {
@@ -207,7 +210,7 @@ namespace jank::runtime
         using T = typename decltype(typed_s)::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
-        { return typed_s; }
+        { return make_box<obj::list>(o); }
         else if constexpr(behavior::consable<T>)
         { return typed_s->cons(o); }
         else if constexpr(behavior::seqable<T>)
@@ -342,6 +345,49 @@ namespace jank::runtime
         { return obj::nil::nil_const(); }
       },
       m
+    );
+  }
+
+  object_ptr find(object_ptr const s, object_ptr const key)
+  {
+    auto const nil(obj::nil::nil_const());
+    if(s == nullptr || s == nil)
+    { return nil; }
+
+    return visit_object
+    (
+      [&](auto const typed_s) -> object_ptr
+      {
+        using S = typename decltype(typed_s)::value_type;
+
+        if constexpr(behavior::associatively_readable<S>)
+        { return typed_s->get_entry(key); }
+        else
+        { return nil; }
+      },
+      s
+    );
+  }
+
+  native_bool contains(object_ptr const s, object_ptr const key)
+  {
+    if(s == nullptr || s == obj::nil::nil_const())
+    { return false; }
+
+    return visit_object
+    (
+      [&](auto const typed_s) -> native_bool
+      {
+        using S = typename decltype(typed_s)::value_type;
+
+        if constexpr(behavior::associatively_readable<S>)
+        { return typed_s->contains(key); }
+        if constexpr(std::same_as<S, obj::set>)
+        { return typed_s->contains(key); }
+        else
+        { return false; }
+      },
+      s
     );
   }
 }

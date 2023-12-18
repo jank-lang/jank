@@ -8,7 +8,13 @@ namespace jank::runtime::behavior
   template <typename T>
   concept seqable = requires(T * const t)
   {
+    /* Returns a (potentially shared) seq, which could just be `this`, if we're already a
+     * seq. However, must return a nullptr for empty seqs. Returning a non-null pointer to
+     * an empty seq is UB. */
     { t->seq() } -> std::convertible_to<object_ptr>;
+    /* Returns a unique seq which can be updated in place. This is an optimization which allows
+     * one allocation for a fresh seq which can then be mutated any number of times to traverse
+     * the data. Also must return nullptr when the sequence is empty. */
     { t->fresh_seq() } -> std::convertible_to<object_ptr>;
   };
 
@@ -32,10 +38,11 @@ namespace jank::runtime::behavior
   namespace detail
   {
     template <typename It>
-    void to_string(It const &begin, It const &end, char const open, char const close, fmt::memory_buffer &buff)
+    void to_string(It const &begin, It const &end, native_string_view const open, char const close, fmt::memory_buffer &buff)
     {
       auto inserter(std::back_inserter(buff));
-      inserter = open;
+      for(auto const c : open)
+      { inserter = c; }
       for(auto i(begin); i != end; ++i)
       {
         runtime::detail::to_string(*i, buff);

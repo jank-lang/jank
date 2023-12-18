@@ -7,11 +7,14 @@
     "boost-filesystem",
     "boost-smart-ptr",
     "boost-variant",
+    "cli11",
     "fmt",
     "folly",
     "immer",
     "libguarded",
-    "magic-enum"
+    "libzippp",
+    "magic-enum",
+    "readline"
   ],
   "default-features": [],
   "features": {

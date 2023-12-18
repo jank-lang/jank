@@ -12,7 +12,7 @@ namespace jank::analyze
 {
   runtime::object_ptr lifted_var::to_runtime_data() const
   {
-    return runtime::obj::map::create_unique
+    return runtime::obj::persistent_array_map::create_unique
     (
       make_box("__type"), make_box("lifted_var"),
       make_box("native_name"), make_box<runtime::obj::symbol>(native_name),
@@ -22,7 +22,7 @@ namespace jank::analyze
 
   runtime::object_ptr lifted_constant::to_runtime_data() const
   {
-    return runtime::obj::map::create_unique
+    return runtime::obj::persistent_array_map::create_unique
     (
       make_box("__type"), make_box("lifted_constant"),
       make_box("native_name"), make_box<runtime::obj::symbol>(native_name),
@@ -33,7 +33,7 @@ namespace jank::analyze
 
   runtime::object_ptr local_binding::to_runtime_data() const
   {
-    return runtime::obj::map::create_unique
+    return runtime::obj::persistent_array_map::create_unique
     (
       make_box("__type"), make_box("local_binding"),
       make_box("name"), name,
@@ -76,7 +76,8 @@ namespace jank::analyze
     return *this;
   }
 
-  option<local_frame::find_result> find_local_impl(local_frame_ptr const start, runtime::obj::symbol_ptr sym, native_bool const allow_captures)
+  option<local_frame::find_result> find_local_impl
+  (local_frame_ptr const start, runtime::obj::symbol_ptr sym, native_bool const allow_captures)
   {
     decltype(local_frame::find_result::crossed_fns) crossed_fns;
 
@@ -114,9 +115,10 @@ namespace jank::analyze
     for(auto const &crossed_fn : result.crossed_fns)
     {
       auto res(crossed_fn->captures.emplace(result.binding.name, result.binding));
-      //static_cast<void>(res);
+      /* We know it needs a box, since it's captured. */
       res.first->second.needs_box = true;
       res.first->second.has_boxed_usage = true;
+      /* To start with, we assume it's only boxed. */
       res.first->second.has_unboxed_usage = false;
     }
   }
@@ -212,7 +214,7 @@ namespace jank::analyze
 
   runtime::object_ptr local_frame::to_runtime_data() const
   {
-    return runtime::obj::map::create_unique
+    return runtime::obj::persistent_array_map::create_unique
     (
       make_box("__type"), make_box("local_frame"),
       make_box("type"), make_box(magic_enum::enum_name(type)),

@@ -15,14 +15,14 @@ namespace jank::runtime
   template <>
   struct static_object<object_type::persistent_list_sequence>
     : gc,
-      obj::detail::iterator_sequence<static_object<object_type::persistent_list_sequence>, runtime::detail::persistent_list::iterator>
+      obj::detail::iterator_sequence<static_object<object_type::persistent_list_sequence>, runtime::detail::native_persistent_list::iterator>
   {
     static constexpr bool pointer_free{ false };
 
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    using obj::detail::iterator_sequence<static_object<object_type::persistent_list_sequence>, runtime::detail::persistent_list::iterator>::iterator_sequence;
+    using obj::detail::iterator_sequence<static_object<object_type::persistent_list_sequence>, runtime::detail::native_persistent_list::iterator>::iterator_sequence;
 
     object base{ object_type::persistent_list_sequence };
   };

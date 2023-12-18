@@ -2,13 +2,16 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/persistent_list_sequence.hpp>
+#include <jank/runtime/detail/native_persistent_list.hpp>
 
 namespace jank::runtime
 {
+  object_ptr seq(object_ptr s);
+
   template <>
   struct static_object<object_type::list> : gc
   {
-    using value_type = runtime::detail::persistent_list;
+    using value_type = runtime::detail::native_persistent_list;
 
     static constexpr bool pointer_free{ false };
 
@@ -17,13 +20,18 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(object &&base);
     static_object(value_type &&d);
     static_object(value_type const &d);
     template <typename... Args>
     static_object(Args &&...args)
       : data{ std::forward<Args>(args)... }
     { }
+
+    static native_box<static_object> empty()
+    {
+      static auto const ret(make_box<static_object>());
+      return ret;
+    }
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
@@ -46,7 +54,7 @@ namespace jank::runtime
 
     object base{ object_type::list };
     value_type data;
-    option<obj::map_ptr> meta;
+    option<object_ptr> meta;
   };
 
   namespace obj

@@ -1,10 +1,16 @@
 #include <iostream>
 #include <filesystem>
 
+#include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
+
 #include <cling/Interpreter/Interpreter.h>
 #include <cling/Interpreter/Value.h>
+#include <clang/Frontend/CompilerInstance.h>
+#include <clang/Lex/Preprocessor.h>
 
-#include <jank/runtime/detail/object_util.hpp>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 #include <jank/util/mapped_file.hpp>
 #include <jank/read/lex.hpp>
@@ -15,68 +21,135 @@
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
 
-int main(int const argc, char const **argv)
+namespace jank
 {
-  if(argc < 2)
+  void run(util::cli::options const &opts, runtime::context &rt_ctx)
   {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    std::cerr << "Usage: " << argv[0] << " <file>\n";
-    return 1;
-  }
+    {
+      profile::timer timer{ "require clojure.core" };
+      rt_ctx.load_module("/clojure.core").expect_ok();
+    }
 
-  GC_set_all_interior_pointers(1);
-  GC_enable();
-  /* TODO: This crashes now, with LLVM13. Looks like it's cleaning up things it shouldn't. */
-  //GC_enable_incremental();
-
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-  char const *file{ argv[1] };
-
-  jank::runtime::context rt_ctx;
-  jank::jit::processor jit_prc;
-
-  try
-  {
-    rt_ctx.eval_prelude(jit_prc);
+    {
+      profile::timer timer{ "eval user code" };
+      std::cout << runtime::detail::to_string(rt_ctx.eval_file(opts.target_file)) << std::endl;
+    }
 
     //{
-    //  auto const mfile(jank::util::map_file(file));
-    //  auto const asts(rt_ctx.analyze_string({ mfile.expect_ok().head, mfile.expect_ok().size }, jit_prc));
+    //  ankerl::nanobench::Config config;
+    //  config.mMinEpochIterations = 5000000;
+    //  config.mOut = &std::cout;
+    //  config.mWarmup = 10000;
 
-    //  for(auto const &ast : asts)
-    //  {
-    //    if(auto *f = boost::get<jank::analyze::expr::function<jank::analyze::expression>>(&ast->data))
+    //  auto const hf1(rt_ctx.find_var("clojure.core", "highest-fixed-1").unwrap()->get_root());
+    //  auto const kw1(rt_ctx.intern_keyword("", "a", true).expect_ok());
+    //  auto const kw2(rt_ctx.intern_keyword("", "b", true).expect_ok());
+    //  ankerl::nanobench::Bench().config(config).run
+    //  (
+    //    "bitmap",
+    //    [&]
     //    {
-    //      jank::codegen::processor cg_prc{ rt_ctx, *f };
-    //      std::cout << cg_prc.declaration_str() << std::endl;
+    //      auto const ret(runtime::dynamic_call(hf1, kw1));
+    //      ankerl::nanobench::doNotOptimizeAway(ret);
     //    }
-    //    else
-    //    {
-    //      auto const wrapped(jank::evaluate::wrap_expression(ast));
-    //      jank::codegen::processor cg_prc{ rt_ctx, wrapped };
-    //      std::cout << cg_prc.declaration_str() << std::endl;
-    //    }
-    //  }
-
-    //  return 0;
+    //  );
     //}
-
-    std::cout << jank::runtime::detail::to_string(rt_ctx.eval_file(file, jit_prc)) << std::endl;
   }
-  catch(std::exception const &e)
-  { fmt::print("Exception: {}", e.what()); }
-  catch(jank::runtime::object_ptr const o)
-  { fmt::print("Exception: {}", jank::runtime::detail::to_string(o)); }
-  catch(jank::native_string const &s)
-  { fmt::print("Exception: {}", s); }
-  catch(jank::read::error const &e)
-  { fmt::print("Read error: {}", e.message); }
 
-  //std::string line;
-  //std::cout << "> " << std::flush;
-  //while(std::getline(std::cin, line))
-  //{
-  //  jit_prc.eval_string(line);
-  //  std::cout << "> " << std::flush;
-  //}
+  void compile(util::cli::options const &opts, runtime::context &rt_ctx)
+  {
+    //rt_ctx.load_module("/clojure.core").expect_ok();
+    rt_ctx.compile_module(opts.target_ns).expect_ok();
+  }
+
+  void repl(util::cli::options const &opts, runtime::context &rt_ctx)
+  {
+    /* TODO: REPL server. */
+    if(opts.repl_server)
+    { throw std::runtime_error{ "Not yet implemented: REPL server" }; }
+
+    {
+      profile::timer timer{ "require clojure.core" };
+      rt_ctx.load_module("/clojure.core").expect_ok();
+    }
+
+    /* By default, RL will do tab completion for files. We disable that here. */
+    rl_bind_key('\t', rl_insert);
+
+    /* TODO: Completion. */
+    /* TODO: Syntax highlighting. */
+    /* TODO: Multi-line input. */
+    while(auto const buf = readline("> "))
+    {
+      native_string line{ buf };
+      boost::trim(line);
+      if(line.empty())
+      { continue; }
+
+      /* TODO: Persist history to disk, á la .lein-repl-history. */
+      /* History is persisted for this session only. */
+      add_history(line.data());
+      try
+      {
+        auto const res(rt_ctx.eval_string(line));
+        fmt::println("{}", runtime::detail::to_string(res));
+      }
+      /* TODO: Unify error handling. JEEZE! */
+      catch(std::exception const &e)
+      { fmt::println("Exception: {}", e.what()); }
+      catch(jank::runtime::object_ptr const o)
+      { fmt::println("Exception: {}", jank::runtime::detail::to_string(o)); }
+      catch(jank::native_string const &s)
+      { fmt::println("Exception: {}", s); }
+      catch(jank::read::error const &e)
+      { fmt::println("Read error: {}", e.message); }
+    }
+  }
 }
+
+// NOLINTNEXTLINE(bugprone-exception-escape): This can only happen if we fail to report an error.
+int main(int const argc, char const **argv)
+try
+{
+  using namespace jank;
+
+  /* The GC needs to enabled even before arg parsing, since our native types,
+   * like strings, use the GC for allocations. It can still be configured later. */
+  GC_set_all_interior_pointers(1);
+  GC_enable();
+
+  auto const parse_result(util::cli::parse(argc, argv));
+  if(parse_result.is_err())
+  { return parse_result.expect_err(); }
+  auto const &opts(parse_result.expect_ok());
+
+  if(opts.gc_incremental)
+  { GC_enable_incremental(); }
+
+  profile::configure(opts);
+  profile::timer timer{ "main" };
+
+  runtime::context rt_ctx{ opts };
+
+  switch(opts.command)
+  {
+    case util::cli::command::run:
+      run(opts, rt_ctx);
+      break;
+    case util::cli::command::compile:
+      compile(opts, rt_ctx);
+      break;
+    case util::cli::command::repl:
+      repl(opts, rt_ctx);
+      break;
+  }
+}
+/* TODO: Unify error handling. JEEZE! */
+catch(std::exception const &e)
+{ fmt::println("Exception: {}", e.what()); }
+catch(jank::runtime::object_ptr const o)
+{ fmt::println("Exception: {}", jank::runtime::detail::to_string(o)); }
+catch(jank::native_string const &s)
+{ fmt::println("Exception: {}", s); }
+catch(jank::read::error const &e)
+{ fmt::println("Read error: {}", e.message); }

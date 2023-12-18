@@ -6,10 +6,13 @@
 #include <folly/Synchronized.h>
 
 #include <jank/result.hpp>
+#include <jank/util/cli.hpp>
 #include <jank/analyze/processor.hpp>
+#include <jank/runtime/module/loader.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/obj/keyword.hpp>
+#include <jank/jit/processor.hpp>
 
 namespace jank::jit
 { struct processor; }
@@ -19,20 +22,34 @@ namespace jank::runtime
   struct context
   {
     context();
+    context(util::cli::options const &opts);
     context(context const&);
     context(context &&) = delete;
 
     void dump() const;
 
     ns_ptr intern_ns(obj::symbol_ptr const &);
-    result<var_ptr, native_string> intern_var(obj::symbol_ptr const &);
-    result<var_ptr, native_string> intern_var(native_string const &ns, native_string const &name);
+    option<ns_ptr> remove_ns(obj::symbol_ptr const &);
+    /* Looks up a ns by its symbol. Does not resolve aliases. Does not intern. */
+    option<ns_ptr> find_ns(obj::symbol_ptr const &);
+    /* Resolves a symbol which could be an alias to its ns, based on the aliases
+     * in the current ns. Does not intern. */
+    option<ns_ptr> resolve_ns(obj::symbol_ptr const &);
+    ns_ptr current_ns();
+
+    /* Adds the current ns to unqualified symbols and resolves the ns of qualified symbols.
+     * Does not intern. */
     obj::symbol_ptr qualify_symbol(obj::symbol_ptr const &);
-    option<var_ptr> find_var(obj::symbol_ptr const &);
     option<object_ptr> find_local(obj::symbol_ptr const &);
 
-    obj::keyword_ptr intern_keyword(obj::symbol const &sym, bool const resolved);
-    obj::keyword_ptr intern_keyword(native_string_view const &ns, native_string_view const &name, bool resolved);
+    result<var_ptr, native_string> intern_var(obj::symbol_ptr const &);
+    result<var_ptr, native_string> intern_var(native_string const &ns, native_string const &name);
+    option<var_ptr> find_var(obj::symbol_ptr const &);
+    option<var_ptr> find_var(native_string const &ns, native_string const &name);
+
+    result<obj::keyword_ptr, native_string> intern_keyword(obj::symbol const &sym, bool const resolved);
+    result<obj::keyword_ptr, native_string> intern_keyword
+    (native_string_view const &ns, native_string_view const &name, bool resolved);
 
     object_ptr macroexpand1(object_ptr o);
     object_ptr macroexpand(object_ptr o);
@@ -41,10 +58,28 @@ namespace jank::runtime
     static object_ptr print(object_ptr o, object_ptr more);
     static object_ptr println(object_ptr more);
 
-    void eval_prelude(jit::processor const &);
-    object_ptr eval_file(native_string_view const &path, jit::processor const &);
-    object_ptr eval_string(native_string_view const &code, jit::processor const &);
-    native_vector<analyze::expression_ptr> analyze_string(native_string_view const &code, jit::processor const &jit_prc, native_bool const eval = true);
+    void eval_prelude();
+    object_ptr eval_file(native_string_view const &path);
+    object_ptr eval_string(native_string_view const &code);
+    native_vector<analyze::expression_ptr> analyze_string(native_string_view const &code, native_bool const eval = true);
+
+    /* Finds the specified module on the class path and loads it. If
+     * the module is already loaded, nothing is done.
+     *
+     * Modules are considered absolute if they begin with a forward slash. Otherwise, they
+     * are considered relative to the current namespace.
+     *
+     * For example, if the current namespace is foo.bar, then:
+     *
+     * Module /meow.cat refers to module meow.cat
+     * Module meow.cat refers to foo.bar$meow.cat
+     */
+    result<void, native_string> load_module(native_string_view const &module);
+
+    /* Does all the same work as load_module, but also writes compiled files to the file system. */
+    result<void, native_string> compile_module(native_string_view const &module);
+
+    void write_module(native_string_view const &module, native_string_view const &contents) const;
 
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */
@@ -74,6 +109,14 @@ namespace jank::runtime
     /* The analyze processor is reused across evaluations so we can keep the semantic information
      * of previous code. This is essential for REPL use. */
     /* TODO: This needs to be synchronized. */
-    jank::analyze::processor an_prc{ *this };
+    analyze::processor an_prc{ *this };
+    jit::processor jit_prc;
+    /* TODO: This needs to be a dynamic var. */
+    bool compiling{};
+    /* TODO: This needs to be a dynamic var. */
+    native_string_view current_module;
+    native_unordered_map<native_string, native_vector<native_string>> module_dependencies;
+    native_string output_dir;
+    module::loader module_loader;
   };
 }

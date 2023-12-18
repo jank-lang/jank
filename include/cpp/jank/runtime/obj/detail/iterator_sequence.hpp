@@ -43,12 +43,12 @@ namespace jank::runtime::obj::detail
     }
 
     void to_string(fmt::memory_buffer &buff) const
-    { return behavior::detail::to_string(begin, end, '(', ')', buff); }
+    { return behavior::detail::to_string(begin, end, "(", ')', buff); }
 
     native_string to_string() const
     {
       fmt::memory_buffer buff;
-      behavior::detail::to_string(begin, end, '(', ')', buff);
+      behavior::detail::to_string(begin, end, "(", ')', buff);
       return native_string{ buff.data(), buff.size() };
     }
     native_integer to_hash() const
@@ -58,7 +58,7 @@ namespace jank::runtime::obj::detail
     native_box<Derived> seq()
     { return static_cast<Derived*>(this); }
     native_box<Derived> fresh_seq() const
-    { return jank::make_box<Derived>(coll, begin, end, size); }
+    { return make_box<Derived>(coll, begin, end, size); }
 
     /* behavior::countable */
     size_t count() const
@@ -75,7 +75,7 @@ namespace jank::runtime::obj::detail
       if(n == end)
       { return nullptr; }
 
-      return jank::make_box<Derived>(coll, n, end, size);
+      return make_box<Derived>(coll, n, end, size);
     }
     native_box<Derived> next_in_place()
     {

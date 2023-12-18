@@ -27,15 +27,15 @@ namespace jank::runtime
   native_bool var::equal(var const &v) const
   { return n == v.n && name == v.name; }
 
-  void to_string_impl(obj::symbol_ptr const &name, fmt::memory_buffer &buff)
-  { format_to(std::back_inserter(buff), FMT_COMPILE("#'{}/{}"), name->ns, name->name); }
+  void to_string_impl(ns_ptr const n, obj::symbol_ptr const &name, fmt::memory_buffer &buff)
+  { format_to(std::back_inserter(buff), FMT_COMPILE("#'{}/{}"), n->name->name, name->name); }
   void var::to_string(fmt::memory_buffer &buff) const
-  { to_string_impl(name, buff); }
+  { to_string_impl(n, name, buff); }
   native_string var::to_string() const
   /* TODO: Maybe cache this. */
   {
     fmt::memory_buffer buff;
-    to_string_impl(name, buff);
+    to_string_impl(n, name, buff);
     return native_string{ buff.data(), buff.size() };
   }
   native_integer var::to_hash() const
@@ -49,14 +49,18 @@ namespace jank::runtime
   }
 
   object_ptr var::get_root() const
-  { return *root.rlock(); }
+  {
+    profile::timer timer{ "var get_root" };
+    return *root.rlock();
+  }
 
   var_ptr var::set_root(object_ptr r)
   {
+    profile::timer timer{ "var set_root" };
     *root.wlock() = r;
     return this;
   }
 
   var_ptr var::clone() const
-  { return jank::make_box<var>(n, name, get_root()); }
+  { return make_box<var>(n, name, get_root()); }
 }

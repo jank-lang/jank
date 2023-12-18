@@ -2,6 +2,8 @@
 
 #include <cling/Interpreter/Value.h>
 #include <clang/AST/Type.h>
+//#include <Interpreter/IncrementalExecutor.h>
+//#include <llvm/Support/MemoryBuffer.h>
 
 #include <jank/util/process_location.hpp>
 #include <jank/util/make_array.hpp>
@@ -54,8 +56,10 @@ namespace jank::jit
     return JANK_CLING_BUILD_DIR;
   }
 
-  processor::processor()
+  processor::processor(runtime::context &rt_ctx, native_integer const optimization_level)
+    : optimization_level{ optimization_level }
   {
+    profile::timer timer{ "jit ctor" };
     /* TODO: Pass this into each fn below so we only do this once on startup. */
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
 
@@ -78,36 +82,58 @@ namespace jank::jit
 
     auto const include_path(jank_path / "../include");
 
+    native_string_view O{ "0" };
+    switch(optimization_level)
+    {
+      case 0:
+        break;
+      case 1:
+        O = "1";
+        break;
+      case 2:
+        O = "2";
+        break;
+      case 3:
+        O = "fast";
+        break;
+      default:
+        throw std::runtime_error{ fmt::format("invalid optimization level {}", optimization_level) };
+    }
+
     auto const args
     (
       jank::util::make_array
       (
+        /* TODO: Path to clang++ from Cling build? Is this using the system clang++? */
         "clang++", "-std=c++17",
         "-DHAVE_CXX14=1", "-DIMMER_HAS_LIBGC=1",
         "-include-pch", pch_path_str.c_str(),
         "-isystem", include_path.c_str(),
-
-        "-Ofast", "-ffast-math", "-march=native"
+        O.data(), "-march=native"
       )
     );
     interpreter = std::make_unique<cling::Interpreter>(args.size(), args.data(), llvm_resource_path_str.c_str());
 
-    /* TODO: Optimization >0 doesn't work with the latest Cling LLVM 13.
-     * 1. https://github.com/root-project/cling/issues/483
-     * 2. https://github.com/root-project/cling/issues/484
-     */
+    eval_string
+    (
+      fmt::format
+      (
+        "auto &__rt_ctx(*reinterpret_cast<jank::runtime::context*>({}));",
+        fmt::ptr(&rt_ctx)
+      )
+    );
   }
 
-  result<option<runtime::object_ptr>, native_string> processor::eval
-  (runtime::context &, codegen::processor &cg_prc) const
+  result<option<runtime::object_ptr>, native_string> processor::eval(codegen::processor &cg_prc) const
   {
+    profile::timer timer{ "jit eval" };
     /* TODO: Improve Cling to accept string_views instead. */
     auto const str(cg_prc.declaration_str());
     //fmt::println("{}", str);
 
     interpreter->declare(static_cast<std::string>(cg_prc.declaration_str()));
 
-    auto const expr(cg_prc.expression_str(true, false));
+    auto const expr(cg_prc.expression_str(true));
     if(expr.empty())
     { return ok(none); }
 
@@ -123,5 +149,22 @@ namespace jank::jit
   }
 
   void processor::eval_string(native_string const &s) const
-  { interpreter->process(static_cast<std::string>(s)); }
+  {
+    jank::profile::timer timer{ "jit eval_string" };
+    //fmt::println("JIT eval string {}", s);
+    interpreter->process(static_cast<std::string>(s));
+  }
+
+  //void processor::load_object(native_string_view const &path) const
+  //{
+  //  auto buf(std::move(llvm::MemoryBuffer::getFile(path.data()).get()));
+  //  llvm::cantFail(interpreter->m_Executor->m_JIT->Jit->addObjectFile(std::move(buf)));
+  //  auto sym(interpreter->m_Executor->m_JIT->Jit->lookup("wow1"));
+  //  if(auto e = sym.takeError())
+  //  {
+  //    fmt::println("sym error: {}", toString(std::move(e)));
+  //    return;
+  //  }
+  //  reinterpret_cast<void (*)()>(sym->getAddress())();
+  //}
 }

@@ -8,18 +8,18 @@
 
 namespace jank::runtime
 {
-  obj::vector::static_object(runtime::detail::peristent_vector &&d)
+  obj::vector::static_object(runtime::detail::native_persistent_vector &&d)
     : data{ std::move(d) }
   { }
 
-  obj::vector::static_object(runtime::detail::peristent_vector const &d)
+  obj::vector::static_object(runtime::detail::native_persistent_vector const &d)
     : data{ d }
   { }
 
   obj::vector_ptr obj::vector::create(object_ptr const s)
   {
     if(s == nullptr)
-    { return jank::make_box<obj::vector>(); }
+    { return make_box<obj::vector>(); }
 
     return visit_object
     (
@@ -29,10 +29,10 @@ namespace jank::runtime
 
         if constexpr(behavior::sequenceable<T>)
         {
-          runtime::detail::transient_vector v;
+          runtime::detail::native_transient_vector v;
           for(auto i(typed_s->fresh_seq()); i != nullptr; i = i->next_in_place())
           { v.push_back(i->first()); }
-          return jank::make_box<obj::vector>(v.persistent());
+          return make_box<obj::vector>(v.persistent());
         }
         else
         { throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_s->to_string()) }; }
@@ -45,12 +45,12 @@ namespace jank::runtime
   { return detail::equal(o, data.begin(), data.end()); }
 
   void obj::vector::to_string(fmt::memory_buffer &buff) const
-  { return behavior::detail::to_string(data.begin(), data.end(), '[', ']', buff); }
+  { return behavior::detail::to_string(data.begin(), data.end(), "[", ']', buff); }
 
   native_string obj::vector::to_string() const
   {
     fmt::memory_buffer buff;
-    behavior::detail::to_string(data.begin(), data.end(), '[', ']', buff);
+    behavior::detail::to_string(data.begin(), data.end(), "[", ']', buff);
     return native_string{ buff.data(), buff.size() };
   }
 
@@ -67,14 +67,14 @@ namespace jank::runtime
   {
     if(data.empty())
     { return nullptr; }
-    return jank::make_box<obj::persistent_vector_sequence>(const_cast<obj::vector*>(this));
+    return make_box<obj::persistent_vector_sequence>(const_cast<obj::vector*>(this));
   }
 
   obj::persistent_vector_sequence_ptr obj::vector::fresh_seq() const
   {
     if(data.empty())
     { return nullptr; }
-    return jank::make_box<obj::persistent_vector_sequence>(const_cast<obj::vector*>(this));
+    return make_box<obj::persistent_vector_sequence>(const_cast<obj::vector*>(this));
   }
 
   size_t obj::vector::count() const
@@ -90,7 +90,7 @@ namespace jank::runtime
   object_ptr obj::vector::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(jank::make_box<obj::vector>(data));
+    auto ret(make_box<obj::vector>(data));
     ret->meta = meta;
     return ret;
   }
@@ -115,8 +115,8 @@ namespace jank::runtime
   {
     if(key->type == object_type::integer)
     {
-      auto const i(static_cast<size_t>(expect_object<obj::integer>(key)->data));
-      if(data.size() <= i)
+      auto const i(expect_object<obj::integer>(key)->data);
+      if(i < 0 || data.size() <= static_cast<size_t>(i))
       { return fallback; }
       return data[i];
     }
@@ -125,5 +125,33 @@ namespace jank::runtime
       throw std::runtime_error
       { fmt::format("get on a vector must be an integer; found {}", runtime::detail::to_string(key)) };
     }
+  }
+
+  object_ptr obj::vector::get_entry(object_ptr const key) const
+  {
+    if(key->type == object_type::integer)
+    {
+      auto const i(expect_object<obj::integer>(key)->data);
+      if(i < 0 || data.size() <= static_cast<size_t>(i))
+      { return obj::nil::nil_const(); }
+      /* TODO: Map entry type? */
+      return make_box<obj::vector>(key, data[i]);
+    }
+    else
+    {
+      throw std::runtime_error
+      { fmt::format("get_entry on a vector must be an integer; found {}", runtime::detail::to_string(key)) };
+    }
+  }
+
+  native_bool obj::vector::contains(object_ptr const key) const
+  {
+    if(key->type == object_type::integer)
+    {
+      auto const i(expect_object<obj::integer>(key)->data);
+      return i >= 0 && static_cast<size_t>(i) < data.size();
+    }
+    else
+    { return false; }
   }
 }

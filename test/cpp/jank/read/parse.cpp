@@ -10,7 +10,7 @@
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/vector.hpp>
-#include <jank/runtime/obj/map.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/string.hpp>
 #include <jank/runtime/obj/list.hpp>
 #include <jank/runtime/detail/object_util.hpp>
@@ -128,6 +128,9 @@ namespace jank::read::parse
     {
       lex::processor lp{ "foo/foo foo.bar/bar spam.bar/spam" };
       runtime::context rt_ctx;
+      rt_ctx.intern_ns(make_box<runtime::obj::symbol>("foo"));
+      rt_ctx.intern_ns(make_box<runtime::obj::symbol>("foo.bar"));
+      rt_ctx.intern_ns(make_box<runtime::obj::symbol>("spam.bar"));
       processor p{ rt_ctx, lp.begin(), lp.end() };
       for(auto const &s : { std::make_pair("foo", "foo"), std::make_pair("foo.bar", "bar"), std::make_pair("spam.bar", "spam") })
       {
@@ -137,12 +140,36 @@ namespace jank::read::parse
       }
     }
 
-    SUBCASE("Quoted")
+    SUBCASE("Qualified, aliased")
     {
-      lex::processor lp{ "'foo 'bar/spam" };
+      lex::processor lp{ "foo.bar/bar" };
+      runtime::context rt_ctx;
+      auto const meow(rt_ctx.intern_ns(make_box<runtime::obj::symbol>("meow")));
+      rt_ctx.current_ns()->add_alias(make_box<runtime::obj::symbol>("foo.bar"), meow);
+      processor p{ rt_ctx, lp.begin(), lp.end() };
+      for(auto const &s : { std::make_pair("meow", "bar") })
+      {
+        auto const r(p.next());
+        CHECK(r.is_ok());
+        CHECK(runtime::detail::equal(r.expect_ok(), make_box<runtime::obj::symbol>(s.first, s.second)));
+      }
+    }
+
+    SUBCASE("Qualified, non-existent ns")
+    {
+      lex::processor lp{ "foo.bar/bar" };
       runtime::context rt_ctx;
       processor p{ rt_ctx, lp.begin(), lp.end() };
-      for(auto const &s : { std::make_pair("", "foo"), std::make_pair("bar", "spam") })
+      auto const r(p.next());
+      CHECK(r.is_err());
+    }
+
+    SUBCASE("Quoted")
+    {
+      lex::processor lp{ "'foo 'bar/spam 'foo.bar/bar" };
+      runtime::context rt_ctx;
+      processor p{ rt_ctx, lp.begin(), lp.end() };
+      for(auto const &s : { std::make_pair("", "foo"), std::make_pair("bar", "spam"), std::make_pair("foo.bar", "bar") })
       {
         auto const r(p.next());
         CHECK(r.is_ok());
@@ -151,7 +178,7 @@ namespace jank::read::parse
           runtime::detail::equal
           (
             r.expect_ok(),
-            jank::make_box<runtime::obj::list>
+            make_box<runtime::obj::list>
             (
               make_box<runtime::obj::symbol>("quote"),
               make_box<runtime::obj::symbol>(s.first, s.second)
@@ -173,7 +200,7 @@ namespace jank::read::parse
       {
         auto const r(p.next());
         CHECK(r.is_ok());
-        CHECK(runtime::detail::equal(r.expect_ok(), rt_ctx.intern_keyword(runtime::obj::symbol{ "", s }, true)));
+        CHECK(runtime::detail::equal(r.expect_ok(), rt_ctx.intern_keyword(runtime::obj::symbol{ "", s }, true).expect_ok()));
       }
     }
 
@@ -186,7 +213,7 @@ namespace jank::read::parse
       {
         auto const r(p.next());
         CHECK(r.is_ok());
-        CHECK(runtime::detail::equal(r.expect_ok(), rt_ctx.intern_keyword(runtime::obj::symbol{ s.first, s.second }, true)));
+        CHECK(runtime::detail::equal(r.expect_ok(), rt_ctx.intern_keyword(runtime::obj::symbol{ s.first, s.second }, true).expect_ok()));
       }
     }
 
@@ -199,23 +226,30 @@ namespace jank::read::parse
       {
         auto const r(p.next());
         CHECK(r.is_ok());
-        CHECK(runtime::detail::equal(r.expect_ok(), rt_ctx.intern_keyword(runtime::obj::symbol{ "", native_string{ s } }, false)));
+        CHECK(runtime::detail::equal(r.expect_ok(), rt_ctx.intern_keyword(runtime::obj::symbol{ "", native_string{ s } }, false).expect_ok()));
       }
     }
 
-  }
-
-  /* TODO: Move this into a subcase once it's passing. */
-  TEST_CASE("Auto-resolved qualified" * doctest::skip())
-  {
-    lex::processor lp{ "::foo/foo ::foo.bar/bar ::spam.bar/spam" };
-    runtime::context rt_ctx;
-    processor p{ rt_ctx, lp.begin(), lp.end() };
-    for(auto const &s : { std::make_pair("foo", "foo"), std::make_pair("foo.bar", "bar"), std::make_pair("spam.bar", "spam") })
+    SUBCASE("Auto-resolved qualified, missing alias")
     {
+      lex::processor lp{ "::foo/foo" };
+      runtime::context rt_ctx;
+      processor p{ rt_ctx, lp.begin(), lp.end() };
+      auto const r(p.next());
+      CHECK(r.is_err());
+    }
+
+    SUBCASE("Auto-resolved qualified, with alias")
+    {
+      lex::processor lp{ "::foo/foo" };
+      runtime::context rt_ctx;
+      auto const foo_ns(rt_ctx.intern_ns(make_box<runtime::obj::symbol>("foo.bar.spam")));
+      auto const clojure_ns(rt_ctx.find_ns(make_box<runtime::obj::symbol>("clojure.core")));
+      clojure_ns.unwrap()->add_alias(make_box<runtime::obj::symbol>("foo"), foo_ns);
+      processor p{ rt_ctx, lp.begin(), lp.end() };
       auto const r(p.next());
       CHECK(r.is_ok());
-      CHECK(runtime::detail::equal(r.expect_ok(), rt_ctx.intern_keyword(runtime::obj::symbol{ s.first, s.second }, false)));
+      CHECK(runtime::detail::equal(r.expect_ok(), rt_ctx.intern_keyword(runtime::obj::symbol{ "foo.bar.spam", "foo" }, true).expect_ok()));
     }
   }
 
@@ -231,7 +265,7 @@ namespace jank::read::parse
         auto const r(p.next());
         CHECK(r.is_ok());
         CHECK(r.expect_ok() != nullptr);
-        CHECK(runtime::detail::equal(r.expect_ok(), jank::make_box<runtime::obj::list>()));
+        CHECK(runtime::detail::equal(r.expect_ok(), make_box<runtime::obj::list>()));
       }
     }
 
@@ -249,7 +283,7 @@ namespace jank::read::parse
           runtime::detail::equal
           (
             r.expect_ok(),
-            jank::make_box<runtime::obj::list>
+            make_box<runtime::obj::list>
             (
               make_box<runtime::obj::integer>(1 * i),
               make_box<runtime::obj::integer>(2 * i),
@@ -273,7 +307,7 @@ namespace jank::read::parse
         runtime::detail::equal
         (
           r1.expect_ok(),
-          jank::make_box<runtime::obj::list>
+          make_box<runtime::obj::list>
           (
             make_box<runtime::obj::symbol>("def"),
             make_box<runtime::obj::symbol>("foo-bar"),
@@ -340,7 +374,7 @@ namespace jank::read::parse
             r.expect_ok(),
             make_box<runtime::obj::vector>
             (
-              runtime::detail::peristent_vector
+              runtime::detail::native_persistent_vector
               {
                 make_box<runtime::obj::integer>(1 * i),
                 make_box<runtime::obj::integer>(2 * i),
@@ -387,7 +421,7 @@ namespace jank::read::parse
         auto const r(p.next());
         CHECK(r.is_ok());
         CHECK(r.expect_ok() != nullptr);
-        CHECK(runtime::detail::equal(r.expect_ok(), make_box<runtime::obj::map>()));
+        CHECK(runtime::detail::equal(r.expect_ok(), make_box<runtime::obj::persistent_array_map>()));
       }
     }
 
@@ -405,7 +439,7 @@ namespace jank::read::parse
           runtime::detail::equal
           (
             r.expect_ok(),
-            make_box<runtime::obj::map>
+            make_box<runtime::obj::persistent_array_map>
             (
               runtime::detail::in_place_unique{},
               make_array_box<runtime::object_ptr>
@@ -435,15 +469,15 @@ namespace jank::read::parse
         runtime::detail::equal
         (
           r.expect_ok(),
-          make_box<runtime::obj::map>
+          make_box<runtime::obj::persistent_array_map>
           (
             runtime::detail::in_place_unique{},
             make_array_box<runtime::object_ptr>
             (
-              rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }, true),
+              rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }, true).expect_ok(),
               make_box<runtime::obj::boolean>(true),
               make_box<runtime::obj::integer>(1),
-              rt_ctx.intern_keyword(runtime::obj::symbol{ "one" }, true),
+              rt_ctx.intern_keyword(runtime::obj::symbol{ "one" }, true).expect_ok(),
               make_box<runtime::obj::string>("meow"),
               make_box<runtime::obj::string>("meow")
             ),
@@ -469,7 +503,7 @@ namespace jank::read::parse
       processor p{ rt_ctx, lp.begin(), lp.end() };
       auto const r1(p.next());
       CHECK(r1.is_ok());
-      CHECK(runtime::detail::equal(r1.expect_ok(), rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }, true)));
+      CHECK(runtime::detail::equal(r1.expect_ok(), rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }, true).expect_ok()));
       auto const r2(p.next());
       CHECK(r2.is_err());
     }

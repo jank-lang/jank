@@ -51,6 +51,11 @@ namespace jank::runtime::detail
 
   bool equal(object_ptr const lhs, object_ptr const rhs)
   {
+    if(!lhs)
+    { return !rhs; }
+    else if(!rhs)
+    { return !lhs; }
+
     return visit_object
     (
       [&](auto const typed_lhs)
@@ -78,7 +83,9 @@ namespace std
     return hasher(const_cast<jank::runtime::object*>(&o));
   }
 
-  bool equal_to<jank::runtime::object_ptr>::operator()(jank::runtime::object_ptr const lhs, jank::runtime::object_ptr const rhs) const noexcept
+  // NOLINTNEXTLINE(bugprone-exception-escape): TODO: Sort this out.
+  bool equal_to<jank::runtime::object_ptr>::operator()
+  (jank::runtime::object_ptr const lhs, jank::runtime::object_ptr const rhs) const noexcept
   {
     if(!lhs)
     { return !rhs; }

@@ -8,11 +8,11 @@
 
 namespace jank::runtime
 {
-  obj::set::static_object(runtime::detail::persistent_set &&d)
+  obj::set::static_object(runtime::detail::native_persistent_set &&d)
     : data{ std::move(d) }
   { }
 
-  obj::set::static_object(runtime::detail::persistent_set const &d)
+  obj::set::static_object(runtime::detail::native_persistent_set const &d)
     : data{ d }
   { }
 
@@ -20,12 +20,12 @@ namespace jank::runtime
   { return detail::equal(o, data.begin(), data.end()); }
 
   void obj::set::to_string(fmt::memory_buffer &buff) const
-  { return behavior::detail::to_string(data.begin(), data.end(), '(', ')', buff); }
+  { return behavior::detail::to_string(data.begin(), data.end(), "#{", '}', buff); }
 
   native_string obj::set::to_string() const
   {
     fmt::memory_buffer buff;
-    behavior::detail::to_string(data.begin(), data.end(), '(', ')', buff);
+    behavior::detail::to_string(data.begin(), data.end(), "#{", '}', buff);
     return native_string{ buff.data(), buff.size() };
   }
 
@@ -39,16 +39,12 @@ namespace jank::runtime
   }
 
   obj::persistent_set_sequence_ptr obj::set::seq() const
-  {
-    if(data.empty())
-    { return nullptr; }
-    return jank::make_box<obj::persistent_set_sequence>(this, data.begin(), data.end(), data.size());
-  }
+  { return fresh_seq(); }
   obj::persistent_set_sequence_ptr obj::set::fresh_seq() const
   {
     if(data.empty())
     { return nullptr; }
-    return jank::make_box<obj::persistent_set_sequence>(this, data.begin(), data.end(), data.size());
+    return make_box<obj::persistent_set_sequence>(this, data.begin(), data.end(), data.size());
   }
 
   size_t obj::set::count() const
@@ -57,11 +53,26 @@ namespace jank::runtime
   object_ptr obj::set::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(jank::make_box<obj::set>(data));
+    auto ret(make_box<obj::set>(data));
     ret->meta = meta;
     return ret;
   }
 
-  obj::set_ptr obj::set::cons(object_ptr)
-  { return this; }
+  obj::set_ptr obj::set::cons(object_ptr const head) const
+  {
+    auto vec(data.insert(head));
+    auto ret(make_box<obj::set>(std::move(vec)));
+    return ret;
+  }
+
+  object_ptr obj::set::call(object_ptr const o) const
+  {
+    auto const found(data.find(o));
+    if(!found)
+    { return obj::nil::nil_const(); }
+    return *found;
+  }
+
+  native_bool obj::set::contains(object_ptr const o) const
+  { return data.find(o); }
 }

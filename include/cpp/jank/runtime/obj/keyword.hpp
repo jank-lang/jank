@@ -7,8 +7,8 @@ namespace jank::runtime
 {
   namespace obj
   {
-    using map = static_object<object_type::map>;
-    using map_ptr = native_box<map>;
+    using persistent_array_map = static_object<object_type::persistent_array_map>;
+    using persistent_array_map_ptr = native_box<persistent_array_map>;
   }
 
   /* The correct way to create a keyword for normal use is through interning via the RT context. */
@@ -23,8 +23,8 @@ namespace jank::runtime
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
     static_object(object &&base);
-    static_object(obj::symbol const &s, bool resolved);
-    static_object(obj::symbol &&s, bool resolved);
+    static_object(obj::symbol const &s);
+    static_object(obj::symbol &&s);
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
@@ -35,15 +35,20 @@ namespace jank::runtime
     /* behavior::metadatable */
     object_ptr with_meta(object_ptr m) const;
 
+    /* behavior::nameable */
+    native_string const& get_name() const;
+    native_string const& get_namespace() const;
+
+    /* behavior::callable */
+    object_ptr call(object_ptr) const;
+    object_ptr call(object_ptr, object_ptr) const;
+
     bool operator ==(static_object const &rhs) const;
 
     object base{ object_type::keyword };
+    /* TODO: Box this. */
     obj::symbol sym;
-    option<obj::map_ptr> meta;
-    /* TODO: Remove this state and always use the RT context to resolve upon creation. */
-    /* Not resolved means this is a :: keyword. If ns is set, when this is true, it's an ns alias.
-     * Upon interning, this will be resolved. */
-    bool resolved{ true };
+    option<object_ptr> meta;
   };
 
   namespace obj

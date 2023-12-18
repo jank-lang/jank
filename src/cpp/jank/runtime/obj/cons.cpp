@@ -5,12 +5,12 @@ namespace jank::runtime
 {
   obj::cons::static_object(object_ptr const head, object_ptr const tail)
     : head{ head }, tail{ tail }
-  { }
+  { assert(head); }
 
   obj::cons_ptr obj::cons::seq()
   { return this; }
   obj::cons_ptr obj::cons::fresh_seq() const
-  { return jank::make_box<obj::cons>(head, tail); }
+  { return make_box<obj::cons>(head, tail); }
 
   object_ptr obj::cons::first() const
   { return head; }

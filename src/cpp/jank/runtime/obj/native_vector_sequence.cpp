@@ -4,25 +4,25 @@ namespace jank::runtime
 {
   obj::native_vector_sequence::static_object(native_vector<object_ptr> const &data, size_t index)
     : data{ data }, index{ index }
-  { }
+  { assert(!this->data.empty()); }
   obj::native_vector_sequence::static_object(native_vector<object_ptr> &&data)
     : data{ std::move(data) }
-  { }
+  { assert(!this->data.empty()); }
   obj::native_vector_sequence::static_object(native_vector<object_ptr> &&data, size_t index)
     : data{ std::move(data) }, index{ index }
-  { }
+  { assert(!this->data.empty()); }
 
   /* behavior::objectable */
   native_bool obj::native_vector_sequence::equal(object const &o) const
   { return detail::equal(o, data.begin(), data.end()); }
 
   void obj::native_vector_sequence::to_string(fmt::memory_buffer &buff) const
-  { return behavior::detail::to_string(data.begin(), data.end(), '(', ')', buff); }
+  { return behavior::detail::to_string(data.begin(), data.end(), "(", ')', buff); }
 
   native_string obj::native_vector_sequence::to_string() const
   {
     fmt::memory_buffer buff;
-    behavior::detail::to_string(data.begin(), data.end(), '(', ')', buff);
+    behavior::detail::to_string(data.begin(), data.end(), "(", ')', buff);
     return native_string{ buff.data(), buff.size() };
   }
 
@@ -31,9 +31,9 @@ namespace jank::runtime
 
   /* behavior::seqable */
   obj::native_vector_sequence_ptr obj::native_vector_sequence::seq()
-  { return this; }
+  { return data.empty() ? nullptr : this; }
   obj::native_vector_sequence_ptr obj::native_vector_sequence::fresh_seq()
-  { return jank::make_box<obj::native_vector_sequence>(data, index); }
+  { return data.empty() ? nullptr : make_box<obj::native_vector_sequence>(data, index); }
 
   /* behavior::countable */
   size_t obj::native_vector_sequence::count() const
@@ -41,7 +41,10 @@ namespace jank::runtime
 
   /* behavior::sequence */
   object_ptr obj::native_vector_sequence::first() const
-  { return data[index]; }
+  {
+    assert(index < data.size());
+    return data[index];
+  }
 
   obj::native_vector_sequence_ptr obj::native_vector_sequence::next() const
   {
@@ -51,7 +54,7 @@ namespace jank::runtime
     if(n == data.size())
     { return nullptr; }
 
-    return jank::make_box<obj::native_vector_sequence>(data, n);
+    return make_box<obj::native_vector_sequence>(data, n);
   }
 
   obj::native_vector_sequence_ptr obj::native_vector_sequence::next_in_place()
@@ -75,5 +78,5 @@ namespace jank::runtime
   }
 
   obj::cons_ptr obj::native_vector_sequence::cons(object_ptr const head)
-  { return make_box<obj::cons>(head, this); }
+  { return make_box<obj::cons>(head, data.empty() ? nullptr : this); }
 }

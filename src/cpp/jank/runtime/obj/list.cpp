@@ -8,17 +8,17 @@
 
 namespace jank::runtime
 {
-  obj::list::static_object(runtime::detail::persistent_list &&d)
+  obj::list::static_object(runtime::detail::native_persistent_list &&d)
     : data{ std::move(d) }
   { }
-  obj::list::static_object(runtime::detail::persistent_list const &d)
+  obj::list::static_object(runtime::detail::native_persistent_list const &d)
     : data{ d }
   { }
 
   obj::list_ptr obj::list::create(object_ptr const s)
   {
     if(s == nullptr)
-    { return jank::make_box<obj::list>(); }
+    { return make_box<obj::list>(); }
 
     return visit_object
     (
@@ -31,7 +31,7 @@ namespace jank::runtime
           native_vector<object_ptr> v;
           for(auto i(typed_s->fresh_seq()); i != nullptr; i = i->next_in_place())
           { v.emplace_back(i->first()); }
-          return jank::make_box<obj::list>(runtime::detail::persistent_list{ v.rbegin(), v.rend() });
+          return make_box<obj::list>(runtime::detail::native_persistent_list{ v.rbegin(), v.rend() });
         }
         else
         { throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_s->to_string()) }; }
@@ -44,12 +44,12 @@ namespace jank::runtime
   { return detail::equal(o, data.begin(), data.end()); }
 
   void obj::list::to_string(fmt::memory_buffer &buff) const
-  { return behavior::detail::to_string(data.begin(), data.end(), '(', ')', buff); }
+  { return behavior::detail::to_string(data.begin(), data.end(), "(", ')', buff); }
 
   native_string obj::list::to_string() const
   {
     fmt::memory_buffer buff;
-    behavior::detail::to_string(data.begin(), data.end(), '(', ')', buff);
+    behavior::detail::to_string(data.begin(), data.end(), "(", ')', buff);
     return native_string{ buff.data(), buff.size() };
   }
   /* TODO: Cache this. */
@@ -65,19 +65,13 @@ namespace jank::runtime
   {
     if(data.size() == 0)
     { return nullptr; }
-    return jank::make_box
-    <
-      obj::persistent_list_sequence
-    >(this, data.begin(), data.end(), data.size());
+    return make_box<obj::persistent_list_sequence>(this, data.begin(), data.end(), data.size());
   }
   obj::persistent_list_sequence_ptr obj::list::fresh_seq() const
   {
     if(data.size() == 0)
     { return nullptr; }
-    return jank::make_box
-    <
-      obj::persistent_list_sequence
-    >(this, data.begin(), data.end(), data.size());
+    return make_box<obj::persistent_list_sequence>(this, data.begin(), data.end(), data.size());
   }
   size_t obj::list::count() const
   { return data.size(); }
@@ -85,14 +79,14 @@ namespace jank::runtime
   obj::list_ptr obj::list::cons(object_ptr head) const
   {
     auto l(data.cons(head));
-    auto ret(jank::make_box<obj::list>(std::move(l)));
+    auto ret(make_box<obj::list>(std::move(l)));
     return ret;
   }
 
   object_ptr obj::list::with_meta(object_ptr m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(jank::make_box<obj::list>(data));
+    auto ret(make_box<obj::list>(data));
     ret->meta = meta;
     return ret;
   }

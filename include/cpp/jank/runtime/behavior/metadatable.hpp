@@ -2,24 +2,15 @@
 
 #include <jank/option.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::behavior
 {
-  namespace obj
+  template <typename T>
+  concept metadatable = requires(T * const t)
   {
-    using map = static_object<object_type::map>;
-    using map_ptr = native_box<map>;
-  }
+    { t->with_meta(object_ptr{}) } -> std::convertible_to<object_ptr>;
+    { t->meta } -> std::convertible_to<option<object_ptr>>;
+  };
 
-  namespace behavior
-  {
-    template <typename T>
-    concept metadatable = requires(T * const t)
-    {
-      { t->with_meta(object_ptr{}) } -> std::convertible_to<object_ptr>;
-      { t->meta } -> std::convertible_to<option<obj::map_ptr>>;
-    };
-
-    namespace detail
-    { obj::map_ptr validate_meta(object_ptr const m); }
-  }
+  namespace detail
+  { object_ptr validate_meta(object_ptr const m); }
 }

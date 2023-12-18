@@ -85,7 +85,9 @@ set(
   #-stdlib=libc++ -lc++abi
   )
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  list(APPEND jank_compiler_flags -Werror)
+  list(APPEND jank_compiler_flags -Werror -DJANK_DEBUG)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+  list(APPEND jank_compiler_flags -DJANK_RELEASE)
 endif()
 
 include(cmake/variables.cmake)
@@ -140,10 +142,13 @@ set_target_properties(jank_cling_lib PROPERTIES LINK_FLAGS -s)
 add_library(
   jank_lib STATIC
   src/cpp/jank/native_box.cpp
+  src/cpp/jank/util/cli.cpp
   src/cpp/jank/util/mapped_file.cpp
   src/cpp/jank/util/scope_exit.cpp
+  src/cpp/jank/profile/time.cpp
   src/cpp/jank/read/lex.cpp
   src/cpp/jank/read/parse.cpp
+  src/cpp/jank/runtime/module/loader.cpp
   src/cpp/jank/runtime/util.cpp
   src/cpp/jank/runtime/seq.cpp
   src/cpp/jank/runtime/object.cpp
@@ -159,14 +164,14 @@ add_library(
   src/cpp/jank/runtime/obj/keyword.cpp
   src/cpp/jank/runtime/obj/list.cpp
   src/cpp/jank/runtime/obj/vector.cpp
-  src/cpp/jank/runtime/obj/map.cpp
+  src/cpp/jank/runtime/obj/persistent_vector_sequence.cpp
+  src/cpp/jank/runtime/obj/persistent_array_map.cpp
+  src/cpp/jank/runtime/obj/persistent_hash_map.cpp
   src/cpp/jank/runtime/obj/set.cpp
   src/cpp/jank/runtime/obj/string.cpp
   src/cpp/jank/runtime/obj/cons.cpp
   src/cpp/jank/runtime/obj/range.cpp
   src/cpp/jank/runtime/obj/iterator.cpp
-  src/cpp/jank/runtime/obj/persistent_vector_sequence.cpp
-  src/cpp/jank/runtime/obj/persistent_map_sequence.cpp
   src/cpp/jank/runtime/obj/native_array_sequence.cpp
   src/cpp/jank/runtime/obj/native_vector_sequence.cpp
   src/cpp/jank/runtime/behavior/callable.cpp
@@ -186,7 +191,10 @@ target_include_directories(
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/cpp>"
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
 )
-target_precompile_headers(jank_lib PUBLIC ${PROJECT_SOURCE_DIR}/include/cpp/jank/prelude.hpp)
+target_precompile_headers(
+  jank_lib
+  PUBLIC ${PROJECT_SOURCE_DIR}/include/cpp/jank/prelude.hpp
+)
 
 set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 
@@ -203,6 +211,8 @@ find_package(fmt CONFIG REQUIRED)
 find_package(folly CONFIG REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem)
 find_package(BDWgc CONFIG REQUIRED)
+find_package(libzippp CONFIG REQUIRED)
+find_package(CLI11 CONFIG REQUIRED)
 
 target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
@@ -215,6 +225,9 @@ target_link_libraries(
   jank_cling_lib immer fmt::fmt
   Folly::folly Folly::folly_deps
   BDWgc::gc BDWgc::cord BDWgc::gccpp BDWgc::gctba
+  libzippp::libzippp
+  CLI11::CLI11
+  readline
 )
 
 set_target_properties(jank_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
@@ -292,6 +305,7 @@ if(jank_tests)
     test/cpp/jank/jit/processor.cpp
   )
   add_executable(jank::test_exe ALIAS jank_test_exe)
+  add_dependencies(jank_test_exe jank_core_libraries)
 
   set_property(TARGET jank_test_exe PROPERTY OUTPUT_NAME jank-test)
 
@@ -320,6 +334,29 @@ if(jank_tests)
   add_test(NAME "Test" COMMAND jank_test_exe)
 endif()
 # ---- Tests ----
+
+# ---- Compiled Clojure libraries ----
+# We do a bit of a dance here, to have a custom command generate a file
+# which is a then a dependency of a custom target. This is because custom
+# targets *always* run, but we only want to compile our libs when they change,
+# or when we haven't yet done so.
+#
+# With this setup, we'll compile when the flag file doesn't exist (i.e. on
+# first build or after a clean), when any of the jank sources for these libs
+# change, or whenever the jank binary changes.
+set(jank_core_libraries_flag ${CMAKE_BINARY_DIR}/classes/core-libraries)
+add_custom_command(
+  DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank
+  OUTPUT ${jank_core_libraries_flag}
+  COMMAND ${CMAKE_BINARY_DIR}/jank compile clojure.core
+  COMMAND mkdir -p ${CMAKE_BINARY_DIR}/classes; touch ${jank_core_libraries_flag}
+)
+add_custom_target(
+  jank_core_libraries
+  ALL
+  DEPENDS ${jank_core_libraries_flag}
+)
+# ---- Compiled Clojure libraries ----
 
 # ---- Install rules ----
 if(NOT CMAKE_SKIP_INSTALL_RULES)

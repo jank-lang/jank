@@ -23,6 +23,8 @@ namespace jank::runtime
     /* behavior::associatively_readable */
     object_ptr get(object_ptr const key);
     object_ptr get(object_ptr const key, object_ptr const fallback);
+    object_ptr get_entry(object_ptr key);
+    native_bool contains(object_ptr key) const;
 
     /* behavior::seqable */
     native_box<static_object> seq();
