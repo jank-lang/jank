@@ -20,40 +20,359 @@
 #include <jank/codegen/processor.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
+#include <jank/gc_string.hpp>
 
 namespace jank
 {
   void run(util::cli::options const &opts, runtime::context &rt_ctx)
   {
-    {
-      profile::timer timer{ "require clojure.core" };
-      rt_ctx.load_module("/clojure.core").expect_ok();
-    }
-
-    {
-      profile::timer timer{ "eval user code" };
-      std::cout << runtime::detail::to_string(rt_ctx.eval_file(opts.target_file)) << std::endl;
-    }
+    static_cast<void>(opts);
+    static_cast<void>(rt_ctx);
+    //{
+    //  profile::timer timer{ "require clojure.core" };
+    //  rt_ctx.load_module("/clojure.core").expect_ok();
+    //}
 
     //{
-    //  ankerl::nanobench::Config config;
-    //  config.mMinEpochIterations = 5000000;
-    //  config.mOut = &std::cout;
-    //  config.mWarmup = 10000;
-
-    //  auto const hf1(rt_ctx.find_var("clojure.core", "highest-fixed-1").unwrap()->get_root());
-    //  auto const kw1(rt_ctx.intern_keyword("", "a", true).expect_ok());
-    //  auto const kw2(rt_ctx.intern_keyword("", "b", true).expect_ok());
-    //  ankerl::nanobench::Bench().config(config).run
-    //  (
-    //    "bitmap",
-    //    [&]
-    //    {
-    //      auto const ret(runtime::dynamic_call(hf1, kw1));
-    //      ankerl::nanobench::doNotOptimizeAway(ret);
-    //    }
-    //  );
+    //  profile::timer timer{ "eval user code" };
+    //  std::cout << runtime::detail::to_string(rt_ctx.eval_file(opts.target_file)) << std::endl;
     //}
+
+    {
+      ankerl::nanobench::Config config;
+      config.mMinEpochIterations = 10000000;
+      config.mOut = &std::cout;
+      config.mWarmup = 10000;
+
+      auto small("foo");
+      auto medium("p0aeoka13scfq4ufg27xlse0y07gjg9v29nonktptjd36jnmlfzpze4qaxztkewq8v36hivq7ieuecvjhp9myn52ubvplrq7ip62oj7qo0n2s8xqgaxc38n70jo3cwdq");
+
+      using std_string = std::basic_string<char, std::char_traits<char>, native_allocator<char>>;
+
+      std_string small_std{ small };
+      gc_string small_gc{ small };
+      folly::fbstring small_folly{ small };
+      std_string medium_std{ medium };
+      gc_string medium_gc{ medium };
+      folly::fbstring medium_folly{ medium };
+
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "gc_string small allocation",
+        [&]
+        {
+          gc_string ret{ small };
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
+
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "std_string small allocation",
+        [&]
+        {
+          std_string ret{ small };
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
+
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "folly::string small allocation",
+        [&]
+        {
+          folly::fbstring ret{ small };
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
+
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "gc_string medium allocation",
+        [&]
+        {
+          gc_string ret{ medium };
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
+
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "std_string medium allocation",
+        [&]
+        {
+          std_string ret{ medium };
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
+
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "folly::string medium allocation",
+        [&]
+        {
+          folly::fbstring ret{ medium };
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
+
+      ///*** Copy ctor ***/
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "gc_string small copy ctor",
+      //  [&]
+      //  {
+      //    gc_string ret{ small_gc };
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "std_string small copy ctor",
+      //  [&]
+      //  {
+      //    std_string ret{ small_std };
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "folly::string small copy ctor",
+      //  [&]
+      //  {
+      //    folly::fbstring ret{ small_folly };
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "gc_string medium copy ctor",
+      //  [&]
+      //  {
+      //    gc_string ret{ medium_gc };
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "std_string medium copy ctor",
+      //  [&]
+      //  {
+      //    std_string ret{ medium_std };
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "folly::string medium copy ctor",
+      //  [&]
+      //  {
+      //    folly::fbstring ret{ medium_folly };
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      /*** Find ***/
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "gc_string small find",
+      //  [&]
+      //  {
+      //    auto const ret(small_gc.find("fo"));
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "std_string small find",
+      //  [&]
+      //  {
+      //    auto const ret(small_std.find("fo"));
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "folly::string small find",
+      //  [&]
+      //  {
+      //    auto const ret(small_folly.find("fo"));
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "gc_string medium find",
+      //  [&]
+      //  {
+      //    auto const ret(medium_gc.find("kewq"));
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "std_string medium find",
+      //  [&]
+      //  {
+      //    auto const ret(medium_std.find("kewq"));
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "folly::string medium find",
+      //  [&]
+      //  {
+      //    auto const ret(medium_folly.find("kewq"));
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      /*** Substrings. ***/
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "gc_string small substr",
+      //  [&]
+      //  {
+      //    auto const ret(small_gc.substr(1));
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "std_string small substr",
+      //  [&]
+      //  {
+      //    auto const ret(small_std.substr(1));
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "folly_string small substr",
+      //  [&]
+      //  {
+      //    auto const ret(small_folly.substr(1));
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "gc_string medium substr",
+      //  [&]
+      //  {
+      //    auto const ret(medium_gc.substr(4, 100));
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "std_string medium substr",
+      //  [&]
+      //  {
+      //    auto const ret(medium_std.substr(4, 100));
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "folly_string medium substr",
+      //  [&]
+      //  {
+      //    auto const ret(medium_folly.substr(4, 100));
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      ///*** Comparisons. ***/
+
+      //std_string another_medium_std{ medium };
+      //gc_string another_medium_gc{ medium };
+      //folly::fbstring another_medium_folly{ medium };
+
+      //auto different_medium("p0aeoka13scfq4ufg27xlse0y07gjg9v29nonktptjd36jnmlfzpze4qaxztkewq8v36hivq7ieuecvjhp9myn52ubvplrq7ip62oj7qo0n2s8xqgaxc38nXXXXXXXXX");
+      //std_string different_medium_std{ different_medium };
+      //gc_string different_medium_gc{ different_medium };
+      //folly::fbstring different_medium_folly{ different_medium };
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "gc_string medium compare same",
+      //  [&]
+      //  {
+      //    auto const ret(medium_gc == another_medium_gc);
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "std_string medium compare same",
+      //  [&]
+      //  {
+      //    auto const ret(medium_std == another_medium_std);
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "folly_string medium compare same",
+      //  [&]
+      //  {
+      //    auto const ret(medium_folly == another_medium_folly);
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "gc_string medium compare different",
+      //  [&]
+      //  {
+      //    auto const ret(medium_gc == different_medium_gc);
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "std_string medium compare different",
+      //  [&]
+      //  {
+      //    auto const ret(medium_std == different_medium_std);
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+
+      //ankerl::nanobench::Bench().config(config).run
+      //(
+      //  "folly_string medium compare different",
+      //  [&]
+      //  {
+      //    auto const ret(medium_folly == different_medium_folly);
+      //    ankerl::nanobench::doNotOptimizeAway(ret);
+      //  }
+      //);
+    }
   }
 
   void compile(util::cli::options const &opts, runtime::context &rt_ctx)
