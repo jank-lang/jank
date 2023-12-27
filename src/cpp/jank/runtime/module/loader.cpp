@@ -68,7 +68,7 @@ namespace jank::runtime::module
 
   /* If it has two or more occurences of $, it's nested. */
   native_bool is_nested_module(native_string const &module)
-  { return module.find_first_of('$') != module.find_last_of('$'); }
+  { return module.find('$') != module.rfind('$'); }
 
   template <typename F>
   void visit_jar_entry(file_entry const &entry, F const &fn)
@@ -189,11 +189,13 @@ namespace jank::runtime::module
   }
 
   loader::loader(context &rt_ctx, native_string_view const &ps)
-    : rt_ctx{ rt_ctx }, paths{ ps }
+    : rt_ctx{ rt_ctx }
   {
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
+    native_string_transient paths{ ps };
     paths += fmt::format(":{}", (jank_path / "../src/jank").string());
     paths += fmt::format(":{}", rt_ctx.output_dir);
+    this->paths = paths;
 
     size_t start{};
     size_t i{ paths.find(module_separator, start) };

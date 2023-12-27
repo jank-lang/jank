@@ -307,10 +307,10 @@
    x)
   ([x & more]
    (let [x-res (gensym)]
-     (list 'let [x-res x]
+     (list 'clojure.core/let [x-res x]
            (list 'if x-res
                  x-res
-                 (cons 'or more))))))
+                 (cons 'clojure.core/or more))))))
 
 (defmacro or
   [& args]
@@ -323,9 +323,9 @@
    x)
   ([x & more]
    (let [x-res (gensym)]
-     (list 'let [x-res x]
+     (list 'clojure.core/let [x-res x]
            (list 'if x-res
-                 (cons 'and more)
+                 (cons 'clojure.core/and more)
                  x-res)))))
 
 (defmacro and
@@ -333,7 +333,7 @@
   (apply* and* args))
 
 ; Takes a set of test/expr pairs. It evaluates each test one at a
-; time.  If a test returns logical true, cond evaluates and returns
+; time. If a test returns logical true, cond evaluates and returns
 ; the value of the corresponding expr and doesn't evaluate any of the
 ; other tests or exprs. (cond) returns nil.
 (defmacro cond [& clauses]

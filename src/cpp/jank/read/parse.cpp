@@ -96,9 +96,8 @@ namespace jank::read::parse
           return ok(nullptr);
         default:
         {
-          native_string msg{ "unexpected token kind: " };
-          msg += magic_enum::enum_name(token.kind);
-          return err(error{ token.pos, msg });
+          native_string msg{ fmt::format("unexpected token kind: {}", magic_enum::enum_name(token.kind)) };
+          return err(error{ token.pos, std::move(msg) });
         }
       }
     }

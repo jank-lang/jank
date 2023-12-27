@@ -1,19 +1,16 @@
 #pragma once
 
-#include <boost/algorithm/searching/boyer_moore.hpp>
-
 namespace jank
 {
   struct gc_string
   {
     using value_type = char;
-    using size_type = size_t;
+    using allocator_type = native_allocator<value_type>;
+    using allocator_traits = std::allocator_traits<allocator_type>;
+    using size_type = allocator_traits::size_type;
     using traits_type = std::char_traits<value_type>;
     using pointer_type = value_type*;
     using const_pointer_type = value_type const*;
-    //using allocator_type = std::allocator<value_type>;
-    using allocator_type = native_allocator<value_type>;
-    using allocator_traits = std::allocator_traits<allocator_type>;
 
     static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
     static constexpr size_type local_capacity{ 15 / sizeof(value_type) };
@@ -95,6 +92,8 @@ namespace jank
       : gc_string{ s.data(), s.size() }
     { }
 
+    /* TODO: When sharing, we don't know if we own it. We check for null, but we could
+     * be sharing the end of the string and the null will be present. */
     constexpr ~gc_string()
     { dispose(); }
 

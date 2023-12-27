@@ -17,13 +17,16 @@ namespace jank::runtime
 
       function_type() = default;
       template <typename R, typename... Args>
-      function_type(R (* const f)(Args...)) : function_type(value_type<R (Args...)>{ f })
+      function_type(R (* const f)(Args...))
+        : function_type{ value_type<R (Args...)>{ f } }
       { }
       template <typename R, typename... Args>
-      function_type(value_type<R (Args...)> &&f) : value{ std::move(f) }
+      function_type(value_type<R (Args...)> &&f)
+        : value{ std::move(f) }
       { }
       template <typename R, typename... Args>
-      function_type(value_type<R (Args...)> const &f) : value{ f }
+      function_type(value_type<R (Args...)> const &f)
+        : value{ f }
       { }
 
       template <typename F>

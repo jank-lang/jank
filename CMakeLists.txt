@@ -297,7 +297,7 @@ if(jank_tests)
   add_executable(
     jank_test_exe
     test/cpp/main.cpp
-    test/cpp/jank/gc_string.cpp
+    test/cpp/jank/gc_string_v2.cpp
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/analyze/box.cpp

@@ -1071,7 +1071,7 @@ namespace jank::codegen
       generated_declaration = true;
     }
 
-    native_string ret;
+    native_string_transient ret;
     ret.reserve(header_buffer.size() + body_buffer.size() + footer_buffer.size());
     ret += native_string_view{ header_buffer.data(), header_buffer.size() };
     ret += native_string_view{ body_buffer.data(), body_buffer.size() };
@@ -1469,7 +1469,7 @@ namespace jank::codegen
     /* Namespace */
     fmt::format_to(inserter, "}}");
 
-    native_string ret;
+    native_string_transient ret;
     ret.reserve(module_buffer.size());
     ret += native_string_view{ module_buffer.data(), module_buffer.size() };
     return ret;

@@ -91,7 +91,7 @@ namespace jank::runtime
 
   native_string munge(native_string const &o)
   {
-    native_string munged;
+    native_string_transient munged;
     for(auto const &c : o)
     {
       auto const &replacement(munge_chars.find(c));
