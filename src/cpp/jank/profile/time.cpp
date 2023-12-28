@@ -2,7 +2,7 @@
 
 namespace jank::profile
 {
-  constexpr native_string_view tag{ "jank::profile" };
+  constexpr native_persistent_string_view tag{ "jank::profile" };
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   static native_bool enabled{};
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
@@ -34,31 +34,31 @@ namespace jank::profile
     }
   }
 
-  void enter(native_string_view const &region)
+  void enter(native_persistent_string_view const &region)
   {
     if(enabled)
     { fmt::println(output, "{} {} enter {}", tag, now(), region); }
   }
 
-  void exit(native_string_view const &region)
+  void exit(native_persistent_string_view const &region)
   {
     if(enabled)
     { fmt::println(output, "{} {} exit {}", tag, now(), region); }
   }
 
-  void report(native_string_view const &boundary)
+  void report(native_persistent_string_view const &boundary)
   {
     if(enabled)
     { fmt::println(output, "{} {} report {}", tag, now(), boundary); }
   }
 
-  timer::timer(native_string_view const &region)
+  timer::timer(native_persistent_string_view const &region)
     : region{ region }
   { enter(region); }
 
   timer::~timer()
   { exit(region); }
 
-  void timer::report(native_string_view const &boundary) const
+  void timer::report(native_persistent_string_view const &boundary) const
   { jank::profile::report(boundary); }
 }

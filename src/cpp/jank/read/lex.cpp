@@ -9,13 +9,13 @@ using namespace std::string_view_literals;
 
 namespace jank::read
 {
-  error::error(size_t const s, native_string const &m)
+  error::error(size_t const s, native_persistent_string const &m)
     : start{ s }, end{ s }, message{ m }
   { }
-  error::error(size_t const s, size_t const e, native_string const &m)
+  error::error(size_t const s, size_t const e, native_persistent_string const &m)
     : start{ s }, end{ e }, message{ m }
   { }
-  error::error(native_string const &m)
+  error::error(native_persistent_string const &m)
     : message{ m }
   { }
 
@@ -37,7 +37,7 @@ namespace jank::read
        [&](auto &&arg)
        {
          using T = std::decay_t<decltype(arg)>;
-         if constexpr(std::is_same_v<T, native_string> || std::is_same_v<T, native_string_view>)
+         if constexpr(std::is_same_v<T, native_persistent_string> || std::is_same_v<T, native_persistent_string_view>)
          { os << std::quoted(arg); }
          else
          { os << arg; }
@@ -57,7 +57,7 @@ namespace jank::read
     token::token(size_t const p, token_kind const k, native_real const d)
       : pos{ p }, kind{ k }, data{ d }
     { }
-    token::token(size_t const p, token_kind const k, native_string_view const d)
+    token::token(size_t const p, token_kind const k, native_persistent_string_view const d)
       : pos{ p }, kind{ k }, data{ d }
     { }
     token::token(size_t const p, token_kind const k, bool const d)
@@ -73,7 +73,7 @@ namespace jank::read
     token::token(size_t const p, size_t const s, token_kind const k, native_real const d)
       : pos{ p }, size{ s }, kind{ k }, data{ d }
     { }
-    token::token(size_t const p, size_t const s, token_kind const k, native_string_view const d)
+    token::token(size_t const p, size_t const s, token_kind const k, native_persistent_string_view const d)
       : pos{ p }, size{ s }, kind{ k }, data{ d }
     { }
     token::token(size_t const p, size_t const s, token_kind const k, bool const d)
@@ -93,7 +93,7 @@ namespace jank::read
     std::ostream& operator <<(std::ostream &os, token::no_data const &)
     { return os << "<no data>"; }
 
-    processor::processor(native_string_view const &f) : file{ f }
+    processor::processor(native_persistent_string_view const &f) : file{ f }
     { }
 
     processor::iterator::value_type const& processor::iterator::operator *() const
@@ -198,7 +198,7 @@ namespace jank::read
           else
           {
             ++pos;
-            native_string_view const comment
+            native_persistent_string_view const comment
             {
               file.data() + token_start + leading_semis,
               pos - token_start - leading_semis
@@ -280,7 +280,7 @@ namespace jank::read
             ++pos;
           }
           require_space = true;
-          native_string_view const name{ file.data() + token_start, ++pos - token_start };
+          native_persistent_string_view const name{ file.data() + token_start, ++pos - token_start };
           if(name[0] == '/' && name.size() > 1)
           { return err(error{ token_start, "invalid symbol" }); }
           else if(name == "nil")
@@ -315,7 +315,7 @@ namespace jank::read
             ++pos;
           }
           require_space = true;
-          native_string_view const name{ file.data() + token_start + 1, ++pos - token_start - 1 };
+          native_persistent_string_view const name{ file.data() + token_start + 1, ++pos - token_start - 1 };
           if(name[0] == '/' && name.size() > 1)
           { return err(error{ token_start, "invalid keyword: starts with /" }); }
           else if(name[0] == ':' && name.size() == 1)
@@ -364,11 +364,11 @@ namespace jank::read
           }
           require_space = true;
           pos++;
-          return ok(token{ token_start, pos - token_start, token_kind::string, native_string_view(file.data() + token_start + 1, pos - token_start - 2) });
+          return ok(token{ token_start, pos - token_start, token_kind::string, native_persistent_string_view(file.data() + token_start + 1, pos - token_start - 2) });
         }
         default:
           ++pos;
-          return err(error{ token_start, native_string{ "unexpected character: " } + file[token_start] });
+          return err(error{ token_start, native_persistent_string{ "unexpected character: " } + file[token_start] });
       }
     }
 

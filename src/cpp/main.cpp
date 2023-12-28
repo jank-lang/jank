@@ -12,6 +12,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+#include <folly/FBString.h>
+
 #include <jank/util/mapped_file.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
@@ -20,7 +22,7 @@
 #include <jank/codegen/processor.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
-#include <jank/gc_string.hpp>
+#include <jank/native_persistent_string.hpp>
 
 namespace jank
 {
@@ -50,18 +52,18 @@ namespace jank
       using std_string = std::basic_string<char, std::char_traits<char>, native_allocator<char>>;
 
       std_string small_std{ small };
-      gc_string small_gc{ small };
+      native_persistent_string small_persistent{ small };
       folly::fbstring small_folly{ small };
       std_string medium_std{ medium };
-      gc_string medium_gc{ medium };
+      native_persistent_string medium_persistent{ medium };
       folly::fbstring medium_folly{ medium };
 
       ankerl::nanobench::Bench().config(config).run
       (
-        "gc_string small allocation",
+        "native_persistent_string small allocation",
         [&]
         {
-          gc_string ret{ small };
+          native_persistent_string ret{ small };
           ankerl::nanobench::doNotOptimizeAway(ret);
         }
       );
@@ -88,10 +90,10 @@ namespace jank
 
       ankerl::nanobench::Bench().config(config).run
       (
-        "gc_string medium allocation",
+        "native_persistent_string medium allocation",
         [&]
         {
-          gc_string ret{ medium };
+          native_persistent_string ret{ medium };
           ankerl::nanobench::doNotOptimizeAway(ret);
         }
       );
@@ -116,262 +118,262 @@ namespace jank
         }
       );
 
-      ///*** Copy ctor ***/
+      /*** Copy ctor ***/
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "gc_string small copy ctor",
-      //  [&]
-      //  {
-      //    gc_string ret{ small_gc };
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "native_persistent_string small copy ctor",
+        [&]
+        {
+          native_persistent_string ret{ small_persistent };
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "std_string small copy ctor",
-      //  [&]
-      //  {
-      //    std_string ret{ small_std };
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "std_string small copy ctor",
+        [&]
+        {
+          std_string ret{ small_std };
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "folly::string small copy ctor",
-      //  [&]
-      //  {
-      //    folly::fbstring ret{ small_folly };
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "folly::string small copy ctor",
+        [&]
+        {
+          folly::fbstring ret{ small_folly };
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "gc_string medium copy ctor",
-      //  [&]
-      //  {
-      //    gc_string ret{ medium_gc };
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "native_persistent_string medium copy ctor",
+        [&]
+        {
+          native_persistent_string ret{ medium_persistent };
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "std_string medium copy ctor",
-      //  [&]
-      //  {
-      //    std_string ret{ medium_std };
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "std_string medium copy ctor",
+        [&]
+        {
+          std_string ret{ medium_std };
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "folly::string medium copy ctor",
-      //  [&]
-      //  {
-      //    folly::fbstring ret{ medium_folly };
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "folly::string medium copy ctor",
+        [&]
+        {
+          folly::fbstring ret{ medium_folly };
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
       /*** Find ***/
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "gc_string small find",
-      //  [&]
-      //  {
-      //    auto const ret(small_gc.find("fo"));
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "native_persistent_string small find",
+        [&]
+        {
+          auto const ret(small_persistent.find("fo"));
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "std_string small find",
-      //  [&]
-      //  {
-      //    auto const ret(small_std.find("fo"));
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "std_string small find",
+        [&]
+        {
+          auto const ret(small_std.find("fo"));
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "folly::string small find",
-      //  [&]
-      //  {
-      //    auto const ret(small_folly.find("fo"));
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "folly::string small find",
+        [&]
+        {
+          auto const ret(small_folly.find("fo"));
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "gc_string medium find",
-      //  [&]
-      //  {
-      //    auto const ret(medium_gc.find("kewq"));
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "native_persistent_string medium find",
+        [&]
+        {
+          auto const ret(medium_persistent.find("kewq"));
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "std_string medium find",
-      //  [&]
-      //  {
-      //    auto const ret(medium_std.find("kewq"));
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "std_string medium find",
+        [&]
+        {
+          auto const ret(medium_std.find("kewq"));
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "folly::string medium find",
-      //  [&]
-      //  {
-      //    auto const ret(medium_folly.find("kewq"));
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "folly::string medium find",
+        [&]
+        {
+          auto const ret(medium_folly.find("kewq"));
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
       /*** Substrings. ***/
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "gc_string small substr",
-      //  [&]
-      //  {
-      //    auto const ret(small_gc.substr(1));
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "native_persistent_string small substr",
+        [&]
+        {
+          auto const ret(small_persistent.substr(1));
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "std_string small substr",
-      //  [&]
-      //  {
-      //    auto const ret(small_std.substr(1));
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "std_string small substr",
+        [&]
+        {
+          auto const ret(small_std.substr(1));
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "folly_string small substr",
-      //  [&]
-      //  {
-      //    auto const ret(small_folly.substr(1));
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "folly_string small substr",
+        [&]
+        {
+          auto const ret(small_folly.substr(1));
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "gc_string medium substr",
-      //  [&]
-      //  {
-      //    auto const ret(medium_gc.substr(4, 100));
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "native_persistent_string medium substr",
+        [&]
+        {
+          auto const ret(medium_persistent.substr(4, 100));
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "std_string medium substr",
-      //  [&]
-      //  {
-      //    auto const ret(medium_std.substr(4, 100));
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "std_string medium substr",
+        [&]
+        {
+          auto const ret(medium_std.substr(4, 100));
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "folly_string medium substr",
-      //  [&]
-      //  {
-      //    auto const ret(medium_folly.substr(4, 100));
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "folly_string medium substr",
+        [&]
+        {
+          auto const ret(medium_folly.substr(4, 100));
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      ///*** Comparisons. ***/
+      /*** Comparisons. ***/
 
-      //std_string another_medium_std{ medium };
-      //gc_string another_medium_gc{ medium };
-      //folly::fbstring another_medium_folly{ medium };
+      std_string another_medium_std{ medium };
+      native_persistent_string another_medium_persistent{ medium };
+      folly::fbstring another_medium_folly{ medium };
 
-      //auto different_medium("p0aeoka13scfq4ufg27xlse0y07gjg9v29nonktptjd36jnmlfzpze4qaxztkewq8v36hivq7ieuecvjhp9myn52ubvplrq7ip62oj7qo0n2s8xqgaxc38nXXXXXXXXX");
-      //std_string different_medium_std{ different_medium };
-      //gc_string different_medium_gc{ different_medium };
-      //folly::fbstring different_medium_folly{ different_medium };
+      auto different_medium("p0aeoka13scfq4ufg27xlse0y07gjg9v29nonktptjd36jnmlfzpze4qaxztkewq8v36hivq7ieuecvjhp9myn52ubvplrq7ip62oj7qo0n2s8xqgaxc38nXXXXXXXXX");
+      std_string different_medium_std{ different_medium };
+      native_persistent_string different_medium_persistent{ different_medium };
+      folly::fbstring different_medium_folly{ different_medium };
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "gc_string medium compare same",
-      //  [&]
-      //  {
-      //    auto const ret(medium_gc == another_medium_gc);
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "native_persistent_string medium compare same",
+        [&]
+        {
+          auto const ret(medium_persistent == another_medium_persistent);
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "std_string medium compare same",
-      //  [&]
-      //  {
-      //    auto const ret(medium_std == another_medium_std);
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "std_string medium compare same",
+        [&]
+        {
+          auto const ret(medium_std == another_medium_std);
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "folly_string medium compare same",
-      //  [&]
-      //  {
-      //    auto const ret(medium_folly == another_medium_folly);
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "folly_string medium compare same",
+        [&]
+        {
+          auto const ret(medium_folly == another_medium_folly);
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "gc_string medium compare different",
-      //  [&]
-      //  {
-      //    auto const ret(medium_gc == different_medium_gc);
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "native_persistent_string medium compare different",
+        [&]
+        {
+          auto const ret(medium_persistent == different_medium_persistent);
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "std_string medium compare different",
-      //  [&]
-      //  {
-      //    auto const ret(medium_std == different_medium_std);
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "std_string medium compare different",
+        [&]
+        {
+          auto const ret(medium_std == different_medium_std);
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
 
-      //ankerl::nanobench::Bench().config(config).run
-      //(
-      //  "folly_string medium compare different",
-      //  [&]
-      //  {
-      //    auto const ret(medium_folly == different_medium_folly);
-      //    ankerl::nanobench::doNotOptimizeAway(ret);
-      //  }
-      //);
+      ankerl::nanobench::Bench().config(config).run
+      (
+        "folly_string medium compare different",
+        [&]
+        {
+          auto const ret(medium_folly == different_medium_folly);
+          ankerl::nanobench::doNotOptimizeAway(ret);
+        }
+      );
     }
   }
 
@@ -400,7 +402,7 @@ namespace jank
     /* TODO: Multi-line input. */
     while(auto const buf = readline("> "))
     {
-      native_string line{ buf };
+      std::string line{ buf };
       boost::trim(line);
       if(line.empty())
       { continue; }
@@ -418,7 +420,7 @@ namespace jank
       { fmt::println("Exception: {}", e.what()); }
       catch(jank::runtime::object_ptr const o)
       { fmt::println("Exception: {}", jank::runtime::detail::to_string(o)); }
-      catch(jank::native_string const &s)
+      catch(jank::native_persistent_string const &s)
       { fmt::println("Exception: {}", s); }
       catch(jank::read::error const &e)
       { fmt::println("Read error: {}", e.message); }
@@ -468,7 +470,7 @@ catch(std::exception const &e)
 { fmt::println("Exception: {}", e.what()); }
 catch(jank::runtime::object_ptr const o)
 { fmt::println("Exception: {}", jank::runtime::detail::to_string(o)); }
-catch(jank::native_string const &s)
+catch(jank::native_persistent_string const &s)
 { fmt::println("Exception: {}", s); }
 catch(jank::read::error const &e)
 { fmt::println("Read error: {}", e.message); }

@@ -462,7 +462,7 @@
                        for(auto it(fresh->next_in_place()); it != nullptr; it = it->next_in_place())
                        { runtime::detail::to_string(it->first(), buff); }
                      }
-                     return make_box<obj::string>(native_string{ buff.data(), buff.size() });
+                     return make_box<obj::string>(native_persistent_string{ buff.data(), buff.size() });
                    }
                    else
                    { throw #{ (ex-info :invalid-seq {:args args}) }#; }
@@ -711,7 +711,7 @@
                 (
                   visit_object
                   (
-                    [=](auto const typed_o) -> native_string
+                    [=](auto const typed_o) -> native_persistent_string
                     {
                       using T = typename decltype(typed_o)::value_type;
 
@@ -729,7 +729,7 @@
               (
                 visit_object
                 (
-                  [=](auto const typed_o) -> native_string
+                  [=](auto const typed_o) -> native_persistent_string
                   {
                     using T = typename decltype(typed_o)::value_type;
 

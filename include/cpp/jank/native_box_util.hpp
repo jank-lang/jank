@@ -20,5 +20,5 @@ namespace jank
   native_box<runtime::obj::integer> make_box(native_integer const i);
   native_box<runtime::obj::integer> make_box(size_t const i);
   native_box<runtime::obj::real> make_box(native_real const r);
-  native_box<runtime::obj::string> make_box(native_string_view const &s);
+  native_box<runtime::obj::string> make_box(native_persistent_string_view const &s);
 }

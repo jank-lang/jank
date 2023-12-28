@@ -20,5 +20,5 @@ namespace jank::util
     size_t size{};
   };
 
-  result<mapped_file, native_string> map_file(native_string_view const &path);
+  result<mapped_file, native_persistent_string> map_file(native_persistent_string_view const &path);
 }

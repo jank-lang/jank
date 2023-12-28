@@ -346,7 +346,7 @@ namespace jank::analyze
     { return err(error{ "fn missing forms" }); }
     auto list(full_list);
 
-    native_string name;
+    native_persistent_string name;
     auto first_elem(list->data.rest().first().unwrap());
     if(first_elem->type == runtime::object_type::symbol)
     {
@@ -769,18 +769,18 @@ namespace jank::analyze
     decltype(expr::native_raw<expression>::chunks) chunks;
     /* TODO: Just use } for end and rely on token parsing info for when that is.
      * This requires storing line/col start/end meta in each object. */
-    constexpr native_string_view interp_start{ "#{" }, interp_end{ "}#" };
-    for(size_t it{}; it != native_string::npos; )
+    constexpr native_persistent_string_view interp_start{ "#{" }, interp_end{ "}#" };
+    for(size_t it{}; it != native_persistent_string::npos; )
     {
       auto const next_start(code_str->data.find(interp_start.data(), it));
-      if(next_start == native_string::npos)
+      if(next_start == native_persistent_string::npos)
       {
         /* This is the final chunk. */
-        chunks.emplace_back(native_string_view{ code_str->data.data() + it });
+        chunks.emplace_back(native_persistent_string_view{ code_str->data.data() + it });
         break;
       }
       auto const next_end(code_str->data.find(interp_end.data(), next_start));
-      if(next_end == native_string::npos)
+      if(next_end == native_persistent_string::npos)
       { return err(error{ fmt::format("no matching {} found for native/raw interpolation", interp_end) }); }
 
       read::lex::processor l_prc
@@ -799,7 +799,7 @@ namespace jank::analyze
       { return result.expect_err_move(); }
 
       if(next_start - it > 0)
-      { chunks.emplace_back(native_string_view{ code_str->data.data() + it, next_start - it }); }
+      { chunks.emplace_back(native_persistent_string_view{ code_str->data.data() + it, next_start - it }); }
       chunks.emplace_back(result.expect_ok());
       it = next_end + interp_end.size();
 

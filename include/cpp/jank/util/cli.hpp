@@ -14,13 +14,13 @@ namespace jank::util::cli
   struct options
   {
     /* Runtime. */
-    native_string_transient class_path;
+    native_transient_string class_path;
     native_bool profiler_enabled{};
-    native_string_transient profiler_file{ "jank.profile" };
+    native_transient_string profiler_file{ "jank.profile" };
     native_bool gc_incremental{};
 
     /* Compilation. */
-    native_string_transient compilation_path{ "classes" };
+    native_transient_string compilation_path{ "classes" };
 #ifdef JANK_RELEASE
     native_integer optimization_level{ 3 };
 #else
@@ -28,11 +28,11 @@ namespace jank::util::cli
 #endif
 
     /* Run command. */
-    native_string_transient target_file;
+    native_transient_string target_file;
 
     /* Compile command. */
-    native_string_transient target_ns;
-    native_string_transient target_runtime{ "dynamic" };
+    native_transient_string target_ns;
+    native_transient_string target_runtime{ "dynamic" };
 
     /* REPL command. */
     native_bool repl_server{};

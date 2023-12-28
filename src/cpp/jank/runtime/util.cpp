@@ -36,7 +36,7 @@ namespace jank::runtime
     { return o; }
   }
 
-  static native_unordered_map<char, native_string_view> const munge_chars
+  static native_unordered_map<char, native_persistent_string_view> const munge_chars
   {
     { '-', "_" },
     { ':', "_COLON_" },
@@ -65,7 +65,7 @@ namespace jank::runtime
   };
 
   /* https://en.cppreference.com/w/cpp/keyword */
-  static native_set<native_string_view> const cpp_keywords
+  static native_set<native_persistent_string_view> const cpp_keywords
   {
     "alignas", "alignof", "and", "and_eq", "asm", "atomic_cancel", "atomic_commit", "atomic_noexcept", "auto",
     "bitand", "bitor", "bool", "break",
@@ -89,9 +89,9 @@ namespace jank::runtime
     "xor", "xor_eq"
   };
 
-  native_string munge(native_string const &o)
+  native_persistent_string munge(native_persistent_string const &o)
   {
-    native_string_transient munged;
+    native_transient_string munged;
     for(auto const &c : o)
     {
       auto const &replacement(munge_chars.find(c));

@@ -42,14 +42,14 @@ namespace jank::runtime
     obj::symbol_ptr qualify_symbol(obj::symbol_ptr const &);
     option<object_ptr> find_local(obj::symbol_ptr const &);
 
-    result<var_ptr, native_string> intern_var(obj::symbol_ptr const &);
-    result<var_ptr, native_string> intern_var(native_string const &ns, native_string const &name);
+    result<var_ptr, native_persistent_string> intern_var(obj::symbol_ptr const &);
+    result<var_ptr, native_persistent_string> intern_var(native_persistent_string const &ns, native_persistent_string const &name);
     option<var_ptr> find_var(obj::symbol_ptr const &);
-    option<var_ptr> find_var(native_string const &ns, native_string const &name);
+    option<var_ptr> find_var(native_persistent_string const &ns, native_persistent_string const &name);
 
-    result<obj::keyword_ptr, native_string> intern_keyword(obj::symbol const &sym, bool const resolved);
-    result<obj::keyword_ptr, native_string> intern_keyword
-    (native_string_view const &ns, native_string_view const &name, bool resolved);
+    result<obj::keyword_ptr, native_persistent_string> intern_keyword(obj::symbol const &sym, bool const resolved);
+    result<obj::keyword_ptr, native_persistent_string> intern_keyword
+    (native_persistent_string_view const &ns, native_persistent_string_view const &name, bool resolved);
 
     object_ptr macroexpand1(object_ptr o);
     object_ptr macroexpand(object_ptr o);
@@ -59,9 +59,9 @@ namespace jank::runtime
     static object_ptr println(object_ptr more);
 
     void eval_prelude();
-    object_ptr eval_file(native_string_view const &path);
-    object_ptr eval_string(native_string_view const &code);
-    native_vector<analyze::expression_ptr> analyze_string(native_string_view const &code, native_bool const eval = true);
+    object_ptr eval_file(native_persistent_string_view const &path);
+    object_ptr eval_string(native_persistent_string_view const &code);
+    native_vector<analyze::expression_ptr> analyze_string(native_persistent_string_view const &code, native_bool const eval = true);
 
     /* Finds the specified module on the class path and loads it. If
      * the module is already loaded, nothing is done.
@@ -74,19 +74,19 @@ namespace jank::runtime
      * Module /meow.cat refers to module meow.cat
      * Module meow.cat refers to foo.bar$meow.cat
      */
-    result<void, native_string> load_module(native_string_view const &module);
+    result<void, native_persistent_string> load_module(native_persistent_string_view const &module);
 
     /* Does all the same work as load_module, but also writes compiled files to the file system. */
-    result<void, native_string> compile_module(native_string_view const &module);
+    result<void, native_persistent_string> compile_module(native_persistent_string_view const &module);
 
-    void write_module(native_string_view const &module, native_string_view const &contents) const;
+    void write_module(native_persistent_string_view const &module, native_persistent_string_view const &contents) const;
 
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */
-    static native_string unique_string();
-    static native_string unique_string(native_string_view const &prefix);
+    static native_persistent_string unique_string();
+    static native_persistent_string unique_string(native_persistent_string_view const &prefix);
     static obj::symbol unique_symbol();
-    static obj::symbol unique_symbol(native_string_view const &prefix);
+    static obj::symbol unique_symbol(native_persistent_string_view const &prefix);
 
     folly::Synchronized<native_unordered_map<obj::symbol_ptr, ns_ptr>> namespaces;
     folly::Synchronized<native_unordered_map<obj::symbol, obj::keyword_ptr>> keywords;
@@ -114,9 +114,9 @@ namespace jank::runtime
     /* TODO: This needs to be a dynamic var. */
     bool compiling{};
     /* TODO: This needs to be a dynamic var. */
-    native_string_view current_module;
-    native_unordered_map<native_string, native_vector<native_string>> module_dependencies;
-    native_string output_dir;
+    native_persistent_string_view current_module;
+    native_unordered_map<native_persistent_string, native_vector<native_persistent_string>> module_dependencies;
+    native_persistent_string output_dir;
     module::loader module_loader;
   };
 }

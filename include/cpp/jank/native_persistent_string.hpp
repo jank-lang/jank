@@ -5,7 +5,7 @@
 
 namespace jank
 {
-  struct gc_string_v2
+  struct native_persistent_string
   {
     using value_type = char;
     using allocator_type = native_allocator<value_type>;
@@ -21,26 +21,26 @@ namespace jank
 
     static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
-    constexpr gc_string_v2() noexcept
+    constexpr native_persistent_string() noexcept
     { set_small_size(0); }
 
-    constexpr gc_string_v2(gc_string_v2 const &s) noexcept
+    constexpr native_persistent_string(native_persistent_string const &s) noexcept
       : store{ s.store }
     {
       /* NOTE: An if saves us a couple of instructions, versus a switch here. */
       if(s.get_category() != category::small)
       {
-        const_cast<gc_string_v2&>(s).store.large.set_category(category::large_shared);
+        const_cast<native_persistent_string&>(s).store.large.set_category(category::large_shared);
         store.large.set_category(category::large_shared);
       }
     }
 
-    constexpr gc_string_v2(gc_string_v2 &&s) noexcept
+    constexpr native_persistent_string(native_persistent_string &&s) noexcept
       : store{ std::move(s.store) }
     { s.set_small_size(0); }
 
     template <size_type N>
-    constexpr gc_string_v2(value_type const (&new_data)[N]) noexcept
+    constexpr native_persistent_string(value_type const (&new_data)[N]) noexcept
     {
       if constexpr(N <= max_small_size)
       { init_small(new_data, N); }
@@ -48,11 +48,11 @@ namespace jank
       { init_large_owned(new_data, N); }
     }
 
-    constexpr gc_string_v2(const_pointer_type const s) noexcept
-      : gc_string_v2{ s, traits_type::length(s) }
+    constexpr native_persistent_string(const_pointer_type const s) noexcept
+      : native_persistent_string{ s, traits_type::length(s) }
     { }
 
-    constexpr gc_string_v2(const_pointer_type const s, size_type const size) noexcept
+    constexpr native_persistent_string(const_pointer_type const s, size_type const size) noexcept
     {
       if(size <= max_small_size)
       { init_small(s, size); }
@@ -60,7 +60,7 @@ namespace jank
       { init_large_owned(s, size); }
     }
 
-    constexpr gc_string_v2
+    constexpr native_persistent_string
     (
       const_pointer_type const lhs, size_type const lhs_size,
       const_pointer_type const rhs, size_type const rhs_size
@@ -73,15 +73,15 @@ namespace jank
       { init_large_owned(lhs, lhs_size, rhs, rhs_size); }
     }
 
-    constexpr gc_string_v2(native_string_view const &s)
-      : gc_string_v2{ s.data(), s.size() }
+    constexpr native_persistent_string(native_persistent_string_view const &s)
+      : native_persistent_string{ s.data(), s.size() }
     { }
 
-    constexpr gc_string_v2(native_string_transient const &s)
-      : gc_string_v2{ s.data(), s.size() }
+    constexpr native_persistent_string(native_transient_string const &s)
+      : native_persistent_string{ s.data(), s.size() }
     { }
 
-    constexpr gc_string_v2(gc_string_v2 const &s, size_type const pos, size_type count)
+    constexpr native_persistent_string(native_persistent_string const &s, size_type const pos, size_type count)
     {
       auto const s_length(s.size());
       if(s_length < pos) [[unlikely]]
@@ -94,12 +94,12 @@ namespace jank
       else
       {
         /* NOTE: Not necessarily null-terminated! */
-        const_cast<gc_string_v2&>(s).store.large.set_category(category::large_shared);
+        const_cast<native_persistent_string&>(s).store.large.set_category(category::large_shared);
         init_large_shared(s.data() + pos, count);
       }
     }
 
-    constexpr ~gc_string_v2() noexcept
+    constexpr ~native_persistent_string() noexcept
     { destroy(); }
 
     /*** Data accessors. ***/
@@ -132,14 +132,14 @@ namespace jank
         case category::large_shared:
         {
           /* Shared strings are always large. */
-          const_cast<gc_string_v2*>(this)->init_large_owned(store.large.data, size());
+          const_cast<native_persistent_string*>(this)->init_large_owned(store.large.data, size());
           return store.large.data;
         }
       }
     }
 
     /*** Searches. ***/
-    constexpr size_type find(gc_string_v2 const &pattern, size_type const pos = 0) const noexcept
+    constexpr size_type find(native_persistent_string const &pattern, size_type const pos = 0) const noexcept
     { return find(pattern.data(), pos, pattern.size()); }
     constexpr size_type find(const_pointer_type const pattern, size_type const pos = 0) const noexcept
     { return find(pattern, pos, traits_type::length(pattern)); }
@@ -193,7 +193,7 @@ namespace jank
       return ret;
     }
 
-    constexpr size_type rfind(gc_string_v2 const &s, size_type const pos = npos) const noexcept
+    constexpr size_type rfind(native_persistent_string const &s, size_type const pos = npos) const noexcept
     { return rfind(s.data(), pos, s.size()); }
     constexpr size_type rfind(const_pointer_type const s, size_type const pos = npos) const noexcept
     { return rfind(s, pos, traits_type::length(s)); }
@@ -237,11 +237,11 @@ namespace jank
     }
 
     /*** Immutable modifications. ***/
-    constexpr gc_string_v2 substr(size_type const pos = 0, size_type const count = npos) const
+    constexpr native_persistent_string substr(size_type const pos = 0, size_type const count = npos) const
     { return { *this, pos, count }; }
 
     /*** Mutations. ***/
-    constexpr gc_string_v2& operator =(gc_string_v2 const &rhs)
+    constexpr native_persistent_string& operator =(native_persistent_string const &rhs)
     {
       if(this == &rhs)
       { return *this; }
@@ -251,14 +251,14 @@ namespace jank
       store = rhs.store;
       if(rhs.get_category() == category::large_owned)
       {
-        const_cast<gc_string_v2&>(rhs).store.large.set_category(category::large_shared);
+        const_cast<native_persistent_string&>(rhs).store.large.set_category(category::large_shared);
         store.large.set_category(category::large_shared);
       }
 
       return *this;
     }
 
-    constexpr gc_string_v2& operator =(const_pointer_type const rhs)
+    constexpr native_persistent_string& operator =(const_pointer_type const rhs)
     {
       destroy();
 
@@ -271,7 +271,7 @@ namespace jank
       return *this;
     }
 
-    constexpr gc_string_v2& operator =(native_string_transient const &rhs)
+    constexpr native_persistent_string& operator =(native_transient_string const &rhs)
     {
       destroy();
 
@@ -285,12 +285,12 @@ namespace jank
     }
 
     /*** Comparisons. ***/
-    constexpr native_bool operator !=(gc_string_v2 const &s) const noexcept
+    constexpr native_bool operator !=(native_persistent_string const &s) const noexcept
     {
       auto const length(size());
       return length != s.size() || traits_type::compare(data(), s.data(), length);
     }
-    constexpr native_bool operator ==(gc_string_v2 const &s) const noexcept
+    constexpr native_bool operator ==(native_persistent_string const &s) const noexcept
     { return !(*this != s); }
 
     constexpr native_bool operator !=(const_pointer_type const s) const noexcept
@@ -301,7 +301,7 @@ namespace jank
     constexpr native_bool operator ==(const_pointer_type const s) const noexcept
     { return !(*this != s); }
 
-    constexpr int compare(gc_string_v2 const &s) const
+    constexpr int compare(native_persistent_string const &s) const
     {
       auto const length(size());
       auto const s_length(s.size());
@@ -338,7 +338,7 @@ namespace jank
     { return rend(); }
 
     /*** Conversions. ***/
-    constexpr operator native_string_view() const
+    constexpr operator native_persistent_string_view() const
     { return { data(), size() }; }
 
     /*** Hashing. ***/
@@ -528,49 +528,49 @@ namespace jank
     mutable native_integer hash{};
   };
 
-  constexpr native_bool operator <(gc_string_v2 const &lhs, gc_string_v2 const &rhs) noexcept
+  constexpr native_bool operator <(native_persistent_string const &lhs, native_persistent_string const &rhs) noexcept
   { return lhs.compare(rhs) < 0; }
 
-  constexpr gc_string_v2 operator +(gc_string_v2 const &lhs, gc_string_v2 const &rhs) noexcept
+  constexpr native_persistent_string operator +(native_persistent_string const &lhs, native_persistent_string const &rhs) noexcept
   { return { lhs.data(), lhs.size(), rhs.data(), rhs.size() }; }
 
-  constexpr gc_string_v2 operator +(gc_string_v2::const_pointer_type const lhs, gc_string_v2 const &rhs) noexcept
-  { return { lhs, gc_string_v2::traits_type::length(lhs), rhs.data(), rhs.size() }; }
+  constexpr native_persistent_string operator +(native_persistent_string::const_pointer_type const lhs, native_persistent_string const &rhs) noexcept
+  { return { lhs, native_persistent_string::traits_type::length(lhs), rhs.data(), rhs.size() }; }
 
-  constexpr gc_string_v2 operator +(gc_string_v2 const &lhs, gc_string_v2::const_pointer_type const rhs) noexcept
-  { return { lhs.data(), lhs.size(), rhs, gc_string_v2::traits_type::length(rhs) }; }
+  constexpr native_persistent_string operator +(native_persistent_string const &lhs, native_persistent_string::const_pointer_type const rhs) noexcept
+  { return { lhs.data(), lhs.size(), rhs, native_persistent_string::traits_type::length(rhs) }; }
 
-  constexpr gc_string_v2 operator +(gc_string_v2 const &lhs, gc_string_v2::value_type const rhs) noexcept
+  constexpr native_persistent_string operator +(native_persistent_string const &lhs, native_persistent_string::value_type const rhs) noexcept
   { return { lhs.data(), lhs.size(), &rhs, 1 }; }
 
-  constexpr std::ostream& operator <<(std::ostream &os, gc_string_v2 const &s)
-  { return os << static_cast<native_string_view>(s); }
+  constexpr std::ostream& operator <<(std::ostream &os, native_persistent_string const &s)
+  { return os << static_cast<native_persistent_string_view>(s); }
 }
 
 template <>
-struct fmt::formatter<jank::gc_string_v2> : private formatter<fmt::string_view>
+struct fmt::formatter<jank::native_persistent_string> : private formatter<fmt::string_view>
 {
   using formatter<fmt::string_view>::parse;
 
   template <typename Context>
-  typename Context::iterator format(jank::gc_string_v2 const &s, Context &ctx) const
+  typename Context::iterator format(jank::native_persistent_string const &s, Context &ctx) const
   { return formatter<fmt::string_view>::format({ s.data(), s.size() }, ctx); }
 };
 
 namespace std
 {
   template <>
-  struct hash<jank::gc_string_v2>
+  struct hash<jank::native_persistent_string>
   {
-    size_t operator()(jank::gc_string_v2 const &s) const
+    size_t operator()(jank::native_persistent_string const &s) const
     { return s.to_hash(); }
   };
 
   template <>
-  struct formatter<jank::gc_string_v2> : formatter<std::string_view>
+  struct formatter<jank::native_persistent_string> : formatter<std::string_view>
   {
     template<class FormatContext>
-    auto format(jank::gc_string_v2 const &s, FormatContext &ctx) const
+    auto format(jank::native_persistent_string const &s, FormatContext &ctx) const
     { return formatter<std::string_view>::format({ s.data(), s.size() }, ctx); }
   };
 }

@@ -32,11 +32,11 @@ namespace jank::runtime
 
     template <typename T>
     requires behavior::sequenceable<T>
-    native_string to_string(native_box<T> const s)
+    native_persistent_string to_string(native_box<T> const s)
     {
       fmt::memory_buffer buff;
       detail::to_string(s, buff);
-      return native_string{ buff.data(), buff.size() };
+      return native_persistent_string{ buff.data(), buff.size() };
     }
 
     template <typename It>

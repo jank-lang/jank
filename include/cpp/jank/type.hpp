@@ -22,7 +22,7 @@ namespace jank
   using native_integer = long long;
   using native_real = long double;
   using native_bool = bool;
-  using native_string_view = std::string_view;
+  using native_persistent_string_view = std::string_view;
 
   template <typename T>
   using native_vector = folly::fbvector<T, native_allocator<T>>;
@@ -42,17 +42,10 @@ namespace jank
   using native_unordered_map = boost::unordered_map
   <K, V, Hash, Pred, native_allocator<std::pair<K const, V>>>;
 
-  using native_string_transient = std::string;
+  using native_transient_string = std::string;
 }
 
-/* TODO: Folly strings leak memory, since they're not using the GC and the GC isn't
- * running destructors. */
-
-/* XXX: native_string.hpp includes this file to learn about integer types, but we also include it
- * to forward our string type. Pragma once allows this to work, but we need to make sure the order
- * is right. */
-//#include <jank/native_string.hpp>
-#include <jank/gc_string_v2.hpp>
-
-namespace jank
-{ using native_string = gc_string_v2; }
+/* NOTE: native_persistent_string.hpp includes this file to learn about integer
+ * types, but we also include it to forward our string type. Pragma once allows
+ * this to work, but we need to make sure the order is right. */
+#include <jank/native_persistent_string.hpp>

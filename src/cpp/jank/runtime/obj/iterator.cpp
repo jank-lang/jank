@@ -88,7 +88,7 @@ namespace jank::runtime
   void obj::iterator::to_string(fmt::memory_buffer &buff)
   { runtime::detail::to_string(seq(), buff); }
 
-  native_string obj::iterator::to_string()
+  native_persistent_string obj::iterator::to_string()
   { return runtime::detail::to_string(seq()); }
 
   native_integer obj::iterator::to_hash() const

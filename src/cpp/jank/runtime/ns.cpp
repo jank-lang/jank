@@ -41,7 +41,7 @@ namespace jank::runtime
     return { expect_object<var>(*found) };
   }
 
-  result<void, native_string> ns::add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns)
+  result<void, native_persistent_string> ns::add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns)
   {
     auto locked_aliases(aliases.wlock());
     auto const found((*locked_aliases)->data.find(sym));
@@ -61,7 +61,7 @@ namespace jank::runtime
     return none;
   }
 
-  result<void, native_string> ns::refer(obj::symbol_ptr const sym, var_ptr const var)
+  result<void, native_persistent_string> ns::refer(obj::symbol_ptr const sym, var_ptr const var)
   {
     auto locked_vars(vars.wlock());
     if(auto const found = (*locked_vars)->data.find(sym))
@@ -103,7 +103,7 @@ namespace jank::runtime
     auto const v(expect_object<ns>(&o));
     return name == v->name;
   }
-  native_string ns::to_string() const
+  native_persistent_string ns::to_string() const
   /* TODO: Maybe cache this. */
   { return name->to_string(); }
   void ns::to_string(fmt::memory_buffer &buff) const

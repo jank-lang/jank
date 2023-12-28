@@ -28,7 +28,7 @@ namespace jank::runtime
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
-    native_string to_string() const;
+    native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
     native_integer to_hash() const;
 
@@ -36,8 +36,8 @@ namespace jank::runtime
     object_ptr with_meta(object_ptr m) const;
 
     /* behavior::nameable */
-    native_string const& get_name() const;
-    native_string const& get_namespace() const;
+    native_persistent_string const& get_name() const;
+    native_persistent_string const& get_namespace() const;
 
     /* behavior::callable */
     object_ptr call(object_ptr) const;

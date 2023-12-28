@@ -15,9 +15,9 @@ namespace jank::runtime
   native_bool obj::nil::equal(object const &o) const
   { return &o == &base; }
 
-  native_string const& obj::nil::to_string() const
+  native_persistent_string const& obj::nil::to_string() const
   {
-    static native_string s{ "nil" };
+    static native_persistent_string s{ "nil" };
     return s;
   }
   void obj::nil::to_string(fmt::memory_buffer &buff) const

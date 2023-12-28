@@ -25,7 +25,7 @@ namespace jank::runtime
     /* behavior::objectable */
     native_bool equal(object const &) const;
     void to_string(fmt::memory_buffer &buff) const;
-    native_string to_string() const;
+    native_persistent_string to_string() const;
     native_integer to_hash() const;
 
     /* behavior::countable */

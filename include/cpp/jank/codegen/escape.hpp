@@ -5,7 +5,7 @@
  * https://github.com/fmtlib/fmt/issues/825#issuecomment-1227501168 */
 namespace jank::codegen
 {
-  template <typename S = native_string_view>
+  template <typename S = native_persistent_string_view>
   struct escape_view
   {
     template <typename It>
@@ -32,9 +32,9 @@ namespace jank::codegen
     typename S::value_type esc{ '\\' };
   };
 
-  constexpr escape_view<native_string_view> escaped
-  (native_string_view const &sv, char const q = '"', char const e = '\\')
-  { return escape_view<native_string_view>{ sv, q, e }; }
+  constexpr escape_view<native_persistent_string_view> escaped
+  (native_persistent_string_view const &sv, char const q = '"', char const e = '\\')
+  { return escape_view<native_persistent_string_view>{ sv, q, e }; }
 }
 
 template <typename S>

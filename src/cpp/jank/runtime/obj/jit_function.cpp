@@ -5,7 +5,7 @@ namespace jank::runtime
   native_bool obj::jit_function::equal(object const &rhs) const
   { return &base == &rhs; }
 
-  native_string obj::jit_function::to_string()
+  native_persistent_string obj::jit_function::to_string()
   { return "jit function"; }
 
   void obj::jit_function::to_string(fmt::memory_buffer &buff)

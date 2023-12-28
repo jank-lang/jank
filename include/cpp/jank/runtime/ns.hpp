@@ -24,16 +24,16 @@ namespace jank::runtime
     var_ptr intern_var(obj::symbol_ptr const &);
     option<var_ptr> find_var(obj::symbol_ptr const &);
 
-    result<void, native_string> add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns);
+    result<void, native_persistent_string> add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns);
     option<ns_ptr> find_alias(obj::symbol_ptr const &sym) const;
 
-    result<void, native_string> refer(obj::symbol_ptr const sym, var_ptr const var);
+    result<void, native_persistent_string> refer(obj::symbol_ptr const sym, var_ptr const var);
 
     obj::persistent_hash_map_ptr get_mappings() const;
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
-    native_string to_string() const;
+    native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
     native_integer to_hash() const;
 

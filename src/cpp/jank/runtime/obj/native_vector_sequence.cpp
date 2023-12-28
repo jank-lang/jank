@@ -19,11 +19,11 @@ namespace jank::runtime
   void obj::native_vector_sequence::to_string(fmt::memory_buffer &buff) const
   { return behavior::detail::to_string(data.begin(), data.end(), "(", ')', buff); }
 
-  native_string obj::native_vector_sequence::to_string() const
+  native_persistent_string obj::native_vector_sequence::to_string() const
   {
     fmt::memory_buffer buff;
     behavior::detail::to_string(data.begin(), data.end(), "(", ')', buff);
-    return native_string{ buff.data(), buff.size() };
+    return native_persistent_string{ buff.data(), buff.size() };
   }
 
   native_integer obj::native_vector_sequence::to_hash()

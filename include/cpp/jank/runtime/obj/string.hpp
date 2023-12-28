@@ -13,17 +13,17 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(native_string const &d);
-    static_object(native_string &&d);
+    static_object(native_persistent_string const &d);
+    static_object(native_persistent_string &&d);
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
-    native_string const& to_string() const;
+    native_persistent_string const& to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
     native_integer to_hash() const;
 
-    result<native_box<static_object>, native_string> substring(native_integer start) const;
-    result<native_box<static_object>, native_string> substring(native_integer start, native_integer end) const;
+    result<native_box<static_object>, native_persistent_string> substring(native_integer start) const;
+    result<native_box<static_object>, native_persistent_string> substring(native_integer start, native_integer end) const;
 
     /* Returns -1 when not found. Turns the arg into a string, so it accepts anything.
      * Searches for the whole string, not just a char. */
@@ -34,7 +34,7 @@ namespace jank::runtime
     size_t count() const;
 
     object base{ object_type::string };
-    native_string data;
+    native_persistent_string data;
   };
 
   namespace obj

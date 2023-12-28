@@ -20,17 +20,17 @@ namespace jank::runtime
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
     static_object(object &&base);
-    static_object(native_string const &d);
-    static_object(native_string &&d);
-    static_object(native_string const &ns, native_string const &n);
-    static_object(native_string &&ns, native_string &&n);
+    static_object(native_persistent_string const &d);
+    static_object(native_persistent_string &&d);
+    static_object(native_persistent_string const &ns, native_persistent_string const &n);
+    static_object(native_persistent_string &&ns, native_persistent_string &&n);
 
     static_object& operator=(static_object const&) = default;
     static_object& operator=(static_object &&) = default;
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
-    native_string to_string() const;
+    native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
     native_integer to_hash() const;
 
@@ -41,15 +41,15 @@ namespace jank::runtime
     object_ptr with_meta(object_ptr m) const;
 
     /* behavior::nameable */
-    native_string const& get_name() const;
-    native_string const& get_namespace() const;
+    native_persistent_string const& get_name() const;
+    native_persistent_string const& get_namespace() const;
 
     bool operator ==(static_object const &rhs) const;
     bool operator <(static_object const &rhs) const;
 
     object base{ object_type::symbol };
-    native_string ns;
-    native_string name;
+    native_persistent_string ns;
+    native_persistent_string name;
     option<object_ptr> meta;
   };
 

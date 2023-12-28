@@ -138,7 +138,7 @@ namespace jank::runtime
     }
   }
 
-  option<var_ptr> context::find_var(native_string const &ns, native_string const &name)
+  option<var_ptr> context::find_var(native_persistent_string const &ns, native_persistent_string const &name)
   { return find_var(make_box<obj::symbol>(ns, name)); }
 
   option<object_ptr> context::find_local(obj::symbol_ptr const &)
@@ -152,7 +152,7 @@ namespace jank::runtime
     eval_file(src_path.string());
   }
 
-  object_ptr context::eval_file(native_string_view const &path)
+  object_ptr context::eval_file(native_persistent_string_view const &path)
   {
     auto const file(util::map_file(path));
     if(file.is_err())
@@ -160,7 +160,7 @@ namespace jank::runtime
     return eval_string({ file.expect_ok().head, file.expect_ok().size });
   }
 
-  object_ptr context::eval_string(native_string_view const &code)
+  object_ptr context::eval_string(native_persistent_string_view const &code)
   {
     profile::timer timer{ "rt eval_string" };
     read::lex::processor l_prc{ code };
@@ -201,7 +201,7 @@ namespace jank::runtime
     return ret;
   }
 
-  native_vector<analyze::expression_ptr> context::analyze_string(native_string_view const &code, native_bool const eval)
+  native_vector<analyze::expression_ptr> context::analyze_string(native_persistent_string_view const &code, native_bool const eval)
   {
     profile::timer timer{ "rt analyze_string" };
     read::lex::processor l_prc{ code };
@@ -219,11 +219,11 @@ namespace jank::runtime
     return ret;
   }
 
-  result<void, native_string> context::load_module(native_string_view const &module)
+  result<void, native_persistent_string> context::load_module(native_persistent_string_view const &module)
   {
     auto const ns(current_ns());
 
-    native_string absolute_module;
+    native_persistent_string absolute_module;
     if(module.starts_with('/'))
     { absolute_module = module.substr(1); }
     else
@@ -238,8 +238,8 @@ namespace jank::runtime
 
     try
     {
-      result<void, native_string> res{ ok() };
-      if(absolute_module.find('$') == native_string::npos)
+      result<void, native_persistent_string> res{ ok() };
+      if(absolute_module.find('$') == native_persistent_string::npos)
       { res = module_loader.load_ns(absolute_module); }
       else
       { res = module_loader.load(absolute_module); }
@@ -251,7 +251,7 @@ namespace jank::runtime
     { return err(detail::to_string(e)); }
   }
 
-  result<void, native_string> context::compile_module(native_string_view const &module)
+  result<void, native_persistent_string> context::compile_module(native_persistent_string_view const &module)
   {
     module_dependencies.clear();
 
@@ -268,7 +268,7 @@ namespace jank::runtime
     return res;
   }
 
-  void context::write_module(native_string_view const &module, native_string_view const &contents) const
+  void context::write_module(native_persistent_string_view const &module, native_persistent_string_view const &contents) const
   {
     profile::timer timer{ "write_module" };
     boost::filesystem::path const dir{ output_dir };
@@ -284,16 +284,16 @@ namespace jank::runtime
     }
   }
 
-  native_string context::unique_string()
+  native_persistent_string context::unique_string()
   { return unique_string("G_"); }
-  native_string context::unique_string(native_string_view const &prefix)
+  native_persistent_string context::unique_string(native_persistent_string_view const &prefix)
   {
     static std::atomic_size_t index{ 1 };
     return fmt::format(FMT_COMPILE("{}_{}"), prefix.data(), index++);
   }
   obj::symbol context::unique_symbol()
   { return unique_symbol("G_"); }
-  obj::symbol context::unique_symbol(native_string_view const &prefix)
+  obj::symbol context::unique_symbol(native_persistent_string_view const &prefix)
   { return { "", unique_string(prefix) }; }
 
   void context::dump() const
@@ -362,11 +362,11 @@ namespace jank::runtime
   ns_ptr context::current_ns()
   { return expect_object<ns>(find_var("clojure.core", "*ns*").unwrap()->get_root()); }
 
-  result<var_ptr, native_string> context::intern_var
-  (native_string const &ns, native_string const &name)
+  result<var_ptr, native_persistent_string> context::intern_var
+  (native_persistent_string const &ns, native_persistent_string const &name)
   { return intern_var(make_box<obj::symbol>(ns, name)); }
 
-  result<var_ptr, native_string> context::intern_var(obj::symbol_ptr const &qualified_sym)
+  result<var_ptr, native_persistent_string> context::intern_var(obj::symbol_ptr const &qualified_sym)
   {
     profile::timer timer{ "intern_var" };
     if(qualified_sym->ns.empty())
@@ -381,11 +381,11 @@ namespace jank::runtime
   }
 
   /* TODO: Swap these. The other one makes a symbol anyway. */
-  result<obj::keyword_ptr, native_string> context::intern_keyword(obj::symbol const &sym, bool const resolved)
+  result<obj::keyword_ptr, native_persistent_string> context::intern_keyword(obj::symbol const &sym, bool const resolved)
   { return intern_keyword(sym.ns, sym.name, resolved); }
 
-  result<obj::keyword_ptr, native_string> context::intern_keyword
-  (native_string_view const &ns, native_string_view const &name, bool const resolved)
+  result<obj::keyword_ptr, native_persistent_string> context::intern_keyword
+  (native_persistent_string_view const &ns, native_persistent_string_view const &name, bool const resolved)
   {
     profile::timer timer{ "rt intern_keyword" };
     obj::symbol sym{ ns, name };

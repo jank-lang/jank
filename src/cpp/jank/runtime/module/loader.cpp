@@ -11,7 +11,7 @@
 namespace jank::runtime::module
 {
   /* This turns `foo_bar/spam/meow.cljc` into `foo-bar.spam.meow`. */
-  native_string path_to_module(boost::filesystem::path const &path)
+  native_persistent_string path_to_module(boost::filesystem::path const &path)
   {
     //static std::regex const underscore{ "_" };
     static std::regex const slash{ "/" };
@@ -24,7 +24,7 @@ namespace jank::runtime::module
     return ret;
   }
 
-  native_string module_to_path(native_string_view const &module)
+  native_persistent_string module_to_path(native_persistent_string_view const &module)
   {
     static std::regex const dash{ "-" };
     static std::regex const dot{ "\\." };
@@ -36,7 +36,7 @@ namespace jank::runtime::module
     return ret;
   }
 
-  native_string module_to_native_ns(native_string_view const &module)
+  native_persistent_string module_to_native_ns(native_persistent_string_view const &module)
   {
     static std::regex const dash{ "-" };
     static std::regex const dot{ "\\." };
@@ -52,14 +52,14 @@ namespace jank::runtime::module
     return ret;
   }
 
-  native_string nest_module(native_string const &module, native_string const &sub)
+  native_persistent_string nest_module(native_persistent_string const &module, native_persistent_string const &sub)
   {
     assert(!module.empty());
     assert(!sub.empty());
     return module + "$" + sub;
   }
 
-  native_string nest_native_ns(native_string const &native_ns, native_string const &end)
+  native_persistent_string nest_native_ns(native_persistent_string const &native_ns, native_persistent_string const &end)
   {
     assert(!native_ns.empty());
     assert(!end.empty());
@@ -67,7 +67,7 @@ namespace jank::runtime::module
   }
 
   /* If it has two or more occurences of $, it's nested. */
-  native_bool is_nested_module(native_string const &module)
+  native_bool is_nested_module(native_persistent_string const &module)
   { return module.find('$') != module.rfind('$'); }
 
   template <typename F>
@@ -85,7 +85,7 @@ namespace jank::runtime::module
 
   void register_entry
   (
-    native_unordered_map<native_string, loader::entry> &entries,
+    native_unordered_map<native_persistent_string, loader::entry> &entries,
     boost::filesystem::path const &resource_path,
     file_entry const &entry
   )
@@ -142,7 +142,7 @@ namespace jank::runtime::module
     }
   }
 
-  void register_directory(native_unordered_map<native_string, loader::entry> &entries, boost::filesystem::path const &path)
+  void register_directory(native_unordered_map<native_persistent_string, loader::entry> &entries, boost::filesystem::path const &path)
   {
     for(auto const &f : boost::filesystem::recursive_directory_iterator{ path })
     {
@@ -151,7 +151,7 @@ namespace jank::runtime::module
     }
   }
 
-  void register_jar(native_unordered_map<native_string, loader::entry> &entries, native_string_view const &path)
+  void register_jar(native_unordered_map<native_persistent_string, loader::entry> &entries, native_persistent_string_view const &path)
   {
     libzippp::ZipArchive zf{ std::string{ path } };
     auto success(zf.open(libzippp::ZipArchive::ReadOnly));
@@ -170,7 +170,7 @@ namespace jank::runtime::module
     }
   }
 
-  void register_path(native_unordered_map<native_string, loader::entry> &entries, native_string_view const &path)
+  void register_path(native_unordered_map<native_persistent_string, loader::entry> &entries, native_persistent_string_view const &path)
   {
     /* It's entirely possible to have empty entries in the classpath, mainly due to lazy string
      * concatenation. We just ignore them. This means something like "::::" is valid. */
@@ -188,11 +188,11 @@ namespace jank::runtime::module
     { register_entry(entries, "", { none, p.string() }); }
   }
 
-  loader::loader(context &rt_ctx, native_string_view const &ps)
+  loader::loader(context &rt_ctx, native_persistent_string_view const &ps)
     : rt_ctx{ rt_ctx }
   {
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
-    native_string_transient paths{ ps };
+    native_transient_string paths{ ps };
     paths += fmt::format(":{}", (jank_path / "../src/jank").string());
     paths += fmt::format(":{}", rt_ctx.output_dir);
     this->paths = paths;
@@ -201,11 +201,11 @@ namespace jank::runtime::module
     size_t i{ paths.find(module_separator, start) };
 
     /* Looks like it's either an empty path list or there's only entry. */
-    if(i == native_string_view::npos)
+    if(i == native_persistent_string_view::npos)
     { register_path(entries, paths); }
     else
     {
-      while(i != native_string_view::npos)
+      while(i != native_persistent_string_view::npos)
       {
         register_path(entries, paths.substr(start, i - start));
 
@@ -227,13 +227,13 @@ namespace jank::runtime::module
     );
   }
 
-  native_bool loader::is_loaded(native_string_view const &module) const
+  native_bool loader::is_loaded(native_persistent_string_view const &module) const
   { return loaded.contains(module); }
 
-  void loader::set_loaded(native_string_view const &module)
+  void loader::set_loaded(native_persistent_string_view const &module)
   { loaded.emplace(module); }
 
-  result<void, native_string> loader::load_ns(native_string_view const &module)
+  result<void, native_persistent_string> loader::load_ns(native_persistent_string_view const &module)
   {
     profile::timer timer{ "load_ns" };
     bool const compiling{ rt_ctx.compiling };
@@ -277,13 +277,13 @@ namespace jank::runtime::module
     return ok();
   }
 
-  result<void, native_string> loader::load(native_string_view const &module)
+  result<void, native_persistent_string> loader::load(native_persistent_string_view const &module)
   {
     auto const &entry(entries.find(module));
     if(entry == entries.end())
     { return err(fmt::format("unable to find module: {}", module)); }
 
-    result<void, native_string> res
+    result<void, native_persistent_string> res
     { err(fmt::format("no sources for registered module: {}", module)) };
 
     bool const compiling{ rt_ctx.compiling };
@@ -314,10 +314,10 @@ namespace jank::runtime::module
     return ok();
   }
 
-  result<void, native_string> loader::load_pcm(file_entry const &) const
+  result<void, native_persistent_string> loader::load_pcm(file_entry const &) const
   { return err("Not yet implemented: PCM loading"); }
 
-  result<void, native_string> loader::load_cpp(file_entry const &entry) const
+  result<void, native_persistent_string> loader::load_cpp(file_entry const &entry) const
   {
     if(entry.archive_path.is_some())
     {
@@ -339,7 +339,7 @@ namespace jank::runtime::module
     return ok();
   }
 
-  result<void, native_string> loader::load_jank(file_entry const &entry) const
+  result<void, native_persistent_string> loader::load_jank(file_entry const &entry) const
   {
     if(entry.archive_path.is_some())
     {
@@ -356,7 +356,7 @@ namespace jank::runtime::module
     return ok();
   }
 
-  result<void, native_string> loader::load_cljc(file_entry const &) const
+  result<void, native_persistent_string> loader::load_cljc(file_entry const &) const
   { return err("Not yet implemented: CLJC loading"); }
 
   object_ptr loader::to_runtime_data() const

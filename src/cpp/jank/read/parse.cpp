@@ -72,7 +72,7 @@ namespace jank::read::parse
         case lex::token_kind::close_paren:
         case lex::token_kind::close_curly_bracket:
           if(expected_closer != token.kind)
-          { return err(error{ token.pos, native_string{ "unexpected closing character" } }); }
+          { return err(error{ token.pos, native_persistent_string{ "unexpected closing character" } }); }
           ++token_current;
           expected_closer = none;
           return ok(nullptr);
@@ -96,7 +96,7 @@ namespace jank::read::parse
           return ok(nullptr);
         default:
         {
-          native_string msg{ fmt::format("unexpected token kind: {}", magic_enum::enum_name(token.kind)) };
+          native_persistent_string msg{ fmt::format("unexpected token kind: {}", magic_enum::enum_name(token.kind)) };
           return err(error{ token.pos, std::move(msg) });
         }
       }
@@ -187,7 +187,7 @@ namespace jank::read::parse
     if(val_result.is_err())
     { return val_result; }
     else if(val_result.expect_ok() == nullptr)
-    { return err(error{ start_token.pos, native_string{ "invalid value after quote" } }); }
+    { return err(error{ start_token.pos, native_persistent_string{ "invalid value after quote" } }); }
 
     return runtime::erase
     (
@@ -217,10 +217,10 @@ namespace jank::read::parse
   {
     auto const token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(boost::get<native_string_view>(token.data));
+    auto const sv(boost::get<native_persistent_string_view>(token.data));
     auto const slash(sv.find('/'));
-    native_string ns, name;
-    if(slash != native_string::npos)
+    native_persistent_string ns, name;
+    if(slash != native_persistent_string::npos)
     {
       /* If it's only a slash, it's a name. Otherwise, it's a ns/name separator. */
       if(sv.size() == 1)
@@ -251,14 +251,14 @@ namespace jank::read::parse
   {
     auto const token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(boost::get<native_string_view>(token.data));
+    auto const sv(boost::get<native_persistent_string_view>(token.data));
     /* A :: keyword either resolves to the current ns or an alias, depending on
      * whether or not it's qualified. */
     bool const resolved{ sv[0] != ':' };
 
     auto const slash(sv.find('/'));
-    native_string ns, name;
-    if(slash != native_string::npos)
+    native_persistent_string ns, name;
+    if(slash != native_persistent_string::npos)
     {
       if(resolved)
       { ns = sv.substr(0, slash); }
@@ -293,8 +293,8 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    auto const sv(boost::get<native_string_view>(token.data));
-    return ok(make_box<runtime::obj::string>(native_string{ sv.data(), sv.size() }));
+    auto const sv(boost::get<native_persistent_string_view>(token.data));
+    return ok(make_box<runtime::obj::string>(native_persistent_string{ sv.data(), sv.size() }));
   }
 
   processor::iterator processor::begin()

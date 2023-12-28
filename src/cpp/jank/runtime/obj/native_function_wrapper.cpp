@@ -18,9 +18,9 @@ namespace jank::runtime
   void obj::native_function_wrapper::to_string(fmt::memory_buffer &buff) const
   { fmt::format_to(std::back_inserter(buff), "function"); }
 
-  native_string const& obj::native_function_wrapper::to_string() const
+  native_persistent_string const& obj::native_function_wrapper::to_string() const
   {
-    static native_string const s{ "native_function_wrapper" };
+    static native_persistent_string const s{ "native_function_wrapper" };
     return s;
   }
 
