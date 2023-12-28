@@ -344,14 +344,14 @@ namespace jank
     /*** Hashing. ***/
     constexpr native_integer to_hash() const noexcept
     {
-      if(hash != 0)
-      { return hash; }
+      if(store.hash != 0)
+      { return store.hash; }
 
       /* https://github.com/openjdk/jdk/blob/7e30130e354ebfed14617effd2a517ab2f4140a5/src/java.base/share/classes/java/lang/StringLatin1.java#L194 */
       auto const ptr(data());
       for(size_t i{}; i != size(); ++i)
-      { hash = 31 * hash + (ptr[i] & 0xff); }
-      return hash;
+      { store.hash = 31 * store.hash + (ptr[i] & 0xff); }
+      return store.hash;
     }
 
   private:
@@ -421,6 +421,7 @@ namespace jank
         value_type small[sizeof(Large) / sizeof(value_type)];
         Large large;
       };
+      mutable native_integer hash{};
     };
 
     constexpr void destroy()
@@ -525,7 +526,6 @@ namespace jank
     }
 
     storage store;
-    mutable native_integer hash{};
   };
 
   constexpr native_bool operator <(native_persistent_string const &lhs, native_persistent_string const &rhs) noexcept
