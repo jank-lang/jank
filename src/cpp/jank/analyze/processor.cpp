@@ -144,18 +144,19 @@ namespace jank::analyze
     auto found_local(current_frame->find_local_or_capture(sym));
     if(found_local.is_some())
     {
-      local_frame::register_captures(found_local.unwrap());
+      auto &unwrapped_local(found_local.unwrap());
+      local_frame::register_captures(unwrapped_local);
 
       /* Since we're referring to a local, we're boxed if it is boxed. */
-      needs_box |= found_local.unwrap().binding.needs_box;
+      needs_box |= unwrapped_local.binding.needs_box;
 
       /* Captured locals are always boxed, even if the originating local is not. */
-      if(!found_local.unwrap().crossed_fns.empty())
+      if(!unwrapped_local.crossed_fns.empty())
       {
         needs_box = true;
 
         /* Capturing counts as a boxed usage for the originating local. */
-        found_local.unwrap().binding.has_boxed_usage = true;
+        unwrapped_local.binding.has_boxed_usage = true;
 
         /* The first time we reference a captured local from within a function, we get here.
          * We determine that we had to cross one or more function scopes to find the relevant
@@ -168,9 +169,9 @@ namespace jank::analyze
       }
 
       if(needs_box)
-      { found_local.unwrap().binding.has_boxed_usage = true; }
+      { unwrapped_local.binding.has_boxed_usage = true; }
       else
-      { found_local.unwrap().binding.has_unboxed_usage = true; }
+      { unwrapped_local.binding.has_unboxed_usage = true; }
 
       return make_box<expression>
       (
@@ -178,7 +179,7 @@ namespace jank::analyze
         {
           expression_base{ {}, expr_type, current_frame, needs_box },
           sym,
-          found_local.unwrap().binding
+          unwrapped_local.binding
         }
       );
     }
