@@ -344,6 +344,7 @@ namespace jank
     /*** Hashing. ***/
     constexpr native_integer to_hash() const noexcept
     {
+      /* TODO: Benchmark folly's hashing algorithm vs this. */
       if(store.hash != 0)
       { return store.hash; }
 
@@ -368,6 +369,7 @@ namespace jank
     {
       pointer_type data;
       size_type size;
+      /* TODO: This is only used in SSO. Use only a single byte. In a union? */
       size_type capacity;
 
       constexpr size_type get_capacity() const noexcept
@@ -421,6 +423,7 @@ namespace jank
         value_type small[sizeof(Large) / sizeof(value_type)];
         Large large;
       };
+      /* TODO: Benchmark benefit of storing this hash vs calculating it each time. */
       mutable native_integer hash{};
     };
 
@@ -496,7 +499,7 @@ namespace jank
       assert(max_small_size < size);
       store.large.data = const_cast<pointer_type>(data);
       store.large.size = size;
-      store.large.set_capacity(size / sizeof(value_type) - 1, category::large_shared);
+      store.large.set_capacity(size, category::large_shared);
     }
 
     constexpr void init_large_owned(const_pointer_type const data, size_type const size) noexcept
@@ -506,7 +509,7 @@ namespace jank
       traits_type::copy(store.large.data, data, size);
       store.large.data[size] = 0;
       store.large.size = size;
-      store.large.set_capacity(size / sizeof(value_type) - 1, category::large_owned);
+      store.large.set_capacity(size, category::large_owned);
     }
 
     constexpr void init_large_owned
@@ -522,7 +525,7 @@ namespace jank
       traits_type::copy(store.large.data + lhs_size, rhs, rhs_size);
       store.large.data[size] = 0;
       store.large.size = size;
-      store.large.set_capacity(size / sizeof(value_type) - 1, category::large_owned);
+      store.large.set_capacity(size, category::large_owned);
     }
 
     storage store;
