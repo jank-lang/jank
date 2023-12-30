@@ -48,10 +48,12 @@ namespace jank
       { init_large_owned(new_data, N); }
     }
 
+    [[gnu::nonnull (2)]]
     constexpr native_persistent_string(const_pointer_type const s) noexcept
       : native_persistent_string{ s, traits_type::length(s) }
     { }
 
+    [[gnu::nonnull (2)]]
     constexpr native_persistent_string(const_pointer_type const s, size_type const size) noexcept
     {
       if(size <= max_small_size)
@@ -60,6 +62,7 @@ namespace jank
       { init_large_owned(s, size); }
     }
 
+    [[gnu::nonnull (2, 4)]]
     constexpr native_persistent_string
     (
       const_pointer_type const lhs, size_type const lhs_size,
@@ -103,16 +106,18 @@ namespace jank
     { destroy(); }
 
     /*** Data accessors. ***/
+    [[gnu::always_inline, gnu::flatten, gnu::hot, gnu::const]]
     constexpr native_bool empty() const noexcept
     { return size() == 0; }
 
-    [[gnu::always_inline, gnu::flatten, gnu::hot]]
+    [[gnu::always_inline, gnu::flatten, gnu::hot, gnu::const]]
     constexpr size_type size() const noexcept
     { return (get_category() == category::small) ? get_small_size() : store.large.size; }
 
-    [[gnu::always_inline, gnu::flatten, gnu::hot]]
+    [[gnu::always_inline, gnu::flatten, gnu::hot, gnu::returns_nonnull, gnu::const]]
     constexpr const_pointer_type data() const noexcept
     { return (get_category() == category::small) ? store.small : store.large.data; }
+    [[gnu::returns_nonnull]]
     constexpr const_pointer_type c_str() const noexcept
     {
       switch(get_category())
@@ -126,17 +131,20 @@ namespace jank
         case category::large_shared:
         {
           /* Shared strings are always large. */
-          const_cast<native_persistent_string*>(this)->init_large_owned(store.large.data, size());
+          const_cast<native_persistent_string*>(this)->init_large_owned(store.large.data, store.large.size);
           return store.large.data;
         }
       }
     }
 
     /*** Searches. ***/
+    [[gnu::const]]
     constexpr size_type find(native_persistent_string const &pattern, size_type const pos = 0) const noexcept
     { return find(pattern.data(), pos, pattern.size()); }
+    [[gnu::const, gnu::nonnull (2)]]
     constexpr size_type find(const_pointer_type const pattern, size_type const pos = 0) const noexcept
     { return find(pattern, pos, traits_type::length(pattern)); }
+    [[gnu::const, gnu::nonnull (2)]]
     constexpr size_type find
     (
       const_pointer_type const pattern,
@@ -172,6 +180,7 @@ namespace jank
       return npos;
     }
 
+    [[gnu::const]]
     constexpr size_type find(value_type c, size_type pos = 0) const noexcept
     {
       size_type ret{ npos };
@@ -188,10 +197,13 @@ namespace jank
       return ret;
     }
 
+    [[gnu::const]]
     constexpr size_type rfind(native_persistent_string const &s, size_type const pos = npos) const noexcept
     { return rfind(s.data(), pos, s.size()); }
+    [[gnu::const, gnu::nonnull (2)]]
     constexpr size_type rfind(const_pointer_type const s, size_type const pos = npos) const noexcept
     { return rfind(s, pos, traits_type::length(s)); }
+    [[gnu::const, gnu::nonnull (2)]]
     constexpr size_type rfind(const_pointer_type const s, size_type pos, size_type const n) const noexcept
     {
       auto const length(size());
@@ -214,6 +226,7 @@ namespace jank
       return npos;
     }
 
+    [[gnu::const]]
     constexpr size_t rfind(value_type const c, size_type const pos = npos) const noexcept
     {
       auto length(size());
@@ -280,22 +293,27 @@ namespace jank
     }
 
     /*** Comparisons. ***/
+    [[gnu::const]]
     constexpr native_bool operator !=(native_persistent_string const &s) const noexcept
     {
       auto const length(size());
       return length != s.size() || traits_type::compare(data(), s.data(), length);
     }
+    [[gnu::const]]
     constexpr native_bool operator ==(native_persistent_string const &s) const noexcept
     { return !(*this != s); }
 
+    [[gnu::const, gnu::nonnull (2)]]
     constexpr native_bool operator !=(const_pointer_type const s) const noexcept
     {
       auto const length(traits_type::length(s));
       return size() != length || traits_type::compare(data(), s, length);
     }
+    [[gnu::const, gnu::nonnull (2)]]
     constexpr native_bool operator ==(const_pointer_type const s) const noexcept
     { return !(*this != s); }
 
+    [[gnu::const]]
     constexpr int compare(native_persistent_string const &s) const
     {
       auto const length(size());
@@ -308,27 +326,35 @@ namespace jank
     }
 
     /*** Iterators. ***/
+    [[gnu::const]]
     constexpr const_iterator begin() const noexcept
     { return data(); }
 
+    [[gnu::const]]
     constexpr const_iterator cbegin() const noexcept
     { return begin(); }
 
+    [[gnu::const]]
     constexpr const_iterator end() const noexcept
     { return data() + size(); }
 
+    [[gnu::const]]
     constexpr const_iterator cend() const
     { return end(); }
 
+    [[gnu::const]]
     constexpr const_reverse_iterator rbegin() const noexcept
     { return const_reverse_iterator(end()); }
 
+    [[gnu::const]]
     constexpr const_reverse_iterator crbegin() const noexcept
     { return rbegin(); }
 
+    [[gnu::const]]
     constexpr const_reverse_iterator rend() const noexcept
     { return const_reverse_iterator(begin()); }
 
+    [[gnu::const]]
     constexpr const_reverse_iterator crend() const noexcept
     { return rend(); }
 
@@ -383,6 +409,7 @@ namespace jank
      */
     struct storage : allocator_type
     {
+      /* TODO: What if we store a max of 22 chars and dedicate a byte for flags with no masking? */
       union
       {
         uint8_t bytes[sizeof(large_storage)];
@@ -397,12 +424,14 @@ namespace jank
     {
       /* NOTE: No performance difference between if/switch here. */
       if(get_category() == category::large_owned)
-      { allocator_traits::deallocate(store, store.large.data, size() + 1); }
+      { allocator_traits::deallocate(store, store.large.data, store.large.size + 1); }
     }
 
+    [[gnu::always_inline, gnu::flatten, gnu::hot, gnu::const]]
     constexpr category get_category() const noexcept
     { return static_cast<category>(store.bytes[last_char_index] & category_extraction_mask); }
 
+    [[gnu::always_inline, gnu::flatten, gnu::hot, gnu::const]]
     constexpr size_type get_small_size() const noexcept
     {
       assert(get_category() == category::small);
@@ -411,6 +440,7 @@ namespace jank
       return max_small_size - small_shifted;
     }
 
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
     constexpr void set_small_size(size_type const s) noexcept
     {
       assert(s <= max_small_size);
@@ -420,14 +450,14 @@ namespace jank
     }
 
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
-    constexpr void init_small(const_pointer_type const data, size_type const size) noexcept
+    constexpr void init_small(const_pointer_type const data, uint8_t const size) noexcept
     {
       /* If `data` is word-aligned, we can do three quick word copies. */
       if((std::bit_cast<size_type>(data) & (sizeof(size_type) - 1)) == 0)
       {
         auto const aligned_data(std::assume_aligned<sizeof(size_type)>(data));
-        size_type const byte_size{ size * sizeof(value_type) };
-        constexpr size_type word_width{ sizeof(size_type) };
+        uint8_t const byte_size(size * sizeof(value_type));
+        constexpr uint8_t word_width{ sizeof(size_type) };
         /* NOTE: We're writing in reverse order here, but it uses one less instruction and
          * is marginally faster than duplicating the code each each case to write in order. */
         switch((byte_size + word_width - 1) / word_width)
@@ -451,8 +481,8 @@ namespace jank
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
     constexpr void init_small
     (
-      const_pointer_type const lhs, size_type const lhs_size,
-      const_pointer_type const rhs, size_type const rhs_size
+      const_pointer_type const lhs, uint8_t const lhs_size,
+      const_pointer_type const rhs, uint8_t const rhs_size
     ) noexcept
     {
       assert(lhs_size + rhs_size <= max_small_size);
@@ -475,6 +505,7 @@ namespace jank
     constexpr void init_large_owned(const_pointer_type const data, size_type const size) noexcept
     {
       assert(max_small_size < size);
+      /* TODO: Apply gnu::malloc to this fn. */
       store.large.data = std::assume_aligned<sizeof(pointer_type)>(store.allocate(size + 1));
       traits_type::copy(store.large.data, data, size);
       store.large.data[size] = 0;
@@ -502,6 +533,7 @@ namespace jank
     storage store;
   };
 
+  [[gnu::const]]
   constexpr native_bool operator <
   (native_persistent_string const &lhs, native_persistent_string const &rhs) noexcept
   { return lhs.compare(rhs) < 0; }
@@ -532,7 +564,7 @@ struct fmt::formatter<jank::native_persistent_string> : private formatter<fmt::s
   using formatter<fmt::string_view>::parse;
 
   template <typename Context>
-  typename Context::iterator format(jank::native_persistent_string const &s, Context &ctx) const
+  auto format(jank::native_persistent_string const &s, Context &ctx) const
   { return formatter<fmt::string_view>::format({ s.data(), s.size() }, ctx); }
 };
 
@@ -548,8 +580,8 @@ namespace std
   template <>
   struct formatter<jank::native_persistent_string> : formatter<std::string_view>
   {
-    template<class FormatContext>
-    auto format(jank::native_persistent_string const &s, FormatContext &ctx) const
+    template <typename Context>
+    auto format(jank::native_persistent_string const &s, Context &ctx) const
     { return formatter<std::string_view>::format({ s.data(), s.size() }, ctx); }
   };
 }
