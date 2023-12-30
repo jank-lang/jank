@@ -91,7 +91,7 @@ namespace jank::runtime
   void obj::range::to_string(fmt::memory_buffer &buff)
   { runtime::detail::to_string(seq(), buff); }
 
-  native_string obj::range::to_string()
+  native_persistent_string obj::range::to_string()
   { return runtime::detail::to_string(seq()); }
 
   native_integer obj::range::to_hash() const

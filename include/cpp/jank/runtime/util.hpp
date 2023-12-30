@@ -31,6 +31,6 @@ namespace jank::runtime
     inline auto truthy(native_box<T> const &d)
     { return truthy(d.data); }
   }
-  native_string munge(native_string const &o);
+  native_persistent_string munge(native_persistent_string const &o);
   object_ptr munge(object_ptr o);
 }

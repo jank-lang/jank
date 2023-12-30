@@ -23,7 +23,7 @@ namespace jank::runtime
       buff
     );
   }
-  native_string obj::persistent_vector_sequence::to_string() const
+  native_persistent_string obj::persistent_vector_sequence::to_string() const
   {
     fmt::memory_buffer buff;
     behavior::detail::to_string

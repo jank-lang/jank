@@ -38,7 +38,7 @@ namespace jank::runtime::behavior
   namespace detail
   {
     template <typename It>
-    void to_string(It const &begin, It const &end, native_string_view const open, char const close, fmt::memory_buffer &buff)
+    void to_string(It const &begin, It const &end, native_persistent_string_view const open, char const close, fmt::memory_buffer &buff)
     {
       auto inserter(std::back_inserter(buff));
       for(auto const c : open)

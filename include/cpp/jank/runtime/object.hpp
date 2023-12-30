@@ -56,7 +56,7 @@ namespace jank::runtime
     concept objectable = requires(T * const t)
     {
       { t->equal(std::declval<object const&>()) } -> std::convertible_to<native_bool>;
-      { t->to_string() } -> std::convertible_to<native_string>;
+      { t->to_string() } -> std::convertible_to<native_persistent_string>;
       { t->to_string(std::declval<fmt::memory_buffer&>()) } -> std::same_as<void>;
       { t->to_hash() } -> std::convertible_to<native_integer>;
       { t->base } -> std::same_as<object&>;

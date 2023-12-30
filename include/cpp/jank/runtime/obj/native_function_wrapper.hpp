@@ -17,13 +17,16 @@ namespace jank::runtime
 
       function_type() = default;
       template <typename R, typename... Args>
-      function_type(R (* const f)(Args...)) : function_type(value_type<R (Args...)>{ f })
+      function_type(R (* const f)(Args...))
+        : function_type{ value_type<R (Args...)>{ f } }
       { }
       template <typename R, typename... Args>
-      function_type(value_type<R (Args...)> &&f) : value{ std::move(f) }
+      function_type(value_type<R (Args...)> &&f)
+        : value{ std::move(f) }
       { }
       template <typename R, typename... Args>
-      function_type(value_type<R (Args...)> const &f) : value{ f }
+      function_type(value_type<R (Args...)> const &f)
+        : value{ f }
       { }
 
       template <typename F>
@@ -52,7 +55,7 @@ namespace jank::runtime
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
-    native_string const& to_string() const;
+    native_persistent_string const& to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
     native_integer to_hash() const;
 

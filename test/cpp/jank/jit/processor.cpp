@@ -27,7 +27,7 @@ namespace jank::jit
   struct failure
   {
     boost::filesystem::path path;
-    native_string error;
+    native_persistent_string error;
   };
 
   TEST_CASE("Files")

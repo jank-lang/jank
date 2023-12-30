@@ -63,11 +63,11 @@ namespace jank::runtime::obj::detail
     }
     void to_string(fmt::memory_buffer &buff) const
     { to_string_impl(static_cast<parent_type const*>(this)->data.begin(), static_cast<parent_type const*>(this)->data.end(), buff); }
-    native_string to_string() const
+    native_persistent_string to_string() const
     {
       fmt::memory_buffer buff;
       to_string_impl(static_cast<parent_type const*>(this)->data.begin(), static_cast<parent_type const*>(this)->data.end(), buff);
-      return native_string{ buff.data(), buff.size() };
+      return native_persistent_string{ buff.data(), buff.size() };
     }
     /* TODO: Cache this. */
     native_integer to_hash() const

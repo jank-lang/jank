@@ -16,7 +16,7 @@ namespace jank::analyze::expr
   template <typename E>
   struct native_raw : expression_base
   {
-    using chunk_t = boost::variant<native_string, native_box<E>>;
+    using chunk_t = boost::variant<native_persistent_string, native_box<E>>;
 
     native_vector<chunk_t> chunks;
 
@@ -34,7 +34,7 @@ namespace jank::analyze::expr
             {
               using T = std::decay_t<decltype(d)>;
 
-              if constexpr(std::same_as<T, native_string>)
+              if constexpr(std::same_as<T, native_persistent_string>)
               { return make_box(d); }
               else
               { return d->to_runtime_data(); }

@@ -46,11 +46,11 @@ namespace jank::runtime
   void obj::list::to_string(fmt::memory_buffer &buff) const
   { return behavior::detail::to_string(data.begin(), data.end(), "(", ')', buff); }
 
-  native_string obj::list::to_string() const
+  native_persistent_string obj::list::to_string() const
   {
     fmt::memory_buffer buff;
     behavior::detail::to_string(data.begin(), data.end(), "(", ')', buff);
-    return native_string{ buff.data(), buff.size() };
+    return native_persistent_string{ buff.data(), buff.size() };
   }
   /* TODO: Cache this. */
   native_integer obj::list::to_hash() const

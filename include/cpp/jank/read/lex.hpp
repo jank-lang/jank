@@ -42,13 +42,13 @@ namespace jank::read::lex
     token(size_t const p, token_kind const k);
     token(size_t const p, token_kind const k, native_integer const);
     token(size_t const p, token_kind const k, native_real const);
-    token(size_t const p, token_kind const k, native_string_view const);
+    token(size_t const p, token_kind const k, native_persistent_string_view const);
     token(size_t const p, token_kind const k, bool const);
 
     token(size_t const p, size_t const s, token_kind const k);
     token(size_t const p, size_t const s, token_kind const k, native_integer const);
     token(size_t const p, size_t const s, token_kind const k, native_real const);
-    token(size_t const p, size_t const s, token_kind const k, native_string_view const);
+    token(size_t const p, size_t const s, token_kind const k, native_persistent_string_view const);
     token(size_t const p, size_t const s, token_kind const k, bool const);
 
     bool operator ==(token const &rhs) const;
@@ -71,7 +71,7 @@ namespace jank::read::lex
       no_data,
       native_integer,
       native_real,
-      native_string_view,
+      native_persistent_string_view,
       native_bool
     > data;
   };
@@ -83,16 +83,16 @@ namespace jank::read
 {
   struct error
   {
-    error(size_t const s, native_string const &m);
-    error(size_t const s, size_t const e, native_string const &m);
-    error(native_string const &m);
+    error(size_t const s, native_persistent_string const &m);
+    error(size_t const s, size_t const e, native_persistent_string const &m);
+    error(native_persistent_string const &m);
 
     bool operator ==(error const &rhs) const;
     bool operator !=(error const &rhs) const;
 
     size_t start{};
     size_t end{};
-    native_string message;
+    native_persistent_string message;
   };
   std::ostream& operator <<(std::ostream &os, error const &e);
 }
@@ -119,7 +119,7 @@ namespace jank::read::lex
       processor &p;
     };
 
-    processor(native_string_view const &f);
+    processor(native_persistent_string_view const &f);
 
     result<token, error> next();
     option<char> peek() const;
@@ -131,6 +131,6 @@ namespace jank::read::lex
     size_t pos{};
     /* Whether or not the previous token requires a space after it. */
     bool require_space{};
-    native_string_view file;
+    native_persistent_string_view file;
   };
 }

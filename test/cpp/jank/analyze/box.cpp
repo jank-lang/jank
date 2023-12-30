@@ -50,7 +50,7 @@ namespace jank::analyze
       CHECK(equal(runtime::get(c_binding, make_box("has_unboxed_usage")), make_box(false)));
     }
 
-    SUBCASE("Boxed usage")
+    SUBCASE("Boxed usage, directly")
     {
       auto const res(rt_ctx.analyze_string("(let* [a 1 b a] a)"));
       CHECK_EQ(res.size(), 1);
@@ -61,6 +61,24 @@ namespace jank::analyze
       CHECK(equal(runtime::get(a_binding, make_box("needs_box")), make_box(false)));
       CHECK(equal(runtime::get(a_binding, make_box("has_boxed_usage")), make_box(true)));
       CHECK(equal(runtime::get(a_binding, make_box("has_unboxed_usage")), make_box(true)));
+    }
+
+    SUBCASE("Boxed usage, indirectly")
+    {
+      auto const res(rt_ctx.analyze_string("(let* [a 1 b a] b)"));
+      CHECK_EQ(res.size(), 1);
+
+      auto const map(res[0]->to_runtime_data());
+      auto const a_binding(runtime::get_in(map, rt_ctx.eval_string(R"(["pairs" 0 0])")));
+      auto const b_binding(runtime::get_in(map, rt_ctx.eval_string(R"(["pairs" 0 1])")));
+
+      CHECK(equal(runtime::get(a_binding, make_box("needs_box")), make_box(false)));
+      CHECK(equal(runtime::get(a_binding, make_box("has_boxed_usage")), make_box(true)));
+      CHECK(equal(runtime::get(a_binding, make_box("has_unboxed_usage")), make_box(false)));
+
+      CHECK(equal(runtime::get(b_binding, make_box("needs_box")), make_box(false)));
+      CHECK(equal(runtime::get(b_binding, make_box("has_boxed_usage")), make_box(true)));
+      CHECK(equal(runtime::get(b_binding, make_box("has_unboxed_usage")), make_box(false)));
     }
 
     SUBCASE("Captured, no unboxed usage")
@@ -102,6 +120,24 @@ namespace jank::analyze
       CHECK(equal(runtime::get(captured_a_binding, make_box("needs_box")), make_box(true)));
       CHECK(equal(runtime::get(captured_a_binding, make_box("has_boxed_usage")), make_box(true)));
       CHECK(equal(runtime::get(captured_a_binding, make_box("has_unboxed_usage")), make_box(false)));
+    }
+
+    SUBCASE("Captured, box usage indirectly")
+    {
+      auto const res(rt_ctx.analyze_string("(let* [a 1 b a] (fn* [] b))"));
+      CHECK_EQ(res.size(), 1);
+
+      auto const map(res[0]->to_runtime_data());
+      auto const a_binding(runtime::get_in(map, rt_ctx.eval_string(R"(["pairs" 0 0])")));
+      auto const b_binding(runtime::get_in(map, rt_ctx.eval_string(R"(["pairs" 0 1])")));
+
+      CHECK(equal(runtime::get(a_binding, make_box("needs_box")), make_box(false)));
+      CHECK(equal(runtime::get(a_binding, make_box("has_boxed_usage")), make_box(true)));
+      CHECK(equal(runtime::get(a_binding, make_box("has_unboxed_usage")), make_box(false)));
+
+      CHECK(equal(runtime::get(b_binding, make_box("needs_box")), make_box(false)));
+      CHECK(equal(runtime::get(b_binding, make_box("has_boxed_usage")), make_box(true)));
+      CHECK(equal(runtime::get(b_binding, make_box("has_unboxed_usage")), make_box(false)));
     }
 
     SUBCASE("Sub-expression of a boxed call which doesn't require boxed inputs")

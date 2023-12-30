@@ -45,11 +45,11 @@ namespace jank::runtime::obj::detail
     void to_string(fmt::memory_buffer &buff) const
     { return behavior::detail::to_string(begin, end, "(", ')', buff); }
 
-    native_string to_string() const
+    native_persistent_string to_string() const
     {
       fmt::memory_buffer buff;
       behavior::detail::to_string(begin, end, "(", ')', buff);
-      return native_string{ buff.data(), buff.size() };
+      return native_persistent_string{ buff.data(), buff.size() };
     }
     native_integer to_hash() const
     { return reinterpret_cast<native_integer>(this); }

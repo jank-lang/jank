@@ -22,11 +22,11 @@ namespace jank::runtime
   void obj::native_array_sequence::to_string(fmt::memory_buffer &buff) const
   { return behavior::detail::to_string(arr + index, arr + size, "(", ')', buff); }
 
-  native_string obj::native_array_sequence::to_string() const
+  native_persistent_string obj::native_array_sequence::to_string() const
   {
     fmt::memory_buffer buff;
     behavior::detail::to_string(arr + index, arr + size, "(", ')', buff);
-    return native_string{ buff.data(), buff.size() };
+    return native_persistent_string{ buff.data(), buff.size() };
   }
   native_integer obj::native_array_sequence::to_hash()
   { return reinterpret_cast<native_integer>(this); }

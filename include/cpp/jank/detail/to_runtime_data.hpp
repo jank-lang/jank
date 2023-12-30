@@ -23,7 +23,7 @@ namespace jank::detail
   runtime::object_ptr to_runtime_data(native_box<T> const &d)
   { return make_box(fmt::format("box({})", reinterpret_cast<void const*>(d.data))); }
 
-  inline runtime::object_ptr to_runtime_data(native_string const &d)
+  inline runtime::object_ptr to_runtime_data(native_persistent_string const &d)
   { return make_box(d); }
   inline runtime::object_ptr to_runtime_data(runtime::obj::symbol const &d)
   { return make_box<runtime::obj::symbol>(d); }

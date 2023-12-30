@@ -226,7 +226,7 @@ namespace jank::read::parse
       {
         auto const r(p.next());
         CHECK(r.is_ok());
-        CHECK(runtime::detail::equal(r.expect_ok(), rt_ctx.intern_keyword(runtime::obj::symbol{ "", native_string{ s } }, false).expect_ok()));
+        CHECK(runtime::detail::equal(r.expect_ok(), rt_ctx.intern_keyword(runtime::obj::symbol{ "", native_persistent_string{ s } }, false).expect_ok()));
       }
     }
 

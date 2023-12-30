@@ -29,18 +29,18 @@ namespace jank::codegen
     handle() = default;
     handle(handle const &) = default;
     handle(handle &&) = default;
-    handle(native_string const &name, bool boxed);
-    handle(native_string const &boxed_name);
-    handle(native_string const &boxed_name, native_string const &unboxed_name);
+    handle(native_persistent_string const &name, bool boxed);
+    handle(native_persistent_string const &boxed_name);
+    handle(native_persistent_string const &boxed_name, native_persistent_string const &unboxed_name);
     handle(analyze::local_binding const &binding);
 
     handle& operator =(handle const &) = default;
     handle& operator =(handle &&) = default;
 
-    native_string str(bool needs_box) const;
+    native_persistent_string str(bool needs_box) const;
 
-    native_string boxed_name;
-    native_string unboxed_name;
+    native_persistent_string boxed_name;
+    native_persistent_string unboxed_name;
   };
 
   enum class compilation_target
@@ -60,14 +60,14 @@ namespace jank::codegen
     (
       runtime::context &rt_ctx,
       analyze::expression_ptr const &expr,
-      native_string_view const &module,
+      native_persistent_string_view const &module,
       compilation_target target
     );
     processor
     (
       runtime::context &rt_ctx,
       analyze::expr::function<analyze::expression> const &expr,
-      native_string_view const &module,
+      native_persistent_string_view const &module,
       compilation_target target
     );
     processor(processor const &) = delete;
@@ -164,19 +164,19 @@ namespace jank::codegen
       bool box_needed
     );
 
-    native_string declaration_str();
+    native_persistent_string declaration_str();
     void build_header();
     void build_body();
     void build_footer();
-    native_string expression_str(bool box_needed);
+    native_persistent_string expression_str(bool box_needed);
 
-    native_string module_init_str(native_string_view const &module);
+    native_persistent_string module_init_str(native_persistent_string_view const &module);
 
     void format_elided_var
     (
-      native_string_view const &start,
-      native_string_view const &end,
-      native_string_view const &ret_tmp,
+      native_persistent_string_view const &start,
+      native_persistent_string_view const &end,
+      native_persistent_string_view const &ret_tmp,
       native_vector<native_box<analyze::expression>> const &arg_exprs,
       analyze::expr::function_arity<analyze::expression> const &fn_arity,
       bool arg_box_needed,
@@ -184,16 +184,16 @@ namespace jank::codegen
     );
     void format_direct_call
     (
-      native_string const &source_tmp,
-      native_string_view const &ret_tmp,
+      native_persistent_string const &source_tmp,
+      native_persistent_string_view const &ret_tmp,
       native_vector<native_box<analyze::expression>> const &arg_exprs,
       analyze::expr::function_arity<analyze::expression> const &fn_arity,
       bool arg_box_needed
     );
     void format_dynamic_call
     (
-      native_string const &source_tmp,
-      native_string_view const &ret_tmp,
+      native_persistent_string const &source_tmp,
+      native_persistent_string_view const &ret_tmp,
       native_vector<native_box<analyze::expression>> const &arg_exprs,
       analyze::expr::function_arity<analyze::expression> const &fn_arity,
       bool arg_box_needed
@@ -203,7 +203,7 @@ namespace jank::codegen
     /* This is stored just to keep the expression alive. */
     analyze::expression_ptr root_expr{};
     analyze::expr::function<analyze::expression> const &root_fn;
-    native_string module;
+    native_persistent_string module;
 
     compilation_target target{};
     runtime::obj::symbol struct_name;

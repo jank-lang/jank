@@ -1,3 +1,5 @@
+(ns ray)
+
 ; TODO: jank can't have `or` yet, due to no
 ; syntax quoting in macros. This program doesn't
 ; require anything other than logical or on two bools, though.

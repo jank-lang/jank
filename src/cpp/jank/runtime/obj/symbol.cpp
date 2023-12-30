@@ -11,7 +11,7 @@ namespace jank::runtime
   void separate(obj::symbol &sym, S &&s)
   {
     auto const found(s.find('/'));
-    if(found != native_string::npos && s.size() > 1)
+    if(found != native_persistent_string::npos && s.size() > 1)
     {
       sym.ns = s.substr(0, found);
       sym.name = s.substr(found + 1);
@@ -20,15 +20,15 @@ namespace jank::runtime
     { sym.name = std::forward<S>(s); }
   }
 
-  obj::symbol::static_object(native_string const &d)
+  obj::symbol::static_object(native_persistent_string const &d)
   { separate(*this, d); }
-  obj::symbol::static_object(native_string &&d)
+  obj::symbol::static_object(native_persistent_string &&d)
   { separate(*this, std::move(d)); }
 
-  obj::symbol::static_object(native_string const &ns, native_string const &n)
+  obj::symbol::static_object(native_persistent_string const &ns, native_persistent_string const &n)
     : ns{ ns }, name{ n }
   { }
-  obj::symbol::static_object(native_string &&ns, native_string &&n)
+  obj::symbol::static_object(native_persistent_string &&ns, native_persistent_string &&n)
     : ns{ std::move(ns) }, name{ std::move(n) }
   { }
 
@@ -46,8 +46,8 @@ namespace jank::runtime
 
   void to_string_impl
   (
-    native_string const &ns,
-    native_string const &name,
+    native_persistent_string const &ns,
+    native_persistent_string const &name,
     fmt::memory_buffer &buff
   )
   {
@@ -58,11 +58,11 @@ namespace jank::runtime
   }
   void obj::symbol::to_string(fmt::memory_buffer &buff) const
   { to_string_impl(ns, name, buff); }
-  native_string obj::symbol::to_string() const
+  native_persistent_string obj::symbol::to_string() const
   {
     fmt::memory_buffer buff;
     to_string_impl(ns, name, buff);
-    return native_string{ buff.data(), buff.size() };
+    return native_persistent_string{ buff.data(), buff.size() };
   }
   native_integer obj::symbol::to_hash() const
   /* TODO: Cache this. */
@@ -76,10 +76,10 @@ namespace jank::runtime
     return ret;
   }
 
-  native_string const& obj::symbol::get_name() const
+  native_persistent_string const& obj::symbol::get_name() const
   { return name; }
 
-  native_string const& obj::symbol::get_namespace() const
+  native_persistent_string const& obj::symbol::get_namespace() const
   { return ns; }
 
   bool obj::symbol::operator ==(obj::symbol const &rhs) const

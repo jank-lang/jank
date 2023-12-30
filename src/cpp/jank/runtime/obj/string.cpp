@@ -9,11 +9,11 @@
 
 namespace jank::runtime
 {
-  obj::string::static_object(native_string const &d)
+  obj::string::static_object(native_persistent_string const &d)
     : data{ d }
   { }
 
-  obj::string::static_object(native_string &&d)
+  obj::string::static_object(native_persistent_string &&d)
     : data{ std::move(d) }
   { }
 
@@ -26,7 +26,7 @@ namespace jank::runtime
     return data == s->data;
   }
 
-  native_string const& obj::string::to_string() const
+  native_persistent_string const& obj::string::to_string() const
   { return data; }
 
   void obj::string::to_string(fmt::memory_buffer &buff) const
@@ -35,10 +35,10 @@ namespace jank::runtime
   native_integer obj::string::to_hash() const
   { return data.to_hash(); }
 
-  result<obj::string_ptr, native_string> obj::string::substring(native_integer start) const
+  result<obj::string_ptr, native_persistent_string> obj::string::substring(native_integer start) const
   { return substring(start, static_cast<native_integer>(data.size())); }
 
-  result<obj::string_ptr, native_string> obj::string::substring
+  result<obj::string_ptr, native_persistent_string> obj::string::substring
   (
     native_integer const start,
     native_integer const end
@@ -59,8 +59,8 @@ namespace jank::runtime
   native_integer obj::string::first_index_of(object_ptr const c) const
   {
     auto const s(runtime::detail::to_string(c));
-    auto const found(data.find_first_of(s));
-    if(found == native_string::npos)
+    auto const found(data.find(s));
+    if(found == native_persistent_string::npos)
     { return -1; }
     return static_cast<native_integer>(found);
   }
@@ -68,8 +68,8 @@ namespace jank::runtime
   native_integer obj::string::last_index_of(object_ptr const c) const
   {
     auto const s(runtime::detail::to_string(c));
-    auto const found(data.find_last_of(s));
-    if(found == native_string::npos)
+    auto const found(data.rfind(s));
+    if(found == native_persistent_string::npos)
     { return -1; }
     return static_cast<native_integer>(found);
   }

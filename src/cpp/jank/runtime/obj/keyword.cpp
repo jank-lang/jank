@@ -23,11 +23,11 @@ namespace jank::runtime
   }
   void obj::keyword::to_string(fmt::memory_buffer &buff) const
   { return to_string_impl(sym, buff); }
-  native_string obj::keyword::to_string() const
+  native_persistent_string obj::keyword::to_string() const
   {
     fmt::memory_buffer buff;
     to_string_impl(sym, buff);
-    return native_string{ buff.data(), buff.size() };
+    return native_persistent_string{ buff.data(), buff.size() };
   }
   native_integer obj::keyword::to_hash() const
   { return reinterpret_cast<native_integer>(this); }
@@ -40,10 +40,10 @@ namespace jank::runtime
     return ret;
   }
 
-  native_string const& obj::keyword::get_name() const
+  native_persistent_string const& obj::keyword::get_name() const
   { return sym.name; }
 
-  native_string const& obj::keyword::get_namespace() const
+  native_persistent_string const& obj::keyword::get_namespace() const
   { return sym.ns; }
 
   object_ptr obj::keyword::call(object_ptr const m) const

@@ -82,7 +82,7 @@ namespace jank::jit
 
     auto const include_path(jank_path / "../include");
 
-    native_string_view O{ "0" };
+    native_persistent_string_view O{ "0" };
     switch(optimization_level)
     {
       case 0:
@@ -124,7 +124,7 @@ namespace jank::jit
     );
   }
 
-  result<option<runtime::object_ptr>, native_string> processor::eval(codegen::processor &cg_prc) const
+  result<option<runtime::object_ptr>, native_persistent_string> processor::eval(codegen::processor &cg_prc) const
   {
     profile::timer timer{ "jit eval" };
     /* TODO: Improve Cling to accept string_views instead. */
@@ -148,14 +148,14 @@ namespace jank::jit
     return ok(ret_val);
   }
 
-  void processor::eval_string(native_string const &s) const
+  void processor::eval_string(native_persistent_string const &s) const
   {
     jank::profile::timer timer{ "jit eval_string" };
     //fmt::println("JIT eval string {}", s);
     interpreter->process(static_cast<std::string>(s));
   }
 
-  //void processor::load_object(native_string_view const &path) const
+  //void processor::load_object(native_persistent_string_view const &path) const
   //{
   //  auto buf(std::move(llvm::MemoryBuffer::getFile(path.data()).get()));
   //  llvm::cantFail(interpreter->m_Executor->m_JIT->Jit->addObjectFile(std::move(buf)));

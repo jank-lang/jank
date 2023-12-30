@@ -39,11 +39,11 @@ namespace jank::runtime
   void obj::boolean::to_string(fmt::memory_buffer &buff) const
   { return to_string_impl(data, buff); }
 
-  native_string obj::boolean::to_string() const
+  native_persistent_string obj::boolean::to_string() const
   {
     fmt::memory_buffer buff;
     to_string_impl(data, buff);
-    return native_string{ buff.data(), buff.size() };
+    return native_persistent_string{ buff.data(), buff.size() };
   }
 
   native_integer obj::boolean::to_hash() const
@@ -64,7 +64,7 @@ namespace jank::runtime
     return data == i->data;
   }
 
-  native_string obj::integer::to_string() const
+  native_persistent_string obj::integer::to_string() const
   { return fmt::format(FMT_COMPILE("{}"), data); }
 
   void obj::integer::to_string(fmt::memory_buffer &buff) const
@@ -94,7 +94,7 @@ namespace jank::runtime
     return hasher(data) == hasher(r->data);
   }
 
-  native_string obj::real::to_string() const
+  native_persistent_string obj::real::to_string() const
   { return fmt::format(FMT_COMPILE("{}"), data); }
 
   void obj::real::to_string(fmt::memory_buffer &buff) const

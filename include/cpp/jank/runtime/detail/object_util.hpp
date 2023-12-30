@@ -5,7 +5,7 @@
 
 namespace jank::runtime::detail
 {
-  native_string to_string(object_ptr const o);
+  native_persistent_string to_string(object_ptr const o);
   native_integer to_hash(object_ptr const o);
   native_real to_real(object_ptr const o);
   void to_string(object_ptr const o, fmt::memory_buffer &buff);
@@ -50,7 +50,7 @@ namespace jank
   { return make_box<runtime::obj::real>(r); }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto make_box(native_string_view const &s)
+  inline auto make_box(native_persistent_string_view const &s)
   { return make_box<runtime::obj::string>(s); }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]

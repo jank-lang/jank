@@ -53,10 +53,10 @@ namespace jank::codegen
      * But our runtime requires params to be const&, so we can't mutate them; we need to shadow
      * them. So, for tail recursive fns, we name the params with this suffix and then define
      * the actual param names as mutable locals outside of the while loop. */
-    constexpr native_string_view const recur_suffix{ "__recur" };
+    constexpr native_persistent_string_view const recur_suffix{ "__recur" };
 
     /* TODO: Consider making this a on the typed object: the C++ name. */
-    native_string_view gen_constant_type(runtime::object_ptr const o, bool const boxed)
+    native_persistent_string_view gen_constant_type(runtime::object_ptr const o, bool const boxed)
     {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
@@ -189,11 +189,11 @@ namespace jank::codegen
       );
     }
 
-    native_string boxed_local_name(native_string const &local_name)
+    native_persistent_string boxed_local_name(native_persistent_string const &local_name)
     { return local_name + "__boxed"; }
   }
 
-  handle::handle(native_string const &name, bool const boxed)
+  handle::handle(native_persistent_string const &name, bool const boxed)
   {
     if(boxed)
     {
@@ -206,10 +206,10 @@ namespace jank::codegen
       boxed_name = fmt::format("jank::make_box({})", unboxed_name);
     }
   }
-  handle::handle(native_string const &boxed_name)
+  handle::handle(native_persistent_string const &boxed_name)
     : boxed_name{ boxed_name }, unboxed_name{ boxed_name }
   { }
-  handle::handle(native_string const &boxed_name, native_string const &unboxed_name)
+  handle::handle(native_persistent_string const &boxed_name, native_persistent_string const &unboxed_name)
     : boxed_name{ boxed_name }, unboxed_name{ unboxed_name }
   {
     if(this->boxed_name.empty())
@@ -231,7 +231,7 @@ namespace jank::codegen
     { unboxed_name = runtime::munge(binding.name->name); }
   }
 
-  native_string handle::str(bool const needs_box) const
+  native_persistent_string handle::str(bool const needs_box) const
   {
     if(needs_box)
     {
@@ -247,7 +247,7 @@ namespace jank::codegen
   (
     runtime::context &rt_ctx,
     analyze::expression_ptr const &expr,
-    native_string_view const &module,
+    native_persistent_string_view const &module,
     compilation_target const target
   )
     : rt_ctx{ rt_ctx },
@@ -262,7 +262,7 @@ namespace jank::codegen
   (
     runtime::context &rt_ctx,
     analyze::expr::function<analyze::expression> const &expr,
-    native_string_view const &module,
+    native_persistent_string_view const &module,
     compilation_target const target
   )
     : rt_ctx{ rt_ctx },
@@ -379,9 +379,9 @@ namespace jank::codegen
 
   void processor::format_elided_var
   (
-    native_string_view const &start,
-    native_string_view const &end,
-    native_string_view const &ret_tmp,
+    native_persistent_string_view const &start,
+    native_persistent_string_view const &end,
+    native_persistent_string_view const &ret_tmp,
     native_vector<native_box<analyze::expression>> const &arg_exprs,
     analyze::expr::function_arity<analyze::expression> const &fn_arity,
     bool const arg_box_needed,
@@ -395,7 +395,7 @@ namespace jank::codegen
     { arg_tmps.emplace_back(gen(arg_expr, fn_arity, arg_box_needed).unwrap()); }
 
     auto inserter(std::back_inserter(body_buffer));
-    native_string_view ret_box;
+    native_persistent_string_view ret_box;
     if(ret_box_needed)
     { ret_box = "jank::make_box("; }
     fmt::format_to(inserter, "auto const {}({}{}", ret_tmp, ret_box, start);
@@ -412,8 +412,8 @@ namespace jank::codegen
 
   void processor::format_direct_call
   (
-    native_string const &source_tmp,
-    native_string_view const &ret_tmp,
+    native_persistent_string const &source_tmp,
+    native_persistent_string_view const &ret_tmp,
     native_vector<native_box<analyze::expression>> const &arg_exprs,
     analyze::expr::function_arity<analyze::expression> const &fn_arity,
     bool const arg_box_needed
@@ -441,8 +441,8 @@ namespace jank::codegen
 
   void processor::format_dynamic_call
   (
-    native_string const &source_tmp,
-    native_string_view const &ret_tmp,
+    native_persistent_string const &source_tmp,
+    native_persistent_string_view const &ret_tmp,
     native_vector<native_box<analyze::expression>> const &arg_exprs,
     analyze::expr::function_arity<analyze::expression> const &fn_arity,
     bool const arg_box_needed
@@ -1044,7 +1044,7 @@ namespace jank::codegen
     size_t interpolated_chunk_it{};
     for(auto const &chunk : expr.chunks)
     {
-      auto const * const code(boost::get<native_string>(&chunk));
+      auto const * const code(boost::get<native_persistent_string>(&chunk));
       if(code != nullptr)
       { fmt::format_to(inserter, "{}", *code); }
       else
@@ -1061,7 +1061,7 @@ namespace jank::codegen
     return ret_tmp;
   }
 
-  native_string processor::declaration_str()
+  native_persistent_string processor::declaration_str()
   {
     if(!generated_declaration)
     {
@@ -1071,11 +1071,11 @@ namespace jank::codegen
       generated_declaration = true;
     }
 
-    native_string ret;
+    native_transient_string ret;
     ret.reserve(header_buffer.size() + body_buffer.size() + footer_buffer.size());
-    ret += native_string_view{ header_buffer.data(), header_buffer.size() };
-    ret += native_string_view{ body_buffer.data(), body_buffer.size() };
-    ret += native_string_view{ footer_buffer.data(), footer_buffer.size() };
+    ret += native_persistent_string_view{ header_buffer.data(), header_buffer.size() };
+    ret += native_persistent_string_view{ body_buffer.data(), body_buffer.size() };
+    ret += native_persistent_string_view{ footer_buffer.data(), footer_buffer.size() };
     //std::cout << ret << std::endl;
     return ret;
   }
@@ -1267,7 +1267,7 @@ namespace jank::codegen
       else if(!highest_fixed_arity || highest_fixed_arity->fn_ctx->param_count < arity.fn_ctx->param_count)
       { highest_fixed_arity = &arity; }
 
-      native_string_view recur_suffix;
+      native_persistent_string_view recur_suffix;
       if(arity.fn_ctx->is_tail_recursive)
       { recur_suffix = detail::recur_suffix; }
 
@@ -1368,7 +1368,7 @@ namespace jank::codegen
     { fmt::format_to(inserter, "}}"); }
   }
 
-  native_string processor::expression_str(bool const box_needed)
+  native_persistent_string processor::expression_str(bool const box_needed)
   {
     auto const module_ns(runtime::module::module_to_native_ns(module));
 
@@ -1376,7 +1376,7 @@ namespace jank::codegen
     {
       auto inserter(std::back_inserter(expression_buffer));
 
-      native_string_view close = ").data";
+      native_persistent_string_view close = ").data";
       if(box_needed)
       {
         fmt::format_to
@@ -1422,7 +1422,7 @@ namespace jank::codegen
     return { expression_buffer.data(), expression_buffer.size() };
   }
 
-  native_string processor::module_init_str(native_string_view const &module)
+  native_persistent_string processor::module_init_str(native_persistent_string_view const &module)
   {
     fmt::memory_buffer module_buffer;
     auto inserter(std::back_inserter(module_buffer));
@@ -1445,7 +1445,7 @@ namespace jank::codegen
 
     fmt::format_to(inserter, "static void __init(){{");
     fmt::format_to(inserter, "jank::profile::timer __timer{{ \"ns __init\" }};");
-    fmt::format_to(inserter, "constexpr auto const deps(jank::util::make_array<jank::native_string_view>(");
+    fmt::format_to(inserter, "constexpr auto const deps(jank::util::make_array<jank::native_persistent_string_view>(");
     bool needs_comma{};
     for(auto const &dep : rt_ctx.module_dependencies[module])
     {
@@ -1469,9 +1469,9 @@ namespace jank::codegen
     /* Namespace */
     fmt::format_to(inserter, "}}");
 
-    native_string ret;
+    native_transient_string ret;
     ret.reserve(module_buffer.size());
-    ret += native_string_view{ module_buffer.data(), module_buffer.size() };
+    ret += native_persistent_string_view{ module_buffer.data(), module_buffer.size() };
     return ret;
   }
 }
