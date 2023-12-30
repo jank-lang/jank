@@ -5,6 +5,40 @@
 
 namespace jank
 {
+  /* This is a not-completely-standard replacement for std::string, with a few goals in mind:
+   *
+   * 1. Be as fast, or faster, than `std::string` and `folly::fbstring`
+   * 2. Support hashing, with cached value
+   * 3. Be immutable (i.e. no copy on substrings, writes only done in constructors, no mutators)
+   * 4. Not a goal: Complete standard compliance (which allows us to cheat)
+   *
+   * To accomplish this, we follow folly's three-word design, with an overlayed union spanning
+   * all three words. We use the right-most byte of the string to categorize it into one of
+   * three possible states (assuming a 64bit machine):
+   *
+   * 1. Small (23 characters or less, not including the null-terminator)
+   * 2. Large owned (24 or more characters, with unique ownership over the memory)
+   * 3. Large shared (24 or more characters, with shared ownership over the memory)
+   *
+   * Shared ownership just relies on jank's garbage collector. No additional bookkeping, such
+   * as reference counting, is done.
+   *
+   * Within that right-most byte, these three categories are determined by two dedicated bits.
+   * If the most-significant-bit (MSB) is set, the string is large and shared. If the next MSB
+   * is also set, the string is large and owned. The remaining 6 bits on that byte are used
+   * to store the size of the string, in the case of a small string.
+   *
+   * Rather than just storing the size, we store the remaining capacity, which is the
+   * (max_small_size - size). The benefit of this is that, when the small string is as large
+   * as possible, i.e. 23 bytes on a 64bit machine, the remaining capacity will be 0, and the
+   * two flag bits will be 0, and thus the byte will be 0 and can act as the null-terminator.
+   *
+   * In the large case, only the two flag bits of the third word are used. Sharing is done by
+   * updating the flag bits on both strings to be shared. We share on both copy construction
+   * as well as substring operations. Since share substrings, shared strings may not be
+   * null-terminated. We'll lazily own the string if c_str() is called on a shared string, but
+   * data() is not expected to return a null-terminated string.
+   */
   struct native_persistent_string
   {
     using value_type = char;
@@ -114,9 +148,14 @@ namespace jank
     constexpr size_type size() const noexcept
     { return (get_category() == category::small) ? get_small_size() : store.large.size; }
 
+    /* XXX: The contents returned, for large shared strings, may not be null-terminated. If
+     * you require that, use c_str(). Whenever possible, use data() and size(). */
     [[gnu::always_inline, gnu::flatten, gnu::hot, gnu::returns_nonnull, gnu::const]]
     constexpr const_pointer_type data() const noexcept
     { return (get_category() == category::small) ? store.small : store.large.data; }
+
+    /* Always returns a null-terminated string. For shared large strings, we'll allocate
+     * and copy the contents upon calling c_str(). If you can use data() and size(), do that. */
     [[gnu::returns_nonnull]]
     constexpr const_pointer_type c_str() const noexcept
     {
