@@ -140,17 +140,17 @@ namespace jank
     { destroy(); }
 
     /*** Data accessors. ***/
-    [[gnu::always_inline, gnu::flatten, gnu::hot, gnu::const]]
+    [[gnu::const]]
     constexpr native_bool empty() const noexcept
     { return size() == 0; }
 
-    [[gnu::always_inline, gnu::flatten, gnu::hot, gnu::const]]
+    [[gnu::const]]
     constexpr size_type size() const noexcept
     { return (get_category() == category::small) ? get_small_size() : store.large.size; }
 
     /* XXX: The contents returned, for large shared strings, may not be null-terminated. If
      * you require that, use c_str(). Whenever possible, use data() and size(). */
-    [[gnu::always_inline, gnu::flatten, gnu::hot, gnu::returns_nonnull, gnu::const]]
+    [[gnu::returns_nonnull, gnu::const]]
     constexpr const_pointer_type data() const noexcept
     { return (get_category() == category::small) ? store.small : store.large.data; }
 
@@ -466,11 +466,11 @@ namespace jank
       { allocator_traits::deallocate(store, store.large.data, store.large.size + 1); }
     }
 
-    [[gnu::always_inline, gnu::flatten, gnu::hot, gnu::const]]
+    [[gnu::const]]
     constexpr category get_category() const noexcept
     { return static_cast<category>(store.bytes[last_char_index] & category_extraction_mask); }
 
-    [[gnu::always_inline, gnu::flatten, gnu::hot, gnu::const]]
+    [[gnu::const]]
     constexpr size_type get_small_size() const noexcept
     {
       assert(get_category() == category::small);
