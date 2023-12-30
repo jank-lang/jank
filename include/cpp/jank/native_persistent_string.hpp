@@ -106,17 +106,11 @@ namespace jank
     constexpr native_bool empty() const noexcept
     { return size() == 0; }
 
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
     constexpr size_type size() const noexcept
     { return (get_category() == category::small) ? get_small_size() : store.large.size; }
 
-    constexpr size_type capacity() const noexcept
-    {
-      if(get_category() == category::small)
-      { return max_small_size; }
-      else
-      { return store.large.size; }
-    }
-
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
     constexpr const_pointer_type data() const noexcept
     { return (get_category() == category::small) ? store.small : store.large.data; }
     constexpr const_pointer_type c_str() const noexcept
@@ -187,6 +181,7 @@ namespace jank
         auto d(data());
         auto const n(length - pos);
         auto const p(traits_type::find(d + pos, n, c));
+        /* TODO: cmov instead of branch here? */
         if(p)
         { ret = p - d; }
       }
@@ -344,7 +339,6 @@ namespace jank
     /*** Hashing. ***/
     constexpr native_integer to_hash() const noexcept
     {
-      /* TODO: Benchmark folly's hashing algorithm vs this. */
       if(store.hash != 0)
       { return store.hash; }
 
@@ -365,63 +359,35 @@ namespace jank
       large_owned = is_little_endian ? 0b11000000 : 0b00000011
     };
 
-    struct Large
+    struct large_storage
     {
       pointer_type data;
       size_type size;
-      /* TODO: This is only used in SSO. Use only a single byte. In a union? */
-      size_type capacity;
-
-      constexpr size_type get_capacity() const noexcept
-      {
-        if constexpr(is_little_endian)
-        { return capacity & capacity_extraction_mask; }
-        else
-        { return capacity >> 2; }
-      }
-
-      constexpr void set_capacity(size_type const new_capacity, category const new_category) noexcept
-      {
-        if constexpr(is_little_endian)
-        { capacity = new_capacity | (static_cast<size_type>(new_category) << category_shift); }
-        else
-        { capacity = (new_capacity << 2) | static_cast<size_type>(new_category); }
-      }
+      size_type extra;
 
       constexpr void set_category(category const new_category) noexcept
-      {
-        if constexpr(is_little_endian)
-        { capacity = (static_cast<size_type>(new_category) << category_shift); }
-        else
-        { capacity = (capacity << 2) | static_cast<size_type>(new_category); }
-      }
+      { extra = static_cast<size_type>(new_category) << category_shift; }
     };
 
-    static constexpr size_type last_char_index{ sizeof(Large) - 1 };
-    static constexpr size_type max_small_size{ last_char_index / sizeof(value_type) };
+    static constexpr uint8_t last_char_index{ sizeof(large_storage) - 1 };
+    static constexpr uint8_t max_small_size{ last_char_index / sizeof(value_type) };
     /* The size is shifted to/from storage, to account for the 2 extra data bits. */
-    static constexpr size_type small_shift{ is_little_endian ? 0 : 2 };
+    static constexpr uint8_t small_shift{ is_little_endian ? 0 : 2  };
     static constexpr uint8_t category_extraction_mask{ is_little_endian ? 0b11000000 : 0b00000011 };
-    static constexpr size_type category_shift{ (sizeof(size_type) - 1) * 8 };
-    static constexpr size_type capacity_extraction_mask
-    {
-      is_little_endian
-        ? ~(size_type(category_extraction_mask) << category_shift)
-        : 0 /* unused */
-    };
+    static constexpr uint8_t category_shift{ (sizeof(size_type) - 1) * 8 };
 
     /* Our storage provides three ways of accessing the same data:
      *   1. Direct bytes (used to access the right-most flag byte)
      *   2. In-place char buffer (used for small categories)
-     *   3. As a Large instance, containing a pointer, size, and capacity
+     *   3. As a large_storage instance, containing a pointer, size, and capacity
      */
     struct storage : allocator_type
     {
       union
       {
-        uint8_t bytes[sizeof(Large)];
-        value_type small[sizeof(Large) / sizeof(value_type)];
-        Large large;
+        uint8_t bytes[sizeof(large_storage)];
+        value_type small[sizeof(large_storage) / sizeof(value_type)];
+        large_storage large;
       };
       /* TODO: Benchmark benefit of storing this hash vs calculating it each time. */
       mutable native_integer hash{};
@@ -453,6 +419,7 @@ namespace jank
       assert(get_category() == category::small && size() == s);
     }
 
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
     constexpr void init_small(const_pointer_type const data, size_type const size) noexcept
     {
       /* If `data` is word-aligned, we can do three quick word copies. */
@@ -466,7 +433,7 @@ namespace jank
         switch((byte_size + word_width - 1) / word_width)
         {
           case 3:
-            store.large.capacity = std::bit_cast<size_type const*>(aligned_data)[2];
+            store.large.extra = std::bit_cast<size_type const*>(aligned_data)[2];
           case 2:
             store.large.size = std::bit_cast<size_type const*>(aligned_data)[1];
           case 1:
@@ -481,6 +448,7 @@ namespace jank
       set_small_size(size);
     }
 
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
     constexpr void init_small
     (
       const_pointer_type const lhs, size_type const lhs_size,
@@ -493,25 +461,28 @@ namespace jank
       set_small_size(lhs_size + rhs_size);
     }
 
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
     constexpr void init_large_shared(const_pointer_type const data, size_type const size) noexcept
     {
       /* NOTE: This is likely NOT null-terminated. We need to look out for this in c_str(). */
       assert(max_small_size < size);
       store.large.data = const_cast<pointer_type>(data);
       store.large.size = size;
-      store.large.set_capacity(size, category::large_shared);
+      store.large.set_category(category::large_shared);
     }
 
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
     constexpr void init_large_owned(const_pointer_type const data, size_type const size) noexcept
     {
       assert(max_small_size < size);
-      store.large.data = std::assume_aligned<sizeof(void*)>(store.allocate(size + 1));
+      store.large.data = std::assume_aligned<sizeof(pointer_type)>(store.allocate(size + 1));
       traits_type::copy(store.large.data, data, size);
       store.large.data[size] = 0;
       store.large.size = size;
-      store.large.set_capacity(size, category::large_owned);
+      store.large.set_category(category::large_owned);
     }
 
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
     constexpr void init_large_owned
     (
       const_pointer_type const lhs, size_type const lhs_size,
@@ -520,30 +491,35 @@ namespace jank
     {
       auto const size(lhs_size + rhs_size);
       assert(max_small_size < size);
-      store.large.data = std::assume_aligned<sizeof(void*)>(store.allocate(size + 1));
+      store.large.data = std::assume_aligned<sizeof(pointer_type)>(store.allocate(size + 1));
       traits_type::copy(store.large.data, lhs, lhs_size);
       traits_type::copy(store.large.data + lhs_size, rhs, rhs_size);
       store.large.data[size] = 0;
       store.large.size = size;
-      store.large.set_capacity(size, category::large_owned);
+      store.large.set_category(category::large_owned);
     }
 
     storage store;
   };
 
-  constexpr native_bool operator <(native_persistent_string const &lhs, native_persistent_string const &rhs) noexcept
+  constexpr native_bool operator <
+  (native_persistent_string const &lhs, native_persistent_string const &rhs) noexcept
   { return lhs.compare(rhs) < 0; }
 
-  constexpr native_persistent_string operator +(native_persistent_string const &lhs, native_persistent_string const &rhs) noexcept
+  constexpr native_persistent_string operator +
+  (native_persistent_string const &lhs, native_persistent_string const &rhs) noexcept
   { return { lhs.data(), lhs.size(), rhs.data(), rhs.size() }; }
 
-  constexpr native_persistent_string operator +(native_persistent_string::const_pointer_type const lhs, native_persistent_string const &rhs) noexcept
+  constexpr native_persistent_string operator +
+  (native_persistent_string::const_pointer_type const lhs, native_persistent_string const &rhs) noexcept
   { return { lhs, native_persistent_string::traits_type::length(lhs), rhs.data(), rhs.size() }; }
 
-  constexpr native_persistent_string operator +(native_persistent_string const &lhs, native_persistent_string::const_pointer_type const rhs) noexcept
+  constexpr native_persistent_string operator +
+  (native_persistent_string const &lhs, native_persistent_string::const_pointer_type const rhs) noexcept
   { return { lhs.data(), lhs.size(), rhs, native_persistent_string::traits_type::length(rhs) }; }
 
-  constexpr native_persistent_string operator +(native_persistent_string const &lhs, native_persistent_string::value_type const rhs) noexcept
+  constexpr native_persistent_string operator +
+  (native_persistent_string const &lhs, native_persistent_string::value_type const rhs) noexcept
   { return { lhs.data(), lhs.size(), &rhs, 1 }; }
 
   constexpr std::ostream& operator <<(std::ostream &os, native_persistent_string const &s)
