@@ -128,11 +128,17 @@ namespace jank
 
       if(count <= max_small_size)
       { init_small(s.data() + pos, count); }
+      /* If the size difference between our substring and its original string is too great, it's
+       * not worth keeping the original string alive just to share the substring. In that case,
+       * we deep copy. This prevents relatively small (yet still categoricall large) substrings
+       * from a large file keeping that whole file in memory as long as the substrings live. */
+      else if((s_length - count) > max_shared_difference)
+      { init_large_owned(s.store.large.data + pos, count); }
       else
       {
         /* NOTE: Not necessarily null-terminated! */
         const_cast<native_persistent_string&>(s).store.large.set_category(category::large_shared);
-        init_large_shared(s.data() + pos, count);
+        init_large_shared(s.store.large.data + pos, count);
       }
     }
 
@@ -436,6 +442,7 @@ namespace jank
 
     static constexpr uint8_t last_char_index{ sizeof(large_storage) - 1 };
     static constexpr uint8_t max_small_size{ last_char_index / sizeof(value_type) };
+    static constexpr uint16_t max_shared_difference{ 512 };
     /* The size is shifted to/from storage, to account for the 2 extra data bits. */
     static constexpr uint8_t small_shift{ is_little_endian ? 0 : 2  };
     static constexpr uint8_t category_extraction_mask{ is_little_endian ? 0b11000000 : 0b00000011 };
