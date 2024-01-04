@@ -7,9 +7,9 @@
 
 namespace jank::runtime
 {
-  /* TODO: If ns already has var, don't make a new one. */
+  /* NOTE: We default to nil, rather than a special unbound type. */
   var::static_object(ns_ptr const &n, obj::symbol_ptr const &s)
-    : n{ n }, name{ s }
+    : n{ n }, name{ s }, root{ obj::nil::nil_const() }
   { }
   var::static_object(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr o)
     : n{ n }, name{ s }, root{ o }
