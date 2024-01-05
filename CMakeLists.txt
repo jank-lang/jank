@@ -306,7 +306,7 @@ if(jank_tests)
     test/cpp/jank/jit/processor.cpp
   )
   add_executable(jank::test_exe ALIAS jank_test_exe)
-  add_dependencies(jank_test_exe jank_core_libraries)
+  add_dependencies(jank_test_exe jank_lib jank_core_libraries)
 
   set_property(TARGET jank_test_exe PROPERTY OUTPUT_NAME jank-test)
 
