@@ -20,6 +20,9 @@
 
 namespace jank::runtime
 {
+  thread_local native_unordered_map
+  <context const*, std::list<thread_binding_frame>> context::thread_binding_frames{};
+
   context::context()
     : context(util::cli::options{ })
   { }
@@ -32,8 +35,10 @@ namespace jank::runtime
     auto &t_state(get_thread_state());
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
     auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));
-    t_state.current_ns = core->intern_var(ns_sym);
+    auto const current_ns_var(core->intern_var(ns_sym));
+    t_state.current_ns = current_ns_var;
     t_state.current_ns->bind_root(core);
+    t_state.current_ns->dynamic.store(true);
 
     intern_ns(make_box<obj::symbol>("native"));
 
@@ -51,7 +56,7 @@ namespace jank::runtime
             if constexpr(std::same_as<T, obj::symbol>)
             {
               auto const new_ns(intern_ns(typed_sym));
-              get_thread_state().current_ns->bind_root(new_ns);
+              get_thread_state().current_ns->set(new_ns).expect_ok();
               return obj::nil::nil_const();
             }
             else
@@ -85,6 +90,15 @@ namespace jank::runtime
 
     auto const fresh_seq_sym(make_box<obj::symbol>("clojure.core/fresh-seq"));
     intern_var(fresh_seq_sym).expect_ok()->bind_root(make_box<obj::native_function_wrapper>(&fresh_seq));
+
+    push_thread_bindings
+    (
+      obj::persistent_hash_map::create_unique
+      (std::make_pair(current_ns_var, current_ns_var->deref()))
+    ).expect_ok();
+
+    /* Finally, enter the user ns. */
+    //in_ns_fn(make_box<obj::symbol>("user"));
   }
 
   context::context(context const &ctx)
@@ -94,12 +108,36 @@ namespace jank::runtime
     , output_dir{ ctx.output_dir }
     , module_loader{ *this, ctx.module_loader.paths }
   {
-    auto ns_lock(namespaces.wlock());
-    for(auto const &ns : *ctx.namespaces.rlock())
-    { ns_lock->insert({ ns.first, ns.second->clone() }); }
-    *keywords.wlock() = *ctx.keywords.rlock();
-    *thread_states.wlock() = *ctx.thread_states.rlock();
+    {
+      auto ns_lock(namespaces.wlock());
+      for(auto const &ns : *ctx.namespaces.rlock())
+      { ns_lock->insert({ ns.first, ns.second->clone(*this) }); }
+      *keywords.wlock() = *ctx.keywords.rlock();
+      *thread_states.wlock() = *ctx.thread_states.rlock();
+    }
+
+    auto &tbfs(thread_binding_frames[this]);
+    auto const &other_tbfs(thread_binding_frames[&ctx]);
+    for(auto const &v : other_tbfs)
+    {
+      thread_binding_frame frame{ obj::persistent_hash_map::empty() };
+      for(auto it(v.bindings->fresh_seq()); it != nullptr; it = it->next_in_place())
+      {
+        auto const entry(it->first());
+        auto const var(expect_object<var>(entry->data[0]));
+        auto const value(entry->data[1]);
+        auto const new_var(intern_var(var->n->name->name, var->name->name).expect_ok());
+        frame.bindings = frame.bindings->assoc(new_var, value);
+      }
+
+      /* We push to the back, since we're looping from the front of the other list. If we
+       * pushed to the front of this one, we'd reverse the order. */
+      tbfs.push_back(std::move(frame));
+    }
   }
+
+  context::~context()
+  { thread_binding_frames.erase(this); }
 
   obj::symbol_ptr context::qualify_symbol(obj::symbol_ptr const &sym)
   {
@@ -107,7 +145,7 @@ namespace jank::runtime
     if(qualified_sym->ns.empty())
     {
       auto const t_state(get_thread_state());
-      auto const current_ns(expect_object<ns>(t_state.current_ns->get_root()));
+      auto const current_ns(expect_object<ns>(t_state.current_ns->deref()));
       qualified_sym = make_box<obj::symbol>(current_ns->name->name, sym->name);
     }
     return qualified_sym;
@@ -133,7 +171,7 @@ namespace jank::runtime
     else
     {
       auto const t_state(get_thread_state());
-      auto const current_ns(expect_object<ns>(t_state.current_ns->get_root()));
+      auto const current_ns(expect_object<ns>(t_state.current_ns->deref()));
       return current_ns->find_var(sym);
     }
   }
@@ -182,7 +220,7 @@ namespace jank::runtime
       auto const &module
       (
         expect_object<runtime::ns>
-        (intern_var("clojure.core", "*ns*").expect_ok()->get_root())->to_string()
+        (intern_var("clojure.core", "*ns*").expect_ok()->deref())->to_string()
       );
       codegen::processor cg_prc{ *this, wrapped_exprs, module, codegen::compilation_target::ns };
       write_module
@@ -307,10 +345,10 @@ namespace jank::runtime
       for(auto const &vp : (*locked_vars)->data)
       {
         auto const v(expect_object<var>(vp.second));
-        if(v->get_root() == nullptr)
+        if(v->deref() == nullptr)
         { std::cout << "    " << v->to_string() << " = nil" << std::endl; }
         else
-        { std::cout << "    " << v->to_string() << " = " << detail::to_string(v->get_root()) << std::endl; }
+        { std::cout << "    " << v->to_string() << " = " << detail::to_string(v->deref()) << std::endl; }
       }
     }
   }
@@ -360,7 +398,7 @@ namespace jank::runtime
 
   /* TODO: Cache this var. */
   ns_ptr context::current_ns()
-  { return expect_object<ns>(find_var("clojure.core", "*ns*").unwrap()->get_root()); }
+  { return expect_object<ns>(find_var("clojure.core", "*ns*").unwrap()->deref()); }
 
   result<var_ptr, native_persistent_string> context::intern_var
   (native_persistent_string const &ns, native_persistent_string const &name)
@@ -370,12 +408,12 @@ namespace jank::runtime
   {
     profile::timer timer{ "intern_var" };
     if(qualified_sym->ns.empty())
-    { return err("can't intern var; sym isn't qualified"); }
+    { return err(fmt::format("can't intern var; sym isn't qualified: {}", qualified_sym->to_string())); }
 
     auto locked_namespaces(namespaces.wlock());
     auto const found_ns(locked_namespaces->find(make_box<obj::symbol>(qualified_sym->ns)));
     if(found_ns == locked_namespaces->end())
-    { return err("can't intern var; namespace doesn't exist"); }
+    { return err(fmt::format("can't intern var; namespace doesn't exist: {}", qualified_sym->ns)); }
 
     return ok(found_ns->second->intern_var(qualified_sym));
   }
@@ -402,7 +440,7 @@ namespace jank::runtime
       else
       {
         auto const t_state(get_thread_state());
-        auto const current_ns(expect_object<jank::runtime::ns>(t_state.current_ns->get_root()));
+        auto const current_ns(expect_object<jank::runtime::ns>(t_state.current_ns->deref()));
         sym.ns = current_ns->name->name;
       }
     }
@@ -447,7 +485,7 @@ namespace jank::runtime
           { return typed_o; }
 
           auto const &args(make_box<obj::list>(typed_o->data.rest().cons(obj::nil::nil_const()).cons(typed_o)));
-          return apply_to(var.unwrap()->get_root(), args);
+          return apply_to(var.unwrap()->deref(), args);
         }
       },
       o
@@ -565,4 +603,49 @@ namespace jank::runtime
       return found->second;
     }
   }
+
+  string_result<void> context::push_thread_bindings(obj::persistent_hash_map_ptr const bindings)
+  {
+    thread_binding_frame frame{ obj::persistent_hash_map::empty() };
+    auto &tbfs(thread_binding_frames[this]);
+    if(!tbfs.empty())
+    { frame.bindings = tbfs.front().bindings; }
+
+    auto const thread_id(std::this_thread::get_id());
+
+    for(auto it(bindings->fresh_seq()); it != nullptr; it = it->next_in_place())
+    {
+      auto const entry(it->first());
+      auto const var(expect_object<var>(entry->data[0]));
+      if(!var->dynamic.load())
+      { return err(fmt::format("Can't dynamically bind non-dynamic var: {}", var->to_string())); }
+      /* TODO: Where is this unset? */
+      var->thread_bound.store(true);
+      frame.bindings = frame.bindings->assoc(var, make_box<var_thread_binding>(entry->data[1], thread_id));
+    }
+
+    assert(frame.bindings);
+    tbfs.push_front(std::move(frame));
+    return ok();
+  }
+
+  string_result<void> context::pop_thread_bindings()
+  {
+    auto &tbfs(thread_binding_frames[this]);
+    if(tbfs.empty()) [[unlikely]]
+    { return err("Mismatched thread binding pop"); }
+
+    tbfs.pop_front();
+
+    return ok();
+  }
+
+  option<thread_binding_frame> context::current_thread_binding_frame()
+  {
+    auto &tbfs(thread_binding_frames[this]);
+    if(tbfs.empty()) [[likely]]
+    { return none; }
+    return tbfs.front();
+  }
+
 }

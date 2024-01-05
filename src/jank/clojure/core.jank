@@ -1312,7 +1312,7 @@
 
 (defn var-get [v]
   (assert (var? v))
-  (native/raw "__value = expect_object<var>(#{ v }#)->get_root();"))
+  (native/raw "__value = expect_object<var>(#{ v }#)->deref();"))
 
 ; Namespaces (again).
 (defn create-ns [sym]

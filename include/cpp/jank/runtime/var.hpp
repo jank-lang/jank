@@ -19,8 +19,9 @@ namespace jank::runtime
     static constexpr bool pointer_free{ false };
 
     static_object() = delete;
-    static_object(ns_ptr const &n, obj::symbol_ptr const &s);
-    static_object(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr o);
+    static_object(ns_ptr const &n, obj::symbol_ptr const &name);
+    static_object(ns_ptr const &n, obj::symbol_ptr const &name, object_ptr root);
+    static_object(ns_ptr const &n, obj::symbol_ptr const &name, object_ptr const root, native_bool dynamic, native_bool thread_bound);
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
@@ -54,11 +55,13 @@ namespace jank::runtime
     ns_ptr n;
     obj::symbol_ptr name;
     option<object_ptr> meta;
-    std::atomic_bool dynamic{ false };
-    std::atomic_bool thread_bound{ false };
 
   private:
     folly::Synchronized<object_ptr> root;
+
+  public:
+    std::atomic_bool dynamic{ false };
+    std::atomic_bool thread_bound{ false };
   };
 
   using var = static_object<object_type::var>;
@@ -84,6 +87,9 @@ namespace jank::runtime
 
   using var_thread_binding = static_object<object_type::var_thread_binding>;
   using var_thread_binding_ptr = native_box<var_thread_binding>;
+
+  struct thread_binding_frame
+  { obj::persistent_hash_map_ptr bindings{}; };
 }
 
 namespace std

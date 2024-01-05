@@ -43,12 +43,12 @@ namespace jank::runtime
     using base_persistent_map::base_persistent_map;
 
     template <typename... Args>
-    static native_box<static_object> create_unique(Args &&...args)
+    static native_box<static_object> create_unique(Args &&...pairs)
     {
       return make_box<static_object>
       (
         runtime::detail::in_place_unique{},
-        std::forward<Args>(args)...
+        std::forward<Args>(pairs)...
       );
     }
 

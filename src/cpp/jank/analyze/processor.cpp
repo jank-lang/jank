@@ -455,7 +455,7 @@ namespace jank::analyze
       (
         runtime::module::nest_module
         (
-          runtime::detail::to_string(ns_var->get_root()),
+          runtime::detail::to_string(ns_var->deref()),
           runtime::munge(name)
         )
       );
@@ -598,9 +598,11 @@ namespace jank::analyze
       auto const &sym_obj(bindings->data[i]);
       auto const &val(bindings->data[i + 1]);
 
+      if(sym_obj->type != runtime::object_type::symbol)
+      { return err(error{ fmt::format("invalid let* binding: left hand must be a symbol, not {}", runtime::detail::to_string(sym_obj)) }); }
       auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
-      if(sym_obj->type != runtime::object_type::symbol || !sym->ns.empty())
-      { return err(error{ "invalid let* binding: left hand must be an unqualified symbol" }); }
+      if(!sym->ns.empty())
+      { return err(error{ fmt::format("invalid let* binding: left hand must be an unqualified symbol, not {}", sym->to_string()) }); }
 
       auto res(analyze(val, ret.frame, expression_type::expression, fn_ctx, false));
       if(res.is_err())

@@ -115,9 +115,9 @@ namespace jank::runtime
   bool ns::operator ==(ns const &rhs) const
   { return name == rhs.name; }
 
-  ns_ptr ns::clone() const
+  ns_ptr ns::clone(context &new_rt_ctx) const
   {
-    auto ret(make_box<ns>(name, rt_ctx));
+    auto ret(make_box<ns>(name, new_rt_ctx));
     *ret->vars.wlock() = *vars.rlock();
     *ret->aliases.wlock() = *aliases.rlock();
     return ret;

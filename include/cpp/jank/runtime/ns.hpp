@@ -39,7 +39,7 @@ namespace jank::runtime
 
     bool operator ==(static_object const &rhs) const;
 
-    native_box<static_object> clone() const;
+    native_box<static_object> clone(context &rt_ctx) const;
 
     object base{ object_type::ns };
     obj::symbol_ptr name{};

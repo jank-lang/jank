@@ -345,11 +345,11 @@ namespace jank::codegen
     {
       case analyze::expression_type::statement:
       case analyze::expression_type::expression:
-      { return fmt::format("{}->get_root()", var.native_name.name); }
+      { return fmt::format("{}->deref()", var.native_name.name); }
       case analyze::expression_type::return_statement:
       {
         auto inserter(std::back_inserter(body_buffer));
-        fmt::format_to(inserter, "return {}->get_root();", var.native_name.name);
+        fmt::format_to(inserter, "return {}->deref();", var.native_name.name);
         return none;
       }
     }

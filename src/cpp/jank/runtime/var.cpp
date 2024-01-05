@@ -1,4 +1,3 @@
-#include <forward_list>
 
 #include <fmt/compile.h>
 
@@ -9,58 +8,15 @@
 
 namespace jank::runtime
 {
-  struct thread_binding_frame
-  { obj::persistent_hash_map_ptr bindings{}; };
-
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-  static thread_local std::forward_list<thread_binding_frame> thread_binding_frames;
-
-  string_result<void> push_thread_bindings(obj::persistent_hash_map_ptr const bindings)
-  {
-    thread_binding_frame frame;
-    obj::persistent_hash_map_ptr new_thread_bindings{};
-    if(!thread_binding_frames.empty()) [[unlikely]]
-    { new_thread_bindings = thread_binding_frames.front().bindings; }
-
-    auto const thread_id(std::this_thread::get_id());
-
-    for(auto it(bindings->fresh_seq()); it != nullptr; it = it->next_in_place())
-    {
-      auto const entry(it->first());
-      auto const var(expect_object<var>(entry->data[0]));
-      if(!var->dynamic.load()) [[unlikely]]
-      { return err(fmt::format("Can't dynamically bind non-dynamic var: {}", var->to_string())); }
-      var->thread_bound.store(true);
-      new_thread_bindings = new_thread_bindings->assoc(var, make_box<var_thread_binding>(entry->data[1], thread_id));
-    }
-
-    thread_binding_frames.push_front(std::move(frame));
-    return ok();
-  }
-
-  string_result<void> pop_thread_bindings()
-  {
-    if(thread_binding_frames.empty()) [[unlikely]]
-    { return err("Mismatched thread binding pop"); }
-
-    thread_binding_frames.pop_front();
-
-    return ok();
-  }
-
-  option<thread_binding_frame> current_thread_binding_frame()
-  {
-    if(thread_binding_frames.empty()) [[likely]]
-    { return none; }
-    return thread_binding_frames.front();
-  }
-
   /* NOTE: We default to nil, rather than a special unbound type. */
-  var::static_object(ns_ptr const &n, obj::symbol_ptr const &s)
-    : n{ n }, name{ s }, root{ obj::nil::nil_const() }
+  var::static_object(ns_ptr const &n, obj::symbol_ptr const &name)
+    : n{ n }, name{ name }, root{ obj::nil::nil_const() }
   { }
-  var::static_object(ns_ptr const &n, obj::symbol_ptr const &s, object_ptr o)
-    : n{ n }, name{ s }, root{ o }
+  var::static_object(ns_ptr const &n, obj::symbol_ptr const &name, object_ptr const root)
+    : n{ n }, name{ name }, root{ root }
+  { }
+  var::static_object(ns_ptr const &n, obj::symbol_ptr const &name, object_ptr const root, native_bool const dynamic, native_bool const thread_bound)
+    : n{ n }, name{ name }, root{ root }, dynamic{ dynamic }, thread_bound{ thread_bound }
   { }
 
   native_bool var::equal(object const &o) const
@@ -128,26 +84,37 @@ namespace jank::runtime
 
   var_thread_binding_ptr var::get_thread_binding() const
   {
-    if(!thread_bound.load() || thread_binding_frames.empty())
+    if(!thread_bound.load())
     { return nullptr; }
 
-    auto const found(thread_binding_frames.front().bindings->get_entry(this));
+    assert(n);
+    auto &tbfs(n->rt_ctx.thread_binding_frames[&n->rt_ctx]);
+    if(tbfs.empty())
+    { return nullptr; }
+
+    assert(tbfs.front().bindings);
+    auto const found(tbfs.front().bindings->get_entry(this));
     if(found == obj::nil::nil_const())
     { return nullptr; }
 
-    return expect_object<var_thread_binding>(expect_object<obj::vector>(found)->data[1]);
+    auto const ret(expect_object<obj::vector>(found)->data[1]);
+    assert(ret);
+    return expect_object<var_thread_binding>(ret);
   }
 
   object_ptr var::deref() const
   {
     auto const binding(get_thread_binding());
     if(binding)
-    { return binding; }
+    {
+      assert(binding->value);
+      return binding->value;
+    }
     return *root.rlock();
   }
 
   var_ptr var::clone() const
-  { return make_box<var>(n, name, get_root()); }
+  { return make_box<var>(n, name, get_root(), dynamic.load(), thread_bound.load()); }
 
   var_thread_binding::static_object(object_ptr const value, std::thread::id const id)
     : value{ value }, thread_id{ id }

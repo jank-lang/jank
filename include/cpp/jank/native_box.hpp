@@ -145,8 +145,10 @@ namespace jank
   template <typename T>
   using remove_box_t = typename remove_box<T>::type;
 
+  /* TODO: Constexpr these. */
+
   template <typename T>
-  native_box<T> make_box(native_box<T> const &o)
+  constexpr native_box<T> make_box(native_box<T> const &o)
   { return o; }
   template <typename T, typename... Args>
   native_box<T> make_box(Args &&... args)

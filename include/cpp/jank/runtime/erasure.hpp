@@ -35,20 +35,20 @@ namespace jank::runtime
   template <typename T>
   requires behavior::objectable<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr inline object_ptr erase(native_box<T> const o)
+  constexpr object_ptr erase(native_box<T> const o)
   { return &o->base; }
   template <typename T>
   requires behavior::objectable<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr inline object_ptr erase(native_box<T const> const o)
+  constexpr object_ptr erase(native_box<T const> const o)
   { return const_cast<object_ptr>(&o->base); }
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr inline object_ptr erase(object_ptr const o)
+  constexpr object_ptr erase(object_ptr const o)
   { return o; }
   template <typename T>
   requires behavior::objectable<std::decay_t<std::remove_pointer_t<T>>>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr inline object_ptr erase(T const o)
+  constexpr object_ptr erase(T const o)
   { return const_cast<object*>(&o->base); }
 
   /* This is dangerous. You probably don't want it. Just use `visit_object`. However, if you're
@@ -57,17 +57,25 @@ namespace jank::runtime
   requires behavior::objectable<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr native_box<T> expect_object(object_ptr const o)
-  { return reinterpret_cast<T*>(reinterpret_cast<char*>(o.data) - offsetof(T, base)); }
+  {
+    assert(o);
+    assert(o->type == detail::object_type_to_enum<T>::value);
+    return reinterpret_cast<T*>(reinterpret_cast<char*>(o.data) - offsetof(T, base));
+  }
   template <typename T>
   requires behavior::objectable<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr native_box<T> expect_object(object const * const o)
-  { return reinterpret_cast<T*>(reinterpret_cast<char*>(const_cast<object*>(o)) - offsetof(T, base)); }
+  {
+    assert(o);
+    assert(o->type == detail::object_type_to_enum<T>::value);
+    return reinterpret_cast<T*>(reinterpret_cast<char*>(const_cast<object*>(o)) - offsetof(T, base));
+  }
 
   template <typename T, typename F, typename ...Args>
   requires behavior::objectable<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr inline auto visit_object(F &&fn, native_box<T const> const not_erased, Args && ...args)
+  constexpr auto visit_object(F &&fn, native_box<T const> const not_erased, Args && ...args)
   { return fn(const_cast<T*>(&not_erased->base), std::forward<Args>(args)...); }
 
   template <typename F, typename ...Args>
@@ -79,7 +87,7 @@ namespace jank::runtime
   template <typename F, typename ...Args>
   requires visitable<F, Args...>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr inline auto visit_object(F &&fn, object const * const const_erased, Args && ...args)
+  constexpr auto visit_object(F &&fn, object const * const const_erased, Args && ...args)
   {
     assert(const_erased);
     auto * const erased(const_cast<object*>(const_erased));

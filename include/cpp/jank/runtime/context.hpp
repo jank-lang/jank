@@ -1,7 +1,7 @@
 #pragma once
 
 #include <mutex>
-#include <unordered_map>
+#include <list>
 
 #include <folly/Synchronized.h>
 
@@ -25,6 +25,7 @@ namespace jank::runtime
     context(util::cli::options const &opts);
     context(context const&);
     context(context &&) = delete;
+    ~context();
 
     void dump() const;
 
@@ -105,6 +106,10 @@ namespace jank::runtime
     thread_state& get_thread_state();
     thread_state& get_thread_state(option<thread_state> init);
 
+    string_result<void> push_thread_bindings(obj::persistent_hash_map_ptr const bindings);
+    string_result<void> pop_thread_bindings();
+    option<thread_binding_frame> current_thread_binding_frame();
+
     folly::Synchronized<native_unordered_map<std::thread::id, thread_state>> thread_states;
     /* The analyze processor is reused across evaluations so we can keep the semantic information
      * of previous code. This is essential for REPL use. */
@@ -118,5 +123,7 @@ namespace jank::runtime
     native_unordered_map<native_persistent_string, native_vector<native_persistent_string>> module_dependencies;
     native_persistent_string output_dir;
     module::loader module_loader;
+
+    static thread_local native_unordered_map<context const*, std::list<thread_binding_frame>> thread_binding_frames;
   };
 }

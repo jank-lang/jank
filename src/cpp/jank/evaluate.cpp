@@ -133,7 +133,7 @@ namespace jank::evaluate
   )
   {
     auto const var(rt_ctx.find_var(expr.qualified_name));
-    return var.unwrap()->get_root();
+    return var.unwrap()->deref();
   }
 
   runtime::object_ptr eval
@@ -310,7 +310,7 @@ namespace jank::evaluate
       runtime::module::nest_module
       (
         runtime::expect_object<runtime::ns>
-        (rt_ctx.intern_var("clojure.core", "*ns*").expect_ok()->get_root())->to_string(),
+        (rt_ctx.intern_var("clojure.core", "*ns*").expect_ok()->deref())->to_string(),
         runtime::munge(expr.name)
       )
     );

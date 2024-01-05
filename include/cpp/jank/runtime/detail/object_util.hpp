@@ -9,7 +9,14 @@ namespace jank::runtime::detail
   native_integer to_hash(object_ptr const o);
   native_real to_real(object_ptr const o);
   void to_string(object_ptr const o, fmt::memory_buffer &buff);
-  bool equal(object_ptr const lhs, object_ptr const rhs);
+  native_bool equal(object_ptr const lhs, object_ptr const rhs);
+
+  template <typename T>
+  struct object_type_to_enum;
+
+  template <object_type O>
+  struct object_type_to_enum<static_object<O>>
+  { static constexpr object_type value{ O }; };
 }
 
 namespace jank
@@ -24,6 +31,8 @@ namespace jank
     using list = static_object<object_type::list>;
     using symbol = static_object<object_type::symbol>;
   }
+
+  /* TODO: Constexpr these. */
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(std::nullptr_t const &)
