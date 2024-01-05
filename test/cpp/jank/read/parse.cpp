@@ -145,7 +145,7 @@ namespace jank::read::parse
       lex::processor lp{ "foo.bar/bar" };
       runtime::context rt_ctx;
       auto const meow(rt_ctx.intern_ns(make_box<runtime::obj::symbol>("meow")));
-      rt_ctx.current_ns()->add_alias(make_box<runtime::obj::symbol>("foo.bar"), meow);
+      rt_ctx.current_ns()->add_alias(make_box<runtime::obj::symbol>("foo.bar"), meow).expect_ok();
       processor p{ rt_ctx, lp.begin(), lp.end() };
       for(auto const &s : { std::make_pair("meow", "bar") })
       {
@@ -245,7 +245,7 @@ namespace jank::read::parse
       runtime::context rt_ctx;
       auto const foo_ns(rt_ctx.intern_ns(make_box<runtime::obj::symbol>("foo.bar.spam")));
       auto const clojure_ns(rt_ctx.find_ns(make_box<runtime::obj::symbol>("clojure.core")));
-      clojure_ns.unwrap()->add_alias(make_box<runtime::obj::symbol>("foo"), foo_ns);
+      clojure_ns.unwrap()->add_alias(make_box<runtime::obj::symbol>("foo"), foo_ns).expect_ok();
       processor p{ rt_ctx, lp.begin(), lp.end() };
       auto const r(p.next());
       CHECK(r.is_ok());

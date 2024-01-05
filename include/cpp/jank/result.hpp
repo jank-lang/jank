@@ -38,7 +38,7 @@ namespace jank
   { return { std::forward<E>(data) }; }
 
   template <typename R, typename E>
-  struct result
+  struct [[nodiscard]] result
   {
     result(detail::result<true, R> &&r) : data{ std::move(r.data) }
     {}
@@ -150,7 +150,7 @@ namespace jank
    *
    * This is favorable over an option<E> since result<R, E> is clearly used for error handling. */
   template <typename E>
-  struct result<void, E>
+  struct [[nodiscard]] result<void, E>
   {
     result(detail::result<true, void> &&) : data{ void_t{} }
     {}
@@ -220,4 +220,7 @@ namespace jank
     { return os << "ok(" << boost::get<R>(r.data) << ")"; }
     return os << "err(" << boost::get<E>(r.data) << ")";
   }
+
+  template <typename R>
+  using string_result = result<R, native_persistent_string>;
 }
