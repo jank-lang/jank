@@ -121,7 +121,7 @@ namespace jank::evaluate
     { return var; }
 
     auto const evaluated_value(eval(rt_ctx, jit_prc, expr.value.unwrap()));
-    var->set_root(evaluated_value);
+    var->bind_root(evaluated_value);
     return var;
   }
 

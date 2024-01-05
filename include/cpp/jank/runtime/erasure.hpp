@@ -190,6 +190,10 @@ namespace jank::runtime
       {
         return fn(expect_object<var>(erased), std::forward<Args>(args)...);
       } break;
+      case object_type::var_thread_binding:
+      {
+        return fn(expect_object<var_thread_binding>(erased), std::forward<Args>(args)...);
+      } break;
       default:
       {
         //throw std::runtime_error

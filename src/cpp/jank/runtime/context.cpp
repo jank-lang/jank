@@ -33,7 +33,7 @@ namespace jank::runtime
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
     auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));
     t_state.current_ns = core->intern_var(ns_sym);
-    t_state.current_ns->set_root(core);
+    t_state.current_ns->bind_root(core);
 
     intern_ns(make_box<obj::symbol>("native"));
 
@@ -51,7 +51,7 @@ namespace jank::runtime
             if constexpr(std::same_as<T, obj::symbol>)
             {
               auto const new_ns(intern_ns(typed_sym));
-              get_thread_state().current_ns->set_root(new_ns);
+              get_thread_state().current_ns->bind_root(new_ns);
               return obj::nil::nil_const();
             }
             else
@@ -63,7 +63,7 @@ namespace jank::runtime
       }
     );
     auto in_ns_var(intern_var(in_ns_sym).expect_ok());
-    in_ns_var->set_root(make_box<obj::native_function_wrapper>(in_ns_fn));
+    in_ns_var->bind_root(make_box<obj::native_function_wrapper>(in_ns_fn));
     t_state.in_ns = in_ns_var;
 
     /* TODO: Remove this once it can be defined in jank. */
@@ -77,14 +77,14 @@ namespace jank::runtime
         return obj::nil::nil_const();
       }
     );
-    intern_var(assert_sym).expect_ok()->set_root(make_box<obj::native_function_wrapper>(assert_fn));
+    intern_var(assert_sym).expect_ok()->bind_root(make_box<obj::native_function_wrapper>(assert_fn));
 
     /* TODO: Remove this once it can be defined in jank. */
     auto const seq_sym(make_box<obj::symbol>("clojure.core/seq"));
-    intern_var(seq_sym).expect_ok()->set_root(make_box<obj::native_function_wrapper>(static_cast<object_ptr (*)(object_ptr)>(&seq)));
+    intern_var(seq_sym).expect_ok()->bind_root(make_box<obj::native_function_wrapper>(static_cast<object_ptr (*)(object_ptr)>(&seq)));
 
     auto const fresh_seq_sym(make_box<obj::symbol>("clojure.core/fresh-seq"));
-    intern_var(fresh_seq_sym).expect_ok()->set_root(make_box<obj::native_function_wrapper>(&fresh_seq));
+    intern_var(fresh_seq_sym).expect_ok()->bind_root(make_box<obj::native_function_wrapper>(&fresh_seq));
   }
 
   context::context(context const &ctx)
@@ -233,7 +233,7 @@ namespace jank::runtime
     std::experimental::scope_exit reset
     {
       [=]()
-      { find_var("clojure.core", "*ns*").unwrap()->set_root(ns); }
+      { find_var("clojure.core", "*ns*").unwrap()->bind_root(ns); }
     };
 
     try

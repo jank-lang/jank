@@ -312,7 +312,7 @@ namespace jank::codegen
       {
         return fmt::format
         (
-          "{}->set_root({})",
+          "{}->bind_root({})",
           runtime::munge(var.native_name.name),
           val.str(true)
         );
@@ -324,7 +324,7 @@ namespace jank::codegen
         fmt::format_to
         (
           inserter,
-          "{}->set_root({});",
+          "{}->bind_root({});",
           runtime::munge(var.native_name.name),
           val.str(true)
         );

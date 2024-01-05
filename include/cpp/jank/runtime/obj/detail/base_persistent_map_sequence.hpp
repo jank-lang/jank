@@ -86,13 +86,13 @@ namespace jank::runtime::obj::detail
     { return static_cast<parent_type*>(this); }
 
     native_box<parent_type> fresh_seq() const
-    { return jank::make_box<parent_type>(coll, begin, end); }
+    { return make_box<parent_type>(coll, begin, end); }
 
     /* behavior::sequenceable */
-    object_ptr first() const
+    obj::vector_ptr first() const
     {
       auto const pair(*begin);
-      return jank::make_box<obj::vector>(runtime::detail::native_persistent_vector{ pair.first, pair.second });
+      return make_box<obj::vector>(runtime::detail::native_persistent_vector{ pair.first, pair.second });
     }
 
     native_box<parent_type> next() const
@@ -103,7 +103,7 @@ namespace jank::runtime::obj::detail
       if(n == end)
       { return nullptr; }
 
-      return jank::make_box<parent_type>(coll, n, end);
+      return make_box<parent_type>(coll, n, end);
     }
 
     native_box<parent_type> next_in_place()
@@ -123,7 +123,7 @@ namespace jank::runtime::obj::detail
       { return nullptr; }
 
       auto const pair(*begin);
-      return jank::make_box<obj::vector>(runtime::detail::native_persistent_vector{ pair.first, pair.second });
+      return make_box<obj::vector>(runtime::detail::native_persistent_vector{ pair.first, pair.second });
     }
 
     obj::cons_ptr cons(object_ptr const head)

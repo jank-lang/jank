@@ -35,6 +35,7 @@ namespace jank::runtime
     persistent_set_sequence,
     ns,
     var,
+    var_thread_binding,
   };
 
   struct object
