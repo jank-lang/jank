@@ -153,8 +153,8 @@ namespace jank::analyze
     auto qualified_sym(make_box<runtime::obj::symbol>(*sym));
     if(qualified_sym->ns.empty())
     {
-      auto const state(rt_ctx.get_thread_state());
-      qualified_sym->ns = runtime::expect_object<runtime::ns>(state.current_ns->deref())->name->name;
+      qualified_sym->ns = runtime::expect_object<runtime::ns>
+      (rt_ctx.current_ns_var->deref())->name->name;
     }
     /* We use unique native names, just so var names don't clash with the underlying C++ API. */
     lifted_var lv

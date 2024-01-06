@@ -453,6 +453,7 @@ namespace jank
      *   2. In-place char buffer (used for small categories)
      *   3. As a large_storage instance, containing a pointer, size, and capacity
      */
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init) */
     struct storage : allocator_type
     {
       /* TODO: What if we store a max of 22 chars and dedicate a byte for flags with no masking? */
@@ -490,6 +491,7 @@ namespace jank
     constexpr void set_small_size(size_type const s) noexcept
     {
       assert(s <= max_small_size);
+      /* NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index) */
       store.small[s] = 0;
       store.small[max_small_size] = value_type((max_small_size - s) << small_shift);
       assert(get_category() == category::small && size() == s);

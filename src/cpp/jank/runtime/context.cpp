@@ -20,8 +20,8 @@
 
 namespace jank::runtime
 {
-  thread_local native_unordered_map
-  <context const*, std::list<thread_binding_frame>> context::thread_binding_frames{};
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  thread_local decltype(context::thread_binding_frames) context::thread_binding_frames{};
 
   context::context()
     : context(util::cli::options{ })
@@ -32,17 +32,14 @@ namespace jank::runtime
     , output_dir{ opts.compilation_path }
     , module_loader{ *this, opts.class_path }
   {
-    auto &t_state(get_thread_state());
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
     auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));
-    auto const current_ns_var(core->intern_var(ns_sym));
-    t_state.current_ns = current_ns_var;
-    t_state.current_ns->bind_root(core);
-    t_state.current_ns->dynamic.store(true);
+    current_ns_var = core->intern_var(ns_sym);
+    current_ns_var->bind_root(core);
+    current_ns_var->dynamic.store(true);
 
     intern_ns(make_box<obj::symbol>("native"));
 
-    auto const in_ns_sym(make_box<obj::symbol>("clojure.core/in-ns"));
     std::function<object_ptr (object_ptr)> in_ns_fn
     (
       [this](object_ptr const sym)
@@ -56,7 +53,7 @@ namespace jank::runtime
             if constexpr(std::same_as<T, obj::symbol>)
             {
               auto const new_ns(intern_ns(typed_sym));
-              get_thread_state().current_ns->set(new_ns).expect_ok();
+              current_ns_var->set(new_ns).expect_ok();
               return obj::nil::nil_const();
             }
             else
@@ -67,9 +64,9 @@ namespace jank::runtime
         );
       }
     );
-    auto in_ns_var(intern_var(in_ns_sym).expect_ok());
+    auto const in_ns_sym(make_box<obj::symbol>("clojure.core/in-ns"));
+    in_ns_var = intern_var(in_ns_sym).expect_ok();
     in_ns_var->bind_root(make_box<obj::native_function_wrapper>(in_ns_fn));
-    t_state.in_ns = in_ns_var;
 
     /* TODO: Remove this once it can be defined in jank. */
     auto const assert_sym(make_box<obj::symbol>("clojure.core/assert"));
@@ -96,9 +93,6 @@ namespace jank::runtime
       obj::persistent_hash_map::create_unique
       (std::make_pair(current_ns_var, current_ns_var->deref()))
     ).expect_ok();
-
-    /* Finally, enter the user ns. */
-    //in_ns_fn(make_box<obj::symbol>("user"));
   }
 
   context::context(context const &ctx)
@@ -113,7 +107,6 @@ namespace jank::runtime
       for(auto const &ns : *ctx.namespaces.rlock())
       { ns_lock->insert({ ns.first, ns.second->clone(*this) }); }
       *keywords.wlock() = *ctx.keywords.rlock();
-      *thread_states.wlock() = *ctx.thread_states.rlock();
     }
 
     auto &tbfs(thread_binding_frames[this]);
@@ -134,18 +127,24 @@ namespace jank::runtime
        * pushed to the front of this one, we'd reverse the order. */
       tbfs.push_back(std::move(frame));
     }
+
+    auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
+    auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));
+    current_ns_var = core->intern_var(ns_sym);
+
+    auto const in_ns_sym(make_box<obj::symbol>("clojure.core/in-ns"));
+    in_ns_var = intern_var(in_ns_sym).expect_ok();
   }
 
   context::~context()
   { thread_binding_frames.erase(this); }
 
-  obj::symbol_ptr context::qualify_symbol(obj::symbol_ptr const &sym)
+  obj::symbol_ptr context::qualify_symbol(obj::symbol_ptr const &sym) const
   {
     obj::symbol_ptr qualified_sym{ sym };
     if(qualified_sym->ns.empty())
     {
-      auto const t_state(get_thread_state());
-      auto const current_ns(expect_object<ns>(t_state.current_ns->deref()));
+      auto const current_ns(expect_object<ns>(current_ns_var->deref()));
       qualified_sym = make_box<obj::symbol>(current_ns->name->name, sym->name);
     }
     return qualified_sym;
@@ -170,8 +169,7 @@ namespace jank::runtime
     }
     else
     {
-      auto const t_state(get_thread_state());
-      auto const current_ns(expect_object<ns>(t_state.current_ns->deref()));
+      auto const current_ns(expect_object<ns>(current_ns_var->deref()));
       return current_ns->find_var(sym);
     }
   }
@@ -439,8 +437,7 @@ namespace jank::runtime
       }
       else
       {
-        auto const t_state(get_thread_state());
-        auto const current_ns(expect_object<jank::runtime::ns>(t_state.current_ns->deref()));
+        auto const current_ns(expect_object<jank::runtime::ns>(current_ns_var->deref()));
         sym.ns = current_ns->name->name;
       }
     }
@@ -565,45 +562,6 @@ namespace jank::runtime
     return obj::nil::nil_const();
   }
 
-  context::thread_state::thread_state(context &ctx)
-    : rt_ctx{ ctx }
-  { }
-
-  context::thread_state& context::get_thread_state()
-  { return get_thread_state(none); }
-  context::thread_state& context::get_thread_state(option<thread_state> init)
-  {
-    profile::timer timer{ "rt get_thread_state" };
-    auto const this_id(std::this_thread::get_id());
-    decltype(thread_states)::DataType::iterator found;
-
-    /* TODO: Can this just use an upgrade lock? */
-    /* Assume it's there and use a read lock. */
-    {
-      auto const locked_thread_states(thread_states.rlock());
-      /* Our read lock here is on the container; we're returning a mutable item, but
-         that's because the item itself is thread-local. */
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-      found = const_cast
-      <native_unordered_map<std::thread::id, thread_state>&>(*locked_thread_states).find(this_id);
-      if(found != locked_thread_states->end())
-      { return found->second; }
-    }
-
-    /* If it's not there, use a write lock and put it there (but check again first). */
-    {
-      auto const locked_thread_states(thread_states.wlock());
-      found = locked_thread_states->find(this_id);
-      if(found != locked_thread_states->end())
-      { return found->second; }
-      else if(init.is_some())
-      { found = locked_thread_states->emplace(this_id, std::move(init.unwrap())).first; }
-      else
-      { found = locked_thread_states->emplace(this_id, thread_state{ *this }).first; }
-      return found->second;
-    }
-  }
-
   string_result<void> context::push_thread_bindings(obj::persistent_hash_map_ptr const bindings)
   {
     thread_binding_frame frame{ obj::persistent_hash_map::empty() };
@@ -632,7 +590,7 @@ namespace jank::runtime
   string_result<void> context::pop_thread_bindings()
   {
     auto &tbfs(thread_binding_frames[this]);
-    if(tbfs.empty()) [[unlikely]]
+    if(tbfs.empty())
     { return err("Mismatched thread binding pop"); }
 
     tbfs.pop_front();
@@ -643,9 +601,8 @@ namespace jank::runtime
   option<thread_binding_frame> context::current_thread_binding_frame()
   {
     auto &tbfs(thread_binding_frames[this]);
-    if(tbfs.empty()) [[likely]]
+    if(tbfs.empty())
     { return none; }
     return tbfs.front();
   }
-
 }
