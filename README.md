@@ -23,22 +23,28 @@ There are pre-compiled binaries for Ubuntu 22.04, which are built to follow the
 For Debian-based distros, this should be all you need:
 
 ```bash
-$ sudo apt-get install -y curl git zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev
+sudo apt-get install -y curl git zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev entr
+```
+
+For Arch:
+
+```bash
+sudo pacman -S clang pkg-config cmake ninja make python3 libffi jemalloc entr
 ```
 
 For macOS, try this:
 
 ```bash
-$ brew install curl git zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib
+brew install curl git zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib
 ```
 
 Clone the repo as follows:
 
 ```bash
-$ git clone --recurse-submodules https://github.com/jank-lang/jank.git
+git clone --recurse-submodules https://github.com/jank-lang/jank.git
 
 # If you didn't recurse submodules when cloning, you'll need to run this.
-$ git submodule update --recursive --init
+git submodule update --recursive --init
 ```
 
 ### Compiling Cling
@@ -46,11 +52,11 @@ Note that you must compile Cling/Clang/LLVM. This can take an hour or two,
 depending on your machine. Building jank itself should take less than a minute.
 
 ```
-$ mkdir -p build
-$ cd build
-$ ../bin/build-cling
-$ cd -
-$ export CC=$PWD/build/cling-build/bin/clang; export CXX=$PWD/build/cling-build/bin/clang++;
+mkdir -p build
+cd build
+../bin/build-cling
+cd -
+export CC=$PWD/build/cling-build/bin/clang; export CXX=$PWD/build/cling-build/bin/clang++;
 ```
 
 At this point, you're ready to build jank.
@@ -62,19 +68,19 @@ At this point, you're ready to build jank.
 A typical release build just needs the following:
 
 ```bash
-$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_cling_build_dir=build/cling-build
-$ ./bin/compile
+./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_cling_build_dir=build/cling-build
+./bin/compile
 ```
 
 #### Debug
 To make a debug build, specify the build type when configuring.
 
 ```bash
-$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_cling_build_dir=build/cling-build -Djank_tests=on
-$ ./bin/compile
+./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_cling_build_dir=build/cling-build -Djank_tests=on
+./bin/compile
 
 # When developing, continuously run the tests locally.
-$ ./bin/watch ./bin/test
+./bin/watch ./bin/test
 ```
 
 ### Packaging
@@ -83,8 +89,8 @@ Note that this includes a lot of header files, which are necessary for jank's
 JIT compilation.
 
 ```bash
-$ ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_cling_build_dir=build/cling-build
-$ ./bin/install
+./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_cling_build_dir=build/cling-build
+./bin/install
 ```
 
 ## Sponsors

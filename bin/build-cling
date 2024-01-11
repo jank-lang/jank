@@ -40,7 +40,7 @@ srcdir="${PWD}"
 cling_url="https://github.com/root-project/cling.git"
 cling_branch="master"
 llvm_url="https://github.com/root-project/llvm-project.git"
-llvm_branch="cling-llvm13"
+llvm_branch="cling-llvm13-20230802-01"
 
 # $1 == Repo URL
 # $2 == Repo branch
@@ -52,12 +52,16 @@ function prepare()
 {
   if [[ ! -d "${srcdir}/llvm" ]];
   then
-    shallow_clone "${llvm_url}" "${llvm_branch}" "${srcdir}"/llvm
+    #shallow_clone "${llvm_url}" "${llvm_branch}" "${srcdir}"/llvm
+    git clone -b "${llvm_branch}" --shallow-submodules --single-branch "${llvm_url}" "${srcdir}"/llvm
   fi
 
   if [[ ! -d "${srcdir}/cling" ]];
   then
     git clone -b "${cling_branch}" --shallow-submodules --single-branch "${cling_url}" "${srcdir}"/cling
+    pushd "${srcdir}"/cling >/dev/null
+      git checkout 798c5659789923fe63b7a7edfa99b5af9300311f
+    popd >/dev/null
   fi
 }
 
