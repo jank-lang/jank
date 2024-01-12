@@ -32,7 +32,6 @@ namespace jank::runtime
         if constexpr(behavior::sequenceable<T>)
         {
           head = typed_tail->first();
-          /* TODO: Can this be in place? */
           tail = typed_tail->next();
         }
         else
@@ -58,7 +57,6 @@ namespace jank::runtime
         if constexpr(behavior::sequenceable<T>)
         {
           head = typed_tail->first();
-          /* TODO: Can this be in place? */
           tail = typed_tail->next();
         }
         else

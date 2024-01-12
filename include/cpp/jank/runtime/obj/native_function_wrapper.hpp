@@ -41,7 +41,6 @@ namespace jank::runtime
   struct invalid_arity
   { };
 
-  /* TODO: Rename to function_wrapper */
   template <>
   struct static_object<object_type::native_function_wrapper> : gc, behavior::callable
   {

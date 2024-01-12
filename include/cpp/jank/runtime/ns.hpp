@@ -43,8 +43,6 @@ namespace jank::runtime
 
     object base{ object_type::ns };
     obj::symbol_ptr name{};
-    /* TODO: Clojure doesn't qualify these symbol keys, but we do. That changes the output of
-     * fns like `ns-map`. */
     /* TODO: Benchmark the use of atomics here. That's what Clojure uses. */
     folly::Synchronized<obj::persistent_hash_map_ptr> vars;
     folly::Synchronized<obj::persistent_hash_map_ptr> aliases;
