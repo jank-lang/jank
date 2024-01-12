@@ -827,13 +827,14 @@ namespace jank::codegen
     bool const box_needed
   )
   {
+    auto const compiling(runtime::detail::truthy(rt_ctx.compile_files_var->deref()));
     /* Since each codegen proc handles one callable struct, we create a new one for this fn. */
     processor prc
     {
       rt_ctx,
       expr,
       runtime::module::nest_module(module, runtime::munge(expr.name)),
-      rt_ctx.compiling ? compilation_target::function : compilation_target::repl
+      compiling ? compilation_target::function : compilation_target::repl
     };
 
     /* If we're compiling, we'll create a separate file for this. */

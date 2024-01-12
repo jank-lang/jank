@@ -38,6 +38,17 @@ namespace jank::runtime
     current_ns_var->bind_root(core);
     current_ns_var->dynamic.store(true);
 
+    auto const compile_files_sym(make_box<obj::symbol>("clojure.core/*compile-files*"));
+    compile_files_var = core->intern_var(compile_files_sym);
+    compile_files_var->bind_root(obj::boolean::false_const());
+    compile_files_var->dynamic.store(true);
+
+    /* TODO: Non-standard binding in clojure.core. */
+    auto const current_module_sym(make_box<obj::symbol>("clojure.core/*current-module*"));
+    current_module_var = core->intern_var(current_module_sym);
+    current_module_var->bind_root(obj::string::empty());
+    current_module_var->dynamic.store(true);
+
     intern_ns(make_box<obj::symbol>("native"));
 
     std::function<object_ptr (object_ptr)> in_ns_fn
@@ -97,7 +108,6 @@ namespace jank::runtime
 
   context::context(context const &ctx)
     : jit_prc{ *this, ctx.jit_prc.optimization_level }
-    , current_module{ ctx.current_module }
     , module_dependencies{ ctx.module_dependencies }
     , output_dir{ ctx.output_dir }
     , module_loader{ *this, ctx.module_loader.paths }
@@ -129,11 +139,11 @@ namespace jank::runtime
     }
 
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
-    auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));
-    current_ns_var = core->intern_var(ns_sym);
+    current_ns_var = core->intern_var(make_box<obj::symbol>("clojure.core/*ns*"));
 
-    auto const in_ns_sym(make_box<obj::symbol>("clojure.core/in-ns"));
-    in_ns_var = intern_var(in_ns_sym).expect_ok();
+    in_ns_var = intern_var(make_box<obj::symbol>("clojure.core/in-ns")).expect_ok();
+    compile_files_var = intern_var(make_box<obj::symbol>("clojure.core/*compile-files*")).expect_ok();
+    current_module_var = intern_var(make_box<obj::symbol>("clojure.core/*current-module*")).expect_ok();
   }
 
   context::~context()
@@ -155,7 +165,6 @@ namespace jank::runtime
     profile::timer timer{ "rt find_var" };
     if(!sym->ns.empty())
     {
-      /* TODO: This is the issue. Diff it with intern_var. */
       ns_ptr ns{};
       {
         auto const locked_namespaces(namespaces.rlock());
@@ -180,14 +189,6 @@ namespace jank::runtime
   option<object_ptr> context::find_local(obj::symbol_ptr const &)
   { return none; }
 
-  /* TODO: Use module loader. */
-  void context::eval_prelude()
-  {
-    auto const jank_path(jank::util::process_location().unwrap().parent_path());
-    auto const src_path(jank_path / "../src/jank/clojure/core.jank");
-    eval_file(src_path.string());
-  }
-
   object_ptr context::eval_file(native_persistent_string_view const &path)
   {
     auto const file(util::map_file(path));
@@ -211,8 +212,9 @@ namespace jank::runtime
       exprs.emplace_back(expr.expect_ok());
     }
 
-    if(compiling)
+    if(detail::truthy(compile_files_var->deref()))
     {
+      auto const &current_module(expect_object<obj::string>(current_module_var->deref())->data);
       auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc));
       wrapped_exprs.name = "__ns";
       auto const &module
@@ -265,12 +267,7 @@ namespace jank::runtime
     else
     { absolute_module = module::nest_module(ns->to_string(), module); }
 
-    /* TODO: Dynamic vars + thread local stacks will solve this better. */
-    std::experimental::scope_exit reset
-    {
-      [=]()
-      { find_var("clojure.core", "*ns*").unwrap()->bind_root(ns); }
-    };
+    binding_scope preserve{ *this };
 
     try
     {
@@ -291,17 +288,17 @@ namespace jank::runtime
   {
     module_dependencies.clear();
 
-    /* TODO: When `compiling` is a dynamic var, we need to push and finally pop here. */
-    auto const prev_compiling(compiling);
-    auto const prev_module(current_module);
-    compiling = true;
-    current_module = module;
+    binding_scope preserve
+    {
+      *this,
+      obj::persistent_hash_map::create_unique
+      (
+        std::make_pair(compile_files_var, obj::boolean::true_const()),
+        std::make_pair(current_module_var, make_box(module))
+      )
+    };
 
-    auto res(load_module(fmt::format("/{}", module)));
-
-    compiling = prev_compiling;
-    current_module = prev_module;
-    return res;
+    return load_module(fmt::format("/{}", module));
   }
 
   void context::write_module(native_persistent_string_view const &module, native_persistent_string_view const &contents) const
@@ -562,8 +559,32 @@ namespace jank::runtime
     return obj::nil::nil_const();
   }
 
+  context::binding_scope::binding_scope(context &rt_ctx)
+    : rt_ctx{ rt_ctx }
+  { rt_ctx.push_thread_bindings().expect_ok(); }
+  context::binding_scope::binding_scope
+  (context &rt_ctx, obj::persistent_hash_map_ptr const bindings)
+    : rt_ctx{ rt_ctx }
+  { rt_ctx.push_thread_bindings(bindings).expect_ok(); }
+  context::binding_scope::~binding_scope()
+  { rt_ctx.pop_thread_bindings().expect_ok(); }
+
+  string_result<void> context::push_thread_bindings()
+  {
+    auto bindings(obj::persistent_hash_map::empty());
+    auto &tbfs(thread_binding_frames[this]);
+    if(!tbfs.empty())
+    { bindings = tbfs.front().bindings; }
+    /* Nothing to preserve, if there are no current bindings. */
+    else
+    { return ok(); }
+
+    assert(bindings);
+    return push_thread_bindings(bindings);
+  }
   string_result<void> context::push_thread_bindings(obj::persistent_hash_map_ptr const bindings)
   {
+    assert(bindings);
     thread_binding_frame frame{ obj::persistent_hash_map::empty() };
     auto &tbfs(thread_binding_frames[this]);
     if(!tbfs.empty())
@@ -579,7 +600,20 @@ namespace jank::runtime
       { return err(fmt::format("Can't dynamically bind non-dynamic var: {}", var->to_string())); }
       /* TODO: Where is this unset? */
       var->thread_bound.store(true);
-      frame.bindings = frame.bindings->assoc(var, make_box<var_thread_binding>(entry->data[1], thread_id));
+
+      /* The binding may already be a thread binding if we're just pushing the previous
+       * bindings again to give a scratch pad for some upcoming code. */
+      if(entry->data[1]->type == object_type::var_thread_binding)
+      {
+        frame.bindings = frame.bindings->assoc
+        (
+          var,
+          make_box<var_thread_binding>
+          (expect_object<var_thread_binding>(entry->data[1])->value, thread_id)
+        );
+      }
+      else
+      { frame.bindings = frame.bindings->assoc(var, make_box<var_thread_binding>(entry->data[1], thread_id)); }
     }
 
     assert(frame.bindings);

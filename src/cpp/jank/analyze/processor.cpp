@@ -445,7 +445,7 @@ namespace jank::analyze
       )
     );
 
-    if(rt_ctx.compiling)
+    if(runtime::detail::truthy(rt_ctx.compile_files_var->deref()))
     {
       /* Register this module as a dependency of the current module so we can generate
        * code to load it. */
@@ -459,8 +459,9 @@ namespace jank::analyze
           runtime::munge(name)
         )
       );
-      rt_ctx.module_dependencies[rt_ctx.current_module].emplace_back(module);
-      fmt::println("module dep {} -> {}", rt_ctx.current_module, module);
+      auto const &current_module(expect_object<runtime::obj::string>(rt_ctx.current_module_var->deref())->data);
+      rt_ctx.module_dependencies[current_module].emplace_back(module);
+      //fmt::println("module dep {} -> {}", rt_ctx.current_module, module);
 
       codegen::processor cg_prc{ rt_ctx, ret, module, codegen::compilation_target::function };
       rt_ctx.write_module(module, cg_prc.declaration_str());

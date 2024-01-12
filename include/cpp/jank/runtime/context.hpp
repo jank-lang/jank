@@ -59,7 +59,6 @@ namespace jank::runtime
     static object_ptr print(object_ptr o, object_ptr more);
     static object_ptr println(object_ptr more);
 
-    void eval_prelude();
     object_ptr eval_file(native_persistent_string_view const &path);
     object_ptr eval_string(native_persistent_string_view const &code);
     native_vector<analyze::expression_ptr> analyze_string(native_persistent_string_view const &code, native_bool const eval = true);
@@ -92,6 +91,16 @@ namespace jank::runtime
     folly::Synchronized<native_unordered_map<obj::symbol_ptr, ns_ptr>> namespaces;
     folly::Synchronized<native_unordered_map<obj::symbol, obj::keyword_ptr>> keywords;
 
+    struct binding_scope
+    {
+      binding_scope(context &rt_ctx);
+      binding_scope(context &rt_ctx, obj::persistent_hash_map_ptr const bindings);
+      ~binding_scope();
+
+      context &rt_ctx;
+    };
+
+    string_result<void> push_thread_bindings();
     string_result<void> push_thread_bindings(obj::persistent_hash_map_ptr const bindings);
     string_result<void> pop_thread_bindings();
     option<thread_binding_frame> current_thread_binding_frame();
@@ -102,15 +111,14 @@ namespace jank::runtime
     analyze::processor an_prc{ *this };
     jit::processor jit_prc;
     /* TODO: This needs to be a dynamic var. */
-    bool compiling{};
-    /* TODO: This needs to be a dynamic var. */
-    native_persistent_string_view current_module;
     native_unordered_map<native_persistent_string, native_vector<native_persistent_string>> module_dependencies;
     native_persistent_string output_dir;
     module::loader module_loader;
 
     var_ptr current_ns_var{};
     var_ptr in_ns_var{};
+    var_ptr compile_files_var{};
+    var_ptr current_module_var{};
 
     static thread_local native_unordered_map<context const*, std::list<thread_binding_frame>> thread_binding_frames;
   };

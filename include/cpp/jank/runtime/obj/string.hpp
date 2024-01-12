@@ -16,6 +16,12 @@ namespace jank::runtime
     static_object(native_persistent_string const &d);
     static_object(native_persistent_string &&d);
 
+    static native_box<static_object> empty()
+    {
+      static auto const ret(make_box<static_object>());
+      return ret;
+    }
+
     /* behavior::objectable */
     native_bool equal(object const &) const;
     native_persistent_string const& to_string() const;

@@ -236,7 +236,7 @@ namespace jank::runtime::module
   result<void, native_persistent_string> loader::load_ns(native_persistent_string_view const &module)
   {
     profile::timer timer{ "load_ns" };
-    bool const compiling{ rt_ctx.compiling };
+    native_bool const compiling{ runtime::detail::truthy(rt_ctx.compile_files_var->deref()) };
     native_bool const needs_init{ !compiling && entries.contains(fmt::format("{}__init", module)) };
     if(needs_init)
     {
@@ -286,7 +286,7 @@ namespace jank::runtime::module
     result<void, native_persistent_string> res
     { err(fmt::format("no sources for registered module: {}", module)) };
 
-    bool const compiling{ rt_ctx.compiling };
+    bool const compiling{ runtime::detail::truthy(rt_ctx.compile_files_var->deref()) };
     if(compiling)
     {
       if(entry->second.jank.is_some())
