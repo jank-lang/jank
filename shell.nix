@@ -2,8 +2,8 @@ with (import <nixpkgs> {});
 let pkgsUnstable = import
 (
   fetchTarball https://github.com/NixOS/nixpkgs-channels/archive/nixos-unstable.tar.gz
-)
-{ };
+);
+#local-cling = callPackage ./cling.nix { };
 in
 mkShell
 {
@@ -12,15 +12,21 @@ mkShell
     # Build deps.
     cmake
     ninja
+    pkg-config
     clang
+    libffi
+    libxcrypt
+
+    #local-cling
 
     # Dev tools.
-    llvm # For clang-format
     entr
     gcovr
     lcov
     git
     shellcheck
+    # For clangd
+    llvm
   ];
   shellHook =
   ''
