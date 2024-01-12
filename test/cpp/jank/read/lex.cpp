@@ -66,684 +66,686 @@ namespace jank::read::lex
     return os << "]";
   }
 
-  TEST_CASE("Empty")
+  TEST_SUITE("lex")
   {
-    processor p{ "" };
-    auto r(p.next());
-    CHECK(r.is_ok());
-    auto const t(r.unwrap_move());
-    CHECK(t.kind == token_kind::eof);
-  }
-
-  TEST_CASE("Whitespace")
-  {
-    processor p{ "  ,,,,,  ," };
-    auto r(p.next());
-    CHECK(r.is_ok());
-    auto const t(r.unwrap_move());
-    CHECK(t.kind == token_kind::eof);
-  }
-
-  TEST_CASE("Comments")
-  {
-    SUBCASE("Empty")
+    TEST_CASE("Empty")
     {
-      processor p{ ";" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({ { 0, 1, token_kind::comment, ""sv } }));
+      processor p{ "" };
+      auto r(p.next());
+      CHECK(r.is_ok());
+      auto const t(r.unwrap_move());
+      CHECK(t.kind == token_kind::eof);
     }
 
-    SUBCASE("Empty multi-line")
+    TEST_CASE("Whitespace")
     {
-      processor p{ ";\n;" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens
-      (
-        {
-          { 0, 1, token_kind::comment, ""sv },
-          { 2, 1, token_kind::comment, ""sv }
-        }
-      ));
+      processor p{ "  ,,,,,  ," };
+      auto r(p.next());
+      CHECK(r.is_ok());
+      auto const t(r.unwrap_move());
+      CHECK(t.kind == token_kind::eof);
     }
 
-    SUBCASE("Non-empty")
+    TEST_CASE("Comments")
     {
-      processor p{ "; Hello hello" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({ { 0, 12, token_kind::comment, " Hello hello"sv } }));
-    }
-
-    SUBCASE("Multiple on same line")
-    {
-      processor p{ "; Hello hello ; \"hi hi\"" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({ { 0, 22, token_kind::comment, " Hello hello ; \"hi hi\""sv } }));
-    }
-
-    SUBCASE("Multiple ; in a row")
-    {
-      processor p{ ";;; Hello hello 12" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({ { 0, 17, token_kind::comment, " Hello hello 12"sv } }));
-    }
-
-    SUBCASE("Expressions before")
-    {
-      processor p{ "1 2 ; meow" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens
-      (
-        {
-          { 0, 1, token_kind::integer, 1ll },
-          { 2, 1, token_kind::integer, 2ll },
-          { 4, 5, token_kind::comment, " meow"sv }
-        }
-      ));
-    }
-
-    SUBCASE("Expressions before and after")
-    {
-      processor p{ "1 ; meow\n2" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens
-      (
-        {
-          { 0, 1, token_kind::integer, 1ll },
-          { 2, 5, token_kind::comment, " meow"sv },
-          { 9, 1, token_kind::integer, 2ll }
-        }
-      ));
-    }
-  }
-
-  TEST_CASE("List")
-  {
-    SUBCASE("Empty")
-    {
-      processor p{ "()" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, token_kind::open_paren }, { 1, token_kind::close_paren }}));
-    }
-
-    SUBCASE("Nested")
-    {
-      processor p{ "(())" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens
-      (
-        {
-          { 0, token_kind::open_paren }, { 1, token_kind::open_paren },
-          { 2, token_kind::close_paren }, { 3, token_kind::close_paren }
-        }
-      ));
-    }
-
-    SUBCASE("Unbalanced")
-    {
-      SUBCASE("Open")
+      SUBCASE("Empty")
       {
-        processor p{ "(" };
+        processor p{ ";" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens == make_tokens({{ 0, token_kind::open_paren }}));
+        CHECK(tokens == make_tokens({ { 0, 1, token_kind::comment, ""sv } }));
       }
 
-      SUBCASE("Closed")
+      SUBCASE("Empty multi-line")
       {
-        processor p{ ")" };
+        processor p{ ";\n;" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens == make_tokens({{ 0, token_kind::close_paren }}));
-      }
-    }
-  }
-
-  TEST_CASE("Vector")
-  {
-    SUBCASE("Empty")
-    {
-      processor p{ "[]" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, token_kind::open_square_bracket }, { 1, token_kind::close_square_bracket }}));
-    }
-
-    SUBCASE("Nested")
-    {
-      processor p{ "[[]]" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens
-      (
-        {
-          { 0, token_kind::open_square_bracket }, { 1, token_kind::open_square_bracket },
-          { 2, token_kind::close_square_bracket }, { 3, token_kind::close_square_bracket }
-        }
-      ));
-    }
-
-    SUBCASE("Mixed")
-    {
-      processor p{ "[(foo [1 2]) 2]" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens
-      (
-        {
-          { 0, token_kind::open_square_bracket },
-          { 1, token_kind::open_paren },
-          { 2, 3, token_kind::symbol, "foo"sv },
-          { 6, token_kind::open_square_bracket },
-          { 7, token_kind::integer, 1ll },
-          { 9, token_kind::integer, 2ll },
-          { 10, token_kind::close_square_bracket },
-          { 11, token_kind::close_paren },
-          { 13, token_kind::integer, 2ll },
-          { 14, token_kind::close_square_bracket },
-        }
-      ));
-    }
-
-    SUBCASE("Unbalanced")
-    {
-      SUBCASE("Open")
-      {
-        processor p{ "[" };
-        native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens == make_tokens({{ 0, token_kind::open_square_bracket }}));
-      }
-
-      SUBCASE("Closed")
-      {
-        processor p{ "]" };
-        native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens == make_tokens({{ 0, token_kind::close_square_bracket }}));
-      }
-    }
-  }
-
-  TEST_CASE("Nil")
-  {
-    SUBCASE("Full match")
-    {
-      processor p{ "nil" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 3, token_kind::nil }}));
-    }
-
-    SUBCASE("Partial match, prefix")
-    {
-      processor p{ "nili" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 4, token_kind::symbol, "nili"sv }}));
-    }
-
-    SUBCASE("Partial match, suffix")
-    {
-      processor p{ "onil" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 4, token_kind::symbol, "onil"sv }}));
-    }
-  }
-
-  TEST_CASE("Boolean")
-  {
-    SUBCASE("Full match")
-    {
-      processor p{ "true false" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens
-      (
-        {
-          { 0, 4, token_kind::boolean, true },
-          { 5, 5, token_kind::boolean, false }
-        }
-      ));
-    }
-
-    SUBCASE("Partial match, prefix")
-    {
-      processor p{ "true- falsey" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens
-      (
-        {
-          { 0, 5, token_kind::symbol, "true-"sv },
-          { 6, 6, token_kind::symbol, "falsey"sv }
-        }
-      ));
-    }
-
-    SUBCASE("Partial match, suffix")
-    {
-      processor p{ "sotrue ffalse" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens
-      (
-        {
-          { 0, 6, token_kind::symbol, "sotrue"sv },
-          { 7, 6, token_kind::symbol, "ffalse"sv }
-        }
-      ));
-    }
-  }
-
-  TEST_CASE("Integer")
-  {
-    SUBCASE("Positive single-char")
-    {
-      processor p{ "0" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, token_kind::integer, 0ll }}));
-    }
-
-    SUBCASE("Positive multi-char")
-    {
-      processor p{ "1234" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 4, token_kind::integer, 1234ll }}));
-    }
-
-    SUBCASE("Negative single-char")
-    {
-      processor p{ "-1" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 2, token_kind::integer, -1ll }}));
-    }
-
-    SUBCASE("Negative multi-char")
-    {
-      processor p{ "-1234" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 5, token_kind::integer, -1234ll }}));
-    }
-
-    SUBCASE("Expect space")
-    {
-      SUBCASE("Required")
-      {
-        processor p{ "1234abc" };
-        native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens == make_results
+        CHECK(tokens == make_tokens
         (
           {
-            token{ 0, 4, token_kind::integer, 1234ll },
-            error{ 4, "expected whitespace before next token" },
-            token{ 4, 3, token_kind::symbol, "abc"sv },
+            { 0, 1, token_kind::comment, ""sv },
+            { 2, 1, token_kind::comment, ""sv }
           }
         ));
       }
 
-      SUBCASE("Not required")
+      SUBCASE("Non-empty")
       {
-        processor p{ "(1234)" };
+        processor p{ "; Hello hello" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens == make_results
-        (
-          {
-            token{ 0, token_kind::open_paren },
-            token{ 1, 4, token_kind::integer, 1234ll },
-            token{ 5, token_kind::close_paren },
-          }
-        ));
+        CHECK(tokens == make_tokens({ { 0, 12, token_kind::comment, " Hello hello"sv } }));
       }
-    }
-  }
 
-  TEST_CASE("Real")
-  {
-    SUBCASE("Positive 0.")
-    {
-      processor p{ "0." };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 2, token_kind::real, 0.0l }}));
-    }
-
-    SUBCASE("Positive 0.0")
-    {
-      processor p{ "0.0" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 3, token_kind::real, 0.0l }}));
-    }
-
-    SUBCASE("Negative 1.")
-    {
-      processor p{ "-1." };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 3, token_kind::real, -1.0l }}));
-    }
-
-    SUBCASE("Negative 1.5")
-    {
-      processor p{ "-1.5" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 4, token_kind::real, -1.5l }}));
-    }
-
-    SUBCASE("Negative multi-char")
-    {
-      processor p{ "-1234.1234" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 10, token_kind::real, -1234.1234l }}));
-    }
-
-    SUBCASE("Positive no leading digit")
-    {
-      processor p{ ".0" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_results
-      (
-        {
-          error{ 0, "unexpected character: ." },
-          token{ 1, token_kind::integer, 0ll },
-        }
-      ));
-    }
-
-    SUBCASE("Negative no leading digit")
-    {
-      processor p{ "-.0" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_results
-      (
-        {
-          error{ 0, 1, "invalid number" },
-          error{ 1, "unexpected character: ." },
-          token{ 2, token_kind::integer, 0ll },
-        }
-      ));
-    }
-
-    SUBCASE("Too many dots")
-    {
+      SUBCASE("Multiple on same line")
       {
-        processor p{ "0.0." };
+        processor p{ "; Hello hello ; \"hi hi\"" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens == make_results
+        CHECK(tokens == make_tokens({ { 0, 22, token_kind::comment, " Hello hello ; \"hi hi\""sv } }));
+      }
+
+      SUBCASE("Multiple ; in a row")
+      {
+        processor p{ ";;; Hello hello 12" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({ { 0, 17, token_kind::comment, " Hello hello 12"sv } }));
+      }
+
+      SUBCASE("Expressions before")
+      {
+        processor p{ "1 2 ; meow" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens
         (
           {
-            error{ 0, 3, "invalid number" },
-            error{ 3, "unexpected character: ." },
+            { 0, 1, token_kind::integer, 1ll },
+            { 2, 1, token_kind::integer, 2ll },
+            { 4, 5, token_kind::comment, " meow"sv }
           }
         ));
       }
 
+      SUBCASE("Expressions before and after")
       {
-        processor p{ "0..0" };
+        processor p{ "1 ; meow\n2" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens == make_results
+        CHECK(tokens == make_tokens
         (
           {
-            error{ 0, 2, "invalid number" },
-            error{ 2, "unexpected character: ." },
-            token{ 3, token_kind::integer, 0ll },
-          }
-        ));
-      }
-      {
-        processor p{ "0.0.0" };
-        native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens == make_results
-        (
-          {
-            error{ 0, 3, "invalid number" },
-            error{ 3, "unexpected character: ." },
-            token{ 4, token_kind::integer, 0ll },
+            { 0, 1, token_kind::integer, 1ll },
+            { 2, 5, token_kind::comment, " meow"sv },
+            { 9, 1, token_kind::integer, 2ll }
           }
         ));
       }
     }
 
-    SUBCASE("Expect space")
+    TEST_CASE("List")
     {
-      SUBCASE("Required")
+      SUBCASE("Empty")
       {
-        processor p{ "12.34abc" };
+        processor p{ "()" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens == make_results
+        CHECK(tokens == make_tokens({{ 0, token_kind::open_paren }, { 1, token_kind::close_paren }}));
+      }
+
+      SUBCASE("Nested")
+      {
+        processor p{ "(())" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens
         (
           {
-            token{ 0, 5, token_kind::real, 12.34l },
-            error{ 5, "expected whitespace before next token" },
-            token{ 5, 3, token_kind::symbol, "abc"sv },
+            { 0, token_kind::open_paren }, { 1, token_kind::open_paren },
+            { 2, token_kind::close_paren }, { 3, token_kind::close_paren }
           }
         ));
       }
 
-      SUBCASE("Not required")
+      SUBCASE("Unbalanced")
       {
-        processor p{ "(12.34)" };
+        SUBCASE("Open")
+        {
+          processor p{ "(" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens == make_tokens({{ 0, token_kind::open_paren }}));
+        }
+
+        SUBCASE("Closed")
+        {
+          processor p{ ")" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens == make_tokens({{ 0, token_kind::close_paren }}));
+        }
+      }
+    }
+
+    TEST_CASE("Vector")
+    {
+      SUBCASE("Empty")
+      {
+        processor p{ "[]" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens == make_results
+        CHECK(tokens == make_tokens({{ 0, token_kind::open_square_bracket }, { 1, token_kind::close_square_bracket }}));
+      }
+
+      SUBCASE("Nested")
+      {
+        processor p{ "[[]]" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens
         (
           {
-            token{ 0, token_kind::open_paren },
-            token{ 1, 5, token_kind::real, 12.34l },
-            token{ 6, token_kind::close_paren },
+            { 0, token_kind::open_square_bracket }, { 1, token_kind::open_square_bracket },
+            { 2, token_kind::close_square_bracket }, { 3, token_kind::close_square_bracket }
+          }
+        ));
+      }
+
+      SUBCASE("Mixed")
+      {
+        processor p{ "[(foo [1 2]) 2]" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens
+        (
+          {
+            { 0, token_kind::open_square_bracket },
+            { 1, token_kind::open_paren },
+            { 2, 3, token_kind::symbol, "foo"sv },
+            { 6, token_kind::open_square_bracket },
+            { 7, token_kind::integer, 1ll },
+            { 9, token_kind::integer, 2ll },
+            { 10, token_kind::close_square_bracket },
+            { 11, token_kind::close_paren },
+            { 13, token_kind::integer, 2ll },
+            { 14, token_kind::close_square_bracket },
+          }
+        ));
+      }
+
+      SUBCASE("Unbalanced")
+      {
+        SUBCASE("Open")
+        {
+          processor p{ "[" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens == make_tokens({{ 0, token_kind::open_square_bracket }}));
+        }
+
+        SUBCASE("Closed")
+        {
+          processor p{ "]" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens == make_tokens({{ 0, token_kind::close_square_bracket }}));
+        }
+      }
+    }
+
+    TEST_CASE("Nil")
+    {
+      SUBCASE("Full match")
+      {
+        processor p{ "nil" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 3, token_kind::nil }}));
+      }
+
+      SUBCASE("Partial match, prefix")
+      {
+        processor p{ "nili" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 4, token_kind::symbol, "nili"sv }}));
+      }
+
+      SUBCASE("Partial match, suffix")
+      {
+        processor p{ "onil" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 4, token_kind::symbol, "onil"sv }}));
+      }
+    }
+
+    TEST_CASE("Boolean")
+    {
+      SUBCASE("Full match")
+      {
+        processor p{ "true false" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens
+        (
+          {
+            { 0, 4, token_kind::boolean, true },
+            { 5, 5, token_kind::boolean, false }
+          }
+        ));
+      }
+
+      SUBCASE("Partial match, prefix")
+      {
+        processor p{ "true- falsey" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens
+        (
+          {
+            { 0, 5, token_kind::symbol, "true-"sv },
+            { 6, 6, token_kind::symbol, "falsey"sv }
+          }
+        ));
+      }
+
+      SUBCASE("Partial match, suffix")
+      {
+        processor p{ "sotrue ffalse" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens
+        (
+          {
+            { 0, 6, token_kind::symbol, "sotrue"sv },
+            { 7, 6, token_kind::symbol, "ffalse"sv }
           }
         ));
       }
     }
-  }
 
-  TEST_CASE("Symbol")
-  {
-    SUBCASE("Single-char")
+    TEST_CASE("Integer")
     {
-      processor p{ "a" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, token_kind::symbol, "a"sv }}));
-    }
+      SUBCASE("Positive single-char")
+      {
+        processor p{ "0" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, token_kind::integer, 0ll }}));
+      }
 
-    SUBCASE("Multi-char")
-    {
-      processor p{ "abc" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 3, token_kind::symbol, "abc"sv }}));
-    }
+      SUBCASE("Positive multi-char")
+      {
+        processor p{ "1234" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 4, token_kind::integer, 1234ll }}));
+      }
 
-    SUBCASE("Single slash")
-    {
-      processor p{ "/" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, token_kind::symbol, "/"sv }}));
-    }
+      SUBCASE("Negative single-char")
+      {
+        processor p{ "-1" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 2, token_kind::integer, -1ll }}));
+      }
 
-    SUBCASE("Multi slash")
-    {
-      processor p{ "//" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_results({ error{ 0, "invalid symbol" }, }));
-    }
+      SUBCASE("Negative multi-char")
+      {
+        processor p{ "-1234" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 5, token_kind::integer, -1234ll }}));
+      }
 
-    SUBCASE("Starting with a slash")
-    {
-      processor p{ "/foo" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_results({ error{ 0, "invalid symbol" }, }));
-    }
-
-    SUBCASE("With numbers")
-    {
-      processor p{ "abc123" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 6, token_kind::symbol, "abc123"sv }}));
-    }
-
-    SUBCASE("With other symbols")
-    {
-      processor p{ "abc_.123/-foo+?=!&<>" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 20, token_kind::symbol, "abc_.123/-foo+?=!&<>"sv }}));
-    }
-
-    SUBCASE("Only -")
-    {
-      processor p{ "-" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, token_kind::symbol, "-"sv }}));
-    }
-
-    SUBCASE("Starting with -")
-    {
-      processor p{ "-main" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 5, token_kind::symbol, "-main"sv }}));
-    }
-
-    SUBCASE("Quoted")
-    {
-      processor p{ "'foo" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, token_kind::single_quote }, { 1, 3, token_kind::symbol, "foo"sv }}));
-    }
-  }
-
-  TEST_CASE("Keyword")
-  {
-    SUBCASE("Single-char")
-    {
-      processor p{ ":a" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 2, token_kind::keyword, "a"sv }}));
-    }
-
-    SUBCASE("Multi-char")
-    {
-      processor p{ ":abc" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 4, token_kind::keyword, "abc"sv }}));
-    }
-
-    SUBCASE("Single slash")
-    {
-      processor p{ ":/" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 2, token_kind::keyword, "/"sv }}));
-    }
-
-    SUBCASE("Multi slash")
-    {
-      processor p{ "://" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_results({ error{ 0, "invalid keyword: starts with /" }, }));
-    }
-
-    SUBCASE("Starting with a slash")
-    {
-      processor p{ ":/foo" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_results({ error{ 0, "invalid keyword: starts with /" }, }));
-    }
-
-    SUBCASE("With numbers")
-    {
-      processor p{ ":abc123" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 7, token_kind::keyword, "abc123"sv }}));
-    }
-
-    SUBCASE("With other symbols")
-    {
-      processor p{ ":abc_.123/-foo+?=!&<>" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 21, token_kind::keyword, "abc_.123/-foo+?=!&<>"sv }}));
-    }
-
-    SUBCASE("Auto-resolved unqualified")
-    {
-      processor p{ "::foo-bar" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 9, token_kind::keyword, ":foo-bar"sv }}));
-    }
-
-    SUBCASE("Auto-resolved qualified")
-    {
-      processor p{ "::foo/bar" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 9, token_kind::keyword, ":foo/bar"sv }}));
-    }
-
-    SUBCASE("Too many starting colons")
-    {
-      processor p{ ":::foo" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_results
-      (
+      SUBCASE("Expect space")
+      {
+        SUBCASE("Required")
         {
-          error{ 0, "invalid keyword: incorrect number of :" },
-          error{ 2, "expected whitespace before next token" },
-          token{ 2, 4, token_kind::keyword, "foo"sv }
+          processor p{ "1234abc" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens == make_results
+          (
+            {
+              token{ 0, 4, token_kind::integer, 1234ll },
+              error{ 4, "expected whitespace before next token" },
+              token{ 4, 3, token_kind::symbol, "abc"sv },
+            }
+          ));
         }
-      ));
-    }
 
-    SUBCASE("Way too many starting colons")
-    {
-      processor p{ "::::foo" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_results
-      (
+        SUBCASE("Not required")
         {
-          error{ 0, "invalid keyword: incorrect number of :" },
-          error{ 2, "expected whitespace before next token" },
-          token{ 2, 5, token_kind::keyword, ":foo"sv }
+          processor p{ "(1234)" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens == make_results
+          (
+            {
+              token{ 0, token_kind::open_paren },
+              token{ 1, 4, token_kind::integer, 1234ll },
+              token{ 5, token_kind::close_paren },
+            }
+          ));
         }
-      ));
-    }
-  }
-
-  TEST_CASE("String")
-  {
-    SUBCASE("Empty")
-    {
-      processor p{ "\"\"" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 2, token_kind::string, ""sv }}));
-    }
-    SUBCASE("Single-char")
-    {
-      processor p{ "\"a\"" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 3, token_kind::string, "a"sv }}));
+      }
     }
 
-    SUBCASE("Multi-char")
+    TEST_CASE("Real")
     {
-      processor p{ "\"abc\"" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 5, token_kind::string, "abc"sv }}));
+      SUBCASE("Positive 0.")
+      {
+        processor p{ "0." };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 2, token_kind::real, 0.0l }}));
+      }
+
+      SUBCASE("Positive 0.0")
+      {
+        processor p{ "0.0" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 3, token_kind::real, 0.0l }}));
+      }
+
+      SUBCASE("Negative 1.")
+      {
+        processor p{ "-1." };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 3, token_kind::real, -1.0l }}));
+      }
+
+      SUBCASE("Negative 1.5")
+      {
+        processor p{ "-1.5" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 4, token_kind::real, -1.5l }}));
+      }
+
+      SUBCASE("Negative multi-char")
+      {
+        processor p{ "-1234.1234" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 10, token_kind::real, -1234.1234l }}));
+      }
+
+      SUBCASE("Positive no leading digit")
+      {
+        processor p{ ".0" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_results
+        (
+          {
+            error{ 0, "unexpected character: ." },
+            token{ 1, token_kind::integer, 0ll },
+          }
+        ));
+      }
+
+      SUBCASE("Negative no leading digit")
+      {
+        processor p{ "-.0" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_results
+        (
+          {
+            error{ 0, 1, "invalid number" },
+            error{ 1, "unexpected character: ." },
+            token{ 2, token_kind::integer, 0ll },
+          }
+        ));
+      }
+
+      SUBCASE("Too many dots")
+      {
+        {
+          processor p{ "0.0." };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens == make_results
+          (
+            {
+              error{ 0, 3, "invalid number" },
+              error{ 3, "unexpected character: ." },
+            }
+          ));
+        }
+
+        {
+          processor p{ "0..0" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens == make_results
+          (
+            {
+              error{ 0, 2, "invalid number" },
+              error{ 2, "unexpected character: ." },
+              token{ 3, token_kind::integer, 0ll },
+            }
+          ));
+        }
+        {
+          processor p{ "0.0.0" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens == make_results
+          (
+            {
+              error{ 0, 3, "invalid number" },
+              error{ 3, "unexpected character: ." },
+              token{ 4, token_kind::integer, 0ll },
+            }
+          ));
+        }
+      }
+
+      SUBCASE("Expect space")
+      {
+        SUBCASE("Required")
+        {
+          processor p{ "12.34abc" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens == make_results
+          (
+            {
+              token{ 0, 5, token_kind::real, 12.34l },
+              error{ 5, "expected whitespace before next token" },
+              token{ 5, 3, token_kind::symbol, "abc"sv },
+            }
+          ));
+        }
+
+        SUBCASE("Not required")
+        {
+          processor p{ "(12.34)" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens == make_results
+          (
+            {
+              token{ 0, token_kind::open_paren },
+              token{ 1, 5, token_kind::real, 12.34l },
+              token{ 6, token_kind::close_paren },
+            }
+          ));
+        }
+      }
     }
 
-    SUBCASE("With numbers")
+    TEST_CASE("Symbol")
     {
-      processor p{ "\"123\"" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 5, token_kind::string, "123"sv }}));
+      SUBCASE("Single-char")
+      {
+        processor p{ "a" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, token_kind::symbol, "a"sv }}));
+      }
+
+      SUBCASE("Multi-char")
+      {
+        processor p{ "abc" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 3, token_kind::symbol, "abc"sv }}));
+      }
+
+      SUBCASE("Single slash")
+      {
+        processor p{ "/" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, token_kind::symbol, "/"sv }}));
+      }
+
+      SUBCASE("Multi slash")
+      {
+        processor p{ "//" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_results({ error{ 0, "invalid symbol" }, }));
+      }
+
+      SUBCASE("Starting with a slash")
+      {
+        processor p{ "/foo" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_results({ error{ 0, "invalid symbol" }, }));
+      }
+
+      SUBCASE("With numbers")
+      {
+        processor p{ "abc123" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 6, token_kind::symbol, "abc123"sv }}));
+      }
+
+      SUBCASE("With other symbols")
+      {
+        processor p{ "abc_.123/-foo+?=!&<>" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 20, token_kind::symbol, "abc_.123/-foo+?=!&<>"sv }}));
+      }
+
+      SUBCASE("Only -")
+      {
+        processor p{ "-" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, token_kind::symbol, "-"sv }}));
+      }
+
+      SUBCASE("Starting with -")
+      {
+        processor p{ "-main" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 5, token_kind::symbol, "-main"sv }}));
+      }
+
+      SUBCASE("Quoted")
+      {
+        processor p{ "'foo" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, token_kind::single_quote }, { 1, 3, token_kind::symbol, "foo"sv }}));
+      }
     }
 
-    SUBCASE("With other symbols")
+    TEST_CASE("Keyword")
     {
-      processor p{ "\"and then() there was abc_123/-foo?!&<>\"" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 40, token_kind::string, "and then() there was abc_123/-foo?!&<>"sv }}));
+      SUBCASE("Single-char")
+      {
+        processor p{ ":a" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 2, token_kind::keyword, "a"sv }}));
+      }
+
+      SUBCASE("Multi-char")
+      {
+        processor p{ ":abc" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 4, token_kind::keyword, "abc"sv }}));
+      }
+
+      SUBCASE("Single slash")
+      {
+        processor p{ ":/" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 2, token_kind::keyword, "/"sv }}));
+      }
+
+      SUBCASE("Multi slash")
+      {
+        processor p{ "://" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_results({ error{ 0, "invalid keyword: starts with /" }, }));
+      }
+
+      SUBCASE("Starting with a slash")
+      {
+        processor p{ ":/foo" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_results({ error{ 0, "invalid keyword: starts with /" }, }));
+      }
+
+      SUBCASE("With numbers")
+      {
+        processor p{ ":abc123" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 7, token_kind::keyword, "abc123"sv }}));
+      }
+
+      SUBCASE("With other symbols")
+      {
+        processor p{ ":abc_.123/-foo+?=!&<>" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 21, token_kind::keyword, "abc_.123/-foo+?=!&<>"sv }}));
+      }
+
+      SUBCASE("Auto-resolved unqualified")
+      {
+        processor p{ "::foo-bar" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 9, token_kind::keyword, ":foo-bar"sv }}));
+      }
+
+      SUBCASE("Auto-resolved qualified")
+      {
+        processor p{ "::foo/bar" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 9, token_kind::keyword, ":foo/bar"sv }}));
+      }
+
+      SUBCASE("Too many starting colons")
+      {
+        processor p{ ":::foo" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_results
+        (
+          {
+            error{ 0, "invalid keyword: incorrect number of :" },
+            error{ 2, "expected whitespace before next token" },
+            token{ 2, 4, token_kind::keyword, "foo"sv }
+          }
+        ));
+      }
+
+      SUBCASE("Way too many starting colons")
+      {
+        processor p{ "::::foo" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_results
+        (
+          {
+            error{ 0, "invalid keyword: incorrect number of :" },
+            error{ 2, "expected whitespace before next token" },
+            token{ 2, 5, token_kind::keyword, ":foo"sv }
+          }
+        ));
+      }
     }
 
-    SUBCASE("With line breaks")
+    TEST_CASE("String")
     {
-      processor p{ "\"foo\nbar\nspam\t\"" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_tokens({{ 0, 15, token_kind::string, "foo\nbar\nspam\t"sv }}));
-    }
+      SUBCASE("Empty")
+      {
+        processor p{ "\"\"" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 2, token_kind::string, ""sv }}));
+      }
+      SUBCASE("Single-char")
+      {
+        processor p{ "\"a\"" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 3, token_kind::string, "a"sv }}));
+      }
 
-    /* TODO: Figure out how to handle this. */
-    SUBCASE("With escapes")
-    {
-      processor p{R"("foo\"\nbar\nspam\t")"};
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      WARN(tokens == make_tokens({{ 0, token_kind::string, "foo\"\nbar\nspam\t"sv }}));
-    }
+      SUBCASE("Multi-char")
+      {
+        processor p{ "\"abc\"" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 5, token_kind::string, "abc"sv }}));
+      }
 
-    SUBCASE("Unterminated")
-    {
-      processor p{ "\"meow" };
-      native_vector<result<token, error>> tokens(p.begin(), p.end());
-      CHECK(tokens == make_results({ error{ 0, "unterminated string" }, }));
+      SUBCASE("With numbers")
+      {
+        processor p{ "\"123\"" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 5, token_kind::string, "123"sv }}));
+      }
+
+      SUBCASE("With other symbols")
+      {
+        processor p{ "\"and then() there was abc_123/-foo?!&<>\"" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 40, token_kind::string, "and then() there was abc_123/-foo?!&<>"sv }}));
+      }
+
+      SUBCASE("With line breaks")
+      {
+        processor p{ "\"foo\nbar\nspam\t\"" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 15, token_kind::string, "foo\nbar\nspam\t"sv }}));
+      }
+
+      SUBCASE("With escapes")
+      {
+        processor p{R"("foo\"\nbar\nspam\t")"};
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens({{ 0, 20, token_kind::escaped_string, "foo\\\"\\nbar\\nspam\\t"sv }}));
+      }
+
+      SUBCASE("Unterminated")
+      {
+        processor p{ "\"meow" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens == make_results({ error{ 0, "unterminated string" }, }));
+      }
     }
   }
 }

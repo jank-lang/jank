@@ -37,6 +37,22 @@ namespace jank
       profile::timer timer{ "eval user code" };
       std::cout << runtime::detail::to_string(rt_ctx.eval_file(opts.target_file)) << std::endl;
     }
+
+    //ankerl::nanobench::Config config;
+    //config.mMinEpochIterations = 1000000;
+    //config.mOut = &std::cout;
+    //config.mWarmup = 10000;
+
+
+    //ankerl::nanobench::Bench().config(config).run
+    //(
+    //  "thing",
+    //  [&]
+    //  {
+    //    auto const ret();
+    //    ankerl::nanobench::doNotOptimizeAway(ret);
+    //  }
+    //);
   }
 
   void compile(util::cli::options const &opts, runtime::context &rt_ctx)
@@ -64,7 +80,7 @@ namespace jank
     /* TODO: Multi-line input. */
     while(auto const buf = readline("> "))
     {
-      std::string line{ buf };
+      native_transient_string line{ buf };
       boost::trim(line);
       if(line.empty())
       { continue; }

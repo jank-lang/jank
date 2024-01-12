@@ -15,6 +15,53 @@
 
 namespace jank::read::parse
 {
+  namespace detail
+  {
+    string_result<native_transient_string> unescape(native_transient_string const &input)
+    {
+      native_transient_string ss;
+      ss.reserve(input.size());
+      native_bool escape{};
+
+      for(auto const ch : input)
+      {
+        if(!escape)
+        {
+          if(ch == '\\')
+          { escape = true; }
+          else
+          { ss += ch; }
+        }
+        else
+        {
+          switch(ch)
+          {
+            case 'n':
+              ss += '\n';
+              break;
+            case 't':
+              ss += '\t';
+              break;
+            case 'r':
+              ss += '\r';
+              break;
+            case '\\':
+              ss += '\\';
+              break;
+            case '"':
+              ss += '"';
+              break;
+            default:
+              return err(fmt::format("invalid escape sequence: \\{}", ch));
+          }
+          escape = false;
+        }
+      }
+
+      return ok(ss);
+    }
+  }
+
   processor::iterator::value_type processor::iterator::operator *() const
   { return latest.unwrap(); }
   processor::iterator::pointer processor::iterator::operator ->()
@@ -24,9 +71,9 @@ namespace jank::read::parse
     latest = some(p.next());
     return *this;
   }
-  bool processor::iterator::operator !=(processor::iterator const &rhs) const
+  native_bool processor::iterator::operator !=(processor::iterator const &rhs) const
   { return latest != rhs.latest; }
-  bool processor::iterator::operator ==(processor::iterator const &rhs) const
+  native_bool processor::iterator::operator ==(processor::iterator const &rhs) const
   { return latest == rhs.latest; }
   processor::iterator& processor::iterator::operator=(processor::iterator const &rhs)
   {
@@ -92,6 +139,8 @@ namespace jank::read::parse
           return parse_real();
         case lex::token_kind::string:
           return parse_string();
+        case lex::token_kind::escaped_string:
+          return parse_escaped_string();
         case lex::token_kind::eof:
           return ok(nullptr);
         default:
@@ -209,7 +258,7 @@ namespace jank::read::parse
   {
     auto const token((*token_current).expect_ok());
     ++token_current;
-    auto const b(boost::get<bool>(token.data));
+    auto const b(boost::get<native_bool>(token.data));
     return ok(make_box<runtime::obj::boolean>(b));
   }
 
@@ -254,7 +303,7 @@ namespace jank::read::parse
     auto const sv(boost::get<native_persistent_string_view>(token.data));
     /* A :: keyword either resolves to the current ns or an alias, depending on
      * whether or not it's qualified. */
-    bool const resolved{ sv[0] != ':' };
+    native_bool const resolved{ sv[0] != ':' };
 
     auto const slash(sv.find('/'));
     native_persistent_string ns, name;
@@ -297,9 +346,19 @@ namespace jank::read::parse
     return ok(make_box<runtime::obj::string>(native_persistent_string{ sv.data(), sv.size() }));
   }
 
+  processor::object_result processor::parse_escaped_string()
+  {
+    auto const token(token_current->expect_ok());
+    ++token_current;
+    auto const sv(boost::get<native_persistent_string_view>(token.data));
+    auto res(detail::unescape({ sv.data(), sv.size() }));
+    if(res.is_err())
+    { return err(error{ token.pos, res.expect_err_move() }); }
+    return ok(make_box<runtime::obj::string>(res.expect_ok_move()));
+  }
+
   processor::iterator processor::begin()
   { return { some(next()), *this }; }
   processor::iterator processor::end()
   { return { some(ok(nullptr)), *this }; }
 }
-

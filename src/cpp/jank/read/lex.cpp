@@ -19,9 +19,9 @@ namespace jank::read
     : message{ m }
   { }
 
-  bool error::operator ==(error const &rhs) const
+  native_bool error::operator ==(error const &rhs) const
   { return !(*this != rhs); }
-  bool error::operator !=(error const &rhs) const
+  native_bool error::operator !=(error const &rhs) const
   { return start != rhs.start || end != rhs.end || message != rhs.message; }
 
   std::ostream& operator <<(std::ostream &os, error const &e)
@@ -60,7 +60,7 @@ namespace jank::read
     token::token(size_t const p, token_kind const k, native_persistent_string_view const d)
       : pos{ p }, kind{ k }, data{ d }
     { }
-    token::token(size_t const p, token_kind const k, bool const d)
+    token::token(size_t const p, token_kind const k, native_bool const d)
       : pos{ p }, kind{ k }, data{ d }
     { }
 
@@ -76,17 +76,17 @@ namespace jank::read
     token::token(size_t const p, size_t const s, token_kind const k, native_persistent_string_view const d)
       : pos{ p }, size{ s }, kind{ k }, data{ d }
     { }
-    token::token(size_t const p, size_t const s, token_kind const k, bool const d)
+    token::token(size_t const p, size_t const s, token_kind const k, native_bool const d)
       : pos{ p }, size{ s }, kind{ k }, data{ d }
     { }
 
-    bool token::no_data::operator ==(no_data const &) const
+    native_bool token::no_data::operator ==(no_data const &) const
     { return true; }
-    bool token::no_data::operator !=(no_data const &) const
+    native_bool token::no_data::operator !=(no_data const &) const
     { return false; }
-    bool token::operator ==(token const &rhs) const
+    native_bool token::operator ==(token const &rhs) const
     { return !(*this != rhs); }
-    bool token::operator !=(token const &rhs) const
+    native_bool token::operator !=(token const &rhs) const
     { return (pos != rhs.pos && pos != token::ignore_pos && rhs.pos != token::ignore_pos) || size != rhs.size || kind != rhs.kind || data != rhs.data; }
     std::ostream& operator <<(std::ostream &os, token const &t)
     { return os << "token(" << t.pos << ", " << t.size << ", " << magic_enum::enum_name(t.kind) << ", " << t.data << ")"; }
@@ -105,9 +105,9 @@ namespace jank::read
       latest = some(p.next());
       return *this;
     }
-    bool processor::iterator::operator !=(processor::iterator const &rhs) const
+    native_bool processor::iterator::operator !=(processor::iterator const &rhs) const
     { return latest != rhs.latest; }
-    bool processor::iterator::operator ==(processor::iterator const &rhs) const
+    native_bool processor::iterator::operator ==(processor::iterator const &rhs) const
     { return latest == rhs.latest; }
 
     processor::iterator processor::begin()
@@ -115,7 +115,7 @@ namespace jank::read
     processor::iterator processor::end()
     { return { some(token_kind::eof), *this }; }
 
-    option<error> processor::check_whitespace(bool const found_space)
+    option<error> processor::check_whitespace(native_bool const found_space)
     {
       if(require_space && !found_space)
       {
@@ -125,7 +125,7 @@ namespace jank::read
       return none;
     }
 
-    static bool is_symbol_char(char const c)
+    static native_bool is_symbol_char(char const c)
     {
       return std::isalnum(static_cast<unsigned char>(c)) != 0
              || c == '_' || c == '-' || c == '/' || c == '?' || c == '!'
@@ -136,7 +136,7 @@ namespace jank::read
     result<token, error> processor::next()
     {
       /* Skip whitespace. */
-      bool found_space{};
+      native_bool found_space{};
       while(true)
       {
         if(pos >= file.size())
@@ -177,7 +177,7 @@ namespace jank::read
         case ';':
         {
           size_t leading_semis{ 1 };
-          bool hit_non_semi{};
+          native_bool hit_non_semi{};
           while(true)
           {
             auto const oc(peek());
@@ -213,8 +213,8 @@ namespace jank::read
           auto &&e(check_whitespace(found_space));
           if(e.is_some())
           { return err(std::move(e.unwrap())); }
-          bool contains_leading_digit{ file[token_start] != '-' };
-          bool contains_dot{};
+          native_bool contains_leading_digit{ file[token_start] != '-' };
+          native_bool contains_dot{};
           while(true)
           {
             auto const oc(peek());
@@ -330,7 +330,7 @@ namespace jank::read
           if(e.is_some())
           { return err(std::move(e.unwrap())); }
           auto const token_start(pos);
-          bool escaped{};
+          native_bool escaped{}, contains_escape{};
           while(true)
           {
             auto const oc(peek());
@@ -359,12 +359,26 @@ namespace jank::read
               escaped = false;
             }
             else if(oc.unwrap() == '\\')
-            { escaped = true; }
+            { escaped = contains_escape = true; }
             ++pos;
           }
           require_space = true;
           pos++;
-          return ok(token{ token_start, pos - token_start, token_kind::string, native_persistent_string_view(file.data() + token_start + 1, pos - token_start - 2) });
+
+          /* Unescaped strings can be read right from memory, but escaped strings require
+           * some processing first, to turn the escape sequences into the necessary characters.
+           * We use distinct token types for these so we can optimize for the typical case. */
+          auto const kind(contains_escape ? token_kind::escaped_string : token_kind::string);
+          return ok
+          (
+            token
+            {
+              token_start,
+              pos - token_start,
+              kind,
+              native_persistent_string_view(file.data() + token_start + 1, pos - token_start - 2)
+            }
+          );
         }
         default:
           ++pos;

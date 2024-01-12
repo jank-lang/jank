@@ -26,8 +26,8 @@ namespace jank::read::parse
       value_type operator *() const;
       pointer operator ->();
       iterator& operator ++();
-      bool operator !=(iterator const &rhs) const;
-      bool operator ==(iterator const &rhs) const;
+      native_bool operator !=(iterator const &rhs) const;
+      native_bool operator ==(iterator const &rhs) const;
       iterator& operator=(iterator const&);
 
       option<value_type> latest;
@@ -53,6 +53,7 @@ namespace jank::read::parse
     object_result parse_integer();
     object_result parse_real();
     object_result parse_string();
+    object_result parse_escaped_string();
 
     iterator begin();
     iterator end();
