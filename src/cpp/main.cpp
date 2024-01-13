@@ -152,3 +152,5 @@ catch(jank::native_persistent_string const &s)
 { fmt::println("Exception: {}", s); }
 catch(jank::read::error const &e)
 { fmt::println("Read error: {}", e.message); }
+catch(...)
+{ fmt::println("Unknown exception thrown"); }

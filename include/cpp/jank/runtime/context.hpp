@@ -48,9 +48,9 @@ namespace jank::runtime
     option<var_ptr> find_var(obj::symbol_ptr const &);
     option<var_ptr> find_var(native_persistent_string const &ns, native_persistent_string const &name);
 
-    result<obj::keyword_ptr, native_persistent_string> intern_keyword(obj::symbol const &sym, bool const resolved);
+    result<obj::keyword_ptr, native_persistent_string> intern_keyword(obj::symbol const &sym, native_bool const resolved = true);
     result<obj::keyword_ptr, native_persistent_string> intern_keyword
-    (native_persistent_string_view const &ns, native_persistent_string_view const &name, bool resolved);
+    (native_persistent_string_view const &ns, native_persistent_string_view const &name, native_bool resolved = true);
 
     object_ptr macroexpand1(object_ptr o);
     object_ptr macroexpand(object_ptr o);
