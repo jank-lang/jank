@@ -56,7 +56,7 @@ namespace jank::codegen
     constexpr native_persistent_string_view const recur_suffix{ "__recur" };
 
     /* TODO: Consider making this a on the typed object: the C++ name. */
-    native_persistent_string_view gen_constant_type(runtime::object_ptr const o, bool const boxed)
+    native_persistent_string_view gen_constant_type(runtime::object_ptr const o, native_bool const boxed)
     {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
@@ -100,7 +100,7 @@ namespace jank::codegen
 #pragma clang diagnostic pop
     }
 
-    void gen_constant(runtime::object_ptr const o, fmt::memory_buffer &buffer, bool const boxed)
+    void gen_constant(runtime::object_ptr const o, fmt::memory_buffer &buffer, native_bool const boxed)
     {
       if(!boxed)
       {
@@ -172,7 +172,7 @@ namespace jank::codegen
           {
             fmt::format_to
             (inserter, "jank::make_box<jank::runtime::obj::vector>(");
-            bool need_comma{};
+            native_bool need_comma{};
             for(auto const &form : typed_o->data)
             {
               if(need_comma)
@@ -193,7 +193,7 @@ namespace jank::codegen
     { return local_name + "__boxed"; }
   }
 
-  handle::handle(native_persistent_string const &name, bool const boxed)
+  handle::handle(native_persistent_string const &name, native_bool const boxed)
   {
     if(boxed)
     {
@@ -231,7 +231,7 @@ namespace jank::codegen
     { unboxed_name = runtime::munge(binding.name->name); }
   }
 
-  native_persistent_string handle::str(bool const needs_box) const
+  native_persistent_string handle::str(native_bool const needs_box) const
   {
     if(needs_box)
     {
@@ -276,7 +276,7 @@ namespace jank::codegen
   (
     analyze::expression_ptr const &ex,
     analyze::expr::function_arity<analyze::expression> const &fn_arity,
-    bool const box_needed
+    native_bool const box_needed
   )
   {
     option<handle> ret;
@@ -293,7 +293,7 @@ namespace jank::codegen
   (
     analyze::expr::def<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &fn_arity,
-    bool const
+    native_bool const
   )
   {
     auto inserter(std::back_inserter(body_buffer));
@@ -337,7 +337,7 @@ namespace jank::codegen
   (
     analyze::expr::var_deref<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &,
-    bool const
+    native_bool const
   )
   {
     auto const &var(expr.frame->find_lifted_var(expr.qualified_name).unwrap().get());
@@ -359,7 +359,7 @@ namespace jank::codegen
   (
     analyze::expr::var_ref<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &,
-    bool const
+    native_bool const
   )
   {
     auto const &var(expr.frame->find_lifted_var(expr.qualified_name).unwrap().get());
@@ -384,8 +384,8 @@ namespace jank::codegen
     native_persistent_string_view const &ret_tmp,
     native_vector<native_box<analyze::expression>> const &arg_exprs,
     analyze::expr::function_arity<analyze::expression> const &fn_arity,
-    bool const arg_box_needed,
-    bool const ret_box_needed
+    native_bool const arg_box_needed,
+    native_bool const ret_box_needed
   )
   {
     /* TODO: Assert arg count when we know it. */
@@ -399,7 +399,7 @@ namespace jank::codegen
     if(ret_box_needed)
     { ret_box = "jank::make_box("; }
     fmt::format_to(inserter, "auto const {}({}{}", ret_tmp, ret_box, start);
-    bool need_comma{};
+    native_bool need_comma{};
     for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
     {
       if(need_comma)
@@ -416,7 +416,7 @@ namespace jank::codegen
     native_persistent_string_view const &ret_tmp,
     native_vector<native_box<analyze::expression>> const &arg_exprs,
     analyze::expr::function_arity<analyze::expression> const &fn_arity,
-    bool const arg_box_needed
+    native_bool const arg_box_needed
   )
   {
     native_vector<handle> arg_tmps;
@@ -428,7 +428,7 @@ namespace jank::codegen
     fmt::format_to
     (inserter, "auto const {}({}.call(", ret_tmp, source_tmp);
 
-    bool need_comma{};
+    native_bool need_comma{};
     for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
     {
       if(need_comma)
@@ -445,7 +445,7 @@ namespace jank::codegen
     native_persistent_string_view const &ret_tmp,
     native_vector<native_box<analyze::expression>> const &arg_exprs,
     analyze::expr::function_arity<analyze::expression> const &fn_arity,
-    bool const arg_box_needed
+    native_bool const arg_box_needed
   )
   {
     native_vector<handle> arg_tmps;
@@ -477,7 +477,7 @@ namespace jank::codegen
   (
     analyze::expr::call<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &fn_arity,
-    bool const box_needed
+    native_bool const box_needed
   )
   {
     auto inserter(std::back_inserter(body_buffer));
@@ -488,7 +488,7 @@ namespace jank::codegen
      * fns; this is not the same as direct linking, which uses `invokeStatic`
      * instead. Rather, this makes calls to `get` become `RT.get`, calls to `+` become
      * `Numbers.add`, and so on. We do the same thing here. */
-    bool elided{};
+    native_bool elided{};
     /* TODO: Use the actual var meta to do this, not a hard-coded set of if checks. */
     if(auto const * const ref = boost::get<analyze::expr::var_deref<analyze::expression>>(&expr.source_expr->data))
     {
@@ -656,7 +656,7 @@ namespace jank::codegen
     }
     else if(auto const * const fn = boost::get<analyze::expr::function<analyze::expression>>(&expr.source_expr->data))
     {
-      bool variadic{};
+      native_bool variadic{};
       for(auto const &arity: fn->arities)
       {
         if(arity.fn_ctx->is_variadic)
@@ -691,7 +691,7 @@ namespace jank::codegen
   (
     analyze::expr::primitive_literal<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &,
-    bool const
+    native_bool const
   )
   {
     auto const &constant(expr.frame->find_lifted_constant(expr.data).unwrap().get());
@@ -718,7 +718,7 @@ namespace jank::codegen
   (
     analyze::expr::vector<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &fn_arity,
-    bool const
+    native_bool const
   )
   {
     native_vector<handle> data_tmps;
@@ -751,7 +751,7 @@ namespace jank::codegen
   (
     analyze::expr::map<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &fn_arity,
-    bool const
+    native_bool const
   )
   {
     native_vector<std::pair<handle, handle>> data_tmps;
@@ -771,7 +771,7 @@ namespace jank::codegen
       "auto const {}(jank::make_box<jank::runtime::obj::persistent_array_map>(jank::runtime::detail::in_place_unique{{}}, jank::make_array_box<object_ptr>(",
       ret_tmp
     );
-    bool need_comma{};
+    native_bool need_comma{};
     for(auto const &data_tmp : data_tmps)
     {
       if(need_comma)
@@ -795,7 +795,7 @@ namespace jank::codegen
   (
     analyze::expr::local_reference const &expr,
     analyze::expr::function_arity<analyze::expression> const &,
-    bool const
+    native_bool const
   )
   {
     auto const munged_name(runtime::munge(expr.name->name));
@@ -824,7 +824,7 @@ namespace jank::codegen
   (
     analyze::expr::function<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &,
-    bool const box_needed
+    native_bool const box_needed
   )
   {
     auto const compiling(runtime::detail::truthy(rt_ctx.compile_files_var->deref()));
@@ -863,7 +863,7 @@ namespace jank::codegen
   (
     analyze::expr::recur<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &fn_arity,
-    bool const
+    native_bool const
   )
   {
     auto inserter(std::back_inserter(body_buffer));
@@ -887,7 +887,7 @@ namespace jank::codegen
   (
     analyze::expr::let<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &fn_arity,
-    bool const
+    native_bool const
   )
   {
     auto inserter(std::back_inserter(body_buffer));
@@ -959,7 +959,7 @@ namespace jank::codegen
   (
     analyze::expr::do_<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &arity,
-    bool const
+    native_bool const
   )
   {
     option<handle> last;
@@ -987,7 +987,7 @@ namespace jank::codegen
   (
     analyze::expr::if_<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &fn_arity,
-    bool const
+    native_bool const
   )
   {
     /* TODO: Handle unboxed results! */
@@ -1021,9 +1021,22 @@ namespace jank::codegen
 
   option<handle> processor::gen
   (
+    analyze::expr::throw_<analyze::expression> const &expr,
+    analyze::expr::function_arity<analyze::expression> const &fn_arity,
+    native_bool const
+  )
+  {
+    auto inserter(std::back_inserter(body_buffer));
+    auto const &value_tmp(gen(expr.value, fn_arity, true));
+    fmt::format_to(inserter, "throw {};", value_tmp.unwrap().str(true));
+    return none;
+  }
+
+  option<handle> processor::gen
+  (
     analyze::expr::native_raw<analyze::expression> const &expr,
     analyze::expr::function_arity<analyze::expression> const &fn_arity,
-    bool const
+    native_bool const
   )
   {
     auto inserter(std::back_inserter(body_buffer));
@@ -1273,7 +1286,7 @@ namespace jank::codegen
       { recur_suffix = detail::recur_suffix; }
 
       fmt::format_to(inserter, "jank::runtime::object_ptr call(");
-      bool param_comma{};
+      native_bool param_comma{};
       for(auto const &param : arity.params)
       {
         fmt::format_to
@@ -1369,7 +1382,7 @@ namespace jank::codegen
     { fmt::format_to(inserter, "}}"); }
   }
 
-  native_persistent_string processor::expression_str(bool const box_needed)
+  native_persistent_string processor::expression_str(native_bool const box_needed)
   {
     auto const module_ns(runtime::module::module_to_native_ns(module));
 
@@ -1447,7 +1460,7 @@ namespace jank::codegen
     fmt::format_to(inserter, "static void __init(){{");
     fmt::format_to(inserter, "jank::profile::timer __timer{{ \"ns __init\" }};");
     fmt::format_to(inserter, "constexpr auto const deps(jank::util::make_array<jank::native_persistent_string_view>(");
-    bool needs_comma{};
+    native_bool needs_comma{};
     for(auto const &dep : rt_ctx.module_dependencies[module])
     {
       if(needs_comma)

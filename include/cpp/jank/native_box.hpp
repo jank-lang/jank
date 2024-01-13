@@ -27,7 +27,7 @@ namespace jank
       return data;
     }
 
-    bool operator !() const
+    native_bool operator !() const
     { return !data; }
 
     value_type& operator *() const
@@ -36,15 +36,15 @@ namespace jank
       return *data;
     }
 
-    bool operator ==(std::nullptr_t) const
+    native_bool operator ==(std::nullptr_t) const
     { return data == nullptr; }
-    bool operator ==(native_box const &rhs) const
+    native_bool operator ==(native_box const &rhs) const
     { return data == rhs.data; }
-    bool operator !=(std::nullptr_t) const
+    native_bool operator !=(std::nullptr_t) const
     { return data != nullptr; }
-    bool operator !=(native_box const &rhs) const
+    native_bool operator !=(native_box const &rhs) const
     { return data != rhs.data; }
-    bool operator <(native_box const &rhs) const
+    native_bool operator <(native_box const &rhs) const
     { return data < rhs.data; }
 
     operator native_box<value_type const>() const
@@ -54,7 +54,7 @@ namespace jank
     operator runtime::object*() const
     { return &data->base; }
 
-    explicit operator bool() const
+    explicit operator native_bool() const
     { return data; }
 
     value_type *data{};
@@ -90,7 +90,7 @@ namespace jank
       return data;
     }
 
-    bool operator !() const
+    native_bool operator !() const
     { return !data; }
 
     value_type& operator *() const
@@ -99,29 +99,29 @@ namespace jank
       return *data;
     }
 
-    bool operator ==(std::nullptr_t) const
+    native_bool operator ==(std::nullptr_t) const
     { return data == nullptr; }
-    bool operator ==(native_box const &rhs) const
+    native_bool operator ==(native_box const &rhs) const
     { return data == rhs.data; }
     template <runtime::object_type T>
-    bool operator ==(runtime::static_object<T> const &rhs) const
+    native_bool operator ==(runtime::static_object<T> const &rhs) const
     { return data == &rhs->base; }
     template <runtime::object_type T>
-    bool operator ==(native_box<runtime::static_object<T>> const &rhs) const
+    native_bool operator ==(native_box<runtime::static_object<T>> const &rhs) const
     { return data == &rhs->base; }
 
-    bool operator !=(std::nullptr_t) const
+    native_bool operator !=(std::nullptr_t) const
     { return data != nullptr; }
-    bool operator !=(native_box const &rhs) const
+    native_bool operator !=(native_box const &rhs) const
     { return data != rhs.data; }
     template <runtime::object_type T>
-    bool operator !=(runtime::static_object<T> const &rhs) const
+    native_bool operator !=(runtime::static_object<T> const &rhs) const
     { return data != &rhs->base; }
     template <runtime::object_type T>
-    bool operator !=(native_box<runtime::static_object<T>> const &rhs) const
+    native_bool operator !=(native_box<runtime::static_object<T>> const &rhs) const
     { return data != &rhs->base; }
 
-    bool operator <(native_box const &rhs) const
+    native_bool operator <(native_box const &rhs) const
     { return data < rhs.data; }
 
     operator native_box<value_type const>() const
@@ -129,7 +129,7 @@ namespace jank
     operator value_type*() const
     { return data; }
 
-    explicit operator bool() const
+    explicit operator native_bool() const
     { return data; }
 
     value_type *data{};
