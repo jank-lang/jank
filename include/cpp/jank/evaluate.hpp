@@ -99,6 +99,12 @@ namespace jank::evaluate
   (
     runtime::context &,
     jit::processor const &,
+    analyze::expr::throw_<analyze::expression> const &
+  );
+  runtime::object_ptr eval
+  (
+    runtime::context &,
+    jit::processor const &,
     analyze::expr::native_raw<analyze::expression> const &
   );
 }

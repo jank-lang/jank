@@ -1,0 +1,3 @@
+(if (even? 3)
+  (throw :failure)
+  (throw :success))

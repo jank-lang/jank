@@ -367,6 +367,15 @@ namespace jank::evaluate
   (
     runtime::context &rt_ctx,
     jit::processor const &jit_prc,
+    analyze::expr::throw_<analyze::expression> const &expr
+  )
+  /* TODO: Clojure wraps this in a fn and does bytecodegen. Why? */
+  { throw eval(rt_ctx, jit_prc, expr.value); }
+
+  runtime::object_ptr eval
+  (
+    runtime::context &rt_ctx,
+    jit::processor const &jit_prc,
     analyze::expr::native_raw<analyze::expression> const &expr
   )
   { return runtime::dynamic_call(eval(rt_ctx, jit_prc, wrap_expression(expr))); }

@@ -39,6 +39,7 @@ namespace jank::analyze
       { jank::make_box<symbol>("if"), make_fn(&processor::analyze_if) },
       { jank::make_box<symbol>("quote"), make_fn(&processor::analyze_quote) },
       { jank::make_box<symbol>("var"), make_fn(&processor::analyze_var) },
+      { jank::make_box<symbol>("throw"), make_fn(&processor::analyze_throw) },
       { jank::make_box<symbol>("native/raw"), make_fn(&processor::analyze_native_raw) },
     };
   }
@@ -716,7 +717,7 @@ namespace jank::analyze
     if(o->count() != 2)
     { return err(error{ "invalid var reference: expects one argument" }); }
 
-    auto const &arg(o->data.rest().first().unwrap());
+    auto const arg(o->data.rest().first().unwrap());
     if(arg->type != runtime::object_type::symbol)
     { return err(error{ "invalid var reference: expects a symbol" }); }
 
@@ -734,6 +735,33 @@ namespace jank::analyze
         expression_base{ {}, expr_type, current_frame, true },
         qualified_sym,
         found_var.unwrap()
+      }
+    );
+  }
+
+  processor::expression_result processor::analyze_throw
+  (
+    runtime::obj::list_ptr const &o,
+    local_frame_ptr &current_frame,
+    expression_type const expr_type,
+    option<expr::function_context_ptr> const &fn_ctx,
+    native_bool const
+  )
+  {
+    if(o->count() != 2)
+    { return err(error{ "invalid throw: expects one argument" }); }
+
+    auto const arg(o->data.rest().first().unwrap());
+    auto arg_expr(analyze(arg, current_frame, expression_type::expression, fn_ctx, true));
+    if(arg_expr.is_err())
+    { return arg_expr.expect_err_move(); }
+
+    return make_box<expression>
+    (
+      expr::throw_<expression>
+      {
+        expression_base{ {}, expr_type, current_frame, true },
+        arg_expr.unwrap_move()
       }
     );
   }

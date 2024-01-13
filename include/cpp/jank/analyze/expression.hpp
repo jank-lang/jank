@@ -17,6 +17,7 @@
 #include <jank/analyze/expr/let.hpp>
 #include <jank/analyze/expr/do.hpp>
 #include <jank/analyze/expr/if.hpp>
+#include <jank/analyze/expr/throw.hpp>
 #include <jank/analyze/expr/native_raw.hpp>
 
 namespace jank::analyze
@@ -39,6 +40,7 @@ namespace jank::analyze
       expr::let<E>,
       expr::do_<E>,
       expr::if_<E>,
+      expr::throw_<E>,
       expr::native_raw<E>
     >;
 
