@@ -9,19 +9,36 @@ namespace jank::codegen
   struct escape_view
   {
     template <typename It>
-    It copy(It out) const
+    constexpr It copy(It out) const
     {
       *out++ = quote;
-      auto needs_escape
-      (
-        [this](auto c)
-        { return c == quote || c == esc; }
-      );
-      for(auto const &c : sv)
+      for(auto const c : sv)
       {
-        if(needs_escape(c))
-        { *out++ = esc; }
-        *out++ = c;
+        switch(c)
+        {
+          case '\n':
+            *out++ = '\\';
+            *out++ = 'n';
+            break;
+          case '\t':
+            *out++ = '\\';
+            *out++ = 't';
+            break;
+          case '\r':
+            *out++ = '\\';
+            *out++ = 'r';
+            break;
+          case '\\':
+            *out++ = '\\';
+            *out++ = '\\';
+            break;
+          case '"':
+            *out++ = '\\';
+            *out++ = '"';
+            break;
+          default:
+            *out++ = c;
+        }
       }
       *out++ = quote;
       return out;

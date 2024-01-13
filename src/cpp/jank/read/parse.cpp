@@ -23,18 +23,18 @@ namespace jank::read::parse
       ss.reserve(input.size());
       native_bool escape{};
 
-      for(auto const ch : input)
+      for(auto const c : input)
       {
         if(!escape)
         {
-          if(ch == '\\')
+          if(c == '\\')
           { escape = true; }
           else
-          { ss += ch; }
+          { ss += c; }
         }
         else
         {
-          switch(ch)
+          switch(c)
           {
             case 'n':
               ss += '\n';
@@ -52,7 +52,7 @@ namespace jank::read::parse
               ss += '"';
               break;
             default:
-              return err(fmt::format("invalid escape sequence: \\{}", ch));
+              return err(fmt::format("invalid escape sequence: \\{}", c));
           }
           escape = false;
         }
