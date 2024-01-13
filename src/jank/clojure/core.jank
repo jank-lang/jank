@@ -202,6 +202,10 @@
          res
          (recur res (first args) (next args)))))))
 
+;; Strings.
+; TODO: Proper version.
+(def pr-str)
+
 ;; Metadata
 (def meta
   (fn* meta [o]
@@ -290,6 +294,11 @@
         (cons 'do body)
         nil))
 
+(defmacro when-not [condition & body]
+  (list 'if (list 'clojure.core/not condition)
+        (cons 'do body)
+        nil))
+
 (defmacro fn [args & body]
   (cons 'fn* (cons args body)))
 
@@ -342,8 +351,31 @@
           (if (next clauses)
             (second clauses)
             (let [err "cond requires an even number of forms"]
-              (list 'native/raw "throw #{ (ex-info :invalid-cond {:err err}) }#;")))
+              (list 'throw (list 'clojure.core/ex-info "invalid cond" {:err err}))))
           (cons 'clojure.core/cond (next (next clauses))))))
+
+; Evaluates expr and throws an exception if it does not evaluate to
+; logical true.
+(defn assert
+  ([&form &env x]
+   (when *assert*
+     (list 'clojure.core/when-not x
+           (list 'throw (list 'clojure.core/ex-info
+                              "assertion failed"
+                              {:assertion (pr-str x)})))))
+  ([&form &env x message]
+   (when *assert*
+     (list 'clojure.core/when-not x
+           (list 'throw (list 'clojure.core/ex-info
+                              "assertion failed"
+                              {:assertion (pr-str x)
+                               :message message}))))))
+; TODO: Use defmacro once it supports multiple arities.
+(reset-meta! (var assert) {:macro true})
+
+; Ignores body, yields nil
+(defmacro comment
+  [& body])
 
 (defn macroexpand-1 [form]
   (native/raw "__value = __rt_ctx.macroexpand1(#{ form }#);"))
@@ -469,6 +501,9 @@
                  },
                  #{ args }#
                );")))
+
+; TODO: Proper version.
+(def pr-str str)
 
 (defn subs
   ([s start]
