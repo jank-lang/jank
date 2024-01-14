@@ -4,7 +4,8 @@
    [clojure.pprint :as pp]
    [clojure.string :as string]
    [leiningen.core.classpath :as lcp]
-   [leiningen.core.main :as lmain]))
+   [leiningen.core.main :as lmain])
+  (:import [java.io File]))
 
 (defn- ^{:help-text "Runs your project or file!"}
   run
@@ -19,7 +20,7 @@
     (lmain/warn "Provide a filename!\nUsage: lein jank run <filename>")
     (let [cp-str (->> project
                       lcp/get-classpath
-                      (string/join ":"))]
+                      (string/join (File/pathSeparatorChar)))]
       (ps/shell {:continue true
                  :dir (:root project)
                  :extra-env (System/getenv)}
