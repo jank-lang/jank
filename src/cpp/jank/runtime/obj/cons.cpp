@@ -4,29 +4,59 @@
 namespace jank::runtime
 {
   obj::cons::static_object(object_ptr const head, object_ptr const tail)
-    : head{ head }, tail{ tail }
-  { assert(head); }
+    : head{ head }
+    , tail{ tail }
+  {
+    assert(head);
+  }
 
   obj::cons_ptr obj::cons::seq()
-  { return this; }
+  {
+    return this;
+  }
+
   obj::cons_ptr obj::cons::fresh_seq() const
-  { return make_box<obj::cons>(head, tail); }
+  {
+    return make_box<obj::cons>(head, tail);
+  }
 
   object_ptr obj::cons::first() const
-  { return head; }
+  {
+    return head;
+  }
 
   object_ptr obj::cons::next() const
-  { return tail; }
+  {
+    if(!tail)
+    {
+      return nullptr;
+    }
+
+    return visit_object(
+      [&](auto const typed_tail) -> object_ptr {
+        using T = typename decltype(typed_tail)::value_type;
+
+        if constexpr(behavior::sequenceable<T>)
+        {
+          return make_box<obj::cons>(typed_tail->first(), typed_tail->next());
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_tail->to_string()) };
+        }
+      },
+      tail);
+  }
 
   obj::cons_ptr obj::cons::next_in_place()
   {
     if(!tail)
-    { return nullptr; }
+    {
+      return nullptr;
+    }
 
-    visit_object
-    (
-      [&](auto const typed_tail)
-      {
+    visit_object(
+      [&](auto const typed_tail) {
         using T = typename decltype(typed_tail)::value_type;
 
         if constexpr(behavior::sequenceable<T>)
@@ -35,10 +65,11 @@ namespace jank::runtime
           tail = typed_tail->next();
         }
         else
-        { throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_tail->to_string()) }; }
+        {
+          throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_tail->to_string()) };
+        }
       },
-      tail
-    );
+      tail);
 
     return this;
   }
@@ -46,12 +77,12 @@ namespace jank::runtime
   object_ptr obj::cons::next_in_place_first()
   {
     if(!tail)
-    { return nullptr; }
+    {
+      return nullptr;
+    }
 
-    visit_object
-    (
-      [&](auto const typed_tail)
-      {
+    visit_object(
+      [&](auto const typed_tail) {
         using T = typename decltype(typed_tail)::value_type;
 
         if constexpr(behavior::sequenceable<T>)
@@ -60,56 +91,69 @@ namespace jank::runtime
           tail = typed_tail->next();
         }
         else
-        { throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_tail->to_string()) }; }
+        {
+          throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_tail->to_string()) };
+        }
       },
-      tail
-    );
+      tail);
 
     return head;
   }
 
   native_bool obj::cons::equal(object const &o) const
   {
-    return visit_object
-    (
-      [this](auto const typed_o)
-      {
+    return visit_object(
+      [this](auto const typed_o) {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(!behavior::seqable<T>)
-        { return false; }
+        {
+          return false;
+        }
         else
         {
           auto seq(typed_o->fresh_seq());
-          for(auto it(fresh_seq()); it != nullptr; seq = seq->next_in_place(), seq = seq->next_in_place())
+          for(auto it(fresh_seq()); it != nullptr;
+              seq = seq->next_in_place(), seq = seq->next_in_place())
           {
             if(seq == nullptr || !runtime::detail::equal(it, seq->first()))
-            { return false; }
+            {
+              return false;
+            }
           }
           return true;
         }
       },
-      &o
-    );
+      &o);
   }
 
   void obj::cons::to_string(fmt::memory_buffer &buff)
-  { runtime::detail::to_string(seq(), buff); }
+  {
+    runtime::detail::to_string(seq(), buff);
+  }
 
   native_persistent_string obj::cons::to_string()
-  { return runtime::detail::to_string(seq()); }
+  {
+    return runtime::detail::to_string(seq());
+  }
 
   native_integer obj::cons::to_hash() const
   {
     if(hash != 0)
-    { return static_cast<native_integer>(hash); }
+    {
+      return static_cast<native_integer>(hash);
+    }
 
     for(auto it(fresh_seq()); it != nullptr; it = it->next_in_place())
-    { hash = runtime::detail::hash_combine(hash, *it->first()); }
+    {
+      hash = runtime::detail::hash_combine(hash, *it->first());
+    }
 
     return static_cast<native_integer>(hash);
   }
 
   obj::cons_ptr obj::cons::cons(object_ptr head) const
-  { return make_box<obj::cons>(head, this); }
+  {
+    return make_box<obj::cons>(head, this);
+  }
 }

@@ -101,8 +101,10 @@ namespace jank::runtime
     };
 
     string_result<void> push_thread_bindings();
+    string_result<void> push_thread_bindings(object_ptr const bindings);
     string_result<void> push_thread_bindings(obj::persistent_hash_map_ptr const bindings);
     string_result<void> pop_thread_bindings();
+    obj::persistent_hash_map_ptr get_thread_bindings() const;
     option<thread_binding_frame> current_thread_binding_frame();
 
     /* The analyze processor is reused across evaluations so we can keep the semantic information
@@ -119,6 +121,7 @@ namespace jank::runtime
     var_ptr in_ns_var{};
     var_ptr compile_files_var{};
     var_ptr current_module_var{};
+    var_ptr assert_var{};
 
     static thread_local native_unordered_map<context const*, std::list<thread_binding_frame>> thread_binding_frames;
   };

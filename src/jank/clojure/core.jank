@@ -92,6 +92,7 @@
 (def first
   (fn* first [o]
     (native/raw "__value = jank::runtime::first(#{ o }#);")))
+; Returns a fresh seq.
 (def next
   (fn* next [o]
     (native/raw "__value = jank::runtime::next(#{ o }#);")))
@@ -1058,6 +1059,80 @@
 (defn var? [o]
   (native/raw "__value = make_box(#{ o }#->type == object_type::var)"))
 
+; TODO: Make this private.
+(defmacro assert-macro-args
+  [& pairs]
+  (list 'do
+        (list 'clojure.core/when-not (first pairs)
+              ; TODO: No need for ex-info, if we had a simpler exception type
+              (list 'throw (list 'clojure.core/ex-info
+                                 (list 'clojure.core/str
+                                       ;'&form
+                                       " requires "
+                                       (second pairs)
+                                       " in "
+                                       ;*ns*
+                                       ":"
+                                       (:line (meta '&form)))
+                                 {:pairs (list 'quote pairs)})))
+        (let [more (next (next pairs))]
+          (when more
+            (list* 'clojure.core/assert-macro-args more)))))
+
+
+; WARNING: This is a low-level function. Prefer high-level macros like
+; binding where ever possible.
+;
+; Takes a map of Var/value pairs. Binds each Var to the associated value for
+; the current thread. Each call *MUST* be accompanied by a matching call to
+; pop-thread-bindings wrapped in a try-finally!
+;
+;   (push-thread-bindings bindings)
+;   (try
+;     ...
+;     (finally
+;       (pop-thread-bindings)))
+(defn push-thread-bindings [bindings]
+  (native/raw "__rt_ctx.push_thread_bindings(#{ bindings }#).expect_ok();"))
+
+; Pop one set of bindings pushed with push-binding before. It is an error to
+; pop bindings without pushing before.
+(defn pop-thread-bindings []
+  (native/raw "__rt_ctx.pop_thread_bindings().expect_ok();"))
+
+; Get a map with the Var/value pairs which is currently in effect for the
+; current thread.
+(defn get-thread-bindings []
+  (native/raw "__value = __rt_ctx.get_thread_bindings();"))
+
+; binding => var-symbol init-expr
+;
+; Creates new bindings for the (already-existing) vars, with the
+; supplied initial values, executes the exprs in an implicit do, then
+; re-establishes the bindings that existed before.  The new bindings
+; are made in parallel (unlike let); all init-exprs are evaluated
+; before the vars are bound to their new values.
+(defmacro binding [bindings & body]
+  ; TODO: Sort out the macro-in-macro bug.
+  ;(assert-macro-args
+  ;  ;(vector? bindings) "a vector for its binding"
+  ;  ;(even? (count bindings)) "an even number of forms in binding vector"
+  ;  )
+  (let [->var-pairs (fn [var-vals ret]
+                      ; TODO: loop
+                      (let [vvs (seq var-vals)]
+                        (if vvs
+                          (recur (nnext vvs)
+                                 (conj (conj ret (list 'clojure.core/var (first vvs))) (second vvs)))
+                          (seq ret))))]
+    (list* 'clojure.core/let []
+           (list 'clojure.core/push-thread-bindings
+                 (list* 'clojure.core/hash-map
+                        (->var-pairs bindings [])))
+           (list (cons 'do body)
+                 (list 'clojure.core/pop-thread-bindings)))))
+
+
 ;; Keywords.
 (defn keyword? [o]
   (native/raw "__value = make_box(#{ o }#->type == object_type::keyword)"))
@@ -1242,13 +1317,14 @@
    (filter (complement pred) coll)))
 
 ;; Input/output.
-(defn print [o]
-  (native/raw "__value = jank::runtime::context::print(#{ o }#);"))
 (defn println [& args]
   ; TODO: Move println back into here once I sort out two things:
   ; 1. Escaped strings, so I can do the space in between each
   ; 2. The linker errors showing up when using fmt::format_to here
   (native/raw "__value = jank::runtime::context::println(#{ args }#);"))
+
+(defn print [o]
+  (native/raw "__value = jank::runtime::context::print(#{ o }#);"))
 
 ;; Functions.
 (defn ifn? [o]

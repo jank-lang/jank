@@ -49,6 +49,11 @@ namespace jank::runtime
     current_module_var->bind_root(obj::string::empty());
     current_module_var->dynamic.store(true);
 
+    auto const assert_sym(make_box<obj::symbol>("clojure.core/*assert*"));
+    assert_var = core->intern_var(assert_sym);
+    assert_var->bind_root(obj::boolean::true_const());
+    assert_var->dynamic.store(true);
+
     intern_ns(make_box<obj::symbol>("native"));
 
     std::function<object_ptr (object_ptr)> in_ns_fn
@@ -78,19 +83,6 @@ namespace jank::runtime
     auto const in_ns_sym(make_box<obj::symbol>("clojure.core/in-ns"));
     in_ns_var = intern_var(in_ns_sym).expect_ok();
     in_ns_var->bind_root(make_box<obj::native_function_wrapper>(in_ns_fn));
-
-    /* TODO: Remove this once it can be defined in jank. */
-    auto const assert_sym(make_box<obj::symbol>("clojure.core/assert"));
-    std::function<object_ptr (object_ptr)> assert_fn
-    (
-      [](object_ptr const o)
-      {
-        if(!o || !detail::truthy(o))
-        { throw std::runtime_error{ "assertion failed" }; }
-        return obj::nil::nil_const();
-      }
-    );
-    intern_var(assert_sym).expect_ok()->bind_root(make_box<obj::native_function_wrapper>(assert_fn));
 
     /* TODO: Remove this once it can be defined in jank. */
     auto const seq_sym(make_box<obj::symbol>("clojure.core/seq"));
@@ -144,6 +136,7 @@ namespace jank::runtime
     in_ns_var = intern_var(make_box<obj::symbol>("clojure.core/in-ns")).expect_ok();
     compile_files_var = intern_var(make_box<obj::symbol>("clojure.core/*compile-files*")).expect_ok();
     current_module_var = intern_var(make_box<obj::symbol>("clojure.core/*current-module*")).expect_ok();
+    assert_var = core->intern_var(make_box<obj::symbol>("clojure.core/*assert*"));
   }
 
   context::~context()
@@ -582,6 +575,16 @@ namespace jank::runtime
     assert(bindings);
     return push_thread_bindings(bindings);
   }
+
+  string_result<void> context::push_thread_bindings(object_ptr const bindings)
+  {
+    assert(bindings);
+    if(bindings->type != object_type::persistent_hash_map)
+    { return err(fmt::format("invalid thread binding map: {}", detail::to_string(bindings))); }
+
+    return push_thread_bindings(expect_object<obj::persistent_hash_map>(bindings));
+  }
+
   string_result<void> context::push_thread_bindings(obj::persistent_hash_map_ptr const bindings)
   {
     assert(bindings);
@@ -630,6 +633,14 @@ namespace jank::runtime
     tbfs.pop_front();
 
     return ok();
+  }
+
+  obj::persistent_hash_map_ptr context::get_thread_bindings() const
+  {
+    auto const &tbfs(thread_binding_frames[this]);
+    if(tbfs.empty())
+    { return obj::persistent_hash_map::empty(); }
+    return tbfs.front().bindings;
   }
 
   option<thread_binding_frame> context::current_thread_binding_frame()
