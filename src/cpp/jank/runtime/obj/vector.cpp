@@ -10,42 +10,51 @@ namespace jank::runtime
 {
   obj::vector::static_object(runtime::detail::native_persistent_vector &&d)
     : data{ std::move(d) }
-  { }
+  {
+  }
 
   obj::vector::static_object(runtime::detail::native_persistent_vector const &d)
     : data{ d }
-  { }
+  {
+  }
 
   obj::vector_ptr obj::vector::create(object_ptr const s)
   {
     if(s == nullptr)
-    { return make_box<obj::vector>(); }
+    {
+      return make_box<obj::vector>();
+    }
 
-    return visit_object
-    (
-      [](auto const typed_s) -> obj::vector_ptr
-      {
+    return visit_object(
+      [](auto const typed_s) -> obj::vector_ptr {
         using T = typename decltype(typed_s)::value_type;
 
         if constexpr(behavior::sequenceable<T>)
         {
           runtime::detail::native_transient_vector v;
           for(auto i(typed_s->fresh_seq()); i != nullptr; i = i->next_in_place())
-          { v.push_back(i->first()); }
+          {
+            v.push_back(i->first());
+          }
           return make_box<obj::vector>(v.persistent());
         }
         else
-        { throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_s->to_string()) }; }
+        {
+          throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_s->to_string()) };
+        }
       },
-      s
-    );
+      s);
   }
 
   native_bool obj::vector::equal(object const &o) const
-  { return detail::equal(o, data.begin(), data.end()); }
+  {
+    return detail::equal(o, data.begin(), data.end());
+  }
 
   void obj::vector::to_string(fmt::memory_buffer &buff) const
-  { return behavior::detail::to_string(data.begin(), data.end(), "[", ']', buff); }
+  {
+    return behavior::detail::to_string(data.begin(), data.end(), "[", ']', buff);
+  }
 
   native_persistent_string obj::vector::to_string() const
   {
@@ -59,26 +68,34 @@ namespace jank::runtime
   {
     auto seed(static_cast<native_integer>(data.size()));
     for(auto const &e : data)
-    { seed = runtime::detail::hash_combine(seed, *e); }
+    {
+      seed = runtime::detail::hash_combine(seed, *e);
+    }
     return seed;
   }
 
   obj::persistent_vector_sequence_ptr obj::vector::seq() const
   {
     if(data.empty())
-    { return nullptr; }
-    return make_box<obj::persistent_vector_sequence>(const_cast<obj::vector*>(this));
+    {
+      return nullptr;
+    }
+    return make_box<obj::persistent_vector_sequence>(const_cast<obj::vector *>(this));
   }
 
   obj::persistent_vector_sequence_ptr obj::vector::fresh_seq() const
   {
     if(data.empty())
-    { return nullptr; }
-    return make_box<obj::persistent_vector_sequence>(const_cast<obj::vector*>(this));
+    {
+      return nullptr;
+    }
+    return make_box<obj::persistent_vector_sequence>(const_cast<obj::vector *>(this));
   }
 
   size_t obj::vector::count() const
-  { return data.size(); }
+  {
+    return data.size();
+  }
 
   obj::vector_ptr obj::vector::cons(object_ptr head) const
   {
@@ -101,13 +118,15 @@ namespace jank::runtime
     {
       auto const i(static_cast<size_t>(expect_object<obj::integer>(key)->data));
       if(data.size() <= i)
-      { return obj::nil::nil_const(); }
+      {
+        return obj::nil::nil_const();
+      }
       return data[i];
     }
     else
     {
-      throw std::runtime_error
-      { fmt::format("get on a vector must be an integer; found {}", runtime::detail::to_string(key)) };
+      throw std::runtime_error{ fmt::format("get on a vector must be an integer; found {}",
+                                            runtime::detail::to_string(key)) };
     }
   }
 
@@ -117,13 +136,15 @@ namespace jank::runtime
     {
       auto const i(expect_object<obj::integer>(key)->data);
       if(i < 0 || data.size() <= static_cast<size_t>(i))
-      { return fallback; }
+      {
+        return fallback;
+      }
       return data[i];
     }
     else
     {
-      throw std::runtime_error
-      { fmt::format("get on a vector must be an integer; found {}", runtime::detail::to_string(key)) };
+      throw std::runtime_error{ fmt::format("get on a vector must be an integer; found {}",
+                                            runtime::detail::to_string(key)) };
     }
   }
 
@@ -133,14 +154,16 @@ namespace jank::runtime
     {
       auto const i(expect_object<obj::integer>(key)->data);
       if(i < 0 || data.size() <= static_cast<size_t>(i))
-      { return obj::nil::nil_const(); }
+      {
+        return obj::nil::nil_const();
+      }
       /* TODO: Map entry type? */
       return make_box<obj::vector>(key, data[i]);
     }
     else
     {
-      throw std::runtime_error
-      { fmt::format("get_entry on a vector must be an integer; found {}", runtime::detail::to_string(key)) };
+      throw std::runtime_error{ fmt::format("get_entry on a vector must be an integer; found {}",
+                                            runtime::detail::to_string(key)) };
     }
   }
 
@@ -152,6 +175,8 @@ namespace jank::runtime
       return i >= 0 && static_cast<size_t>(i) < data.size();
     }
     else
-    { return false; }
+    {
+      return false;
+    }
   }
 }

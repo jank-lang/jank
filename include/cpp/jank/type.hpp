@@ -10,14 +10,11 @@ namespace jank
 {
   template <typename T>
   using native_allocator = gc_allocator<T>;
-  using memory_policy = immer::memory_policy
-  <
-    immer::heap_policy<immer::gc_heap>,
-    immer::no_refcount_policy,
-    immer::default_lock_policy,
-    immer::gc_transience_policy,
-    false
-  >;
+  using memory_policy = immer::memory_policy<immer::heap_policy<immer::gc_heap>,
+                                             immer::no_refcount_policy,
+                                             immer::default_lock_policy,
+                                             immer::gc_transience_policy,
+                                             false>;
 
   using native_integer = long long;
   using native_real = long double;
@@ -32,15 +29,9 @@ namespace jank
   using native_set = std::set<T, std::less<T>, native_allocator<T>>;
 
   /* TODO: Try out unordered_flat_map once vcpkg has boost 1.81.0. */
-  template
-  <
-    typename K,
-    typename V,
-    typename Hash = std::hash<K>,
-    typename Pred = std::equal_to<K>
-  >
-  using native_unordered_map = boost::unordered_map
-  <K, V, Hash, Pred, native_allocator<std::pair<K const, V>>>;
+  template <typename K, typename V, typename Hash = std::hash<K>, typename Pred = std::equal_to<K>>
+  using native_unordered_map
+    = boost::unordered_map<K, V, Hash, Pred, native_allocator<std::pair<K const, V>>>;
 
   using native_transient_string = std::string;
 }

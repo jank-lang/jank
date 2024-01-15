@@ -15,11 +15,10 @@ namespace jank::analyze::expr
 
     runtime::object_ptr to_runtime_data() const
     {
-      return runtime::obj::persistent_array_map::create_unique
-      (
-        make_box("__type"), make_box("expr::throw"),
-        make_box("value"), detail::to_runtime_data(*value)
-      );
+      return runtime::obj::persistent_array_map::create_unique(make_box("__type"),
+                                                               make_box("expr::throw"),
+                                                               make_box("value"),
+                                                               detail::to_runtime_data(*value));
     }
   };
 }

@@ -17,16 +17,22 @@ namespace jank::runtime::detail
   struct object_ptr_equal
   {
     static bool equal(object_ptr const &l, object_ptr const &r)
-    { return detail::equal(l, r); }
+    {
+      return detail::equal(l, r);
+    }
 
     inline bool operator()(object_ptr const &l, object_ptr const &r) const
-    { return detail::equal(l, r); }
+    {
+      return detail::equal(l, r);
+    }
   };
 
   using native_persistent_vector = immer::vector<object_ptr, memory_policy>;
   using native_transient_vector = native_persistent_vector::transient_type;
-  using native_persistent_set = immer::set<object_ptr, std::hash<object_ptr>, object_ptr_equal, memory_policy>;
+  using native_persistent_set
+    = immer::set<object_ptr, std::hash<object_ptr>, object_ptr_equal, memory_policy>;
   using native_transient_set = native_persistent_set::transient_type;
-  using native_persistent_hash_map = immer::map<object_ptr, object_ptr, std::hash<object_ptr>, object_ptr_equal, jank::memory_policy>;
+  using native_persistent_hash_map = immer::
+    map<object_ptr, object_ptr, std::hash<object_ptr>, object_ptr_equal, jank::memory_policy>;
   using native_transient_hash_map = native_persistent_hash_map::transient_type;
 }

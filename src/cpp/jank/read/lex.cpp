@@ -10,110 +10,214 @@ using namespace std::string_view_literals;
 namespace jank::read
 {
   error::error(size_t const s, native_persistent_string const &m)
-    : start{ s }, end{ s }, message{ m }
-  { }
+    : start{ s }
+    , end{ s }
+    , message{ m }
+  {
+  }
+
   error::error(size_t const s, size_t const e, native_persistent_string const &m)
-    : start{ s }, end{ e }, message{ m }
-  { }
+    : start{ s }
+    , end{ e }
+    , message{ m }
+  {
+  }
+
   error::error(native_persistent_string const &m)
     : message{ m }
-  { }
+  {
+  }
 
-  native_bool error::operator ==(error const &rhs) const
-  { return !(*this != rhs); }
-  native_bool error::operator !=(error const &rhs) const
-  { return start != rhs.start || end != rhs.end || message != rhs.message; }
+  native_bool error::operator==(error const &rhs) const
+  {
+    return !(*this != rhs);
+  }
 
-  std::ostream& operator <<(std::ostream &os, error const &e)
-  { return os << "error(" << e.start << " - " << e.end << ", \"" << e.message << "\")"; }
+  native_bool error::operator!=(error const &rhs) const
+  {
+    return start != rhs.start || end != rhs.end || message != rhs.message;
+  }
+
+  std::ostream &operator<<(std::ostream &os, error const &e)
+  {
+    return os << "error(" << e.start << " - " << e.end << ", \"" << e.message << "\")";
+  }
 
   namespace lex
   {
-    template <typename ... Ts>
-    std::ostream& operator<<(std::ostream &os, std::variant<Ts...> const &v)
+    template <typename... Ts>
+    std::ostream &operator<<(std::ostream &os, std::variant<Ts...> const &v)
     {
-      boost::apply_visitor
-      (
-       [&](auto &&arg)
-       {
-         using T = std::decay_t<decltype(arg)>;
-         if constexpr(std::is_same_v<T, native_persistent_string> || std::is_same_v<T, native_persistent_string_view>)
-         { os << std::quoted(arg); }
-         else
-         { os << arg; }
-       },
-       v
-      );
+      boost::apply_visitor(
+        [&](auto &&arg) {
+          using T = std::decay_t<decltype(arg)>;
+          if constexpr(std::is_same_v<T, native_persistent_string>
+                       || std::is_same_v<T, native_persistent_string_view>)
+          {
+            os << std::quoted(arg);
+          }
+          else
+          {
+            os << arg;
+          }
+        },
+        v);
       return os;
     }
 
-    token::token(token_kind const k) : kind{ k }
-    { }
-    token::token(size_t const p, token_kind const k) : pos{ p }, kind{ k }
-    { }
+    token::token(token_kind const k)
+      : kind{ k }
+    {
+    }
+
+    token::token(size_t const p, token_kind const k)
+      : pos{ p }
+      , kind{ k }
+    {
+    }
+
     token::token(size_t const p, token_kind const k, native_integer const d)
-      : pos{ p }, kind{ k }, data{ d }
-    { }
+      : pos{ p }
+      , kind{ k }
+      , data{ d }
+    {
+    }
+
     token::token(size_t const p, token_kind const k, native_real const d)
-      : pos{ p }, kind{ k }, data{ d }
-    { }
+      : pos{ p }
+      , kind{ k }
+      , data{ d }
+    {
+    }
+
     token::token(size_t const p, token_kind const k, native_persistent_string_view const d)
-      : pos{ p }, kind{ k }, data{ d }
-    { }
+      : pos{ p }
+      , kind{ k }
+      , data{ d }
+    {
+    }
+
     token::token(size_t const p, token_kind const k, native_bool const d)
-      : pos{ p }, kind{ k }, data{ d }
-    { }
+      : pos{ p }
+      , kind{ k }
+      , data{ d }
+    {
+    }
 
     token::token(size_t const p, size_t const s, token_kind const k)
-      : pos{ p }, size{ s }, kind{ k }
-    { }
+      : pos{ p }
+      , size{ s }
+      , kind{ k }
+    {
+    }
+
     token::token(size_t const p, size_t const s, token_kind const k, native_integer const d)
-      : pos{ p }, size{ s }, kind{ k }, data{ d }
-    { }
+      : pos{ p }
+      , size{ s }
+      , kind{ k }
+      , data{ d }
+    {
+    }
+
     token::token(size_t const p, size_t const s, token_kind const k, native_real const d)
-      : pos{ p }, size{ s }, kind{ k }, data{ d }
-    { }
-    token::token(size_t const p, size_t const s, token_kind const k, native_persistent_string_view const d)
-      : pos{ p }, size{ s }, kind{ k }, data{ d }
-    { }
+      : pos{ p }
+      , size{ s }
+      , kind{ k }
+      , data{ d }
+    {
+    }
+
+    token::token(size_t const p,
+                 size_t const s,
+                 token_kind const k,
+                 native_persistent_string_view const d)
+      : pos{ p }
+      , size{ s }
+      , kind{ k }
+      , data{ d }
+    {
+    }
+
     token::token(size_t const p, size_t const s, token_kind const k, native_bool const d)
-      : pos{ p }, size{ s }, kind{ k }, data{ d }
-    { }
+      : pos{ p }
+      , size{ s }
+      , kind{ k }
+      , data{ d }
+    {
+    }
 
-    native_bool token::no_data::operator ==(no_data const &) const
-    { return true; }
-    native_bool token::no_data::operator !=(no_data const &) const
-    { return false; }
-    native_bool token::operator ==(token const &rhs) const
-    { return !(*this != rhs); }
-    native_bool token::operator !=(token const &rhs) const
-    { return (pos != rhs.pos && pos != token::ignore_pos && rhs.pos != token::ignore_pos) || size != rhs.size || kind != rhs.kind || data != rhs.data; }
-    std::ostream& operator <<(std::ostream &os, token const &t)
-    { return os << "token(" << t.pos << ", " << t.size << ", " << magic_enum::enum_name(t.kind) << ", " << t.data << ")"; }
-    std::ostream& operator <<(std::ostream &os, token::no_data const &)
-    { return os << "<no data>"; }
+    native_bool token::no_data::operator==(no_data const &) const
+    {
+      return true;
+    }
 
-    processor::processor(native_persistent_string_view const &f) : file{ f }
-    { }
+    native_bool token::no_data::operator!=(no_data const &) const
+    {
+      return false;
+    }
 
-    processor::iterator::value_type const& processor::iterator::operator *() const
-    { return latest.unwrap(); }
-    processor::iterator::value_type const* processor::iterator::operator ->() const
-    { return &latest.unwrap(); }
-    processor::iterator& processor::iterator::operator ++()
+    native_bool token::operator==(token const &rhs) const
+    {
+      return !(*this != rhs);
+    }
+
+    native_bool token::operator!=(token const &rhs) const
+    {
+      return (pos != rhs.pos && pos != token::ignore_pos && rhs.pos != token::ignore_pos)
+        || size != rhs.size || kind != rhs.kind || data != rhs.data;
+    }
+
+    std::ostream &operator<<(std::ostream &os, token const &t)
+    {
+      return os << "token(" << t.pos << ", " << t.size << ", " << magic_enum::enum_name(t.kind)
+                << ", " << t.data << ")";
+    }
+
+    std::ostream &operator<<(std::ostream &os, token::no_data const &)
+    {
+      return os << "<no data>";
+    }
+
+    processor::processor(native_persistent_string_view const &f)
+      : file{ f }
+    {
+    }
+
+    processor::iterator::value_type const &processor::iterator::operator*() const
+    {
+      return latest.unwrap();
+    }
+
+    processor::iterator::value_type const *processor::iterator::operator->() const
+    {
+      return &latest.unwrap();
+    }
+
+    processor::iterator &processor::iterator::operator++()
     {
       latest = some(p.next());
       return *this;
     }
-    native_bool processor::iterator::operator !=(processor::iterator const &rhs) const
-    { return latest != rhs.latest; }
-    native_bool processor::iterator::operator ==(processor::iterator const &rhs) const
-    { return latest == rhs.latest; }
+
+    native_bool processor::iterator::operator!=(processor::iterator const &rhs) const
+    {
+      return latest != rhs.latest;
+    }
+
+    native_bool processor::iterator::operator==(processor::iterator const &rhs) const
+    {
+      return latest == rhs.latest;
+    }
 
     processor::iterator processor::begin()
-    { return { some(next()), *this }; }
+    {
+      return { some(next()), *this };
+    }
+
     processor::iterator processor::end()
-    { return { some(token_kind::eof), *this }; }
+    {
+      return { some(token_kind::eof), *this };
+    }
 
     option<error> processor::check_whitespace(native_bool const found_space)
     {
@@ -127,10 +231,9 @@ namespace jank::read
 
     static native_bool is_symbol_char(char const c)
     {
-      return std::isalnum(static_cast<unsigned char>(c)) != 0
-             || c == '_' || c == '-' || c == '/' || c == '?' || c == '!'
-             || c == '+' || c == '*' || c == '=' || c == '.' || c == '&'
-             || c == '<' || c == '>';
+      return std::isalnum(static_cast<unsigned char>(c)) != 0 || c == '_' || c == '-' || c == '/'
+        || c == '?' || c == '!' || c == '+' || c == '*' || c == '=' || c == '.' || c == '&'
+        || c == '<' || c == '>';
     }
 
     result<token, error> processor::next()
@@ -140,11 +243,15 @@ namespace jank::read
       while(true)
       {
         if(pos >= file.size())
-        { return ok(token{ pos, token_kind::eof }); }
+        {
+          return ok(token{ pos, token_kind::eof });
+        }
 
         auto const c(file[pos]);
         if(std::isspace(c) == 0 && c != ',')
-        { break; }
+        {
+          break;
+        }
 
         found_space = true;
         ++pos;
@@ -175,83 +282,107 @@ namespace jank::read
           require_space = false;
           return ok(token{ pos++, token_kind::single_quote });
         case ';':
-        {
-          size_t leading_semis{ 1 };
-          native_bool hit_non_semi{};
-          while(true)
           {
-            auto const oc(peek());
-            if(oc.is_none())
-            { break; }
-            auto const c(oc.unwrap());
-            if(c == '\n')
-            { break; }
-            else if(c == ';' && !hit_non_semi)
-            { ++leading_semis; }
-            else
-            { hit_non_semi = true; }
-
-            ++pos;
-          }
-          if(pos == token_start)
-          { return ok(token{ pos++, 1, token_kind::comment, ""sv }); }
-          else
-          {
-            ++pos;
-            native_persistent_string_view const comment
+            size_t leading_semis{ 1 };
+            native_bool hit_non_semi{};
+            while(true)
             {
-              file.data() + token_start + leading_semis,
-              pos - token_start - leading_semis
-            };
-            return ok(token{ token_start, pos - 1 - token_start, token_kind::comment, comment });
+              auto const oc(peek());
+              if(oc.is_none())
+              {
+                break;
+              }
+              auto const c(oc.unwrap());
+              if(c == '\n')
+              {
+                break;
+              }
+              else if(c == ';' && !hit_non_semi)
+              {
+                ++leading_semis;
+              }
+              else
+              {
+                hit_non_semi = true;
+              }
+
+              ++pos;
+            }
+            if(pos == token_start)
+            {
+              return ok(token{ pos++, 1, token_kind::comment, ""sv });
+            }
+            else
+            {
+              ++pos;
+              native_persistent_string_view const comment{ file.data() + token_start
+                                                             + leading_semis,
+                                                           pos - token_start - leading_semis };
+              return ok(token{ token_start, pos - 1 - token_start, token_kind::comment, comment });
+            }
           }
-        }
         /* Numbers. */
         case '-':
         case '0' ... '9':
-        {
-          auto &&e(check_whitespace(found_space));
-          if(e.is_some())
-          { return err(std::move(e.unwrap())); }
-          native_bool contains_leading_digit{ file[token_start] != '-' };
-          native_bool contains_dot{};
-          while(true)
           {
-            auto const oc(peek());
-            if(oc.is_none())
-            { break; }
-
-            auto const c(oc.unwrap());
-            if(c == '.')
+            auto &&e(check_whitespace(found_space));
+            if(e.is_some())
             {
-              if(contains_dot || !contains_leading_digit)
-              {
-                ++pos;
-                return err(error{ token_start, pos, "invalid number" });
-              }
-              contains_dot = true;
+              return err(std::move(e.unwrap()));
             }
-            else if(std::isdigit(c) == 0)
-            { break; }
+            native_bool contains_leading_digit{ file[token_start] != '-' };
+            native_bool contains_dot{};
+            while(true)
+            {
+              auto const oc(peek());
+              if(oc.is_none())
+              {
+                break;
+              }
 
-            contains_leading_digit = true;
+              auto const c(oc.unwrap());
+              if(c == '.')
+              {
+                if(contains_dot || !contains_leading_digit)
+                {
+                  ++pos;
+                  return err(error{ token_start, pos, "invalid number" });
+                }
+                contains_dot = true;
+              }
+              else if(std::isdigit(c) == 0)
+              {
+                break;
+              }
 
-            ++pos;
-          }
+              contains_leading_digit = true;
 
-          /* Tokens beginning with - are ambiguous; it's only a negative number if it has numbers
+              ++pos;
+            }
+
+            /* Tokens beginning with - are ambiguous; it's only a negative number if it has numbers
            * to follow. */
-          if(file[token_start] != '-' || (pos - token_start) >= 1)
-          {
-            require_space = true;
-            ++pos;
-            if(contains_dot)
-            { return ok(token{ token_start, pos - token_start, token_kind::real, std::strtold(file.data() + token_start, nullptr) }); }
-            else
-            { return ok(token{ token_start, pos - token_start, token_kind::integer, std::strtoll(file.data() + token_start, nullptr, 10) }); }
+            if(file[token_start] != '-' || (pos - token_start) >= 1)
+            {
+              require_space = true;
+              ++pos;
+              if(contains_dot)
+              {
+                return ok(token{ token_start,
+                                 pos - token_start,
+                                 token_kind::real,
+                                 std::strtold(file.data() + token_start, nullptr) });
+              }
+              else
+              {
+                return ok(token{ token_start,
+                                 pos - token_start,
+                                 token_kind::integer,
+                                 std::strtoll(file.data() + token_start, nullptr, 10) });
+              }
+            }
+            /* XXX: Fall through to symbol starting with - */
           }
-          /* XXX: Fall through to symbol starting with - */
-        }
         /* Symbols. */
         case 'a' ... 'z':
         case 'A' ... 'Z':
@@ -265,124 +396,153 @@ namespace jank::read
         case '&':
         case '<':
         case '>':
-        {
-          auto &&e(check_whitespace(found_space));
-          if(e.is_some())
-          { return err(std::move(e.unwrap())); }
-          while(true)
           {
-            auto const oc(peek());
-            if(oc.is_none())
-            { break; }
-            auto const c(oc.unwrap());
-            if(!is_symbol_char(c))
-            { break; }
-            ++pos;
-          }
-          require_space = true;
-          native_persistent_string_view const name{ file.data() + token_start, ++pos - token_start };
-          if(name[0] == '/' && name.size() > 1)
-          { return err(error{ token_start, "invalid symbol" }); }
-          else if(name == "nil")
-          { return ok(token{ token_start, pos - token_start, token_kind::nil }); }
-          else if(name == "true")
-          { return ok(token{ token_start, pos - token_start, token_kind::boolean, true }); }
-          else if(name == "false")
-          { return ok(token{ token_start, pos - token_start, token_kind::boolean, false }); }
+            auto &&e(check_whitespace(found_space));
+            if(e.is_some())
+            {
+              return err(std::move(e.unwrap()));
+            }
+            while(true)
+            {
+              auto const oc(peek());
+              if(oc.is_none())
+              {
+                break;
+              }
+              auto const c(oc.unwrap());
+              if(!is_symbol_char(c))
+              {
+                break;
+              }
+              ++pos;
+            }
+            require_space = true;
+            native_persistent_string_view const name{ file.data() + token_start,
+                                                      ++pos - token_start };
+            if(name[0] == '/' && name.size() > 1)
+            {
+              return err(error{ token_start, "invalid symbol" });
+            }
+            else if(name == "nil")
+            {
+              return ok(token{ token_start, pos - token_start, token_kind::nil });
+            }
+            else if(name == "true")
+            {
+              return ok(token{ token_start, pos - token_start, token_kind::boolean, true });
+            }
+            else if(name == "false")
+            {
+              return ok(token{ token_start, pos - token_start, token_kind::boolean, false });
+            }
 
-          return ok(token{ token_start, pos - token_start, token_kind::symbol, name });
-        }
+            return ok(token{ token_start, pos - token_start, token_kind::symbol, name });
+          }
         /* Keywords. */
         case ':':
-        {
-          auto &&e(check_whitespace(found_space));
-          if(e.is_some())
-          { return err(std::move(e.unwrap())); }
-
-          /* Support auto-resolved qualified keywords. */
-          auto const oc(peek());
-          if(oc.is_some() && oc.unwrap() == ':')
-          { ++pos; }
-
-          while(true)
           {
-            auto const oc(peek());
-            if(oc.is_none())
-            { break; }
-            auto const c(oc.unwrap());
-            if(!is_symbol_char(c))
-            { break; }
-            ++pos;
-          }
-          require_space = true;
-          native_persistent_string_view const name{ file.data() + token_start + 1, ++pos - token_start - 1 };
-          if(name[0] == '/' && name.size() > 1)
-          { return err(error{ token_start, "invalid keyword: starts with /" }); }
-          else if(name[0] == ':' && name.size() == 1)
-          { return err(error{ token_start, "invalid keyword: incorrect number of :" }); }
+            auto &&e(check_whitespace(found_space));
+            if(e.is_some())
+            {
+              return err(std::move(e.unwrap()));
+            }
 
-          return ok(token{ token_start, pos - token_start, token_kind::keyword, name });
-        }
+            /* Support auto-resolved qualified keywords. */
+            auto const oc(peek());
+            if(oc.is_some() && oc.unwrap() == ':')
+            {
+              ++pos;
+            }
+
+            while(true)
+            {
+              auto const oc(peek());
+              if(oc.is_none())
+              {
+                break;
+              }
+              auto const c(oc.unwrap());
+              if(!is_symbol_char(c))
+              {
+                break;
+              }
+              ++pos;
+            }
+            require_space = true;
+            native_persistent_string_view const name{ file.data() + token_start + 1,
+                                                      ++pos - token_start - 1 };
+            if(name[0] == '/' && name.size() > 1)
+            {
+              return err(error{ token_start, "invalid keyword: starts with /" });
+            }
+            else if(name[0] == ':' && name.size() == 1)
+            {
+              return err(error{ token_start, "invalid keyword: incorrect number of :" });
+            }
+
+            return ok(token{ token_start, pos - token_start, token_kind::keyword, name });
+          }
         /* Strings. */
         case '"':
-        {
-          auto &&e(check_whitespace(found_space));
-          if(e.is_some())
-          { return err(std::move(e.unwrap())); }
-          auto const token_start(pos);
-          native_bool escaped{}, contains_escape{};
-          while(true)
           {
-            auto const oc(peek());
-            if(oc.is_none())
+            auto &&e(check_whitespace(found_space));
+            if(e.is_some())
             {
-              ++pos;
-              return err(error{ token_start, "unterminated string" });
+              return err(std::move(e.unwrap()));
             }
-            else if(!escaped && oc.unwrap() == '"')
+            auto const token_start(pos);
+            native_bool escaped{}, contains_escape{};
+            while(true)
             {
-              ++pos;
-              break;
-            }
-
-            if(escaped)
-            {
-              switch(oc.unwrap())
+              auto const oc(peek());
+              if(oc.is_none())
               {
-                case 'n':
-                case 't':
-                case '"':
-                  break;
-                default:
-                  return err(error{ pos, "unsupported escape character" });
+                ++pos;
+                return err(error{ token_start, "unterminated string" });
               }
-              escaped = false;
-            }
-            else if(oc.unwrap() == '\\')
-            { escaped = contains_escape = true; }
-            ++pos;
-          }
-          require_space = true;
-          pos++;
+              else if(!escaped && oc.unwrap() == '"')
+              {
+                ++pos;
+                break;
+              }
 
-          /* Unescaped strings can be read right from memory, but escaped strings require
+              if(escaped)
+              {
+                switch(oc.unwrap())
+                {
+                  case 'n':
+                  case 't':
+                  case '"':
+                    break;
+                  default:
+                    return err(error{ pos, "unsupported escape character" });
+                }
+                escaped = false;
+              }
+              else if(oc.unwrap() == '\\')
+              {
+                escaped = contains_escape = true;
+              }
+              ++pos;
+            }
+            require_space = true;
+            pos++;
+
+            /* Unescaped strings can be read right from memory, but escaped strings require
            * some processing first, to turn the escape sequences into the necessary characters.
            * We use distinct token types for these so we can optimize for the typical case. */
-          auto const kind(contains_escape ? token_kind::escaped_string : token_kind::string);
-          return ok
-          (
-            token
-            {
-              token_start,
-              pos - token_start,
-              kind,
-              native_persistent_string_view(file.data() + token_start + 1, pos - token_start - 2)
-            }
-          );
-        }
+            auto const kind(contains_escape ? token_kind::escaped_string : token_kind::string);
+            return ok(token{ token_start,
+                             pos - token_start,
+                             kind,
+                             native_persistent_string_view(file.data() + token_start + 1,
+                                                           pos - token_start - 2) });
+          }
         default:
           ++pos;
-          return err(error{ token_start, native_persistent_string{ "unexpected character: " } + file[token_start] });
+          return err(
+            error{ token_start,
+                   native_persistent_string{ "unexpected character: " } + file[token_start] });
       }
     }
 
@@ -390,7 +550,9 @@ namespace jank::read
     {
       auto const next_pos(pos + 1);
       if(next_pos >= file.size())
-      { return none; }
+      {
+        return none;
+      }
       return some(file[next_pos]);
     }
   }

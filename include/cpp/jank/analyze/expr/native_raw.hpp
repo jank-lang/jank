@@ -25,30 +25,27 @@ namespace jank::analyze::expr
       runtime::object_ptr chunk_maps(make_box<runtime::obj::vector>());
       for(auto const &e : chunks)
       {
-        chunk_maps = runtime::conj
-        (
-          chunk_maps,
-          boost::apply_visitor
-          (
-            [](auto const &d) -> runtime::object_ptr
-            {
-              using T = std::decay_t<decltype(d)>;
+        chunk_maps = runtime::conj(chunk_maps,
+                                   boost::apply_visitor(
+                                     [](auto const &d) -> runtime::object_ptr {
+                                       using T = std::decay_t<decltype(d)>;
 
-              if constexpr(std::same_as<T, native_persistent_string>)
-              { return make_box(d); }
-              else
-              { return d->to_runtime_data(); }
-            },
-            e
-          )
-        );
+                                       if constexpr(std::same_as<T, native_persistent_string>)
+                                       {
+                                         return make_box(d);
+                                       }
+                                       else
+                                       {
+                                         return d->to_runtime_data();
+                                       }
+                                     },
+                                     e));
       }
 
-      return runtime::obj::persistent_array_map::create_unique
-      (
-        make_box("__type"), make_box("expr::native_raw"),
-        make_box("chunks"), chunk_maps
-      );
+      return runtime::obj::persistent_array_map::create_unique(make_box("__type"),
+                                                               make_box("expr::native_raw"),
+                                                               make_box("chunks"),
+                                                               chunk_maps);
     }
   };
 }

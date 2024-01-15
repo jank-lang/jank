@@ -15,7 +15,9 @@
 #include <jank/jit/processor.hpp>
 
 namespace jank::jit
-{ struct processor; }
+{
+  struct processor;
+}
 
 namespace jank::runtime
 {
@@ -23,7 +25,7 @@ namespace jank::runtime
   {
     context();
     context(util::cli::options const &opts);
-    context(context const&);
+    context(context const &);
     context(context &&) = delete;
     ~context();
 
@@ -44,13 +46,18 @@ namespace jank::runtime
     option<object_ptr> find_local(obj::symbol_ptr const &);
 
     result<var_ptr, native_persistent_string> intern_var(obj::symbol_ptr const &);
-    result<var_ptr, native_persistent_string> intern_var(native_persistent_string const &ns, native_persistent_string const &name);
+    result<var_ptr, native_persistent_string>
+    intern_var(native_persistent_string const &ns, native_persistent_string const &name);
     option<var_ptr> find_var(obj::symbol_ptr const &);
-    option<var_ptr> find_var(native_persistent_string const &ns, native_persistent_string const &name);
+    option<var_ptr>
+    find_var(native_persistent_string const &ns, native_persistent_string const &name);
 
-    result<obj::keyword_ptr, native_persistent_string> intern_keyword(obj::symbol const &sym, native_bool const resolved = true);
-    result<obj::keyword_ptr, native_persistent_string> intern_keyword
-    (native_persistent_string_view const &ns, native_persistent_string_view const &name, native_bool resolved = true);
+    result<obj::keyword_ptr, native_persistent_string>
+    intern_keyword(obj::symbol const &sym, native_bool const resolved = true);
+    result<obj::keyword_ptr, native_persistent_string>
+    intern_keyword(native_persistent_string_view const &ns,
+                   native_persistent_string_view const &name,
+                   native_bool resolved = true);
 
     object_ptr macroexpand1(object_ptr o);
     object_ptr macroexpand(object_ptr o);
@@ -61,7 +68,8 @@ namespace jank::runtime
 
     object_ptr eval_file(native_persistent_string_view const &path);
     object_ptr eval_string(native_persistent_string_view const &code);
-    native_vector<analyze::expression_ptr> analyze_string(native_persistent_string_view const &code, native_bool const eval = true);
+    native_vector<analyze::expression_ptr>
+    analyze_string(native_persistent_string_view const &code, native_bool const eval = true);
 
     /* Finds the specified module on the class path and loads it. If
      * the module is already loaded, nothing is done.
@@ -77,9 +85,11 @@ namespace jank::runtime
     result<void, native_persistent_string> load_module(native_persistent_string_view const &module);
 
     /* Does all the same work as load_module, but also writes compiled files to the file system. */
-    result<void, native_persistent_string> compile_module(native_persistent_string_view const &module);
+    result<void, native_persistent_string>
+    compile_module(native_persistent_string_view const &module);
 
-    void write_module(native_persistent_string_view const &module, native_persistent_string_view const &contents) const;
+    void write_module(native_persistent_string_view const &module,
+                      native_persistent_string_view const &contents) const;
 
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */
@@ -113,7 +123,8 @@ namespace jank::runtime
     analyze::processor an_prc{ *this };
     jit::processor jit_prc;
     /* TODO: This needs to be a dynamic var. */
-    native_unordered_map<native_persistent_string, native_vector<native_persistent_string>> module_dependencies;
+    native_unordered_map<native_persistent_string, native_vector<native_persistent_string>>
+      module_dependencies;
     native_persistent_string output_dir;
     module::loader module_loader;
 
@@ -123,6 +134,7 @@ namespace jank::runtime
     var_ptr current_module_var{};
     var_ptr assert_var{};
 
-    static thread_local native_unordered_map<context const*, std::list<thread_binding_frame>> thread_binding_frames;
+    static thread_local native_unordered_map<context const *, std::list<thread_binding_frame>>
+      thread_binding_frames;
   };
 }

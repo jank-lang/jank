@@ -26,7 +26,9 @@ namespace jank::evaluate
 
     arity.frame = expr.frame;
     while(arity.frame->parent.is_some())
-    { arity.frame = arity.frame->parent.unwrap(); }
+    {
+      arity.frame = arity.frame->parent.unwrap();
+    }
     arity.frame->type = analyze::local_frame::frame_type::fn;
     expr.expr_type = analyze::expression_type::return_statement;
     /* TODO: Avoid allocation by using existing ptr. */
@@ -41,23 +43,19 @@ namespace jank::evaluate
     return wrapper;
   }
 
-  analyze::expr::function<analyze::expression> wrap_expressions
-  (
-    native_vector<analyze::expression_ptr> const &exprs,
-    analyze::processor const &an_prc
-  )
+  analyze::expr::function<analyze::expression>
+  wrap_expressions(native_vector<analyze::expression_ptr> const &exprs,
+                   analyze::processor const &an_prc)
   {
     if(exprs.empty())
     {
-      return wrap_expression
-      (
-        analyze::expr::primitive_literal<analyze::expression>
-        {
-          analyze::expression_base
-          { {}, analyze::expression_type::return_statement, an_prc.root_frame, true },
-          runtime::obj::nil::nil_const()
-        }
-      );
+      return wrap_expression(analyze::expr::primitive_literal<analyze::expression>{
+        analyze::expression_base{{},
+                                 analyze::expression_type::return_statement,
+                                 an_prc.root_frame,
+                                 true},
+        runtime::obj::nil::nil_const()
+      });
     }
     else
     {
@@ -70,7 +68,9 @@ namespace jank::evaluate
       body[0]->get_base()->expr_type = analyze::expression_type::statement;
 
       for(auto const &expr : exprs)
-      { body.emplace_back(expr); }
+      {
+        body.emplace_back(expr);
+      }
 
       /* Finally, mark the last body item as our return. */
       auto const last_body_index(body.size() - 1);
@@ -82,91 +82,70 @@ namespace jank::evaluate
 
   analyze::expr::function<analyze::expression> wrap_expression(analyze::expression_ptr const expr)
   {
-    return boost::apply_visitor
-    (
-      [](auto const &typed_expr)
-      { return wrap_expression(typed_expr); },
-      expr->data
-    );
+    return boost::apply_visitor([](auto const &typed_expr) { return wrap_expression(typed_expr); },
+                                expr->data);
   }
 
-  runtime::object_ptr eval
-  (
-    runtime::context &rt_ctx,
-    jit::processor const &jit_prc,
-    analyze::expression_ptr const &ex
-  )
+  runtime::object_ptr
+  eval(runtime::context &rt_ctx, jit::processor const &jit_prc, analyze::expression_ptr const &ex)
   {
     runtime::object_ptr ret{};
-    boost::apply_visitor
-    (
-      [&rt_ctx, &jit_prc, &ret](auto const &typed_ex)
-      { ret = eval(rt_ctx, jit_prc, typed_ex); },
-      ex->data
-    );
+    boost::apply_visitor(
+      [&rt_ctx, &jit_prc, &ret](auto const &typed_ex) { ret = eval(rt_ctx, jit_prc, typed_ex); },
+      ex->data);
 
     assert(ret);
     return ret;
   }
 
-  runtime::object_ptr eval
-  (
-    runtime::context &rt_ctx,
-    jit::processor const &jit_prc,
-    analyze::expr::def<analyze::expression> const &expr
-  )
+  runtime::object_ptr eval(runtime::context &rt_ctx,
+                           jit::processor const &jit_prc,
+                           analyze::expr::def<analyze::expression> const &expr)
   {
     auto var(rt_ctx.intern_var(expr.name).expect_ok());
     if(expr.value.is_none())
-    { return var; }
+    {
+      return var;
+    }
 
     auto const evaluated_value(eval(rt_ctx, jit_prc, expr.value.unwrap()));
     var->bind_root(evaluated_value);
     return var;
   }
 
-  runtime::object_ptr eval
-  (
-    runtime::context &rt_ctx,
-    jit::processor const &,
-    analyze::expr::var_deref<analyze::expression> const &expr
-  )
+  runtime::object_ptr eval(runtime::context &rt_ctx,
+                           jit::processor const &,
+                           analyze::expr::var_deref<analyze::expression> const &expr)
   {
     auto const var(rt_ctx.find_var(expr.qualified_name));
     return var.unwrap()->deref();
   }
 
-  runtime::object_ptr eval
-  (
-    runtime::context &rt_ctx,
-    jit::processor const &,
-    analyze::expr::var_ref<analyze::expression> const &expr
-  )
+  runtime::object_ptr eval(runtime::context &rt_ctx,
+                           jit::processor const &,
+                           analyze::expr::var_ref<analyze::expression> const &expr)
   {
     auto const var(rt_ctx.find_var(expr.qualified_name));
     return var.unwrap();
   }
 
-  runtime::object_ptr eval
-  (
-    runtime::context &rt_ctx,
-    jit::processor const &jit_prc,
-    analyze::expr::call<analyze::expression> const &expr
-  )
+  runtime::object_ptr eval(runtime::context &rt_ctx,
+                           jit::processor const &jit_prc,
+                           analyze::expr::call<analyze::expression> const &expr)
   {
     auto const source(eval(rt_ctx, jit_prc, expr.source_expr));
-    return runtime::visit_object
-    (
-      [&](auto const typed_source) -> runtime::object_ptr
-      {
+    return runtime::visit_object(
+      [&](auto const typed_source) -> runtime::object_ptr {
         using T = typename decltype(typed_source)::value_type;
 
         if constexpr(std::is_base_of_v<runtime::behavior::callable, T>)
         {
           native_vector<runtime::object_ptr> arg_vals;
           arg_vals.reserve(expr.arg_exprs.size());
-          for(auto const &arg_expr: expr.arg_exprs)
-          { arg_vals.emplace_back(eval(rt_ctx, jit_prc, arg_expr)); }
+          for(auto const &arg_expr : expr.arg_exprs)
+          {
+            arg_vals.emplace_back(eval(rt_ctx, jit_prc, arg_expr));
+          }
 
           /* TODO: Use apply_to */
           switch(arg_vals.size())
@@ -180,42 +159,105 @@ namespace jank::evaluate
             case 3:
               return runtime::dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2]);
             case 4:
-              return runtime::dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3]);
+              return runtime::dynamic_call(source,
+                                           arg_vals[0],
+                                           arg_vals[1],
+                                           arg_vals[2],
+                                           arg_vals[3]);
             case 5:
-              return runtime::dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3], arg_vals[4]);
+              return runtime::dynamic_call(source,
+                                           arg_vals[0],
+                                           arg_vals[1],
+                                           arg_vals[2],
+                                           arg_vals[3],
+                                           arg_vals[4]);
             case 6:
-              return runtime::dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3], arg_vals[4], arg_vals[5]);
+              return runtime::dynamic_call(source,
+                                           arg_vals[0],
+                                           arg_vals[1],
+                                           arg_vals[2],
+                                           arg_vals[3],
+                                           arg_vals[4],
+                                           arg_vals[5]);
             case 7:
-              return runtime::dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3], arg_vals[4], arg_vals[5], arg_vals[6]);
+              return runtime::dynamic_call(source,
+                                           arg_vals[0],
+                                           arg_vals[1],
+                                           arg_vals[2],
+                                           arg_vals[3],
+                                           arg_vals[4],
+                                           arg_vals[5],
+                                           arg_vals[6]);
             case 8:
-              return runtime::dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3], arg_vals[4], arg_vals[5], arg_vals[6], arg_vals[7]);
+              return runtime::dynamic_call(source,
+                                           arg_vals[0],
+                                           arg_vals[1],
+                                           arg_vals[2],
+                                           arg_vals[3],
+                                           arg_vals[4],
+                                           arg_vals[5],
+                                           arg_vals[6],
+                                           arg_vals[7]);
             case 9:
-              return runtime::dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3], arg_vals[4], arg_vals[5], arg_vals[6], arg_vals[7], arg_vals[8]);
+              return runtime::dynamic_call(source,
+                                           arg_vals[0],
+                                           arg_vals[1],
+                                           arg_vals[2],
+                                           arg_vals[3],
+                                           arg_vals[4],
+                                           arg_vals[5],
+                                           arg_vals[6],
+                                           arg_vals[7],
+                                           arg_vals[8]);
             case 10:
-              return runtime::dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3], arg_vals[4], arg_vals[5], arg_vals[6], arg_vals[7], arg_vals[8], arg_vals[9]);
+              return runtime::dynamic_call(source,
+                                           arg_vals[0],
+                                           arg_vals[1],
+                                           arg_vals[2],
+                                           arg_vals[3],
+                                           arg_vals[4],
+                                           arg_vals[5],
+                                           arg_vals[6],
+                                           arg_vals[7],
+                                           arg_vals[8],
+                                           arg_vals[9]);
             default:
-            {
-              /* TODO: This could be optimized; making lists sucks right now. */
-              runtime::detail::native_persistent_list all{ arg_vals.rbegin(), arg_vals.rend() };
-              for(size_t i{}; i < 10; ++i)
-              { all = all.rest(); }
-              return runtime::dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3], arg_vals[4], arg_vals[5], arg_vals[6], arg_vals[7], arg_vals[8], arg_vals[9], make_box<runtime::obj::list>(all));
-            }
+              {
+                /* TODO: This could be optimized; making lists sucks right now. */
+                runtime::detail::native_persistent_list all{ arg_vals.rbegin(), arg_vals.rend() };
+                for(size_t i{}; i < 10; ++i)
+                {
+                  all = all.rest();
+                }
+                return runtime::dynamic_call(source,
+                                             arg_vals[0],
+                                             arg_vals[1],
+                                             arg_vals[2],
+                                             arg_vals[3],
+                                             arg_vals[4],
+                                             arg_vals[5],
+                                             arg_vals[6],
+                                             arg_vals[7],
+                                             arg_vals[8],
+                                             arg_vals[9],
+                                             make_box<runtime::obj::list>(all));
+              }
           }
         }
         else if constexpr(std::same_as<T, runtime::obj::set>)
         {
           auto const s(expr.arg_exprs.size());
           if(s != 1)
-          { throw std::runtime_error{ fmt::format("invalid call with {} args to: {}", s, typed_source->to_string()) }; }
+          {
+            throw std::runtime_error{
+              fmt::format("invalid call with {} args to: {}", s, typed_source->to_string())
+            };
+          }
           return typed_source->call(eval(rt_ctx, jit_prc, expr.arg_exprs[0]));
         }
-        else if constexpr
-        (
-          std::same_as<T, runtime::obj::keyword>
-          || std::same_as<T, runtime::obj::persistent_hash_map>
-          || std::same_as<T, runtime::obj::persistent_array_map>
-        )
+        else if constexpr(std::same_as<T, runtime::obj::keyword>
+                          || std::same_as<T, runtime::obj::persistent_hash_map>
+                          || std::same_as<T, runtime::obj::persistent_array_map>)
         {
           auto const s(expr.arg_exprs.size());
           switch(s)
@@ -223,29 +265,27 @@ namespace jank::evaluate
             case 1:
               return typed_source->call(eval(rt_ctx, jit_prc, expr.arg_exprs[0]));
             case 2:
-              return typed_source->call
-              (
-                eval(rt_ctx, jit_prc, expr.arg_exprs[0]),
-                eval(rt_ctx, jit_prc, expr.arg_exprs[1])
-              );
+              return typed_source->call(eval(rt_ctx, jit_prc, expr.arg_exprs[0]),
+                                        eval(rt_ctx, jit_prc, expr.arg_exprs[1]));
             default:
-              throw std::runtime_error
-              { fmt::format("invalid call with {} args to: {}", s, typed_source->to_string()) };
+              throw std::runtime_error{
+                fmt::format("invalid call with {} args to: {}", s, typed_source->to_string())
+              };
           }
         }
         else
-        { throw std::runtime_error{ fmt::format("invalid call with 0 args to: {}", expr.arg_exprs.size(), typed_source->to_string()) }; }
+        {
+          throw std::runtime_error{ fmt::format("invalid call with 0 args to: {}",
+                                                expr.arg_exprs.size(),
+                                                typed_source->to_string()) };
+        }
       },
-      source
-    );
+      source);
   }
 
-  runtime::object_ptr eval
-  (
-    runtime::context &rt_ctx,
-    jit::processor const &,
-    analyze::expr::primitive_literal<analyze::expression> const &expr
-  )
+  runtime::object_ptr eval(runtime::context &rt_ctx,
+                           jit::processor const &,
+                           analyze::expr::primitive_literal<analyze::expression> const &expr)
   {
     if(expr.data->type == runtime::object_type::keyword)
     {
@@ -255,129 +295,107 @@ namespace jank::evaluate
     return expr.data;
   }
 
-  runtime::object_ptr eval
-  (
-    runtime::context &rt_ctx,
-    jit::processor const &jit_prc,
-    analyze::expr::vector<analyze::expression> const &expr
-  )
+  runtime::object_ptr eval(runtime::context &rt_ctx,
+                           jit::processor const &jit_prc,
+                           analyze::expr::vector<analyze::expression> const &expr)
   {
     runtime::detail::native_transient_vector ret;
     for(auto const &e : expr.data_exprs)
-    { ret.push_back(eval(rt_ctx, jit_prc, e)); }
+    {
+      ret.push_back(eval(rt_ctx, jit_prc, e));
+    }
     return make_box<runtime::obj::vector>(ret.persistent());
   }
 
-  runtime::object_ptr eval
-  (
-    runtime::context &rt_ctx,
-    jit::processor const &jit_prc,
-    analyze::expr::map<analyze::expression> const &expr
-  )
+  runtime::object_ptr eval(runtime::context &rt_ctx,
+                           jit::processor const &jit_prc,
+                           analyze::expr::map<analyze::expression> const &expr)
   {
     /* TODO: Pre-allocate array. */
     /* TODO: If there are more exprs than the max array map keys, we need a hash map. */
     runtime::detail::native_array_map ret;
     for(auto const &e : expr.data_exprs)
     {
-      ret.insert_or_assign
-      (
-        eval(rt_ctx, jit_prc, e.first),
-        eval(rt_ctx, jit_prc, e.second)
-      );
+      ret.insert_or_assign(eval(rt_ctx, jit_prc, e.first), eval(rt_ctx, jit_prc, e.second));
     }
     return make_box<runtime::obj::persistent_array_map>(std::move(ret));
   }
 
-  runtime::object_ptr eval
-  (
-    runtime::context &,
-    jit::processor const &,
-    analyze::expr::local_reference const &
-  )
+  runtime::object_ptr
+  eval(runtime::context &, jit::processor const &, analyze::expr::local_reference const &)
   /* Doesn't make sense to eval these, since let is wrapped in a fn and JIT compiled. */
-  { throw "unsupported eval: local_reference"; }
-
-  runtime::object_ptr eval
-  (
-    runtime::context &rt_ctx,
-    jit::processor const &jit_prc,
-    analyze::expr::function<analyze::expression> const &expr
-  )
   {
-    auto const &module
-    (
-      runtime::module::nest_module
-      (
-        runtime::expect_object<runtime::ns>
-        (rt_ctx.intern_var("clojure.core", "*ns*").expect_ok()->deref())->to_string(),
-        runtime::munge(expr.name)
-      )
-    );
+    throw "unsupported eval: local_reference";
+  }
+
+  runtime::object_ptr eval(runtime::context &rt_ctx,
+                           jit::processor const &jit_prc,
+                           analyze::expr::function<analyze::expression> const &expr)
+  {
+    auto const &module(
+      runtime::module::nest_module(runtime::expect_object<runtime::ns>(
+                                     rt_ctx.intern_var("clojure.core", "*ns*").expect_ok()->deref())
+                                     ->to_string(),
+                                   runtime::munge(expr.name)));
     codegen::processor cg_prc{ rt_ctx, expr, module, codegen::compilation_target::repl };
     return jit_prc.eval(cg_prc).expect_ok().unwrap();
   }
 
-  runtime::object_ptr eval
-  (
-    runtime::context &,
-    jit::processor const &,
-    analyze::expr::recur<analyze::expression> const &
-  )
+  runtime::object_ptr eval(runtime::context &,
+                           jit::processor const &,
+                           analyze::expr::recur<analyze::expression> const &)
   /* Recur will always be in a fn or loop, which will be JIT compiled. */
-  { throw "unsupported eval: recur"; }
+  {
+    throw "unsupported eval: recur";
+  }
 
-  runtime::object_ptr eval
-  (
-    runtime::context &rt_ctx,
-    jit::processor const &jit_prc,
-    analyze::expr::do_<analyze::expression> const &expr
-  )
+  runtime::object_ptr eval(runtime::context &rt_ctx,
+                           jit::processor const &jit_prc,
+                           analyze::expr::do_<analyze::expression> const &expr)
   {
     runtime::object_ptr ret{ runtime::obj::nil::nil_const() };
     for(auto const &form : expr.body)
-    { ret = eval(rt_ctx, jit_prc, form); }
+    {
+      ret = eval(rt_ctx, jit_prc, form);
+    }
     return ret;
   }
 
-  runtime::object_ptr eval
-  (
-    runtime::context &rt_ctx,
-    jit::processor const &jit_prc,
-    analyze::expr::let<analyze::expression> const &expr
-  )
-  { return runtime::dynamic_call(eval(rt_ctx, jit_prc, wrap_expression(expr))); }
+  runtime::object_ptr eval(runtime::context &rt_ctx,
+                           jit::processor const &jit_prc,
+                           analyze::expr::let<analyze::expression> const &expr)
+  {
+    return runtime::dynamic_call(eval(rt_ctx, jit_prc, wrap_expression(expr)));
+  }
 
-  runtime::object_ptr eval
-  (
-    runtime::context &rt_ctx,
-    jit::processor const &jit_prc,
-    analyze::expr::if_<analyze::expression> const &expr
-  )
+  runtime::object_ptr eval(runtime::context &rt_ctx,
+                           jit::processor const &jit_prc,
+                           analyze::expr::if_<analyze::expression> const &expr)
   {
     auto const condition(eval(rt_ctx, jit_prc, expr.condition));
     if(runtime::detail::truthy(condition))
-    { return eval(rt_ctx, jit_prc, expr.then); }
+    {
+      return eval(rt_ctx, jit_prc, expr.then);
+    }
     else if(expr.else_.is_some())
-    { return eval(rt_ctx, jit_prc, expr.else_.unwrap()); }
+    {
+      return eval(rt_ctx, jit_prc, expr.else_.unwrap());
+    }
     return runtime::obj::nil::nil_const();
   }
 
-  runtime::object_ptr eval
-  (
-    runtime::context &rt_ctx,
-    jit::processor const &jit_prc,
-    analyze::expr::throw_<analyze::expression> const &expr
-  )
+  runtime::object_ptr eval(runtime::context &rt_ctx,
+                           jit::processor const &jit_prc,
+                           analyze::expr::throw_<analyze::expression> const &expr)
   /* TODO: Clojure wraps this in a fn and does bytecodegen. Why? */
-  { throw eval(rt_ctx, jit_prc, expr.value); }
+  {
+    throw eval(rt_ctx, jit_prc, expr.value);
+  }
 
-  runtime::object_ptr eval
-  (
-    runtime::context &rt_ctx,
-    jit::processor const &jit_prc,
-    analyze::expr::native_raw<analyze::expression> const &expr
-  )
-  { return runtime::dynamic_call(eval(rt_ctx, jit_prc, wrap_expression(expr))); }
+  runtime::object_ptr eval(runtime::context &rt_ctx,
+                           jit::processor const &jit_prc,
+                           analyze::expr::native_raw<analyze::expression> const &expr)
+  {
+    return runtime::dynamic_call(eval(rt_ctx, jit_prc, wrap_expression(expr)));
+  }
 }
-

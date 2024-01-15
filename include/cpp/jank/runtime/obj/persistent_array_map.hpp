@@ -10,38 +10,38 @@ namespace jank::runtime
 {
   template <>
   struct static_object<object_type::persistent_array_map>
-  : obj::detail::base_persistent_map
-    <
-      object_type::persistent_array_map,
-      object_type::persistent_array_map_sequence,
-      runtime::detail::native_array_map
-    >
+    : obj::detail::base_persistent_map<object_type::persistent_array_map,
+                                       object_type::persistent_array_map_sequence,
+                                       runtime::detail::native_array_map>
   {
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
+
     static_object(value_type &&d)
       : data{ std::move(d) }
-    { }
+    {
+    }
+
     static_object(value_type const &d)
       : data{ d }
-    { }
+    {
+    }
+
     template <typename... Args>
     static_object(runtime::detail::in_place_unique, Args &&...args)
       : data{ runtime::detail::in_place_unique{}, std::forward<Args>(args)... }
-    { }
+    {
+    }
 
     using base_persistent_map::base_persistent_map;
 
     template <typename... Args>
     static native_box<static_object> create_unique(Args &&...args)
     {
-      return make_box<static_object>
-      (
-        runtime::detail::in_place_unique{},
-        make_array_box<object_ptr>(std::forward<Args>(args)...),
-        sizeof...(args)
-      );
+      return make_box<static_object>(runtime::detail::in_place_unique{},
+                                     make_array_box<object_ptr>(std::forward<Args>(args)...),
+                                     sizeof...(args));
     }
 
     /* behavior::associatively_readable */

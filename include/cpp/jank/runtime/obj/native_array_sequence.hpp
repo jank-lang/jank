@@ -12,10 +12,13 @@ namespace jank::runtime
     static_object(static_object const &) = default;
     static_object(object_ptr * const arr, size_t const size);
     static_object(object_ptr * const arr, size_t const index, size_t const size);
-    template <typename ...Args>
-    static_object(object_ptr first, Args ... rest)
-      : arr{ make_array_box<object_ptr>(first, rest...) }, size{ sizeof...(Args) + 1 }
-    { }
+
+    template <typename... Args>
+    static_object(object_ptr first, Args... rest)
+      : arr{ make_array_box<object_ptr>(first, rest...) }
+      , size{ sizeof...(Args) + 1 }
+    {
+    }
 
     /* behavior::objectable */
     native_bool equal(object const &o) const;

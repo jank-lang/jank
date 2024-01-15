@@ -12,7 +12,9 @@ namespace jank::runtime
   }
 
   template <>
-  struct static_object<object_type::jit_function> : gc, behavior::callable
+  struct static_object<object_type::jit_function>
+    : gc
+    , behavior::callable
   {
     static constexpr bool pointer_free{ false };
 

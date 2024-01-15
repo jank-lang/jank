@@ -17,13 +17,14 @@ namespace jank::analyze::expr
 
     runtime::object_ptr to_runtime_data() const
     {
-      return runtime::obj::persistent_array_map::create_unique
-      (
-        make_box("__type"), make_box("expr::if"),
-        make_box("condition"), detail::to_runtime_data(*condition),
-        make_box("then"), detail::to_runtime_data(*then),
-        make_box("else"), detail::to_runtime_data(else_)
-      );
+      return runtime::obj::persistent_array_map::create_unique(make_box("__type"),
+                                                               make_box("expr::if"),
+                                                               make_box("condition"),
+                                                               detail::to_runtime_data(*condition),
+                                                               make_box("then"),
+                                                               detail::to_runtime_data(*then),
+                                                               make_box("else"),
+                                                               detail::to_runtime_data(else_));
     }
   };
 }

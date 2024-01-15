@@ -25,8 +25,8 @@ namespace jank::runtime
     static_object(native_persistent_string const &ns, native_persistent_string const &n);
     static_object(native_persistent_string &&ns, native_persistent_string &&n);
 
-    static_object& operator=(static_object const&) = default;
-    static_object& operator=(static_object &&) = default;
+    static_object &operator=(static_object const &) = default;
+    static_object &operator=(static_object &&) = default;
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
@@ -41,11 +41,11 @@ namespace jank::runtime
     object_ptr with_meta(object_ptr m) const;
 
     /* behavior::nameable */
-    native_persistent_string const& get_name() const;
-    native_persistent_string const& get_namespace() const;
+    native_persistent_string const &get_name() const;
+    native_persistent_string const &get_namespace() const;
 
-    bool operator ==(static_object const &rhs) const;
-    bool operator <(static_object const &rhs) const;
+    bool operator==(static_object const &rhs) const;
+    bool operator<(static_object const &rhs) const;
 
     object base{ object_type::symbol };
     native_persistent_string ns;
@@ -66,7 +66,10 @@ namespace std
   struct hash<jank::runtime::obj::symbol>
   {
     size_t operator()(jank::runtime::obj::symbol const &o) const noexcept
-    { return static_cast<size_t>(jank::runtime::detail::hash_combine(o.ns.to_hash(), o.name.to_hash())); }
+    {
+      return static_cast<size_t>(
+        jank::runtime::detail::hash_combine(o.ns.to_hash(), o.name.to_hash()));
+    }
   };
 
   template <>
@@ -82,16 +85,17 @@ namespace std
   template <>
   struct equal_to<jank::runtime::obj::symbol_ptr>
   {
-    bool operator()
-    (
-      jank::runtime::obj::symbol_ptr const &lhs,
-      jank::runtime::obj::symbol_ptr const &rhs
-    ) const noexcept
+    bool operator()(jank::runtime::obj::symbol_ptr const &lhs,
+                    jank::runtime::obj::symbol_ptr const &rhs) const noexcept
     {
       if(!lhs)
-      { return !rhs; }
+      {
+        return !rhs;
+      }
       else if(!rhs)
-      { return !lhs; }
+      {
+        return !lhs;
+      }
       return lhs->equal(*rhs);
     }
   };

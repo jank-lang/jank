@@ -49,9 +49,11 @@ namespace jank::codegen
     typename S::value_type esc{ '\\' };
   };
 
-  constexpr escape_view<native_persistent_string_view> escaped
-  (native_persistent_string_view const &sv, char const q = '"', char const e = '\\')
-  { return escape_view<native_persistent_string_view>{ sv, q, e }; }
+  constexpr escape_view<native_persistent_string_view>
+  escaped(native_persistent_string_view const &sv, char const q = '"', char const e = '\\')
+  {
+    return escape_view<native_persistent_string_view>{ sv, q, e };
+  }
 }
 
 template <typename S>
@@ -61,9 +63,13 @@ struct fmt::formatter<jank::codegen::escape_view<S>>
 
   template <typename C>
   constexpr auto parse(C &ctx)
-  { return ctx.begin(); }
+  {
+    return ctx.begin();
+  }
 
   template <typename C>
   auto format(jank::codegen::escape_view<S> const &s, C &ctx)
-  { return s.copy(ctx.out()); }
+  {
+    return s.copy(ctx.out());
+  }
 };

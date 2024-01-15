@@ -11,22 +11,28 @@ namespace jank::runtime
     , vars{ obj::persistent_hash_map::empty() }
     , aliases{ obj::persistent_hash_map::empty() }
     , rt_ctx{ c }
-  { }
+  {
+  }
 
   var_ptr ns::intern_var(obj::symbol_ptr const &sym)
   {
     obj::symbol_ptr unqualified_sym{ sym };
     if(!unqualified_sym->ns.empty())
-    { unqualified_sym = make_box<obj::symbol>("", sym->name); }
+    {
+      unqualified_sym = make_box<obj::symbol>("", sym->name);
+    }
 
     /* TODO: Read lock, then upgrade as needed? Benchmark. */
     auto locked_vars(vars.wlock());
     auto const found_var((*locked_vars)->data.find(unqualified_sym));
     if(found_var)
-    { return expect_object<var>(*found_var); }
+    {
+      return expect_object<var>(*found_var);
+    }
 
     auto const new_var(make_box<var>(this, unqualified_sym));
-    *locked_vars = make_box<obj::persistent_hash_map>((*locked_vars)->data.set(unqualified_sym, new_var));
+    *locked_vars
+      = make_box<obj::persistent_hash_map>((*locked_vars)->data.set(unqualified_sym, new_var));
     return new_var;
   }
 
@@ -36,17 +42,22 @@ namespace jank::runtime
     auto const locked_vars(vars.rlock());
     auto const found((*locked_vars)->data.find(sym));
     if(!found)
-    { return none; }
+    {
+      return none;
+    }
 
     return { expect_object<var>(*found) };
   }
 
-  result<void, native_persistent_string> ns::add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns)
+  result<void, native_persistent_string>
+  ns::add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns)
   {
     auto locked_aliases(aliases.wlock());
     auto const found((*locked_aliases)->data.find(sym));
     if(found && expect_object<var>(*found) != ns)
-    { return err(fmt::format("Alias already bound to a different ns: {}", sym->to_string())); }
+    {
+      return err(fmt::format("Alias already bound to a different ns: {}", sym->to_string()));
+    }
 
     *locked_aliases = make_box<obj::persistent_hash_map>((*locked_aliases)->data.set(sym, ns));
     return ok();
@@ -57,7 +68,9 @@ namespace jank::runtime
     auto locked_aliases(aliases.rlock());
     auto const found((*locked_aliases)->data.find(sym));
     if(found)
-    { return expect_object<ns>(*found); }
+    {
+      return expect_object<ns>(*found);
+    }
     return none;
   }
 
@@ -72,16 +85,10 @@ namespace jank::runtime
         auto const clojure_core(rt_ctx.find_ns(make_box<obj::symbol>("clojure.core")).unwrap());
         if(var->n != found_var->n && (found_var->n != clojure_core))
         {
-          return err
-          (
-            fmt::format
-            (
-              "{} already refers to {} in ns {}",
-              sym->to_string(),
-              expect_object<runtime::var>(*found)->to_string(),
-              to_string()
-            )
-          );
+          return err(fmt::format("{} already refers to {} in ns {}",
+                                 sym->to_string(),
+                                 expect_object<runtime::var>(*found)->to_string(),
+                                 to_string()));
         }
       }
     }
@@ -98,22 +105,33 @@ namespace jank::runtime
   native_bool ns::equal(object const &o) const
   {
     if(o.type != object_type::ns)
-    { return false; }
+    {
+      return false;
+    }
 
     auto const v(expect_object<ns>(&o));
     return name == v->name;
   }
   native_persistent_string ns::to_string() const
   /* TODO: Maybe cache this. */
-  { return name->to_string(); }
+  {
+    return name->to_string();
+  }
+
   void ns::to_string(fmt::memory_buffer &buff) const
-  { name->to_string(buff); }
+  {
+    name->to_string(buff);
+  }
   native_integer ns::to_hash() const
   /* TODO: Cache this. */
-  { return name->to_hash(); }
+  {
+    return name->to_hash();
+  }
 
-  bool ns::operator ==(ns const &rhs) const
-  { return name == rhs.name; }
+  bool ns::operator==(ns const &rhs) const
+  {
+    return name == rhs.name;
+  }
 
   ns_ptr ns::clone(context &new_rt_ctx) const
   {

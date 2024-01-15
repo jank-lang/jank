@@ -18,19 +18,28 @@ namespace jank::runtime
     inline auto truthy(T const * const d)
     {
       if constexpr(std::same_as<T, obj::nil>)
-      { return false; }
+      {
+        return false;
+      }
       else if constexpr(std::same_as<T, obj::boolean>)
-      { return d->data; }
+      {
+        return d->data;
+      }
       else
-      { return true; }
+      {
+        return true;
+      }
     }
 
     template <typename T>
     requires runtime::behavior::objectable<T>
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
     inline auto truthy(native_box<T> const &d)
-    { return truthy(d.data); }
+    {
+      return truthy(d.data);
+    }
   }
+
   native_persistent_string munge(native_persistent_string const &o);
   object_ptr munge(object_ptr o);
 }

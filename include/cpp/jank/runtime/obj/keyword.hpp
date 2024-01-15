@@ -36,14 +36,14 @@ namespace jank::runtime
     object_ptr with_meta(object_ptr m) const;
 
     /* behavior::nameable */
-    native_persistent_string const& get_name() const;
-    native_persistent_string const& get_namespace() const;
+    native_persistent_string const &get_name() const;
+    native_persistent_string const &get_namespace() const;
 
     /* behavior::callable */
     object_ptr call(object_ptr) const;
     object_ptr call(object_ptr, object_ptr) const;
 
-    bool operator ==(static_object const &rhs) const;
+    bool operator==(static_object const &rhs) const;
 
     object base{ object_type::keyword };
     /* TODO: Box this. */
@@ -64,7 +64,9 @@ namespace std
   struct hash<jank::runtime::obj::keyword_ptr>
   {
     size_t operator()(jank::runtime::obj::keyword_ptr const o) const noexcept
-    { return o->to_hash(); }
+    {
+      return o->to_hash();
+    }
   };
 
   template <>
@@ -73,14 +75,17 @@ namespace std
     size_t operator()(jank::runtime::obj::keyword const &o) const noexcept
     {
       static auto hasher(std::hash<jank::runtime::obj::keyword_ptr>{});
-      return hasher(const_cast<jank::runtime::obj::keyword*>(&o));
+      return hasher(const_cast<jank::runtime::obj::keyword *>(&o));
     }
   };
 
   template <>
   struct equal_to<jank::runtime::obj::keyword_ptr>
   {
-    bool operator()(jank::runtime::obj::keyword_ptr const &lhs, jank::runtime::obj::keyword_ptr const &rhs) const noexcept
-    { return lhs == rhs; }
+    bool operator()(jank::runtime::obj::keyword_ptr const &lhs,
+                    jank::runtime::obj::keyword_ptr const &rhs) const noexcept
+    {
+      return lhs == rhs;
+    }
   };
 }

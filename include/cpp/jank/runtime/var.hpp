@@ -21,7 +21,11 @@ namespace jank::runtime
     static_object() = delete;
     static_object(ns_ptr const &n, obj::symbol_ptr const &name);
     static_object(ns_ptr const &n, obj::symbol_ptr const &name, object_ptr root);
-    static_object(ns_ptr const &n, obj::symbol_ptr const &name, object_ptr const root, native_bool dynamic, native_bool thread_bound);
+    static_object(ns_ptr const &n,
+                  obj::symbol_ptr const &name,
+                  object_ptr const root,
+                  native_bool dynamic,
+                  native_bool thread_bound);
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
@@ -47,7 +51,7 @@ namespace jank::runtime
     /* behavior::derefable */
     object_ptr deref() const;
 
-    bool operator ==(static_object const &rhs) const;
+    bool operator==(static_object const &rhs) const;
 
     native_box<static_object> clone() const;
 
@@ -89,7 +93,9 @@ namespace jank::runtime
   using var_thread_binding_ptr = native_box<var_thread_binding>;
 
   struct thread_binding_frame
-  { obj::persistent_hash_map_ptr bindings{}; };
+  {
+    obj::persistent_hash_map_ptr bindings{};
+  };
 }
 
 namespace std
@@ -117,16 +123,17 @@ namespace std
   template <>
   struct equal_to<jank::runtime::var_ptr>
   {
-    bool operator()
-    (
-      jank::runtime::var_ptr const &lhs,
-      jank::runtime::var_ptr const &rhs
-    ) const noexcept
+    bool
+    operator()(jank::runtime::var_ptr const &lhs, jank::runtime::var_ptr const &rhs) const noexcept
     {
       if(!lhs)
-      { return !rhs; }
+      {
+        return !rhs;
+      }
       else if(!rhs)
-      { return !lhs; }
+      {
+        return !lhs;
+      }
       return lhs->equal(*rhs);
     }
   };

@@ -10,17 +10,23 @@ namespace jank::runtime
 {
   obj::set::static_object(runtime::detail::native_persistent_set &&d)
     : data{ std::move(d) }
-  { }
+  {
+  }
 
   obj::set::static_object(runtime::detail::native_persistent_set const &d)
     : data{ d }
-  { }
+  {
+  }
 
   native_bool obj::set::equal(object const &o) const
-  { return detail::equal(o, data.begin(), data.end()); }
+  {
+    return detail::equal(o, data.begin(), data.end());
+  }
 
   void obj::set::to_string(fmt::memory_buffer &buff) const
-  { return behavior::detail::to_string(data.begin(), data.end(), "#{", '}', buff); }
+  {
+    return behavior::detail::to_string(data.begin(), data.end(), "#{", '}', buff);
+  }
 
   native_persistent_string obj::set::to_string() const
   {
@@ -34,21 +40,30 @@ namespace jank::runtime
   {
     auto seed(static_cast<native_integer>(data.size()));
     for(auto const &e : data)
-    { seed = runtime::detail::hash_combine(seed, *e); }
+    {
+      seed = runtime::detail::hash_combine(seed, *e);
+    }
     return seed;
   }
 
   obj::persistent_set_sequence_ptr obj::set::seq() const
-  { return fresh_seq(); }
+  {
+    return fresh_seq();
+  }
+
   obj::persistent_set_sequence_ptr obj::set::fresh_seq() const
   {
     if(data.empty())
-    { return nullptr; }
+    {
+      return nullptr;
+    }
     return make_box<obj::persistent_set_sequence>(this, data.begin(), data.end(), data.size());
   }
 
   size_t obj::set::count() const
-  { return data.size(); }
+  {
+    return data.size();
+  }
 
   object_ptr obj::set::with_meta(object_ptr const m) const
   {
@@ -69,10 +84,14 @@ namespace jank::runtime
   {
     auto const found(data.find(o));
     if(!found)
-    { return obj::nil::nil_const(); }
+    {
+      return obj::nil::nil_const();
+    }
     return *found;
   }
 
   native_bool obj::set::contains(object_ptr const o) const
-  { return data.find(o); }
+  {
+    return data.find(o);
+  }
 }

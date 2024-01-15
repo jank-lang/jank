@@ -53,13 +53,13 @@ namespace jank::read::lex
     token(size_t const p, size_t const s, token_kind const k, native_persistent_string_view const);
     token(size_t const p, size_t const s, token_kind const k, native_bool const);
 
-    native_bool operator ==(token const &rhs) const;
-    native_bool operator !=(token const &rhs) const;
+    native_bool operator==(token const &rhs) const;
+    native_bool operator!=(token const &rhs) const;
 
     struct no_data
     {
-      native_bool operator ==(no_data const &rhs) const;
-      native_bool operator !=(no_data const &rhs) const;
+      native_bool operator==(no_data const &rhs) const;
+      native_bool operator!=(no_data const &rhs) const;
     };
 
     /* For some values, when comparing tokens, the position doesn't matter.
@@ -68,17 +68,12 @@ namespace jank::read::lex
     size_t pos{ ignore_pos };
     size_t size{ 1 };
     token_kind kind;
-    boost::variant
-    <
-      no_data,
-      native_integer,
-      native_real,
-      native_persistent_string_view,
-      native_bool
-    > data;
+    boost::variant<no_data, native_integer, native_real, native_persistent_string_view, native_bool>
+      data;
   };
-  std::ostream& operator <<(std::ostream &os, token const &t);
-  std::ostream& operator <<(std::ostream &os, token::no_data const &t);
+
+  std::ostream &operator<<(std::ostream &os, token const &t);
+  std::ostream &operator<<(std::ostream &os, token::no_data const &t);
 }
 
 namespace jank::read
@@ -89,14 +84,15 @@ namespace jank::read
     error(size_t const s, size_t const e, native_persistent_string const &m);
     error(native_persistent_string const &m);
 
-    native_bool operator ==(error const &rhs) const;
-    native_bool operator !=(error const &rhs) const;
+    native_bool operator==(error const &rhs) const;
+    native_bool operator!=(error const &rhs) const;
 
     size_t start{};
     size_t end{};
     native_persistent_string message;
   };
-  std::ostream& operator <<(std::ostream &os, error const &e);
+
+  std::ostream &operator<<(std::ostream &os, error const &e);
 }
 
 namespace jank::read::lex
@@ -108,14 +104,14 @@ namespace jank::read::lex
       using iterator_category = std::input_iterator_tag;
       using difference_type = std::ptrdiff_t;
       using value_type = result<token, error>;
-      using pointer = value_type*;
-      using reference = value_type&;
+      using pointer = value_type *;
+      using reference = value_type &;
 
-      value_type const& operator *() const;
-      value_type const* operator ->() const;
-      iterator& operator ++();
-      native_bool operator ==(iterator const &rhs) const;
-      native_bool operator !=(iterator const &rhs) const;
+      value_type const &operator*() const;
+      value_type const *operator->() const;
+      iterator &operator++();
+      native_bool operator==(iterator const &rhs) const;
+      native_bool operator!=(iterator const &rhs) const;
 
       option<value_type> latest;
       processor &p;

@@ -15,18 +15,15 @@ namespace jank::analyze::expr
       runtime::object_ptr pair_maps(make_box<runtime::obj::vector>());
       for(auto const &e : data_exprs)
       {
-        pair_maps = runtime::conj
-        (
+        pair_maps = runtime::conj(
           pair_maps,
-          make_box<runtime::obj::vector>(e.first->to_runtime_data(), e.second->to_runtime_data())
-        );
+          make_box<runtime::obj::vector>(e.first->to_runtime_data(), e.second->to_runtime_data()));
       }
 
-      return runtime::obj::persistent_array_map::create_unique
-      (
-        make_box("__type"), make_box("expr::map"),
-        make_box("data_exprs"), pair_maps
-      );
+      return runtime::obj::persistent_array_map::create_unique(make_box("__type"),
+                                                               make_box("expr::map"),
+                                                               make_box("data_exprs"),
+                                                               pair_maps);
     }
   };
 }

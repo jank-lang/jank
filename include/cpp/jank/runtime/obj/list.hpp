@@ -22,10 +22,12 @@ namespace jank::runtime
     static_object(static_object const &) = default;
     static_object(value_type &&d);
     static_object(value_type const &d);
+
     template <typename... Args>
     static_object(Args &&...args)
       : data{ std::forward<Args>(args)... }
-    { }
+    {
+    }
 
     static native_box<static_object> empty()
     {

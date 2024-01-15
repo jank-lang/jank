@@ -24,7 +24,8 @@ namespace jank::runtime
     var_ptr intern_var(obj::symbol_ptr const &);
     option<var_ptr> find_var(obj::symbol_ptr const &);
 
-    result<void, native_persistent_string> add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns);
+    result<void, native_persistent_string>
+    add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns);
     option<ns_ptr> find_alias(obj::symbol_ptr const &sym) const;
 
     result<void, native_persistent_string> refer(obj::symbol_ptr const sym, var_ptr const var);
@@ -37,7 +38,7 @@ namespace jank::runtime
     void to_string(fmt::memory_buffer &buff) const;
     native_integer to_hash() const;
 
-    bool operator ==(static_object const &rhs) const;
+    bool operator==(static_object const &rhs) const;
 
     native_box<static_object> clone(context &rt_ctx) const;
 

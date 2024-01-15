@@ -18,14 +18,16 @@ namespace jank::analyze::expr
     {
       runtime::object_ptr arg_expr_maps(make_box<runtime::obj::vector>());
       for(auto const &e : arg_exprs)
-      { arg_expr_maps = runtime::conj(arg_expr_maps, e->to_runtime_data()); }
+      {
+        arg_expr_maps = runtime::conj(arg_expr_maps, e->to_runtime_data());
+      }
 
-      return runtime::obj::persistent_array_map::create_unique
-      (
-        make_box("__type"), make_box("expr::recur"),
-        make_box("args"), args,
-        make_box("arg_exprs"), arg_expr_maps
-      );
+      return runtime::obj::persistent_array_map::create_unique(make_box("__type"),
+                                                               make_box("expr::recur"),
+                                                               make_box("args"),
+                                                               args,
+                                                               make_box("arg_exprs"),
+                                                               arg_expr_maps);
     }
   };
 }

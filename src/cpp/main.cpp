@@ -65,7 +65,9 @@ namespace jank
   {
     /* TODO: REPL server. */
     if(opts.repl_server)
-    { throw std::runtime_error{ "Not yet implemented: REPL server" }; }
+    {
+      throw std::runtime_error{ "Not yet implemented: REPL server" };
+    }
 
     {
       profile::timer timer{ "require clojure.core" };
@@ -83,7 +85,9 @@ namespace jank
       native_transient_string line{ buf };
       boost::trim(line);
       if(line.empty())
-      { continue; }
+      {
+        continue;
+      }
 
       /* TODO: Persist history to disk, á la .lein-repl-history. */
       /* History is persisted for this session only. */
@@ -95,13 +99,21 @@ namespace jank
       }
       /* TODO: Unify error handling. JEEZE! */
       catch(std::exception const &e)
-      { fmt::println("Exception: {}", e.what()); }
+      {
+        fmt::println("Exception: {}", e.what());
+      }
       catch(jank::runtime::object_ptr const o)
-      { fmt::println("Exception: {}", jank::runtime::detail::to_string(o)); }
+      {
+        fmt::println("Exception: {}", jank::runtime::detail::to_string(o));
+      }
       catch(jank::native_persistent_string const &s)
-      { fmt::println("Exception: {}", s); }
+      {
+        fmt::println("Exception: {}", s);
+      }
       catch(jank::read::error const &e)
-      { fmt::println("Read error: {}", e.message); }
+      {
+        fmt::println("Read error: {}", e.message);
+      }
     }
   }
 }
@@ -119,11 +131,15 @@ try
 
   auto const parse_result(util::cli::parse(argc, argv));
   if(parse_result.is_err())
-  { return parse_result.expect_err(); }
+  {
+    return parse_result.expect_err();
+  }
   auto const &opts(parse_result.expect_ok());
 
   if(opts.gc_incremental)
-  { GC_enable_incremental(); }
+  {
+    GC_enable_incremental();
+  }
 
   profile::configure(opts);
   profile::timer timer{ "main" };
@@ -145,12 +161,22 @@ try
 }
 /* TODO: Unify error handling. JEEZE! */
 catch(std::exception const &e)
-{ fmt::println("Exception: {}", e.what()); }
+{
+  fmt::println("Exception: {}", e.what());
+}
 catch(jank::runtime::object_ptr const o)
-{ fmt::println("Exception: {}", jank::runtime::detail::to_string(o)); }
+{
+  fmt::println("Exception: {}", jank::runtime::detail::to_string(o));
+}
 catch(jank::native_persistent_string const &s)
-{ fmt::println("Exception: {}", s); }
+{
+  fmt::println("Exception: {}", s);
+}
 catch(jank::read::error const &e)
-{ fmt::println("Read error: {}", e.message); }
+{
+  fmt::println("Read error: {}", e.message);
+}
 catch(...)
-{ fmt::println("Unknown exception thrown"); }
+{
+  fmt::println("Unknown exception thrown");
+}

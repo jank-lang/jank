@@ -24,8 +24,9 @@ namespace jank::runtime
   thread_local decltype(context::thread_binding_frames) context::thread_binding_frames{};
 
   context::context()
-    : context(util::cli::options{ })
-  { }
+    : context(util::cli::options{})
+  {
+  }
 
   context::context(util::cli::options const &opts)
     : jit_prc{ *this, opts.optimization_level }
@@ -56,46 +57,42 @@ namespace jank::runtime
 
     intern_ns(make_box<obj::symbol>("native"));
 
-    std::function<object_ptr (object_ptr)> in_ns_fn
-    (
-      [this](object_ptr const sym)
-      {
-        return visit_object
-        (
-          [this](auto const typed_sym)
-          {
-            using T = typename decltype(typed_sym)::value_type;
+    std::function<object_ptr(object_ptr)> in_ns_fn([this](object_ptr const sym) {
+      return visit_object(
+        [this](auto const typed_sym) {
+          using T = typename decltype(typed_sym)::value_type;
 
-            if constexpr(std::same_as<T, obj::symbol>)
-            {
-              auto const new_ns(intern_ns(typed_sym));
-              current_ns_var->set(new_ns).expect_ok();
-              return obj::nil::nil_const();
-            }
-            else
-            /* TODO: throw. */
-            { return obj::nil::nil_const(); }
-          },
-          sym
-        );
-      }
-    );
+          if constexpr(std::same_as<T, obj::symbol>)
+          {
+            auto const new_ns(intern_ns(typed_sym));
+            current_ns_var->set(new_ns).expect_ok();
+            return obj::nil::nil_const();
+          }
+          else
+          /* TODO: throw. */
+          {
+            return obj::nil::nil_const();
+          }
+        },
+        sym);
+    });
     auto const in_ns_sym(make_box<obj::symbol>("clojure.core/in-ns"));
     in_ns_var = intern_var(in_ns_sym).expect_ok();
     in_ns_var->bind_root(make_box<obj::native_function_wrapper>(in_ns_fn));
 
     /* TODO: Remove this once it can be defined in jank. */
     auto const seq_sym(make_box<obj::symbol>("clojure.core/seq"));
-    intern_var(seq_sym).expect_ok()->bind_root(make_box<obj::native_function_wrapper>(static_cast<object_ptr (*)(object_ptr)>(&seq)));
+    intern_var(seq_sym).expect_ok()->bind_root(
+      make_box<obj::native_function_wrapper>(static_cast<object_ptr (*)(object_ptr)>(&seq)));
 
     auto const fresh_seq_sym(make_box<obj::symbol>("clojure.core/fresh-seq"));
-    intern_var(fresh_seq_sym).expect_ok()->bind_root(make_box<obj::native_function_wrapper>(&fresh_seq));
+    intern_var(fresh_seq_sym)
+      .expect_ok()
+      ->bind_root(make_box<obj::native_function_wrapper>(&fresh_seq));
 
-    push_thread_bindings
-    (
-      obj::persistent_hash_map::create_unique
-      (std::make_pair(current_ns_var, current_ns_var->deref()))
-    ).expect_ok();
+    push_thread_bindings(obj::persistent_hash_map::create_unique(
+                           std::make_pair(current_ns_var, current_ns_var->deref())))
+      .expect_ok();
   }
 
   context::context(context const &ctx)
@@ -107,7 +104,9 @@ namespace jank::runtime
     {
       auto ns_lock(namespaces.wlock());
       for(auto const &ns : *ctx.namespaces.rlock())
-      { ns_lock->insert({ ns.first, ns.second->clone(*this) }); }
+      {
+        ns_lock->insert({ ns.first, ns.second->clone(*this) });
+      }
       *keywords.wlock() = *ctx.keywords.rlock();
     }
 
@@ -134,13 +133,17 @@ namespace jank::runtime
     current_ns_var = core->intern_var(make_box<obj::symbol>("clojure.core/*ns*"));
 
     in_ns_var = intern_var(make_box<obj::symbol>("clojure.core/in-ns")).expect_ok();
-    compile_files_var = intern_var(make_box<obj::symbol>("clojure.core/*compile-files*")).expect_ok();
-    current_module_var = intern_var(make_box<obj::symbol>("clojure.core/*current-module*")).expect_ok();
+    compile_files_var
+      = intern_var(make_box<obj::symbol>("clojure.core/*compile-files*")).expect_ok();
+    current_module_var
+      = intern_var(make_box<obj::symbol>("clojure.core/*current-module*")).expect_ok();
     assert_var = core->intern_var(make_box<obj::symbol>("clojure.core/*assert*"));
   }
 
   context::~context()
-  { thread_binding_frames.erase(this); }
+  {
+    thread_binding_frames.erase(this);
+  }
 
   obj::symbol_ptr context::qualify_symbol(obj::symbol_ptr const &sym) const
   {
@@ -163,7 +166,9 @@ namespace jank::runtime
         auto const locked_namespaces(namespaces.rlock());
         auto const found(locked_namespaces->find(make_box<obj::symbol>("", sym->ns)));
         if(found == locked_namespaces->end())
-        { return none; }
+        {
+          return none;
+        }
         ns = found->second;
       }
 
@@ -176,17 +181,26 @@ namespace jank::runtime
     }
   }
 
-  option<var_ptr> context::find_var(native_persistent_string const &ns, native_persistent_string const &name)
-  { return find_var(make_box<obj::symbol>(ns, name)); }
+  option<var_ptr>
+  context::find_var(native_persistent_string const &ns, native_persistent_string const &name)
+  {
+    return find_var(make_box<obj::symbol>(ns, name));
+  }
 
   option<object_ptr> context::find_local(obj::symbol_ptr const &)
-  { return none; }
+  {
+    return none;
+  }
 
   object_ptr context::eval_file(native_persistent_string_view const &path)
   {
     auto const file(util::map_file(path));
     if(file.is_err())
-    { throw std::runtime_error{ fmt::format("unable to map file {} due to error: {}", path, file.expect_err()) }; }
+    {
+      throw std::runtime_error{
+        fmt::format("unable to map file {} due to error: {}", path, file.expect_err())
+      };
+    }
     return eval_string({ file.expect_ok().head, file.expect_ok().size });
   }
 
@@ -210,29 +224,20 @@ namespace jank::runtime
       auto const &current_module(expect_object<obj::string>(current_module_var->deref())->data);
       auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc));
       wrapped_exprs.name = "__ns";
-      auto const &module
-      (
-        expect_object<runtime::ns>
-        (intern_var("clojure.core", "*ns*").expect_ok()->deref())->to_string()
-      );
+      auto const &module(
+        expect_object<runtime::ns>(intern_var("clojure.core", "*ns*").expect_ok()->deref())
+          ->to_string());
       codegen::processor cg_prc{ *this, wrapped_exprs, module, codegen::compilation_target::ns };
-      write_module
-      (
-        current_module,
-        cg_prc.declaration_str()
-      );
-      write_module
-      (
-        fmt::format("{}__init", current_module),
-        cg_prc.module_init_str(current_module)
-      );
+      write_module(current_module, cg_prc.declaration_str());
+      write_module(fmt::format("{}__init", current_module), cg_prc.module_init_str(current_module));
     }
 
     assert(ret);
     return ret;
   }
 
-  native_vector<analyze::expression_ptr> context::analyze_string(native_persistent_string_view const &code, native_bool const eval)
+  native_vector<analyze::expression_ptr>
+  context::analyze_string(native_persistent_string_view const &code, native_bool const eval)
   {
     profile::timer timer{ "rt analyze_string" };
     read::lex::processor l_prc{ code };
@@ -243,22 +248,29 @@ namespace jank::runtime
     {
       auto const expr(an_prc.analyze(form.expect_ok(), analyze::expression_type::statement));
       if(eval)
-      { evaluate::eval(*this, jit_prc, expr.expect_ok()); }
+      {
+        evaluate::eval(*this, jit_prc, expr.expect_ok());
+      }
       ret.emplace_back(expr.expect_ok());
     }
 
     return ret;
   }
 
-  result<void, native_persistent_string> context::load_module(native_persistent_string_view const &module)
+  result<void, native_persistent_string>
+  context::load_module(native_persistent_string_view const &module)
   {
     auto const ns(current_ns());
 
     native_persistent_string absolute_module;
     if(module.starts_with('/'))
-    { absolute_module = module.substr(1); }
+    {
+      absolute_module = module.substr(1);
+    }
     else
-    { absolute_module = module::nest_module(ns->to_string(), module); }
+    {
+      absolute_module = module::nest_module(ns->to_string(), module);
+    }
 
     binding_scope preserve{ *this };
 
@@ -266,40 +278,47 @@ namespace jank::runtime
     {
       result<void, native_persistent_string> res{ ok() };
       if(absolute_module.find('$') == native_persistent_string::npos)
-      { res = module_loader.load_ns(absolute_module); }
+      {
+        res = module_loader.load_ns(absolute_module);
+      }
       else
-      { res = module_loader.load(absolute_module); }
+      {
+        res = module_loader.load(absolute_module);
+      }
       return res;
     }
     catch(std::exception const &e)
-    { return err(e.what()); }
+    {
+      return err(e.what());
+    }
     catch(object_ptr const &e)
-    { return err(detail::to_string(e)); }
+    {
+      return err(detail::to_string(e));
+    }
   }
 
-  result<void, native_persistent_string> context::compile_module(native_persistent_string_view const &module)
+  result<void, native_persistent_string>
+  context::compile_module(native_persistent_string_view const &module)
   {
     module_dependencies.clear();
 
-    binding_scope preserve
-    {
-      *this,
-      obj::persistent_hash_map::create_unique
-      (
-        std::make_pair(compile_files_var, obj::boolean::true_const()),
-        std::make_pair(current_module_var, make_box(module))
-      )
-    };
+    binding_scope preserve{ *this,
+                            obj::persistent_hash_map::create_unique(
+                              std::make_pair(compile_files_var, obj::boolean::true_const()),
+                              std::make_pair(current_module_var, make_box(module))) };
 
     return load_module(fmt::format("/{}", module));
   }
 
-  void context::write_module(native_persistent_string_view const &module, native_persistent_string_view const &contents) const
+  void context::write_module(native_persistent_string_view const &module,
+                             native_persistent_string_view const &contents) const
   {
     profile::timer timer{ "write_module" };
     boost::filesystem::path const dir{ output_dir };
     if(!boost::filesystem::exists(dir))
-    { boost::filesystem::create_directories(dir); }
+    {
+      boost::filesystem::create_directories(dir);
+    }
 
     /* TODO: This needs to go into sub directories. Also, we should register these modules with
      * the loader upon writing. */
@@ -311,16 +330,25 @@ namespace jank::runtime
   }
 
   native_persistent_string context::unique_string()
-  { return unique_string("G_"); }
+  {
+    return unique_string("G_");
+  }
+
   native_persistent_string context::unique_string(native_persistent_string_view const &prefix)
   {
     static std::atomic_size_t index{ 1 };
     return fmt::format(FMT_COMPILE("{}_{}"), prefix.data(), index++);
   }
+
   obj::symbol context::unique_symbol()
-  { return unique_symbol("G_"); }
+  {
+    return unique_symbol("G_");
+  }
+
   obj::symbol context::unique_symbol(native_persistent_string_view const &prefix)
-  { return { "", unique_string(prefix) }; }
+  {
+    return { "", unique_string(prefix) };
+  }
 
   void context::dump() const
   {
@@ -334,9 +362,14 @@ namespace jank::runtime
       {
         auto const v(expect_object<var>(vp.second));
         if(v->deref() == nullptr)
-        { std::cout << "    " << v->to_string() << " = nil" << std::endl; }
+        {
+          std::cout << "    " << v->to_string() << " = nil" << std::endl;
+        }
         else
-        { std::cout << "    " << v->to_string() << " = " << detail::to_string(v->deref()) << std::endl; }
+        {
+          std::cout << "    " << v->to_string() << " = " << detail::to_string(v->deref())
+                    << std::endl;
+        }
       }
     }
   }
@@ -346,7 +379,9 @@ namespace jank::runtime
     auto locked_namespaces(namespaces.wlock());
     auto const found(locked_namespaces->find(sym));
     if(found != locked_namespaces->end())
-    { return found->second; }
+    {
+      return found->second;
+    }
 
     auto const result(locked_namespaces->emplace(sym, make_box<ns>(sym, *this)));
     return result.first->second;
@@ -370,7 +405,9 @@ namespace jank::runtime
     auto locked_namespaces(namespaces.rlock());
     auto const found(locked_namespaces->find(sym));
     if(found != locked_namespaces->end())
-    { return found->second; }
+    {
+      return found->second;
+    }
     return none;
   }
 
@@ -379,39 +416,56 @@ namespace jank::runtime
     auto const ns(current_ns());
     auto const alias(ns->find_alias(target));
     if(alias.is_some())
-    { return alias.unwrap(); }
+    {
+      return alias.unwrap();
+    }
 
     return find_ns(target);
   }
 
   /* TODO: Cache this var. */
   ns_ptr context::current_ns()
-  { return expect_object<ns>(find_var("clojure.core", "*ns*").unwrap()->deref()); }
+  {
+    return expect_object<ns>(find_var("clojure.core", "*ns*").unwrap()->deref());
+  }
 
-  result<var_ptr, native_persistent_string> context::intern_var
-  (native_persistent_string const &ns, native_persistent_string const &name)
-  { return intern_var(make_box<obj::symbol>(ns, name)); }
+  result<var_ptr, native_persistent_string>
+  context::intern_var(native_persistent_string const &ns, native_persistent_string const &name)
+  {
+    return intern_var(make_box<obj::symbol>(ns, name));
+  }
 
-  result<var_ptr, native_persistent_string> context::intern_var(obj::symbol_ptr const &qualified_sym)
+  result<var_ptr, native_persistent_string>
+  context::intern_var(obj::symbol_ptr const &qualified_sym)
   {
     profile::timer timer{ "intern_var" };
     if(qualified_sym->ns.empty())
-    { return err(fmt::format("can't intern var; sym isn't qualified: {}", qualified_sym->to_string())); }
+    {
+      return err(
+        fmt::format("can't intern var; sym isn't qualified: {}", qualified_sym->to_string()));
+    }
 
     auto locked_namespaces(namespaces.wlock());
     auto const found_ns(locked_namespaces->find(make_box<obj::symbol>(qualified_sym->ns)));
     if(found_ns == locked_namespaces->end())
-    { return err(fmt::format("can't intern var; namespace doesn't exist: {}", qualified_sym->ns)); }
+    {
+      return err(fmt::format("can't intern var; namespace doesn't exist: {}", qualified_sym->ns));
+    }
 
     return ok(found_ns->second->intern_var(qualified_sym));
   }
 
   /* TODO: Swap these. The other one makes a symbol anyway. */
-  result<obj::keyword_ptr, native_persistent_string> context::intern_keyword(obj::symbol const &sym, bool const resolved)
-  { return intern_keyword(sym.ns, sym.name, resolved); }
+  result<obj::keyword_ptr, native_persistent_string>
+  context::intern_keyword(obj::symbol const &sym, bool const resolved)
+  {
+    return intern_keyword(sym.ns, sym.name, resolved);
+  }
 
-  result<obj::keyword_ptr, native_persistent_string> context::intern_keyword
-  (native_persistent_string_view const &ns, native_persistent_string_view const &name, bool const resolved)
+  result<obj::keyword_ptr, native_persistent_string>
+  context::intern_keyword(native_persistent_string_view const &ns,
+                          native_persistent_string_view const &name,
+                          bool const resolved)
   {
     profile::timer timer{ "rt intern_keyword" };
     obj::symbol sym{ ns, name };
@@ -422,7 +476,9 @@ namespace jank::runtime
       {
         auto const resolved_ns(resolve_ns(make_box<obj::symbol>(ns)));
         if(resolved_ns.is_none())
-        { return err(fmt::format("Unable to resolve ns for keyword: {}", ns)); }
+        {
+          return err(fmt::format("Unable to resolve ns for keyword: {}", ns));
+        }
         sym.ns = resolved_ns.unwrap()->name->name;
       }
       else
@@ -435,7 +491,9 @@ namespace jank::runtime
     auto locked_keywords(keywords.wlock());
     auto const found(locked_keywords->find(sym));
     if(found != locked_keywords->end())
-    { return found->second; }
+    {
+      return found->second;
+    }
 
     auto const res(locked_keywords->emplace(sym, make_box<obj::keyword>(sym)));
     return res.first->second;
@@ -444,46 +502,56 @@ namespace jank::runtime
   object_ptr context::macroexpand1(object_ptr const o)
   {
     profile::timer timer{ "rt macroexpand1" };
-    return visit_object
-    (
-      [this](auto const typed_o) -> object_ptr
-      {
+    return visit_object(
+      [this](auto const typed_o) -> object_ptr {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(!std::same_as<T, obj::list>)
-        { return typed_o; }
+        {
+          return typed_o;
+        }
         else
         {
           if(typed_o->data.data->length == 0)
-          { return typed_o; }
+          {
+            return typed_o;
+          }
 
           auto const first_sym_obj(typed_o->data.first().unwrap());
           if(first_sym_obj->type != object_type::symbol)
-          { return typed_o; }
+          {
+            return typed_o;
+          }
 
           auto const var(find_var(expect_object<obj::symbol>(first_sym_obj)));
           /* None means it's not a var, so not a macro. No meta means no :macro set. */
           if(var.is_none() || var.unwrap()->meta.is_none())
-          { return typed_o; }
+          {
+            return typed_o;
+          }
 
           auto const meta(var.unwrap()->meta.unwrap());
           auto const found_macro(get(meta, intern_keyword("", "macro", true).expect_ok()));
           if(!found_macro || !detail::truthy(found_macro))
-          { return typed_o; }
+          {
+            return typed_o;
+          }
 
-          auto const &args(make_box<obj::list>(typed_o->data.rest().cons(obj::nil::nil_const()).cons(typed_o)));
+          auto const &args(
+            make_box<obj::list>(typed_o->data.rest().cons(obj::nil::nil_const()).cons(typed_o)));
           return apply_to(var.unwrap()->deref(), args);
         }
       },
-      o
-    );
+      o);
   }
 
   object_ptr context::macroexpand(object_ptr const o)
   {
     auto const expanded(macroexpand1(o));
     if(expanded != o)
-    { return macroexpand(expanded); }
+    {
+      return macroexpand(expanded);
+    }
     return o;
   }
 
@@ -496,10 +564,8 @@ namespace jank::runtime
 
   object_ptr context::print(object_ptr const o, object_ptr const more)
   {
-    visit_object
-    (
-      [o](auto const typed_more)
-      {
+    visit_object(
+      [o](auto const typed_more) {
         using T = typename decltype(typed_more)::value_type;
 
         if constexpr(behavior::sequenceable<T>)
@@ -516,19 +582,19 @@ namespace jank::runtime
           std::fwrite(buff.data(), 1, buff.size(), stdout);
         }
         else
-        { throw std::runtime_error{ fmt::format("expected a sequence: {}", typed_more->to_string()) }; }
+        {
+          throw std::runtime_error{ fmt::format("expected a sequence: {}",
+                                                typed_more->to_string()) };
+        }
       },
-      more
-    );
+      more);
     return obj::nil::nil_const();
   }
 
   object_ptr context::println(object_ptr const more)
   {
-    visit_object
-    (
-      [](auto const typed_more)
-      {
+    visit_object(
+      [](auto const typed_more) {
         using T = typename decltype(typed_more)::value_type;
 
         if constexpr(behavior::sequenceable<T>)
@@ -545,32 +611,46 @@ namespace jank::runtime
           std::putc('\n', stdout);
         }
         else
-        { throw std::runtime_error{ fmt::format("expected a sequence: {}", typed_more->to_string()) }; }
+        {
+          throw std::runtime_error{ fmt::format("expected a sequence: {}",
+                                                typed_more->to_string()) };
+        }
       },
-      more
-    );
+      more);
     return obj::nil::nil_const();
   }
 
   context::binding_scope::binding_scope(context &rt_ctx)
     : rt_ctx{ rt_ctx }
-  { rt_ctx.push_thread_bindings().expect_ok(); }
-  context::binding_scope::binding_scope
-  (context &rt_ctx, obj::persistent_hash_map_ptr const bindings)
+  {
+    rt_ctx.push_thread_bindings().expect_ok();
+  }
+
+  context::binding_scope::binding_scope(context &rt_ctx,
+                                        obj::persistent_hash_map_ptr const bindings)
     : rt_ctx{ rt_ctx }
-  { rt_ctx.push_thread_bindings(bindings).expect_ok(); }
+  {
+    rt_ctx.push_thread_bindings(bindings).expect_ok();
+  }
+
   context::binding_scope::~binding_scope()
-  { rt_ctx.pop_thread_bindings().expect_ok(); }
+  {
+    rt_ctx.pop_thread_bindings().expect_ok();
+  }
 
   string_result<void> context::push_thread_bindings()
   {
     auto bindings(obj::persistent_hash_map::empty());
     auto &tbfs(thread_binding_frames[this]);
     if(!tbfs.empty())
-    { bindings = tbfs.front().bindings; }
+    {
+      bindings = tbfs.front().bindings;
+    }
     /* Nothing to preserve, if there are no current bindings. */
     else
-    { return ok(); }
+    {
+      return ok();
+    }
 
     assert(bindings);
     return push_thread_bindings(bindings);
@@ -580,7 +660,9 @@ namespace jank::runtime
   {
     assert(bindings);
     if(bindings->type != object_type::persistent_hash_map)
-    { return err(fmt::format("invalid thread binding map: {}", detail::to_string(bindings))); }
+    {
+      return err(fmt::format("invalid thread binding map: {}", detail::to_string(bindings)));
+    }
 
     return push_thread_bindings(expect_object<obj::persistent_hash_map>(bindings));
   }
@@ -591,7 +673,9 @@ namespace jank::runtime
     thread_binding_frame frame{ obj::persistent_hash_map::empty() };
     auto &tbfs(thread_binding_frames[this]);
     if(!tbfs.empty())
-    { frame.bindings = tbfs.front().bindings; }
+    {
+      frame.bindings = tbfs.front().bindings;
+    }
 
     auto const thread_id(std::this_thread::get_id());
 
@@ -600,7 +684,9 @@ namespace jank::runtime
       auto const entry(it->first());
       auto const var(expect_object<var>(entry->data[0]));
       if(!var->dynamic.load())
-      { return err(fmt::format("Can't dynamically bind non-dynamic var: {}", var->to_string())); }
+      {
+        return err(fmt::format("Can't dynamically bind non-dynamic var: {}", var->to_string()));
+      }
       /* TODO: Where is this unset? */
       var->thread_bound.store(true);
 
@@ -608,15 +694,16 @@ namespace jank::runtime
        * bindings again to give a scratch pad for some upcoming code. */
       if(entry->data[1]->type == object_type::var_thread_binding)
       {
-        frame.bindings = frame.bindings->assoc
-        (
+        frame.bindings = frame.bindings->assoc(
           var,
-          make_box<var_thread_binding>
-          (expect_object<var_thread_binding>(entry->data[1])->value, thread_id)
-        );
+          make_box<var_thread_binding>(expect_object<var_thread_binding>(entry->data[1])->value,
+                                       thread_id));
       }
       else
-      { frame.bindings = frame.bindings->assoc(var, make_box<var_thread_binding>(entry->data[1], thread_id)); }
+      {
+        frame.bindings
+          = frame.bindings->assoc(var, make_box<var_thread_binding>(entry->data[1], thread_id));
+      }
     }
 
     assert(frame.bindings);
@@ -628,7 +715,9 @@ namespace jank::runtime
   {
     auto &tbfs(thread_binding_frames[this]);
     if(tbfs.empty())
-    { return err("Mismatched thread binding pop"); }
+    {
+      return err("Mismatched thread binding pop");
+    }
 
     tbfs.pop_front();
 
@@ -639,7 +728,9 @@ namespace jank::runtime
   {
     auto const &tbfs(thread_binding_frames[this]);
     if(tbfs.empty())
-    { return obj::persistent_hash_map::empty(); }
+    {
+      return obj::persistent_hash_map::empty();
+    }
     return tbfs.front().bindings;
   }
 
@@ -647,7 +738,9 @@ namespace jank::runtime
   {
     auto &tbfs(thread_binding_frames[this]);
     if(tbfs.empty())
-    { return none; }
+    {
+      return none;
+    }
     return tbfs.front();
   }
 }
