@@ -6,13 +6,13 @@
 #include <folly/Synchronized.h>
 
 #include <jank/result.hpp>
-#include <jank/util/cli.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/runtime/module/loader.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/jit/processor.hpp>
+#include <jank/util/cli.hpp>
 
 namespace jank::jit
 {

@@ -48,8 +48,15 @@ namespace jank::util::cli
     cli_repl.fallthrough();
     cli_repl.add_flag("--server", opts.repl_server, "Start an nREPL server");
 
+    /* Run subcommand. */
+    auto &cli_run_main(*cli.add_subcommand("run-main", "Load and execute -main"));
+    cli_run_main.fallthrough();
+    cli_run_main.add_option("module", opts.target_module, "The entrypoint module")->required();
+
     cli.require_subcommand(1);
     cli.failure_message(CLI::FailureMessage::help);
+    cli.allow_extras();
+
     try
     {
       cli.parse(argc, argv);
@@ -57,6 +64,11 @@ namespace jank::util::cli
     catch(CLI::ParseError const &e)
     {
       return err(cli.exit(e));
+    }
+
+    if(cli.remaining_size() >= 0)
+    {
+      opts.extra_opts = cli.remaining();
     }
 
     if(cli.got_subcommand(&cli_run))
@@ -70,6 +82,10 @@ namespace jank::util::cli
     else if(cli.got_subcommand(&cli_repl))
     {
       opts.command = command::repl;
+    }
+    else if(cli.got_subcommand(&cli_run_main))
+    {
+      opts.command = command::run_main;
     }
 
     return ok(opts);
