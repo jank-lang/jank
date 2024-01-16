@@ -178,6 +178,11 @@ namespace jank::runtime::detail
       return data ? data->length : 0;
     }
 
+    native_bool empty() const
+    {
+      return data ? data->length == 0 : true;
+    }
+
     option<T> first() const
     {
       if(data)

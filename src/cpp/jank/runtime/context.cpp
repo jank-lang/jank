@@ -512,7 +512,7 @@ namespace jank::runtime
         }
         else
         {
-          if(typed_o->data.data->length == 0)
+          if(typed_o->data.empty())
           {
             return typed_o;
           }
