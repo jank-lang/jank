@@ -8,7 +8,8 @@ namespace jank::util::cli
   {
     run,
     compile,
-    repl
+    repl,
+    run_main
   };
 
   struct options
@@ -36,6 +37,14 @@ namespace jank::util::cli
 
     /* REPL command. */
     native_bool repl_server{};
+
+    /* Run main command. */
+    native_transient_string target_module;
+
+    /* Extras.
+     * TODO: Use a native_persistent_vector instead.
+     * */
+    std::vector<native_transient_string> extra_opts;
 
     command command{ command::repl };
   };

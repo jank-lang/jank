@@ -55,6 +55,37 @@ namespace jank
     //);
   }
 
+  void run_main(util::cli::options const &opts, runtime::context &rt_ctx)
+  {
+    {
+      profile::timer timer{ "require clojure.core" };
+      rt_ctx.load_module("/clojure.core").expect_ok();
+    }
+
+    {
+      profile::timer timer{ "eval user code" };
+      rt_ctx.load_module("/" + opts.target_module).expect_ok();
+
+      auto const main_var(rt_ctx.find_var(opts.target_module, "-main").unwrap_or(nullptr);
+      if(main_var)
+      {
+        /* TODO: Handle the case when `-main` accepts no arg. */
+        runtime::detail::native_transient_vector extra_args;
+        for(auto const &s : opts.extra_opts)
+        {
+          extra_args.push_back(make_box<runtime::obj::string>(s));
+        }
+        runtime::apply_to(main_var->deref(),
+                          make_box<runtime::obj::vector>(extra_args.persistent()));
+      }
+      else
+      {
+        throw std::runtime_error{ fmt::format("Could not find #'{}/-main function!",
+                                              opts.target_module) };
+      }
+    }
+  }
+
   void compile(util::cli::options const &opts, runtime::context &rt_ctx)
   {
     //rt_ctx.load_module("/clojure.core").expect_ok();
@@ -156,6 +187,9 @@ try
       break;
     case util::cli::command::repl:
       repl(opts, rt_ctx);
+      break;
+    case util::cli::command::run_main:
+      run_main(opts, rt_ctx);
       break;
   }
 }
