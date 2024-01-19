@@ -1,7 +1,7 @@
 #include <unordered_map>
 
 #include <jank/runtime/util.hpp>
-#include <jank/runtime/obj/string.hpp>
+#include <jank/runtime/obj/persistent_string.hpp>
 
 namespace jank::runtime
 {
@@ -207,9 +207,9 @@ namespace jank::runtime
       [](auto const typed_o) -> object_ptr {
         using T = typename decltype(typed_o)::value_type;
 
-        if constexpr(std::same_as<T, obj::string>)
+        if constexpr(std::same_as<T, obj::persistent_string>)
         {
-          return jank::make_box<obj::string>(munge(typed_o->data));
+          return jank::make_box<obj::persistent_string>(munge(typed_o->data));
         }
         else
         {

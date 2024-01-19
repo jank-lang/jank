@@ -95,9 +95,9 @@ namespace jank::codegen
           {
             return "jank::runtime::obj::keyword_ptr";
           }
-        case jank::runtime::object_type::string:
+        case jank::runtime::object_type::persistent_string:
           {
-            return "jank::runtime::obj::string_ptr";
+            return "jank::runtime::obj::persistent_string_ptr";
           }
         case jank::runtime::object_type::list:
           {
@@ -177,10 +177,10 @@ namespace jank::codegen
                            typed_o->sym.ns,
                            typed_o->sym.name);
           }
-          else if constexpr(std::same_as<T, runtime::obj::string>)
+          else if constexpr(std::same_as<T, runtime::obj::persistent_string>)
           {
             fmt::format_to(inserter,
-                           "jank::make_box<jank::runtime::obj::string>({})",
+                           "jank::make_box<jank::runtime::obj::persistent_string>({})",
                            escaped(typed_o->data));
           }
           else if constexpr(std::same_as<T, runtime::obj::vector>)

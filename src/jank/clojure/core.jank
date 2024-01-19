@@ -470,7 +470,7 @@
 
 ; Strings.
 (defn string? [o]
-  (native/raw "__value = make_box(#{ o }#->type == object_type::string);"))
+  (native/raw "__value = make_box(#{ o }#->type == object_type::persistent_string);"))
 (defn str
   ([]
    "")
@@ -495,7 +495,7 @@
                        for(auto it(fresh->next_in_place()); it != nullptr; it = it->next_in_place())
                        { runtime::detail::to_string(it->first(), buff); }
                      }
-                     return make_box<obj::string>(native_persistent_string{ buff.data(), buff.size() });
+                     return make_box<obj::persistent_string>(native_persistent_string{ buff.data(), buff.size() });
                    }
                    else
                    { throw #{ (ex-info :invalid-seq {:args args}) }#; }
@@ -510,11 +510,11 @@
   ([s start]
    (native/raw "__value = visit_object
                (
-                 [=](auto const typed_s) -> obj::string_ptr
+                 [=](auto const typed_s) -> obj::persistent_string_ptr
                  {
                    using T = typename decltype(typed_s)::value_type;
 
-                   if constexpr(std::is_same_v<T, obj::string>)
+                   if constexpr(std::is_same_v<T, obj::persistent_string>)
                    { return typed_s->substring(to_int(#{ start }#)).expect_ok(); }
                    else
                    { throw #{ (ex-info :not-a-string {:s s}) }#; }
@@ -524,11 +524,11 @@
   ([s start end]
    (native/raw "__value = visit_object
                (
-                 [=](auto const typed_s) -> obj::string_ptr
+                 [=](auto const typed_s) -> obj::persistent_string_ptr
                  {
                    using T = typename decltype(typed_s)::value_type;
 
-                   if constexpr(std::is_same_v<T, obj::string>)
+                   if constexpr(std::is_same_v<T, obj::persistent_string>)
                    { return typed_s->substring(to_int(#{ start }#), to_int(#{ end }#)).expect_ok(); }
                    else
                    { throw #{ (ex-info :not-a-string {:s s}) }#; }
@@ -545,7 +545,7 @@
                   {
                     using T = typename decltype(typed_s)::value_type;
 
-                    if constexpr(std::is_same_v<T, obj::string>)
+                    if constexpr(std::is_same_v<T, obj::persistent_string>)
                     { return typed_s->first_index_of(#{ c }#); }
                     else
                     { throw #{ (ex-info :not-a-string {:s s}) }#; }
@@ -562,7 +562,7 @@
                   {
                     using T = typename decltype(typed_s)::value_type;
 
-                    if constexpr(std::is_same_v<T, obj::string>)
+                    if constexpr(std::is_same_v<T, obj::persistent_string>)
                     { return typed_s->last_index_of(#{ c }#); }
                     else
                     { throw #{ (ex-info :not-a-string {:s s}) }#; }
@@ -1359,7 +1359,7 @@
 ;; jank.compiler things.
 ; TODO: Options, following what criterium offers.
 (defn benchmark [label fun]
-  (native/raw "auto const label_str(expect_object<obj::string>(#{ (str label) }#));
+  (native/raw "auto const label_str(expect_object<obj::persistent_string>(#{ (str label) }#));
               visit_object
               (
                [=](auto const typed_fun)

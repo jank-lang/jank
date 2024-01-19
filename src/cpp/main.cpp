@@ -73,7 +73,7 @@ namespace jank
         runtime::detail::native_transient_vector extra_args;
         for(auto const &s : opts.extra_opts)
         {
-          extra_args.push_back(make_box<runtime::obj::string>(s));
+          extra_args.push_back(make_box<runtime::obj::persistent_string>(s));
         }
         runtime::apply_to(main_var->deref(),
                           make_box<runtime::obj::vector>(extra_args.persistent()));

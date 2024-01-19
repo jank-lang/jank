@@ -582,7 +582,8 @@ namespace jank
         large_storage large;
       };
 
-      /* TODO: Benchmark benefit of storing this hash vs calculating it each time. */
+      /* TODO: On 64bit systems, this has 32bits of wasted data. We could use it, but that would
+       * impact the "three word" setup now, which would slow down a lot of operations. Worth it? */
       mutable native_hash hash{};
     };
 

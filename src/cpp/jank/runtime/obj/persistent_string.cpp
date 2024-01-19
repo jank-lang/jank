@@ -4,54 +4,54 @@
 #include <fmt/compile.h>
 
 #include <jank/runtime/util.hpp>
-#include <jank/runtime/obj/string.hpp>
+#include <jank/runtime/obj/persistent_string.hpp>
 
 namespace jank::runtime
 {
-  obj::string::static_object(native_persistent_string const &d)
+  obj::persistent_string::static_object(native_persistent_string const &d)
     : data{ d }
   {
   }
 
-  obj::string::static_object(native_persistent_string &&d)
+  obj::persistent_string::static_object(native_persistent_string &&d)
     : data{ std::move(d) }
   {
   }
 
-  native_bool obj::string::equal(object const &o) const
+  native_bool obj::persistent_string::equal(object const &o) const
   {
-    if(o.type != object_type::string)
+    if(o.type != object_type::persistent_string)
     {
       return false;
     }
 
-    auto const s(expect_object<obj::string>(&o));
+    auto const s(expect_object<obj::persistent_string>(&o));
     return data == s->data;
   }
 
-  native_persistent_string const &obj::string::to_string() const
+  native_persistent_string const &obj::persistent_string::to_string() const
   {
     return data;
   }
 
-  void obj::string::to_string(fmt::memory_buffer &buff) const
+  void obj::persistent_string::to_string(fmt::memory_buffer &buff) const
   {
     format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data);
   }
 
-  native_hash obj::string::to_hash() const
+  native_hash obj::persistent_string::to_hash() const
   {
     return data.to_hash();
   }
 
-  result<obj::string_ptr, native_persistent_string>
-  obj::string::substring(native_integer start) const
+  result<obj::persistent_string_ptr, native_persistent_string>
+  obj::persistent_string::substring(native_integer start) const
   {
     return substring(start, static_cast<native_integer>(data.size()));
   }
 
-  result<obj::string_ptr, native_persistent_string>
-  obj::string::substring(native_integer const start, native_integer const end) const
+  result<obj::persistent_string_ptr, native_persistent_string>
+  obj::persistent_string::substring(native_integer const start, native_integer const end) const
   {
     if(start < 0)
     {
@@ -73,7 +73,7 @@ namespace jank::runtime
     return ok(make_box(data.substr(start, end)));
   }
 
-  native_integer obj::string::first_index_of(object_ptr const c) const
+  native_integer obj::persistent_string::first_index_of(object_ptr const c) const
   {
     auto const s(runtime::detail::to_string(c));
     auto const found(data.find(s));
@@ -84,7 +84,7 @@ namespace jank::runtime
     return static_cast<native_integer>(found);
   }
 
-  native_integer obj::string::last_index_of(object_ptr const c) const
+  native_integer obj::persistent_string::last_index_of(object_ptr const c) const
   {
     auto const s(runtime::detail::to_string(c));
     auto const found(data.rfind(s));
@@ -95,7 +95,7 @@ namespace jank::runtime
     return static_cast<native_integer>(found);
   }
 
-  size_t obj::string::count() const
+  size_t obj::persistent_string::count() const
   {
     return data.size();
   }

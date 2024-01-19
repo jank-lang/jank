@@ -2,7 +2,7 @@
 
 #include <boost/variant.hpp>
 
-#include <jank/runtime/obj/string.hpp>
+#include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/analyze/local_frame.hpp>
 #include <jank/analyze/expression_base.hpp>
 #include <jank/detail/to_runtime_data.hpp>

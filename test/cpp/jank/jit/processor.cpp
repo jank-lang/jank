@@ -11,7 +11,7 @@
 #include <jank/read/parse.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/vector.hpp>
-#include <jank/runtime/obj/string.hpp>
+#include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/jit/processor.hpp>

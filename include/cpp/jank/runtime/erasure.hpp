@@ -6,7 +6,7 @@
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/cons.hpp>
-#include <jank/runtime/obj/string.hpp>
+#include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/vector.hpp>
@@ -126,9 +126,9 @@ namespace jank::runtime
           return fn(expect_object<obj::real>(erased), std::forward<Args>(args)...);
         }
         break;
-      case object_type::string:
+      case object_type::persistent_string:
         {
-          return fn(expect_object<obj::string>(erased), std::forward<Args>(args)...);
+          return fn(expect_object<obj::persistent_string>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::keyword:

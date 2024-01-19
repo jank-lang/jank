@@ -13,7 +13,7 @@ namespace jank::runtime
     boolean,
     integer,
     real,
-    string,
+    persistent_string,
     keyword,
     symbol,
     list,

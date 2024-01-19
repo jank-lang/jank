@@ -2,7 +2,7 @@
 
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
-#include <jank/runtime/obj/string.hpp>
+#include <jank/runtime/obj/persistent_string.hpp>
 
 namespace jank::runtime
 {

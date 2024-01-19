@@ -28,7 +28,7 @@ namespace jank
     using boolean = static_object<object_type::boolean>;
     using integer = static_object<object_type::integer>;
     using real = static_object<object_type::real>;
-    using string = static_object<object_type::string>;
+    using persistent_string = static_object<object_type::persistent_string>;
     using list = static_object<object_type::list>;
     using symbol = static_object<object_type::symbol>;
   }
@@ -74,13 +74,13 @@ namespace jank
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(native_persistent_string_view const &s)
   {
-    return make_box<runtime::obj::string>(s);
+    return make_box<runtime::obj::persistent_string>(s);
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(char const * const s)
   {
-    return make_box<runtime::obj::string>(s);
+    return make_box<runtime::obj::persistent_string>(s);
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]

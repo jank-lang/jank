@@ -11,7 +11,7 @@
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/vector.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
-#include <jank/runtime/obj/string.hpp>
+#include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/list.hpp>
 #include <jank/runtime/detail/object_util.hpp>
 
@@ -496,8 +496,8 @@ namespace jank::read::parse
                 make_box<runtime::obj::boolean>(true),
                 make_box<runtime::obj::integer>(1),
                 rt_ctx.intern_keyword(runtime::obj::symbol{ "one" }, true).expect_ok(),
-                make_box<runtime::obj::string>("meow"),
-                make_box<runtime::obj::string>("meow")
+                make_box<runtime::obj::persistent_string>("meow"),
+                make_box<runtime::obj::persistent_string>("meow")
               ),
               6
             )

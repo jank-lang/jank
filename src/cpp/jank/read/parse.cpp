@@ -10,7 +10,7 @@
 #include <jank/runtime/obj/set.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/keyword.hpp>
-#include <jank/runtime/obj/string.hpp>
+#include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/read/parse.hpp>
 
 namespace jank::read::parse
@@ -398,7 +398,7 @@ namespace jank::read::parse
     auto const token(token_current->expect_ok());
     ++token_current;
     auto const sv(boost::get<native_persistent_string_view>(token.data));
-    return ok(make_box<runtime::obj::string>(native_persistent_string{ sv.data(), sv.size() }));
+    return ok(make_box<runtime::obj::persistent_string>(native_persistent_string{ sv.data(), sv.size() }));
   }
 
   processor::object_result processor::parse_escaped_string()
@@ -411,7 +411,7 @@ namespace jank::read::parse
     {
       return err(error{ token.pos, res.expect_err_move() });
     }
-    return ok(make_box<runtime::obj::string>(res.expect_ok_move()));
+    return ok(make_box<runtime::obj::persistent_string>(res.expect_ok_move()));
   }
 
   processor::iterator processor::begin()

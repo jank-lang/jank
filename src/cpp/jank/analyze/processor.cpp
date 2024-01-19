@@ -450,7 +450,7 @@ namespace jank::analyze
       auto const module(runtime::module::nest_module(runtime::detail::to_string(ns_var->deref()),
                                                      runtime::munge(name)));
       auto const &current_module(
-        expect_object<runtime::obj::string>(rt_ctx.current_module_var->deref())->data);
+        expect_object<runtime::obj::persistent_string>(rt_ctx.current_module_var->deref())->data);
       rt_ctx.module_dependencies[current_module].emplace_back(module);
       //fmt::println("module dep {} -> {}", rt_ctx.current_module, module);
 
@@ -777,12 +777,12 @@ namespace jank::analyze
     }
 
     auto const &code(o->data.rest().first().unwrap());
-    if(code->type != runtime::object_type::string)
+    if(code->type != runtime::object_type::persistent_string)
     {
       return err(error{ "invalid native/raw: expects string of C++ code" });
     }
 
-    auto const code_str(runtime::expect_object<runtime::obj::string>(code));
+    auto const code_str(runtime::expect_object<runtime::obj::persistent_string>(code));
     if(code_str->data.empty())
     {
       return make_box<expression>(expr::native_raw<expression>{
@@ -1094,7 +1094,7 @@ namespace jank::analyze
         else if constexpr(runtime::behavior::numberable<T> || std::same_as<T, runtime::obj::boolean>
                           || std::same_as<T, runtime::obj::keyword>
                           || std::same_as<T, runtime::obj::nil>
-                          || std::same_as<T, runtime::obj::string>)
+                          || std::same_as<T, runtime::obj::persistent_string>)
         {
           return analyze_primitive_literal(o, current_frame, expr_type, fn_ctx, needs_box);
         }

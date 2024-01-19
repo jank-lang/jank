@@ -6,7 +6,7 @@ namespace jank::runtime
 {
   /* TODO: Seqable. */
   template <>
-  struct static_object<object_type::string> : gc
+  struct static_object<object_type::persistent_string> : gc
   {
     static constexpr bool pointer_free{ true };
 
@@ -41,13 +41,13 @@ namespace jank::runtime
     /* behavior::countable */
     size_t count() const;
 
-    object base{ object_type::string };
+    object base{ object_type::persistent_string };
     native_persistent_string data;
   };
 
   namespace obj
   {
-    using string = static_object<object_type::string>;
-    using string_ptr = native_box<string>;
+    using persistent_string = static_object<object_type::persistent_string>;
+    using persistent_string_ptr = native_box<persistent_string>;
   }
 }

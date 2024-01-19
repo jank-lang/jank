@@ -7,7 +7,7 @@
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
-#include <jank/runtime/obj/string.hpp>
+#include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/seq.hpp>
@@ -47,7 +47,7 @@ namespace jank::runtime
     /* TODO: Non-standard binding in clojure.core. */
     auto const current_module_sym(make_box<obj::symbol>("clojure.core/*current-module*"));
     current_module_var = core->intern_var(current_module_sym);
-    current_module_var->bind_root(obj::string::empty());
+    current_module_var->bind_root(obj::persistent_string::empty());
     current_module_var->dynamic.store(true);
 
     auto const assert_sym(make_box<obj::symbol>("clojure.core/*assert*"));
@@ -221,7 +221,7 @@ namespace jank::runtime
 
     if(detail::truthy(compile_files_var->deref()))
     {
-      auto const &current_module(expect_object<obj::string>(current_module_var->deref())->data);
+      auto const &current_module(expect_object<obj::persistent_string>(current_module_var->deref())->data);
       auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc));
       wrapped_exprs.name = "__ns";
       auto const &module(
