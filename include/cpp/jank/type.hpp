@@ -19,6 +19,7 @@ namespace jank
   using native_integer = long long;
   using native_real = long double;
   using native_bool = bool;
+  using native_hash = uint32_t;
   using native_persistent_string_view = std::string_view;
 
   template <typename T>
@@ -35,6 +36,8 @@ namespace jank
 
   using native_transient_string = std::string;
 }
+
+#include <jank/hash.hpp>
 
 /* NOTE: native_persistent_string.hpp includes this file to learn about integer
  * types, but we also include it to forward our string type. Pragma once allows

@@ -22,12 +22,14 @@ namespace jank::analyze::expr
         arg_expr_maps = runtime::conj(arg_expr_maps, e->to_runtime_data());
       }
 
-      return runtime::obj::persistent_array_map::create_unique(make_box("__type"),
-                                                               make_box("expr::recur"),
-                                                               make_box("args"),
-                                                               args,
-                                                               make_box("arg_exprs"),
-                                                               arg_expr_maps);
+      return runtime::merge(
+        static_cast<expression_base const *>(this)->to_runtime_data(),
+        runtime::obj::persistent_array_map::create_unique(make_box("__type"),
+                                                          make_box("expr::recur"),
+                                                          make_box("args"),
+                                                          args,
+                                                          make_box("arg_exprs"),
+                                                          arg_expr_maps));
     }
   };
 }

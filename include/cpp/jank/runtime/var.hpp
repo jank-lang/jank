@@ -31,7 +31,7 @@ namespace jank::runtime
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
-    native_integer to_hash() const;
+    native_hash to_hash() const;
 
     /* behavior::objectable extended */
     native_bool equal(static_object const &) const;
@@ -56,9 +56,10 @@ namespace jank::runtime
     native_box<static_object> clone() const;
 
     object base{ object_type::var };
-    ns_ptr n;
-    obj::symbol_ptr name;
+    ns_ptr n{};
+    obj::symbol_ptr name{};
     option<object_ptr> meta;
+    mutable native_hash hash{};
 
   private:
     folly::Synchronized<object_ptr> root;
@@ -82,10 +83,10 @@ namespace jank::runtime
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
-    native_integer to_hash() const;
+    native_hash to_hash() const;
 
     object base{ object_type::var_thread_binding };
-    object_ptr value;
+    object_ptr value{};
     std::thread::id thread_id;
   };
 

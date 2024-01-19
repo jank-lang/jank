@@ -6,7 +6,6 @@
 namespace jank::runtime::detail
 {
   native_persistent_string to_string(object_ptr const o);
-  native_integer to_hash(object_ptr const o);
   native_real to_real(object_ptr const o);
   void to_string(object_ptr const o, fmt::memory_buffer &buff);
   native_bool equal(object_ptr const lhs, object_ptr const rhs);

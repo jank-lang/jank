@@ -122,10 +122,10 @@ namespace jank::runtime
   {
     name->to_string(buff);
   }
-  native_integer ns::to_hash() const
-  /* TODO: Cache this. */
+  native_hash ns::to_hash() const
+  /* TODO: Cache this? */
   {
-    return name->to_hash();
+    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
   }
 
   bool ns::operator==(ns const &rhs) const

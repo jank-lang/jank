@@ -2,7 +2,7 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/object_util.hpp>
-#include <jank/runtime/detail/native_array_map.hpp>
+#include <jank/runtime/detail/native_persistent_array_map.hpp>
 #include <jank/runtime/obj/persistent_array_map_sequence.hpp>
 #include <jank/runtime/obj/detail/base_persistent_map.hpp>
 
@@ -12,7 +12,7 @@ namespace jank::runtime
   struct static_object<object_type::persistent_array_map>
     : obj::detail::base_persistent_map<object_type::persistent_array_map,
                                        object_type::persistent_array_map_sequence,
-                                       runtime::detail::native_array_map>
+                                       runtime::detail::native_persistent_array_map>
   {
     static_object() = default;
     static_object(static_object &&) = default;

@@ -214,21 +214,21 @@ namespace jank::codegen
             fmt::format_to(inserter, ")");
           }
           /* Cons, etc. */
-          else if constexpr(runtime::behavior::seqable<T>)
-          {
-            fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::list>(");
-            native_bool need_comma{};
-            for(auto it(typed_o->fresh_seq()); it != nullptr; it = it->next_in_place())
-            {
-              if(need_comma)
-              {
-                fmt::format_to(inserter, ", ");
-              }
-              need_comma = true;
-              gen_constant(it->first(), buffer, true);
-            }
-            fmt::format_to(inserter, ")");
-          }
+          //else if constexpr(runtime::behavior::seqable<T>)
+          //{
+          //  fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::list>(");
+          //  native_bool need_comma{};
+          //  for(auto it(typed_o->fresh_seq()); it != nullptr; it = it->next_in_place())
+          //  {
+          //    if(need_comma)
+          //    {
+          //      fmt::format_to(inserter, ", ");
+          //    }
+          //    need_comma = true;
+          //    gen_constant(it->first(), buffer, true);
+          //  }
+          //  fmt::format_to(inserter, ")");
+          //}
           else
           {
             throw std::runtime_error{ fmt::format("unimplemented constant codegen: {}\n",
@@ -1341,7 +1341,7 @@ namespace jank::codegen
     ret += native_persistent_string_view{ header_buffer.data(), header_buffer.size() };
     ret += native_persistent_string_view{ body_buffer.data(), body_buffer.size() };
     ret += native_persistent_string_view{ footer_buffer.data(), footer_buffer.size() };
-    //std::cout << ret << std::endl;
+    //fmt::println("codegen declaration {}", ret);
     return ret;
   }
 

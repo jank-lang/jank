@@ -30,9 +30,9 @@ namespace jank::runtime
     return s;
   }
 
-  native_integer obj::native_function_wrapper::to_hash() const
+  native_hash obj::native_function_wrapper::to_hash() const
   {
-    return reinterpret_cast<native_integer>(this);
+    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
   }
 
   template <size_t N, typename... Args>

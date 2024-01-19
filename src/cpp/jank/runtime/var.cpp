@@ -3,7 +3,6 @@
 
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/ns.hpp>
-#include <jank/runtime/hash.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 
 namespace jank::runtime
@@ -68,10 +67,12 @@ namespace jank::runtime
     to_string_impl(n, name, buff);
     return native_persistent_string{ buff.data(), buff.size() };
   }
-  native_integer var::to_hash() const
-  /* TODO: Cache this. */
+  native_hash var::to_hash() const
   {
-    return detail::hash_combine(n->name->to_hash(), name->to_hash());
+    if(hash)
+    { return hash; }
+
+    return hash = hash::combine(n->to_hash(), name->to_hash());
   }
 
   object_ptr var::with_meta(object_ptr const m)
@@ -180,8 +181,8 @@ namespace jank::runtime
     return runtime::detail::to_string(value, buff);
   }
 
-  native_integer var_thread_binding::to_hash() const
+  native_hash var_thread_binding::to_hash() const
   {
-    return runtime::detail::to_hash(value);
+    return hash::visit(value);
   }
 }

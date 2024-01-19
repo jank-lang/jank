@@ -2,7 +2,6 @@
 #include <sstream>
 
 #include <jank/runtime/util.hpp>
-#include <jank/runtime/hash.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/vector.hpp>
 
@@ -63,15 +62,12 @@ namespace jank::runtime
     return native_persistent_string{ buff.data(), buff.size() };
   }
 
-  /* TODO: Cache this. */
-  native_integer obj::vector::to_hash() const
+  native_hash obj::vector::to_hash() const
   {
-    auto seed(static_cast<native_integer>(data.size()));
-    for(auto const &e : data)
-    {
-      seed = runtime::detail::hash_combine(seed, *e);
-    }
-    return seed;
+    if(hash != 0)
+    { return hash; }
+
+    return hash = hash::ordered(data.begin(), data.end());
   }
 
   obj::persistent_vector_sequence_ptr obj::vector::seq() const

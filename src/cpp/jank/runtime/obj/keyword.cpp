@@ -39,9 +39,9 @@ namespace jank::runtime
     return native_persistent_string{ buff.data(), buff.size() };
   }
 
-  native_integer obj::keyword::to_hash() const
+  native_hash obj::keyword::to_hash() const
   {
-    return reinterpret_cast<native_integer>(this);
+    return sym.to_hash() + 0x9e3779b9;
   }
 
   object_ptr obj::keyword::with_meta(object_ptr m) const

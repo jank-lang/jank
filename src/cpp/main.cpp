@@ -66,7 +66,7 @@ namespace jank
       profile::timer timer{ "eval user code" };
       rt_ctx.load_module("/" + opts.target_module).expect_ok();
 
-      auto const main_var(rt_ctx.find_var(opts.target_module, "-main").unwrap_or(nullptr);
+      auto const main_var(rt_ctx.find_var(opts.target_module, "-main").unwrap_or(nullptr));
       if(main_var)
       {
         /* TODO: Handle the case when `-main` accepts no arg. */

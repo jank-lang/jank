@@ -42,10 +42,9 @@ namespace jank::runtime
       buff);
     return { buff.data(), buff.size() };
   }
-  native_integer obj::persistent_vector_sequence::to_hash() const
-  /* TODO: Hash from contents. */
+  native_hash obj::persistent_vector_sequence::to_hash() const
   {
-    return reinterpret_cast<native_integer>(this);
+    return hash::ordered(vec->data.begin(), vec->data.end());
   }
 
   /* behavior::countable */

@@ -9,7 +9,6 @@
 #include <jank/runtime/behavior/consable.hpp>
 #include <jank/runtime/behavior/countable.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
-#include <jank/runtime/hash.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/vector.hpp>
@@ -437,5 +436,41 @@ namespace jank::runtime
         }
       },
       s);
+  }
+
+  object_ptr merge(object_ptr const m, object_ptr const other)
+  {
+    return visit_object(
+      [&](auto const typed_m) -> object_ptr {
+        using T = typename decltype(typed_m)::value_type;
+
+        if constexpr(behavior::associatively_writable<T>)
+        {
+          return visit_object(
+            [&](auto const typed_other) -> object_ptr {
+              using O = typename decltype(typed_other)::value_type;
+
+              if constexpr(std::same_as<O, obj::persistent_hash_map> || std::same_as<O, obj::persistent_array_map>)
+              {
+                object_ptr ret{ m };
+                for(auto const &pair : typed_other->data)
+                { ret = assoc(ret, pair.first, pair.second); }
+                return ret;
+              }
+              else
+              {
+                throw std::runtime_error{ fmt::format("not associatively readable: {}",
+                    typed_m->to_string()) };
+              }
+            },
+            other);
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not associatively writable: {}",
+                                                typed_m->to_string()) };
+        }
+      },
+      m);
   }
 } // namespace jank::runtime

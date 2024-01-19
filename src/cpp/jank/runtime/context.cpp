@@ -479,12 +479,12 @@ namespace jank::runtime
         {
           return err(fmt::format("Unable to resolve ns for keyword: {}", ns));
         }
-        sym.ns = resolved_ns.unwrap()->name->name;
+        sym.set_ns(resolved_ns.unwrap()->name->name);
       }
       else
       {
         auto const current_ns(expect_object<jank::runtime::ns>(current_ns_var->deref()));
-        sym.ns = current_ns->name->name;
+        sym.set_ns(current_ns->name->name);
       }
     }
 
@@ -537,7 +537,7 @@ namespace jank::runtime
             return typed_o;
           }
 
-          auto const &args(
+          auto const args(
             make_box<obj::list>(typed_o->data.rest().cons(obj::nil::nil_const()).cons(typed_o)));
           return apply_to(var.unwrap()->deref(), args);
         }
@@ -597,7 +597,9 @@ namespace jank::runtime
       [](auto const typed_more) {
         using T = typename decltype(typed_more)::value_type;
 
-        if constexpr(behavior::sequenceable<T>)
+        if constexpr(std::same_as<T, obj::nil>)
+        { std::putc('\n', stdout); }
+        else if constexpr(behavior::sequenceable<T>)
         {
           fmt::memory_buffer buff;
           auto inserter(std::back_inserter(buff));

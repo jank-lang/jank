@@ -2,7 +2,6 @@
 #include <sstream>
 
 #include <jank/runtime/util.hpp>
-#include <jank/runtime/hash.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/set.hpp>
 
@@ -36,14 +35,9 @@ namespace jank::runtime
   }
 
   /* TODO: Cache this. */
-  native_integer obj::set::to_hash() const
+  native_hash obj::set::to_hash() const
   {
-    auto seed(static_cast<native_integer>(data.size()));
-    for(auto const &e : data)
-    {
-      seed = runtime::detail::hash_combine(seed, *e);
-    }
-    return seed;
+    return hash::unordered(data.begin(), data.end());
   }
 
   obj::persistent_set_sequence_ptr obj::set::seq() const

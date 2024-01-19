@@ -36,7 +36,7 @@ namespace jank::runtime
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
-    native_integer to_hash() const;
+    native_hash to_hash() const;
 
     bool operator==(static_object const &rhs) const;
 

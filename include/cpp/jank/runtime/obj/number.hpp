@@ -19,7 +19,7 @@ namespace jank::runtime
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
-    native_integer to_hash() const;
+    native_hash to_hash() const;
 
     object base{ object_type::boolean };
     native_bool data{};
@@ -39,7 +39,7 @@ namespace jank::runtime
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
-    native_integer to_hash() const;
+    native_hash to_hash() const;
 
     /* behavior::numberable */
     native_integer to_integer() const;
@@ -63,7 +63,7 @@ namespace jank::runtime
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
-    native_integer to_hash() const;
+    native_hash to_hash() const;
 
     /* behavior::numberable */
     native_integer to_integer() const;

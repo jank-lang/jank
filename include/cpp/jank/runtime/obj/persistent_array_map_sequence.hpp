@@ -7,7 +7,7 @@ namespace jank::runtime
   template <>
   struct static_object<object_type::persistent_array_map_sequence>
     : obj::detail::base_persistent_map_sequence<object_type::persistent_array_map_sequence,
-                                                runtime::detail::native_array_map::const_iterator>
+                                                runtime::detail::native_persistent_array_map::const_iterator>
   {
     using base_persistent_map_sequence::base_persistent_map_sequence;
   };

@@ -4,7 +4,6 @@
 #include <fmt/compile.h>
 
 #include <jank/runtime/util.hpp>
-#include <jank/runtime/hash.hpp>
 #include <jank/runtime/obj/string.hpp>
 
 namespace jank::runtime
@@ -40,7 +39,7 @@ namespace jank::runtime
     format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data);
   }
 
-  native_integer obj::string::to_hash() const
+  native_hash obj::string::to_hash() const
   {
     return data.to_hash();
   }

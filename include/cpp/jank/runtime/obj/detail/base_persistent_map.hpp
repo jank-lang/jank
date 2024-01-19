@@ -40,7 +40,7 @@ namespace jank::runtime::obj::detail
         return false;
       }
 
-      return to_hash() == runtime::detail::to_hash(p);
+      return to_hash() == hash::visit(p);
     }
 
     static void to_string_impl(typename V::const_iterator const &begin,
@@ -81,16 +81,15 @@ namespace jank::runtime::obj::detail
       return native_persistent_string{ buff.data(), buff.size() };
     }
 
-    /* TODO: Cache this. */
-    native_integer to_hash() const
+    native_hash to_hash() const
     {
-      auto seed(static_cast<native_integer>(static_cast<parent_type const *>(this)->data.size()));
-      for(auto const &e : static_cast<parent_type const *>(this)->data)
+      if(hash)
       {
-        seed = runtime::detail::hash_combine(seed, *e.first);
-        seed = runtime::detail::hash_combine(seed, *e.second);
+        return hash;
       }
-      return seed;
+
+      return hash = hash::unordered(static_cast<parent_type const *>(this)->data.begin(),
+                                    static_cast<parent_type const *>(this)->data.end());
     }
 
     /* behavior::seqable */
@@ -133,5 +132,6 @@ namespace jank::runtime::obj::detail
 
     object base{ OT };
     option<object_ptr> meta;
+    mutable native_hash hash{};
   };
 }

@@ -85,16 +85,19 @@ namespace jank::runtime
     to_string_impl(ns, name, buff);
     return native_persistent_string{ buff.data(), buff.size() };
   }
-  native_integer obj::symbol::to_hash() const
-  /* TODO: Cache this. */
+
+  native_hash obj::symbol::to_hash() const
   {
-    return runtime::detail::hash_combine(ns.to_hash(), name.to_hash());
+    if(hash)
+    { return hash; }
+
+    return hash = hash::combine(hash::string(name), hash::string(ns));
   }
 
   object_ptr obj::symbol::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(jank::make_box<obj::symbol>(ns, name));
+    auto ret(make_box<obj::symbol>(ns, name));
     ret->meta = meta;
     return ret;
   }
@@ -117,5 +120,16 @@ namespace jank::runtime
   bool obj::symbol::operator<(obj::symbol const &rhs) const
   {
     return to_hash() < rhs.to_hash();
+  }
+
+  void obj::symbol::set_ns(native_persistent_string const &s)
+  {
+    ns = s;
+    hash = 0;
+  }
+  void obj::symbol::set_name(native_persistent_string const &s)
+  {
+    name = s;
+    hash = 0;
   }
 }

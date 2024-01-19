@@ -188,12 +188,16 @@ namespace jank::analyze
       return found->first;
     }
 
-    auto qualified_sym(make_box<runtime::obj::symbol>(*sym));
-    if(qualified_sym->ns.empty())
+    runtime::obj::symbol_ptr qualified_sym{};
+    if(sym->ns.empty())
     {
-      qualified_sym->ns
-        = runtime::expect_object<runtime::ns>(rt_ctx.current_ns_var->deref())->name->name;
+      qualified_sym = make_box<runtime::obj::symbol>(
+        runtime::expect_object<runtime::ns>(rt_ctx.current_ns_var->deref())->name->name,
+        sym->name);
     }
+    else
+    { qualified_sym = make_box<runtime::obj::symbol>(*sym); }
+
     /* We use unique native names, just so var names don't clash with the underlying C++ API. */
     lifted_var lv{ runtime::context::unique_symbol(runtime::munge(qualified_sym->name)),
                    qualified_sym };
@@ -204,6 +208,7 @@ namespace jank::analyze
   option<std::reference_wrapper<lifted_var const>>
   local_frame::find_lifted_var(runtime::obj::symbol_ptr const &sym) const
   {
+    assert(sym);
     auto const &closest_fn(find_closest_fn_frame(*this));
     auto const &found(closest_fn.lifted_vars.find(sym));
     if(found != closest_fn.lifted_vars.end())
@@ -215,6 +220,7 @@ namespace jank::analyze
 
   void local_frame::lift_constant(runtime::object_ptr const constant)
   {
+    assert(constant);
     auto &closest_fn(find_closest_fn_frame(*this));
     auto const &found(closest_fn.lifted_constants.find(constant));
     if(found != closest_fn.lifted_constants.end())
@@ -245,6 +251,7 @@ namespace jank::analyze
   option<std::reference_wrapper<lifted_constant const>>
   local_frame::find_lifted_constant(runtime::object_ptr const o) const
   {
+    assert(o);
     auto const &closest_fn(find_closest_fn_frame(*this));
     auto const &found(closest_fn.lifted_constants.find(o));
     if(found != closest_fn.lifted_constants.end())

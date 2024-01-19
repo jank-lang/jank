@@ -17,7 +17,6 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(object &&base);
     static_object(value_type &&d);
     static_object(value_type const &d);
 
@@ -31,7 +30,7 @@ namespace jank::runtime
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
-    native_integer to_hash() const;
+    native_hash to_hash() const;
 
     /* behavior::metadatable */
     object_ptr with_meta(object_ptr m) const;
@@ -55,6 +54,7 @@ namespace jank::runtime
     object base{ object_type::vector };
     value_type data;
     option<object_ptr> meta;
+    mutable native_hash hash{};
   };
 
   namespace obj

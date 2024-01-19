@@ -7,7 +7,6 @@
 #include <immer/memory_policy.hpp>
 
 #include <jank/option.hpp>
-#include <jank/runtime/hash.hpp>
 
 namespace jank::runtime::detail
 {

@@ -738,7 +738,7 @@
 
 ;; Other.
 (defn hash [o]
-  (native/raw "__value = make_box(runtime::detail::to_hash(#{ o }#));"))
+  (native/raw "__value = make_box(hash::visit(#{ o }#));"))
 
 (defn name [o]
   (if (string? o)

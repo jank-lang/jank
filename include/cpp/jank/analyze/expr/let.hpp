@@ -34,12 +34,14 @@ namespace jank::analyze::expr
             e.second->to_runtime_data()));
       }
 
-      return runtime::obj::persistent_array_map::create_unique(make_box("__type"),
-                                                               make_box("expr::let"),
-                                                               make_box("pairs"),
-                                                               pair_maps,
-                                                               make_box("body"),
-                                                               detail::to_runtime_data(body));
+      return runtime::merge(
+        static_cast<expression_base const *>(this)->to_runtime_data(),
+        runtime::obj::persistent_array_map::create_unique(make_box("__type"),
+                                                          make_box("expr::let"),
+                                                          make_box("pairs"),
+                                                          pair_maps,
+                                                          make_box("body"),
+                                                          detail::to_runtime_data(body)));
     }
   };
 }

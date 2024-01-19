@@ -262,7 +262,7 @@ namespace jank::analyze
       if(!unique_res.second)
       {
         /* TODO: Output a warning here. */
-        for(auto const &param : param_symbols)
+        for(auto &param : param_symbols)
         {
           if(param->equal(*sym))
           {
@@ -270,7 +270,7 @@ namespace jank::analyze
              * without any name. So, if we have a param shadowing another, we just remove the
              * name of the one being shadowed. This is better than generating a new name for
              * it, since we don't want it referenced at all. */
-            param->name = "";
+            param->set_name("");
             break;
           }
         }

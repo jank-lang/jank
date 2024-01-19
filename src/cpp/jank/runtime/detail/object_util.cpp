@@ -12,11 +12,6 @@ namespace jank::runtime::detail
     visit_object([&](auto const typed_o) { typed_o->to_string(buff); }, o);
   }
 
-  native_integer to_hash(object_ptr const o)
-  {
-    return visit_object([](auto const typed_o) { return typed_o->to_hash(); }, o);
-  }
-
   native_real to_real(object_ptr const o)
   {
     return visit_object(
@@ -55,13 +50,12 @@ namespace std
   size_t
   hash<jank::runtime::object_ptr>::operator()(jank::runtime::object_ptr const o) const noexcept
   {
-    return jank::runtime::visit_object([&](auto const typed_o) { return typed_o->to_hash(); }, o);
+    return jank::hash::visit(o);
   }
 
   size_t hash<jank::runtime::object>::operator()(jank::runtime::object const &o) const noexcept
   {
-    static auto hasher(std::hash<jank::runtime::object_ptr>{});
-    return hasher(const_cast<jank::runtime::object *>(&o));
+    return jank::hash::visit(const_cast<jank::runtime::object *>(&o));
   }
 
   // NOLINTNEXTLINE(bugprone-exception-escape): TODO: Sort this out.

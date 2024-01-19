@@ -61,9 +61,9 @@ namespace jank::runtime::obj::detail
       return native_persistent_string{ buff.data(), buff.size() };
     }
 
-    native_integer to_hash() const
+    native_hash to_hash() const
     {
-      return reinterpret_cast<native_integer>(this);
+      return hash::ordered(begin, end);
     }
 
     /* behavior::seqable */

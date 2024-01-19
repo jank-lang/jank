@@ -128,15 +128,8 @@ namespace jank::runtime
     return runtime::detail::to_string(seq());
   }
 
-  native_integer obj::range::to_hash() const
+  native_hash obj::range::to_hash() const
   {
-    size_t hash{};
-
-    for(auto it(fresh_seq()); it != nullptr; it = it->next_in_place())
-    {
-      hash = runtime::detail::hash_combine(hash, *it->first());
-    }
-
-    return static_cast<native_integer>(hash);
+    return hash::ordered(&base);
   }
 }

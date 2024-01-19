@@ -54,10 +54,9 @@ namespace jank::runtime
     return native_persistent_string{ buff.data(), buff.size() };
   }
 
-  native_integer obj::boolean::to_hash() const
-  /* TODO: Do what Clojure does here instead. */
+  native_hash obj::boolean::to_hash() const
   {
-    return data ? 1 : 0;
+    return data ? 1231 : 1237;
   }
 
   /***** integer *****/
@@ -87,9 +86,9 @@ namespace jank::runtime
     fmt::format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data);
   }
 
-  native_integer obj::integer::to_hash() const
+  native_hash obj::integer::to_hash() const
   {
-    return data;
+    return hash::integer(data);
   }
 
   native_integer obj::integer::to_integer() const
@@ -130,9 +129,9 @@ namespace jank::runtime
     fmt::format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data);
   }
 
-  native_integer obj::real::to_hash() const
+  native_hash obj::real::to_hash() const
   {
-    return static_cast<native_integer>(data);
+    return hash::real(data);
   }
 
   native_integer obj::real::to_integer() const

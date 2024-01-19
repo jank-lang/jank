@@ -84,10 +84,9 @@ namespace jank::runtime::obj::detail
       return native_persistent_string{ buff.data(), buff.size() };
     }
 
-    native_integer to_hash() const
-    /* TODO: Hash from contents. */
+    native_hash to_hash() const
     {
-      return reinterpret_cast<native_integer>(this);
+      return hash::unordered(&static_cast<parent_type const *>(this)->base);
     }
 
     /* behavior::countable */

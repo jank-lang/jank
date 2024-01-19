@@ -8,11 +8,6 @@ namespace jank::runtime
     return &r;
   }
 
-  obj::nil::static_object(object &&base)
-    : base{ std::move(base) }
-  {
-  }
-
   native_bool obj::nil::equal(object const &o) const
   {
     return &o == &base;
@@ -29,7 +24,7 @@ namespace jank::runtime
     fmt::format_to(std::back_inserter(buff), "nil");
   }
 
-  native_integer obj::nil::to_hash() const
+  native_hash obj::nil::to_hash() const
   {
     return 0;
   }

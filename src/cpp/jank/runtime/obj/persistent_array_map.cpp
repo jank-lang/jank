@@ -2,7 +2,6 @@
 #include <sstream>
 
 #include <jank/runtime/util.hpp>
-#include <jank/runtime/hash.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/vector.hpp>
@@ -53,7 +52,7 @@ namespace jank::runtime
      * promoting to a hash map.
      *
      * TODO: Benchmark if it's faster to have this behavior or to check first. */
-    if(data.size() == detail::native_array_map::max_size)
+    if(data.size() == detail::native_persistent_array_map::max_size)
     {
       return make_box<obj::persistent_hash_map>(data, key, val);
     }

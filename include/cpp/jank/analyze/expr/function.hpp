@@ -3,7 +3,6 @@
 #include <list>
 
 #include <jank/runtime/obj/symbol.hpp>
-#include <jank/runtime/hash.hpp>
 #include <jank/analyze/local_frame.hpp>
 #include <jank/analyze/expr/do.hpp>
 #include <jank/analyze/expression_base.hpp>
@@ -78,12 +77,14 @@ namespace jank::analyze::expr
         arity_maps = runtime::conj(arity_maps, e.to_runtime_data());
       }
 
-      return runtime::obj::persistent_array_map::create_unique(make_box("__type"),
-                                                               make_box("expr::function"),
-                                                               make_box("name"),
-                                                               detail::to_runtime_data(name),
-                                                               make_box("arities"),
-                                                               arity_maps);
+      return runtime::merge(
+        static_cast<expression_base const *>(this)->to_runtime_data(),
+        runtime::obj::persistent_array_map::create_unique(make_box("__type"),
+                                                          make_box("expr::function"),
+                                                          make_box("name"),
+                                                          detail::to_runtime_data(name),
+                                                          make_box("arities"),
+                                                          arity_maps));
     }
   };
 }
@@ -96,7 +97,7 @@ namespace std
     size_t operator()(jank::analyze::expr::arity_key const &k) const noexcept
     {
       static auto hasher(std::hash<decltype(jank::analyze::expr::arity_key::param_count)>{});
-      return jank::runtime::detail::hash_combine(hasher(k.param_count), k.is_variadic);
+      return jank::hash::combine(hasher(k.param_count), k.is_variadic);
     }
   };
 }

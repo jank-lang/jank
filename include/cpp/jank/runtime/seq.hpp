@@ -50,7 +50,11 @@ namespace jank::runtime
         [](auto const typed_o, auto const begin, auto const end) -> native_bool {
           using T = typename decltype(typed_o)::value_type;
 
-          if constexpr(!behavior::seqable<T>)
+          /* nil is seqable, but we don't want it to be equal to an empty collection.
+           * An empty seq itself is nil, but that's different. */
+          if constexpr(std::same_as<T, obj::nil>)
+          { return false; }
+          else if constexpr(!behavior::seqable<T>)
           {
             return false;
           }
@@ -89,4 +93,5 @@ namespace jank::runtime
   object_ptr get_in(object_ptr m, object_ptr keys, object_ptr fallback);
   object_ptr find(object_ptr s, object_ptr key);
   native_bool contains(object_ptr s, object_ptr key);
+  object_ptr merge(object_ptr m, object_ptr other);
 }

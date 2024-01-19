@@ -313,7 +313,7 @@ namespace jank::evaluate
   {
     /* TODO: Pre-allocate array. */
     /* TODO: If there are more exprs than the max array map keys, we need a hash map. */
-    runtime::detail::native_array_map ret;
+    runtime::detail::native_persistent_array_map ret;
     for(auto const &e : expr.data_exprs)
     {
       ret.insert_or_assign(eval(rt_ctx, jit_prc, e.first), eval(rt_ctx, jit_prc, e.second));

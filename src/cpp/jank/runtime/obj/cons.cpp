@@ -137,19 +137,12 @@ namespace jank::runtime
     return runtime::detail::to_string(seq());
   }
 
-  native_integer obj::cons::to_hash() const
+  native_hash obj::cons::to_hash() const
   {
     if(hash != 0)
-    {
-      return static_cast<native_integer>(hash);
-    }
+    { return hash; }
 
-    for(auto it(fresh_seq()); it != nullptr; it = it->next_in_place())
-    {
-      hash = runtime::detail::hash_combine(hash, *it->first());
-    }
-
-    return static_cast<native_integer>(hash);
+    return hash = hash::ordered(&base);
   }
 
   obj::cons_ptr obj::cons::cons(object_ptr head) const

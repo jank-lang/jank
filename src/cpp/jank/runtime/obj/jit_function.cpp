@@ -17,9 +17,9 @@ namespace jank::runtime
     fmt::format_to(std::back_inserter(buff), "jit_function");
   }
 
-  native_integer obj::jit_function::to_hash() const
+  native_hash obj::jit_function::to_hash() const
   {
-    return reinterpret_cast<native_integer>(this);
+    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
   }
 
   object_ptr obj::jit_function::with_meta(object_ptr const m)

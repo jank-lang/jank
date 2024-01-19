@@ -42,10 +42,12 @@ namespace jank::analyze::expr
                                      e));
       }
 
-      return runtime::obj::persistent_array_map::create_unique(make_box("__type"),
-                                                               make_box("expr::native_raw"),
-                                                               make_box("chunks"),
-                                                               chunk_maps);
+      return runtime::merge(
+        static_cast<expression_base const *>(this)->to_runtime_data(),
+        runtime::obj::persistent_array_map::create_unique(make_box("__type"),
+                                                          make_box("expr::native_raw"),
+                                                          make_box("chunks"),
+                                                          chunk_maps));
     }
   };
 }

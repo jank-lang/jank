@@ -18,7 +18,6 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(object &&base);
     static_object(obj::vector_ptr v);
     static_object(obj::vector_ptr v, size_t i);
 
@@ -26,7 +25,7 @@ namespace jank::runtime
     native_bool equal(object const &) const;
     void to_string(fmt::memory_buffer &buff) const;
     native_persistent_string to_string() const;
-    native_integer to_hash() const;
+    native_hash to_hash() const;
 
     /* behavior::countable */
     size_t count() const;

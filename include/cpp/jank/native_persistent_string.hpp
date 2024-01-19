@@ -521,7 +521,7 @@ namespace jank
     }
 
     /*** Hashing. ***/
-    constexpr native_integer to_hash() const noexcept
+    constexpr native_hash to_hash() const noexcept
     {
       if(store.hash != 0)
       {
@@ -534,7 +534,7 @@ namespace jank
       {
         store.hash = 31 * store.hash + (ptr[i] & 0xff);
       }
-      return store.hash;
+      return store.hash = hash::integer(store.hash);
     }
 
   private:
@@ -583,7 +583,7 @@ namespace jank
       };
 
       /* TODO: Benchmark benefit of storing this hash vs calculating it each time. */
-      mutable native_integer hash{};
+      mutable native_hash hash{};
     };
 
     constexpr void destroy()
