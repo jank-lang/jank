@@ -426,7 +426,7 @@ namespace jank::runtime
         {
           return typed_s->contains(key);
         }
-        if constexpr(std::same_as<S, obj::set>)
+        if constexpr(std::same_as<S, obj::persistent_set>)
         {
           return typed_s->contains(key);
         }

@@ -8,8 +8,8 @@ namespace jank::runtime
 {
   namespace obj
   {
-    using set = static_object<object_type::set>;
-    using set_ptr = native_box<set>;
+    using persistent_set = static_object<object_type::persistent_set>;
+    using persistent_set_ptr = native_box<persistent_set>;
   }
 
   template <>

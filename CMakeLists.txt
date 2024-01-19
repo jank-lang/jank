@@ -170,7 +170,7 @@ add_library(
   src/cpp/jank/runtime/obj/persistent_vector_sequence.cpp
   src/cpp/jank/runtime/obj/persistent_array_map.cpp
   src/cpp/jank/runtime/obj/persistent_hash_map.cpp
-  src/cpp/jank/runtime/obj/set.cpp
+  src/cpp/jank/runtime/obj/persistent_set.cpp
   src/cpp/jank/runtime/obj/persistent_string.cpp
   src/cpp/jank/runtime/obj/cons.cpp
   src/cpp/jank/runtime/obj/range.cpp

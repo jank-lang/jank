@@ -7,7 +7,7 @@
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
-#include <jank/runtime/obj/set.hpp>
+#include <jank/runtime/obj/persistent_set.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>

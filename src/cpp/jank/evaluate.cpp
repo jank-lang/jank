@@ -244,7 +244,7 @@ namespace jank::evaluate
               }
           }
         }
-        else if constexpr(std::same_as<T, runtime::obj::set>)
+        else if constexpr(std::same_as<T, runtime::obj::persistent_set>)
         {
           auto const s(expr.arg_exprs.size());
           if(s != 1)

@@ -11,7 +11,7 @@
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
-#include <jank/runtime/obj/set.hpp>
+#include <jank/runtime/obj/persistent_set.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/persistent_array_map_sequence.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
@@ -173,9 +173,9 @@ namespace jank::runtime
                     std::forward<Args>(args)...);
         }
         break;
-      case object_type::set:
+      case object_type::persistent_set:
         {
-          return fn(expect_object<obj::set>(erased), std::forward<Args>(args)...);
+          return fn(expect_object<obj::persistent_set>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::cons:

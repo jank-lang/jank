@@ -66,7 +66,7 @@ namespace jank::runtime
               return typed_source->call(a1);
           }
         }
-        else if constexpr(std::same_as<T, obj::set> || std::same_as<T, obj::persistent_hash_map>
+        else if constexpr(std::same_as<T, obj::persistent_set> || std::same_as<T, obj::persistent_hash_map>
                           || std::same_as<T, obj::persistent_array_map>
                           || std::same_as<T, obj::keyword>)
         {

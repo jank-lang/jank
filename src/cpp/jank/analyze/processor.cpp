@@ -1087,7 +1087,7 @@ namespace jank::analyze
         {
           return analyze_map(typed_o, current_frame, expr_type, fn_ctx, needs_box);
         }
-        else if constexpr(std::same_as<T, runtime::obj::set>)
+        else if constexpr(std::same_as<T, runtime::obj::persistent_set>)
         {
           return err(error{ "unimplemented analysis: set" });
         }

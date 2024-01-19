@@ -22,7 +22,7 @@ namespace jank::runtime
     persistent_array_map_sequence,
     persistent_hash_map,
     persistent_hash_map_sequence,
-    set,
+    persistent_set,
     cons,
     range,
     iterator,

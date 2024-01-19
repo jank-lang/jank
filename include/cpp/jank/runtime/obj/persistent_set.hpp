@@ -6,7 +6,7 @@
 namespace jank::runtime
 {
   template <>
-  struct static_object<object_type::set> : gc
+  struct static_object<object_type::persistent_set> : gc
   {
     using value_type = runtime::detail::native_persistent_set;
 
@@ -49,8 +49,11 @@ namespace jank::runtime
 
     native_bool contains(object_ptr o) const;
 
-    object base{ object_type::set };
+    object base{ object_type::persistent_set };
     value_type data;
     option<object_ptr> meta;
   };
+
+  using persistent_set = static_object<object_type::persistent_set>;
+  using persistent_set_ptr = native_box<persistent_set>;
 }

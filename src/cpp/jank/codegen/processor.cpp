@@ -107,9 +107,9 @@ namespace jank::codegen
           {
             return "jank::runtime::obj::persistent_vector_ptr";
           }
-        case jank::runtime::object_type::set:
+        case jank::runtime::object_type::persistent_set:
           {
-            return "jank::runtime::obj::set_ptr";
+            return "jank::runtime::obj::persistent_set_ptr";
           }
         case jank::runtime::object_type::persistent_array_map:
           {

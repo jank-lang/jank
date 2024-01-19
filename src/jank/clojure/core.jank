@@ -724,7 +724,7 @@
 ; Sets.
 
 (defn set? [o]
-  (native/raw "__value = make_box(#{ o }#->type == object_type::set);"))
+  (native/raw "__value = make_box(#{ o }#->type == object_type::persistent_set);"))
 
 ; Returns a set of the distinct elements of coll.
 (defn set [coll]
@@ -733,7 +733,7 @@
     ; TODO: Transient
     (reduce* (fn [acc e]
                (conj acc e))
-             (native/raw "__value = make_box<obj::set>();")
+             (native/raw "__value = make_box<obj::persistent_set>();")
              coll)))
 
 ;; Other.
