@@ -103,9 +103,9 @@ namespace jank::codegen
           {
             return "jank::runtime::obj::list_ptr";
           }
-        case jank::runtime::object_type::vector:
+        case jank::runtime::object_type::persistent_vector:
           {
-            return "jank::runtime::obj::vector_ptr";
+            return "jank::runtime::obj::persistent_vector_ptr";
           }
         case jank::runtime::object_type::set:
           {
@@ -183,9 +183,9 @@ namespace jank::codegen
                            "jank::make_box<jank::runtime::obj::persistent_string>({})",
                            escaped(typed_o->data));
           }
-          else if constexpr(std::same_as<T, runtime::obj::vector>)
+          else if constexpr(std::same_as<T, runtime::obj::persistent_vector>)
           {
-            fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::vector>(");
+            fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::persistent_vector>(");
             native_bool need_comma{};
             for(auto const &form : typed_o->data)
             {
@@ -951,7 +951,7 @@ namespace jank::codegen
 
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::context::unique_string("vec"));
-    fmt::format_to(inserter, "auto const {}(jank::make_box<jank::runtime::obj::vector>(", ret_tmp);
+    fmt::format_to(inserter, "auto const {}(jank::make_box<jank::runtime::obj::persistent_vector>(", ret_tmp);
     for(auto it(data_tmps.begin()); it != data_tmps.end();)
     {
       fmt::format_to(inserter, "{}", it->str(true));

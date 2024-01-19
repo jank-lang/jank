@@ -2,13 +2,13 @@
 
 namespace jank::runtime
 {
-  obj::persistent_vector_sequence::static_object(obj::vector_ptr v)
+  obj::persistent_vector_sequence::static_object(obj::persistent_vector_ptr v)
     : vec{ v }
   {
     assert(v->count() > 0);
   }
 
-  obj::persistent_vector_sequence::static_object(obj::vector_ptr v, size_t i)
+  obj::persistent_vector_sequence::static_object(obj::persistent_vector_ptr v, size_t i)
     : vec{ v }
     , index{ i }
   {
@@ -24,7 +24,7 @@ namespace jank::runtime
   void obj::persistent_vector_sequence::to_string(fmt::memory_buffer &buff) const
   {
     return behavior::detail::to_string(
-      vec->data.begin() + static_cast<decltype(obj::vector::data)::difference_type>(index),
+      vec->data.begin() + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
       vec->data.end(),
       "[",
       ']',
@@ -35,7 +35,7 @@ namespace jank::runtime
   {
     fmt::memory_buffer buff;
     behavior::detail::to_string(
-      vec->data.begin() + static_cast<decltype(obj::vector::data)::difference_type>(index),
+      vec->data.begin() + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
       vec->data.end(),
       "[",
       ']',

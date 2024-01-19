@@ -6,8 +6,8 @@ namespace jank::runtime
 {
   namespace obj
   {
-    using vector = static_object<object_type::vector>;
-    using vector_ptr = native_box<vector>;
+    using persistent_vector = static_object<object_type::persistent_vector>;
+    using persistent_vector_ptr = native_box<persistent_vector>;
   }
 
   template <>
@@ -18,8 +18,8 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(obj::vector_ptr v);
-    static_object(obj::vector_ptr v, size_t i);
+    static_object(obj::persistent_vector_ptr v);
+    static_object(obj::persistent_vector_ptr v, size_t i);
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
@@ -42,7 +42,7 @@ namespace jank::runtime
     obj::cons_ptr cons(object_ptr head);
 
     object base{ object_type::persistent_vector_sequence };
-    obj::vector_ptr vec{};
+    obj::persistent_vector_ptr vec{};
     size_t index{};
   };
 

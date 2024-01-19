@@ -4,7 +4,7 @@
 #include <magic_enum.hpp>
 
 #include <jank/runtime/obj/number.hpp>
-#include <jank/runtime/obj/vector.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/list.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/set.hpp>
@@ -224,7 +224,7 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
-    return make_box<runtime::obj::vector>(ret.persistent());
+    return make_box<runtime::obj::persistent_vector>(ret.persistent());
   }
 
   /* TODO: Uniqueness check. */

@@ -9,7 +9,7 @@
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/keyword.hpp>
-#include <jank/runtime/obj/vector.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/list.hpp>
@@ -372,7 +372,7 @@ namespace jank::read::parse
           auto const r(p.next());
           CHECK(r.is_ok());
           CHECK(r.expect_ok() != nullptr);
-          CHECK(runtime::detail::equal(r.expect_ok(), make_box<runtime::obj::vector>()));
+          CHECK(runtime::detail::equal(r.expect_ok(), make_box<runtime::obj::persistent_vector>()));
         }
       }
 
@@ -390,7 +390,7 @@ namespace jank::read::parse
             runtime::detail::equal
             (
               r.expect_ok(),
-              make_box<runtime::obj::vector>
+              make_box<runtime::obj::persistent_vector>
               (
                 runtime::detail::native_persistent_vector
                 {

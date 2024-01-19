@@ -17,7 +17,7 @@ namespace jank::runtime
     keyword,
     symbol,
     list,
-    vector,
+    persistent_vector,
     persistent_array_map,
     persistent_array_map_sequence,
     persistent_hash_map,

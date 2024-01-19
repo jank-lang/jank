@@ -3,29 +3,29 @@
 
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
-#include <jank/runtime/obj/vector.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
 
 namespace jank::runtime
 {
-  obj::vector::static_object(runtime::detail::native_persistent_vector &&d)
+  obj::persistent_vector::static_object(runtime::detail::native_persistent_vector &&d)
     : data{ std::move(d) }
   {
   }
 
-  obj::vector::static_object(runtime::detail::native_persistent_vector const &d)
+  obj::persistent_vector::static_object(runtime::detail::native_persistent_vector const &d)
     : data{ d }
   {
   }
 
-  obj::vector_ptr obj::vector::create(object_ptr const s)
+  obj::persistent_vector_ptr obj::persistent_vector::create(object_ptr const s)
   {
     if(s == nullptr)
     {
-      return make_box<obj::vector>();
+      return make_box<obj::persistent_vector>();
     }
 
     return visit_object(
-      [](auto const typed_s) -> obj::vector_ptr {
+      [](auto const typed_s) -> obj::persistent_vector_ptr {
         using T = typename decltype(typed_s)::value_type;
 
         if constexpr(behavior::sequenceable<T>)
@@ -35,7 +35,7 @@ namespace jank::runtime
           {
             v.push_back(i->first());
           }
-          return make_box<obj::vector>(v.persistent());
+          return make_box<obj::persistent_vector>(v.persistent());
         }
         else
         {
@@ -45,24 +45,24 @@ namespace jank::runtime
       s);
   }
 
-  native_bool obj::vector::equal(object const &o) const
+  native_bool obj::persistent_vector::equal(object const &o) const
   {
     return detail::equal(o, data.begin(), data.end());
   }
 
-  void obj::vector::to_string(fmt::memory_buffer &buff) const
+  void obj::persistent_vector::to_string(fmt::memory_buffer &buff) const
   {
     return behavior::detail::to_string(data.begin(), data.end(), "[", ']', buff);
   }
 
-  native_persistent_string obj::vector::to_string() const
+  native_persistent_string obj::persistent_vector::to_string() const
   {
     fmt::memory_buffer buff;
     behavior::detail::to_string(data.begin(), data.end(), "[", ']', buff);
     return native_persistent_string{ buff.data(), buff.size() };
   }
 
-  native_hash obj::vector::to_hash() const
+  native_hash obj::persistent_vector::to_hash() const
   {
     if(hash != 0)
     { return hash; }
@@ -70,45 +70,45 @@ namespace jank::runtime
     return hash = hash::ordered(data.begin(), data.end());
   }
 
-  obj::persistent_vector_sequence_ptr obj::vector::seq() const
+  obj::persistent_vector_sequence_ptr obj::persistent_vector::seq() const
   {
     if(data.empty())
     {
       return nullptr;
     }
-    return make_box<obj::persistent_vector_sequence>(const_cast<obj::vector *>(this));
+    return make_box<obj::persistent_vector_sequence>(const_cast<obj::persistent_vector *>(this));
   }
 
-  obj::persistent_vector_sequence_ptr obj::vector::fresh_seq() const
+  obj::persistent_vector_sequence_ptr obj::persistent_vector::fresh_seq() const
   {
     if(data.empty())
     {
       return nullptr;
     }
-    return make_box<obj::persistent_vector_sequence>(const_cast<obj::vector *>(this));
+    return make_box<obj::persistent_vector_sequence>(const_cast<obj::persistent_vector *>(this));
   }
 
-  size_t obj::vector::count() const
+  size_t obj::persistent_vector::count() const
   {
     return data.size();
   }
 
-  obj::vector_ptr obj::vector::cons(object_ptr head) const
+  obj::persistent_vector_ptr obj::persistent_vector::cons(object_ptr head) const
   {
     auto vec(data.push_back(head));
-    auto ret(make_box<obj::vector>(std::move(vec)));
+    auto ret(make_box<obj::persistent_vector>(std::move(vec)));
     return ret;
   }
 
-  object_ptr obj::vector::with_meta(object_ptr const m) const
+  object_ptr obj::persistent_vector::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(make_box<obj::vector>(data));
+    auto ret(make_box<obj::persistent_vector>(data));
     ret->meta = meta;
     return ret;
   }
 
-  object_ptr obj::vector::get(object_ptr const key) const
+  object_ptr obj::persistent_vector::get(object_ptr const key) const
   {
     if(key->type == object_type::integer)
     {
@@ -126,7 +126,7 @@ namespace jank::runtime
     }
   }
 
-  object_ptr obj::vector::get(object_ptr const key, object_ptr const fallback) const
+  object_ptr obj::persistent_vector::get(object_ptr const key, object_ptr const fallback) const
   {
     if(key->type == object_type::integer)
     {
@@ -144,7 +144,7 @@ namespace jank::runtime
     }
   }
 
-  object_ptr obj::vector::get_entry(object_ptr const key) const
+  object_ptr obj::persistent_vector::get_entry(object_ptr const key) const
   {
     if(key->type == object_type::integer)
     {
@@ -154,7 +154,7 @@ namespace jank::runtime
         return obj::nil::nil_const();
       }
       /* TODO: Map entry type? */
-      return make_box<obj::vector>(key, data[i]);
+      return make_box<obj::persistent_vector>(key, data[i]);
     }
     else
     {
@@ -163,7 +163,7 @@ namespace jank::runtime
     }
   }
 
-  native_bool obj::vector::contains(object_ptr const key) const
+  native_bool obj::persistent_vector::contains(object_ptr const key) const
   {
     if(key->type == object_type::integer)
     {

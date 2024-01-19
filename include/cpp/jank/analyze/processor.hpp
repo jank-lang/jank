@@ -6,7 +6,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/list.hpp>
-#include <jank/runtime/obj/vector.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/analyze/local_frame.hpp>
 #include <jank/analyze/expression.hpp>
@@ -106,7 +106,7 @@ namespace jank::analyze
                                                 expression_type,
                                                 option<expr::function_context_ptr> const &,
                                                 native_bool needs_box);
-    expression_result analyze_vector(runtime::obj::vector_ptr const &,
+    expression_result analyze_vector(runtime::obj::persistent_vector_ptr const &,
                                      local_frame_ptr &,
                                      expression_type,
                                      option<expr::function_context_ptr> const &,

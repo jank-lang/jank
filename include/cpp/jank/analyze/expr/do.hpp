@@ -13,7 +13,7 @@ namespace jank::analyze::expr
     runtime::object_ptr to_runtime_data() const
     {
       using namespace runtime::obj;
-      runtime::object_ptr body_maps(make_box<runtime::obj::vector>());
+      runtime::object_ptr body_maps(make_box<runtime::obj::persistent_vector>());
       for(auto const &e : body)
       {
         body_maps = runtime::conj(body_maps, e->to_runtime_data());

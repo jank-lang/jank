@@ -11,7 +11,7 @@
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
-#include <jank/runtime/obj/vector.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/seq.hpp>
 #include <jank/runtime/util.hpp>
 

@@ -6,7 +6,7 @@
 namespace jank::runtime
 {
   template <>
-  struct static_object<object_type::vector> : gc
+  struct static_object<object_type::persistent_vector> : gc
   {
     using value_type = runtime::detail::native_persistent_vector;
 
@@ -51,7 +51,7 @@ namespace jank::runtime
     /* behavior::consable */
     native_box<static_object> cons(object_ptr head) const;
 
-    object base{ object_type::vector };
+    object base{ object_type::persistent_vector };
     value_type data;
     option<object_ptr> meta;
     mutable native_hash hash{};
@@ -59,7 +59,7 @@ namespace jank::runtime
 
   namespace obj
   {
-    using vector = static_object<object_type::vector>;
-    using vector_ptr = native_box<vector>;
+    using persistent_vector = static_object<object_type::persistent_vector>;
+    using persistent_vector_ptr = native_box<persistent_vector>;
   }
 }

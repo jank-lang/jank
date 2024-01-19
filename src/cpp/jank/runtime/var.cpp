@@ -139,7 +139,7 @@ namespace jank::runtime
       return nullptr;
     }
 
-    auto const ret(expect_object<obj::vector>(found)->data[1]);
+    auto const ret(expect_object<obj::persistent_vector>(found)->data[1]);
     assert(ret);
     return expect_object<var_thread_binding>(ret);
   }

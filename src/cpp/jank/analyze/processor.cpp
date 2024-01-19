@@ -6,7 +6,7 @@
 
 #include <fmt/core.h>
 
-#include <jank/runtime/obj/vector.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/behavior/numberable.hpp>
 #include <jank/analyze/processor.hpp>
@@ -57,7 +57,7 @@ namespace jank::analyze
      * represents a ns, a single REPL expression, or an actual source fn. */
     runtime::detail::native_transient_vector fn;
     fn.push_back(make_box<runtime::obj::symbol>("fn*"));
-    fn.push_back(make_box<runtime::obj::vector>());
+    fn.push_back(make_box<runtime::obj::persistent_vector>());
     for(; parse_current != parse_end; ++parse_current)
     {
       if(parse_current->is_err())
@@ -210,12 +210,12 @@ namespace jank::analyze
   processor::analyze_fn_arity(runtime::obj::list_ptr const &list, local_frame_ptr &current_frame)
   {
     auto const params_obj(list->data.first().unwrap());
-    if(params_obj->type != runtime::object_type::vector)
+    if(params_obj->type != runtime::object_type::persistent_vector)
     {
       return err(error{ "invalid fn parameter vector" });
     }
 
-    auto const params(runtime::expect_object<runtime::obj::vector>(params_obj));
+    auto const params(runtime::expect_object<runtime::obj::persistent_vector>(params_obj));
 
     local_frame_ptr frame{
       make_box<local_frame>(local_frame::frame_type::fn, current_frame->rt_ctx, current_frame)
@@ -358,7 +358,7 @@ namespace jank::analyze
 
     native_vector<expr::function_arity<expression>> arities;
 
-    if(first_elem->type == runtime::object_type::vector)
+    if(first_elem->type == runtime::object_type::persistent_vector)
     {
       auto result(analyze_fn_arity(make_box<runtime::obj::list>(list->data.rest()), current_frame));
       if(result.is_err())
@@ -559,12 +559,12 @@ namespace jank::analyze
     }
 
     auto const bindings_obj(o->data.rest().first().unwrap());
-    if(bindings_obj->type != runtime::object_type::vector)
+    if(bindings_obj->type != runtime::object_type::persistent_vector)
     {
       return err(error{ "invalid let* bindings: must be a vector" });
     }
 
-    auto const bindings(runtime::expect_object<runtime::obj::vector>(bindings_obj));
+    auto const bindings(runtime::expect_object<runtime::obj::persistent_vector>(bindings_obj));
 
     auto const binding_parts(bindings->data.size());
     if(binding_parts % 2 == 1)
@@ -866,7 +866,7 @@ namespace jank::analyze
 
   /* TODO: Test for this. */
   processor::expression_result
-  processor::analyze_vector(runtime::obj::vector_ptr const &o,
+  processor::analyze_vector(runtime::obj::persistent_vector_ptr const &o,
                             local_frame_ptr &current_frame,
                             expression_type const expr_type,
                             option<expr::function_context_ptr> const &fn_ctx,
@@ -990,7 +990,7 @@ namespace jank::analyze
       {
         auto const arity_meta(
           runtime::get_in(var_deref->var->meta.unwrap(),
-                          make_box<runtime::obj::vector>(
+                          make_box<runtime::obj::persistent_vector>(
                             rt_ctx.intern_keyword("", "arities", true).expect_ok(),
                             /* NOTE: We don't support unboxed meta on variadic arities. */
                             make_box(arg_count))));
@@ -1079,7 +1079,7 @@ namespace jank::analyze
         {
           return analyze_call(typed_o, current_frame, expr_type, fn_ctx, needs_box);
         }
-        else if constexpr(std::same_as<T, runtime::obj::vector>)
+        else if constexpr(std::same_as<T, runtime::obj::persistent_vector>)
         {
           return analyze_vector(typed_o, current_frame, expr_type, fn_ctx, needs_box);
         }

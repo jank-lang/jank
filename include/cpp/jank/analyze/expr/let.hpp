@@ -24,12 +24,12 @@ namespace jank::analyze::expr
 
     runtime::object_ptr to_runtime_data() const
     {
-      runtime::object_ptr pair_maps(make_box<runtime::obj::vector>());
+      runtime::object_ptr pair_maps(make_box<runtime::obj::persistent_vector>());
       for(auto const &e : pairs)
       {
         pair_maps = runtime::conj(
           pair_maps,
-          make_box<runtime::obj::vector>(
+          make_box<runtime::obj::persistent_vector>(
             detail::to_runtime_data(frame->find_local_or_capture(e.first).unwrap().binding),
             e.second->to_runtime_data()));
       }

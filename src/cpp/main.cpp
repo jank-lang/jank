@@ -76,7 +76,7 @@ namespace jank
           extra_args.push_back(make_box<runtime::obj::persistent_string>(s));
         }
         runtime::apply_to(main_var->deref(),
-                          make_box<runtime::obj::vector>(extra_args.persistent()));
+                          make_box<runtime::obj::persistent_vector>(extra_args.persistent()));
       }
       else
       {

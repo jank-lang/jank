@@ -4,7 +4,7 @@
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
-#include <jank/runtime/obj/vector.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
 
 namespace jank::runtime
 {
@@ -33,7 +33,7 @@ namespace jank::runtime
     auto const res(data.find(key));
     if(res)
     {
-      return make_box<obj::vector>(key, res);
+      return make_box<obj::persistent_vector>(key, res);
     }
     return obj::nil::nil_const();
   }
@@ -66,13 +66,13 @@ namespace jank::runtime
 
   obj::persistent_array_map_ptr obj::persistent_array_map::cons(object_ptr const head) const
   {
-    if(head->type != object_type::vector)
+    if(head->type != object_type::persistent_vector)
     {
       throw std::runtime_error{ fmt::format("invalid map entry: {}",
                                             runtime::detail::to_string(head)) };
     }
 
-    auto const vec(expect_object<obj::vector>(head));
+    auto const vec(expect_object<obj::persistent_vector>(head));
     if(vec->count() != 2)
     {
       throw std::runtime_error{ fmt::format("invalid map entry: {}",

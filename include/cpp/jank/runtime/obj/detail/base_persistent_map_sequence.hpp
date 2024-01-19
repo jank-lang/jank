@@ -107,10 +107,10 @@ namespace jank::runtime::obj::detail
     }
 
     /* behavior::sequenceable */
-    obj::vector_ptr first() const
+    obj::persistent_vector_ptr first() const
     {
       auto const pair(*begin);
-      return make_box<obj::vector>(
+      return make_box<obj::persistent_vector>(
         runtime::detail::native_persistent_vector{ pair.first, pair.second });
     }
 
@@ -149,7 +149,7 @@ namespace jank::runtime::obj::detail
       }
 
       auto const pair(*begin);
-      return make_box<obj::vector>(
+      return make_box<obj::persistent_vector>(
         runtime::detail::native_persistent_vector{ pair.first, pair.second });
     }
 

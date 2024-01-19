@@ -2,7 +2,7 @@
 
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/ns.hpp>
-#include <jank/runtime/obj/vector.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/codegen/processor.hpp>
@@ -304,7 +304,7 @@ namespace jank::evaluate
     {
       ret.push_back(eval(rt_ctx, jit_prc, e));
     }
-    return make_box<runtime::obj::vector>(ret.persistent());
+    return make_box<runtime::obj::persistent_vector>(ret.persistent());
   }
 
   runtime::object_ptr eval(runtime::context &rt_ctx,

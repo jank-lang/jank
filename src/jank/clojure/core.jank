@@ -170,7 +170,7 @@
 ;; Vectors.
 (def vector?
   (fn* vector? [o]
-    (native/raw "__value = make_box(#{ o }#->type == object_type::vector);")))
+    (native/raw "__value = make_box(#{ o }#->type == object_type::persistent_vector);")))
 
 (def vec
   (fn* vec [coll]
@@ -181,7 +181,7 @@
                      using T = typename decltype(typed_coll)::value_type;
 
                      if constexpr(behavior::seqable<T>)
-                     { return jank::runtime::obj::vector::create(typed_coll); }
+                     { return jank::runtime::obj::persistent_vector::create(typed_coll); }
                      else
                      { throw #{ (ex-info :invalid-seq {:coll coll}) }#; }
                    },

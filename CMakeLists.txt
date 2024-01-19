@@ -166,7 +166,7 @@ add_library(
   src/cpp/jank/runtime/obj/symbol.cpp
   src/cpp/jank/runtime/obj/keyword.cpp
   src/cpp/jank/runtime/obj/list.cpp
-  src/cpp/jank/runtime/obj/vector.cpp
+  src/cpp/jank/runtime/obj/persistent_vector.cpp
   src/cpp/jank/runtime/obj/persistent_vector_sequence.cpp
   src/cpp/jank/runtime/obj/persistent_array_map.cpp
   src/cpp/jank/runtime/obj/persistent_hash_map.cpp

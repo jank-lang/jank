@@ -22,7 +22,7 @@ namespace jank::analyze::expr
 
     runtime::object_ptr to_runtime_data() const
     {
-      runtime::object_ptr chunk_maps(make_box<runtime::obj::vector>());
+      runtime::object_ptr chunk_maps(make_box<runtime::obj::persistent_vector>());
       for(auto const &e : chunks)
       {
         chunk_maps = runtime::conj(chunk_maps,
