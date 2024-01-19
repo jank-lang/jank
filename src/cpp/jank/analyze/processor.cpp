@@ -66,12 +66,12 @@ namespace jank::analyze
       }
       fn.push_back(parse_current->expect_ok());
     }
-    auto fn_list(make_box<runtime::obj::list>(fn.rbegin(), fn.rend()));
+    auto fn_list(make_box<runtime::obj::persistent_list>(fn.rbegin(), fn.rend()));
     return analyze(fn_list, expression_type::expression);
   }
 
   processor::expression_result
-  processor::analyze_def(runtime::obj::list_ptr const &l,
+  processor::analyze_def(runtime::obj::persistent_list_ptr const &l,
                          local_frame_ptr &current_frame,
                          expression_type const expr_type,
                          option<expr::function_context_ptr> const &fn_ctx,
@@ -207,7 +207,7 @@ namespace jank::analyze
   }
 
   result<expr::function_arity<expression>, error>
-  processor::analyze_fn_arity(runtime::obj::list_ptr const &list, local_frame_ptr &current_frame)
+  processor::analyze_fn_arity(runtime::obj::persistent_list_ptr const &list, local_frame_ptr &current_frame)
   {
     auto const params_obj(list->data.first().unwrap());
     if(params_obj->type != runtime::object_type::persistent_vector)
@@ -325,7 +325,7 @@ namespace jank::analyze
     };
   }
 
-  processor::expression_result processor::analyze_fn(runtime::obj::list_ptr const &full_list,
+  processor::expression_result processor::analyze_fn(runtime::obj::persistent_list_ptr const &full_list,
                                                      local_frame_ptr &current_frame,
                                                      expression_type const expr_type,
                                                      option<expr::function_context_ptr> const &,
@@ -360,23 +360,23 @@ namespace jank::analyze
 
     if(first_elem->type == runtime::object_type::persistent_vector)
     {
-      auto result(analyze_fn_arity(make_box<runtime::obj::list>(list->data.rest()), current_frame));
+      auto result(analyze_fn_arity(make_box<runtime::obj::persistent_list>(list->data.rest()), current_frame));
       if(result.is_err())
       {
         return result.expect_err_move();
       }
       arities.emplace_back(result.expect_ok_move());
     }
-    else if(first_elem->type == runtime::object_type::list)
+    else if(first_elem->type == runtime::object_type::persistent_list)
     {
       for(auto it(list->data.rest()); it.size() > 0; it = it.rest())
       {
         auto arity_list_obj(it.first().unwrap());
-        if(arity_list_obj->type != runtime::object_type::list)
+        if(arity_list_obj->type != runtime::object_type::persistent_list)
         {
           return err(error{ "invalid fn: expected arity list" });
         }
-        auto arity_list(runtime::expect_object<runtime::obj::list>(arity_list_obj));
+        auto arity_list(runtime::expect_object<runtime::obj::persistent_list>(arity_list_obj));
 
         auto result(analyze_fn_arity(arity_list.data, current_frame));
         if(result.is_err())
@@ -462,7 +462,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_recur(runtime::obj::list_ptr const &list,
+  processor::analyze_recur(runtime::obj::persistent_list_ptr const &list,
                            local_frame_ptr &current_frame,
                            expression_type const expr_type,
                            option<expr::function_context_ptr> const &fn_ctx,
@@ -503,13 +503,13 @@ namespace jank::analyze
 
     return make_box<expression>(expr::recur<expression>{
       expression_base{{}, expr_type, current_frame},
-      jank::make_box<runtime::obj::list>(list->data.rest()),
+      jank::make_box<runtime::obj::persistent_list>(list->data.rest()),
       arg_exprs
     });
   }
 
   processor::expression_result
-  processor::analyze_do(runtime::obj::list_ptr const &list,
+  processor::analyze_do(runtime::obj::persistent_list_ptr const &list,
                         local_frame_ptr &current_frame,
                         expression_type const expr_type,
                         option<expr::function_context_ptr> const &fn_ctx,
@@ -547,7 +547,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_let(runtime::obj::list_ptr const &o,
+  processor::analyze_let(runtime::obj::persistent_list_ptr const &o,
                          local_frame_ptr &current_frame,
                          expression_type const expr_type,
                          option<expr::function_context_ptr> const &fn_ctx,
@@ -631,7 +631,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_if(runtime::obj::list_ptr const &o,
+  processor::analyze_if(runtime::obj::persistent_list_ptr const &o,
                         local_frame_ptr &current_frame,
                         expression_type const expr_type,
                         option<expr::function_context_ptr> const &fn_ctx,
@@ -688,7 +688,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_quote(runtime::obj::list_ptr const &o,
+  processor::analyze_quote(runtime::obj::persistent_list_ptr const &o,
                            local_frame_ptr &current_frame,
                            expression_type const expr_type,
                            option<expr::function_context_ptr> const &fn_ctx,
@@ -706,7 +706,7 @@ namespace jank::analyze
                                      needs_box);
   }
 
-  processor::expression_result processor::analyze_var(runtime::obj::list_ptr const &o,
+  processor::expression_result processor::analyze_var(runtime::obj::persistent_list_ptr const &o,
                                                       local_frame_ptr &current_frame,
                                                       expression_type const expr_type,
                                                       option<expr::function_context_ptr> const &,
@@ -740,7 +740,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_throw(runtime::obj::list_ptr const &o,
+  processor::analyze_throw(runtime::obj::persistent_list_ptr const &o,
                            local_frame_ptr &current_frame,
                            expression_type const expr_type,
                            option<expr::function_context_ptr> const &fn_ctx,
@@ -765,7 +765,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_native_raw(runtime::obj::list_ptr const &o,
+  processor::analyze_native_raw(runtime::obj::persistent_list_ptr const &o,
                                 local_frame_ptr &current_frame,
                                 expression_type const expr_type,
                                 option<expr::function_context_ptr> const &fn_ctx,
@@ -938,7 +938,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_call(runtime::obj::list_ptr const &o,
+  processor::analyze_call(runtime::obj::persistent_list_ptr const &o,
                           local_frame_ptr &current_frame,
                           expression_type const expr_type,
                           option<expr::function_context_ptr> const &fn_ctx,
@@ -1049,7 +1049,7 @@ namespace jank::analyze
     return make_box<expression>(expr::call<expression>{
       expression_base{{}, expr_type, current_frame, needs_ret_box},
       source,
-      jank::make_box<runtime::obj::list>(o->data.rest()),
+      jank::make_box<runtime::obj::persistent_list>(o->data.rest()),
       arg_exprs
     });
   }
@@ -1075,7 +1075,7 @@ namespace jank::analyze
       [&](auto const typed_o) -> processor::expression_result {
         using T = typename decltype(typed_o)::value_type;
 
-        if constexpr(std::same_as<T, runtime::obj::list>)
+        if constexpr(std::same_as<T, runtime::obj::persistent_list>)
         {
           return analyze_call(typed_o, current_frame, expr_type, fn_ctx, needs_box);
         }
@@ -1106,7 +1106,7 @@ namespace jank::analyze
          * and not just lists. */
         if constexpr(runtime::behavior::seqable<T>)
         {
-          return analyze_call(runtime::obj::list::create(typed_o->seq()),
+          return analyze_call(runtime::obj::persistent_list::create(typed_o->seq()),
                               current_frame,
                               expr_type,
                               fn_ctx,

@@ -149,7 +149,7 @@
 (def list?
   (fn* list? [o]
     ; TODO: Visit and use a behavior for this check instead. It should apply to conses and others.
-    (native/raw "__value = make_box(#{ o }#->type == object_type::list);")))
+    (native/raw "__value = make_box(#{ o }#->type == object_type::persistent_list);")))
 
 (def list
   (fn* list [& items]
@@ -160,7 +160,7 @@
                      using T = typename decltype(typed_items)::value_type;
 
                      if constexpr(behavior::seqable<T>)
-                     { return jank::runtime::obj::list::create(typed_items); }
+                     { return jank::runtime::obj::persistent_list::create(typed_items); }
                      else
                      { throw #{ (ex-info :invalid-seq {:items items}) }#; }
                    },

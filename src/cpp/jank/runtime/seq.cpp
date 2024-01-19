@@ -237,7 +237,7 @@ namespace jank::runtime
 
         if constexpr(std::same_as<T, obj::nil>)
         {
-          return make_box<obj::list>(o);
+          return make_box<obj::persistent_list>(o);
         }
         else if constexpr(behavior::consable<T>)
         {

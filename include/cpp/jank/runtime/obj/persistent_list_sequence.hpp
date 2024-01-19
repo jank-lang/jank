@@ -8,7 +8,7 @@ namespace jank::runtime
 {
   namespace obj
   {
-    using list = static_object<object_type::list>;
+    using list = static_object<object_type::persistent_list>;
     using list_ptr = native_box<list>;
   }
 

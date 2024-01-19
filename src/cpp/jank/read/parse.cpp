@@ -5,7 +5,7 @@
 
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
-#include <jank/runtime/obj/list.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/set.hpp>
 #include <jank/runtime/obj/symbol.hpp>
@@ -199,7 +199,7 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
-    return make_box<runtime::obj::list>(ret.rbegin(), ret.rend());
+    return make_box<runtime::obj::persistent_list>(ret.rbegin(), ret.rend());
   }
 
   processor::object_result processor::parse_vector()
@@ -283,7 +283,7 @@ namespace jank::read::parse
       return err(error{ start_token.pos, native_persistent_string{ "invalid value after quote" } });
     }
 
-    return runtime::erase(make_box<runtime::obj::list>(make_box<runtime::obj::symbol>("quote"),
+    return runtime::erase(make_box<runtime::obj::persistent_list>(make_box<runtime::obj::symbol>("quote"),
                                                        val_result.expect_ok_move()));
   }
 

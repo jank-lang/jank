@@ -240,7 +240,7 @@ namespace jank::evaluate
                                              arg_vals[7],
                                              arg_vals[8],
                                              arg_vals[9],
-                                             make_box<runtime::obj::list>(all));
+                                             make_box<runtime::obj::persistent_list>(all));
               }
           }
         }

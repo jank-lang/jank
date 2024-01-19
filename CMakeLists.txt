@@ -165,7 +165,7 @@ add_library(
   src/cpp/jank/runtime/obj/jit_function.cpp
   src/cpp/jank/runtime/obj/symbol.cpp
   src/cpp/jank/runtime/obj/keyword.cpp
-  src/cpp/jank/runtime/obj/list.cpp
+  src/cpp/jank/runtime/obj/persistent_list.cpp
   src/cpp/jank/runtime/obj/persistent_vector.cpp
   src/cpp/jank/runtime/obj/persistent_vector_sequence.cpp
   src/cpp/jank/runtime/obj/persistent_array_map.cpp

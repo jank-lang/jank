@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include <jank/runtime/obj/list.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/analyze/expression_base.hpp>
 #include <jank/runtime/seq.hpp>
 
@@ -11,7 +11,7 @@ namespace jank::analyze::expr
   template <typename E>
   struct recur : expression_base
   {
-    runtime::obj::list_ptr args{};
+    runtime::obj::persistent_list_ptr args{};
     native_vector<native_box<E>> arg_exprs;
 
     runtime::object_ptr to_runtime_data() const

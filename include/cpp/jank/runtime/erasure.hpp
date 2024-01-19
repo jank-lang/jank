@@ -10,7 +10,7 @@
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
-#include <jank/runtime/obj/list.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/set.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/persistent_array_map_sequence.hpp>
@@ -146,9 +146,9 @@ namespace jank::runtime
           return fn(expect_object<obj::persistent_vector>(erased), std::forward<Args>(args)...);
         }
         break;
-      case object_type::list:
+      case object_type::persistent_list:
         {
-          return fn(expect_object<obj::list>(erased), std::forward<Args>(args)...);
+          return fn(expect_object<obj::persistent_list>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::persistent_array_map:

@@ -5,7 +5,7 @@
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/symbol.hpp>
-#include <jank/runtime/obj/list.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/analyze/local_frame.hpp>
@@ -39,12 +39,12 @@ namespace jank::analyze
                               expression_type,
                               option<expr::function_context_ptr> const &,
                               native_bool needs_box);
-    expression_result analyze_call(runtime::obj::list_ptr const &,
+    expression_result analyze_call(runtime::obj::persistent_list_ptr const &,
                                    local_frame_ptr &,
                                    expression_type,
                                    option<expr::function_context_ptr> const &,
                                    native_bool needs_box);
-    expression_result analyze_def(runtime::obj::list_ptr const &,
+    expression_result analyze_def(runtime::obj::persistent_list_ptr const &,
                                   local_frame_ptr &,
                                   expression_type,
                                   option<expr::function_context_ptr> const &,
@@ -54,49 +54,49 @@ namespace jank::analyze
                                      expression_type,
                                      option<expr::function_context_ptr> const &,
                                      native_bool needs_box);
-    expression_result analyze_fn(runtime::obj::list_ptr const &,
+    expression_result analyze_fn(runtime::obj::persistent_list_ptr const &,
                                  local_frame_ptr &,
                                  expression_type,
                                  option<expr::function_context_ptr> const &,
                                  native_bool needs_box);
-    expression_result analyze_recur(runtime::obj::list_ptr const &,
+    expression_result analyze_recur(runtime::obj::persistent_list_ptr const &,
                                     local_frame_ptr &,
                                     expression_type,
                                     option<expr::function_context_ptr> const &,
                                     native_bool needs_box);
-    expression_result analyze_do(runtime::obj::list_ptr const &,
+    expression_result analyze_do(runtime::obj::persistent_list_ptr const &,
                                  local_frame_ptr &,
                                  expression_type,
                                  option<expr::function_context_ptr> const &,
                                  native_bool needs_box);
     jank::result<expr::function_arity<expression>, error>
-    analyze_fn_arity(runtime::obj::list_ptr const &, local_frame_ptr &);
-    expression_result analyze_let(runtime::obj::list_ptr const &,
+    analyze_fn_arity(runtime::obj::persistent_list_ptr const &, local_frame_ptr &);
+    expression_result analyze_let(runtime::obj::persistent_list_ptr const &,
                                   local_frame_ptr &,
                                   expression_type,
                                   option<expr::function_context_ptr> const &,
                                   native_bool needs_box);
-    expression_result analyze_if(runtime::obj::list_ptr const &,
+    expression_result analyze_if(runtime::obj::persistent_list_ptr const &,
                                  local_frame_ptr &,
                                  expression_type,
                                  option<expr::function_context_ptr> const &,
                                  native_bool needs_box);
-    expression_result analyze_quote(runtime::obj::list_ptr const &,
+    expression_result analyze_quote(runtime::obj::persistent_list_ptr const &,
                                     local_frame_ptr &,
                                     expression_type,
                                     option<expr::function_context_ptr> const &,
                                     native_bool needs_box);
-    expression_result analyze_var(runtime::obj::list_ptr const &,
+    expression_result analyze_var(runtime::obj::persistent_list_ptr const &,
                                   local_frame_ptr &,
                                   expression_type,
                                   option<expr::function_context_ptr> const &,
                                   native_bool needs_box);
-    expression_result analyze_throw(runtime::obj::list_ptr const &,
+    expression_result analyze_throw(runtime::obj::persistent_list_ptr const &,
                                     local_frame_ptr &,
                                     expression_type,
                                     option<expr::function_context_ptr> const &,
                                     native_bool needs_box);
-    expression_result analyze_native_raw(runtime::obj::list_ptr const &,
+    expression_result analyze_native_raw(runtime::obj::persistent_list_ptr const &,
                                          local_frame_ptr &,
                                          expression_type,
                                          option<expr::function_context_ptr> const &,
@@ -118,7 +118,7 @@ namespace jank::analyze
                                   native_bool needs_box);
 
     using special_function_type
-      = std::function<expression_result(runtime::obj::list_ptr const &,
+      = std::function<expression_result(runtime::obj::persistent_list_ptr const &,
                                         local_frame_ptr &,
                                         expression_type,
                                         option<expr::function_context_ptr> const &,

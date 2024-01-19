@@ -12,7 +12,7 @@
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
-#include <jank/runtime/obj/list.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/detail/object_util.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
@@ -196,7 +196,7 @@ namespace jank::read::parse
             runtime::detail::equal
             (
               r.expect_ok(),
-              make_box<runtime::obj::list>
+              make_box<runtime::obj::persistent_list>
               (
                 make_box<runtime::obj::symbol>("quote"),
                 make_box<runtime::obj::symbol>(s.first, s.second)
@@ -283,7 +283,7 @@ namespace jank::read::parse
           auto const r(p.next());
           CHECK(r.is_ok());
           CHECK(r.expect_ok() != nullptr);
-          CHECK(runtime::detail::equal(r.expect_ok(), make_box<runtime::obj::list>()));
+          CHECK(runtime::detail::equal(r.expect_ok(), make_box<runtime::obj::persistent_list>()));
         }
       }
 
@@ -301,7 +301,7 @@ namespace jank::read::parse
             runtime::detail::equal
             (
               r.expect_ok(),
-              make_box<runtime::obj::list>
+              make_box<runtime::obj::persistent_list>
               (
                 make_box<runtime::obj::integer>(1 * i),
                 make_box<runtime::obj::integer>(2 * i),
@@ -325,7 +325,7 @@ namespace jank::read::parse
           runtime::detail::equal
           (
             r1.expect_ok(),
-            make_box<runtime::obj::list>
+            make_box<runtime::obj::persistent_list>
             (
               make_box<runtime::obj::symbol>("def"),
               make_box<runtime::obj::symbol>("foo-bar"),

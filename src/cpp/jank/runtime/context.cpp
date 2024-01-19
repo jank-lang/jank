@@ -506,7 +506,7 @@ namespace jank::runtime
       [this](auto const typed_o) -> object_ptr {
         using T = typename decltype(typed_o)::value_type;
 
-        if constexpr(!std::same_as<T, obj::list>)
+        if constexpr(!std::same_as<T, obj::persistent_list>)
         {
           return typed_o;
         }
@@ -538,7 +538,7 @@ namespace jank::runtime
           }
 
           auto const args(
-            make_box<obj::list>(typed_o->data.rest().cons(obj::nil::nil_const()).cons(typed_o)));
+            make_box<obj::persistent_list>(typed_o->data.rest().cons(obj::nil::nil_const()).cons(typed_o)));
           return apply_to(var.unwrap()->deref(), args);
         }
       },

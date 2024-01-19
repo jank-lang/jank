@@ -29,7 +29,7 @@ namespace jank
     using integer = static_object<object_type::integer>;
     using real = static_object<object_type::real>;
     using persistent_string = static_object<object_type::persistent_string>;
-    using list = static_object<object_type::list>;
+    using persistent_list = static_object<object_type::persistent_list>;
     using symbol = static_object<object_type::symbol>;
   }
 
@@ -86,7 +86,7 @@ namespace jank
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(runtime::detail::native_persistent_list const &l)
   {
-    return make_box<runtime::obj::list>(l);
+    return make_box<runtime::obj::persistent_list>(l);
   }
 
   template <typename T>

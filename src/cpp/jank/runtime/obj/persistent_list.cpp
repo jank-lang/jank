@@ -3,29 +3,29 @@
 
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
-#include <jank/runtime/obj/list.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
 
 namespace jank::runtime
 {
-  obj::list::static_object(runtime::detail::native_persistent_list &&d)
+  obj::persistent_list::static_object(runtime::detail::native_persistent_list &&d)
     : data{ std::move(d) }
   {
   }
 
-  obj::list::static_object(runtime::detail::native_persistent_list const &d)
+  obj::persistent_list::static_object(runtime::detail::native_persistent_list const &d)
     : data{ d }
   {
   }
 
-  obj::list_ptr obj::list::create(object_ptr const s)
+  obj::persistent_list_ptr obj::persistent_list::create(object_ptr const s)
   {
     if(s == nullptr)
     {
-      return make_box<obj::list>();
+      return make_box<obj::persistent_list>();
     }
 
     return visit_object(
-      [](auto const typed_s) -> obj::list_ptr {
+      [](auto const typed_s) -> obj::persistent_list_ptr {
         using T = typename decltype(typed_s)::value_type;
 
         if constexpr(behavior::sequenceable<T>)
@@ -35,7 +35,7 @@ namespace jank::runtime
           {
             v.emplace_back(i->first());
           }
-          return make_box<obj::list>(
+          return make_box<obj::persistent_list>(
             runtime::detail::native_persistent_list{ v.rbegin(), v.rend() });
         }
         else
@@ -46,17 +46,17 @@ namespace jank::runtime
       s);
   }
 
-  native_bool obj::list::equal(object const &o) const
+  native_bool obj::persistent_list::equal(object const &o) const
   {
     return detail::equal(o, data.begin(), data.end());
   }
 
-  void obj::list::to_string(fmt::memory_buffer &buff) const
+  void obj::persistent_list::to_string(fmt::memory_buffer &buff) const
   {
     return behavior::detail::to_string(data.begin(), data.end(), "(", ')', buff);
   }
 
-  native_persistent_string obj::list::to_string() const
+  native_persistent_string obj::persistent_list::to_string() const
   {
     fmt::memory_buffer buff;
     behavior::detail::to_string(data.begin(), data.end(), "(", ')', buff);
@@ -64,12 +64,12 @@ namespace jank::runtime
   }
 
   /* TODO: Cache this. */
-  native_hash obj::list::to_hash() const
+  native_hash obj::persistent_list::to_hash() const
   {
     return hash::ordered(data.begin(), data.end());
   }
 
-  obj::persistent_list_sequence_ptr obj::list::seq() const
+  obj::persistent_list_sequence_ptr obj::persistent_list::seq() const
   {
     if(data.size() == 0)
     {
@@ -78,7 +78,7 @@ namespace jank::runtime
     return make_box<obj::persistent_list_sequence>(this, data.begin(), data.end(), data.size());
   }
 
-  obj::persistent_list_sequence_ptr obj::list::fresh_seq() const
+  obj::persistent_list_sequence_ptr obj::persistent_list::fresh_seq() const
   {
     if(data.size() == 0)
     {
@@ -87,22 +87,22 @@ namespace jank::runtime
     return make_box<obj::persistent_list_sequence>(this, data.begin(), data.end(), data.size());
   }
 
-  size_t obj::list::count() const
+  size_t obj::persistent_list::count() const
   {
     return data.size();
   }
 
-  obj::list_ptr obj::list::cons(object_ptr head) const
+  obj::persistent_list_ptr obj::persistent_list::cons(object_ptr head) const
   {
     auto l(data.cons(head));
-    auto ret(make_box<obj::list>(std::move(l)));
+    auto ret(make_box<obj::persistent_list>(std::move(l)));
     return ret;
   }
 
-  object_ptr obj::list::with_meta(object_ptr m) const
+  object_ptr obj::persistent_list::with_meta(object_ptr m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(make_box<obj::list>(data));
+    auto ret(make_box<obj::persistent_list>(data));
     ret->meta = meta;
     return ret;
   }

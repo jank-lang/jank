@@ -7,7 +7,7 @@
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/native_array_sequence.hpp>
 #include <jank/runtime/obj/native_vector_sequence.hpp>
-#include <jank/runtime/obj/list.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/seq.hpp>
 #include <jank/util/make_array.hpp>
 
@@ -654,7 +654,7 @@ namespace jank::runtime
                           object_ptr const a8,
                           object_ptr const a9,
                           object_ptr const a10,
-                          obj::list_ptr const rest)
+                          obj::persistent_list_ptr const rest)
   {
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
@@ -904,7 +904,7 @@ namespace jank::runtime
                                   s->next_in_place_first(),
                                   s->next_in_place_first(),
                                   s->next_in_place_first(),
-                                  obj::list::create(s->next_in_place()));
+                                  obj::persistent_list::create(s->next_in_place()));
           }
         }
         else

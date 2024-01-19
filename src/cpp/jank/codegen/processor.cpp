@@ -99,9 +99,9 @@ namespace jank::codegen
           {
             return "jank::runtime::obj::persistent_string_ptr";
           }
-        case jank::runtime::object_type::list:
+        case jank::runtime::object_type::persistent_list:
           {
-            return "jank::runtime::obj::list_ptr";
+            return "jank::runtime::obj::persistent_list_ptr";
           }
         case jank::runtime::object_type::persistent_vector:
           {
@@ -198,9 +198,9 @@ namespace jank::codegen
             }
             fmt::format_to(inserter, ")");
           }
-          else if constexpr(std::same_as<T, runtime::obj::list>)
+          else if constexpr(std::same_as<T, runtime::obj::persistent_list>)
           {
-            fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::list>(");
+            fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::persistent_list>(");
             native_bool need_comma{};
             for(auto const &form : typed_o->data)
             {
@@ -216,7 +216,7 @@ namespace jank::codegen
           /* Cons, etc. */
           //else if constexpr(runtime::behavior::seqable<T>)
           //{
-          //  fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::list>(");
+          //  fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::persistent_list>(");
           //  native_bool need_comma{};
           //  for(auto it(typed_o->fresh_seq()); it != nullptr; it = it->next_in_place())
           //  {
@@ -518,7 +518,7 @@ namespace jank::codegen
 
     if(runtime::max_params < arg_tmps.size())
     {
-      fmt::format_to(inserter, ", jank::make_box<jank::runtime::obj::list>(");
+      fmt::format_to(inserter, ", jank::make_box<jank::runtime::obj::persistent_list>(");
       native_bool comma{};
       for(size_t i{ runtime::max_params }; i < arg_tmps.size(); ++i)
       {

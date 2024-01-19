@@ -9,7 +9,7 @@ namespace jank::runtime
   object_ptr seq(object_ptr s);
 
   template <>
-  struct static_object<object_type::list> : gc
+  struct static_object<object_type::persistent_list> : gc
   {
     using value_type = runtime::detail::native_persistent_list;
 
@@ -54,14 +54,14 @@ namespace jank::runtime
     /* behavior::consable */
     native_box<static_object> cons(object_ptr head) const;
 
-    object base{ object_type::list };
+    object base{ object_type::persistent_list };
     value_type data;
     option<object_ptr> meta;
   };
 
   namespace obj
   {
-    using list = static_object<object_type::list>;
-    using list_ptr = native_box<list>;
+    using persistent_list = static_object<object_type::persistent_list>;
+    using persistent_list_ptr = native_box<persistent_list>;
   }
 }
