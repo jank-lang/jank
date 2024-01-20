@@ -610,6 +610,20 @@
        r
        (recur r (first zs) (rest zs))))))
 
+; Returns a lazy sequence consisting of the result of applying f to
+; the set of first items of each coll, followed by applying f to the
+; set of second items in each coll, until any one of the colls is
+; exhausted.  Any remaining items in other colls are ignored. Function
+; f should accept number-of-colls arguments. Returns a transducer when
+; no collection is provided.
+(defn map
+  ; TODO: Laziness; other arities.
+  ([f coll]
+   (reduce* (fn [acc e]
+              (conj acc (f e)))
+            []
+            coll)))
+
 ; Creates a new vector containing the args.
 (defn vector
   ([]
@@ -721,8 +735,17 @@
            {}
            ks))
 
-; Sets.
+; Returns a map with the keys mapped to the corresponding vals.
+(defn zipmap [keys vals]
+  ; TODO: Loop
+  (let [f (fn [acc ks vs]
+            (if (and ks vs)
+              (recur (assoc acc (first ks) (first vs)) (next ks) (next vs))
+              acc))]
+    ; TODO: Transient
+    (f {} (seq keys) (seq vals))))
 
+;; Sets.
 (defn set? [o]
   (native/raw "__value = make_box(#{ o }#->type == object_type::persistent_set);"))
 
@@ -1055,7 +1078,37 @@
 (reset-meta! (var rand) {:arities {0 {:supports-unboxed-input? true
                                       :unboxed-output? true}}})
 
-; Vars.
+;; Sequences.
+; Returns a lazy sequence of all but the first n items in coll.
+; Returns a stateful transducer when no collection is provided.
+(defn drop
+  ; TODO: transducer
+  ([n coll]
+   (let [step (fn [n acc]
+                (let [s (seq acc)]
+                  (if (and (pos? n) s)
+                    (recur (dec n) (rest s))
+                    acc)))]
+     (step n coll))))
+
+; Returns a lazy seq of every nth item in coll.  Returns a stateful
+; transducer when no collection is provided.
+(defn take-nth
+  ; TODO: transducer
+  ([n coll]
+   ; TODO: lazy-seq
+   (let [f (fn [acc coll]
+             (if (seq coll)
+               (let [remaining (drop n coll)]
+                 (if (seq remaining)
+                   (recur (conj acc (first remaining)) remaining)
+                   acc))
+               acc))]
+     (if (seq coll)
+       (f [(first coll)] (rest coll))
+       '()))))
+
+;; Vars.
 (defn var? [o]
   (native/raw "__value = make_box(#{ o }#->type == object_type::var)"))
 
@@ -1123,7 +1176,7 @@
                       (let [vvs (seq var-vals)]
                         (if vvs
                           (recur (nnext vvs)
-                                 (conj (conj ret (list 'clojure.core/var (first vvs))) (second vvs)))
+                                 (conj (conj ret (list 'var (first vvs))) (second vvs)))
                           (seq ret))))]
     (list* 'clojure.core/let []
            (list 'clojure.core/push-thread-bindings
@@ -1132,6 +1185,43 @@
            (list (cons 'do body)
                  (list 'clojure.core/pop-thread-bindings)))))
 
+; Temporarily redefines Vars during a call to func.  Each val of
+; binding-map will replace the root value of its key which must be
+; a Var.  After func is called with no args, the root values of all
+; the Vars will be set back to their old values.  These temporary
+; changes will be visible in all threads.  Useful for mocking out
+; functions during testing.
+(defn with-redefs-fn [binding-map fun]
+  (let [root-bind (fn [m]
+                    (doseq [kv m]
+                      (native/raw "expect_object<runtime::var>(#{ (first kv) }#)->bind_root(#{ (second kv) }#);")))
+        old-vals (zipmap (keys binding-map)
+                         (map (fn [v]
+                                (native/raw "__value = expect_object<runtime::var>(#{ v }#)->get_root();"))
+                              (keys binding-map)))]
+    ; TODO: try/finally
+    (do ;try
+      (root-bind binding-map)
+      (fun)
+      (do ;finally
+        (root-bind old-vals)))))
+
+; binding => var-symbol temp-value-expr
+;
+; Temporarily redefines Vars while executing the body.  The
+; temp-value-exprs will be evaluated and each resulting value will
+; replace in parallel the root value of its Var.  After the body is
+; executed, the root values of all the Vars will be set back to their
+; old values.  These temporary changes will be visible in all threads.
+; Useful for mocking out functions during testing.
+(defmacro with-redefs [bindings & body]
+  (list 'clojure.core/with-redefs-fn
+        (zipmap (map (fn [v]
+                       (list 'var v))
+                     (take-nth 2 bindings))
+                (take-nth 2 (next bindings)))
+        (list* 'clojure.core/fn []
+               body)))
 
 ;; Keywords.
 (defn keyword? [o]
@@ -1260,20 +1350,6 @@
                      acc
                      (recur (dec n) (next coll) (conj acc (first coll))))))]
      (take* n coll []))))
-
-; Returns a lazy sequence consisting of the result of applying f to
-; the set of first items of each coll, followed by applying f to the
-; set of second items in each coll, until any one of the colls is
-; exhausted.  Any remaining items in other colls are ignored. Function
-; f should accept number-of-colls arguments. Returns a transducer when
-; no collection is provided.
-(defn map
-  ; TODO: Laziness; other arities.
-  ([f coll]
-   (reduce* (fn [acc e]
-              (conj acc (f e)))
-            []
-            coll)))
 
 ; Returns a vector consisting of the result of applying f to the
 ; set of first items of each coll, followed by applying f to the set
@@ -1423,7 +1499,7 @@
 
 (defn var-get [v]
   (assert (var? v))
-  (native/raw "__value = expect_object<var>(#{ v }#)->deref();"))
+  (native/raw "__value = expect_object<runtime::var>(#{ v }#)->deref();"))
 
 ; Namespaces (again).
 (defn create-ns [sym]
@@ -1522,7 +1598,7 @@
                    (native/raw "expect_object<runtime::ns>(#{ *ns* }#)->refer
                                 (
                                   expect_object<obj::symbol>(#{ sym }#),
-                                  expect_object<var>(#{ v }#)
+                                  expect_object<runtime::var>(#{ v }#)
                                 ).expect_ok();"))))
              nil
              to-refer)))
