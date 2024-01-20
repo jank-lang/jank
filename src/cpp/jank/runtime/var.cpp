@@ -84,12 +84,7 @@ namespace jank::runtime
   object_ptr var::get_root() const
   {
     profile::timer timer{ "var get_root" };
-    if(!thread_bound.load())
-    {
-      return *root.rlock();
-    }
-
-    return deref();
+    return *root.rlock();
   }
 
   var_ptr var::bind_root(object_ptr const r)
