@@ -725,7 +725,7 @@ namespace jank::analyze
 
     auto const arg_sym(runtime::expect_object<runtime::obj::symbol>(arg));
 
-    auto const qualified_sym(rt_ctx.qualify_symbol(arg_sym));
+    auto const qualified_sym(current_frame->lift_var(arg_sym));
     auto const found_var(rt_ctx.find_var(qualified_sym));
     if(found_var.is_none())
     {
