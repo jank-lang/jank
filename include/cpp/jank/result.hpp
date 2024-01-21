@@ -1,8 +1,5 @@
 #pragma once
 
-#include <iostream>
-#include <cstdlib> // std::abort
-
 #include <boost/variant.hpp>
 
 #include <jank/option.hpp>
@@ -109,9 +106,7 @@ namespace jank
         return;
       }
 
-      auto const &err(expect_err());
-      std::cout << "error: expected ok result, but found: " << err << std::endl;
-      throw err;
+      throw expect_err();
     }
 
     constexpr R const &expect_ok() const
@@ -182,7 +177,7 @@ namespace jank
       if(!is_ok())
       /* TODO: Panic function. */
       {
-        std::abort();
+        throw expect_err();
       }
       return std::move(boost::get<R>(data));
     }
@@ -265,9 +260,7 @@ namespace jank
         return;
       }
 
-      auto const &err(expect_err());
-      std::cout << "error: expected ok result, but found: " << err << std::endl;
-      throw err;
+      throw expect_err();
     }
 
     constexpr void expect_ok() const

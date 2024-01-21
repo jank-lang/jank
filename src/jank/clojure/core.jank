@@ -1120,18 +1120,17 @@
               ; TODO: No need for ex-info, if we had a simpler exception type
               (list 'throw (list 'clojure.core/ex-info
                                  (list 'clojure.core/str
-                                       ;'&form
+                                       '&form
                                        " requires "
                                        (second pairs)
                                        " in "
-                                       ;*ns*
+                                       'clojure.core/*ns*
                                        ":"
                                        (:line (meta '&form)))
-                                 {:pairs (list 'quote pairs)})))
+                                 {})))
         (let [more (next (next pairs))]
           (when more
             (list* 'clojure.core/assert-macro-args more)))))
-
 
 ; WARNING: This is a low-level function. Prefer high-level macros like
 ; binding where ever possible.
@@ -1166,11 +1165,9 @@
 ; are made in parallel (unlike let); all init-exprs are evaluated
 ; before the vars are bound to their new values.
 (defmacro binding [bindings & body]
-  ; TODO: Sort out the macro-in-macro bug.
-  ;(assert-macro-args
-  ;  ;(vector? bindings) "a vector for its binding"
-  ;  ;(even? (count bindings)) "an even number of forms in binding vector"
-  ;  )
+  (assert-macro-args
+    (vector? bindings) "a vector for its binding"
+    (even? (count bindings)) "an even number of forms in binding vector")
   (let [->var-pairs (fn [var-vals ret]
                       ; TODO: loop
                       (let [vvs (seq var-vals)]

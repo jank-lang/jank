@@ -214,21 +214,21 @@ namespace jank::codegen
             fmt::format_to(inserter, ")");
           }
           /* Cons, etc. */
-          //else if constexpr(runtime::behavior::seqable<T>)
-          //{
-          //  fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::persistent_list>(");
-          //  native_bool need_comma{};
-          //  for(auto it(typed_o->fresh_seq()); it != nullptr; it = it->next_in_place())
-          //  {
-          //    if(need_comma)
-          //    {
-          //      fmt::format_to(inserter, ", ");
-          //    }
-          //    need_comma = true;
-          //    gen_constant(it->first(), buffer, true);
-          //  }
-          //  fmt::format_to(inserter, ")");
-          //}
+          else if constexpr(runtime::behavior::seqable<T>)
+          {
+            fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::persistent_list>(");
+            native_bool need_comma{};
+            for(auto it(typed_o->fresh_seq()); it != nullptr; it = it->next_in_place())
+            {
+              if(need_comma)
+              {
+                fmt::format_to(inserter, ", ");
+              }
+              need_comma = true;
+              gen_constant(it->first(), buffer, true);
+            }
+            fmt::format_to(inserter, ")");
+          }
           else
           {
             throw std::runtime_error{ fmt::format("unimplemented constant codegen: {}\n",
