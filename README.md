@@ -23,7 +23,7 @@ There are pre-compiled binaries for Ubuntu 22.04, which are built to follow the
 For Debian-based distros, this should be all you need:
 
 ```bash
-sudo apt-get install -y curl git zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev entr
+sudo apt-get install -y curl git zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev entr jemalloc
 ```
 
 For Arch:
@@ -35,7 +35,7 @@ sudo pacman -S clang pkg-config cmake ninja make python3 libffi jemalloc entr
 For macOS, try this:
 
 ```bash
-brew install curl git zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib
+brew install curl git zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib jemalloc
 ```
 
 Clone the repo as follows:
