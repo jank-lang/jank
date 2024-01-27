@@ -263,4 +263,119 @@ namespace jank::runtime
         break;
     }
   }
+
+  template <typename F1, typename F2, typename... Args>
+  requires visitable<F1, Args...>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  constexpr auto visit_seqable(F1 &&fn, F2 &&else_fn, object const * const const_erased, Args &&...args)
+  {
+    assert(const_erased);
+    auto * const erased(const_cast<object *>(const_erased));
+
+    switch(erased->type)
+    {
+      case object_type::nil:
+        {
+          return fn(expect_object<obj::nil>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_vector:
+        {
+          return fn(expect_object<obj::persistent_vector>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_list:
+        {
+          return fn(expect_object<obj::persistent_list>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_array_map:
+        {
+          return fn(expect_object<obj::persistent_array_map>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_array_map_sequence:
+        {
+          return fn(expect_object<obj::persistent_array_map_sequence>(erased),
+                    std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_hash_map:
+        {
+          return fn(expect_object<obj::persistent_hash_map>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_hash_map_sequence:
+        {
+          return fn(expect_object<obj::persistent_hash_map_sequence>(erased),
+                    std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_set:
+        {
+          return fn(expect_object<obj::persistent_set>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::cons:
+        {
+          return fn(expect_object<obj::cons>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::range:
+        {
+          return fn(expect_object<obj::range>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::native_array_sequence:
+        {
+          return fn(expect_object<obj::native_array_sequence>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::native_vector_sequence:
+        {
+          return fn(expect_object<obj::native_vector_sequence>(erased),
+                    std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_vector_sequence:
+        {
+          return fn(expect_object<obj::persistent_vector_sequence>(erased),
+                    std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_list_sequence:
+        {
+          return fn(expect_object<obj::persistent_list_sequence>(erased),
+                    std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_set_sequence:
+        {
+          return fn(expect_object<obj::persistent_set_sequence>(erased),
+                    std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::iterator:
+        {
+          return fn(expect_object<obj::iterator>(erased), std::forward<Args>(args)...);
+        }
+        break;
+
+      /* Not seqable. */
+      /* TODO: persistent_string should be seqable, once we support char objects. */
+      case object_type::persistent_string:
+      case object_type::boolean:
+      case object_type::integer:
+      case object_type::real:
+      case object_type::keyword:
+      case object_type::symbol:
+      case object_type::native_function_wrapper:
+      case object_type::jit_function:
+      case object_type::ns:
+      case object_type::var:
+      case object_type::var_thread_binding:
+      default:
+        return else_fn();
+    }
+  }
 }
