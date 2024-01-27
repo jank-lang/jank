@@ -15,7 +15,7 @@ namespace jank
 
   namespace detail
   {
-    template <bool Ok, typename T>
+    template <native_bool Ok, typename T>
     struct result;
   }
 
@@ -23,10 +23,11 @@ namespace jank
   struct option
   {
     using storage_type = char[sizeof(T)];
+    using value_type = T;
 
-    option() = default;
+    constexpr option() = default;
 
-    option(option<T> const &o)
+    constexpr option(option<T> const &o)
       : set{ o.set }
     {
       if(set)
@@ -35,7 +36,7 @@ namespace jank
       }
     }
 
-    option(option &&o) noexcept
+    constexpr option(option &&o) noexcept
       : set{ std::move(o.set) }
     {
       o.set = false;
@@ -45,22 +46,23 @@ namespace jank
       }
     }
 
-    ~option()
+    constexpr ~option()
     {
       reset();
     }
 
     template <typename D = T>
-    option(D &&d,
-           std::enable_if_t<std::is_constructible_v<T, D>
-                            && !std::is_same_v<std::decay_t<D>, option<T>>> * = nullptr)
+    constexpr option(D &&d,
+                     std::enable_if_t<std::is_constructible_v<T, D>
+                                      && !std::is_same_v<std::decay_t<D>, option<T>>> * = nullptr)
       : set{ true }
     {
       new(reinterpret_cast<T *>(data)) T{ std::forward<D>(d) };
     }
 
     template <typename D>
-    option(option<D> const &o, std::enable_if_t<std::is_constructible_v<T, D>> * = nullptr)
+    constexpr option(option<D> const &o,
+                     std::enable_if_t<std::is_constructible_v<T, D>> * = nullptr)
       : set{ o.set }
     {
       if(set)
@@ -70,7 +72,7 @@ namespace jank
     }
 
     template <typename D>
-    option(option<D> &&o, std::enable_if_t<std::is_constructible_v<T, D>> * = nullptr)
+    constexpr option(option<D> &&o, std::enable_if_t<std::is_constructible_v<T, D>> * = nullptr)
       : set{ std::move(o.set) }
     {
       if(set)
@@ -80,11 +82,11 @@ namespace jank
       o.reset();
     }
 
-    option(none_t const &)
+    constexpr option(none_t const &)
     {
     }
 
-    option<T> &operator=(option<T> const &rhs)
+    constexpr option<T> &operator=(option<T> const &rhs)
     {
       if(this == &rhs)
       {
@@ -100,7 +102,7 @@ namespace jank
       return *this;
     }
 
-    option<T> &operator=(option<T> &&rhs) noexcept
+    constexpr option<T> &operator=(option<T> &&rhs) noexcept
     {
       if(this == &rhs)
       {
@@ -117,7 +119,7 @@ namespace jank
       return *this;
     }
 
-    option<T> &operator=(none_t const &)
+    constexpr option<T> &operator=(none_t const &)
     {
       reset();
       return *this;
@@ -125,7 +127,7 @@ namespace jank
 
     template <typename D>
     // NOLINTNEXTLINE(cppcoreguidelines-c-copy-assignment-signature): It gets this wrong.
-    std::enable_if_t<std::is_constructible_v<T, D>, option<T> &> operator=(D &&rhs)
+    constexpr std::enable_if_t<std::is_constructible_v<T, D>, option<T> &> operator=(D &&rhs)
     {
       reset();
 
@@ -134,7 +136,7 @@ namespace jank
       return *this;
     }
 
-    void reset() noexcept
+    constexpr void reset() noexcept
     {
       if(set)
       {
@@ -143,31 +145,31 @@ namespace jank
       set = false;
     }
 
-    bool is_some() const
+    constexpr native_bool is_some() const
     {
       return set;
     }
 
-    bool is_none() const
+    constexpr native_bool is_none() const
     {
       return !set;
     }
 
-    T &unwrap()
+    constexpr T &unwrap()
     {
       /* TODO: Panic fn. */
       assert(set);
       return *reinterpret_cast<T *>(data);
     }
 
-    T const &unwrap() const
+    constexpr T const &unwrap() const
     {
       /* TODO: Panic fn. */
       assert(set);
       return *reinterpret_cast<T const *>(data);
     }
 
-    T &unwrap_or(T &fallback)
+    constexpr T &unwrap_or(T &fallback)
     {
       if(set)
       {
@@ -177,7 +179,7 @@ namespace jank
     }
 
     /* We don't take const& and return it since that's just asking for lifetime issues. */
-    T unwrap_or(T fallback) const
+    constexpr T unwrap_or(T fallback) const
     {
       if(set)
       {
@@ -186,7 +188,7 @@ namespace jank
       return std::move(fallback);
     }
 
-    bool operator!=(option<T> const &rhs) const
+    constexpr native_bool operator!=(option<T> const &rhs) const
     {
       if(set != rhs.set)
       {
@@ -200,23 +202,28 @@ namespace jank
       return true;
     }
 
-    bool operator==(option<T> const &rhs) const
+    constexpr native_bool operator==(option<T> const &rhs) const
     {
       return !(*this != rhs);
     }
 
-    bool operator!=(T const &rhs) const
+    constexpr native_bool operator!=(T const &rhs) const
     {
       return !set || (*reinterpret_cast<T const *>(data) != rhs);
     }
 
-    bool operator==(T const &rhs) const
+    constexpr native_bool operator==(T const &rhs) const
     {
       return !(*this != rhs);
     }
 
-    bool set{};
+    constexpr operator native_bool() const
+    {
+      return is_some();
+    }
+
     alignas(alignof(T)) storage_type data{};
+    native_bool set{};
   };
 
   template <typename T, typename Decayed = std::decay_t<T>>
