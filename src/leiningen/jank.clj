@@ -31,12 +31,6 @@
       (assoc :main (:main jank-project))))
 
 (defn- run-main [project classpath & args]
-  (pp/pprint (string/join " " ["jank"
-                               "run-main"
-                               "--class-path"
-                               classpath
-                               "--"
-                               args]))
   (apply ps/shell
          {:continue true
           :dir (:root project)
@@ -70,7 +64,6 @@
   todo(saket): Add support to execute a project using main entrypoint.
   todo(saket): Error handling in case file not found or jank executable not found on path."
   [project & args]
-  (println (:source-paths project))
   (let [cp-str (->> project
                     lcp/get-classpath
                     (string/join (File/pathSeparatorChar)))]
