@@ -1,4 +1,3 @@
-
 #include <fmt/compile.h>
 
 #include <jank/runtime/var.hpp>
@@ -67,10 +66,13 @@ namespace jank::runtime
     to_string_impl(n, name, buff);
     return native_persistent_string{ buff.data(), buff.size() };
   }
+
   native_hash var::to_hash() const
   {
     if(hash)
-    { return hash; }
+    {
+      return hash;
+    }
 
     return hash = hash::combine(n->to_hash(), name->to_hash());
   }
@@ -111,6 +113,12 @@ namespace jank::runtime
 
     binding->value = r;
     return ok();
+  }
+
+  var_ptr var::set_dynamic(native_bool const dyn)
+  {
+    dynamic.store(dyn);
+    return this;
   }
 
   var_thread_binding_ptr var::get_thread_binding() const

@@ -16,7 +16,7 @@ namespace jank::runtime
   template <>
   struct static_object<object_type::var> : gc
   {
-    static constexpr bool pointer_free{ false };
+    static constexpr native_bool pointer_free{ false };
 
     static_object() = delete;
     static_object(ns_ptr const &n, obj::symbol_ptr const &name);
@@ -46,12 +46,14 @@ namespace jank::runtime
      * binding. If there is no thread binding, a var cannot be set. */
     string_result<void> set(object_ptr r) const;
 
+    native_box<static_object> set_dynamic(native_bool dyn);
+
     native_box<static_object<object_type::var_thread_binding>> get_thread_binding() const;
 
     /* behavior::derefable */
     object_ptr deref() const;
 
-    bool operator==(static_object const &rhs) const;
+    native_bool operator==(static_object const &rhs) const;
 
     native_box<static_object> clone() const;
 
@@ -75,7 +77,7 @@ namespace jank::runtime
   template <>
   struct static_object<object_type::var_thread_binding> : gc
   {
-    static constexpr bool pointer_free{ false };
+    static constexpr native_bool pointer_free{ false };
 
     static_object(object_ptr value, std::thread::id id);
 
