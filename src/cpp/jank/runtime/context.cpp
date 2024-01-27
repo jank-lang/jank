@@ -1,5 +1,4 @@
 #include <exception>
-#include <experimental/scope>
 
 #include <fmt/compile.h>
 
