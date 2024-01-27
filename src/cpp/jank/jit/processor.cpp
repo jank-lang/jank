@@ -21,6 +21,12 @@ namespace jank::jit
       return std::move(dev_path);
     }
 
+    auto dev_arm64_path(jank_path / "CMakeFiles/jank_lib.dir/cmake_pch_arm64.hxx.pch");
+    if(boost::filesystem::exists(dev_arm64_path))
+    {
+      return std::move(dev_arm64_path);
+    }
+
     auto installed_path(jank_path / "../include/cpp/jank/prelude.hpp.pch");
     if(boost::filesystem::exists(installed_path))
     {
@@ -121,8 +127,7 @@ namespace jank::jit
       pch_path_str.c_str(),
       "-isystem",
       include_path.c_str(),
-      O.data(),
-      "-march=native"));
+      O.data()));
     interpreter = std::make_unique<cling::Interpreter>(args.size(),
                                                        args.data(),
                                                        llvm_resource_path_str.c_str());
