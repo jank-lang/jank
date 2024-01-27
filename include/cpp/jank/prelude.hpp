@@ -17,6 +17,7 @@
 #include <jank/type.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/util/make_array.hpp>
+#include <jank/util/scope_exit.hpp>
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/type.hpp>
 #include <jank/runtime/erasure.hpp>

@@ -40,6 +40,7 @@ namespace jank::analyze
       {     jank::make_box<symbol>("quote"),      make_fn(&processor::analyze_quote)},
       {       jank::make_box<symbol>("var"),        make_fn(&processor::analyze_var)},
       {     jank::make_box<symbol>("throw"),      make_fn(&processor::analyze_throw)},
+      {       jank::make_box<symbol>("try"),        make_fn(&processor::analyze_try)},
       {jank::make_box<symbol>("native/raw"), make_fn(&processor::analyze_native_raw)},
     };
   }
@@ -207,7 +208,8 @@ namespace jank::analyze
   }
 
   result<expr::function_arity<expression>, error>
-  processor::analyze_fn_arity(runtime::obj::persistent_list_ptr const &list, local_frame_ptr &current_frame)
+  processor::analyze_fn_arity(runtime::obj::persistent_list_ptr const &list,
+                              local_frame_ptr &current_frame)
   {
     auto const params_obj(list->data.first().unwrap());
     if(params_obj->type != runtime::object_type::persistent_vector)
@@ -276,7 +278,7 @@ namespace jank::analyze
         }
       }
 
-      frame->locals.emplace(sym, local_binding{ sym, none });
+      frame->locals.emplace(sym, local_binding{ sym, none, current_frame });
       param_symbols.emplace_back(sym);
     }
 
@@ -325,11 +327,12 @@ namespace jank::analyze
     };
   }
 
-  processor::expression_result processor::analyze_fn(runtime::obj::persistent_list_ptr const &full_list,
-                                                     local_frame_ptr &current_frame,
-                                                     expression_type const expr_type,
-                                                     option<expr::function_context_ptr> const &,
-                                                     native_bool const)
+  processor::expression_result
+  processor::analyze_fn(runtime::obj::persistent_list_ptr const &full_list,
+                        local_frame_ptr &current_frame,
+                        expression_type const expr_type,
+                        option<expr::function_context_ptr> const &,
+                        native_bool const)
   {
     auto const length(full_list->count());
     if(length < 2)
@@ -360,7 +363,8 @@ namespace jank::analyze
 
     if(first_elem->type == runtime::object_type::persistent_vector)
     {
-      auto result(analyze_fn_arity(make_box<runtime::obj::persistent_list>(list->data.rest()), current_frame));
+      auto result(analyze_fn_arity(make_box<runtime::obj::persistent_list>(list->data.rest()),
+                                   current_frame));
       if(result.is_err())
       {
         return result.expect_err_move();
@@ -472,6 +476,10 @@ namespace jank::analyze
     {
       return err(error{ "unable to use recur outside of a function or loop" });
     }
+    else if(runtime::detail::truthy(rt_ctx.no_recur_var->deref()))
+    {
+      return err(error{ "recur is not permitted through a try/catch" });
+    }
     else if(expr_type != expression_type::return_statement)
     {
       return err(error{ "recur used outside of tail position" });
@@ -523,8 +531,8 @@ namespace jank::analyze
     size_t i{};
     for(auto const &item : list->data.rest())
     {
-      auto const last(++i == form_count);
-      auto const form_type(last ? expr_type : expression_type::statement);
+      auto const is_last(++i == form_count);
+      auto const form_type(is_last ? expr_type : expression_type::statement);
       auto form(analyze(item,
                         current_frame,
                         form_type,
@@ -535,9 +543,9 @@ namespace jank::analyze
         return form.expect_err_move();
       }
 
-      if(last)
+      if(is_last)
       {
-        ret.needs_box = form.expect_ok_ptr()->data->get_base()->needs_box;
+        ret.needs_box = form.expect_ok()->get_base()->needs_box;
       }
 
       ret.body.emplace_back(form.expect_ok());
@@ -610,8 +618,8 @@ namespace jank::analyze
     size_t i{};
     for(auto const &item : o->data.rest().rest())
     {
-      auto const last(++i == form_count);
-      auto const form_type(last ? expr_type : expression_type::statement);
+      auto const is_last(++i == form_count);
+      auto const form_type(is_last ? expr_type : expression_type::statement);
       auto res(analyze(item, ret.frame, form_type, fn_ctx, needs_box));
       if(res.is_err())
       {
@@ -619,9 +627,9 @@ namespace jank::analyze
       }
 
       /* Ultimately, whether or not this let is boxed is up to the last form. */
-      if(last)
+      if(is_last)
       {
-        ret.needs_box = res.expect_ok_ptr()->data->get_base()->needs_box;
+        ret.needs_box = res.expect_ok()->get_base()->needs_box;
       }
 
       ret.body.body.emplace_back(res.expect_ok_move());
@@ -762,6 +770,177 @@ namespace jank::analyze
       expression_base{{}, expr_type, current_frame, true},
       arg_expr.unwrap_move()
     });
+  }
+
+  processor::expression_result
+  processor::analyze_try(runtime::obj::persistent_list_ptr const &list,
+                         local_frame_ptr &current_frame,
+                         expression_type const expr_type,
+                         option<expr::function_context_ptr> const &fn_ctx,
+                         native_bool const)
+  {
+    expr::try_<expression> ret{
+      expression_base{{}, expr_type, current_frame}
+    };
+
+    /* The exact shape of a try/catch/finally form isn't known until we traverse it, so
+     * we do so twice here. The first time, we count the catch/finally forms and ensure
+     * they're in the correct position. From that, we can calculate the last body form
+     * index, which is necessary for marking it as return position (and requiring boxing).
+     * The second iteration will analyze each form accordingly. */
+    enum class try_expression_type
+    {
+      other,
+      catch_,
+      finally_
+    };
+
+    static runtime::obj::symbol catch_{ "catch" }, finally_{ "finally" };
+    native_bool has_catch{}, has_finally{};
+
+    for(auto const &item : list->data.rest())
+    {
+      auto const type(runtime::visit_seqable(
+        [](auto const typed_item) {
+          auto const first(typed_item->seq()->first());
+          if(runtime::detail::equal(first, &catch_))
+          {
+            return try_expression_type::catch_;
+          }
+          else if(runtime::detail::equal(first, &finally_))
+          {
+            return try_expression_type::finally_;
+          }
+          else
+          {
+            return try_expression_type::other;
+          }
+        },
+        []() { return try_expression_type::other; },
+        item));
+
+      switch(type)
+      {
+        case try_expression_type::other:
+          if(has_catch || has_finally)
+          {
+            return err(error{ "extra forms after catch/finally" });
+          }
+          break;
+        case try_expression_type::catch_:
+          if(has_finally)
+          {
+            return err(error{ "finally must be the last form of a try" });
+          }
+          if(has_catch)
+          {
+            return err(error{ "only one catch may be supplied" });
+          }
+          has_catch = true;
+          break;
+        case try_expression_type::finally_:
+          if(has_finally)
+          {
+            return err(error{ "only one finally may be supplied" });
+          }
+          has_finally = true;
+          break;
+      }
+    }
+
+    if(!has_catch)
+    {
+      return err(error{ "each try must have a catch clause" });
+    }
+
+    /* At this point, we know the form has a catch, maybe a finally, and 0 or more body forms.
+     * The catch is already asserted to be the last body index + 1, with the finally following it.
+     * Nothing else will follow that. */
+
+    size_t const form_count{ list->count() - 1 };
+    size_t const last_body_index{ form_count - 1 - (has_catch + has_finally) };
+    size_t current_index{};
+
+    /* Clojure JVM doesn't support recur across try/catch/finally, so we don't either. */
+    rt_ctx
+      .push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+        std::make_pair(rt_ctx.no_recur_var, runtime::obj::boolean::true_const())))
+      .expect_ok();
+    util::scope_exit const finally{ [&]() { rt_ctx.pop_thread_bindings().expect_ok(); } };
+
+    for(auto const &item : list->data.rest())
+    {
+      if(current_index <= last_body_index)
+      {
+        auto const is_last(current_index == last_body_index);
+        auto const form_type(is_last ? expr_type : expression_type::statement);
+        auto form(analyze(item, current_frame, form_type, fn_ctx, is_last));
+        if(form.is_err())
+        {
+          return form.expect_err_move();
+        }
+
+        ret.body.body.emplace_back(form.expect_ok());
+      }
+      else if(current_index == last_body_index + 1)
+      {
+        /* Verify we have (catch <sym> ...) */
+        auto const catch_list(runtime::expect_object<runtime::obj::list>(item));
+        auto const catch_body_size(catch_list->count());
+        if(catch_body_size == 1)
+        {
+          return err(error{ "symbol required after catch" });
+        }
+
+        auto const sym_obj(catch_list->data.rest().first().unwrap());
+        if(sym_obj->type != runtime::object_type::symbol)
+        {
+          return err(error{ "symbol required after catch" });
+        }
+
+        auto const sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
+        if(!sym->get_namespace().empty())
+        {
+          return err(error{ "symbol for catch must be unqualified" });
+        }
+
+        /* We introduce a new frame so that we can register the sym as a local.
+         * It holds the exception value which was caught. */
+        auto frame(make_box<local_frame>(local_frame::frame_type::catch_,
+                                         current_frame->rt_ctx,
+                                         current_frame));
+        frame->locals.emplace(sym, local_binding{ sym, none, current_frame });
+
+        /* Now we just turn the body into a do block and have the do analyzer handle the rest. */
+        auto const do_list(
+          catch_list->data.rest().rest().cons(make_box<runtime::obj::symbol>("do")));
+        auto do_res(analyze(make_box(do_list), frame, expr_type, fn_ctx, true));
+        if(do_res.is_err())
+        {
+          return do_res.expect_err_move();
+        }
+
+        ret.catch_body = expr::catch_<expression>{ sym,
+                                                   std::move(boost::get<expr::do_<expression>>(
+                                                     do_res.expect_ok()->data)) };
+        has_catch = true;
+      }
+      else if(current_index == last_body_index + 2)
+      {
+        auto const finally_list(runtime::expect_object<runtime::obj::list>(item));
+        auto const do_list(finally_list->data.rest().cons(make_box<runtime::obj::symbol>("do")));
+        auto do_res(
+          analyze(make_box(do_list), current_frame, expression_type::statement, fn_ctx, false));
+        if(do_res.is_err())
+        {
+          return do_res.expect_err_move();
+        }
+        ret.finally_body = std::move(boost::get<expr::do_<expression>>(do_res.expect_ok()->data));
+      }
+      ++current_index;
+    }
+
+    return make_box<expression>(std::move(ret));
   }
 
   processor::expression_result

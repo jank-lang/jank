@@ -35,7 +35,8 @@ namespace jank::jit
     TEST_CASE("files")
     {
       runtime::context rt_ctx;
-      auto const cardinal_result(rt_ctx.intern_keyword(runtime::obj::symbol{ "", "success" }, true).expect_ok());
+      auto const cardinal_result(
+        rt_ctx.intern_keyword(runtime::obj::symbol{ "", "success" }, true).expect_ok());
       rt_ctx.load_module("/clojure.core").expect_ok();
       size_t test_count{};
 
@@ -49,23 +50,18 @@ namespace jank::jit
       for(auto const &dir_entry : boost::filesystem::recursive_directory_iterator("test/jank"))
       {
         if(!boost::filesystem::is_regular_file(dir_entry.path()))
-        { continue; }
+        {
+          continue;
+        }
 
         auto const &filename(dir_entry.path().filename().string());
-        auto const expect_success
-        (boost::algorithm::starts_with(filename, "pass-"));
-        auto const expect_failure
-        (boost::algorithm::starts_with(filename, "fail-"));
-        auto const expect_throw
-        (boost::algorithm::starts_with(filename, "throw-"));
-        auto const allow_failure
-        (boost::algorithm::starts_with(filename, "warn-"));
-        CHECK_MESSAGE
-        (
-          (expect_success || expect_failure || allow_failure || expect_throw),
-          "Test file needs to begin with pass- or fail- or throw- or warn-: ",
-          dir_entry
-        );
+        auto const expect_success(boost::algorithm::starts_with(filename, "pass-"));
+        auto const expect_failure(boost::algorithm::starts_with(filename, "fail-"));
+        auto const expect_throw(boost::algorithm::starts_with(filename, "throw-"));
+        auto const allow_failure(boost::algorithm::starts_with(filename, "warn-"));
+        CHECK_MESSAGE((expect_success || expect_failure || allow_failure || expect_throw),
+                      "Test file needs to begin with pass- or fail- or throw- or warn-: ",
+                      dir_entry);
         ++test_count;
 
         runtime::context test_rt_ctx{ rt_ctx };
@@ -80,29 +76,19 @@ namespace jank::jit
           * going to intentionally make that happen. */
           std::streambuf * const old_cout{ std::cout.rdbuf(captured_output.rdbuf()) };
           std::streambuf * const old_cerr{ std::cerr.rdbuf(captured_output.rdbuf()) };
-          util::scope_exit const _
-          {
-            [=]()
-            {
-              std::cout.rdbuf(old_cout);
-              std::cerr.rdbuf(old_cerr);
-            }
-          };
+          util::scope_exit const _{ [=]() {
+            std::cout.rdbuf(old_cout);
+            std::cerr.rdbuf(old_cerr);
+          } };
 
           auto const result(test_rt_ctx.eval_file(dir_entry.path().string()));
           if(!expect_success)
           {
-            failures.push_back
-            (
-              {
-                dir_entry.path(),
-                fmt::format
-                (
+            failures.push_back(
+              { dir_entry.path(),
+                fmt::format(
                   "Test failure was expected, but it passed with {}",
-                  (result == nullptr ? "nullptr" : runtime::detail::to_string(result))
-                )
-              }
-            );
+                  (result == nullptr ? "nullptr" : runtime::detail::to_string(result))) });
             passed = false;
           }
           else
@@ -114,13 +100,9 @@ namespace jank::jit
             }
             else if(!runtime::detail::equal(result, cardinal_result))
             {
-              failures.push_back
-              (
-                {
-                  dir_entry.path(),
-                  fmt::format("Result is not :success: {}", runtime::detail::to_string(result))
-                }
-              );
+              failures.push_back(
+                { dir_entry.path(),
+                  fmt::format("Result is not :success: {}", runtime::detail::to_string(result)) });
               passed = false;
             }
           }
@@ -137,24 +119,16 @@ namespace jank::jit
         {
           if(expect_success || (expect_throw && !runtime::detail::equal(e, cardinal_result)))
           {
-            failures.push_back
-            (
-              {
-                dir_entry.path(),
-                fmt::format("Exception thrown: {}", runtime::detail::to_string(e))
-              }
-            );
+            failures.push_back(
+              { dir_entry.path(),
+                fmt::format("Exception thrown: {}", runtime::detail::to_string(e)) });
             passed = false;
           }
           else if(expect_failure && runtime::detail::equal(e, cardinal_result))
           {
-            failures.push_back
-            (
-              {
-                dir_entry.path(),
-                fmt::format("Expected failure, thrown: {}", runtime::detail::to_string(e))
-              }
-            );
+            failures.push_back(
+              { dir_entry.path(),
+                fmt::format("Expected failure, thrown: {}", runtime::detail::to_string(e)) });
             passed = false;
           }
         }
@@ -162,13 +136,9 @@ namespace jank::jit
         {
           if(!expect_throw || !runtime::detail::equal(e, cardinal_result))
           {
-            failures.push_back
-            (
-              {
-                dir_entry.path(),
-                fmt::format("Exception thrown: {}", runtime::detail::to_string(e))
-              }
-            );
+            failures.push_back(
+              { dir_entry.path(),
+                fmt::format("Exception thrown: {}", runtime::detail::to_string(e)) });
             passed = false;
           }
         }
@@ -182,9 +152,13 @@ namespace jank::jit
         }
 
         if(allow_failure)
-        { fmt::print(fmt::fg(fmt::color::orange), "allowed failure\n"); }
+        {
+          fmt::print(fmt::fg(fmt::color::orange), "allowed failure\n");
+        }
         else if(passed)
-        { fmt::print(fmt::fg(fmt::color::green), "success\n"); }
+        {
+          fmt::print(fmt::fg(fmt::color::green), "success\n");
+        }
         else
         {
           fmt::print(fmt::fg(fmt::color::red), "failure\n");
@@ -195,13 +169,10 @@ namespace jank::jit
       CHECK(failures.empty());
       for(auto const &f : failures)
       {
-        fmt::print
-        (
-          "{}: {} {}\n",
-          fmt::styled("failure", fmt::fg(fmt::color::red)),
-          f.path.string(),
-          f.error
-        );
+        fmt::print("{}: {} {}\n",
+                   fmt::styled("failure", fmt::fg(fmt::color::red)),
+                   f.path.string(),
+                   f.error);
       }
       fmt::print("tested {} jank files\n", test_count);
     }

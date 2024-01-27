@@ -133,6 +133,7 @@ namespace jank::runtime
     var_ptr compile_files_var{};
     var_ptr current_module_var{};
     var_ptr assert_var{};
+    var_ptr no_recur_var{};
 
     static thread_local native_unordered_map<context const *, std::list<thread_binding_frame>>
       thread_binding_frames;

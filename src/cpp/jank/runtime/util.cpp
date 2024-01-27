@@ -201,7 +201,7 @@ namespace jank::runtime
   }
 
   /* TODO: Support symbols and other data; Clojure takes in anything and passes it through str. */
-  object_ptr munge(object_ptr o)
+  object_ptr munge(object_ptr const o)
   {
     return visit_object(
       [](auto const typed_o) -> object_ptr {
@@ -209,11 +209,11 @@ namespace jank::runtime
 
         if constexpr(std::same_as<T, obj::persistent_string>)
         {
-          return jank::make_box<obj::persistent_string>(munge(typed_o->data));
+          return make_box<obj::persistent_string>(munge(typed_o->data));
         }
         else
         {
-          throw "munging only supported for strings right now";
+          throw std::runtime_error{ "munging only supported for strings right now" };
         }
       },
       o);

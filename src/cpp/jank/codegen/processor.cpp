@@ -951,7 +951,9 @@ namespace jank::codegen
 
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::context::unique_string("vec"));
-    fmt::format_to(inserter, "auto const {}(jank::make_box<jank::runtime::obj::persistent_vector>(", ret_tmp);
+    fmt::format_to(inserter,
+                   "auto const {}(jank::make_box<jank::runtime::obj::persistent_vector>(",
+                   ret_tmp);
     for(auto it(data_tmps.begin()); it != data_tmps.end();)
     {
       fmt::format_to(inserter, "{}", it->str(true));
@@ -1276,8 +1278,57 @@ namespace jank::codegen
   {
     auto inserter(std::back_inserter(body_buffer));
     auto const &value_tmp(gen(expr.value, fn_arity, true));
-    fmt::format_to(inserter, "throw {};", value_tmp.unwrap().str(true));
+    fmt::format_to(inserter,
+                   "throw static_cast<jank::runtime::object_ptr>({});",
+                   value_tmp.unwrap().str(true));
     return none;
+  }
+
+  option<handle> processor::gen(analyze::expr::try_<analyze::expression> const &expr,
+                                analyze::expr::function_arity<analyze::expression> const &fn_arity,
+                                native_bool const needs_box)
+  {
+    auto inserter(std::back_inserter(body_buffer));
+    auto ret_tmp(runtime::context::unique_string("try"));
+    fmt::format_to(inserter, "object_ptr {}{{ obj::nil::nil_const() }};", ret_tmp);
+
+    fmt::format_to(inserter, "{{");
+    if(expr.finally_body.is_some())
+    {
+      fmt::format_to(inserter, "jank::util::scope_exit const finally{{ [&](){{ ");
+      gen(expr.finally_body.unwrap(), fn_arity, needs_box);
+      fmt::format_to(inserter, "}} }};");
+    }
+
+    fmt::format_to(inserter, "try {{");
+    auto const &body_tmp(gen(expr.body, fn_arity, needs_box));
+    if(body_tmp.is_some())
+    {
+      fmt::format_to(inserter, "{} = {};", ret_tmp, body_tmp.unwrap().str(needs_box));
+    }
+    if(expr.expr_type == analyze::expression_type::return_statement)
+    {
+      fmt::format_to(inserter, "return {};", ret_tmp);
+    }
+    fmt::format_to(inserter, "}}");
+
+    fmt::format_to(inserter,
+                   "catch(jank::runtime::object_ptr const {}) {{",
+                   runtime::munge(expr.catch_body.sym->name));
+    auto const &catch_tmp(gen(expr.catch_body.body, fn_arity, needs_box));
+    if(catch_tmp.is_some())
+    {
+      fmt::format_to(inserter, "{} = {};", ret_tmp, catch_tmp.unwrap().str(needs_box));
+    }
+    if(expr.expr_type == analyze::expression_type::return_statement)
+    {
+      fmt::format_to(inserter, "return {};", ret_tmp);
+    }
+    fmt::format_to(inserter, "}}");
+
+    fmt::format_to(inserter, "}}");
+
+    return ret_tmp;
   }
 
   option<handle> processor::gen(analyze::expr::native_raw<analyze::expression> const &expr,

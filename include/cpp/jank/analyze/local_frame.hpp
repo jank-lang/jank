@@ -52,7 +52,8 @@ namespace jank::analyze
     {
       root,
       fn,
-      let
+      let,
+      catch_
     };
 
     static constexpr bool pointer_free{ false };

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <memory>
-
-#include <jank/option.hpp>
 #include <jank/analyze/expression_base.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 

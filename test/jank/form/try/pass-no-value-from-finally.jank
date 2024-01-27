@@ -1,0 +1,17 @@
+(assert (= (try
+             1
+             (catch _
+               2)
+             (finally
+               3))
+           1))
+
+(assert (= (try
+             (throw :anything)
+             (catch _
+               2)
+             (finally
+               3))
+           2))
+
+:success

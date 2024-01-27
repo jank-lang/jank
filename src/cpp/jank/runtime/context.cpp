@@ -44,41 +44,22 @@ namespace jank::runtime
     compile_files_var->bind_root(obj::boolean::false_const());
     compile_files_var->dynamic.store(true);
 
-    /* TODO: Non-standard binding in clojure.core. */
-    auto const current_module_sym(make_box<obj::symbol>("clojure.core/*current-module*"));
-    current_module_var = core->intern_var(current_module_sym);
-    current_module_var->bind_root(obj::persistent_string::empty());
-    current_module_var->dynamic.store(true);
-
     auto const assert_sym(make_box<obj::symbol>("clojure.core/*assert*"));
     assert_var = core->intern_var(assert_sym);
     assert_var->bind_root(obj::boolean::true_const());
     assert_var->dynamic.store(true);
 
+    /* These are not actually interned. */
+    current_module_var
+      = make_box<runtime::var>(core, make_box<obj::symbol>("*current-module*"))->set_dynamic(true);
+    no_recur_var
+      = make_box<runtime::var>(core, make_box<obj::symbol>("*no-recur*"))->set_dynamic(true);
+
     intern_ns(make_box<obj::symbol>("native"));
 
-    std::function<object_ptr(object_ptr)> in_ns_fn([this](object_ptr const sym) {
-      return visit_object(
-        [this](auto const typed_sym) {
-          using T = typename decltype(typed_sym)::value_type;
-
-          if constexpr(std::same_as<T, obj::symbol>)
-          {
-            auto const new_ns(intern_ns(typed_sym));
-            current_ns_var->set(new_ns).expect_ok();
-            return obj::nil::nil_const();
-          }
-          else
-          /* TODO: throw. */
-          {
-            return obj::nil::nil_const();
-          }
-        },
-        sym);
-    });
+    /* This won't be set until clojure.core is loaded. */
     auto const in_ns_sym(make_box<obj::symbol>("clojure.core/in-ns"));
     in_ns_var = intern_var(in_ns_sym).expect_ok();
-    in_ns_var->bind_root(make_box<obj::native_function_wrapper>(in_ns_fn));
 
     /* TODO: Remove this once it can be defined in jank. */
     auto const seq_sym(make_box<obj::symbol>("clojure.core/seq"));
@@ -135,9 +116,12 @@ namespace jank::runtime
     in_ns_var = intern_var(make_box<obj::symbol>("clojure.core/in-ns")).expect_ok();
     compile_files_var
       = intern_var(make_box<obj::symbol>("clojure.core/*compile-files*")).expect_ok();
-    current_module_var
-      = intern_var(make_box<obj::symbol>("clojure.core/*current-module*")).expect_ok();
     assert_var = core->intern_var(make_box<obj::symbol>("clojure.core/*assert*"));
+
+    current_module_var
+      = make_box<runtime::var>(core, make_box<obj::symbol>("*current-module*"))->set_dynamic(true);
+    no_recur_var
+      = make_box<runtime::var>(core, make_box<obj::symbol>("*no-recur*"))->set_dynamic(true);
   }
 
   context::~context()
@@ -221,7 +205,8 @@ namespace jank::runtime
 
     if(detail::truthy(compile_files_var->deref()))
     {
-      auto const &current_module(expect_object<obj::persistent_string>(current_module_var->deref())->data);
+      auto const &current_module(
+        expect_object<obj::persistent_string>(current_module_var->deref())->data);
       auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc));
       wrapped_exprs.name = "__ns";
       auto const &module(
@@ -537,8 +522,8 @@ namespace jank::runtime
             return typed_o;
           }
 
-          auto const args(
-            make_box<obj::persistent_list>(typed_o->data.rest().cons(obj::nil::nil_const()).cons(typed_o)));
+          auto const args(make_box<obj::persistent_list>(
+            typed_o->data.rest().cons(obj::nil::nil_const()).cons(typed_o)));
           return apply_to(var.unwrap()->deref(), args);
         }
       },
@@ -598,7 +583,9 @@ namespace jank::runtime
         using T = typename decltype(typed_more)::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
-        { std::putc('\n', stdout); }
+        {
+          std::putc('\n', stdout);
+        }
         else if constexpr(behavior::sequenceable<T>)
         {
           fmt::memory_buffer buff;

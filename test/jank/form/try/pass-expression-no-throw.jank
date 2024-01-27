@@ -1,0 +1,6 @@
+(assert (= (try
+             :success
+             (catch _))
+           :success))
+
+:success

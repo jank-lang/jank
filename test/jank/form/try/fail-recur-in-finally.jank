@@ -1,0 +1,7 @@
+(fn* []
+  (try
+    :success
+    (catch _
+      )
+    (finally
+      (recur))))
