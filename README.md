@@ -23,7 +23,7 @@ There are pre-compiled binaries for Ubuntu 22.04, which are built to follow the
 For Debian-based distros, this should be all you need:
 
 ```bash
-sudo apt-get install -y curl git zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev entr jemalloc
+sudo apt-get install -y curl git zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev entr libffi-dev clang libjemalloc-dev libreadline-dev
 ```
 
 For Arch:

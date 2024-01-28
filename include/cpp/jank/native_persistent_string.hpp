@@ -767,14 +767,4 @@ namespace std
       return s.to_hash();
     }
   };
-
-  template <>
-  struct formatter<jank::native_persistent_string> : formatter<std::string_view>
-  {
-    template <typename Context>
-    auto format(jank::native_persistent_string const &s, Context &ctx) const
-    {
-      return formatter<std::string_view>::format({ s.data(), s.size() }, ctx);
-    }
-  };
 }
