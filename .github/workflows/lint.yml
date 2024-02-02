@@ -18,8 +18,18 @@ jobs:
           version: 2022.10.16--22.13.50
       - name: Lint bash scripts
         run: ./bin/ci/lint
-      - name: Run clang-format
+      - name: Run clang-format on include/cpp
         uses: jidicula/clang-format-action@v4.11.0
         with:
           clang-format-version: 16
-          check-path: .
+          check-path: include/cpp
+      - name: Run clang-format on src/cpp
+        uses: jidicula/clang-format-action@v4.11.0
+        with:
+          clang-format-version: 16
+          check-path: src/cpp
+      - name: Run clang-format on test/cpp
+        uses: jidicula/clang-format-action@v4.11.0
+        with:
+          clang-format-version: 16
+          check-path: test/cpp
