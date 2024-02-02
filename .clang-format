@@ -65,12 +65,13 @@ IndentWidth: '2'
 IndentWrappedFunctionNames: 'false'
 InsertBraces: 'true'
 InsertNewlineAtEOF: 'true'
-IntegerLiteralSeparator:
-  Binary: 8
-  BinaryMinDigits: 8
-  Decimal: 3
-  DecimalMinDigits: 5
-  Hex: -1
+# CI isn't supporting this, even though it should be in 16.
+#IntegerLiteralSeparator:
+#  Binary: 8
+#  BinaryMinDigits: 8
+#  Decimal: 3
+#  DecimalMinDigits: 5
+#  Hex: -1
 KeepEmptyLinesAtTheStartOfBlocks: 'false'
 LambdaBodyIndentation: Signature
 Language: Cpp
