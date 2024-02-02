@@ -12,7 +12,9 @@ int main(int const argc, char const **argv)
 
   auto const res(context.run());
   if(context.shouldExit())
-  { return res; }
+  {
+    return res;
+  }
 
   return res;
 }

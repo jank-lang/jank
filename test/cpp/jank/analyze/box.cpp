@@ -96,10 +96,12 @@ namespace jank::analyze
         CHECK(equal(runtime::get(a_binding, make_box("has_unboxed_usage")), make_box(false)));
 
         auto const f_fn(runtime::get_in(map, rt_ctx.eval_string(R"(["pairs" 1 1])")));
-        auto const captured_a_binding(runtime::get_in(f_fn, rt_ctx.eval_string(R"(["arities" 0 "body" "body" 0 "binding"])")));
+        auto const captured_a_binding(
+          runtime::get_in(f_fn, rt_ctx.eval_string(R"(["arities" 0 "body" "body" 0 "binding"])")));
         CHECK(equal(runtime::get(captured_a_binding, make_box("needs_box")), make_box(true)));
         CHECK(equal(runtime::get(captured_a_binding, make_box("has_boxed_usage")), make_box(true)));
-        CHECK(equal(runtime::get(captured_a_binding, make_box("has_unboxed_usage")), make_box(false)));
+        CHECK(
+          equal(runtime::get(captured_a_binding, make_box("has_unboxed_usage")), make_box(false)));
       }
 
       SUBCASE("Captured, unboxed arithmetic usage")
@@ -118,10 +120,12 @@ namespace jank::analyze
         CHECK(equal(runtime::get(a_binding, make_box("has_unboxed_usage")), make_box(true)));
 
         auto const f_fn(runtime::get_in(map, rt_ctx.eval_string(R"(["pairs" 2 1])")));
-        auto const captured_a_binding(runtime::get_in(f_fn, rt_ctx.eval_string(R"(["arities" 0 "body" "body" 0 "binding"])")));
+        auto const captured_a_binding(
+          runtime::get_in(f_fn, rt_ctx.eval_string(R"(["arities" 0 "body" "body" 0 "binding"])")));
         CHECK(equal(runtime::get(captured_a_binding, make_box("needs_box")), make_box(true)));
         CHECK(equal(runtime::get(captured_a_binding, make_box("has_boxed_usage")), make_box(true)));
-        CHECK(equal(runtime::get(captured_a_binding, make_box("has_unboxed_usage")), make_box(false)));
+        CHECK(
+          equal(runtime::get(captured_a_binding, make_box("has_unboxed_usage")), make_box(false)));
       }
 
       //SUBCASE("Captured, box usage indirectly")
@@ -147,18 +151,13 @@ namespace jank::analyze
         runtime::context rt_ctx;
         rt_ctx.load_module("/clojure.core").expect_ok();
 
-        auto const res
-        (
-          rt_ctx.analyze_string
-          (
-            R"(
+        auto const res(rt_ctx.analyze_string(
+          R"(
             (let* [r 0.0
                   r2 (* r r)]
               (* (+ r2 (- 1.0 r2))
                 (pow (- 1.0 r) 5.0)))
-            )"
-          )
-        );
+            )"));
         CHECK_EQ(res.size(), 1);
 
         auto const map(res[0]->to_runtime_data());
@@ -176,18 +175,13 @@ namespace jank::analyze
 
       SUBCASE("Captured through multiple levels")
       {
-        auto const res
-        (
-          rt_ctx.analyze_string
-          (
-            R"(
+        auto const res(rt_ctx.analyze_string(
+          R"(
             (let* [a 10]
               (fn* []
                 (fn* []
                   a)))
-            )"
-          )
-        );
+            )"));
         CHECK_EQ(res.size(), 1);
 
         auto const map(res[0]->to_runtime_data());
@@ -198,11 +192,15 @@ namespace jank::analyze
         CHECK(equal(runtime::get(a_binding, make_box("has_unboxed_usage")), make_box(false)));
 
         auto const first_fn(runtime::get_in(map, rt_ctx.eval_string(R"(["body" "body" 0])")));
-        auto const second_fn(runtime::get_in(first_fn, rt_ctx.eval_string(R"(["arities" 0 "body" "body" 0])")));
-        auto const captured_a_binding(runtime::get_in(second_fn, rt_ctx.eval_string(R"(["arities" 0 "body" "body" 0 "binding"])")));
+        auto const second_fn(
+          runtime::get_in(first_fn, rt_ctx.eval_string(R"(["arities" 0 "body" "body" 0])")));
+        auto const captured_a_binding(
+          runtime::get_in(second_fn,
+                          rt_ctx.eval_string(R"(["arities" 0 "body" "body" 0 "binding"])")));
         CHECK(equal(runtime::get(captured_a_binding, make_box("needs_box")), make_box(true)));
         CHECK(equal(runtime::get(captured_a_binding, make_box("has_boxed_usage")), make_box(true)));
-        CHECK(equal(runtime::get(captured_a_binding, make_box("has_unboxed_usage")), make_box(false)));
+        CHECK(
+          equal(runtime::get(captured_a_binding, make_box("has_unboxed_usage")), make_box(false)));
       }
     }
 
@@ -217,7 +215,8 @@ namespace jank::analyze
 
         auto const map(res[0]->to_runtime_data());
 
-        auto const f_binding(runtime::get_in(map, rt_ctx.eval_string(R"(["pairs" 1 1 "source_expr" "binding"])")));
+        auto const f_binding(
+          runtime::get_in(map, rt_ctx.eval_string(R"(["pairs" 1 1 "source_expr" "binding"])")));
         CHECK(equal(runtime::get(f_binding, make_box("needs_box")), make_box(true)));
         CHECK(equal(runtime::get(f_binding, make_box("has_boxed_usage")), make_box(true)));
         CHECK(equal(runtime::get(f_binding, make_box("has_unboxed_usage")), make_box(false)));
