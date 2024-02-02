@@ -89,7 +89,9 @@ namespace jank::runtime
   native_hash obj::symbol::to_hash() const
   {
     if(hash)
-    { return hash; }
+    {
+      return hash;
+    }
 
     return hash = hash::combine(hash::string(name), hash::string(ns));
   }
@@ -127,6 +129,7 @@ namespace jank::runtime
     ns = s;
     hash = 0;
   }
+
   void obj::symbol::set_name(native_persistent_string const &s)
   {
     name = s;

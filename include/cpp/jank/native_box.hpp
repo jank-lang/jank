@@ -255,7 +255,10 @@ namespace jank
 
   template <typename T>
   constexpr native_box<T> make_array_box()
-  { return nullptr; }
+  {
+    return nullptr;
+  }
+
   template <typename T, typename... Args>
   native_box<T> make_array_box(Args &&...args)
   {

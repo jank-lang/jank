@@ -72,7 +72,7 @@ namespace jank::runtime::detail
 
     native_persistent_array_map clone() const;
 
-    object_ptr * data{};
+    object_ptr *data{};
     size_t length{};
     mutable native_hash hash{};
   };

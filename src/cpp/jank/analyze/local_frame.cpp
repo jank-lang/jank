@@ -196,7 +196,9 @@ namespace jank::analyze
         sym->name);
     }
     else
-    { qualified_sym = make_box<runtime::obj::symbol>(*sym); }
+    {
+      qualified_sym = make_box<runtime::obj::symbol>(*sym);
+    }
 
     /* We use unique native names, just so var names don't clash with the underlying C++ API. */
     lifted_var lv{ runtime::context::unique_symbol(runtime::munge(qualified_sym->name)),

@@ -101,20 +101,26 @@ namespace jank::hash
   uint32_t integer(native_integer const input)
   {
     if constexpr(sizeof(uint64_t) == sizeof(native_integer))
-    { return integer(static_cast<uint64_t>(input)); }
+    {
+      return integer(static_cast<uint64_t>(input));
+    }
     else
-    { return integer(static_cast<uint32_t>(input)); }
+    {
+      return integer(static_cast<uint32_t>(input));
+    }
   }
 
   uint32_t real(native_real const input)
   {
     if constexpr(8 == sizeof(native_integer))
     {
-      auto const v(*reinterpret_cast<uint64_t const*>(&input));
+      auto const v(*reinterpret_cast<uint64_t const *>(&input));
       return v ^ (v >> 32);
     }
     else
-    { return *reinterpret_cast<uint32_t const*>(&input); }
+    {
+      return *reinterpret_cast<uint32_t const *>(&input);
+    }
   }
 
   uint32_t string(native_persistent_string_view const &input)

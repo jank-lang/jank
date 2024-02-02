@@ -15,9 +15,10 @@ namespace jank::analyze::expr
       runtime::object_ptr pair_maps(make_box<runtime::obj::persistent_vector>());
       for(auto const &e : data_exprs)
       {
-        pair_maps = runtime::conj(
-          pair_maps,
-          make_box<runtime::obj::persistent_vector>(e.first->to_runtime_data(), e.second->to_runtime_data()));
+        pair_maps
+          = runtime::conj(pair_maps,
+                          make_box<runtime::obj::persistent_vector>(e.first->to_runtime_data(),
+                                                                    e.second->to_runtime_data()));
       }
 
       return runtime::merge(

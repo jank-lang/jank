@@ -59,10 +59,14 @@ namespace jank::hash
     for(auto it(begin); it != end; ++it)
     {
       /* It's common that we have pairs of data, like with maps. */
-      if constexpr(requires (T t) { t.first, t.second; })
-      { hash += 31 * visit((*it).first) + visit((*it).second); }
+      if constexpr(requires(T t) { t.first, t.second; })
+      {
+        hash += 31 * visit((*it).first) + visit((*it).second);
+      }
       else
-      { hash += visit(*it); }
+      {
+        hash += visit(*it);
+      }
       ++n;
     }
 

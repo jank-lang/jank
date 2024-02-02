@@ -450,17 +450,20 @@ namespace jank::runtime
             [&](auto const typed_other) -> object_ptr {
               using O = typename decltype(typed_other)::value_type;
 
-              if constexpr(std::same_as<O, obj::persistent_hash_map> || std::same_as<O, obj::persistent_array_map>)
+              if constexpr(std::same_as<O, obj::persistent_hash_map>
+                           || std::same_as<O, obj::persistent_array_map>)
               {
                 object_ptr ret{ m };
                 for(auto const &pair : typed_other->data)
-                { ret = assoc(ret, pair.first, pair.second); }
+                {
+                  ret = assoc(ret, pair.first, pair.second);
+                }
                 return ret;
               }
               else
               {
                 throw std::runtime_error{ fmt::format("not associatively readable: {}",
-                    typed_m->to_string()) };
+                                                      typed_m->to_string()) };
               }
             },
             other);

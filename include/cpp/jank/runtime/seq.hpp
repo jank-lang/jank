@@ -53,7 +53,9 @@ namespace jank::runtime
           /* nil is seqable, but we don't want it to be equal to an empty collection.
            * An empty seq itself is nil, but that's different. */
           if constexpr(std::same_as<T, obj::nil>)
-          { return false; }
+          {
+            return false;
+          }
           else if constexpr(!behavior::seqable<T>)
           {
             return false;

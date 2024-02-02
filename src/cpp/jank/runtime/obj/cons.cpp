@@ -140,7 +140,9 @@ namespace jank::runtime
   native_hash obj::cons::to_hash() const
   {
     if(hash != 0)
-    { return hash; }
+    {
+      return hash;
+    }
 
     return hash = hash::ordered(&base);
   }

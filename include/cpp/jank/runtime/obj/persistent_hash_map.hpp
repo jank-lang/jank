@@ -22,7 +22,9 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(runtime::detail::native_persistent_array_map const &m, object_ptr key, object_ptr val);
+    static_object(runtime::detail::native_persistent_array_map const &m,
+                  object_ptr key,
+                  object_ptr val);
     static_object(value_type &&d);
     static_object(value_type const &d);
     static_object(runtime::detail::native_transient_hash_map &&d);

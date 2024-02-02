@@ -283,8 +283,9 @@ namespace jank::read::parse
       return err(error{ start_token.pos, native_persistent_string{ "invalid value after quote" } });
     }
 
-    return runtime::erase(make_box<runtime::obj::persistent_list>(make_box<runtime::obj::symbol>("quote"),
-                                                       val_result.expect_ok_move()));
+    return runtime::erase(
+      make_box<runtime::obj::persistent_list>(make_box<runtime::obj::symbol>("quote"),
+                                              val_result.expect_ok_move()));
   }
 
   processor::object_result processor::parse_nil()
@@ -398,7 +399,8 @@ namespace jank::read::parse
     auto const token(token_current->expect_ok());
     ++token_current;
     auto const sv(boost::get<native_persistent_string_view>(token.data));
-    return ok(make_box<runtime::obj::persistent_string>(native_persistent_string{ sv.data(), sv.size() }));
+    return ok(
+      make_box<runtime::obj::persistent_string>(native_persistent_string{ sv.data(), sv.size() }));
   }
 
   processor::object_result processor::parse_escaped_string()

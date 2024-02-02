@@ -24,7 +24,8 @@ namespace jank::runtime
   void obj::persistent_vector_sequence::to_string(fmt::memory_buffer &buff) const
   {
     return behavior::detail::to_string(
-      vec->data.begin() + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
+      vec->data.begin()
+        + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
       vec->data.end(),
       "[",
       ']',
@@ -35,13 +36,15 @@ namespace jank::runtime
   {
     fmt::memory_buffer buff;
     behavior::detail::to_string(
-      vec->data.begin() + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
+      vec->data.begin()
+        + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
       vec->data.end(),
       "[",
       ']',
       buff);
     return { buff.data(), buff.size() };
   }
+
   native_hash obj::persistent_vector_sequence::to_hash() const
   {
     return hash::ordered(vec->data.begin(), vec->data.end());

@@ -267,7 +267,8 @@ namespace jank::runtime
   template <typename F1, typename F2, typename... Args>
   requires visitable<F1, Args...>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr auto visit_seqable(F1 &&fn, F2 &&else_fn, object const * const const_erased, Args &&...args)
+  constexpr auto
+  visit_seqable(F1 &&fn, F2 &&else_fn, object const * const const_erased, Args &&...args)
   {
     assert(const_erased);
     auto * const erased(const_cast<object *>(const_erased));
