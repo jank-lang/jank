@@ -20,6 +20,7 @@ readability-*,\
 -cppcoreguidelines-pro-bounds-pointer-arithmetic,\
 -cppcoreguidelines-pro-type-static-cast-downcast,\
 -cppcoreguidelines-pro-type-const-cast,\
+-cppcoreguidelines-owning-memory,\
 -bugprone-easily-swappable-parameters,\
 -bugprone-reserved-identifier,\
 -readability-implicit-bool-conversion,\

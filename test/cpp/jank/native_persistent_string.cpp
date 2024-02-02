@@ -1,3 +1,4 @@
+/* clang-format off */
 #include <jank/native_persistent_string.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
@@ -20,6 +21,7 @@ namespace jank
         SUBCASE("SSO")
         {
           native_persistent_string s{ "foo bar" };
+          /* NOLINTNEXTLINE(performance-unnecessary-copy-initialization) */
           native_persistent_string c{ s };
           CHECK_EQ(c.size(), 7);
           CHECK_NE(c.data(), s.data());
@@ -28,6 +30,7 @@ namespace jank
         SUBCASE("Long")
         {
           native_persistent_string s{ "foo bar spam meow foo bar spam meow" };
+          /* NOLINTNEXTLINE(performance-unnecessary-copy-initialization) */
           native_persistent_string c{ s };
           CHECK_EQ(c.size(), 35);
           CHECK_EQ(c.data(), s.data());

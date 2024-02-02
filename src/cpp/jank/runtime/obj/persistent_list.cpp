@@ -71,7 +71,7 @@ namespace jank::runtime
 
   obj::persistent_list_sequence_ptr obj::persistent_list::seq() const
   {
-    if(data.size() == 0)
+    if(data.empty())
     {
       return nullptr;
     }
@@ -80,7 +80,7 @@ namespace jank::runtime
 
   obj::persistent_list_sequence_ptr obj::persistent_list::fresh_seq() const
   {
-    if(data.size() == 0)
+    if(data.empty())
     {
       return nullptr;
     }

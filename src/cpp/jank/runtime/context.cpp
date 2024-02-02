@@ -623,7 +623,13 @@ namespace jank::runtime
 
   context::binding_scope::~binding_scope()
   {
-    rt_ctx.pop_thread_bindings().expect_ok();
+    try
+    {
+      rt_ctx.pop_thread_bindings().expect_ok();
+    }
+    catch(...)
+    {
+    }
   }
 
   string_result<void> context::push_thread_bindings()

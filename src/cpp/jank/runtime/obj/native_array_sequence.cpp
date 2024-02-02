@@ -39,7 +39,7 @@ namespace jank::runtime
     return native_persistent_string{ buff.data(), buff.size() };
   }
 
-  native_hash obj::native_array_sequence::to_hash()
+  native_hash obj::native_array_sequence::to_hash() const
   {
     return hash::ordered(arr + index, arr + size);
   }

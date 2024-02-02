@@ -1286,7 +1286,7 @@ namespace jank::codegen
 
   option<handle> processor::gen(analyze::expr::try_<analyze::expression> const &expr,
                                 analyze::expr::function_arity<analyze::expression> const &fn_arity,
-                                native_bool const needs_box)
+                                native_bool const box_needed)
   {
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::context::unique_string("try"));
@@ -1296,15 +1296,15 @@ namespace jank::codegen
     if(expr.finally_body.is_some())
     {
       fmt::format_to(inserter, "jank::util::scope_exit const finally{{ [&](){{ ");
-      gen(expr.finally_body.unwrap(), fn_arity, needs_box);
+      gen(expr.finally_body.unwrap(), fn_arity, box_needed);
       fmt::format_to(inserter, "}} }};");
     }
 
     fmt::format_to(inserter, "try {{");
-    auto const &body_tmp(gen(expr.body, fn_arity, needs_box));
+    auto const &body_tmp(gen(expr.body, fn_arity, box_needed));
     if(body_tmp.is_some())
     {
-      fmt::format_to(inserter, "{} = {};", ret_tmp, body_tmp.unwrap().str(needs_box));
+      fmt::format_to(inserter, "{} = {};", ret_tmp, body_tmp.unwrap().str(box_needed));
     }
     if(expr.expr_type == analyze::expression_type::return_statement)
     {
@@ -1315,10 +1315,10 @@ namespace jank::codegen
     fmt::format_to(inserter,
                    "catch(jank::runtime::object_ptr const {}) {{",
                    runtime::munge(expr.catch_body.sym->name));
-    auto const &catch_tmp(gen(expr.catch_body.body, fn_arity, needs_box));
+    auto const &catch_tmp(gen(expr.catch_body.body, fn_arity, box_needed));
     if(catch_tmp.is_some())
     {
-      fmt::format_to(inserter, "{} = {};", ret_tmp, catch_tmp.unwrap().str(needs_box));
+      fmt::format_to(inserter, "{} = {};", ret_tmp, catch_tmp.unwrap().str(box_needed));
     }
     if(expr.expr_type == analyze::expression_type::return_statement)
     {

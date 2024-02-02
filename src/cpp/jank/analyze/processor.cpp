@@ -373,7 +373,7 @@ namespace jank::analyze
     }
     else if(first_elem->type == runtime::object_type::persistent_list)
     {
-      for(auto it(list->data.rest()); it.size() > 0; it = it.rest())
+      for(auto it(list->data.rest()); !it.empty(); it = it.rest())
       {
         auto arity_list_obj(it.first().unwrap());
         if(arity_list_obj->type != runtime::object_type::persistent_list)
@@ -923,7 +923,6 @@ namespace jank::analyze
         ret.catch_body = expr::catch_<expression>{ sym,
                                                    std::move(boost::get<expr::do_<expression>>(
                                                      do_res.expect_ok()->data)) };
-        has_catch = true;
       }
       else if(current_index == last_body_index + 2)
       {
