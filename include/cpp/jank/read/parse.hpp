@@ -5,7 +5,9 @@
 #include <jank/read/lex.hpp>
 
 namespace jank::runtime
-{ struct context; }
+{
+  struct context;
+}
 
 /* TODO: Rename file to processor. */
 namespace jank::read::parse
@@ -20,26 +22,23 @@ namespace jank::read::parse
       using iterator_category = std::input_iterator_tag;
       using difference_type = std::ptrdiff_t;
       using value_type = object_result;
-      using pointer = value_type*;
-      using reference = value_type&;
+      using pointer = value_type *;
+      using reference = value_type &;
 
-      value_type operator *() const;
-      pointer operator ->();
-      iterator& operator ++();
-      bool operator !=(iterator const &rhs) const;
-      bool operator ==(iterator const &rhs) const;
-      iterator& operator=(iterator const&);
+      value_type operator*() const;
+      pointer operator->();
+      iterator &operator++();
+      native_bool operator!=(iterator const &rhs) const;
+      native_bool operator==(iterator const &rhs) const;
+      iterator &operator=(iterator const &);
 
       option<value_type> latest;
       processor &p;
     };
 
-    processor
-    (
-      runtime::context &rt_ctx,
-      lex::processor::iterator const &b,
-      lex::processor::iterator const &e
-    );
+    processor(runtime::context &rt_ctx,
+              lex::processor::iterator const &b,
+              lex::processor::iterator const &e);
 
     object_result next();
     object_result parse_list();
@@ -53,6 +52,7 @@ namespace jank::read::parse
     object_result parse_integer();
     object_result parse_real();
     object_result parse_string();
+    object_result parse_escaped_string();
 
     iterator begin();
     iterator end();

@@ -1,14 +1,17 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/persistent_vector_sequence.hpp>
+#include <jank/runtime/obj/persistent_list_sequence.hpp>
+#include <jank/runtime/detail/native_persistent_list.hpp>
 
 namespace jank::runtime
 {
+  object_ptr seq(object_ptr s);
+
   template <>
-  struct static_object<object_type::vector> : gc
+  struct static_object<object_type::persistent_list> : gc
   {
-    using value_type = runtime::detail::native_persistent_vector;
+    using value_type = runtime::detail::native_persistent_list;
 
     static constexpr bool pointer_free{ false };
 
@@ -17,47 +20,48 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(object &&base);
     static_object(value_type &&d);
     static_object(value_type const &d);
+
     template <typename... Args>
     static_object(Args &&...args)
       : data{ std::forward<Args>(args)... }
-    { }
+    {
+    }
+
+    static native_box<static_object> empty()
+    {
+      static auto const ret(make_box<static_object>());
+      return ret;
+    }
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
-    native_integer to_hash() const;
+    native_hash to_hash() const;
 
     /* behavior::metadatable */
     object_ptr with_meta(object_ptr m) const;
 
     /* behavior::seqable */
-    obj::persistent_vector_sequence_ptr seq() const;
-    obj::persistent_vector_sequence_ptr fresh_seq() const;
+    obj::persistent_list_sequence_ptr seq() const;
+    obj::persistent_list_sequence_ptr fresh_seq() const;
 
     /* behavior::countable */
     size_t count() const;
 
-    /* behavior::associatively_readable */
-    object_ptr get(object_ptr key) const;
-    object_ptr get(object_ptr key, object_ptr fallback) const;
-    object_ptr get_entry(object_ptr key) const;
-    native_bool contains(object_ptr key) const;
-
     /* behavior::consable */
     native_box<static_object> cons(object_ptr head) const;
 
-    object base{ object_type::vector };
+    object base{ object_type::persistent_list };
     value_type data;
     option<object_ptr> meta;
   };
 
   namespace obj
   {
-    using vector = static_object<object_type::vector>;
-    using vector_ptr = native_box<vector>;
+    using persistent_list = static_object<object_type::persistent_list>;
+    using persistent_list_ptr = native_box<persistent_list>;
   }
 }

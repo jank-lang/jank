@@ -24,12 +24,9 @@ namespace jank::profile
       if(!output.is_open())
       {
         enabled = false;
-        fmt::println
-        (
-          stderr,
-          "Unable to open profile file: {}\nProfiling is now disabled.",
-          opts.profiler_file
-        );
+        fmt::println(stderr,
+                     "Unable to open profile file: {}\nProfiling is now disabled.",
+                     opts.profiler_file);
       }
     }
   }
@@ -37,28 +34,40 @@ namespace jank::profile
   void enter(native_persistent_string_view const &region)
   {
     if(enabled)
-    { fmt::println(output, "{} {} enter {}", tag, now(), region); }
+    {
+      fmt::println(output, "{} {} enter {}", tag, now(), region);
+    }
   }
 
   void exit(native_persistent_string_view const &region)
   {
     if(enabled)
-    { fmt::println(output, "{} {} exit {}", tag, now(), region); }
+    {
+      fmt::println(output, "{} {} exit {}", tag, now(), region);
+    }
   }
 
   void report(native_persistent_string_view const &boundary)
   {
     if(enabled)
-    { fmt::println(output, "{} {} report {}", tag, now(), boundary); }
+    {
+      fmt::println(output, "{} {} report {}", tag, now(), boundary);
+    }
   }
 
   timer::timer(native_persistent_string_view const &region)
     : region{ region }
-  { enter(region); }
+  {
+    enter(region);
+  }
 
   timer::~timer()
-  { exit(region); }
+  {
+    exit(region);
+  }
 
   void timer::report(native_persistent_string_view const &boundary) const
-  { jank::profile::report(boundary); }
+  {
+    jank::profile::report(boundary);
+  }
 }

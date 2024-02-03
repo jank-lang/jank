@@ -15,24 +15,25 @@ namespace jank::runtime
 
   template <>
   struct static_object<object_type::persistent_hash_map>
-  : obj::detail::base_persistent_map
-    <
-      object_type::persistent_hash_map,
-      object_type::persistent_hash_map_sequence,
-      runtime::detail::native_persistent_hash_map
-    >
+    : obj::detail::base_persistent_map<object_type::persistent_hash_map,
+                                       object_type::persistent_hash_map_sequence,
+                                       runtime::detail::native_persistent_hash_map>
   {
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(runtime::detail::native_array_map const &m, object_ptr key, object_ptr val);
+    static_object(runtime::detail::native_persistent_array_map const &m,
+                  object_ptr key,
+                  object_ptr val);
     static_object(value_type &&d);
     static_object(value_type const &d);
     static_object(runtime::detail::native_transient_hash_map &&d);
+
     template <typename... Args>
     static_object(runtime::detail::in_place_unique, Args &&...args)
       : data{ std::forward<Args>(args)... }
-    { }
+    {
+    }
 
     static native_box<static_object> empty()
     {
@@ -43,13 +44,10 @@ namespace jank::runtime
     using base_persistent_map::base_persistent_map;
 
     template <typename... Args>
-    static native_box<static_object> create_unique(Args &&...args)
+    static native_box<static_object> create_unique(Args &&...pairs)
     {
-      return make_box<static_object>
-      (
-        runtime::detail::in_place_unique{},
-        std::forward<Args>(args)...
-      );
+      return make_box<static_object>(runtime::detail::in_place_unique{},
+                                     std::forward<Args>(pairs)...);
     }
 
     static native_box<static_object> create_from_seq(object_ptr const seq);

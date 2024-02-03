@@ -12,21 +12,21 @@ namespace jank::analyze::expr
 
     runtime::object_ptr to_runtime_data() const
     {
-      runtime::object_ptr pair_maps(make_box<runtime::obj::vector>());
+      runtime::object_ptr pair_maps(make_box<runtime::obj::persistent_vector>());
       for(auto const &e : data_exprs)
       {
-        pair_maps = runtime::conj
-        (
-          pair_maps,
-          make_box<runtime::obj::vector>(e.first->to_runtime_data(), e.second->to_runtime_data())
-        );
+        pair_maps
+          = runtime::conj(pair_maps,
+                          make_box<runtime::obj::persistent_vector>(e.first->to_runtime_data(),
+                                                                    e.second->to_runtime_data()));
       }
 
-      return runtime::obj::persistent_array_map::create_unique
-      (
-        make_box("__type"), make_box("expr::map"),
-        make_box("data_exprs"), pair_maps
-      );
+      return runtime::merge(
+        static_cast<expression_base const *>(this)->to_runtime_data(),
+        runtime::obj::persistent_array_map::create_unique(make_box("__type"),
+                                                          make_box("expr::map"),
+                                                          make_box("data_exprs"),
+                                                          pair_maps));
     }
   };
 }

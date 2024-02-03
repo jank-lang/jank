@@ -17,11 +17,21 @@ namespace jank::jit
 
     auto dev_path(jank_path / "CMakeFiles/jank_lib.dir/cmake_pch.hxx.pch");
     if(boost::filesystem::exists(dev_path))
-    { return std::move(dev_path); }
+    {
+      return std::move(dev_path);
+    }
+
+    auto dev_arm64_path(jank_path / "CMakeFiles/jank_lib.dir/cmake_pch_arm64.hxx.pch");
+    if(boost::filesystem::exists(dev_arm64_path))
+    {
+      return std::move(dev_arm64_path);
+    }
 
     auto installed_path(jank_path / "../include/cpp/jank/prelude.hpp.pch");
     if(boost::filesystem::exists(installed_path))
-    { return std::move(installed_path); }
+    {
+      return std::move(installed_path);
+    }
 
     return none;
   }
@@ -31,8 +41,8 @@ namespace jank::jit
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
     auto const script_path(jank_path / "build-pch");
     auto const include_path(jank_path / "../include");
-    auto const command
-    (script_path.string() + " " + include_path.string() + " " + std::string{ JANK_COMPILER_FLAGS });
+    auto const command(script_path.string() + " " + include_path.string() + " "
+                       + std::string{ JANK_COMPILER_FLAGS });
 
     std::cerr << "Note: Looks like your first run. Building pre-compiled header… " << std::flush;
 
@@ -51,7 +61,9 @@ namespace jank::jit
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
 
     if(boost::filesystem::exists(jank_path / "../lib/clang"))
-    { return jank_path / ".."; }
+    {
+      return jank_path / "..";
+    }
 
     return JANK_CLING_BUILD_DIR;
   }
@@ -70,14 +82,18 @@ namespace jank::jit
 
       /* TODO: Better error handling. */
       if(pch_path.is_none())
-      { throw std::runtime_error{ "unable to find and also unable to build PCH" }; }
+      {
+        throw std::runtime_error{ "unable to find and also unable to build PCH" };
+      }
     }
     auto const &pch_path_str(pch_path.unwrap().string());
 
     auto const llvm_resource_path(find_llvm_resource_path());
     if(llvm_resource_path.is_none())
     /* TODO: Better error handling. */
-    { throw std::runtime_error{ "unable to find LLVM resource path" }; }
+    {
+      throw std::runtime_error{ "unable to find LLVM resource path" };
+    }
     auto const &llvm_resource_path_str(llvm_resource_path.unwrap().string());
 
     auto const include_path(jank_path / "../include");
@@ -97,34 +113,31 @@ namespace jank::jit
         O = "fast";
         break;
       default:
-        throw std::runtime_error{ fmt::format("invalid optimization level {}", optimization_level) };
+        throw std::runtime_error{ fmt::format("invalid optimization level {}",
+                                              optimization_level) };
     }
 
-    auto const args
-    (
-      jank::util::make_array
-      (
-        /* TODO: Path to clang++ from Cling build? Is this using the system clang++? */
-        "clang++", "-std=c++17",
-        "-DHAVE_CXX14=1", "-DIMMER_HAS_LIBGC=1",
-        "-include-pch", pch_path_str.c_str(),
-        "-isystem", include_path.c_str(),
-        O.data(), "-march=native"
-      )
-    );
-    interpreter = std::make_unique<cling::Interpreter>(args.size(), args.data(), llvm_resource_path_str.c_str());
+    auto const args(jank::util::make_array(
+      /* TODO: Path to clang++ from Cling build? Is this using the system clang++? */
+      "clang++",
+      "-std=c++17",
+      "-DHAVE_CXX14=1",
+      "-DIMMER_HAS_LIBGC=1",
+      "-include-pch",
+      pch_path_str.c_str(),
+      "-isystem",
+      include_path.c_str(),
+      O.data()));
+    interpreter = std::make_unique<cling::Interpreter>(args.size(),
+                                                       args.data(),
+                                                       llvm_resource_path_str.c_str());
 
-    eval_string
-    (
-      fmt::format
-      (
-        "auto &__rt_ctx(*reinterpret_cast<jank::runtime::context*>({}));",
-        fmt::ptr(&rt_ctx)
-      )
-    );
+    eval_string(fmt::format("auto &__rt_ctx(*reinterpret_cast<jank::runtime::context*>({}));",
+                            fmt::ptr(&rt_ctx)));
   }
 
-  result<option<runtime::object_ptr>, native_persistent_string> processor::eval(codegen::processor &cg_prc) const
+  result<option<runtime::object_ptr>, native_persistent_string>
+  processor::eval(codegen::processor &cg_prc) const
   {
     profile::timer timer{ "jit eval" };
     /* TODO: Improve Cling to accept string_views instead. */
@@ -135,16 +148,20 @@ namespace jank::jit
 
     auto const expr(cg_prc.expression_str(true));
     if(expr.empty())
-    { return ok(none); }
+    {
+      return ok(none);
+    }
 
     cling::Value v;
     /* TODO: Format this for erasure during codegen. */
     auto const result(interpreter->evaluate(fmt::format("&{}->base", expr), v));
     if(result != cling::Interpreter::CompilationResult::kSuccess)
-    { return err("compilation error"); }
+    {
+      return err("compilation error");
+    }
 
     // clang::QualType::getFromOpaquePtr(v.m_Type).getAsString()
-    auto const ret_val(v.castAs<runtime::object*>());
+    auto const ret_val(v.castAs<runtime::object *>());
     return ok(ret_val);
   }
 

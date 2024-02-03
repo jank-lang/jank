@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include <jank/runtime/obj/list.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/analyze/expression_base.hpp>
 #include <jank/runtime/seq.hpp>
 
@@ -13,22 +13,27 @@ namespace jank::analyze::expr
   {
     /* Var, local, or callable. */
     native_box<E> source_expr{};
-    runtime::obj::list_ptr args{};
+    runtime::obj::persistent_list_ptr args{};
     native_vector<native_box<E>> arg_exprs;
 
     runtime::object_ptr to_runtime_data() const
     {
-      runtime::object_ptr arg_expr_maps(make_box<runtime::obj::vector>());
+      runtime::object_ptr arg_expr_maps(make_box<runtime::obj::persistent_vector>());
       for(auto const &e : arg_exprs)
-      { arg_expr_maps = runtime::conj(arg_expr_maps, e->to_runtime_data()); }
+      {
+        arg_expr_maps = runtime::conj(arg_expr_maps, e->to_runtime_data());
+      }
 
-      return runtime::obj::persistent_array_map::create_unique
-      (
-        make_box("__type"), make_box("expr::call"),
-        make_box("source_expr"), source_expr->to_runtime_data(),
-        make_box("args"), args,
-        make_box("arg_exprs"), arg_expr_maps
-      );
+      return runtime::merge(
+        static_cast<expression_base const *>(this)->to_runtime_data(),
+        runtime::obj::persistent_array_map::create_unique(make_box("__type"),
+                                                          make_box("expr::call"),
+                                                          make_box("source_expr"),
+                                                          source_expr->to_runtime_data(),
+                                                          make_box("args"),
+                                                          args,
+                                                          make_box("arg_exprs"),
+                                                          arg_expr_maps));
     }
   };
 }

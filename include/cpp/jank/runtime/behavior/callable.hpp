@@ -8,14 +8,15 @@ namespace jank::runtime
 
   namespace obj
   {
-    using list = static_object<object_type::list>;
+    using list = static_object<object_type::persistent_list>;
     using list_ptr = native_box<list>;
   }
 
   constexpr size_t const max_params{ 10 };
 
   struct variadic_tag
-  { };
+  {
+  };
 
   /* When analysis can match a call to a fn definition, we can know the
    * supported arities at compile-time, but that's not always the case in
@@ -26,13 +27,65 @@ namespace jank::runtime
   object_ptr dynamic_call(object_ptr source, object_ptr, object_ptr);
   object_ptr dynamic_call(object_ptr source, object_ptr, object_ptr, object_ptr);
   object_ptr dynamic_call(object_ptr source, object_ptr, object_ptr, object_ptr, object_ptr);
-  object_ptr dynamic_call(object_ptr source, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr);
-  object_ptr dynamic_call(object_ptr source, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr);
-  object_ptr dynamic_call(object_ptr source, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr);
-  object_ptr dynamic_call(object_ptr source, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr);
-  object_ptr dynamic_call(object_ptr source, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr);
-  object_ptr dynamic_call(object_ptr source, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr);
-  object_ptr dynamic_call(object_ptr source, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, obj::list_ptr);
+  object_ptr
+  dynamic_call(object_ptr source, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr);
+  object_ptr dynamic_call(object_ptr source,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr);
+  object_ptr dynamic_call(object_ptr source,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr);
+  object_ptr dynamic_call(object_ptr source,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr);
+  object_ptr dynamic_call(object_ptr source,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr);
+  object_ptr dynamic_call(object_ptr source,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr);
+  object_ptr dynamic_call(object_ptr source,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          object_ptr,
+                          obj::persistent_list_ptr);
 
   object_ptr apply_to(object_ptr source, object_ptr args);
 
@@ -50,11 +103,38 @@ namespace jank::runtime
       virtual object_ptr call(object_ptr, object_ptr, object_ptr) const;
       virtual object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr) const;
       virtual object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const;
-      virtual object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const;
-      virtual object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const;
-      virtual object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const;
-      virtual object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const;
-      virtual object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const;
+      virtual object_ptr
+        call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const;
+      virtual object_ptr
+        call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr)
+          const;
+      virtual object_ptr call(object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr) const;
+      virtual object_ptr call(object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr) const;
+      virtual object_ptr call(object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr) const;
 
       /* When dynamically calling a function, we need to know three things:
        *
@@ -88,37 +168,85 @@ namespace jank::runtime
       virtual arity_flag_t get_arity_flags() const;
 
       static constexpr arity_flag_t mask_variadic_arity(uint8_t const pos)
-      { return (0b10000000 | pos); }
-      static constexpr arity_flag_t extract_variadic_arity_mask(arity_flag_t const arity_flags)
-      { return (arity_flags & 0b10001111); }
-      static constexpr native_bool is_variadic_ambiguous(arity_flag_t const arity_flags)
-      { return (arity_flags & 0b01000000); }
+      {
+        return (0b10000000 | pos);
+      }
 
-      static constexpr arity_flag_t build_arity_flags
-      (
-        uint8_t const highest_fixed_arity,
-        native_bool const is_variadic,
-        native_bool const is_variadic_ambiguous
-      )
-      { return (is_variadic << 7) | (is_variadic_ambiguous << 6) | highest_fixed_arity; }
+      static constexpr arity_flag_t extract_variadic_arity_mask(arity_flag_t const arity_flags)
+      {
+        return (arity_flags & 0b10001111);
+      }
+
+      static constexpr native_bool is_variadic_ambiguous(arity_flag_t const arity_flags)
+      {
+        return (arity_flags & 0b01000000);
+      }
+
+      static constexpr arity_flag_t build_arity_flags(uint8_t const highest_fixed_arity,
+                                                      native_bool const is_variadic,
+                                                      native_bool const is_variadic_ambiguous)
+      {
+        return (is_variadic << 7) | (is_variadic_ambiguous << 6) | highest_fixed_arity;
+      }
     };
+
     using callable_ptr = native_box<callable>;
 
     /* TODO: Is this needed? A non-callable function-like would need to define all call overloads? :( */
     template <typename T>
-    concept function_like = requires(T * const t)
-    {
-      { t->call(object_ptr{}) } -> std::convertible_to<object_ptr>;
-      { t->call(object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
-      { t->call(object_ptr{}, object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
-      { t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
-      { t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
-      { t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
-      { t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
-      { t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
-      { t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
+    concept function_like = requires(T * const t) {
+      {
+        t->call(object_ptr{})
+      } -> std::convertible_to<object_ptr>;
+      {
+        t->call(object_ptr{}, object_ptr{})
+      } -> std::convertible_to<object_ptr>;
+      {
+        t->call(object_ptr{}, object_ptr{}, object_ptr{})
+      } -> std::convertible_to<object_ptr>;
+      {
+        t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{})
+      } -> std::convertible_to<object_ptr>;
+      {
+        t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{})
+      } -> std::convertible_to<object_ptr>;
+      {
+        t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{})
+      } -> std::convertible_to<object_ptr>;
+      {
+        t->call(object_ptr{},
+                object_ptr{},
+                object_ptr{},
+                object_ptr{},
+                object_ptr{},
+                object_ptr{},
+                object_ptr{})
+      } -> std::convertible_to<object_ptr>;
+      {
+        t->call(object_ptr{},
+                object_ptr{},
+                object_ptr{},
+                object_ptr{},
+                object_ptr{},
+                object_ptr{},
+                object_ptr{},
+                object_ptr{})
+      } -> std::convertible_to<object_ptr>;
+      {
+        t->call(object_ptr{},
+                object_ptr{},
+                object_ptr{},
+                object_ptr{},
+                object_ptr{},
+                object_ptr{},
+                object_ptr{},
+                object_ptr{},
+                object_ptr{})
+      } -> std::convertible_to<object_ptr>;
 
-      { t->get_arity_flags() } -> std::convertible_to<size_t>;
+      {
+        t->get_arity_flags()
+      } -> std::convertible_to<size_t>;
     };
   }
 }

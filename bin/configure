@@ -4,8 +4,8 @@ set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 build_dir="${here}/../build"
-/bin/rm -rf "${build_dir}"/{CMakeCache.txt,CMakeFiles}
-/bin/mkdir -p "${build_dir}"
+rm -rf "${build_dir}"/{CMakeCache.txt,CMakeFiles}
+mkdir -p "${build_dir}"
 
 # Assume clang, but allow overriding.
 export CC="${CC:-clang}"

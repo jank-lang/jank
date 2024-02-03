@@ -13,16 +13,16 @@ namespace jank::runtime
     boolean,
     integer,
     real,
-    string,
+    persistent_string,
     keyword,
     symbol,
-    list,
-    vector,
+    persistent_list,
+    persistent_vector,
     persistent_array_map,
     persistent_array_map_sequence,
     persistent_hash_map,
     persistent_hash_map_sequence,
-    set,
+    persistent_set,
     cons,
     range,
     iterator,
@@ -35,10 +35,13 @@ namespace jank::runtime
     persistent_set_sequence,
     ns,
     var,
+    var_thread_binding,
   };
 
   struct object
-  { object_type type{}; };
+  {
+    object_type type{};
+  };
 
   template <object_type T>
   struct static_object;
@@ -53,13 +56,22 @@ namespace jank::runtime
   namespace behavior
   {
     template <typename T>
-    concept objectable = requires(T * const t)
-    {
-      { t->equal(std::declval<object const&>()) } -> std::convertible_to<native_bool>;
-      { t->to_string() } -> std::convertible_to<native_persistent_string>;
-      { t->to_string(std::declval<fmt::memory_buffer&>()) } -> std::same_as<void>;
-      { t->to_hash() } -> std::convertible_to<native_integer>;
-      { t->base } -> std::same_as<object&>;
+    concept objectable = requires(T * const t) {
+      {
+        t->equal(std::declval<object const &>())
+      } -> std::convertible_to<native_bool>;
+      {
+        t->to_string()
+      } -> std::convertible_to<native_persistent_string>;
+      {
+        t->to_string(std::declval<fmt::memory_buffer &>())
+      } -> std::same_as<void>;
+      {
+        t->to_hash()
+      } -> std::convertible_to<native_integer>;
+      {
+        t->base
+      } -> std::same_as<object &>;
     };
   }
 }

@@ -4,56 +4,124 @@
 #include <magic_enum.hpp>
 
 #include <jank/runtime/obj/number.hpp>
-#include <jank/runtime/obj/vector.hpp>
-#include <jank/runtime/obj/list.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
-#include <jank/runtime/obj/set.hpp>
+#include <jank/runtime/obj/persistent_set.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/keyword.hpp>
-#include <jank/runtime/obj/string.hpp>
+#include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/read/parse.hpp>
 
 namespace jank::read::parse
 {
-  processor::iterator::value_type processor::iterator::operator *() const
-  { return latest.unwrap(); }
-  processor::iterator::pointer processor::iterator::operator ->()
-  { return &latest.unwrap(); }
-  processor::iterator& processor::iterator::operator ++()
+  namespace detail
+  {
+    string_result<native_transient_string> unescape(native_transient_string const &input)
+    {
+      native_transient_string ss;
+      ss.reserve(input.size());
+      native_bool escape{};
+
+      for(auto const c : input)
+      {
+        if(!escape)
+        {
+          if(c == '\\')
+          {
+            escape = true;
+          }
+          else
+          {
+            ss += c;
+          }
+        }
+        else
+        {
+          switch(c)
+          {
+            case 'n':
+              ss += '\n';
+              break;
+            case 't':
+              ss += '\t';
+              break;
+            case 'r':
+              ss += '\r';
+              break;
+            case '\\':
+              ss += '\\';
+              break;
+            case '"':
+              ss += '"';
+              break;
+            default:
+              return err(fmt::format("invalid escape sequence: \\{}", c));
+          }
+          escape = false;
+        }
+      }
+
+      return ok(ss);
+    }
+  }
+
+  processor::iterator::value_type processor::iterator::operator*() const
+  {
+    return latest.unwrap();
+  }
+
+  processor::iterator::pointer processor::iterator::operator->()
+  {
+    return &latest.unwrap();
+  }
+
+  processor::iterator &processor::iterator::operator++()
   {
     latest = some(p.next());
     return *this;
   }
-  bool processor::iterator::operator !=(processor::iterator const &rhs) const
-  { return latest != rhs.latest; }
-  bool processor::iterator::operator ==(processor::iterator const &rhs) const
-  { return latest == rhs.latest; }
-  processor::iterator& processor::iterator::operator=(processor::iterator const &rhs)
+
+  native_bool processor::iterator::operator!=(processor::iterator const &rhs) const
+  {
+    return latest != rhs.latest;
+  }
+
+  native_bool processor::iterator::operator==(processor::iterator const &rhs) const
+  {
+    return latest == rhs.latest;
+  }
+
+  processor::iterator &processor::iterator::operator=(processor::iterator const &rhs)
   {
     latest = rhs.latest;
     return *this;
   }
 
-  processor::processor
-  (
-    runtime::context &rt_ctx,
-    lex::processor::iterator const &b,
-    lex::processor::iterator const &e
-  )
-    : rt_ctx{ rt_ctx }, token_current{ b }, token_end{ e }
-  { }
+  processor::processor(runtime::context &rt_ctx,
+                       lex::processor::iterator const &b,
+                       lex::processor::iterator const &e)
+    : rt_ctx{ rt_ctx }
+    , token_current{ b }
+    , token_end{ e }
+  {
+  }
 
   processor::object_result processor::next()
   {
     /* TODO: Replace nullptr with none. */
     if(token_current == token_end)
-    { return ok(nullptr); }
+    {
+      return ok(nullptr);
+    }
 
     while(true)
     {
       auto token_result(*token_current);
       if(token_result.is_err())
-      { return token_result.err().unwrap(); }
+      {
+        return token_result.err().unwrap();
+      }
       auto token(token_result.expect_ok());
       switch(token.kind)
       {
@@ -72,7 +140,10 @@ namespace jank::read::parse
         case lex::token_kind::close_paren:
         case lex::token_kind::close_curly_bracket:
           if(expected_closer != token.kind)
-          { return err(error{ token.pos, native_persistent_string{ "unexpected closing character" } }); }
+          {
+            return err(
+              error{ token.pos, native_persistent_string{ "unexpected closing character" } });
+          }
           ++token_current;
           expected_closer = none;
           return ok(nullptr);
@@ -92,13 +163,16 @@ namespace jank::read::parse
           return parse_real();
         case lex::token_kind::string:
           return parse_string();
+        case lex::token_kind::escaped_string:
+          return parse_escaped_string();
         case lex::token_kind::eof:
           return ok(nullptr);
         default:
-        {
-          native_persistent_string msg{ fmt::format("unexpected token kind: {}", magic_enum::enum_name(token.kind)) };
-          return err(error{ token.pos, std::move(msg) });
-        }
+          {
+            native_persistent_string msg{ fmt::format("unexpected token kind: {}",
+                                                      magic_enum::enum_name(token.kind)) };
+            return err(error{ token.pos, std::move(msg) });
+          }
       }
     }
   }
@@ -114,14 +188,18 @@ namespace jank::read::parse
     for(auto it(begin()); it != end(); ++it)
     {
       if(it.latest.unwrap().is_err())
-      { return err(it.latest.unwrap().expect_err()); }
+      {
+        return err(it.latest.unwrap().expect_err());
+      }
       ret.push_back(it.latest.unwrap().expect_ok());
     }
     if(expected_closer.is_some())
-    { return err(error{ start_token.pos, "Unterminated list" }); }
+    {
+      return err(error{ start_token.pos, "Unterminated list" });
+    }
 
     expected_closer = prev_expected_closer;
-    return make_box<runtime::obj::list>(ret.rbegin(), ret.rend());
+    return make_box<runtime::obj::persistent_list>(ret.rbegin(), ret.rend());
   }
 
   processor::object_result processor::parse_vector()
@@ -135,14 +213,18 @@ namespace jank::read::parse
     for(auto it(begin()); it != end(); ++it)
     {
       if(it.latest.unwrap().is_err())
-      { return err(it.latest.unwrap().expect_err()); }
+      {
+        return err(it.latest.unwrap().expect_err());
+      }
       ret.push_back(it.latest.unwrap().expect_ok());
     }
     if(expected_closer.is_some())
-    { return err(error{ start_token.pos, "Unterminated vector" }); }
+    {
+      return err(error{ start_token.pos, "Unterminated vector" });
+    }
 
     expected_closer = prev_expected_closer;
-    return make_box<runtime::obj::vector>(ret.persistent());
+    return make_box<runtime::obj::persistent_vector>(ret.persistent());
   }
 
   /* TODO: Uniqueness check. */
@@ -153,24 +235,32 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_curly_bracket);
 
-    runtime::detail::native_array_map ret;
+    runtime::detail::native_persistent_array_map ret;
     for(auto it(begin()); it != end(); ++it)
     {
       if(it.latest.unwrap().is_err())
-      { return err(it.latest.unwrap().expect_err()); }
+      {
+        return err(it.latest.unwrap().expect_err());
+      }
       auto const key(it.latest.unwrap().expect_ok());
 
       if(++it == end())
-      { return err(error{ start_token.pos, "odd number of items in map" }); }
+      {
+        return err(error{ start_token.pos, "odd number of items in map" });
+      }
 
       if(it.latest.unwrap().is_err())
-      { return err(it.latest.unwrap().expect_err()); }
+      {
+        return err(it.latest.unwrap().expect_err());
+      }
       auto const value(it.latest.unwrap().expect_ok());
 
       ret.insert_or_assign(key, value);
     }
     if(expected_closer.is_some())
-    { return err(error{ start_token.pos, "Unterminated map" }); }
+    {
+      return err(error{ start_token.pos, "Unterminated map" });
+    }
 
     expected_closer = prev_expected_closer;
     return make_box<runtime::obj::persistent_array_map>(ret);
@@ -185,18 +275,17 @@ namespace jank::read::parse
     auto val_result(next());
     quoted = old_quoted;
     if(val_result.is_err())
-    { return val_result; }
+    {
+      return val_result;
+    }
     else if(val_result.expect_ok() == nullptr)
-    { return err(error{ start_token.pos, native_persistent_string{ "invalid value after quote" } }); }
+    {
+      return err(error{ start_token.pos, native_persistent_string{ "invalid value after quote" } });
+    }
 
-    return runtime::erase
-    (
-      make_box<runtime::obj::list>
-      (
-        make_box<runtime::obj::symbol>("quote"),
-        val_result.expect_ok_move()
-      )
-    );
+    return runtime::erase(
+      make_box<runtime::obj::persistent_list>(make_box<runtime::obj::symbol>("quote"),
+                                              val_result.expect_ok_move()));
   }
 
   processor::object_result processor::parse_nil()
@@ -209,7 +298,7 @@ namespace jank::read::parse
   {
     auto const token((*token_current).expect_ok());
     ++token_current;
-    auto const b(boost::get<bool>(token.data));
+    auto const b(boost::get<native_bool>(token.data));
     return ok(make_box<runtime::obj::boolean>(b));
   }
 
@@ -224,26 +313,34 @@ namespace jank::read::parse
     {
       /* If it's only a slash, it's a name. Otherwise, it's a ns/name separator. */
       if(sv.size() == 1)
-      { name = sv; }
+      {
+        name = sv;
+      }
       else
       {
         auto const ns_portion(sv.substr(0, slash));
         /* Quoted symbols can have any ns and it doesn't need to exist. */
         if(quoted)
-        { ns = ns_portion; }
+        {
+          ns = ns_portion;
+        }
         /* Normal symbols will have the ns resolved immediately. */
         else
         {
           auto const resolved_ns(rt_ctx.resolve_ns(make_box<runtime::obj::symbol>(ns_portion)));
           if(resolved_ns.is_none())
-          { return err(error{ token.pos, fmt::format("unknown namespace: {}", ns_portion) }); }
+          {
+            return err(error{ token.pos, fmt::format("unknown namespace: {}", ns_portion) });
+          }
           ns = resolved_ns.unwrap()->name->name;
         }
         name = sv.substr(slash + 1);
       }
     }
     else
-    { name = sv; }
+    {
+      name = sv;
+    }
     return ok(make_box<runtime::obj::symbol>(ns, name));
   }
 
@@ -254,24 +351,32 @@ namespace jank::read::parse
     auto const sv(boost::get<native_persistent_string_view>(token.data));
     /* A :: keyword either resolves to the current ns or an alias, depending on
      * whether or not it's qualified. */
-    bool const resolved{ sv[0] != ':' };
+    native_bool const resolved{ sv[0] != ':' };
 
     auto const slash(sv.find('/'));
     native_persistent_string ns, name;
     if(slash != native_persistent_string::npos)
     {
       if(resolved)
-      { ns = sv.substr(0, slash); }
+      {
+        ns = sv.substr(0, slash);
+      }
       else
-      { ns = sv.substr(1, slash - 1); }
+      {
+        ns = sv.substr(1, slash - 1);
+      }
       name = sv.substr(slash + 1);
     }
     else
-    { name = sv.substr(resolved ? 0 : 1); }
+    {
+      name = sv.substr(resolved ? 0 : 1);
+    }
 
     auto const intern_res(rt_ctx.intern_keyword(runtime::obj::symbol{ ns, name }, resolved));
     if(intern_res.is_err())
-    { return err(intern_res.expect_err()); }
+    {
+      return err(intern_res.expect_err());
+    }
     return ok(intern_res.expect_ok());
   }
 
@@ -294,12 +399,30 @@ namespace jank::read::parse
     auto const token(token_current->expect_ok());
     ++token_current;
     auto const sv(boost::get<native_persistent_string_view>(token.data));
-    return ok(make_box<runtime::obj::string>(native_persistent_string{ sv.data(), sv.size() }));
+    return ok(
+      make_box<runtime::obj::persistent_string>(native_persistent_string{ sv.data(), sv.size() }));
+  }
+
+  processor::object_result processor::parse_escaped_string()
+  {
+    auto const token(token_current->expect_ok());
+    ++token_current;
+    auto const sv(boost::get<native_persistent_string_view>(token.data));
+    auto res(detail::unescape({ sv.data(), sv.size() }));
+    if(res.is_err())
+    {
+      return err(error{ token.pos, res.expect_err_move() });
+    }
+    return ok(make_box<runtime::obj::persistent_string>(res.expect_ok_move()));
   }
 
   processor::iterator processor::begin()
-  { return { some(next()), *this }; }
-  processor::iterator processor::end()
-  { return { some(ok(nullptr)), *this }; }
-}
+  {
+    return { some(next()), *this };
+  }
 
+  processor::iterator processor::end()
+  {
+    return { some(ok(nullptr)), *this };
+  }
+}

@@ -1,21 +1,23 @@
 #pragma once
 
 #include <mutex>
-#include <unordered_map>
+#include <list>
 
 #include <folly/Synchronized.h>
 
 #include <jank/result.hpp>
-#include <jank/util/cli.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/runtime/module/loader.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/jit/processor.hpp>
+#include <jank/util/cli.hpp>
 
 namespace jank::jit
-{ struct processor; }
+{
+  struct processor;
+}
 
 namespace jank::runtime
 {
@@ -23,8 +25,9 @@ namespace jank::runtime
   {
     context();
     context(util::cli::options const &opts);
-    context(context const&);
+    context(context const &);
     context(context &&) = delete;
+    ~context();
 
     void dump() const;
 
@@ -39,17 +42,22 @@ namespace jank::runtime
 
     /* Adds the current ns to unqualified symbols and resolves the ns of qualified symbols.
      * Does not intern. */
-    obj::symbol_ptr qualify_symbol(obj::symbol_ptr const &);
+    obj::symbol_ptr qualify_symbol(obj::symbol_ptr const &) const;
     option<object_ptr> find_local(obj::symbol_ptr const &);
 
     result<var_ptr, native_persistent_string> intern_var(obj::symbol_ptr const &);
-    result<var_ptr, native_persistent_string> intern_var(native_persistent_string const &ns, native_persistent_string const &name);
+    result<var_ptr, native_persistent_string>
+    intern_var(native_persistent_string const &ns, native_persistent_string const &name);
     option<var_ptr> find_var(obj::symbol_ptr const &);
-    option<var_ptr> find_var(native_persistent_string const &ns, native_persistent_string const &name);
+    option<var_ptr>
+    find_var(native_persistent_string const &ns, native_persistent_string const &name);
 
-    result<obj::keyword_ptr, native_persistent_string> intern_keyword(obj::symbol const &sym, bool const resolved);
-    result<obj::keyword_ptr, native_persistent_string> intern_keyword
-    (native_persistent_string_view const &ns, native_persistent_string_view const &name, bool resolved);
+    result<obj::keyword_ptr, native_persistent_string>
+    intern_keyword(obj::symbol const &sym, native_bool const resolved = true);
+    result<obj::keyword_ptr, native_persistent_string>
+    intern_keyword(native_persistent_string_view const &ns,
+                   native_persistent_string_view const &name,
+                   native_bool resolved = true);
 
     object_ptr macroexpand1(object_ptr o);
     object_ptr macroexpand(object_ptr o);
@@ -58,10 +66,10 @@ namespace jank::runtime
     static object_ptr print(object_ptr o, object_ptr more);
     static object_ptr println(object_ptr more);
 
-    void eval_prelude();
     object_ptr eval_file(native_persistent_string_view const &path);
     object_ptr eval_string(native_persistent_string_view const &code);
-    native_vector<analyze::expression_ptr> analyze_string(native_persistent_string_view const &code, native_bool const eval = true);
+    native_vector<analyze::expression_ptr>
+    analyze_string(native_persistent_string_view const &code, native_bool const eval = true);
 
     /* Finds the specified module on the class path and loads it. If
      * the module is already loaded, nothing is done.
@@ -77,9 +85,11 @@ namespace jank::runtime
     result<void, native_persistent_string> load_module(native_persistent_string_view const &module);
 
     /* Does all the same work as load_module, but also writes compiled files to the file system. */
-    result<void, native_persistent_string> compile_module(native_persistent_string_view const &module);
+    result<void, native_persistent_string>
+    compile_module(native_persistent_string_view const &module);
 
-    void write_module(native_persistent_string_view const &module, native_persistent_string_view const &contents) const;
+    void write_module(native_persistent_string_view const &module,
+                      native_persistent_string_view const &contents) const;
 
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */
@@ -91,32 +101,41 @@ namespace jank::runtime
     folly::Synchronized<native_unordered_map<obj::symbol_ptr, ns_ptr>> namespaces;
     folly::Synchronized<native_unordered_map<obj::symbol, obj::keyword_ptr>> keywords;
 
-    /* TODO: This can be forward declared and moved to the cpp. */
-    struct thread_state
+    struct binding_scope
     {
-      thread_state(thread_state const&) = default;
-      thread_state(context &ctx);
+      binding_scope(context &rt_ctx);
+      binding_scope(context &rt_ctx, obj::persistent_hash_map_ptr const bindings);
+      ~binding_scope();
 
-      var_ptr current_ns{};
-      var_ptr in_ns{};
       context &rt_ctx;
     };
 
-    thread_state& get_thread_state();
-    thread_state& get_thread_state(option<thread_state> init);
+    string_result<void> push_thread_bindings();
+    string_result<void> push_thread_bindings(object_ptr const bindings);
+    string_result<void> push_thread_bindings(obj::persistent_hash_map_ptr const bindings);
+    string_result<void> pop_thread_bindings();
+    obj::persistent_hash_map_ptr get_thread_bindings() const;
+    option<thread_binding_frame> current_thread_binding_frame();
 
-    folly::Synchronized<native_unordered_map<std::thread::id, thread_state>> thread_states;
     /* The analyze processor is reused across evaluations so we can keep the semantic information
      * of previous code. This is essential for REPL use. */
     /* TODO: This needs to be synchronized. */
     analyze::processor an_prc{ *this };
     jit::processor jit_prc;
     /* TODO: This needs to be a dynamic var. */
-    bool compiling{};
-    /* TODO: This needs to be a dynamic var. */
-    native_persistent_string_view current_module;
-    native_unordered_map<native_persistent_string, native_vector<native_persistent_string>> module_dependencies;
+    native_unordered_map<native_persistent_string, native_vector<native_persistent_string>>
+      module_dependencies;
     native_persistent_string output_dir;
     module::loader module_loader;
+
+    var_ptr current_ns_var{};
+    var_ptr in_ns_var{};
+    var_ptr compile_files_var{};
+    var_ptr current_module_var{};
+    var_ptr assert_var{};
+    var_ptr no_recur_var{};
+
+    static thread_local native_unordered_map<context const *, std::list<thread_binding_frame>>
+      thread_binding_frames;
   };
 }

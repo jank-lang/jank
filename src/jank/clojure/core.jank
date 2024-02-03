@@ -2,7 +2,6 @@
 
 ; Namespace management.
 (def *ns*)
-(def in-ns)
 
 ; Exceptions
 (def ex-info
@@ -92,6 +91,7 @@
 (def first
   (fn* first [o]
     (native/raw "__value = jank::runtime::first(#{ o }#);")))
+; Returns a fresh seq.
 (def next
   (fn* next [o]
     (native/raw "__value = jank::runtime::next(#{ o }#);")))
@@ -148,7 +148,7 @@
 (def list?
   (fn* list? [o]
     ; TODO: Visit and use a behavior for this check instead. It should apply to conses and others.
-    (native/raw "__value = make_box(#{ o }#->type == object_type::list);")))
+    (native/raw "__value = make_box(#{ o }#->type == object_type::persistent_list);")))
 
 (def list
   (fn* list [& items]
@@ -159,7 +159,7 @@
                      using T = typename decltype(typed_items)::value_type;
 
                      if constexpr(behavior::seqable<T>)
-                     { return jank::runtime::obj::list::create(typed_items); }
+                     { return jank::runtime::obj::persistent_list::create(typed_items); }
                      else
                      { throw #{ (ex-info :invalid-seq {:items items}) }#; }
                    },
@@ -169,7 +169,7 @@
 ;; Vectors.
 (def vector?
   (fn* vector? [o]
-    (native/raw "__value = make_box(#{ o }#->type == object_type::vector);")))
+    (native/raw "__value = make_box(#{ o }#->type == object_type::persistent_vector);")))
 
 (def vec
   (fn* vec [coll]
@@ -180,7 +180,7 @@
                      using T = typename decltype(typed_coll)::value_type;
 
                      if constexpr(behavior::seqable<T>)
-                     { return jank::runtime::obj::vector::create(typed_coll); }
+                     { return jank::runtime::obj::persistent_vector::create(typed_coll); }
                      else
                      { throw #{ (ex-info :invalid-seq {:coll coll}) }#; }
                    },
@@ -201,6 +201,10 @@
        (if (empty? args)
          res
          (recur res (first args) (next args)))))))
+
+;; Strings.
+; TODO: Proper version.
+(def pr-str)
 
 ;; Metadata
 (def meta
@@ -290,6 +294,11 @@
         (cons 'do body)
         nil))
 
+(defmacro when-not [condition & body]
+  (list 'if (list 'clojure.core/not condition)
+        (cons 'do body)
+        nil))
+
 (defmacro fn [args & body]
   (cons 'fn* (cons args body)))
 
@@ -342,8 +351,31 @@
           (if (next clauses)
             (second clauses)
             (let [err "cond requires an even number of forms"]
-              (list 'native/raw "throw #{ (ex-info :invalid-cond {:err err}) }#;")))
+              (list 'throw (list 'clojure.core/ex-info "invalid cond" {:err err}))))
           (cons 'clojure.core/cond (next (next clauses))))))
+
+; Evaluates expr and throws an exception if it does not evaluate to
+; logical true.
+(defn assert
+  ([&form &env x]
+   (when *assert*
+     (list 'clojure.core/when-not x
+           (list 'throw (list 'clojure.core/ex-info
+                              "assertion failed"
+                              {:assertion (pr-str x)})))))
+  ([&form &env x message]
+   (when *assert*
+     (list 'clojure.core/when-not x
+           (list 'throw (list 'clojure.core/ex-info
+                              "assertion failed"
+                              {:assertion (pr-str x)
+                               :message message}))))))
+; TODO: Use defmacro once it supports multiple arities.
+(reset-meta! (var assert) {:macro true})
+
+; Ignores body, yields nil
+(defmacro comment
+  [& body])
 
 (defn macroexpand-1 [form]
   (native/raw "__value = __rt_ctx.macroexpand1(#{ form }#);"))
@@ -437,7 +469,7 @@
 
 ; Strings.
 (defn string? [o]
-  (native/raw "__value = make_box(#{ o }#->type == object_type::string);"))
+  (native/raw "__value = make_box(#{ o }#->type == object_type::persistent_string);"))
 (defn str
   ([]
    "")
@@ -462,7 +494,7 @@
                        for(auto it(fresh->next_in_place()); it != nullptr; it = it->next_in_place())
                        { runtime::detail::to_string(it->first(), buff); }
                      }
-                     return make_box<obj::string>(native_persistent_string{ buff.data(), buff.size() });
+                     return make_box<obj::persistent_string>(native_persistent_string{ buff.data(), buff.size() });
                    }
                    else
                    { throw #{ (ex-info :invalid-seq {:args args}) }#; }
@@ -470,15 +502,18 @@
                  #{ args }#
                );")))
 
+; TODO: Proper version.
+(def pr-str str)
+
 (defn subs
   ([s start]
    (native/raw "__value = visit_object
                (
-                 [=](auto const typed_s) -> obj::string_ptr
+                 [=](auto const typed_s) -> obj::persistent_string_ptr
                  {
                    using T = typename decltype(typed_s)::value_type;
 
-                   if constexpr(std::is_same_v<T, obj::string>)
+                   if constexpr(std::is_same_v<T, obj::persistent_string>)
                    { return typed_s->substring(to_int(#{ start }#)).expect_ok(); }
                    else
                    { throw #{ (ex-info :not-a-string {:s s}) }#; }
@@ -488,11 +523,11 @@
   ([s start end]
    (native/raw "__value = visit_object
                (
-                 [=](auto const typed_s) -> obj::string_ptr
+                 [=](auto const typed_s) -> obj::persistent_string_ptr
                  {
                    using T = typename decltype(typed_s)::value_type;
 
-                   if constexpr(std::is_same_v<T, obj::string>)
+                   if constexpr(std::is_same_v<T, obj::persistent_string>)
                    { return typed_s->substring(to_int(#{ start }#), to_int(#{ end }#)).expect_ok(); }
                    else
                    { throw #{ (ex-info :not-a-string {:s s}) }#; }
@@ -509,7 +544,7 @@
                   {
                     using T = typename decltype(typed_s)::value_type;
 
-                    if constexpr(std::is_same_v<T, obj::string>)
+                    if constexpr(std::is_same_v<T, obj::persistent_string>)
                     { return typed_s->first_index_of(#{ c }#); }
                     else
                     { throw #{ (ex-info :not-a-string {:s s}) }#; }
@@ -526,7 +561,7 @@
                   {
                     using T = typename decltype(typed_s)::value_type;
 
-                    if constexpr(std::is_same_v<T, obj::string>)
+                    if constexpr(std::is_same_v<T, obj::persistent_string>)
                     { return typed_s->last_index_of(#{ c }#); }
                     else
                     { throw #{ (ex-info :not-a-string {:s s}) }#; }
@@ -573,6 +608,20 @@
      (if (empty? zs)
        r
        (recur r (first zs) (rest zs))))))
+
+; Returns a lazy sequence consisting of the result of applying f to
+; the set of first items of each coll, followed by applying f to the
+; set of second items in each coll, until any one of the colls is
+; exhausted.  Any remaining items in other colls are ignored. Function
+; f should accept number-of-colls arguments. Returns a transducer when
+; no collection is provided.
+(defn map
+  ; TODO: Laziness; other arities.
+  ([f coll]
+   (reduce* (fn [acc e]
+              (conj acc (f e)))
+            []
+            coll)))
 
 ; Creates a new vector containing the args.
 (defn vector
@@ -685,10 +734,19 @@
            {}
            ks))
 
-; Sets.
+; Returns a map with the keys mapped to the corresponding vals.
+(defn zipmap [keys vals]
+  ; TODO: Loop
+  (let [f (fn [acc ks vs]
+            (if (and ks vs)
+              (recur (assoc acc (first ks) (first vs)) (next ks) (next vs))
+              acc))]
+    ; TODO: Transient
+    (f {} (seq keys) (seq vals))))
 
+;; Sets.
 (defn set? [o]
-  (native/raw "__value = make_box(#{ o }#->type == object_type::set);"))
+  (native/raw "__value = make_box(#{ o }#->type == object_type::persistent_set);"))
 
 ; Returns a set of the distinct elements of coll.
 (defn set [coll]
@@ -697,12 +755,12 @@
     ; TODO: Transient
     (reduce* (fn [acc e]
                (conj acc e))
-             (native/raw "__value = make_box<obj::set>();")
+             (native/raw "__value = make_box<obj::persistent_set>();")
              coll)))
 
 ;; Other.
 (defn hash [o]
-  (native/raw "__value = make_box(runtime::detail::to_hash(#{ o }#));"))
+  (native/raw "__value = make_box(hash::visit(#{ o }#));"))
 
 (defn name [o]
   (if (string? o)
@@ -1019,9 +1077,147 @@
 (reset-meta! (var rand) {:arities {0 {:supports-unboxed-input? true
                                       :unboxed-output? true}}})
 
-; Vars.
+;; Sequences.
+; Returns a lazy sequence of all but the first n items in coll.
+; Returns a stateful transducer when no collection is provided.
+(defn drop
+  ; TODO: transducer
+  ([n coll]
+   (let [step (fn [n acc]
+                (let [s (seq acc)]
+                  (if (and (pos? n) s)
+                    (recur (dec n) (rest s))
+                    acc)))]
+     (step n coll))))
+
+; Returns a lazy seq of every nth item in coll.  Returns a stateful
+; transducer when no collection is provided.
+(defn take-nth
+  ; TODO: transducer
+  ([n coll]
+   ; TODO: lazy-seq
+   (let [f (fn [acc coll]
+             (if (seq coll)
+               (let [remaining (drop n coll)]
+                 (if (seq remaining)
+                   (recur (conj acc (first remaining)) remaining)
+                   acc))
+               acc))]
+     (if (seq coll)
+       (f [(first coll)] (rest coll))
+       '()))))
+
+;; Vars.
 (defn var? [o]
   (native/raw "__value = make_box(#{ o }#->type == object_type::var)"))
+
+; TODO: Make this private.
+(defmacro assert-macro-args
+  [& pairs]
+  (list 'do
+        (list 'clojure.core/when-not (first pairs)
+              ; TODO: No need for ex-info, if we had a simpler exception type
+              (list 'throw (list 'clojure.core/ex-info
+                                 (list 'clojure.core/str
+                                       '&form
+                                       " requires "
+                                       (second pairs)
+                                       " in "
+                                       'clojure.core/*ns*
+                                       ":"
+                                       (:line (meta '&form)))
+                                 {})))
+        (let [more (next (next pairs))]
+          (when more
+            (list* 'clojure.core/assert-macro-args more)))))
+
+; WARNING: This is a low-level function. Prefer high-level macros like
+; binding where ever possible.
+;
+; Takes a map of Var/value pairs. Binds each Var to the associated value for
+; the current thread. Each call *MUST* be accompanied by a matching call to
+; pop-thread-bindings wrapped in a try-finally!
+;
+;   (push-thread-bindings bindings)
+;   (try
+;     ...
+;     (finally
+;       (pop-thread-bindings)))
+(defn push-thread-bindings [bindings]
+  (native/raw "__rt_ctx.push_thread_bindings(#{ bindings }#).expect_ok();"))
+
+; Pop one set of bindings pushed with push-binding before. It is an error to
+; pop bindings without pushing before.
+(defn pop-thread-bindings []
+  (native/raw "__rt_ctx.pop_thread_bindings().expect_ok();"))
+
+; Get a map with the Var/value pairs which is currently in effect for the
+; current thread.
+(defn get-thread-bindings []
+  (native/raw "__value = __rt_ctx.get_thread_bindings();"))
+
+; binding => var-symbol init-expr
+;
+; Creates new bindings for the (already-existing) vars, with the
+; supplied initial values, executes the exprs in an implicit do, then
+; re-establishes the bindings that existed before.  The new bindings
+; are made in parallel (unlike let); all init-exprs are evaluated
+; before the vars are bound to their new values.
+(defmacro binding [bindings & body]
+  (assert-macro-args
+    (vector? bindings) "a vector for its binding"
+    (even? (count bindings)) "an even number of forms in binding vector")
+  (let [->var-pairs (fn [var-vals ret]
+                      ; TODO: loop
+                      (let [vvs (seq var-vals)]
+                        (if vvs
+                          (recur (nnext vvs)
+                                 (conj (conj ret (list 'var (first vvs))) (second vvs)))
+                          (seq ret))))]
+    (list* 'clojure.core/let []
+           (list 'clojure.core/push-thread-bindings
+                 (list* 'clojure.core/hash-map
+                        (->var-pairs bindings [])))
+           (list (cons 'do body)
+                 (list 'clojure.core/pop-thread-bindings)))))
+
+; Temporarily redefines Vars during a call to func.  Each val of
+; binding-map will replace the root value of its key which must be
+; a Var.  After func is called with no args, the root values of all
+; the Vars will be set back to their old values.  These temporary
+; changes will be visible in all threads.  Useful for mocking out
+; functions during testing.
+(defn with-redefs-fn [binding-map fun]
+  (let [root-bind (fn [m]
+                    (doseq [kv m]
+                      (native/raw "expect_object<runtime::var>(#{ (first kv) }#)->bind_root(#{ (second kv) }#);")))
+        old-vals (zipmap (keys binding-map)
+                         (map (fn [v]
+                                (native/raw "__value = expect_object<runtime::var>(#{ v }#)->get_root();"))
+                              (keys binding-map)))]
+    ; TODO: try/finally
+    (do ;try
+      (root-bind binding-map)
+      (fun)
+      (do ;finally
+        (root-bind old-vals)))))
+
+; binding => var-symbol temp-value-expr
+;
+; Temporarily redefines Vars while executing the body.  The
+; temp-value-exprs will be evaluated and each resulting value will
+; replace in parallel the root value of its Var.  After the body is
+; executed, the root values of all the Vars will be set back to their
+; old values.  These temporary changes will be visible in all threads.
+; Useful for mocking out functions during testing.
+(defmacro with-redefs [bindings & body]
+  (list 'clojure.core/with-redefs-fn
+        (zipmap (map (fn [v]
+                       (list 'var v))
+                     (take-nth 2 bindings))
+                (take-nth 2 (next bindings)))
+        (list* 'clojure.core/fn []
+               body)))
 
 ;; Keywords.
 (defn keyword? [o]
@@ -1151,20 +1347,6 @@
                      (recur (dec n) (next coll) (conj acc (first coll))))))]
      (take* n coll []))))
 
-; Returns a lazy sequence consisting of the result of applying f to
-; the set of first items of each coll, followed by applying f to the
-; set of second items in each coll, until any one of the colls is
-; exhausted.  Any remaining items in other colls are ignored. Function
-; f should accept number-of-colls arguments. Returns a transducer when
-; no collection is provided.
-(defn map
-  ; TODO: Laziness; other arities.
-  ([f coll]
-   (reduce* (fn [acc e]
-              (conj acc (f e)))
-            []
-            coll)))
-
 ; Returns a vector consisting of the result of applying f to the
 ; set of first items of each coll, followed by applying f to the set
 ; of second items in each coll, until any one of the colls is
@@ -1207,13 +1389,14 @@
    (filter (complement pred) coll)))
 
 ;; Input/output.
-(defn print [o]
-  (native/raw "__value = jank::runtime::context::print(#{ o }#);"))
 (defn println [& args]
   ; TODO: Move println back into here once I sort out two things:
   ; 1. Escaped strings, so I can do the space in between each
   ; 2. The linker errors showing up when using fmt::format_to here
   (native/raw "__value = jank::runtime::context::println(#{ args }#);"))
+
+(defn print [o]
+  (native/raw "__value = jank::runtime::context::print(#{ o }#);"))
 
 ;; Functions.
 (defn ifn? [o]
@@ -1248,7 +1431,7 @@
 ;; jank.compiler things.
 ; TODO: Options, following what criterium offers.
 (defn benchmark [label fun]
-  (native/raw "auto const label_str(expect_object<obj::string>(#{ (str label) }#));
+  (native/raw "auto const label_str(expect_object<obj::persistent_string>(#{ (str label) }#));
               visit_object
               (
                [=](auto const typed_fun)
@@ -1306,13 +1489,19 @@
 (reset-meta! (var pow) {:arities {2 {:supports-unboxed-input? true
                                      :unboxed-output? true}}})
 
+; Namespaces.
+(defn in-ns [sym]
+  (if (symbol? sym)
+    (native/raw "__rt_ctx.current_ns_var->set(__rt_ctx.intern_ns(expect_object<obj::symbol>(sym))).expect_ok();")
+    (throw "argument to in-ns must be a symbol")))
+
 ; Vars.
 (defn var? [o]
   (native/raw "__value = make_box(#{ o }#->type == object_type::var);"))
 
 (defn var-get [v]
   (assert (var? v))
-  (native/raw "__value = expect_object<var>(#{ v }#)->get_root();"))
+  (native/raw "__value = expect_object<runtime::var>(#{ v }#)->deref();"))
 
 ; Namespaces (again).
 (defn create-ns [sym]
@@ -1411,7 +1600,7 @@
                    (native/raw "expect_object<runtime::ns>(#{ *ns* }#)->refer
                                 (
                                   expect_object<obj::symbol>(#{ sym }#),
-                                  expect_object<var>(#{ v }#)
+                                  expect_object<runtime::var>(#{ v }#)
                                 ).expect_ok();"))))
              nil
              to-refer)))

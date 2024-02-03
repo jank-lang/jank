@@ -17,12 +17,12 @@
 #include <jank/type.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/util/make_array.hpp>
+#include <jank/util/scope_exit.hpp>
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/type.hpp>
 #include <jank/runtime/erasure.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/math.hpp>
-#include <jank/runtime/hash.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/seq.hpp>
 #include <jank/runtime/behavior/numberable.hpp>

@@ -17,74 +17,122 @@ namespace jank::runtime
       sym.name = s.substr(found + 1);
     }
     else
-    { sym.name = std::forward<S>(s); }
+    {
+      sym.name = std::forward<S>(s);
+    }
   }
 
   obj::symbol::static_object(native_persistent_string const &d)
-  { separate(*this, d); }
+  {
+    separate(*this, d);
+  }
+
   obj::symbol::static_object(native_persistent_string &&d)
-  { separate(*this, std::move(d)); }
+  {
+    separate(*this, std::move(d));
+  }
 
   obj::symbol::static_object(native_persistent_string const &ns, native_persistent_string const &n)
-    : ns{ ns }, name{ n }
-  { }
+    : ns{ ns }
+    , name{ n }
+  {
+  }
+
   obj::symbol::static_object(native_persistent_string &&ns, native_persistent_string &&n)
-    : ns{ std::move(ns) }, name{ std::move(n) }
-  { }
+    : ns{ std::move(ns) }
+    , name{ std::move(n) }
+  {
+  }
 
   native_bool obj::symbol::equal(object const &o) const
   {
     if(o.type != object_type::symbol)
-    { return false; }
+    {
+      return false;
+    }
 
     auto const s(expect_object<obj::symbol>(&o));
     return ns == s->ns && name == s->name;
   }
 
   native_bool obj::symbol::equal(obj::symbol const &s) const
-  { return ns == s.ns && name == s.name; }
+  {
+    return ns == s.ns && name == s.name;
+  }
 
-  void to_string_impl
-  (
-    native_persistent_string const &ns,
-    native_persistent_string const &name,
-    fmt::memory_buffer &buff
-  )
+  void to_string_impl(native_persistent_string const &ns,
+                      native_persistent_string const &name,
+                      fmt::memory_buffer &buff)
   {
     if(!ns.empty())
-    { format_to(std::back_inserter(buff), FMT_COMPILE("{}/{}"), ns, name); }
+    {
+      format_to(std::back_inserter(buff), FMT_COMPILE("{}/{}"), ns, name);
+    }
     else
-    { format_to(std::back_inserter(buff), FMT_COMPILE("{}"), name); }
+    {
+      format_to(std::back_inserter(buff), FMT_COMPILE("{}"), name);
+    }
   }
+
   void obj::symbol::to_string(fmt::memory_buffer &buff) const
-  { to_string_impl(ns, name, buff); }
+  {
+    to_string_impl(ns, name, buff);
+  }
+
   native_persistent_string obj::symbol::to_string() const
   {
     fmt::memory_buffer buff;
     to_string_impl(ns, name, buff);
     return native_persistent_string{ buff.data(), buff.size() };
   }
-  native_integer obj::symbol::to_hash() const
-  /* TODO: Cache this. */
-  { return runtime::detail::hash_combine(ns.to_hash(), name.to_hash()); }
+
+  native_hash obj::symbol::to_hash() const
+  {
+    if(hash)
+    {
+      return hash;
+    }
+
+    return hash = hash::combine(hash::string(name), hash::string(ns));
+  }
 
   object_ptr obj::symbol::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(jank::make_box<obj::symbol>(ns, name));
+    auto ret(make_box<obj::symbol>(ns, name));
     ret->meta = meta;
     return ret;
   }
 
-  native_persistent_string const& obj::symbol::get_name() const
-  { return name; }
+  native_persistent_string const &obj::symbol::get_name() const
+  {
+    return name;
+  }
 
-  native_persistent_string const& obj::symbol::get_namespace() const
-  { return ns; }
+  native_persistent_string const &obj::symbol::get_namespace() const
+  {
+    return ns;
+  }
 
-  bool obj::symbol::operator ==(obj::symbol const &rhs) const
-  { return ns == rhs.ns && name == rhs.name; }
+  bool obj::symbol::operator==(obj::symbol const &rhs) const
+  {
+    return ns == rhs.ns && name == rhs.name;
+  }
 
-  bool obj::symbol::operator <(obj::symbol const &rhs) const
-  { return to_hash() < rhs.to_hash(); }
+  bool obj::symbol::operator<(obj::symbol const &rhs) const
+  {
+    return to_hash() < rhs.to_hash();
+  }
+
+  void obj::symbol::set_ns(native_persistent_string const &s)
+  {
+    ns = s;
+    hash = 0;
+  }
+
+  void obj::symbol::set_name(native_persistent_string const &s)
+  {
+    name = s;
+    hash = 0;
+  }
 }

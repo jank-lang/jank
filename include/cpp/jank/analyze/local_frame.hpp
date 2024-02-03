@@ -11,7 +11,9 @@ namespace jank::analyze
   struct expression;
 
   namespace expr
-  { using function_context_ptr = native_box<struct function_context>; }
+  {
+    using function_context_ptr = native_box<struct function_context>;
+  }
 
   struct lifted_var
   {
@@ -50,7 +52,8 @@ namespace jank::analyze
     {
       root,
       fn,
-      let
+      let,
+      catch_
     };
 
     static constexpr bool pointer_free{ false };
@@ -58,15 +61,12 @@ namespace jank::analyze
     local_frame() = delete;
     local_frame(local_frame const &) = default;
     local_frame(local_frame &&) noexcept = default;
-    local_frame
-    (
-      frame_type const &type,
-      runtime::context &ctx,
-      option<native_box<local_frame>> const &p
-    );
+    local_frame(frame_type const &type,
+                runtime::context &ctx,
+                option<native_box<local_frame>> const &p);
 
-    local_frame& operator=(local_frame const &rhs);
-    local_frame& operator=(local_frame &&rhs);
+    local_frame &operator=(local_frame const &rhs);
+    local_frame &operator=(local_frame &&rhs);
 
     struct find_result
     {
@@ -86,15 +86,15 @@ namespace jank::analyze
     static native_bool within_same_fn(native_box<local_frame>, native_box<local_frame>);
 
     runtime::obj::symbol_ptr lift_var(runtime::obj::symbol_ptr const &);
-    option<std::reference_wrapper<lifted_var const>> find_lifted_var
-    (runtime::obj::symbol_ptr const &) const;
+    option<std::reference_wrapper<lifted_var const>>
+    find_lifted_var(runtime::obj::symbol_ptr const &) const;
 
     void lift_constant(runtime::object_ptr);
-    option<std::reference_wrapper<lifted_constant const>> find_lifted_constant
-    (runtime::object_ptr) const;
+    option<std::reference_wrapper<lifted_constant const>>
+      find_lifted_constant(runtime::object_ptr) const;
 
-    static local_frame const& find_closest_fn_frame(local_frame const &frame);
-    static local_frame& find_closest_fn_frame(local_frame &frame);
+    static local_frame const &find_closest_fn_frame(local_frame const &frame);
+    static local_frame &find_closest_fn_frame(local_frame &frame);
 
     runtime::object_ptr to_runtime_data() const;
 
@@ -106,5 +106,6 @@ namespace jank::analyze
     native_unordered_map<runtime::object_ptr, lifted_constant> lifted_constants;
     runtime::context &rt_ctx;
   };
+
   using local_frame_ptr = native_box<local_frame>;
 }

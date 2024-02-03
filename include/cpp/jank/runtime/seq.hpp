@@ -16,14 +16,18 @@ namespace jank::runtime
     {
       auto inserter(std::back_inserter(buff));
       if(!s)
-      { fmt::format_to(inserter, "()"); }
+      {
+        fmt::format_to(inserter, "()");
+      }
 
       fmt::format_to(inserter, "(");
       bool needs_space{};
       for(auto i(s->fresh_seq()); i != nullptr; i = i->next_in_place())
       {
         if(needs_space)
-        { fmt::format_to(inserter, " "); }
+        {
+          fmt::format_to(inserter, " ");
+        }
         detail::to_string(first(i), buff);
         needs_space = true;
       }
@@ -42,29 +46,36 @@ namespace jank::runtime
     template <typename It>
     native_bool equal(object const &o, It const begin, It const end)
     {
-      return visit_object
-      (
-        [](auto const typed_o, auto const begin, auto const end) -> native_bool
-        {
+      return visit_object(
+        [](auto const typed_o, auto const begin, auto const end) -> native_bool {
           using T = typename decltype(typed_o)::value_type;
 
-          if constexpr(!behavior::seqable<T>)
-          { return false; }
+          /* nil is seqable, but we don't want it to be equal to an empty collection.
+           * An empty seq itself is nil, but that's different. */
+          if constexpr(std::same_as<T, obj::nil>)
+          {
+            return false;
+          }
+          else if constexpr(!behavior::seqable<T>)
+          {
+            return false;
+          }
           else
           {
             auto seq(typed_o->fresh_seq());
             for(auto it(begin); it != end; ++it, seq = seq->next_in_place())
             {
               if(seq == nullptr || !runtime::detail::equal(*it, seq->first()))
-              { return false; }
+              {
+                return false;
+              }
             }
             return true;
           }
         },
         &o,
         begin,
-        end
-      );
+        end);
     }
   }
 
@@ -84,4 +95,5 @@ namespace jank::runtime
   object_ptr get_in(object_ptr m, object_ptr keys, object_ptr fallback);
   object_ptr find(object_ptr s, object_ptr key);
   native_bool contains(object_ptr s, object_ptr key);
+  object_ptr merge(object_ptr m, object_ptr other);
 }

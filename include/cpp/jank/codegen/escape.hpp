@@ -9,19 +9,36 @@ namespace jank::codegen
   struct escape_view
   {
     template <typename It>
-    It copy(It out) const
+    constexpr It copy(It out) const
     {
       *out++ = quote;
-      auto needs_escape
-      (
-        [this](auto c)
-        { return c == quote || c == esc; }
-      );
-      for(auto const &c : sv)
+      for(auto const c : sv)
       {
-        if(needs_escape(c))
-        { *out++ = esc; }
-        *out++ = c;
+        switch(c)
+        {
+          case '\n':
+            *out++ = '\\';
+            *out++ = 'n';
+            break;
+          case '\t':
+            *out++ = '\\';
+            *out++ = 't';
+            break;
+          case '\r':
+            *out++ = '\\';
+            *out++ = 'r';
+            break;
+          case '\\':
+            *out++ = '\\';
+            *out++ = '\\';
+            break;
+          case '"':
+            *out++ = '\\';
+            *out++ = '"';
+            break;
+          default:
+            *out++ = c;
+        }
       }
       *out++ = quote;
       return out;
@@ -32,9 +49,11 @@ namespace jank::codegen
     typename S::value_type esc{ '\\' };
   };
 
-  constexpr escape_view<native_persistent_string_view> escaped
-  (native_persistent_string_view const &sv, char const q = '"', char const e = '\\')
-  { return escape_view<native_persistent_string_view>{ sv, q, e }; }
+  constexpr escape_view<native_persistent_string_view>
+  escaped(native_persistent_string_view const &sv, char const q = '"', char const e = '\\')
+  {
+    return escape_view<native_persistent_string_view>{ sv, q, e };
+  }
 }
 
 template <typename S>
@@ -44,9 +63,13 @@ struct fmt::formatter<jank::codegen::escape_view<S>>
 
   template <typename C>
   constexpr auto parse(C &ctx)
-  { return ctx.begin(); }
+  {
+    return ctx.begin();
+  }
 
   template <typename C>
   auto format(jank::codegen::escape_view<S> const &s, C &ctx)
-  { return s.copy(ctx.out()); }
+  {
+    return s.copy(ctx.out());
+  }
 };

@@ -17,6 +17,8 @@
 #include <jank/analyze/expr/let.hpp>
 #include <jank/analyze/expr/do.hpp>
 #include <jank/analyze/expr/if.hpp>
+#include <jank/analyze/expr/throw.hpp>
+#include <jank/analyze/expr/try.hpp>
 #include <jank/analyze/expr/native_raw.hpp>
 
 namespace jank::analyze
@@ -24,23 +26,22 @@ namespace jank::analyze
   struct expression : gc
   {
     using E = expression;
-    using value_type = boost::variant
-    <
-      expr::def<E>,
-      expr::var_deref<E>,
-      expr::var_ref<E>,
-      expr::call<E>,
-      expr::primitive_literal<E>,
-      expr::vector<E>,
-      expr::map<E>,
-      expr::function<E>,
-      expr::recur<E>,
-      expr::local_reference,
-      expr::let<E>,
-      expr::do_<E>,
-      expr::if_<E>,
-      expr::native_raw<E>
-    >;
+    using value_type = boost::variant<expr::def<E>,
+                                      expr::var_deref<E>,
+                                      expr::var_ref<E>,
+                                      expr::call<E>,
+                                      expr::primitive_literal<E>,
+                                      expr::vector<E>,
+                                      expr::map<E>,
+                                      expr::function<E>,
+                                      expr::recur<E>,
+                                      expr::local_reference,
+                                      expr::let<E>,
+                                      expr::do_<E>,
+                                      expr::if_<E>,
+                                      expr::throw_<E>,
+                                      expr::try_<E>,
+                                      expr::native_raw<E>>;
 
     static constexpr bool pointer_free{ false };
 
@@ -49,40 +50,27 @@ namespace jank::analyze
     expression(expression &&) = default;
 
     template <typename T>
-    expression
-    (
-      T &&t,
-      std::enable_if_t
-      <
-        !std::is_same_v<std::decay_t<T>, expression>
-        && std::is_constructible_v<value_type, T>
-      >* = nullptr
-    )
+    expression(T &&t,
+               std::enable_if_t<!std::is_same_v<std::decay_t<T>, expression>
+                                && std::is_constructible_v<value_type, T>> * = nullptr)
       : data{ std::forward<T>(t) }
-    { }
+    {
+    }
 
     expression_base_ptr get_base()
     {
-      return boost::apply_visitor
-      (
-        [](auto &typed_ex) -> expression_base_ptr
-        { return &typed_ex; },
-        data
-      );
+      return boost::apply_visitor([](auto &typed_ex) -> expression_base_ptr { return &typed_ex; },
+                                  data);
     }
 
     runtime::object_ptr to_runtime_data() const
     {
-      return boost::apply_visitor
-      (
-        [](auto &typed_ex)
-        { return typed_ex.to_runtime_data(); },
-        data
-      );
+      return boost::apply_visitor([](auto &typed_ex) { return typed_ex.to_runtime_data(); }, data);
     }
 
     value_type data;
   };
+
   /* TODO: Use something non-nullable. */
   using expression_ptr = native_box<expression>;
 }

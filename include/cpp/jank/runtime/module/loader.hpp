@@ -3,10 +3,14 @@
 #include <boost/filesystem/path.hpp>
 
 namespace jank::runtime
-{ struct context; }
+{
+  struct context;
+}
 
 namespace jank::jit
-{ struct processor; }
+{
+  struct processor;
+}
 
 namespace jank::runtime::module
 {
@@ -24,8 +28,10 @@ namespace jank::runtime::module
   native_persistent_string path_to_module(boost::filesystem::path const &path);
   native_persistent_string module_to_path(native_persistent_string_view const &module);
   native_persistent_string module_to_native_ns(native_persistent_string_view const &module);
-  native_persistent_string nest_module(native_persistent_string const &module, native_persistent_string const &sub);
-  native_persistent_string nest_native_ns(native_persistent_string const &native_ns, native_persistent_string const &end);
+  native_persistent_string
+  nest_module(native_persistent_string const &module, native_persistent_string const &sub);
+  native_persistent_string
+  nest_native_ns(native_persistent_string const &native_ns, native_persistent_string const &end);
   native_bool is_nested_module(native_persistent_string const &module);
 
   struct loader

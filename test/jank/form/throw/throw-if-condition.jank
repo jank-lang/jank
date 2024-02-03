@@ -1,0 +1,3 @@
+(if (throw :success)
+  1
+  2)

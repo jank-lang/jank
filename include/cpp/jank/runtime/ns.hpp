@@ -24,7 +24,8 @@ namespace jank::runtime
     var_ptr intern_var(obj::symbol_ptr const &);
     option<var_ptr> find_var(obj::symbol_ptr const &);
 
-    result<void, native_persistent_string> add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns);
+    result<void, native_persistent_string>
+    add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns);
     option<ns_ptr> find_alias(obj::symbol_ptr const &sym) const;
 
     result<void, native_persistent_string> refer(obj::symbol_ptr const sym, var_ptr const var);
@@ -35,16 +36,14 @@ namespace jank::runtime
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
-    native_integer to_hash() const;
+    native_hash to_hash() const;
 
-    bool operator ==(static_object const &rhs) const;
+    bool operator==(static_object const &rhs) const;
 
-    native_box<static_object> clone() const;
+    native_box<static_object> clone(context &rt_ctx) const;
 
     object base{ object_type::ns };
     obj::symbol_ptr name{};
-    /* TODO: Clojure doesn't qualify these symbol keys, but we do. That changes the output of
-     * fns like `ns-map`. */
     /* TODO: Benchmark the use of atomics here. That's what Clojure uses. */
     folly::Synchronized<obj::persistent_hash_map_ptr> vars;
     folly::Synchronized<obj::persistent_hash_map_ptr> aliases;

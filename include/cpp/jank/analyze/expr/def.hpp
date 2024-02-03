@@ -18,12 +18,14 @@ namespace jank::analyze::expr
 
     runtime::object_ptr to_runtime_data() const
     {
-      return runtime::obj::persistent_array_map::create_unique
-      (
-        make_box("__type"), make_box("expr::def"),
-        make_box("name"), name,
-        make_box("value"), detail::to_runtime_data(value)
-      );
+      return runtime::merge(
+        static_cast<expression_base const *>(this)->to_runtime_data(),
+        runtime::obj::persistent_array_map::create_unique(make_box("__type"),
+                                                          make_box("expr::def"),
+                                                          make_box("name"),
+                                                          name,
+                                                          make_box("value"),
+                                                          detail::to_runtime_data(value)));
     }
   };
 }

@@ -74,6 +74,7 @@ set(
   -Wall -Wextra -Wpedantic
   -Wfloat-equal -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor
   -Wold-style-cast -Wno-gnu-case-range
+  -Wno-gnu-conditional-omitted-operand
   -DJANK_CLING_BUILD_DIR="${jank_cling_build_dir_absolute}"
   -DIMMER_HAS_LIBGC=1 -DHAVE_CXX14=1
   $<$<CONFIG:Release>:-O3>
@@ -142,6 +143,7 @@ set_target_properties(jank_cling_lib PROPERTIES LINK_FLAGS -s)
 add_library(
   jank_lib STATIC
   src/cpp/jank/native_box.cpp
+  src/cpp/jank/hash.cpp
   src/cpp/jank/util/cli.cpp
   src/cpp/jank/util/mapped_file.cpp
   src/cpp/jank/util/scope_exit.cpp
@@ -153,6 +155,7 @@ add_library(
   src/cpp/jank/runtime/seq.cpp
   src/cpp/jank/runtime/object.cpp
   src/cpp/jank/runtime/detail/object_util.cpp
+  src/cpp/jank/runtime/detail/native_persistent_array_map.cpp
   src/cpp/jank/runtime/context.cpp
   src/cpp/jank/runtime/ns.cpp
   src/cpp/jank/runtime/var.cpp
@@ -162,13 +165,13 @@ add_library(
   src/cpp/jank/runtime/obj/jit_function.cpp
   src/cpp/jank/runtime/obj/symbol.cpp
   src/cpp/jank/runtime/obj/keyword.cpp
-  src/cpp/jank/runtime/obj/list.cpp
-  src/cpp/jank/runtime/obj/vector.cpp
+  src/cpp/jank/runtime/obj/persistent_list.cpp
+  src/cpp/jank/runtime/obj/persistent_vector.cpp
   src/cpp/jank/runtime/obj/persistent_vector_sequence.cpp
   src/cpp/jank/runtime/obj/persistent_array_map.cpp
   src/cpp/jank/runtime/obj/persistent_hash_map.cpp
-  src/cpp/jank/runtime/obj/set.cpp
-  src/cpp/jank/runtime/obj/string.cpp
+  src/cpp/jank/runtime/obj/persistent_set.cpp
+  src/cpp/jank/runtime/obj/persistent_string.cpp
   src/cpp/jank/runtime/obj/cons.cpp
   src/cpp/jank/runtime/obj/range.cpp
   src/cpp/jank/runtime/obj/iterator.cpp
@@ -306,7 +309,7 @@ if(jank_tests)
     test/cpp/jank/jit/processor.cpp
   )
   add_executable(jank::test_exe ALIAS jank_test_exe)
-  add_dependencies(jank_test_exe jank_core_libraries)
+  add_dependencies(jank_test_exe jank_lib jank_core_libraries)
 
   set_property(TARGET jank_test_exe PROPERTY OUTPUT_NAME jank-test)
 

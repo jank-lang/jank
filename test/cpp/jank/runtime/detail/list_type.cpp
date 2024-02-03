@@ -54,11 +54,15 @@ namespace jank::runtime::detail
       native_persistent_list_impl<int> l{ 10, 20, 30 };
       int c{ 1 };
       for(auto i : l)
-      { CHECK(i == c++ * 10); }
+      {
+        CHECK(i == c++ * 10);
+      }
       /* Check twice to ensure iterators aren't stateful. */
       c = 1;
       for(auto i : l)
-      { CHECK(i == c++ * 10); }
+      {
+        CHECK(i == c++ * 10);
+      }
     }
   }
 }

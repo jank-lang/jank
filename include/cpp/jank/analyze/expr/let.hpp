@@ -16,32 +16,32 @@ namespace jank::analyze::expr
 
     let(expression_type const type, bool const needs_box, local_frame_ptr const f)
       : expression_base{ gc{}, type, f, needs_box }
-    { }
+    {
+    }
+
     native_vector<pair_type> pairs;
     do_<E> body;
 
     runtime::object_ptr to_runtime_data() const
     {
-      runtime::object_ptr pair_maps(make_box<runtime::obj::vector>());
+      runtime::object_ptr pair_maps(make_box<runtime::obj::persistent_vector>());
       for(auto const &e : pairs)
       {
-        pair_maps = runtime::conj
-        (
+        pair_maps = runtime::conj(
           pair_maps,
-          make_box<runtime::obj::vector>
-          (
+          make_box<runtime::obj::persistent_vector>(
             detail::to_runtime_data(frame->find_local_or_capture(e.first).unwrap().binding),
-            e.second->to_runtime_data()
-          )
-        );
+            e.second->to_runtime_data()));
       }
 
-      return runtime::obj::persistent_array_map::create_unique
-      (
-        make_box("__type"), make_box("expr::let"),
-        make_box("pairs"), pair_maps,
-        make_box("body"), detail::to_runtime_data(body)
-      );
+      return runtime::merge(
+        static_cast<expression_base const *>(this)->to_runtime_data(),
+        runtime::obj::persistent_array_map::create_unique(make_box("__type"),
+                                                          make_box("expr::let"),
+                                                          make_box("pairs"),
+                                                          pair_maps,
+                                                          make_box("body"),
+                                                          detail::to_runtime_data(body)));
     }
   };
 }

@@ -6,7 +6,9 @@
 #include <jank/analyze/processor.hpp>
 
 namespace jank::runtime
-{ struct context; }
+{
+  struct context;
+}
 
 namespace jank::codegen
 {
@@ -29,15 +31,16 @@ namespace jank::codegen
     handle() = default;
     handle(handle const &) = default;
     handle(handle &&) = default;
-    handle(native_persistent_string const &name, bool boxed);
+    handle(native_persistent_string const &name, native_bool boxed);
     handle(native_persistent_string const &boxed_name);
-    handle(native_persistent_string const &boxed_name, native_persistent_string const &unboxed_name);
+    handle(native_persistent_string const &boxed_name,
+           native_persistent_string const &unboxed_name);
     handle(analyze::local_binding const &binding);
 
-    handle& operator =(handle const &) = default;
-    handle& operator =(handle &&) = default;
+    handle &operator=(handle const &) = default;
+    handle &operator=(handle &&) = default;
 
-    native_persistent_string str(bool needs_box) const;
+    native_persistent_string str(native_bool needs_box) const;
 
     native_persistent_string boxed_name;
     native_persistent_string unboxed_name;
@@ -56,148 +59,94 @@ namespace jank::codegen
   struct processor
   {
     processor() = delete;
-    processor
-    (
-      runtime::context &rt_ctx,
-      analyze::expression_ptr const &expr,
-      native_persistent_string_view const &module,
-      compilation_target target
-    );
-    processor
-    (
-      runtime::context &rt_ctx,
-      analyze::expr::function<analyze::expression> const &expr,
-      native_persistent_string_view const &module,
-      compilation_target target
-    );
+    processor(runtime::context &rt_ctx,
+              analyze::expression_ptr const &expr,
+              native_persistent_string_view const &module,
+              compilation_target target);
+    processor(runtime::context &rt_ctx,
+              analyze::expr::function<analyze::expression> const &expr,
+              native_persistent_string_view const &module,
+              compilation_target target);
     processor(processor const &) = delete;
     processor(processor &&) noexcept = default;
 
-    option<handle> gen
-    (
-      analyze::expression_ptr const &,
-      analyze::expr::function_arity<analyze::expression> const &,
-      bool box_needed
-    );
-    option<handle> gen
-    (
-      analyze::expr::def<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &,
-      bool box_needed
-    );
-    option<handle> gen
-    (
-      analyze::expr::var_deref<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &,
-      bool box_needed
-    );
-    option<handle> gen
-    (
-      analyze::expr::var_ref<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &,
-      bool box_needed
-    );
-    option<handle> gen
-    (
-      analyze::expr::call<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &,
-      bool box_needed
-    );
-    option<handle> gen
-    (
-      analyze::expr::primitive_literal<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &,
-      bool box_needed
-    );
-    option<handle> gen
-    (
-      analyze::expr::vector<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &,
-      bool box_needed
-    );
-    option<handle> gen
-    (
-      analyze::expr::map<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &,
-      bool box_needed
-    );
-    option<handle> gen
-    (
-      analyze::expr::local_reference const &,
-      analyze::expr::function_arity<analyze::expression> const &,
-      bool box_needed
-    );
-    option<handle> gen
-    (
-      analyze::expr::function<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &,
-      bool box_needed
-    );
-    option<handle> gen
-    (
-      analyze::expr::recur<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &,
-      bool box_needed
-    );
-    option<handle> gen
-    (
-      analyze::expr::let<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &,
-      bool box_needed
-    );
-    option<handle> gen
-    (
-      analyze::expr::do_<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &,
-      bool box_needed
-    );
-    option<handle> gen
-    (
-      analyze::expr::if_<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &,
-      bool box_needed
-    );
-    option<handle> gen
-    (
-      analyze::expr::native_raw<analyze::expression> const &,
-      analyze::expr::function_arity<analyze::expression> const &,
-      bool box_needed
-    );
+    option<handle> gen(analyze::expression_ptr const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
+    option<handle> gen(analyze::expr::def<analyze::expression> const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
+    option<handle> gen(analyze::expr::var_deref<analyze::expression> const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
+    option<handle> gen(analyze::expr::var_ref<analyze::expression> const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
+    option<handle> gen(analyze::expr::call<analyze::expression> const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
+    option<handle> gen(analyze::expr::primitive_literal<analyze::expression> const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
+    option<handle> gen(analyze::expr::vector<analyze::expression> const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
+    option<handle> gen(analyze::expr::map<analyze::expression> const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
+    option<handle> gen(analyze::expr::local_reference const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
+    option<handle> gen(analyze::expr::function<analyze::expression> const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
+    option<handle> gen(analyze::expr::recur<analyze::expression> const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
+    option<handle> gen(analyze::expr::let<analyze::expression> const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
+    option<handle> gen(analyze::expr::do_<analyze::expression> const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
+    option<handle> gen(analyze::expr::if_<analyze::expression> const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
+    option<handle> gen(analyze::expr::throw_<analyze::expression> const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
+    option<handle> gen(analyze::expr::try_<analyze::expression> const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
+    option<handle> gen(analyze::expr::native_raw<analyze::expression> const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
 
     native_persistent_string declaration_str();
     void build_header();
     void build_body();
     void build_footer();
-    native_persistent_string expression_str(bool box_needed);
+    native_persistent_string expression_str(native_bool box_needed);
 
     native_persistent_string module_init_str(native_persistent_string_view const &module);
 
-    void format_elided_var
-    (
-      native_persistent_string_view const &start,
-      native_persistent_string_view const &end,
-      native_persistent_string_view const &ret_tmp,
-      native_vector<native_box<analyze::expression>> const &arg_exprs,
-      analyze::expr::function_arity<analyze::expression> const &fn_arity,
-      bool arg_box_needed,
-      bool ret_box_needed
-    );
-    void format_direct_call
-    (
-      native_persistent_string const &source_tmp,
-      native_persistent_string_view const &ret_tmp,
-      native_vector<native_box<analyze::expression>> const &arg_exprs,
-      analyze::expr::function_arity<analyze::expression> const &fn_arity,
-      bool arg_box_needed
-    );
-    void format_dynamic_call
-    (
-      native_persistent_string const &source_tmp,
-      native_persistent_string_view const &ret_tmp,
-      native_vector<native_box<analyze::expression>> const &arg_exprs,
-      analyze::expr::function_arity<analyze::expression> const &fn_arity,
-      bool arg_box_needed
-    );
+    void format_elided_var(native_persistent_string_view const &start,
+                           native_persistent_string_view const &end,
+                           native_persistent_string_view const &ret_tmp,
+                           native_vector<native_box<analyze::expression>> const &arg_exprs,
+                           analyze::expr::function_arity<analyze::expression> const &fn_arity,
+                           native_bool arg_box_needed,
+                           native_bool ret_box_needed);
+    void format_direct_call(native_persistent_string const &source_tmp,
+                            native_persistent_string_view const &ret_tmp,
+                            native_vector<native_box<analyze::expression>> const &arg_exprs,
+                            analyze::expr::function_arity<analyze::expression> const &fn_arity,
+                            native_bool arg_box_needed);
+    void format_dynamic_call(native_persistent_string const &source_tmp,
+                             native_persistent_string_view const &ret_tmp,
+                             native_vector<native_box<analyze::expression>> const &arg_exprs,
+                             analyze::expr::function_arity<analyze::expression> const &fn_arity,
+                             native_bool arg_box_needed);
 
     runtime::context &rt_ctx;
     /* This is stored just to keep the expression alive. */
@@ -211,7 +160,7 @@ namespace jank::codegen
     fmt::memory_buffer body_buffer;
     fmt::memory_buffer footer_buffer;
     fmt::memory_buffer expression_buffer;
-    bool generated_declaration{};
-    bool generated_expression{};
+    native_bool generated_declaration{};
+    native_bool generated_expression{};
   };
 }

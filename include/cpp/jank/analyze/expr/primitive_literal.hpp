@@ -13,11 +13,12 @@ namespace jank::analyze::expr
 
     runtime::object_ptr to_runtime_data() const
     {
-      return runtime::obj::persistent_array_map::create_unique
-      (
-        make_box("__type"), make_box("expr::primitive_literal"),
-        make_box("data"), data
-      );
+      using namespace runtime::obj;
+      return runtime::merge(static_cast<expression_base const *>(this)->to_runtime_data(),
+                            persistent_array_map::create_unique(make_box("__type"),
+                                                                make_box("expr::primitive_literal"),
+                                                                make_box("data"),
+                                                                data));
     }
   };
 }

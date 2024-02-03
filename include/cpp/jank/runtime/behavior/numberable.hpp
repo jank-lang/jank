@@ -5,9 +5,12 @@
 namespace jank::runtime::behavior
 {
   template <typename T>
-  concept numberable = requires(T * const t)
-  {
-    { t->to_integer() } -> std::convertible_to<native_integer>;
-    { t->to_real() } -> std::convertible_to<native_real>;
+  concept numberable = requires(T * const t) {
+    {
+      t->to_integer()
+    } -> std::convertible_to<native_integer>;
+    {
+      t->to_real()
+    } -> std::convertible_to<native_real>;
   };
 }

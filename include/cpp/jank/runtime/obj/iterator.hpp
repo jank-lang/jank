@@ -18,14 +18,13 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(object &&base);
     static_object(object_ptr const fn, object_ptr const start);
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
     native_persistent_string to_string();
     void to_string(fmt::memory_buffer &buff);
-    native_integer to_hash() const;
+    native_hash to_hash() const;
 
     /* behavior::seqable */
     native_box<static_object> seq();

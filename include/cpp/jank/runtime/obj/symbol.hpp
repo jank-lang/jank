@@ -1,7 +1,6 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/hash.hpp>
 
 namespace jank::runtime
 {
@@ -19,20 +18,19 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(object &&base);
     static_object(native_persistent_string const &d);
     static_object(native_persistent_string &&d);
     static_object(native_persistent_string const &ns, native_persistent_string const &n);
     static_object(native_persistent_string &&ns, native_persistent_string &&n);
 
-    static_object& operator=(static_object const&) = default;
-    static_object& operator=(static_object &&) = default;
+    static_object &operator=(static_object const &) = default;
+    static_object &operator=(static_object &&) = default;
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
-    native_integer to_hash() const;
+    native_hash to_hash() const;
 
     /* behavior::objectable extended */
     native_bool equal(static_object const &) const;
@@ -41,16 +39,23 @@ namespace jank::runtime
     object_ptr with_meta(object_ptr m) const;
 
     /* behavior::nameable */
-    native_persistent_string const& get_name() const;
-    native_persistent_string const& get_namespace() const;
+    native_persistent_string const &get_name() const;
+    native_persistent_string const &get_namespace() const;
 
-    bool operator ==(static_object const &rhs) const;
-    bool operator <(static_object const &rhs) const;
+    bool operator==(static_object const &rhs) const;
+    bool operator<(static_object const &rhs) const;
+
+    void set_ns(native_persistent_string const &);
+    void set_name(native_persistent_string const &);
 
     object base{ object_type::symbol };
+
+    /* These require mutation fns, since changing them will affect the hash. */
     native_persistent_string ns;
     native_persistent_string name;
+
     option<object_ptr> meta;
+    mutable native_hash hash{};
   };
 
   namespace obj
@@ -66,7 +71,9 @@ namespace std
   struct hash<jank::runtime::obj::symbol>
   {
     size_t operator()(jank::runtime::obj::symbol const &o) const noexcept
-    { return static_cast<size_t>(jank::runtime::detail::hash_combine(o.ns.to_hash(), o.name.to_hash())); }
+    {
+      return o.to_hash();
+    }
   };
 
   template <>
@@ -74,24 +81,24 @@ namespace std
   {
     size_t operator()(jank::runtime::obj::symbol_ptr const &o) const noexcept
     {
-      static auto hasher(std::hash<jank::runtime::obj::symbol>{});
-      return hasher(*o);
+      return o->to_hash();
     }
   };
 
   template <>
   struct equal_to<jank::runtime::obj::symbol_ptr>
   {
-    bool operator()
-    (
-      jank::runtime::obj::symbol_ptr const &lhs,
-      jank::runtime::obj::symbol_ptr const &rhs
-    ) const noexcept
+    bool operator()(jank::runtime::obj::symbol_ptr const &lhs,
+                    jank::runtime::obj::symbol_ptr const &rhs) const noexcept
     {
       if(!lhs)
-      { return !rhs; }
+      {
+        return !rhs;
+      }
       else if(!rhs)
-      { return !lhs; }
+      {
+        return !lhs;
+      }
       return lhs->equal(*rhs);
     }
   };
