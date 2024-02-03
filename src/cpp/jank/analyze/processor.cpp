@@ -99,7 +99,7 @@ namespace jank::analyze
       return err(error{ "invalid def: name must not be qualified" });
     }
 
-    bool has_value{ true };
+    native_bool has_value{ true };
     auto const value_opt(l->data.rest().rest().first());
     if(value_opt.is_none())
     {
@@ -226,7 +226,7 @@ namespace jank::analyze
     param_symbols.reserve(params->data.size());
     std::set<runtime::obj::symbol> unique_param_symbols;
 
-    bool is_variadic{};
+    native_bool is_variadic{};
     for(auto it(params->data.begin()); it != params->data.end(); ++it)
     {
       auto const p(*it);
@@ -1037,7 +1037,7 @@ namespace jank::analyze
   {
     native_vector<expression_ptr> exprs;
     exprs.reserve(o->count());
-    bool literal{ true };
+    native_bool literal{ true };
     for(auto d = o->seq(); d != nullptr; d = d->next_in_place())
     {
       auto res(analyze(d->first(), current_frame, expression_type::expression, fn_ctx, true));
@@ -1095,6 +1095,46 @@ namespace jank::analyze
 
     /* TODO: Uniqueness check. */
     return make_box<expression>(expr::map<expression>{
+      expression_base{{}, expr_type, current_frame, true},
+      std::move(exprs)
+    });
+  }
+
+  processor::expression_result
+  processor::analyze_set(runtime::obj::persistent_set_ptr const &o,
+                         local_frame_ptr &current_frame,
+                         expression_type const expr_type,
+                         option<expr::function_context_ptr> const &fn_ctx,
+                         native_bool const)
+  {
+    native_vector<expression_ptr> exprs;
+    exprs.reserve(o->count());
+    native_bool literal{ true };
+    for(auto d = o->seq(); d != nullptr; d = d->next_in_place())
+    {
+      auto res(analyze(d->first(), current_frame, expression_type::expression, fn_ctx, true));
+      if(res.is_err())
+      {
+        return res.expect_err_move();
+      }
+      exprs.emplace_back(res.expect_ok_move());
+      if(!boost::get<expr::primitive_literal<expression>>(&exprs.back()->data))
+      {
+        literal = false;
+      }
+    }
+
+    if(literal)
+    {
+      /* TODO: Order lifted constants. Use sub constants during codegen. */
+      current_frame->lift_constant(o);
+      return make_box<expression>(expr::primitive_literal<expression>{
+        expression_base{{}, expr_type, current_frame, true},
+        o
+      });
+    }
+
+    return make_box<expression>(expr::set<expression>{
       expression_base{{}, expr_type, current_frame, true},
       std::move(exprs)
     });
@@ -1252,7 +1292,7 @@ namespace jank::analyze
         }
         else if constexpr(std::same_as<T, runtime::obj::persistent_set>)
         {
-          return err(error{ "unimplemented analysis: set" });
+          return analyze_set(typed_o, current_frame, expr_type, fn_ctx, needs_box);
         }
         else if constexpr(runtime::behavior::numberable<T> || std::same_as<T, runtime::obj::boolean>
                           || std::same_as<T, runtime::obj::keyword>

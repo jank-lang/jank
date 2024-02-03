@@ -908,5 +908,47 @@ namespace jank::read::lex
         }));
       }
     }
+
+    TEST_CASE("Reader macro")
+    {
+      SUBCASE("Empty")
+      {
+        processor p{ "#" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                {0, 1, token_kind::reader_macro}
+        }));
+      }
+
+      SUBCASE("Set")
+      {
+        SUBCASE("Empty")
+        {
+          processor p{ "#{}" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  {0, 1,        token_kind::reader_macro},
+                  {1, 1,  token_kind::open_curly_bracket},
+                  {2, 1, token_kind::close_curly_bracket}
+          }));
+        }
+
+        /* Clojure doesn't actually allow this, but I don't see why not. It does for meta hints, so
+         * I figure this is just a lazy inconsistency. */
+        SUBCASE("With line breaks")
+        {
+          processor p{ "#\n{}" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  {0, 1,        token_kind::reader_macro},
+                  {2, 1,  token_kind::open_curly_bracket},
+                  {3, 1, token_kind::close_curly_bracket}
+          }));
+        }
+      }
+    }
   }
 }

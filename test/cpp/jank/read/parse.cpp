@@ -498,6 +498,86 @@ namespace jank::read::parse
             rt_ctx.intern_keyword(runtime::obj::symbol{ "meow" }).expect_ok(),
             runtime::obj::boolean::true_const())));
       }
+
+      //SUBCASE("Nested hints")
+      //{
+      //  lex::processor lp{ "^{:foo ^:meow 'bar} []" };
+      //  runtime::context rt_ctx;
+      //  processor p{ rt_ctx, lp.begin(), lp.end() };
+      //  auto const r(p.next());
+      //  CHECK(r.is_ok());
+      //  CHECK(r.expect_ok() != nullptr);
+      //  CHECK(runtime::detail::equal(r.expect_ok(), runtime::obj::persistent_vector::empty()));
+      //  CHECK(
+      //    runtime::detail::equal(runtime::meta(r.expect_ok()),
+      //                           runtime::obj::persistent_array_map::create_unique(
+      //                             rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }).expect_ok(),
+      //                             make_box<runtime::obj::symbol>("bar"))));
+      //}
+    }
+
+    TEST_CASE("Reader macro")
+    {
+      SUBCASE("No following value")
+      {
+        lex::processor lp{ "#" };
+        runtime::context rt_ctx;
+        processor p{ rt_ctx, lp.begin(), lp.end() };
+        auto const r1(p.next());
+        CHECK(r1.is_err());
+      }
+
+      SUBCASE("Unsupported following value")
+      {
+        lex::processor lp{ "#[]" };
+        runtime::context rt_ctx;
+        processor p{ rt_ctx, lp.begin(), lp.end() };
+        auto const r1(p.next());
+        CHECK(r1.is_err());
+      }
+
+      SUBCASE("Set")
+      {
+        SUBCASE("Empty")
+        {
+          lex::processor lp{ "#{}" };
+          runtime::context rt_ctx;
+          processor p{ rt_ctx, lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_ok());
+          CHECK(r.expect_ok() != nullptr);
+          CHECK(runtime::detail::equal(r.expect_ok(), runtime::obj::persistent_set::empty()));
+        }
+
+        SUBCASE("Non-empty")
+        {
+          lex::processor lp{ "#{1}" };
+          runtime::context rt_ctx;
+          processor p{ rt_ctx, lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_ok());
+          CHECK(r.expect_ok() != nullptr);
+          CHECK(runtime::detail::equal(
+            r.expect_ok(),
+            make_box<runtime::obj::persistent_set>(std::in_place, make_box(1))));
+        }
+
+        SUBCASE("Nested")
+        {
+          lex::processor lp{ "#{1, #{2}}" };
+          runtime::context rt_ctx;
+          processor p{ rt_ctx, lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_ok());
+          CHECK(r.expect_ok() != nullptr);
+          CHECK(runtime::detail::equal(
+            r.expect_ok(),
+            make_box<runtime::obj::persistent_set>(
+              std::in_place,
+              make_box(1),
+              make_box<runtime::obj::persistent_set>(std::in_place, make_box(2)))));
+        }
+      }
     }
   }
 }

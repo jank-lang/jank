@@ -321,6 +321,18 @@ namespace jank::evaluate
     return make_box<runtime::obj::persistent_array_map>(std::move(ret));
   }
 
+  runtime::object_ptr eval(runtime::context &rt_ctx,
+                           jit::processor const &jit_prc,
+                           analyze::expr::set<analyze::expression> const &expr)
+  {
+    runtime::detail::native_transient_set ret;
+    for(auto const &e : expr.data_exprs)
+    {
+      ret.insert(eval(rt_ctx, jit_prc, e));
+    }
+    return make_box<runtime::obj::persistent_set>(std::move(ret));
+  }
+
   runtime::object_ptr
   eval(runtime::context &, jit::processor const &, analyze::expr::local_reference const &)
   /* Doesn't make sense to eval these, since let is wrapped in a fn and JIT compiled. */

@@ -151,6 +151,8 @@ namespace jank::read::parse
           return parse_quote();
         case lex::token_kind::meta_hint:
           return parse_meta_hint();
+        case lex::token_kind::reader_macro:
+          return parse_reader_macro();
         case lex::token_kind::nil:
           return parse_nil();
         case lex::token_kind::boolean:
@@ -367,6 +369,56 @@ namespace jank::read::parse
         }
       },
       target_val_result.expect_ok());
+  }
+
+  processor::object_result processor::parse_reader_macro()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    ++token_current;
+
+    auto next_token_result(*token_current);
+    if(next_token_result.is_err())
+    {
+      return next_token_result.err().unwrap();
+    }
+    auto next_token(next_token_result.expect_ok());
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+    switch(next_token.kind)
+    {
+      case lex::token_kind::open_curly_bracket:
+        return parse_reader_macro_set();
+      default:
+        return err(
+          error{ start_token.pos, native_persistent_string{ "unsupported reader macro" } });
+    }
+#pragma clang diagnostic pop
+  }
+
+  processor::object_result processor::parse_reader_macro_set()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    ++token_current;
+
+    auto const prev_expected_closer(expected_closer);
+    expected_closer = some(lex::token_kind::close_curly_bracket);
+
+    runtime::detail::native_transient_set ret;
+    for(auto it(begin()); it != end(); ++it)
+    {
+      if(it.latest.unwrap().is_err())
+      {
+        return err(it.latest.unwrap().expect_err());
+      }
+      ret.insert(it.latest.unwrap().expect_ok());
+    }
+    if(expected_closer.is_some())
+    {
+      return err(error{ start_token.pos, "Unterminated set" });
+    }
+
+    expected_closer = prev_expected_closer;
+    return make_box<runtime::obj::persistent_set>(std::move(ret));
   }
 
   processor::object_result processor::parse_nil()

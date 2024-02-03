@@ -550,6 +550,18 @@ namespace jank::read
 
             return ok(token{ token_start, pos - token_start, token_kind::meta_hint });
           }
+        /* Reader macros. */
+        case '#':
+          {
+            auto &&e(check_whitespace(found_space));
+            if(e.is_some())
+            {
+              return err(std::move(e.unwrap()));
+            }
+            ++pos;
+
+            return ok(token{ token_start, pos - token_start, token_kind::reader_macro });
+          }
         default:
           ++pos;
           return err(

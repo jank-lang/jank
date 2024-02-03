@@ -18,11 +18,18 @@ namespace jank::runtime
     static_object(native_box<static_object> meta);
     static_object(value_type &&d);
     static_object(value_type const &d);
+    static_object(runtime::detail::native_transient_set &&d);
 
     template <typename... Args>
-    static_object(Args &&...args)
+    static_object(std::in_place_t, Args &&...args)
       : data{ std::forward<Args>(args)... }
     {
+    }
+
+    static native_box<static_object> empty()
+    {
+      static auto const ret(make_box<static_object>());
+      return ret;
     }
 
     /* behavior::objectable */

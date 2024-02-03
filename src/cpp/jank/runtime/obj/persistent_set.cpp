@@ -1,6 +1,3 @@
-#include <iostream>
-#include <sstream>
-
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_set.hpp>
@@ -14,6 +11,11 @@ namespace jank::runtime
 
   obj::persistent_set::static_object(runtime::detail::native_persistent_set const &d)
     : data{ d }
+  {
+  }
+
+  obj::persistent_set::static_object(runtime::detail::native_transient_set &&d)
+    : data{ d.persistent() }
   {
   }
 

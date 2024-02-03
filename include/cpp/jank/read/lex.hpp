@@ -19,6 +19,7 @@ namespace jank::read::lex
     close_curly_bracket,
     single_quote,
     meta_hint,
+    reader_macro,
     /* Has string data. */
     comment,
     nil,

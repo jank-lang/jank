@@ -1015,6 +1015,42 @@ namespace jank::codegen
     return ret_tmp;
   }
 
+  option<handle> processor::gen(analyze::expr::set<analyze::expression> const &expr,
+                                analyze::expr::function_arity<analyze::expression> const &fn_arity,
+                                native_bool const)
+  {
+    native_vector<handle> data_tmps;
+    data_tmps.reserve(expr.data_exprs.size());
+    for(auto const &data_expr : expr.data_exprs)
+    {
+      data_tmps.emplace_back(gen(data_expr, fn_arity, true).unwrap());
+    }
+
+    auto inserter(std::back_inserter(body_buffer));
+    auto ret_tmp(runtime::context::unique_string("vec"));
+    fmt::format_to(
+      inserter,
+      "auto const {}(jank::make_box<jank::runtime::obj::persistent_set>(std::in_place, ",
+      ret_tmp);
+    for(auto it(data_tmps.begin()); it != data_tmps.end();)
+    {
+      fmt::format_to(inserter, "{}", it->str(true));
+      if(++it != data_tmps.end())
+      {
+        fmt::format_to(inserter, ", ");
+      }
+    }
+    fmt::format_to(inserter, "));");
+
+    if(expr.expr_type == analyze::expression_type::return_statement)
+    {
+      fmt::format_to(inserter, "return {};", ret_tmp);
+      return none;
+    }
+
+    return ret_tmp;
+  }
+
   option<handle> processor::gen(analyze::expr::local_reference const &expr,
                                 analyze::expr::function_arity<analyze::expression> const &,
                                 native_bool const)
