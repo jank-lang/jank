@@ -411,96 +411,92 @@ namespace jank::read::parse
       }
     }
 
-    TEST_CASE("Map")
+    TEST_CASE("Meta hint")
     {
-      SUBCASE("Empty")
+      SUBCASE("No following meta value")
       {
-        lex::processor lp{ "{} { } {,,,}" };
+        lex::processor lp{ "^" };
         runtime::context rt_ctx;
         processor p{ rt_ctx, lp.begin(), lp.end() };
-        for(size_t i{}; i < 3; ++i)
-        {
-          auto const r(p.next());
-          CHECK(r.is_ok());
-          CHECK(r.expect_ok() != nullptr);
-          CHECK(
-            runtime::detail::equal(r.expect_ok(), make_box<runtime::obj::persistent_array_map>()));
-        }
+        auto const r1(p.next());
+        CHECK(r1.is_err());
       }
 
-      SUBCASE("Non-empty")
+      SUBCASE("No following target value")
       {
-        lex::processor lp{ "{1 2 3 4} { 2, 4 6, 8 }" };
+        lex::processor lp{ "^:foo" };
         runtime::context rt_ctx;
         processor p{ rt_ctx, lp.begin(), lp.end() };
-        for(size_t i{ 1 }; i < 3; ++i)
-        {
-          auto const r(p.next());
-          CHECK(r.is_ok());
-          CHECK(runtime::detail::equal(
-            r.expect_ok(),
-            make_box<runtime::obj::persistent_array_map>(
-              runtime::detail::in_place_unique{},
-              make_array_box<runtime::object_ptr>(make_box<runtime::obj::integer>(1 * i),
-                                                  make_box<runtime::obj::integer>(2 * i),
-                                                  make_box<runtime::obj::integer>(3 * i),
-                                                  make_box<runtime::obj::integer>(4 * i)),
-              4)));
-        }
+        auto const r1(p.next());
+        CHECK(r1.is_err());
       }
 
-      SUBCASE("Heterogeneous")
+      SUBCASE("Keyword meta for a metadatable target")
       {
-        lex::processor lp{ R"({:foo true 1 :one "meow" "meow"})" };
+        lex::processor lp{ "^:foo {}" };
         runtime::context rt_ctx;
         processor p{ rt_ctx, lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(r.is_ok());
         CHECK(r.expect_ok() != nullptr);
-        CHECK(runtime::detail::equal(
-          r.expect_ok(),
-          make_box<runtime::obj::persistent_array_map>(
-            runtime::detail::in_place_unique{},
-            make_array_box<runtime::object_ptr>(
-              rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }, true).expect_ok(),
-              make_box<runtime::obj::boolean>(true),
-              make_box<runtime::obj::integer>(1),
-              rt_ctx.intern_keyword(runtime::obj::symbol{ "one" }, true).expect_ok(),
-              make_box<runtime::obj::persistent_string>("meow"),
-              make_box<runtime::obj::persistent_string>("meow")),
-            6)));
+        CHECK(runtime::detail::equal(r.expect_ok(), runtime::obj::persistent_array_map::empty()));
+        CHECK(
+          runtime::detail::equal(runtime::meta(r.expect_ok()),
+                                 runtime::obj::persistent_array_map::create_unique(
+                                   rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }).expect_ok(),
+                                   runtime::obj::boolean::true_const())));
       }
 
-      SUBCASE("Odd elements")
+      SUBCASE("Keyword meta for non-metadatable target")
       {
-        lex::processor lp{ "{1 2 3}" };
+        lex::processor lp{ "^:foo nil" };
         runtime::context rt_ctx;
         processor p{ rt_ctx, lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(r1.is_err());
       }
 
-      SUBCASE("Extra close")
+      SUBCASE("Map meta for a metadatable target")
       {
-        lex::processor lp{ ":foo}" };
+        lex::processor lp{ "^{:foo :bar} []" };
         runtime::context rt_ctx;
         processor p{ rt_ctx, lp.begin(), lp.end() };
-        auto const r1(p.next());
-        CHECK(r1.is_ok());
+        auto const r(p.next());
+        CHECK(r.is_ok());
+        CHECK(r.expect_ok() != nullptr);
+        CHECK(runtime::detail::equal(r.expect_ok(), runtime::obj::persistent_vector::empty()));
         CHECK(runtime::detail::equal(
-          r1.expect_ok(),
-          rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }, true).expect_ok()));
-        auto const r2(p.next());
-        CHECK(r2.is_err());
+          runtime::meta(r.expect_ok()),
+          runtime::obj::persistent_array_map::create_unique(
+            rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }).expect_ok(),
+            rt_ctx.intern_keyword(runtime::obj::symbol{ "bar" }).expect_ok())));
       }
 
-      SUBCASE("Unterminated")
+      SUBCASE("Map meta for non-metadatable target")
       {
-        lex::processor lp{ "{1" };
+        lex::processor lp{ "^{:foo :bar} 7.5" };
         runtime::context rt_ctx;
         processor p{ rt_ctx, lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(r1.is_err());
+      }
+
+      SUBCASE("Multiple meta hints for a metadatable target")
+      {
+        lex::processor lp{ "^{:foo :bar} ^:meow ()" };
+        runtime::context rt_ctx;
+        processor p{ rt_ctx, lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(r.is_ok());
+        CHECK(r.expect_ok() != nullptr);
+        CHECK(runtime::detail::equal(r.expect_ok(), runtime::obj::persistent_list::empty()));
+        CHECK(runtime::detail::equal(
+          runtime::meta(r.expect_ok()),
+          runtime::obj::persistent_array_map::create_unique(
+            rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }).expect_ok(),
+            rt_ctx.intern_keyword(runtime::obj::symbol{ "bar" }).expect_ok(),
+            rt_ctx.intern_keyword(runtime::obj::symbol{ "meow" }).expect_ok(),
+            runtime::obj::boolean::true_const())));
       }
     }
   }

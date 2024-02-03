@@ -96,4 +96,5 @@ namespace jank::runtime
   object_ptr find(object_ptr s, object_ptr key);
   native_bool contains(object_ptr s, object_ptr key);
   object_ptr merge(object_ptr m, object_ptr other);
+  object_ptr meta(object_ptr m);
 }

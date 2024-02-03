@@ -884,5 +884,29 @@ namespace jank::read::lex
         }));
       }
     }
+
+    TEST_CASE("Meta hint")
+    {
+      SUBCASE("Empty")
+      {
+        processor p{ "^" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                {0, 1, token_kind::meta_hint}
+        }));
+      }
+
+      SUBCASE("With line breaks")
+      {
+        processor p{ "^\n:foo" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 1, token_kind::meta_hint },
+                { 2, 4, token_kind::keyword, "foo"sv }
+        }));
+      }
+    }
   }
 }

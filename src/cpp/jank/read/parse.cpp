@@ -149,6 +149,8 @@ namespace jank::read::parse
           return ok(nullptr);
         case lex::token_kind::single_quote:
           return parse_quote();
+        case lex::token_kind::meta_hint:
+          return parse_meta_hint();
         case lex::token_kind::nil:
           return parse_nil();
         case lex::token_kind::boolean:
@@ -286,6 +288,85 @@ namespace jank::read::parse
     return runtime::erase(
       make_box<runtime::obj::persistent_list>(make_box<runtime::obj::symbol>("quote"),
                                               val_result.expect_ok_move()));
+  }
+
+  processor::object_result processor::parse_meta_hint()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    ++token_current;
+    auto meta_val_result(next());
+    if(meta_val_result.is_err())
+    {
+      return meta_val_result;
+    }
+    else if(meta_val_result.expect_ok() == nullptr)
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "invalid meta value after meta hint" } });
+    }
+
+    auto meta_result(runtime::visit_object(
+      [&](auto const typed_val) -> processor::object_result {
+        using T = typename decltype(typed_val)::value_type;
+        if constexpr(std::same_as<T, runtime::obj::keyword>)
+        {
+          return runtime::obj::persistent_array_map::create_unique(
+            typed_val,
+            runtime::obj::boolean::true_const());
+        }
+        /* TODO: Concept for map-like. */
+        if constexpr(std::same_as<T, runtime::obj::persistent_hash_map>
+                     || std::same_as<T, runtime::obj::persistent_array_map>)
+        {
+          return typed_val;
+        }
+        else
+        {
+          return err(error{
+            start_token.pos,
+            native_persistent_string{ "value after meta hint ^ must be a keyword or map" } });
+        }
+      },
+      meta_val_result.expect_ok()));
+    if(meta_result.is_err())
+    {
+      return meta_result;
+    }
+
+    auto target_val_result(next());
+    if(target_val_result.is_err())
+    {
+      return target_val_result;
+    }
+    else if(target_val_result.expect_ok() == nullptr)
+    {
+      return err(error{ start_token.pos,
+                        native_persistent_string{ "invalid target value after meta hint" } });
+    }
+
+    return runtime::visit_object(
+      [&](auto const typed_val) -> processor::object_result {
+        using T = typename decltype(typed_val)::value_type;
+        if constexpr(runtime::behavior::metadatable<T>)
+        {
+          if(typed_val->meta.is_none())
+          {
+            return typed_val->with_meta(meta_result.expect_ok());
+          }
+          else
+          {
+            return typed_val->with_meta(
+              runtime::merge(typed_val->meta.unwrap(), meta_result.expect_ok()));
+          }
+        }
+        else
+        {
+          return err(
+            error{ start_token.pos,
+                   native_persistent_string{ "target value for meta hint must accept metadata" } });
+        }
+      },
+      target_val_result.expect_ok());
   }
 
   processor::object_result processor::parse_nil()

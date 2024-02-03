@@ -361,7 +361,7 @@ namespace jank::read
             }
 
             /* Tokens beginning with - are ambiguous; it's only a negative number if it has numbers
-           * to follow. */
+             * to follow. */
             if(file[token_start] != '-' || (pos - token_start) >= 1)
             {
               require_space = true;
@@ -529,14 +529,26 @@ namespace jank::read
             pos++;
 
             /* Unescaped strings can be read right from memory, but escaped strings require
-           * some processing first, to turn the escape sequences into the necessary characters.
-           * We use distinct token types for these so we can optimize for the typical case. */
+             * some processing first, to turn the escape sequences into the necessary characters.
+             * We use distinct token types for these so we can optimize for the typical case. */
             auto const kind(contains_escape ? token_kind::escaped_string : token_kind::string);
             return ok(token{ token_start,
                              pos - token_start,
                              kind,
                              native_persistent_string_view(file.data() + token_start + 1,
                                                            pos - token_start - 2) });
+          }
+        /* Meta hints. */
+        case '^':
+          {
+            auto &&e(check_whitespace(found_space));
+            if(e.is_some())
+            {
+              return err(std::move(e.unwrap()));
+            }
+            ++pos;
+
+            return ok(token{ token_start, pos - token_start, token_kind::meta_hint });
           }
         default:
           ++pos;

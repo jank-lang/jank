@@ -476,4 +476,27 @@ namespace jank::runtime
       },
       m);
   }
+
+  object_ptr meta(object_ptr const m)
+  {
+    if(m == nullptr || m == obj::nil::nil_const())
+    {
+      return obj::nil::nil_const();
+    }
+
+    return visit_object(
+      [&](auto const typed_m) -> object_ptr {
+        using T = typename decltype(typed_m)::value_type;
+
+        if constexpr(behavior::metadatable<T>)
+        {
+          return typed_m->meta.unwrap_or(obj::nil::nil_const());
+        }
+        else
+        {
+          return obj::nil::nil_const();
+        }
+      },
+      m);
+  }
 } // namespace jank::runtime

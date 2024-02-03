@@ -34,6 +34,12 @@ namespace jank::runtime
     {
     }
 
+    static native_box<static_object> empty()
+    {
+      static auto const ret(make_box<static_object>());
+      return ret;
+    }
+
     using base_persistent_map::base_persistent_map;
 
     template <typename... Args>
