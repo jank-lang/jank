@@ -547,6 +547,7 @@ namespace jank::read
               return err(std::move(e.unwrap()));
             }
             ++pos;
+            require_space = false;
 
             return ok(token{ token_start, pos - token_start, token_kind::meta_hint });
           }
@@ -559,6 +560,7 @@ namespace jank::read
               return err(std::move(e.unwrap()));
             }
             ++pos;
+            require_space = false;
 
             return ok(token{ token_start, pos - token_start, token_kind::reader_macro });
           }

@@ -499,21 +499,45 @@ namespace jank::read::parse
             runtime::obj::boolean::true_const())));
       }
 
-      //SUBCASE("Nested hints")
-      //{
-      //  lex::processor lp{ "^{:foo ^:meow 'bar} []" };
-      //  runtime::context rt_ctx;
-      //  processor p{ rt_ctx, lp.begin(), lp.end() };
-      //  auto const r(p.next());
-      //  CHECK(r.is_ok());
-      //  CHECK(r.expect_ok() != nullptr);
-      //  CHECK(runtime::detail::equal(r.expect_ok(), runtime::obj::persistent_vector::empty()));
-      //  CHECK(
-      //    runtime::detail::equal(runtime::meta(r.expect_ok()),
-      //                           runtime::obj::persistent_array_map::create_unique(
-      //                             rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }).expect_ok(),
-      //                             make_box<runtime::obj::symbol>("bar"))));
-      //}
+      SUBCASE("Nested hints")
+      {
+        lex::processor lp{ "^{:foo ^:meow 'bar} []" };
+        runtime::context rt_ctx;
+        processor p{ rt_ctx, lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(r.is_ok());
+        CHECK(r.expect_ok() != nullptr);
+        CHECK(runtime::detail::equal(r.expect_ok(), runtime::obj::persistent_vector::empty()));
+        CHECK(runtime::detail::equal(
+          runtime::meta(r.expect_ok()),
+          runtime::obj::persistent_array_map::create_unique(
+            rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }).expect_ok(),
+            make_box<runtime::obj::persistent_list>(make_box<runtime::obj::symbol>("quote"),
+                                                    make_box<runtime::obj::symbol>("bar")))));
+      }
+
+      SUBCASE("Within a call")
+      {
+        lex::processor lp{ "(str ^:foo #{})" };
+        runtime::context rt_ctx;
+        processor p{ rt_ctx, lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(r.is_ok());
+        CHECK(r.expect_ok() != nullptr);
+        CHECK(runtime::detail::equal(
+          r.expect_ok(),
+          make_box<runtime::obj::persistent_list>(make_box<runtime::obj::symbol>("str"),
+                                                  runtime::obj::persistent_set::empty())));
+        CHECK(runtime::detail::equal(
+          runtime::meta(runtime::expect_object<runtime::obj::persistent_list>(r.expect_ok())
+                          ->data.rest()
+                          .first()
+                          .unwrap()),
+          runtime::obj::persistent_array_map::create_unique(
+            rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }).expect_ok(),
+            runtime::obj::boolean::true_const())));
+      }
+      /* TODO: With codegen? */
     }
 
     TEST_CASE("Reader macro")
