@@ -319,7 +319,7 @@ namespace jank::evaluate
                            analyze::expr::map<analyze::expression> const &expr)
   {
     auto const size(expr.data_exprs.size());
-    if(size < runtime::obj::persistent_array_map::max_size)
+    if(size <= runtime::obj::persistent_array_map::max_size)
     {
       auto const array_box(make_array_box<runtime::object_ptr>(size * 2));
       size_t i{};

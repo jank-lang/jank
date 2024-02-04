@@ -46,7 +46,7 @@ namespace jank::runtime
 
   obj::symbol::static_object(native_persistent_string const &ns,
                              native_persistent_string const &n,
-                             option<object_ptr> const meta)
+                             object_ptr const meta)
     : ns{ ns }
     , name{ n }
     , meta{ meta }

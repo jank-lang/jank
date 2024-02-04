@@ -24,7 +24,7 @@ namespace jank::runtime
     static_object(native_persistent_string &&ns, native_persistent_string &&n);
     static_object(native_persistent_string const &ns,
                   native_persistent_string const &n,
-                  option<object_ptr> meta);
+                  object_ptr meta);
 
     static_object &operator=(static_object const &) = default;
     static_object &operator=(static_object &&) = default;

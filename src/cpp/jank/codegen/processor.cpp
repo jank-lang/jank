@@ -1075,7 +1075,7 @@ namespace jank::codegen
     auto ret_tmp(runtime::context::unique_string("map"));
 
     /* Jump right to a hash map, if we have enough values. */
-    if(expr.data_exprs.size() < runtime::obj::persistent_array_map::max_size)
+    if(expr.data_exprs.size() <= runtime::obj::persistent_array_map::max_size)
     {
       fmt::format_to(inserter, "auto const {}(", ret_tmp);
       if(expr.meta.is_some())
