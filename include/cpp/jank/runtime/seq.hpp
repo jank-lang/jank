@@ -21,7 +21,7 @@ namespace jank::runtime
       }
 
       fmt::format_to(inserter, "(");
-      bool needs_space{};
+      native_bool needs_space{};
       for(auto i(s->fresh_seq()); i != nullptr; i = i->next_in_place())
       {
         if(needs_space)

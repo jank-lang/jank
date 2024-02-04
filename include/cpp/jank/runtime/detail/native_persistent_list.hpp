@@ -13,7 +13,7 @@ namespace jank::runtime::detail
   template <typename T>
   struct list_node
   {
-    static constexpr bool pointer_free{ false };
+    static constexpr native_bool pointer_free{ false };
 
     list_node() = default;
     list_node(list_node const &) = default;
@@ -96,12 +96,12 @@ namespace jank::runtime::detail
         return *this;
       }
 
-      bool operator==(iterator const &rhs) const
+      native_bool operator==(iterator const &rhs) const
       {
         return latest == rhs.latest;
       }
 
-      bool operator!=(iterator const &rhs) const
+      native_bool operator!=(iterator const &rhs) const
       {
         return latest != rhs.latest;
       }

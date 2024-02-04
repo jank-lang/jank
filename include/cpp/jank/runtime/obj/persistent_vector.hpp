@@ -10,17 +10,25 @@ namespace jank::runtime
   {
     using value_type = runtime::detail::native_persistent_vector;
 
-    static constexpr bool pointer_free{ false };
+    static constexpr native_bool pointer_free{ false };
 
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
     static_object(value_type &&d);
     static_object(value_type const &d);
+    static_object(object_ptr meta, value_type &&d);
 
     template <typename... Args>
-    static_object(Args &&...args)
+    static_object(std::in_place_t, Args &&...args)
       : data{ std::forward<Args>(args)... }
+    {
+    }
+
+    template <typename... Args>
+    static_object(object_ptr const meta, std::in_place_t, Args &&...args)
+      : data{ std::forward<Args>(args)... }
+      , meta{ meta }
     {
     }
 

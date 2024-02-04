@@ -67,7 +67,7 @@ namespace jank::analyze
       }
       fn.push_back(parse_current->expect_ok());
     }
-    auto fn_list(make_box<runtime::obj::persistent_list>(fn.rbegin(), fn.rend()));
+    auto fn_list(make_box<runtime::obj::persistent_list>(std::in_place, fn.rbegin(), fn.rend()));
     return analyze(fn_list, expression_type::expression);
   }
 
@@ -1064,7 +1064,8 @@ namespace jank::analyze
 
     return make_box<expression>(expr::vector<expression>{
       expression_base{{}, expr_type, current_frame, true},
-      std::move(exprs)
+      std::move(exprs),
+      o->meta
     });
   }
 
@@ -1096,7 +1097,8 @@ namespace jank::analyze
     /* TODO: Uniqueness check. */
     return make_box<expression>(expr::map<expression>{
       expression_base{{}, expr_type, current_frame, true},
-      std::move(exprs)
+      std::move(exprs),
+      o->meta
     });
   }
 
@@ -1136,7 +1138,8 @@ namespace jank::analyze
 
     return make_box<expression>(expr::set<expression>{
       expression_base{{}, expr_type, current_frame, true},
-      std::move(exprs)
+      std::move(exprs),
+      o->meta
     });
   }
 
@@ -1194,6 +1197,7 @@ namespace jank::analyze
         auto const arity_meta(
           runtime::get_in(var_deref->var->meta.unwrap(),
                           make_box<runtime::obj::persistent_vector>(
+                            std::in_place,
                             rt_ctx.intern_keyword("", "arities", true).expect_ok(),
                             /* NOTE: We don't support unboxed meta on variadic arities. */
                             make_box(arg_count))));

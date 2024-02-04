@@ -7,10 +7,10 @@ namespace jank::runtime
 {
   namespace detail
   {
-    bool truthy(object_ptr o);
-    bool truthy(obj::nil_ptr);
-    bool truthy(obj::boolean_ptr const o);
-    bool truthy(native_bool const o);
+    native_bool truthy(object_ptr o);
+    native_bool truthy(obj::nil_ptr);
+    native_bool truthy(obj::boolean_ptr const o);
+    native_bool truthy(native_bool const o);
 
     template <typename T>
     requires runtime::behavior::objectable<T>

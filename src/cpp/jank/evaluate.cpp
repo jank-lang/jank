@@ -304,21 +304,62 @@ namespace jank::evaluate
     {
       ret.push_back(eval(rt_ctx, jit_prc, e));
     }
-    return make_box<runtime::obj::persistent_vector>(ret.persistent());
+    if(expr.meta.is_some())
+    {
+      return make_box<runtime::obj::persistent_vector>(expr.meta.unwrap(), ret.persistent());
+    }
+    else
+    {
+      return make_box<runtime::obj::persistent_vector>(ret.persistent());
+    }
   }
 
   runtime::object_ptr eval(runtime::context &rt_ctx,
                            jit::processor const &jit_prc,
                            analyze::expr::map<analyze::expression> const &expr)
   {
-    /* TODO: Pre-allocate array. */
-    /* TODO: If there are more exprs than the max array map keys, we need a hash map. */
-    runtime::detail::native_persistent_array_map ret;
-    for(auto const &e : expr.data_exprs)
+    auto const size(expr.data_exprs.size());
+    if(size < runtime::obj::persistent_array_map::max_size)
     {
-      ret.insert_or_assign(eval(rt_ctx, jit_prc, e.first), eval(rt_ctx, jit_prc, e.second));
+      auto const array_box(make_array_box<runtime::object_ptr>(size * 2));
+      size_t i{};
+      for(auto const &e : expr.data_exprs)
+      {
+        array_box.data[i++] = eval(rt_ctx, jit_prc, e.first);
+        array_box.data[i++] = eval(rt_ctx, jit_prc, e.second);
+      }
+
+      if(expr.meta.is_some())
+      {
+        return make_box<runtime::obj::persistent_array_map>(expr.meta.unwrap(),
+                                                            runtime::detail::in_place_unique{},
+                                                            array_box,
+                                                            size * 2);
+      }
+      else
+      {
+        return make_box<runtime::obj::persistent_array_map>(runtime::detail::in_place_unique{},
+                                                            array_box,
+                                                            size * 2);
+      }
     }
-    return make_box<runtime::obj::persistent_array_map>(std::move(ret));
+    else
+    {
+      runtime::detail::native_transient_hash_map trans;
+      for(auto const &e : expr.data_exprs)
+      {
+        trans.insert({ eval(rt_ctx, jit_prc, e.first), eval(rt_ctx, jit_prc, e.second) });
+      }
+
+      if(expr.meta.is_some())
+      {
+        return make_box<runtime::obj::persistent_hash_map>(expr.meta.unwrap(), trans.persistent());
+      }
+      else
+      {
+        return make_box<runtime::obj::persistent_hash_map>(trans.persistent());
+      }
+    }
   }
 
   runtime::object_ptr eval(runtime::context &rt_ctx,
@@ -330,14 +371,21 @@ namespace jank::evaluate
     {
       ret.insert(eval(rt_ctx, jit_prc, e));
     }
-    return make_box<runtime::obj::persistent_set>(std::move(ret));
+    if(expr.meta.is_some())
+    {
+      return make_box<runtime::obj::persistent_set>(expr.meta.unwrap(), std::move(ret));
+    }
+    else
+    {
+      return make_box<runtime::obj::persistent_set>(std::move(ret));
+    }
   }
 
   runtime::object_ptr
   eval(runtime::context &, jit::processor const &, analyze::expr::local_reference const &)
   /* Doesn't make sense to eval these, since let is wrapped in a fn and JIT compiled. */
   {
-    throw "unsupported eval: local_reference";
+    throw make_box("unsupported eval: local_reference");
   }
 
   runtime::object_ptr eval(runtime::context &rt_ctx,
@@ -358,7 +406,7 @@ namespace jank::evaluate
                            analyze::expr::recur<analyze::expression> const &)
   /* Recur will always be in a fn or loop, which will be JIT compiled. */
   {
-    throw "unsupported eval: recur";
+    throw make_box("unsupported eval: recur");
   }
 
   runtime::object_ptr eval(runtime::context &rt_ctx,

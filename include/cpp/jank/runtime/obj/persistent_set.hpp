@@ -10,7 +10,7 @@ namespace jank::runtime
   {
     using value_type = runtime::detail::native_persistent_set;
 
-    static constexpr bool pointer_free{ false };
+    static constexpr native_bool pointer_free{ false };
 
     static_object() = default;
     static_object(static_object &&) = default;
@@ -19,10 +19,18 @@ namespace jank::runtime
     static_object(value_type &&d);
     static_object(value_type const &d);
     static_object(runtime::detail::native_transient_set &&d);
+    static_object(object_ptr meta, runtime::detail::native_transient_set &&d);
 
     template <typename... Args>
     static_object(std::in_place_t, Args &&...args)
       : data{ std::forward<Args>(args)... }
+    {
+    }
+
+    template <typename... Args>
+    static_object(object_ptr const meta, std::in_place_t, Args &&...args)
+      : data{ std::forward<Args>(args)... }
+      , meta{ meta }
     {
     }
 

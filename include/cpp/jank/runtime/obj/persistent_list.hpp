@@ -13,7 +13,7 @@ namespace jank::runtime
   {
     using value_type = runtime::detail::native_persistent_list;
 
-    static constexpr bool pointer_free{ false };
+    static constexpr native_bool pointer_free{ false };
 
     static native_box<static_object> create(object_ptr s);
 
@@ -24,8 +24,15 @@ namespace jank::runtime
     static_object(value_type const &d);
 
     template <typename... Args>
-    static_object(Args &&...args)
+    static_object(std::in_place_t, Args &&...args)
       : data{ std::forward<Args>(args)... }
+    {
+    }
+
+    template <typename... Args>
+    static_object(object_ptr const meta, std::in_place_t, Args &&...args)
+      : data{ std::forward<Args>(args)... }
+      , meta{ meta }
     {
     }
 

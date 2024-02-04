@@ -89,12 +89,12 @@ namespace jank
     {
     }
 
-    constexpr bool is_ok() const
+    constexpr native_bool is_ok() const
     {
       return data.which() == 0;
     }
 
-    constexpr bool is_err() const
+    constexpr native_bool is_err() const
     {
       return data.which() == 1;
     }
@@ -182,22 +182,22 @@ namespace jank
       return std::move(boost::get<R>(data));
     }
 
-    constexpr bool operator==(result const &rhs) const
+    constexpr native_bool operator==(result const &rhs) const
     {
       return rhs.data == data;
     }
 
-    constexpr bool operator!=(result const &rhs) const
+    constexpr native_bool operator!=(result const &rhs) const
     {
       return rhs.data != data;
     }
 
-    constexpr bool operator==(R const &rhs) const
+    constexpr native_bool operator==(R const &rhs) const
     {
       return data.which() == 0 && rhs == boost::get<R>(data);
     }
 
-    constexpr bool operator==(E const &rhs) const
+    constexpr native_bool operator==(E const &rhs) const
     {
       return data.which() == 1 && rhs == boost::get<E>(data);
     }
@@ -243,12 +243,12 @@ namespace jank
     {
     }
 
-    constexpr bool is_ok() const
+    constexpr native_bool is_ok() const
     {
       return data.which() == 0;
     }
 
-    constexpr bool is_err() const
+    constexpr native_bool is_err() const
     {
       return data.which() == 1;
     }
@@ -297,17 +297,17 @@ namespace jank
       return none;
     }
 
-    constexpr bool operator==(result const &rhs) const
+    constexpr native_bool operator==(result const &rhs) const
     {
       return rhs.data == data;
     }
 
-    constexpr bool operator!=(result const &rhs) const
+    constexpr native_bool operator!=(result const &rhs) const
     {
       return rhs.data != data;
     }
 
-    constexpr bool operator==(E const &rhs) const
+    constexpr native_bool operator==(E const &rhs) const
     {
       return data.which() == 1 && rhs == boost::get<E>(data);
     }

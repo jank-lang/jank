@@ -45,7 +45,7 @@ namespace jank::analyze
                                       expr::try_<E>,
                                       expr::native_raw<E>>;
 
-    static constexpr bool pointer_free{ false };
+    static constexpr native_bool pointer_free{ false };
 
     expression() = default;
     expression(expression const &) = default;

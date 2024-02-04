@@ -199,6 +199,7 @@ namespace jank::read::parse
           CHECK(r.is_ok());
           CHECK(runtime::detail::equal(r.expect_ok(),
                                        make_box<runtime::obj::persistent_list>(
+                                         std::in_place,
                                          make_box<runtime::obj::symbol>("quote"),
                                          make_box<runtime::obj::symbol>(s.first, s.second))));
         }
@@ -307,7 +308,8 @@ namespace jank::read::parse
           CHECK(r.is_ok());
           CHECK(runtime::detail::equal(
             r.expect_ok(),
-            make_box<runtime::obj::persistent_list>(make_box<runtime::obj::integer>(1 * i),
+            make_box<runtime::obj::persistent_list>(std::in_place,
+                                                    make_box<runtime::obj::integer>(1 * i),
                                                     make_box<runtime::obj::integer>(2 * i),
                                                     make_box<runtime::obj::integer>(3 * i),
                                                     make_box<runtime::obj::integer>(4 * i))));
@@ -323,7 +325,8 @@ namespace jank::read::parse
         CHECK(r1.is_ok());
         CHECK(runtime::detail::equal(
           r1.expect_ok(),
-          make_box<runtime::obj::persistent_list>(make_box<runtime::obj::symbol>("def"),
+          make_box<runtime::obj::persistent_list>(std::in_place,
+                                                  make_box<runtime::obj::symbol>("def"),
                                                   make_box<runtime::obj::symbol>("foo-bar"),
                                                   make_box<runtime::obj::integer>(1))));
         auto const r2(p.next());
@@ -512,7 +515,8 @@ namespace jank::read::parse
           runtime::meta(r.expect_ok()),
           runtime::obj::persistent_array_map::create_unique(
             rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }).expect_ok(),
-            make_box<runtime::obj::persistent_list>(make_box<runtime::obj::symbol>("quote"),
+            make_box<runtime::obj::persistent_list>(std::in_place,
+                                                    make_box<runtime::obj::symbol>("quote"),
                                                     make_box<runtime::obj::symbol>("bar")))));
       }
 
@@ -526,7 +530,8 @@ namespace jank::read::parse
         CHECK(r.expect_ok() != nullptr);
         CHECK(runtime::detail::equal(
           r.expect_ok(),
-          make_box<runtime::obj::persistent_list>(make_box<runtime::obj::symbol>("str"),
+          make_box<runtime::obj::persistent_list>(std::in_place,
+                                                  make_box<runtime::obj::symbol>("str"),
                                                   runtime::obj::persistent_set::empty())));
         CHECK(runtime::detail::equal(
           runtime::meta(runtime::expect_object<runtime::obj::persistent_list>(r.expect_ok())

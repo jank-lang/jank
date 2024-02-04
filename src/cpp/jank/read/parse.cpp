@@ -203,7 +203,7 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
-    return make_box<runtime::obj::persistent_list>(ret.rbegin(), ret.rend());
+    return make_box<runtime::obj::persistent_list>(std::in_place, ret.rbegin(), ret.rend());
   }
 
   processor::object_result processor::parse_vector()
@@ -288,7 +288,8 @@ namespace jank::read::parse
     }
 
     return runtime::erase(
-      make_box<runtime::obj::persistent_list>(make_box<runtime::obj::symbol>("quote"),
+      make_box<runtime::obj::persistent_list>(std::in_place,
+                                              make_box<runtime::obj::symbol>("quote"),
                                               val_result.expect_ok_move()));
   }
 

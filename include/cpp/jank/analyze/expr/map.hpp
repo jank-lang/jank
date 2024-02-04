@@ -9,6 +9,7 @@ namespace jank::analyze::expr
   struct map : expression_base
   {
     native_vector<std::pair<native_box<E>, native_box<E>>> data_exprs;
+    option<runtime::object_ptr> meta;
 
     runtime::object_ptr to_runtime_data() const
     {
@@ -17,7 +18,8 @@ namespace jank::analyze::expr
       {
         pair_maps
           = runtime::conj(pair_maps,
-                          make_box<runtime::obj::persistent_vector>(e.first->to_runtime_data(),
+                          make_box<runtime::obj::persistent_vector>(std::in_place,
+                                                                    e.first->to_runtime_data(),
                                                                     e.second->to_runtime_data()));
       }
 
@@ -26,7 +28,9 @@ namespace jank::analyze::expr
         runtime::obj::persistent_array_map::create_unique(make_box("__type"),
                                                           make_box("expr::map"),
                                                           make_box("data_exprs"),
-                                                          pair_maps));
+                                                          pair_maps,
+                                                          make_box("meta"),
+                                                          detail::to_runtime_data(meta)));
     }
   };
 }

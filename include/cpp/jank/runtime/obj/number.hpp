@@ -5,7 +5,7 @@ namespace jank::runtime
   template <>
   struct static_object<object_type::boolean> : gc
   {
-    static constexpr bool pointer_free{ true };
+    static constexpr native_bool pointer_free{ true };
 
     static native_box<static_object> true_const();
     static native_box<static_object> false_const();
@@ -28,7 +28,7 @@ namespace jank::runtime
   template <>
   struct static_object<object_type::integer> : gc
   {
-    static constexpr bool pointer_free{ true };
+    static constexpr native_bool pointer_free{ true };
 
     static_object() = default;
     static_object(static_object &&) = default;
@@ -52,7 +52,7 @@ namespace jank::runtime
   template <>
   struct static_object<object_type::real> : gc
   {
-    static constexpr bool pointer_free{ true };
+    static constexpr native_bool pointer_free{ true };
 
     static_object() = default;
     static_object(static_object &&) = default;
