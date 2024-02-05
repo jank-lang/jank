@@ -20,6 +20,7 @@ namespace jank::read::lex
     single_quote,
     meta_hint,
     reader_macro,
+    reader_macro_comment,
     /* Has string data. */
     comment,
     nil,

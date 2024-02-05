@@ -152,7 +152,24 @@ namespace jank::read::parse
         case lex::token_kind::meta_hint:
           return parse_meta_hint();
         case lex::token_kind::reader_macro:
-          return parse_reader_macro();
+          {
+            auto res(parse_reader_macro());
+            /* Reader macros can skip some items entirely. */
+            if(res.is_ok() && res.expect_ok() == nullptr)
+            {
+              continue;
+            }
+            return res;
+          }
+        case lex::token_kind::reader_macro_comment:
+          {
+            auto res(parse_reader_macro_comment());
+            if(res.is_ok() && res.expect_ok() == nullptr)
+            {
+              continue;
+            }
+            return res;
+          }
         case lex::token_kind::nil:
           return parse_nil();
         case lex::token_kind::boolean:
@@ -420,6 +437,25 @@ namespace jank::read::parse
 
     expected_closer = prev_expected_closer;
     return make_box<runtime::obj::persistent_set>(std::move(ret));
+  }
+
+  processor::object_result processor::parse_reader_macro_comment()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    ++token_current;
+
+    auto ignored_result(next());
+    if(ignored_result.is_err())
+    {
+      return ignored_result;
+    }
+    else if(ignored_result.expect_ok() == nullptr)
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "value after #_ must be present" } });
+    }
+
+    return ok(nullptr);
   }
 
   processor::object_result processor::parse_nil()

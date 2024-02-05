@@ -48,6 +48,7 @@ namespace jank::read::parse
     object_result parse_meta_hint();
     object_result parse_reader_macro();
     object_result parse_reader_macro_set();
+    object_result parse_reader_macro_comment();
     object_result parse_symbol();
     object_result parse_nil();
     object_result parse_boolean();

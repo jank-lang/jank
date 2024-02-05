@@ -559,8 +559,15 @@ namespace jank::read
             {
               return err(std::move(e.unwrap()));
             }
-            ++pos;
             require_space = false;
+            auto const oc(peek());
+            ++pos;
+
+            if(oc.is_some() && oc.unwrap() == '_')
+            {
+              ++pos;
+              return ok(token{ token_start, pos - token_start, token_kind::reader_macro_comment });
+            }
 
             return ok(token{ token_start, pos - token_start, token_kind::reader_macro });
           }

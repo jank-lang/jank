@@ -607,6 +607,62 @@ namespace jank::read::parse
               make_box<runtime::obj::persistent_set>(std::in_place, make_box(2)))));
         }
       }
+
+      SUBCASE("Comment")
+      {
+        SUBCASE("EOF")
+        {
+          lex::processor lp{ "#_" };
+          runtime::context rt_ctx;
+          processor p{ rt_ctx, lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_err());
+        }
+
+        SUBCASE("Other reader macro")
+        {
+          lex::processor lp{ "#_#{1} #{2}" };
+          runtime::context rt_ctx;
+          processor p{ rt_ctx, lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_ok());
+          CHECK(r.expect_ok() != nullptr);
+          CHECK(runtime::detail::equal(
+            r.expect_ok(),
+            make_box<runtime::obj::persistent_set>(std::in_place, make_box(2))));
+        }
+
+        SUBCASE("Adjacent")
+        {
+          lex::processor lp{ "#_#_1 2 3" };
+          runtime::context rt_ctx;
+          processor p{ rt_ctx, lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_ok());
+          CHECK(r.expect_ok() != nullptr);
+          CHECK(runtime::detail::equal(r.expect_ok(), make_box(3)));
+        }
+
+        SUBCASE("Number")
+        {
+          lex::processor lp{ "#_1.23 \"ok\"" };
+          runtime::context rt_ctx;
+          processor p{ rt_ctx, lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_ok());
+          CHECK(r.expect_ok() != nullptr);
+          CHECK(runtime::detail::equal(r.expect_ok(), make_box("ok")));
+        }
+
+        SUBCASE("Invalid form")
+        {
+          lex::processor lp{ "#_{1.23} \"not ok\"" };
+          runtime::context rt_ctx;
+          processor p{ rt_ctx, lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_err());
+        }
+      }
     }
   }
 }
