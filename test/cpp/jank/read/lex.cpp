@@ -921,6 +921,56 @@ namespace jank::read::lex
         }));
       }
 
+      SUBCASE("Comment")
+      {
+        SUBCASE("Empty")
+        {
+          processor p{ "#_" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  {0, 2, token_kind::reader_macro_comment}
+          }));
+        }
+
+        SUBCASE("No whitespace after")
+        {
+          processor p{ "#_[]" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  {0, 2, token_kind::reader_macro_comment},
+                  {2, 1,  token_kind::open_square_bracket},
+                  {3, 1, token_kind::close_square_bracket}
+          }));
+        }
+      }
+
+      SUBCASE("Conditional")
+      {
+        SUBCASE("Empty")
+        {
+          processor p{ "#?" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  {0, 2, token_kind::reader_macro_conditional}
+          }));
+        }
+
+        SUBCASE("With following list")
+        {
+          processor p{ "#?()" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  {0, 2, token_kind::reader_macro_conditional},
+                  {2, 1,               token_kind::open_paren},
+                  {3, 1,              token_kind::close_paren}
+          }));
+        }
+      }
+
       SUBCASE("Set")
       {
         SUBCASE("Empty")

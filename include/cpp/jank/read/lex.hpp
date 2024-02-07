@@ -21,6 +21,7 @@ namespace jank::read::lex
     meta_hint,
     reader_macro,
     reader_macro_comment,
+    reader_macro_conditional,
     /* Has string data. */
     comment,
     nil,

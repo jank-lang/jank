@@ -542,7 +542,6 @@ namespace jank::read::parse
             rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }).expect_ok(),
             runtime::obj::boolean::true_const())));
       }
-      /* TODO: With codegen? */
     }
 
     TEST_CASE("Reader macro")
@@ -661,6 +660,105 @@ namespace jank::read::parse
           processor p{ rt_ctx, lp.begin(), lp.end() };
           auto const r(p.next());
           CHECK(r.is_err());
+        }
+      }
+
+      SUBCASE("Conditional")
+      {
+        SUBCASE("EOF")
+        {
+          lex::processor lp{ "#?" };
+          runtime::context rt_ctx;
+          processor p{ rt_ctx, lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_err());
+        }
+
+        SUBCASE("Non-list after")
+        {
+          lex::processor lp{ "#?[]" };
+          runtime::context rt_ctx;
+          processor p{ rt_ctx, lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_err());
+        }
+
+        SUBCASE("No match")
+        {
+          lex::processor lp{ "[#?(:clj 0 :cljs 1) 9]" };
+          runtime::context rt_ctx;
+          processor p{ rt_ctx, lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_ok());
+          CHECK(r.expect_ok() != nullptr);
+          CHECK(runtime::detail::equal(
+            r.expect_ok(),
+            make_box<runtime::obj::persistent_vector>(std::in_place, make_box(9))));
+        }
+
+        SUBCASE("Default match")
+        {
+          lex::processor lp{ "[#?(:clj 0 :cljs 1 :default 8) 9]" };
+          runtime::context rt_ctx;
+          processor p{ rt_ctx, lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_ok());
+          CHECK(r.expect_ok() != nullptr);
+          CHECK(runtime::detail::equal(
+            r.expect_ok(),
+            make_box<runtime::obj::persistent_vector>(std::in_place, make_box(8), make_box(9))));
+        }
+
+        SUBCASE("jank match")
+        {
+          lex::processor lp{ "[#?(:clj 0 :cljs 1 :jank 7 :default 8) 9]" };
+          runtime::context rt_ctx;
+          processor p{ rt_ctx, lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_ok());
+          CHECK(r.expect_ok() != nullptr);
+          CHECK(runtime::detail::equal(
+            r.expect_ok(),
+            make_box<runtime::obj::persistent_vector>(std::in_place, make_box(7), make_box(9))));
+        }
+
+        SUBCASE("First match picked")
+        {
+          lex::processor lp{ "[#?(:default -1 :clj 0 :cljs 1 :jank 7 :default 8) 9]" };
+          runtime::context rt_ctx;
+          processor p{ rt_ctx, lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_ok());
+          CHECK(r.expect_ok() != nullptr);
+          CHECK(runtime::detail::equal(
+            r.expect_ok(),
+            make_box<runtime::obj::persistent_vector>(std::in_place, make_box(-1), make_box(9))));
+        }
+
+        SUBCASE("Nested")
+        {
+          lex::processor lp{ "[#?(:clj 0 :cljs 1 :jank #?(:default 5) :default 8) 9]" };
+          runtime::context rt_ctx;
+          processor p{ rt_ctx, lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_ok());
+          CHECK(r.expect_ok() != nullptr);
+          CHECK(runtime::detail::equal(
+            r.expect_ok(),
+            make_box<runtime::obj::persistent_vector>(std::in_place, make_box(5), make_box(9))));
+        }
+
+        SUBCASE("Other reader macro")
+        {
+          lex::processor lp{ "#?(:default #{1})" };
+          runtime::context rt_ctx;
+          processor p{ rt_ctx, lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_ok());
+          CHECK(r.expect_ok() != nullptr);
+          CHECK(runtime::detail::equal(
+            r.expect_ok(),
+            make_box<runtime::obj::persistent_set>(std::in_place, make_box(1))));
         }
       }
     }

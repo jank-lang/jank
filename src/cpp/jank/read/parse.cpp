@@ -170,6 +170,15 @@ namespace jank::read::parse
             }
             return res;
           }
+        case lex::token_kind::reader_macro_conditional:
+          {
+            auto res(parse_reader_macro_conditional());
+            if(res.is_ok() && res.expect_ok() == nullptr)
+            {
+              continue;
+            }
+            return res;
+          }
         case lex::token_kind::nil:
           return parse_nil();
         case lex::token_kind::boolean:
@@ -453,6 +462,57 @@ namespace jank::read::parse
     {
       return err(
         error{ start_token.pos, native_persistent_string{ "value after #_ must be present" } });
+    }
+
+    return ok(nullptr);
+  }
+
+  processor::object_result processor::parse_reader_macro_conditional()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    ++token_current;
+
+    auto list_result(next());
+    if(list_result.is_err())
+    {
+      return list_result;
+    }
+    else if(list_result.expect_ok() == nullptr)
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "value after #? must be present" } });
+    }
+    else if(list_result.expect_ok()->type != runtime::object_type::persistent_list)
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "value after #? must be a list" } });
+    }
+
+    auto const list(runtime::expect_object<runtime::obj::persistent_list>(list_result.expect_ok()));
+
+    if(list.data->count() % 2 == 1)
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "#? expects an even number of forms" } });
+    }
+
+    auto const jank_keyword(rt_ctx.intern_keyword("", "jank").expect_ok());
+    auto const default_keyword(rt_ctx.intern_keyword("", "default").expect_ok());
+
+    for(auto it(list->fresh_seq()); it != nullptr;)
+    {
+      auto const kw(it->first());
+      /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
+       * matter. If :default comes first, we'll always take it. In short, order is important. This
+       * matches Clojure's behavior. */
+      if(runtime::detail::equal(kw, jank_keyword) || runtime::detail::equal(kw, default_keyword))
+      {
+        it = it->next_in_place();
+        auto const form(it->first());
+        return ok(form);
+      }
+
+      it = it->next_in_place()->next_in_place();
     }
 
     return ok(nullptr);
