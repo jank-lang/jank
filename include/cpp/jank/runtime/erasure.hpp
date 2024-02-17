@@ -16,6 +16,7 @@
 #include <jank/runtime/obj/persistent_array_map_sequence.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_hash_map_sequence.hpp>
+#include <jank/runtime/obj/transient_hash_map.hpp>
 #include <jank/runtime/obj/iterator.hpp>
 #include <jank/runtime/obj/range.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
@@ -171,6 +172,11 @@ namespace jank::runtime
         {
           return fn(expect_object<obj::persistent_hash_map_sequence>(erased),
                     std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::transient_hash_map:
+        {
+          return fn(expect_object<obj::transient_hash_map>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::persistent_set:

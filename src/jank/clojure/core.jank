@@ -396,6 +396,41 @@
 (defn some? [o]
   (native/raw "__value = (o == obj::nil::nil_const()) ? #{ false }# : #{ true }#"))
 
+; Transients.
+; Returns a new, transient version of the collection, in constant time.
+(defn transient [o]
+  (native/raw "__value = visit_object
+               (
+                 [=](auto const typed_o) -> object_ptr
+                 {
+                   using T = typename decltype(typed_o)::value_type;
+
+                   if constexpr(behavior::transientable<T>)
+                   { return typed_o->to_transient(); }
+                   else
+                   { throw #{ (ex-info :not-transientable {:o o}) }#; }
+                 },
+                 #{ o }#
+               );"))
+
+; Returns a new, persistent version of the transient collection, in
+; constant time. The transient collection cannot be used after this
+; call, any such use will throw an exception.
+(defn persistent! [o]
+  (native/raw "__value = visit_object
+               (
+                 [=](auto const typed_o) -> object_ptr
+                 {
+                   using T = typename decltype(typed_o)::value_type;
+
+                   if constexpr(behavior::persistentable<T>)
+                   { return typed_o->to_persistent(); }
+                   else
+                   { throw #{ (ex-info :not-persistentable {:o o}) }#; }
+                 },
+                 #{ o }#
+               );"))
+
 ; Functions.
 
 (defn- spread [arglist]
@@ -672,6 +707,7 @@
 ;; Maps.
 (defn hash-map
   ([]
+   ; NOTE: Actually returns an array map. Clojure does the same.
    {})
   ([& kvs]
    (native/raw "__value = obj::persistent_hash_map::create_from_seq(#{ kvs }#);")))

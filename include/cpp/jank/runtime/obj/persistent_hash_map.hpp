@@ -11,6 +11,9 @@ namespace jank::runtime
   {
     using persistent_array_map = static_object<object_type::persistent_array_map>;
     using persistent_array_map_ptr = native_box<persistent_array_map>;
+
+    using transient_hash_map = static_object<object_type::transient_hash_map>;
+    using transient_hash_map_ptr = native_box<transient_hash_map>;
   }
 
   template <>
@@ -19,6 +22,8 @@ namespace jank::runtime
                                        object_type::persistent_hash_map_sequence,
                                        runtime::detail::native_persistent_hash_map>
   {
+    using transient_type = static_object<object_type::transient_hash_map>;
+
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
@@ -67,6 +72,9 @@ namespace jank::runtime
     /* behavior::callable */
     object_ptr call(object_ptr) const;
     object_ptr call(object_ptr, object_ptr) const;
+
+    /* behavior::transientable */
+    obj::transient_hash_map_ptr to_transient() const;
 
     value_type data{};
   };

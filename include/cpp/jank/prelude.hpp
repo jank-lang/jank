@@ -27,3 +27,4 @@
 #include <jank/runtime/seq.hpp>
 #include <jank/runtime/behavior/numberable.hpp>
 #include <jank/runtime/behavior/nameable.hpp>
+#include <jank/runtime/behavior/transientable.hpp>
