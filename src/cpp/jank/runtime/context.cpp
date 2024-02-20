@@ -655,7 +655,8 @@ namespace jank::runtime
     assert(bindings);
     if(bindings->type != object_type::persistent_hash_map)
     {
-      return err(fmt::format("invalid thread binding map: {}", detail::to_string(bindings)));
+      return err(fmt::format("invalid thread binding map (must be hash map): {}",
+                             detail::to_string(bindings)));
     }
 
     return push_thread_bindings(expect_object<obj::persistent_hash_map>(bindings));

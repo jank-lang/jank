@@ -563,21 +563,32 @@ namespace jank::read
             auto const oc(peek());
             ++pos;
 
-            if(oc.is_some())
+            switch(oc.unwrap_or(' '))
             {
-              switch(oc.unwrap())
-              {
-                case '_':
+              case '_':
+                ++pos;
+                return ok(
+                  token{ token_start, pos - token_start, token_kind::reader_macro_comment });
+              case '?':
+                {
+                  auto const maybe_splice(peek());
                   ++pos;
-                  return ok(
-                    token{ token_start, pos - token_start, token_kind::reader_macro_comment });
-                case '?':
-                  ++pos;
-                  return ok(
-                    token{ token_start, pos - token_start, token_kind::reader_macro_conditional });
-                default:
-                  break;
-              }
+                  if(maybe_splice.unwrap_or(' ') == '@')
+                  {
+                    ++pos;
+                    return ok(token{ token_start,
+                                     pos - token_start,
+                                     token_kind::reader_macro_conditional_splice });
+                  }
+                  else
+                  {
+                    return ok(token{ token_start,
+                                     pos - token_start,
+                                     token_kind::reader_macro_conditional });
+                  }
+                }
+              default:
+                break;
             }
 
             return ok(token{ token_start, pos - token_start, token_kind::reader_macro });

@@ -760,6 +760,84 @@ namespace jank::read::parse
             r.expect_ok(),
             make_box<runtime::obj::persistent_set>(std::in_place, make_box(1))));
         }
+
+        SUBCASE("Splice")
+        {
+          SUBCASE("Not seqable")
+          {
+            lex::processor lp{ "#?@(:jank 2)" };
+            runtime::context rt_ctx;
+            processor p{ rt_ctx, lp.begin(), lp.end() };
+            auto const r(p.next());
+            CHECK(r.is_err());
+          }
+
+          SUBCASE("Top-level, empty")
+          {
+            lex::processor lp{ "#?@(:jank [])" };
+            runtime::context rt_ctx;
+            processor p{ rt_ctx, lp.begin(), lp.end() };
+            auto const r(p.next());
+            CHECK(r.is_err());
+          }
+
+          SUBCASE("Top-level, non-empty")
+          {
+            lex::processor lp{ "#?@(:jank [1])" };
+            runtime::context rt_ctx;
+            processor p{ rt_ctx, lp.begin(), lp.end() };
+            auto const r(p.next());
+            CHECK(r.is_err());
+          }
+
+          /* NOTE: Clojure doesn't allow this, but we do. At least until jank has a better
+           * abstraction for knowing which sequences are ordered. */
+          SUBCASE("Unordered sequence")
+          {
+            lex::processor lp{ "(#?@(:jank #{1 2}))" };
+            runtime::context rt_ctx;
+            processor p{ rt_ctx, lp.begin(), lp.end() };
+            auto const r(p.next());
+            CHECK(r.is_ok());
+            CHECK(r.expect_ok() != nullptr);
+            CHECK(runtime::detail::equal(
+              r.expect_ok(),
+              make_box<runtime::obj::persistent_list>(std::in_place, make_box(1), make_box(2))));
+          }
+
+          SUBCASE("Nested")
+          {
+            lex::processor lp{ "[#?@(:jank [1 #?@(:clj [1.2 1.3]) 2 #?@(:default [3 4]) 5 6])]" };
+            runtime::context rt_ctx;
+            processor p{ rt_ctx, lp.begin(), lp.end() };
+            auto const r(p.next());
+            CHECK(r.is_ok());
+            CHECK(r.expect_ok() != nullptr);
+            CHECK(runtime::detail::equal(r.expect_ok(),
+                                         make_box<runtime::obj::persistent_vector>(std::in_place,
+                                                                                   make_box(1),
+                                                                                   make_box(2),
+                                                                                   make_box(3),
+                                                                                   make_box(4),
+                                                                                   make_box(5),
+                                                                                   make_box(6))));
+          }
+
+          SUBCASE("Within a set, non-empty splice")
+          {
+            lex::processor lp{ "#{0 #?@(:default [1]) 2}" };
+            runtime::context rt_ctx;
+            processor p{ rt_ctx, lp.begin(), lp.end() };
+            auto const r(p.next());
+            CHECK(r.is_ok());
+            CHECK(r.expect_ok() != nullptr);
+            CHECK(runtime::detail::equal(r.expect_ok(),
+                                         make_box<runtime::obj::persistent_set>(std::in_place,
+                                                                                make_box(0),
+                                                                                make_box(1),
+                                                                                make_box(2))));
+          }
+        }
       }
     }
   }

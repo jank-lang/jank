@@ -104,6 +104,11 @@ namespace jank::read::parse
     : rt_ctx{ rt_ctx }
     , token_current{ b }
     , token_end{ e }
+    , splicing_allowed_var{ make_box<runtime::var>(
+                              rt_ctx.intern_ns(make_box<runtime::obj::symbol>("clojure.core")),
+                              make_box<runtime::obj::symbol>("*splicing-allowed?*"),
+                              runtime::obj::boolean::false_const())
+                              ->set_dynamic(true) }
   {
   }
 
@@ -117,6 +122,13 @@ namespace jank::read::parse
 
     while(true)
     {
+      if(!pending_forms.empty())
+      {
+        auto const front(pending_forms.front());
+        pending_forms.pop_front();
+        return ok(front);
+      }
+
       auto token_result(*token_current);
       if(token_result.is_err())
       {
@@ -172,7 +184,16 @@ namespace jank::read::parse
           }
         case lex::token_kind::reader_macro_conditional:
           {
-            auto res(parse_reader_macro_conditional());
+            auto res(parse_reader_macro_conditional(false));
+            if(res.is_ok() && res.expect_ok() == nullptr)
+            {
+              continue;
+            }
+            return res;
+          }
+        case lex::token_kind::reader_macro_conditional_splice:
+          {
+            auto res(parse_reader_macro_conditional(true));
             if(res.is_ok() && res.expect_ok() == nullptr)
             {
               continue;
@@ -214,6 +235,12 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_paren);
 
+    rt_ctx
+      .push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+        std::make_pair(splicing_allowed_var, runtime::obj::boolean::true_const())))
+      .expect_ok();
+    util::scope_exit const finally{ [&]() { rt_ctx.pop_thread_bindings().expect_ok(); } };
+
     runtime::detail::native_transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
     {
@@ -238,6 +265,12 @@ namespace jank::read::parse
     ++token_current;
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_square_bracket);
+
+    rt_ctx
+      .push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+        std::make_pair(splicing_allowed_var, runtime::obj::boolean::true_const())))
+      .expect_ok();
+    util::scope_exit const finally{ [&]() { rt_ctx.pop_thread_bindings().expect_ok(); } };
 
     runtime::detail::native_transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
@@ -264,6 +297,12 @@ namespace jank::read::parse
     ++token_current;
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_curly_bracket);
+
+    rt_ctx
+      .push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+        std::make_pair(splicing_allowed_var, runtime::obj::boolean::true_const())))
+      .expect_ok();
+    util::scope_exit const finally{ [&]() { rt_ctx.pop_thread_bindings().expect_ok(); } };
 
     runtime::detail::native_persistent_array_map ret;
     for(auto it(begin()); it != end(); ++it)
@@ -430,6 +469,12 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_curly_bracket);
 
+    rt_ctx
+      .push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+        std::make_pair(splicing_allowed_var, runtime::obj::boolean::true_const())))
+      .expect_ok();
+    util::scope_exit const finally{ [&]() { rt_ctx.pop_thread_bindings().expect_ok(); } };
+
     runtime::detail::native_transient_set ret;
     for(auto it(begin()); it != end(); ++it)
     {
@@ -467,7 +512,7 @@ namespace jank::read::parse
     return ok(nullptr);
   }
 
-  processor::object_result processor::parse_reader_macro_conditional()
+  processor::object_result processor::parse_reader_macro_conditional(native_bool const splice)
   {
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
@@ -507,9 +552,43 @@ namespace jank::read::parse
        * matches Clojure's behavior. */
       if(runtime::detail::equal(kw, jank_keyword) || runtime::detail::equal(kw, default_keyword))
       {
-        it = it->next_in_place();
-        auto const form(it->first());
-        return ok(form);
+        if(splice)
+        {
+          if(!runtime::detail::truthy(splicing_allowed_var->deref()))
+          {
+            return err(error{ start_token.pos,
+                              native_persistent_string{ "#?@ splice must not be top-level" } });
+          }
+
+          auto const s(it->next_in_place()->first());
+          auto const res(runtime::visit_seqable(
+            [&](auto const typed_s) -> processor::object_result {
+              auto const seq(typed_s->fresh_seq());
+              if(seq == nullptr)
+              {
+                return ok(nullptr);
+              }
+              auto const first(seq->first());
+
+              auto const front(pending_forms.begin());
+              for(auto it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
+              {
+                pending_forms.insert(front, it->first());
+              }
+
+              return ok(first);
+            },
+            [=]() -> processor::object_result {
+              return err(error{ start_token.pos,
+                                native_persistent_string{ "#?@ splice must be a sequence" } });
+            },
+            s));
+          return res;
+        }
+        else
+        {
+          return ok(it->next_in_place()->first());
+        }
       }
 
       it = it->next_in_place()->next_in_place();
