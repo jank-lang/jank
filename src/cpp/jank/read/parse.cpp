@@ -561,7 +561,7 @@ namespace jank::read::parse
           }
 
           auto const s(it->next_in_place()->first());
-          auto const res(runtime::visit_seqable(
+          return runtime::visit_seqable(
             [&](auto const typed_s) -> processor::object_result {
               auto const seq(typed_s->fresh_seq());
               if(seq == nullptr)
@@ -582,8 +582,7 @@ namespace jank::read::parse
               return err(error{ start_token.pos,
                                 native_persistent_string{ "#?@ splice must be a sequence" } });
             },
-            s));
-          return res;
+            s);
         }
         else
         {
