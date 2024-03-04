@@ -6,6 +6,7 @@
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/codegen/processor.hpp>
+#include <jank/codegen/llvm/processor.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/evaluate.hpp>
 
@@ -392,13 +393,14 @@ namespace jank::evaluate
                            jit::processor const &jit_prc,
                            analyze::expr::function<analyze::expression> const &expr)
   {
-    auto const &module(
-      runtime::module::nest_module(runtime::expect_object<runtime::ns>(
-                                     rt_ctx.intern_var("clojure.core", "*ns*").expect_ok()->deref())
-                                     ->to_string(),
-                                   runtime::munge(expr.name)));
+    auto const &module(runtime::module::nest_module(
+      runtime::expect_object<runtime::ns>(rt_ctx.current_ns_var->deref())->to_string(),
+      runtime::munge(expr.name)));
     codegen::processor cg_prc{ rt_ctx, expr, module, codegen::compilation_target::repl };
+    //cg_prc.gen_body();
+    //cg_prc.jit_module->print(llvm::outs(), nullptr);
     return jit_prc.eval(cg_prc).expect_ok().unwrap();
+    //return runtime::obj::nil::nil_const();
   }
 
   runtime::object_ptr eval(runtime::context &,

@@ -14,8 +14,6 @@ endif()
 # We just pull the Clang compiler right out of the Cling build dir.
 option(jank_cling_build_dir "Location of Cling source, if built locally" "")
 cmake_path(ABSOLUTE_PATH jank_cling_build_dir OUTPUT_VARIABLE jank_cling_build_dir_absolute)
-set(CMAKE_C_COMPILER "${jank_cling_build_dir_absolute}/bin/clang")
-set(CMAKE_CXX_COMPILER "${jank_cling_build_dir_absolute}/bin/clang++")
 
 include(cmake/vcpkg.cmake)
 
@@ -28,7 +26,7 @@ set(VCPKG_TARGET_TRIPLET "x64-clang-static")
 project(
     jank
     VERSION 0.1
-    DESCRIPTION "A Clojure dialect on LLVM with gradual typing, a native runtime, and C++ interop."
+    DESCRIPTION "A native Clojure dialect built on LLVM."
     HOMEPAGE_URL "https://jank-lang.org/"
     # C is needed here, due to a clang issue:
     # https://stackoverflow.com/questions/71740678/cmake-error-in-findterminfo-with-clang-15-on-macos
@@ -38,7 +36,7 @@ project(
 set(jank_cxx_standard cxx_std_20)
 
 set(jank_required_compiler_id "Clang")
-set(jank_required_compiler_version "13.0.0")
+set(jank_required_compiler_version "16.0.6")
 
 # We need different flags for linking whole libraries on different OSes.
 # We need to be mindful to wrap each library with ${jank_link_whole_start} and ${jank_link_whole_end}.
@@ -69,6 +67,8 @@ if(
   )
 endif()
 
+#set(CMAKE_CXX_FLAGS "-Xclang -fincremental-extensions")
+
 set(
   jank_compiler_flags
   -Wall -Wextra -Wpedantic
@@ -82,11 +82,11 @@ set(
 )
 set(
   jank_linker_flags
-  -L${jank_cling_build_dir}/build-compiler-rt/lib/linux
   #-stdlib=libc++ -lc++abi
   )
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  list(APPEND jank_compiler_flags -Werror -DJANK_DEBUG)
+  list(APPEND jank_compiler_flags #-Werror
+    -DJANK_DEBUG)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
   list(APPEND jank_compiler_flags -DJANK_RELEASE)
 endif()
@@ -97,42 +97,6 @@ include(cmake/analysis.cmake)
 
 # Enable easier tooling during development.
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
-
-# ---- libjankcling.so ----
-# Cling, Clang, and LLVM are huge. About 1.5G unstripped and 150M stripped.
-# This takes a long time to link, so doing it as part of the jank lib or
-# executable hurts iteration time on hot reloading tests and, in general,
-# compiling more than once. So this is just a lib to suck all of that up.
-
-# CMake doesn't support libraries/executables without sources, but we're just
-# combining libraries here, so we make a dummy source just to please it.
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/null.cpp" "")
-
-add_library(jank_cling_lib SHARED "${CMAKE_CURRENT_BINARY_DIR}/null.cpp")
-
-set_property(TARGET jank_cling_lib PROPERTY OUTPUT_NAME jankcling)
-
-target_compile_features(jank_cling_lib PUBLIC ${jank_cxx_standard})
-
-find_package(LLVM REQUIRED CONFIG HINTS "${jank_cling_build_dir}/lib/cmake/llvm" NO_DEFAULT_PATH)
-find_package(Clang REQUIRED CONFIG HINTS "${jank_cling_build_dir}/lib/cmake/clang" NO_DEFAULT_PATH)
-find_package(
-  Cling REQUIRED
-  HINTS "${jank_cling_build_dir}/tools/cling/lib/cmake/cling"
-        "${jank_cling_build_dir}/lib/cmake/cling"
-  NO_DEFAULT_PATH
-)
-
-list(APPEND CLING_INCLUDE_DIRS ${jank_cling_build_dir}/build-compiler-rt/include)
-
-target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
-target_include_directories(jank_cling_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
-target_include_directories(jank_cling_lib SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
-target_link_directories(jank_cling_lib PRIVATE ${LLVM_LIBRARY_DIRS})
-target_link_libraries(jank_cling_lib PRIVATE ${jank_link_whole_start} clingInterpreter ${jank_link_whole_end})
-
-set_target_properties(jank_cling_lib PROPERTIES LINK_FLAGS -s)
-# ---- libjankcling.so ----
 
 # ---- libjank.a ----
 # The sources for jank are used for both the compiler and its tests, so
@@ -222,15 +186,20 @@ target_include_directories(jank_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 
-target_link_directories(jank_lib PRIVATE ${jank_cling_build_dir}/build-compiler-rt/lib/linux)
 target_link_libraries(
   jank_lib PRIVATE
-  jank_cling_lib immer fmt::fmt
+  immer fmt::fmt
   Folly::folly Folly::folly_deps
   BDWgc::gc BDWgc::cord BDWgc::gccpp BDWgc::gctba
   libzippp::libzippp
   CLI11::CLI11
   readline
+  clang
+  clang-cpp
+  LLVM
+  z
+  lzma
+  ncursesw
 )
 
 set_target_properties(jank_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
@@ -339,6 +308,20 @@ if(jank_tests)
 endif()
 # ---- Tests ----
 
+# ---- Incremental PCH ----
+set(jank_incremental_pch_flag ${CMAKE_BINARY_DIR}/incremental.pch)
+add_custom_command(
+  DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/bin/build-pch
+  OUTPUT ${jank_incremental_pch_flag}
+  COMMAND "${CMAKE_SOURCE_DIR}/bin/build-pch" "${CMAKE_SOURCE_DIR}/include" "${jank_incremental_pch_flag}"
+)
+add_custom_target(
+  jank_incremental_pch
+  ALL
+  DEPENDS ${jank_incremental_pch_flag}
+)
+# ---- Incremental PCH ----
+
 # ---- Compiled Clojure libraries ----
 # We do a bit of a dance here, to have a custom command generate a file
 # which is a then a dependency of a custom target. This is because custom
@@ -350,7 +333,8 @@ endif()
 # change, or whenever the jank binary changes.
 set(jank_core_libraries_flag ${CMAKE_BINARY_DIR}/classes/core-libraries)
 add_custom_command(
-  DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank
+  # TODO: Depend on jank's actual PCH.
+  DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
   COMMAND ${CMAKE_BINARY_DIR}/jank compile clojure.core
   COMMAND mkdir -p ${CMAKE_BINARY_DIR}/classes; touch ${jank_core_libraries_flag}

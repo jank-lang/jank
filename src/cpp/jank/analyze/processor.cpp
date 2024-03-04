@@ -12,6 +12,7 @@
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/analyze/step/force_boxed.hpp>
+#include <jank/codegen/processor.hpp>
 #include <jank/result.hpp>
 
 namespace jank::analyze

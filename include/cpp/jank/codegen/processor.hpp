@@ -129,7 +129,7 @@ namespace jank::codegen
     void build_header();
     void build_body();
     void build_footer();
-    native_persistent_string expression_str(native_bool box_needed);
+    native_persistent_string expression_str(native_bool fn, native_bool box_needed);
 
     native_persistent_string module_init_str(native_persistent_string_view const &module);
 
@@ -163,6 +163,7 @@ namespace jank::codegen
     fmt::memory_buffer body_buffer;
     fmt::memory_buffer footer_buffer;
     fmt::memory_buffer expression_buffer;
+    native_persistent_string expression_fn_name;
     native_bool generated_declaration{};
     native_bool generated_expression{};
   };

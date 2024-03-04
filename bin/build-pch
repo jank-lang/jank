@@ -5,17 +5,23 @@ set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 include="${1}"
+output="${2:-${include}/cpp/jank/prelude.hpp.pch}"
+shift
 shift
 flags=$*
 
 # shellcheck disable=SC2086
-"${here}/clang++" -I "${include}" \
-                  -I "${include}/cpp" \
-                  ${flags} \
-                  -std=gnu++17 \
-                  -w \
-                  -fpch-instantiate-templates \
-                  -emit-pch \
-                  -x c++-header \
-                  -o "${include}"/cpp/jank/prelude.hpp.pch \
-                  -c "${include}"/cpp/jank/prelude.hpp \
+clang++ -I "${include}" \
+        -I "${include}/cpp" \
+        -I "${include}/../build/vcpkg_installed/x64-clang-static/include" \
+        -I "${include}/../third-party/nanobench/include" \
+        ${flags} \
+        -std=gnu++20 \
+        -DHAVE_CXX14=1 \
+        -DIMMER_HAS_LIBGC=1 \
+        -w \
+        -Xclang -fincremental-extensions \
+        -emit-pch \
+        -x c++-header \
+        -o "${output}" \
+        -c "${include}"/cpp/jank/prelude.hpp \

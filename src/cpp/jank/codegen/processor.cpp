@@ -159,13 +159,17 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, runtime::obj::integer>)
           {
-            fmt::format_to(inserter,
-                           "jank::make_box<jank::runtime::obj::integer>({})",
-                           typed_o->data);
+            fmt::format_to(
+              inserter,
+              "jank::make_box<jank::runtime::obj::integer>(static_cast<jank::native_integer>({}))",
+              typed_o->data);
           }
           else if constexpr(std::same_as<T, runtime::obj::real>)
           {
-            fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::real>({})", typed_o->data);
+            fmt::format_to(
+              inserter,
+              "jank::make_box<jank::runtime::obj::real>(static_cast<jank::native_real>({}))",
+              typed_o->data);
           }
           else if constexpr(std::same_as<T, runtime::obj::symbol>)
           {
@@ -1232,12 +1236,12 @@ namespace jank::codegen
       case analyze::expression_type::expression:
         /* TODO: Return a handle. */
         {
-          return prc.expression_str(box_needed);
+          return prc.expression_str(false, box_needed);
         }
       case analyze::expression_type::return_statement:
         {
           auto body_inserter(std::back_inserter(body_buffer));
-          fmt::format_to(body_inserter, "return {};", prc.expression_str(box_needed));
+          fmt::format_to(body_inserter, "return {};", prc.expression_str(false, box_needed));
           return none;
         }
     }
@@ -1819,30 +1823,25 @@ namespace jank::codegen
     }
   }
 
-  native_persistent_string processor::expression_str(native_bool const box_needed)
+  native_persistent_string processor::expression_str(native_bool const fn, native_bool const)
   {
     auto const module_ns(runtime::module::module_to_native_ns(module));
 
     if(!generated_expression)
     {
       auto inserter(std::back_inserter(expression_buffer));
+      if(fn)
+      {
+        expression_fn_name = runtime::context::unique_string("jit");
 
-      native_persistent_string_view close = ").data";
-      if(box_needed)
-      {
-        fmt::format_to(
-          inserter,
-          "jank::make_box<{0}>(__rt_ctx",
-          runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name)));
+        fmt::format_to(inserter,
+                       "extern \"C\" jank::runtime::object* {}() {{ return ",
+                       expression_fn_name);
       }
-      else
-      {
-        fmt::format_to(
-          inserter,
-          "{0}{{ __rt_ctx",
-          runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name)));
-        close = "}";
-      }
+
+      fmt::format_to(inserter,
+                     "&jank::make_box<{0}>(__rt_ctx",
+                     runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name)));
 
       native_set<native_integer> used_captures;
       for(auto const &arity : root_fn.arities)
@@ -1856,15 +1855,20 @@ namespace jank::codegen
           used_captures.emplace(v.first->to_hash());
 
           /* We're generating the inputs to the function ctor, which means we don't
-            * want the binding of the capture within the function; we want the one outside
-            * of it, which we're capturing. We need to reach further for that. */
+           * want the binding of the capture within the function; we want the one outside
+           * of it, which we're capturing. We need to reach further for that. */
           auto const originating_local(root_fn.frame->find_local_or_capture(v.first));
           handle h{ originating_local.unwrap().binding };
           fmt::format_to(inserter, ", {0}", h.str(true));
         }
       }
 
-      fmt::format_to(inserter, "{}", close);
+      fmt::format_to(inserter, ")->base");
+
+      if(fn)
+      {
+        fmt::format_to(inserter, "; }}");
+      }
 
       generated_expression = true;
     }
