@@ -5,9 +5,19 @@
 
 namespace jank::runtime
 {
+  namespace obj
+  {
+    using persistent_vector = static_object<object_type::persistent_vector>;
+    using persistent_vector_ptr = native_box<persistent_vector>;
+
+    using transient_vector = static_object<object_type::transient_vector>;
+    using transient_vector_ptr = native_box<transient_vector>;
+  }
+
   template <>
   struct static_object<object_type::persistent_vector> : gc
   {
+    using transient_type = static_object<object_type::transient_vector>;
     using value_type = runtime::detail::native_persistent_vector;
 
     static constexpr bool pointer_free{ false };
@@ -51,15 +61,12 @@ namespace jank::runtime
     /* behavior::consable */
     native_box<static_object> cons(object_ptr head) const;
 
+    /* behavior::transientable */
+    obj::transient_vector_ptr to_transient() const;
+
     object base{ object_type::persistent_vector };
     value_type data;
     option<object_ptr> meta;
     mutable native_hash hash{};
   };
-
-  namespace obj
-  {
-    using persistent_vector = static_object<object_type::persistent_vector>;
-    using persistent_vector_ptr = native_box<persistent_vector>;
-  }
 }
