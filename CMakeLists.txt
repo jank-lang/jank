@@ -36,7 +36,7 @@ project(
 set(jank_cxx_standard cxx_std_20)
 
 set(jank_required_compiler_id "Clang")
-set(jank_required_compiler_version "16.0.6")
+set(jank_required_compiler_version "17.0.6")
 
 # We need different flags for linking whole libraries on different OSes.
 # We need to be mindful to wrap each library with ${jank_link_whole_start} and ${jank_link_whole_end}.
@@ -181,6 +181,12 @@ find_package(BDWgc CONFIG REQUIRED)
 find_package(libzippp CONFIG REQUIRED)
 find_package(CLI11 CONFIG REQUIRED)
 
+#set(LLVM_INCLUDE_DIRS /usr/lib/llvm17/include)
+set(LLVM_INCLUDE_DIRS /home/jeaye/projects/third-party/llvm-17.0.6/install/include)
+set(CLANG_INCLUDE_DIRS /home/jeaye/projects/third-party/llvm-17.0.6/clang/include)
+#target_link_options(jank_lib PRIVATE -L/usr/lib/llvm17/lib)
+target_link_options(jank_lib PRIVATE -L/home/jeaye/projects/third-party/llvm-17.0.6/build-llvm/lib)
+
 target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
 target_include_directories(jank_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
@@ -194,9 +200,9 @@ target_link_libraries(
   libzippp::libzippp
   CLI11::CLI11
   readline
-  clang
-  clang-cpp
-  LLVM
+  /home/jeaye/projects/third-party/llvm-17.0.6/build-clang/lib/libclang.so.17
+  /home/jeaye/projects/third-party/llvm-17.0.6/build-clang/lib/libclang-cpp.so.17
+  /home/jeaye/projects/third-party/llvm-17.0.6/build-llvm/lib/libLLVM-17.so
   z
   lzma
   ncursesw

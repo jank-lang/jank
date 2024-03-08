@@ -163,9 +163,9 @@ namespace jank::jit
       "-isystem",
       "/home/jeaye/projects/jank/third-party/nanobench/include",
       "-isystem",
-      "/usr/lib/clang/16/include",
-      "-include-pch",
-      pch_path_str.c_str(),
+      "/usr/lib/llvm17/lib/clang/17",
+      //"-include-pch",
+      //pch_path_str.c_str(),
       //"-include",
       //prelude_path.c_str(),
       //"-isystem",
@@ -175,22 +175,20 @@ namespace jank::jit
       //O.data()
     };
 
-    auto CI = cantFail(clang::IncrementalCompilerBuilder::create(args));
+    //auto CI = cantFail(clang::IncrementalCompilerBuilder::create(args));
+    clang::IncrementalCompilerBuilder CB;
+    CB.SetCompilerArgs(args);
+    auto CI = llvm::cantFail(CB.CreateCpp());
     llvm::install_fatal_error_handler(LLVMErrorHandler, static_cast<void *>(&CI->getDiagnostics()));
 
     CI->LoadRequestedPlugins();
 
     interpreter = llvm::cantFail(clang::Interpreter::create(std::move(CI)));
 
-    //eval_string(fmt::format("#include \"{}\"", prelude_path.c_str()));
+    eval_string(fmt::format("#include \"{}\"", prelude_path.c_str()));
     eval_string(fmt::format("auto &__rt_ctx(*reinterpret_cast<jank::runtime::context*>({}));",
                             fmt::ptr(&rt_ctx)));
     eval_string("extern jank::runtime::object_ptr jank_repl_result;");
-    //auto ee(const_cast<llvm::orc::LLJIT *>(interpreter->getExecutionEngine()));
-    //ee->addObjectFile();
-    //auto dl(ee->getDataLayout());
-    //ee->getMainJITDylib().addGenerator(cantFail(
-    //  llvm::orc::DynamicLibrarySearchGenerator::GetForCurrentProcess(dl.getGlobalPrefix())));
   }
 
   processor::~processor()

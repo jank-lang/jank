@@ -11,7 +11,7 @@ shift
 flags=$*
 
 # shellcheck disable=SC2086
-clang++ -I "${include}" \
+clang++-17 -I "${include}" \
         -I "${include}/cpp" \
         -I "${include}/../build/vcpkg_installed/x64-clang-static/include" \
         -I "${include}/../third-party/nanobench/include" \
@@ -21,7 +21,7 @@ clang++ -I "${include}" \
         -DIMMER_HAS_LIBGC=1 \
         -w \
         -Xclang -fincremental-extensions \
-        -emit-pch \
+        -Xclang -emit-pch \
         -x c++-header \
         -o "${output}" \
         -c "${include}"/cpp/jank/prelude.hpp \

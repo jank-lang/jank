@@ -169,9 +169,11 @@ try
 
   llvm::llvm_shutdown_obj Y{};
 
-  llvm::InitializeNativeTarget();
-  llvm::InitializeNativeTargetAsmParser();
-  llvm::InitializeNativeTargetAsmPrinter();
+  llvm::InitializeAllTargetInfos();
+  llvm::InitializeAllTargets();
+  llvm::InitializeAllTargetMCs();
+  llvm::InitializeAllAsmPrinters();
+  llvm::InitializeAllAsmParsers();
 
   auto const parse_result(util::cli::parse(argc, argv));
   if(parse_result.is_err())
