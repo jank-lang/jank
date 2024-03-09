@@ -66,6 +66,18 @@ namespace jank::read::parse
     }
   }
 
+  native_bool
+  processor::object_source_info::operator==(processor::object_source_info const &rhs) const
+  {
+    return !(*this != rhs);
+  }
+
+  native_bool
+  processor::object_source_info::operator!=(processor::object_source_info const &rhs) const
+  {
+    return ptr != rhs.ptr;
+  }
+
   processor::iterator::value_type processor::iterator::operator*() const
   {
     return latest.unwrap();
@@ -109,10 +121,9 @@ namespace jank::read::parse
 
   processor::object_result processor::next()
   {
-    /* TODO: Replace nullptr with none. */
     if(token_current == token_end)
     {
-      return ok(nullptr);
+      return ok(none);
     }
 
     while(true)
@@ -146,7 +157,7 @@ namespace jank::read::parse
           }
           ++token_current;
           expected_closer = none;
-          return ok(nullptr);
+          return ok(none);
         case lex::token_kind::single_quote:
           return parse_quote();
         case lex::token_kind::nil:
@@ -166,7 +177,7 @@ namespace jank::read::parse
         case lex::token_kind::escaped_string:
           return parse_escaped_string();
         case lex::token_kind::eof:
-          return ok(nullptr);
+          return ok(none);
         default:
           {
             native_persistent_string msg{ fmt::format("unexpected token kind: {}",
@@ -191,7 +202,7 @@ namespace jank::read::parse
       {
         return err(it.latest.unwrap().expect_err());
       }
-      ret.push_back(it.latest.unwrap().expect_ok());
+      ret.push_back(it.latest.unwrap().expect_ok().unwrap().ptr);
     }
     if(expected_closer.is_some())
     {
@@ -199,7 +210,7 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
-    return make_box<runtime::obj::persistent_list>(ret.rbegin(), ret.rend());
+    return object_source_info{ make_box<runtime::obj::persistent_list>(ret.rbegin(), ret.rend()) };
   }
 
   processor::object_result processor::parse_vector()
@@ -216,7 +227,7 @@ namespace jank::read::parse
       {
         return err(it.latest.unwrap().expect_err());
       }
-      ret.push_back(it.latest.unwrap().expect_ok());
+      ret.push_back(it.latest.unwrap().expect_ok().unwrap().ptr);
     }
     if(expected_closer.is_some())
     {
@@ -224,7 +235,7 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
-    return make_box<runtime::obj::persistent_vector>(ret.persistent());
+    return object_source_info{ make_box<runtime::obj::persistent_vector>(ret.persistent()) };
   }
 
   /* TODO: Uniqueness check. */
@@ -255,7 +266,7 @@ namespace jank::read::parse
       }
       auto const value(it.latest.unwrap().expect_ok());
 
-      ret.insert_or_assign(key, value);
+      ret.insert_or_assign(key.unwrap().ptr, value.unwrap().ptr);
     }
     if(expected_closer.is_some())
     {
@@ -263,7 +274,7 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
-    return make_box<runtime::obj::persistent_array_map>(ret);
+    return object_source_info{ make_box<runtime::obj::persistent_array_map>(ret) };
   }
 
   processor::object_result processor::parse_quote()
@@ -278,20 +289,20 @@ namespace jank::read::parse
     {
       return val_result;
     }
-    else if(val_result.expect_ok() == nullptr)
+    else if(val_result.expect_ok().is_none())
     {
       return err(error{ start_token.pos, native_persistent_string{ "invalid value after quote" } });
     }
 
-    return runtime::erase(
+    return object_source_info{ runtime::erase(
       make_box<runtime::obj::persistent_list>(make_box<runtime::obj::symbol>("quote"),
-                                              val_result.expect_ok_move()));
+                                              val_result.expect_ok().unwrap().ptr)) };
   }
 
   processor::object_result processor::parse_nil()
   {
     ++token_current;
-    return ok(runtime::obj::nil::nil_const());
+    return object_source_info{ runtime::obj::nil::nil_const() };
   }
 
   processor::object_result processor::parse_boolean()
@@ -299,7 +310,7 @@ namespace jank::read::parse
     auto const token((*token_current).expect_ok());
     ++token_current;
     auto const b(boost::get<native_bool>(token.data));
-    return ok(make_box<runtime::obj::boolean>(b));
+    return object_source_info{ make_box<runtime::obj::boolean>(b) };
   }
 
   processor::object_result processor::parse_symbol()
@@ -341,7 +352,7 @@ namespace jank::read::parse
     {
       name = sv;
     }
-    return ok(make_box<runtime::obj::symbol>(ns, name));
+    return object_source_info{ make_box<runtime::obj::symbol>(ns, name) };
   }
 
   processor::object_result processor::parse_keyword()
@@ -377,21 +388,22 @@ namespace jank::read::parse
     {
       return err(intern_res.expect_err());
     }
-    return ok(intern_res.expect_ok());
+    return object_source_info{ intern_res.expect_ok() };
   }
 
   processor::object_result processor::parse_integer()
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return ok(make_box<runtime::obj::integer>(boost::get<native_integer>(token.data)));
+    return object_source_info{ make_box<runtime::obj::integer>(
+      boost::get<native_integer>(token.data)) };
   }
 
   processor::object_result processor::parse_real()
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return ok(make_box<runtime::obj::real>(boost::get<native_real>(token.data)));
+    return object_source_info{ make_box<runtime::obj::real>(boost::get<native_real>(token.data)) };
   }
 
   processor::object_result processor::parse_string()
@@ -399,8 +411,8 @@ namespace jank::read::parse
     auto const token(token_current->expect_ok());
     ++token_current;
     auto const sv(boost::get<native_persistent_string_view>(token.data));
-    return ok(
-      make_box<runtime::obj::persistent_string>(native_persistent_string{ sv.data(), sv.size() }));
+    return object_source_info{ make_box<runtime::obj::persistent_string>(
+      native_persistent_string{ sv.data(), sv.size() }) };
   }
 
   processor::object_result processor::parse_escaped_string()
@@ -413,7 +425,7 @@ namespace jank::read::parse
     {
       return err(error{ token.pos, res.expect_err_move() });
     }
-    return ok(make_box<runtime::obj::persistent_string>(res.expect_ok_move()));
+    return object_source_info{ make_box<runtime::obj::persistent_string>(res.expect_ok_move()) };
   }
 
   processor::iterator processor::begin()
@@ -423,6 +435,6 @@ namespace jank::read::parse
 
   processor::iterator processor::end()
   {
-    return { some(ok(nullptr)), *this };
+    return { some(ok(none)), *this };
   }
 }

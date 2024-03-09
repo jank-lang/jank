@@ -14,8 +14,15 @@ namespace jank::read::parse
 {
   struct processor
   {
-    /* TODO: none instead of nullptr. */
-    using object_result = result<runtime::object_ptr, error>;
+    struct object_source_info
+    {
+      native_bool operator==(object_source_info const &rhs) const;
+      native_bool operator!=(object_source_info const &rhs) const;
+
+      runtime::object_ptr ptr{};
+    };
+
+    using object_result = result<option<object_source_info>, error>;
 
     struct iterator
     {

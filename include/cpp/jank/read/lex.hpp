@@ -67,7 +67,7 @@ namespace jank::read::lex
     static constexpr size_t ignore_pos{ std::numeric_limits<size_t>::max() };
     size_t pos{ ignore_pos };
     size_t size{ 1 };
-    token_kind kind;
+    token_kind kind{ token_kind::eof };
     boost::variant<no_data, native_integer, native_real, native_persistent_string_view, native_bool>
       data;
   };

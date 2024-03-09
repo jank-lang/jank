@@ -65,7 +65,7 @@ namespace jank::analyze
       {
         return err(parse_current->expect_err_move());
       }
-      fn.push_back(parse_current->expect_ok());
+      fn.push_back(parse_current->expect_ok().unwrap().ptr);
     }
     auto fn_list(make_box<runtime::obj::persistent_list>(fn.rbegin(), fn.rend()));
     return analyze(fn_list, expression_type::expression);
@@ -986,8 +986,11 @@ namespace jank::analyze
       {
         return parsed_it->expect_err_move();
       }
-      auto result(
-        analyze(parsed_it->expect_ok(), current_frame, expression_type::expression, fn_ctx, true));
+      auto result(analyze(parsed_it->expect_ok().unwrap().ptr,
+                          current_frame,
+                          expression_type::expression,
+                          fn_ctx,
+                          true));
       if(result.is_err())
       {
         return result.expect_err_move();
