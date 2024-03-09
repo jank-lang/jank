@@ -7,9 +7,6 @@ namespace jank::runtime
 {
   namespace obj
   {
-    using persistent_vector = static_object<object_type::persistent_vector>;
-    using persistent_vector_ptr = native_box<persistent_vector>;
-
     using transient_vector = static_object<object_type::transient_vector>;
     using transient_vector_ptr = native_box<transient_vector>;
   }
@@ -69,4 +66,10 @@ namespace jank::runtime
     option<object_ptr> meta;
     mutable native_hash hash{};
   };
+
+  namespace obj
+  {
+    using persistent_vector = static_object<object_type::persistent_vector>;
+    using persistent_vector_ptr = native_box<persistent_vector>;
+  }
 }

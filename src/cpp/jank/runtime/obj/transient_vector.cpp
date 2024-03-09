@@ -1,10 +1,10 @@
-#include "jank/runtime/detail/object_util.hpp"
-#include "jank/runtime/erasure.hpp"
-#include "jank/type.hpp"
+#include <jank/runtime/detail/object_util.hpp>
+#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/obj/persistent_vector_sequence.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/transient_vector.hpp>
-#include <stdexcept>
+#include <jank/type.hpp>
 
 namespace jank::runtime
 {
@@ -65,46 +65,100 @@ namespace jank::runtime
   {
     assert_active();
     active = false;
-    return make_box<obj::persistent_vector>(std::move(data));
+    return make_box<obj::persistent_vector>(data.persistent());
   }
 
-  object_ptr obj::transient_vector::call(object_ptr const o) const
+  object_ptr obj::transient_vector::call(object_ptr const idx) const
   {
     assert_active();
-    if(o->type == object_type::integer)
+    if(idx->type == object_type::integer)
     {
-      auto const i(expect_object<obj::integer>(o)->data);
+      auto const i(expect_object<obj::integer>(idx)->data);
+      if(i < 0 || data.size() <= static_cast<size_t>(i))
+      {
+        throw std::runtime_error{
+          fmt::format("Index out of bound; index = {}, count = {}", i, count())
+        };
+      }
+
+      return data[i];
+    }
+    else
+    {
+      throw std::runtime_error{ fmt::format("key must be an integer; found {}",
+                                            runtime::detail::to_string(idx)) };
+    }
+  }
+
+  object_ptr obj::transient_vector::get(object_ptr idx) const
+  {
+    assert_active();
+    if(idx->type == object_type::integer)
+    {
+      auto const i(expect_object<obj::integer>(idx)->data);
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         return obj::nil::nil_const();
       }
 
-      return data.at(i);
+      return data[i];
     }
     else
     {
       throw std::runtime_error{ fmt::format("key must be an integer; found {}",
-                                            runtime::detail::to_string(o)) };
+                                            runtime::detail::to_string(idx)) };
     }
   }
 
-  object_ptr obj::transient_vector::call(object_ptr const o, object_ptr const fallback) const
+  object_ptr obj::transient_vector::get(object_ptr idx, object_ptr fallback) const
   {
     assert_active();
-    if(o->type == object_type::integer)
+    if(idx->type == object_type::integer)
     {
-      auto const i(expect_object<obj::integer>(o)->data);
+      auto const i(expect_object<obj::integer>(idx)->data);
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         return fallback;
       }
 
-      return data.at(i);
+      return data[i];
     }
     else
     {
       throw std::runtime_error{ fmt::format("key must be an integer; found {}",
-                                            runtime::detail::to_string(o)) };
+                                            runtime::detail::to_string(idx)) };
+    }
+  }
+
+  object_ptr obj::transient_vector::get_entry(object_ptr const key) const
+  {
+    if(key->type == object_type::integer)
+    {
+      auto const i(expect_object<obj::integer>(key)->data);
+      if(i < 0 || data.size() <= static_cast<size_t>(i))
+      {
+        return obj::nil::nil_const();
+      }
+      /* TODO: Map entry type? */
+      return make_box<obj::persistent_vector>(key, data[i]);
+    }
+    else
+    {
+      throw std::runtime_error{ fmt::format("get_entry on a vector must be an integer; found {}",
+                                            runtime::detail::to_string(key)) };
+    }
+  }
+
+  native_bool obj::transient_vector::contains(object_ptr const key) const
+  {
+    if(key->type == object_type::integer)
+    {
+      auto const i(expect_object<obj::integer>(key)->data);
+      return i >= 0 && static_cast<size_t>(i) < data.size();
+    }
+    else
+    {
+      return false;
     }
   }
 

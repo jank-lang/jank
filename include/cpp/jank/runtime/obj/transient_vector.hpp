@@ -42,7 +42,12 @@ namespace jank::runtime
 
     /* behavior::callable */
     object_ptr call(object_ptr) const;
-    object_ptr call(object_ptr, object_ptr) const;
+
+    /* behavior::associatively_readable */
+    object_ptr get(object_ptr idx) const;
+    object_ptr get(object_ptr idx, object_ptr fallback) const;
+    object_ptr get_entry(object_ptr key) const;
+    native_bool contains(object_ptr key) const;
 
     void assert_active() const;
 
