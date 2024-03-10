@@ -1,15 +1,7 @@
-#include <jank/runtime/detail/object_util.hpp>
-#include <jank/runtime/erasure.hpp>
-#include <jank/runtime/obj/persistent_vector_sequence.hpp>
-#include <jank/runtime/util.hpp>
-#include <jank/runtime/obj/native_function_wrapper.hpp>
-#include <jank/runtime/obj/transient_vector.hpp>
-#include <jank/type.hpp>
-
 namespace jank::runtime
 {
   obj::transient_vector::static_object(runtime::detail::native_persistent_vector &&d)
-    : data{ d.transient() }
+    : data{ std::move(d).transient() }
   {
   }
 
@@ -19,7 +11,7 @@ namespace jank::runtime
   }
 
   obj::transient_vector::static_object(runtime::detail::native_transient_vector &&d)
-    : data{ d }
+    : data{ std::move(d) }
   {
   }
 
@@ -90,7 +82,7 @@ namespace jank::runtime
     }
   }
 
-  object_ptr obj::transient_vector::get(object_ptr idx) const
+  object_ptr obj::transient_vector::get(object_ptr const idx) const
   {
     assert_active();
     if(idx->type == object_type::integer)
@@ -110,7 +102,7 @@ namespace jank::runtime
     }
   }
 
-  object_ptr obj::transient_vector::get(object_ptr idx, object_ptr fallback) const
+  object_ptr obj::transient_vector::get(object_ptr const idx, object_ptr const fallback) const
   {
     assert_active();
     if(idx->type == object_type::integer)
@@ -130,30 +122,30 @@ namespace jank::runtime
     }
   }
 
-  object_ptr obj::transient_vector::get_entry(object_ptr const key) const
+  object_ptr obj::transient_vector::get_entry(object_ptr const idx) const
   {
-    if(key->type == object_type::integer)
+    if(idx->type == object_type::integer)
     {
-      auto const i(expect_object<obj::integer>(key)->data);
+      auto const i(expect_object<obj::integer>(idx)->data);
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         return obj::nil::nil_const();
       }
       /* TODO: Map entry type? */
-      return make_box<obj::persistent_vector>(key, data[i]);
+      return make_box<obj::persistent_vector>(idx, data[i]);
     }
     else
     {
       throw std::runtime_error{ fmt::format("get_entry on a vector must be an integer; found {}",
-                                            runtime::detail::to_string(key)) };
+                                            runtime::detail::to_string(idx)) };
     }
   }
 
-  native_bool obj::transient_vector::contains(object_ptr const key) const
+  native_bool obj::transient_vector::contains(object_ptr const elem) const
   {
-    if(key->type == object_type::integer)
+    if(elem->type == object_type::integer)
     {
-      auto const i(expect_object<obj::integer>(key)->data);
+      auto const i(expect_object<obj::integer>(elem)->data);
       return i >= 0 && static_cast<size_t>(i) < data.size();
     }
     else

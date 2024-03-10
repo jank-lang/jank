@@ -5,7 +5,7 @@
 namespace jank::runtime
 {
   obj::transient_hash_map::static_object(runtime::detail::native_persistent_hash_map &&d)
-    : data{ d.transient() }
+    : data{ std::move(d).transient() }
   {
   }
 
@@ -15,7 +15,7 @@ namespace jank::runtime
   }
 
   obj::transient_hash_map::static_object(runtime::detail::native_transient_hash_map &&d)
-    : data{ d }
+    : data{ std::move(d) }
   {
   }
 

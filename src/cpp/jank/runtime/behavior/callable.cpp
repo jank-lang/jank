@@ -1,6 +1,3 @@
-#include "jank/runtime/obj/persistent_vector.hpp"
-#include <iostream>
-
 #include <fmt/core.h>
 
 #include <jank/runtime/behavior/callable.hpp>

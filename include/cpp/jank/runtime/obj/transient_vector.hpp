@@ -1,7 +1,5 @@
 #pragma once
 
-#include <jank/runtime/object.hpp>
-
 namespace jank::runtime
 {
   template <>
@@ -13,7 +11,7 @@ namespace jank::runtime
     using persistent_type = static_object<object_type::persistent_vector>;
 
     static_object() = default;
-    static_object(static_object &&) = default;
+    static_object(static_object &&) noexcept = default;
     static_object(static_object const &) = default;
     static_object(detail::native_persistent_vector const &d);
     static_object(detail::native_persistent_vector &&d);
@@ -41,13 +39,13 @@ namespace jank::runtime
     native_box<persistent_type> to_persistent();
 
     /* behavior::callable */
-    object_ptr call(object_ptr) const;
+    object_ptr call(object_ptr const) const;
 
     /* behavior::associatively_readable */
-    object_ptr get(object_ptr idx) const;
-    object_ptr get(object_ptr idx, object_ptr fallback) const;
-    object_ptr get_entry(object_ptr key) const;
-    native_bool contains(object_ptr key) const;
+    object_ptr get(object_ptr const idx) const;
+    object_ptr get(object_ptr const idx, object_ptr const fallback) const;
+    object_ptr get_entry(object_ptr const idx) const;
+    native_bool contains(object_ptr const elem) const;
 
     void assert_active() const;
 
