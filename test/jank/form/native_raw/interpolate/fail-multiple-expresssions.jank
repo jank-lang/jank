@@ -1,1 +1,1 @@
-(native/raw "__value = #{ 1 2 }#;")
+(native/raw "__value = ~{ 1 2 };")
