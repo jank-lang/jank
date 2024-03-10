@@ -138,6 +138,14 @@ namespace jank::read
     {
     }
 
+    token::token(size_t const p, size_t const s, token_kind const k, char const * const d)
+      : pos{ p }
+      , size{ s }
+      , kind{ k }
+      , data{ native_persistent_string_view{ d } }
+    {
+    }
+
     token::token(size_t const p, size_t const s, token_kind const k, native_bool const d)
       : pos{ p }
       , size{ s }

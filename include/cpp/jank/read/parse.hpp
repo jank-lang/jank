@@ -20,6 +20,7 @@ namespace jank::read::parse
       native_bool operator!=(object_source_info const &rhs) const;
 
       runtime::object_ptr ptr{};
+      lex::token start, end;
     };
 
     using object_result = result<option<object_source_info>, error>;
@@ -67,6 +68,7 @@ namespace jank::read::parse
     runtime::context &rt_ctx;
     lex::processor::iterator token_current, token_end;
     option<lex::token_kind> expected_closer;
+    lex::token latest_token;
     /* Whether or not the next form is considered quoted. */
     native_bool quoted{};
   };
