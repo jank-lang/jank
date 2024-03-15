@@ -14,8 +14,16 @@ namespace jank::read::parse
 {
   struct processor
   {
-    /* TODO: none instead of nullptr. */
-    using object_result = result<runtime::object_ptr, error>;
+    struct object_source_info
+    {
+      native_bool operator==(object_source_info const &rhs) const;
+      native_bool operator!=(object_source_info const &rhs) const;
+
+      runtime::object_ptr ptr{};
+      lex::token start, end;
+    };
+
+    using object_result = result<option<object_source_info>, error>;
 
     struct iterator
     {
@@ -60,6 +68,7 @@ namespace jank::read::parse
     runtime::context &rt_ctx;
     lex::processor::iterator token_current, token_end;
     option<lex::token_kind> expected_closer;
+    lex::token latest_token;
     /* Whether or not the next form is considered quoted. */
     native_bool quoted{};
   };

@@ -5,19 +5,19 @@
 
 ; Exceptions
 (def ex-info
-  (fn* [msg map]
+  (fn* ex-info [msg map]
     {:error msg
      :data map}))
 
 ; Relations.
 ;; Miscellaneous.
 (def nil?
-  (fn* [o]
-    (native/raw "__value = (o == obj::nil::nil_const()) ? #{ true }# : #{ false }#")))
+  (fn* nil? [o]
+    (native/raw "__value = (o == obj::nil::nil_const()) ? ~{ true } : ~{ false }")))
 
 ;; Collections.
 (def empty?
-  (fn* [o]
+  (fn* empty? [o]
     (if (nil? o)
       true
       (native/raw "__value = visit_object
@@ -29,16 +29,16 @@
                     if constexpr(behavior::seqable<T>)
                     { return make_box(typed_o->seq() == nullptr); }
                     else
-                    { throw #{ (ex-info :not-seqable {:o o}) }#; }
-                    },
-                   #{ o }#
+                    { throw ~{ (ex-info :not-seqable {:o o}) }; }
+                   },
+                   ~{ o }
                    );"))))
 
 (def count
-  (fn* [o]
+  (fn* count [o]
     (if (nil? o)
       0
-      (native/raw "__value = make_box(runtime::detail::sequence_length(#{ o }#));"))))
+      (native/raw "__value = make_box(runtime::detail::sequence_length(~{ o }));"))))
 
 ; Lists.
 ; TODO: Can these be removed from the C++ source?
@@ -61,9 +61,9 @@
 ;                       return ret;
 ;                     }
 ;                     else
-;                     { throw #{ (ex-info :not-seqable {:o o}) }#; }
+;                     { throw ~{ (ex-info :not-seqable {:o o}) }; }
 ;                   },
-;                   #{ o }#
+;                   ~{ o }
 ;                 );")))
 ;(def fresh-seq
 ;  (fn* fresh-seq [o]
@@ -84,20 +84,20 @@
 ;                       return ret;
 ;                     }
 ;                     else
-;                     { throw #{ (ex-info :not-seqable {:o o}) }#; }
+;                     { throw ~{ (ex-info :not-seqable {:o o}) }; }
 ;                   },
-;                   #{ o }#
+;                   ~{ o }
 ;                 );")))
 (def first
   (fn* first [o]
-    (native/raw "__value = jank::runtime::first(#{ o }#);")))
+    (native/raw "__value = jank::runtime::first(~{ o });")))
 ; Returns a fresh seq.
 (def next
   (fn* next [o]
-    (native/raw "__value = jank::runtime::next(#{ o }#);")))
+    (native/raw "__value = jank::runtime::next(~{ o });")))
 (def next-in-place
   (fn* next-in-place [o]
-    (native/raw "__value = jank::runtime::next_in_place(#{ o }#);")))
+    (native/raw "__value = jank::runtime::next_in_place(~{ o });")))
 (def nnext
   (fn* nnext [o]
     (next-in-place (next o))))
@@ -118,16 +118,16 @@
                        {
                          auto const seq(typed_o->seq());
                          if(!seq)
-                         { return #{ '() }#; }
+                         { return ~{ '() }; }
                          auto const ret(seq->next());
                          if(ret == nullptr)
-                         { return #{ '() }#; }
+                         { return ~{ '() }; }
                          return ret;
                        }
                        else
-                       { throw #{ (ex-info :not-seqable {:o o}) }#; }
+                       { throw ~{ (ex-info :not-seqable {:o o}) }; }
                      },
-                     #{ o }#
+                     ~{ o }
                    );"))))
 (def cons
   (fn* cons [head tail]
@@ -138,17 +138,17 @@
                      using T = typename decltype(typed_tail)::value_type;
 
                      if constexpr(behavior::seqable<T>)
-                     { return make_box<jank::runtime::obj::cons>(#{ head }#, typed_tail->seq()); }
+                     { return make_box<jank::runtime::obj::cons>(~{ head }, typed_tail->seq()); }
                      else
-                     { throw #{ (ex-info :invalid-cons-tail {:head head :tail tail}) }#; }
+                     { throw ~{ (ex-info :invalid-cons-tail {:head head :tail tail}) }; }
                    },
-                   #{ tail }#
+                   ~{ tail }
                  );")))
 
 (def list?
   (fn* list? [o]
     ; TODO: Visit and use a behavior for this check instead. It should apply to conses and others.
-    (native/raw "__value = make_box(#{ o }#->type == object_type::persistent_list);")))
+    (native/raw "__value = make_box(~{ o }->type == object_type::persistent_list);")))
 
 (def list
   (fn* list [& items]
@@ -161,15 +161,15 @@
                      if constexpr(behavior::seqable<T>)
                      { return jank::runtime::obj::persistent_list::create(typed_items); }
                      else
-                     { throw #{ (ex-info :invalid-seq {:items items}) }#; }
+                     { throw ~{ (ex-info :invalid-seq {:items items}) }; }
                    },
-                   #{ items }#
+                   ~{ items }
                  );")))
 
 ;; Vectors.
 (def vector?
   (fn* vector? [o]
-    (native/raw "__value = make_box(#{ o }#->type == object_type::persistent_vector);")))
+    (native/raw "__value = make_box(~{ o }->type == object_type::persistent_vector);")))
 
 (def vec
   (fn* vec [coll]
@@ -182,9 +182,9 @@
                      if constexpr(behavior::seqable<T>)
                      { return jank::runtime::obj::persistent_vector::create(typed_coll); }
                      else
-                     { throw #{ (ex-info :invalid-seq {:coll coll}) }#; }
+                     { throw ~{ (ex-info :invalid-seq {:coll coll}) }; }
                    },
-                   #{ coll }#
+                   ~{ coll }
                  );")))
 
 (def conj)
@@ -195,7 +195,7 @@
     ([coll]
      coll)
     ([coll x]
-     (native/raw "__value = jank::runtime::conj(#{ coll }#, #{ x }#);"))
+     (native/raw "__value = jank::runtime::conj(~{ coll }, ~{ x });"))
     ([coll x & args]
      (let* [res (conj coll x)]
        (if (empty? args)
@@ -218,13 +218,13 @@
                      if constexpr(behavior::metadatable<T>)
                      {
                        if(typed_o->meta.is_none())
-                       { return #{ nil }#; }
+                       { return ~{ nil }; }
                        return typed_o->meta.unwrap();
                      }
                      else
-                     { return #{ nil }#; }
+                     { return ~{ nil }; }
                    },
-                   #{ o }#
+                   ~{ o }
                  );")))
 (def with-meta
   (fn* with-meta [o m]
@@ -235,11 +235,11 @@
                      using T = typename decltype(typed_o)::value_type;
 
                      if constexpr(behavior::metadatable<T>)
-                     { return typed_o->with_meta(#{ m }#); }
+                     { return typed_o->with_meta(~{ m }); }
                      else
-                     { throw #{ (ex-info :not-metadatable {:o o}) }#; }
+                     { throw ~{ (ex-info :not-metadatable {:o o}) }; }
                    },
-                   #{ o }#
+                   ~{ o }
                  );")))
 (def reset-meta!
   (fn* reset-meta! [o m]
@@ -251,14 +251,14 @@
 
                      if constexpr(behavior::metadatable<T>)
                      {
-                       auto const meta(behavior::detail::validate_meta(#{ m }#));
+                       auto const meta(behavior::detail::validate_meta(~{ m }));
                        typed_o->meta = meta;
-                       return #{ m }#;
+                       return ~{ m };
                      }
                      else
-                     { throw #{ (ex-info :not-metadatable {:o o}) }#; }
+                     { throw ~{ (ex-info :not-metadatable {:o o}) }; }
                    },
-                   #{ o }#
+                   ~{ o }
                  );")))
 
 ;; Macros.
@@ -277,7 +277,7 @@
   ([]
    (native/raw "__value = make_box<obj::symbol>(runtime::context::unique_symbol());"))
   ([prefix]
-   (native/raw "__value = make_box<obj::symbol>(runtime::context::unique_symbol(runtime::detail::to_string(#{ prefix }#)));")))
+   (native/raw "__value = make_box<obj::symbol>(runtime::context::unique_symbol(runtime::detail::to_string(~{ prefix })));")))
 
 ; TODO: This doesn't support macros with overloads.
 (defn defmacro [&form &env fn-name fn-args & body]
@@ -307,7 +307,7 @@
 
 ; TODO: Higher arities. Needs clojure.core/spread, which needs clojure.core/cons.
 (defn apply* [f args]
-  (native/raw "__value = runtime::apply_to(#{ f }#, #{ args }#);"))
+  (native/raw "__value = runtime::apply_to(~{ f }, ~{ args });"))
 
 (defn or*
   ([]
@@ -378,23 +378,23 @@
   [& body])
 
 (defn macroexpand-1 [form]
-  (native/raw "__value = __rt_ctx.macroexpand1(#{ form }#);"))
+  (native/raw "__value = __rt_ctx.macroexpand1(~{ form });"))
 (defn macroexpand [form]
-  (native/raw "__value = __rt_ctx.macroexpand(#{ form }#);"))
+  (native/raw "__value = __rt_ctx.macroexpand(~{ form });"))
 
 ; Relations.
 ;; Miscellaneous.
 (defn true? [o]
-  (native/raw "__value = runtime::detail::equal(#{ o }#, #{ true }#) ? #{ true }# : #{ false }#"))
+  (native/raw "__value = runtime::detail::equal(~{ o }, ~{ true }) ? ~{ true } : ~{ false }"))
 (defn false? [o]
-  (native/raw "__value = runtime::detail::equal(#{ o }#, #{ false }#) ? #{ true }# : #{ false }#"))
+  (native/raw "__value = runtime::detail::equal(~{ o }, ~{ false }) ? ~{ true } : ~{ false }"))
 (defn not [o]
   (native/raw "if(o == obj::nil::nil_const())
-               { __value = #{ true }#; }
+               { __value = ~{ true }; }
                else
-               { __value = runtime::detail::equal(#{ o }#, #{ false }#) ? #{ true }# : #{ false }#; }"))
+               { __value = runtime::detail::equal(~{ o }, ~{ false }) ? ~{ true } : ~{ false }; }"))
 (defn some? [o]
-  (native/raw "__value = (o == obj::nil::nil_const()) ? #{ false }# : #{ true }#"))
+  (native/raw "__value = (o == obj::nil::nil_const()) ? ~{ false } : ~{ true }"))
 
 ; Functions.
 
@@ -421,15 +421,15 @@
 ; Applies fn f to the argument list formed by prepending intervening arguments to args.
 (defn apply
   ([f args]
-   (native/raw "__value = runtime::apply_to(#{ f }#, #{ args }#);"))
+   (native/raw "__value = runtime::apply_to(~{ f }, ~{ args });"))
   ([f x args]
-   (native/raw "__value = runtime::apply_to(#{ f }#, #{ (list* x args) }#);"))
+   (native/raw "__value = runtime::apply_to(~{ f }, ~{ (list* x args) });"))
   ([f x y args]
-   (native/raw "__value = runtime::apply_to(#{ f }#, #{ (list* x y args) }#);"))
+   (native/raw "__value = runtime::apply_to(~{ f }, ~{ (list* x y args) });"))
   ([f x y z args]
-   (native/raw "__value = runtime::apply_to(#{ f }#, #{ (list* x y z args) }#);"))
+   (native/raw "__value = runtime::apply_to(~{ f }, ~{ (list* x y z args) });"))
   ([f a b c d & args]
-   (native/raw "__value = runtime::apply_to(#{ f }#, #{ (cons a (cons b (cons c (cons d (spread args))))) }#);")))
+   (native/raw "__value = runtime::apply_to(~{ f }, ~{ (cons a (cons b (cons c (cons d (spread args))))) });")))
 
 ; Takes a fn f and returns a fn that takes the same arguments as f,
 ; has the same effects, if any, and returns the opposite truth value.
@@ -456,25 +456,25 @@
 
                  if constexpr(behavior::seqable<T>)
                  {
-                  object_ptr res{ #{ val }# };
+                  object_ptr res{ ~{ val } };
                   for(auto it(typed_coll->fresh_seq()); it != nullptr; it = it->next_in_place())
-                  { res = dynamic_call(#{ f }#, res, it->first()); }
+                  { res = dynamic_call(~{ f }, res, it->first()); }
                   return res;
                   }
                  else
-                 { throw #{ (ex-info :invalid-seq {:coll coll}) }#; }
+                 { throw ~{ (ex-info :invalid-seq {:coll coll}) }; }
                  },
-                #{ coll }#
+                ~{ coll }
                 );")))
 
 ; Strings.
 (defn string? [o]
-  (native/raw "__value = make_box(#{ o }#->type == object_type::persistent_string);"))
+  (native/raw "__value = make_box(~{ o }->type == object_type::persistent_string);"))
 (defn str
   ([]
    "")
   ([o]
-   (native/raw "__value = make_box(runtime::detail::to_string(#{ o }#));"))
+   (native/raw "__value = make_box(runtime::detail::to_string(~{ o }));"))
   ([o & args]
    (native/raw "__value = visit_object
                (
@@ -486,7 +486,7 @@
                    {
                      fmt::memory_buffer buff;
                      buff.reserve(16);
-                     runtime::detail::to_string(#{ o }#, buff);
+                     runtime::detail::to_string(~{ o }, buff);
                      if(0 < runtime::detail::sequence_length(typed_args))
                      {
                        auto const fresh(typed_args->fresh_seq());
@@ -497,9 +497,9 @@
                      return make_box<obj::persistent_string>(native_persistent_string{ buff.data(), buff.size() });
                    }
                    else
-                   { throw #{ (ex-info :invalid-seq {:args args}) }#; }
+                   { throw ~{ (ex-info :invalid-seq {:args args}) }; }
                  },
-                 #{ args }#
+                 ~{ args }
                );")))
 
 ; TODO: Proper version.
@@ -514,11 +514,11 @@
                    using T = typename decltype(typed_s)::value_type;
 
                    if constexpr(std::is_same_v<T, obj::persistent_string>)
-                   { return typed_s->substring(to_int(#{ start }#)).expect_ok(); }
+                   { return typed_s->substring(to_int(~{ start })).expect_ok(); }
                    else
-                   { throw #{ (ex-info :not-a-string {:s s}) }#; }
+                   { throw ~{ (ex-info :not-a-string {:s s}) }; }
                  },
-                 #{ s }#
+                 ~{ s }
                );"))
   ([s start end]
    (native/raw "__value = visit_object
@@ -528,11 +528,11 @@
                    using T = typename decltype(typed_s)::value_type;
 
                    if constexpr(std::is_same_v<T, obj::persistent_string>)
-                   { return typed_s->substring(to_int(#{ start }#), to_int(#{ end }#)).expect_ok(); }
+                   { return typed_s->substring(to_int(~{ start }), to_int(~{ end })).expect_ok(); }
                    else
-                   { throw #{ (ex-info :not-a-string {:s s}) }#; }
+                   { throw ~{ (ex-info :not-a-string {:s s}) }; }
                  },
-                 #{ s }#
+                 ~{ s }
                );")))
 
 (defn- first-index-of [s c]
@@ -545,11 +545,11 @@
                     using T = typename decltype(typed_s)::value_type;
 
                     if constexpr(std::is_same_v<T, obj::persistent_string>)
-                    { return typed_s->first_index_of(#{ c }#); }
+                    { return typed_s->first_index_of(~{ c }); }
                     else
-                    { throw #{ (ex-info :not-a-string {:s s}) }#; }
+                    { throw ~{ (ex-info :not-a-string {:s s}) }; }
                   },
-                  #{ s }#
+                  ~{ s }
                 )
               );"))
 (defn- last-index-of [s c]
@@ -562,11 +562,11 @@
                     using T = typename decltype(typed_s)::value_type;
 
                     if constexpr(std::is_same_v<T, obj::persistent_string>)
-                    { return typed_s->last_index_of(#{ c }#); }
+                    { return typed_s->last_index_of(~{ c }); }
                     else
-                    { throw #{ (ex-info :not-a-string {:s s}) }#; }
+                    { throw ~{ (ex-info :not-a-string {:s s}) }; }
                   },
-                  #{ s }#
+                  ~{ s }
                 )
               );"))
 
@@ -585,7 +585,7 @@
                  else
                  { return false; }
                  },
-                #{ o }#
+                ~{ o }
                 )
                );"))
 
@@ -674,7 +674,7 @@
   ([]
    {})
   ([& kvs]
-   (native/raw "__value = obj::persistent_hash_map::create_from_seq(#{ kvs }#);")))
+   (native/raw "__value = obj::persistent_hash_map::create_from_seq(~{ kvs });")))
 
 (defn keys [m]
   ; TODO: Use a proper key seq instead.
@@ -692,18 +692,18 @@
 
 (defn get
   ([m k]
-   (native/raw "__value = jank::runtime::get(#{ m }#, #{ k }#);"))
+   (native/raw "__value = jank::runtime::get(~{ m }, ~{ k });"))
   ([m k fallback]
-   (native/raw "__value = jank::runtime::get(#{ m }#, #{ k }#, #{ fallback }#);")))
+   (native/raw "__value = jank::runtime::get(~{ m }, ~{ k }, ~{ fallback });")))
 (defn get-in
   ([m ks]
-   (native/raw "__value = jank::runtime::get_in(#{ m }#, #{ ks }#);"))
+   (native/raw "__value = jank::runtime::get_in(~{ m }, ~{ ks });"))
   ([m ks fallback]
-   (native/raw "__value = jank::runtime::get_in(#{ m }#, #{ ks }#, #{ fallback }#);")))
+   (native/raw "__value = jank::runtime::get_in(~{ m }, ~{ ks }, ~{ fallback });")))
 
 (defn assoc
   ([map key val]
-   (native/raw "__value = jank::runtime::assoc(#{ map }#, #{ key }#, #{ val }#);"))
+   (native/raw "__value = jank::runtime::assoc(~{ map }, ~{ key }, ~{ val });"))
   ([map key val & kvs]
    (let [res (assoc map key val)]
      (if (empty? kvs)
@@ -718,16 +718,16 @@
 ; range of indexes. 'contains?' operates constant or logarithmic time;
 ; it will not perform a linear search for a value.  See also 'some'.
 (defn contains? [coll k]
-  (native/raw "__value = make_box(jank::runtime::contains(#{ coll }#, #{ k }#));"))
+  (native/raw "__value = make_box(jank::runtime::contains(~{ coll }, ~{ k }));"))
 
 ; Returns the map entry for key, or nil if key not present.
 (defn find [coll k]
-  (native/raw "__value = jank::runtime::find(#{ coll }#, #{ k }#);"))
+  (native/raw "__value = jank::runtime::find(~{ coll }, ~{ k });"))
 
 ; Returns a map containing only those entries in map whose key is in keys
 (defn select-keys [m ks]
   (reduce* (fn [acc k]
-             (let [e (native/raw "__value = jank::runtime::find(#{ m }#, #{ k }#);")]
+             (let [e (native/raw "__value = jank::runtime::find(~{ m }, ~{ k });")]
                (if e
                  (conj acc e)
                  acc)))
@@ -746,7 +746,7 @@
 
 ;; Sets.
 (defn set? [o]
-  (native/raw "__value = make_box(#{ o }#->type == object_type::persistent_set);"))
+  (native/raw "__value = make_box(~{ o }->type == object_type::persistent_set);"))
 
 ; Returns a set of the distinct elements of coll.
 (defn set [coll]
@@ -760,7 +760,7 @@
 
 ;; Other.
 (defn hash [o]
-  (native/raw "__value = make_box(hash::visit(#{ o }#));"))
+  (native/raw "__value = make_box(hash::visit(~{ o }));"))
 
 (defn name [o]
   (if (string? o)
@@ -776,9 +776,9 @@
                       if constexpr(behavior::nameable<T>)
                       { return typed_o->get_name(); }
                       else
-                      { throw #{ (ex-info :not-nameable {:o o}) }#; }
+                      { throw ~{ (ex-info :not-nameable {:o o}) }; }
                     },
-                    #{ o }#
+                    ~{ o }
                   )
                 );")))
 
@@ -794,9 +794,9 @@
                     if constexpr(behavior::nameable<T>)
                     { return typed_o->get_namespace(); }
                     else
-                    { throw #{ (ex-info :not-nameable {:o o}) }#; }
+                    { throw ~{ (ex-info :not-nameable {:o o}) }; }
                   },
-                  #{ o }#
+                  ~{ o }
                 )
               );"))
 
@@ -808,9 +808,9 @@
   ([x]
    x)
   ([l r]
-   (native/raw "__value = add(#{ l }#, #{ r }#);"))
+   (native/raw "__value = add(~{ l }, ~{ r });"))
   ([l r & args]
-   (let [res (native/raw "__value = add(#{ l }#, #{ r }#);")]
+   (let [res (native/raw "__value = add(~{ l }, ~{ r });")]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -821,9 +821,9 @@
   ([x]
    (- 0 x))
   ([l r]
-   (native/raw "__value = sub(#{ l }#, #{ r }#);"))
+   (native/raw "__value = sub(~{ l }, ~{ r });"))
   ([l r & args]
-   (let [res (native/raw "__value = sub(#{ l }#, #{ r }#);")]
+   (let [res (native/raw "__value = sub(~{ l }, ~{ r });")]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -836,9 +836,9 @@
   ([x]
    x)
   ([l r]
-   (native/raw "__value = mul(#{ l }#, #{ r }#);"))
+   (native/raw "__value = mul(~{ l }, ~{ r });"))
   ([l r & args]
-   (let [res (native/raw "__value = mul(#{ l }#, #{ r }#);")]
+   (let [res (native/raw "__value = mul(~{ l }, ~{ r });")]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -854,9 +854,9 @@
     ([x]
      (/ 1 x))
     ([l r]
-     (native/raw "__value = div(#{ l }#, #{ r }#);"))
+     (native/raw "__value = div(~{ l }, ~{ r });"))
     ([l r & args]
-     (let [res (native/raw "__value = div(#{ l }#, #{ r }#);")]
+     (let [res (native/raw "__value = div(~{ l }, ~{ r });")]
        (if (empty? args)
          res
          (recur res (first args) (next args)))))))
@@ -867,12 +867,12 @@
   ([x]
    true)
   ([l r]
-   (native/raw "__value = make_box(runtime::detail::equal(#{ l }#, #{ r }#));"))
+   (native/raw "__value = make_box(runtime::detail::equal(~{ l }, ~{ r }));"))
   ([l r & args]
-   (if (native/raw "__value = make_box(runtime::detail::equal(#{ l }#, #{ r }#));")
+   (if (native/raw "__value = make_box(runtime::detail::equal(~{ l }, ~{ r }));")
      (if (next args)
        (recur r (first args) (next args))
-       (native/raw "__value = make_box(runtime::detail::equal(#{ r }#, #{ (first args) }#));"))
+       (native/raw "__value = make_box(runtime::detail::equal(~{ r }, ~{ (first args) }));"))
      false)))
 
 (defn not=
@@ -887,12 +887,12 @@
   ([x]
    true)
   ([l r]
-   (native/raw "__value = make_box(lt(#{ l }#, #{ r }#));"))
+   (native/raw "__value = make_box(lt(~{ l }, ~{ r }));"))
   ([l r & args]
-   (if (native/raw "__value = make_box(lt(#{ l }#, #{ r }#));")
+   (if (native/raw "__value = make_box(lt(~{ l }, ~{ r }));")
      (if (next args)
        (recur r (first args) (next args))
-       (native/raw "__value = make_box(lt(#{ r }#, #{ (first args) }#));"))
+       (native/raw "__value = make_box(lt(~{ r }, ~{ (first args) }));"))
      false)))
 (reset-meta! (var <) {:arities {2 {:supports-unboxed-input? true
                                    :unboxed-output? true}}})
@@ -901,12 +901,12 @@
   ([x]
    true)
   ([l r]
-   (native/raw "__value = make_box(lte(#{ l }#, #{ r }#));"))
+   (native/raw "__value = make_box(lte(~{ l }, ~{ r }));"))
   ([l r & args]
-   (if (native/raw "__value = make_box(lte(#{ l }#, #{ r }#));")
+   (if (native/raw "__value = make_box(lte(~{ l }, ~{ r }));")
      (if (next args)
        (recur r (first args) (next args))
-       (native/raw "__value = make_box(lte(#{ r }#, #{ (first args) }#));"))
+       (native/raw "__value = make_box(lte(~{ r }, ~{ (first args) }));"))
      false)))
 (reset-meta! (var <=) {:arities {2 {:supports-unboxed-input? true
                                     :unboxed-output? true}}})
@@ -915,12 +915,12 @@
   ([x]
    true)
   ([l r]
-   (native/raw "__value = make_box(lt(#{ r }#, #{ l }#));"))
+   (native/raw "__value = make_box(lt(~{ r }, ~{ l }));"))
   ([l r & args]
-   (if (native/raw "__value = make_box(lt(#{ r }#, #{ l }#));")
+   (if (native/raw "__value = make_box(lt(~{ r }, ~{ l }));")
      (if (next args)
        (recur r (first args) (next args))
-       (native/raw "__value = make_box(lt(#{ (first args) }#, #{ r }#));"))
+       (native/raw "__value = make_box(lt(~{ (first args) }, ~{ r }));"))
      false)))
 (reset-meta! (var >) {:arities {2 {:supports-unboxed-input? true
                                    :unboxed-output? true}}})
@@ -929,12 +929,12 @@
   ([x]
    true)
   ([l r]
-   (native/raw "__value = make_box(lte(#{ r }#, #{ l }#));"))
+   (native/raw "__value = make_box(lte(~{ r }, ~{ l }));"))
   ([l r & args]
-   (if (native/raw "__value = make_box(lte(#{ r }#, #{ l }#));")
+   (if (native/raw "__value = make_box(lte(~{ r }, ~{ l }));")
      (if (next args)
        (recur r (first args) (next args))
-       (native/raw "__value = make_box(lte(#{ (first args) }#, #{ r }#));"))
+       (native/raw "__value = make_box(lte(~{ (first args) }, ~{ r }));"))
      false)))
 (reset-meta! (var >=) {:arities {2 {:supports-unboxed-input? true
                                     :unboxed-output? true}}})
@@ -943,9 +943,9 @@
   ([x]
    x)
   ([l r]
-   (native/raw "__value = min(#{ l }#, #{ r }#);"))
+   (native/raw "__value = min(~{ l }, ~{ r });"))
   ([l r & args]
-   (let [res (native/raw "__value = min(#{ l }#, #{ r }#);")]
+   (let [res (native/raw "__value = min(~{ l }, ~{ r });")]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -956,9 +956,9 @@
   ([x]
    x)
   ([l r]
-   (native/raw "__value = max(#{ l }#, #{ r }#);"))
+   (native/raw "__value = max(~{ l }, ~{ r });"))
   ([l r & args]
-   (let [res (native/raw "__value = max(#{ l }#, #{ r }#);")]
+   (let [res (native/raw "__value = max(~{ l }, ~{ r });")]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -966,19 +966,19 @@
                                      :unboxed-output? true}}})
 
 (defn inc [n]
-  (native/raw "__value = inc(#{ n }#);"))
+  (native/raw "__value = inc(~{ n });"))
 (defn dec [n]
-  (native/raw "__value = dec(#{ n }#);"))
+  (native/raw "__value = dec(~{ n });"))
 
 (defn pos? [n]
-  (native/raw "__value = make_box(is_pos(#{ n }#));"))
+  (native/raw "__value = make_box(is_pos(~{ n }));"))
 (defn neg? [n]
-  (native/raw "__value = make_box(is_neg(#{ n }#));"))
+  (native/raw "__value = make_box(is_neg(~{ n }));"))
 (defn zero? [n]
-  (native/raw "__value = make_box(is_zero(#{ n }#));"))
+  (native/raw "__value = make_box(is_zero(~{ n }));"))
 
 (defn rem [num div]
-  (native/raw "__value = rem(#{ num }#, #{ div }#);"))
+  (native/raw "__value = rem(~{ num }, ~{ div });"))
 (defn mod [num div]
   (let [m (rem num div)]
     ; TODO: Could use an or here, if we had it.
@@ -990,11 +990,11 @@
 
 ;; Numbers.
 (defn integer? [o]
-  (native/raw "__value = make_box(#{ o }#->type == object_type::integer)"))
+  (native/raw "__value = make_box(~{ o }->type == object_type::integer)"))
 (defn float? [o]
-  (native/raw "__value = make_box(#{ o }#->type == object_type::real)"))
+  (native/raw "__value = make_box(~{ o }->type == object_type::real)"))
 (defn boolean? [o]
-  (native/raw "__value = make_box(#{ o }#->type == object_type::boolean)"))
+  (native/raw "__value = make_box(~{ o }->type == object_type::boolean)"))
 (defn number? [o]
   (native/raw "__value = make_box
               (
@@ -1009,12 +1009,12 @@
                  else
                  { return false; }
                  },
-                #{ o }#
+                ~{ o }
                 )
                );"))
 
 (defn int [o]
-  (native/raw "__value = make_box(to_int(#{ o }#));"))
+  (native/raw "__value = make_box(to_int(~{ o }));"))
 (defn float [o]
   (native/raw "__value = make_box
               (
@@ -1027,9 +1027,9 @@
                  if constexpr(behavior::numberable<T>)
                  { return typed_o->to_real(); }
                  else
-                 { throw #{ (ex-info :not-a-number {:o o}) }#; }
+                 { throw ~{ (ex-info :not-a-number {:o o}) }; }
                  },
-                #{ o }#
+                ~{ o }
                 )
                );"))
 
@@ -1045,9 +1045,9 @@
                  if constexpr(std::is_same_v<T, obj::integer>)
                  { return typed_o->data % 2 == 0; }
                  else
-                 { throw #{ (ex-info :not-an-integer {:o o}) }#; }
+                 { throw ~{ (ex-info :not-an-integer {:o o}) }; }
                  },
-                #{ o }#
+                ~{ o }
                 )
                );"))
 (defn odd? [o]
@@ -1062,9 +1062,9 @@
                  if constexpr(std::is_same_v<T, obj::integer>)
                  { return typed_o->data % 2 == 1; }
                  else
-                 { throw #{ (ex-info :not-an-integer {:o o}) }#; }
+                 { throw ~{ (ex-info :not-an-integer {:o o}) }; }
                  },
-                #{ o }#
+                ~{ o }
                 )
                );"))
 
@@ -1109,7 +1109,7 @@
 
 ;; Vars.
 (defn var? [o]
-  (native/raw "__value = make_box(#{ o }#->type == object_type::var)"))
+  (native/raw "__value = make_box(~{ o }->type == object_type::var)"))
 
 ; TODO: Make this private.
 (defmacro assert-macro-args
@@ -1144,7 +1144,7 @@
 ;     (finally
 ;       (pop-thread-bindings)))
 (defn push-thread-bindings [bindings]
-  (native/raw "__rt_ctx.push_thread_bindings(#{ bindings }#).expect_ok();"))
+  (native/raw "__rt_ctx.push_thread_bindings(~{ bindings }).expect_ok();"))
 
 ; Pop one set of bindings pushed with push-binding before. It is an error to
 ; pop bindings without pushing before.
@@ -1190,10 +1190,10 @@
 (defn with-redefs-fn [binding-map fun]
   (let [root-bind (fn [m]
                     (doseq [kv m]
-                      (native/raw "expect_object<runtime::var>(#{ (first kv) }#)->bind_root(#{ (second kv) }#);")))
+                      (native/raw "expect_object<runtime::var>(~{ (first kv) })->bind_root(~{ (second kv) });")))
         old-vals (zipmap (keys binding-map)
                          (map (fn [v]
-                                (native/raw "__value = expect_object<runtime::var>(#{ v }#)->get_root();"))
+                                (native/raw "__value = expect_object<runtime::var>(~{ v })->get_root();"))
                               (keys binding-map)))]
     ; TODO: try/finally
     (do ;try
@@ -1221,7 +1221,7 @@
 
 ;; Keywords.
 (defn keyword? [o]
-  (native/raw "__value = make_box(#{ o }#->type == object_type::keyword)"))
+  (native/raw "__value = make_box(~{ o }->type == object_type::keyword)"))
 (defn simple-keyword? [o]
   (native/raw "__value = make_box
               (
@@ -1236,7 +1236,7 @@
                  else
                  { return false; }
                  },
-                #{ o }#
+                ~{ o }
                 )
                );"))
 (defn qualified-keyword? [o]
@@ -1253,7 +1253,7 @@
                  else
                  { return false; }
                  },
-                #{ o }#
+                ~{ o }
                 )
                );"))
 (defn simple-symbol? [o]
@@ -1270,7 +1270,7 @@
                  else
                  { return false; }
                  },
-                #{ o }#
+                ~{ o }
                 )
                );"))
 (defn qualified-symbol? [o]
@@ -1287,11 +1287,11 @@
                  else
                  { return false; }
                  },
-                #{ o }#
+                ~{ o }
                 )
                );"))
 (defn symbol? [o]
-  (native/raw "__value = make_box(#{ o }#->type == object_type::symbol)"))
+  (native/raw "__value = make_box(~{ o }->type == object_type::symbol)"))
 
 ; Returns a Symbol with the given namespace and name. Arity-1 works
 ; on strings, keywords, and vars.
@@ -1300,12 +1300,12 @@
    (cond
      (symbol? o) o
      ; TODO: Intern.
-     (string? o) (native/raw "__value = make_box<obj::symbol>(runtime::detail::to_string(#{ o }#));")
-     (var? o) (native/raw "__value = expect_object<runtime::var>(#{ o }#)->name;")
-     (keyword? o) (native/raw "__value = make_box<obj::symbol>(expect_object<obj::keyword>(#{ o }#)->sym) ;")
-     :else (native/raw "throw #{ (ex-info :cannot-convert-to-symbol {:o o}) }#;")))
+     (string? o) (native/raw "__value = make_box<obj::symbol>(runtime::detail::to_string(~{ o }));")
+     (var? o) (native/raw "__value = expect_object<runtime::var>(~{ o })->name;")
+     (keyword? o) (native/raw "__value = make_box<obj::symbol>(expect_object<obj::keyword>(~{ o })->sym) ;")
+     :else (native/raw "throw ~{ (ex-info :cannot-convert-to-symbol {:o o}) };")))
   ([ns o]
-   (native/raw "__value = make_box<obj::symbol>(runtime::detail::to_string(#{ ns }#), runtime::detail::to_string(#{ o }#));")))
+   (native/raw "__value = make_box<obj::symbol>(runtime::detail::to_string(~{ ns }), runtime::detail::to_string(~{ o }));")))
 
 ;; Sequences.
 (defn iterate [f x]
@@ -1316,22 +1316,22 @@
                 using T = typename decltype(typed_f)::value_type;
 
                 if constexpr(std::is_base_of_v<behavior::callable, T>)
-                { return make_box<obj::iterator>(typed_f, #{ x }#); }
+                { return make_box<obj::iterator>(typed_f, ~{ x }); }
                 else
-                { throw #{ (ex-info :not-callable {:f f}) }#; }
+                { throw ~{ (ex-info :not-callable {:f f}) }; }
                 },
-               #{ f }#
+               ~{ f }
                );"))
 
 (defn range
   ([]
    (iterate inc 0))
   ([end]
-   (native/raw "__value = make_box<obj::range>(#{ end }#);"))
+   (native/raw "__value = make_box<obj::range>(~{ end });"))
   ([start end]
-   (native/raw "__value = make_box<obj::range>(#{ start }#, #{ end }#);"))
+   (native/raw "__value = make_box<obj::range>(~{ start }, ~{ end });"))
   ([start end step]
-   (native/raw "__value = make_box<obj::range>(#{ start }#, #{ end }#, #{ step }#);")))
+   (native/raw "__value = make_box<obj::range>(~{ start }, ~{ end }, ~{ step });")))
 
 (defn take
   ; TODO: Transducer.
@@ -1393,10 +1393,10 @@
   ; TODO: Move println back into here once I sort out two things:
   ; 1. Escaped strings, so I can do the space in between each
   ; 2. The linker errors showing up when using fmt::format_to here
-  (native/raw "__value = jank::runtime::context::println(#{ args }#);"))
+  (native/raw "__value = jank::runtime::context::println(~{ args });"))
 
 (defn print [o]
-  (native/raw "__value = jank::runtime::context::print(#{ o }#);"))
+  (native/raw "__value = jank::runtime::context::print(~{ o });"))
 
 ;; Functions.
 (defn ifn? [o]
@@ -1413,14 +1413,14 @@
                  else
                  { return false; }
                  },
-                #{ o }#
+                ~{ o }
                 )
                );"))
 (defn fn? [o]
   (native/raw "auto const fn
               (
-               #{ o }#->type == object_type::native_function_wrapper
-               || #{ o }#->type == object_type::jit_function
+               ~{ o }->type == object_type::native_function_wrapper
+               || ~{ o }->type == object_type::jit_function
                );
               __value = make_box(fn);"))
 
@@ -1431,7 +1431,7 @@
 ;; jank.compiler things.
 ; TODO: Options, following what criterium offers.
 (defn benchmark [label fun]
-  (native/raw "auto const label_str(expect_object<obj::persistent_string>(#{ (str label) }#));
+  (native/raw "auto const label_str(expect_object<obj::persistent_string>(~{ (str label) }));
               visit_object
               (
                [=](auto const typed_fun)
@@ -1465,27 +1465,27 @@
                   );
                  }
                 else
-                { throw #{ (ex-info :not-callable {:fun fun}) }#; }
+                { throw ~{ (ex-info :not-callable {:fun fun}) }; }
                 },
-               #{ fun }#
+               ~{ fun }
                );"))
 
 ;; Extra things that usually come from Java.
 (defn tan [o]
-  (native/raw "__value = make_box(std::tan(runtime::detail::to_real(#{ o }#)));"))
+  (native/raw "__value = make_box(std::tan(runtime::detail::to_real(~{ o })));"))
 
 (defn sqrt [o]
-  (native/raw "__value = make_box(std::sqrt(runtime::detail::to_real(#{ o }#)));"))
+  (native/raw "__value = make_box(std::sqrt(runtime::detail::to_real(~{ o })));"))
 (reset-meta! (var sqrt) {:arities {1 {:supports-unboxed-input? true
                                       :unboxed-output? true}}})
 
 (defn abs [o]
-  (native/raw "__value = abs(#{ o }#);"))
+  (native/raw "__value = abs(~{ o });"))
 (reset-meta! (var abs) {:arities {1 {:supports-unboxed-input? true
                                      :unboxed-output? true}}})
 
 (defn pow [x y]
-  (native/raw "__value = make_box(std::pow(runtime::detail::to_real(#{ x }#), runtime::detail::to_real(#{ y }#)));"))
+  (native/raw "__value = make_box(std::pow(runtime::detail::to_real(~{ x }), runtime::detail::to_real(~{ y })));"))
 (reset-meta! (var pow) {:arities {2 {:supports-unboxed-input? true
                                      :unboxed-output? true}}})
 
@@ -1497,44 +1497,44 @@
 
 ; Vars.
 (defn var? [o]
-  (native/raw "__value = make_box(#{ o }#->type == object_type::var);"))
+  (native/raw "__value = make_box(~{ o }->type == object_type::var);"))
 
 (defn var-get [v]
   (assert (var? v))
-  (native/raw "__value = expect_object<runtime::var>(#{ v }#)->deref();"))
+  (native/raw "__value = expect_object<runtime::var>(~{ v })->deref();"))
 
 ; Namespaces (again).
 (defn create-ns [sym]
   (assert (symbol? sym))
-  (native/raw "__value = __rt_ctx.intern_ns(expect_object<obj::symbol>(#{ sym }#));"))
+  (native/raw "__value = __rt_ctx.intern_ns(expect_object<obj::symbol>(~{ sym }));"))
 
 (defn find-ns [sym]
   (assert (symbol? sym))
-  (native/raw "__value = __rt_ctx.find_ns(expect_object<obj::symbol>(#{ sym }#)).unwrap_or(nullptr);
+  (native/raw "__value = __rt_ctx.find_ns(expect_object<obj::symbol>(~{ sym })).unwrap_or(nullptr);
                if(!__value)
                { __value = obj::nil::nil_const(); }"))
 
 (defn remove-ns [sym]
   (assert (symbol? sym))
-  (native/raw "__value = __rt_ctx.remove_ns(expect_object<obj::symbol>(#{ sym }#)).unwrap_or(nullptr);
+  (native/raw "__value = __rt_ctx.remove_ns(expect_object<obj::symbol>(~{ sym })).unwrap_or(nullptr);
                if(!__value)
                { __value = obj::nil::nil_const(); }"))
 
 (defn the-ns [ns-or-sym]
-  (if (native/raw "__value = make_box(#{ ns-or-sym }#->type == object_type::ns);")
+  (if (native/raw "__value = make_box(~{ ns-or-sym }->type == object_type::ns);")
     ns-or-sym
     (let [found (find-ns ns-or-sym)]
       (if (nil? found)
-        (native/raw "throw #{ (ex-info :not-an-ns-or-sym {:value ns-or-sym}) }#;")
+        (native/raw "throw ~{ (ex-info :not-an-ns-or-sym {:value ns-or-sym}) };")
         found))))
 
 (defn ns-name [ns-sym]
   (let [ns (the-ns ns-sym)]
-    (native/raw "__value = expect_object<runtime::ns>(#{ ns }#)->name;")))
+    (native/raw "__value = expect_object<runtime::ns>(~{ ns })->name;")))
 
 (defn ns-map [ns-sym]
   (let [ns (the-ns ns-sym)]
-    (native/raw "__value = expect_object<runtime::ns>(#{ ns }#)->get_mappings();")))
+    (native/raw "__value = expect_object<runtime::ns>(~{ ns })->get_mappings();")))
 
 (defn ns-publics [ns-sym]
   (let [ns (the-ns ns-sym)]
@@ -1545,7 +1545,7 @@
                      v (second kv)]
                  ; TODO: Check for visibility.
                  (if (var? v)
-                   (if (native/raw "__value = make_box(#{ ns }# == expect_object<runtime::var>(#{ v }#)->n);")
+                   (if (native/raw "__value = make_box(~{ ns } == expect_object<runtime::var>(~{ v })->n);")
                      (assoc acc k v)
                      acc)
                    acc)))
@@ -1568,21 +1568,21 @@
 
 (defn- throw-if [pred msg]
   (when pred
-    (native/raw "throw #{ (ex-info :assertion-failure {:msg msg }) }#;")))
+    (native/raw "throw ~{ (ex-info :assertion-failure {:msg msg }) };")))
 
 (defn alias [alias ns-sym]
   (let [ns-obj (the-ns ns-sym)]
     (assert (symbol? alias))
-    (native/raw "expect_object<ns>(#{ *ns* }#)->add_alias
+    (native/raw "expect_object<ns>(~{ *ns* })->add_alias
                  (
-                   expect_object<obj::symbol>(#{ alias }#),
-                   expect_object<ns>(#{ ns-obj }#)
+                   expect_object<obj::symbol>(~{ alias }),
+                   expect_object<ns>(~{ ns-obj })
                  ).expect_ok();")))
 
 (defn refer [ns-sym & filters]
   (let [ns (find-ns ns-sym)
         _ (when (nil? ns)
-            (native/raw "throw #{ (ex-info :unknown-namespace {:value ns-sym}) }#;"))
+            (native/raw "throw ~{ (ex-info :unknown-namespace {:value ns-sym}) };"))
         filters (apply hash-map filters)
         rename (or (:rename filters) {})
         exclude? (set (:exclude filters))
@@ -1596,11 +1596,11 @@
                  (let [v (get sym->var sym)
                        sym (rename sym sym)]
                    (when (nil? v)
-                     (native/raw "throw #{ (ex-info :var-does-not-exist {:value sym}) }#;"))
-                   (native/raw "expect_object<runtime::ns>(#{ *ns* }#)->refer
+                     (native/raw "throw ~{ (ex-info :var-does-not-exist {:value sym}) };"))
+                   (native/raw "expect_object<runtime::ns>(~{ *ns* })->refer
                                 (
-                                  expect_object<obj::symbol>(#{ sym }#),
-                                  expect_object<runtime::var>(#{ v }#)
+                                  expect_object<obj::symbol>(~{ sym }),
+                                  expect_object<runtime::var>(~{ v })
                                 ).expect_ok();"))))
              nil
              to-refer)))
@@ -1610,7 +1610,7 @@
     nil
     (let [path (first paths)]
       ; TODO: Check for cyclic deps, once we have dynamic vars.
-      (native/raw "__rt_ctx.load_module(runtime::detail::to_string(#{ path }#)).expect_ok();")
+      (native/raw "__rt_ctx.load_module(runtime::detail::to_string(~{ path })).expect_ok();")
       (recur (rest paths)))))
 
 ; Loads a lib given its name. If `need-ns?`, ensures that the associated
@@ -1653,7 +1653,7 @@
         as-alias (:as-alias opts)
         ; TODO: Dynamic var
         ;loaded (contains? @*loaded-libs* lib)
-        loaded? (native/raw "__value = make_box(__rt_ctx.module_loader.is_loaded(runtime::detail::to_string(#{ lib }#)));")
+        loaded? (native/raw "__value = make_box(__rt_ctx.module_loader.is_loaded(runtime::detail::to_string(~{ lib })));")
         need-ns? (or as use)
         load (cond reload-all load-all
                    reload load-one
@@ -1704,7 +1704,7 @@
       (apply load-lib (prependss arg opts)))))
 
 (defn compile [path]
-  (native/raw "__rt_ctx.compile_module(runtime::detail::to_string(#{ path }#)).expect_ok();"))
+  (native/raw "__rt_ctx.compile_module(runtime::detail::to_string(~{ path })).expect_ok();"))
 
 (defn require [& args]
   (apply load-libs :require args))
@@ -1737,7 +1737,7 @@
           (list 'if (list '= (list 'quote name) (list 'quote 'clojure.core))
             'nil
             (list 'let (vector 'name (list 'quote name))
-              (list 'native/raw "__rt_ctx.module_loader.set_loaded(runtime::detail::to_string(#{ name }#));")
+              (list 'native/raw "__rt_ctx.module_loader.set_loaded(runtime::detail::to_string(~{ name }));")
               ; TODO: Dynamic vars
               ;(dosync (commute @#'*loaded-libs* conj '~name))
               'nil))
