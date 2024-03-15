@@ -45,6 +45,7 @@ namespace jank::read::lex
 
   struct token
   {
+    token() = default;
     token(token_kind const k);
     token(size_t const p, token_kind const k);
     token(size_t const p, token_kind const k, native_integer const);
@@ -56,6 +57,7 @@ namespace jank::read::lex
     token(size_t const p, size_t const s, token_kind const k, native_integer const);
     token(size_t const p, size_t const s, token_kind const k, native_real const);
     token(size_t const p, size_t const s, token_kind const k, native_persistent_string_view const);
+    token(size_t const p, size_t const s, token_kind const k, char const * const);
     token(size_t const p, size_t const s, token_kind const k, native_bool const);
 
     native_bool operator==(token const &rhs) const;
@@ -72,7 +74,7 @@ namespace jank::read::lex
     static constexpr size_t ignore_pos{ std::numeric_limits<size_t>::max() };
     size_t pos{ ignore_pos };
     size_t size{ 1 };
-    token_kind kind;
+    token_kind kind{ token_kind::eof };
     boost::variant<no_data, native_integer, native_real, native_persistent_string_view, native_bool>
       data;
   };

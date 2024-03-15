@@ -197,7 +197,8 @@ namespace jank::runtime
     native_vector<analyze::expression_ptr> exprs{};
     for(auto const &form : p_prc)
     {
-      auto const expr(an_prc.analyze(form.expect_ok(), analyze::expression_type::statement));
+      auto const expr(
+        an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_type::statement));
       ret = evaluate::eval(*this, jit_prc, expr.expect_ok());
       exprs.emplace_back(expr.expect_ok());
     }
@@ -230,7 +231,8 @@ namespace jank::runtime
     native_vector<analyze::expression_ptr> ret{};
     for(auto const &form : p_prc)
     {
-      auto const expr(an_prc.analyze(form.expect_ok(), analyze::expression_type::statement));
+      auto const expr(
+        an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_type::statement));
       if(eval)
       {
         evaluate::eval(*this, jit_prc, expr.expect_ok());

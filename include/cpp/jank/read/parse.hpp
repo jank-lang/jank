@@ -14,8 +14,16 @@ namespace jank::read::parse
 {
   struct processor
   {
-    /* TODO: none instead of nullptr. */
-    using object_result = result<runtime::object_ptr, error>;
+    struct object_source_info
+    {
+      native_bool operator==(object_source_info const &rhs) const;
+      native_bool operator!=(object_source_info const &rhs) const;
+
+      runtime::object_ptr ptr{};
+      lex::token start, end;
+    };
+
+    using object_result = result<option<object_source_info>, error>;
 
     struct iterator
     {
@@ -73,6 +81,7 @@ namespace jank::read::parse
      * This is needed because parse iteration works one form at a time and splicing potentially
      * turns one form into many. */
     std::list<runtime::object_ptr> pending_forms;
+    lex::token latest_token;
     /* Whether or not the next form is considered quoted. */
     native_bool quoted{};
   };
