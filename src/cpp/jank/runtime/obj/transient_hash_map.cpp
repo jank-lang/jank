@@ -97,6 +97,13 @@ namespace jank::runtime
     return this;
   }
 
+  obj::transient_hash_map_ptr obj::transient_hash_map::dissoc_in_place(object_ptr const key)
+  {
+    assert_active();
+    data.erase(key);
+    return this;
+  }
+
   obj::transient_hash_map_ptr obj::transient_hash_map::cons_in_place(object_ptr const head)
   {
     assert_active();

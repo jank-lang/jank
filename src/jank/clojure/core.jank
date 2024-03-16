@@ -431,6 +431,87 @@
                  #{ o }#
                );"))
 
+(def conj!)
+(def conj!
+  (fn* conj!
+    ([]
+     (transient []))
+    ([coll]
+     coll)
+    ([coll x]
+     (native/raw "__value = visit_object
+                  (
+                    [&](auto const typed_t, auto const head) -> object_ptr
+                    {
+                      using T = typename decltype(typed_t)::value_type;
+
+                        if constexpr(behavior::persistentable<T>)
+                        {
+                          return typed_t->cons_in_place(head);
+                        }
+                       else
+                       { throw #{ (ex-info :not-persistentable {:o coll}) }#; }
+                     },
+                     #{ coll }#,
+                     #{ x }#
+                   );
+                 "))))
+
+(def assoc!)
+(def assoc!
+  (fn* assoc!
+    ([coll k v]
+     (native/raw "__value = visit_object
+                  (
+                    [&](auto const typed_t, auto const key, auto const val) -> object_ptr
+                    {
+                      using T = typename decltype(typed_t)::value_type;
+
+                      if constexpr(behavior::associatively_writable_in_place<T>)
+                      {
+                        return typed_t->assoc_in_place(key, val);
+                      }
+                      else
+                      { throw #{ (ex-info :not-associatively_writable_in_place {:o coll}) }#; }
+                    },
+                    #{ coll }#,
+                    #{ k }#,
+                    #{ v }#
+                  );
+                 "))
+    ([coll k v & kvs]
+      (let* [ret (assoc! coll k v)]
+        (if kvs
+          (recur ret (first kvs) (second kvs) (nnext kvs))
+          ret)))))
+
+(def dissoc!)
+(def dissoc!
+  (fn* dissoc!
+    ([coll k]
+     (native/raw "__value = visit_object
+                  (
+                    [&](auto const typed_t, auto const key) -> object_ptr
+                    {
+                      using T = typename decltype(typed_t)::value_type;
+
+                      if constexpr(behavior::associatively_writable_in_place<T>)
+                      {
+                        return typed_t->dissoc_in_place(key);
+                      }
+                      else
+                      { throw #{ (ex-info :not-associatively_writable_in_place {:o coll}) }#; }
+                    },
+                    #{ coll }#,
+                    #{ k }#
+                  );
+                 "))
+    ([coll k & ks]
+      (let* [ret (dissoc! coll k)]
+        (if ks
+          (recur ret (first ks) (next ks))
+          ret)))))
+
 ; Functions.
 
 (defn- spread [arglist]
