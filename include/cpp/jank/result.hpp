@@ -78,14 +78,14 @@ namespace jank
     template <typename T>
     constexpr result(detail::result<true, T> const &t,
                      std::enable_if_t<std::is_constructible_v<R, T>> * = nullptr)
-      : data{ t.data }
+      : data{ R{ t.data } }
     {
     }
 
     template <typename T>
     constexpr result(detail::result<false, T> const &t,
                      std::enable_if_t<std::is_constructible_v<E, T>> * = nullptr)
-      : data{ t.data }
+      : data{ E{ t.data } }
     {
     }
 
