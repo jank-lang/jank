@@ -23,6 +23,8 @@ namespace jank::runtime
       return ret;
     }
 
+    native_box<static_object> pop();
+
     /* behavior::objectable */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;

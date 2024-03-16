@@ -512,6 +512,27 @@
           (recur ret (first ks) (next ks))
           ret)))))
 
+(def pop!)
+(def pop!
+  (fn* pop!
+    ([coll]
+     (native/raw "__value = visit_object
+                  (
+                    [&](auto const typed_t) -> object_ptr
+                    {
+                      using T = typename decltype(typed_t)::value_type;
+
+                      if constexpr(std::same_as<T, obj::transient_vector>)
+                      {
+                        return typed_t->pop();
+                      }
+                      else
+                      { throw #{ (ex-info :not-transient-vector {:o coll}) }#; }
+                    },
+                    #{ coll }#
+                  );
+                 "))))
+
 ; Functions.
 
 (defn- spread [arglist]
