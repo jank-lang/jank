@@ -46,8 +46,12 @@ namespace jank::runtime
   }
 
   template <size_t Arity>
-  struct invalid_arity
+  struct invalid_arity : std::runtime_error
   {
+    invalid_arity()
+      : std::runtime_error{ fmt::format("invalid call to fn with {} args provided", Arity) }
+    {
+    }
   };
 
   template <>

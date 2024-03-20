@@ -53,6 +53,8 @@ namespace jank::runtime
       = make_box<runtime::var>(core, make_box<obj::symbol>("*current-module*"))->set_dynamic(true);
     no_recur_var
       = make_box<runtime::var>(core, make_box<obj::symbol>("*no-recur*"))->set_dynamic(true);
+    gensym_env_var
+      = make_box<runtime::var>(core, make_box<obj::symbol>("*gensym-env*"))->set_dynamic(true);
 
     intern_ns(make_box<obj::symbol>("native"));
 
@@ -121,6 +123,8 @@ namespace jank::runtime
       = make_box<runtime::var>(core, make_box<obj::symbol>("*current-module*"))->set_dynamic(true);
     no_recur_var
       = make_box<runtime::var>(core, make_box<obj::symbol>("*no-recur*"))->set_dynamic(true);
+    gensym_env_var
+      = make_box<runtime::var>(core, make_box<obj::symbol>("*gensym-env*"))->set_dynamic(true);
   }
 
   context::~context()

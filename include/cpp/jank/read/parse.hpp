@@ -58,6 +58,9 @@ namespace jank::read::parse
     object_result parse_reader_macro_set();
     object_result parse_reader_macro_comment();
     object_result parse_reader_macro_conditional(native_bool splice);
+    object_result parse_syntax_quote();
+    object_result parse_unquote(native_bool splice);
+    object_result parse_deref();
     object_result parse_symbol();
     object_result parse_nil();
     object_result parse_boolean();
@@ -70,6 +73,13 @@ namespace jank::read::parse
     iterator begin();
     iterator end();
 
+  private:
+    string_result<runtime::object_ptr> syntax_quote(runtime::object_ptr form);
+    string_result<runtime::object_ptr> syntax_quote_expand_seq(runtime::object_ptr seq);
+    static string_result<runtime::object_ptr> syntax_quote_flatten_map(runtime::object_ptr seq);
+    static native_bool syntax_quote_is_unquote(runtime::object_ptr form, native_bool splice);
+
+  public:
     runtime::context &rt_ctx;
     lex::processor::iterator token_current, token_end;
     option<lex::token_kind> expected_closer;

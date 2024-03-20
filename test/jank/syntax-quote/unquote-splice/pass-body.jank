@@ -1,0 +1,14 @@
+(def result nil)
+
+(defmacro do-build-keyword [& body]
+  `(do
+     ~@body))
+
+(assert (= 42 (do-build-keyword
+                (def result "s")
+                (def result (str result "uccess"))
+                (def result (keyword result))
+                42)))
+
+; Should be :success.
+result

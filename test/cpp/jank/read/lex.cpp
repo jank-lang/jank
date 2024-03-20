@@ -1000,5 +1000,89 @@ namespace jank::read::lex
         }
       }
     }
+
+    TEST_CASE("Syntax quoting")
+    {
+      SUBCASE("Empty")
+      {
+        processor p{ "`" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                {0, 1, token_kind::syntax_quote}
+        }));
+      }
+
+      SUBCASE("With line breaks")
+      {
+        processor p{ "`\n:foo" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 1, token_kind::syntax_quote },
+                { 2, 4, token_kind::keyword, "foo"sv }
+        }));
+      }
+
+      SUBCASE("Unquote")
+      {
+        SUBCASE("Empty")
+        {
+          processor p{ "~" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  {0, 1, token_kind::unquote}
+          }));
+        }
+
+        SUBCASE("With line breaks")
+        {
+          processor p{ "~\n:foo" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 1, token_kind::unquote },
+                  { 2, 4, token_kind::keyword, "foo"sv }
+          }));
+        }
+      }
+
+      SUBCASE("Unquote splicing")
+      {
+        SUBCASE("Empty")
+        {
+          processor p{ "~@" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  {0, 2, token_kind::unquote_splice}
+          }));
+        }
+
+        SUBCASE("With line breaks before")
+        {
+          processor p{ "~\n@:foo" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 1, token_kind::unquote },
+                  { 2, 1, token_kind::deref },
+                  { 3, 4, token_kind::keyword, "foo"sv }
+          }));
+        }
+
+        SUBCASE("With line breaks after")
+        {
+          processor p{ "~@\n:foo" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 2, token_kind::unquote_splice },
+                  { 3, 4, token_kind::keyword, "foo"sv }
+          }));
+        }
+      }
+    }
   }
 }

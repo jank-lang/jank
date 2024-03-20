@@ -3,6 +3,14 @@
 ; Namespace management.
 (def *ns*)
 
+; Syntax quoting.
+(def unquote
+  (fn* unquote [_]
+    (throw "~ cannot be used outside of syntax quote")))
+(def unquote-splicing
+  (fn* unquote [_]
+    (throw "~@ cannot be used outside of syntax quote")))
+
 ; Exceptions
 (def ex-info
   (fn* ex-info [msg map]
@@ -103,7 +111,7 @@
     (next-in-place (next o))))
 (def second
   (fn* second [o]
-    (first (next o))))
+    (native/raw "__value = jank::runtime::second(~{ o });")))
 (def rest
   (fn* rest [o]
     (if (nil? o)
@@ -1240,6 +1248,21 @@
                 ~{ o }
                 )
                );"))
+
+; Returns a Keyword with the given namespace and name.  Do not use :
+; in the keyword strings, it will be added automatically.
+(defn keyword
+  ([name]
+   (if (keyword? name)
+     name
+     (native/raw "__value = __rt_ctx.intern_keyword(runtime::detail::to_string(~{ name })).expect_ok();")))
+  ([ns name]
+   (native/raw "__value = __rt_ctx.intern_keyword
+                (
+                  runtime::detail::to_string(~{ ns }),
+                  runtime::detail::to_string(~{ name })
+                ).expect_ok();")))
+
 (defn simple-symbol? [o]
   (native/raw "__value = make_box
               (
@@ -1284,10 +1307,10 @@
    (cond
      (symbol? o) o
      ; TODO: Intern.
-     (string? o) (native/raw "__value = make_box<obj::symbol>(runtime::detail::to_string(~{ o }));")
+     (string? o) (native/raw "__value = make_box<obj::symbol>(expect_object<obj::persistent_string>(~{ o })->data);")
      (var? o) (native/raw "__value = expect_object<runtime::var>(~{ o })->name;")
-     (keyword? o) (native/raw "__value = make_box<obj::symbol>(expect_object<obj::keyword>(~{ o })->sym) ;")
-     :else (native/raw "throw ~{ (ex-info :cannot-convert-to-symbol {:o o}) };")))
+     (keyword? o) (native/raw "__value = make_box<obj::symbol>(expect_object<obj::keyword>(~{ o })->sym);")
+     :else (throw (ex-info :cannot-convert-to-symbol {:o o}))))
   ([ns o]
    (native/raw "__value = make_box<obj::symbol>(runtime::detail::to_string(~{ ns }), runtime::detail::to_string(~{ o }));")))
 

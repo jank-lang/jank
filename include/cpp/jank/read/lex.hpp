@@ -23,6 +23,10 @@ namespace jank::read::lex
     reader_macro_comment,
     reader_macro_conditional,
     reader_macro_conditional_splice,
+    syntax_quote,
+    unquote,
+    unquote_splice,
+    deref,
     /* Has string data. */
     comment,
     nil,

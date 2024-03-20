@@ -601,6 +601,55 @@ namespace jank::read
 
             return ok(token{ token_start, pos - token_start, token_kind::reader_macro });
           }
+        /* Syntax quoting. */
+        case '`':
+          {
+            auto &&e(check_whitespace(found_space));
+            if(e.is_some())
+            {
+              return err(std::move(e.unwrap()));
+            }
+            ++pos;
+            require_space = false;
+
+            return ok(token{ token_start, pos - token_start, token_kind::syntax_quote });
+          }
+        /* Syntax unquoting. */
+        case '~':
+          {
+            auto &&e(check_whitespace(found_space));
+            if(e.is_some())
+            {
+              return err(std::move(e.unwrap()));
+            }
+            require_space = false;
+            auto const oc(peek());
+            ++pos;
+
+            switch(oc.unwrap_or(' '))
+            {
+              case '@':
+                {
+                  ++pos;
+                  return ok(token{ token_start, pos - token_start, token_kind::unquote_splice });
+                }
+              default:
+                return ok(token{ token_start, pos - token_start, token_kind::unquote });
+            }
+          }
+        /* Deref macro. */
+        case '@':
+          {
+            auto &&e(check_whitespace(found_space));
+            if(e.is_some())
+            {
+              return err(std::move(e.unwrap()));
+            }
+            ++pos;
+            require_space = false;
+
+            return ok(token{ token_start, pos - token_start, token_kind::deref });
+          }
         default:
           ++pos;
           return err(

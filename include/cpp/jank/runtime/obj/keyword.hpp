@@ -25,6 +25,7 @@ namespace jank::runtime
     static_object(object &&base);
     static_object(obj::symbol const &s);
     static_object(obj::symbol &&s);
+    static_object(native_persistent_string_view const &ns, native_persistent_string_view const &n);
 
     /* behavior::objectable */
     native_bool equal(object const &) const;

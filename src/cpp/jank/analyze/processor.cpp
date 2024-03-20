@@ -1028,7 +1028,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_primitive_literal(runtime::object_ptr o,
+  processor::analyze_primitive_literal(runtime::object_ptr const o,
                                        local_frame_ptr &current_frame,
                                        expression_type const expr_type,
                                        option<expr::function_context_ptr> const &,
@@ -1342,5 +1342,16 @@ namespace jank::analyze
         }
       },
       o);
+  }
+
+  native_bool processor::is_special(runtime::object_ptr const form)
+  {
+    if(form->type != runtime::object_type::symbol)
+    {
+      return false;
+    }
+
+    auto const found_special(specials.find(runtime::expect_object<runtime::obj::symbol>(form)));
+    return found_special != specials.end();
   }
 }

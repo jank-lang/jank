@@ -165,6 +165,11 @@ namespace jank::runtime
       s);
   }
 
+  object_ptr second(object_ptr const s)
+  {
+    return first(next(s));
+  }
+
   object_ptr next(object_ptr const s)
   {
     return visit_object(
