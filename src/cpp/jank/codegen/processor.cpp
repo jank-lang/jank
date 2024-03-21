@@ -4,7 +4,7 @@
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/codegen/processor.hpp>
-#include <jank/codegen/escape.hpp>
+#include <jank/util/escape.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 
 /* The strategy for codegen to C++ is quite simple. Codegen always happens on a
@@ -181,7 +181,7 @@ namespace jank::codegen
           {
             fmt::format_to(inserter,
                            "jank::make_box<jank::runtime::obj::persistent_string>({})",
-                           escaped(typed_o->data));
+                           util::escaped_quoted_view(typed_o->data));
           }
           else if constexpr(std::same_as<T, runtime::obj::persistent_vector>)
           {

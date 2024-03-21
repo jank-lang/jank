@@ -199,7 +199,7 @@ namespace jank
         return *reinterpret_cast<T const *>(data) != *reinterpret_cast<T const *>(rhs.data);
       }
 
-      return true;
+      return false;
     }
 
     constexpr native_bool operator==(option<T> const &rhs) const

@@ -1,10 +1,14 @@
 #pragma once
 
-/* This provides a fmt extension for escaping strings and wrapping them in
- * quotes. It's largely adapted from here:
- * https://github.com/fmtlib/fmt/issues/825#issuecomment-1227501168 */
-namespace jank::codegen
+namespace jank::util
 {
+  /* This provides a fmt extension for escaping strings and wrapping them in
+  * quotes. It's largely adapted from here:
+  * https://github.com/fmtlib/fmt/issues/825#issuecomment-1227501168
+  *
+  * Usage just looks like:
+  * fmt::format("{}", util::escaped_quoted_view(s))
+  */
   template <typename S = native_persistent_string_view>
   struct escape_view
   {
@@ -50,16 +54,22 @@ namespace jank::codegen
   };
 
   constexpr escape_view<native_persistent_string_view>
-  escaped(native_persistent_string_view const &sv, char const q = '"', char const e = '\\')
+  escaped_quoted_view(native_persistent_string_view const &sv,
+                      char const q = '"',
+                      char const e = '\\')
   {
     return escape_view<native_persistent_string_view>{ sv, q, e };
   }
+
+  /* These provide normal escaping/unescaping, with no quoting. */
+  string_result<native_transient_string> unescape(native_transient_string const &input);
+  native_transient_string escape(native_transient_string const &input);
 }
 
 template <typename S>
-struct fmt::formatter<jank::codegen::escape_view<S>>
+struct fmt::formatter<jank::util::escape_view<S>>
 {
-  using V = jank::codegen::escape_view<S>;
+  using V = jank::util::escape_view<S>;
 
   template <typename C>
   constexpr auto parse(C &ctx)
@@ -68,7 +78,7 @@ struct fmt::formatter<jank::codegen::escape_view<S>>
   }
 
   template <typename C>
-  auto format(jank::codegen::escape_view<S> const &s, C &ctx)
+  auto format(jank::util::escape_view<S> const &s, C &ctx)
   {
     return s.copy(ctx.out());
   }
