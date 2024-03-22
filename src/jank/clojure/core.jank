@@ -503,6 +503,23 @@
                 { throw ~{ (ex-info :not-transient-vector {:o coll}) }; }
                ")))
 
+(defn disj!
+  ([set] set)
+  ([set elem]
+   (native/raw "if( ~{ set }->type == object_type::transient_set)
+                {
+                  auto typed_set = expect_object<obj::transient_set>(~{ set });
+                  __value = typed_set->disjoin_in_place(~{ elem });
+                }
+                else
+                { throw ~{ (ex-info :not-transient-set {:o set}) }; }
+               "))
+  ([set elem & elems]
+    (let [ret (disj! set elem)]
+      (if elems
+        (recur ret (first elems) (next elems))
+        ret))))
+
 ; Functions.
 
 (defn- spread [arglist]

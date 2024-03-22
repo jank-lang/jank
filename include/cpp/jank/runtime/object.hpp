@@ -23,6 +23,7 @@ namespace jank::runtime
     persistent_hash_map,
     persistent_hash_map_sequence,
     transient_hash_map,
+    transient_set,
     transient_vector,
     persistent_set,
     cons,
