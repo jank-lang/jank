@@ -44,6 +44,15 @@ namespace jank::runtime
   {
   }
 
+  obj::symbol::static_object(native_persistent_string const &ns,
+                             native_persistent_string const &n,
+                             object_ptr const meta)
+    : ns{ ns }
+    , name{ n }
+    , meta{ meta }
+  {
+  }
+
   native_bool obj::symbol::equal(object const &o) const
   {
     if(o.type != object_type::symbol)

@@ -13,11 +13,11 @@ namespace jank::analyze::expr
 {
   struct function_context : gc
   {
-    static constexpr bool pointer_free{ true };
+    static constexpr native_bool pointer_free{ true };
 
     size_t param_count{};
-    bool is_variadic{};
-    bool is_tail_recursive{};
+    native_bool is_variadic{};
+    native_bool is_tail_recursive{};
     /* TODO: is_pure */
   };
 
@@ -54,13 +54,13 @@ namespace jank::analyze::expr
 
   struct arity_key
   {
-    bool operator==(arity_key const &rhs) const
+    native_bool operator==(arity_key const &rhs) const
     {
       return param_count == rhs.param_count && is_variadic == rhs.is_variadic;
     }
 
     size_t param_count{};
-    bool is_variadic{};
+    native_bool is_variadic{};
   };
 
   template <typename E>

@@ -9,7 +9,7 @@ namespace jank::analyze
     return_statement
   };
 
-  inline bool is_statement(expression_type const expr_type)
+  inline native_bool is_statement(expression_type const expr_type)
   {
     return expr_type != expression_type::expression;
   }

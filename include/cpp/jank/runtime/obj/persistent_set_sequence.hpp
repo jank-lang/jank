@@ -18,7 +18,7 @@ namespace jank::runtime
     , obj::detail::iterator_sequence<static_object<object_type::persistent_set_sequence>,
                                      runtime::detail::native_persistent_set::iterator>
   {
-    static constexpr bool pointer_free{ false };
+    static constexpr native_bool pointer_free{ false };
 
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;

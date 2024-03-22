@@ -25,7 +25,7 @@ namespace jank::runtime
     return head;
   }
 
-  object_ptr obj::cons::next() const
+  obj::cons_ptr obj::cons::next() const
   {
     if(!tail)
     {
@@ -33,7 +33,7 @@ namespace jank::runtime
     }
 
     return visit_object(
-      [&](auto const typed_tail) -> object_ptr {
+      [&](auto const typed_tail) -> obj::cons_ptr {
         using T = typename decltype(typed_tail)::value_type;
 
         if constexpr(behavior::sequenceable<T>)

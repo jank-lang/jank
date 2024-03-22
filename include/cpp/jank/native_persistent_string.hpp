@@ -360,6 +360,43 @@ namespace jank
       return npos;
     }
 
+    [[gnu::const]]
+    constexpr native_bool starts_with(value_type const c) const noexcept
+    {
+      return size() > 0 && data()[0] == c;
+    }
+
+    [[gnu::const]]
+    constexpr native_bool starts_with(const_pointer_type const s) const noexcept
+    {
+      auto const this_sz(size());
+      auto const s_sz(traits_type::length(s));
+      if(this_sz < s_sz)
+      {
+        return false;
+      }
+      return traits_type::compare(data(), s, s_sz) == 0;
+    }
+
+    [[gnu::const]]
+    constexpr native_bool ends_with(value_type const c) const noexcept
+    {
+      auto const s(size());
+      return s > 0 && data()[s - 1] == c;
+    }
+
+    [[gnu::const]]
+    constexpr native_bool ends_with(const_pointer_type const s) const noexcept
+    {
+      auto const this_sz(size());
+      auto const s_sz(traits_type::length(s));
+      if(this_sz < s_sz)
+      {
+        return false;
+      }
+      return traits_type::compare(data() + this_sz - s_sz, s, s_sz) == 0;
+    }
+
     /*** Immutable modifications. ***/
     constexpr native_persistent_string
     substr(size_type const pos = 0, size_type const count = npos) const

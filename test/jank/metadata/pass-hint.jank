@@ -1,0 +1,13 @@
+; Literal
+(assert (= (meta ^:foo {1 2}) {:foo true}))
+(assert (= (meta ^:foo [1 2]) {:foo true}))
+(assert (= (meta (quote ^:foo (1 2))) {:foo true}))
+(assert (= (meta ^:foo #{1 2 3}) {:foo true}))
+(assert (= (meta (quote ^:foo meow)) {:foo true}))
+
+; Non-literal
+(assert (= (meta ^:foo {(str 1) (str 2)}) {:foo true}))
+(assert (= (meta ^:foo [(+ 1 2)]) {:foo true}))
+(assert (= (meta ^{:foo/bar :meow} #{(str 3.14)}) {:foo/bar :meow}))
+
+:success
