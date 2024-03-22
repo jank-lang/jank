@@ -14,6 +14,18 @@ namespace jank::runtime
   {
   }
 
+  obj::persistent_set::static_object(runtime::detail::native_transient_set &&d)
+    : data{ d.persistent() }
+  {
+  }
+
+  obj::persistent_set::static_object(object_ptr const meta,
+                                     runtime::detail::native_transient_set &&d)
+    : data{ d.persistent() }
+    , meta{ meta }
+  {
+  }
+
   native_bool obj::persistent_set::equal(object const &o) const
   {
     return detail::equal(o, data.begin(), data.end());

@@ -29,9 +29,10 @@ namespace jank::runtime
   {
   }
 
-  obj::persistent_hash_map::static_object(runtime::detail::native_transient_hash_map &&d)
-    : data{ d.persistent() }
+  obj::persistent_hash_map::static_object(object_ptr const meta, value_type &&d)
+    : data{ std::move(d) }
   {
+    this->meta = meta;
   }
 
   obj::persistent_hash_map_ptr obj::persistent_hash_map::create_from_seq(object_ptr const seq)
@@ -90,7 +91,7 @@ namespace jank::runtime
     auto const res(data.find(key));
     if(res)
     {
-      return make_box<obj::persistent_vector>(key, *res);
+      return make_box<obj::persistent_vector>(std::in_place, key, *res);
     }
     return obj::nil::nil_const();
   }

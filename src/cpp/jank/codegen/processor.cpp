@@ -147,11 +147,15 @@ namespace jank::codegen
             fmt::format_to(inserter, "jank::runtime::obj::nil::nil_const()");
           }
           else if constexpr(std::same_as<T, runtime::obj::boolean>)
-          /* TODO: Use a constant here. */
           {
-            fmt::format_to(inserter,
-                           "jank::make_box<jank::runtime::obj::boolean>({})",
-                           typed_o->data);
+            if(typed_o->data)
+            {
+              fmt::format_to(inserter, "jank::runtime::obj::boolean::true_const()");
+            }
+            else
+            {
+              fmt::format_to(inserter, "jank::runtime::obj::boolean::false_const()");
+            }
           }
           else if constexpr(std::same_as<T, runtime::obj::integer>)
           {
@@ -165,10 +169,22 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, runtime::obj::symbol>)
           {
-            fmt::format_to(inserter,
-                           R"(jank::make_box<jank::runtime::obj::symbol>("{}", "{}"))",
-                           typed_o->ns,
-                           typed_o->name);
+            if(typed_o->meta.is_some())
+            {
+              fmt::format_to(inserter,
+                             R"(jank::make_box<jank::runtime::obj::symbol>("{}", "{}", )",
+                             typed_o->ns,
+                             typed_o->name);
+              gen_constant(typed_o->meta.unwrap(), buffer, true);
+              fmt::format_to(inserter, ")");
+            }
+            else
+            {
+              fmt::format_to(inserter,
+                             R"(jank::make_box<jank::runtime::obj::symbol>("{}", "{}"))",
+                             typed_o->ns,
+                             typed_o->name);
+            }
           }
           else if constexpr(std::same_as<T, runtime::obj::keyword>)
           {
@@ -186,14 +202,15 @@ namespace jank::codegen
           else if constexpr(std::same_as<T, runtime::obj::persistent_vector>)
           {
             fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::persistent_vector>(");
-            native_bool need_comma{};
+            if(typed_o->meta.is_some())
+            {
+              gen_constant(typed_o->meta.unwrap(), buffer, true);
+              fmt::format_to(inserter, ", ");
+            }
+            fmt::format_to(inserter, "std::in_place ");
             for(auto const &form : typed_o->data)
             {
-              if(need_comma)
-              {
-                fmt::format_to(inserter, ", ");
-              }
-              need_comma = true;
+              fmt::format_to(inserter, ", ");
               gen_constant(form, buffer, true);
             }
             fmt::format_to(inserter, ")");
@@ -201,6 +218,47 @@ namespace jank::codegen
           else if constexpr(std::same_as<T, runtime::obj::persistent_list>)
           {
             fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::persistent_list>(");
+            if(typed_o->meta.is_some())
+            {
+              gen_constant(typed_o->meta.unwrap(), buffer, true);
+              fmt::format_to(inserter, ", ");
+            }
+            fmt::format_to(inserter, "std::in_place ");
+            for(auto const &form : typed_o->data)
+            {
+              fmt::format_to(inserter, ", ");
+              gen_constant(form, buffer, true);
+            }
+            fmt::format_to(inserter, ")");
+          }
+          else if constexpr(std::same_as<T, runtime::obj::persistent_set>)
+          {
+            fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::persistent_set>(");
+            if(typed_o->meta.is_some())
+            {
+              gen_constant(typed_o->meta.unwrap(), buffer, true);
+              fmt::format_to(inserter, ", ");
+            }
+            fmt::format_to(inserter, "std::in_place ");
+            for(auto const &form : typed_o->data)
+            {
+              fmt::format_to(inserter, ", ");
+              gen_constant(form, buffer, true);
+            }
+            fmt::format_to(inserter, ")");
+          }
+          else if constexpr(std::same_as<T, runtime::obj::persistent_array_map>)
+          {
+            if(typed_o->meta.is_some())
+            {
+              fmt::format_to(inserter,
+                             "jank::runtime::obj::persistent_array_map::create_unique_with_meta(");
+              gen_constant(typed_o->meta.unwrap(), buffer, true);
+            }
+            else
+            {
+              fmt::format_to(inserter, "jank::runtime::obj::persistent_array_map::create_unique(");
+            }
             native_bool need_comma{};
             for(auto const &form : typed_o->data)
             {
@@ -209,22 +267,48 @@ namespace jank::codegen
                 fmt::format_to(inserter, ", ");
               }
               need_comma = true;
-              gen_constant(form, buffer, true);
+              gen_constant(form.first, buffer, true);
+              fmt::format_to(inserter, ", ");
+              gen_constant(form.second, buffer, true);
             }
             fmt::format_to(inserter, ")");
           }
-          /* Cons, etc. */
-          else if constexpr(runtime::behavior::seqable<T>)
+          else if constexpr(std::same_as<T, runtime::obj::persistent_hash_map>)
           {
-            fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::persistent_list>(");
+            if(typed_o->meta.is_some())
+            {
+              fmt::format_to(inserter,
+                             "jank::runtime::obj::persistent_hash_map::create_unique_with_meta(");
+              gen_constant(typed_o->meta.unwrap(), buffer, true);
+            }
+            else
+            {
+              fmt::format_to(inserter, "jank::runtime::obj::persistent_hash_map::create_unique(");
+            }
             native_bool need_comma{};
-            for(auto it(typed_o->fresh_seq()); it != nullptr; it = it->next_in_place())
+            for(auto const &form : typed_o->data)
             {
               if(need_comma)
               {
                 fmt::format_to(inserter, ", ");
               }
               need_comma = true;
+              fmt::format_to(inserter, "std::make_pair(");
+              gen_constant(form.first, buffer, true);
+              fmt::format_to(inserter, ", ");
+              gen_constant(form.second, buffer, true);
+              fmt::format_to(inserter, ")");
+            }
+            fmt::format_to(inserter, ")");
+          }
+          /* Cons, etc. */
+          else if constexpr(runtime::behavior::seqable<T>)
+          {
+            fmt::format_to(inserter,
+                           "jank::make_box<jank::runtime::obj::persistent_list>(std::in_place");
+            for(auto it(typed_o->fresh_seq()); it != nullptr; it = it->next_in_place())
+            {
+              fmt::format_to(inserter, ", ");
               gen_constant(it->first(), buffer, true);
             }
             fmt::format_to(inserter, ")");
@@ -518,12 +602,11 @@ namespace jank::codegen
 
     if(runtime::max_params < arg_tmps.size())
     {
-      fmt::format_to(inserter, ", jank::make_box<jank::runtime::obj::persistent_list>(");
-      native_bool comma{};
+      fmt::format_to(inserter,
+                     ", jank::make_box<jank::runtime::obj::persistent_list>(std::in_place");
       for(size_t i{ runtime::max_params }; i < arg_tmps.size(); ++i)
       {
-        fmt::format_to(inserter, "{} {}", comma ? "," : "", arg_tmps[i].str(true));
-        comma = true;
+        fmt::format_to(inserter, ", {}", arg_tmps[i].str(true));
       }
       fmt::format_to(inserter, ")");
     }
@@ -954,13 +1037,16 @@ namespace jank::codegen
     fmt::format_to(inserter,
                    "auto const {}(jank::make_box<jank::runtime::obj::persistent_vector>(",
                    ret_tmp);
-    for(auto it(data_tmps.begin()); it != data_tmps.end();)
+    if(expr.meta.is_some())
     {
-      fmt::format_to(inserter, "{}", it->str(true));
-      if(++it != data_tmps.end())
-      {
-        fmt::format_to(inserter, ", ");
-      }
+      detail::gen_constant(expr.meta.unwrap(), body_buffer, true);
+      fmt::format_to(inserter, ", ");
+    }
+    fmt::format_to(inserter, "std::in_place ");
+    for(auto const &tmp : data_tmps)
+    {
+      fmt::format_to(inserter, ", ");
+      fmt::format_to(inserter, "{}", tmp.str(true));
     }
     fmt::format_to(inserter, "));");
 
@@ -987,24 +1073,99 @@ namespace jank::codegen
 
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::context::unique_string("map"));
-    /* TODO: Jump right to a hash map, if we have enough values. */
-    fmt::format_to(inserter,
-                   "auto const "
-                   "{}(jank::make_box<jank::runtime::obj::persistent_array_map>(jank::runtime::"
-                   "detail::in_place_unique{{}}, jank::make_array_box<object_ptr>(",
-                   ret_tmp);
-    native_bool need_comma{};
-    for(auto const &data_tmp : data_tmps)
+
+    /* Jump right to a hash map, if we have enough values. */
+    if(expr.data_exprs.size() <= runtime::obj::persistent_array_map::max_size)
     {
-      if(need_comma)
+      fmt::format_to(inserter, "auto const {}(", ret_tmp);
+      if(expr.meta.is_some())
       {
-        fmt::format_to(inserter, ", ");
+        fmt::format_to(inserter,
+                       "jank::runtime::obj::persistent_array_map::create_unique_with_meta(");
+        detail::gen_constant(expr.meta.unwrap(), body_buffer, true);
       }
-      fmt::format_to(inserter, "{}", data_tmp.first.str(true));
-      fmt::format_to(inserter, ", {}", data_tmp.second.str(true));
-      need_comma = true;
+      else
+      {
+        fmt::format_to(inserter, "jank::runtime::obj::persistent_array_map::create_unique(");
+      }
+      native_bool need_comma{};
+      for(auto const &data_tmp : data_tmps)
+      {
+        if(need_comma)
+        {
+          fmt::format_to(inserter, ", ");
+        }
+        fmt::format_to(inserter, "{}", data_tmp.first.str(true));
+        fmt::format_to(inserter, ", {}", data_tmp.second.str(true));
+        need_comma = true;
+      }
+      fmt::format_to(inserter, "));");
     }
-    fmt::format_to(inserter, "),{}));", data_tmps.size() * 2);
+    else
+    {
+      fmt::format_to(inserter, "auto const {}(", ret_tmp);
+      if(expr.meta.is_some())
+      {
+        fmt::format_to(inserter,
+                       "jank::runtime::obj::persistent_hash_map::create_unique_with_meta(");
+        detail::gen_constant(expr.meta.unwrap(), body_buffer, true);
+      }
+      else
+      {
+        fmt::format_to(inserter, "jank::runtime::obj::persistent_hash_map::create_unique(");
+      }
+      native_bool need_comma{};
+      for(auto const &data_tmp : data_tmps)
+      {
+        if(need_comma)
+        {
+          fmt::format_to(inserter, ", ");
+        }
+        fmt::format_to(inserter, "std::make_pair(");
+        fmt::format_to(inserter, "{}", data_tmp.first.str(true));
+        fmt::format_to(inserter, ", {})", data_tmp.second.str(true));
+        need_comma = true;
+      }
+      fmt::format_to(inserter, "));");
+    }
+
+    if(expr.expr_type == analyze::expression_type::return_statement)
+    {
+      fmt::format_to(inserter, "return {};", ret_tmp);
+      return none;
+    }
+
+    return ret_tmp;
+  }
+
+  option<handle> processor::gen(analyze::expr::set<analyze::expression> const &expr,
+                                analyze::expr::function_arity<analyze::expression> const &fn_arity,
+                                native_bool const)
+  {
+    native_vector<handle> data_tmps;
+    data_tmps.reserve(expr.data_exprs.size());
+    for(auto const &data_expr : expr.data_exprs)
+    {
+      data_tmps.emplace_back(gen(data_expr, fn_arity, true).unwrap());
+    }
+
+    auto inserter(std::back_inserter(body_buffer));
+    auto ret_tmp(runtime::context::unique_string("set"));
+    fmt::format_to(inserter,
+                   "auto const {}(jank::make_box<jank::runtime::obj::persistent_set>(",
+                   ret_tmp);
+    if(expr.meta.is_some())
+    {
+      detail::gen_constant(expr.meta.unwrap(), body_buffer, true);
+      fmt::format_to(inserter, ", ");
+    }
+    fmt::format_to(inserter, "std::in_place ");
+    for(auto const &tmp : data_tmps)
+    {
+      fmt::format_to(inserter, ", ");
+      fmt::format_to(inserter, "{}", tmp.str(true));
+    }
+    fmt::format_to(inserter, "));");
 
     if(expr.expr_type == analyze::expression_type::return_statement)
     {

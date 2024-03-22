@@ -66,6 +66,11 @@ namespace jank::read::parse
     : rt_ctx{ rt_ctx }
     , token_current{ b }
     , token_end{ e }
+    , splicing_allowed_var{ make_box<runtime::var>(
+                              rt_ctx.intern_ns(make_box<runtime::obj::symbol>("clojure.core")),
+                              make_box<runtime::obj::symbol>("*splicing-allowed?*"),
+                              runtime::obj::boolean::false_const())
+                              ->set_dynamic(true) }
   {
   }
 
@@ -78,6 +83,16 @@ namespace jank::read::parse
 
     while(true)
     {
+      if(!pending_forms.empty())
+      {
+        auto const front(pending_forms.front());
+        pending_forms.pop_front();
+        /* NOTE: Source info for spliced forms will be incorrect. Right now,
+         * that doesn't matter. If it begins to matter, we need to store the
+         * source info along with the object in `pending_forms`. */
+        return object_source_info{ front, latest_token, latest_token };
+      }
+
       auto token_result(*token_current);
       if(token_result.is_err())
       {
@@ -110,6 +125,53 @@ namespace jank::read::parse
           return ok(none);
         case lex::token_kind::single_quote:
           return parse_quote();
+        case lex::token_kind::meta_hint:
+          return parse_meta_hint();
+        case lex::token_kind::reader_macro:
+          {
+            auto res(parse_reader_macro());
+            /* Reader macros can skip some items entirely. */
+            if(res.is_ok() && res.expect_ok().is_none())
+            {
+              continue;
+            }
+            return res;
+          }
+        case lex::token_kind::reader_macro_comment:
+          {
+            auto res(parse_reader_macro_comment());
+            if(res.is_ok() && res.expect_ok().is_none())
+            {
+              continue;
+            }
+            return res;
+          }
+        case lex::token_kind::reader_macro_conditional:
+          {
+            auto res(parse_reader_macro_conditional(false));
+            if(res.is_ok() && res.expect_ok().is_none())
+            {
+              continue;
+            }
+            return res;
+          }
+        case lex::token_kind::reader_macro_conditional_splice:
+          {
+            auto res(parse_reader_macro_conditional(true));
+            if(res.is_ok() && res.expect_ok().is_none())
+            {
+              continue;
+            }
+            return res;
+          }
+        case lex::token_kind::syntax_quote:
+          return parse_syntax_quote();
+        case lex::token_kind::unquote:
+          return parse_unquote(false);
+        case lex::token_kind::unquote_splice:
+          return parse_unquote(true);
+        case lex::token_kind::deref:
+          return parse_deref();
         case lex::token_kind::nil:
           return parse_nil();
         case lex::token_kind::boolean:
@@ -145,6 +207,12 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_paren);
 
+    rt_ctx
+      .push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+        std::make_pair(splicing_allowed_var, runtime::obj::boolean::true_const())))
+      .expect_ok();
+    util::scope_exit const finally{ [&]() { rt_ctx.pop_thread_bindings().expect_ok(); } };
+
     runtime::detail::native_transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
     {
@@ -160,9 +228,11 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
-    return object_source_info{ make_box<runtime::obj::persistent_list>(ret.rbegin(), ret.rend()),
-                               start_token,
-                               latest_token };
+    return object_source_info{
+      make_box<runtime::obj::persistent_list>(std::in_place, ret.rbegin(), ret.rend()),
+      start_token,
+      latest_token
+    };
   }
 
   processor::object_result processor::parse_vector()
@@ -171,6 +241,12 @@ namespace jank::read::parse
     ++token_current;
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_square_bracket);
+
+    rt_ctx
+      .push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+        std::make_pair(splicing_allowed_var, runtime::obj::boolean::true_const())))
+      .expect_ok();
+    util::scope_exit const finally{ [&]() { rt_ctx.pop_thread_bindings().expect_ok(); } };
 
     runtime::detail::native_transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
@@ -199,6 +275,12 @@ namespace jank::read::parse
     ++token_current;
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_curly_bracket);
+
+    rt_ctx
+      .push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+        std::make_pair(splicing_allowed_var, runtime::obj::boolean::true_const())))
+      .expect_ok();
+    util::scope_exit const finally{ [&]() { rt_ctx.pop_thread_bindings().expect_ok(); } };
 
     runtime::detail::native_persistent_array_map ret;
     for(auto it(begin()); it != end(); ++it)
@@ -251,10 +333,586 @@ namespace jank::read::parse
     }
 
     return object_source_info{ runtime::erase(make_box<runtime::obj::persistent_list>(
+                                 std::in_place,
                                  make_box<runtime::obj::symbol>("quote"),
                                  val_result.expect_ok().unwrap().ptr)),
                                start_token,
                                latest_token };
+  }
+
+  processor::object_result processor::parse_meta_hint()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    ++token_current;
+    auto meta_val_result(next());
+    if(meta_val_result.is_err())
+    {
+      return meta_val_result;
+    }
+    else if(meta_val_result.expect_ok().is_none())
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "invalid meta value after meta hint" } });
+    }
+
+    auto meta_result(runtime::visit_object(
+      [&](auto const typed_val) -> processor::object_result {
+        using T = typename decltype(typed_val)::value_type;
+        if constexpr(std::same_as<T, runtime::obj::keyword>)
+        {
+          return object_source_info{ runtime::obj::persistent_array_map::create_unique(
+                                       typed_val,
+                                       runtime::obj::boolean::true_const()),
+                                     start_token,
+                                     latest_token };
+        }
+        /* TODO: Concept for map-like. */
+        if constexpr(std::same_as<T, runtime::obj::persistent_hash_map>
+                     || std::same_as<T, runtime::obj::persistent_array_map>)
+        {
+          return object_source_info{ typed_val, start_token, latest_token };
+        }
+        else
+        {
+          return err(error{
+            start_token.pos,
+            native_persistent_string{ "value after meta hint ^ must be a keyword or map" } });
+        }
+      },
+      meta_val_result.expect_ok().unwrap().ptr));
+    if(meta_result.is_err())
+    {
+      return meta_result;
+    }
+
+    auto target_val_result(next());
+    if(target_val_result.is_err())
+    {
+      return target_val_result;
+    }
+    else if(target_val_result.expect_ok().is_none())
+    {
+      return err(error{ start_token.pos,
+                        native_persistent_string{ "invalid target value after meta hint" } });
+    }
+
+    return runtime::visit_object(
+      [&](auto const typed_val) -> processor::object_result {
+        using T = typename decltype(typed_val)::value_type;
+        if constexpr(runtime::behavior::metadatable<T>)
+        {
+          if(typed_val->meta.is_none())
+          {
+            return object_source_info{ typed_val->with_meta(meta_result.expect_ok().unwrap().ptr),
+                                       start_token,
+                                       latest_token };
+          }
+          else
+          {
+            return object_source_info{ typed_val->with_meta(
+                                         runtime::merge(typed_val->meta.unwrap(),
+                                                        meta_result.expect_ok().unwrap().ptr)),
+                                       start_token,
+                                       latest_token };
+          }
+        }
+        else
+        {
+          return err(
+            error{ start_token.pos,
+                   native_persistent_string{ "target value for meta hint must accept metadata" } });
+        }
+      },
+      target_val_result.expect_ok().unwrap().ptr);
+  }
+
+  processor::object_result processor::parse_reader_macro()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    ++token_current;
+
+    auto next_token_result(*token_current);
+    if(next_token_result.is_err())
+    {
+      return next_token_result.err().unwrap();
+    }
+    auto next_token(next_token_result.expect_ok());
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+    switch(next_token.kind)
+    {
+      case lex::token_kind::open_curly_bracket:
+        return parse_reader_macro_set();
+      default:
+        return err(
+          error{ start_token.pos, native_persistent_string{ "unsupported reader macro" } });
+    }
+#pragma clang diagnostic pop
+  }
+
+  processor::object_result processor::parse_reader_macro_set()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    ++token_current;
+
+    auto const prev_expected_closer(expected_closer);
+    expected_closer = some(lex::token_kind::close_curly_bracket);
+
+    rt_ctx
+      .push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+        std::make_pair(splicing_allowed_var, runtime::obj::boolean::true_const())))
+      .expect_ok();
+    util::scope_exit const finally{ [&]() { rt_ctx.pop_thread_bindings().expect_ok(); } };
+
+    runtime::detail::native_transient_set ret;
+    for(auto it(begin()); it != end(); ++it)
+    {
+      if(it.latest.unwrap().is_err())
+      {
+        return err(it.latest.unwrap().expect_err());
+      }
+      ret.insert(it.latest.unwrap().expect_ok().unwrap().ptr);
+    }
+    if(expected_closer.is_some())
+    {
+      return err(error{ start_token.pos, "Unterminated set" });
+    }
+
+    expected_closer = prev_expected_closer;
+    return object_source_info{ make_box<runtime::obj::persistent_set>(std::move(ret)),
+                               start_token,
+                               latest_token };
+  }
+
+  processor::object_result processor::parse_reader_macro_comment()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    ++token_current;
+
+    auto ignored_result(next());
+    if(ignored_result.is_err())
+    {
+      return ignored_result;
+    }
+    else if(ignored_result.expect_ok().is_none())
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "value after #_ must be present" } });
+    }
+
+    return ok(none);
+  }
+
+  processor::object_result processor::parse_reader_macro_conditional(native_bool const splice)
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    ++token_current;
+
+    auto list_result(next());
+    if(list_result.is_err())
+    {
+      return list_result;
+    }
+    else if(list_result.expect_ok().is_none())
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "value after #? must be present" } });
+    }
+    else if(list_result.expect_ok().unwrap().ptr->type != runtime::object_type::persistent_list)
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "value after #? must be a list" } });
+    }
+
+    auto const list(
+      runtime::expect_object<runtime::obj::persistent_list>(list_result.expect_ok().unwrap().ptr));
+    auto const list_end(list_result.expect_ok().unwrap().end);
+
+    if(list.data->count() % 2 == 1)
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "#? expects an even number of forms" } });
+    }
+
+    auto const jank_keyword(rt_ctx.intern_keyword("", "jank").expect_ok());
+    auto const default_keyword(rt_ctx.intern_keyword("", "default").expect_ok());
+
+    for(auto it(list->fresh_seq()); it != nullptr;)
+    {
+      auto const kw(it->first());
+      /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
+       * matter. If :default comes first, we'll always take it. In short, order is important. This
+       * matches Clojure's behavior. */
+      if(runtime::detail::equal(kw, jank_keyword) || runtime::detail::equal(kw, default_keyword))
+      {
+        if(splice)
+        {
+          if(!runtime::detail::truthy(splicing_allowed_var->deref()))
+          {
+            return err(error{ start_token.pos,
+                              native_persistent_string{ "#?@ splice must not be top-level" } });
+          }
+
+          auto const s(it->next_in_place()->first());
+          return runtime::visit_seqable(
+            [&](auto const typed_s) -> processor::object_result {
+              auto const seq(typed_s->fresh_seq());
+              if(!seq)
+              {
+                return ok(none);
+              }
+              auto const first(seq->first());
+
+              auto const front(pending_forms.begin());
+              for(auto it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
+              {
+                pending_forms.insert(front, it->first());
+              }
+
+              return object_source_info{ first, start_token, list_end };
+            },
+            [=]() -> processor::object_result {
+              return err(error{ start_token.pos,
+                                native_persistent_string{ "#?@ splice must be a sequence" } });
+            },
+            s);
+        }
+        else
+        {
+          return object_source_info{ it->next_in_place()->first(), start_token, list_end };
+        }
+      }
+
+      it = it->next_in_place()->next_in_place();
+    }
+
+    return ok(none);
+  }
+
+  string_result<runtime::object_ptr>
+  processor::syntax_quote_expand_seq(runtime::object_ptr const seq)
+  {
+    if(!seq)
+    {
+      return runtime::obj::nil::nil_const();
+    }
+
+    return runtime::visit_seqable(
+      [this](auto const typed_seq) -> string_result<runtime::object_ptr> {
+        runtime::detail::native_transient_vector ret;
+        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
+        {
+          auto const item(it->first());
+
+          if(syntax_quote_is_unquote(item, false))
+          {
+            ret.push_back(make_box<runtime::obj::persistent_list>(
+              std::in_place,
+              make_box<runtime::obj::symbol>("clojure.core/list"),
+              runtime::second(item)));
+          }
+          else if(syntax_quote_is_unquote(item, true))
+          {
+            ret.push_back(runtime::second(item));
+          }
+          else
+          {
+            auto quoted_item(syntax_quote(item));
+            if(quoted_item.is_err())
+            {
+              return quoted_item;
+            }
+            ret.push_back(make_box<runtime::obj::persistent_list>(
+              std::in_place,
+              make_box<runtime::obj::symbol>("clojure.core/list"),
+              quoted_item.expect_ok()));
+          }
+        }
+        auto const vec(make_box<runtime::obj::persistent_vector>(ret.persistent())->seq());
+        return vec ?: runtime::obj::nil::nil_const();
+      },
+      []() -> string_result<runtime::object_ptr> {
+        /* TODO: ICE */
+        return err("not seqable");
+      },
+      seq);
+  }
+
+  string_result<runtime::object_ptr>
+  processor::syntax_quote_flatten_map(runtime::object_ptr const seq)
+  {
+    if(!seq)
+    {
+      return runtime::obj::nil::nil_const();
+    }
+
+    return runtime::visit_seqable(
+      [](auto const typed_seq) -> string_result<runtime::object_ptr> {
+        runtime::detail::native_transient_vector ret;
+        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
+        {
+          auto item(it->first());
+          ret.push_back(runtime::first(item));
+          ret.push_back(runtime::second(item));
+        }
+        auto const vec(make_box<runtime::obj::persistent_vector>(ret.persistent())->seq());
+        return vec ?: runtime::obj::nil::nil_const();
+      },
+      []() -> string_result<runtime::object_ptr> {
+        /* TODO: ICE */
+        return err("not seqable");
+      },
+      seq);
+  }
+
+  native_bool
+  processor::syntax_quote_is_unquote(runtime::object_ptr const form, native_bool const splice)
+  {
+    return runtime::visit_seqable(
+      [splice](auto const typed_form) {
+        runtime::object_ptr item{};
+        auto const s(typed_form->seq());
+        if(!s)
+        {
+          item = runtime::obj::nil::nil_const();
+        }
+        else
+        {
+          item = s->first();
+        }
+
+        return make_box<runtime::obj::symbol>(
+                 (splice ? "clojure.core/unquote-splicing" : "clojure.core/unquote"))
+          ->equal(*item);
+      },
+      []() { return false; },
+      form);
+  }
+
+  string_result<runtime::object_ptr> processor::syntax_quote(runtime::object_ptr const form)
+  {
+    /* Specials, such as fn*, let*, try, etc. just get left alone. We can't qualify them more. */
+    if(rt_ctx.an_prc.is_special(form))
+    {
+      return make_box<runtime::obj::persistent_list>(std::in_place,
+                                                     make_box<runtime::obj::symbol>("quote"),
+                                                     form);
+    }
+    /* By default, all symbols get qualified. However, any symbol ending in # does not get
+     * qualified, but instead gets a gensym (a unique name). The unique names are kept in
+     * a bound map for reproducibility. */
+    else if(form->type == runtime::object_type::symbol)
+    {
+      auto sym(runtime::expect_object<runtime::obj::symbol>(form));
+      if(sym->ns.empty() && sym->name.ends_with('#'))
+      {
+        auto const env(rt_ctx.gensym_env_var->deref());
+        if(env->type == runtime::object_type::nil)
+        {
+          return err("gensym literal is not within a syntax quote");
+        }
+
+        auto gensym(runtime::get(env, sym));
+        if(gensym->type == runtime::object_type::nil)
+        {
+          gensym = make_box<runtime::obj::symbol>(runtime::context::unique_symbol(sym->name));
+          rt_ctx.gensym_env_var->set(runtime::assoc(env, sym, gensym)).expect_ok();
+        }
+        sym = runtime::expect_object<runtime::obj::symbol>(gensym);
+      }
+      else if(sym->ns.empty())
+      {
+        auto var(rt_ctx.find_var(sym));
+        if(var.is_none())
+        {
+          sym = make_box<runtime::obj::symbol>(rt_ctx.current_ns()->name->name, sym->name);
+        }
+        else
+        {
+          sym = make_box<runtime::obj::symbol>(var.unwrap()->n->name->name, sym->name);
+        }
+      }
+
+      return make_box<runtime::obj::persistent_list>(std::in_place,
+                                                     make_box<runtime::obj::symbol>("quote"),
+                                                     sym);
+    }
+    else if(syntax_quote_is_unquote(form, false))
+    {
+      return runtime::second(form);
+    }
+    else if(syntax_quote_is_unquote(form, true))
+    {
+      return err("unquote splice not in seq");
+    }
+    /* Clojure treats these specially, perhaps as a small optimization, by not quoting. We can
+     * do the same for now, but quoting all of these has no effect. */
+    /* TODO: Characters. */
+    else if(form->type == runtime::object_type::keyword
+            || form->type == runtime::object_type::persistent_string
+            || form->type == runtime::object_type::integer
+            || form->type == runtime::object_type::real || form->type == runtime::object_type::nil)
+    {
+      return form;
+    }
+    /* For anything else, do nothing special aside from quoting. Hopefully that works. */
+    else
+    {
+      return runtime::visit_seqable(
+        [&](auto const typed_form) -> string_result<runtime::object_ptr> {
+          using T = typename decltype(typed_form)::value_type;
+
+          if constexpr(std::same_as<T, runtime::obj::persistent_vector>)
+          {
+            auto expanded(syntax_quote_expand_seq(typed_form->seq()));
+            if(expanded.is_err())
+            {
+              return expanded;
+            }
+
+            return make_box<runtime::obj::persistent_list>(
+              std::in_place,
+              make_box<runtime::obj::symbol>("clojure.core/apply"),
+              make_box<runtime::obj::symbol>("clojure.core/vector"),
+              make_box<runtime::obj::persistent_list>(
+                std::in_place,
+                make_box<runtime::obj::symbol>("clojure.core/seq"),
+                runtime::conj(expanded.expect_ok(),
+                              make_box<runtime::obj::symbol>("clojure.core/concat"))));
+          }
+          if constexpr(std::same_as<T, runtime::obj::persistent_hash_map>
+                       || std::same_as<T, runtime::obj::persistent_array_map>)
+          {
+            auto flattened(syntax_quote_flatten_map(typed_form->seq()));
+            if(flattened.is_err())
+            {
+              return flattened;
+            }
+
+            auto expanded(syntax_quote_expand_seq(flattened.expect_ok()));
+            if(expanded.is_err())
+            {
+              return expanded;
+            }
+
+            return make_box<runtime::obj::persistent_list>(
+              std::in_place,
+              make_box<runtime::obj::symbol>("clojure.core/apply"),
+              make_box<runtime::obj::symbol>("clojure.core/hash-map"),
+              make_box<runtime::obj::persistent_list>(
+                std::in_place,
+                make_box<runtime::obj::symbol>("clojure.core/seq"),
+                runtime::conj(expanded.expect_ok(),
+                              make_box<runtime::obj::symbol>("clojure.core/concat"))));
+          }
+          if constexpr(std::same_as<T, runtime::obj::persistent_set>)
+          {
+            return err("nyi: set");
+          }
+          if constexpr(std::same_as<T, runtime::obj::persistent_list>)
+          {
+            auto const seq(typed_form->seq());
+            if(!seq)
+            {
+              return make_box<runtime::obj::persistent_list>(
+                std::in_place,
+                make_box<runtime::obj::symbol>("clojure.core/list"));
+            }
+            else
+            {
+              auto expanded(syntax_quote_expand_seq(typed_form->seq()));
+              if(expanded.is_err())
+              {
+                return expanded;
+              }
+
+              return make_box<runtime::obj::persistent_list>(
+                std::in_place,
+                make_box<runtime::obj::symbol>("clojure.core/seq"),
+                runtime::conj(expanded.expect_ok(),
+                              make_box<runtime::obj::symbol>("clojure.core/concat")));
+            }
+          }
+          else
+          {
+            return err(fmt::format("unsupported collection type: {}",
+                                   magic_enum::enum_name(typed_form->base.type)));
+          }
+        },
+        [=]() -> string_result<runtime::object_ptr> {
+          return make_box<runtime::obj::persistent_list>(std::in_place,
+                                                         make_box<runtime::obj::symbol>("quote"),
+                                                         form);
+        },
+        form);
+    }
+  }
+
+  processor::object_result processor::parse_syntax_quote()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    ++token_current;
+
+    runtime::context::binding_scope const scope{
+      rt_ctx,
+      runtime::obj::persistent_hash_map::create_unique(
+        std::make_pair(rt_ctx.gensym_env_var, runtime::obj::persistent_hash_map::empty()))
+    };
+
+    auto const old_quoted(quoted);
+    quoted = true;
+    auto quoted_form(next());
+    quoted = old_quoted;
+    if(quoted_form.is_err())
+    {
+      return quoted_form;
+    }
+    else if(quoted_form.expect_ok().is_none())
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "value after ` must be present" } });
+    }
+
+    auto const res(syntax_quote(quoted_form.expect_ok().unwrap().ptr));
+    if(res.is_err())
+    {
+      return err(error{ start_token.pos, res.expect_err() });
+    }
+
+    return object_source_info{ res.expect_ok(), start_token, quoted_form.expect_ok().unwrap().end };
+  }
+
+  processor::object_result processor::parse_unquote(native_bool const splice)
+  {
+    auto const start_token((*token_current).expect_ok());
+    ++token_current;
+    auto val_result(next());
+    if(val_result.is_err())
+    {
+      return val_result;
+    }
+    else if(val_result.expect_ok().is_none())
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "invalid value after unquote" } });
+    }
+
+    return object_source_info{
+      runtime::erase(make_box<runtime::obj::persistent_list>(
+        std::in_place,
+        make_box<runtime::obj::symbol>(
+          (splice ? "clojure.core/unquote-splicing" : "clojure.core/unquote")),
+        val_result.expect_ok().unwrap().ptr)),
+      start_token,
+      latest_token
+    };
+  }
+
+  processor::object_result processor::parse_deref()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    ++token_current;
+    return err(error{ start_token.pos, native_persistent_string{ "not implemented" } });
   }
 
   processor::object_result processor::parse_nil()

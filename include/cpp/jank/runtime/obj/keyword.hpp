@@ -15,7 +15,7 @@ namespace jank::runtime
   template <>
   struct static_object<object_type::keyword> : gc
   {
-    static constexpr bool pointer_free{ true };
+    static constexpr native_bool pointer_free{ true };
     /* Clojure uses this. No idea. https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/Keyword.java */
     static constexpr size_t hash_magic{ 0x9e3779b9 };
 
@@ -25,6 +25,7 @@ namespace jank::runtime
     static_object(object &&base);
     static_object(obj::symbol const &s);
     static_object(obj::symbol &&s);
+    static_object(native_persistent_string_view const &ns, native_persistent_string_view const &n);
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
@@ -43,7 +44,7 @@ namespace jank::runtime
     object_ptr call(object_ptr) const;
     object_ptr call(object_ptr, object_ptr) const;
 
-    bool operator==(static_object const &rhs) const;
+    native_bool operator==(static_object const &rhs) const;
 
     object base{ object_type::keyword };
     /* TODO: Box this. */

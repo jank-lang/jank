@@ -14,7 +14,7 @@ namespace jank::analyze::expr
   {
     using pair_type = std::pair<runtime::obj::symbol_ptr, native_box<E>>;
 
-    let(expression_type const type, bool const needs_box, local_frame_ptr const f)
+    let(expression_type const type, native_bool const needs_box, local_frame_ptr const f)
       : expression_base{ gc{}, type, f, needs_box }
     {
     }
@@ -30,6 +30,7 @@ namespace jank::analyze::expr
         pair_maps = runtime::conj(
           pair_maps,
           make_box<runtime::obj::persistent_vector>(
+            std::in_place,
             detail::to_runtime_data(frame->find_local_or_capture(e.first).unwrap().binding),
             e.second->to_runtime_data()));
       }

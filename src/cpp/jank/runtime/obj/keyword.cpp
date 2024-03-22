@@ -15,6 +15,12 @@ namespace jank::runtime
   {
   }
 
+  obj::keyword::static_object(native_persistent_string_view const &ns,
+                              native_persistent_string_view const &n)
+    : sym{ ns, n }
+  {
+  }
+
   /* Keywords are interned, so we can always count on identity equality. */
   native_bool obj::keyword::equal(object const &o) const
   {

@@ -130,6 +130,7 @@
   * similar to http://eta-lang.org/
   * also emacs site
   * rizin https://rizin.re/
+  * nice docs: https://github.com/aidenybai/million
 
 * compile-time type for string literals
   * "foo" => static-string : (3)

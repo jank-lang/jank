@@ -21,7 +21,7 @@ namespace jank::runtime::obj::detail
     using parent_type = static_object<OT>;
     using sequence_type = static_object<ST>;
 
-    static constexpr bool pointer_free{ false };
+    static constexpr native_bool pointer_free{ false };
 
     base_persistent_map() = default;
 

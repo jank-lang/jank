@@ -3,6 +3,14 @@
 ; Namespace management.
 (def *ns*)
 
+; Syntax quoting.
+(def unquote
+  (fn* unquote [_]
+    (throw "~ cannot be used outside of syntax quote")))
+(def unquote-splicing
+  (fn* unquote [_]
+    (throw "~@ cannot be used outside of syntax quote")))
+
 ; Exceptions
 (def ex-info
   (fn* ex-info [msg map]
@@ -103,7 +111,7 @@
     (next-in-place (next o))))
 (def second
   (fn* second [o]
-    (first (next o))))
+    (native/raw "__value = jank::runtime::second(~{ o });")))
 (def rest
   (fn* rest [o]
     (if (nil? o)
@@ -209,23 +217,7 @@
 ;; Metadata
 (def meta
   (fn* meta [o]
-    (native/raw "__value = visit_object
-                 (
-                   [=](auto const typed_o) -> object_ptr
-                   {
-                     using T = typename decltype(typed_o)::value_type;
-
-                     if constexpr(behavior::metadatable<T>)
-                     {
-                       if(typed_o->meta.is_none())
-                       { return ~{ nil }; }
-                       return typed_o->meta.unwrap();
-                     }
-                     else
-                     { return ~{ nil }; }
-                   },
-                   ~{ o }
-                 );")))
+    (native/raw "__value = runtime::meta(~{ o });")))
 (def with-meta
   (fn* with-meta [o m]
     (native/raw "__value = visit_object
@@ -446,7 +438,7 @@
                     if constexpr(behavior::consable_in_place<T>)
                     { return typed_coll->cons_in_place(head); }
                     else
-                    { throw ~{ (ex-info :not-persistentable {:o coll}) }; }
+                    { throw ~{ (ex-info :not-consable-in-place {:o coll}) }; }
                    },
                    ~{ coll },
                    ~{ x }
@@ -457,12 +449,12 @@
   ([coll k v]
    (native/raw "__value = visit_object
                 (
-                  [=](auto const typed_t, auto const key, auto const val) -> object_ptr
+                  [=](auto const typed_coll, auto const key, auto const val) -> object_ptr
                   {
-                    using T = typename decltype(typed_t)::value_type;
+                    using T = typename decltype(typed_coll)::value_type;
 
                     if constexpr(behavior::associatively_writable_in_place<T>)
-                    { return typed_t->assoc_in_place(key, val); }
+                    { return typed_coll->assoc_in_place(key, val); }
                     else
                     { throw ~{ (ex-info :not-associatively_writable_in_place {:o coll}) }; }
                   },
@@ -481,12 +473,12 @@
   ([coll k]
    (native/raw "__value = visit_object
                 (
-                  [=](auto const typed_t, auto const key) -> object_ptr
+                  [=](auto const typed_coll, auto const key) -> object_ptr
                   {
-                    using T = typename decltype(typed_t)::value_type;
+                    using T = typename decltype(typed_coll)::value_type;
 
                     if constexpr(behavior::associatively_writable_in_place<T>)
-                    { return typed_t->dissoc_in_place(key); }
+                    { return typed_coll->dissoc_in_place(key); }
                     else
                     { throw ~{ (ex-info :not-associatively_writable_in_place {:o coll}) }; }
                   },
@@ -504,8 +496,8 @@
   ([coll]
    (native/raw "if( ~{ coll }->type == object_type::transient_vector )
                 {
-                  auto typed_coll = expect_object<obj::transient_vector>(~{ coll });
-                  __value = typed_coll->pop_in_place();
+                  auto transient_coll = expect_object<obj::transient_vector>(~{ coll });
+                  __value = transient_coll->pop_in_place();
                 }
                 else
                 { throw ~{ (ex-info :not-transient-vector {:o coll}) }; }
@@ -1389,6 +1381,21 @@
                 ~{ o }
                 )
                );"))
+
+; Returns a Keyword with the given namespace and name.  Do not use :
+; in the keyword strings, it will be added automatically.
+(defn keyword
+  ([name]
+   (if (keyword? name)
+     name
+     (native/raw "__value = __rt_ctx.intern_keyword(runtime::detail::to_string(~{ name })).expect_ok();")))
+  ([ns name]
+   (native/raw "__value = __rt_ctx.intern_keyword
+                (
+                  runtime::detail::to_string(~{ ns }),
+                  runtime::detail::to_string(~{ name })
+                ).expect_ok();")))
+
 (defn simple-symbol? [o]
   (native/raw "__value = make_box
               (
@@ -1433,10 +1440,10 @@
    (cond
      (symbol? o) o
      ; TODO: Intern.
-     (string? o) (native/raw "__value = make_box<obj::symbol>(runtime::detail::to_string(~{ o }));")
+     (string? o) (native/raw "__value = make_box<obj::symbol>(expect_object<obj::persistent_string>(~{ o })->data);")
      (var? o) (native/raw "__value = expect_object<runtime::var>(~{ o })->name;")
-     (keyword? o) (native/raw "__value = make_box<obj::symbol>(expect_object<obj::keyword>(~{ o })->sym) ;")
-     :else (native/raw "throw ~{ (ex-info :cannot-convert-to-symbol {:o o}) };")))
+     (keyword? o) (native/raw "__value = make_box<obj::symbol>(expect_object<obj::keyword>(~{ o })->sym);")
+     :else (throw (ex-info :cannot-convert-to-symbol {:o o}))))
   ([ns o]
    (native/raw "__value = make_box<obj::symbol>(runtime::detail::to_string(~{ ns }), runtime::detail::to_string(~{ o }));")))
 

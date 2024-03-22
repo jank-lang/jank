@@ -143,7 +143,7 @@ namespace jank
       }
       catch(jank::read::error const &e)
       {
-        fmt::println("Read error: {}", e.message);
+        fmt::println("Read error ({} - {}): {}", e.start, e.end, e.message);
       }
     }
   }
@@ -208,7 +208,7 @@ catch(jank::native_persistent_string const &s)
 }
 catch(jank::read::error const &e)
 {
-  fmt::println("Read error: {}", e.message);
+  fmt::println("Read error ({} - {}): {}", e.start, e.end, e.message);
 }
 catch(...)
 {

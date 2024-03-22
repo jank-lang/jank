@@ -12,16 +12,16 @@
 
 namespace jank::runtime::detail
 {
-  bool equal(object_ptr const lhs, object_ptr const rhs);
+  native_bool equal(object_ptr const lhs, object_ptr const rhs);
 
   struct object_ptr_equal
   {
-    static bool equal(object_ptr const &l, object_ptr const &r)
+    static native_bool equal(object_ptr const &l, object_ptr const &r)
     {
       return detail::equal(l, r);
     }
 
-    inline bool operator()(object_ptr const &l, object_ptr const &r) const
+    inline native_bool operator()(object_ptr const &l, object_ptr const &r) const
     {
       return detail::equal(l, r);
     }

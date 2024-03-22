@@ -7,7 +7,7 @@ namespace jank::runtime
   template <>
   struct static_object<object_type::nil> : gc
   {
-    static constexpr bool pointer_free{ true };
+    static constexpr native_bool pointer_free{ true };
 
     static native_box<static_object> nil_const();
 

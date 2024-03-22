@@ -259,6 +259,28 @@ namespace jank
     return nullptr;
   }
 
+  template <typename T, size_t N>
+  constexpr native_box<T> make_array_box()
+  {
+    auto const ret(new(GC) T[N]{});
+    if(!ret)
+    {
+      throw std::runtime_error{ "unable to allocate array box" };
+    }
+    return ret;
+  }
+
+  template <typename T>
+  constexpr native_box<T> make_array_box(size_t const length)
+  {
+    auto const ret(new(GC) T[length]{});
+    if(!ret)
+    {
+      throw std::runtime_error{ "unable to allocate array box" };
+    }
+    return ret;
+  }
+
   template <typename T, typename... Args>
   native_box<T> make_array_box(Args &&...args)
   {

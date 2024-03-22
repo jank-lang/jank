@@ -121,6 +121,14 @@ namespace jank::analyze
                                   expression_type,
                                   option<expr::function_context_ptr> const &,
                                   native_bool needs_box);
+    expression_result analyze_set(runtime::obj::persistent_set_ptr const &,
+                                  local_frame_ptr &,
+                                  expression_type,
+                                  option<expr::function_context_ptr> const &,
+                                  native_bool needs_box);
+
+    /* Returns whether or not the form is a special symbol. */
+    native_bool is_special(runtime::object_ptr form);
 
     using special_function_type
       = std::function<expression_result(runtime::obj::persistent_list_ptr const &,
