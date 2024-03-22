@@ -40,16 +40,6 @@ namespace jank::runtime
     return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  obj::transient_vector_ptr obj::transient_vector::pop_in_place()
-  {
-    assert_active();
-    if(data.empty())
-    { throw std::runtime_error{ "Can't pop empty vector" }; }
-
-    data.take(data.size() - 1);
-    return this;
-  }
-
   size_t obj::transient_vector::count() const
   {
     assert_active();
@@ -162,6 +152,18 @@ namespace jank::runtime
     {
       return false;
     }
+  }
+
+  obj::transient_vector_ptr obj::transient_vector::pop_in_place()
+  {
+    assert_active();
+    if(data.empty())
+    {
+      throw std::runtime_error{ "Can't pop empty vector" };
+    }
+
+    data.take(data.size() - 1);
+    return this;
   }
 
   void obj::transient_vector::assert_active() const

@@ -23,8 +23,6 @@ namespace jank::runtime
       return ret;
     }
 
-    native_box<static_object> pop_in_place();
-
     /* behavior::objectable */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
@@ -48,6 +46,8 @@ namespace jank::runtime
     object_ptr get(object_ptr const idx, object_ptr const fallback) const;
     object_ptr get_entry(object_ptr const idx) const;
     native_bool contains(object_ptr const elem) const;
+
+    native_box<static_object> pop_in_place();
 
     void assert_active() const;
 
