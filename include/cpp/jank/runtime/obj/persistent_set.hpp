@@ -5,6 +5,12 @@
 
 namespace jank::runtime
 {
+  namespace obj
+  {
+    using transient_set = static_object<object_type::transient_set>;
+    using transient_set_ptr = native_box<transient_set>;
+  }
+
   template <>
   struct static_object<object_type::persistent_set> : gc
   {
@@ -46,6 +52,9 @@ namespace jank::runtime
 
     /* behavior::callable */
     object_ptr call(object_ptr) const;
+
+    /* behavior::transientable */
+    obj::transient_set_ptr to_transient() const;
 
     native_bool contains(object_ptr o) const;
 

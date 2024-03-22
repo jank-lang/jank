@@ -1,6 +1,3 @@
-#include <iostream>
-#include <sstream>
-
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_set.hpp>
@@ -82,6 +79,11 @@ namespace jank::runtime
       return obj::nil::nil_const();
     }
     return *found;
+  }
+
+  obj::transient_set_ptr obj::persistent_set::to_transient() const
+  {
+    return make_box<obj::transient_set>(data);
   }
 
   native_bool obj::persistent_set::contains(object_ptr const o) const
