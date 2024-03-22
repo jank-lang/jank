@@ -437,12 +437,15 @@ namespace jank::read::parse
       return next_token_result.err().unwrap();
     }
     auto next_token(next_token_result.expect_ok());
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
     switch(next_token.kind)
     {
       case lex::token_kind::open_curly_bracket:
         return parse_reader_macro_set();
+      case lex::token_kind::open_paren:
+        return parse_reader_macro_fn();
       default:
         return err(
           error{ start_token.pos, native_persistent_string{ "unsupported reader macro" } });
@@ -482,6 +485,63 @@ namespace jank::read::parse
     return object_source_info{ make_box<runtime::obj::persistent_set>(std::move(ret)),
                                start_token,
                                latest_token };
+  }
+
+  processor::object_result processor::parse_reader_macro_fn()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+
+    if(shorthand.is_some())
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "nested #() forms are not allowed" } });
+    }
+
+    shorthand = shorthand_function_details{};
+
+    auto list_result(next());
+    if(list_result.is_err())
+    {
+      return list_result;
+    }
+    else if(list_result.expect_ok().is_none())
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "value after #( must be present" } });
+    }
+    else if(list_result.expect_ok().unwrap().ptr->type != runtime::object_type::persistent_list)
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "value after #( must be a list" } });
+    }
+
+    auto const call(
+      runtime::expect_object<runtime::obj::persistent_list>(list_result.expect_ok().unwrap().ptr));
+    auto const call_end(list_result.expect_ok().unwrap().end);
+
+    runtime::detail::native_transient_vector arg_trans;
+    if(shorthand.unwrap().max_fixed_arity.is_some())
+    {
+      for(uint8_t i{}; i < shorthand.unwrap().max_fixed_arity.unwrap(); ++i)
+      {
+        arg_trans.push_back(make_box<runtime::obj::symbol>(fmt::format("%{}#", i + 1)));
+      }
+    }
+    if(shorthand.unwrap().variadic)
+    {
+      arg_trans.push_back(make_box<runtime::obj::symbol>("&"));
+      arg_trans.push_back(make_box<runtime::obj::symbol>("%&#"));
+    }
+
+    auto const args(make_box<runtime::obj::persistent_vector>(arg_trans.persistent()));
+    auto const wrapped(make_box<runtime::obj::list>(std::in_place,
+                                                    make_box<runtime::obj::symbol>("fn*"),
+                                                    args,
+                                                    call));
+
+    shorthand = none;
+
+    return object_source_info{ wrapped, start_token, call_end };
   }
 
   processor::object_result processor::parse_reader_macro_comment()
@@ -720,7 +780,7 @@ namespace jank::read::parse
         }
         sym = runtime::expect_object<runtime::obj::symbol>(gensym);
       }
-      else if(sym->ns.empty())
+      else if(sym->ns.empty() && sym->name != "&")
       {
         auto var(rt_ctx.find_var(sym));
         if(var.is_none())
@@ -755,9 +815,11 @@ namespace jank::read::parse
     {
       return form;
     }
-    /* For anything else, do nothing special aside from quoting. Hopefully that works. */
     else
     {
+      /* Handle all sorts of sequences. We do this by recursively walking through them,
+       * flattening them, qualifying the symbols, and then building up code which will
+       * reassemble them. */
       return runtime::visit_seqable(
         [&](auto const typed_form) -> string_result<runtime::object_ptr> {
           using T = typename decltype(typed_form)::value_type;
@@ -820,7 +882,7 @@ namespace jank::read::parse
             }
             else
             {
-              auto expanded(syntax_quote_expand_seq(typed_form->seq()));
+              auto expanded(syntax_quote_expand_seq(seq));
               if(expanded.is_err())
               {
                 return expanded;
@@ -839,6 +901,7 @@ namespace jank::read::parse
                                    magic_enum::enum_name(typed_form->base.type)));
           }
         },
+        /* For anything else, do nothing special aside from quoting. Hopefully that works. */
         [=]() -> string_result<runtime::object_ptr> {
           return make_box<runtime::obj::persistent_list>(std::in_place,
                                                          make_box<runtime::obj::symbol>("quote"),
@@ -967,6 +1030,52 @@ namespace jank::read::parse
     else
     {
       name = sv;
+
+      /* When we're parsing a shorthand anonymous function (i.e. #() reader macro), symbols
+       * beginning with % have a special meaning which affect the shorthand function. We track
+       * that state here. */
+      if(shorthand.is_some() && name.starts_with('%'))
+      {
+        auto const after_percent(name.substr(1));
+        native_bool all_digits{ true };
+        for(auto const c : after_percent)
+        {
+          all_digits &= std::isdigit(c) != 0;
+        }
+        if(all_digits)
+        {
+          /* We support just % alone, which means %1. */
+          uint8_t num{ 1 };
+          if(after_percent.empty())
+          {
+            /* We rename it so that the generated param name matches. */
+            name = "%1";
+          }
+
+          num = std::strtol(name.c_str() + 1, nullptr, 10);
+          auto &max_fixed_arity(shorthand.unwrap().max_fixed_arity);
+          if(max_fixed_arity.is_none() || max_fixed_arity.unwrap() < num)
+          {
+            max_fixed_arity = num;
+          }
+        }
+        else if(after_percent == "&")
+        {
+          shorthand.unwrap().variadic = true;
+        }
+        else
+        {
+          return err(error{ token.pos,
+                            native_persistent_string{ "arg literal must be %, %&, or %integer" } });
+        }
+
+        /* This is a hack. We're building up an anonymous function, but that form could be within
+         * a syntax quote. We don't want our %1 and %& symbols to be qualified, so we tack a #
+         * at the end, so they're like foo# and get treated as gensyms. However, when not inside
+         * a syntax quote, # is fine to have in a symbol anyway. This saves us from having to
+         * do custom logic within the syntax quoting to check for these symbols. */
+        name = name + "#";
+      }
     }
     return object_source_info{ make_box<runtime::obj::symbol>(ns, name), token, token };
   }

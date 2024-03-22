@@ -241,7 +241,7 @@ namespace jank::read
     {
       return std::isalnum(static_cast<unsigned char>(c)) != 0 || c == '_' || c == '-' || c == '/'
         || c == '?' || c == '!' || c == '+' || c == '*' || c == '=' || c == '.' || c == '&'
-        || c == '<' || c == '>' || c == '#';
+        || c == '<' || c == '>' || c == '#' || c == '%';
     }
 
     result<token, error> processor::next()
@@ -404,6 +404,7 @@ namespace jank::read
         case '&':
         case '<':
         case '>':
+        case '%':
           {
             auto &&e(check_whitespace(found_space));
             if(e.is_some())

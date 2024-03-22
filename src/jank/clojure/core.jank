@@ -166,8 +166,10 @@
                    {
                      using T = typename decltype(typed_items)::value_type;
 
-                     if constexpr(behavior::seqable<T>)
-                     { return jank::runtime::obj::persistent_list::create(typed_items); }
+                     if constexpr(std::same_as<runtime::obj::nil, T>)
+                     { return runtime::obj::persistent_list::empty(); }
+                     else if constexpr(behavior::seqable<T>)
+                     { return runtime::obj::persistent_list::create(typed_items); }
                      else
                      { throw ~{ (ex-info :invalid-seq {:items items}) }; }
                    },

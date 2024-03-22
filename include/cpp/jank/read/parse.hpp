@@ -25,6 +25,12 @@ namespace jank::read::parse
 
     using object_result = result<option<object_source_info>, error>;
 
+    struct shorthand_function_details
+    {
+      option<uint8_t> max_fixed_arity{};
+      native_bool variadic{};
+    };
+
     struct iterator
     {
       using iterator_category = std::input_iterator_tag;
@@ -56,6 +62,7 @@ namespace jank::read::parse
     object_result parse_meta_hint();
     object_result parse_reader_macro();
     object_result parse_reader_macro_set();
+    object_result parse_reader_macro_fn();
     object_result parse_reader_macro_comment();
     object_result parse_reader_macro_conditional(native_bool splice);
     object_result parse_syntax_quote();
@@ -92,6 +99,7 @@ namespace jank::read::parse
      * turns one form into many. */
     std::list<runtime::object_ptr> pending_forms;
     lex::token latest_token;
+    option<shorthand_function_details> shorthand;
     /* Whether or not the next form is considered quoted. */
     native_bool quoted{};
   };

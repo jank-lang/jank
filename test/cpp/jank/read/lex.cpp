@@ -646,11 +646,11 @@ namespace jank::read::lex
 
       SUBCASE("With other symbols")
       {
-        processor p{ "abc_.123/-foo+?=!&<>#" };
+        processor p{ "abc_.123/-foo+?=!&<>#%" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                {0, 21, token_kind::symbol, "abc_.123/-foo+?=!&<>#"sv}
+                {0, 22, token_kind::symbol, "abc_.123/-foo+?=!&<>#%"sv}
         }));
       }
 

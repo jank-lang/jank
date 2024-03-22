@@ -1,0 +1,7 @@
+(assert (= 0 (#(do 0))))
+(assert (= 1 (#(do %1) 1)))
+(assert (= 2 (#(do %2) 1 2)))
+(assert (= 3 (#(do %3) 1 2 3)))
+(assert (= [1 2 3 4] (#(do [%1 %2 %3 %4]) 1 2 3 4)))
+
+:success
