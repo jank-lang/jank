@@ -400,9 +400,9 @@
                    if constexpr(behavior::transientable<T>)
                    { return typed_o->to_transient(); }
                    else
-                   { throw #{ (ex-info :not-transientable {:o o}) }#; }
+                   { throw ~{ (ex-info :not-transientable {:o o}) }; }
                  },
-                 #{ o }#
+                 ~{ o }
                );"))
 
 ; Returns a new, persistent version of the transient collection, in
@@ -418,10 +418,90 @@
                    if constexpr(behavior::persistentable<T>)
                    { return typed_o->to_persistent(); }
                    else
-                   { throw #{ (ex-info :not-persistentable {:o o}) }#; }
+                   { throw ~{ (ex-info :not-persistentable {:o o}) }; }
                  },
-                 #{ o }#
+                 ~{ o }
                );"))
+
+(defn conj!
+  ([]
+   (transient []))
+  ([coll]
+   coll)
+  ([coll x]
+   (native/raw "__value = visit_object
+                (
+                  [=](auto const typed_coll, auto const head) -> object_ptr
+                  {
+                    using T = typename decltype(typed_coll)::value_type;
+
+                    if constexpr(behavior::consable_in_place<T>)
+                    { return typed_coll->cons_in_place(head); }
+                    else
+                    { throw ~{ (ex-info :not-consable-in-place {:o coll}) }; }
+                   },
+                   ~{ coll },
+                   ~{ x }
+                 );
+               ")))
+
+(defn assoc!
+  ([coll k v]
+   (native/raw "__value = visit_object
+                (
+                  [=](auto const typed_coll, auto const key, auto const val) -> object_ptr
+                  {
+                    using T = typename decltype(typed_coll)::value_type;
+
+                    if constexpr(behavior::associatively_writable_in_place<T>)
+                    { return typed_coll->assoc_in_place(key, val); }
+                    else
+                    { throw ~{ (ex-info :not-associatively_writable_in_place {:o coll}) }; }
+                  },
+                  ~{ coll },
+                  ~{ k },
+                  ~{ v }
+                );
+               "))
+  ([coll k v & kvs]
+    (let [ret (assoc! coll k v)]
+      (if kvs
+        (recur ret (first kvs) (second kvs) (nnext kvs))
+        ret))))
+
+(defn dissoc!
+  ([coll k]
+   (native/raw "__value = visit_object
+                (
+                  [=](auto const typed_coll, auto const key) -> object_ptr
+                  {
+                    using T = typename decltype(typed_coll)::value_type;
+
+                    if constexpr(behavior::associatively_writable_in_place<T>)
+                    { return typed_coll->dissoc_in_place(key); }
+                    else
+                    { throw ~{ (ex-info :not-associatively_writable_in_place {:o coll}) }; }
+                  },
+                  ~{ coll },
+                  ~{ k }
+                );
+               "))
+  ([coll k & ks]
+    (let [ret (dissoc! coll k)]
+      (if ks
+        (recur ret (first ks) (next ks))
+        ret))))
+
+(defn pop!
+  ([coll]
+   (native/raw "if( ~{ coll }->type == object_type::transient_vector )
+                {
+                  auto transient_coll = expect_object<obj::transient_vector>(~{ coll });
+                  __value = transient_coll->pop_in_place();
+                }
+                else
+                { throw ~{ (ex-info :not-transient-vector {:o coll}) }; }
+               ")))
 
 ; Functions.
 

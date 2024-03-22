@@ -41,7 +41,8 @@ namespace jank::runtime
     native_bool contains(object_ptr key) const;
 
     /* behavior::associatively_writable_in_place */
-    native_box<static_object> assoc_in_place(object_ptr key, object_ptr val);
+    native_box<static_object> assoc_in_place(object_ptr const key, object_ptr const val);
+    native_box<static_object> dissoc_in_place(object_ptr const key);
 
     /* behavior::consable_in_place */
     native_box<static_object> cons_in_place(object_ptr head);

@@ -47,6 +47,8 @@ namespace jank::runtime
     object_ptr get_entry(object_ptr const idx) const;
     native_bool contains(object_ptr const elem) const;
 
+    native_box<static_object> pop_in_place();
+
     void assert_active() const;
 
     object base{ object_type::transient_vector };

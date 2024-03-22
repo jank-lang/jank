@@ -16,5 +16,9 @@ namespace jank::runtime::behavior
     {
       t->assoc_in_place(object_ptr{}, object_ptr{})
     } -> std::convertible_to<object_ptr>;
+
+    {
+      t->dissoc_in_place(object_ptr{})
+    } -> std::convertible_to<object_ptr>;
   };
 }

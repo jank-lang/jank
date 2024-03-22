@@ -154,6 +154,18 @@ namespace jank::runtime
     }
   }
 
+  obj::transient_vector_ptr obj::transient_vector::pop_in_place()
+  {
+    assert_active();
+    if(data.empty())
+    {
+      throw std::runtime_error{ "Can't pop empty vector" };
+    }
+
+    data.take(data.size() - 1);
+    return this;
+  }
+
   void obj::transient_vector::assert_active() const
   {
     if(!active)
