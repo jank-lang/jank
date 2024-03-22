@@ -14,24 +14,32 @@ namespace jank::runtime
                                        object_type::persistent_array_map_sequence,
                                        runtime::detail::native_persistent_array_map>
   {
+    static constexpr size_t max_size{ value_type::max_size };
+
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-
-    static_object(value_type &&d)
-      : data{ std::move(d) }
-    {
-    }
-
-    static_object(value_type const &d)
-      : data{ d }
-    {
-    }
+    static_object(value_type &&d);
+    static_object(value_type const &d);
+    static_object(object_ptr meta, value_type &&d);
 
     template <typename... Args>
     static_object(runtime::detail::in_place_unique, Args &&...args)
       : data{ runtime::detail::in_place_unique{}, std::forward<Args>(args)... }
     {
+    }
+
+    template <typename... Args>
+    static_object(object_ptr const meta, runtime::detail::in_place_unique, Args &&...args)
+      : data{ runtime::detail::in_place_unique{}, std::forward<Args>(args)... }
+    {
+      this->meta = meta;
+    }
+
+    static native_box<static_object> empty()
+    {
+      static auto const ret(make_box<static_object>());
+      return ret;
     }
 
     using base_persistent_map::base_persistent_map;
@@ -40,6 +48,15 @@ namespace jank::runtime
     static native_box<static_object> create_unique(Args &&...args)
     {
       return make_box<static_object>(runtime::detail::in_place_unique{},
+                                     make_array_box<object_ptr>(std::forward<Args>(args)...),
+                                     sizeof...(args));
+    }
+
+    template <typename... Args>
+    static native_box<static_object> create_unique_with_meta(object_ptr const meta, Args &&...args)
+    {
+      return make_box<static_object>(meta,
+                                     runtime::detail::in_place_unique{},
                                      make_array_box<object_ptr>(std::forward<Args>(args)...),
                                      sizeof...(args));
     }

@@ -13,7 +13,6 @@
 (assert (= m (meta (with-meta [] m))))
 (assert (= m (meta (with-meta '() m))))
 
-; TODO: Set literals
-;(assert (= m (meta (with-meta #{} m))))
+(assert (= m (meta (with-meta #{} m))))
 
 :success

@@ -64,7 +64,8 @@ namespace jank::jit
                       dir_entry);
         ++test_count;
 
-        runtime::context test_rt_ctx{ rt_ctx };
+        /* TODO: Clear our rt_ctx for each run. Using the copy ctor leads to odd failures with
+         * macros, likely due to interned keywords not being identical. */
         bool passed{ true };
         std::stringstream captured_output;
 
@@ -73,7 +74,7 @@ namespace jank::jit
         try
         {
           /* Silence ouptut when running these. This include compilation errors from Cling, since we're
-          * going to intentionally make that happen. */
+           * going to intentionally make that happen. */
           std::streambuf * const old_cout{ std::cout.rdbuf(captured_output.rdbuf()) };
           std::streambuf * const old_cerr{ std::cerr.rdbuf(captured_output.rdbuf()) };
           util::scope_exit const _{ [=]() {
@@ -81,7 +82,7 @@ namespace jank::jit
             std::cerr.rdbuf(old_cerr);
           } };
 
-          auto const result(test_rt_ctx.eval_file(dir_entry.path().string()));
+          auto const result(rt_ctx.eval_file(dir_entry.path().string()));
           if(!expect_success)
           {
             failures.push_back(

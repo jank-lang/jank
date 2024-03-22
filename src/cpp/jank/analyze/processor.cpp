@@ -65,9 +65,9 @@ namespace jank::analyze
       {
         return err(parse_current->expect_err_move());
       }
-      fn.push_back(parse_current->expect_ok());
+      fn.push_back(parse_current->expect_ok().unwrap().ptr);
     }
-    auto fn_list(make_box<runtime::obj::persistent_list>(fn.rbegin(), fn.rend()));
+    auto fn_list(make_box<runtime::obj::persistent_list>(std::in_place, fn.rbegin(), fn.rend()));
     return analyze(fn_list, expression_type::expression);
   }
 
@@ -99,7 +99,7 @@ namespace jank::analyze
       return err(error{ "invalid def: name must not be qualified" });
     }
 
-    bool has_value{ true };
+    native_bool has_value{ true };
     auto const value_opt(l->data.rest().rest().first());
     if(value_opt.is_none())
     {
@@ -226,7 +226,7 @@ namespace jank::analyze
     param_symbols.reserve(params->data.size());
     std::set<runtime::obj::symbol> unique_param_symbols;
 
-    bool is_variadic{};
+    native_bool is_variadic{};
     for(auto it(params->data.begin()); it != params->data.end(); ++it)
     {
       auto const p(*it);
@@ -957,54 +957,68 @@ namespace jank::analyze
     /* native/raw expressions are broken up into chunks of either literal C++ code or
      * interpolated jank code, the latter needing to also be analyzed. */
     decltype(expr::native_raw<expression>::chunks) chunks;
-    /* TODO: Just use } for end and rely on token parsing info for when that is.
-     * This requires storing line/col start/end meta in each object. */
-    constexpr native_persistent_string_view interp_start{ "#{" }, interp_end{ "}#" };
-    for(size_t it{}; it != native_persistent_string::npos;)
+    constexpr native_persistent_string_view interp_start{ "~{" };
+    for(size_t it{}; it < code_str->data.size();)
     {
-      auto const next_start(code_str->data.find(interp_start.data(), it));
-      if(next_start == native_persistent_string::npos)
+      auto const next_interp(code_str->data.find(interp_start.data(), it));
+      if(next_interp == native_persistent_string::npos)
       {
         /* This is the final chunk. */
         chunks.emplace_back(native_persistent_string_view{ code_str->data.data() + it });
         break;
       }
-      auto const next_end(code_str->data.find(interp_end.data(), next_start));
-      if(next_end == native_persistent_string::npos)
-      {
-        return err(
-          error{ fmt::format("no matching {} found for native/raw interpolation", interp_end) });
-      }
 
+      /* Once we've found the start of an interpolation, we begin lexing/parsing at that
+       * spot, so we can get a jank value. */
       read::lex::processor l_prc{
-        {code_str->data.data() + next_start + interp_start.size(),
-         next_end - next_start - interp_end.size()}
+        {code_str->data.data() + next_interp + interp_start.size(),
+         code_str->data.data() + code_str->data.size()}
       };
       read::parse::processor p_prc{ rt_ctx, l_prc.begin(), l_prc.end() };
-      auto parsed_it(p_prc.begin());
-      if(parsed_it->is_err())
+      auto parsed_obj(p_prc.next());
+      if(parsed_obj.is_err())
       {
-        return parsed_it->expect_err_move();
+        return parsed_obj.expect_err_move();
       }
-      auto result(
-        analyze(parsed_it->expect_ok(), current_frame, expression_type::expression, fn_ctx, true));
+      else if(parsed_obj.expect_ok().is_none())
+      {
+        return err(error{ next_interp + interp_start.size(), "invalid native/raw interpolation" });
+      }
+
+      /* We get back an AST expression and keep track of it as a chunk for later codegen. */
+      auto result(analyze(parsed_obj.expect_ok().unwrap().ptr,
+                          current_frame,
+                          expression_type::expression,
+                          fn_ctx,
+                          true));
       if(result.is_err())
       {
         return result.expect_err_move();
       }
 
-      if(next_start - it > 0)
+      /* C++ code before the next interpolation. */
+      if(next_interp - it > 0)
       {
         chunks.emplace_back(
-          native_persistent_string_view{ code_str->data.data() + it, next_start - it });
+          native_persistent_string_view{ code_str->data.data() + it, next_interp - it });
       }
       chunks.emplace_back(result.expect_ok());
-      it = next_end + interp_end.size();
 
-      if(++parsed_it != p_prc.end())
+      /* The next token needs to be a }, to match our original ~{. If it's not, either multiple
+       * forms were included in the interpolation or there is no closing }. We don't know for
+       * sure. */
+      auto const next_token(*p_prc.token_current);
+      if(next_token.is_err())
       {
-        return err(error{ "invalid native/raw: only one expression per interpolation" });
+        return next_token.expect_err();
       }
+      else if(next_token.expect_ok().kind != read::lex::token_kind::close_curly_bracket)
+      {
+        return err(error{
+          "invalid native/raw interpolation: ~{ must be followed by a single form and then a }" });
+      }
+      it = next_interp + interp_start.size() + next_token.expect_ok().pos
+        + next_token.expect_ok().size;
     }
 
     return make_box<expression>(expr::native_raw<expression>{
@@ -1014,7 +1028,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_primitive_literal(runtime::object_ptr o,
+  processor::analyze_primitive_literal(runtime::object_ptr const o,
                                        local_frame_ptr &current_frame,
                                        expression_type const expr_type,
                                        option<expr::function_context_ptr> const &,
@@ -1037,7 +1051,7 @@ namespace jank::analyze
   {
     native_vector<expression_ptr> exprs;
     exprs.reserve(o->count());
-    bool literal{ true };
+    native_bool literal{ true };
     for(auto d = o->seq(); d != nullptr; d = d->next_in_place())
     {
       auto res(analyze(d->first(), current_frame, expression_type::expression, fn_ctx, true));
@@ -1064,7 +1078,8 @@ namespace jank::analyze
 
     return make_box<expression>(expr::vector<expression>{
       expression_base{{}, expr_type, current_frame, true},
-      std::move(exprs)
+      std::move(exprs),
+      o->meta
     });
   }
 
@@ -1096,7 +1111,49 @@ namespace jank::analyze
     /* TODO: Uniqueness check. */
     return make_box<expression>(expr::map<expression>{
       expression_base{{}, expr_type, current_frame, true},
-      std::move(exprs)
+      std::move(exprs),
+      o->meta
+    });
+  }
+
+  processor::expression_result
+  processor::analyze_set(runtime::obj::persistent_set_ptr const &o,
+                         local_frame_ptr &current_frame,
+                         expression_type const expr_type,
+                         option<expr::function_context_ptr> const &fn_ctx,
+                         native_bool const)
+  {
+    native_vector<expression_ptr> exprs;
+    exprs.reserve(o->count());
+    native_bool literal{ true };
+    for(auto d = o->seq(); d != nullptr; d = d->next_in_place())
+    {
+      auto res(analyze(d->first(), current_frame, expression_type::expression, fn_ctx, true));
+      if(res.is_err())
+      {
+        return res.expect_err_move();
+      }
+      exprs.emplace_back(res.expect_ok_move());
+      if(!boost::get<expr::primitive_literal<expression>>(&exprs.back()->data))
+      {
+        literal = false;
+      }
+    }
+
+    if(literal)
+    {
+      /* TODO: Order lifted constants. Use sub constants during codegen. */
+      current_frame->lift_constant(o);
+      return make_box<expression>(expr::primitive_literal<expression>{
+        expression_base{{}, expr_type, current_frame, true},
+        o
+      });
+    }
+
+    return make_box<expression>(expr::set<expression>{
+      expression_base{{}, expr_type, current_frame, true},
+      std::move(exprs),
+      o->meta
     });
   }
 
@@ -1154,6 +1211,7 @@ namespace jank::analyze
         auto const arity_meta(
           runtime::get_in(var_deref->var->meta.unwrap(),
                           make_box<runtime::obj::persistent_vector>(
+                            std::in_place,
                             rt_ctx.intern_keyword("", "arities", true).expect_ok(),
                             /* NOTE: We don't support unboxed meta on variadic arities. */
                             make_box(arg_count))));
@@ -1252,7 +1310,7 @@ namespace jank::analyze
         }
         else if constexpr(std::same_as<T, runtime::obj::persistent_set>)
         {
-          return err(error{ "unimplemented analysis: set" });
+          return analyze_set(typed_o, current_frame, expr_type, fn_ctx, needs_box);
         }
         else if constexpr(runtime::behavior::numberable<T> || std::same_as<T, runtime::obj::boolean>
                           || std::same_as<T, runtime::obj::keyword>
@@ -1284,5 +1342,16 @@ namespace jank::analyze
         }
       },
       o);
+  }
+
+  native_bool processor::is_special(runtime::object_ptr const form)
+  {
+    if(form->type != runtime::object_type::symbol)
+    {
+      return false;
+    }
+
+    auto const found_special(specials.find(runtime::expect_object<runtime::obj::symbol>(form)));
+    return found_special != specials.end();
   }
 }

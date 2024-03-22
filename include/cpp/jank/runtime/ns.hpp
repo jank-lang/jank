@@ -16,7 +16,7 @@ namespace jank::runtime
   template <>
   struct static_object<object_type::ns> : gc
   {
-    static constexpr bool pointer_free{ false };
+    static constexpr native_bool pointer_free{ false };
 
     static_object() = delete;
     static_object(obj::symbol_ptr const &name, context &c);
@@ -38,7 +38,7 @@ namespace jank::runtime
     void to_string(fmt::memory_buffer &buff) const;
     native_hash to_hash() const;
 
-    bool operator==(static_object const &rhs) const;
+    native_bool operator==(static_object const &rhs) const;
 
     native_box<static_object> clone(context &rt_ctx) const;
 

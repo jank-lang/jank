@@ -138,6 +138,14 @@ namespace jank::read
     {
     }
 
+    token::token(size_t const p, size_t const s, token_kind const k, char const * const d)
+      : pos{ p }
+      , size{ s }
+      , kind{ k }
+      , data{ native_persistent_string_view{ d } }
+    {
+    }
+
     token::token(size_t const p, size_t const s, token_kind const k, native_bool const d)
       : pos{ p }
       , size{ s }
@@ -233,7 +241,7 @@ namespace jank::read
     {
       return std::isalnum(static_cast<unsigned char>(c)) != 0 || c == '_' || c == '-' || c == '/'
         || c == '?' || c == '!' || c == '+' || c == '*' || c == '=' || c == '.' || c == '&'
-        || c == '<' || c == '>';
+        || c == '<' || c == '>' || c == '#';
     }
 
     result<token, error> processor::next()
@@ -361,7 +369,7 @@ namespace jank::read
             }
 
             /* Tokens beginning with - are ambiguous; it's only a negative number if it has numbers
-           * to follow. */
+             * to follow. */
             if(file[token_start] != '-' || (pos - token_start) >= 1)
             {
               require_space = true;
@@ -529,14 +537,118 @@ namespace jank::read
             pos++;
 
             /* Unescaped strings can be read right from memory, but escaped strings require
-           * some processing first, to turn the escape sequences into the necessary characters.
-           * We use distinct token types for these so we can optimize for the typical case. */
+             * some processing first, to turn the escape sequences into the necessary characters.
+             * We use distinct token types for these so we can optimize for the typical case. */
             auto const kind(contains_escape ? token_kind::escaped_string : token_kind::string);
             return ok(token{ token_start,
                              pos - token_start,
                              kind,
                              native_persistent_string_view(file.data() + token_start + 1,
                                                            pos - token_start - 2) });
+          }
+        /* Meta hints. */
+        case '^':
+          {
+            auto &&e(check_whitespace(found_space));
+            if(e.is_some())
+            {
+              return err(std::move(e.unwrap()));
+            }
+            ++pos;
+            require_space = false;
+
+            return ok(token{ token_start, pos - token_start, token_kind::meta_hint });
+          }
+        /* Reader macros. */
+        case '#':
+          {
+            auto &&e(check_whitespace(found_space));
+            if(e.is_some())
+            {
+              return err(std::move(e.unwrap()));
+            }
+            require_space = false;
+            auto const oc(peek());
+            ++pos;
+
+            switch(oc.unwrap_or(' '))
+            {
+              case '_':
+                ++pos;
+                return ok(
+                  token{ token_start, pos - token_start, token_kind::reader_macro_comment });
+              case '?':
+                {
+                  auto const maybe_splice(peek());
+                  ++pos;
+                  if(maybe_splice.unwrap_or(' ') == '@')
+                  {
+                    ++pos;
+                    return ok(token{ token_start,
+                                     pos - token_start,
+                                     token_kind::reader_macro_conditional_splice });
+                  }
+                  else
+                  {
+                    return ok(token{ token_start,
+                                     pos - token_start,
+                                     token_kind::reader_macro_conditional });
+                  }
+                }
+              default:
+                break;
+            }
+
+            return ok(token{ token_start, pos - token_start, token_kind::reader_macro });
+          }
+        /* Syntax quoting. */
+        case '`':
+          {
+            auto &&e(check_whitespace(found_space));
+            if(e.is_some())
+            {
+              return err(std::move(e.unwrap()));
+            }
+            ++pos;
+            require_space = false;
+
+            return ok(token{ token_start, pos - token_start, token_kind::syntax_quote });
+          }
+        /* Syntax unquoting. */
+        case '~':
+          {
+            auto &&e(check_whitespace(found_space));
+            if(e.is_some())
+            {
+              return err(std::move(e.unwrap()));
+            }
+            require_space = false;
+            auto const oc(peek());
+            ++pos;
+
+            switch(oc.unwrap_or(' '))
+            {
+              case '@':
+                {
+                  ++pos;
+                  return ok(token{ token_start, pos - token_start, token_kind::unquote_splice });
+                }
+              default:
+                return ok(token{ token_start, pos - token_start, token_kind::unquote });
+            }
+          }
+        /* Deref macro. */
+        case '@':
+          {
+            auto &&e(check_whitespace(found_space));
+            if(e.is_some())
+            {
+              return err(std::move(e.unwrap()));
+            }
+            ++pos;
+            require_space = false;
+
+            return ok(token{ token_start, pos - token_start, token_kind::deref });
           }
         default:
           ++pos;

@@ -165,6 +165,11 @@ namespace jank::runtime
       s);
   }
 
+  object_ptr second(object_ptr const s)
+  {
+    return first(next(s));
+  }
+
   object_ptr next(object_ptr const s)
   {
     return visit_object(
@@ -237,7 +242,7 @@ namespace jank::runtime
 
         if constexpr(std::same_as<T, obj::nil>)
         {
-          return make_box<obj::persistent_list>(o);
+          return make_box<obj::persistent_list>(std::in_place, o);
         }
         else if constexpr(behavior::consable<T>)
         {
@@ -472,6 +477,29 @@ namespace jank::runtime
         {
           throw std::runtime_error{ fmt::format("not associatively writable: {}",
                                                 typed_m->to_string()) };
+        }
+      },
+      m);
+  }
+
+  object_ptr meta(object_ptr const m)
+  {
+    if(m == nullptr || m == obj::nil::nil_const())
+    {
+      return obj::nil::nil_const();
+    }
+
+    return visit_object(
+      [&](auto const typed_m) -> object_ptr {
+        using T = typename decltype(typed_m)::value_type;
+
+        if constexpr(behavior::metadatable<T>)
+        {
+          return typed_m->meta.unwrap_or(obj::nil::nil_const());
+        }
+        else
+        {
+          return obj::nil::nil_const();
         }
       },
       m);

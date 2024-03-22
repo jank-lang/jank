@@ -21,7 +21,7 @@ namespace jank::runtime
       }
 
       fmt::format_to(inserter, "(");
-      bool needs_space{};
+      native_bool needs_space{};
       for(auto i(s->fresh_seq()); i != nullptr; i = i->next_in_place())
       {
         if(needs_space)
@@ -52,25 +52,22 @@ namespace jank::runtime
 
           /* nil is seqable, but we don't want it to be equal to an empty collection.
            * An empty seq itself is nil, but that's different. */
-          if constexpr(std::same_as<T, obj::nil>)
-          {
-            return false;
-          }
-          else if constexpr(!behavior::seqable<T>)
+          if constexpr(std::same_as<T, obj::nil> || !behavior::seqable<T>)
           {
             return false;
           }
           else
           {
             auto seq(typed_o->fresh_seq());
-            for(auto it(begin); it != end; ++it, seq = seq->next_in_place())
+            auto it(begin);
+            for(; it != end; ++it, seq = seq->next_in_place())
             {
               if(seq == nullptr || !runtime::detail::equal(*it, seq->first()))
               {
                 return false;
               }
             }
-            return true;
+            return seq == nullptr && it == end;
           }
         },
         &o,
@@ -85,6 +82,7 @@ namespace jank::runtime
   object_ptr seq(object_ptr s);
   object_ptr fresh_seq(object_ptr s);
   object_ptr first(object_ptr s);
+  object_ptr second(object_ptr s);
   object_ptr next(object_ptr s);
   object_ptr next_in_place(object_ptr s);
   object_ptr conj(object_ptr s, object_ptr o);
@@ -96,4 +94,5 @@ namespace jank::runtime
   object_ptr find(object_ptr s, object_ptr key);
   native_bool contains(object_ptr s, object_ptr key);
   object_ptr merge(object_ptr m, object_ptr other);
+  object_ptr meta(object_ptr m);
 }

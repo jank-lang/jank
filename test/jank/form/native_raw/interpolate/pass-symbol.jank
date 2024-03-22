@@ -1,4 +1,0 @@
-(def a 1)
-(assert (= a (native/raw "__value = #{ a }#;")))
-
-:success

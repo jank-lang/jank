@@ -7,7 +7,7 @@ namespace jank::runtime
   template <>
   struct static_object<object_type::cons> : gc
   {
-    static constexpr bool pointer_free{ false };
+    static constexpr native_bool pointer_free{ false };
 
     static_object() = default;
     static_object(static_object &&) = default;
@@ -29,7 +29,7 @@ namespace jank::runtime
 
     /* behavior::sequenceable */
     object_ptr first() const;
-    object_ptr next() const;
+    native_box<static_object> next() const;
     native_box<static_object> next_in_place();
     object_ptr next_in_place_first();
 

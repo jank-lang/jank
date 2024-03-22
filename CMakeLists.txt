@@ -147,6 +147,7 @@ add_library(
   src/cpp/jank/util/cli.cpp
   src/cpp/jank/util/mapped_file.cpp
   src/cpp/jank/util/scope_exit.cpp
+  src/cpp/jank/util/escape.cpp
   src/cpp/jank/profile/time.cpp
   src/cpp/jank/read/lex.cpp
   src/cpp/jank/read/parse.cpp

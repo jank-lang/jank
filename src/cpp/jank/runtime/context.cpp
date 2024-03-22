@@ -53,6 +53,8 @@ namespace jank::runtime
       = make_box<runtime::var>(core, make_box<obj::symbol>("*current-module*"))->set_dynamic(true);
     no_recur_var
       = make_box<runtime::var>(core, make_box<obj::symbol>("*no-recur*"))->set_dynamic(true);
+    gensym_env_var
+      = make_box<runtime::var>(core, make_box<obj::symbol>("*gensym-env*"))->set_dynamic(true);
 
     intern_ns(make_box<obj::symbol>("native"));
 
@@ -121,6 +123,8 @@ namespace jank::runtime
       = make_box<runtime::var>(core, make_box<obj::symbol>("*current-module*"))->set_dynamic(true);
     no_recur_var
       = make_box<runtime::var>(core, make_box<obj::symbol>("*no-recur*"))->set_dynamic(true);
+    gensym_env_var
+      = make_box<runtime::var>(core, make_box<obj::symbol>("*gensym-env*"))->set_dynamic(true);
   }
 
   context::~context()
@@ -197,7 +201,8 @@ namespace jank::runtime
     native_vector<analyze::expression_ptr> exprs{};
     for(auto const &form : p_prc)
     {
-      auto const expr(an_prc.analyze(form.expect_ok(), analyze::expression_type::statement));
+      auto const expr(
+        an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_type::statement));
       ret = evaluate::eval(*this, jit_prc, expr.expect_ok());
       exprs.emplace_back(expr.expect_ok());
     }
@@ -230,7 +235,8 @@ namespace jank::runtime
     native_vector<analyze::expression_ptr> ret{};
     for(auto const &form : p_prc)
     {
-      auto const expr(an_prc.analyze(form.expect_ok(), analyze::expression_type::statement));
+      auto const expr(
+        an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_type::statement));
       if(eval)
       {
         evaluate::eval(*this, jit_prc, expr.expect_ok());
@@ -655,7 +661,8 @@ namespace jank::runtime
     assert(bindings);
     if(bindings->type != object_type::persistent_hash_map)
     {
-      return err(fmt::format("invalid thread binding map: {}", detail::to_string(bindings)));
+      return err(fmt::format("invalid thread binding map (must be hash map): {}",
+                             detail::to_string(bindings)));
     }
 
     return push_thread_bindings(expect_object<obj::persistent_hash_map>(bindings));
