@@ -56,7 +56,7 @@ namespace jank::analyze
       catch_
     };
 
-    static constexpr bool pointer_free{ false };
+    static constexpr native_bool pointer_free{ false };
 
     local_frame() = delete;
     local_frame(local_frame const &) = default;

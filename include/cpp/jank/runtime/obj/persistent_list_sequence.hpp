@@ -8,6 +8,7 @@ namespace jank::runtime
 {
   namespace obj
   {
+    /* TODO: Rename. */
     using list = static_object<object_type::persistent_list>;
     using list_ptr = native_box<list>;
   }
@@ -18,7 +19,7 @@ namespace jank::runtime
     , obj::detail::iterator_sequence<static_object<object_type::persistent_list_sequence>,
                                      runtime::detail::native_persistent_list::iterator>
   {
-    static constexpr bool pointer_free{ false };
+    static constexpr native_bool pointer_free{ false };
 
     static_object() = default;
     static_object(static_object &&) = default;

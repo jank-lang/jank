@@ -1,0 +1,8 @@
+(let [e []
+      b [0]
+      a [1 2 3]]
+  (assert (= '(clojure.core/str) `(str ~@e)))
+  (assert (= '(clojure.core/str 1 2 3) `(str ~@a)))
+  (assert (= [1 2 3 0 1 2 3] `[~@e ~@a ~@b ~@a ~@e])))
+
+:success

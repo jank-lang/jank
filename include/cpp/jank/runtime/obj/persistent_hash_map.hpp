@@ -27,12 +27,19 @@ namespace jank::runtime
                   object_ptr val);
     static_object(value_type &&d);
     static_object(value_type const &d);
-    static_object(runtime::detail::native_transient_hash_map &&d);
+    static_object(object_ptr meta, value_type &&d);
 
     template <typename... Args>
     static_object(runtime::detail::in_place_unique, Args &&...args)
       : data{ std::forward<Args>(args)... }
     {
+    }
+
+    template <typename... Args>
+    static_object(object_ptr const meta, runtime::detail::in_place_unique, Args &&...args)
+      : data{ std::forward<Args>(args)... }
+    {
+      this->meta = meta;
     }
 
     static native_box<static_object> empty()
@@ -47,6 +54,14 @@ namespace jank::runtime
     static native_box<static_object> create_unique(Args &&...pairs)
     {
       return make_box<static_object>(runtime::detail::in_place_unique{},
+                                     std::forward<Args>(pairs)...);
+    }
+
+    template <typename... Args>
+    static native_box<static_object> create_unique_with_meta(object_ptr const meta, Args &&...pairs)
+    {
+      return make_box<static_object>(meta,
+                                     runtime::detail::in_place_unique{},
                                      std::forward<Args>(pairs)...);
     }
 

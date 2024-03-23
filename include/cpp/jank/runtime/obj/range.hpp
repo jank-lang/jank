@@ -7,7 +7,7 @@ namespace jank::runtime
   template <>
   struct static_object<object_type::range> : gc
   {
-    static constexpr bool pointer_free{ false };
+    static constexpr native_bool pointer_free{ false };
 
     static_object() = default;
     static_object(static_object &&) = default;

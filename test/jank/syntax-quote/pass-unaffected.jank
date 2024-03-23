@@ -1,0 +1,10 @@
+(assert (= 1 `1))
+(assert (= :foo `:foo))
+(assert (= :foo/bar `:foo/bar))
+(assert (= [] `[]))
+(assert (= {} `{}))
+(assert (= '() `()))
+(assert (= "meow" `"meow"))
+(assert (= 'foo/meow `foo/meow))
+
+:success

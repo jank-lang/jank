@@ -7,7 +7,7 @@ namespace jank::runtime::obj::detail
   template <object_type OT, typename It>
   struct base_persistent_map_sequence : gc
   {
-    static constexpr bool pointer_free{ false };
+    static constexpr native_bool pointer_free{ false };
 
     using parent_type = static_object<OT>;
     using iterator_type = It;

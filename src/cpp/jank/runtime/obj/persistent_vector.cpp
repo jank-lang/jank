@@ -17,6 +17,13 @@ namespace jank::runtime
   {
   }
 
+  obj::persistent_vector::static_object(object_ptr const meta,
+                                        runtime::detail::native_persistent_vector &&d)
+    : data{ std::move(d) }
+    , meta{ meta }
+  {
+  }
+
   obj::persistent_vector_ptr obj::persistent_vector::create(object_ptr const s)
   {
     if(s == nullptr)
@@ -156,7 +163,7 @@ namespace jank::runtime
         return obj::nil::nil_const();
       }
       /* TODO: Map entry type? */
-      return make_box<obj::persistent_vector>(key, data[i]);
+      return make_box<obj::persistent_vector>(std::in_place, key, data[i]);
     }
     else
     {

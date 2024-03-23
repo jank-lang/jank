@@ -1,2 +1,2 @@
-(let* [a a])
-a
+(let* [self-reference self-reference])
+self-reference
