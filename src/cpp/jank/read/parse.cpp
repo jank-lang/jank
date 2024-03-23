@@ -446,6 +446,8 @@ namespace jank::read::parse
         return parse_reader_macro_set();
       case lex::token_kind::open_paren:
         return parse_reader_macro_fn();
+      case lex::token_kind::single_quote:
+        return parse_reader_macro_var_quote();
       default:
         return err(
           error{ start_token.pos, native_persistent_string{ "unsupported reader macro" } });
@@ -542,6 +544,37 @@ namespace jank::read::parse
     shorthand = none;
 
     return object_source_info{ wrapped, start_token, call_end };
+  }
+
+  processor::object_result processor::parse_reader_macro_var_quote()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    ++token_current;
+
+    auto sym_result(next());
+    if(sym_result.is_err())
+    {
+      return sym_result;
+    }
+    else if(sym_result.expect_ok().is_none())
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "value after #' must be present" } });
+    }
+    else if(sym_result.expect_ok().unwrap().ptr->type != runtime::object_type::symbol)
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "value after #' must be a symbol" } });
+    }
+
+    auto const sym(
+      runtime::expect_object<runtime::obj::symbol>(sym_result.expect_ok().unwrap().ptr));
+    auto const sym_end(sym_result.expect_ok().unwrap().end);
+
+    auto const wrapped(
+      make_box<runtime::obj::list>(std::in_place, make_box<runtime::obj::symbol>("var"), sym));
+
+    return object_source_info{ wrapped, start_token, sym_end };
   }
 
   processor::object_result processor::parse_reader_macro_comment()

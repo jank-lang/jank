@@ -737,7 +737,7 @@ namespace jank::analyze
     auto const found_var(rt_ctx.find_var(qualified_sym));
     if(found_var.is_none())
     {
-      return err(error{ "invalid var reference: var not found" });
+      return err(error{ fmt::format("unable to resolve var: {}", qualified_sym->to_string()) });
     }
 
     return make_box<expression>(expr::var_ref<expression>{

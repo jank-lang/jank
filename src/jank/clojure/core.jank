@@ -11,6 +11,10 @@
   (fn* unquote [_]
     (throw "~@ cannot be used outside of syntax quote")))
 
+(def type
+  (fn* type [o]
+    (native/raw "__value = make_box(magic_enum::enum_name(~{ o }->type));")))
+
 ; Exceptions
 (def ex-info
   (fn* ex-info [msg map]
