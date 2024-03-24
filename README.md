@@ -80,33 +80,6 @@ If you'd like your name, company, or logo here, you can
 </p>
 
 ## In the news
-<table>
-  <tr>
-    <td>Clojure Conj 2023</td>
-    <td>The REPL Interview</td>
-    <td>devmio Interview</td>
-    <td>Compiler Spotlight</td>
-  </tr>
-  <tr>
-    <td>
-      <a href="https://www.youtube.com/watch?v=Yw4IAY4Nx_o">
-        <img src="https://i0.wp.com/2023.clojure-conj.org/wp-content/uploads/2019/06/clojure.png?resize=150%2C150&ssl=1" height="100px">
-      </a>
-    </td>
-    <td>
-      <a href="https://www.therepl.net/episodes/44/">
-        <img src="https://user-images.githubusercontent.com/1057635/193151333-449385c2-9ddb-468e-b715-f149d173e310.svg" height="100px">
-      </a>
-    </td>
-    <td>
-      <a href="https://devm.io/programming/jank-programming-language">
-        <img src="https://user-images.githubusercontent.com/1057635/193151345-7ad97eb4-f0f9-485a-acbb-fbe796bb7919.svg" width="300px">
-      </a>
-    </td>
-    <td>
-      <a href="https://compilerspotlight.substack.com/p/language-showcase-jank">
-        <img src="https://user-images.githubusercontent.com/1057635/193154279-4b57dd8b-0985-4e35-85a2-d25b046232c5.png" width="350px">
-      </a>
-    </td>
-  </tr>
- </table>
+| [<img src="https://i0.wp.com/2023.clojure-conj.org/wp-content/uploads/2019/06/clojure.png?resize=150%2C150&ssl=1" height="100px"><br /><sub><b>Clojure Conj 2023</b></sub>](https://www.youtube.com/watch?v=Yw4IAY4Nx_o)<br />        | [<img src="https://user-images.githubusercontent.com/1057635/193151333-449385c2-9ddb-468e-b715-f149d173e310.svg" height="100px"><br /><sub><b>The REPL Interview</b></sub>](https://www.therepl.net/episodes/44/)<br /> |
+| :-----------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|  [<img src="https://github.com/jank-lang/jank/assets/1057635/72ff097c-578c-46f8-a727-aae6dcf2a82f" width="100px"><br /><sub><b>Language Introduction</b></sub>](https://youtu.be/ncYlHfK25i0)<br />          | [<img src="https://github.com/jank-lang/jank/assets/1057635/9788a7c8-93da-47ea-8d1d-8a258a747942" width="100px"><br /><sub><b>Compiler Spotlight</b></sub>](https://compilerspotlight.substack.com/p/language-showcase-jank)<br /> |
