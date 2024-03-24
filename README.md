@@ -1,13 +1,24 @@
-# The jank programming language [![Build](https://github.com/jank-lang/jank/actions/workflows/build.yml/badge.svg)](https://github.com/jank-lang/jank/actions/workflows/build.yml) [![codecov](https://codecov.io/gh/jank-lang/jank/branch/main/graph/badge.svg)](https://codecov.io/gh/jank-lang/jank) [![Sponsor](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&link=https://github.com/sponsors/jeaye&color=red)](https://github.com/sponsors/jeaye)
+<a href="https://jank-lang.org">
+  <img src="https://raw.githubusercontent.com/jank-lang/jank/main/.github/img/banner.png" alt="jank Banner" />
+</a>
 
-Most simply, jank is a Clojure dialect on LLVM with C++ interop. Less simply,
-jank is a general-purpose programming language which embraces the interactive,
+<div align="center">
+  <a href="https://clojurians.slack.com/archives/C03SRH97FDK" target="_blank"><img src="https://img.shields.io/badge/slack-%23jank-e01563.svg?style=flat&logo=slack&logoColor=fd893f&colorA=363636&colorB=363636" /></a>
+  <a href="https://github.com/sponsors/jeaye" target="_blank"><img src="https://img.shields.io/github/sponsors/jeaye?style=flat&logo=github&logoColor=fd893f&colorA=363636&colorB=363636" /></a>
+  <a href="" target="_blank"><img src="https://img.shields.io/twitter/follow/jeayewilkerson?style=flat&logo=x&logoColor=fd893f&colorA=363636&colorB=363636" /></a>
+  <br/>
+  <a href="https://img.shields.io/github/actions/workflow/status/jank-lang/jank/build.yml?branch=main" target="_blank"><img src="https://img.shields.io/github/actions/workflow/status/jank-lang/jank/build.yml?branch=main&style=flat&logo=github&logoColor=fd893f&colorA=363636&colorB=363636" alt="CI" /></a>
+  <a href="" target="_blank"><img src="https://img.shields.io/codecov/c/github/jank-lang/jank?style=flat&logo=codecov&logoColor=fd893f&colorA=363636&colorB=363636" /></a>
+</div>
+
+# What is jank?
+
+Most simply, jank is a [Clojure](https://clojure.org/) dialect on LLVM with C++ interop.
+Less simply, jank is a general-purpose programming language which embraces the interactive,
 functional, value-oriented nature of Clojure and the desire for the native
 runtime and performance of C++. jank aims to be strongly compatible with
 Clojure. While Clojure's default host is the JVM and its interop is with Java,
 jank's host is LLVM and its interop is with C++.
-
-https://jank-lang.org
 
 For the current progress of jank and its usability, see the tables here: https://jank-lang.org/progress/
 
