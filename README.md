@@ -1,5 +1,5 @@
 <a href="https://jank-lang.org">
-  <img src="https://raw.githubusercontent.com/jank-lang/jank/main/.github/img/banner.png" alt="jank Banner" />
+  <img src="https://media.githubusercontent.com/media/jank-lang/jank/main/.github/img/banner.png" alt="jank banner" />
 </a>
 
 <div align="center">
