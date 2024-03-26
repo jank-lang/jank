@@ -536,10 +536,11 @@ namespace jank::read::parse
     }
 
     auto const args(make_box<runtime::obj::persistent_vector>(arg_trans.persistent()));
-    auto const wrapped(make_box<runtime::obj::list>(std::in_place,
-                                                    make_box<runtime::obj::symbol>("fn*"),
-                                                    args,
-                                                    call));
+    auto const wrapped(
+      make_box<runtime::obj::persistent_list>(std::in_place,
+                                              make_box<runtime::obj::symbol>("fn*"),
+                                              args,
+                                              call));
 
     shorthand = none;
 
@@ -572,7 +573,9 @@ namespace jank::read::parse
     auto const sym_end(sym_result.expect_ok().unwrap().end);
 
     auto const wrapped(
-      make_box<runtime::obj::list>(std::in_place, make_box<runtime::obj::symbol>("var"), sym));
+      make_box<runtime::obj::persistent_list>(std::in_place,
+                                              make_box<runtime::obj::symbol>("var"),
+                                              sym));
 
     return object_source_info{ wrapped, start_token, sym_end };
   }

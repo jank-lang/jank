@@ -855,7 +855,7 @@ namespace jank::analyze
             has_catch = true;
 
             /* Verify we have (catch <sym> ...) */
-            auto const catch_list(runtime::expect_object<runtime::obj::list>(item));
+            auto const catch_list(runtime::expect_object<runtime::obj::persistent_list>(item));
             auto const catch_body_size(catch_list->count());
             if(catch_body_size == 1)
             {
@@ -903,7 +903,7 @@ namespace jank::analyze
             }
             has_finally = true;
 
-            auto const finally_list(runtime::expect_object<runtime::obj::list>(item));
+            auto const finally_list(runtime::expect_object<runtime::obj::persistent_list>(item));
             auto const do_list(
               finally_list->data.rest().cons(make_box<runtime::obj::symbol>("do")));
             auto do_res(
