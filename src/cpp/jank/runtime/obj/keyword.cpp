@@ -5,17 +5,13 @@
 
 namespace jank::runtime
 {
-  obj::keyword::static_object(obj::symbol const &s)
+  obj::keyword::static_object(detail::must_be_interned, native_persistent_string_view const &s)
     : sym{ s }
   {
   }
 
-  obj::keyword::static_object(obj::symbol &&s)
-    : sym{ std::move(s) }
-  {
-  }
-
-  obj::keyword::static_object(native_persistent_string_view const &ns,
+  obj::keyword::static_object(detail::must_be_interned,
+                              native_persistent_string_view const &ns,
                               native_persistent_string_view const &n)
     : sym{ ns, n }
   {
@@ -48,14 +44,6 @@ namespace jank::runtime
   native_hash obj::keyword::to_hash() const
   {
     return sym.to_hash() + 0x9e3779b9;
-  }
-
-  object_ptr obj::keyword::with_meta(object_ptr m) const
-  {
-    auto const meta(behavior::detail::validate_meta(m));
-    auto ret(make_box<obj::keyword>(sym));
-    ret->meta = meta;
-    return ret;
   }
 
   native_persistent_string const &obj::keyword::get_name() const

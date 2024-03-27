@@ -445,47 +445,47 @@ namespace jank::runtime
     return ok(found_ns->second->intern_var(qualified_sym));
   }
 
-  /* TODO: Swap these. The other one makes a symbol anyway. */
-  result<obj::keyword_ptr, native_persistent_string>
-  context::intern_keyword(obj::symbol const &sym, bool const resolved)
-  {
-    return intern_keyword(sym.ns, sym.name, resolved);
-  }
-
   result<obj::keyword_ptr, native_persistent_string>
   context::intern_keyword(native_persistent_string_view const &ns,
                           native_persistent_string_view const &name,
                           bool const resolved)
   {
-    profile::timer timer{ "rt intern_keyword" };
-    obj::symbol sym{ ns, name };
+    native_persistent_string resolved_ns{ ns };
     if(!resolved)
     {
       /* The ns will be an ns alias. */
       if(!ns.empty())
       {
-        auto const resolved_ns(resolve_ns(make_box<obj::symbol>(ns)));
-        if(resolved_ns.is_none())
+        auto const resolved(resolve_ns(make_box<obj::symbol>(ns)));
+        if(resolved.is_none())
         {
           return err(fmt::format("Unable to resolve ns for keyword: {}", ns));
         }
-        sym.set_ns(resolved_ns.unwrap()->name->name);
+        resolved_ns = resolved.unwrap()->name->name;
       }
       else
       {
         auto const current_ns(expect_object<jank::runtime::ns>(current_ns_var->deref()));
-        sym.set_ns(current_ns->name->name);
+        resolved_ns = current_ns->name->name;
       }
     }
+    return intern_keyword(resolved_ns.empty() ? name : fmt::format("{}/{}", resolved_ns, name));
+  }
+
+  result<obj::keyword_ptr, native_persistent_string>
+  context::intern_keyword(native_persistent_string_view const &s)
+  {
+    profile::timer timer{ "rt intern_keyword" };
 
     auto locked_keywords(keywords.wlock());
-    auto const found(locked_keywords->find(sym));
+    auto const found(locked_keywords->find(s));
     if(found != locked_keywords->end())
     {
       return found->second;
     }
 
-    auto const res(locked_keywords->emplace(sym, make_box<obj::keyword>(sym)));
+    auto const res(
+      locked_keywords->emplace(s, make_box<obj::keyword>(detail::must_be_interned{}, s)));
     return res.first->second;
   }
 

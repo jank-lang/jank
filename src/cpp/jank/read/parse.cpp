@@ -1144,7 +1144,7 @@ namespace jank::read::parse
       name = sv.substr(resolved ? 0 : 1);
     }
 
-    auto const intern_res(rt_ctx.intern_keyword(runtime::obj::symbol{ ns, name }, resolved));
+    auto const intern_res(rt_ctx.intern_keyword(ns, name, resolved));
     if(intern_res.is_err())
     {
       return err(intern_res.expect_err());

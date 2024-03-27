@@ -53,11 +53,11 @@ namespace jank::runtime
     find_var(native_persistent_string const &ns, native_persistent_string const &name);
 
     result<obj::keyword_ptr, native_persistent_string>
-    intern_keyword(obj::symbol const &sym, native_bool const resolved = true);
-    result<obj::keyword_ptr, native_persistent_string>
     intern_keyword(native_persistent_string_view const &ns,
                    native_persistent_string_view const &name,
                    native_bool resolved = true);
+    result<obj::keyword_ptr, native_persistent_string>
+    intern_keyword(native_persistent_string_view const &s);
 
     object_ptr macroexpand1(object_ptr o);
     object_ptr macroexpand(object_ptr o);
@@ -99,7 +99,7 @@ namespace jank::runtime
     static obj::symbol unique_symbol(native_persistent_string_view const &prefix);
 
     folly::Synchronized<native_unordered_map<obj::symbol_ptr, ns_ptr>> namespaces;
-    folly::Synchronized<native_unordered_map<obj::symbol, obj::keyword_ptr>> keywords;
+    folly::Synchronized<native_unordered_map<native_persistent_string, obj::keyword_ptr>> keywords;
 
     struct binding_scope
     {

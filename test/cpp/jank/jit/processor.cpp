@@ -35,8 +35,7 @@ namespace jank::jit
     TEST_CASE("files")
     {
       runtime::context rt_ctx;
-      auto const cardinal_result(
-        rt_ctx.intern_keyword(runtime::obj::symbol{ "", "success" }, true).expect_ok());
+      auto const cardinal_result(rt_ctx.intern_keyword("success").expect_ok());
       rt_ctx.load_module("/clojure.core").expect_ok();
       size_t test_count{};
 

@@ -22,19 +22,16 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(object &&base);
-    static_object(obj::symbol const &s);
-    static_object(obj::symbol &&s);
-    static_object(native_persistent_string_view const &ns, native_persistent_string_view const &n);
+    static_object(detail::must_be_interned, native_persistent_string_view const &s);
+    static_object(detail::must_be_interned,
+                  native_persistent_string_view const &ns,
+                  native_persistent_string_view const &n);
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
     native_hash to_hash() const;
-
-    /* behavior::metadatable */
-    object_ptr with_meta(object_ptr m) const;
 
     /* behavior::nameable */
     native_persistent_string const &get_name() const;
@@ -49,7 +46,6 @@ namespace jank::runtime
     object base{ object_type::keyword };
     /* TODO: Box this. */
     obj::symbol sym;
-    option<object_ptr> meta;
   };
 
   namespace obj

@@ -280,9 +280,8 @@ namespace jank::read::parse
         for(auto const &s : { "foo", "bar", "spam" })
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(
-            r.expect_ok().unwrap().ptr,
-            rt_ctx.intern_keyword(runtime::obj::symbol{ "", s }, true).expect_ok()));
+          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
+                                       rt_ctx.intern_keyword(s).expect_ok()));
 
           /* We add one for the colon. */
           auto const len(strlen(s) + 1);
@@ -306,9 +305,8 @@ namespace jank::read::parse
                               std::make_pair("spam.bar", "spam") })
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(
-            r.expect_ok().unwrap().ptr,
-            rt_ctx.intern_keyword(runtime::obj::symbol{ s.first, s.second }, true).expect_ok()));
+          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
+                                       rt_ctx.intern_keyword(s.first, s.second).expect_ok()));
 
           /* We add one for the colon and one for the slash. */
           auto const len(strlen(s.first) + strlen(s.second) + 2);
@@ -333,10 +331,8 @@ namespace jank::read::parse
         for(auto const &s : { "foo", "spam" })
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(
-            r.expect_ok().unwrap().ptr,
-            rt_ctx.intern_keyword(runtime::obj::symbol{ "", native_persistent_string{ s } }, false)
-              .expect_ok()));
+          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
+                                       rt_ctx.intern_keyword("", s, false).expect_ok()));
 
           /* We add one for each colon. */
           auto const len(strlen(s) + 2);
@@ -366,9 +362,8 @@ namespace jank::read::parse
         clojure_ns.unwrap()->add_alias(make_box<runtime::obj::symbol>("foo"), foo_ns).expect_ok();
         processor p{ rt_ctx, lp.begin(), lp.end() };
         auto const r(p.next());
-        CHECK(runtime::detail::equal(
-          r.expect_ok().unwrap().ptr,
-          rt_ctx.intern_keyword(runtime::obj::symbol{ "foo.bar.spam", "foo" }, true).expect_ok()));
+        CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
+                                     rt_ctx.intern_keyword("foo.bar.spam", "foo").expect_ok()));
         CHECK(r.expect_ok().unwrap().start
               == lex::token{ 0, 9, lex::token_kind::keyword, ":foo/foo" });
         CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
@@ -612,13 +607,12 @@ namespace jank::read::parse
           r.expect_ok().unwrap().ptr,
           make_box<runtime::obj::persistent_array_map>(
             runtime::detail::in_place_unique{},
-            make_array_box<runtime::object_ptr>(
-              rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }, true).expect_ok(),
-              make_box<runtime::obj::boolean>(true),
-              make_box<runtime::obj::integer>(1),
-              rt_ctx.intern_keyword(runtime::obj::symbol{ "one" }, true).expect_ok(),
-              make_box<runtime::obj::persistent_string>("meow"),
-              make_box<runtime::obj::persistent_string>("meow")),
+            make_array_box<runtime::object_ptr>(rt_ctx.intern_keyword("foo").expect_ok(),
+                                                make_box<runtime::obj::boolean>(true),
+                                                make_box<runtime::obj::integer>(1),
+                                                rt_ctx.intern_keyword("one").expect_ok(),
+                                                make_box<runtime::obj::persistent_string>("meow"),
+                                                make_box<runtime::obj::persistent_string>("meow")),
             6)));
         CHECK(r.expect_ok().unwrap().start
               == lex::token{ 0, 1, lex::token_kind::open_curly_bracket });
@@ -641,9 +635,8 @@ namespace jank::read::parse
         runtime::context rt_ctx;
         processor p{ rt_ctx, lp.begin(), lp.end() };
         auto const r1(p.next());
-        CHECK(runtime::detail::equal(
-          r1.expect_ok().unwrap().ptr,
-          rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }, true).expect_ok()));
+        CHECK(runtime::detail::equal(r1.expect_ok().unwrap().ptr,
+                                     rt_ctx.intern_keyword("foo").expect_ok()));
         auto const r2(p.next());
         CHECK(r2.is_err());
       }
@@ -686,11 +679,10 @@ namespace jank::read::parse
         auto const r(p.next());
         CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
                                      runtime::obj::persistent_array_map::empty()));
-        CHECK(
-          runtime::detail::equal(runtime::meta(r.expect_ok().unwrap().ptr),
-                                 runtime::obj::persistent_array_map::create_unique(
-                                   rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }).expect_ok(),
-                                   runtime::obj::boolean::true_const())));
+        CHECK(runtime::detail::equal(runtime::meta(r.expect_ok().unwrap().ptr),
+                                     runtime::obj::persistent_array_map::create_unique(
+                                       rt_ctx.intern_keyword("foo").expect_ok(),
+                                       runtime::obj::boolean::true_const())));
       }
 
       SUBCASE("Keyword meta for non-metadatable target")
@@ -710,11 +702,10 @@ namespace jank::read::parse
         auto const r(p.next());
         CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
                                      runtime::obj::persistent_vector::empty()));
-        CHECK(runtime::detail::equal(
-          runtime::meta(r.expect_ok().unwrap().ptr),
-          runtime::obj::persistent_array_map::create_unique(
-            rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }).expect_ok(),
-            rt_ctx.intern_keyword(runtime::obj::symbol{ "bar" }).expect_ok())));
+        CHECK(runtime::detail::equal(runtime::meta(r.expect_ok().unwrap().ptr),
+                                     runtime::obj::persistent_array_map::create_unique(
+                                       rt_ctx.intern_keyword("foo").expect_ok(),
+                                       rt_ctx.intern_keyword("bar").expect_ok())));
       }
 
       SUBCASE("Map meta for non-metadatable target")
@@ -734,13 +725,12 @@ namespace jank::read::parse
         auto const r(p.next());
         CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
                                      runtime::obj::persistent_list::empty()));
-        CHECK(runtime::detail::equal(
-          runtime::meta(r.expect_ok().unwrap().ptr),
-          runtime::obj::persistent_array_map::create_unique(
-            rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }).expect_ok(),
-            rt_ctx.intern_keyword(runtime::obj::symbol{ "bar" }).expect_ok(),
-            rt_ctx.intern_keyword(runtime::obj::symbol{ "meow" }).expect_ok(),
-            runtime::obj::boolean::true_const())));
+        CHECK(runtime::detail::equal(runtime::meta(r.expect_ok().unwrap().ptr),
+                                     runtime::obj::persistent_array_map::create_unique(
+                                       rt_ctx.intern_keyword("foo").expect_ok(),
+                                       rt_ctx.intern_keyword("bar").expect_ok(),
+                                       rt_ctx.intern_keyword("meow").expect_ok(),
+                                       runtime::obj::boolean::true_const())));
       }
 
       SUBCASE("Nested hints")
@@ -754,7 +744,7 @@ namespace jank::read::parse
         CHECK(runtime::detail::equal(
           runtime::meta(r.expect_ok().unwrap().ptr),
           runtime::obj::persistent_array_map::create_unique(
-            rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }).expect_ok(),
+            rt_ctx.intern_keyword("foo").expect_ok(),
             make_box<runtime::obj::persistent_list>(std::in_place,
                                                     make_box<runtime::obj::symbol>("quote"),
                                                     make_box<runtime::obj::symbol>("bar")))));
@@ -778,7 +768,7 @@ namespace jank::read::parse
               .first()
               .unwrap()),
           runtime::obj::persistent_array_map::create_unique(
-            rt_ctx.intern_keyword(runtime::obj::symbol{ "foo" }).expect_ok(),
+            rt_ctx.intern_keyword("foo").expect_ok(),
             runtime::obj::boolean::true_const())));
       }
     }

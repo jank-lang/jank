@@ -18,6 +18,12 @@ namespace jank::runtime::detail
   {
     static constexpr object_type value{ O };
   };
+
+  /* If an object requires this in its constructor, use your runtime context to intern
+   * it instead. */
+  struct must_be_interned
+  {
+  };
 }
 
 namespace jank
