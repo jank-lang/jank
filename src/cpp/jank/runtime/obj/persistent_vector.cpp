@@ -4,6 +4,7 @@
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/obj/transient_vector.hpp>
 
 namespace jank::runtime
 {
@@ -107,6 +108,11 @@ namespace jank::runtime
     auto vec(data.push_back(head));
     auto ret(make_box<obj::persistent_vector>(std::move(vec)));
     return ret;
+  }
+
+  obj::transient_vector_ptr obj::persistent_vector::to_transient() const
+  {
+    return make_box<obj::transient_vector>(data);
   }
 
   object_ptr obj::persistent_vector::with_meta(object_ptr const m) const

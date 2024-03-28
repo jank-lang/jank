@@ -16,6 +16,9 @@
 #include <jank/runtime/obj/persistent_array_map_sequence.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_hash_map_sequence.hpp>
+#include <jank/runtime/obj/transient_hash_map.hpp>
+#include <jank/runtime/obj/transient_vector.hpp>
+#include <jank/runtime/obj/transient_set.hpp>
 #include <jank/runtime/obj/iterator.hpp>
 #include <jank/runtime/obj/range.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
@@ -173,9 +176,24 @@ namespace jank::runtime
                     std::forward<Args>(args)...);
         }
         break;
+      case object_type::transient_hash_map:
+        {
+          return fn(expect_object<obj::transient_hash_map>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::transient_vector:
+        {
+          return fn(expect_object<obj::transient_vector>(erased), std::forward<Args>(args)...);
+        }
+        break;
       case object_type::persistent_set:
         {
           return fn(expect_object<obj::persistent_set>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::transient_set:
+        {
+          return fn(expect_object<obj::transient_set>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::cons:

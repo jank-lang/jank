@@ -21,13 +21,17 @@ namespace jank::runtime
 
   void obj::native_function_wrapper::to_string(fmt::memory_buffer &buff) const
   {
-    fmt::format_to(std::back_inserter(buff), "function");
+    fmt::format_to(std::back_inserter(buff),
+                   "{}@{}",
+                   magic_enum::enum_name(base.type),
+                   fmt::ptr(&base));
   }
 
-  native_persistent_string const &obj::native_function_wrapper::to_string() const
+  native_persistent_string obj::native_function_wrapper::to_string() const
   {
-    static native_persistent_string const s{ "native_function_wrapper" };
-    return s;
+    fmt::memory_buffer buff;
+    to_string(buff);
+    return native_persistent_string{ buff.data(), buff.size() };
   }
 
   native_hash obj::native_function_wrapper::to_hash() const

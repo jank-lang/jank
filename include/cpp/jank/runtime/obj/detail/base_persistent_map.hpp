@@ -40,6 +40,7 @@ namespace jank::runtime::obj::detail
         return false;
       }
 
+      /* TODO: Is this enough? Value comparison may be needed. */
       return to_hash() == hash::visit(p);
     }
 

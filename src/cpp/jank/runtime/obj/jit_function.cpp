@@ -9,12 +9,17 @@ namespace jank::runtime
 
   native_persistent_string obj::jit_function::to_string()
   {
-    return "jit function";
+    fmt::memory_buffer buff;
+    to_string(buff);
+    return native_persistent_string{ buff.data(), buff.size() };
   }
 
   void obj::jit_function::to_string(fmt::memory_buffer &buff)
   {
-    fmt::format_to(std::back_inserter(buff), "jit_function");
+    fmt::format_to(std::back_inserter(buff),
+                   "{}@{}",
+                   magic_enum::enum_name(base.type),
+                   fmt::ptr(&base));
   }
 
   native_hash obj::jit_function::to_hash() const
