@@ -979,12 +979,9 @@
   (native/raw "__value = rem(~{ num }, ~{ div });"))
 (defn mod [num div]
   (let [m (rem num div)]
-    ; TODO: Could use an or here, if we had it.
-    (if (zero? m)
+    (if (or (zero? m) (= (pos? num) (pos? div)))
       m
-      (if (= (pos? num) (pos? div))
-        m
-        (+ m div)))))
+      (+ m div))))
 
 ;; Numbers.
 (defn integer? [o]
@@ -1179,11 +1176,11 @@
            (list (cons 'do body)
                  (list 'clojure.core/pop-thread-bindings)))))
 
-; Temporarily redefines Vars during a call to func.  Each val of
+; Temporarily redefines Vars during a call to func. Each val of
 ; binding-map will replace the root value of its key which must be
-; a Var.  After func is called with no args, the root values of all
-; the Vars will be set back to their old values.  These temporary
-; changes will be visible in all threads.  Useful for mocking out
+; a Var. After func is called with no args, the root values of all
+; the Vars will be set back to their old values. These temporary
+; changes will be visible in all threads. Useful for mocking out
 ; functions during testing.
 (defn with-redefs-fn [binding-map fun]
   (let [root-bind (fn [m]
@@ -1193,11 +1190,12 @@
                          (map (fn [v]
                                 (native/raw "__value = expect_object<runtime::var>(~{ v })->get_root();"))
                               (keys binding-map)))]
-    ; TODO: try/finally
-    (do ;try
+    (try
       (root-bind binding-map)
       (fun)
-      (do ;finally
+      (catch e
+        (throw e))
+      (finally
         (root-bind old-vals)))))
 
 ; binding => var-symbol temp-value-expr
@@ -1312,7 +1310,6 @@
   ([o]
    (cond
      (symbol? o) o
-     ; TODO: Intern.
      (string? o) (native/raw "__value = make_box<obj::symbol>(expect_object<obj::persistent_string>(~{ o })->data);")
      (var? o) (native/raw "__value = expect_object<runtime::var>(~{ o })->name;")
      (keyword? o) (native/raw "__value = make_box<obj::symbol>(expect_object<obj::keyword>(~{ o })->sym);")
@@ -1692,14 +1689,12 @@
         filter-opts (select-keys opts [:exclude :only :rename :refer])
         undefined-on-entry? (not (find-ns lib))]
     (if load
-      ; TODO: Exception handling
-      (do ;try
+      (try
         (load lib need-ns? require)
-        ;(catch Exception e
-        ;  (when undefined-on-entry
-        ;    (remove-ns lib))
-        ;  (throw e))
-        )
+        (catch e
+          (when undefined-on-entry?
+            (remove-ns lib))
+          (throw e)))
       (throw-if (and need-ns? (not (find-ns lib)))
                 (str "namespace " lib " not found")))
     (when as
@@ -1720,8 +1715,7 @@
                       []
                       flags)
         args (remove keyword? args)]
-    ; TODO: Set syntax.
-    (let [supported (set [:as :reload :reload-all :require :use :verbose :refer :as-alias])
+    (let [supported #{:as :reload :reload-all :require :use :verbose :refer :as-alias}
           unsupported (seq (remove supported flags))]
       (throw-if unsupported
                 (str "Unsupported option(s) supplied: " unsupported)))
