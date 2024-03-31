@@ -38,6 +38,9 @@ runs:
     - name: Compile and test
       shell: bash
       run: ${{ github.workspace }}/bin/ci/test -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+    - if: ${{ env.CODECOV }} == "on"
+      name: Upload report to Codecov
+      uses: codecov/codecov-action@v3
     - if: ${{ inputs.update_release }}
       name: Release
       id: release
