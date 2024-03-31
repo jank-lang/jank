@@ -78,7 +78,7 @@ namespace jank::runtime
     auto const res(data.find(key));
     if(res)
     {
-      return make_box<obj::persistent_vector>(key, *res);
+      return make_box<obj::persistent_vector>(std::in_place, key, *res);
     }
     return obj::nil::nil_const();
   }
@@ -128,7 +128,7 @@ namespace jank::runtime
   {
     assert_active();
     active = false;
-    return make_box<obj::persistent_hash_map>(std::move(data));
+    return make_box<obj::persistent_hash_map>(std::move(data).persistent());
   }
 
   object_ptr obj::transient_hash_map::call(object_ptr const o) const

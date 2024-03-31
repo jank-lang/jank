@@ -101,7 +101,7 @@ namespace jank::runtime
       return nil;
     }
 
-    return make_box<obj::persistent_vector>(found, found);
+    return make_box<obj::persistent_vector>(std::in_place, found, found);
   }
 
   native_bool obj::transient_set::contains(object_ptr const elem) const

@@ -132,7 +132,7 @@ namespace jank::runtime
         return obj::nil::nil_const();
       }
       /* TODO: Map entry type? */
-      return make_box<obj::persistent_vector>(idx, data[i]);
+      return make_box<obj::persistent_vector>(std::in_place, idx, data[i]);
     }
     else
     {
