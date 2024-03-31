@@ -11,4 +11,11 @@ namespace jank::runtime::behavior
       t->cons(object_ptr{})
     }; // -> consable
   };
+
+  template <typename T>
+  concept consable_in_place = requires(T * const t) {
+    {
+      t->cons_in_place(object_ptr{})
+    }; // -> consable_in_place
+  };
 }

@@ -1,10 +1,8 @@
-#include <iostream>
-#include <sstream>
-
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/obj/transient_hash_map.hpp>
 
 namespace jank::runtime
 {
@@ -147,5 +145,10 @@ namespace jank::runtime
       return fallback;
     }
     return *found;
+  }
+
+  obj::transient_hash_map_ptr obj::persistent_hash_map::to_transient() const
+  {
+    return make_box<obj::transient_hash_map>(data);
   }
 }

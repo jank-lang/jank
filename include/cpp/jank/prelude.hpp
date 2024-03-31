@@ -28,3 +28,6 @@
 #include <jank/runtime/seq.hpp>
 #include <jank/runtime/behavior/numberable.hpp>
 #include <jank/runtime/behavior/nameable.hpp>
+#include <jank/runtime/behavior/transientable.hpp>
+#include <jank/runtime/behavior/consable.hpp>
+#include <jank/runtime/behavior/associatively_writable.hpp>

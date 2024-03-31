@@ -244,7 +244,8 @@ namespace jank::evaluate
               }
           }
         }
-        else if constexpr(std::same_as<T, runtime::obj::persistent_set>)
+        else if constexpr(std::same_as<T, runtime::obj::persistent_set>
+                          || std::same_as<T, runtime::obj::transient_vector>)
         {
           auto const s(expr.arg_exprs.size());
           if(s != 1)
@@ -257,7 +258,8 @@ namespace jank::evaluate
         }
         else if constexpr(std::same_as<T, runtime::obj::keyword>
                           || std::same_as<T, runtime::obj::persistent_hash_map>
-                          || std::same_as<T, runtime::obj::persistent_array_map>)
+                          || std::same_as<T, runtime::obj::persistent_array_map>
+                          || std::same_as<T, runtime::obj::transient_set>)
         {
           auto const s(expr.arg_exprs.size());
           switch(s)

@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include <fmt/core.h>
 
 #include <jank/runtime/behavior/callable.hpp>
@@ -69,7 +67,8 @@ namespace jank::runtime
         else if constexpr(std::same_as<T, obj::persistent_set>
                           || std::same_as<T, obj::persistent_hash_map>
                           || std::same_as<T, obj::persistent_array_map>
-                          || std::same_as<T, obj::keyword>)
+                          || std::same_as<T, obj::transient_vector>
+                          || std::same_as<T, obj::transient_set> || std::same_as<T, obj::keyword>)
         {
           return typed_source->call(a1);
         }
@@ -110,7 +109,7 @@ namespace jank::runtime
         }
         else if constexpr(std::same_as<T, obj::persistent_hash_map>
                           || std::same_as<T, obj::persistent_array_map>
-                          || std::same_as<T, obj::keyword>)
+                          || std::same_as<T, obj::transient_set> || std::same_as<T, obj::keyword>)
         {
           return typed_source->call(a1, a2);
         }
