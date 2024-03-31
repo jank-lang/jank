@@ -281,7 +281,8 @@
 (defn defmacro [&form &env fn-name fn-args & body]
   (list 'do
         (list 'def fn-name (cons 'fn* (cons (vec (cons '&form (cons '&env fn-args))) body)))
-        (list 'reset-meta! (list 'var fn-name) {:macro true})))
+        (list 'reset-meta! (list 'var fn-name) {:macro true})
+        (list 'var fn-name)))
 (reset-meta! (var defmacro) {:macro true})
 
 (defmacro defn- [& args]
