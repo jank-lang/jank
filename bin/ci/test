@@ -30,6 +30,7 @@ then
   LLVM_PROFILE_FILE=build/test.profraw ./bin/test
   "${cling_dir}/bin/llvm-profdata" merge --sparse build/test.profraw -o build/test.profdata
   "${cling_dir}/bin/llvm-cov" show ./build/jank-test --instr-profile build/test.profdata > coverage.txt
+  # This file will be read by a subsequent CodeCov Github action.
 else
   ./bin/test
 fi
