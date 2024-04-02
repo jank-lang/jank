@@ -16,7 +16,7 @@ namespace jank::runtime
 
   obj::iterator_ptr obj::iterator::fresh_seq() const
   {
-    return jank::make_box<obj::iterator>(fn, current);
+    return make_box<obj::iterator>(fn, current);
   }
 
   object_ptr obj::iterator::first() const
@@ -32,7 +32,7 @@ namespace jank::runtime
     }
 
     auto const next(dynamic_call(fn, current));
-    auto const ret(jank::make_box<obj::iterator>(fn, next));
+    auto const ret(make_box<obj::iterator>(fn, next));
     cached_next = ret;
 
     return ret;
@@ -112,7 +112,7 @@ namespace jank::runtime
     return hash::ordered(&base);
   }
 
-  obj::cons_ptr obj::iterator::cons(object_ptr head)
+  obj::cons_ptr obj::iterator::cons(object_ptr const head) const
   {
     return make_box<obj::cons>(head, this);
   }

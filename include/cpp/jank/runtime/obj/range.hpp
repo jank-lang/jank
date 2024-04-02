@@ -4,6 +4,10 @@
 
 namespace jank::runtime
 {
+  /* A range from X to Y, exclusive, incrementing by S. This is for non-integer values.
+   * For integer values, use integer_range. This is not countable in constant time, due
+   * to floating point shenanigans. */
+  /* TODO: integer_range */
   template <>
   struct static_object<object_type::range> : gc
   {

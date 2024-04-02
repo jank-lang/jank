@@ -35,7 +35,7 @@ namespace jank::runtime
     native_box<static_object> next() const;
     native_box<static_object> next_in_place();
     object_ptr next_in_place_first();
-    obj::cons_ptr cons(object_ptr head);
+    obj::cons_ptr cons(object_ptr head) const;
 
     object base{ object_type::iterator };
     /* TODO: Support chunking. */
