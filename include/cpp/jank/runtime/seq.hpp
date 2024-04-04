@@ -18,6 +18,7 @@ namespace jank::runtime
       if(!s)
       {
         fmt::format_to(inserter, "()");
+        return;
       }
 
       fmt::format_to(inserter, "(");

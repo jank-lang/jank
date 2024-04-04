@@ -27,6 +27,7 @@ namespace jank::runtime
     transient_vector,
     persistent_set,
     cons,
+    lazy_sequence,
     range,
     iterator,
     native_function_wrapper,

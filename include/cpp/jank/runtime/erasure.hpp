@@ -20,6 +20,7 @@
 #include <jank/runtime/obj/transient_vector.hpp>
 #include <jank/runtime/obj/transient_set.hpp>
 #include <jank/runtime/obj/iterator.hpp>
+#include <jank/runtime/obj/lazy_sequence.hpp>
 #include <jank/runtime/obj/range.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
@@ -240,6 +241,11 @@ namespace jank::runtime
           return fn(expect_object<obj::iterator>(erased), std::forward<Args>(args)...);
         }
         break;
+      case object_type::lazy_sequence:
+        {
+          return fn(expect_object<obj::lazy_sequence>(erased), std::forward<Args>(args)...);
+        }
+        break;
       case object_type::native_function_wrapper:
         {
           return fn(expect_object<obj::native_function_wrapper>(erased),
@@ -377,6 +383,11 @@ namespace jank::runtime
       case object_type::iterator:
         {
           return fn(expect_object<obj::iterator>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::lazy_sequence:
+        {
+          return fn(expect_object<obj::lazy_sequence>(erased), std::forward<Args>(args)...);
         }
         break;
 

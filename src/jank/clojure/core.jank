@@ -149,10 +149,12 @@
                    {
                      using T = typename decltype(typed_tail)::value_type;
 
-                     if constexpr(behavior::seqable<T>)
+                     if constexpr(std::same_as<obj::lazy_sequence, T>)
+                     { return make_box<jank::runtime::obj::cons>(~{ head }, typed_tail); }
+                     else if constexpr(behavior::seqable<T>)
                      { return make_box<jank::runtime::obj::cons>(~{ head }, typed_tail->seq()); }
                      else
-                     { throw ~{ (ex-info :invalid-cons-tail {:head head :tail tail}) }; }
+                     { throw ~{ (ex-info :invalid-cons-tail {:type (type tail)}) }; }
                    },
                    ~{ tail }
                  );")))
@@ -773,6 +775,16 @@
   ([a b c d e f & args]
    ; TODO: LazilyPersistentVector
    (vec (concat [a b c d e f] args))))
+
+(defn lazy-seq* [fun]
+  (native/raw "__value = make_box<obj::lazy_sequence>(~{ fun });"))
+
+; Takes a body of expressions that returns an ISeq or nil, and yields
+; a Seqable object that will invoke the body only the first time seq
+; is called, and will cache the result and return it on all subsequent
+; seq calls. See also - realized?
+(defmacro lazy-seq [& body]
+  `(lazy-seq* (fn [] ~@body)))
 
 ; Repeatedly executes body (presumably for side-effects) with
 ; bindings and filtering as provided by `for`.  Does not retain

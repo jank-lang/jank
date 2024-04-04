@@ -5,7 +5,7 @@ namespace jank::runtime
 {
   obj::cons::static_object(object_ptr const head, object_ptr const tail)
     : head{ head }
-    , tail{ tail }
+    , tail{ tail == obj::nil::nil_const() ? nullptr : tail }
   {
     assert(head);
   }
@@ -25,27 +25,14 @@ namespace jank::runtime
     return head;
   }
 
-  obj::cons_ptr obj::cons::next() const
+  object_ptr obj::cons::next() const
   {
     if(!tail)
     {
       return nullptr;
     }
 
-    return visit_object(
-      [&](auto const typed_tail) -> obj::cons_ptr {
-        using T = typename decltype(typed_tail)::value_type;
-
-        if constexpr(behavior::sequenceable<T>)
-        {
-          return make_box<obj::cons>(typed_tail->first(), typed_tail->next());
-        }
-        else
-        {
-          throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_tail->to_string()) };
-        }
-      },
-      tail);
+    return runtime::seq(tail);
   }
 
   obj::cons_ptr obj::cons::next_in_place()
@@ -63,6 +50,10 @@ namespace jank::runtime
         {
           head = typed_tail->first();
           tail = typed_tail->next();
+          if(tail == obj::nil::nil_const())
+          {
+            tail = nullptr;
+          }
         }
         else
         {
@@ -89,6 +80,10 @@ namespace jank::runtime
         {
           head = typed_tail->first();
           tail = typed_tail->next();
+          if(tail == obj::nil::nil_const())
+          {
+            tail = nullptr;
+          }
         }
         else
         {
@@ -114,7 +109,7 @@ namespace jank::runtime
         {
           auto seq(typed_o->fresh_seq());
           for(auto it(fresh_seq()); it != nullptr;
-              seq = seq->next_in_place(), seq = seq->next_in_place())
+              it = it->next_in_place(), seq = seq->next_in_place())
           {
             if(seq == nullptr || !runtime::detail::equal(it, seq->first()))
             {
