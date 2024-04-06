@@ -1,0 +1,5 @@
+(assert (= 2 ((fn* [a]
+                (let* [a a]
+                  a))
+              2)))
+:success

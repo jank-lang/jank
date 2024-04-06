@@ -227,7 +227,7 @@ namespace jank::analyze
       make_box<local_frame>(local_frame::frame_type::fn, current_frame->rt_ctx, current_frame)
     };
     auto const fn_name(make_box<runtime::obj::symbol>(name));
-    local_binding fn_name_binding{ fn_name, none, current_frame };
+    local_binding fn_name_binding{ fn_name, fn_name->name, none, current_frame };
     fn_name_binding.is_named_recur = true;
     frame->locals.emplace(fn_name, std::move(fn_name_binding));
 
@@ -285,7 +285,7 @@ namespace jank::analyze
         }
       }
 
-      frame->locals.emplace(sym, local_binding{ sym, none, current_frame });
+      frame->locals.emplace(sym, local_binding{ sym, sym->name, none, current_frame });
       param_symbols.emplace_back(sym);
     }
 
@@ -618,9 +618,12 @@ namespace jank::analyze
         return res.expect_err_move();
       }
       auto it(ret.pairs.emplace_back(sym, res.expect_ok_move()));
-      ret.frame->locals.emplace(
-        sym,
-        local_binding{ sym, some(it.second), current_frame, it.second->get_base()->needs_box });
+      ret.frame->locals.emplace(sym,
+                                local_binding{ sym,
+                                               runtime::context::unique_string(sym->name),
+                                               some(it.second),
+                                               current_frame,
+                                               it.second->get_base()->needs_box });
     }
 
     size_t const form_count{ o->count() - 2 };
@@ -994,7 +997,7 @@ namespace jank::analyze
             auto frame(make_box<local_frame>(local_frame::frame_type::catch_,
                                              current_frame->rt_ctx,
                                              current_frame));
-            frame->locals.emplace(sym, local_binding{ sym, none, current_frame });
+            frame->locals.emplace(sym, local_binding{ sym, sym->name, none, current_frame });
 
             /* Now we just turn the body into a do block and have the do analyzer handle the rest. */
             auto const do_list(

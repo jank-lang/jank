@@ -363,17 +363,17 @@ namespace jank::codegen
   {
     if(binding.needs_box)
     {
-      boxed_name = runtime::munge(binding.name->name);
+      boxed_name = runtime::munge(binding.native_name);
       unboxed_name = boxed_name;
     }
     else if(binding.has_boxed_usage)
     {
-      unboxed_name = runtime::munge(binding.name->name);
+      unboxed_name = runtime::munge(binding.native_name);
       boxed_name = detail::boxed_local_name(unboxed_name);
     }
     else
     {
-      unboxed_name = runtime::munge(binding.name->name);
+      unboxed_name = runtime::munge(binding.native_name);
     }
   }
 
@@ -1180,7 +1180,7 @@ namespace jank::codegen
                                 analyze::expr::function_arity<analyze::expression> const &,
                                 native_bool const)
   {
-    auto const munged_name(runtime::munge(expr.name->name));
+    auto const munged_name(runtime::munge(expr.binding.native_name));
 
     handle ret;
     if(expr.binding.needs_box)
@@ -1289,17 +1289,17 @@ namespace jank::codegen
 
     for(auto const &pair : expr.pairs)
     {
-      auto const &val_tmp(gen(pair.second, fn_arity, pair.second->get_base()->needs_box));
-      auto const &munged_name(runtime::munge(pair.first->name));
-      /* Every binding is wrapped in its own scope, to allow shadowing. */
-      fmt::format_to(inserter, "{{ auto const {}({}); ", munged_name, val_tmp.unwrap().str(false));
-
       auto const local(expr.frame->find_local_or_capture(pair.first));
       if(local.is_none())
       {
         throw std::runtime_error{ fmt::format("ICE: unable to find local: {}",
                                               pair.first->to_string()) };
       }
+
+      auto const &val_tmp(gen(pair.second, fn_arity, pair.second->get_base()->needs_box));
+      auto const &munged_name(runtime::munge(local.unwrap().binding.native_name));
+      /* Every binding is wrapped in its own scope, to allow shadowing. */
+      fmt::format_to(inserter, "{{ auto const {}({}); ", munged_name, val_tmp.unwrap().str(false));
 
       auto const &binding(local.unwrap().binding);
       if(!binding.needs_box && binding.has_boxed_usage)
@@ -1631,7 +1631,7 @@ namespace jank::codegen
 
           fmt::format_to(inserter,
                          "jank::runtime::object_ptr const {0};",
-                         runtime::munge(v.first->name));
+                         runtime::munge(v.second.native_name));
         }
       }
     }
@@ -1655,7 +1655,7 @@ namespace jank::codegen
           /* TODO: More useful types here. */
           fmt::format_to(inserter,
                          ", jank::runtime::object_ptr {0}",
-                         runtime::munge(v.first->name));
+                         runtime::munge(v.second.native_name));
         }
       }
     }
@@ -1702,7 +1702,7 @@ namespace jank::codegen
           }
           used_captures.emplace(v.first->to_hash());
 
-          fmt::format_to(inserter, ", {0}{{ {0} }}", runtime::munge(v.first->name));
+          fmt::format_to(inserter, ", {0}{{ {0} }}", runtime::munge(v.second.native_name));
         }
       }
     }
@@ -1863,8 +1863,8 @@ namespace jank::codegen
           used_captures.emplace(v.first->to_hash());
 
           /* We're generating the inputs to the function ctor, which means we don't
-            * want the binding of the capture within the function; we want the one outside
-            * of it, which we're capturing. We need to reach further for that. */
+           * want the binding of the capture within the function; we want the one outside
+           * of it, which we're capturing. We need to reach further for that. */
           auto const originating_local(root_fn.frame->find_local_or_capture(v.first));
           handle h{ originating_local.unwrap().binding };
           fmt::format_to(inserter, ", {0}", h.str(true));

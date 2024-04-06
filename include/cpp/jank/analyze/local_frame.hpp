@@ -37,6 +37,7 @@ namespace jank::analyze
   struct local_binding
   {
     runtime::obj::symbol_ptr name{};
+    native_persistent_string native_name;
     option<native_box<expression>> value_expr{};
     native_box<struct local_frame> originating_frame{};
     native_bool needs_box{ true };
