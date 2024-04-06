@@ -1,5 +1,3 @@
-; The layout of this file roughly matches: https://clojure.org/api/cheatsheet
-
 ; Namespace management.
 (def *ns*)
 
@@ -8,7 +6,7 @@
   (fn* unquote [_]
     (throw "~ cannot be used outside of syntax quote")))
 (def unquote-splicing
-  (fn* unquote [_]
+  (fn* unquote-splicing [_]
     (throw "~@ cannot be used outside of syntax quote")))
 
 (def type
@@ -745,7 +743,7 @@
 (defn reverse [coll]
   (reduce conj () coll))
 
-; TODO: Lazy seqs
+; XXX: This will be redefined later on, to be lazy.
 (defn concat
   ([]
    '())

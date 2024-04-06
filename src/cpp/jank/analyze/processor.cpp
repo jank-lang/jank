@@ -212,6 +212,7 @@ namespace jank::analyze
 
   result<expr::function_arity<expression>, error>
   processor::analyze_fn_arity(runtime::obj::persistent_list_ptr const &list,
+                              native_persistent_string const &name,
                               local_frame_ptr &current_frame)
   {
     auto const params_obj(list->data.first().unwrap());
@@ -225,6 +226,11 @@ namespace jank::analyze
     local_frame_ptr frame{
       make_box<local_frame>(local_frame::frame_type::fn, current_frame->rt_ctx, current_frame)
     };
+    auto const fn_name(make_box<runtime::obj::symbol>(name));
+    local_binding fn_name_binding{ fn_name, none, current_frame };
+    fn_name_binding.is_named_recur = true;
+    frame->locals.emplace(fn_name, std::move(fn_name_binding));
+
     native_vector<runtime::obj::symbol_ptr> param_symbols;
     param_symbols.reserve(params->data.size());
     std::set<runtime::obj::symbol> unique_param_symbols;
@@ -342,7 +348,7 @@ namespace jank::analyze
     }
     auto list(full_list);
 
-    native_persistent_string name;
+    native_persistent_string name, unique_name;
     auto first_elem(list->data.rest().first().unwrap());
     if(first_elem->type == runtime::object_type::symbol)
     {
@@ -350,7 +356,7 @@ namespace jank::analyze
       /* TODO: Remove the generated portion here once we support codegen for making all references
        * to generated code use the fully qualified name. Right now, a jank fn named `min` will
        * conflict with the RT `min` fn, for example. */
-      name = runtime::context::unique_string(s->name);
+      name = s->name;
       first_elem = list->data.rest().rest().first().unwrap();
       list = make_box(list->data.rest());
     }
@@ -358,13 +364,14 @@ namespace jank::analyze
     {
       name = runtime::context::unique_string("fn");
     }
-    name = runtime::munge(name);
+    unique_name = runtime::context::unique_string(name);
 
     native_vector<expr::function_arity<expression>> arities;
 
     if(first_elem->type == runtime::object_type::persistent_vector)
     {
       auto result(analyze_fn_arity(make_box<runtime::obj::persistent_list>(list->data.rest()),
+                                   name,
                                    current_frame));
       if(result.is_err())
       {
@@ -383,7 +390,7 @@ namespace jank::analyze
         }
         auto arity_list(runtime::expect_object<runtime::obj::persistent_list>(arity_list_obj));
 
-        auto result(analyze_fn_arity(arity_list.data, current_frame));
+        auto result(analyze_fn_arity(arity_list.data, name, current_frame));
         if(result.is_err())
         {
           return result.expect_err_move();
@@ -443,6 +450,7 @@ namespace jank::analyze
     auto ret(make_box<expression>(expr::function<expression>{
       expression_base{{}, expr_type, current_frame},
       name,
+      unique_name,
       std::move(arities)
     }));
 
@@ -1284,6 +1292,9 @@ namespace jank::analyze
     expression_ptr source{};
     native_bool needs_ret_box{ true };
     native_bool needs_arg_box{ true };
+    /* Do we recur through calling our own fn name? */
+    native_bool is_named_recur{};
+
     /* TODO: If this is a recursive call, note that and skip the var lookup. */
     if(first->type == runtime::object_type::symbol)
     {
@@ -1310,6 +1321,7 @@ namespace jank::analyze
 
       source = sym_result.expect_ok();
       auto var_deref(boost::get<expr::var_deref<expression>>(&source->data));
+      auto local_ref(boost::get<expr::local_reference>(&source->data));
 
       /* If this expression doesn't need to be boxed, based on where it's called, we can dig
        * into the call details itself to see if the function supports unboxed returns. Most don't. */
@@ -1350,6 +1362,10 @@ namespace jank::analyze
           needs_ret_box = needs_box | !supports_unboxed_output;
         }
       }
+      else if(local_ref && local_ref->binding.is_named_recur)
+      {
+        is_named_recur = true;
+      }
     }
     else
     {
@@ -1378,7 +1394,8 @@ namespace jank::analyze
       expression_base{{}, expr_type, current_frame, needs_ret_box},
       source,
       make_box<runtime::obj::persistent_list>(o->data.rest()),
-      arg_exprs
+      arg_exprs,
+      is_named_recur
     });
   }
 

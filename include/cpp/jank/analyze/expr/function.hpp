@@ -67,6 +67,7 @@ namespace jank::analyze::expr
   struct function : expression_base
   {
     native_persistent_string name;
+    native_persistent_string unique_name;
     native_vector<function_arity<E>> arities;
 
     runtime::object_ptr to_runtime_data() const
@@ -83,6 +84,8 @@ namespace jank::analyze::expr
                                                           make_box("expr::function"),
                                                           make_box("name"),
                                                           detail::to_runtime_data(name),
+                                                          make_box("unique_name"),
+                                                          detail::to_runtime_data(unique_name),
                                                           make_box("arities"),
                                                           arity_maps));
     }

@@ -38,7 +38,8 @@ namespace jank::evaluate
 
     wrapper.arities.emplace_back(std::move(arity));
     wrapper.frame = expr.frame;
-    wrapper.name = runtime::context::unique_string("repl_fn");
+    wrapper.name = "repl_fn";
+    wrapper.unique_name = runtime::context::unique_string(wrapper.name);
 
     return wrapper;
   }
@@ -398,7 +399,7 @@ namespace jank::evaluate
       runtime::module::nest_module(runtime::expect_object<runtime::ns>(
                                      rt_ctx.intern_var("clojure.core", "*ns*").expect_ok()->deref())
                                      ->to_string(),
-                                   runtime::munge(expr.name)));
+                                   runtime::munge(expr.unique_name)));
     codegen::processor cg_prc{ rt_ctx, expr, module, codegen::compilation_target::repl };
     return jit_prc.eval(cg_prc).expect_ok().unwrap();
   }

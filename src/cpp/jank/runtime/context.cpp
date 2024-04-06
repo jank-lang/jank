@@ -213,6 +213,7 @@ namespace jank::runtime
         expect_object<obj::persistent_string>(current_module_var->deref())->data);
       auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc));
       wrapped_exprs.name = "__ns";
+      wrapped_exprs.unique_name = runtime::context::unique_string(wrapped_exprs.name);
       auto const &module(
         expect_object<runtime::ns>(intern_var("clojure.core", "*ns*").expect_ok()->deref())
           ->to_string());

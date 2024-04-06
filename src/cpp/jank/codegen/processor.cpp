@@ -402,7 +402,7 @@ namespace jank::codegen
     , root_fn{ boost::get<analyze::expr::function<analyze::expression>>(expr->data) }
     , module{ module }
     , target{ target }
-    , struct_name{ root_fn.name }
+    , struct_name{ root_fn.unique_name }
   {
     assert(root_fn.frame.data);
   }
@@ -415,7 +415,7 @@ namespace jank::codegen
     , root_fn{ expr }
     , module{ module }
     , target{ target }
-    , struct_name{ root_fn.name }
+    , struct_name{ root_fn.unique_name }
   {
     assert(root_fn.frame.data);
   }
@@ -1216,7 +1216,7 @@ namespace jank::codegen
     /* Since each codegen proc handles one callable struct, we create a new one for this fn. */
     processor prc{ rt_ctx,
                    expr,
-                   runtime::module::nest_module(module, runtime::munge(expr.name)),
+                   runtime::module::nest_module(module, runtime::munge(expr.unique_name)),
                    compiling ? compilation_target::function : compilation_target::repl };
 
     /* If we're compiling, we'll create a separate file for this. */
@@ -1736,6 +1736,7 @@ namespace jank::codegen
 
       fmt::format_to(inserter, "jank::runtime::object_ptr call(");
       native_bool param_comma{};
+      native_bool param_shadows_fn{};
       for(auto const &param : arity.params)
       {
         fmt::format_to(inserter,
@@ -1744,6 +1745,7 @@ namespace jank::codegen
                        runtime::munge(param->name),
                        recur_suffix);
         param_comma = true;
+        param_shadows_fn |= param->name == root_fn.name;
       }
 
       fmt::format_to(inserter,
@@ -1754,6 +1756,11 @@ namespace jank::codegen
         )");
 
       fmt::format_to(inserter, "jank::profile::timer __timer{{ \"{}\" }};", root_fn.name);
+
+      if(!param_shadows_fn)
+      {
+        fmt::format_to(inserter, "object_ptr const {}{{ this }};", runtime::munge(root_fn.name));
+      }
 
       if(arity.fn_ctx->is_tail_recursive)
       {

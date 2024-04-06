@@ -70,7 +70,9 @@ namespace jank::analyze
                                  option<expr::function_context_ptr> const &,
                                  native_bool needs_box);
     jank::result<expr::function_arity<expression>, error>
-    analyze_fn_arity(runtime::obj::persistent_list_ptr const &, local_frame_ptr &);
+    analyze_fn_arity(runtime::obj::persistent_list_ptr const &,
+                     native_persistent_string const &name,
+                     local_frame_ptr &);
     expression_result analyze_let(runtime::obj::persistent_list_ptr const &,
                                   local_frame_ptr &,
                                   expression_type,

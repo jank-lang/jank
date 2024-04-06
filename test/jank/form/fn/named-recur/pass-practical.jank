@@ -1,0 +1,11 @@
+(def count-loops 0)
+(assert (= 0
+           ((fn* count [n]
+              (def count-loops (inc count-loops))
+              (if (zero? n)
+                n
+                (count (dec n))))
+            10)))
+(assert (= 11 count-loops))
+
+:success

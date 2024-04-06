@@ -15,6 +15,8 @@ namespace jank::analyze::expr
     native_box<E> source_expr{};
     runtime::obj::persistent_list_ptr args{};
     native_vector<native_box<E>> arg_exprs;
+    /* Do we recur through calling our own fn name? */
+    native_bool is_named_recur{};
 
     runtime::object_ptr to_runtime_data() const
     {
