@@ -124,6 +124,7 @@ namespace jank::runtime::detail
     }
 
     template <typename It>
+    /* XXX: These must be reverse iterators. */
     native_persistent_list_impl(It const &rb, It const &re)
     {
       size_t length{};

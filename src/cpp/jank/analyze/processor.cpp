@@ -31,17 +31,18 @@ namespace jank::analyze
       };
     };
     specials = {
-      {       jank::make_box<symbol>("def"),        make_fn(&processor::analyze_def)},
-      {       jank::make_box<symbol>("fn*"),         make_fn(&processor::analyze_fn)},
-      {     jank::make_box<symbol>("recur"),      make_fn(&processor::analyze_recur)},
-      {        jank::make_box<symbol>("do"),         make_fn(&processor::analyze_do)},
-      {      jank::make_box<symbol>("let*"),        make_fn(&processor::analyze_let)},
-      {        jank::make_box<symbol>("if"),         make_fn(&processor::analyze_if)},
-      {     jank::make_box<symbol>("quote"),      make_fn(&processor::analyze_quote)},
-      {       jank::make_box<symbol>("var"),        make_fn(&processor::analyze_var)},
-      {     jank::make_box<symbol>("throw"),      make_fn(&processor::analyze_throw)},
-      {       jank::make_box<symbol>("try"),        make_fn(&processor::analyze_try)},
-      {jank::make_box<symbol>("native/raw"), make_fn(&processor::analyze_native_raw)},
+      {       make_box<symbol>("def"),        make_fn(&processor::analyze_def)},
+      {       make_box<symbol>("fn*"),         make_fn(&processor::analyze_fn)},
+      {     make_box<symbol>("recur"),      make_fn(&processor::analyze_recur)},
+      {        make_box<symbol>("do"),         make_fn(&processor::analyze_do)},
+      {      make_box<symbol>("let*"),        make_fn(&processor::analyze_let)},
+      {     make_box<symbol>("loop*"),       make_fn(&processor::analyze_loop)},
+      {        make_box<symbol>("if"),         make_fn(&processor::analyze_if)},
+      {     make_box<symbol>("quote"),      make_fn(&processor::analyze_quote)},
+      {       make_box<symbol>("var"),        make_fn(&processor::analyze_var)},
+      {     make_box<symbol>("throw"),      make_fn(&processor::analyze_throw)},
+      {       make_box<symbol>("try"),        make_fn(&processor::analyze_try)},
+      {make_box<symbol>("native/raw"), make_fn(&processor::analyze_native_raw)},
     };
   }
 
@@ -141,6 +142,8 @@ namespace jank::analyze
                                                          option<expr::function_context_ptr> const &,
                                                          native_bool needs_box)
   {
+    assert(!sym->to_string().empty());
+
     /* TODO: Assert it doesn't start with __. */
     auto found_local(current_frame->find_local_or_capture(sym));
     if(found_local.is_some())
@@ -268,11 +271,9 @@ namespace jank::analyze
         {
           if(param->equal(*sym))
           {
-            /* C++ doesn't allow multiple params with the same name, but it does allow params
-             * without any name. So, if we have a param shadowing another, we just remove the
-             * name of the one being shadowed. This is better than generating a new name for
-             * it, since we don't want it referenced at all. */
-            param->set_name("");
+            /* C++ doesn't allow multiple params with the same name, so we generate a unique
+             * name for shared params. */
+            param = make_box<runtime::obj::symbol>(runtime::context::unique_string("shadowed"));
             break;
           }
         }
@@ -511,7 +512,7 @@ namespace jank::analyze
 
     return make_box<expression>(expr::recur<expression>{
       expression_base{{}, expr_type, current_frame},
-      jank::make_box<runtime::obj::persistent_list>(list->data.rest()),
+      make_box<runtime::obj::persistent_list>(list->data.rest()),
       arg_exprs
     });
   }
@@ -563,7 +564,7 @@ namespace jank::analyze
   {
     if(o->count() < 2)
     {
-      return err(error{ "invalid let: expects bindings" });
+      return err(error{ "invalid let*: expects bindings" });
     }
 
     auto const bindings_obj(o->data.rest().first().unwrap());
@@ -636,6 +637,112 @@ namespace jank::analyze
     }
 
     return make_box<expression>(std::move(ret));
+  }
+
+  processor::expression_result
+  processor::analyze_loop(runtime::obj::persistent_list_ptr const &o,
+                          local_frame_ptr &current_frame,
+                          expression_type const expr_type,
+                          option<expr::function_context_ptr> const &fn_ctx,
+                          native_bool const)
+  {
+    if(o->count() < 2)
+    {
+      return err(error{ "invalid loop*: expects bindings" });
+    }
+
+    auto const bindings_obj(o->data.rest().first().unwrap());
+    if(bindings_obj->type != runtime::object_type::persistent_vector)
+    {
+      return err(error{ "invalid loop* bindings: must be a vector" });
+    }
+
+    auto const bindings(runtime::expect_object<runtime::obj::persistent_vector>(bindings_obj));
+
+    auto const binding_parts(bindings->data.size());
+    if(binding_parts % 2 == 1)
+    {
+      return err(error{ "invalid loop* bindings: must be an even number" });
+    }
+
+    runtime::detail::native_transient_vector binding_syms, binding_vals;
+    for(size_t i{}; i < binding_parts; i += 2)
+    {
+      auto const &sym_obj(bindings->data[i]);
+      auto const &val(bindings->data[i + 1]);
+
+      if(sym_obj->type != runtime::object_type::symbol)
+      {
+        return err(error{ fmt::format("invalid loop* binding: left hand must be a symbol, not {}",
+                                      runtime::detail::to_string(sym_obj)) });
+      }
+      auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
+      if(!sym->ns.empty())
+      {
+        return err(error{
+          fmt::format("invalid loop* binding: left hand must be an unqualified symbol, not {}",
+                      sym->to_string()) });
+      }
+
+      binding_syms.push_back(sym_obj);
+      binding_vals.push_back(val);
+    }
+
+    /* We take the lazy way out here. Clojure JVM handles loop* with two cases:
+     *
+     * 1. Statements, which expand the loop inline and use labels, gotos, and mutation
+     * 2. Expressions, which wrap the loop in a fn which does the same
+     *
+     * We do something similar to the second, but we transform the loop into just function
+     * recursion and call the function on the spot. It works for both cases, though it's
+     * marginally less efficient.
+     *
+     * However, there's an additional snag. If we just transform the loop into a fn to
+     * call immediately, we get something like this:
+     *
+     * ```
+     * (loop* [a 1
+     *         b 2]
+     *   (println a b))
+     * ```
+     *
+     * Becoming this:
+     *
+     * ```
+     * ((fn* [a b]
+     *   (println a b)) 1 2)
+     * ```
+     *
+     * This works great, but loop* can actually be used as a let*. That means we can do something
+     * like this:
+     *
+     * ```
+     * (loop* [a 1
+     *         b (* 2 a)]
+     *   (println a b))
+     * ```
+     *
+     * But we can't translate that like the one above, since we'd be referring to `a` before it
+     * was bound. So we get around this by actually just lifting all of this into a let*:
+     *
+     * ```
+     * (let* [a 1
+     *        b (* 2 a)]
+     *   ((fn* [a b]
+       *   (println a b)) a b))
+     * ```
+     */
+    runtime::detail::native_persistent_list args{ binding_syms.rbegin(), binding_syms.rend() };
+    auto const params(make_box<runtime::obj::persistent_vector>(binding_syms.persistent()));
+    auto const fn(make_box<runtime::obj::persistent_list>(
+      o->data.rest().rest().cons(params).cons(make_box<runtime::obj::symbol>("fn*"))));
+    auto const call(make_box<runtime::obj::persistent_list>(args.cons(fn)));
+    auto const let(make_box<runtime::obj::persistent_list>(std::in_place,
+                                                           make_box<runtime::obj::symbol>("let*"),
+                                                           bindings_obj,
+                                                           call));
+
+    return analyze_let(let, current_frame, expr_type, fn_ctx, true);
   }
 
   processor::expression_result
@@ -1270,7 +1377,7 @@ namespace jank::analyze
     return make_box<expression>(expr::call<expression>{
       expression_base{{}, expr_type, current_frame, needs_ret_box},
       source,
-      jank::make_box<runtime::obj::persistent_list>(o->data.rest()),
+      make_box<runtime::obj::persistent_list>(o->data.rest()),
       arg_exprs
     });
   }

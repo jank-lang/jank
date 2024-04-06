@@ -23,6 +23,8 @@ namespace jank::runtime
     static_object(value_type &&d);
     static_object(value_type const &d);
 
+    /* TODO: This is broken when `args` is a value_type list we're looking to wrap in another list.
+     * It just uses the copy ctor. */
     template <typename... Args>
     static_object(std::in_place_t, Args &&...args)
       : data{ std::forward<Args>(args)... }
