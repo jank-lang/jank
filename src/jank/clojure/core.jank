@@ -911,8 +911,8 @@
 ;; Maps.
 (defn hash-map
   ([]
-   ; NOTE: Actually returns an array map. Clojure does the same.
-   {})
+   ; XXX: Clojure returns an array map for this arity, but that sucks.
+   (native/raw "__value = obj::persistent_hash_map::empty();"))
   ([& kvs]
    (native/raw "__value = obj::persistent_hash_map::create_from_seq(~{ kvs });")))
 
@@ -976,13 +976,14 @@
 
 ; Returns a map with the keys mapped to the corresponding vals.
 (defn zipmap [keys vals]
-  ; TODO: Loop
-  (let [f (fn [acc ks vs]
-            (if (and ks vs)
-              (recur (assoc acc (first ks) (first vs)) (next ks) (next vs))
-              acc))]
-    ; TODO: Transient
-    (f {} (seq keys) (seq vals))))
+  (loop* [map (transient (hash-map))
+          ks (seq keys)
+          vs (seq vals)]
+    (if (and ks vs)
+      (recur (assoc! map (first ks) (first vs))
+             (next ks)
+             (next vs))
+      (persistent! map))))
 
 ;; Sets.
 (defn set? [o]
@@ -1713,6 +1714,14 @@
 (defn cycle [coll]
   ; TODO: Custom cycle object
   (lazy-seq (concat coll (cycle coll))))
+
+; Returns a lazy (infinite!, or length n if supplied) sequence of xs.
+(defn repeat
+  ; TODO: Custom repeat object
+  ([x]
+   (lazy-seq (cons x (repeat x))))
+  ([n x]
+   (take n (repeat x))))
 
 ; Returns a vector of [(take n coll) (drop n coll)]
 (defn split-at [n coll]
