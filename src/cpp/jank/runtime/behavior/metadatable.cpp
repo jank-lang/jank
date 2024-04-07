@@ -10,7 +10,7 @@ namespace jank::runtime::behavior::detail
       throw std::runtime_error{ fmt::format("invalid meta: nullptr") };
     }
 
-    if(!is_map(m))
+    if(!is_map(m) && m != obj::nil::nil_const())
     {
       throw std::runtime_error{ fmt::format("invalid meta: {}", runtime::detail::to_string(m)) };
     }

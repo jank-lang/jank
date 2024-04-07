@@ -157,6 +157,22 @@
                    ~{ tail }
                  );")))
 
+(def seq?
+  (fn* seq? [o]
+    (native/raw "__value = visit_object
+                 (
+                   [=](auto const typed_tail) -> object_ptr
+                   {
+                     using T = typename decltype(typed_tail)::value_type;
+
+                     if constexpr(behavior::sequenceable<T>)
+                     { return ~{ true }; }
+                     else
+                     { return ~{ false }; }
+                   },
+                   ~{ o }
+                 );")))
+
 (def list?
   (fn* list? [o]
     ; TODO: Visit and use a behavior for this check instead. It should apply to conses and others.
@@ -396,7 +412,24 @@
 (defn some? [o]
   (native/raw "__value = (o == obj::nil::nil_const()) ? ~{ false } : ~{ true }"))
 
-; Transients.
+;; Transients.
+
+; XXX: Clojure doesn't specify this fn, but I find it useful.
+(defn transientable? [o]
+  (native/raw "__value = visit_object
+               (
+                 [=](auto const typed_o) -> object_ptr
+                 {
+                   using T = typename decltype(typed_o)::value_type;
+
+                   if constexpr(behavior::transientable<T>)
+                   { return ~{ true } ; }
+                   else
+                   { return ~{ false }; }
+                 },
+                 ~{ o }
+               );"))
+
 ; Returns a new, transient version of the collection, in constant time.
 (defn transient [o]
   (native/raw "__value = visit_object
@@ -811,6 +844,28 @@
           nil
           s)))
 
+; Returns a lazy seq representing the concatenation of the elements in the supplied colls.
+(defn concat
+  ([] (lazy-seq nil))
+  ([x] (lazy-seq x))
+  ([x y]
+   (lazy-seq
+     (let [s (seq x)]
+       (if s
+         ; TODO: Chunking
+         (cons (first s) (concat (rest s) y))
+         y))))
+  ([x y & zs]
+   (let [cat (fn cat [xys zs]
+               (lazy-seq
+                 (let [xys (seq xys)]
+                   (if xys
+                     ; TODO: Chunking
+                     (cons (first xys) (cat (rest xys) zs))
+                     (when zs
+                       (cat (first zs) (next zs)))))))]
+     (cat (concat x y) zs))))
+
 ; Returns the first logical true value of (pred x) for any x in coll,
 ; else nil.  One common idiom is to use a set as pred, for example
 ; this will return :fred if :fred is in the sequence, otherwise nil:
@@ -822,6 +877,36 @@
 
 (defn not-any? [pred coll]
   (not (some pred coll)))
+
+; Threads the expr through the forms. Inserts x as the
+; second item in the first form, making a list of it if it is not a
+; list already. If there are more forms, inserts the first form as the
+; second item in second form, etc.
+(defmacro -> [x & forms]
+  (loop* [x x
+          forms forms]
+    (if forms
+      (let [form (first forms)
+            threaded (if (seq? form)
+                       (with-meta `(~(first form) ~x ~@(next form)) (meta form))
+                       (list form x))]
+        (recur threaded (next forms)))
+      x)))
+
+; Threads the expr through the forms. Inserts x as the
+; last item in the first form, making a list of it if it is not a
+; list already. If there are more forms, inserts the first form as the
+; last item in second form, etc.
+(defmacro ->> [x & forms]
+  (loop* [x x
+          forms forms]
+    (if forms
+      (let [form (first forms)
+            threaded (if (seq? form)
+                       (with-meta `(~(first form) ~@(next form)  ~x) (meta form))
+                       (list form x))]
+        (recur threaded (next forms)))
+      x)))
 
 ;; Maps.
 (defn hash-map
@@ -1098,9 +1183,9 @@
   ([x]
    x)
   ([l r]
-   (native/raw "__value = min(~{ l }, ~{ r });"))
+   (native/raw "__value = runtime::min(~{ l }, ~{ r });"))
   ([l r & args]
-   (let [res (native/raw "__value = min(~{ l }, ~{ r });")]
+   (let [res (native/raw "__value = runtime::min(~{ l }, ~{ r });")]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -1111,9 +1196,9 @@
   ([x]
    x)
   ([l r]
-   (native/raw "__value = max(~{ l }, ~{ r });"))
+   (native/raw "__value = runtime::max(~{ l }, ~{ r });"))
   ([l r & args]
-   (let [res (native/raw "__value = max(~{ l }, ~{ r });")]
+   (let [res (native/raw "__value = runtime::max(~{ l }, ~{ r });")]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -1121,19 +1206,19 @@
                                      :unboxed-output? true}}})
 
 (defn inc [n]
-  (native/raw "__value = inc(~{ n });"))
+  (native/raw "__value = runtime::inc(~{ n });"))
 (defn dec [n]
-  (native/raw "__value = dec(~{ n });"))
+  (native/raw "__value = runtime::dec(~{ n });"))
 
 (defn pos? [n]
-  (native/raw "__value = make_box(is_pos(~{ n }));"))
+  (native/raw "__value = make_box(runtime::is_pos(~{ n }));"))
 (defn neg? [n]
-  (native/raw "__value = make_box(is_neg(~{ n }));"))
+  (native/raw "__value = make_box(runtime::is_neg(~{ n }));"))
 (defn zero? [n]
-  (native/raw "__value = make_box(is_zero(~{ n }));"))
+  (native/raw "__value = make_box(runtime::is_zero(~{ n }));"))
 
 (defn rem [num div]
-  (native/raw "__value = rem(~{ num }, ~{ div });"))
+  (native/raw "__value = runtime::rem(~{ num }, ~{ div });"))
 (defn mod [num div]
   (let [m (rem num div)]
     (if (or (zero? m) (= (pos? num) (pos? div)))
@@ -1230,10 +1315,8 @@
                                       :unboxed-output? true}}})
 
 ;; Sequences.
-; Returns a lazy sequence of all but the first n items in coll.
-; Returns a stateful transducer when no collection is provided.
+; This is defined to be lazy later on.
 (defn drop
-  ; TODO: transducer
   ([n coll]
    (let [step (fn [n acc]
                 (let [s (seq acc)]
@@ -1752,9 +1835,10 @@
   ([] [])
   ([to] to)
   ([to from]
-   ; TODO: Optimize for transients.
-   (reduce conj to from))
-  ; TODO: transucer arity
+   (if (transientable? to)
+     (with-meta (persistent! (reduce conj! (transient to) from)) (meta to))
+     (reduce conj to from)))
+  ; TODO: transducer arity
   )
 
 ; Returns a vector consisting of the result of applying f to the
@@ -1764,7 +1848,7 @@
 ; f should accept number-of-colls arguments.
 (defn mapv
   ([f coll]
-   #_(-> (reduce (fn [v o]
+   (-> (reduce (fn [v o]
                  (conj! v (f o)))
                (transient [])
                coll)
@@ -1779,7 +1863,7 @@
 ; Returns a vector of the items in coll for which
 ; (pred item) returns logical true. pred must be free of side-effects.
 (defn filterv [pred coll]
-  #_(-> (reduce (fn [v o]
+  (-> (reduce (fn [v o]
                 (if (pred o)
                   (conj! v o)
                   v))
@@ -1957,7 +2041,7 @@
                                       :unboxed-output? true}}})
 
 (defn abs [o]
-  (native/raw "__value = abs(~{ o });"))
+  (native/raw "__value = runtime::abs(~{ o });"))
 (reset-meta! (var abs) {:arities {1 {:supports-unboxed-input? true
                                      :unboxed-output? true}}})
 
