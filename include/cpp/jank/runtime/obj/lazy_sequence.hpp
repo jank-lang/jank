@@ -10,6 +10,7 @@ namespace jank::runtime
     using cons_ptr = native_box<cons>;
   }
 
+  /* TODO: IPending analog, to implement `realized?`. */
   template <>
   struct static_object<object_type::lazy_sequence> : gc
   {
@@ -38,6 +39,9 @@ namespace jank::runtime
     object_ptr next_in_place_first();
     obj::cons_ptr cons(object_ptr head) const;
 
+    /* behavior::metadatable */
+    object_ptr with_meta(object_ptr m) const;
+
   private:
     object_ptr resolve_fn() const;
     object_ptr resolve_seq() const;
@@ -48,6 +52,7 @@ namespace jank::runtime
     mutable object_ptr fn{};
     mutable object_ptr fn_result{};
     mutable object_ptr sequence{};
+    option<object_ptr> meta;
   };
 
   namespace obj

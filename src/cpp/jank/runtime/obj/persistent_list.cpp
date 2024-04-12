@@ -99,7 +99,47 @@ namespace jank::runtime
     return ret;
   }
 
-  object_ptr obj::persistent_list::with_meta(object_ptr m) const
+  object_ptr obj::persistent_list::first() const
+  {
+    auto const first(data.first());
+    if(first.is_none())
+    {
+      return obj::nil::nil_const();
+    }
+    return first.unwrap();
+  }
+
+  obj::persistent_list_sequence_ptr obj::persistent_list::next() const
+  {
+    if(data.size() < 2)
+    {
+      return nullptr;
+    }
+    return make_box<obj::persistent_list_sequence>(this,
+                                                   ++data.begin(),
+                                                   data.end(),
+                                                   data.size() - 1);
+  }
+
+  obj::persistent_list_sequence_ptr obj::persistent_list::next_in_place() const
+  {
+    /* In-place updates don't make sense for lists, since any call to fresh_seq would return
+     * a list sequence. So we know, principally, that a list itself cannot be considered fresh. */
+    return next();
+  }
+
+  object_ptr obj::persistent_list::next_in_place_first()
+  {
+    if(data.size() < 2)
+    {
+      return nullptr;
+    }
+
+    data = data.rest();
+    return first();
+  }
+
+  object_ptr obj::persistent_list::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<obj::persistent_list>(data));

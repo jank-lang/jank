@@ -233,6 +233,22 @@
          res
          (recur res (first args) (next args)))))))
 
+; Return the last item in coll, in linear time
+(def last
+  (fn* last [s]
+    (if (next s)
+      (recur (next s))
+      (first s))))
+
+; Return a seq of all but the last item in coll, in linear time
+(def butlast
+  (fn* butlast [s]
+    (loop* [ret []
+            s s]
+      (if (next s)
+        (recur (conj ret (first s)) (next s))
+        (seq ret)))))
+
 ;; Strings.
 ; TODO: Proper version.
 (def pr-str)
@@ -648,10 +664,284 @@
                   return res;
                   }
                  else
-                 { throw ~{ (ex-info :invalid-seq {:coll coll}) }; }
+                 { ~{ (throw (ex-info :invalid-seq {:coll coll})) }; }
                  },
                 ~{ coll }
                 );")))
+
+; Primitives.
+;; Arithmetic.
+(defn +
+  ([]
+   0)
+  ([x]
+   x)
+  ([l r]
+   (native/raw "__value = runtime::add(~{ l }, ~{ r });"))
+  ([l r & args]
+   (let [res (native/raw "__value = runtime::add(~{ l }, ~{ r });")]
+     (if (empty? args)
+       res
+       (recur res (first args) (next args))))))
+(reset-meta! (var +) {:arities {2 {:supports-unboxed-input? true
+                                   :unboxed-output? true}}})
+
+(defn -
+  ([x]
+   (- 0 x))
+  ([l r]
+   (native/raw "__value = runtime::sub(~{ l }, ~{ r });"))
+  ([l r & args]
+   (let [res (native/raw "__value = runtime::sub(~{ l }, ~{ r });")]
+     (if (empty? args)
+       res
+       (recur res (first args) (next args))))))
+(reset-meta! (var -) {:arities {2 {:supports-unboxed-input? true
+                                   :unboxed-output? true}}})
+
+(defn *
+  ([]
+   1)
+  ([x]
+   x)
+  ([l r]
+   (native/raw "__value = runtime::mul(~{ l }, ~{ r });"))
+  ([l r & args]
+   (let [res (native/raw "__value = runtime::mul(~{ l }, ~{ r });")]
+     (if (empty? args)
+       res
+       (recur res (first args) (next args))))))
+(reset-meta! (var *) {:arities {2 {:supports-unboxed-input? true
+                                   :unboxed-output? true}}})
+
+; TODO: Symbol creation for generated names related to instances of this
+; will result in a name like `/384`, which gets parsed as `384`. Fix the parsing
+; in the symbol string separation fn.
+(def /)
+(def /
+  (fn _SLASH_
+    ([x]
+     (/ 1 x))
+    ([l r]
+     (native/raw "__value = runtime::div(~{ l }, ~{ r });"))
+    ([l r & args]
+     (let [res (native/raw "__value = runtime::div(~{ l }, ~{ r });")]
+       (if (empty? args)
+         res
+         (recur res (first args) (next args)))))))
+(reset-meta! (var /) {:arities {2 {:supports-unboxed-input? true
+                                   :unboxed-output? true}}})
+
+(defn =
+  ([x]
+   true)
+  ([l r]
+   (native/raw "__value = make_box(runtime::detail::equal(~{ l }, ~{ r }));"))
+  ([l r & args]
+   (if (native/raw "__value = make_box(runtime::detail::equal(~{ l }, ~{ r }));")
+     (if (next args)
+       (recur r (first args) (next args))
+       (native/raw "__value = make_box(runtime::detail::equal(~{ r }, ~{ (first args) }));"))
+     false)))
+
+(defn not=
+  ([x]
+   false)
+  ([x y]
+   (not (= x y)))
+  ([x y & more]
+   (not (apply = x y more))))
+
+(defn <
+  ([x]
+   true)
+  ([l r]
+   (native/raw "__value = make_box(runtime::lt(~{ l }, ~{ r }));"))
+  ([l r & args]
+   (if (native/raw "__value = make_box(runtime::lt(~{ l }, ~{ r }));")
+     (if (next args)
+       (recur r (first args) (next args))
+       (native/raw "__value = make_box(runtime::lt(~{ r }, ~{ (first args) }));"))
+     false)))
+(reset-meta! (var <) {:arities {2 {:supports-unboxed-input? true
+                                   :unboxed-output? true}}})
+
+(defn <=
+  ([x]
+   true)
+  ([l r]
+   (native/raw "__value = make_box(runtime::lte(~{ l }, ~{ r }));"))
+  ([l r & args]
+   (if (native/raw "__value = make_box(runtime::lte(~{ l }, ~{ r }));")
+     (if (next args)
+       (recur r (first args) (next args))
+       (native/raw "__value = make_box(runtime::lte(~{ r }, ~{ (first args) }));"))
+     false)))
+(reset-meta! (var <=) {:arities {2 {:supports-unboxed-input? true
+                                    :unboxed-output? true}}})
+
+(defn >
+  ([x]
+   true)
+  ([l r]
+   (native/raw "__value = make_box(runtime::lt(~{ r }, ~{ l }));"))
+  ([l r & args]
+   (if (native/raw "__value = make_box(runtime::lt(~{ r }, ~{ l }));")
+     (if (next args)
+       (recur r (first args) (next args))
+       (native/raw "__value = make_box(runtime::lt(~{ (first args) }, ~{ r }));"))
+     false)))
+(reset-meta! (var >) {:arities {2 {:supports-unboxed-input? true
+                                   :unboxed-output? true}}})
+
+(defn >=
+  ([x]
+   true)
+  ([l r]
+   (native/raw "__value = make_box(runtime::lte(~{ r }, ~{ l }));"))
+  ([l r & args]
+   (if (native/raw "__value = make_box(runtime::lte(~{ r }, ~{ l }));")
+     (if (next args)
+       (recur r (first args) (next args))
+       (native/raw "__value = make_box(runtime::lte(~{ (first args) }, ~{ r }));"))
+     false)))
+(reset-meta! (var >=) {:arities {2 {:supports-unboxed-input? true
+                                    :unboxed-output? true}}})
+
+(defn min
+  ([x]
+   x)
+  ([l r]
+   (native/raw "__value = runtime::min(~{ l }, ~{ r });"))
+  ([l r & args]
+   (let [res (native/raw "__value = runtime::min(~{ l }, ~{ r });")]
+     (if (empty? args)
+       res
+       (recur res (first args) (next args))))))
+(reset-meta! (var min) {:arities {2 {:supports-unboxed-input? true
+                                     :unboxed-output? true}}})
+
+(defn max
+  ([x]
+   x)
+  ([l r]
+   (native/raw "__value = runtime::max(~{ l }, ~{ r });"))
+  ([l r & args]
+   (let [res (native/raw "__value = runtime::max(~{ l }, ~{ r });")]
+     (if (empty? args)
+       res
+       (recur res (first args) (next args))))))
+(reset-meta! (var max) {:arities {2 {:supports-unboxed-input? true
+                                     :unboxed-output? true}}})
+
+(defn inc [n]
+  (native/raw "__value = runtime::inc(~{ n });"))
+(defn dec [n]
+  (native/raw "__value = runtime::dec(~{ n });"))
+
+(defn pos? [n]
+  (native/raw "__value = make_box(runtime::is_pos(~{ n }));"))
+(defn neg? [n]
+  (native/raw "__value = make_box(runtime::is_neg(~{ n }));"))
+(defn zero? [n]
+  (native/raw "__value = make_box(runtime::is_zero(~{ n }));"))
+
+(defn rem [num div]
+  (native/raw "__value = runtime::rem(~{ num }, ~{ div });"))
+(defn mod [num div]
+  (let [m (rem num div)]
+    (if (or (zero? m) (= (pos? num) (pos? div)))
+      m
+      (+ m div))))
+
+;; Numbers.
+(defn integer? [o]
+  (native/raw "__value = make_box(~{ o }->type == object_type::integer)"))
+(defn float? [o]
+  (native/raw "__value = make_box(~{ o }->type == object_type::real)"))
+(defn boolean? [o]
+  (native/raw "__value = make_box(~{ o }->type == object_type::boolean)"))
+(defn number? [o]
+  (native/raw "__value = make_box
+              (
+               visit_object
+               (
+                [=](auto const typed_o) -> native_bool
+                {
+                 using T = typename decltype(typed_o)::value_type;
+
+                 if constexpr(behavior::numberable<T>)
+                 { return true; }
+                 else
+                 { return false; }
+                 },
+                ~{ o }
+                )
+               );"))
+
+(defn int [o]
+  (native/raw "__value = make_box(to_int(~{ o }));"))
+(defn float [o]
+  (native/raw "__value = make_box
+              (
+               visit_object
+               (
+                [=](auto const typed_o) -> native_real
+                {
+                 using T = typename decltype(typed_o)::value_type;
+
+                 if constexpr(behavior::numberable<T>)
+                 { return typed_o->to_real(); }
+                 else
+                 { ~{ (throw (ex-info :not-a-number {:o o})) }; }
+                 },
+                ~{ o }
+                )
+               );"))
+
+(defn even? [o]
+  (native/raw "__value = make_box
+              (
+               visit_object
+               (
+                [=](auto const typed_o) -> native_bool
+                {
+                 using T = typename decltype(typed_o)::value_type;
+
+                 if constexpr(std::is_same_v<T, obj::integer>)
+                 { return typed_o->data % 2 == 0; }
+                 else
+                 { ~{ (throw (ex-info :not-an-integer {:o o})) }; }
+                 },
+                ~{ o }
+                )
+               );"))
+(defn odd? [o]
+  (native/raw "__value = make_box
+              (
+               visit_object
+               (
+                [=](auto const typed_o) -> native_bool
+                {
+                 using T = typename decltype(typed_o)::value_type;
+
+                 if constexpr(std::is_same_v<T, obj::integer>)
+                 { return typed_o->data % 2 == 1; }
+                 else
+                 { ~{ (throw (ex-info :not-an-integer {:o o})) }; }
+                 },
+                ~{ o }
+                )
+               );"))
+
+;; Random.
+(defn rand
+  ([]
+   (native/raw "__value = make_box(jank::runtime::rand());"))
+  ([n]
+   (* (rand) n)))
+(reset-meta! (var rand) {:arities {0 {:supports-unboxed-input? true
+                                      :unboxed-output? true}}})
 
 ; Strings.
 (defn string? [o]
@@ -1037,285 +1327,11 @@
                     if constexpr(behavior::nameable<T>)
                     { return typed_o->get_namespace(); }
                     else
-                    { throw ~{ (ex-info :not-nameable {:o o}) }; }
+                    { ~{ (throw (ex-info :not-nameable {:o o})) }; }
                   },
                   ~{ o }
                 )
               );"))
-
-; Primitives.
-;; Arithmetic.
-(defn +
-  ([]
-   0)
-  ([x]
-   x)
-  ([l r]
-   (native/raw "__value = add(~{ l }, ~{ r });"))
-  ([l r & args]
-   (let [res (native/raw "__value = add(~{ l }, ~{ r });")]
-     (if (empty? args)
-       res
-       (recur res (first args) (next args))))))
-(reset-meta! (var +) {:arities {2 {:supports-unboxed-input? true
-                                   :unboxed-output? true}}})
-
-(defn -
-  ([x]
-   (- 0 x))
-  ([l r]
-   (native/raw "__value = sub(~{ l }, ~{ r });"))
-  ([l r & args]
-   (let [res (native/raw "__value = sub(~{ l }, ~{ r });")]
-     (if (empty? args)
-       res
-       (recur res (first args) (next args))))))
-(reset-meta! (var -) {:arities {2 {:supports-unboxed-input? true
-                                   :unboxed-output? true}}})
-
-(defn *
-  ([]
-   1)
-  ([x]
-   x)
-  ([l r]
-   (native/raw "__value = mul(~{ l }, ~{ r });"))
-  ([l r & args]
-   (let [res (native/raw "__value = mul(~{ l }, ~{ r });")]
-     (if (empty? args)
-       res
-       (recur res (first args) (next args))))))
-(reset-meta! (var *) {:arities {2 {:supports-unboxed-input? true
-                                   :unboxed-output? true}}})
-
-; TODO: Symbol creation for generated names related to instances of this
-; will result in a name like `/384`, which gets parsed as `384`. Fix the parsing
-; in the symbol string separation fn.
-(def /)
-(def /
-  (fn _SLASH_
-    ([x]
-     (/ 1 x))
-    ([l r]
-     (native/raw "__value = div(~{ l }, ~{ r });"))
-    ([l r & args]
-     (let [res (native/raw "__value = div(~{ l }, ~{ r });")]
-       (if (empty? args)
-         res
-         (recur res (first args) (next args)))))))
-(reset-meta! (var /) {:arities {2 {:supports-unboxed-input? true
-                                   :unboxed-output? true}}})
-
-(defn =
-  ([x]
-   true)
-  ([l r]
-   (native/raw "__value = make_box(runtime::detail::equal(~{ l }, ~{ r }));"))
-  ([l r & args]
-   (if (native/raw "__value = make_box(runtime::detail::equal(~{ l }, ~{ r }));")
-     (if (next args)
-       (recur r (first args) (next args))
-       (native/raw "__value = make_box(runtime::detail::equal(~{ r }, ~{ (first args) }));"))
-     false)))
-
-(defn not=
-  ([x]
-   false)
-  ([x y]
-   (not (= x y)))
-  ([x y & more]
-   (not (apply = x y more))))
-
-(defn <
-  ([x]
-   true)
-  ([l r]
-   (native/raw "__value = make_box(lt(~{ l }, ~{ r }));"))
-  ([l r & args]
-   (if (native/raw "__value = make_box(lt(~{ l }, ~{ r }));")
-     (if (next args)
-       (recur r (first args) (next args))
-       (native/raw "__value = make_box(lt(~{ r }, ~{ (first args) }));"))
-     false)))
-(reset-meta! (var <) {:arities {2 {:supports-unboxed-input? true
-                                   :unboxed-output? true}}})
-
-(defn <=
-  ([x]
-   true)
-  ([l r]
-   (native/raw "__value = make_box(lte(~{ l }, ~{ r }));"))
-  ([l r & args]
-   (if (native/raw "__value = make_box(lte(~{ l }, ~{ r }));")
-     (if (next args)
-       (recur r (first args) (next args))
-       (native/raw "__value = make_box(lte(~{ r }, ~{ (first args) }));"))
-     false)))
-(reset-meta! (var <=) {:arities {2 {:supports-unboxed-input? true
-                                    :unboxed-output? true}}})
-
-(defn >
-  ([x]
-   true)
-  ([l r]
-   (native/raw "__value = make_box(lt(~{ r }, ~{ l }));"))
-  ([l r & args]
-   (if (native/raw "__value = make_box(lt(~{ r }, ~{ l }));")
-     (if (next args)
-       (recur r (first args) (next args))
-       (native/raw "__value = make_box(lt(~{ (first args) }, ~{ r }));"))
-     false)))
-(reset-meta! (var >) {:arities {2 {:supports-unboxed-input? true
-                                   :unboxed-output? true}}})
-
-(defn >=
-  ([x]
-   true)
-  ([l r]
-   (native/raw "__value = make_box(lte(~{ r }, ~{ l }));"))
-  ([l r & args]
-   (if (native/raw "__value = make_box(lte(~{ r }, ~{ l }));")
-     (if (next args)
-       (recur r (first args) (next args))
-       (native/raw "__value = make_box(lte(~{ (first args) }, ~{ r }));"))
-     false)))
-(reset-meta! (var >=) {:arities {2 {:supports-unboxed-input? true
-                                    :unboxed-output? true}}})
-
-(defn min
-  ([x]
-   x)
-  ([l r]
-   (native/raw "__value = runtime::min(~{ l }, ~{ r });"))
-  ([l r & args]
-   (let [res (native/raw "__value = runtime::min(~{ l }, ~{ r });")]
-     (if (empty? args)
-       res
-       (recur res (first args) (next args))))))
-(reset-meta! (var min) {:arities {2 {:supports-unboxed-input? true
-                                     :unboxed-output? true}}})
-
-(defn max
-  ([x]
-   x)
-  ([l r]
-   (native/raw "__value = runtime::max(~{ l }, ~{ r });"))
-  ([l r & args]
-   (let [res (native/raw "__value = runtime::max(~{ l }, ~{ r });")]
-     (if (empty? args)
-       res
-       (recur res (first args) (next args))))))
-(reset-meta! (var max) {:arities {2 {:supports-unboxed-input? true
-                                     :unboxed-output? true}}})
-
-(defn inc [n]
-  (native/raw "__value = runtime::inc(~{ n });"))
-(defn dec [n]
-  (native/raw "__value = runtime::dec(~{ n });"))
-
-(defn pos? [n]
-  (native/raw "__value = make_box(runtime::is_pos(~{ n }));"))
-(defn neg? [n]
-  (native/raw "__value = make_box(runtime::is_neg(~{ n }));"))
-(defn zero? [n]
-  (native/raw "__value = make_box(runtime::is_zero(~{ n }));"))
-
-(defn rem [num div]
-  (native/raw "__value = runtime::rem(~{ num }, ~{ div });"))
-(defn mod [num div]
-  (let [m (rem num div)]
-    (if (or (zero? m) (= (pos? num) (pos? div)))
-      m
-      (+ m div))))
-
-;; Numbers.
-(defn integer? [o]
-  (native/raw "__value = make_box(~{ o }->type == object_type::integer)"))
-(defn float? [o]
-  (native/raw "__value = make_box(~{ o }->type == object_type::real)"))
-(defn boolean? [o]
-  (native/raw "__value = make_box(~{ o }->type == object_type::boolean)"))
-(defn number? [o]
-  (native/raw "__value = make_box
-              (
-               visit_object
-               (
-                [=](auto const typed_o) -> native_bool
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(behavior::numberable<T>)
-                 { return true; }
-                 else
-                 { return false; }
-                 },
-                ~{ o }
-                )
-               );"))
-
-(defn int [o]
-  (native/raw "__value = make_box(to_int(~{ o }));"))
-(defn float [o]
-  (native/raw "__value = make_box
-              (
-               visit_object
-               (
-                [=](auto const typed_o) -> native_real
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(behavior::numberable<T>)
-                 { return typed_o->to_real(); }
-                 else
-                 { throw ~{ (ex-info :not-a-number {:o o}) }; }
-                 },
-                ~{ o }
-                )
-               );"))
-
-(defn even? [o]
-  (native/raw "__value = make_box
-              (
-               visit_object
-               (
-                [=](auto const typed_o) -> native_bool
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(std::is_same_v<T, obj::integer>)
-                 { return typed_o->data % 2 == 0; }
-                 else
-                 { throw ~{ (ex-info :not-an-integer {:o o}) }; }
-                 },
-                ~{ o }
-                )
-               );"))
-(defn odd? [o]
-  (native/raw "__value = make_box
-              (
-               visit_object
-               (
-                [=](auto const typed_o) -> native_bool
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(std::is_same_v<T, obj::integer>)
-                 { return typed_o->data % 2 == 1; }
-                 else
-                 { throw ~{ (ex-info :not-an-integer {:o o}) }; }
-                 },
-                ~{ o }
-                )
-               );"))
-
-;; Random.
-(defn rand
-  ([]
-   (native/raw "__value = make_box(jank::runtime::rand());"))
-  ([n]
-   (* (rand) n)))
-(reset-meta! (var rand) {:arities {0 {:supports-unboxed-input? true
-                                      :unboxed-output? true}}})
 
 ;; Sequences.
 ; This is defined to be lazy later on.
@@ -1733,6 +1749,22 @@
 (defn split-with [pred coll]
   [(take-while pred coll) (drop-while pred coll)])
 
+; Returns a lazy seq of the first item in each coll, then the second etc.
+(defn interleave
+  ([] ())
+  ([c1] (lazy-seq c1))
+  ([c1 c2]
+   (lazy-seq
+     (let [s1 (seq c1) s2 (seq c2)]
+       (when (and s1 s2)
+         (cons (first s1) (cons (first s2)
+                                (interleave (rest s1) (rest s2))))))))
+  ([c1 c2 & colls]
+   (lazy-seq
+     (let [ss (map seq (conj colls c2 c1))]
+       (when (every? identity ss)
+         (concat (map first ss) (apply interleave (map rest ss))))))))
+
 ; When lazy sequences are produced via functions that have side
 ; effects, any effects other than those needed to produce the first
 ; element in the seq do not occur until the seq is consumed. dorun can
@@ -1916,6 +1948,26 @@
    (filter (complement pred)))
   ([pred coll]
    (filter (complement pred) coll)))
+
+; Takes an expression and a set of test/form pairs. Threads expr (via ->)
+; through each form for which the corresponding test
+; expression is true. Note that, unlike cond branching, cond-> threading does
+; not short circuit after the first true test expression.
+(defmacro cond-> [expr & clauses]
+  (assert (even? (count clauses)))
+  (let [g (gensym)
+        steps (map (fn [test+step]
+                     (let [test (first test+step)
+                           step (second test+step)]
+                       `(if ~test
+                          (-> ~g ~step)
+                          ~g)))
+                   (partition 2 clauses))]
+    `(let [~g ~expr
+           ~@(interleave (repeat g) (butlast steps))]
+       ~(if (empty? steps)
+          g
+          (last steps)))))
 
 ;; Functions.
 (defn ifn? [o]

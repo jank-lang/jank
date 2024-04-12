@@ -63,6 +63,12 @@ namespace jank::runtime
     /* behavior::consable */
     native_box<static_object> cons(object_ptr head) const;
 
+    /* behavior::sequenceable */
+    object_ptr first() const;
+    obj::persistent_list_sequence_ptr next() const;
+    obj::persistent_list_sequence_ptr next_in_place() const;
+    object_ptr next_in_place_first();
+
     object base{ object_type::persistent_list };
     value_type data;
     option<object_ptr> meta;
