@@ -39,7 +39,7 @@
                     if constexpr(behavior::seqable<T>)
                     { return make_box(typed_o->seq() == nullptr); }
                     else
-                    { throw ~{ (ex-info :not-seqable {:o o}) }; }
+                    { ~{ (throw (ex-info :not-seqable {:o o})) }; }
                    },
                    ~{ o }
                    );"))))
@@ -71,7 +71,7 @@
 ;                       return ret;
 ;                     }
 ;                     else
-;                     { throw ~{ (ex-info :not-seqable {:o o}) }; }
+;                     { ~{ (throw (ex-info :not-seqable {:o o})) }; }
 ;                   },
 ;                   ~{ o }
 ;                 );")))
@@ -94,7 +94,7 @@
 ;                       return ret;
 ;                     }
 ;                     else
-;                     { throw ~{ (ex-info :not-seqable {:o o}) }; }
+;                     { ~{ (throw (ex-info :not-seqable {:o o})) }; }
 ;                   },
 ;                   ~{ o }
 ;                 );")))
@@ -135,10 +135,11 @@
                          return ret;
                        }
                        else
-                       { throw ~{ (ex-info :not-seqable {:o o}) }; }
+                       { ~{ (throw (ex-info :not-seqable {:o o})) }; }
                      },
                      ~{ o }
                    );"))))
+
 (def cons
   (fn* cons [head tail]
     (native/raw "__value = visit_object
@@ -152,7 +153,7 @@
                      else if constexpr(behavior::seqable<T>)
                      { return make_box<jank::runtime::obj::cons>(~{ head }, typed_tail->seq()); }
                      else
-                     { throw ~{ (ex-info :invalid-cons-tail {:type (type tail)}) }; }
+                     { ~{ (throw (ex-info :invalid-cons-tail {:type (type tail)})) }; }
                    },
                    ~{ tail }
                  );")))
@@ -191,7 +192,7 @@
                      else if constexpr(behavior::seqable<T>)
                      { return runtime::obj::persistent_list::create(typed_items); }
                      else
-                     { throw ~{ (ex-info :invalid-seq {:items items}) }; }
+                     { ~{ (throw (ex-info :invalid-seq {:items items})) }; }
                    },
                    ~{ items }
                  );")))
@@ -212,7 +213,7 @@
                      if constexpr(behavior::seqable<T>)
                      { return jank::runtime::obj::persistent_vector::create(typed_coll); }
                      else
-                     { throw ~{ (ex-info :invalid-seq {:coll coll}) }; }
+                     { ~{ (throw (ex-info :invalid-seq {:coll coll})) }; }
                    },
                    ~{ coll }
                  );")))
@@ -251,7 +252,8 @@
                      if constexpr(behavior::metadatable<T>)
                      { return typed_o->with_meta(~{ m }); }
                      else
-                     { throw ~{ (ex-info :not-metadatable {:o o}) }; }
+                     { ~{ (throw (ex-info :not-metadatable {:o o
+                                                            :type (type o)})) }; }
                    },
                    ~{ o }
                  );")))
@@ -270,7 +272,7 @@
                        return ~{ m };
                      }
                      else
-                     { throw ~{ (ex-info :not-metadatable {:o o}) }; }
+                     { ~{ (throw (ex-info :not-metadatable {:o o})) }; }
                    },
                    ~{ o }
                  );")))
@@ -441,7 +443,7 @@
                    if constexpr(behavior::transientable<T>)
                    { return typed_o->to_transient(); }
                    else
-                   { throw ~{ (ex-info :not-transientable {:o o}) }; }
+                   { ~{ (throw (ex-info :not-transientable {:o o})) }; }
                  },
                  ~{ o }
                );"))
@@ -459,7 +461,7 @@
                    if constexpr(behavior::persistentable<T>)
                    { return typed_o->to_persistent(); }
                    else
-                   { throw ~{ (ex-info :not-persistentable {:o o}) }; }
+                   { ~{ (throw (ex-info :not-persistentable {:o o})) }; }
                  },
                  ~{ o }
                );"))
@@ -479,7 +481,7 @@
                     if constexpr(behavior::consable_in_place<T>)
                     { return typed_coll->cons_in_place(head); }
                     else
-                    { throw ~{ (ex-info :not-consable-in-place {:o coll}) }; }
+                    { ~{ (throw (ex-info :not-consable-in-place {:o coll})) }; }
                    },
                    ~{ coll },
                    ~{ x }
@@ -497,7 +499,7 @@
                     if constexpr(behavior::associatively_writable_in_place<T>)
                     { return typed_coll->assoc_in_place(key, val); }
                     else
-                    { throw ~{ (ex-info :not-associatively_writable_in_place {:o coll}) }; }
+                    { ~{ (throw (ex-info :not-associatively_writable_in_place {:o coll})) }; }
                   },
                   ~{ coll },
                   ~{ k },
@@ -521,7 +523,7 @@
                     if constexpr(behavior::associatively_writable_in_place<T>)
                     { return typed_coll->dissoc_in_place(key); }
                     else
-                    { throw ~{ (ex-info :not-associatively_writable_in_place {:o coll}) }; }
+                    { ~{ (throw (ex-info :not-associatively_writable_in_place {:o coll})) }; }
                   },
                   ~{ coll },
                   ~{ k }
@@ -541,7 +543,7 @@
                   __value = transient_coll->pop_in_place();
                 }
                 else
-                { throw ~{ (ex-info :not-transient-vector {:o coll}) }; }
+                { ~{ (throw (ex-info :not-transient-vector {:o coll})) }; }
                ")))
 
 (defn disj!
@@ -553,7 +555,7 @@
                   __value = typed_set->disjoin_in_place(~{ elem });
                 }
                 else
-                { throw ~{ (ex-info :not-transient-set {:o set}) }; }
+                { ~{ (throw (ex-info :not-transient-set {:o set})) }; }
                "))
   ([set elem & elems]
     (let [ret (disj! set elem)]
@@ -681,7 +683,7 @@
                      return make_box<obj::persistent_string>(native_persistent_string{ buff.data(), buff.size() });
                    }
                    else
-                   { throw ~{ (ex-info :invalid-seq {:args args}) }; }
+                   { ~{ (throw (ex-info :invalid-seq {:args args})) }; }
                  },
                  ~{ args }
                );")))
@@ -700,7 +702,7 @@
                    if constexpr(std::is_same_v<T, obj::persistent_string>)
                    { return typed_s->substring(to_int(~{ start })).expect_ok(); }
                    else
-                   { throw ~{ (ex-info :not-a-string {:s s}) }; }
+                   { ~{ (throw (ex-info :not-a-string {:s s})) }; }
                  },
                  ~{ s }
                );"))
@@ -714,7 +716,7 @@
                    if constexpr(std::is_same_v<T, obj::persistent_string>)
                    { return typed_s->substring(to_int(~{ start }), to_int(~{ end })).expect_ok(); }
                    else
-                   { throw ~{ (ex-info :not-a-string {:s s}) }; }
+                   { ~{ (throw (ex-info :not-a-string {:s s})) }; }
                  },
                  ~{ s }
                );")))
@@ -731,7 +733,7 @@
                     if constexpr(std::is_same_v<T, obj::persistent_string>)
                     { return typed_s->first_index_of(~{ c }); }
                     else
-                    { throw ~{ (ex-info :not-a-string {:s s}) }; }
+                    { ~{ (throw (ex-info :not-a-string {:s s})) }; }
                   },
                   ~{ s }
                 )
@@ -748,7 +750,7 @@
                     if constexpr(std::is_same_v<T, obj::persistent_string>)
                     { return typed_s->last_index_of(~{ c }); }
                     else
-                    { throw ~{ (ex-info :not-a-string {:s s}) }; }
+                    { ~{ (throw (ex-info :not-a-string {:s s})) }; }
                   },
                   ~{ s }
                 )
@@ -1017,7 +1019,7 @@
                       if constexpr(behavior::nameable<T>)
                       { return typed_o->get_name(); }
                       else
-                      { throw ~{ (ex-info :not-nameable {:o o}) }; }
+                      { ~{ (throw (ex-info :not-nameable {:o o})) }; }
                     },
                     ~{ o }
                   )
@@ -1611,7 +1613,7 @@
                 if constexpr(std::is_base_of_v<behavior::callable, T>)
                 { return make_box<obj::iterator>(typed_f, ~{ x }); }
                 else
-                { throw ~{ (ex-info :not-callable {:f f}) }; }
+                { ~{ (throw (ex-info :not-callable {:f f})) }; }
                 },
                ~{ f }
                );"))
@@ -2035,7 +2037,7 @@
                   );
                  }
                 else
-                { throw ~{ (ex-info :not-callable {:fun fun}) }; }
+                { ~{ (throw (ex-info :not-callable {:fun fun})) }; }
                 },
                ~{ fun }
                );"))
@@ -2095,7 +2097,7 @@
     ns-or-sym
     (let [found (find-ns ns-or-sym)]
       (if (nil? found)
-        (native/raw "throw ~{ (ex-info :not-an-ns-or-sym {:value ns-or-sym}) };")
+        (throw (ex-info :not-an-ns-or-sym {:value ns-or-sym}))
         found))))
 
 (defn ns-name [ns-sym]
@@ -2138,7 +2140,7 @@
 
 (defn- throw-if [pred msg]
   (when pred
-    (native/raw "throw ~{ (ex-info :assertion-failure {:msg msg }) };")))
+    (throw (ex-info :assertion-failure {:msg msg}))))
 
 (defn alias [alias ns-sym]
   (let [ns-obj (the-ns ns-sym)]
@@ -2152,7 +2154,7 @@
 (defn refer [ns-sym & filters]
   (let [ns (find-ns ns-sym)
         _ (when (nil? ns)
-            (native/raw "throw ~{ (ex-info :unknown-namespace {:value ns-sym}) };"))
+            (throw (ex-info :unknown-namespace {:value ns-sym})))
         filters (apply hash-map filters)
         rename (or (:rename filters) {})
         exclude? (set (:exclude filters))
@@ -2166,7 +2168,7 @@
                 (let [v (get sym->var sym)
                       sym (rename sym sym)]
                   (when (nil? v)
-                    (native/raw "throw ~{ (ex-info :var-does-not-exist {:value sym}) };"))
+                    (throw (ex-info :var-does-not-exist {:value sym})))
                   (native/raw "expect_object<runtime::ns>(~{ *ns* })->refer
                               (
                                expect_object<obj::symbol>(~{ sym }),

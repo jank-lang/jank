@@ -1499,22 +1499,8 @@ namespace jank::codegen
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::context::unique_string("native"));
 
-    native_vector<handle> interpolated_chunk_tmps;
-    interpolated_chunk_tmps.reserve((expr.chunks.size() / 2) + 1);
-    // NOLINTNEXTLINE(clang-analyzer-core.NullDereference): Not sure what's up with this.
-    for(auto const &chunk : expr.chunks)
-    {
-      auto const * const chunk_expr(boost::get<analyze::expression_ptr>(&chunk));
-      if(chunk_expr == nullptr)
-      {
-        continue;
-      }
-      interpolated_chunk_tmps.emplace_back(gen(*chunk_expr, fn_arity, true).unwrap());
-    }
-
     fmt::format_to(inserter, "object_ptr {}{{ obj::nil::nil_const() }};", ret_tmp);
     fmt::format_to(inserter, "{{ object_ptr __value{{ obj::nil::nil_const() }};");
-    size_t interpolated_chunk_it{};
     for(auto const &chunk : expr.chunks)
     {
       auto const * const code(boost::get<native_persistent_string>(&chunk));
@@ -1524,7 +1510,43 @@ namespace jank::codegen
       }
       else
       {
-        fmt::format_to(inserter, "{}", interpolated_chunk_tmps[interpolated_chunk_it++].str(true));
+        /* Interplated chunks need special care, since we're injecting jank code right in the
+         * middle of arbitrary C++ code. We have no idea if we're in a statement or expression
+         * context within the C++ code, so we always assume we're in an expression context (since
+         * that's the most limiting). This means that ~{ foo } can be used anywhere any C++
+         * expression can be used and it should work.
+         *
+         * However, since arbitrary jank code can be used within an interpolation, we may have
+         * temporaries we need to define. One expression may result in a dozen actual lines of
+         * C++, including several statements leading up to the final expression. Given that we
+         * have no idea the context we're in, the only safe way to do this is to wrap the code
+         * in a lambda and invoke it right away (IIFE). This works for the majority of cases
+         * and we don't assume a return type so we can keep as much type info deduced as possible.
+         *
+         * However, there's an edge case which is still fairly common: interpolated throws. From
+         * your inline C++, if you use ~{ (throw foo) }, the function we generate will just throw
+         * when it's called. That's well and good, but if you do this from inside a visit_object
+         * lambda, in the else branch of an `if constexpr`, for example, Clang will complain that
+         * you're not always returning a value from your lambda, even though the expression you're
+         * calling can only throw. We get around this by detecting that case and adding an
+         * attribute to the lambda. This is further complicated by [[noreturn]] on lambdas not
+         * actually being standard, so we need to rely on GCC-style extensions to do it. */
+        auto const &chunk_expr(boost::get<analyze::expression_ptr>(chunk));
+        auto const noreturn(
+          boost::get<analyze::expr::throw_<analyze::expression>>(&chunk_expr->data) != nullptr);
+
+        fmt::format_to(inserter, "[&](){}{{ ", (noreturn ? "__attribute__((__noreturn__))" : ""));
+
+        auto const &handle(gen(chunk_expr, fn_arity, true));
+        if(handle.is_some())
+        {
+          fmt::format_to(inserter, " return {};", handle.unwrap().str(true));
+        }
+        else if(!noreturn)
+        {
+          fmt::format_to(inserter, "; return jank::runtime::obj::nil::nil_const();");
+        }
+        fmt::format_to(inserter, ";}}()");
       }
     }
     fmt::format_to(inserter, ";{} = __value; }}", ret_tmp);
