@@ -71,7 +71,7 @@ namespace jank::runtime
     object_ptr assoc(object_ptr key, object_ptr val) const;
 
     /* behavior::consable */
-    native_box<static_object> cons(object_ptr head) const;
+    object_ptr cons(object_ptr head) const;
 
     /* behavior::callable */
     object_ptr call(object_ptr) const;

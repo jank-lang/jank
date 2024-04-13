@@ -107,6 +107,13 @@ namespace jank::runtime
   obj::transient_hash_map_ptr obj::transient_hash_map::cons_in_place(object_ptr const head)
   {
     assert_active();
+
+    if(head->type == object_type::persistent_array_map
+       || head->type == object_type::persistent_hash_map)
+    {
+      return expect_object<obj::transient_hash_map>(runtime::merge(this, head));
+    }
+
     if(head->type != object_type::persistent_vector)
     {
       throw std::runtime_error{ fmt::format("invalid map entry: {}",

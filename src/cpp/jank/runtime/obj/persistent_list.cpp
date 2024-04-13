@@ -46,6 +46,11 @@ namespace jank::runtime
       s);
   }
 
+  obj::persistent_list_ptr obj::persistent_list::create(obj::persistent_list_ptr const s)
+  {
+    return s;
+  }
+
   native_bool obj::persistent_list::equal(object const &o) const
   {
     return detail::equal(o, data.begin(), data.end());

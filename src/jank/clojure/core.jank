@@ -50,6 +50,28 @@
       0
       (native/raw "__value = make_box(runtime::detail::sequence_length(~{ o }));"))))
 
+(def int
+  (fn* int [o]
+    (native/raw "__value = make_box(to_int(~{ o }));")))
+(def float
+  (fn* float [o]
+    (native/raw "__value = make_box
+                (
+                 visit_object
+                 (
+                  [=](auto const typed_o) -> native_real
+                  {
+                   using T = typename decltype(typed_o)::value_type;
+
+                   if constexpr(behavior::numberable<T>)
+                   { return typed_o->to_real(); }
+                   else
+                   { ~{ (throw (ex-info :not-a-number {:o o})) }; }
+                   },
+                  ~{ o }
+                  )
+                 );")))
+
 ; Lists.
 ; TODO: Can these be removed from the C++ source?
 ;(def seq
@@ -218,6 +240,20 @@
                    ~{ coll }
                  );")))
 
+; Returns a persistent vector of the items in vector from
+; start (inclusive) to end (exclusive).  If end is not supplied,
+; defaults to (count vector). This operation is O(1) and very fast, as
+; the resulting vector shares structure with the original and no
+; trimming is done.
+(def subvec
+  (fn* subvec
+    ([v start]
+     (subvec v start (count v)))
+    ([v start end]
+     (let* [start (int start)
+            end (int end)]
+       (native/raw "__value = runtime::subvec(~{ v }, ~{ start }->data, ~{ end }->data);")))))
+
 (def conj)
 (def conj
   (fn* conj
@@ -249,9 +285,91 @@
         (recur (conj ret (first s)) (next s))
         (seq ret)))))
 
+;; Maps.
+(def map?
+  (fn* map? [o]
+    (native/raw "__value = make_box
+                 (
+                   ~{ o }->type == object_type::persistent_array_map
+                   || ~{ o }->type == object_type::persistent_hash_map
+                 );")))
+
+(def assoc
+  (fn* assoc
+    ([map key val]
+     (native/raw "__value = jank::runtime::assoc(~{ map }, ~{ key }, ~{ val });"))
+    ([map key val & kvs]
+     (let* [res (assoc map key val)]
+       (if kvs
+         (if (next kvs)
+           (recur res (first kvs) (second kvs) (nnext kvs))
+           (throw "assoc expects even number of args after the first"))
+         res)))))
+
 ;; Strings.
 ; TODO: Proper version.
 (def pr-str)
+
+(def string?
+  (fn* string? [o]
+    (native/raw "__value = make_box(~{ o }->type == object_type::persistent_string);")))
+
+(def str
+  (fn* str
+    ([]
+     "")
+    ([o]
+     (native/raw "__value = make_box(runtime::detail::to_string(~{ o }));"))
+    ([o & args]
+     (native/raw "__value = visit_object
+                 (
+                   [=](auto const typed_args) -> object_ptr
+                   {
+                     using T = typename decltype(typed_args)::value_type;
+
+                     if constexpr(behavior::sequenceable<T>)
+                     {
+                       fmt::memory_buffer buff;
+                       buff.reserve(16);
+                       runtime::detail::to_string(~{ o }, buff);
+                       if(0 < runtime::detail::sequence_length(typed_args))
+                       {
+                         auto const fresh(typed_args->fresh_seq());
+                         runtime::detail::to_string(fresh->first(), buff);
+                         for(auto it(fresh->next_in_place()); it != nullptr; it = it->next_in_place())
+                         { runtime::detail::to_string(it->first(), buff); }
+                       }
+                       return make_box<obj::persistent_string>(native_persistent_string{ buff.data(), buff.size() });
+                     }
+                     else
+                     { ~{ (throw (ex-info :invalid-seq {:args args})) }; }
+                   },
+                   ~{ args }
+                 );"))))
+
+;; Symbols.
+(def symbol?
+  (fn* symbol? [o]
+    (native/raw "__value = make_box(~{ o }->type == object_type::symbol)")))
+
+; Relations.
+;; Miscellaneous.
+(def true?
+  (fn* true? [o]
+    (native/raw "__value = runtime::detail::equal(~{ o }, ~{ true }) ? ~{ true } : ~{ false }")))
+(def false?
+  (fn* false? [o]
+    (native/raw "__value = runtime::detail::equal(~{ o }, ~{ false }) ? ~{ true } : ~{ false }")))
+(def not
+  (fn* not [o]
+    (native/raw "if(o == obj::nil::nil_const())
+                 { __value = ~{ true }; }
+                 else
+                 { __value = runtime::detail::equal(~{ o }, ~{ false }) ? ~{ true } : ~{ false }; }")))
+(def some?
+  (fn* some? [o]
+    (native/raw "__value = (o == obj::nil::nil_const()) ? ~{ false } : ~{ true }")))
+
 
 ;; Metadata
 (def meta
@@ -293,14 +411,106 @@
                    ~{ o }
                  );")))
 
+(def let
+  (fn* let [&form &env & decl]
+    (cons 'let* decl)))
+(reset-meta! (var let) {:macro true})
+
+(def loop
+  (fn* loop [&form &env & decl]
+    (cons 'loop* decl)))
+(reset-meta! (var loop) {:macro true})
+
+(def fn
+  (fn* fn [&form &env & decl]
+    (with-meta (cons 'fn* decl) (meta &form))))
+(reset-meta! (var fn) {:macro true})
+
+; TODO: Private
+(def sigs
+  (fn* [fdecl]
+    (let* [asig (fn* asig [fdecl]
+                  (let* [arglist (first fdecl)
+                         ;elide implicit macro args
+                         arglist (if (native/raw "__value = make_box(runtime::detail::equal(~{ '&form }, ~{ (first arglist) }));")
+                                   (subvec arglist 2 (count arglist))
+                                   arglist)
+                         body (next fdecl)]
+                    (if (map? (first body))
+                      (if (next body)
+                        (with-meta arglist (conj (if (meta arglist)
+                                                   (meta arglist)
+                                                   {})
+                                                 (first body)))
+                        arglist)
+                      arglist)))]
+      (if (seq? (first fdecl))
+        (loop* [ret []
+                fdecls fdecl]
+          (if fdecls
+            (recur (conj ret (asig (first fdecls))) (next fdecls))
+            (seq ret)))
+        (list (asig fdecl))))))
+
+;(defn seq-to-map-for-destructuring
+;  "Builds a map from a seq as described in
+;  https://clojure.org/reference/special_forms#keyword-arguments"
+;  {:added "1.11"}
+;  [s]
+;  (if (next s)
+;    (clojure.lang.PersistentArrayMap/createAsIfByAssoc (to-array s))
+;    (if (seq s) (first s) clojure.lang.PersistentArrayMap/EMPTY)))
+
 ;; Macros.
 (def defn
-  (fn* defn [&form &env fn-name fn-args & body]
-    (list 'do
-          ; TODO: Remove this once fn* supports naming.
-          (list 'def fn-name)
-          (list 'def fn-name (cons 'fn* (cons fn-name (cons fn-args body)))))))
+  (fn* defn [&form &env name & fdecl]
+    ;; Note: Cannot delegate this check to def because of the call to (with-meta name ..)
+    (if (native/raw "__value = make_box(~{ name }->type != object_type::symbol);")
+      (throw "First argument to defn must be a symbol"))
+    (let* [m (if (string? (first fdecl))
+               {:doc (first fdecl)}
+               {})
+           fdecl (if (string? (first fdecl))
+                   (next fdecl)
+                   fdecl)
+           m (if (map? (first fdecl))
+               (conj m (first fdecl))
+               m)
+           fdecl (if (map? (first fdecl))
+                   (next fdecl)
+                   fdecl)
+           fdecl (if (vector? (first fdecl))
+                   (list fdecl)
+                   fdecl)
+           m (if (map? (last fdecl))
+               (conj m (last fdecl))
+               m)
+           fdecl (if (map? (last fdecl))
+                   (butlast fdecl)
+                   fdecl)
+           m (conj {:arglists (list 'quote (sigs fdecl))} m)
+           m (let* [inline (:inline m)
+                    ifn (first inline)
+                    iname (second inline)]
+               ;; same as: (if (and (= 'fn ifn) (not (symbol? iname))) ...)
+               (if (if (native/raw "__value = make_box(runtime::detail::equal(~{ 'fn }, ~{ ifn }));")
+                     (if (native/raw "__value = make_box(~{ name }->type == object_type::symbol);")
+                       false
+                       true))
+                 ;; inserts the same fn name to the inline fn if it does not have one
+                 (assoc m :inline (cons ifn (cons (native/raw "auto const n(expect_object<obj::symbol>(~{ name }));
+                                                              __value = make_box<obj::symbol>(n->name + \"__inliner\");")
+                                                  (next inline))))
+                 m))
+           m (conj (if (meta name) (meta name) {}) m)]
+      (list 'def (with-meta name m)
+            (with-meta (cons `fn fdecl) {:rettag (:tag m)})))))
 (reset-meta! (var defn) {:macro true})
+
+(defn macroexpand-1 [form]
+  (native/raw "__value = __rt_ctx.macroexpand1(~{ form });"))
+(defn macroexpand [form]
+  (native/raw "__value = __rt_ctx.macroexpand(~{ form });"))
 
 ; Returns a new symbol with a unique name. If a prefix string is
 ; supplied, the name is prefix# where # is some unique number. If
@@ -311,16 +521,56 @@
   ([prefix]
    (native/raw "__value = make_box<obj::symbol>(runtime::context::unique_symbol(runtime::detail::to_string(~{ prefix })));")))
 
-; TODO: This doesn't support macros with overloads.
-(defn defmacro [&form &env fn-name fn-args & body]
-  (list 'do
-        (list 'def fn-name (cons 'fn* (cons (vec (cons '&form (cons '&env fn-args))) body)))
-        (list 'reset-meta! (list 'var fn-name) {:macro true})
-        (list 'var fn-name)))
+(defn defmacro
+  "Like defn, but the resulting function name is declared as a
+  macro and will be used as a macro by the compiler when it is
+  called."
+  [&form &env name & args]
+  (let [prefix (loop [p (list name) args args]
+                 (let [f (first args)]
+                   (if (string? f)
+                     (recur (cons f p) (next args))
+                     (if (map? f)
+                       (recur (cons f p) (next args))
+                       p))))
+        fdecl (loop [fd args]
+                (if (string? (first fd))
+                  (recur (next fd))
+                  (if (map? (first fd))
+                    (recur (next fd))
+                    fd)))
+        fdecl (if (vector? (first fdecl))
+                (list fdecl)
+                fdecl)
+        add-implicit-args (fn [fd]
+                            (let [args (first fd)]
+                              (cons (vec (cons '&form (cons '&env args))) (next fd))))
+        add-args (fn [acc ds]
+                   (if (nil? ds)
+                     acc
+                     (let [d (first ds)]
+                       (if (map? d)
+                         (conj acc d)
+                         (recur (conj acc (add-implicit-args d)) (next ds))))))
+        fdecl (seq (add-args [] fdecl))
+        decl (loop [p prefix d fdecl]
+               (if p
+                 (recur (next p) (cons (first p) d))
+                 d))]
+    (list 'do
+          (cons `defn decl)
+          (list `reset-meta! (list 'var name) (list 'assoc
+                                                    (list 'meta (list 'var name))
+                                                    :macro
+                                                    true))
+          (list 'var name))))
 (reset-meta! (var defmacro) {:macro true})
 
-(defmacro defn- [& args]
-  (cons 'defn args))
+(defmacro defn-
+  "Same as defn, yielding non-public def."
+  {:added "1.0"}
+  [name & decls]
+  (cons `defn (cons (with-meta name (assoc (meta name) :private true)) decls)))
 
 (defmacro when [condition & body]
   (list 'if condition
@@ -331,49 +581,6 @@
   (list 'if (list 'clojure.core/not condition)
         (cons 'do body)
         nil))
-
-(defmacro fn [args & body]
-  (cons 'fn* (cons args body)))
-
-(defmacro let [args & body]
-  (cons 'let* (cons args body)))
-
-; The full `apply` will be defined below, but it requires more helpers to support
-; all of its arities.
-(defn apply* [f args]
-  (native/raw "__value = runtime::apply_to(~{ f }, ~{ args });"))
-
-(defn or*
-  ([]
-   nil)
-  ([x]
-   x)
-  ([x & more]
-   (let [x-res (gensym)]
-     (list 'clojure.core/let [x-res x]
-           (list 'if x-res
-                 x-res
-                 (cons 'clojure.core/or more))))))
-
-(defmacro or
-  [& args]
-  (apply* or* args))
-
-(defn and*
-  ([]
-   true)
-  ([x]
-   x)
-  ([x & more]
-   (let [x-res (gensym)]
-     (list 'clojure.core/let [x-res x]
-           (list 'if x-res
-                 (cons 'clojure.core/and more)
-                 x-res)))))
-
-(defmacro and
-  [& args]
-  (apply* and* args))
 
 ; Takes a set of test/expr pairs. It evaluates each test one at a
 ; time. If a test returns logical true, cond evaluates and returns
@@ -388,47 +595,58 @@
               (list 'throw (list 'clojure.core/ex-info "invalid cond" {:err err}))))
           (cons 'clojure.core/cond (next (next clauses))))))
 
+(defmacro let [args & body]
+  (cons 'let* (cons args body)))
+
+; The full `apply` will be defined below, but it requires more helpers to support
+; all of its arities.
+(defn- apply* [f args]
+  (native/raw "__value = runtime::apply_to(~{ f }, ~{ args });"))
+
+(defmacro or
+  ([]
+   nil)
+  ([x]
+   x)
+  ([x & more]
+   (let [x-res (gensym)]
+     (list 'clojure.core/let [x-res x]
+           (list 'if x-res
+                 x-res
+                 (cons 'clojure.core/or more))))))
+
+(defmacro and
+  ([]
+   true)
+  ([x]
+   x)
+  ([x & more]
+   (let [x-res (gensym)]
+     (list 'clojure.core/let [x-res x]
+           (list 'if x-res
+                 (cons 'clojure.core/and more)
+                 x-res)))))
+
 ; Evaluates expr and throws an exception if it does not evaluate to
 ; logical true.
-(defn assert
-  ([&form &env x]
+(defmacro assert
+  ([x]
    (when *assert*
      (list 'clojure.core/when-not x
            (list 'throw (list 'clojure.core/ex-info
                               "assertion failed"
                               {:assertion (pr-str x)})))))
-  ([&form &env x message]
+  ([x message]
    (when *assert*
      (list 'clojure.core/when-not x
            (list 'throw (list 'clojure.core/ex-info
                               "assertion failed"
                               {:assertion (pr-str x)
                                :message message}))))))
-; TODO: Use defmacro once it supports multiple arities.
-(reset-meta! (var assert) {:macro true})
 
 ; Ignores body, yields nil
 (defmacro comment
   [& body])
-
-(defn macroexpand-1 [form]
-  (native/raw "__value = __rt_ctx.macroexpand1(~{ form });"))
-(defn macroexpand [form]
-  (native/raw "__value = __rt_ctx.macroexpand(~{ form });"))
-
-; Relations.
-;; Miscellaneous.
-(defn true? [o]
-  (native/raw "__value = runtime::detail::equal(~{ o }, ~{ true }) ? ~{ true } : ~{ false }"))
-(defn false? [o]
-  (native/raw "__value = runtime::detail::equal(~{ o }, ~{ false }) ? ~{ true } : ~{ false }"))
-(defn not [o]
-  (native/raw "if(o == obj::nil::nil_const())
-               { __value = ~{ true }; }
-               else
-               { __value = runtime::detail::equal(~{ o }, ~{ false }) ? ~{ true } : ~{ false }; }"))
-(defn some? [o]
-  (native/raw "__value = (o == obj::nil::nil_const()) ? ~{ false } : ~{ true }"))
 
 ;; Transients.
 
@@ -580,8 +798,9 @@
         ret))))
 
 ; Functions.
-
-(defn- spread [arglist]
+(defn spread
+  {:private true}
+  [arglist]
   (cond
     (nil? arglist) nil
     (nil? (next arglist)) (seq (first arglist))
@@ -879,26 +1098,6 @@
                 )
                );"))
 
-(defn int [o]
-  (native/raw "__value = make_box(to_int(~{ o }));"))
-(defn float [o]
-  (native/raw "__value = make_box
-              (
-               visit_object
-               (
-                [=](auto const typed_o) -> native_real
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(behavior::numberable<T>)
-                 { return typed_o->to_real(); }
-                 else
-                 { ~{ (throw (ex-info :not-a-number {:o o})) }; }
-                 },
-                ~{ o }
-                )
-               );"))
-
 (defn even? [o]
   (native/raw "__value = make_box
               (
@@ -944,39 +1143,6 @@
                                       :unboxed-output? true}}})
 
 ; Strings.
-(defn string? [o]
-  (native/raw "__value = make_box(~{ o }->type == object_type::persistent_string);"))
-(defn str
-  ([]
-   "")
-  ([o]
-   (native/raw "__value = make_box(runtime::detail::to_string(~{ o }));"))
-  ([o & args]
-   (native/raw "__value = visit_object
-               (
-                 [=](auto const typed_args) -> object_ptr
-                 {
-                   using T = typename decltype(typed_args)::value_type;
-
-                   if constexpr(behavior::sequenceable<T>)
-                   {
-                     fmt::memory_buffer buff;
-                     buff.reserve(16);
-                     runtime::detail::to_string(~{ o }, buff);
-                     if(0 < runtime::detail::sequence_length(typed_args))
-                     {
-                       auto const fresh(typed_args->fresh_seq());
-                       runtime::detail::to_string(fresh->first(), buff);
-                       for(auto it(fresh->next_in_place()); it != nullptr; it = it->next_in_place())
-                       { runtime::detail::to_string(it->first(), buff); }
-                     }
-                     return make_box<obj::persistent_string>(native_persistent_string{ buff.data(), buff.size() });
-                   }
-                   else
-                   { ~{ (throw (ex-info :invalid-seq {:args args})) }; }
-                 },
-                 ~{ args }
-               );")))
 
 ; TODO: Proper version.
 (def pr-str str)
@@ -1232,17 +1398,6 @@
    (native/raw "__value = jank::runtime::get_in(~{ m }, ~{ ks });"))
   ([m ks fallback]
    (native/raw "__value = jank::runtime::get_in(~{ m }, ~{ ks }, ~{ fallback });")))
-
-(defn assoc
-  ([map key val]
-   (native/raw "__value = jank::runtime::assoc(~{ map }, ~{ key }, ~{ val });"))
-  ([map key val & kvs]
-   (let [res (assoc map key val)]
-     (if (empty? kvs)
-       res
-       (do
-         (assert (not (empty? (next kvs)))); "assoc expects even number of args after the first"
-         (recur res (first kvs) (second kvs) (nnext kvs)))))))
 
 ; Returns true if key is present in the given collection, otherwise
 ; returns false.  Note that for numerically indexed collections like
@@ -1521,37 +1676,15 @@
   (native/raw "__value = make_box(~{ o }->type == object_type::keyword)"))
 (defn simple-keyword? [o]
   (native/raw "__value = make_box
-              (
-               visit_object
                (
-                [=](auto const typed_o) -> native_bool
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(std::is_same_v<T, obj::keyword>)
-                 { return typed_o->sym.ns.empty(); }
-                 else
-                 { return false; }
-                 },
-                ~{ o }
-                )
+                 ~{ o }->type == object_type::keyword
+                 && expect_object<obj::keyword>(~{ o })->sym.ns.empty()
                );"))
 (defn qualified-keyword? [o]
   (native/raw "__value = make_box
-              (
-               visit_object
                (
-                [=](auto const typed_o) -> native_bool
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(std::is_same_v<T, obj::keyword>)
-                 { return !typed_o->sym.ns.empty(); }
-                 else
-                 { return false; }
-                 },
-                ~{ o }
-                )
+                 ~{ o }->type == object_type::keyword
+                 && !expect_object<obj::keyword>(~{ o })->sym.ns.empty()
                );"))
 
 ; Returns a Keyword with the given namespace and name.  Do not use :
@@ -1570,40 +1703,16 @@
 
 (defn simple-symbol? [o]
   (native/raw "__value = make_box
-              (
-               visit_object
                (
-                [=](auto const typed_o) -> native_bool
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(std::is_same_v<T, obj::symbol>)
-                 { return typed_o->ns.empty(); }
-                 else
-                 { return false; }
-                 },
-                ~{ o }
-                )
+                 ~{ o }->type == object_type::symbol
+                 && expect_object<obj::symbol>(~{ o })->ns.empty()
                );"))
 (defn qualified-symbol? [o]
   (native/raw "__value = make_box
-              (
-               visit_object
                (
-                [=](auto const typed_o) -> native_bool
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(std::is_same_v<T, obj::symbol>)
-                 { return !typed_o->ns.empty(); }
-                 else
-                 { return false; }
-                 },
-                ~{ o }
-                )
+                 ~{ o }->type == object_type::symbol
+                 && !expect_object<obj::symbol>(~{ o })->ns.empty()
                );"))
-(defn symbol? [o]
-  (native/raw "__value = make_box(~{ o }->type == object_type::symbol)"))
 
 ; Returns a Symbol with the given namespace and name. Arity-1 works
 ; on strings, keywords, and vars.

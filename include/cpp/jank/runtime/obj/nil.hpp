@@ -4,6 +4,12 @@
 
 namespace jank::runtime
 {
+  namespace obj
+  {
+    using persistent_array_map = static_object<object_type::persistent_array_map>;
+    using persistent_array_map_ptr = native_box<persistent_array_map>;
+  }
+
   template <>
   struct static_object<object_type::nil> : gc
   {
@@ -24,6 +30,9 @@ namespace jank::runtime
     object_ptr get(object_ptr const key, object_ptr const fallback);
     object_ptr get_entry(object_ptr key);
     native_bool contains(object_ptr key) const;
+
+    /* behavior::associatively_writable */
+    obj::persistent_array_map_ptr assoc(object_ptr key, object_ptr val) const;
 
     /* behavior::seqable */
     native_box<static_object> seq();

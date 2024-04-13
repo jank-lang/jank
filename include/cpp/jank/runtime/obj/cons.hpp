@@ -40,6 +40,7 @@ namespace jank::runtime
     object_ptr head{};
     object_ptr tail{};
     mutable native_hash hash{};
+    option<object_ptr> meta;
   };
 
   namespace obj

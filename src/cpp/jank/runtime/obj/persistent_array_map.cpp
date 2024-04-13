@@ -80,8 +80,14 @@ namespace jank::runtime
     }
   }
 
-  obj::persistent_array_map_ptr obj::persistent_array_map::cons(object_ptr const head) const
+  object_ptr obj::persistent_array_map::cons(object_ptr const head) const
   {
+    if(head->type == object_type::persistent_array_map
+       || head->type == object_type::persistent_hash_map)
+    {
+      return runtime::merge(this, head);
+    }
+
     if(head->type != object_type::persistent_vector)
     {
       throw std::runtime_error{ fmt::format("invalid map entry: {}",
@@ -95,9 +101,16 @@ namespace jank::runtime
                                             runtime::detail::to_string(head)) };
     }
 
-    auto copy(data.clone());
-    copy.insert_or_assign(vec->data[0], vec->data[1]);
-    return make_box<obj::persistent_array_map>(std::move(copy));
+    if(data.size() == detail::native_persistent_array_map::max_size)
+    {
+      return make_box<obj::persistent_hash_map>(data, vec->data[0], vec->data[1]);
+    }
+    else
+    {
+      auto copy(data.clone());
+      copy.insert_or_assign(vec->data[0], vec->data[1]);
+      return make_box<obj::persistent_array_map>(std::move(copy));
+    }
   }
 
   object_ptr obj::persistent_array_map::call(object_ptr const o) const

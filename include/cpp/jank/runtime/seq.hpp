@@ -96,4 +96,5 @@ namespace jank::runtime
   native_bool contains(object_ptr s, object_ptr key);
   object_ptr merge(object_ptr m, object_ptr other);
   object_ptr meta(object_ptr m);
+  object_ptr subvec(object_ptr v, size_t start, size_t end);
 }

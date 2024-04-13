@@ -15,7 +15,9 @@ namespace jank::runtime
 
     static constexpr native_bool pointer_free{ false };
 
+    /* Create from a sequence. */
     static native_box<static_object> create(object_ptr s);
+    static native_box<static_object> create(native_box<static_object> s);
 
     static_object() = default;
     static_object(static_object &&) = default;

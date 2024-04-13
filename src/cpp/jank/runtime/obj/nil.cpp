@@ -49,6 +49,11 @@ namespace jank::runtime
     return false;
   }
 
+  obj::persistent_array_map_ptr obj::nil::assoc(object_ptr const key, object_ptr const val) const
+  {
+    return obj::persistent_array_map::create_unique(key, val);
+  }
+
   obj::nil_ptr obj::nil::seq()
   {
     return nullptr;

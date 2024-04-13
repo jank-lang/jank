@@ -379,28 +379,41 @@ namespace jank::analyze
       }
       arities.emplace_back(result.expect_ok_move());
     }
-    else if(first_elem->type == runtime::object_type::persistent_list)
+    /* TODO: Sequence? */
+    else
     {
       for(auto it(list->data.rest()); !it.empty(); it = it.rest())
       {
         auto arity_list_obj(it.first().unwrap());
-        if(arity_list_obj->type != runtime::object_type::persistent_list)
-        {
-          return err(error{ "invalid fn: expected arity list" });
-        }
-        auto arity_list(runtime::expect_object<runtime::obj::persistent_list>(arity_list_obj));
 
-        auto result(analyze_fn_arity(arity_list.data, name, current_frame));
-        if(result.is_err())
+        auto const err(runtime::visit_object(
+          [&](auto const typed_arity_list) -> option<error> {
+            using T = typename decltype(typed_arity_list)::value_type;
+
+            if constexpr(runtime::behavior::sequenceable<T>)
+            {
+              auto arity_list(runtime::obj::persistent_list::create(typed_arity_list));
+
+              auto result(analyze_fn_arity(arity_list.data, name, current_frame));
+              if(result.is_err())
+              {
+                return result.expect_err_move();
+              }
+              arities.emplace_back(result.expect_ok_move());
+              return none;
+            }
+            else
+            {
+              return some(error{ "invalid fn: expected arity list" });
+            }
+          },
+          arity_list_obj));
+
+        if(err.is_some())
         {
-          return result.expect_err_move();
+          return err.unwrap();
         }
-        arities.emplace_back(result.expect_ok_move());
       }
-    }
-    else
-    {
-      return err(error{ "invalid fn syntax" });
     }
 
     /* There can only be one variadic arity. Clojure requires this. */

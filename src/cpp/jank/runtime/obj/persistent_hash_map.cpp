@@ -110,6 +110,12 @@ namespace jank::runtime
 
   obj::persistent_hash_map_ptr obj::persistent_hash_map::cons(object_ptr const head) const
   {
+    if(head->type == object_type::persistent_array_map
+       || head->type == object_type::persistent_hash_map)
+    {
+      return expect_object<obj::persistent_hash_map>(runtime::merge(this, head));
+    }
+
     if(head->type != object_type::persistent_vector)
     {
       throw std::runtime_error{ fmt::format("invalid map entry: {}",

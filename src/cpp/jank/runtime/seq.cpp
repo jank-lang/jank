@@ -244,6 +244,10 @@ namespace jank::runtime
         {
           return make_box<obj::persistent_list>(std::in_place, o);
         }
+        else if constexpr(behavior::consable_in_place<T>)
+        {
+          return typed_s->cons_in_place(o);
+        }
         else if constexpr(behavior::consable<T>)
         {
           return typed_s->cons(o);
@@ -266,7 +270,11 @@ namespace jank::runtime
       [&](auto const typed_m) -> object_ptr {
         using T = typename decltype(typed_m)::value_type;
 
-        if constexpr(behavior::associatively_writable<T>)
+        if constexpr(behavior::associatively_writable_in_place<T>)
+        {
+          return typed_m->assoc_in_place(k, v);
+        }
+        else if constexpr(behavior::associatively_writable<T>)
         {
           return typed_m->assoc(k, v);
         }
@@ -456,7 +464,10 @@ namespace jank::runtime
               using O = typename decltype(typed_other)::value_type;
 
               if constexpr(std::same_as<O, obj::persistent_hash_map>
-                           || std::same_as<O, obj::persistent_array_map>)
+                           || std::same_as<O, obj::persistent_array_map>
+                           || std::same_as<O, obj::transient_hash_map>
+                           //|| std::same_as<O, obj::transient_array_map>
+              )
               {
                 object_ptr ret{ m };
                 for(auto const &pair : typed_other->data)
@@ -503,5 +514,26 @@ namespace jank::runtime
         }
       },
       m);
+  }
+
+  object_ptr subvec(object_ptr const o, size_t const start, size_t const end)
+  {
+    if(o->type != object_type::persistent_vector)
+    {
+      throw std::runtime_error{ "not a vector" };
+    }
+
+    auto const v(expect_object<obj::persistent_vector>(o));
+
+    if(end < start || start < 0 || end > v->count())
+    {
+      throw std::runtime_error{ "index out of bounds" };
+    }
+    else if(start == end)
+    {
+      return obj::persistent_vector::empty();
+    }
+    return make_box<obj::persistent_vector>(
+      detail::native_persistent_vector{ v->data.begin() + start, v->data.begin() + end });
   }
 } // namespace jank::runtime
