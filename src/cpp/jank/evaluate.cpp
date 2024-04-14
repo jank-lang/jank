@@ -370,7 +370,6 @@ namespace jank::evaluate
                            analyze::expr::set<analyze::expression> const &expr)
   {
     runtime::detail::native_transient_set ret;
-    fmt::println("building set {}", runtime::detail::to_string(expr.to_runtime_data()));
     for(auto const &e : expr.data_exprs)
     {
       ret.insert(eval(rt_ctx, jit_prc, e));

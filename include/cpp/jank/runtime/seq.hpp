@@ -88,6 +88,7 @@ namespace jank::runtime
   object_ptr next_in_place(object_ptr s);
   object_ptr conj(object_ptr s, object_ptr o);
   object_ptr assoc(object_ptr m, object_ptr k, object_ptr v);
+  object_ptr dissoc(object_ptr m, object_ptr k);
   object_ptr get(object_ptr m, object_ptr key);
   object_ptr get(object_ptr m, object_ptr key, object_ptr fallback);
   object_ptr get_in(object_ptr m, object_ptr keys);

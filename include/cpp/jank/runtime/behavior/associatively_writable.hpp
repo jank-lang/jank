@@ -9,6 +9,10 @@ namespace jank::runtime::behavior
     {
       t->assoc(object_ptr{}, object_ptr{})
     } -> std::convertible_to<object_ptr>;
+
+    {
+      t->dissoc(object_ptr{})
+    } -> std::convertible_to<object_ptr>;
   };
 
   template <typename T>

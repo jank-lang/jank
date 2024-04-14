@@ -69,6 +69,7 @@ namespace jank::runtime
 
     /* behavior::associatively_writable */
     object_ptr assoc(object_ptr key, object_ptr val) const;
+    native_box<static_object> dissoc(object_ptr key) const;
 
     /* behavior::consable */
     object_ptr cons(object_ptr head) const;

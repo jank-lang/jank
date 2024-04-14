@@ -108,6 +108,12 @@ namespace jank::runtime
     return make_box<obj::persistent_hash_map>(std::move(copy));
   }
 
+  obj::persistent_hash_map_ptr obj::persistent_hash_map::dissoc(object_ptr const key) const
+  {
+    auto copy(data.erase(key));
+    return make_box<obj::persistent_hash_map>(std::move(copy));
+  }
+
   obj::persistent_hash_map_ptr obj::persistent_hash_map::cons(object_ptr const head) const
   {
     if(head->type == object_type::persistent_array_map

@@ -33,6 +33,7 @@ namespace jank::runtime
 
     /* behavior::associatively_writable */
     obj::persistent_array_map_ptr assoc(object_ptr key, object_ptr val) const;
+    native_box<static_object> dissoc(object_ptr key) const;
 
     /* behavior::seqable */
     native_box<static_object> seq();

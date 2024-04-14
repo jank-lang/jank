@@ -80,6 +80,13 @@ namespace jank::runtime
     }
   }
 
+  obj::persistent_array_map_ptr obj::persistent_array_map::dissoc(object_ptr const key) const
+  {
+    auto copy(data.clone());
+    copy.erase(key);
+    return make_box<obj::persistent_array_map>(std::move(copy));
+  }
+
   object_ptr obj::persistent_array_map::cons(object_ptr const head) const
   {
     if(head->type == object_type::persistent_array_map

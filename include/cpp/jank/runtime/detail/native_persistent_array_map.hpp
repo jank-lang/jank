@@ -32,6 +32,8 @@ namespace jank::runtime::detail
 
     void insert_or_assign(object_ptr const key, object_ptr const val);
 
+    void erase(object_ptr const key);
+
     object_ptr find(object_ptr const key) const;
 
     native_hash to_hash() const;

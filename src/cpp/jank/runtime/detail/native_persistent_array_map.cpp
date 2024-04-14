@@ -167,6 +167,46 @@ namespace jank::runtime::detail
     return nullptr;
   }
 
+  void native_persistent_array_map::erase(object_ptr const key)
+  {
+    if(key->type == runtime::object_type::keyword)
+    {
+      for(size_t i{}; i < length; i += 2)
+      {
+        if(data[i] == key)
+        {
+          for(size_t k{ i + 2 }; k < length; k += 2)
+          {
+            data[k - 2] = data[k];
+            data[k - 1] = data[k + 1];
+          }
+
+          length -= 2;
+          hash = 0;
+          return;
+        }
+      }
+    }
+    else
+    {
+      for(size_t i{}; i < length; i += 2)
+      {
+        if(detail::equal(data[i], key))
+        {
+          for(size_t k{ i + 2 }; k < length; k += 2)
+          {
+            data[k - 2] = data[k];
+            data[k - 1] = data[k + 1];
+          }
+
+          length -= 2;
+          hash = 0;
+          return;
+        }
+      }
+    }
+  }
+
   native_hash native_persistent_array_map::to_hash() const
   {
     if(hash != 0)

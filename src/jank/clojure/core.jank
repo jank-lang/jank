@@ -1399,6 +1399,19 @@
   ([m ks fallback]
    (native/raw "__value = jank::runtime::get_in(~{ m }, ~{ ks }, ~{ fallback });")))
 
+(defn dissoc
+  "dissoc[iate]. Returns a new map of the same (hashed/sorted) type,
+  that does not contain a mapping for key(s)."
+  ([m]
+   m)
+  ([m k]
+   (native/raw "__value = jank::runtime::dissoc(~{ m }, ~{ k });"))
+  ([m k & ks]
+   (let* [ret (dissoc m k)]
+     (if ks
+       (recur ret (first ks) (next ks))
+       ret))))
+
 ; Returns true if key is present in the given collection, otherwise
 ; returns false.  Note that for numerically indexed collections like
 ; vectors and Java arrays, this tests if the numeric key is within the
