@@ -370,17 +370,19 @@ namespace jank::evaluate
                            analyze::expr::set<analyze::expression> const &expr)
   {
     runtime::detail::native_transient_set ret;
+    fmt::println("building set {}", runtime::detail::to_string(expr.to_runtime_data()));
     for(auto const &e : expr.data_exprs)
     {
       ret.insert(eval(rt_ctx, jit_prc, e));
     }
     if(expr.meta.is_some())
     {
-      return make_box<runtime::obj::persistent_set>(expr.meta.unwrap(), std::move(ret));
+      return make_box<runtime::obj::persistent_set>(expr.meta.unwrap(),
+                                                    std::move(ret).persistent());
     }
     else
     {
-      return make_box<runtime::obj::persistent_set>(std::move(ret));
+      return make_box<runtime::obj::persistent_set>(std::move(ret).persistent());
     }
   }
 

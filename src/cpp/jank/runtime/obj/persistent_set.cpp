@@ -14,14 +14,9 @@ namespace jank::runtime
   {
   }
 
-  obj::persistent_set::static_object(runtime::detail::native_transient_set &&d)
-    : data{ d.persistent() }
-  {
-  }
-
   obj::persistent_set::static_object(object_ptr const meta,
-                                     runtime::detail::native_transient_set &&d)
-    : data{ d.persistent() }
+                                     runtime::detail::native_persistent_set &&d)
+    : data{ std::move(d) }
     , meta{ meta }
   {
   }

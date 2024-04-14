@@ -484,7 +484,7 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
-    return object_source_info{ make_box<runtime::obj::persistent_set>(std::move(ret)),
+    return object_source_info{ make_box<runtime::obj::persistent_set>(std::move(ret).persistent()),
                                start_token,
                                latest_token };
   }

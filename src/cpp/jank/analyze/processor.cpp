@@ -12,6 +12,7 @@
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/analyze/step/force_boxed.hpp>
+#include <jank/evaluate.hpp>
 #include <jank/result.hpp>
 
 namespace jank::analyze
@@ -931,7 +932,7 @@ namespace jank::analyze
     static runtime::obj::symbol catch_{ "catch" }, finally_{ "finally" };
     native_bool has_catch{}, has_finally{};
 
-    for(auto it(list->seq()->next_in_place()); it != nullptr; it = it->next_in_place())
+    for(auto it(list->fresh_seq()->next_in_place()); it != nullptr; it = it->next_in_place())
     {
       auto const item(it->first());
       auto const type(runtime::visit_seqable(
@@ -1183,7 +1184,7 @@ namespace jank::analyze
     native_vector<expression_ptr> exprs;
     exprs.reserve(o->count());
     native_bool literal{ true };
-    for(auto d = o->seq(); d != nullptr; d = d->next_in_place())
+    for(auto d = o->fresh_seq(); d != nullptr; d = d->next_in_place())
     {
       auto res(analyze(d->first(), current_frame, expression_type::expression, fn_ctx, true));
       if(res.is_err())
@@ -1199,8 +1200,17 @@ namespace jank::analyze
 
     if(literal)
     {
+      /* Eval the literal to resolve exprs such as quotes. */
+      auto const pre_eval_expr(make_box<expression>(expr::vector<expression>{
+        expression_base{{}, expr_type, current_frame, true},
+        std::move(exprs),
+        o->meta
+      }));
+      auto const o(evaluate::eval(rt_ctx, rt_ctx.jit_prc, pre_eval_expr));
+
       /* TODO: Order lifted constants. Use sub constants during codegen. */
       current_frame->lift_constant(o);
+
       return make_box<expression>(expr::primitive_literal<expression>{
         expression_base{{}, expr_type, current_frame, true},
         o
@@ -1257,7 +1267,7 @@ namespace jank::analyze
     native_vector<expression_ptr> exprs;
     exprs.reserve(o->count());
     native_bool literal{ true };
-    for(auto d = o->seq(); d != nullptr; d = d->next_in_place())
+    for(auto d = o->fresh_seq(); d != nullptr; d = d->next_in_place())
     {
       auto res(analyze(d->first(), current_frame, expression_type::expression, fn_ctx, true));
       if(res.is_err())
@@ -1273,8 +1283,17 @@ namespace jank::analyze
 
     if(literal)
     {
+      /* Eval the literal to resolve exprs such as quotes. */
+      auto const pre_eval_expr(make_box<expression>(expr::set<expression>{
+        expression_base{{}, expr_type, current_frame, true},
+        std::move(exprs),
+        o->meta
+      }));
+      auto const o(evaluate::eval(rt_ctx, rt_ctx.jit_prc, pre_eval_expr));
+
       /* TODO: Order lifted constants. Use sub constants during codegen. */
       current_frame->lift_constant(o);
+
       return make_box<expression>(expr::primitive_literal<expression>{
         expression_base{{}, expr_type, current_frame, true},
         o

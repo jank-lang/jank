@@ -19,13 +19,11 @@ namespace jank::runtime
     static constexpr native_bool pointer_free{ false };
 
     static_object() = default;
-    static_object(static_object &&) = default;
+    static_object(static_object &&) noexcept = default;
     static_object(static_object const &) = default;
-    static_object(native_box<static_object> meta);
     static_object(value_type &&d);
     static_object(value_type const &d);
-    static_object(runtime::detail::native_transient_set &&d);
-    static_object(object_ptr meta, runtime::detail::native_transient_set &&d);
+    static_object(object_ptr meta, value_type &&d);
 
     template <typename... Args>
     static_object(std::in_place_t, Args &&...args)
