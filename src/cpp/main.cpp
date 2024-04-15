@@ -126,6 +126,7 @@ namespace jank
       try
       {
         auto const res(rt_ctx.eval_string(line));
+        fmt::println("");
         fmt::println("{}", runtime::detail::to_string(res));
       }
       /* TODO: Unify error handling. JEEZE! */

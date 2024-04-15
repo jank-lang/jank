@@ -1583,30 +1583,30 @@
           (when more
             (list* 'clojure.core/assert-macro-args more)))))
 
-; bindings => binding-form test
-;
-; If test is true, evaluates then with binding-form bound to the value of
-; test, if not, yields else
-; TODO: Macro arities
-;(defmacro if-let
-;  ([bindings then]
-;   `(if-let ~bindings ~then nil))
-;  ([bindings then else & oldform]
-;   (assert-macro-args
-;     (vector? bindings) "a vector for its binding"
-;     (nil? oldform) "1 or 2 forms after binding vector"
-;     (= 2 (count bindings)) "exactly 2 forms in binding vector")
-;   (let [form (bindings 0) tst (bindings 1)]
-;     `(let [temp# ~tst]
-;        (if temp#
-;          (let [~form temp#]
-;            ~then)
-;          ~else)))))
+(defmacro if-let
+  "bindings => binding-form test
 
-; bindings => binding-form test
-;
-; When test is true, evaluates body with binding-form bound to the value of test
-(defmacro when-let [bindings & body]
+  If test is true, evaluates then with binding-form bound to the value of
+  test, if not, yields else"
+  ([bindings then]
+   `(if-let ~bindings ~then nil))
+  ([bindings then else & oldform]
+   (assert-macro-args
+     (vector? bindings) "a vector for its binding"
+     (nil? oldform) "1 or 2 forms after binding vector"
+     (= 2 (count bindings)) "exactly 2 forms in binding vector")
+   (let [form (bindings 0) tst (bindings 1)]
+     `(let [temp# ~tst]
+        (if temp#
+          (let [~form temp#]
+            ~then)
+          ~else)))))
+
+(defmacro when-let
+  "bindings => binding-form test
+
+  When test is true, evaluates body with binding-form bound to the value of test"
+  [bindings & body]
   (assert-macro-args
     (vector? bindings) "a vector for its binding"
     (= 2 (count bindings)) "exactly 2 forms in binding vector")
@@ -1617,32 +1617,31 @@
          (let [~form temp#]
            ~@body)))))
 
-; TODO: Macro arities
-;(defmacro if-some
-;  "bindings => binding-form test
-;
-;   If test is not nil, evaluates then with binding-form bound to the
-;   value of test, if not, yields else"
-;  {:added "1.6"}
-;  ([bindings then]
-;   `(if-some ~bindings ~then nil))
-;  ([bindings then else & oldform]
-;   (assert-macro-args
-;     (vector? bindings) "a vector for its binding"
-;     (nil? oldform) "1 or 2 forms after binding vector"
-;     (= 2 (count bindings)) "exactly 2 forms in binding vector")
-;   (let [form (bindings 0) tst (bindings 1)]
-;     `(let [temp# ~tst]
-;        (if (nil? temp#)
-;          ~else
-;          (let [~form temp#]
-;            ~then))))))
+(defmacro if-some
+  "bindings => binding-form test
 
-; bindings => binding-form test
-;
-; When test is not nil, evaluates body with binding-form bound to the
-; value of test
-(defmacro when-some [bindings & body]
+  If test is not nil, evaluates then with binding-form bound to the
+  value of test, if not, yields else"
+  ([bindings then]
+   `(if-some ~bindings ~then nil))
+  ([bindings then else & oldform]
+   (assert-macro-args
+     (vector? bindings) "a vector for its binding"
+     (nil? oldform) "1 or 2 forms after binding vector"
+     (= 2 (count bindings)) "exactly 2 forms in binding vector")
+   (let [form (bindings 0) tst (bindings 1)]
+     `(let [temp# ~tst]
+        (if (nil? temp#)
+          ~else
+          (let [~form temp#]
+            ~then))))))
+
+(defmacro when-some
+  "bindings => binding-form test
+
+  When test is not nil, evaluates body with binding-form bound to the
+  value of test"
+  [bindings & body]
   (assert-macro-args
     (vector? bindings) "a vector for its binding"
     (= 2 (count bindings)) "exactly 2 forms in binding vector")
@@ -2265,6 +2264,19 @@
            (loop* ~(vec (interleave gs gs))
                   (let ~(vec (interleave bs gs))
                     ~@body)))))))
+
+(defmacro when-first
+  "bindings => x xs
+
+  Roughly the same as (when (seq xs) (let [x (first xs)] body)) but xs is evaluated only once"
+  [bindings & body]
+  (assert-macro-args
+    (vector? bindings) "a vector for its binding"
+    (= 2 (count bindings)) "exactly 2 forms in binding vector")
+  (let [[x xs] bindings]
+    `(when-let [xs# (seq ~xs)]
+       (let [~x (first xs#)]
+         ~@body))))
 
 ; Returns a seq of the last n items in coll.  Depending on the type
 ; of coll may be no better than linear time.  For vectors, see also subvec.
