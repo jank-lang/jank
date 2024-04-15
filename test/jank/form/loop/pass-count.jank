@@ -1,4 +1,4 @@
-(def count
+(def count*
   (fn* [& args]
     (loop [args args
            n 0]
@@ -8,8 +8,8 @@
           ;(println (first args))
           (recur (rest args) (+ n 1)))))))
 
-(assert (= 0 (count)))
-(assert (= 4 (count 1 2 3 :four)))
-(assert (= 5 (count 1 2 3 :four 5)))
+(assert (= 0 (count*)))
+(assert (= 4 (count* 1 2 3 :four)))
+(assert (= 5 (count* 1 2 3 :four 5)))
 
 :success
