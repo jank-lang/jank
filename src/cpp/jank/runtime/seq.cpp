@@ -559,4 +559,79 @@ namespace jank::runtime
     return make_box<obj::persistent_vector>(
       detail::native_persistent_vector{ v->data.begin() + start, v->data.begin() + end });
   }
+
+  /* TODO: indexable behavior for O(1) lookup. */
+  object_ptr nth(object_ptr const o, object_ptr const idx)
+  {
+    auto const index(to_int(idx));
+    if(index < 0)
+    {
+      throw std::runtime_error{ fmt::format("index out of bounds: {}", index) };
+    }
+    else if(o == obj::nil::nil_const())
+    {
+      return o;
+    }
+
+    return visit_object(
+      [&](auto const typed_o) -> object_ptr {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::seqable<T>)
+        {
+          native_integer i{};
+          for(auto it(typed_o->fresh_seq()); it != nullptr; it = it->next_in_place(), ++i)
+          {
+            if(i == index)
+            {
+              return it->first();
+            }
+          }
+          throw std::runtime_error{ fmt::format("index out of bounds: {}", index) };
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not indexable: {}",
+                                                magic_enum::enum_name(o->type)) };
+        }
+      },
+      o);
+  }
+
+  object_ptr nth(object_ptr const o, object_ptr const idx, object_ptr const fallback)
+  {
+    auto const index(to_int(idx));
+    if(index < 0)
+    {
+      return fallback;
+    }
+    else if(o == obj::nil::nil_const())
+    {
+      return o;
+    }
+
+    return visit_object(
+      [&](auto const typed_o) -> object_ptr {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::seqable<T>)
+        {
+          native_integer i{};
+          for(auto it(typed_o->fresh_seq()); it != nullptr; it = it->next_in_place(), ++i)
+          {
+            if(i == index)
+            {
+              return it->first();
+            }
+          }
+          return fallback;
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not indexable: {}",
+                                                magic_enum::enum_name(o->type)) };
+        }
+      },
+      o);
+  }
 } // namespace jank::runtime

@@ -98,4 +98,6 @@ namespace jank::runtime
   object_ptr merge(object_ptr m, object_ptr other);
   object_ptr meta(object_ptr m);
   object_ptr subvec(object_ptr v, size_t start, size_t end);
+  object_ptr nth(object_ptr o, object_ptr idx);
+  object_ptr nth(object_ptr o, object_ptr idx, object_ptr fallback);
 }

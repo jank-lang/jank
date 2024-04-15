@@ -1914,6 +1914,16 @@
    (dorun n coll)
    coll))
 
+(defn nth
+  "Returns the value at the index. get returns nil if index out of
+  bounds, nth throws an exception unless not-found is supplied.  nth
+  also works for strings, Java arrays, regex Matchers and Lists, and,
+  in O(n) time, for sequences."
+  ([coll index]
+   (native/raw "__value = runtime::nth(~{ coll }, ~{ index });"))
+  ([coll index not-found]
+   (native/raw "__value = runtime::nth(~{ coll }, ~{ index }, ~{ not-found });")))
+
 ; Returns the nth next of coll, (seq coll) when n is 0.
 (defn nthnext [coll n]
   (if (and (seq coll) (pos? n))
