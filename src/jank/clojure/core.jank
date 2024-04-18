@@ -455,15 +455,6 @@
             (seq ret)))
         (list (asig fdecl))))))
 
-;(defn seq-to-map-for-destructuring
-;  "Builds a map from a seq as described in
-;  https://clojure.org/reference/special_forms#keyword-arguments"
-;  {:added "1.11"}
-;  [s]
-;  (if (next s)
-;    (clojure.lang.PersistentArrayMap/createAsIfByAssoc (to-array s))
-;    (if (seq s) (first s) clojure.lang.PersistentArrayMap/EMPTY)))
-
 ;; Macros.
 (def defn
   (fn* defn [&form &env name & fdecl]
@@ -890,6 +881,20 @@
                  },
                 ~{ coll }
                 );")))
+
+(defn peek
+  "For a list or queue, same as first, for a vector, same as, but much
+  more efficient than, last. If the collection is empty, returns nil."
+  [coll]
+  (native/raw "__value = runtime::peek(~{ coll });"))
+
+(defn pop
+  "For a list or queue, returns a new list/queue without the first
+  item, for a vector, returns a new vector without the last item. If
+  the collection is empty, throws an exception. Note - not the same
+  as next/butlast."
+  [coll]
+  (native/raw "__value = runtime::pop(~{ coll });"))
 
 ; Primitives.
 ;; Arithmetic.

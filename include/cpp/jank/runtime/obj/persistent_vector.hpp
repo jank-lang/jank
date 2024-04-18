@@ -72,6 +72,14 @@ namespace jank::runtime
     /* behavior::consable */
     native_box<static_object> cons(object_ptr head) const;
 
+    /* behavior::stackable */
+    object_ptr peek() const;
+    native_box<static_object> pop() const;
+
+    /* behavior::indexable */
+    object_ptr nth(object_ptr index) const;
+    object_ptr nth(object_ptr index, object_ptr fallback) const;
+
     /* behavior::transientable */
     obj::transient_vector_ptr to_transient() const;
 

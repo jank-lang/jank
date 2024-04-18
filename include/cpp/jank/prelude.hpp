@@ -31,3 +31,5 @@
 #include <jank/runtime/behavior/transientable.hpp>
 #include <jank/runtime/behavior/consable.hpp>
 #include <jank/runtime/behavior/associatively_writable.hpp>
+#include <jank/runtime/behavior/stackable.hpp>
+#include <jank/runtime/behavior/indexable.hpp>

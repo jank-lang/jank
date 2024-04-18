@@ -1,19 +1,24 @@
 #pragma once
 
-#include <cstdlib> // size_t
-
-namespace jank::runtime
+namespace jank::runtime::behavior
 {
-  using object_ptr = native_box<struct object>;
-
-  namespace behavior
-  {
-    struct indexable
+  /* Indexable is meant to provide efficient item access in a
+   * collection, given an index. Alas, Clojure implements it
+   * for sequences in O(n) as well.
+   *
+   * In jank, the `runtime::nth` functions will handle the O(n)
+   * use cases and this behavior is reserved for more efficient
+   * usage. */
+  template <typename T>
+  concept indexable = requires(T * const t) {
+    /* Given an index, return the item at that index or throw. */
     {
-      virtual ~indexable() = default;
+      t->nth(object_ptr{})
+    } -> std::convertible_to<object_ptr>;
 
-      virtual object_ptr nth(size_t const i) const = 0;
-      virtual object_ptr nth(size_t const i, object_ptr fallback) const = 0;
-    };
-  }
+    /* Given an index, return the item at that index or return the fallback. */
+    {
+      t->nth(object_ptr{}, object_ptr{})
+    } -> std::convertible_to<object_ptr>;
+  };
 }

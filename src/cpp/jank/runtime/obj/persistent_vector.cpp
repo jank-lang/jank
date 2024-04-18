@@ -190,4 +190,49 @@ namespace jank::runtime
       return false;
     }
   }
+
+  object_ptr obj::persistent_vector::peek() const
+  {
+    if(data.empty())
+    {
+      return obj::nil::nil_const();
+    }
+
+    return data[data.size() - 1];
+  }
+
+  obj::persistent_vector_ptr obj::persistent_vector::pop() const
+  {
+    if(data.empty())
+    {
+      throw std::runtime_error{ "cannot pop an empty vector" };
+    }
+
+    return make_box<obj::persistent_vector>(data.take(data.size() - 1));
+  }
+
+  object_ptr obj::persistent_vector::nth(object_ptr const index) const
+  {
+    if(index->type == object_type::integer)
+    {
+      auto const i(static_cast<size_t>(expect_object<obj::integer>(index)->data));
+      if(data.size() <= i)
+      {
+        throw std::runtime_error{
+          fmt::format("out of bounds index {}; vector has a size of {}", i, data.size())
+        };
+      }
+      return data[i];
+    }
+    else
+    {
+      throw std::runtime_error{ fmt::format("get on a vector must be an integer; found {}",
+                                            runtime::detail::to_string(index)) };
+    }
+  }
+
+  object_ptr obj::persistent_vector::nth(object_ptr const index, object_ptr const fallback) const
+  {
+    return get(index, fallback);
+  }
 }

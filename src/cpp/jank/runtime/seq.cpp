@@ -539,7 +539,7 @@ namespace jank::runtime
       m);
   }
 
-  object_ptr subvec(object_ptr const o, size_t const start, size_t const end)
+  object_ptr subvec(object_ptr const o, native_integer const start, native_integer const end)
   {
     if(o->type != object_type::persistent_vector)
     {
@@ -548,7 +548,7 @@ namespace jank::runtime
 
     auto const v(expect_object<obj::persistent_vector>(o));
 
-    if(end < start || start < 0 || end > v->count())
+    if(end < start || start < 0 || static_cast<size_t>(end) > v->count())
     {
       throw std::runtime_error{ "index out of bounds" };
     }
@@ -560,7 +560,6 @@ namespace jank::runtime
       detail::native_persistent_vector{ v->data.begin() + start, v->data.begin() + end });
   }
 
-  /* TODO: indexable behavior for O(1) lookup. */
   object_ptr nth(object_ptr const o, object_ptr const idx)
   {
     auto const index(to_int(idx));
@@ -577,7 +576,11 @@ namespace jank::runtime
       [&](auto const typed_o) -> object_ptr {
         using T = typename decltype(typed_o)::value_type;
 
-        if constexpr(behavior::seqable<T>)
+        if constexpr(behavior::indexable<T>)
+        {
+          return typed_o->nth(idx);
+        }
+        else if constexpr(behavior::seqable<T>)
         {
           native_integer i{};
           for(auto it(typed_o->fresh_seq()); it != nullptr; it = it->next_in_place(), ++i)
@@ -614,7 +617,11 @@ namespace jank::runtime
       [&](auto const typed_o) -> object_ptr {
         using T = typename decltype(typed_o)::value_type;
 
-        if constexpr(behavior::seqable<T>)
+        if constexpr(behavior::indexable<T>)
+        {
+          return typed_o->nth(idx, fallback);
+        }
+        else if constexpr(behavior::seqable<T>)
         {
           native_integer i{};
           for(auto it(typed_o->fresh_seq()); it != nullptr; it = it->next_in_place(), ++i)
@@ -634,4 +641,53 @@ namespace jank::runtime
       },
       o);
   }
+
+  object_ptr peek(object_ptr const o)
+  {
+    if(o == obj::nil::nil_const())
+    {
+      return o;
+    }
+
+    return visit_object(
+      [&](auto const typed_o) -> object_ptr {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::stackable<T>)
+        {
+          return typed_o->peek();
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not stackable: {}",
+                                                magic_enum::enum_name(o->type)) };
+        }
+      },
+      o);
+  }
+
+  object_ptr pop(object_ptr const o)
+  {
+    if(o == obj::nil::nil_const())
+    {
+      return o;
+    }
+
+    return visit_object(
+      [&](auto const typed_o) -> object_ptr {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::stackable<T>)
+        {
+          return typed_o->pop();
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not stackable: {}",
+                                                magic_enum::enum_name(o->type)) };
+        }
+      },
+      o);
+  }
+
 } // namespace jank::runtime

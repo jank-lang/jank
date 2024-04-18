@@ -71,6 +71,10 @@ namespace jank::runtime
     obj::persistent_list_sequence_ptr next_in_place() const;
     object_ptr next_in_place_first();
 
+    /* behavior::stackable */
+    object_ptr peek() const;
+    native_box<static_object> pop() const;
+
     object base{ object_type::persistent_list };
     value_type data;
     option<object_ptr> meta;

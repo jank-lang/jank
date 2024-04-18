@@ -151,4 +151,19 @@ namespace jank::runtime
     ret->meta = meta;
     return ret;
   }
+
+  object_ptr obj::persistent_list::peek() const
+  {
+    return data.first().unwrap_or(obj::nil::nil_const());
+  }
+
+  obj::persistent_list_ptr obj::persistent_list::pop() const
+  {
+    if(data.empty())
+    {
+      throw std::runtime_error{ "cannot pop an empty list" };
+    }
+
+    return make_box<obj::persistent_list>(data.rest());
+  }
 }
