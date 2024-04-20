@@ -10,8 +10,9 @@ shift
 shift
 flags=$*
 
+# TODO: Discern path from llvm_dir
 # shellcheck disable=SC2086
-clang++-17 -I "${include}" \
+~/projects/third-party/llvm-project/build-clang/bin/clang++ -I "${include}" \
         -I "${include}/cpp" \
         -I "${include}/../build/vcpkg_installed/x64-clang-static/include" \
         -I "${include}/../third-party/nanobench/include" \
@@ -20,8 +21,9 @@ clang++-17 -I "${include}" \
         -DHAVE_CXX14=1 \
         -DIMMER_HAS_LIBGC=1 \
         -w \
+        -Xclang -fpch-instantiate-templates \
         -Xclang -fincremental-extensions \
         -Xclang -emit-pch \
         -x c++-header \
         -o "${output}" \
-        -c "${include}"/cpp/jank/prelude.hpp \
+        -c "${include}"/cpp/jank/prelude.hpp

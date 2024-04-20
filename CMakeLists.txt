@@ -9,6 +9,12 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   )
 endif()
 
+set(CMAKE_MODULE_PATH
+  ${CMAKE_MODULE_PATH}
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules"
+  )
+
 # jank can only be built with the corresponding Clang that Cling will be using,
 # since the JIT compiled code needs to match 1:1 with the AOT compiled runtime.
 # We just pull the Clang compiler right out of the Cling build dir.
@@ -35,6 +41,7 @@ project(
 
 set(jank_cxx_standard cxx_std_20)
 
+# TODO: Unify this with LLVM version.
 set(jank_required_compiler_id "Clang")
 set(jank_required_compiler_version "17.0.6")
 
@@ -67,16 +74,19 @@ if(
   )
 endif()
 
-#set(CMAKE_CXX_FLAGS "-Xclang -fincremental-extensions")
-
 set(
   jank_compiler_flags
   -Wall -Wextra -Wpedantic
   -Wfloat-equal -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor
   -Wold-style-cast -Wno-gnu-case-range
   -Wno-gnu-conditional-omitted-operand
+  -Wno-implicit-fallthrough
+  -Wno-covered-switch-default
   -DJANK_CLING_BUILD_DIR="${jank_cling_build_dir_absolute}"
   -DIMMER_HAS_LIBGC=1 -DHAVE_CXX14=1
+  -fno-common
+  -frtti
+  -fexceptions
   $<$<CONFIG:Release>:-O3>
   #-stdlib=libc++
 )
@@ -97,6 +107,18 @@ include(cmake/analysis.cmake)
 
 # Enable easier tooling during development.
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
+
+# ---- Clang/LLVM ----
+include(cmake/llvm.cmake)
+#llvm_map_components_to_libnames(jank_llvm_libs support lineeditor orcjit native core)
+
+function(jank_hook_llvm target)
+  set(tgt "${target}")
+  target_include_directories("${tgt}" PRIVATE ${LLVM_INCLUDE_DIRS})
+  target_compile_definitions("${tgt}" PRIVATE ${LLVM_DEFINITIONS})
+  #target_link_libraries("${tgt}" PRIVATE ${jank_llvm_libs})
+endfunction()
+# ---- Clang/LLVM ----
 
 # ---- libjank.a ----
 # The sources for jank are used for both the compiler and its tests, so
@@ -181,16 +203,7 @@ find_package(BDWgc CONFIG REQUIRED)
 find_package(libzippp CONFIG REQUIRED)
 find_package(CLI11 CONFIG REQUIRED)
 
-#set(LLVM_INCLUDE_DIRS /usr/lib/llvm17/include)
-set(LLVM_INCLUDE_DIRS /home/jeaye/projects/third-party/llvm-17.0.6/install/include)
-set(CLANG_INCLUDE_DIRS /home/jeaye/projects/third-party/llvm-17.0.6/clang/include)
-#target_link_options(jank_lib PRIVATE -L/usr/lib/llvm17/lib)
-target_link_options(jank_lib PRIVATE -L/home/jeaye/projects/third-party/llvm-17.0.6/build-llvm/lib)
-
 target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
-target_include_directories(jank_lib SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
-target_include_directories(jank_lib SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
-target_include_directories(jank_lib SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 
 target_link_libraries(
   jank_lib PRIVATE
@@ -200,13 +213,15 @@ target_link_libraries(
   libzippp::libzippp
   CLI11::CLI11
   readline
-  /home/jeaye/projects/third-party/llvm-17.0.6/build-clang/lib/libclang.so.17
-  /home/jeaye/projects/third-party/llvm-17.0.6/build-clang/lib/libclang-cpp.so.17
-  /home/jeaye/projects/third-party/llvm-17.0.6/build-llvm/lib/libLLVM-17.so
-  z
-  lzma
-  ncursesw
+  clang-cpp
+  clangInterpreter
+  #${jank_llvm_libs}
+  #z
+  #lzma
+  #ncursesw
 )
+
+jank_hook_llvm(jank_lib)
 
 set_target_properties(jank_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
 
@@ -257,9 +272,6 @@ target_compile_options(jank_exe PUBLIC ${jank_compiler_flags})
 target_link_options(jank_exe PRIVATE ${jank_linker_flags})
 
 target_include_directories(jank_exe SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
-target_include_directories(jank_exe SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
-target_include_directories(jank_exe SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
-target_include_directories(jank_exe SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 
 target_link_libraries(
   jank_exe PUBLIC
@@ -267,6 +279,9 @@ target_link_libraries(
   ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
   Boost::boost
 )
+
+jank_hook_llvm(jank_exe)
+
 set_target_properties(jank_exe PROPERTIES LINK_FLAGS_RELEASE -s)
 # ---- jank executable ----
 
@@ -294,9 +309,6 @@ if(jank_tests)
   target_link_options(jank_test_exe PRIVATE ${jank_linker_flags})
 
   target_include_directories(jank_test_exe SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
-  target_include_directories(jank_test_exe SYSTEM PRIVATE ${CLING_INCLUDE_DIRS})
-  target_include_directories(jank_test_exe SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS})
-  target_include_directories(jank_test_exe SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 
   find_package(doctest REQUIRED)
   target_link_libraries(
@@ -306,6 +318,8 @@ if(jank_tests)
     Boost::boost
     doctest::doctest
   )
+
+  jank_hook_llvm(jank_test_exe)
 
   # Symbol exporting for JIT.
   set_target_properties(jank_test_exe PROPERTIES ENABLE_EXPORTS 1)

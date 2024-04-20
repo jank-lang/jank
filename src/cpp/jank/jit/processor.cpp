@@ -39,12 +39,14 @@ namespace jank::jit
     auto dev_path(jank_path / "incremental.pch");
     if(boost::filesystem::exists(dev_path))
     {
+      fmt::println("PCH path: {}", dev_path.string());
       return std::move(dev_path);
     }
 
     auto installed_path(jank_path / "../include/cpp/jank/incremental.pch");
     if(boost::filesystem::exists(installed_path))
     {
+      fmt::println("PCH path: {}", installed_path.string());
       return std::move(installed_path);
     }
 
@@ -151,28 +153,8 @@ namespace jank::jit
     auto const prelude_path(include_path / "cpp/jank/prelude.hpp");
     auto const vcpkg_path(include_path / "../build/vcpkg_installed/x64-clang-static/include");
     std::vector<char const *> args{
-      //"-Xclang",
-      //"-emit-llvm-only",
-      "-std=gnu++20",
-      "-DHAVE_CXX14=1",
-      "-DIMMER_HAS_LIBGC=1",
-      "-w",
-      "-I/home/jeaye/projects/jank/include/cpp",
-      "-isystem",
-      "/home/jeaye/projects/jank/build/vcpkg_installed/x64-clang-static/include",
-      "-isystem",
-      "/home/jeaye/projects/jank/third-party/nanobench/include",
-      "-isystem",
-      "/usr/lib/llvm17/lib/clang/17",
-      //"-include-pch",
-      //pch_path_str.c_str(),
-      //"-include",
-      //prelude_path.c_str(),
-      //"-isystem",
-      //include_path.c_str(),
-      //"-isystem",
-      //vcpkg_path.c_str(),
-      //O.data()
+      "-std=gnu++20", "-DHAVE_CXX14=1", "-DIMMER_HAS_LIBGC=1",
+      "-w",           "-include-pch",   pch_path_str.c_str(),
     };
 
     //auto CI = cantFail(clang::IncrementalCompilerBuilder::create(args));
@@ -188,6 +170,7 @@ namespace jank::jit
     eval_string(fmt::format("#include \"{}\"", prelude_path.c_str()));
     eval_string(fmt::format("auto &__rt_ctx(*reinterpret_cast<jank::runtime::context*>({}));",
                             fmt::ptr(&rt_ctx)));
+    /* TODO: Not thread-safe. */
     eval_string("extern jank::runtime::object_ptr jank_repl_result;");
   }
 
