@@ -37,9 +37,11 @@ namespace jank::runtime
     /* behavior::sequenceable */
     object_ptr first() const;
     native_box<static_object> next() const;
+    obj::cons_ptr cons(object_ptr head);
+
+    /* behavior::sequenceable_in_place */
     native_box<static_object> next_in_place();
     object_ptr next_in_place_first();
-    obj::cons_ptr cons(object_ptr head);
 
     object base{ object_type::persistent_vector_sequence };
     obj::persistent_vector_ptr vec{};

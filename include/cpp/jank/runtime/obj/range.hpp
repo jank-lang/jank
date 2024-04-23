@@ -33,6 +33,8 @@ namespace jank::runtime
     /* behavior::sequenceable */
     object_ptr first() const;
     native_box<static_object> next() const;
+
+    /* behavior::sequenceable_in_place */
     native_box<static_object> next_in_place();
     object_ptr next_in_place_first();
 

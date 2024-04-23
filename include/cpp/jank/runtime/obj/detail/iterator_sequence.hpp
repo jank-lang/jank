@@ -102,6 +102,7 @@ namespace jank::runtime::obj::detail
       return make_box<Derived>(coll, n, end, size);
     }
 
+    /* behavior::sequenceable_in_place */
     native_box<Derived> next_in_place()
     {
       ++begin;

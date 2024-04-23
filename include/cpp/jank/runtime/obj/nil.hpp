@@ -8,6 +8,8 @@ namespace jank::runtime
   {
     using persistent_array_map = static_object<object_type::persistent_array_map>;
     using persistent_array_map_ptr = native_box<persistent_array_map>;
+    using cons = static_object<object_type::cons>;
+    using cons_ptr = native_box<cons>;
   }
 
   template <>
@@ -42,6 +44,9 @@ namespace jank::runtime
     /* behavior::sequenceable */
     native_box<static_object> first() const;
     native_box<static_object> next() const;
+    obj::cons_ptr cons(object_ptr head) const;
+
+    /* behavior::sequenceable_in_place */
     native_box<static_object> next_in_place();
     native_box<static_object> next_in_place_first();
 

@@ -79,6 +79,11 @@ namespace jank::runtime
     return nullptr;
   }
 
+  obj::cons_ptr obj::nil::cons(object_ptr const head) const
+  {
+    return make_box<obj::cons>(head, nullptr);
+  }
+
   obj::nil_ptr obj::nil::next_in_place()
   {
     return nullptr;

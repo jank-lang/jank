@@ -1,5 +1,6 @@
 #pragma once
 
+/* TODO: Rename to conjable. */
 namespace jank::runtime::behavior
 {
   template <typename T>

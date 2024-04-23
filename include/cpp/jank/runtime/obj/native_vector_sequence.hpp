@@ -30,9 +30,11 @@ namespace jank::runtime
     /* behavior::sequence */
     object_ptr first() const;
     native_box<static_object> next() const;
+    obj::cons_ptr cons(object_ptr head);
+
+    /* behavior::sequenceable_in_place */
     native_box<static_object> next_in_place();
     object_ptr next_in_place_first();
-    obj::cons_ptr cons(object_ptr head);
 
     object base{ object_type::native_vector_sequence };
     native_vector<object_ptr> data{};

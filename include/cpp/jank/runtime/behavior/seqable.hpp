@@ -2,6 +2,7 @@
 
 #include <jank/native_box.hpp>
 #include <jank/runtime/detail/object_util.hpp>
+#include <jank/runtime/behavior/consable.hpp>
 
 namespace jank::runtime::behavior
 {
@@ -36,7 +37,10 @@ namespace jank::runtime::behavior
     {
       t->next()
     }; // -> sequenceable;
+  } && consable<T>;
 
+  template <typename T>
+  concept sequenceable_in_place = requires(T * const t) {
     /* Each call to next() allocates a new sequence_ptr, since it's polymorphic. When iterating
      * over a large sequence, this can mean a _lot_ of allocations. However, if you own the
      * sequence_ptr you have, typically meaning it wasn't a parameter, then you can mutate it
@@ -51,10 +55,6 @@ namespace jank::runtime::behavior
     {
       t->next_in_place_first()
     }; // -> sequenceable;
-
-    {
-      t->cons(object_ptr{})
-    }; //-> consable;
   };
 
   namespace detail

@@ -127,6 +127,7 @@ namespace jank::runtime::obj::detail
       return make_box<parent_type>(coll, n, end);
     }
 
+    /* behavior::sequenceable_in_place */
     native_box<parent_type> next_in_place()
     {
       ++begin;
