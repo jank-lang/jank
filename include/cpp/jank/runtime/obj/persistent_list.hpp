@@ -71,7 +71,6 @@ namespace jank::runtime
 
     /* behavior::sequenceable_in_place */
     obj::persistent_list_sequence_ptr next_in_place() const;
-    object_ptr next_in_place_first();
 
     /* behavior::stackable */
     object_ptr peek() const;

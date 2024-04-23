@@ -72,19 +72,6 @@ namespace jank::runtime
     return this;
   }
 
-  object_ptr obj::range::next_in_place_first()
-  {
-    auto next_start(add(start, step));
-    if(!lt(next_start, end))
-    {
-      return nullptr;
-    }
-
-    start = next_start;
-
-    return start;
-  }
-
   obj::cons_ptr obj::range::cons(object_ptr head) const
   {
     return make_box<obj::cons>(head, this);

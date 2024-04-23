@@ -88,9 +88,4 @@ namespace jank::runtime
   {
     return nullptr;
   }
-
-  obj::nil_ptr obj::nil::next_in_place_first()
-  {
-    return nullptr;
-  }
 }

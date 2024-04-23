@@ -41,7 +41,6 @@ namespace jank::runtime
 
     /* behavior::sequenceable_in_place */
     native_box<static_object> next_in_place();
-    object_ptr next_in_place_first();
 
     object base{ object_type::persistent_vector_sequence };
     obj::persistent_vector_ptr vec{};

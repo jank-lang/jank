@@ -93,18 +93,6 @@ namespace jank::runtime
     return this;
   }
 
-  object_ptr obj::native_array_sequence::next_in_place_first()
-  {
-    ++index;
-
-    if(size <= index)
-    {
-      return nullptr;
-    }
-
-    return arr[index];
-  }
-
   obj::cons_ptr obj::native_array_sequence::cons(object_ptr const head)
   {
     return make_box<obj::cons>(head, this);

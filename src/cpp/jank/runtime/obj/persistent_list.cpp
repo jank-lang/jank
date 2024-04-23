@@ -133,17 +133,6 @@ namespace jank::runtime
     return next();
   }
 
-  object_ptr obj::persistent_list::next_in_place_first()
-  {
-    if(data.size() < 2)
-    {
-      return nullptr;
-    }
-
-    data = data.rest();
-    return first();
-  }
-
   object_ptr obj::persistent_list::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));

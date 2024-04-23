@@ -65,36 +65,6 @@ namespace jank::runtime
     return this;
   }
 
-  object_ptr obj::cons::next_in_place_first()
-  {
-    if(!tail)
-    {
-      return nullptr;
-    }
-
-    visit_object(
-      [&](auto const typed_tail) {
-        using T = typename decltype(typed_tail)::value_type;
-
-        if constexpr(behavior::sequenceable<T>)
-        {
-          head = typed_tail->first();
-          tail = typed_tail->next();
-          if(tail == obj::nil::nil_const())
-          {
-            tail = nullptr;
-          }
-        }
-        else
-        {
-          throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_tail->to_string()) };
-        }
-      },
-      tail);
-
-    return head;
-  }
-
   native_bool obj::cons::equal(object const &o) const
   {
     return visit_object(

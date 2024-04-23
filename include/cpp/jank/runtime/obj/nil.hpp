@@ -48,7 +48,6 @@ namespace jank::runtime
 
     /* behavior::sequenceable_in_place */
     native_box<static_object> next_in_place();
-    native_box<static_object> next_in_place_first();
 
     object base{ object_type::nil };
   };

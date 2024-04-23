@@ -54,22 +54,6 @@ namespace jank::runtime
     return this;
   }
 
-  object_ptr obj::iterator::next_in_place_first()
-  {
-    if(cached_next)
-    {
-      current = cached_next->first();
-      cached_next = nullptr;
-    }
-    else
-    {
-      auto const next(dynamic_call(fn, current));
-      current = next;
-    }
-
-    return current;
-  }
-
   native_bool obj::iterator::equal(object const &o) const
   {
     return visit_object(

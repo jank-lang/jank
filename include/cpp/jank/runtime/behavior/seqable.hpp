@@ -51,10 +51,6 @@ namespace jank::runtime::behavior
     {
       t->next_in_place()
     }; // -> sequenceable;
-
-    {
-      t->next_in_place_first()
-    }; // -> sequenceable;
   };
 
   namespace detail

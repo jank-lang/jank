@@ -70,16 +70,6 @@ namespace jank::runtime
     return nullptr;
   }
 
-  object_ptr obj::lazy_sequence::next_in_place_first()
-  {
-    next_in_place();
-    if(sequence)
-    {
-      return runtime::first(sequence);
-    }
-    return obj::nil::nil_const();
-  }
-
   native_bool obj::lazy_sequence::equal(object const &o) const
   {
     return visit_object(

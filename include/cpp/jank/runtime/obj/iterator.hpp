@@ -37,7 +37,6 @@ namespace jank::runtime
 
     /* behavior::sequenceable_in_place */
     native_box<static_object> next_in_place();
-    object_ptr next_in_place_first();
 
     object base{ object_type::iterator };
     /* TODO: Support chunking. */

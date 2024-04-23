@@ -140,20 +140,6 @@ namespace jank::runtime::obj::detail
       return static_cast<parent_type *>(this);
     }
 
-    object_ptr next_in_place_first()
-    {
-      ++begin;
-
-      if(begin == end)
-      {
-        return nullptr;
-      }
-
-      auto const pair(*begin);
-      return make_box<obj::persistent_vector>(
-        runtime::detail::native_persistent_vector{ pair.first, pair.second });
-    }
-
     obj::cons_ptr cons(object_ptr const head)
     {
       return make_box<obj::cons>(head, static_cast<parent_type *>(this));

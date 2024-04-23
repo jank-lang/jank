@@ -98,18 +98,6 @@ namespace jank::runtime
     return this;
   }
 
-  object_ptr obj::persistent_vector_sequence::next_in_place_first()
-  {
-    ++index;
-
-    if(index == vec->data.size())
-    {
-      return nullptr;
-    }
-
-    return vec->data[index];
-  }
-
   obj::cons_ptr obj::persistent_vector_sequence::cons(object_ptr const head)
   {
     return make_box<obj::cons>(head, this);
