@@ -6,7 +6,7 @@
 #include <jank/runtime/behavior/associatively_readable.hpp>
 #include <jank/runtime/behavior/associatively_writable.hpp>
 #include <jank/runtime/behavior/callable.hpp>
-#include <jank/runtime/behavior/consable.hpp>
+#include <jank/runtime/behavior/conjable.hpp>
 #include <jank/runtime/behavior/countable.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
@@ -244,17 +244,17 @@ namespace jank::runtime
         {
           return make_box<obj::persistent_list>(std::in_place, o);
         }
-        else if constexpr(behavior::consable_in_place<T>)
+        else if constexpr(behavior::conjable_in_place<T>)
         {
           return typed_s->cons_in_place(o);
         }
-        else if constexpr(behavior::consable<T>)
+        else if constexpr(behavior::conjable<T>)
         {
-          return typed_s->cons(o);
+          return typed_s->conj(o);
         }
         else if constexpr(behavior::seqable<T>)
         {
-          return typed_s->seq()->cons(o);
+          return typed_s->seq()->conj(o);
         }
         else
         {

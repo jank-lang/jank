@@ -706,10 +706,10 @@
                   {
                     using T = typename decltype(typed_coll)::value_type;
 
-                    if constexpr(behavior::consable_in_place<T>)
+                    if constexpr(behavior::conjable_in_place<T>)
                     { return typed_coll->cons_in_place(head); }
                     else
-                    { ~{ (throw (ex-info :not-consable-in-place {:o coll})) }; }
+                    { ~{ (throw (ex-info :not-conjable-in-place {:o coll})) }; }
                    },
                    ~{ coll },
                    ~{ x }

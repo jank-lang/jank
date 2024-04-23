@@ -96,7 +96,7 @@ namespace jank::runtime
     return hash::ordered(&base);
   }
 
-  obj::cons_ptr obj::iterator::cons(object_ptr const head) const
+  obj::cons_ptr obj::iterator::conj(object_ptr const head) const
   {
     return make_box<obj::cons>(head, this);
   }

@@ -71,7 +71,7 @@ namespace jank::runtime
     return ret;
   }
 
-  obj::persistent_set_ptr obj::persistent_set::cons(object_ptr const head) const
+  obj::persistent_set_ptr obj::persistent_set::conj(object_ptr const head) const
   {
     auto vec(data.insert(head));
     auto ret(make_box<obj::persistent_set>(std::move(vec)));

@@ -529,7 +529,7 @@ namespace jank::runtime
           }
 
           auto const args(make_box<obj::persistent_list>(
-            typed_o->data.rest().cons(obj::nil::nil_const()).cons(typed_o)));
+            typed_o->data.rest().conj(obj::nil::nil_const()).conj(typed_o)));
           return apply_to(var.unwrap()->deref(), args);
         }
       },

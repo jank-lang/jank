@@ -94,7 +94,7 @@ namespace jank::runtime
     return this;
   }
 
-  obj::cons_ptr obj::native_vector_sequence::cons(object_ptr const head)
+  obj::cons_ptr obj::native_vector_sequence::conj(object_ptr const head)
   {
     return make_box<obj::cons>(head, data.empty() ? nullptr : this);
   }

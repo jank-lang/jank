@@ -97,9 +97,9 @@ namespace jank::runtime
     return data.size();
   }
 
-  obj::persistent_list_ptr obj::persistent_list::cons(object_ptr head) const
+  obj::persistent_list_ptr obj::persistent_list::conj(object_ptr head) const
   {
-    auto l(data.cons(head));
+    auto l(data.conj(head));
     auto ret(make_box<obj::persistent_list>(std::move(l)));
     return ret;
   }

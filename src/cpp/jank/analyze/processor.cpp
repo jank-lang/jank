@@ -760,8 +760,8 @@ namespace jank::analyze
     runtime::detail::native_persistent_list args{ binding_syms.rbegin(), binding_syms.rend() };
     auto const params(make_box<runtime::obj::persistent_vector>(binding_syms.persistent()));
     auto const fn(make_box<runtime::obj::persistent_list>(
-      o->data.rest().rest().cons(params).cons(make_box<runtime::obj::symbol>("fn*"))));
-    auto const call(make_box<runtime::obj::persistent_list>(args.cons(fn)));
+      o->data.rest().rest().conj(params).conj(make_box<runtime::obj::symbol>("fn*"))));
+    auto const call(make_box<runtime::obj::persistent_list>(args.conj(fn)));
     auto const let(make_box<runtime::obj::persistent_list>(std::in_place,
                                                            make_box<runtime::obj::symbol>("let*"),
                                                            bindings_obj,
@@ -1015,7 +1015,7 @@ namespace jank::analyze
 
             /* Now we just turn the body into a do block and have the do analyzer handle the rest. */
             auto const do_list(
-              catch_list->data.rest().rest().cons(make_box<runtime::obj::symbol>("do")));
+              catch_list->data.rest().rest().conj(make_box<runtime::obj::symbol>("do")));
             auto do_res(analyze(make_box(do_list), frame, expr_type, fn_ctx, true));
             if(do_res.is_err())
             {
@@ -1037,7 +1037,7 @@ namespace jank::analyze
 
             auto const finally_list(runtime::expect_object<runtime::obj::persistent_list>(item));
             auto const do_list(
-              finally_list->data.rest().cons(make_box<runtime::obj::symbol>("do")));
+              finally_list->data.rest().conj(make_box<runtime::obj::symbol>("do")));
             auto do_res(
               analyze(make_box(do_list), current_frame, expression_type::statement, fn_ctx, false));
             if(do_res.is_err())

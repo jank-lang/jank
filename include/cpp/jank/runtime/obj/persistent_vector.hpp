@@ -69,8 +69,8 @@ namespace jank::runtime
     object_ptr get_entry(object_ptr key) const;
     native_bool contains(object_ptr key) const;
 
-    /* behavior::consable */
-    native_box<static_object> cons(object_ptr head) const;
+    /* behavior::conjable */
+    native_box<static_object> conj(object_ptr head) const;
 
     /* behavior::stackable */
     object_ptr peek() const;

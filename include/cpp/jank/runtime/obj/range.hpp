@@ -37,8 +37,8 @@ namespace jank::runtime
     /* behavior::sequenceable_in_place */
     native_box<static_object> next_in_place();
 
-    /* behavior::consable */
-    obj::cons_ptr cons(object_ptr head) const;
+    /* behavior::conjable */
+    obj::cons_ptr conj(object_ptr head) const;
 
     object base{ object_type::range };
     object_ptr start{};

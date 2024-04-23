@@ -72,7 +72,7 @@ namespace jank::runtime
     return this;
   }
 
-  obj::cons_ptr obj::range::cons(object_ptr head) const
+  obj::cons_ptr obj::range::conj(object_ptr head) const
   {
     return make_box<obj::cons>(head, this);
   }

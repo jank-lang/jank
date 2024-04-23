@@ -115,7 +115,7 @@ namespace jank::runtime::obj::detail
       return static_cast<Derived *>(this);
     }
 
-    obj::cons_ptr cons(object_ptr const head)
+    obj::cons_ptr conj(object_ptr const head)
     {
       return make_box<obj::cons>(head, static_cast<Derived *>(this));
     }

@@ -32,7 +32,7 @@ namespace jank::runtime
     /* behavior::countable */
     size_t count() const;
 
-    /* behavior::consable_in_place */
+    /* behavior::conjable_in_place */
     native_box<static_object> cons_in_place(object_ptr elem);
 
     /* behavior::persistentable */

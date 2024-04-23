@@ -103,7 +103,7 @@ namespace jank::runtime
     return data.size();
   }
 
-  obj::persistent_vector_ptr obj::persistent_vector::cons(object_ptr head) const
+  obj::persistent_vector_ptr obj::persistent_vector::conj(object_ptr head) const
   {
     auto vec(data.push_back(head));
     auto ret(make_box<obj::persistent_vector>(std::move(vec)));

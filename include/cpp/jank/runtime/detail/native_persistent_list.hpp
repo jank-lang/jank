@@ -147,12 +147,12 @@ namespace jank::runtime::detail
       return { nullptr };
     }
 
-    native_persistent_list_impl<T> cons(T const &t) const
+    native_persistent_list_impl<T> conj(T const &t) const
     {
       return { make_box<value_type>(t, data, size()) };
     }
 
-    native_persistent_list_impl<T> cons(T &&t) const
+    native_persistent_list_impl<T> conj(T &&t) const
     {
       return { make_box<value_type>(std::move(t), data, size()) };
     }

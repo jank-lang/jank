@@ -93,7 +93,7 @@ namespace jank::runtime
     return this;
   }
 
-  obj::cons_ptr obj::native_array_sequence::cons(object_ptr const head)
+  obj::cons_ptr obj::native_array_sequence::conj(object_ptr const head)
   {
     return make_box<obj::cons>(head, this);
   }

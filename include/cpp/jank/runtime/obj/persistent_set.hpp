@@ -60,8 +60,8 @@ namespace jank::runtime
     /* behavior::countable */
     size_t count() const;
 
-    /* behavior::consable */
-    native_box<static_object> cons(object_ptr head) const;
+    /* behavior::conjable */
+    native_box<static_object> conj(object_ptr head) const;
 
     /* behavior::callable */
     object_ptr call(object_ptr) const;

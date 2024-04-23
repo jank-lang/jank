@@ -117,7 +117,7 @@ namespace jank::runtime
     return hash::ordered(s);
   }
 
-  obj::cons_ptr obj::lazy_sequence::cons(object_ptr const head) const
+  obj::cons_ptr obj::lazy_sequence::conj(object_ptr const head) const
   {
     resolve_seq();
     return make_box<obj::cons>(head, sequence ? this : nullptr);

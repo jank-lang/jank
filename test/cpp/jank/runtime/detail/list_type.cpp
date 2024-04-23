@@ -29,7 +29,7 @@ namespace jank::runtime::detail
   TEST_CASE("Cons")
   {
     native_persistent_list_impl<int> l1{ 10 };
-    native_persistent_list_impl<int> l2{ l1.cons(20) };
+    native_persistent_list_impl<int> l2{ l1.conj(20) };
     CHECK(l2.first() == 20);
     CHECK(l2.size() == 2);
     CHECK(l2.rest().size() == 1);

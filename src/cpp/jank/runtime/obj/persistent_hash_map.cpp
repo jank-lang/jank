@@ -114,7 +114,7 @@ namespace jank::runtime
     return make_box<obj::persistent_hash_map>(std::move(copy));
   }
 
-  obj::persistent_hash_map_ptr obj::persistent_hash_map::cons(object_ptr const head) const
+  obj::persistent_hash_map_ptr obj::persistent_hash_map::conj(object_ptr const head) const
   {
     if(head->type == object_type::persistent_array_map
        || head->type == object_type::persistent_hash_map)

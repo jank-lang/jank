@@ -2,7 +2,7 @@
 
 #include <jank/native_box.hpp>
 #include <jank/runtime/detail/object_util.hpp>
-#include <jank/runtime/behavior/consable.hpp>
+#include <jank/runtime/behavior/conjable.hpp>
 
 namespace jank::runtime::behavior
 {
@@ -37,7 +37,7 @@ namespace jank::runtime::behavior
     {
       t->next()
     }; // -> sequenceable;
-  } && consable<T>;
+  } && conjable<T>;
 
   template <typename T>
   concept sequenceable_in_place = requires(T * const t) {
