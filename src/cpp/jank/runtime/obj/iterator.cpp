@@ -68,7 +68,7 @@ namespace jank::runtime
         {
           auto seq(typed_o->fresh_seq());
           for(auto it(fresh_seq()); it != nullptr;
-              it = it->next_in_place(), seq = seq->next_in_place())
+              it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
           {
             if(seq == nullptr || !runtime::detail::equal(it, seq->first()))
             {

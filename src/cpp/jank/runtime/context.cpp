@@ -62,16 +62,6 @@ namespace jank::runtime
     auto const in_ns_sym(make_box<obj::symbol>("clojure.core/in-ns"));
     in_ns_var = intern_var(in_ns_sym).expect_ok();
 
-    /* TODO: Remove this once it can be defined in jank. */
-    auto const seq_sym(make_box<obj::symbol>("clojure.core/seq"));
-    intern_var(seq_sym).expect_ok()->bind_root(
-      make_box<obj::native_function_wrapper>(static_cast<object_ptr (*)(object_ptr)>(&seq)));
-
-    auto const fresh_seq_sym(make_box<obj::symbol>("clojure.core/fresh-seq"));
-    intern_var(fresh_seq_sym)
-      .expect_ok()
-      ->bind_root(make_box<obj::native_function_wrapper>(&fresh_seq));
-
     push_thread_bindings(obj::persistent_hash_map::create_unique(
                            std::make_pair(current_ns_var, current_ns_var->deref())))
       .expect_ok();
@@ -97,7 +87,7 @@ namespace jank::runtime
     for(auto const &v : other_tbfs)
     {
       thread_binding_frame frame{ obj::persistent_hash_map::empty() };
-      for(auto it(v.bindings->fresh_seq()); it != nullptr; it = it->next_in_place())
+      for(auto it(v.bindings->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
       {
         auto const entry(it->first());
         auto const var(expect_object<var>(entry->data[0]));
@@ -565,7 +555,7 @@ namespace jank::runtime
           auto inserter(std::back_inserter(buff));
           detail::to_string(o, buff);
           detail::to_string(typed_more->first(), buff);
-          for(auto it(typed_more->next_in_place()); it != nullptr; it = it->next_in_place())
+          for(auto it(next_in_place(typed_more)); it != nullptr; it = next_in_place(it))
           {
             fmt::format_to(inserter, " ");
             detail::to_string(it->first(), buff);
@@ -597,7 +587,7 @@ namespace jank::runtime
           fmt::memory_buffer buff;
           auto inserter(std::back_inserter(buff));
           detail::to_string(typed_more->first(), buff);
-          for(auto it(typed_more->next_in_place()); it != nullptr; it = it->next_in_place())
+          for(auto it(next_in_place(typed_more)); it != nullptr; it = next_in_place(it))
           {
             fmt::format_to(inserter, " ");
             detail::to_string(it->first(), buff);
@@ -681,7 +671,7 @@ namespace jank::runtime
 
     auto const thread_id(std::this_thread::get_id());
 
-    for(auto it(bindings->fresh_seq()); it != nullptr; it = it->next_in_place())
+    for(auto it(bindings->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
     {
       auto const entry(it->first());
       auto const var(expect_object<var>(entry->data[0]));

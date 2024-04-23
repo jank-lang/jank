@@ -932,7 +932,7 @@ namespace jank::analyze
     static runtime::obj::symbol catch_{ "catch" }, finally_{ "finally" };
     native_bool has_catch{}, has_finally{};
 
-    for(auto it(list->fresh_seq()->next_in_place()); it != nullptr; it = it->next_in_place())
+    for(auto it(next_in_place(list->fresh_seq())); it != nullptr; it = next_in_place(it))
     {
       auto const item(it->first());
       auto const type(runtime::visit_seqable(
@@ -1184,7 +1184,7 @@ namespace jank::analyze
     native_vector<expression_ptr> exprs;
     exprs.reserve(o->count());
     native_bool literal{ true };
-    for(auto d = o->fresh_seq(); d != nullptr; d = d->next_in_place())
+    for(auto d = o->fresh_seq(); d != nullptr; d = next_in_place(d))
     {
       auto res(analyze(d->first(), current_frame, expression_type::expression, fn_ctx, true));
       if(res.is_err())
@@ -1267,7 +1267,7 @@ namespace jank::analyze
     native_vector<expression_ptr> exprs;
     exprs.reserve(o->count());
     native_bool literal{ true };
-    for(auto d = o->fresh_seq(); d != nullptr; d = d->next_in_place())
+    for(auto d = o->fresh_seq(); d != nullptr; d = next_in_place(d))
     {
       auto res(analyze(d->first(), current_frame, expression_type::expression, fn_ctx, true));
       if(res.is_err())

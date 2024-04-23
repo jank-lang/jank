@@ -76,53 +76,12 @@
                  );")))
 
 ; Lists.
-; TODO: Can these be removed from the C++ source?
-;(def seq
-;  (fn* seq [o]
-;    (native/raw "__value = visit_object
-;                 (
-;                   [=](auto const typed_o) -> object_ptr
-;                   {
-;                     using T = typename decltype(typed_o)::value_type;
-;
-;                     if constexpr(std::same_as<T, obj::nil>)
-;                     { return typed_o; }
-;                     else if constexpr(behavior::seqable<T>)
-;                     {
-;                       auto const &ret(typed_o->seq());
-;                       if(!ret)
-;                       { return obj::nil::nil_const(); }
-;
-;                       return ret;
-;                     }
-;                     else
-;                     { ~{ (throw (ex-info :not-seqable {:o o})) }; }
-;                   },
-;                   ~{ o }
-;                 );")))
-;(def fresh-seq
-;  (fn* fresh-seq [o]
-;    (native/raw "__value = visit_object
-;                 (
-;                   [=](auto const typed_o) -> object_ptr
-;                   {
-;                     using T = typename decltype(typed_o)::value_type;
-;
-;                     if constexpr(std::same_as<T, obj::nil>)
-;                     { return typed_o; }
-;                     else if constexpr(behavior::seqable<T>)
-;                     {
-;                       auto const &ret(typed_o->seq());
-;                       if(!ret)
-;                       { return obj::nil::nil_const(); }
-;
-;                       return ret;
-;                     }
-;                     else
-;                     { ~{ (throw (ex-info :not-seqable {:o o})) }; }
-;                   },
-;                   ~{ o }
-;                 );")))
+(def seq
+  (fn* seq [o]
+    (native/raw "__value = jank::runtime::seq(~{ o });")))
+(def fresh-seq
+  (fn* fresh-seq [o]
+    (native/raw "__value = jank::runtime::fresh_seq(~{ o });")))
 (def first
   (fn* first [o]
     (native/raw "__value = jank::runtime::first(~{ o });")))
@@ -339,7 +298,7 @@
                        {
                          auto const fresh(typed_args->fresh_seq());
                          runtime::detail::to_string(fresh->first(), buff);
-                         for(auto it(fresh->next_in_place()); it != nullptr; it = it->next_in_place())
+                         for(auto it(next_in_place(fresh)); it != nullptr; it = next_in_place(it))
                          { runtime::detail::to_string(it->first(), buff); }
                        }
                        return make_box<obj::persistent_string>(native_persistent_string{ buff.data(), buff.size() });
@@ -863,22 +822,17 @@
        (reduce f (first s) (next s))
        (f))))
   ([f val coll]
-   (native/raw "__value = visit_object
+   (native/raw "__value = visit_seqable
                (
                 [=](auto const typed_coll) -> object_ptr
                 {
-                 using T = typename decltype(typed_coll)::value_type;
-
-                 if constexpr(behavior::seqable<T>)
-                 {
                   object_ptr res{ ~{ val } };
-                  for(auto it(typed_coll->fresh_seq()); it != nullptr; it = it->next_in_place())
+                  for(auto it(typed_coll->fresh_seq()); it != nullptr; it = next_in_place(it))
                   { res = dynamic_call(~{ f }, res, it->first()); }
                   return res;
-                  }
-                 else
-                 { ~{ (throw (ex-info :invalid-seq {:coll coll})) }; }
                  },
+                [=]() -> object_ptr
+                { ~{ (throw (ex-info :invalid-seq {:coll coll})) }; },
                 ~{ coll }
                 );")))
 
@@ -1294,7 +1248,7 @@
 ; is called, and will cache the result and return it on all subsequent
 ; seq calls. See also - realized?
 (defmacro lazy-seq [& body]
-  `(lazy-seq* (fn [] ~@body)))
+  `(lazy-seq* (fn lazy-seq# [] ~@body)))
 
 ; Repeatedly executes body (presumably for side-effects) with
 ; bindings and filtering as provided by `for`.  Does not retain

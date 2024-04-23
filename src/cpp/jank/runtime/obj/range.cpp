@@ -90,9 +90,9 @@ namespace jank::runtime
         else
         {
           auto seq(typed_o->fresh_seq());
-          /* TODO: No way this is correct. Also, this is common code; can it be shared? */
+          /* TODO: This is common code; can it be shared? */
           for(auto it(fresh_seq()); it != nullptr;
-              seq = seq->next_in_place(), seq = seq->next_in_place())
+              it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
           {
             if(seq == nullptr || !runtime::detail::equal(it, seq->first()))
             {

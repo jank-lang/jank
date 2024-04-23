@@ -306,7 +306,7 @@ namespace jank::codegen
           {
             fmt::format_to(inserter,
                            "jank::make_box<jank::runtime::obj::persistent_list>(std::in_place");
-            for(auto it(typed_o->fresh_seq()); it != nullptr; it = it->next_in_place())
+            for(auto it(typed_o->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
             {
               fmt::format_to(inserter, ", ");
               gen_constant(it->first(), buffer, true);

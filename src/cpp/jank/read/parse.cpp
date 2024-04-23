@@ -649,7 +649,7 @@ namespace jank::read::parse
                               native_persistent_string{ "#?@ splice must not be top-level" } });
           }
 
-          auto const s(it->next_in_place()->first());
+          auto const s(next_in_place(it)->first());
           return runtime::visit_seqable(
             [&](auto const typed_s) -> processor::object_result {
               auto const seq(typed_s->fresh_seq());
@@ -660,7 +660,7 @@ namespace jank::read::parse
               auto const first(seq->first());
 
               auto const front(pending_forms.begin());
-              for(auto it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
+              for(auto it(next_in_place(seq)); it != nullptr; it = next_in_place(it))
               {
                 pending_forms.insert(front, it->first());
               }
@@ -675,11 +675,11 @@ namespace jank::read::parse
         }
         else
         {
-          return object_source_info{ it->next_in_place()->first(), start_token, list_end };
+          return object_source_info{ next_in_place(it)->first(), start_token, list_end };
         }
       }
 
-      it = it->next_in_place()->next_in_place();
+      it = next_in_place(next_in_place(it));
     }
 
     return ok(none);
@@ -696,7 +696,7 @@ namespace jank::read::parse
     return runtime::visit_seqable(
       [this](auto const typed_seq) -> string_result<runtime::object_ptr> {
         runtime::detail::native_transient_vector ret;
-        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
+        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = next_in_place(it))
         {
           auto const item(it->first());
 
@@ -745,7 +745,7 @@ namespace jank::read::parse
     return runtime::visit_seqable(
       [](auto const typed_seq) -> string_result<runtime::object_ptr> {
         runtime::detail::native_transient_vector ret;
-        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
+        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = next_in_place(it))
         {
           auto item(it->first());
           ret.push_back(runtime::first(item));

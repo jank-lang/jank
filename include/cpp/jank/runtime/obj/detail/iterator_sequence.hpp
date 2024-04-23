@@ -2,6 +2,7 @@
 
 #include <jank/runtime/detail/object_util.hpp>
 #include <jank/runtime/obj/cons.hpp>
+#include <jank/runtime/seq.hpp>
 
 namespace jank::runtime::obj::detail
 {
@@ -36,7 +37,7 @@ namespace jank::runtime::obj::detail
           else
           {
             auto seq(typed_o->seq());
-            for(auto it(begin); it != end; ++it, seq = seq->next_in_place())
+            for(auto it(begin); it != end; ++it, seq = runtime::next_in_place(seq))
             {
               if(seq == nullptr || !runtime::detail::equal(*it, seq->first()))
               {

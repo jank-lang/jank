@@ -44,10 +44,10 @@ namespace jank::runtime
         if constexpr(behavior::seqable<T>)
         {
           detail::native_transient_hash_map transient;
-          for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
+          for(auto it(typed_seq->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
           {
             auto const key(it->first());
-            it = it->next_in_place();
+            it = runtime::next_in_place(it);
             if(!it)
             {
               throw std::runtime_error{ fmt::format("Odd number of elements: {}",

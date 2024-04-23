@@ -31,7 +31,7 @@ namespace jank::runtime
         if constexpr(behavior::sequenceable<T>)
         {
           native_vector<object_ptr> v;
-          for(auto i(typed_s->fresh_seq()); i != nullptr; i = i->next_in_place())
+          for(auto i(typed_s->fresh_seq()); i != nullptr; i = runtime::next_in_place(i))
           {
             v.emplace_back(i->first());
           }

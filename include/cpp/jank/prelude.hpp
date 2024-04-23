@@ -25,7 +25,6 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/math.hpp>
 #include <jank/runtime/util.hpp>
-#include <jank/runtime/seq.hpp>
 #include <jank/runtime/behavior/numberable.hpp>
 #include <jank/runtime/behavior/nameable.hpp>
 #include <jank/runtime/behavior/transientable.hpp>
