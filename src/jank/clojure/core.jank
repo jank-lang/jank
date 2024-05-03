@@ -838,6 +838,57 @@
                 ~{ coll }
                 );")))
 
+(defn completing
+  "Takes a reducing function f of 2 args and returns a fn suitable for
+  transduce by adding an arity-1 signature that calls cf (default -
+  identity) on the result argument."
+  ([f] (completing f identity))
+  ([f cf]
+   (fn
+     ([] (f))
+     ([x] (cf x))
+     ([x y] (f x y)))))
+
+(defn transduce
+  "reduce with a transformation of rf (xf). If init is not
+  supplied, (rf) will be called to produce it. f should be a reducing
+  step function that accepts both 1 and 2 arguments, if it accepts
+  only 2 you can add the arity-1 with 'completing'. Returns the result
+  of applying (the transformed) xf to init and the first item in coll,
+  then applying xf to that result and the 2nd item, etc. If coll
+  contains no items, returns init and rf is not called. Note that
+  certain transforms may inject or skip items."
+  ([xform rf coll]
+   (transduce xform rf (rf) coll))
+  ([xform rf init coll]
+   (let [f (xform rf)
+         ret (reduce f init coll)]
+     (f ret))))
+
+(defn run!
+  "Runs the supplied procedure (via reduce), for purposes of side
+  effects, on successive items in the collection. Returns nil"
+  [proc coll]
+  (reduce #(proc %2) nil coll)
+  nil)
+
+(defn comp
+  "Takes a set of functions and returns a fn that is the composition
+  of those fns.  The returned fn takes a variable number of args,
+  applies the rightmost of fns to the args, the next
+  fn (right-to-left) to the result, etc."
+  ([] identity)
+  ([f] f)
+  ([f g]
+   (fn
+     ([] (f (g)))
+     ([x] (f (g x)))
+     ([x y] (f (g x y)))
+     ([x y z] (f (g x y z)))
+     ([x y z & args] (f (apply g x y z args)))))
+  ([f g & fs]
+   (reduce comp (list* f g fs))))
+
 (defn peek
   "For a list or queue, same as first, for a vector, same as, but much
   more efficient than, last. If the collection is empty, returns nil."
@@ -1632,7 +1683,7 @@
      (vector? bindings) "a vector for its binding"
      (nil? oldform) "1 or 2 forms after binding vector"
      (= 2 (count bindings)) "exactly 2 forms in binding vector")
-   (let [form (bindings 0) tst (bindings 1)]
+   (let [form (get bindings 0) tst (get bindings 1)]
      `(let [temp# ~tst]
         (if temp#
           (let [~form temp#]
@@ -1666,7 +1717,7 @@
      (vector? bindings) "a vector for its binding"
      (nil? oldform) "1 or 2 forms after binding vector"
      (= 2 (count bindings)) "exactly 2 forms in binding vector")
-   (let [form (bindings 0) tst (bindings 1)]
+   (let [form (get bindings 0) tst (get bindings 1)]
      `(let [temp# ~tst]
         (if (nil? temp#)
           ~else
@@ -1899,7 +1950,15 @@
 ; f should accept number-of-colls arguments. Returns a transducer when
 ; no collection is provided.
 (defn map
-  ; TODO: Transducer
+  ([f]
+   (fn [rf]
+     (fn
+       ([] (rf))
+       ([result] (rf result))
+       ([result input]
+        (rf result (f input)))
+       ([result input & inputs]
+        (rf result (apply f input inputs))))))
   ([f coll]
    (lazy-seq
      (when-let [s (seq coll)]
@@ -1934,6 +1993,23 @@
                     (when (every? identity ss)
                       (cons (map first ss) (step (map rest ss)))))))]
      (map #(apply f %) (step (conj colls c3 c2 c1))))))
+
+(defn keep
+  ([f]
+   (fn [rf]
+     (fn
+       ([] (rf))
+       ([result] (rf result))
+       ([result input]
+        (if-some [v (f input)]
+          (rf result v)
+          result)))))
+  ([f coll]
+   (lazy-seq
+    (when-some [s (seq coll)]
+      (if-some [v (f (first s))]
+        (cons v (keep f (rest s)))
+        (keep f (rest s)))))))
 
 (defn take
   ; TODO: Transducer.
@@ -2101,8 +2177,10 @@
    (if (transientable? to)
      (with-meta (persistent! (reduce conj! (transient to) from)) (meta to))
      (reduce conj to from)))
-  ; TODO: transducer arity
-  )
+  ([to xform from]
+   (if (transientable? to)
+     (with-meta (persistent! (transduce xform conj! (transient to) from)) (meta to))
+     (transduce xform conj to from))))
 
 ;; Redefine let and loop with destructuring.
 (defn destructure
@@ -2482,7 +2560,15 @@
 ; (pred item) returns logical true. pred must be free of side-effects.
 ; Returns a transducer when no collection is provided.
 (defn filter
-  ; TODO: other arities.
+  ([pred]
+   (fn [rf]
+     (fn
+       ([] (rf))
+       ([result] (rf result))
+       ([result input]
+        (if (pred input)
+          (rf result input)
+          result)))))
   ([pred coll]
    (lazy-seq
      (when-let [s (seq coll)]
