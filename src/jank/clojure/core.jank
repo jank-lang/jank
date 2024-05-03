@@ -1401,16 +1401,19 @@
    (lazy-seq
      (let [s (seq x)]
        (if s
-         ; TODO: Chunking
-         (cons (first s) (concat (rest s) y))
+         (if (chunked-seq? s)
+           (chunk-cons (chunk-first s) (concat (chunk-rest s) y))
+           (cons (first s) (concat (rest s) y)))
          y))))
   ([x y & zs]
    (let [cat (fn cat [xys zs]
                (lazy-seq
                  (let [xys (seq xys)]
                    (if xys
-                     ; TODO: Chunking
-                     (cons (first xys) (cat (rest xys) zs))
+                     (if (chunked-seq? xys)
+                       (chunk-cons (chunk-first xys)
+                                   (cat (chunk-rest xys) zs))
+                       (cons (first xys) (cat (rest xys) zs)))
                      (when zs
                        (cat (first zs) (next zs)))))))]
      (cat (concat x y) zs))))
@@ -1995,21 +1998,35 @@
      (map #(apply f %) (step (conj colls c3 c2 c1))))))
 
 (defn keep
+  "Returns a lazy sequence of the non-nil results of (f item). Note,
+  this means false return values will be included.  f must be free of
+  side-effects.  Returns a transducer when no collection is provided."
   ([f]
    (fn [rf]
      (fn
        ([] (rf))
        ([result] (rf result))
        ([result input]
-        (if-some [v (f input)]
-          (rf result v)
-          result)))))
+          (let [v (f input)]
+            (if (nil? v)
+              result
+              (rf result v)))))))
   ([f coll]
    (lazy-seq
-    (when-some [s (seq coll)]
-      (if-some [v (f (first s))]
-        (cons v (keep f (rest s)))
-        (keep f (rest s)))))))
+    (when-let [s (seq coll)]
+      (if (chunked-seq? s)
+        (let [c (chunk-first s)
+              size (count c)
+              b (chunk-buffer size)]
+          (dotimes [i size]
+            (let [x (f (nth c i))]
+              (when-not (nil? x)
+                (chunk-append b x))))
+          (chunk-cons (chunk b) (keep f (chunk-rest s))))
+        (let [x (f (first s))]
+          (if (nil? x)
+            (keep f (rest s))
+            (cons x (keep f (rest s))))))))))
 
 (defn take
   ; TODO: Transducer.
@@ -2473,10 +2490,8 @@
                              (lazy-seq
                                (loop [~gxs ~gxs]
                                  (when-let [~gxs (seq ~gxs)]
-                                   ; TODO: Chunking
-                                   (if false #_(chunked-seq? ~gxs)
-                                     nil
-                                     #_(let [c# (chunk-first ~gxs)
+                                   (if (chunked-seq? ~gxs)
+                                     (let [c# (chunk-first ~gxs)
                                            size# (int (count c#))
                                            ~gb (chunk-buffer size#)]
                                        (if (loop [~gi (int 0)]
@@ -2572,12 +2587,19 @@
   ([pred coll]
    (lazy-seq
      (when-let [s (seq coll)]
-       ; TODO: Chunking support
-       (let [f (first s)
-             r (rest s)]
-         (if (pred f)
-           (cons f (filter pred r))
-           (filter pred r)))))))
+       (if (chunked-seq? s)
+         (let [c (chunk-first s)
+               size (count c)
+               b (chunk-buffer size)]
+           (dotimes [i size]
+             (let [v (nth c i)]
+               (when (pred v)
+                 (chunk-append b v))))
+           (chunk-cons (chunk b) (filter pred (chunk-rest s))))
+         (let [f (first s) r (rest s)]
+           (if (pred f)
+             (cons f (filter pred r))
+             (filter pred r))))))))
 
 ; Returns a lazy sequence of the items in coll for which
 ; (pred item) returns logical false. pred must be free of side-effects.
