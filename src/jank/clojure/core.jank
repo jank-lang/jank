@@ -1633,23 +1633,6 @@
                     acc)))]
      (step n coll))))
 
-; Returns a lazy seq of every nth item in coll.  Returns a stateful
-; transducer when no collection is provided.
-(defn take-nth
-  ; TODO: transducer
-  ([n coll]
-   ; TODO: lazy-seq
-   (let [f (fn [acc coll]
-             (if (seq coll)
-               (let [remaining (drop n coll)]
-                 (if (seq remaining)
-                   (recur (conj acc (first remaining)) remaining)
-                   acc))
-               acc))]
-     (if (seq coll)
-       (f [(first coll)] (rest coll))
-       '()))))
-
 ;; Vars.
 (defn var? [o]
   (native/raw "__value = make_box(~{ o }->type == object_type::var)"))
@@ -1946,6 +1929,15 @@
       (recur (rest coll) (dec n))
       coll)))
 
+; Returns a lazy seq of every nth item in coll.  Returns a stateful
+; transducer when no collection is provided.
+(defn take-nth
+  ; TODO: transducer (stateful)
+  ([n coll]
+   (lazy-seq
+     (when-let [s (seq coll)]
+       (cons (first s) (take-nth n (drop n s)))))))
+
 ; Returns a lazy sequence consisting of the result of applying f to
 ; the set of first items of each coll, followed by applying f to the
 ; set of second items in each coll, until any one of the colls is
@@ -2029,7 +2021,7 @@
             (cons x (keep f (rest s))))))))))
 
 (defn take
-  ; TODO: Transducer.
+  ; TODO: Transducer (stateful).
   ([n]
    )
   ([n coll]
@@ -2050,7 +2042,7 @@
 ; Returns a lazy sequence of all but the first n items in coll.
 ; Returns a stateful transducer when no collection is provided.
 (defn drop [n coll]
-  ; TODO: Transducer
+  ; TODO: Transducer (stateful).
   (let [step (fn [n coll]
                (let [s (seq coll)]
                  (if (and (pos? n) s)
