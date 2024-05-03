@@ -212,6 +212,8 @@ namespace jank::runtime
   native_bool is_pos(object_ptr l);
   native_bool is_neg(object_ptr l);
 
+  native_bool is_equiv(object_ptr l, object_ptr r);
+
   native_real rand();
 
   native_integer to_int(object_ptr l);

@@ -3,6 +3,7 @@
 
 namespace jank::runtime
 {
+  /* TODO: visit_numberable */
   object_ptr add(object_ptr const l, object_ptr const r)
   {
     return visit_object(
@@ -1040,6 +1041,43 @@ namespace jank::runtime
         }
       },
       l);
+  }
+
+  native_bool is_equiv(object_ptr const l, object_ptr const r)
+  {
+    return visit_object(
+      [](auto const typed_l, auto const r) -> native_bool {
+        using L = typename decltype(typed_l)::value_type;
+
+        if constexpr(behavior::numberable<L>)
+        {
+          return visit_object(
+            [](auto const typed_r, auto const typed_l) -> native_bool {
+              using R = typename decltype(typed_r)::value_type;
+
+              if constexpr(behavior::numberable<R>)
+              {
+                using C = std::common_type_t<decltype(L::data), decltype(R::data)>;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+                return static_cast<C>(typed_l) == static_cast<C>(typed_r->data);
+#pragma clang diagnostic pop
+              }
+              else
+              {
+                throw std::runtime_error{ fmt::format("not a number: {}", typed_r->to_string()) };
+              }
+            },
+            r,
+            typed_l->data);
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not a number: {}", typed_l->to_string()) };
+        }
+      },
+      l,
+      r);
   }
 
   native_real rand()

@@ -754,7 +754,7 @@ namespace jank::analyze
      * (let* [a 1
      *        b (* 2 a)]
      *   ((fn* [a b]
-       *   (println a b)) a b))
+     *     (println a b)) a b))
      * ```
      */
     runtime::detail::native_persistent_list args{ binding_syms.rbegin(), binding_syms.rend() };

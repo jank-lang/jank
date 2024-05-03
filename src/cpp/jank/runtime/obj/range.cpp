@@ -5,10 +5,21 @@
 
 namespace jank::runtime
 {
+  static native_bool positive_step_bounds_check(object_ptr const val, object_ptr const end)
+  {
+    return lte(end, val);
+  }
+
+  static native_bool negative_step_bounds_check(object_ptr const val, object_ptr const end)
+  {
+    return lte(val, end);
+  }
+
   obj::range::static_object(object_ptr const end)
     : start{ make_box(0) }
     , end{ end }
     , step{ make_box(1) }
+    , bounds_check{ positive_step_bounds_check }
   {
   }
 
@@ -16,6 +27,7 @@ namespace jank::runtime
     : start{ start }
     , end{ end }
     , step{ make_box(1) }
+    , bounds_check{ positive_step_bounds_check }
   {
   }
 
@@ -23,7 +35,70 @@ namespace jank::runtime
     : start{ start }
     , end{ end }
     , step{ step }
+    , bounds_check{ is_pos(step) ? positive_step_bounds_check : negative_step_bounds_check }
   {
+  }
+
+  obj::range::static_object(object_ptr const start,
+                            object_ptr const end,
+                            object_ptr const step,
+                            obj::range::bounds_check_t const bounds_check)
+    : start{ start }
+    , end{ end }
+    , step{ step }
+    , bounds_check{ bounds_check }
+  {
+  }
+
+  obj::range::static_object(object_ptr const start,
+                            object_ptr const end,
+                            object_ptr const step,
+                            obj::range::bounds_check_t const bounds_check,
+                            obj::array_chunk_ptr const chunk,
+                            obj::range_ptr const chunk_next)
+    : start{ start }
+    , end{ end }
+    , step{ step }
+    , bounds_check{ bounds_check }
+    , chunk{ chunk }
+    , chunk_next{ chunk_next }
+  {
+  }
+
+  object_ptr obj::range::create(object_ptr const end)
+  {
+    if(is_pos(end))
+    {
+      return make_box<obj::range>(make_box(0), end, make_box(1), positive_step_bounds_check);
+    }
+    return obj::persistent_list::empty();
+  }
+
+  object_ptr obj::range::create(object_ptr const start, object_ptr const end)
+  {
+    return create(start, end, make_box(1));
+  }
+
+  object_ptr obj::range::create(object_ptr const start, object_ptr const end, object_ptr const step)
+  {
+    fmt::println("(pos {}, lt {}), (neg {}, lt {}), equiv {}",
+                 is_pos(step),
+                 lt(end, start),
+                 is_neg(step),
+                 lt(start, end),
+                 is_equiv(start, end));
+    if((is_pos(step) && lt(end, start)) || (is_neg(step) && lt(start, end)) || is_equiv(start, end))
+    {
+      return obj::persistent_list::empty();
+    }
+    /* TODO: Repeat object. */
+    //else if(is_zero(step))
+    //{ return make_box<obj::repeat>(start); }
+    return make_box<obj::range>(start,
+                                end,
+                                step,
+                                is_pos(step) ? positive_step_bounds_check
+                                             : negative_step_bounds_check);
   }
 
   obj::range_ptr obj::range::seq()
@@ -33,12 +108,45 @@ namespace jank::runtime
 
   obj::range_ptr obj::range::fresh_seq() const
   {
-    return make_box<obj::range>(start, end, step);
+    return make_box<obj::range>(start, end, step, bounds_check);
   }
 
   object_ptr obj::range::first() const
   {
     return start;
+  }
+
+  void obj::range::force_chunk() const
+  {
+    if(chunk)
+    {
+      return;
+    }
+
+    native_vector<object_ptr> arr;
+    arr.reserve(chunk_size);
+    size_t n{};
+    object_ptr val{ start };
+    while(n < chunk_size)
+    {
+      arr.emplace_back(val);
+      ++n;
+      val = add(val, step);
+      if(bounds_check(val, end))
+      {
+        chunk = make_box<obj::array_chunk>(std::move(arr), 0);
+        return;
+      }
+    }
+
+    if(bounds_check(val, end))
+    {
+      chunk = make_box<obj::array_chunk>(std::move(arr), 0);
+      return;
+    }
+
+    chunk = make_box<obj::array_chunk>(std::move(arr), 0);
+    chunk_next = make_box<obj::range>(val, end, step, bounds_check);
   }
 
   obj::range_ptr obj::range::next() const
@@ -48,31 +156,50 @@ namespace jank::runtime
       return cached_next;
     }
 
-    auto next_start(add(start, step));
-    if(!lt(next_start, end))
+    force_chunk();
+    if(chunk->count() > 1)
     {
-      return nullptr;
+      auto const smaller_chunk(chunk->chunk_next());
+      cached_next = make_box<obj::range>(smaller_chunk->nth(make_box(0)),
+                                         end,
+                                         step,
+                                         bounds_check,
+                                         smaller_chunk,
+                                         chunk_next);
+      return cached_next;
     }
-
-    auto const ret(make_box<obj::range>(next_start, end, step));
-    cached_next = ret;
-    return ret;
+    return chunked_next();
   }
 
   obj::range_ptr obj::range::next_in_place()
   {
-    auto next_start(add(start, step));
-    if(!lt(next_start, end))
+    force_chunk();
+    if(chunk->count() > 1)
+    {
+      chunk = chunk->chunk_next_in_place();
+      start = chunk->nth(make_box(0));
+      return this;
+    }
+    return chunk_next;
+  }
+
+  obj::array_chunk_ptr obj::range::chunked_first() const
+  {
+    force_chunk();
+    return chunk;
+  }
+
+  obj::range_ptr obj::range::chunked_next() const
+  {
+    force_chunk();
+    if(!chunk_next)
     {
       return nullptr;
     }
-
-    start = next_start;
-
-    return this;
+    return chunk_next;
   }
 
-  obj::cons_ptr obj::range::conj(object_ptr head) const
+  obj::cons_ptr obj::range::conj(object_ptr const head) const
   {
     return make_box<obj::cons>(head, this);
   }
@@ -118,5 +245,13 @@ namespace jank::runtime
   native_hash obj::range::to_hash() const
   {
     return hash::ordered(&base);
+  }
+
+  object_ptr obj::range::with_meta(object_ptr const m) const
+  {
+    auto const meta(behavior::detail::validate_meta(m));
+    auto ret(fresh_seq());
+    ret->meta = meta;
+    return ret;
   }
 }

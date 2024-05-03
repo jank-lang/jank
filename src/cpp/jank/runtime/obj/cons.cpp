@@ -10,9 +10,9 @@ namespace jank::runtime
     assert(head);
   }
 
-  obj::cons_ptr obj::cons::seq()
+  obj::cons_ptr obj::cons::seq() const
   {
-    return this;
+    return const_cast<obj::cons *>(this);
   }
 
   obj::cons_ptr obj::cons::fresh_seq() const
@@ -112,7 +112,7 @@ namespace jank::runtime
     return hash = hash::ordered(&base);
   }
 
-  obj::cons_ptr obj::cons::conj(object_ptr head) const
+  obj::cons_ptr obj::cons::conj(object_ptr const head) const
   {
     return make_box<obj::cons>(head, this);
   }

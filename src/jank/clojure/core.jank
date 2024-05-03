@@ -38,6 +38,8 @@
 
                     if constexpr(behavior::seqable<T>)
                     { return make_box(typed_o->seq() == nullptr); }
+                    else if constexpr(behavior::countable<T>)
+                    { return make_box(typed_o->count() == 0); }
                     else
                     { ~{ (throw (ex-info :not-seqable {:o o})) }; }
                    },
@@ -1250,6 +1252,82 @@
 (defmacro lazy-seq [& body]
   `(lazy-seq* (fn lazy-seq# [] ~@body)))
 
+(defn chunk-buffer [capacity]
+  (native/raw "__value = make_box<obj::chunk_buffer>(~{ capacity });"))
+
+(defn chunk-append [b x]
+  (native/raw "auto const buffer(expect_object<obj::chunk_buffer>(b));
+               buffer->append(~{ x });"))
+
+(defn chunk [b]
+  (native/raw "auto const buffer(expect_object<obj::chunk_buffer>(b));
+               __value = buffer->chunk();"))
+
+(defn chunk-first [o]
+  (native/raw "__value = visit_object
+               (
+                [=](auto const typed_o) -> object_ptr
+                {
+                 using T = typename decltype(typed_o)::value_type;
+
+                 if constexpr(behavior::chunkable<T>)
+                 { return typed_o->chunked_first(); }
+                 else
+                 { ~{ (throw (ex-info :not-chunkable {:o o})) }; }
+                 },
+                ~{ o }
+               );"))
+
+(defn chunk-next [o]
+  (native/raw "__value = visit_object
+               (
+                [=](auto const typed_o) -> object_ptr
+                {
+                 using T = typename decltype(typed_o)::value_type;
+
+                 if constexpr(behavior::chunkable<T>)
+                 { return typed_o->chunked_next() ?: ~{ nil }; }
+                 else
+                 { ~{ (throw (ex-info :not-chunkable {:o o})) }; }
+                 },
+                ~{ o }
+               );"))
+
+(defn chunk-rest [o]
+  (native/raw "__value = visit_object
+               (
+                [=](auto const typed_o) -> object_ptr
+                {
+                 using T = typename decltype(typed_o)::value_type;
+
+                 if constexpr(behavior::chunkable<T>)
+                 { return typed_o->chunked_next() ?: ~{ '() }; }
+                 else
+                 { ~{ (throw (ex-info :not-chunkable {:o o})) }; }
+                 },
+                ~{ o }
+               );"))
+
+(defn chunk-cons [chunk rest]
+  (if (empty? chunk)
+    rest
+    (native/raw "__value = make_box<obj::chunked_cons>(~{ chunk }, ~{ rest });")))
+
+(defn chunked-seq? [o]
+  (native/raw "__value = visit_object
+               (
+                [=](auto const typed_o) -> object_ptr
+                {
+                 using T = typename decltype(typed_o)::value_type;
+
+                 if constexpr(behavior::chunkable<T>)
+                 { return ~{ true }; }
+                 else
+                 { return ~{ false }; }
+                 },
+                ~{ o }
+               );"))
+
 ; Repeatedly executes body (presumably for side-effects) with
 ; bindings and filtering as provided by `for`.  Does not retain
 ; the head of the sequence. Returns nil.
@@ -1612,6 +1690,25 @@
          (let [~form temp#]
            ~@body)))))
 
+(defmacro dotimes
+  "bindings => name n
+
+  Repeatedly executes body (presumably for side-effects) with name
+  bound to integers from 0 through n-1."
+  [bindings & body]
+  (assert-macro-args
+    (vector? bindings) "a vector for its binding"
+    (= 2 (count bindings)) "exactly 2 forms in binding vector")
+  (let [i (first bindings)
+        n (second bindings)]
+    `(let [n# (int ~n)]
+       (loop [~i 0]
+         (when (< ~i n#)
+           ~@body
+           ; TODO: unchecked-inc
+           (recur (inc ~i)))))))
+
+
 ; WARNING: This is a low-level function. Prefer high-level macros like
 ; binding where ever possible.
 ;
@@ -1766,11 +1863,34 @@
   ([]
    (iterate inc 0))
   ([end]
-   (native/raw "__value = make_box<obj::range>(~{ end });"))
+   (native/raw "__value = obj::range::create(~{ end });"))
   ([start end]
-   (native/raw "__value = make_box<obj::range>(~{ start }, ~{ end });"))
+   (native/raw "__value = obj::range::create(~{ start }, ~{ end });"))
   ([start end step]
-   (native/raw "__value = make_box<obj::range>(~{ start }, ~{ end }, ~{ step });")))
+   (native/raw "__value = obj::range::create(~{ start }, ~{ end }, ~{ step });")))
+
+(defn nth
+  "Returns the value at the index. get returns nil if index out of
+  bounds, nth throws an exception unless not-found is supplied.  nth
+  also works for strings, Java arrays, regex Matchers and Lists, and,
+  in O(n) time, for sequences."
+  ([coll index]
+   (native/raw "__value = runtime::nth(~{ coll }, ~{ index });"))
+  ([coll index not-found]
+   (native/raw "__value = runtime::nth(~{ coll }, ~{ index }, ~{ not-found });")))
+
+; Returns the nth next of coll, (seq coll) when n is 0.
+(defn nthnext [coll n]
+  (if (and (seq coll) (pos? n))
+    (recur (next coll) (dec n))
+    coll))
+
+; Returns the nth rest of coll, coll when n is 0.
+(defn nthrest [coll n]
+  (let [xs (and (pos? n) (seq coll))]
+    (if xs
+      (recur (rest coll) (dec n))
+      coll)))
 
 ; Returns a lazy sequence consisting of the result of applying f to
 ; the set of first items of each coll, followed by applying f to the
@@ -1782,9 +1902,15 @@
   ; TODO: Transducer
   ([f coll]
    (lazy-seq
-    (when-let [s (seq coll)]
-      ; TODO: Chunking support
-      (cons (f (first s)) (map f (rest s))))))
+     (when-let [s (seq coll)]
+       (if (chunked-seq? s)
+         (let [c (chunk-first s)
+               size (int (count c))
+               b (chunk-buffer size)]
+           (dotimes [i size]
+             (chunk-append b (f (nth c i))))
+           (chunk-cons (chunk b) (map f (chunk-rest s))))
+         (cons (f (first s)) (map f (rest s)))))))
   ([f c1 c2]
    (lazy-seq
     (let [s1 (seq c1)
@@ -1918,29 +2044,6 @@
   ([n coll]
    (dorun n coll)
    coll))
-
-(defn nth
-  "Returns the value at the index. get returns nil if index out of
-  bounds, nth throws an exception unless not-found is supplied.  nth
-  also works for strings, Java arrays, regex Matchers and Lists, and,
-  in O(n) time, for sequences."
-  ([coll index]
-   (native/raw "__value = runtime::nth(~{ coll }, ~{ index });"))
-  ([coll index not-found]
-   (native/raw "__value = runtime::nth(~{ coll }, ~{ index }, ~{ not-found });")))
-
-; Returns the nth next of coll, (seq coll) when n is 0.
-(defn nthnext [coll n]
-  (if (and (seq coll) (pos? n))
-    (recur (next coll) (dec n))
-    coll))
-
-; Returns the nth rest of coll, coll when n is 0.
-(defn nthrest [coll n]
-  (let [xs (and (pos? n) (seq coll))]
-    (if xs
-      (recur (rest coll) (dec n))
-      coll)))
 
 ; Returns a lazy sequence of lists of n items each, at offsets step
 ; apart. If step is not supplied, defaults to n, i.e. the partitions

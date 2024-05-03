@@ -226,7 +226,7 @@ namespace jank::runtime
     }
     else
     {
-      throw std::runtime_error{ fmt::format("get on a vector must be an integer; found {}",
+      throw std::runtime_error{ fmt::format("nth on a vector must be an integer; found {}",
                                             runtime::detail::to_string(index)) };
     }
   }

@@ -12,13 +12,27 @@ namespace jank::runtime
   struct static_object<object_type::range> : gc
   {
     static constexpr native_bool pointer_free{ false };
+    static constexpr native_integer chunk_size{ 32 };
+
+    using bounds_check_t = native_bool (*)(object_ptr, object_ptr);
 
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(object_ptr const end);
-    static_object(object_ptr const start, object_ptr const end);
-    static_object(object_ptr const start, object_ptr const end, object_ptr const step);
+    static_object(object_ptr end);
+    static_object(object_ptr start, object_ptr end);
+    static_object(object_ptr start, object_ptr end, object_ptr step);
+    static_object(object_ptr start, object_ptr end, object_ptr step, bounds_check_t bounds_check);
+    static_object(object_ptr start,
+                  object_ptr end,
+                  object_ptr step,
+                  bounds_check_t bounds_check,
+                  obj::array_chunk_ptr chunk,
+                  native_box<static_object> chunk_next);
+
+    static object_ptr create(object_ptr end);
+    static object_ptr create(object_ptr start, object_ptr end);
+    static object_ptr create(object_ptr start, object_ptr end, object_ptr step);
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
@@ -37,15 +51,26 @@ namespace jank::runtime
     /* behavior::sequenceable_in_place */
     native_box<static_object> next_in_place();
 
+    /* behavior::chunkable */
+    obj::array_chunk_ptr chunked_first() const;
+    native_box<static_object> chunked_next() const;
+    void force_chunk() const;
+
     /* behavior::conjable */
     obj::cons_ptr conj(object_ptr head) const;
+
+    /* behavior::metadatable */
+    object_ptr with_meta(object_ptr m) const;
 
     object base{ object_type::range };
     object_ptr start{};
     object_ptr end{};
     object_ptr step{};
+    bounds_check_t bounds_check{};
+    mutable obj::array_chunk_ptr chunk{};
+    mutable native_box<static_object> chunk_next{};
     mutable native_box<static_object> cached_next{};
-    /* TODO: Support chunking. */
+    option<object_ptr> meta{};
   };
 
   namespace obj

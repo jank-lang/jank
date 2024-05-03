@@ -25,6 +25,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/math.hpp>
 #include <jank/runtime/util.hpp>
+#include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/behavior/numberable.hpp>
 #include <jank/runtime/behavior/nameable.hpp>
 #include <jank/runtime/behavior/transientable.hpp>
@@ -32,3 +33,4 @@
 #include <jank/runtime/behavior/associatively_writable.hpp>
 #include <jank/runtime/behavior/stackable.hpp>
 #include <jank/runtime/behavior/indexable.hpp>
+#include <jank/runtime/behavior/chunkable.hpp>

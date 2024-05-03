@@ -21,6 +21,9 @@
 #include <jank/runtime/obj/transient_set.hpp>
 #include <jank/runtime/obj/iterator.hpp>
 #include <jank/runtime/obj/lazy_sequence.hpp>
+#include <jank/runtime/obj/chunk_buffer.hpp>
+#include <jank/runtime/obj/array_chunk.hpp>
+#include <jank/runtime/obj/chunked_cons.hpp>
 #include <jank/runtime/obj/range.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
@@ -246,6 +249,21 @@ namespace jank::runtime
           return fn(expect_object<obj::lazy_sequence>(erased), std::forward<Args>(args)...);
         }
         break;
+      case object_type::chunk_buffer:
+        {
+          return fn(expect_object<obj::chunk_buffer>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::array_chunk:
+        {
+          return fn(expect_object<obj::array_chunk>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::chunked_cons:
+        {
+          return fn(expect_object<obj::chunked_cons>(erased), std::forward<Args>(args)...);
+        }
+        break;
       case object_type::native_function_wrapper:
         {
           return fn(expect_object<obj::native_function_wrapper>(erased),
@@ -388,6 +406,11 @@ namespace jank::runtime
       case object_type::lazy_sequence:
         {
           return fn(expect_object<obj::lazy_sequence>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::chunked_cons:
+        {
+          return fn(expect_object<obj::chunked_cons>(erased), std::forward<Args>(args)...);
         }
         break;
 
