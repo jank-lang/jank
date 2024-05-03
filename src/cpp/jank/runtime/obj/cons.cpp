@@ -92,12 +92,12 @@ namespace jank::runtime
       &o);
   }
 
-  void obj::cons::to_string(fmt::memory_buffer &buff)
+  void obj::cons::to_string(fmt::memory_buffer &buff) const
   {
     runtime::detail::to_string(seq(), buff);
   }
 
-  native_persistent_string obj::cons::to_string()
+  native_persistent_string obj::cons::to_string() const
   {
     return runtime::detail::to_string(seq());
   }
