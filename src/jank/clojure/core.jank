@@ -2036,10 +2036,20 @@
       (recur (rest coll) (dec n))
       coll)))
 
-; Returns a lazy seq of every nth item in coll.  Returns a stateful
-; transducer when no collection is provided.
 (defn take-nth
-  ; TODO: transducer (stateful)
+  "Returns a lazy seq of every nth item in coll.  Returns a stateful
+  transducer when no collection is provided."
+  ([n]
+   (fn [rf]
+     (let [iv (volatile! -1)]
+       (fn
+         ([] (rf))
+         ([result] (rf result))
+         ([result input]
+          (let [i (vswap! iv inc)]
+            (if (zero? (rem i n))
+              (rf result input)
+              result)))))))
   ([n coll]
    (lazy-seq
      (when-let [s (seq coll)]
@@ -2265,6 +2275,27 @@
        (when (every? identity ss)
          (concat (map first ss) (apply interleave (map rest ss))))))))
 
+(defn interpose
+  "Returns a lazy seq of the elements of coll separated by sep.
+  Returns a stateful transducer when no collection is provided."
+  ([sep]
+   (fn [rf]
+     (let [started (volatile! false)]
+       (fn
+         ([] (rf))
+         ([result] (rf result))
+         ([result input]
+          (if (deref started)
+            (let [sepr (rf result sep)]
+              (if (reduced? sepr)
+                sepr
+                (rf sepr input)))
+            (do
+              (vreset! started true)
+              (rf result input))))))))
+  ([sep coll]
+   (drop 1 (interleave (repeat sep) coll))))
+
 ; When lazy sequences are produced via functions that have side
 ; effects, any effects other than those needed to produce the first
 ; element in the seq do not occur until the seq is consumed. dorun can
@@ -2314,12 +2345,13 @@
            (cons p (partition n step pad (nthrest s step)))
            (list (take n (concat p pad)))))))))
 
-; Returns a lazy sequence of lists like partition, but may include
-; partitions with fewer than n items at the end.  Returns a stateful
-; transducer when no collection is provided.
 (defn partition-all
+  "Returns a lazy sequence of lists like partition, but may include
+  partitions with fewer than n items at the end.  Returns a stateful
+  transducer when no collection is provided."
   ([n]
    (fn [rf]
+     ;; OPTIMIZE: jvm clojure uses an array here for perf
      (let [part (volatile! [])]
        (fn
          ([] (rf))
@@ -2343,17 +2375,44 @@
        (let [seg (doall (take n s))]
          (cons seg (partition-all n step (nthrest s step))))))))
 
-; Applies f to each value in coll, splitting it each time f returns a
-; new value.  Returns a lazy seq of partitions.  Returns a stateful
-; transducer when no collection is provided.
-; TODO: Transducer
-(defn partition-by [f coll]
-  (lazy-seq
+(defn partition-by
+  "Applies f to each value in coll, splitting it each time f returns a
+  new value.  Returns a lazy seq of partitions.  Returns a stateful
+  transducer when no collection is provided."
+  ([f]
+   (fn [rf]
+     ;; OPTIMIZE: jvm clojure uses an array here for perf
+     (let [vv (volatile! [])
+           pv (volatile! ::none)]
+       (fn
+         ([] (rf))
+         ([result]
+          (let [v (deref vv)
+                result (if (empty? v)
+                         result
+                         (unreduced (rf result v)))]
+            (rf result)))
+         ([result input]
+          (let [pval (deref pv)
+                val (f input)]
+            (vreset! pv val)
+            (if (or (= pval ::none) ; OPTIMIZE: Use identical?
+                    (= val pval))
+              (do
+                (vswap! vv conj input)
+                result)
+              (let [v (deref vv)
+                    ret (rf result v)]
+                (when-not (reduced? ret)
+                  (vreset! vv [input]))
+                ret))))))))
+  ([f coll]
+   (lazy-seq
     (when-let [s (seq coll)]
       (let [fst (first s)
             fv (f fst)
             run (cons fst (take-while #(= fv (f %)) (next s)))]
-        (cons run (partition-by f (lazy-seq (drop (count run) s))))))))
+        (cons run (partition-by f (lazy-seq (drop (count run) s)))))))))
 
 (defn into
   "Returns a new coll consisting of to-coll with all of the items of
