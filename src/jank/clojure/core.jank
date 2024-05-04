@@ -2109,9 +2109,21 @@
             (cons x (keep f (rest s))))))))))
 
 (defn take
-  ; TODO: Transducer (stateful).
   ([n]
-   )
+   (fn [rf]
+     (let [nv (volatile! n)]
+       (fn
+         ([] (rf))
+         ([result] (rf result))
+         ([result input]
+          (let [n (deref nv)
+                nn (vswap! nv dec)
+                result (if (pos? n)
+                         (rf result input)
+                         result)]
+            (if (not (pos? nn))
+              (ensure-reduced result)
+              result)))))))
   ([n coll]
    (lazy-seq
      (when (pos? n)
@@ -2125,14 +2137,24 @@
   ([f] (lazy-seq (cons (f) (repeatedly f))))
   ([n f] (take n (repeatedly f))))
 
-; Returns a lazy sequence of successive items from coll while
-; (pred item) returns logical true. pred must be free of side-effects.
-; Returns a transducer when no collection is provided.
-(defn take-while [pred coll]
-  (lazy-seq
+(defn take-while
+  "Returns a lazy sequence of successive items from coll while
+  (pred item) returns logical true. pred must be free of side-effects.
+  Returns a transducer when no collection is provided"
+  ([pred]
+   (fn [rf]
+     (fn
+       ([] (rf))
+       ([result] (rf result))
+       ([result input]
+        (if (pred input)
+          (rf result input)
+          (reduced result))))))
+  ([pred coll]
+   (lazy-seq
     (when-let [s (seq coll)]
       (when (pred (first s))
-        (cons (first s) (take-while pred (rest s)))))))
+        (cons (first s) (take-while pred (rest s))))))))
 
 ; Returns a lazy sequence of all but the first n items in coll.
 ; Returns a stateful transducer when no collection is provided.
