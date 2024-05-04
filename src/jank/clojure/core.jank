@@ -25,6 +25,11 @@
   (fn* nil? [o]
     (native/raw "__value = (o == obj::nil::nil_const()) ? ~{ true } : ~{ false }")))
 
+(def identical?
+  "Tests if 2 arguments are the same object"
+  (fn* identical? [l r]
+    (native/raw "__value = (~{ l } == ~{ r }) ? ~{ true } : ~{ false }")))
+
 ;; Collections.
 (def empty?
   (fn* empty? [o]
@@ -2396,7 +2401,7 @@
           (let [pval (deref pv)
                 val (f input)]
             (vreset! pv val)
-            (if (or (= pval ::none) ; OPTIMIZE: Use identical?
+            (if (or (identical? pval ::none)
                     (= val pval))
               (do
                 (vswap! vv conj input)
