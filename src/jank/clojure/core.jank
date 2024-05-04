@@ -25,8 +25,9 @@
   (fn* nil? [o]
     (native/raw "__value = (o == obj::nil::nil_const()) ? ~{ true } : ~{ false }")))
 
-(def identical?
-  "Tests if 2 arguments are the same object"
+(def
+  ^{:doc "Tests if 2 arguments are the same object"}
+  identical?
   (fn* identical? [l r]
     (native/raw "__value = (~{ l } == ~{ r }) ? ~{ true } : ~{ false }")))
 
