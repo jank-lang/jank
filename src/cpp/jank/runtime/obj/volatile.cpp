@@ -38,10 +38,10 @@ namespace jank::runtime
     return val;
   }
 
-  obj::volatile_ptr obj::volatile_::reset(object_ptr const o)
+  object_ptr obj::volatile_::reset(object_ptr const o)
   {
     val = o;
     assert(val);
-    return this;
+    return val;
   }
 }
