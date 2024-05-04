@@ -39,7 +39,7 @@ namespace jank::runtime
     native_bool equal(static_object const &) const;
 
     /* behavior::metadatable */
-    object_ptr with_meta(object_ptr m) const;
+    native_box<static_object> with_meta(object_ptr m) const;
 
     /* behavior::nameable */
     native_persistent_string const &get_name() const;

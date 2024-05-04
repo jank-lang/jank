@@ -41,7 +41,7 @@ namespace jank::runtime
     native_box<static_object> next_in_place();
 
     /* behavior::metadatable */
-    object_ptr with_meta(object_ptr m) const;
+    native_box<static_object> with_meta(object_ptr m) const;
 
   private:
     object_ptr resolve_fn() const;

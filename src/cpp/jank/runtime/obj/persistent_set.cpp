@@ -63,7 +63,7 @@ namespace jank::runtime
     return data.size();
   }
 
-  object_ptr obj::persistent_set::with_meta(object_ptr const m) const
+  obj::persistent_set_ptr obj::persistent_set::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<obj::persistent_set>(data));

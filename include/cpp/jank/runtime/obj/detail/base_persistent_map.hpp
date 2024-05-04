@@ -123,7 +123,7 @@ namespace jank::runtime::obj::detail
     }
 
     /* behavior::metadatable */
-    object_ptr with_meta(object_ptr const m) const
+    native_box<parent_type> with_meta(object_ptr const m) const
     {
       auto const meta(behavior::detail::validate_meta(m));
       auto ret(make_box<parent_type>(static_cast<parent_type const *>(this)->data));

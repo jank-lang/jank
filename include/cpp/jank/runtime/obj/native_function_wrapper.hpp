@@ -114,7 +114,7 @@ namespace jank::runtime
                     object_ptr) const final;
 
     /* behavior::metadatable */
-    object_ptr with_meta(object_ptr m) const;
+    native_box<static_object> with_meta(object_ptr m) const;
 
     object base{ object_type::native_function_wrapper };
     obj::detail::function_type data{};

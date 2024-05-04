@@ -165,7 +165,7 @@ namespace jank::runtime
     return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
   }
 
-  object_ptr obj::native_function_wrapper::with_meta(object_ptr const m) const
+  obj::native_function_wrapper_ptr obj::native_function_wrapper::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(jank::make_box<obj::native_function_wrapper>(data));

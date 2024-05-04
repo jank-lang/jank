@@ -27,8 +27,8 @@ namespace jank::runtime
       vec->data.begin()
         + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
       vec->data.end(),
-      "[",
-      ']',
+      "(",
+      ')',
       buff);
   }
 

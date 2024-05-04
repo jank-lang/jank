@@ -117,7 +117,7 @@ namespace jank::runtime
     return make_box<obj::cons>(head, this);
   }
 
-  object_ptr obj::cons::with_meta(object_ptr const m) const
+  obj::cons_ptr obj::cons::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

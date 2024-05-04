@@ -77,7 +77,7 @@ namespace jank::runtime
     return hash = hash::combine(n->to_hash(), name->to_hash());
   }
 
-  object_ptr var::with_meta(object_ptr const m)
+  var_ptr var::with_meta(object_ptr const m)
   {
     meta = behavior::detail::validate_meta(m);
     return this;

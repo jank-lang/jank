@@ -1,0 +1,26 @@
+; No docstring.
+(def one :1)
+(assert (= one :1))
+(assert (= (:doc (meta #'one)) nil))
+
+; Empty docstring.
+(def one "" 1)
+(assert (= one 1))
+(assert (= (:doc (meta #'one)) ""))
+
+; Non-empty docstring.
+(def one "Not empty." "1")
+(assert (= one "1"))
+(assert (= (:doc (meta #'one)) "Not empty."))
+
+; Non-empty docstring.
+(def one "Not empty." "1")
+(assert (= one "1"))
+(assert (= (:doc (meta #'one)) "Not empty."))
+
+; Overwrite meta.
+(def ^{:doc "meta"} one "docstring" 'one)
+(assert (= one 'one))
+(assert (= (:doc (meta #'one)) "docstring"))
+
+:success

@@ -440,10 +440,30 @@ namespace jank::codegen
     auto const &munged_name(runtime::munge(var.native_name.name));
     auto ret_tmp(runtime::context::unique_string(munged_name));
 
+    option<std::reference_wrapper<analyze::lifted_constant const>> meta;
+    if(expr.name->meta.is_some())
+    {
+      meta = expr.frame->find_lifted_constant(expr.name->meta.unwrap()).unwrap();
+    }
+
+    /* TODO: There's a slight difference here between eval and codegen:
+     * During eval, which matches Clojure, we'll always replace the meta. With codegen, we
+     * only replace it if the new def specifies meta. I'd like to clean this up, but the
+     * codegen for it is annoying, so I'm more inclined to leave a TODO like this. */
+
     /* Forward declarations just intern the var and evaluate to it. */
     if(expr.value.is_none())
     {
-      return munged_name;
+      if(meta.is_some())
+      {
+        return fmt::format("{}->with_meta({})",
+                           runtime::munge(var.native_name.name),
+                           meta.unwrap().get().native_name.name);
+      }
+      else
+      {
+        return munged_name;
+      }
     }
 
     auto const val(gen(expr.value.unwrap(), fn_arity, true).unwrap());
@@ -451,20 +471,42 @@ namespace jank::codegen
     {
       case analyze::expression_type::expression:
         {
-          return fmt::format("{}->bind_root({})",
-                             runtime::munge(var.native_name.name),
-                             val.str(true));
+          if(meta.is_some())
+          {
+            return fmt::format("{}->bind_root({})->with_meta({})",
+                               runtime::munge(var.native_name.name),
+                               val.str(true),
+                               meta.unwrap().get().native_name.name);
+          }
+          else
+          {
+            return fmt::format("{}->bind_root({})",
+                               runtime::munge(var.native_name.name),
+                               val.str(true));
+          }
         }
       case analyze::expression_type::return_statement:
         {
           fmt::format_to(inserter, "return ");
         }
+      /* Fallthrough */
       case analyze::expression_type::statement:
         {
-          fmt::format_to(inserter,
-                         "{}->bind_root({});",
-                         runtime::munge(var.native_name.name),
-                         val.str(true));
+          if(meta.is_some())
+          {
+            fmt::format_to(inserter,
+                           "{}->bind_root({})->with_meta({});",
+                           runtime::munge(var.native_name.name),
+                           val.str(true),
+                           meta.unwrap().get().native_name.name);
+          }
+          else
+          {
+            fmt::format_to(inserter,
+                           "{}->bind_root({});",
+                           runtime::munge(var.native_name.name),
+                           val.str(true));
+          }
           return none;
         }
     }

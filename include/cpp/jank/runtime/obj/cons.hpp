@@ -21,7 +21,7 @@ namespace jank::runtime
     native_hash to_hash() const;
 
     /* behavior::metadatable */
-    object_ptr with_meta(object_ptr m) const;
+    native_box<static_object> with_meta(object_ptr m) const;
 
     /* behavior::seqable */
     native_box<static_object> seq() const;

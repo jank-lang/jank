@@ -247,7 +247,7 @@ namespace jank::runtime
     return hash::ordered(&base);
   }
 
-  object_ptr obj::range::with_meta(object_ptr const m) const
+  obj::range_ptr obj::range::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

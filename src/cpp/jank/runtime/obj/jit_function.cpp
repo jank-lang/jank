@@ -27,7 +27,7 @@ namespace jank::runtime
     return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  object_ptr obj::jit_function::with_meta(object_ptr const m)
+  obj::jit_function_ptr obj::jit_function::with_meta(object_ptr const m)
   {
     auto const new_meta(behavior::detail::validate_meta(m));
     meta = new_meta;

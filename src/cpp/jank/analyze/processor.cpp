@@ -81,34 +81,31 @@ namespace jank::analyze
                          native_bool const)
   {
     auto const length(l->count());
-    if(length != 2 && length != 3)
+    if(length < 2 || length > 4)
     {
       /* TODO: Error handling. */
-      return err(error{ "invalid def" });
+      return err(
+        error{ fmt::format("invalid def: incorrect number of elements in form: {}", length) });
     }
 
     auto const sym_obj(l->data.rest().first().unwrap());
     if(sym_obj->type != runtime::object_type::symbol)
     {
       /* TODO: Error handling. */
-      return err(error{ "invalid def: name must be a symbol" });
+      return err(error{ fmt::format("invalid def: name must be a symbol, not {}",
+                                    magic_enum::enum_name(sym_obj->type)) });
     }
 
     auto const sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
     if(!sym->ns.empty())
     {
       /* TODO: Error handling. */
-      return err(error{ "invalid def: name must not be qualified" });
+      return err(
+        error{ fmt::format("invalid def: name must not be qualified: {}", sym->to_string()) });
     }
 
-    native_bool has_value{ true };
-    auto const value_opt(l->data.rest().rest().first());
-    if(value_opt.is_none())
-    {
-      has_value = false;
-    }
-
-    auto const qualified_sym(current_frame->lift_var(sym));
+    auto qualified_sym(current_frame->lift_var(sym));
+    qualified_sym->meta = sym->meta;
     auto const var(rt_ctx.intern_var(qualified_sym));
     if(var.is_err())
     {
@@ -116,9 +113,13 @@ namespace jank::analyze
     }
 
     option<native_box<expression>> value_expr;
+    native_bool const has_value{ 3 <= length };
+    native_bool const has_docstring{ 4 <= length };
 
     if(has_value)
     {
+      auto const value_opt(has_docstring ? l->data.rest().rest().rest().first()
+                                         : l->data.rest().rest().first());
       auto value_result(
         analyze(value_opt.unwrap(), current_frame, expression_type::expression, fn_ctx, true));
       if(value_result.is_err())
@@ -128,6 +129,27 @@ namespace jank::analyze
       value_expr = some(value_result.expect_ok());
 
       vars.insert_or_assign(var.expect_ok(), value_expr.unwrap());
+    }
+
+    if(has_docstring)
+    {
+      auto const docstring_obj(l->data.rest().rest().first().unwrap());
+      if(docstring_obj->type != runtime::object_type::persistent_string)
+      {
+        return err(error{ fmt::format("invalid def: docstring must be a string: {}",
+                                      runtime::detail::to_string(docstring_obj)) });
+      }
+      auto const meta_with_doc(
+        runtime::assoc(qualified_sym->meta.unwrap_or(runtime::obj::nil::nil_const()),
+                       rt_ctx.intern_keyword("doc").expect_ok(),
+                       docstring_obj));
+      qualified_sym = qualified_sym->with_meta(meta_with_doc);
+    }
+
+    /* Lift this so it can be used during codegen. */
+    if(qualified_sym->meta.is_some())
+    {
+      current_frame->lift_constant(qualified_sym->meta.unwrap());
     }
 
     return make_box<expression>(expr::def<expression>{

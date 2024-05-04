@@ -115,7 +115,7 @@ namespace jank::runtime
     return make_box<obj::transient_vector>(data);
   }
 
-  object_ptr obj::persistent_vector::with_meta(object_ptr const m) const
+  obj::persistent_vector_ptr obj::persistent_vector::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<obj::persistent_vector>(data));

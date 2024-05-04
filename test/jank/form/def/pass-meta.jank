@@ -1,0 +1,11 @@
+; Docstring.
+(def ^{:doc "boop"} one 'one)
+(assert (= one 'one))
+(assert (= (:doc (meta #'one)) "boop"))
+
+; Wipe out.
+(def one 'one)
+(assert (= one 'one))
+(assert (= (meta #'one) nil))
+
+:success

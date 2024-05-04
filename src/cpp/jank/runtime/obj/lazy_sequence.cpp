@@ -164,7 +164,7 @@ namespace jank::runtime
     return sequence;
   }
 
-  object_ptr obj::lazy_sequence::with_meta(object_ptr const m) const
+  obj::lazy_sequence_ptr obj::lazy_sequence::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

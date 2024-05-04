@@ -105,7 +105,7 @@ namespace jank::runtime
     return hash = hash::combine(hash::string(name), hash::string(ns));
   }
 
-  object_ptr obj::symbol::with_meta(object_ptr const m) const
+  obj::symbol_ptr obj::symbol::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<obj::symbol>(ns, name));

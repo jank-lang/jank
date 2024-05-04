@@ -18,8 +18,7 @@
 ; Nested definition, where the outer var holds the inner var.
 (def nested (def odd? true))
 (assert odd?)
-; TODO: Ability to assert this.
-;(assert (deref nested))
+(assert (deref nested))
 
 (def a :default)
 (def change-a

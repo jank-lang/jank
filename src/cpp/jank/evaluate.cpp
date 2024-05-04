@@ -104,6 +104,7 @@ namespace jank::evaluate
                            analyze::expr::def<analyze::expression> const &expr)
   {
     auto var(rt_ctx.intern_var(expr.name).expect_ok());
+    var->meta = expr.name->meta;
     if(expr.value.is_none())
     {
       return var;

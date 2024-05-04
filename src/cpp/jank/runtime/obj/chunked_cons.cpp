@@ -200,7 +200,7 @@ namespace jank::runtime
     return make_box<obj::cons>(head, this);
   }
 
-  object_ptr obj::chunked_cons::with_meta(object_ptr const m) const
+  obj::chunked_cons_ptr obj::chunked_cons::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

@@ -133,7 +133,7 @@ namespace jank::runtime
     return next();
   }
 
-  object_ptr obj::persistent_list::with_meta(object_ptr const m) const
+  obj::persistent_list_ptr obj::persistent_list::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<obj::persistent_list>(data));

@@ -30,7 +30,7 @@ namespace jank::runtime
     native_hash to_hash() const;
 
     /* behavior::metadatable */
-    object_ptr with_meta(object_ptr m);
+    native_box<static_object> with_meta(object_ptr m);
 
     object base{ object_type::jit_function };
     behavior::callable_ptr data{};

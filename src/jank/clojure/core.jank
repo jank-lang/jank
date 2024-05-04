@@ -2913,9 +2913,6 @@
               __value = make_box(fn);"))
 
 ;; Miscellaneous.
-; TODO: This should be a macro.
-(def assert)
-
 (defn sleep [ms]
   (let [ms (int ms)]
     (native/raw "std::this_thread::sleep_for(std::chrono::milliseconds(~{ ms }->data));")))

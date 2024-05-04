@@ -37,7 +37,7 @@ namespace jank::runtime
     native_bool equal(static_object const &) const;
 
     /* behavior::metadatable */
-    object_ptr with_meta(object_ptr m);
+    native_box<static_object> with_meta(object_ptr m);
 
     object_ptr get_root() const;
     /* Binding a root changes it for all threads. */
