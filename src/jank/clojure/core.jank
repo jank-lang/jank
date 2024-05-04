@@ -2251,7 +2251,23 @@
 ; partitions with fewer than n items at the end.  Returns a stateful
 ; transducer when no collection is provided.
 (defn partition-all
-  ; TODO: Transducer
+  ([n]
+   (fn [rf]
+     (let [part (volatile! [])]
+       (fn
+         ([] (rf))
+         ([result]
+          (let [p (deref part)
+                result (if (empty? p)
+                         result
+                         (unreduced (rf result p)))]
+            (rf result)))
+         ([result input]
+          (let [p (vswap! part conj input)]
+            (if (= n (count p))
+              (do (vreset! part [])
+                  (rf result p))
+              result)))))))
   ([n coll]
    (partition-all n n coll))
   ([n step coll]
