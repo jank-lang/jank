@@ -2030,6 +2030,13 @@
        (when-let [s (seq coll)]
          (cons (first s) (take (dec n) (rest s))))))))
 
+(defn repeatedly
+  "Takes a function of no args, presumably with side effects, and
+  returns an infinite (or length n if supplied) lazy sequence of calls
+  to it"
+  ([f] (lazy-seq (cons (f) (repeatedly f))))
+  ([n f] (take n (repeatedly f))))
+
 ; Returns a lazy sequence of successive items from coll while
 ; (pred item) returns logical true. pred must be free of side-effects.
 ; Returns a transducer when no collection is provided.
@@ -2563,6 +2570,21 @@
   ([f coll]
    (apply concat (map f coll))))
 
+(defn tree-seq
+  "Returns a lazy sequence of the nodes in a tree, via a depth-first walk.
+   branch? must be a fn of one arg that returns true if passed a node
+   that can have children (but may not).  children must be a fn of one
+   arg that returns a sequence of the children. Will only be called on
+   nodes for which branch? returns true. Root is the root node of the
+  tree."
+  [branch? children root]
+  (let [walk (fn walk [node]
+               (lazy-seq
+                (cons node
+                      (when (branch? node)
+                        (mapcat walk (children node))))))]
+    (walk root)))
+
 ; Returns a lazy sequence of the items in coll for which
 ; (pred item) returns logical true. pred must be free of side-effects.
 ; Returns a transducer when no collection is provided.
@@ -2592,6 +2614,14 @@
            (if (pred f)
              (cons f (filter pred r))
              (filter pred r))))))))
+
+(defn flatten
+  "Takes any nested combination of sequential things (lists, vectors,
+  etc.) and returns their contents as a single, flat lazy sequence.
+  (flatten nil) returns an empty sequence."
+  [x]
+  (filter (complement sequential?)
+          (rest (tree-seq sequential? seq x))))
 
 ; Returns a lazy sequence of the items in coll for which
 ; (pred item) returns logical false. pred must be free of side-effects.
