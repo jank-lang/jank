@@ -6,6 +6,7 @@
 
 #include <fmt/core.h>
 
+#include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/behavior/numberable.hpp>
@@ -1536,7 +1537,8 @@ namespace jank::analyze
         else if constexpr(runtime::behavior::numberable<T> || std::same_as<T, runtime::obj::boolean>
                           || std::same_as<T, runtime::obj::keyword>
                           || std::same_as<T, runtime::obj::nil>
-                          || std::same_as<T, runtime::obj::persistent_string>)
+                          || std::same_as<T, runtime::obj::persistent_string>
+                          || std::same_as<T, runtime::obj::character>)
         {
           return analyze_primitive_literal(o, current_frame, expr_type, fn_ctx, needs_box);
         }

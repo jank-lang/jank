@@ -37,6 +37,7 @@ namespace jank
     using persistent_string = static_object<object_type::persistent_string>;
     using persistent_list = static_object<object_type::persistent_list>;
     using symbol = static_object<object_type::symbol>;
+    using character = static_object<object_type::character>;
   }
 
   /* TODO: Constexpr these. */

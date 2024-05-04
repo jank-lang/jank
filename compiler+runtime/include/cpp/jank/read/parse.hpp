@@ -57,6 +57,7 @@ namespace jank::read::parse
     object_result parse_vector();
     object_result parse_map();
     object_result parse_quote();
+    object_result parse_character();
     object_result parse_meta_hint();
     object_result parse_reader_macro();
     object_result parse_reader_macro_set();

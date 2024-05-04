@@ -86,6 +86,83 @@ namespace jank::read::parse
       CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
     }
 
+    TEST_CASE("Character")
+    {
+      SUBCASE("single")
+      {
+        lex::processor lp{ R"(\a\1\`\:\#)" };
+        processor p{ lp.begin(), lp.end() };
+
+        size_t offset{};
+        for(auto const &ch : { 'a', '1', '`', ':', '#' })
+        {
+          auto const r(p.next());
+          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
+                                       make_box<runtime::obj::character>(ch)));
+
+          CHECK(r.expect_ok().unwrap().start
+                == lex::token{ offset, 2, lex::token_kind::character, std::string(1, ch) });
+          CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+
+          /* Current character and then a backslash */
+          offset += 2;
+        }
+      }
+
+      SUBCASE("escaped")
+      {
+        lex::processor lp{ R"(\newline\backspace\return\formfeed\tab\space)" };
+        processor p{ lp.begin(), lp.end() };
+
+        size_t offset{};
+        for(auto const &ch : { std::make_pair<native_persistent_string, char8_t>("newline", '\n'),
+                               std::make_pair<native_persistent_string, char8_t>("backspace", '\b'),
+                               std::make_pair<native_persistent_string, char8_t>("return", '\r'),
+                               std::make_pair<native_persistent_string, char8_t>("formfeed", '\f'),
+                               std::make_pair<native_persistent_string, char8_t>("tab", '\t'),
+                               std::make_pair<native_persistent_string, char8_t>("space", ' ') })
+        {
+          auto const r(p.next());
+          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
+                                       make_box<runtime::obj::character>(ch.second)));
+
+          /* +1 for backslash */
+          auto const len = ch.first.size() + 1;
+          CHECK(r.expect_ok().unwrap().start
+                == lex::token{ offset, len, lex::token_kind::character, ch.first });
+          CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+
+          offset += len;
+        }
+      }
+
+      SUBCASE("escaped and single")
+      {
+        lex::processor lp{ R"(\newline\a\tab\`\space)" };
+        processor p{ lp.begin(), lp.end() };
+
+        size_t offset{};
+        for(auto const &ch : { std::make_pair<native_persistent_string, char8_t>("newline", '\n'),
+                               std::make_pair<native_persistent_string, char8_t>("a", 'a'),
+                               std::make_pair<native_persistent_string, char8_t>("tab", '\t'),
+                               std::make_pair<native_persistent_string, char8_t>("`", '`'),
+                               std::make_pair<native_persistent_string, char8_t>("space", ' ') })
+        {
+          auto const r(p.next());
+          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
+                                       make_box<runtime::obj::character>(ch.second)));
+
+          /* +1 for backslash */
+          auto const len = ch.first.size() + 1;
+          CHECK(r.expect_ok().unwrap().start
+                == lex::token{ offset, len, lex::token_kind::character, ch.first });
+          CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+
+          offset += len;
+        }
+      }
+    }
+
     TEST_CASE("String")
     {
       SUBCASE("Unescaped")

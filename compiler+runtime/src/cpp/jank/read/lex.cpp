@@ -289,6 +289,45 @@ namespace jank::read
         case '\'':
           require_space = false;
           return ok(token{ pos++, token_kind::single_quote });
+        case '\\':
+          {
+            require_space = false;
+
+            auto const ch(peek());
+            pos++;
+            if(ch.is_none() || std::isspace(ch.unwrap()))
+            {
+              return err(error{ token_start, 2, "Expecting a valid character literal after \\" });
+            }
+
+            while(true)
+            {
+              auto const pt(peek());
+              if(pt.is_none())
+              {
+                break;
+              }
+              if(!std::isalnum(pt.unwrap()))
+              {
+                break;
+              }
+              pos++;
+            }
+
+            native_persistent_string_view const data{ file.data() + token_start + 1,
+                                                      ++pos - token_start - 1 };
+
+            if(data.size() > 1 && data != "newline" && data != "space" && data != "tab"
+               && data != "formfeed" && data != "backspace" && data != "return")
+            {
+              return err(error{ token_start,
+                                pos - token_start,
+                                fmt::format("Invalid character literal `{}` after \\\nNote: Jank "
+                                            "doesn't support unicode characters yet!",
+                                            data) });
+            }
+            return ok(token{ token_start, pos - token_start, token_kind::character, data });
+          }
         case ';':
           {
             size_t leading_semis{ 1 };

@@ -79,6 +79,10 @@ namespace jank::codegen
             }
             return "jank::native_integer";
           }
+        case jank::runtime::object_type::character:
+          {
+            return "jank::runtime::obj::character";
+          }
         case jank::runtime::object_type::real:
           {
             if(boxed)
