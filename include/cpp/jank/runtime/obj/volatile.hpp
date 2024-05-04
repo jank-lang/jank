@@ -19,7 +19,7 @@ namespace jank::runtime
     /* behavior::derefable */
     object_ptr deref() const;
 
-    native_box<static_object> reset(object_ptr o);
+    object_ptr reset(object_ptr o);
 
     object base{ object_type::volatile_ };
     object_ptr val{};

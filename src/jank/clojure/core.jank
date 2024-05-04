@@ -994,7 +994,7 @@
   "Sets the value of volatile to newval without regard for the
    current value. Returns newval."
   [vol newval]
-  (native/raw "__value = expect_object<obj::volatile_>(~{ vol })->reset(~{ newval })->deref();"))
+  (native/raw "__value = expect_object<obj::volatile_>(~{ vol })->reset(~{ newval });"))
 
 ; XXX: In Clojure, this is a macro (for perf reasons). However, building native/raw
 ; forms from macros is quite cumbersome right now. A function will do until it doesn't.
@@ -1003,7 +1003,7 @@
   (apply f current-value-of-vol args). Returns the value that
   was swapped in."
   [vol f & args]
-  (native/raw "__value = expect_object<obj::volatile_>(~{ vol })->reset(~{ (apply f (deref vol) args) })->deref();"))
+  (native/raw "__value = expect_object<obj::volatile_>(~{ vol })->reset(~{ (apply f (deref vol) args) });"))
 
 (defn volatile?
   "Returns true if x is a volatile."
