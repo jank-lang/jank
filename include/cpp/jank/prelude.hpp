@@ -28,6 +28,7 @@
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/behavior/numberable.hpp>
 #include <jank/runtime/behavior/nameable.hpp>
+#include <jank/runtime/behavior/derefable.hpp>
 #include <jank/runtime/behavior/transientable.hpp>
 #include <jank/runtime/behavior/conjable.hpp>
 #include <jank/runtime/behavior/associatively_writable.hpp>

@@ -903,6 +903,64 @@
   [coll]
   (native/raw "__value = runtime::pop(~{ coll });"))
 
+(defn deref
+  "Also reader macro: @ref/@agent/@var/@atom/@delay/@future/@promise. Within a transaction,
+  returns the in-transaction-value of ref, else returns the
+  most-recently-committed value of ref. When applied to a var, agent
+  or atom, returns its current state. When applied to a delay, forces
+  it if not already forced. When applied to a future, will block if
+  computation not complete. When applied to a promise, will block
+  until a value is delivered.  The variant taking a timeout can be
+  used for blocking references (futures and promises), and will return
+  timeout-val if the timeout (in milliseconds) is reached before a
+  value is available. See also - realized?."
+  ([ref]
+   (native/raw "__value = visit_object
+               (
+                [=](auto const typed_ref) -> object_ptr
+                {
+                 using T = typename decltype(typed_ref)::value_type;
+
+                 if constexpr(behavior::derefable<T>)
+                 { return typed_ref->deref(); }
+                 else
+                 { ~{ (throw (ex-info :not-derefable {:ref ref})) }; }
+                 },
+                ~{ ref }
+               );"))
+  ; TODO: Blocking.
+  ([ref timeout-ms timeout-val]
+   ;(if (instance? clojure.lang.IBlockingDeref ref)
+   ;  (.deref ^clojure.lang.IBlockingDeref ref timeout-ms timeout-val)
+   ;  (deref-future ref timeout-ms timeout-val))
+   ))
+
+; Volatiles.
+(defn volatile!
+  "Creates and returns a Volatile with an initial value of val."
+  [val]
+  (native/raw "__value = make_box<obj::volatile_>(~{ val });"))
+
+(defn vreset!
+  "Sets the value of volatile to newval without regard for the
+   current value. Returns newval."
+  [vol newval]
+  (native/raw "__value = expect_object<obj::volatile_>(~{ vol })->reset(~{ newval });"))
+
+; XXX: In Clojure, this is a macro (for perf reasons). However, building native/raw
+; forms from macros is quite cumbersome right now. A function will do until it doesn't.
+(defn vswap!
+  "Non-atomically swaps the value of the volatile as if:
+  (apply f current-value-of-vol args). Returns the value that
+  was swapped in."
+  [vol f & args]
+  (native/raw "__value = expect_object<obj::volatile_>(~{ vol })->reset(~{ (apply f (deref vol) args) });"))
+
+(defn volatile?
+  "Returns true if x is a volatile."
+  [x]
+  (native/raw "__value = make_box(~{ x }->type == object_type::volatile_);"))
+
 ; Primitives.
 ;; Arithmetic.
 (defn +
