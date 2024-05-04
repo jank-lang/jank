@@ -927,6 +927,25 @@
          ret (reduce f init coll)]
      (f ret))))
 
+;; TODO: private
+(defn preserving-reduced
+  [rf]
+  #(let [ret (rf %1 %2)]
+     (if (reduced? ret)
+       (reduced ret)
+       ret)))
+
+(defn cat
+  "A transducer which concatenates the contents of each input, which must be a
+  collection, into the reduction."
+  [rf]
+  (let [rrf (preserving-reduced rf)]
+    (fn
+      ([] (rf))
+      ([result] (rf result))
+      ([result input]
+       (reduce rrf result input)))))
+
 (defn run!
   "Runs the supplied procedure (via reduce), for purposes of side
   effects, on successive items in the collection. Returns nil"
@@ -2156,32 +2175,58 @@
       (when (pred (first s))
         (cons (first s) (take-while pred (rest s))))))))
 
-; Returns a lazy sequence of all but the first n items in coll.
-; Returns a stateful transducer when no collection is provided.
-(defn drop [n coll]
-  ; TODO: Transducer (stateful).
-  (let [step (fn [n coll]
-               (let [s (seq coll)]
-                 (if (and (pos? n) s)
-                   (recur (dec n) (rest s))
-                   s)))]
-    (lazy-seq (step n coll))))
+(defn drop
+  "Returns a lazy sequence of all but the first n items in coll.
+  Returns a stateful transducer when no collection is provided."
+  ([n]
+   (fn [rf]
+     (let [nv (volatile! n)]
+       (fn
+         ([] (rf))
+         ([result] (rf result))
+         ([result input]
+          (let [n (deref nv)]
+            (vswap! nv dec)
+            (if (pos? n)
+              result
+              (rf result input))))))))
+  ([n coll]
+   (let [step (fn [n coll]
+                (let [s (seq coll)]
+                  (if (and (pos? n) s)
+                    (recur (dec n) (rest s))
+                    s)))]
+     (lazy-seq (step n coll)))))
 
 ; Return a lazy sequence of all but the last n (default 1) items in coll
 (defn drop-last
   ([coll] (drop-last 1 coll))
   ([n coll] (map (fn [x _] x) coll (drop n coll))))
 
-; Returns a lazy sequence of the items in coll starting from the
-; first item for which (pred item) returns logical false.  Returns a
-; stateful transducer when no collection is provided.
-(defn drop-while [pred coll]
-  (let [step (fn [pred coll]
-               (let [s (seq coll)]
-                 (if (and s (pred (first s)))
-                   (recur pred (rest s))
-                   s)))]
-    (lazy-seq (step pred coll))))
+(defn drop-while
+  "Returns a lazy sequence of the items in coll starting from the
+  first item for which (pred item) returns logical false.  Returns a
+  stateful transducer when no collection is provided."
+  ([pred]
+   (fn [rf]
+     (let [dv (volatile! true)]
+       (fn
+         ([] (rf))
+         ([result] (rf result))
+         ([result input]
+          (let [drop? (deref dv)]
+            (if (and drop? (pred input))
+              result
+              (do
+                (vreset! dv nil)
+                (rf result input)))))))))
+  ([pred coll]
+   (let [step (fn [pred coll]
+                (let [s (seq coll)]
+                  (if (and s (pred (first s)))
+                    (recur pred (rest s))
+                    s)))]
+     (lazy-seq (step pred coll)))))
 
 ; Returns a lazy (infinite!) sequence of repetitions of the items in coll.
 (defn cycle [coll]
@@ -2685,13 +2730,11 @@
               coll)
       persistent!))
 
-; Returns the result of applying concat to the result of applying map
-; to f and colls. Thus function f should return a collection. Returns
-; a transducer when no collections are provided
 (defn mapcat
-  ; TODO: Transducer.
-  ([f]
-   )
+  "Returns the result of applying concat to the result of applying map
+  to f and colls. Thus function f should return a collection. Returns
+  a transducer when no collections are provided"
+  ([f] (comp (map f) cat))
   ; TODO: Variadic.
   ([f coll]
    (apply concat (map f coll))))
