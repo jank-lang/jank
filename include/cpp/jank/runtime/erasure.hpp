@@ -33,6 +33,7 @@
 #include <jank/runtime/obj/native_array_sequence.hpp>
 #include <jank/runtime/obj/native_vector_sequence.hpp>
 #include <jank/runtime/obj/volatile.hpp>
+#include <jank/runtime/obj/reduced.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
 
@@ -277,6 +278,11 @@ namespace jank::runtime
         }
         break;
       case object_type::volatile_:
+        {
+          return fn(expect_object<obj::volatile_>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::reduced:
         {
           return fn(expect_object<obj::volatile_>(erased), std::forward<Args>(args)...);
         }

@@ -807,17 +807,72 @@
     ([x y & zs] (not (apply f x y zs)))))
 
 ; Utils.
-; f should be a function of 2 arguments. If val is not supplied,
-; returns the result of applying f to the first 2 items in coll, then
-; applying f to that result and the 3rd item, etc. If coll contains no
-; items, f must accept no arguments as well, and reduce returns the
-; result of calling f with no arguments.  If coll has only 1 item, it
-; is returned and f is not called.  If val is supplied, returns the
-; result of applying f to val and the first item in coll, then
-; applying f to that result and the 2nd item, etc. If coll contains no
-; items, returns val and f is not called.
-; TODO: Support for `reduced`
+(defn deref
+  "Also reader macro: @ref/@agent/@var/@atom/@delay/@future/@promise. Within a transaction,
+  returns the in-transaction-value of ref, else returns the
+  most-recently-committed value of ref. When applied to a var, agent
+  or atom, returns its current state. When applied to a delay, forces
+  it if not already forced. When applied to a future, will block if
+  computation not complete. When applied to a promise, will block
+  until a value is delivered.  The variant taking a timeout can be
+  used for blocking references (futures and promises), and will return
+  timeout-val if the timeout (in milliseconds) is reached before a
+  value is available. See also - realized?."
+  ([ref]
+   (native/raw "__value = visit_object
+               (
+                [=](auto const typed_ref) -> object_ptr
+                {
+                 using T = typename decltype(typed_ref)::value_type;
+
+                 if constexpr(behavior::derefable<T>)
+                 { return typed_ref->deref(); }
+                 else
+                 { ~{ (throw (ex-info :not-derefable {:ref ref})) }; }
+                 },
+                ~{ ref }
+               );"))
+  ; TODO: Blocking.
+  ([ref timeout-ms timeout-val]
+   ;(if (instance? clojure.lang.IBlockingDeref ref)
+   ;  (.deref ^clojure.lang.IBlockingDeref ref timeout-ms timeout-val)
+   ;  (deref-future ref timeout-ms timeout-val))
+   ))
+
+(defn reduced
+  "Wraps x in a way such that a reduce will terminate with the value x"
+  [x]
+  (native/raw "__value = make_box<obj::reduced>(~{ x });"))
+
+(defn reduced?
+  "Returns true if x is the result of a call to reduced"
+  ([x]
+   (native/raw "__value = make_box(~{ x }->type == object_type::reduced);")))
+
+(defn ensure-reduced
+  "If x is already reduced?, returns it, else returns (reduced x)"
+  [x]
+  (if (reduced? x)
+    x
+    (reduced x)))
+
+(defn unreduced
+  "If x is reduced?, returns (deref x), else returns x"
+  [x]
+  (if (reduced? x)
+    (deref x)
+    x))
+
 (defn reduce
+  "f should be a function of 2 arguments. If val is not supplied,
+  returns the result of applying f to the first 2 items in coll, then
+  applying f to that result and the 3rd item, etc. If coll contains no
+  items, f must accept no arguments as well, and reduce returns the
+  result of calling f with no arguments.  If coll has only 1 item, it
+  is returned and f is not called.  If val is supplied, returns the
+  result of applying f to val and the first item in coll, then
+  applying f to that result and the 2nd item, etc. If coll contains no
+  items, returns val and f is not called."
   ([f coll]
    (let [s (seq coll)]
      (if s
@@ -830,7 +885,14 @@
                 {
                   object_ptr res{ ~{ val } };
                   for(auto it(typed_coll->fresh_seq()); it != nullptr; it = next_in_place(it))
-                  { res = dynamic_call(~{ f }, res, it->first()); }
+                  {
+                    res = dynamic_call(~{ f }, res, it->first());
+                    if(res->type == object_type::reduced)
+                    {
+                      res = expect_object<obj::reduced>(res)->val;
+                      break;
+                    }
+                  }
                   return res;
                  },
                 [=]() -> object_ptr
@@ -902,38 +964,6 @@
   as next/butlast."
   [coll]
   (native/raw "__value = runtime::pop(~{ coll });"))
-
-(defn deref
-  "Also reader macro: @ref/@agent/@var/@atom/@delay/@future/@promise. Within a transaction,
-  returns the in-transaction-value of ref, else returns the
-  most-recently-committed value of ref. When applied to a var, agent
-  or atom, returns its current state. When applied to a delay, forces
-  it if not already forced. When applied to a future, will block if
-  computation not complete. When applied to a promise, will block
-  until a value is delivered.  The variant taking a timeout can be
-  used for blocking references (futures and promises), and will return
-  timeout-val if the timeout (in milliseconds) is reached before a
-  value is available. See also - realized?."
-  ([ref]
-   (native/raw "__value = visit_object
-               (
-                [=](auto const typed_ref) -> object_ptr
-                {
-                 using T = typename decltype(typed_ref)::value_type;
-
-                 if constexpr(behavior::derefable<T>)
-                 { return typed_ref->deref(); }
-                 else
-                 { ~{ (throw (ex-info :not-derefable {:ref ref})) }; }
-                 },
-                ~{ ref }
-               );"))
-  ; TODO: Blocking.
-  ([ref timeout-ms timeout-val]
-   ;(if (instance? clojure.lang.IBlockingDeref ref)
-   ;  (.deref ^clojure.lang.IBlockingDeref ref timeout-ms timeout-val)
-   ;  (deref-future ref timeout-ms timeout-val))
-   ))
 
 ; Volatiles.
 (defn volatile!

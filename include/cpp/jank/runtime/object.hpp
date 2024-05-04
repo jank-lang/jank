@@ -41,6 +41,7 @@ namespace jank::runtime
     persistent_list_sequence,
     persistent_set_sequence,
     volatile_,
+    reduced,
     ns,
     var,
     var_thread_binding,

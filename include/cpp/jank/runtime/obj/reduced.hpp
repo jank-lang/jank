@@ -3,7 +3,7 @@
 namespace jank::runtime
 {
   template <>
-  struct static_object<object_type::volatile_> : gc
+  struct static_object<object_type::reduced> : gc
   {
     static constexpr native_bool pointer_free{ false };
 
@@ -19,15 +19,13 @@ namespace jank::runtime
     /* behavior::derefable */
     object_ptr deref() const;
 
-    native_box<static_object> reset(object_ptr o);
-
-    object base{ object_type::volatile_ };
+    object base{ object_type::reduced };
     object_ptr val{};
   };
 
   namespace obj
   {
-    using volatile_ = static_object<object_type::volatile_>;
-    using volatile_ptr = native_box<volatile_>;
+    using reduced = static_object<object_type::reduced>;
+    using reduced_ptr = native_box<reduced>;
   }
 }
