@@ -2689,6 +2689,18 @@
             (assoc counts x (inc (get counts x 0))))
           {} coll))
 
+(defn group-by
+  "Returns a map of the elements of coll keyed by the result of
+  f on each element. The value at each key will be a vector of the
+  corresponding elements, in the order they appeared in coll."
+  [f coll]
+  ;; OPTIMIZE: transient
+  (reduce
+   (fn [ret x]
+     (let [k (f x)]
+       (assoc ret k (conj (get ret k []) x))))
+   {} coll))
+
 (defn reductions
   "Returns a lazy seq of the intermediate values of the reduction (as
   per reduce) of coll by f, starting with init."
@@ -3297,7 +3309,6 @@
   through each form for which the corresponding test expression
   is true.  Note that, unlike cond branching, cond->> threading does not short circuit
   after the first true test expression."
-  {:added "1.5"}
   [expr & clauses]
   (assert (even? (count clauses)))
   (let [g (gensym)
