@@ -24,6 +24,8 @@
 
 namespace jank::jit
 {
+  using runtime::__rt_ctx;
+
   struct failure
   {
     boost::filesystem::path path;
@@ -34,9 +36,7 @@ namespace jank::jit
   {
     TEST_CASE("files")
     {
-      runtime::context rt_ctx;
-      auto const cardinal_result(rt_ctx.intern_keyword("success").expect_ok());
-      rt_ctx.load_module("/clojure.core").expect_ok();
+      auto const cardinal_result(__rt_ctx->intern_keyword("success").expect_ok());
       size_t test_count{};
 
       /* The functionality I want here is too complex for doctest to handle. Output should be
@@ -81,7 +81,7 @@ namespace jank::jit
             std::cerr.rdbuf(old_cerr);
           } };
 
-          auto const result(rt_ctx.eval_file(dir_entry.path().string()));
+          auto const result(__rt_ctx->eval_file(dir_entry.path().string()));
           if(!expect_success)
           {
             failures.push_back(

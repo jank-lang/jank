@@ -189,7 +189,7 @@ namespace jank::runtime
   {
     profile::timer timer{ "rt eval_string" };
     read::lex::processor l_prc{ code };
-    read::parse::processor p_prc{ *this, l_prc.begin(), l_prc.end() };
+    read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
     object_ptr ret{ obj::nil::nil_const() };
     native_vector<analyze::expression_ptr> exprs{};
@@ -225,7 +225,7 @@ namespace jank::runtime
   {
     profile::timer timer{ "rt analyze_string" };
     read::lex::processor l_prc{ code };
-    read::parse::processor p_prc{ *this, l_prc.begin(), l_prc.end() };
+    read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
     native_vector<analyze::expression_ptr> ret{};
     for(auto const &form : p_prc)

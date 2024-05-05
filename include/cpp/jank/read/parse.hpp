@@ -50,9 +50,7 @@ namespace jank::read::parse
       processor &p;
     };
 
-    processor(runtime::context &rt_ctx,
-              lex::processor::iterator const &b,
-              lex::processor::iterator const &e);
+    processor(lex::processor::iterator const &b, lex::processor::iterator const &e);
 
     object_result next();
     object_result parse_list();
@@ -88,7 +86,6 @@ namespace jank::read::parse
     static native_bool syntax_quote_is_unquote(runtime::object_ptr form, native_bool splice);
 
   public:
-    runtime::context &rt_ctx;
     lex::processor::iterator token_current, token_end;
     option<lex::token_kind> expected_closer;
     /* Splicing, in reader conditionals, is not allowed at the top level. When we're parsing

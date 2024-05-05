@@ -21,6 +21,12 @@ namespace jank::jit
 
 namespace jank::runtime
 {
+  /* This is a singleton, as much as I fought it for actual years. Trying to have multiple
+   * contexts is limited firstly by there being a single, global JIT compilation context
+   * and process in which global memory exists. Secondly, by the fact that interned keywords
+   * from one context will not play nicely with others. Thirdly that we want the context
+   * anywhere and everywhere, without passing it around, so we can do things like intern
+   * keywords. So this guy is always initialized in main and you can always use it. */
   struct context
   {
     context();

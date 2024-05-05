@@ -16,6 +16,8 @@
 
 namespace jank::read::parse
 {
+  using runtime::__rt_ctx;
+
   native_bool
   processor::object_source_info::operator==(processor::object_source_info const &rhs) const
   {
@@ -60,14 +62,11 @@ namespace jank::read::parse
     return *this;
   }
 
-  processor::processor(runtime::context &rt_ctx,
-                       lex::processor::iterator const &b,
-                       lex::processor::iterator const &e)
-    : rt_ctx{ rt_ctx }
-    , token_current{ b }
+  processor::processor(lex::processor::iterator const &b, lex::processor::iterator const &e)
+    : token_current{ b }
     , token_end{ e }
     , splicing_allowed_var{ make_box<runtime::var>(
-                              rt_ctx.intern_ns(make_box<runtime::obj::symbol>("clojure.core")),
+                              __rt_ctx->intern_ns(make_box<runtime::obj::symbol>("clojure.core")),
                               make_box<runtime::obj::symbol>("*splicing-allowed?*"),
                               runtime::obj::boolean::false_const())
                               ->set_dynamic(true) }
@@ -207,11 +206,11 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_paren);
 
-    rt_ctx
-      .push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+    __rt_ctx
+      ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
         std::make_pair(splicing_allowed_var, runtime::obj::boolean::true_const())))
       .expect_ok();
-    util::scope_exit const finally{ [&]() { rt_ctx.pop_thread_bindings().expect_ok(); } };
+    util::scope_exit const finally{ [&]() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
     runtime::detail::native_transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
@@ -242,11 +241,11 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_square_bracket);
 
-    rt_ctx
-      .push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+    __rt_ctx
+      ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
         std::make_pair(splicing_allowed_var, runtime::obj::boolean::true_const())))
       .expect_ok();
-    util::scope_exit const finally{ [&]() { rt_ctx.pop_thread_bindings().expect_ok(); } };
+    util::scope_exit const finally{ [&]() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
     runtime::detail::native_transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
@@ -276,11 +275,11 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_curly_bracket);
 
-    rt_ctx
-      .push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+    __rt_ctx
+      ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
         std::make_pair(splicing_allowed_var, runtime::obj::boolean::true_const())))
       .expect_ok();
-    util::scope_exit const finally{ [&]() { rt_ctx.pop_thread_bindings().expect_ok(); } };
+    util::scope_exit const finally{ [&]() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
     runtime::detail::native_persistent_array_map ret;
     for(auto it(begin()); it != end(); ++it)
@@ -463,11 +462,11 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_curly_bracket);
 
-    rt_ctx
-      .push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+    __rt_ctx
+      ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
         std::make_pair(splicing_allowed_var, runtime::obj::boolean::true_const())))
       .expect_ok();
-    util::scope_exit const finally{ [&]() { rt_ctx.pop_thread_bindings().expect_ok(); } };
+    util::scope_exit const finally{ [&]() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
     runtime::detail::native_transient_set ret;
     for(auto it(begin()); it != end(); ++it)
@@ -630,8 +629,8 @@ namespace jank::read::parse
         error{ start_token.pos, native_persistent_string{ "#? expects an even number of forms" } });
     }
 
-    auto const jank_keyword(rt_ctx.intern_keyword("", "jank").expect_ok());
-    auto const default_keyword(rt_ctx.intern_keyword("", "default").expect_ok());
+    auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
+    auto const default_keyword(__rt_ctx->intern_keyword("", "default").expect_ok());
 
     for(auto it(list->fresh_seq()); it != nullptr;)
     {
@@ -788,7 +787,7 @@ namespace jank::read::parse
   string_result<runtime::object_ptr> processor::syntax_quote(runtime::object_ptr const form)
   {
     /* Specials, such as fn*, let*, try, etc. just get left alone. We can't qualify them more. */
-    if(rt_ctx.an_prc.is_special(form))
+    if(__rt_ctx->an_prc.is_special(form))
     {
       return make_box<runtime::obj::persistent_list>(std::in_place,
                                                      make_box<runtime::obj::symbol>("quote"),
@@ -802,7 +801,7 @@ namespace jank::read::parse
       auto sym(runtime::expect_object<runtime::obj::symbol>(form));
       if(sym->ns.empty() && sym->name.ends_with('#'))
       {
-        auto const env(rt_ctx.gensym_env_var->deref());
+        auto const env(__rt_ctx->gensym_env_var->deref());
         if(env->type == runtime::object_type::nil)
         {
           return err("gensym literal is not within a syntax quote");
@@ -812,16 +811,16 @@ namespace jank::read::parse
         if(gensym->type == runtime::object_type::nil)
         {
           gensym = make_box<runtime::obj::symbol>(runtime::context::unique_symbol(sym->name));
-          rt_ctx.gensym_env_var->set(runtime::assoc(env, sym, gensym)).expect_ok();
+          __rt_ctx->gensym_env_var->set(runtime::assoc(env, sym, gensym)).expect_ok();
         }
         sym = runtime::expect_object<runtime::obj::symbol>(gensym);
       }
       else if(sym->ns.empty() && sym->name != "&")
       {
-        auto var(rt_ctx.find_var(sym));
+        auto var(__rt_ctx->find_var(sym));
         if(var.is_none())
         {
-          sym = make_box<runtime::obj::symbol>(rt_ctx.current_ns()->name->name, sym->name);
+          sym = make_box<runtime::obj::symbol>(__rt_ctx->current_ns()->name->name, sym->name);
         }
         else
         {
@@ -953,9 +952,9 @@ namespace jank::read::parse
     ++token_current;
 
     runtime::context::binding_scope const scope{
-      rt_ctx,
+      *__rt_ctx,
       runtime::obj::persistent_hash_map::create_unique(
-        std::make_pair(rt_ctx.gensym_env_var, runtime::obj::persistent_hash_map::empty()))
+        std::make_pair(__rt_ctx->gensym_env_var, runtime::obj::persistent_hash_map::empty()))
     };
 
     auto const old_quoted(quoted);
@@ -1053,7 +1052,7 @@ namespace jank::read::parse
         /* Normal symbols will have the ns resolved immediately. */
         else
         {
-          auto const resolved_ns(rt_ctx.resolve_ns(make_box<runtime::obj::symbol>(ns_portion)));
+          auto const resolved_ns(__rt_ctx->resolve_ns(make_box<runtime::obj::symbol>(ns_portion)));
           if(resolved_ns.is_none())
           {
             return err(error{ token.pos, fmt::format("unknown namespace: {}", ns_portion) });
@@ -1144,7 +1143,7 @@ namespace jank::read::parse
       name = sv.substr(resolved ? 0 : 1);
     }
 
-    auto const intern_res(rt_ctx.intern_keyword(ns, name, resolved));
+    auto const intern_res(__rt_ctx->intern_keyword(ns, name, resolved));
     if(intern_res.is_err())
     {
       return err(intern_res.expect_err());

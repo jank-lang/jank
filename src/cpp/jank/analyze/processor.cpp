@@ -1136,7 +1136,7 @@ namespace jank::analyze
         {code_str->data.data() + next_interp + interp_start.size(),
          code_str->data.data() + code_str->data.size()}
       };
-      read::parse::processor p_prc{ rt_ctx, l_prc.begin(), l_prc.end() };
+      read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
       auto parsed_obj(p_prc.next());
       if(parsed_obj.is_err())
       {

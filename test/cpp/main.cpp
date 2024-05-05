@@ -2,6 +2,7 @@
 #include <doctest/doctest.h>
 
 int main(int const argc, char const **argv)
+try
 {
   GC_set_all_interior_pointers(1);
   GC_enable();
@@ -10,6 +11,9 @@ int main(int const argc, char const **argv)
   context.applyCommandLine(argc, argv);
   context.setOption("no-breaks", true);
 
+  jank::runtime::__rt_ctx = new(GC) jank::runtime::context{};
+  jank::runtime::__rt_ctx->load_module("/clojure.core").expect_ok();
+
   auto const res(context.run());
   if(context.shouldExit())
   {
@@ -17,4 +21,25 @@ int main(int const argc, char const **argv)
   }
 
   return res;
+}
+/* TODO: Unify error handling. JEEZE! */
+catch(std::exception const &e)
+{
+  fmt::println("Exception: {}", e.what());
+}
+catch(jank::runtime::object_ptr const o)
+{
+  fmt::println("Exception: {}", jank::runtime::detail::to_string(o));
+}
+catch(jank::native_persistent_string const &s)
+{
+  fmt::println("Exception: {}", s);
+}
+catch(jank::read::error const &e)
+{
+  fmt::println("Read error ({} - {}): {}", e.start, e.end, e.message);
+}
+catch(...)
+{
+  fmt::println("Unknown exception thrown");
 }

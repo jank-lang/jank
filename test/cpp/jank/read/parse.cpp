@@ -1,8 +1,5 @@
 #include <unistd.h>
 
-#include <array>
-#include <iostream>
-
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/seq.hpp>
@@ -21,13 +18,14 @@
 
 namespace jank::read::parse
 {
+  using runtime::__rt_ctx;
+
   TEST_SUITE("parse")
   {
     TEST_CASE("Empty")
     {
-      runtime::context rt_ctx;
       lex::processor lp{ "" };
-      processor p{ rt_ctx, lp.begin(), lp.end() };
+      processor p{ lp.begin(), lp.end() };
       auto const r(p.next());
       CHECK(r.expect_ok().is_none());
     }
@@ -35,8 +33,7 @@ namespace jank::read::parse
     TEST_CASE("Nil")
     {
       lex::processor lp{ "nil" };
-      runtime::context rt_ctx;
-      processor p{ rt_ctx, lp.begin(), lp.end() };
+      processor p{ lp.begin(), lp.end() };
       auto const r(p.next());
       CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr, runtime::obj::nil::nil_const()));
       CHECK(r.expect_ok().unwrap().start == lex::token{ 0, 3, lex::token_kind::nil });
@@ -46,8 +43,7 @@ namespace jank::read::parse
     TEST_CASE("Boolean")
     {
       lex::processor lp{ "true false" };
-      runtime::context rt_ctx;
-      processor p{ rt_ctx, lp.begin(), lp.end() };
+      processor p{ lp.begin(), lp.end() };
       auto const t(p.next());
       CHECK(runtime::detail::equal(t.expect_ok().unwrap().ptr, make_box(true)));
       CHECK(t.expect_ok().unwrap().start == lex::token{ 0, 4, lex::token_kind::boolean, true });
@@ -62,8 +58,7 @@ namespace jank::read::parse
     TEST_CASE("Integer")
     {
       lex::processor lp{ "1234" };
-      runtime::context rt_ctx;
-      processor p{ rt_ctx, lp.begin(), lp.end() };
+      processor p{ lp.begin(), lp.end() };
       auto const r(p.next());
       CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr, make_box(1234)));
       CHECK(r.expect_ok().unwrap().start == lex::token{ 0, 4, lex::token_kind::integer, 1234ll });
@@ -73,8 +68,7 @@ namespace jank::read::parse
     TEST_CASE("Comments")
     {
       lex::processor lp{ ";meow \n1234 ; bar\n;\n\n" };
-      runtime::context rt_ctx;
-      processor p{ rt_ctx, lp.begin(), lp.end() };
+      processor p{ lp.begin(), lp.end() };
       auto const i(p.next());
       CHECK(runtime::detail::equal(i.expect_ok().unwrap().ptr, make_box(1234)));
 
@@ -85,8 +79,7 @@ namespace jank::read::parse
     TEST_CASE("Real")
     {
       lex::processor lp{ "12.34" };
-      runtime::context rt_ctx;
-      processor p{ rt_ctx, lp.begin(), lp.end() };
+      processor p{ lp.begin(), lp.end() };
       auto const r(p.next());
       CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr, make_box(12.34l)));
       CHECK(r.expect_ok().unwrap().start == lex::token{ 0, 5, lex::token_kind::real, 12.34l });
@@ -98,8 +91,7 @@ namespace jank::read::parse
       SUBCASE("Unescaped")
       {
         lex::processor lp{ R"("foo" "bar")" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
         for(auto const &s : { "foo", "bar" })
@@ -120,8 +112,7 @@ namespace jank::read::parse
       SUBCASE("Escaped")
       {
         lex::processor lp{ R"("foo\n" "\t\"bar\"")" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
         for(auto const &s : { "foo\n", "\t\"bar\"" })
@@ -146,8 +137,7 @@ namespace jank::read::parse
       SUBCASE("Unqualified")
       {
         lex::processor lp{ "foo bar spam" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
         for(auto const &s : { "foo", "bar", "spam" })
@@ -168,8 +158,7 @@ namespace jank::read::parse
       SUBCASE("Slash")
       {
         lex::processor lp{ "/" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
                                      make_box<runtime::obj::symbol>("", "/")));
@@ -180,11 +169,10 @@ namespace jank::read::parse
       SUBCASE("Qualified")
       {
         lex::processor lp{ "foo/foo foo.bar/bar spam.bar/spam" };
-        runtime::context rt_ctx;
-        rt_ctx.intern_ns(make_box<runtime::obj::symbol>("foo"));
-        rt_ctx.intern_ns(make_box<runtime::obj::symbol>("foo.bar"));
-        rt_ctx.intern_ns(make_box<runtime::obj::symbol>("spam.bar"));
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        __rt_ctx->intern_ns(make_box<runtime::obj::symbol>("foo"));
+        __rt_ctx->intern_ns(make_box<runtime::obj::symbol>("foo.bar"));
+        __rt_ctx->intern_ns(make_box<runtime::obj::symbol>("spam.bar"));
+        processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
         for(auto const &s : { std::make_pair("foo", "foo"),
@@ -211,10 +199,11 @@ namespace jank::read::parse
       SUBCASE("Qualified, aliased")
       {
         lex::processor lp{ "foo.bar/bar" };
-        runtime::context rt_ctx;
-        auto const meow(rt_ctx.intern_ns(make_box<runtime::obj::symbol>("meow")));
-        rt_ctx.current_ns()->add_alias(make_box<runtime::obj::symbol>("foo.bar"), meow).expect_ok();
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        auto const meow(__rt_ctx->intern_ns(make_box<runtime::obj::symbol>("meow")));
+        __rt_ctx->current_ns()
+          ->add_alias(make_box<runtime::obj::symbol>("foo.bar"), meow)
+          .expect_ok();
+        processor p{ lp.begin(), lp.end() };
         for(auto const &s : { std::make_pair("meow", "bar") })
         {
           auto const r(p.next());
@@ -225,9 +214,8 @@ namespace jank::read::parse
 
       SUBCASE("Qualified, non-existent ns")
       {
-        lex::processor lp{ "foo.bar/bar" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        lex::processor lp{ "foo.bar.non-existent/bar" };
+        processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(r.is_err());
       }
@@ -235,8 +223,7 @@ namespace jank::read::parse
       SUBCASE("Quoted")
       {
         lex::processor lp{ "'foo 'bar/spam 'foo.bar/bar" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
         for(auto const &s : { std::make_pair("", "foo"),
@@ -273,15 +260,14 @@ namespace jank::read::parse
       SUBCASE("Unqualified")
       {
         lex::processor lp{ ":foo :bar :spam" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
         for(auto const &s : { "foo", "bar", "spam" })
         {
           auto const r(p.next());
           CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       rt_ctx.intern_keyword(s).expect_ok()));
+                                       __rt_ctx->intern_keyword(s).expect_ok()));
 
           /* We add one for the colon. */
           auto const len(strlen(s) + 1);
@@ -296,8 +282,7 @@ namespace jank::read::parse
       SUBCASE("Qualified")
       {
         lex::processor lp{ ":foo/foo :foo.bar/bar :spam.bar/spam" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
         for(auto const &s : { std::make_pair("foo", "foo"),
@@ -306,7 +291,7 @@ namespace jank::read::parse
         {
           auto const r(p.next());
           CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       rt_ctx.intern_keyword(s.first, s.second).expect_ok()));
+                                       __rt_ctx->intern_keyword(s.first, s.second).expect_ok()));
 
           /* We add one for the colon and one for the slash. */
           auto const len(strlen(s.first) + strlen(s.second) + 2);
@@ -324,15 +309,14 @@ namespace jank::read::parse
       SUBCASE("Auto-resolved unqualified")
       {
         lex::processor lp{ "::foo ::spam" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
         for(auto const &s : { "foo", "spam" })
         {
           auto const r(p.next());
           CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       rt_ctx.intern_keyword("", s, false).expect_ok()));
+                                       __rt_ctx->intern_keyword("", s, false).expect_ok()));
 
           /* We add one for each colon. */
           auto const len(strlen(s) + 2);
@@ -346,9 +330,8 @@ namespace jank::read::parse
 
       SUBCASE("Auto-resolved qualified, missing alias")
       {
-        lex::processor lp{ "::foo/foo" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        lex::processor lp{ "::foo.not-aliased/foo" };
+        processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(r.is_err());
       }
@@ -356,14 +339,13 @@ namespace jank::read::parse
       SUBCASE("Auto-resolved qualified, with alias")
       {
         lex::processor lp{ "::foo/foo" };
-        runtime::context rt_ctx;
-        auto const foo_ns(rt_ctx.intern_ns(make_box<runtime::obj::symbol>("foo.bar.spam")));
-        auto const clojure_ns(rt_ctx.find_ns(make_box<runtime::obj::symbol>("clojure.core")));
+        auto const foo_ns(__rt_ctx->intern_ns(make_box<runtime::obj::symbol>("foo.bar.spam")));
+        auto const clojure_ns(__rt_ctx->find_ns(make_box<runtime::obj::symbol>("clojure.core")));
         clojure_ns.unwrap()->add_alias(make_box<runtime::obj::symbol>("foo"), foo_ns).expect_ok();
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                     rt_ctx.intern_keyword("foo.bar.spam", "foo").expect_ok()));
+                                     __rt_ctx->intern_keyword("foo.bar.spam", "foo").expect_ok()));
         CHECK(r.expect_ok().unwrap().start
               == lex::token{ 0, 9, lex::token_kind::keyword, ":foo/foo" });
         CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
@@ -375,8 +357,7 @@ namespace jank::read::parse
       SUBCASE("Empty")
       {
         lex::processor lp{ "() ( ) (  )" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
         for(size_t i{}; i < 3; ++i)
@@ -399,8 +380,7 @@ namespace jank::read::parse
       SUBCASE("Non-empty")
       {
         lex::processor lp{ "(1, 2, 3, 4) ( 2, 4, 6, 8 )" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
         for(size_t i{ 1 }; i < 3; ++i)
@@ -428,8 +408,7 @@ namespace jank::read::parse
       SUBCASE("Mixed")
       {
         lex::processor lp{ "(def foo-bar 1) foo-bar" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(runtime::detail::equal(
           r1.expect_ok().unwrap().ptr,
@@ -445,8 +424,7 @@ namespace jank::read::parse
       SUBCASE("Extra close")
       {
         lex::processor lp{ "1)" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(runtime::detail::equal(r1.expect_ok().unwrap().ptr, make_box(1)));
         auto const r2(p.next());
@@ -456,8 +434,7 @@ namespace jank::read::parse
       SUBCASE("Unterminated")
       {
         lex::processor lp{ "(1" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(r1.is_err());
       }
@@ -468,8 +445,7 @@ namespace jank::read::parse
       SUBCASE("Empty")
       {
         lex::processor lp{ "[] [ ] [  ]" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
         for(size_t i{}; i < 3; ++i)
@@ -492,8 +468,7 @@ namespace jank::read::parse
       SUBCASE("Non-empty")
       {
         lex::processor lp{ "[1, 2, 3, 4] [ 2, 4, 6, 8 ]" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
         for(size_t i{ 1 }; i < 3; ++i)
@@ -522,8 +497,7 @@ namespace jank::read::parse
       SUBCASE("Extra close")
       {
         lex::processor lp{ "1]" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(runtime::detail::equal(r1.expect_ok().unwrap().ptr, make_box(1)));
         auto const r2(p.next());
@@ -533,8 +507,7 @@ namespace jank::read::parse
       SUBCASE("Unterminated")
       {
         lex::processor lp{ "[1" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(r1.is_err());
       }
@@ -545,8 +518,7 @@ namespace jank::read::parse
       SUBCASE("Empty")
       {
         lex::processor lp{ "{} { } {,,}" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
         for(size_t i{}; i < 3; ++i)
@@ -569,8 +541,7 @@ namespace jank::read::parse
       SUBCASE("Non-empty")
       {
         lex::processor lp{ "{1 2, 3 4} { 2 4, 6 8 }" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
         for(size_t i{ 1 }; i < 3; ++i)
@@ -600,17 +571,16 @@ namespace jank::read::parse
       SUBCASE("Heterogeneous")
       {
         lex::processor lp{ R"({:foo true 1 :one "meow" "meow"})" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(runtime::detail::equal(
           r.expect_ok().unwrap().ptr,
           make_box<runtime::obj::persistent_array_map>(
             runtime::detail::in_place_unique{},
-            make_array_box<runtime::object_ptr>(rt_ctx.intern_keyword("foo").expect_ok(),
+            make_array_box<runtime::object_ptr>(__rt_ctx->intern_keyword("foo").expect_ok(),
                                                 make_box<runtime::obj::boolean>(true),
                                                 make_box<runtime::obj::integer>(1),
-                                                rt_ctx.intern_keyword("one").expect_ok(),
+                                                __rt_ctx->intern_keyword("one").expect_ok(),
                                                 make_box<runtime::obj::persistent_string>("meow"),
                                                 make_box<runtime::obj::persistent_string>("meow")),
             6)));
@@ -623,8 +593,7 @@ namespace jank::read::parse
       SUBCASE("Odd elements")
       {
         lex::processor lp{ "{1 2 3}" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(r1.is_err());
       }
@@ -632,11 +601,10 @@ namespace jank::read::parse
       SUBCASE("Extra close")
       {
         lex::processor lp{ ":foo}" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(runtime::detail::equal(r1.expect_ok().unwrap().ptr,
-                                     rt_ctx.intern_keyword("foo").expect_ok()));
+                                     __rt_ctx->intern_keyword("foo").expect_ok()));
         auto const r2(p.next());
         CHECK(r2.is_err());
       }
@@ -644,8 +612,7 @@ namespace jank::read::parse
       SUBCASE("Unterminated")
       {
         lex::processor lp{ "{1" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(r1.is_err());
       }
@@ -656,8 +623,7 @@ namespace jank::read::parse
       SUBCASE("No following meta value")
       {
         lex::processor lp{ "^" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(r1.is_err());
       }
@@ -665,8 +631,7 @@ namespace jank::read::parse
       SUBCASE("No following target value")
       {
         lex::processor lp{ "^:foo" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(r1.is_err());
       }
@@ -674,22 +639,20 @@ namespace jank::read::parse
       SUBCASE("Keyword meta for a metadatable target")
       {
         lex::processor lp{ "^:foo {}" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
                                      runtime::obj::persistent_array_map::empty()));
         CHECK(runtime::detail::equal(runtime::meta(r.expect_ok().unwrap().ptr),
                                      runtime::obj::persistent_array_map::create_unique(
-                                       rt_ctx.intern_keyword("foo").expect_ok(),
+                                       __rt_ctx->intern_keyword("foo").expect_ok(),
                                        runtime::obj::boolean::true_const())));
       }
 
       SUBCASE("Keyword meta for non-metadatable target")
       {
         lex::processor lp{ "^:foo nil" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(r1.is_err());
       }
@@ -697,22 +660,20 @@ namespace jank::read::parse
       SUBCASE("Map meta for a metadatable target")
       {
         lex::processor lp{ "^{:foo :bar} []" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
                                      runtime::obj::persistent_vector::empty()));
         CHECK(runtime::detail::equal(runtime::meta(r.expect_ok().unwrap().ptr),
                                      runtime::obj::persistent_array_map::create_unique(
-                                       rt_ctx.intern_keyword("foo").expect_ok(),
-                                       rt_ctx.intern_keyword("bar").expect_ok())));
+                                       __rt_ctx->intern_keyword("foo").expect_ok(),
+                                       __rt_ctx->intern_keyword("bar").expect_ok())));
       }
 
       SUBCASE("Map meta for non-metadatable target")
       {
         lex::processor lp{ "^{:foo :bar} 7.5" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(r1.is_err());
       }
@@ -720,31 +681,29 @@ namespace jank::read::parse
       SUBCASE("Multiple meta hints for a metadatable target")
       {
         lex::processor lp{ "^{:foo :bar} ^:meow ()" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
                                      runtime::obj::persistent_list::empty()));
         CHECK(runtime::detail::equal(runtime::meta(r.expect_ok().unwrap().ptr),
                                      runtime::obj::persistent_array_map::create_unique(
-                                       rt_ctx.intern_keyword("foo").expect_ok(),
-                                       rt_ctx.intern_keyword("bar").expect_ok(),
-                                       rt_ctx.intern_keyword("meow").expect_ok(),
+                                       __rt_ctx->intern_keyword("foo").expect_ok(),
+                                       __rt_ctx->intern_keyword("bar").expect_ok(),
+                                       __rt_ctx->intern_keyword("meow").expect_ok(),
                                        runtime::obj::boolean::true_const())));
       }
 
       SUBCASE("Nested hints")
       {
         lex::processor lp{ "^{:foo ^:meow 'bar} []" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
                                      runtime::obj::persistent_vector::empty()));
         CHECK(runtime::detail::equal(
           runtime::meta(r.expect_ok().unwrap().ptr),
           runtime::obj::persistent_array_map::create_unique(
-            rt_ctx.intern_keyword("foo").expect_ok(),
+            __rt_ctx->intern_keyword("foo").expect_ok(),
             make_box<runtime::obj::persistent_list>(std::in_place,
                                                     make_box<runtime::obj::symbol>("quote"),
                                                     make_box<runtime::obj::symbol>("bar")))));
@@ -753,8 +712,7 @@ namespace jank::read::parse
       SUBCASE("Within a call")
       {
         lex::processor lp{ "(str ^:foo #{})" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(runtime::detail::equal(
           r.expect_ok().unwrap().ptr,
@@ -768,7 +726,7 @@ namespace jank::read::parse
               .first()
               .unwrap()),
           runtime::obj::persistent_array_map::create_unique(
-            rt_ctx.intern_keyword("foo").expect_ok(),
+            __rt_ctx->intern_keyword("foo").expect_ok(),
             runtime::obj::boolean::true_const())));
       }
     }
@@ -778,8 +736,7 @@ namespace jank::read::parse
       SUBCASE("No following value")
       {
         lex::processor lp{ "#" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(r1.is_err());
       }
@@ -787,8 +744,7 @@ namespace jank::read::parse
       SUBCASE("Unsupported following value")
       {
         lex::processor lp{ "#[]" };
-        runtime::context rt_ctx;
-        processor p{ rt_ctx, lp.begin(), lp.end() };
+        processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(r1.is_err());
       }
@@ -798,8 +754,7 @@ namespace jank::read::parse
         SUBCASE("Empty")
         {
           lex::processor lp{ "#{}" };
-          runtime::context rt_ctx;
-          processor p{ rt_ctx, lp.begin(), lp.end() };
+          processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
           CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
                                        runtime::obj::persistent_set::empty()));
@@ -808,8 +763,7 @@ namespace jank::read::parse
         SUBCASE("Non-empty")
         {
           lex::processor lp{ "#{1}" };
-          runtime::context rt_ctx;
-          processor p{ rt_ctx, lp.begin(), lp.end() };
+          processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
           CHECK(runtime::detail::equal(
             r.expect_ok().unwrap().ptr,
@@ -819,8 +773,7 @@ namespace jank::read::parse
         SUBCASE("Nested")
         {
           lex::processor lp{ "#{1, #{2}}" };
-          runtime::context rt_ctx;
-          processor p{ rt_ctx, lp.begin(), lp.end() };
+          processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
           CHECK(runtime::detail::equal(
             r.expect_ok().unwrap().ptr,
@@ -836,8 +789,7 @@ namespace jank::read::parse
         SUBCASE("EOF")
         {
           lex::processor lp{ "#_" };
-          runtime::context rt_ctx;
-          processor p{ rt_ctx, lp.begin(), lp.end() };
+          processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
           CHECK(r.is_err());
         }
@@ -845,8 +797,7 @@ namespace jank::read::parse
         SUBCASE("Other reader macro")
         {
           lex::processor lp{ "#_#{1} #{2}" };
-          runtime::context rt_ctx;
-          processor p{ rt_ctx, lp.begin(), lp.end() };
+          processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
           CHECK(runtime::detail::equal(
             r.expect_ok().unwrap().ptr,
@@ -856,8 +807,7 @@ namespace jank::read::parse
         SUBCASE("Adjacent")
         {
           lex::processor lp{ "#_#_1 2 3" };
-          runtime::context rt_ctx;
-          processor p{ rt_ctx, lp.begin(), lp.end() };
+          processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
           CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr, make_box(3)));
         }
@@ -865,8 +815,7 @@ namespace jank::read::parse
         SUBCASE("Number")
         {
           lex::processor lp{ "#_1.23 \"ok\"" };
-          runtime::context rt_ctx;
-          processor p{ rt_ctx, lp.begin(), lp.end() };
+          processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
           CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr, make_box("ok")));
         }
@@ -874,8 +823,7 @@ namespace jank::read::parse
         SUBCASE("Invalid form")
         {
           lex::processor lp{ "#_{1.23} \"not ok\"" };
-          runtime::context rt_ctx;
-          processor p{ rt_ctx, lp.begin(), lp.end() };
+          processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
           CHECK(r.is_err());
         }
@@ -886,8 +834,7 @@ namespace jank::read::parse
         SUBCASE("EOF")
         {
           lex::processor lp{ "#?" };
-          runtime::context rt_ctx;
-          processor p{ rt_ctx, lp.begin(), lp.end() };
+          processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
           CHECK(r.is_err());
         }
@@ -895,8 +842,7 @@ namespace jank::read::parse
         SUBCASE("Non-list after")
         {
           lex::processor lp{ "#?[]" };
-          runtime::context rt_ctx;
-          processor p{ rt_ctx, lp.begin(), lp.end() };
+          processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
           CHECK(r.is_err());
         }
@@ -904,8 +850,7 @@ namespace jank::read::parse
         SUBCASE("No match")
         {
           lex::processor lp{ "[#?(:clj 0 :cljs 1) 9]" };
-          runtime::context rt_ctx;
-          processor p{ rt_ctx, lp.begin(), lp.end() };
+          processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
           CHECK(runtime::detail::equal(
             r.expect_ok().unwrap().ptr,
@@ -915,8 +860,7 @@ namespace jank::read::parse
         SUBCASE("Default match")
         {
           lex::processor lp{ "[#?(:clj 0 :cljs 1 :default 8) 9]" };
-          runtime::context rt_ctx;
-          processor p{ rt_ctx, lp.begin(), lp.end() };
+          processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
           CHECK(runtime::detail::equal(
             r.expect_ok().unwrap().ptr,
@@ -926,8 +870,7 @@ namespace jank::read::parse
         SUBCASE("jank match")
         {
           lex::processor lp{ "[#?(:clj 0 :cljs 1 :jank 7 :default 8) 9]" };
-          runtime::context rt_ctx;
-          processor p{ rt_ctx, lp.begin(), lp.end() };
+          processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
           CHECK(runtime::detail::equal(
             r.expect_ok().unwrap().ptr,
@@ -937,8 +880,7 @@ namespace jank::read::parse
         SUBCASE("First match picked")
         {
           lex::processor lp{ "[#?(:default -1 :clj 0 :cljs 1 :jank 7 :default 8) 9]" };
-          runtime::context rt_ctx;
-          processor p{ rt_ctx, lp.begin(), lp.end() };
+          processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
           CHECK(runtime::detail::equal(
             r.expect_ok().unwrap().ptr,
@@ -948,8 +890,7 @@ namespace jank::read::parse
         SUBCASE("Nested")
         {
           lex::processor lp{ "[#?(:clj 0 :cljs 1 :jank #?(:default 5) :default 8) 9]" };
-          runtime::context rt_ctx;
-          processor p{ rt_ctx, lp.begin(), lp.end() };
+          processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
           CHECK(runtime::detail::equal(
             r.expect_ok().unwrap().ptr,
@@ -959,8 +900,7 @@ namespace jank::read::parse
         SUBCASE("Other reader macro")
         {
           lex::processor lp{ "#?(:default #{1})" };
-          runtime::context rt_ctx;
-          processor p{ rt_ctx, lp.begin(), lp.end() };
+          processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
           CHECK(runtime::detail::equal(
             r.expect_ok().unwrap().ptr,
@@ -972,8 +912,7 @@ namespace jank::read::parse
           SUBCASE("Not seqable")
           {
             lex::processor lp{ "#?@(:jank 2)" };
-            runtime::context rt_ctx;
-            processor p{ rt_ctx, lp.begin(), lp.end() };
+            processor p{ lp.begin(), lp.end() };
             auto const r(p.next());
             CHECK(r.is_err());
           }
@@ -981,8 +920,7 @@ namespace jank::read::parse
           SUBCASE("Top-level, empty")
           {
             lex::processor lp{ "#?@(:jank [])" };
-            runtime::context rt_ctx;
-            processor p{ rt_ctx, lp.begin(), lp.end() };
+            processor p{ lp.begin(), lp.end() };
             auto const r(p.next());
             CHECK(r.is_err());
           }
@@ -990,8 +928,7 @@ namespace jank::read::parse
           SUBCASE("Top-level, non-empty")
           {
             lex::processor lp{ "#?@(:jank [1])" };
-            runtime::context rt_ctx;
-            processor p{ rt_ctx, lp.begin(), lp.end() };
+            processor p{ lp.begin(), lp.end() };
             auto const r(p.next());
             CHECK(r.is_err());
           }
@@ -1001,8 +938,7 @@ namespace jank::read::parse
           SUBCASE("Unordered sequence")
           {
             lex::processor lp{ "(#?@(:jank #{1 2}))" };
-            runtime::context rt_ctx;
-            processor p{ rt_ctx, lp.begin(), lp.end() };
+            processor p{ lp.begin(), lp.end() };
             auto const r(p.next());
             CHECK(runtime::detail::equal(
               r.expect_ok().unwrap().ptr,
@@ -1012,8 +948,7 @@ namespace jank::read::parse
           SUBCASE("Nested")
           {
             lex::processor lp{ "[#?@(:jank [1 #?@(:clj [1.2 1.3]) 2 #?@(:default [3 4]) 5 6])]" };
-            runtime::context rt_ctx;
-            processor p{ rt_ctx, lp.begin(), lp.end() };
+            processor p{ lp.begin(), lp.end() };
             auto const r(p.next());
             CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
                                          make_box<runtime::obj::persistent_vector>(std::in_place,
@@ -1028,8 +963,7 @@ namespace jank::read::parse
           SUBCASE("Within a set, non-empty splice")
           {
             lex::processor lp{ "#{0 #?@(:default [1]) 2}" };
-            runtime::context rt_ctx;
-            processor p{ rt_ctx, lp.begin(), lp.end() };
+            processor p{ lp.begin(), lp.end() };
             auto const r(p.next());
             CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
                                          make_box<runtime::obj::persistent_set>(std::in_place,
