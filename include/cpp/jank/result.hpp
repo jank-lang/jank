@@ -223,7 +223,7 @@ namespace jank
     }
 
     constexpr result(detail::result<false, E> &&e)
-      : data{ std::move(e.data) }
+      : data{ std::move(e).data }
     {
     }
 

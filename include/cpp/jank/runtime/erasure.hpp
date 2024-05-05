@@ -97,7 +97,7 @@ namespace jank::runtime
   template <typename T, typename F, typename... Args>
   requires behavior::objectable<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr auto visit_object(F &&fn, native_box<T const> const not_erased, Args &&...args)
+  constexpr auto visit_object(F const &fn, native_box<T const> const not_erased, Args &&...args)
   {
     return fn(const_cast<T *>(&not_erased->base), std::forward<Args>(args)...);
   }
@@ -108,7 +108,7 @@ namespace jank::runtime
   template <typename F, typename... Args>
   requires visitable<F, Args...>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr auto visit_object(F &&fn, object const * const const_erased, Args &&...args)
+  constexpr auto visit_object(F const &fn, object const * const const_erased, Args &&...args)
   {
     assert(const_erased);
     auto * const erased(const_cast<object *>(const_erased));
@@ -322,7 +322,7 @@ namespace jank::runtime
   requires visitable<F1, Args...>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr auto
-  visit_seqable(F1 &&fn, F2 &&else_fn, object const * const const_erased, Args &&...args)
+  visit_seqable(F1 const &fn, F2 const &else_fn, object const * const const_erased, Args &&...args)
   {
     assert(const_erased);
     auto * const erased(const_cast<object *>(const_erased));

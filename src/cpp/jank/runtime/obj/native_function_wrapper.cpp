@@ -172,4 +172,9 @@ namespace jank::runtime
     ret->meta = meta;
     return ret;
   }
+
+  object_ptr obj::native_function_wrapper::this_object_ptr() const
+  {
+    return &const_cast<obj::native_function_wrapper *>(this)->base;
+  }
 }

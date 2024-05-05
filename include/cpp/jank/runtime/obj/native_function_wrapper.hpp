@@ -48,8 +48,8 @@ namespace jank::runtime
   template <size_t Arity>
   struct invalid_arity : std::runtime_error
   {
-    invalid_arity()
-      : std::runtime_error{ fmt::format("invalid call to fn with {} args provided", Arity) }
+    invalid_arity(native_persistent_string const &name)
+      : std::runtime_error{ fmt::format("invalid call to {} with {} args provided", name, Arity) }
     {
     }
   };
@@ -59,7 +59,7 @@ namespace jank::runtime
     : gc
     , behavior::callable
   {
-    static constexpr native_bool pointer_free{ true };
+    static constexpr native_bool pointer_free{ false };
 
     static_object() = default;
     static_object(static_object &&) = default;
@@ -112,6 +112,8 @@ namespace jank::runtime
                     object_ptr,
                     object_ptr,
                     object_ptr) const final;
+
+    object_ptr this_object_ptr() const final;
 
     /* behavior::metadatable */
     native_box<static_object> with_meta(object_ptr m) const;

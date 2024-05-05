@@ -136,6 +136,10 @@ namespace jank::runtime
                               object_ptr,
                               object_ptr) const;
 
+      /* Callables need a way to get back to the root object so we can do helpful
+       * error reporting on failed calls. */
+      virtual object_ptr this_object_ptr() const = 0;
+
       /* When dynamically calling a function, we need to know three things:
        *
        * 1. Is the function variadic?

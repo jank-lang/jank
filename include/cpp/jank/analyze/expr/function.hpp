@@ -69,6 +69,7 @@ namespace jank::analyze::expr
     native_persistent_string name;
     native_persistent_string unique_name;
     native_vector<function_arity<E>> arities;
+    runtime::obj::persistent_hash_map_ptr meta{};
 
     runtime::object_ptr to_runtime_data() const
     {

@@ -26,16 +26,19 @@
 
 namespace jank
 {
-  void run(util::cli::options const &opts, runtime::context &rt_ctx)
+  void run(util::cli::options const &opts)
   {
+    using namespace jank;
+    using namespace jank::runtime;
+
     {
       profile::timer timer{ "require clojure.core" };
-      rt_ctx.load_module("/clojure.core").expect_ok();
+      __rt_ctx->load_module("/clojure.core").expect_ok();
     }
 
     {
       profile::timer timer{ "eval user code" };
-      std::cout << runtime::detail::to_string(rt_ctx.eval_file(opts.target_file)) << std::endl;
+      std::cout << runtime::detail::to_string(__rt_ctx->eval_file(opts.target_file)) << std::endl;
     }
 
     //ankerl::nanobench::Config config;
@@ -55,18 +58,21 @@ namespace jank
     //);
   }
 
-  void run_main(util::cli::options const &opts, runtime::context &rt_ctx)
+  void run_main(util::cli::options const &opts)
   {
+    using namespace jank;
+    using namespace jank::runtime;
+
     {
       profile::timer timer{ "require clojure.core" };
-      rt_ctx.load_module("/clojure.core").expect_ok();
+      __rt_ctx->load_module("/clojure.core").expect_ok();
     }
 
     {
       profile::timer timer{ "eval user code" };
-      rt_ctx.load_module("/" + opts.target_module).expect_ok();
+      __rt_ctx->load_module("/" + opts.target_module).expect_ok();
 
-      auto const main_var(rt_ctx.find_var(opts.target_module, "-main").unwrap_or(nullptr));
+      auto const main_var(__rt_ctx->find_var(opts.target_module, "-main").unwrap_or(nullptr));
       if(main_var)
       {
         /* TODO: Handle the case when `-main` accepts no arg. */
@@ -86,14 +92,20 @@ namespace jank
     }
   }
 
-  void compile(util::cli::options const &opts, runtime::context &rt_ctx)
+  void compile(util::cli::options const &opts)
   {
-    //rt_ctx.load_module("/clojure.core").expect_ok();
-    rt_ctx.compile_module(opts.target_ns).expect_ok();
+    using namespace jank;
+    using namespace jank::runtime;
+
+    //__rt_ctx.load_module("/clojure.core").expect_ok();
+    __rt_ctx->compile_module(opts.target_ns).expect_ok();
   }
 
-  void repl(util::cli::options const &opts, runtime::context &rt_ctx)
+  void repl(util::cli::options const &opts)
   {
+    using namespace jank;
+    using namespace jank::runtime;
+
     /* TODO: REPL server. */
     if(opts.repl_server)
     {
@@ -102,7 +114,7 @@ namespace jank
 
     {
       profile::timer timer{ "require clojure.core" };
-      rt_ctx.load_module("/clojure.core").expect_ok();
+      __rt_ctx->load_module("/clojure.core").expect_ok();
     }
 
     /* By default, RL will do tab completion for files. We disable that here. */
@@ -125,7 +137,7 @@ namespace jank
       add_history(line.data());
       try
       {
-        auto const res(rt_ctx.eval_string(line));
+        auto const res(__rt_ctx->eval_string(line));
         fmt::println("");
         fmt::println("{}", runtime::detail::to_string(res));
       }
@@ -155,6 +167,7 @@ int main(int const argc, char const **argv)
 try
 {
   using namespace jank;
+  using namespace jank::runtime;
 
   /* The GC needs to enabled even before arg parsing, since our native types,
    * like strings, use the GC for allocations. It can still be configured later. */
@@ -176,21 +189,21 @@ try
   profile::configure(opts);
   profile::timer timer{ "main" };
 
-  runtime::context rt_ctx{ opts };
+  __rt_ctx = new(GC) runtime::context{ opts };
 
   switch(opts.command)
   {
     case util::cli::command::run:
-      run(opts, rt_ctx);
+      run(opts);
       break;
     case util::cli::command::compile:
-      compile(opts, rt_ctx);
+      compile(opts);
       break;
     case util::cli::command::repl:
-      repl(opts, rt_ctx);
+      repl(opts);
       break;
     case util::cli::command::run_main:
-      run_main(opts, rt_ctx);
+      run_main(opts);
       break;
   }
 }

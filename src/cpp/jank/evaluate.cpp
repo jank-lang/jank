@@ -40,6 +40,7 @@ namespace jank::evaluate
     wrapper.frame = expr.frame;
     wrapper.name = "repl_fn";
     wrapper.unique_name = runtime::context::unique_string(wrapper.name);
+    wrapper.meta = runtime::obj::persistent_hash_map::empty();
 
     return wrapper;
   }

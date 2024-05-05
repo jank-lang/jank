@@ -381,20 +381,17 @@
                    ~{ o }
                  );")))
 
-(def let
+(def ^{:macro true} let
   (fn* let [&form &env & decl]
     (cons 'let* decl)))
-(reset-meta! (var let) {:macro true})
 
-(def loop
+(def ^{:macro true} loop
   (fn* loop [&form &env & decl]
     (cons 'loop* decl)))
-(reset-meta! (var loop) {:macro true})
 
-(def fn
+(def ^{:macro true} fn
   (fn* fn [&form &env & decl]
     (with-meta (cons 'fn* decl) (meta &form))))
-(reset-meta! (var fn) {:macro true})
 
 ; TODO: Private
 (def sigs
@@ -423,7 +420,12 @@
         (list (asig fdecl))))))
 
 ;; Macros.
-(def defn
+(def ^{:macro true
+       :doc "Same as (def name (fn [params* ] exprs*)) or (def
+            name (fn ([params* ] exprs*)+)) with any doc-string or attrs added
+            to the var metadata. prepost-map defines a map with optional keys
+            :pre and :post that contain collections of pre or post conditions."}
+  defn
   (fn* defn [&form &env name & fdecl]
     ;; Note: Cannot delegate this check to def because of the call to (with-meta name ..)
     (if (native/raw "__value = make_box(~{ name }->type != object_type::symbol);")
@@ -465,13 +467,12 @@
                  m))
            m (conj (if (meta name) (meta name) {}) m)]
       (list 'def (with-meta name m)
-            (with-meta (cons `fn fdecl) {:rettag (:tag m)})))))
-(reset-meta! (var defn) {:macro true})
+            (with-meta (cons `fn (cons name fdecl)) {:rettag (:tag m)})))))
 
 (defn macroexpand-1 [form]
-  (native/raw "__value = __rt_ctx.macroexpand1(~{ form });"))
+  (native/raw "__value = __rt_ctx->macroexpand1(~{ form });"))
 (defn macroexpand [form]
-  (native/raw "__value = __rt_ctx.macroexpand(~{ form });"))
+  (native/raw "__value = __rt_ctx->macroexpand(~{ form });"))
 
 ; Returns a new symbol with a unique name. If a prefix string is
 ; supplied, the name is prefix# where # is some unique number. If
@@ -482,10 +483,12 @@
   ([prefix]
    (native/raw "__value = make_box<obj::symbol>(runtime::context::unique_symbol(runtime::detail::to_string(~{ prefix })));")))
 
-(defn defmacro
-  "Like defn, but the resulting function name is declared as a
-  macro and will be used as a macro by the compiler when it is
-  called."
+(defn
+  ^{:macro true
+    :doc "Like defn, but the resulting function name is declared as a
+         macro and will be used as a macro by the compiler when it is
+         called."}
+  defmacro
   [&form &env name & args]
   (let [prefix (loop [p (list name) args args]
                  (let [f (first args)]
@@ -525,7 +528,6 @@
                                                     :macro
                                                     true))
           (list 'var name))))
-(reset-meta! (var defmacro) {:macro true})
 
 (defmacro defn-
   "Same as defn, yielding non-public def."
@@ -1018,7 +1020,10 @@
 
 ; Primitives.
 ;; Arithmetic.
-(defn +
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  +
   ([]
    0)
   ([x]
@@ -1030,10 +1035,11 @@
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
-(reset-meta! (var +) {:arities {2 {:supports-unboxed-input? true
-                                   :unboxed-output? true}}})
 
-(defn -
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  -
   ([x]
    (- 0 x))
   ([l r]
@@ -1043,10 +1049,11 @@
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
-(reset-meta! (var -) {:arities {2 {:supports-unboxed-input? true
-                                   :unboxed-output? true}}})
 
-(defn *
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  *
   ([]
    1)
   ([x]
@@ -1058,14 +1065,14 @@
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
-(reset-meta! (var *) {:arities {2 {:supports-unboxed-input? true
-                                   :unboxed-output? true}}})
 
 ; TODO: Symbol creation for generated names related to instances of this
 ; will result in a name like `/384`, which gets parsed as `384`. Fix the parsing
 ; in the symbol string separation fn.
-(def /)
-(def /
+(def
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  /
   (fn _SLASH_
     ([x]
      (/ 1 x))
@@ -1076,8 +1083,6 @@
        (if (empty? args)
          res
          (recur res (first args) (next args)))))))
-(reset-meta! (var /) {:arities {2 {:supports-unboxed-input? true
-                                   :unboxed-output? true}}})
 
 (defn =
   ([x]
@@ -1099,7 +1104,10 @@
   ([x y & more]
    (not (apply = x y more))))
 
-(defn <
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  <
   ([x]
    true)
   ([l r]
@@ -1110,10 +1118,11 @@
        (recur r (first args) (next args))
        (native/raw "__value = make_box(runtime::lt(~{ r }, ~{ (first args) }));"))
      false)))
-(reset-meta! (var <) {:arities {2 {:supports-unboxed-input? true
-                                   :unboxed-output? true}}})
 
-(defn <=
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  <=
   ([x]
    true)
   ([l r]
@@ -1124,10 +1133,11 @@
        (recur r (first args) (next args))
        (native/raw "__value = make_box(runtime::lte(~{ r }, ~{ (first args) }));"))
      false)))
-(reset-meta! (var <=) {:arities {2 {:supports-unboxed-input? true
-                                    :unboxed-output? true}}})
 
-(defn >
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  >
   ([x]
    true)
   ([l r]
@@ -1138,10 +1148,11 @@
        (recur r (first args) (next args))
        (native/raw "__value = make_box(runtime::lt(~{ (first args) }, ~{ r }));"))
      false)))
-(reset-meta! (var >) {:arities {2 {:supports-unboxed-input? true
-                                   :unboxed-output? true}}})
 
-(defn >=
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  >=
   ([x]
    true)
   ([l r]
@@ -1152,10 +1163,11 @@
        (recur r (first args) (next args))
        (native/raw "__value = make_box(runtime::lte(~{ (first args) }, ~{ r }));"))
      false)))
-(reset-meta! (var >=) {:arities {2 {:supports-unboxed-input? true
-                                    :unboxed-output? true}}})
 
-(defn min
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  min
   ([x]
    x)
   ([l r]
@@ -1165,10 +1177,11 @@
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
-(reset-meta! (var min) {:arities {2 {:supports-unboxed-input? true
-                                     :unboxed-output? true}}})
 
-(defn max
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  max
   ([x]
    x)
   ([l r]
@@ -1178,8 +1191,6 @@
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
-(reset-meta! (var max) {:arities {2 {:supports-unboxed-input? true
-                                     :unboxed-output? true}}})
 
 (defn inc [n]
   (native/raw "__value = runtime::inc(~{ n });"))
@@ -1262,13 +1273,14 @@
                );"))
 
 ;; Random.
-(defn rand
+(defn
+  ^{:arities {0 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  rand
   ([]
    (native/raw "__value = make_box(jank::runtime::rand());"))
   ([n]
    (* (rand) n)))
-(reset-meta! (var rand) {:arities {0 {:supports-unboxed-input? true
-                                      :unboxed-output? true}}})
 
 ; Strings.
 
@@ -1872,17 +1884,17 @@
 ;     (finally
 ;       (pop-thread-bindings)))
 (defn push-thread-bindings [bindings]
-  (native/raw "__rt_ctx.push_thread_bindings(~{ bindings }).expect_ok();"))
+  (native/raw "__rt_ctx->push_thread_bindings(~{ bindings }).expect_ok();"))
 
 ; Pop one set of bindings pushed with push-binding before. It is an error to
 ; pop bindings without pushing before.
 (defn pop-thread-bindings []
-  (native/raw "__rt_ctx.pop_thread_bindings().expect_ok();"))
+  (native/raw "__rt_ctx->pop_thread_bindings().expect_ok();"))
 
 ; Get a map with the Var/value pairs which is currently in effect for the
 ; current thread.
 (defn get-thread-bindings []
-  (native/raw "__value = __rt_ctx.get_thread_bindings();"))
+  (native/raw "__value = __rt_ctx->get_thread_bindings();"))
 
 ; binding => var-symbol init-expr
 ;
@@ -1941,9 +1953,9 @@
   ([name]
    (if (keyword? name)
      name
-     (native/raw "__value = __rt_ctx.intern_keyword(runtime::detail::to_string(~{ name })).expect_ok();")))
+     (native/raw "__value = __rt_ctx->intern_keyword(runtime::detail::to_string(~{ name })).expect_ok();")))
   ([ns name]
-   (native/raw "__value = __rt_ctx.intern_keyword
+   (native/raw "__value = __rt_ctx->intern_keyword
                 (
                   runtime::detail::to_string(~{ ns }),
                   runtime::detail::to_string(~{ name })
@@ -3012,25 +3024,28 @@
 (defn tan [o]
   (native/raw "__value = make_box(std::tan(runtime::detail::to_real(~{ o })));"))
 
-(defn sqrt [o]
+(defn
+  ^{:arities {1 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  sqrt [o]
   (native/raw "__value = make_box(std::sqrt(runtime::detail::to_real(~{ o })));"))
-(reset-meta! (var sqrt) {:arities {1 {:supports-unboxed-input? true
-                                      :unboxed-output? true}}})
 
-(defn abs [o]
+(defn
+  ^{:arities {1 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  abs [o]
   (native/raw "__value = runtime::abs(~{ o });"))
-(reset-meta! (var abs) {:arities {1 {:supports-unboxed-input? true
-                                     :unboxed-output? true}}})
 
-(defn pow [x y]
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  pow [x y]
   (native/raw "__value = make_box(std::pow(runtime::detail::to_real(~{ x }), runtime::detail::to_real(~{ y })));"))
-(reset-meta! (var pow) {:arities {2 {:supports-unboxed-input? true
-                                     :unboxed-output? true}}})
 
 ; Namespaces.
 (defn in-ns [sym]
   (if (symbol? sym)
-    (native/raw "__rt_ctx.current_ns_var->set(__rt_ctx.intern_ns(expect_object<obj::symbol>(sym))).expect_ok();")
+    (native/raw "__rt_ctx->current_ns_var->set(__rt_ctx->intern_ns(expect_object<obj::symbol>(sym))).expect_ok();")
     (throw "argument to in-ns must be a symbol")))
 
 ; Vars.
@@ -3044,17 +3059,17 @@
 ; Namespaces (again).
 (defn create-ns [sym]
   (assert (symbol? sym))
-  (native/raw "__value = __rt_ctx.intern_ns(expect_object<obj::symbol>(~{ sym }));"))
+  (native/raw "__value = __rt_ctx->intern_ns(expect_object<obj::symbol>(~{ sym }));"))
 
 (defn find-ns [sym]
   (assert (symbol? sym))
-  (native/raw "__value = __rt_ctx.find_ns(expect_object<obj::symbol>(~{ sym })).unwrap_or(nullptr);
+  (native/raw "__value = __rt_ctx->find_ns(expect_object<obj::symbol>(~{ sym })).unwrap_or(nullptr);
                if(!__value)
                { __value = obj::nil::nil_const(); }"))
 
 (defn remove-ns [sym]
   (assert (symbol? sym))
-  (native/raw "__value = __rt_ctx.remove_ns(expect_object<obj::symbol>(~{ sym })).unwrap_or(nullptr);
+  (native/raw "__value = __rt_ctx->remove_ns(expect_object<obj::symbol>(~{ sym })).unwrap_or(nullptr);
                if(!__value)
                { __value = obj::nil::nil_const(); }"))
 
@@ -3148,7 +3163,7 @@
     nil
     (let [path (first paths)]
       ; TODO: Check for cyclic deps, once we have dynamic vars.
-      (native/raw "__rt_ctx.load_module(runtime::detail::to_string(~{ path })).expect_ok();")
+      (native/raw "__rt_ctx->load_module(runtime::detail::to_string(~{ path })).expect_ok();")
       (recur (rest paths)))))
 
 ; Loads a lib given its name. If `need-ns?`, ensures that the associated
@@ -3191,7 +3206,7 @@
         as-alias (:as-alias opts)
         ; TODO: Dynamic var
         ;loaded (contains? @*loaded-libs* lib)
-        loaded? (native/raw "__value = make_box(__rt_ctx.module_loader.is_loaded(runtime::detail::to_string(~{ lib })));")
+        loaded? (native/raw "__value = make_box(__rt_ctx->module_loader.is_loaded(runtime::detail::to_string(~{ lib })));")
         need-ns? (or as use)
         load (cond reload-all load-all
                    reload load-one
@@ -3239,7 +3254,7 @@
       (apply load-lib (prependss arg opts)))))
 
 (defn compile [path]
-  (native/raw "__rt_ctx.compile_module(runtime::detail::to_string(~{ path })).expect_ok();"))
+  (native/raw "__rt_ctx->compile_module(runtime::detail::to_string(~{ path })).expect_ok();"))
 
 (defn require [& args]
   (apply load-libs :require args))
@@ -3272,7 +3287,7 @@
           (list 'if (list '= (list 'quote name) (list 'quote 'clojure.core))
             'nil
             (list 'let (vector 'name (list 'quote name))
-              (list 'native/raw "__rt_ctx.module_loader.set_loaded(runtime::detail::to_string(~{ name }));")
+              (list 'native/raw "__rt_ctx->module_loader.set_loaded(runtime::detail::to_string(~{ name }));")
               ; TODO: Dynamic vars
               ;(dosync (commute @#'*loaded-libs* conj '~name))
               'nil))

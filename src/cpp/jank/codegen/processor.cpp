@@ -188,10 +188,11 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, runtime::obj::keyword>)
           {
-            fmt::format_to(inserter,
-                           R"(__rt_ctx.intern_keyword("{}", "{}", true).expect_ok())",
-                           typed_o->sym.ns,
-                           typed_o->sym.name);
+            fmt::format_to(
+              inserter,
+              R"(jank::runtime::__rt_ctx->intern_keyword("{}", "{}", true).expect_ok())",
+              typed_o->sym.ns,
+              typed_o->sym.name);
           }
           else if constexpr(std::same_as<T, runtime::obj::persistent_string>)
           {
@@ -1638,7 +1639,6 @@ namespace jank::codegen
                    R"(
         struct {0} : jank::runtime::obj::jit_function
         {{
-          jank::runtime::context &__rt_ctx;
       )",
                    runtime::munge(struct_name.name));
 
@@ -1702,10 +1702,9 @@ namespace jank::codegen
 
     {
       native_set<native_integer> used_captures;
-      fmt::format_to(inserter,
-                     "{0}(jank::runtime::context &__rt_ctx",
-                     runtime::munge(struct_name.name));
+      fmt::format_to(inserter, "{0}(", runtime::munge(struct_name.name));
 
+      native_bool need_comma{};
       for(auto const &arity : root_fn.arities)
       {
         for(auto const &v : arity.frame->captures)
@@ -1718,15 +1717,19 @@ namespace jank::codegen
 
           /* TODO: More useful types here. */
           fmt::format_to(inserter,
-                         ", jank::runtime::object_ptr {0}",
+                         "{} jank::runtime::object_ptr {}",
+                         (need_comma ? "," : ""),
                          runtime::munge(v.second.native_name));
+          need_comma = true;
         }
       }
     }
 
     {
       native_set<native_integer> used_vars, used_constants, used_captures;
-      fmt::format_to(inserter, ") : __rt_ctx{{ __rt_ctx }}");
+      fmt::format_to(inserter, ") : jank::runtime::obj::jit_function{{ ");
+      detail::gen_constant(root_fn.meta, header_buffer, true);
+      fmt::format_to(inserter, "}}");
 
       for(auto const &arity : root_fn.arities)
       {
@@ -1738,11 +1741,12 @@ namespace jank::codegen
           }
           used_vars.emplace(v.second.native_name.to_hash());
 
-          fmt::format_to(inserter,
-                         R"(, {0}{{ __rt_ctx.intern_var("{1}", "{2}").expect_ok() }})",
-                         runtime::munge(v.second.native_name.name),
-                         v.second.var_name->ns,
-                         v.second.var_name->name);
+          fmt::format_to(
+            inserter,
+            R"(, {0}{{ jank::runtime::__rt_ctx->intern_var("{1}", "{2}").expect_ok() }})",
+            runtime::munge(v.second.native_name.name),
+            v.second.var_name->ns,
+            v.second.var_name->name);
         }
 
         for(auto const &v : arity.frame->lifted_constants)
@@ -1771,7 +1775,7 @@ namespace jank::codegen
       }
     }
 
-    fmt::format_to(inserter, "{{ }}");
+    fmt::format_to(inserter, "{{  }}");
   }
 
   void processor::build_body()
@@ -1903,19 +1907,20 @@ namespace jank::codegen
       {
         fmt::format_to(
           inserter,
-          "jank::make_box<{0}>(__rt_ctx",
+          "jank::make_box<{0}>(",
           runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name)));
       }
       else
       {
         fmt::format_to(
           inserter,
-          "{0}{{ __rt_ctx",
+          "{0}{{ ",
           runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name)));
         close = "}";
       }
 
       native_set<native_integer> used_captures;
+      native_bool need_comma{};
       for(auto const &arity : root_fn.arities)
       {
         for(auto const &v : arity.frame->captures)
@@ -1931,7 +1936,8 @@ namespace jank::codegen
            * of it, which we're capturing. We need to reach further for that. */
           auto const originating_local(root_fn.frame->find_local_or_capture(v.first));
           handle h{ originating_local.unwrap().binding };
-          fmt::format_to(inserter, ", {0}", h.str(true));
+          fmt::format_to(inserter, "{} {}", (need_comma ? "," : ""), h.str(true));
+          need_comma = true;
         }
       }
 
@@ -1973,7 +1979,7 @@ namespace jank::codegen
     fmt::format_to(inserter, "));");
 
     fmt::format_to(inserter, "for(auto const &dep : deps){{");
-    fmt::format_to(inserter, "__rt_ctx.load_module(dep);");
+    fmt::format_to(inserter, "jank::runtime::__rt_ctx->load_module(dep);");
     fmt::format_to(inserter, "}}");
 
     /* __init fn */

@@ -5,6 +5,7 @@
 
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
+#include <jank/util/escape.hpp>
 
 namespace jank::runtime
 {
@@ -29,14 +30,16 @@ namespace jank::runtime
     return data == s->data;
   }
 
-  native_persistent_string const &obj::persistent_string::to_string() const
+  native_persistent_string obj::persistent_string::to_string() const
   {
-    return data;
+    fmt::memory_buffer buff;
+    to_string(buff);
+    return native_persistent_string{ buff.data(), buff.size() };
   }
 
   void obj::persistent_string::to_string(fmt::memory_buffer &buff) const
   {
-    format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data);
+    format_to(std::back_inserter(buff), FMT_COMPILE("{}"), util::escaped_quoted_view(data));
   }
 
   native_hash obj::persistent_string::to_hash() const

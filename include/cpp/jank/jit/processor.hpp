@@ -16,7 +16,7 @@ namespace jank::jit
 {
   struct processor
   {
-    processor(runtime::context &rt_ctx, native_integer optimization_level);
+    processor(native_integer optimization_level);
 
     result<option<runtime::object_ptr>, native_persistent_string>
     eval(codegen::processor &cg_prc) const;

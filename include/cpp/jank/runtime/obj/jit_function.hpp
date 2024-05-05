@@ -21,7 +21,7 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(object_ptr const fn, object_ptr const start);
+    static_object(object_ptr meta);
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
@@ -31,6 +31,9 @@ namespace jank::runtime
 
     /* behavior::metadatable */
     native_box<static_object> with_meta(object_ptr m);
+
+    /* behavior::metadatable */
+    object_ptr this_object_ptr() const final;
 
     object base{ object_type::jit_function };
     behavior::callable_ptr data{};

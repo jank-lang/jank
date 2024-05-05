@@ -22,13 +22,16 @@ namespace jank::runtime
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   thread_local decltype(context::thread_binding_frames) context::thread_binding_frames{};
 
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  context *__rt_ctx{};
+
   context::context()
     : context(util::cli::options{})
   {
   }
 
   context::context(util::cli::options const &opts)
-    : jit_prc{ *this, opts.optimization_level }
+    : jit_prc{ opts.optimization_level }
     , output_dir{ opts.compilation_path }
     , module_loader{ *this, opts.class_path }
   {
@@ -67,8 +70,9 @@ namespace jank::runtime
       .expect_ok();
   }
 
+  /* TODO: Remove this. */
   context::context(context const &ctx)
-    : jit_prc{ *this, ctx.jit_prc.optimization_level }
+    : jit_prc{ ctx.jit_prc.optimization_level }
     , module_dependencies{ ctx.module_dependencies }
     , output_dir{ ctx.output_dir }
     , module_loader{ *this, ctx.module_loader.paths }

@@ -139,4 +139,6 @@ namespace jank::runtime
     static thread_local native_unordered_map<context const *, std::list<thread_binding_frame>>
       thread_binding_frames;
   };
+
+  extern context *__rt_ctx;
 }

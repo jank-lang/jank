@@ -68,7 +68,7 @@ namespace jank::jit
     return JANK_CLING_BUILD_DIR;
   }
 
-  processor::processor(runtime::context &rt_ctx, native_integer const optimization_level)
+  processor::processor(native_integer const optimization_level)
     : optimization_level{ optimization_level }
   {
     profile::timer timer{ "jit ctor" };
@@ -131,9 +131,6 @@ namespace jank::jit
     interpreter = std::make_unique<cling::Interpreter>(args.size(),
                                                        args.data(),
                                                        llvm_resource_path_str.c_str());
-
-    eval_string(fmt::format("auto &__rt_ctx(*reinterpret_cast<jank::runtime::context*>({}));",
-                            fmt::ptr(&rt_ctx)));
   }
 
   result<option<runtime::object_ptr>, native_persistent_string>

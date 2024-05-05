@@ -914,38 +914,38 @@ namespace jank::runtime
   {
     object_ptr callable::call() const
     {
-      throw invalid_arity<0>{};
+      throw invalid_arity<0>{ runtime::detail::to_string(this_object_ptr()) };
     }
 
     object_ptr callable::call(object_ptr) const
     {
-      throw invalid_arity<1>{};
+      throw invalid_arity<1>{ runtime::detail::to_string(this_object_ptr()) };
     }
 
     object_ptr callable::call(object_ptr, object_ptr) const
     {
-      throw invalid_arity<2>{};
+      throw invalid_arity<2>{ runtime::detail::to_string(this_object_ptr()) };
     }
 
     object_ptr callable::call(object_ptr, object_ptr, object_ptr) const
     {
-      throw invalid_arity<3>{};
+      throw invalid_arity<3>{ runtime::detail::to_string(this_object_ptr()) };
     }
 
     object_ptr callable::call(object_ptr, object_ptr, object_ptr, object_ptr) const
     {
-      throw invalid_arity<4>{};
+      throw invalid_arity<4>{ runtime::detail::to_string(this_object_ptr()) };
     }
 
     object_ptr callable::call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const
     {
-      throw invalid_arity<5>{};
+      throw invalid_arity<5>{ runtime::detail::to_string(this_object_ptr()) };
     }
 
     object_ptr
     callable::call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const
     {
-      throw invalid_arity<6>{};
+      throw invalid_arity<6>{ runtime::detail::to_string(this_object_ptr()) };
     }
 
     object_ptr callable::call(object_ptr,
@@ -956,7 +956,7 @@ namespace jank::runtime
                               object_ptr,
                               object_ptr) const
     {
-      throw invalid_arity<7>{};
+      throw invalid_arity<7>{ runtime::detail::to_string(this_object_ptr()) };
     }
 
     object_ptr callable::call(object_ptr,
@@ -968,7 +968,7 @@ namespace jank::runtime
                               object_ptr,
                               object_ptr) const
     {
-      throw invalid_arity<8>{};
+      throw invalid_arity<8>{ runtime::detail::to_string(this_object_ptr()) };
     }
 
     object_ptr callable::call(object_ptr,
@@ -981,7 +981,7 @@ namespace jank::runtime
                               object_ptr,
                               object_ptr) const
     {
-      throw invalid_arity<9>{};
+      throw invalid_arity<9>{ runtime::detail::to_string(this_object_ptr()) };
     }
 
     object_ptr callable::call(object_ptr,
@@ -995,7 +995,7 @@ namespace jank::runtime
                               object_ptr,
                               object_ptr) const
     {
-      throw invalid_arity<10>{};
+      throw invalid_arity<10>{ runtime::detail::to_string(this_object_ptr()) };
     }
 
     callable::arity_flag_t callable::get_arity_flags() const
