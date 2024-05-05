@@ -2177,13 +2177,12 @@
     (let [s1 (seq c1)
           s2 (seq c2)
           s3 (seq c3)]
-      (when (and  s1 s2 s3)
+      (when (and s1 s2 s3)
         (cons (f (first s1) (first s2) (first s3))
               (map f (rest s1) (rest s2) (rest s3)))))))
-  ; TODO: Recursion in named fns
-  #_([f c1 c2 c3 & colls]
+  ([f c1 c2 c3 & colls]
    (let [step (fn step [cs]
-                 (lazy-seq
+                (lazy-seq
                   (let [ss (map seq cs)]
                     (when (every? identity ss)
                       (cons (map first ss) (step (map rest ss)))))))]
