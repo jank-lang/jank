@@ -905,11 +905,10 @@ namespace jank::codegen
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", ">" }))
         {
-          /* TODO: Use lt and reverse args. */
-          format_elided_var("jank::runtime::gt(",
+          format_elided_var("jank::runtime::lt(",
                             ")",
                             ret_tmp.str(false),
-                            expr.arg_exprs,
+                            { expr.arg_exprs.rbegin(), expr.arg_exprs.rend() },
                             fn_arity,
                             false,
                             box_needed);
@@ -918,11 +917,10 @@ namespace jank::codegen
         }
         else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", ">=" }))
         {
-          /* TODO: Use lte and reverse args. */
-          format_elided_var("jank::runtime::gte(",
+          format_elided_var("jank::runtime::lte(",
                             ")",
                             ret_tmp.str(false),
-                            expr.arg_exprs,
+                            { expr.arg_exprs.rbegin(), expr.arg_exprs.rend() },
                             fn_arity,
                             false,
                             box_needed);
