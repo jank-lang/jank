@@ -61,10 +61,6 @@ namespace jank::runtime
           {
             return make_box<obj::chunked_cons>(typed_head->chunk_next(), tail);
           }
-          if(tail == nullptr)
-          {
-            return obj::persistent_list::empty();
-          }
           return tail;
         }
         else

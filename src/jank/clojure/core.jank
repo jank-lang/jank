@@ -1487,7 +1487,7 @@
 (defn chunk-cons [chunk rest]
   (if (empty? chunk)
     rest
-    (native/raw "__value = make_box<obj::chunked_cons>(~{ chunk }, ~{ rest });")))
+    (native/raw "__value = make_box<obj::chunked_cons>(~{ chunk }, ~{ (seq rest) });")))
 
 (defn chunked-seq? [o]
   (native/raw "__value = visit_object
