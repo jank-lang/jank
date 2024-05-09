@@ -140,9 +140,7 @@
                    {
                      using T = typename decltype(typed_tail)::value_type;
 
-                     if constexpr(std::same_as<obj::lazy_sequence, T>)
-                     { return make_box<jank::runtime::obj::cons>(~{ head }, typed_tail); }
-                     else if constexpr(behavior::seqable<T>)
+                     if constexpr(behavior::seqable<T>)
                      { return make_box<jank::runtime::obj::cons>(~{ head }, typed_tail->seq()); }
                      else
                      { ~{ (throw (ex-info :invalid-cons-tail {:type (type tail)})) }; }
