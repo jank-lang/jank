@@ -98,19 +98,19 @@ namespace jank::jit
 
     auto const include_path(jank_path / "../include");
 
-    native_persistent_string_view O{ "0" };
+    native_persistent_string_view O{ "-O0" };
     switch(optimization_level)
     {
       case 0:
         break;
       case 1:
-        O = "1";
+        O = "-O1";
         break;
       case 2:
-        O = "2";
+        O = "-O2";
         break;
       case 3:
-        O = "fast";
+        O = "-Ofast";
         break;
       default:
         throw std::runtime_error{ fmt::format("invalid optimization level {}",
