@@ -40,6 +40,7 @@ namespace jank::runtime
     persistent_vector_sequence,
     persistent_list_sequence,
     persistent_set_sequence,
+    atom,
     volatile_,
     reduced,
     ns,

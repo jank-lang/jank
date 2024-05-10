@@ -134,19 +134,7 @@
 
 (def cons
   (fn* cons [head tail]
-    (native/raw "__value = visit_object
-                 (
-                   [=](auto const typed_tail) -> object_ptr
-                   {
-                     using T = typename decltype(typed_tail)::value_type;
-
-                     if constexpr(behavior::seqable<T>)
-                     { return make_box<jank::runtime::obj::cons>(~{ head }, typed_tail->seq()); }
-                     else
-                     { ~{ (throw (ex-info :invalid-cons-tail {:type (type tail)})) }; }
-                   },
-                   ~{ tail }
-                 );")))
+    (native/raw "__value = runtime::cons(~{ head }, ~{ tail });")))
 
 (def seq?
   (fn* seq? [o]
@@ -990,7 +978,73 @@
   [coll]
   (native/raw "__value = runtime::pop(~{ coll });"))
 
-; Volatiles.
+;; Atoms.
+(defn atom
+  "Creates and returns an Atom with an initial value of x and zero or
+  more options (in any order):
+
+  :meta metadata-map
+
+  :validator validate-fn
+
+  If metadata-map is supplied, it will become the metadata on the
+  atom. validate-fn must be nil or a side-effect-free fn of one
+  argument, which will be passed the intended new state on any state
+  change. If the new state is unacceptable, the validate-fn should
+  return false or throw an exception."
+  ([x]
+   (native/raw "__value = make_box<obj::atom>(~{ x });"))
+  ; TODO: Validators.
+  #_([x & options] (setup-reference (atom x) options)))
+
+(defn swap!
+  "Atomically swaps the value of atom to be:
+  (apply f current-value-of-atom args). Note that f may be called
+  multiple times, and thus should be free of side effects.  Returns
+  the value that was swapped in."
+  ([atom f]
+   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap(~{ f });"))
+  ([atom f x]
+   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x });"))
+  ([atom f x y]
+   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x }, ~{ y });"))
+  ([atom f x y & args]
+   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x }, ~{ y }, ~{ args });")))
+
+(defn swap-vals!
+  "Atomically swaps the value of atom to be:
+  (apply f current-value-of-atom args). Note that f may be called
+  multiple times, and thus should be free of side effects.
+  Returns [old new], the value of the atom before and after the swap."
+  ([atom f]
+   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap_vals(~{ f });"))
+  ([atom f x]
+   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x });"))
+  ([atom f x y]
+   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x }, ~{ y });"))
+  ([atom f x y & args]
+   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x }, ~{ y }, ~{ args });")))
+
+(defn compare-and-set!
+  "Atomically sets the value of atom to newval if and only if the
+  current value of the atom is identical to oldval. Returns true if
+  set happened, else false"
+  [atom oldval newval]
+  (native/raw "__value = expect_object<obj::atom>(~{ atom })->compare_and_set(~{ oldval }, ~{ newval });"))
+
+(defn reset!
+  "Sets the value of atom to newval without regard for the
+  current value. Returns newval."
+  [atom newval]
+  (native/raw "__value = expect_object<obj::atom>(~{ atom })->reset(~{ newval });"))
+
+(defn reset-vals!
+  "Sets the value of atom to newval. Returns [old new], the value of the
+   atom before and after the reset."
+  [atom newval]
+  (native/raw "__value = expect_object<obj::atom>(~{ atom })->reset_vals(~{ newval });"))
+
+;; Volatiles.
 (defn volatile!
   "Creates and returns a Volatile with an initial value of val."
   [val]

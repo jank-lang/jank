@@ -32,6 +32,7 @@
 #include <jank/runtime/obj/persistent_set_sequence.hpp>
 #include <jank/runtime/obj/native_array_sequence.hpp>
 #include <jank/runtime/obj/native_vector_sequence.hpp>
+#include <jank/runtime/obj/atom.hpp>
 #include <jank/runtime/obj/volatile.hpp>
 #include <jank/runtime/obj/reduced.hpp>
 #include <jank/runtime/ns.hpp>
@@ -275,6 +276,11 @@ namespace jank::runtime
       case object_type::jit_function:
         {
           return fn(expect_object<obj::jit_function>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::atom:
+        {
+          return fn(expect_object<obj::atom>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::volatile_:

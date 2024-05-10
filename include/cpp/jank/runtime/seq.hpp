@@ -71,6 +71,7 @@ namespace jank::runtime
   native_bool is_nil(object_ptr o);
   native_bool is_some(object_ptr o);
   native_bool is_map(object_ptr o);
+  object_ptr cons(object_ptr head, object_ptr tail);
   object_ptr conj(object_ptr s, object_ptr o);
   object_ptr assoc(object_ptr m, object_ptr k, object_ptr v);
   object_ptr dissoc(object_ptr m, object_ptr k);

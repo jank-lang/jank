@@ -185,6 +185,7 @@ add_library(
   src/cpp/jank/runtime/obj/chunked_cons.cpp
   src/cpp/jank/runtime/obj/native_array_sequence.cpp
   src/cpp/jank/runtime/obj/native_vector_sequence.cpp
+  src/cpp/jank/runtime/obj/atom.cpp
   src/cpp/jank/runtime/obj/volatile.cpp
   src/cpp/jank/runtime/obj/reduced.cpp
   src/cpp/jank/runtime/behavior/callable.cpp
