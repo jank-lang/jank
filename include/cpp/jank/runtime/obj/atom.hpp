@@ -19,14 +19,18 @@ namespace jank::runtime
     /* behavior::derefable */
     object_ptr deref() const;
 
+    /* Replaces the old value with the specified value. Returns the new value. */
     object_ptr reset(object_ptr o);
+    /* Same as reset, but returns a vector of the old value and the new value. */
     obj::persistent_vector_ptr reset_vals(object_ptr o);
 
+    /* Atomically updates the value of the atom with the specified fn. Returns the new value. */
     object_ptr swap(object_ptr fn);
     object_ptr swap(object_ptr fn, object_ptr a1);
     object_ptr swap(object_ptr fn, object_ptr a1, object_ptr a2);
     object_ptr swap(object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest);
 
+    /* Same as swap, but returns a vector of the old value and the new value. */
     obj::persistent_vector_ptr swap_vals(object_ptr fn);
     obj::persistent_vector_ptr swap_vals(object_ptr fn, object_ptr a1);
     obj::persistent_vector_ptr swap_vals(object_ptr fn, object_ptr a1, object_ptr a2);
