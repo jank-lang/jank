@@ -1,11 +1,11 @@
 (ns leiningen.jank
   (:require
-   [babashka.process :as ps]
-   [babashka.fs :as fs]
-   [clojure.pprint :as pp]
-   [clojure.string :as string]
-   [leiningen.core.classpath :as lcp]
-   [leiningen.core.main :as lmain])
+    [babashka.process :as ps]
+    [babashka.fs :as fs]
+    [clojure.pprint :as pp]
+    [clojure.string :as string]
+    [leiningen.core.classpath :as lcp]
+    [leiningen.core.main :as lmain])
   (:import [java.io File]))
 
 (defn- ->absolute-path [path]
@@ -81,11 +81,11 @@
   "Prints help about jank subcommands"
   [& _args]
   (pp/print-table
-   (map (fn [[sub fn-ref]]
-          {:sub-command (name sub)
-           :help (or (-> fn-ref meta :help-text)
-                     (-> fn-ref meta :doc))})
-        subtasks)))
+    (map (fn [[sub fn-ref]]
+           {:sub-command (name sub)
+            :help (or (-> fn-ref meta :help-text)
+                      (-> fn-ref meta :doc))})
+         subtasks)))
 
 (defn jank
   "Compile, run and repl into jank"
