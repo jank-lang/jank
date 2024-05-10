@@ -26,10 +26,10 @@ pom.xml.asc
 .cpcache
 inst
 deb-cache
-/build
-/build-*
+build
+build-*
 coverage.txt
-/vcpkg_installed
+vcpkg_installed
 .idea/
 .vs/
 .vscode/
