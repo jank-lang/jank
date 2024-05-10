@@ -17,7 +17,8 @@ jobs:
           # Update this whenever the package list changes.
           version: 2022.10.16--22.13.50
       - name: Lint bash scripts
-        run: ./compiler+runtime/bin/ci/lint
+        working-directory: ${{ github.workspace }}/compiler+runtime
+        run: ./bin/ci/lint
       - name: Run clang-format on compiler+runtime/include/cpp
         uses: jidicula/clang-format-action@v4.11.0
         with:

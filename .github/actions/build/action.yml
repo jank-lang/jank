@@ -37,6 +37,7 @@ runs:
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('compiler+runtime/bin/build-cling') }}
     - name: Compile and test
       shell: bash
+      working-directory: ${{ github.workspace }}/compiler+runtime
       run: ${{ github.workspace }}/compiler+runtime/bin/ci/test -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
     - if: ${{ env.CODECOV }} == "on"
       name: Upload report to Codecov
@@ -45,6 +46,7 @@ runs:
       name: Release
       id: release
       shell: bash
+      working-directory: ${{ github.workspace }}/compiler+runtime
       run: |
         export DESTDIR=jank-${{ matrix.os }}-$(date +'%Y-%m-%d').$(git rev-parse --short $GITHUB_SHA)
         ${{ github.workspace }}/compiler+runtime/bin/install
