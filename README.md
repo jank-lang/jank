@@ -59,7 +59,7 @@ There are pre-compiled binaries for Ubuntu 22.04, which are built to follow the
 ```
 
 ## Docs
-* [Building jank](./doc/build.md)
+* [Building jank](./compiler+runtime/doc/build.md)
 
 ## Sponsors
 If you'd like your name, company, or logo here, you can

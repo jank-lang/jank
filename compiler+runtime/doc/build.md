@@ -29,7 +29,7 @@ git submodule update --recursive --init
 
 ## Compiling Cling
 Note that you must compile Cling/Clang/LLVM. This can take an hour or two,
-depending on your machine. Building jank itself should take less than a minute.
+depending on your machine. Building jank itself should take a minute or two.
 
 ```
 mkdir -p build
