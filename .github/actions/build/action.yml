@@ -34,10 +34,10 @@ runs:
       with:
         path: |
           ${{ github.workspace }}/build
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('bin/build-cling') }}
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('compiler+runtime/bin/build-cling') }}
     - name: Compile and test
       shell: bash
-      run: ${{ github.workspace }}/bin/ci/test -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+      run: ${{ github.workspace }}/compiler+runtime/bin/ci/test -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
     - if: ${{ env.CODECOV }} == "on"
       name: Upload report to Codecov
       uses: codecov/codecov-action@v3
@@ -47,6 +47,6 @@ runs:
       shell: bash
       run: |
         export DESTDIR=jank-${{ matrix.os }}-$(date +'%Y-%m-%d').$(git rev-parse --short $GITHUB_SHA)
-        ${{ github.workspace }}/bin/install
+        ${{ github.workspace }}/compiler+runtime/bin/install
         tar czf $DESTDIR.tar.gz $DESTDIR/
         echo "archive=$DESTDIR.tar.gz" >> $GITHUB_OUTPUT
