@@ -17,19 +17,6 @@
        (map ->absolute-path)
        (concat lein-paths)))
 
-(defn prep-project [{jank-project :jank
-                     :as project}]
-  (-> project
-      (dissoc :jank)
-      ; TODO: Needed?
-      (update :source-paths #(concat-project-paths % (:source-paths jank-project)))
-      (update :test-paths #(concat-project-paths % (:test-paths jank-project)))
-      (update :resource-paths #(concat-project-paths % (:resource-paths jank-project)))
-      (assoc :compile-path (when-let [compile-path (:compile-path jank-project)]
-                             (->absolute-path compile-path)))
-      (update :dependencies #(concat-project-paths % (:dependencies jank-project)))
-      (assoc :main (:main jank-project))))
-
 (defn run-main [project classpath & args]
   (apply ps/shell
          {:continue true
@@ -88,7 +75,7 @@
   "Compile, run and repl into jank"
   [project subcmd & args]
   (if-some [handler (subtask-kw->var (keyword subcmd))]
-    (apply handler (prep-project project) args)
+    (apply handler project args)
     (do
       (lmain/warn "Invalid subcommand!")
       (print-help))))
