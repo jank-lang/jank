@@ -48,7 +48,7 @@ runs:
       shell: bash
       working-directory: ${{ github.workspace }}/compiler+runtime
       run: |
-        export DESTDIR=jank-${{ matrix.os }}-$(date +'%Y-%m-%d').$(git rev-parse --short $GITHUB_SHA)
+        export DESTDIR=${{ github.workspace }}/jank-${{ matrix.os }}-$(date +'%Y-%m-%d').$(git rev-parse --short $GITHUB_SHA)
         ${{ github.workspace }}/compiler+runtime/bin/install
         tar czf $DESTDIR.tar.gz $DESTDIR/
         echo "archive=$DESTDIR.tar.gz" >> $GITHUB_OUTPUT
