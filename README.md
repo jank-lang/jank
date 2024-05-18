@@ -26,7 +26,7 @@ The current tl;dr for jank's usability is: **still getting there, but not ready 
 use yet**.
 
 ## Latest binaries
-There are pre-compiled binaries for Ubuntu 22.04, which are built to follow the
+There are pre-compiled binaries for Ubuntu 24.04, which are built to follow the
 `main` branch. You can download a tarball with everything you need here: https://github.com/jank-lang/jank/releases/tag/latest
 
 ## Appetizer
