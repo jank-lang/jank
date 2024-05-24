@@ -207,13 +207,13 @@ namespace jank::runtime
         expect_object<obj::persistent_string>(current_module_var->deref())->data);
       auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc));
       wrapped_exprs.name = "__ns";
-      wrapped_exprs.unique_name = runtime::context::unique_string(wrapped_exprs.name);
+      wrapped_exprs.unique_name = wrapped_exprs.name;
       auto const &module(
         expect_object<runtime::ns>(intern_var("clojure.core", "*ns*").expect_ok()->deref())
           ->to_string());
       codegen::processor cg_prc{ *this, wrapped_exprs, module, codegen::compilation_target::ns };
       write_module(current_module, cg_prc.declaration_str());
-      write_module(fmt::format("{}__init", current_module), cg_prc.module_init_str(current_module));
+      write_module(fmt::format("{}--init", current_module), cg_prc.module_init_str(current_module));
     }
 
     assert(ret);
@@ -308,7 +308,9 @@ namespace jank::runtime
     /* TODO: This needs to go into sub directories. Also, we should register these modules with
      * the loader upon writing. */
     {
-      std::ofstream ofs{ fmt::format("{}/{}.cpp", module::module_to_path(output_dir), module) };
+      std::ofstream ofs{
+        fmt::format("{}/{}.cpp", module::module_to_path(output_dir), runtime::munge(module))
+      };
       ofs << contents;
       ofs.flush();
     }
@@ -322,12 +324,12 @@ namespace jank::runtime
   native_persistent_string context::unique_string(native_persistent_string_view const &prefix)
   {
     static std::atomic_size_t index{ 1 };
-    return fmt::format(FMT_COMPILE("{}_{}"), prefix.data(), index++);
+    return fmt::format(FMT_COMPILE("{}-{}"), prefix.data(), index++);
   }
 
   obj::symbol context::unique_symbol()
   {
-    return unique_symbol("G_");
+    return unique_symbol("G-");
   }
 
   obj::symbol context::unique_symbol(native_persistent_string_view const &prefix)

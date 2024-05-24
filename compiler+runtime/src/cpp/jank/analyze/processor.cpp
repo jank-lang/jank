@@ -380,14 +380,25 @@ namespace jank::analyze
        * to generated code use the fully qualified name. Right now, a jank fn named `min` will
        * conflict with the RT `min` fn, for example. */
       name = s->name;
+      unique_name = runtime::context::unique_string(name);
       first_elem = list->data.rest().rest().first().unwrap();
       list = make_box(list->data.rest());
     }
     else
     {
       name = runtime::context::unique_string("fn");
+      unique_name = name;
     }
-    unique_name = runtime::context::unique_string(name);
+
+    /* Allow native name to be overridden using :jank/link-name meta. */
+    auto const link_name_kw(rt_ctx.intern_keyword("jank", "link-name").expect_ok());
+    auto const link_name(
+      runtime::get(full_list->meta.unwrap_or(runtime::obj::nil::nil_const()), link_name_kw));
+    if(link_name != runtime::obj::nil::nil_const())
+    {
+      name = runtime::expect_object<runtime::obj::persistent_string>(link_name)->data;
+      unique_name = runtime::context::unique_string(name);
+    }
 
     native_vector<expr::function_arity<expression>> arities;
 
@@ -504,12 +515,14 @@ namespace jank::analyze
        * code to load it. */
       auto const &ns_sym(make_box<runtime::obj::symbol>("clojure.core/*ns*"));
       auto const &ns_var(rt_ctx.find_var(ns_sym).unwrap());
-      auto const module(runtime::module::nest_module(runtime::detail::to_string(ns_var->deref()),
-                                                     runtime::munge(name)));
+      auto const module(
+        runtime::module::nest_module(runtime::detail::to_string(ns_var->deref()), unique_name));
       auto const &current_module(
         expect_object<runtime::obj::persistent_string>(rt_ctx.current_module_var->deref())->data);
       rt_ctx.module_dependencies[current_module].emplace_back(module);
-      //fmt::println("module dep {} -> {}", rt_ctx.current_module, module);
+      //fmt::println("module dep {} -> {}",
+      //             runtime::detail::to_string(rt_ctx.current_module_var->deref()),
+      //             module);
 
       codegen::processor cg_prc{ rt_ctx, ret, module, codegen::compilation_target::function };
       rt_ctx.write_module(module, cg_prc.declaration_str());

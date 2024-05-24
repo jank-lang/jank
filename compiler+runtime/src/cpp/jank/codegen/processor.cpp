@@ -439,7 +439,7 @@ namespace jank::codegen
     auto inserter(std::back_inserter(body_buffer));
     auto const &var(expr.frame->find_lifted_var(expr.name).unwrap().get());
     auto const &munged_name(runtime::munge(var.native_name.name));
-    auto ret_tmp(runtime::context::unique_string(munged_name));
+    auto ret_tmp(runtime::munge(runtime::context::unique_string(munged_name)));
 
     option<std::reference_wrapper<analyze::lifted_constant const>> meta;
     if(expr.name->meta.is_some())
@@ -459,7 +459,7 @@ namespace jank::codegen
       {
         return fmt::format("{}->with_meta({})",
                            runtime::munge(var.native_name.name),
-                           meta.unwrap().get().native_name.name);
+                           runtime::munge(meta.unwrap().get().native_name.name));
       }
       else
       {
@@ -477,7 +477,7 @@ namespace jank::codegen
             return fmt::format("{}->bind_root({})->with_meta({})",
                                runtime::munge(var.native_name.name),
                                val.str(true),
-                               meta.unwrap().get().native_name.name);
+                               runtime::munge(meta.unwrap().get().native_name.name));
           }
           else
           {
@@ -499,7 +499,7 @@ namespace jank::codegen
                            "{}->bind_root({})->with_meta({});",
                            runtime::munge(var.native_name.name),
                            val.str(true),
-                           meta.unwrap().get().native_name.name);
+                           runtime::munge(meta.unwrap().get().native_name.name));
           }
           else
           {
@@ -523,12 +523,12 @@ namespace jank::codegen
       case analyze::expression_type::statement:
       case analyze::expression_type::expression:
         {
-          return fmt::format("{}->deref()", var.native_name.name);
+          return fmt::format("{}->deref()", runtime::munge(var.native_name.name));
         }
       case analyze::expression_type::return_statement:
         {
           auto inserter(std::back_inserter(body_buffer));
-          fmt::format_to(inserter, "return {}->deref();", var.native_name.name);
+          fmt::format_to(inserter, "return {}->deref();", runtime::munge(var.native_name.name));
           return none;
         }
     }
@@ -544,12 +544,12 @@ namespace jank::codegen
       case analyze::expression_type::statement:
       case analyze::expression_type::expression:
         {
-          return var.native_name.name;
+          return runtime::munge(var.native_name.name);
         }
       case analyze::expression_type::return_statement:
         {
           auto inserter(std::back_inserter(body_buffer));
-          fmt::format_to(inserter, "return {};", var.native_name.name);
+          fmt::format_to(inserter, "return {};", runtime::munge(var.native_name.name));
           return none;
         }
     }
@@ -663,7 +663,7 @@ namespace jank::codegen
     auto inserter(std::back_inserter(body_buffer));
 
     /* TODO: Doesn't take into account boxing. */
-    handle ret_tmp{ runtime::context::unique_string("call") };
+    handle ret_tmp{ runtime::munge(runtime::context::unique_string("call")) };
     /* Clojure's codegen actually skips vars for certain calls to clojure.core
      * fns; this is not the same as direct linking, which uses `invokeStatic`
      * instead. Rather, this makes calls to `get` become `RT.get`, calls to `+` become
@@ -1040,10 +1040,11 @@ namespace jank::codegen
   {
     auto const &constant(expr.frame->find_lifted_constant(expr.data).unwrap().get());
 
-    handle ret{ constant.native_name.name };
+    handle ret{ runtime::munge(constant.native_name.name) };
     if(constant.unboxed_native_name.is_some())
     {
-      ret = { constant.native_name.name, constant.unboxed_native_name.unwrap().name };
+      ret = { runtime::munge(constant.native_name.name),
+              runtime::munge(constant.unboxed_native_name.unwrap().name) };
     }
 
     switch(expr.expr_type)
@@ -1074,7 +1075,7 @@ namespace jank::codegen
     }
 
     auto inserter(std::back_inserter(body_buffer));
-    auto ret_tmp(runtime::context::unique_string("vec"));
+    auto ret_tmp(runtime::munge(runtime::context::unique_string("vec")));
     fmt::format_to(inserter,
                    "auto const {}(jank::make_box<jank::runtime::obj::persistent_vector>(",
                    ret_tmp);
@@ -1113,7 +1114,7 @@ namespace jank::codegen
     }
 
     auto inserter(std::back_inserter(body_buffer));
-    auto ret_tmp(runtime::context::unique_string("map"));
+    auto ret_tmp(runtime::munge(runtime::context::unique_string("map")));
 
     /* Jump right to a hash map, if we have enough values. */
     if(expr.data_exprs.size() <= runtime::obj::persistent_array_map::max_size)
@@ -1191,7 +1192,7 @@ namespace jank::codegen
     }
 
     auto inserter(std::back_inserter(body_buffer));
-    auto ret_tmp(runtime::context::unique_string("set"));
+    auto ret_tmp(runtime::munge(runtime::context::unique_string("set")));
     fmt::format_to(inserter,
                    "auto const {}(jank::make_box<jank::runtime::obj::persistent_set>(",
                    ret_tmp);
@@ -1312,7 +1313,7 @@ namespace jank::codegen
                                 native_bool const)
   {
     auto inserter(std::back_inserter(body_buffer));
-    handle ret_tmp{ runtime::context::unique_string("let"), expr.needs_box };
+    handle ret_tmp{ runtime::munge(runtime::context::unique_string("let")), expr.needs_box };
 
     if(expr.needs_box)
     {
@@ -1435,7 +1436,7 @@ namespace jank::codegen
   {
     /* TODO: Handle unboxed results! */
     auto inserter(std::back_inserter(body_buffer));
-    auto ret_tmp(runtime::context::unique_string("if"));
+    auto ret_tmp(runtime::munge(runtime::context::unique_string("if")));
     fmt::format_to(inserter, "object_ptr {}{{ obj::nil::nil_const() }};", ret_tmp);
     auto const &condition_tmp(gen(expr.condition, fn_arity, false));
     fmt::format_to(inserter,
@@ -1491,7 +1492,7 @@ namespace jank::codegen
                                 native_bool const box_needed)
   {
     auto inserter(std::back_inserter(body_buffer));
-    auto ret_tmp(runtime::context::unique_string("try"));
+    auto ret_tmp(runtime::munge(runtime::context::unique_string("try")));
     fmt::format_to(inserter, "object_ptr {}{{ obj::nil::nil_const() }};", ret_tmp);
 
     fmt::format_to(inserter, "{{");
@@ -1538,7 +1539,7 @@ namespace jank::codegen
                                 native_bool const)
   {
     auto inserter(std::back_inserter(body_buffer));
-    auto ret_tmp(runtime::context::unique_string("native"));
+    auto ret_tmp(runtime::munge(runtime::context::unique_string("native")));
 
     fmt::format_to(inserter, "object_ptr {}{{ obj::nil::nil_const() }};", ret_tmp);
     fmt::format_to(inserter, "{{ object_ptr __value{{ obj::nil::nil_const() }};");
@@ -1630,7 +1631,9 @@ namespace jank::codegen
      * Local fns are within a struct already, so we can't enter the ns again. */
     if(!runtime::module::is_nested_module(module))
     {
-      fmt::format_to(inserter, "namespace {} {{", runtime::module::module_to_native_ns(module));
+      fmt::format_to(inserter,
+                     "namespace {} {{",
+                     runtime::module::module_to_native_ns(runtime::munge(module)));
     }
 
     fmt::format_to(inserter,
@@ -1894,7 +1897,7 @@ namespace jank::codegen
 
   native_persistent_string processor::expression_str(native_bool const box_needed)
   {
-    auto const module_ns(runtime::module::module_to_native_ns(module));
+    auto const module_ns(runtime::module::module_to_native_ns(runtime::munge(module)));
 
     if(!generated_expression)
     {
@@ -1951,7 +1954,9 @@ namespace jank::codegen
     fmt::memory_buffer module_buffer;
     auto inserter(std::back_inserter(module_buffer));
 
-    fmt::format_to(inserter, "namespace {} {{", runtime::module::module_to_native_ns(module));
+    fmt::format_to(inserter,
+                   "namespace {} {{",
+                   runtime::module::module_to_native_ns(runtime::munge(module)));
 
     fmt::format_to(inserter,
                    R"(
@@ -1971,13 +1976,13 @@ namespace jank::codegen
       {
         fmt::format_to(inserter, ", ");
       }
-      fmt::format_to(inserter, "\"{}\"", dep);
+      fmt::format_to(inserter, "\"/{}\"", dep);
       needs_comma = true;
     }
     fmt::format_to(inserter, "));");
 
     fmt::format_to(inserter, "for(auto const &dep : deps){{");
-    fmt::format_to(inserter, "jank::runtime::__rt_ctx->load_module(dep);");
+    fmt::format_to(inserter, "jank::runtime::__rt_ctx->load_module(dep).expect_ok();");
     fmt::format_to(inserter, "}}");
 
     /* __init fn */

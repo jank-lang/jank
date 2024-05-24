@@ -13,24 +13,25 @@ namespace jank::runtime::module
   /* This turns `foo_bar/spam/meow.cljc` into `foo-bar.spam.meow`. */
   native_persistent_string path_to_module(boost::filesystem::path const &path)
   {
-    //static std::regex const underscore{ "_" };
     static std::regex const slash{ "/" };
 
-    auto const &s(path.string());
+    auto const &s(runtime::demunge(path.string()));
     std::string ret{ s, 0, s.size() - path.extension().size() };
-    //ret = std::regex_replace(ret, underscore, "-");
-    ret = std::regex_replace(ret, slash, ".");
+
+    /* There's a special case of the / function which shouldn't be treated as a path. */
+    if(ret.find("$/") == std::string::npos)
+    {
+      ret = std::regex_replace(ret, slash, ".");
+    }
 
     return ret;
   }
 
   native_persistent_string module_to_path(native_persistent_string_view const &module)
   {
-    static std::regex const dash{ "-" };
     static std::regex const dot{ "\\." };
 
-    std::string ret{ module };
-    ret = std::regex_replace(ret, dash, "_");
+    std::string ret{ runtime::munge(module) };
     ret = std::regex_replace(ret, dot, "/");
 
     return ret;
@@ -149,7 +150,11 @@ namespace jank::runtime::module
 
     if(registered)
     {
-      //fmt::println("register_entry {} {} {} {}", entry.archive_path, entry.path, module_path.string(), path_to_module(module_path));
+      //fmt::println("register_entry {} {} {} {}",
+      //             entry.archive_path,
+      //             entry.path,
+      //             module_path.string(),
+      //             path_to_module(module_path));
     }
   }
 
@@ -172,7 +177,7 @@ namespace jank::runtime::module
     auto success(zf.open(libzippp::ZipArchive::ReadOnly));
     if(!success)
     {
-      std::cerr << fmt::format("Failed to open jar on classpath: {}", path) << std::endl;
+      std::cerr << fmt::format("Failed to open jar on classpath: {}\n", path);
       return;
     }
 
@@ -219,9 +224,12 @@ namespace jank::runtime::module
   {
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
     native_transient_string paths{ ps };
+    paths += fmt::format(":{}", (jank_path / "classes").string());
     paths += fmt::format(":{}", (jank_path / "../src/jank").string());
     paths += fmt::format(":{}", rt_ctx.output_dir);
     this->paths = paths;
+
+    //fmt::println("classpaths: {}", paths);
 
     size_t start{};
     size_t i{ paths.find(module_separator, start) };
@@ -270,16 +278,21 @@ namespace jank::runtime::module
   loader::load_ns(native_persistent_string_view const &module)
   {
     profile::timer timer{ "load_ns" };
+
+    //fmt::println("loading ns {}", module);
+
     native_bool const compiling{ runtime::detail::truthy(rt_ctx.compile_files_var->deref()) };
-    native_bool const needs_init{ !compiling && entries.contains(fmt::format("{}__init", module)) };
+    native_bool const needs_init{ !compiling && entries.contains(fmt::format("{}--init", module)) };
     if(needs_init)
     {
       profile::timer timer{ "load_ns __init" };
-      auto ret(load(fmt::format("{}__init", module)));
+      //fmt::println("loading ns __init {}", module);
+      auto ret(load(fmt::format("{}--init", module)));
       if(ret.is_err())
       {
         return ret;
       }
+      //fmt::println("evaling ns __init {}", module);
       rt_ctx.jit_prc.eval_string(
         fmt::format("{}::__ns__init::__init();", runtime::module::module_to_native_ns(module)));
     }
@@ -296,8 +309,8 @@ namespace jank::runtime::module
     if(needs_init)
     {
       profile::timer timer{ "load_ns effects" };
-      rt_ctx.jit_prc.eval_string(fmt::format("{}::__ns{{ __rt_ctx }}.call();",
-                                             runtime::module::module_to_native_ns(module)));
+      rt_ctx.jit_prc.eval_string(
+        fmt::format("{}::__ns{{ }}.call();", runtime::module::module_to_native_ns(module)));
     }
 
     return ok();
@@ -313,6 +326,8 @@ namespace jank::runtime::module
 
     result<void, native_persistent_string> res{ err(
       fmt::format("no sources for registered module: {}", module)) };
+
+    //fmt::println("loading nested module {}", module);
 
     bool const compiling{ runtime::detail::truthy(rt_ctx.compile_files_var->deref()) };
     if(compiling)
