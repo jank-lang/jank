@@ -1,0 +1,3 @@
+(ns jank.nrepl-server.other-thing)
+
+(println "also in other thing")

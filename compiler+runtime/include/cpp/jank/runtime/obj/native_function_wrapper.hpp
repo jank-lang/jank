@@ -10,6 +10,11 @@ namespace jank::runtime
 {
   namespace obj::detail
   {
+    /* This must be constructed with a std::function object, since we need put it into a
+     * std::any and pull it out based on how we call it. i.e. if we try to call it with
+     * one param, we try to grab it from the std::any as a std::function<object_ptr (object_ptr)>.
+     *
+     * This means you can't just dump a lambda into this. Build a std::function from it first. */
     struct function_type
     {
       template <typename T>

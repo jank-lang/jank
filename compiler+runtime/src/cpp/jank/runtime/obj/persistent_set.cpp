@@ -1,5 +1,4 @@
 #include <jank/runtime/util.hpp>
-#include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_set.hpp>
 
 namespace jank::runtime

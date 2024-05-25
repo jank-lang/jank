@@ -21,6 +21,7 @@ namespace jank::runtime
     static_object() = delete;
     static_object(obj::symbol_ptr const &name, context &c);
 
+    var_ptr intern_var(native_persistent_string_view const &);
     var_ptr intern_var(obj::symbol_ptr const &);
     option<var_ptr> find_var(obj::symbol_ptr const &);
 

@@ -1,8 +1,4 @@
-#include <iostream>
-#include <sstream>
-
 #include <jank/runtime/util.hpp>
-#include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
 
 namespace jank::runtime

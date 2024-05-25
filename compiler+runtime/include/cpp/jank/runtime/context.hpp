@@ -37,6 +37,7 @@ namespace jank::runtime
 
     void dump() const;
 
+    ns_ptr intern_ns(native_persistent_string_view const &);
     ns_ptr intern_ns(obj::symbol_ptr const &);
     option<ns_ptr> remove_ns(obj::symbol_ptr const &);
     /* Looks up a ns by its symbol. Does not resolve aliases. Does not intern. */

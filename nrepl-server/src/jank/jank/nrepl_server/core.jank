@@ -1,0 +1,8 @@
+(ns jank.nrepl-server.core
+  (:require [jank.nrepl-server.other-thing]
+            [jank.nrepl-server.asio]))
+
+(defn -main [& _args]
+  (println "Hello, World!")
+  (jank.nrepl-server.asio/run! 5000 (fn [data]
+                                      (println "callback with" data))))

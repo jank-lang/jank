@@ -2,7 +2,6 @@
 
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
-#include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/native_array_sequence.hpp>
 #include <jank/runtime/obj/native_vector_sequence.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>

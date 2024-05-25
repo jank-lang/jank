@@ -1,7 +1,4 @@
-#include <memory>
-
 #include <jank/runtime/ns.hpp>
-#include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 
 namespace jank::runtime
@@ -12,6 +9,11 @@ namespace jank::runtime
     , aliases{ obj::persistent_hash_map::empty() }
     , rt_ctx{ c }
   {
+  }
+
+  var_ptr ns::intern_var(native_persistent_string_view const &name)
+  {
+    return intern_var(make_box<obj::symbol>(name));
   }
 
   var_ptr ns::intern_var(obj::symbol_ptr const &sym)

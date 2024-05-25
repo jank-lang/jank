@@ -1,6 +1,3 @@
-#include <iostream>
-#include <sstream>
-
 #include <fmt/core.h>
 
 #include <jank/runtime/behavior/associatively_readable.hpp>
@@ -9,7 +6,6 @@
 #include <jank/runtime/behavior/conjable.hpp>
 #include <jank/runtime/behavior/countable.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
-#include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/seq.hpp>

@@ -5,7 +5,6 @@
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/util.hpp>
@@ -359,6 +358,11 @@ namespace jank::runtime
         }
       }
     }
+  }
+
+  ns_ptr context::intern_ns(native_persistent_string_view const &name)
+  {
+    return intern_ns(make_box<obj::symbol>(name));
   }
 
   ns_ptr context::intern_ns(obj::symbol_ptr const &sym)

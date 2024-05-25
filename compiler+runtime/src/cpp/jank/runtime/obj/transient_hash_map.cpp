@@ -1,5 +1,4 @@
 #include <jank/runtime/util.hpp>
-#include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/transient_hash_map.hpp>
 
 namespace jank::runtime
