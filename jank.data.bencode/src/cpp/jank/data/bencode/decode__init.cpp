@@ -1,4 +1,4 @@
-namespace jank::data::bencode_native
+namespace jank::data::bencode::decode
 {
   struct __ns__init
   {

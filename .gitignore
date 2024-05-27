@@ -7,7 +7,7 @@ a.out
 /.lsp
 
 # lein
-/target
+target
 /classes
 /checkouts
 pom.xml

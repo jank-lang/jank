@@ -46,6 +46,7 @@ namespace jank::util::cli
     /* REPL subcommand. */
     auto &cli_repl(*cli.add_subcommand("repl", "Start up a terminal REPL and optional server"));
     cli_repl.fallthrough();
+    cli_repl.add_option("module", opts.target_module, "The entrypoint module");
     cli_repl.add_flag("--server", opts.repl_server, "Start an nREPL server");
 
     /* Run subcommand. */

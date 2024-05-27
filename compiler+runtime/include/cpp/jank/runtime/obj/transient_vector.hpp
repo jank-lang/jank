@@ -19,8 +19,7 @@ namespace jank::runtime
 
     static native_box<static_object> empty()
     {
-      static auto const ret(make_box<static_object>());
-      return ret;
+      return make_box<static_object>();
     }
 
     /* behavior::objectable */

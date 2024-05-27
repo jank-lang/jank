@@ -1,5 +1,0 @@
-(ns jank.data.bencode
-  (:require [jank.data.bencode-native]))
-
-(defn -main [& _args]
-  (println "Hello, World!"))

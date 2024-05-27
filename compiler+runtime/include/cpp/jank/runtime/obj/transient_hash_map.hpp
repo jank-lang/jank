@@ -13,7 +13,7 @@ namespace jank::runtime
     using persistent_type = static_object<object_type::persistent_hash_map>;
 
     static_object() = default;
-    static_object(static_object &&) = default;
+    static_object(static_object &&) noexcept = default;
     static_object(static_object const &) = default;
     static_object(detail::native_persistent_hash_map const &d);
     static_object(detail::native_persistent_hash_map &&d);
@@ -21,8 +21,7 @@ namespace jank::runtime
 
     static native_box<static_object> empty()
     {
-      static auto const ret(make_box<static_object>());
-      return ret;
+      return make_box<static_object>();
     }
 
     /* behavior::objectable */

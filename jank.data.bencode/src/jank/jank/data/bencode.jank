@@ -1,0 +1,7 @@
+(ns jank.data.bencode
+  (:require [jank.data.bencode.decode]))
+
+(def decode jank.data.bencode.decode/decode)
+
+(defn -main [& _args]
+  (println "Hello, World!"))

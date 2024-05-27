@@ -117,6 +117,13 @@ namespace jank
       __rt_ctx->load_module("/clojure.core").expect_ok();
     }
 
+    if(!opts.target_module.empty())
+    {
+      profile::timer timer{ "load main" };
+      __rt_ctx->load_module("/" + opts.target_module).expect_ok();
+      dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
+    }
+
     /* By default, RL will do tab completion for files. We disable that here. */
     rl_bind_key('\t', rl_insert);
 

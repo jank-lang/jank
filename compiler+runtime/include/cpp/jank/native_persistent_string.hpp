@@ -217,6 +217,13 @@ namespace jank
       }
     }
 
+    [[gnu::const]]
+    constexpr value_type
+    operator[](size_t const index) const noexcept
+    {
+      return data()[index];
+    }
+
     /*** Searches. ***/
     [[gnu::const]]
     constexpr size_type
