@@ -1,0 +1,5 @@
+(def tail
+  (loop* [n 1]
+    (if (< 0 n)
+      (recur (recur (+ n -1)))
+      n)))

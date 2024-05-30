@@ -1,0 +1,5 @@
+(assert (= `clojure.core/meow `meow `meow))
+(assert (= `[clojure.core/meow] `[meow]))
+(assert (= `[clojure.core/meow {clojure.core/a clojure.core/b}] `[meow {a b}]))
+
+:success

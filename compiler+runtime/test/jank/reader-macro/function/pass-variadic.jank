@@ -1,0 +1,9 @@
+; No fixed args.
+(assert (= [1 2 3] (#(do %&) 1 2 3)))
+
+; Fixed arg.
+(assert (= [2 3] (#(do % %&) 1 2 3)))
+(assert (= [3] (#(do %2 %&) 1 2 3)))
+(assert (= nil (#(do %3 %&) 1 2 3)))
+
+:success

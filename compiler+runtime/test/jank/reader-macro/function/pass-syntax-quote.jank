@@ -1,0 +1,6 @@
+(defmacro quote-fn [label]
+  `#(str ~label %1))
+
+(assert (= "wow1" ((quote-fn "wow") 1)))
+
+:success

@@ -1,0 +1,6 @@
+(assert (= '(clojure.core/let [a 2]
+              a)
+           `(let [~'a 2]
+              ~'a)))
+
+:success

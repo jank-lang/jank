@@ -1,0 +1,3 @@
+(assert (= (var clojure.core/str) #'str))
+
+:success

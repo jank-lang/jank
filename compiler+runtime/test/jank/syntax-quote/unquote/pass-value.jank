@@ -1,0 +1,5 @@
+(let [a [1 2 3]]
+  (assert (= a `~a))
+  (assert (= '(clojure.core/str [1 2 3]) `(str ~a))))
+
+:success
