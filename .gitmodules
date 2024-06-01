@@ -1,3 +1,6 @@
 [submodule "third-party/vcpkg"]
 	path = compiler+runtime/third-party/vcpkg
 	url = https://github.com/jank-lang/vcpkg.git
+[submodule "compiler+runtime/third-party/folly"]
+	path = compiler+runtime/third-party/folly
+	url = git@github.com:jank-lang/folly.git

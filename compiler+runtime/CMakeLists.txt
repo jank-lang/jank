@@ -204,6 +204,7 @@ target_include_directories(
     PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/cpp>"
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
 )
 target_precompile_headers(
   jank_lib
@@ -222,8 +223,7 @@ target_link_options(jank_lib PRIVATE ${jank_linker_flags})
 find_package(Immer CONFIG REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
-find_package(folly CONFIG REQUIRED)
-find_package(Boost REQUIRED COMPONENTS filesystem)
+find_package(Boost REQUIRED COMPONENTS filesystem preprocessor)
 find_package(BDWgc CONFIG REQUIRED)
 find_package(libzippp CONFIG REQUIRED)
 find_package(CLI11 CONFIG REQUIRED)
@@ -237,11 +237,11 @@ target_link_directories(jank_lib PRIVATE ${jank_cling_build_dir}/build-compiler-
 target_link_libraries(
   jank_lib PRIVATE
   jank_cling_lib immer fmt::fmt
-  Folly::folly Folly::folly_deps
   BDWgc::gc BDWgc::cord BDWgc::gccpp BDWgc::gctba
   libzippp::libzippp
   CLI11::CLI11
   readline
+  Boost::filesystem
 )
 
 set_target_properties(jank_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
@@ -278,6 +278,57 @@ set_target_properties(nanobench_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
 set_target_properties(nanobench_lib PROPERTIES ENABLE_EXPORTS 1)
 # ---- libnanobench.a ----
 
+# ---- libfolly.a ----
+# Folly is well and truly a pain in the ass to build through its
+# own build system (via vcpkg). It regularly fails to build for me
+# on all sorts of standard systems (both Linux and macOS) and jank
+# has been running with custom patches for several months now. After
+# running into compilation issues with it yet again, I've decided to
+# just rip the good bits out and only compile what we need.
+#
+# The Folly fork we have makes things even easier to build by commenting
+# out some bits related to jemalloc and tcmalloc. Folly has a whole
+# complex preprocessor system for this stuff, but it still ends up
+# linking to them even when you say you don't want them.
+
+add_library(
+  folly_lib STATIC
+  third-party/folly/folly/ScopeGuard.cpp
+  third-party/folly/folly/SharedMutex.cpp
+  third-party/folly/folly/concurrency/CacheLocality.cpp
+  third-party/folly/folly/synchronization/ParkingLot.cpp
+  third-party/folly/folly/synchronization/SanitizeThread.cpp
+  third-party/folly/folly/lang/SafeAssert.cpp
+  third-party/folly/folly/lang/ToAscii.cpp
+  third-party/folly/folly/system/ThreadId.cpp
+  third-party/folly/folly/system/AtFork.cpp
+  third-party/folly/folly/detail/Futex.cpp
+)
+
+target_include_directories(
+    folly_lib ${warning_guard}
+    PUBLIC
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
+    ${BOOST_INCLUDE_DIRS}
+)
+
+set_property(TARGET folly_lib PROPERTY OUTPUT_NAME folly)
+
+target_compile_features(folly_lib PUBLIC ${jank_cxx_standard})
+target_compile_options(folly_lib PUBLIC ${jank_compiler_flags} -w)
+target_link_options(folly_lib PRIVATE ${jank_linker_flags})
+
+set_target_properties(folly_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
+
+# Symbol exporting for JIT.
+set_target_properties(folly_lib PROPERTIES ENABLE_EXPORTS 1)
+
+target_link_libraries(
+  folly_lib PUBLIC
+  Boost::preprocessor
+)
+# ---- libfolly.a ----
+
 # ---- jank executable ----
 add_executable(
   jank_exe
@@ -303,7 +354,7 @@ target_link_libraries(
   jank_exe PUBLIC
   ${jank_link_whole_start} jank_lib ${jank_link_whole_end}
   ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
-  Boost::boost
+  folly_lib
 )
 set_target_properties(jank_exe PROPERTIES LINK_FLAGS_RELEASE -s)
 # ---- jank executable ----
@@ -340,7 +391,7 @@ if(jank_tests)
     jank_test_exe PUBLIC
     ${jank_link_whole_start} jank_lib ${jank_link_whole_end}
     ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
-    Boost::boost
+    folly_lib
     doctest::doctest
   )
 

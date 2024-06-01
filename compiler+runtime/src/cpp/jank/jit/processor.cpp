@@ -117,17 +117,14 @@ namespace jank::jit
                                               optimization_level) };
     }
 
-    auto const args(jank::util::make_array(
-      /* TODO: Path to clang++ from Cling build? Is this using the system clang++? */
-      "clang++",
-      "-std=c++17",
-      "-DHAVE_CXX14=1",
-      "-DIMMER_HAS_LIBGC=1",
-      "-include-pch",
-      pch_path_str.c_str(),
-      "-isystem",
-      include_path.c_str(),
-      O.data()));
+    auto const args(jank::util::make_array("-std=c++17",
+                                           "-DHAVE_CXX14=1",
+                                           "-DIMMER_HAS_LIBGC=1",
+                                           "-include-pch",
+                                           pch_path_str.c_str(),
+                                           "-isystem",
+                                           include_path.c_str(),
+                                           O.data()));
     interpreter = std::make_unique<cling::Interpreter>(args.size(),
                                                        args.data(),
                                                        llvm_resource_path_str.c_str());

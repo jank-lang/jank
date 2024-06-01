@@ -53,14 +53,14 @@ namespace jank::jit
           continue;
         }
 
-        auto const &filename(dir_entry.path().filename().string());
+        auto const filename(dir_entry.path().filename().string());
         auto const expect_success(boost::algorithm::starts_with(filename, "pass-"));
         auto const expect_failure(boost::algorithm::starts_with(filename, "fail-"));
         auto const expect_throw(boost::algorithm::starts_with(filename, "throw-"));
         auto const allow_failure(boost::algorithm::starts_with(filename, "warn-"));
         CHECK_MESSAGE((expect_success || expect_failure || allow_failure || expect_throw),
                       "Test file needs to begin with pass- or fail- or throw- or warn-: ",
-                      dir_entry);
+                      filename);
         ++test_count;
 
         /* TODO: Clear our rt_ctx for each run. Using the copy ctor leads to odd failures with
