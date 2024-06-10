@@ -174,7 +174,7 @@ namespace jank::runtime
 
   object_ptr context::eval_file(native_persistent_string_view const &path)
   {
-    auto const file(util::map_file(path));
+    auto const file(util::map_file({ path.data(), path.size() }));
     if(file.is_err())
     {
       throw std::runtime_error{
@@ -298,7 +298,7 @@ namespace jank::runtime
                              native_persistent_string_view const &contents) const
   {
     profile::timer timer{ "write_module" };
-    boost::filesystem::path const dir{ output_dir };
+    boost::filesystem::path const dir{ native_transient_string{ output_dir } };
     if(!boost::filesystem::exists(dir))
     {
       boost::filesystem::create_directories(dir);
@@ -338,23 +338,22 @@ namespace jank::runtime
 
   void context::dump() const
   {
-    std::cout << "context dump" << std::endl;
+    std::cout << "context dump\n";
     auto locked_namespaces(namespaces.rlock());
     for(auto const &p : *locked_namespaces)
     {
-      std::cout << "  " << p.second->name->to_string() << std::endl;
+      std::cout << "  " << p.second->name->to_string() << "\n";
       auto locked_vars(p.second->vars.rlock());
       for(auto const &vp : (*locked_vars)->data)
       {
         auto const v(expect_object<var>(vp.second));
         if(v->deref() == nullptr)
         {
-          std::cout << "    " << v->to_string() << " = nil" << std::endl;
+          std::cout << "    " << v->to_string() << " = nil\n";
         }
         else
         {
-          std::cout << "    " << v->to_string() << " = " << detail::to_string(v->deref())
-                    << std::endl;
+          std::cout << "    " << v->to_string() << " = " << detail::to_string(v->deref()) << "\n";
         }
       }
     }
@@ -636,6 +635,8 @@ namespace jank::runtime
     }
     catch(...)
     {
+      /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg): I need to log without exceptions. */
+      std::printf("Exception caught while destructing binding_scope");
     }
   }
 

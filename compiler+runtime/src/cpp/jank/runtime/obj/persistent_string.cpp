@@ -37,7 +37,7 @@ namespace jank::runtime
 
   void obj::persistent_string::to_string(fmt::memory_buffer &buff) const
   {
-    format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data);
+    fmt::format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data);
   }
 
   native_hash obj::persistent_string::to_hash() const

@@ -12,10 +12,22 @@ flags=$*
 
 # TODO: Discern path from llvm_dir
 # shellcheck disable=SC2086
-~/projects/third-party/llvm-project/build-clang/bin/clang++ -I "${include}" \
+~/projects/third-party/llvm-project/build/bin/clang++ -I "${include}" \
         -I "${include}/cpp" \
         -I "${include}/../build/vcpkg_installed/x64-clang-static/include" \
         -I "${include}/../third-party/nanobench/include" \
+        -I "${include}/../third-party/folly" \
+        -I/home/jeaye/projects/jank/compiler+runtime/build \
+        -I/home/jeaye/projects/jank/compiler+runtime \
+        -I/home/jeaye/projects/jank/compiler+runtime/include/cpp \
+        -I/home/jeaye/projects/jank/compiler+runtime/third-party/nanobench/include \
+        -I/home/jeaye/projects/jank/compiler+runtime/third-party/folly \
+        -isystem /home/jeaye/projects/third-party/llvm-project/clang/include \
+        -isystem /home/jeaye/projects/third-party/llvm-project/build/tools/clang/include \
+        -isystem /home/jeaye/projects/third-party/llvm-project/llvm/include \
+        -isystem /home/jeaye/projects/third-party/llvm-project/build/include \
+        -isystem /home/jeaye/projects/third-party/llvm-project/llvm/tools/clang/include \
+        -isystem /home/jeaye/projects/jank/compiler+runtime/build/vcpkg_installed/x64-clang-static/include \
         ${flags} \
         -std=gnu++20 \
         -DHAVE_CXX14=1 \

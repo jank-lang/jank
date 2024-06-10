@@ -40,7 +40,7 @@ namespace jank::util
     }
   }
 
-  result<mapped_file, native_persistent_string> map_file(native_persistent_string_view const &path)
+  result<mapped_file, native_persistent_string> map_file(native_transient_string const &path)
   {
     if(!boost::filesystem::exists(path.data()))
     {

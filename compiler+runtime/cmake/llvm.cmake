@@ -30,6 +30,7 @@ set(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)
 
 if (DEFINED llvm_dir)
   set(llvm_search_hints PATHS ${llvm_dir} HINTS "${llvm_dir}/lib/cmake/llvm" "${llvm_dir}/cmake" "${LLVM_CONFIG_EXTRA_PATH_HINTS}")
+  set(clang_search_hints PATHS ${llvm_dir} HINTS "${llvm_dir}/lib/cmake/llvm" "${llvm_dir}/cmake" "${LLVM_CONFIG_EXTRA_PATH_HINTS}")
 endif()
 if (DEFINED clang_dir)
   set(clang_search_hints PATHS ${clang_dir} HINTS "${clang_dir}/lib/cmake/clang" "${clang_dir}/cmake" "${CLANG_CONFIG_EXTRA_PATH_HINTS}")

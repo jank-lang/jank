@@ -15,14 +15,7 @@ set(CMAKE_MODULE_PATH
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules"
   )
 
-# jank can only be built with the corresponding Clang that Cling will be using,
-# since the JIT compiled code needs to match 1:1 with the AOT compiled runtime.
-# We just pull the Clang compiler right out of the Cling build dir.
-option(jank_cling_build_dir "Location of Cling source, if built locally" "")
-cmake_path(ABSOLUTE_PATH jank_cling_build_dir OUTPUT_VARIABLE jank_cling_build_dir_absolute)
-
 include(cmake/vcpkg.cmake)
-
 # LTO is explicitly not used, since it leads to runtime symbol lookup issues with the JIT.
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
 
@@ -43,7 +36,7 @@ set(jank_cxx_standard cxx_std_20)
 
 # TODO: Unify this with LLVM version.
 set(jank_required_compiler_id "Clang")
-set(jank_required_compiler_version "17.0.6")
+set(jank_required_compiler_version "19.0.0")
 
 # We need different flags for linking whole libraries on different OSes.
 # We need to be mindful to wrap each library with ${jank_link_whole_start} and ${jank_link_whole_end}.
@@ -74,6 +67,7 @@ if(
   )
 endif()
 
+# TODO: Remove FMT_HEADER_ONLY once the extern template Clang bug is fixed.
 set(
   jank_compiler_flags
   -Wall -Wextra -Wpedantic
@@ -84,10 +78,11 @@ set(
   -Wno-covered-switch-default
   -DJANK_CLING_BUILD_DIR="${jank_cling_build_dir_absolute}"
   -DIMMER_HAS_LIBGC=1 -DHAVE_CXX14=1
+  -DFMT_HEADER_ONLY=1
   -fno-common
   -frtti
   -fexceptions
-  $<$<CONFIG:Release>:-O3>
+  $<$<CONFIG:Release>:-Ofast>
   #-stdlib=libc++
 )
 set(
@@ -101,7 +96,6 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
   list(APPEND jank_compiler_flags -DJANK_RELEASE)
 endif()
 
-include(cmake/variables.cmake)
 include(cmake/coverage.cmake)
 include(cmake/analysis.cmake)
 
@@ -110,13 +104,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
 # ---- Clang/LLVM ----
 include(cmake/llvm.cmake)
-#llvm_map_components_to_libnames(jank_llvm_libs support lineeditor orcjit native core)
+llvm_map_components_to_libnames(jank_llvm_libs ${LLVM_TARGETS_TO_BUILD} support lineeditor orcjit native core)
 
 function(jank_hook_llvm target)
   set(tgt "${target}")
-  target_include_directories("${tgt}" PRIVATE ${LLVM_INCLUDE_DIRS})
+  target_include_directories("${tgt}" SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
   target_compile_definitions("${tgt}" PRIVATE ${LLVM_DEFINITIONS})
-  #target_link_libraries("${tgt}" PRIVATE ${jank_llvm_libs})
+  target_link_libraries("${tgt}" PRIVATE ${jank_llvm_libs})
 endfunction()
 # ---- Clang/LLVM ----
 
@@ -186,9 +180,14 @@ add_library(
 )
 
 target_include_directories(
-    jank_lib ${warning_guard}
+    jank_lib
     PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/cpp>"
+)
+target_include_directories(
+    jank_lib
+    SYSTEM
+    PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
 )
@@ -218,18 +217,19 @@ target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 
 target_link_libraries(
   jank_lib PRIVATE
-  jank_cling_lib immer fmt::fmt
+  immer fmt::fmt
   BDWgc::gc BDWgc::cord BDWgc::gccpp BDWgc::gctba
   libzippp::libzippp
   CLI11::CLI11
   readline
-  clang-cpp
+  #clang-cpp
   clangInterpreter
+  #clang-repl
   #${jank_llvm_libs}
   #z
   #lzma
   #ncursesw
-  Boost::filesystem
+  Boost::boost
 )
 
 jank_hook_llvm(jank_lib)
@@ -245,13 +245,19 @@ set_target_properties(jank_lib PROPERTIES ENABLE_EXPORTS 1)
 # whether a define has been set. This doesn't work with jank's pre-compiled
 # headers, so I've manually split the two up and included them here.
 
-add_library(
-  nanobench_lib STATIC
+set(
+  nanobench_sources
   third-party/nanobench/src/nanobench.cpp
 )
 
+add_library(nanobench_lib STATIC ${nanobench_sources})
+
+# Not our code. Don't try to lint it.
+set_source_files_properties(${nanobench_sources} PROPERTIES SKIP_LINTING ON)
+
 target_include_directories(
-    nanobench_lib ${warning_guard}
+    nanobench_lib
+    SYSTEM
     PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
 )
@@ -281,8 +287,8 @@ set_target_properties(nanobench_lib PROPERTIES ENABLE_EXPORTS 1)
 # complex preprocessor system for this stuff, but it still ends up
 # linking to them even when you say you don't want them.
 
-add_library(
-  folly_lib STATIC
+set(
+  folly_sources
   third-party/folly/folly/ScopeGuard.cpp
   third-party/folly/folly/SharedMutex.cpp
   third-party/folly/folly/concurrency/CacheLocality.cpp
@@ -295,8 +301,14 @@ add_library(
   third-party/folly/folly/detail/Futex.cpp
 )
 
+add_library(folly_lib STATIC ${folly_sources})
+
+# Not our code. Don't try to lint it.
+set_source_files_properties(${folly_sources} PROPERTIES SKIP_LINTING ON)
+
 target_include_directories(
-    folly_lib ${warning_guard}
+    folly_lib
+    SYSTEM
     PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
     ${BOOST_INCLUDE_DIRS}
@@ -342,11 +354,13 @@ target_link_libraries(
   ${jank_link_whole_start} jank_lib ${jank_link_whole_end}
   ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
   folly_lib
+  fmt::fmt
+  Boost::boost Boost::filesystem Boost::system
 )
 
 jank_hook_llvm(jank_exe)
 
-set_target_properties(jank_exe PROPERTIES LINK_FLAGS_RELEASE -s)
+set_target_properties(jank_exe PROPERTIES LINK_FLAGS_RELEASE "-s")
 # ---- jank executable ----
 
 # ---- Tests ----
@@ -380,6 +394,7 @@ if(jank_tests)
     ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
     folly_lib
     doctest::doctest
+    Boost::boost Boost::filesystem
   )
 
   jank_hook_llvm(jank_test_exe)
@@ -396,7 +411,7 @@ set(jank_incremental_pch_flag ${CMAKE_BINARY_DIR}/incremental.pch)
 add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/bin/build-pch
   OUTPUT ${jank_incremental_pch_flag}
-  COMMAND "${CMAKE_SOURCE_DIR}/bin/build-pch" "${CMAKE_SOURCE_DIR}/include" "${jank_incremental_pch_flag}"
+  COMMAND "${CMAKE_SOURCE_DIR}/bin/build-pch" "${CMAKE_SOURCE_DIR}/include" "${jank_incremental_pch_flag}" $<$<CONFIG:Release>:-Ofast>
 )
 add_custom_target(
   jank_incremental_pch

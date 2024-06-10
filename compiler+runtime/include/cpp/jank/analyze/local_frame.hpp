@@ -69,7 +69,7 @@ namespace jank::analyze
                 option<native_box<local_frame>> const &p);
 
     local_frame &operator=(local_frame const &rhs);
-    local_frame &operator=(local_frame &&rhs);
+    local_frame &operator=(local_frame &&rhs) noexcept;
 
     struct find_result
     {

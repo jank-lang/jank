@@ -6,7 +6,6 @@
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/codegen/processor.hpp>
-#include <jank/codegen/llvm/processor.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/evaluate.hpp>
 
@@ -53,10 +52,10 @@ namespace jank::evaluate
     if(exprs.empty())
     {
       return wrap_expression(analyze::expr::primitive_literal<analyze::expression>{
-        analyze::expression_base{{},
+        analyze::expression_base{ {},
                                  analyze::expression_type::return_statement,
                                  an_prc.root_frame,
-                                 true},
+                                 true },
         runtime::obj::nil::nil_const()
       });
     }
@@ -403,10 +402,7 @@ namespace jank::evaluate
       runtime::expect_object<runtime::ns>(rt_ctx.current_ns_var->deref())->to_string(),
       runtime::munge(expr.unique_name)));
     codegen::processor cg_prc{ rt_ctx, expr, module, codegen::compilation_target::repl };
-    //cg_prc.gen_body();
-    //cg_prc.jit_module->print(llvm::outs(), nullptr);
     return jit_prc.eval(cg_prc).expect_ok().unwrap();
-    //return runtime::obj::nil::nil_const();
   }
 
   runtime::object_ptr eval(runtime::context &,

@@ -23,7 +23,7 @@ namespace jank::runtime
 
   void obj::persistent_vector_sequence::to_string(fmt::memory_buffer &buff) const
   {
-    return behavior::detail::to_string(
+    behavior::detail::to_string(
       vec->data.begin()
         + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
       vec->data.end(),

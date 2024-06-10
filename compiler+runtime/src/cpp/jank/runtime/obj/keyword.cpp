@@ -31,7 +31,7 @@ namespace jank::runtime
 
   void obj::keyword::to_string(fmt::memory_buffer &buff) const
   {
-    return to_string_impl(sym, buff);
+    to_string_impl(sym, buff);
   }
 
   native_persistent_string obj::keyword::to_string() const

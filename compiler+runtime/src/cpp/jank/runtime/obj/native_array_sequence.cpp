@@ -29,7 +29,7 @@ namespace jank::runtime
 
   void obj::native_array_sequence::to_string(fmt::memory_buffer &buff) const
   {
-    return behavior::detail::to_string(arr + index, arr + size, "(", ')', buff);
+    behavior::detail::to_string(arr + index, arr + size, "(", ')', buff);
   }
 
   native_persistent_string obj::native_array_sequence::to_string() const

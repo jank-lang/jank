@@ -76,7 +76,7 @@ namespace jank::analyze
     return *this;
   }
 
-  local_frame &local_frame::operator=(local_frame &&rhs)
+  local_frame &local_frame::operator=(local_frame &&rhs) noexcept
   {
     if(this == &rhs)
     {
@@ -158,6 +158,7 @@ namespace jank::analyze
   {
     if(frame.type == local_frame::frame_type::fn)
     {
+      /* NOLINTNEXTLINE(bugprone-return-const-ref-from-parameter): I expect this to not be a temporary. */
       return frame;
     }
     else if(frame.parent.is_some())
@@ -166,6 +167,7 @@ namespace jank::analyze
     }
 
     /* Default to the root frame, if there is no fn frame. */
+    /* NOLINTNEXTLINE(bugprone-return-const-ref-from-parameter): I expect this to not be a temporary. */
     return frame;
   }
   local_frame &local_frame::find_closest_fn_frame(local_frame &frame)

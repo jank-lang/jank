@@ -62,8 +62,14 @@ namespace jank::profile
   }
 
   timer::~timer()
+  try
   {
     exit(region);
+  }
+  catch(...)
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg): I need to log without exceptions. */
+    std::printf("Exception caught while destructing timer");
   }
 
   void timer::report(native_persistent_string_view const &boundary) const
