@@ -407,9 +407,17 @@ endif()
 # ---- Tests ----
 
 # ---- Incremental PCH ----
+# jank has two types of pre-compiled headers, since Clang's JIT compiler is picky. The first
+# PCH is handled normally via CMake using `target_precompile_headers` and it's used for AOT builts.
+# However, once we boot up jank, the first thing we do is load a PCH so that the JIT environment
+# can know all of the types and functions within the jank runtime. This second PCH is our
+# "incremental" PCH, named that way since it uses Clang's -fincremental-extensions flag.
+#
+# Here, we set up the incremental PCH to be built whenever the normal PCH is changed or the script
+# for building the incremental PCH changes. Any other changes don't matter.
 set(jank_incremental_pch_flag ${CMAKE_BINARY_DIR}/incremental.pch)
 add_custom_command(
-  DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/bin/build-pch
+  DEPENDS ${CMAKE_BINARY_DIR}/CMakeFiles/jank_lib.dir/cmake_pch.hxx ${CMAKE_SOURCE_DIR}/bin/build-pch
   OUTPUT ${jank_incremental_pch_flag}
   COMMAND "${CMAKE_SOURCE_DIR}/bin/build-pch" "${CMAKE_SOURCE_DIR}/include" "${jank_incremental_pch_flag}" $<$<CONFIG:Release>:-Ofast>
 )

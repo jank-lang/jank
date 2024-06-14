@@ -33,7 +33,6 @@ flags=$*
         -DHAVE_CXX14=1 \
         -DIMMER_HAS_LIBGC=1 \
         -w \
-        -Xclang -fpch-instantiate-templates \
         -Xclang -fincremental-extensions \
         -Xclang -emit-pch \
         -x c++-header \

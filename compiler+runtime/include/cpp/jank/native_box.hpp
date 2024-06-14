@@ -239,11 +239,11 @@ namespace jank
     native_box<T> ret;
     if constexpr(T::pointer_free)
     {
-      ret = new(PointerFreeGC) T{ std::forward<Args>(args)... };
+      ret.data = new(PointerFreeGC) T{ std::forward<Args>(args)... };
     }
     else
     {
-      ret = new(GC) T{ std::forward<Args>(args)... };
+      ret.data = new(GC) T{ std::forward<Args>(args)... };
     }
 
     if(!ret)
