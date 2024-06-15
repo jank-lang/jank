@@ -35,6 +35,7 @@ namespace jank::runtime
     iterator,
     native_function_wrapper,
     jit_function,
+    multi_function,
     native_array_sequence,
     native_vector_sequence,
     persistent_vector_sequence,
@@ -46,6 +47,7 @@ namespace jank::runtime
     ns,
     var,
     var_thread_binding,
+    var_unbound_root,
   };
 
   struct object
@@ -67,21 +69,11 @@ namespace jank::runtime
   {
     template <typename T>
     concept objectable = requires(T * const t) {
-      {
-        t->equal(std::declval<object const &>())
-      } -> std::convertible_to<native_bool>;
-      {
-        t->to_string()
-      } -> std::convertible_to<native_persistent_string>;
-      {
-        t->to_string(std::declval<fmt::memory_buffer &>())
-      } -> std::same_as<void>;
-      {
-        t->to_hash()
-      } -> std::convertible_to<native_integer>;
-      {
-        t->base
-      } -> std::same_as<object &>;
+      { t->equal(std::declval<object const &>()) } -> std::convertible_to<native_bool>;
+      { t->to_string() } -> std::convertible_to<native_persistent_string>;
+      { t->to_string(std::declval<fmt::memory_buffer &>()) } -> std::same_as<void>;
+      { t->to_hash() } -> std::convertible_to<native_integer>;
+      { t->base } -> std::same_as<object &>;
     };
   }
 }

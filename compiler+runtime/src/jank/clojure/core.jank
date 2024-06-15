@@ -720,25 +720,14 @@
 
 (defn pop!
   ([coll]
-   (native/raw "if( ~{ coll }->type == object_type::transient_vector )
-                {
-                  auto transient_coll = expect_object<obj::transient_vector>(~{ coll });
-                  __value = transient_coll->pop_in_place();
-                }
-                else
-                { ~{ (throw (ex-info :not-transient-vector {:o coll})) }; }
-               ")))
+   (native/raw "auto transient_coll = try_object<obj::transient_vector>(~{ coll });
+                __value = transient_coll->pop_in_place();")))
 
 (defn disj!
   ([set] set)
   ([set elem]
-   (native/raw "if( ~{ set }->type == object_type::transient_set)
-                {
-                  auto typed_set = expect_object<obj::transient_set>(~{ set });
-                  __value = typed_set->disjoin_in_place(~{ elem });
-                }
-                else
-                { ~{ (throw (ex-info :not-transient-set {:o set})) }; }
+   (native/raw "auto typed_set = try_object<obj::transient_set>(~{ set });
+                __value = typed_set->disjoin_in_place(~{ elem });
                "))
   ([set elem & elems]
     (let [ret (disj! set elem)]
@@ -746,7 +735,7 @@
         (recur ret (first elems) (next elems))
         ret))))
 
-; Functions.
+;; Functions.
 (defn spread
   {:private true}
   [arglist]
@@ -1003,13 +992,13 @@
   multiple times, and thus should be free of side effects.  Returns
   the value that was swapped in."
   ([atom f]
-   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap(~{ f });"))
+   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap(~{ f });"))
   ([atom f x]
-   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x });"))
+   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x });"))
   ([atom f x y]
-   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x }, ~{ y });"))
+   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x }, ~{ y });"))
   ([atom f x y & args]
-   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x }, ~{ y }, ~{ args });")))
+   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x }, ~{ y }, ~{ args });")))
 
 (defn swap-vals!
   "Atomically swaps the value of atom to be:
@@ -1017,32 +1006,32 @@
   multiple times, and thus should be free of side effects.
   Returns [old new], the value of the atom before and after the swap."
   ([atom f]
-   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap_vals(~{ f });"))
+   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap_vals(~{ f });"))
   ([atom f x]
-   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x });"))
+   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x });"))
   ([atom f x y]
-   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x }, ~{ y });"))
+   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x }, ~{ y });"))
   ([atom f x y & args]
-   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x }, ~{ y }, ~{ args });")))
+   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x }, ~{ y }, ~{ args });")))
 
 (defn compare-and-set!
   "Atomically sets the value of atom to newval if and only if the
   current value of the atom is identical to oldval. Returns true if
   set happened, else false"
   [atom oldval newval]
-  (native/raw "__value = expect_object<obj::atom>(~{ atom })->compare_and_set(~{ oldval }, ~{ newval });"))
+  (native/raw "__value = try_object<obj::atom>(~{ atom })->compare_and_set(~{ oldval }, ~{ newval });"))
 
 (defn reset!
   "Sets the value of atom to newval without regard for the
   current value. Returns newval."
   [atom newval]
-  (native/raw "__value = expect_object<obj::atom>(~{ atom })->reset(~{ newval });"))
+  (native/raw "__value = try_object<obj::atom>(~{ atom })->reset(~{ newval });"))
 
 (defn reset-vals!
   "Sets the value of atom to newval. Returns [old new], the value of the
    atom before and after the reset."
   [atom newval]
-  (native/raw "__value = expect_object<obj::atom>(~{ atom })->reset_vals(~{ newval });"))
+  (native/raw "__value = try_object<obj::atom>(~{ atom })->reset_vals(~{ newval });"))
 
 ;; Volatiles.
 (defn volatile!
@@ -1054,7 +1043,7 @@
   "Sets the value of volatile to newval without regard for the
    current value. Returns newval."
   [vol newval]
-  (native/raw "__value = expect_object<obj::volatile_>(~{ vol })->reset(~{ newval });"))
+  (native/raw "__value = try_object<obj::volatile_>(~{ vol })->reset(~{ newval });"))
 
 ; XXX: In Clojure, this is a macro (for perf reasons). However, building native/raw
 ; forms from macros is quite cumbersome right now. A function will do until it doesn't.
@@ -1063,7 +1052,7 @@
   (apply f current-value-of-vol args). Returns the value that
   was swapped in."
   [vol f & args]
-  (native/raw "__value = expect_object<obj::volatile_>(~{ vol })->reset(~{ (apply f (deref vol) args) });"))
+  (native/raw "__value = try_object<obj::volatile_>(~{ vol })->reset(~{ (apply f (deref vol) args) });"))
 
 (defn volatile?
   "Returns true if x is a volatile."
@@ -1484,11 +1473,11 @@
   (native/raw "__value = make_box<obj::chunk_buffer>(~{ capacity });"))
 
 (defn chunk-append [b x]
-  (native/raw "auto const buffer(expect_object<obj::chunk_buffer>(b));
+  (native/raw "auto const buffer(try_object<obj::chunk_buffer>(b));
                buffer->append(~{ x });"))
 
 (defn chunk [b]
-  (native/raw "auto const buffer(expect_object<obj::chunk_buffer>(b));
+  (native/raw "auto const buffer(try_object<obj::chunk_buffer>(b));
                __value = buffer->chunk();"))
 
 (defn chunk-first [o]
@@ -1895,6 +1884,27 @@
       (persistent! map))))
 
 ;; Sets.
+(defn hash-set
+  "Returns a new hash set with supplied keys.  Any equal keys are
+  handled as if by repeated uses of conj."
+  ([]
+   #{})
+  ([& keys]
+   (native/raw "__value = obj::persistent_set::create_from_seq(~{ keys });")))
+
+(defn disj
+  "disj[oin]. Returns a new set of the same (hashed/sorted) type, that
+  does not contain key(s)."
+  ([set]
+   set)
+  ([set key]
+   (native/raw "__value = jank::runtime::disj(~{ set }, ~{ key });"))
+  ([set key & ks]
+   (let* [res (disj set key)]
+     (if (empty? ks)
+       res
+       (recur res (first ks) (next ks))))))
+
 (defn set? [o]
   (native/raw "__value = make_box(~{ o }->type == object_type::persistent_set);"))
 
@@ -2127,19 +2137,21 @@
   (assert-macro-args
     (vector? bindings) "a vector for its binding"
     (even? (count bindings)) "an even number of forms in binding vector")
-  (let [->var-pairs (fn [var-vals ret]
-                      ; TODO: loop
-                      (let [vvs (seq var-vals)]
+  (let [->var-pairs (fn ->var-pairs [var-vals]
+                      (loop [ret []
+                             vvs (seq var-vals)]
                         (if vvs
-                          (recur (nnext vvs)
-                                 (conj (conj ret (list 'var (first vvs))) (second vvs)))
+                          (recur (conj (conj ret `(var ~(first vvs))) (second vvs))
+                                 (next (next vvs)))
                           (seq ret))))]
-    (list* 'clojure.core/let []
-           (list 'clojure.core/push-thread-bindings
-                 (list* 'clojure.core/hash-map
-                        (->var-pairs bindings [])))
-           (list (cons 'do body)
-                 (list 'clojure.core/pop-thread-bindings)))))
+    `(do
+       (push-thread-bindings (hash-map ~@(->var-pairs bindings)))
+       (try
+         ~@body
+         (catch e#
+           (throw e#))
+         (finally
+           (pop-thread-bindings))))))
 
 ;; Input/output.
 (defn println [& args]
@@ -3434,7 +3446,155 @@
                );
               __value = make_box(fn);"))
 
+; Vars.
+(defn var? [o]
+  (native/raw "__value = make_box(~{ o }->type == object_type::var);"))
+
+(defn var-get [v]
+  (native/raw "__value = try_object<runtime::var>(~{ v })->deref();"))
+
+(defn alter-var-root
+  "Atomically alters the root binding of var v by applying f to its
+  current value plus any args"
+  [v f & args]
+  (native/raw "__value = try_object<runtime::var>(~{ v })->alter_root(~{ f }, ~{ args });"))
+
+(defn bound?
+  "Returns true if all of the vars provided as arguments have any bound value, root or thread-local.
+  Implies that deref'ing the provided vars will succeed. Returns true if no vars are provided."
+  [& vars]
+  (every? (fn [v]
+            (native/raw "__value = make_box(try_object<runtime::var>(~{ v })->is_bound());"))
+          vars))
+
+(defn thread-bound?
+  "Returns true if all of the vars provided as arguments have thread-local bindings.
+  Implies that set!'ing the provided vars will succeed.  Returns true if no vars are provided."
+  [& vars]
+  (every? (fn [v]
+            (native/raw "__value = make_box(try_object<runtime::var>(~{ v })->get_thread_binding() != nullptr);"))
+          vars))
+
+;; Multimethods.
+(defn- check-valid-options
+  "Throws an exception if the given option map contains keys not listed
+  as valid, else returns nil."
+  [options & valid-keys]
+  (when (seq (apply disj (apply hash-set (keys options)) valid-keys))
+    (throw (apply str "Only these options are valid: "
+                  (first valid-keys)
+                  (map #(str ", " %) (rest valid-keys))))))
+
+(defn- multi-fn? [o]
+  (native/raw "__value = make_box(~{ o }->type == object_type::multi_function);"))
+
+(defn- multi-fn [name dispatch-fn default hierarchy]
+  (native/raw "__value = make_box<obj::multi_function>(~{ name }, ~{ dispatch-fn }, ~{ default }, ~{ hierarchy });"))
+
+(def global-hierarchy)
+
+(defmacro defmulti
+  "Creates a new multimethod with the associated dispatch function.
+  The docstring and attr-map are optional.
+
+  Options are key-value pairs and may be one of:
+
+  :default
+
+  The default dispatch value, defaults to :default
+
+  :hierarchy
+
+  The value used for hierarchical dispatch (e.g. ::square is-a ::shape)
+
+  Hierarchies are type-like relationships that do not depend upon type
+  inheritance. By default Clojure's multimethods dispatch off of a
+  global hierarchy map.  However, a hierarchy relationship can be
+  created with the derive function used to augment the root ancestor
+  created with make-hierarchy.
+
+  Multimethods expect the value of the hierarchy option to be supplied as
+  a reference type e.g. a var (i.e. via the Var-quote dispatch macro #'
+  or the var special form)."
+  [mm-name & options]
+  (let [docstring (if (string? (first options))
+                    (first options)
+                    nil)
+        options (if (string? (first options))
+                  (next options)
+                  options)
+        m (if (map? (first options))
+            (first options)
+            {})
+        options (if (map? (first options))
+                  (next options)
+                  options)
+        dispatch-fn (first options)
+        options (next options)
+        m (if docstring
+            (assoc m :doc docstring)
+            m)
+        m (if (meta mm-name)
+            (conj (meta mm-name) m)
+            m)
+        mm-name (with-meta mm-name m)]
+    (let [options (apply hash-map options)
+          default (get options :default :default)
+          hierarchy (get options :hierarchy #'global-hierarchy)]
+      (check-valid-options options :default :hierarchy)
+      `(let [v# (def ~mm-name)]
+         (when-not (multi-fn? (deref v#))
+           (def ~mm-name (multi-fn '~(symbol *ns* mm-name) ~dispatch-fn ~default ~hierarchy)))))))
+
+;(defmacro defmethod
+;  "Creates and installs a new method of multimethod associated with dispatch-value. "
+;  {:added "1.0"}
+;  [multifn dispatch-val & fn-tail]
+;  `(. ~(with-meta multifn {:tag 'clojure.lang.MultiFn}) addMethod ~dispatch-val (fn ~@fn-tail)))
+;
+;(defn remove-all-methods
+;  "Removes all of the methods of multimethod."
+;  {:added "1.2"
+;   :static true}
+; [^clojure.lang.MultiFn multifn]
+; (.reset multifn))
+;
+;(defn remove-method
+;  "Removes the method of multimethod associated with dispatch-value."
+;  {:added "1.0"
+;   :static true}
+; [^clojure.lang.MultiFn multifn dispatch-val]
+; (. multifn removeMethod dispatch-val))
+;
+;(defn prefer-method
+;  "Causes the multimethod to prefer matches of dispatch-val-x over dispatch-val-y
+;   when there is a conflict"
+;  {:added "1.0"
+;   :static true}
+;  [^clojure.lang.MultiFn multifn dispatch-val-x dispatch-val-y]
+;  (. multifn preferMethod dispatch-val-x dispatch-val-y))
+;
+;(defn methods
+;  "Given a multimethod, returns a map of dispatch values -> dispatch fns"
+;  {:added "1.0"
+;   :static true}
+;  [^clojure.lang.MultiFn multifn] (.getMethodTable multifn))
+;
+;(defn get-method
+;  "Given a multimethod and a dispatch value, returns the dispatch fn
+;  that would apply to that value, or nil if none apply and no default"
+;  {:added "1.0"
+;   :static true}
+;  [^clojure.lang.MultiFn multifn dispatch-val] (.getMethod multifn dispatch-val))
+;
+;(defn prefers
+;  "Given a multimethod, returns a map of preferred value -> set of other values"
+;  {:added "1.0"
+;   :static true}
+;  [^clojure.lang.MultiFn multifn] (.getPreferTable multifn))
+
 ;; Miscellaneous.
+; TODO: jank.core
 (defn sleep [ms]
   (let [ms (int ms)]
     (native/raw "std::this_thread::sleep_for(std::chrono::milliseconds(~{ ms }->data));")))
@@ -3458,10 +3618,10 @@
 (defn with-redefs-fn [binding-map fun]
   (let [root-bind (fn [m]
                     (doseq [kv m]
-                      (native/raw "expect_object<runtime::var>(~{ (first kv) })->bind_root(~{ (second kv) });")))
+                      (native/raw "try_object<runtime::var>(~{ (first kv) })->bind_root(~{ (second kv) });")))
         old-vals (zipmap (keys binding-map)
                          (map (fn [v]
-                                (native/raw "__value = expect_object<runtime::var>(~{ v })->get_root();"))
+                                (native/raw "__value = try_object<runtime::var>(~{ v })->get_root();"))
                               (keys binding-map)))]
     (try
       (root-bind binding-map)
@@ -3491,7 +3651,7 @@
 ;; jank.compiler things.
 ; TODO: Options, following what criterium offers.
 (defn benchmark [label fun]
-  (native/raw "auto const label_str(expect_object<obj::persistent_string>(~{ (str label) }));
+  (native/raw "auto const label_str(try_object<obj::persistent_string>(~{ (str label) }));
               visit_object
               (
                [=](auto const typed_fun)
@@ -3558,28 +3718,17 @@
     (native/raw "__rt_ctx->current_ns_var->set(__rt_ctx->intern_ns(expect_object<obj::symbol>(sym))).expect_ok();")
     (throw "argument to in-ns must be a symbol")))
 
-; Vars.
-(defn var? [o]
-  (native/raw "__value = make_box(~{ o }->type == object_type::var);"))
-
-(defn var-get [v]
-  (assert (var? v))
-  (native/raw "__value = expect_object<runtime::var>(~{ v })->deref();"))
-
 ; Namespaces (again).
 (defn create-ns [sym]
-  (assert (symbol? sym))
-  (native/raw "__value = __rt_ctx->intern_ns(expect_object<obj::symbol>(~{ sym }));"))
+  (native/raw "__value = __rt_ctx->intern_ns(try_object<obj::symbol>(~{ sym }));"))
 
 (defn find-ns [sym]
-  (assert (symbol? sym))
-  (native/raw "__value = __rt_ctx->find_ns(expect_object<obj::symbol>(~{ sym })).unwrap_or(nullptr);
+  (native/raw "__value = __rt_ctx->find_ns(try_object<obj::symbol>(~{ sym })).unwrap_or(nullptr);
                if(!__value)
                { __value = obj::nil::nil_const(); }"))
 
 (defn remove-ns [sym]
-  (assert (symbol? sym))
-  (native/raw "__value = __rt_ctx->remove_ns(expect_object<obj::symbol>(~{ sym })).unwrap_or(nullptr);
+  (native/raw "__value = __rt_ctx->remove_ns(try_object<obj::symbol>(~{ sym })).unwrap_or(nullptr);
                if(!__value)
                { __value = obj::nil::nil_const(); }"))
 
@@ -3635,10 +3784,9 @@
 
 (defn alias [alias ns-sym]
   (let [ns-obj (the-ns ns-sym)]
-    (assert (symbol? alias))
     (native/raw "expect_object<ns>(~{ *ns* })->add_alias
                  (
-                   expect_object<obj::symbol>(~{ alias }),
+                   try_object<obj::symbol>(~{ alias }),
                    expect_object<ns>(~{ ns-obj })
                  ).expect_ok();")))
 
@@ -3662,7 +3810,7 @@
                     (throw (ex-info :var-does-not-exist {:value sym})))
                   (native/raw "expect_object<runtime::ns>(~{ *ns* })->refer
                               (
-                               expect_object<obj::symbol>(~{ sym }),
+                               try_object<obj::symbol>(~{ sym }),
                                expect_object<runtime::var>(~{ v })
                                ).expect_ok();"))))
             nil

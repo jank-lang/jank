@@ -5,6 +5,12 @@
 
 namespace jank::runtime
 {
+  namespace obj
+  {
+    using persistent_list = static_object<object_type::persistent_list>;
+    using persistent_list_ptr = native_box<persistent_list>;
+  }
+
   template <typename T>
   requires behavior::seqable<T>
   auto seq(native_box<T> const s)
@@ -73,6 +79,7 @@ namespace jank::runtime
   native_bool is_map(object_ptr o);
   object_ptr cons(object_ptr head, object_ptr tail);
   object_ptr conj(object_ptr s, object_ptr o);
+  object_ptr disj(object_ptr s, object_ptr o);
   object_ptr assoc(object_ptr m, object_ptr k, object_ptr v);
   object_ptr dissoc(object_ptr m, object_ptr k);
   object_ptr get(object_ptr m, object_ptr key);
@@ -88,6 +95,7 @@ namespace jank::runtime
   object_ptr nth(object_ptr o, object_ptr idx, object_ptr fallback);
   object_ptr peek(object_ptr o);
   object_ptr pop(object_ptr o);
+  obj::persistent_list_ptr into_list(object_ptr s);
 
   namespace detail
   {

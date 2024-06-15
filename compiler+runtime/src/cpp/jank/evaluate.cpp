@@ -52,10 +52,10 @@ namespace jank::evaluate
     if(exprs.empty())
     {
       return wrap_expression(analyze::expr::primitive_literal<analyze::expression>{
-        analyze::expression_base{{},
+        analyze::expression_base{ {},
                                  analyze::expression_type::return_statement,
                                  an_prc.root_frame,
-                                 true},
+                                 true },
         runtime::obj::nil::nil_const()
       });
     }
@@ -113,6 +113,11 @@ namespace jank::evaluate
 
     auto const evaluated_value(eval(rt_ctx, jit_prc, expr.value.unwrap()));
     var->bind_root(evaluated_value);
+
+    auto const meta(var->meta.unwrap_or(runtime::obj::nil::nil_const()));
+    auto const dynamic(runtime::get(meta, rt_ctx.intern_keyword("dynamic").expect_ok()));
+    var->set_dynamic(runtime::detail::truthy(dynamic));
+
     return var;
   }
 

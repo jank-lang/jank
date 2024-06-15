@@ -1001,5 +1001,23 @@ namespace jank::runtime
     {
       return 0;
     }
+
+    callable_ptr to_callable(object_ptr const fn)
+    {
+      return visit_object(
+        [=](auto const typed_fn) -> callable_ptr {
+          using T = typename decltype(typed_fn)::value_type;
+
+          if constexpr(std::is_base_of_v<callable, T>)
+          {
+            return typed_fn;
+          }
+          else
+          {
+            throw std::runtime_error{ fmt::format("not callable {}", typed_fn->to_string()) };
+          }
+        },
+        fn);
+    }
   }
 }

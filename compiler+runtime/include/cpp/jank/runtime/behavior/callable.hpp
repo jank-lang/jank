@@ -196,18 +196,14 @@ namespace jank::runtime
 
     using callable_ptr = native_box<callable>;
 
+    callable_ptr to_callable(object_ptr fn);
+
     /* TODO: Is this needed? A non-callable function-like would need to define all call overloads? :( */
     template <typename T>
     concept function_like = requires(T * const t) {
-      {
-        t->call(object_ptr{})
-      } -> std::convertible_to<object_ptr>;
-      {
-        t->call(object_ptr{}, object_ptr{})
-      } -> std::convertible_to<object_ptr>;
-      {
-        t->call(object_ptr{}, object_ptr{}, object_ptr{})
-      } -> std::convertible_to<object_ptr>;
+      { t->call(object_ptr{}) } -> std::convertible_to<object_ptr>;
+      { t->call(object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
+      { t->call(object_ptr{}, object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
       {
         t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{})
       } -> std::convertible_to<object_ptr>;
@@ -248,9 +244,7 @@ namespace jank::runtime
                 object_ptr{})
       } -> std::convertible_to<object_ptr>;
 
-      {
-        t->get_arity_flags()
-      } -> std::convertible_to<size_t>;
+      { t->get_arity_flags() } -> std::convertible_to<size_t>;
     };
   }
 }

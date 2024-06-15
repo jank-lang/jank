@@ -26,6 +26,7 @@
 #include <jank/runtime/obj/chunked_cons.hpp>
 #include <jank/runtime/obj/range.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
+#include <jank/runtime/obj/multi_function.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_vector_sequence.hpp>
 #include <jank/runtime/obj/persistent_list_sequence.hpp>
@@ -72,8 +73,28 @@ namespace jank::runtime
     return const_cast<object *>(&o->base);
   }
 
-  /* This is dangerous. You probably don't want it. Just use `visit_object`. However, if you're
-   * absolutely certain you know the type of an erased object, I guess you can use this. */
+  /* This is dangerous. You probably don't want it. Just use `try_object` or `visit_object`.
+   * However, if you're absolutely certain you know the type of an erased object, I guess
+   * you can use this. */
+  template <typename T>
+  requires behavior::objectable<T>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  constexpr native_box<T> try_object(object const * const o)
+  {
+    assert(o);
+    if(o->type != detail::object_type_to_enum<T>::value)
+    {
+      /* TODO: Use fmt when possible. */
+      throw std::runtime_error{ "invalid object type" };
+      //throw std::runtime_error{ fmt::format(
+      //  "invalid object type (expected {}, found {})",
+      //  magic_enum::enum_name(detail::object_type_to_enum<T>::value),
+      //  magic_enum::enum_name(o->type)) };
+    }
+    return reinterpret_cast<T *>(reinterpret_cast<char *>(const_cast<object *>(o))
+                                 - offsetof(T, base));
+  }
+
   template <typename T>
   requires behavior::objectable<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
@@ -278,6 +299,11 @@ namespace jank::runtime
           return fn(expect_object<obj::jit_function>(erased), std::forward<Args>(args)...);
         }
         break;
+      case object_type::multi_function:
+        {
+          return fn(expect_object<obj::multi_function>(erased), std::forward<Args>(args)...);
+        }
+        break;
       case object_type::atom:
         {
           return fn(expect_object<obj::atom>(erased), std::forward<Args>(args)...);
@@ -308,8 +334,15 @@ namespace jank::runtime
           return fn(expect_object<var_thread_binding>(erased), std::forward<Args>(args)...);
         }
         break;
+      case object_type::var_unbound_root:
+        {
+          return fn(expect_object<var_unbound_root>(erased), std::forward<Args>(args)...);
+        }
+        break;
       default:
         {
+          /* TODO: Use fmt when possible. */
+          throw std::runtime_error{ "invalid object type" };
           //throw std::runtime_error
           //{
           //  fmt::format

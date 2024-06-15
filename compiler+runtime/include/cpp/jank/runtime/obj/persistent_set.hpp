@@ -44,6 +44,8 @@ namespace jank::runtime
       return ret;
     }
 
+    static native_box<static_object> create_from_seq(object_ptr const seq);
+
     /* behavior::objectable */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
@@ -70,6 +72,7 @@ namespace jank::runtime
     obj::transient_set_ptr to_transient() const;
 
     native_bool contains(object_ptr o) const;
+    native_box<static_object> disj(object_ptr o) const;
 
     object base{ object_type::persistent_set };
     value_type data;

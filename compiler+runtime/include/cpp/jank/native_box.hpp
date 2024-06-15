@@ -27,6 +27,13 @@ namespace jank
     {
     }
 
+    template <typename C>
+    requires std::is_convertible_v<C *, T *>
+    native_box(native_box<C> const data)
+      : data{ data.data }
+    {
+    }
+
     value_type *operator->() const
     {
       assert(data);

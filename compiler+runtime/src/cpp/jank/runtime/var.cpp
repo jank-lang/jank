@@ -6,11 +6,10 @@
 
 namespace jank::runtime
 {
-  /* NOTE: We default to nil, rather than a special unbound type. */
   var::static_object(ns_ptr const &n, obj::symbol_ptr const &name)
     : n{ n }
     , name{ name }
-    , root{ obj::nil::nil_const() }
+    , root{ make_box<var_unbound_root>(this) }
   {
   }
 
@@ -83,6 +82,11 @@ namespace jank::runtime
     return this;
   }
 
+  native_bool var::is_bound() const
+  {
+    return (*root.rlock())->type != object_type::var_unbound_root;
+  }
+
   object_ptr var::get_root() const
   {
     profile::timer timer{ "var get_root" };
@@ -94,6 +98,13 @@ namespace jank::runtime
     profile::timer timer{ "var bind_root" };
     *root.wlock() = r;
     return this;
+  }
+
+  object_ptr var::alter_root(object_ptr const f, object_ptr const args)
+  {
+    auto locked_root(root.wlock());
+    *locked_root = apply_to(f, cons(*locked_root, args));
+    return *locked_root;
   }
 
   string_result<void> var::set(object_ptr const r) const
@@ -187,5 +198,35 @@ namespace jank::runtime
   native_hash var_thread_binding::to_hash() const
   {
     return hash::visit(value);
+  }
+
+  var_unbound_root::static_object(var_ptr const var)
+    : var{ var }
+  {
+  }
+
+  native_bool var_unbound_root::equal(object const &o) const
+  {
+    return &base == &o;
+  }
+
+  native_persistent_string var_unbound_root::to_string() const
+  {
+    fmt::memory_buffer buff;
+    to_string(buff);
+    return native_persistent_string{ buff.data(), buff.size() };
+  }
+
+  void var_unbound_root::to_string(fmt::memory_buffer &buff) const
+  {
+    fmt::format_to(std::back_inserter(buff),
+                   "unbound@{} for var {}",
+                   fmt::ptr(&base),
+                   var->to_string());
+  }
+
+  native_hash var_unbound_root::to_hash() const
+  {
+    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
   }
 }
