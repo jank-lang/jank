@@ -106,6 +106,11 @@ namespace jank::evaluate
   {
     auto var(rt_ctx.intern_var(expr.name).expect_ok());
     var->meta = expr.name->meta;
+
+    auto const meta(var->meta.unwrap_or(runtime::obj::nil::nil_const()));
+    auto const dynamic(runtime::get(meta, rt_ctx.intern_keyword("dynamic").expect_ok()));
+    var->set_dynamic(runtime::detail::truthy(dynamic));
+
     if(expr.value.is_none())
     {
       return var;
@@ -113,10 +118,6 @@ namespace jank::evaluate
 
     auto const evaluated_value(eval(rt_ctx, jit_prc, expr.value.unwrap()));
     var->bind_root(evaluated_value);
-
-    auto const meta(var->meta.unwrap_or(runtime::obj::nil::nil_const()));
-    auto const dynamic(runtime::get(meta, rt_ctx.intern_keyword("dynamic").expect_ok()));
-    var->set_dynamic(runtime::detail::truthy(dynamic));
 
     return var;
   }

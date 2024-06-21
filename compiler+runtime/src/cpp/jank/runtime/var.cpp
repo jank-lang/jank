@@ -84,7 +84,7 @@ namespace jank::runtime
 
   native_bool var::is_bound() const
   {
-    return (*root.rlock())->type != object_type::var_unbound_root;
+    return deref()->type != object_type::var_unbound_root;
   }
 
   object_ptr var::get_root() const
