@@ -56,12 +56,12 @@ namespace jank::runtime
     return sym.ns;
   }
 
-  object_ptr obj::keyword::call(object_ptr const m) const
+  object_ptr obj::keyword::call(object_ptr const m)
   {
     return runtime::get(m, this);
   }
 
-  object_ptr obj::keyword::call(object_ptr const m, object_ptr const fallback) const
+  object_ptr obj::keyword::call(object_ptr const m, object_ptr const fallback)
   {
     return runtime::get(m, this, fallback);
   }

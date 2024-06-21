@@ -1819,7 +1819,7 @@ namespace jank::codegen
 
       fmt::format_to(inserter,
                      R"(
-          ) const final {{
+          ) final {{
           using namespace jank;
           using namespace jank::runtime;
         )");

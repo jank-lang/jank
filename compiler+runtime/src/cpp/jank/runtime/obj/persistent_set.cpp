@@ -100,7 +100,7 @@ namespace jank::runtime
     return ret;
   }
 
-  object_ptr obj::persistent_set::call(object_ptr const o) const
+  object_ptr obj::persistent_set::call(object_ptr const o)
   {
     auto const found(data.find(o));
     if(!found)

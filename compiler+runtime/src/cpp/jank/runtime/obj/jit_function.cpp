@@ -44,8 +44,8 @@ namespace jank::runtime
     return this;
   }
 
-  object_ptr obj::jit_function::this_object_ptr() const
+  object_ptr obj::jit_function::this_object_ptr()
   {
-    return &const_cast<obj::jit_function *>(this)->base;
+    return &this->base;
   }
 }

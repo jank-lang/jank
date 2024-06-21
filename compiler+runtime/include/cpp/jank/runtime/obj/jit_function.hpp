@@ -27,7 +27,7 @@ namespace jank::runtime
     native_box<static_object> with_meta(object_ptr m);
 
     /* behavior::callable */
-    object_ptr this_object_ptr() const final;
+    object_ptr this_object_ptr() final;
 
     object base{ object_type::jit_function };
     behavior::callable_ptr data{};

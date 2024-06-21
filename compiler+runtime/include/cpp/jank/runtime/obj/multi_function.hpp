@@ -30,17 +30,17 @@ namespace jank::runtime
     native_hash to_hash() const;
 
     /* behavior::callable */
-    object_ptr call() const override;
-    object_ptr call(object_ptr) const override;
-    object_ptr call(object_ptr, object_ptr) const override;
-    object_ptr call(object_ptr, object_ptr, object_ptr) const override;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr) const override;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const override;
+    object_ptr call() override;
+    object_ptr call(object_ptr) override;
+    object_ptr call(object_ptr, object_ptr) override;
+    object_ptr call(object_ptr, object_ptr, object_ptr) override;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr) override;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) override;
     object_ptr
-      call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const override;
+      call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) override;
     object_ptr
       call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr)
-        const override;
+        override;
     object_ptr call(object_ptr,
                     object_ptr,
                     object_ptr,
@@ -48,16 +48,7 @@ namespace jank::runtime
                     object_ptr,
                     object_ptr,
                     object_ptr,
-                    object_ptr) const override;
-    object_ptr call(object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr) const override;
+                    object_ptr) override;
     object_ptr call(object_ptr,
                     object_ptr,
                     object_ptr,
@@ -66,19 +57,43 @@ namespace jank::runtime
                     object_ptr,
                     object_ptr,
                     object_ptr,
+                    object_ptr) override;
+    object_ptr call(object_ptr,
                     object_ptr,
-                    object_ptr) const override;
-    object_ptr this_object_ptr() const final;
+                    object_ptr,
+                    object_ptr,
+                    object_ptr,
+                    object_ptr,
+                    object_ptr,
+                    object_ptr,
+                    object_ptr,
+                    object_ptr) override;
+    object_ptr this_object_ptr() final;
+
+    native_box<static_object> reset();
+    obj::persistent_hash_map_ptr reset_cache();
+    native_box<static_object> add_method(object_ptr dispatch_val, object_ptr method);
+    native_box<static_object> remove_method(object_ptr dispatch_val);
+    native_box<static_object> prefer_method(object_ptr x, object_ptr y);
+    native_bool is_preferred(object_ptr hierarchy, object_ptr x, object_ptr y) const;
+
+    static native_bool is_a(object_ptr hierarchy, object_ptr x, object_ptr y);
+    native_bool is_dominant(object_ptr hierarchy, object_ptr x, object_ptr y) const;
+
+    object_ptr get_fn(object_ptr dispatch_val);
+    object_ptr get_method(object_ptr dispatch_val);
+    object_ptr find_and_cache_best_method(object_ptr dispatch_val);
 
     object base{ object_type::multi_function };
     behavior::callable_ptr dispatch{};
     object_ptr default_dispatch_value{};
-    object_ptr hierarchy{};
-    object_ptr cached_hierarchy{};
+    var_ptr hierarchy{};
+    mutable object_ptr cached_hierarchy{};
     obj::persistent_hash_map_ptr method_table{};
+    mutable obj::persistent_hash_map_ptr method_cache{};
     obj::persistent_hash_map_ptr prefer_table{};
-    obj::persistent_hash_map_ptr method_cache{};
     obj::symbol_ptr name;
+    std::mutex data_lock;
   };
 
   namespace obj

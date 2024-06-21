@@ -75,8 +75,8 @@ namespace jank::runtime
     object_ptr conj(object_ptr head) const;
 
     /* behavior::callable */
-    object_ptr call(object_ptr) const;
-    object_ptr call(object_ptr, object_ptr) const;
+    object_ptr call(object_ptr);
+    object_ptr call(object_ptr, object_ptr);
 
     value_type data{};
   };

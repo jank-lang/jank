@@ -137,7 +137,7 @@ namespace jank::runtime
     return make_box<obj::persistent_hash_map>(std::move(data).persistent());
   }
 
-  object_ptr obj::transient_hash_map::call(object_ptr const o) const
+  object_ptr obj::transient_hash_map::call(object_ptr const o)
   {
     assert_active();
     auto const found(data.find(o));
@@ -148,7 +148,7 @@ namespace jank::runtime
     return *found;
   }
 
-  object_ptr obj::transient_hash_map::call(object_ptr const o, object_ptr const fallback) const
+  object_ptr obj::transient_hash_map::call(object_ptr const o, object_ptr const fallback)
   {
     assert_active();
     auto const found(data.find(o));
