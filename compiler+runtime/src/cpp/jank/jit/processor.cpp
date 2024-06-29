@@ -136,7 +136,7 @@ namespace jank::jit
     profile::timer timer{ "jit eval" };
     /* TODO: Improve Cling to accept string_views instead. */
     auto const str(cg_prc.declaration_str());
-    //fmt::println("{}", str);
+    // fmt::println("{}", str);
 
     interpreter->declare(static_cast<std::string>(cg_prc.declaration_str()));
 

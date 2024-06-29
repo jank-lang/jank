@@ -1,9 +1,5 @@
-#include <iostream>
-#include <iomanip>
-
 #include <magic_enum.hpp>
 
-#include <jank/runtime/erasure.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
@@ -348,40 +344,9 @@ namespace jank::read::parse
     ++token_current;
     auto const sv(boost::get<native_persistent_string_view>(token.data));
 
-    if(sv.size() == 1)
-    {
-      // TODO(jeaye): add [] operator for sv
-      return object_source_info{ make_box<runtime::obj::character>(*sv.begin()), token, token };
-    }
-    else if(sv == "newline")
-    {
-      return object_source_info{ make_box<runtime::obj::character>('\n'), token, token };
-    }
-    else if(sv == "space")
-    {
-      return object_source_info{ make_box<runtime::obj::character>(' '), token, token };
-    }
-    else if(sv == "tab")
-    {
-      return object_source_info{ make_box<runtime::obj::character>('\t'), token, token };
-    }
-    else if(sv == "formfeed")
-    {
-      return object_source_info{ make_box<runtime::obj::character>('\f'), token, token };
-    }
-    else if(sv == "backspace")
-    {
-      return object_source_info{ make_box<runtime::obj::character>('\b'), token, token };
-    }
-    else if(sv == "return")
-    {
-      return object_source_info{ make_box<runtime::obj::character>('\r'), token, token };
-    }
-
-    // TODO(saket): include symbol that caused an error in the error message
-    return err(error{ latest_token.pos,
-                      latest_token.pos + latest_token.size,
-                      native_persistent_string{ "unexpected symbol after \\" } });
+    return object_source_info{ make_box<runtime::obj::character>(sv),
+                               token,
+                               token };
   }
 
   processor::object_result processor::parse_meta_hint()

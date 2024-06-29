@@ -12,7 +12,7 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(native_char const &d);
+    static_object(native_persistent_string_view const &);
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
@@ -21,7 +21,7 @@ namespace jank::runtime
     native_hash to_hash() const;
 
     object base{ object_type::character };
-    native_char data{};
+    native_persistent_string data;
   };
 
   namespace obj

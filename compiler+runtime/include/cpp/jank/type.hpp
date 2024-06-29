@@ -16,7 +16,6 @@ namespace jank
                                              immer::gc_transience_policy,
                                              false>;
 
-  using native_char = char8_t;
   using native_integer = long long;
   using native_real = long double;
   using native_bool = bool;

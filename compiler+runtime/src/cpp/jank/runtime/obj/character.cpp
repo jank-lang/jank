@@ -1,12 +1,10 @@
-#include <iostream>
-#include <sstream>
-
 #include <jank/runtime/obj/character.hpp>
+#include <jank/util/character.hpp>
 
 namespace jank::runtime
 {
-  obj::character::static_object(native_char const &d)
-    : data{ d }
+  obj::character::static_object(native_persistent_string_view const &d)
+    : data{ native_persistent_string(d) }
   {
   }
 
@@ -23,31 +21,7 @@ namespace jank::runtime
 
   void obj::character::to_string(fmt::memory_buffer &buff) const
   {
-    native_persistent_string sv;
-    switch(data)
-    {
-      case '\n':
-        sv = "newline";
-        break;
-      case ' ':
-        sv = "space";
-        break;
-      case '\t':
-        sv = "tab";
-        break;
-      case '\b':
-        sv = "backspace";
-        break;
-      case '\f':
-        sv = "formfeed";
-        break;
-      case '\r':
-        sv = "return";
-        break;
-      default:
-        sv = std::string(1, static_cast<char>(data));
-    }
-    fmt::format_to(std::back_inserter(buff), "\\{}", sv);
+    fmt::format_to(std::back_inserter(buff), "{}", data);
   }
 
   native_persistent_string obj::character::to_string() const
@@ -59,7 +33,6 @@ namespace jank::runtime
 
   native_hash obj::character::to_hash() const
   {
-    // TODO(saket): fix this
-    return hash::real(data);
+    return static_cast<native_hash>(util::character::get_char_from_repr(data).unwrap());
   }
 }

@@ -297,36 +297,33 @@ namespace jank::read
             pos++;
             if(ch.is_none() || std::isspace(ch.unwrap()))
             {
-              return err(error{ token_start, 2, "Expecting a valid character literal after \\" });
+              return err(error{ token_start, "Expecting a valid character literal after \\" });
             }
 
             while(true)
             {
               auto const pt(peek());
-              if(pt.is_none())
-              {
-                break;
-              }
-              if(!std::isalnum(pt.unwrap()))
+              if(pt.is_none() || !is_symbol_char(pt.unwrap()))
               {
                 break;
               }
               pos++;
             }
 
-            native_persistent_string_view const data{ file.data() + token_start + 1,
-                                                      ++pos - token_start - 1 };
+            native_persistent_string_view const data{ file.data() + token_start,
+                                                      ++pos - token_start };
 
-            if(data.size() > 1 && data != "newline" && data != "space" && data != "tab"
-               && data != "formfeed" && data != "backspace" && data != "return")
+            if(data.size() == 2 || data == "\\newline" || data == "\\backspace" || data == "\\space"
+               || data == "\\formfeed" || data == "\\return" || data == "\\tab")
             {
-              return err(error{ token_start,
-                                pos - token_start,
-                                fmt::format("Invalid character literal `{}` after \\\nNote: Jank "
-                                            "doesn't support unicode characters yet!",
-                                            data) });
+              return ok(token{ token_start, pos - token_start, token_kind::character, data });
             }
-            return ok(token{ token_start, pos - token_start, token_kind::character, data });
+
+            return err(error{ token_start,
+                              pos - token_start,
+                              fmt::format("Invalid character literal `{}` \nNote: Jank "
+                                          "doesn't support unicode characters yet!",
+                                          data) });
           }
         case ';':
           {
@@ -495,9 +492,16 @@ namespace jank::read
               return err(std::move(e.unwrap()));
             }
 
-            /* Support auto-resolved qualified keywords. */
             auto const oc(peek());
-            if(oc.is_some() && oc.unwrap() == ':')
+            if(oc.is_none() || std::isspace(oc.unwrap()))
+            {
+              ++pos;
+              return err(
+                error{ token_start, "invalid keyword: expected non-whitespace character after :" });
+            }
+
+            /* Support auto-resolved qualified keywords. */
+            if(oc.unwrap() == ':')
             {
               ++pos;
             }

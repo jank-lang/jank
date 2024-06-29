@@ -1,3 +1,4 @@
+#include "jank/type.hpp"
 #include <unistd.h>
 
 #include <jank/read/lex.hpp>
@@ -88,20 +89,20 @@ namespace jank::read::parse
 
     TEST_CASE("Character")
     {
-      SUBCASE("single")
+      SUBCASE("Single")
       {
         lex::processor lp{ R"(\a\1\`\:\#)" };
         processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
-        for(auto const &ch : { 'a', '1', '`', ':', '#' })
+        for(native_persistent_string const &ch : { "\\a", "\\1", "\\`", "\\:", "\\#" })
         {
           auto const r(p.next());
           CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
                                        make_box<runtime::obj::character>(ch)));
 
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, 2, lex::token_kind::character, std::string(1, ch) });
+                == lex::token{ offset, 2, lex::token_kind::character, ch });
           CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
 
           /* Current character and then a backslash */
@@ -109,53 +110,44 @@ namespace jank::read::parse
         }
       }
 
-      SUBCASE("escaped")
+      SUBCASE("Special")
       {
-        lex::processor lp{ R"(\newline\backspace\return\formfeed\tab\space)" };
+        lex::processor lp{ R"(\newline \backspace \return \formfeed \tab \space)" };
         processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
-        for(auto const &ch : { std::make_pair<native_persistent_string, char8_t>("newline", '\n'),
-                               std::make_pair<native_persistent_string, char8_t>("backspace", '\b'),
-                               std::make_pair<native_persistent_string, char8_t>("return", '\r'),
-                               std::make_pair<native_persistent_string, char8_t>("formfeed", '\f'),
-                               std::make_pair<native_persistent_string, char8_t>("tab", '\t'),
-                               std::make_pair<native_persistent_string, char8_t>("space", ' ') })
+        for(native_persistent_string const &ch :
+            { "\\newline", "\\backspace", "\\return", "\\formfeed", "\\tab", "\\space" })
         {
           auto const r(p.next());
           CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       make_box<runtime::obj::character>(ch.second)));
+                                       make_box<runtime::obj::character>(ch)));
 
-          /* +1 for backslash */
-          auto const len = ch.first.size() + 1;
+          auto const len(ch.size());
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, len, lex::token_kind::character, ch.first });
+                == lex::token{ offset, len, lex::token_kind::character, ch });
           CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
 
-          offset += len;
+          /* +1 for space */
+          offset += len + 1;
         }
       }
 
-      SUBCASE("escaped and single")
+      SUBCASE("Special and single")
       {
         lex::processor lp{ R"(\newline\a\tab\`\space)" };
         processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
-        for(auto const &ch : { std::make_pair<native_persistent_string, char8_t>("newline", '\n'),
-                               std::make_pair<native_persistent_string, char8_t>("a", 'a'),
-                               std::make_pair<native_persistent_string, char8_t>("tab", '\t'),
-                               std::make_pair<native_persistent_string, char8_t>("`", '`'),
-                               std::make_pair<native_persistent_string, char8_t>("space", ' ') })
+        for(native_persistent_string const &ch : { "\\newline", "\\a", "\\tab", "\\`", "\\space" })
         {
           auto const r(p.next());
           CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       make_box<runtime::obj::character>(ch.second)));
+                                       make_box<runtime::obj::character>(ch)));
 
-          /* +1 for backslash */
-          auto const len = ch.first.size() + 1;
+          auto const len(ch.size());
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, len, lex::token_kind::character, ch.first });
+                == lex::token{ offset, len, lex::token_kind::character, ch });
           CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
 
           offset += len;
