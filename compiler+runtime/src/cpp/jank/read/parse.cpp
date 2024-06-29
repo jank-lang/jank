@@ -1008,9 +1008,24 @@ namespace jank::read::parse
 
   processor::object_result processor::parse_deref()
   {
-    auto const start_token(token_current.latest.unwrap().expect_ok());
+    auto const start_token((*token_current).expect_ok());
     ++token_current;
-    return err(error{ start_token.pos, native_persistent_string{ "not implemented" } });
+    auto val_result(next());
+    if(val_result.is_err())
+    {
+      return val_result;
+    }
+    else if(val_result.expect_ok().is_none())
+    {
+      return err(error{ start_token.pos, native_persistent_string{ "invalid value after @" } });
+    }
+
+    return object_source_info{ runtime::erase(make_box<runtime::obj::persistent_list>(
+                                 std::in_place,
+                                 make_box<runtime::obj::symbol>("deref"),
+                                 val_result.expect_ok().unwrap().ptr)),
+                               start_token,
+                               latest_token };
   }
 
   processor::object_result processor::parse_nil()

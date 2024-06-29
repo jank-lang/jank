@@ -749,6 +749,44 @@ namespace jank::read::parse
         CHECK(r1.is_err());
       }
 
+      SUBCASE("Deref")
+      {
+        SUBCASE("Unterminated")
+        {
+          lex::processor lp{ "@" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r1(p.next());
+          CHECK(r1.is_err());
+        }
+
+        SUBCASE("Single")
+        {
+          lex::processor lp{ "@foo" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(runtime::detail::equal(
+            r.expect_ok().unwrap().ptr,
+            make_box<runtime::obj::persistent_list>(std::in_place,
+                                                    make_box<runtime::obj::symbol>("deref"),
+                                                    make_box<runtime::obj::symbol>("foo"))));
+        }
+
+        SUBCASE("Double")
+        {
+          lex::processor lp{ "@@foo" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(runtime::detail::equal(
+            r.expect_ok().unwrap().ptr,
+            make_box<runtime::obj::persistent_list>(
+              std::in_place,
+              make_box<runtime::obj::symbol>("deref"),
+              make_box<runtime::obj::persistent_list>(std::in_place,
+                                                      make_box<runtime::obj::symbol>("deref"),
+                                                      make_box<runtime::obj::symbol>("foo")))));
+        }
+      }
+
       SUBCASE("Set")
       {
         SUBCASE("Empty")
