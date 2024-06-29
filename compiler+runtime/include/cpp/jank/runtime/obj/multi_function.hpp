@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 
@@ -10,6 +12,9 @@ namespace jank::runtime
     using persistent_hash_map = static_object<object_type::persistent_hash_map>;
     using persistent_hash_map_ptr = native_box<persistent_hash_map>;
   }
+
+  using var = static_object<object_type::var>;
+  using var_ptr = native_box<var>;
 
   template <>
   struct static_object<object_type::multi_function>
@@ -93,7 +98,7 @@ namespace jank::runtime
     mutable obj::persistent_hash_map_ptr method_cache{};
     obj::persistent_hash_map_ptr prefer_table{};
     obj::symbol_ptr name;
-    std::mutex data_lock;
+    std::recursive_mutex data_lock;
   };
 
   namespace obj

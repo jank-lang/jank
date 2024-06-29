@@ -3491,7 +3491,7 @@
 (defn- multi-fn? [o]
   (native/raw "__value = make_box(~{ o }->type == object_type::multi_function);"))
 
-(defn- multi-fn [name dispatch-fn default hierarchy]
+(defn- multi-fn* [name dispatch-fn default hierarchy]
   (native/raw "__value = make_box<obj::multi_function>(~{ name }, ~{ dispatch-fn }, ~{ default }, ~{ hierarchy });"))
 
 (def global-hierarchy)
@@ -3541,20 +3541,24 @@
             (conj (meta mm-name) m)
             m)
         mm-name (with-meta mm-name m)]
+    (println "options" options (type options) (apply hash-map options))
     (let [options (apply hash-map options)
           default (get options :default :default)
           hierarchy (get options :hierarchy #'global-hierarchy)]
       (check-valid-options options :default :hierarchy)
+      ; TODO: This returns nil, due to an issue with let*. Why?
       `(let [v# (def ~mm-name)]
          (when-not (multi-fn? (deref v#))
-           (def ~mm-name (multi-fn '~(symbol *ns* mm-name) ~dispatch-fn ~default ~hierarchy)))))))
+           (def ~mm-name (multi-fn* '~(symbol *ns* mm-name) ~dispatch-fn ~default ~hierarchy)))))))
 
-;(defmacro defmethod
-;  "Creates and installs a new method of multimethod associated with dispatch-value. "
-;  {:added "1.0"}
-;  [multifn dispatch-val & fn-tail]
-;  `(. ~(with-meta multifn {:tag 'clojure.lang.MultiFn}) addMethod ~dispatch-val (fn ~@fn-tail)))
-;
+(defn- defmethod* [multifn dispatch-val fun]
+  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->add_method(~{ dispatch-val }, ~{ fun });"))
+
+(defmacro defmethod
+  "Creates and installs a new method of multimethod associated with dispatch-value. "
+  [multifn dispatch-val & fn-tail]
+  `(defmethod* ~multifn ~dispatch-val (fn ~@fn-tail)))
+
 ;(defn remove-all-methods
 ;  "Removes all of the methods of multimethod."
 ;  {:added "1.2"
@@ -3616,14 +3620,14 @@
    (isa? global-hierarchy child parent))
   ([h child parent]
    (or (= child parent)
-       (contains? ((:ancestors h) child) parent)
+       (contains? (get (:ancestors h) child) parent)
        (and (vector? parent) (vector? child)
             (= (count parent) (count child))
             (loop [ret true
                    i 0]
               (if (or (not ret) (= i (count parent)))
                 ret
-                (recur (isa? h (child i) (parent i)) (inc i))))))))
+                (recur (isa? h (get child i) (get parent i)) (inc i))))))))
 
 (defn parents
   "Returns the immediate parents of tag, either via a Java type
