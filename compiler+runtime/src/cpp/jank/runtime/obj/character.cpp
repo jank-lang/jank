@@ -1,10 +1,54 @@
 #include <jank/runtime/obj/character.hpp>
-#include <jank/util/character.hpp>
 
 namespace jank::runtime
 {
+
+  static option<char> get_char_from_repr(native_persistent_string const &sv)
+  {
+    if(sv.size() == 2)
+    {
+      return sv[1];
+    }
+    else if(sv == "\\newline")
+    {
+      return '\n';
+    }
+    else if(sv == "\\space")
+    {
+      return ' ';
+    }
+    else if(sv == "\\tab")
+    {
+      return '\t';
+    }
+    else if(sv == "\\backspace")
+    {
+      return '\b';
+    }
+    else if(sv == "\\formfeed")
+    {
+      return '\f';
+    }
+    else if(sv == "\\return")
+    {
+      return '\r';
+    }
+
+    return none;
+  }
+
   obj::character::static_object(native_persistent_string_view const &d)
-    : data{ native_persistent_string(d) }
+    : data{ d }
+  {
+  }
+
+  obj::character::static_object(native_persistent_string const &d)
+    : data{ d }
+  {
+  }
+
+  obj::character::static_object(char ch)
+    : data{ 1, ch }
   {
   }
 
@@ -33,6 +77,6 @@ namespace jank::runtime
 
   native_hash obj::character::to_hash() const
   {
-    return static_cast<native_hash>(util::character::get_char_from_repr(data).unwrap());
+    return static_cast<native_hash>(get_char_from_repr(data).unwrap());
   }
 }

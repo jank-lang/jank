@@ -67,6 +67,12 @@ namespace jank
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(char const i)
+  {
+    return make_box<runtime::obj::character>(i);
+  }
+
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(size_t const i)
   {
     return make_box<runtime::obj::integer>(static_cast<native_integer>(i));

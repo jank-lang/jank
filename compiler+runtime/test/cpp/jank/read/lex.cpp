@@ -655,7 +655,7 @@ namespace jank::read::lex
         }));
       }
 
-      SUBCASE("character followed by a backticked keyword")
+      SUBCASE("Character followed by a backticked keyword")
       {
         processor p{ R"(\a`:kw)" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());

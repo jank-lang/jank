@@ -85,7 +85,7 @@ namespace jank::codegen
             {
               return "jank::runtime::obj::character_ptr";
             }
-            return "jank::native_persistent_string";
+            return "jank::runtime::obj::character";
           }
         case jank::runtime::object_type::real:
           {

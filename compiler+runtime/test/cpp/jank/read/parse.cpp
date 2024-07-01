@@ -1,4 +1,3 @@
-#include "jank/type.hpp"
 #include <unistd.h>
 
 #include <jank/read/lex.hpp>

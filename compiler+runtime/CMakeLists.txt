@@ -144,7 +144,6 @@ add_library(
   jank_lib STATIC
   src/cpp/jank/native_box.cpp
   src/cpp/jank/hash.cpp
-  src/cpp/jank/util/character.cpp
   src/cpp/jank/util/cli.cpp
   src/cpp/jank/util/mapped_file.cpp
   src/cpp/jank/util/scope_exit.cpp
