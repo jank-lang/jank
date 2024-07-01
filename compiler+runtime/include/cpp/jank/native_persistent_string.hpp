@@ -90,14 +90,13 @@ namespace jank
       }
     }
 
-    [[gnu::nonnull(2)]]
-    constexpr native_persistent_string(const_pointer_type const s) noexcept
+    [[gnu::nonnull(2)]] constexpr native_persistent_string(const_pointer_type const s) noexcept
       : native_persistent_string{ s, traits_type::length(s) }
     {
     }
 
-    [[gnu::nonnull(2)]]
-    constexpr native_persistent_string(const_pointer_type const s, size_type const size) noexcept
+    [[gnu::nonnull(2)]] constexpr native_persistent_string(const_pointer_type const s,
+                                                           size_type const size) noexcept
     {
       if(size <= max_small_size)
       {
@@ -109,11 +108,10 @@ namespace jank
       }
     }
 
-    [[gnu::nonnull(2, 4)]]
-    constexpr native_persistent_string(const_pointer_type const lhs,
-                                       size_type const lhs_size,
-                                       const_pointer_type const rhs,
-                                       size_type const rhs_size) noexcept
+    [[gnu::nonnull(2, 4)]] constexpr native_persistent_string(const_pointer_type const lhs,
+                                                              size_type const lhs_size,
+                                                              const_pointer_type const rhs,
+                                                              size_type const rhs_size) noexcept
     {
       auto const combined_size(lhs_size + rhs_size);
       if(combined_size <= max_small_size)
@@ -232,7 +230,8 @@ namespace jank
     }
 
     [[gnu::const]]
-    constexpr value_type operator[](size_t const index) const noexcept
+    constexpr value_type
+    operator[](size_t const index) const noexcept
     {
       return data()[index];
     }
@@ -481,27 +480,31 @@ namespace jank
 
     /*** Comparisons. ***/
     [[gnu::const]]
-    constexpr native_bool operator!=(native_persistent_string const &s) const noexcept
+    constexpr native_bool
+    operator!=(native_persistent_string const &s) const noexcept
     {
       auto const length(size());
       return length != s.size() || traits_type::compare(data(), s.data(), length);
     }
 
     [[gnu::const]]
-    constexpr native_bool operator==(native_persistent_string const &s) const noexcept
+    constexpr native_bool
+    operator==(native_persistent_string const &s) const noexcept
     {
       return !(*this != s);
     }
 
     [[gnu::const, gnu::nonnull(2)]]
-    constexpr native_bool operator!=(const_pointer_type const s) const noexcept
+    constexpr native_bool
+    operator!=(const_pointer_type const s) const noexcept
     {
       auto const length(traits_type::length(s));
       return size() != length || traits_type::compare(data(), s, length);
     }
 
     [[gnu::const, gnu::nonnull(2)]]
-    constexpr native_bool operator==(const_pointer_type const s) const noexcept
+    constexpr native_bool
+    operator==(const_pointer_type const s) const noexcept
     {
       return !(*this != s);
     }

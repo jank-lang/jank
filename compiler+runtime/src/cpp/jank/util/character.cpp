@@ -2,7 +2,7 @@
 
 namespace jank::util::character
 {
-  option<char> get_char_from_repr(native_persistent_string_view const &sv)
+  option<char> get_char_from_repr(native_persistent_string const &sv)
   {
     if(sv.size() == 2)
     {
