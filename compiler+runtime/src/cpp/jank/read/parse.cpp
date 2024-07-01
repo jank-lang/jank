@@ -344,9 +344,7 @@ namespace jank::read::parse
     ++token_current;
     auto const sv(boost::get<native_persistent_string_view>(token.data));
 
-    return object_source_info{ make_box<runtime::obj::character>(sv),
-                               token,
-                               token };
+    return object_source_info{ make_box<runtime::obj::character>(sv), token, token };
   }
 
   processor::object_result processor::parse_meta_hint()

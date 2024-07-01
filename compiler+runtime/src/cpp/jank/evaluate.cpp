@@ -52,10 +52,10 @@ namespace jank::evaluate
     if(exprs.empty())
     {
       return wrap_expression(analyze::expr::primitive_literal<analyze::expression>{
-        analyze::expression_base{ {},
+        analyze::expression_base{{},
                                  analyze::expression_type::return_statement,
                                  an_prc.root_frame,
-                                 true },
+                                 true},
         runtime::obj::nil::nil_const()
       });
     }
