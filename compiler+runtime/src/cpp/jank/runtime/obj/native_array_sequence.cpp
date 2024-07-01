@@ -24,7 +24,7 @@ namespace jank::runtime
   /* behavior::objectable */
   native_bool obj::native_array_sequence::equal(object const &o) const
   {
-    return detail::equal(o, arr, arr + size);
+    return detail::equal(o, arr + index, arr + size);
   }
 
   void obj::native_array_sequence::to_string(fmt::memory_buffer &buff) const

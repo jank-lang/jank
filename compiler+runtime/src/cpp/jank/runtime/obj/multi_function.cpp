@@ -8,11 +8,11 @@ namespace jank::runtime
                                      object_ptr const hierarchy)
     : dispatch{ runtime::behavior::to_callable(dispatch) }
     , default_dispatch_value{ default_ }
-    , hierarchy{ hierarchy }
-    , name{ (name->type == object_type::symbol
-               ? expect_object<obj::symbol>(name)
-               : throw std::runtime_error{
-                   fmt::format("invalid multifn name: {}", runtime::detail::to_string(name)) }) }
+    , hierarchy{ try_object<var>(hierarchy) }
+    , method_table{ obj::persistent_hash_map::empty() }
+    , method_cache{ obj::persistent_hash_map::empty() }
+    , prefer_table{ obj::persistent_hash_map::empty() }
+    , name{ try_object<obj::symbol>(name) }
   {
   }
 
@@ -42,96 +42,323 @@ namespace jank::runtime
     return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  object_ptr obj::multi_function::call() const
+  object_ptr obj::multi_function::call()
   {
-    return obj::nil::nil_const();
+    return dynamic_call(get_fn(dispatch->call()));
   }
 
-  object_ptr obj::multi_function::call(object_ptr const a1) const
+  object_ptr obj::multi_function::call(object_ptr const a1)
   {
-    return dispatch->call(a1);
+    return dynamic_call(get_fn(dispatch->call(a1)), a1);
   }
 
-  object_ptr obj::multi_function::call(object_ptr, object_ptr) const
+  object_ptr obj::multi_function::call(object_ptr const a1, object_ptr const a2)
   {
-    return obj::nil::nil_const();
-  }
-
-  object_ptr obj::multi_function::call(object_ptr, object_ptr, object_ptr) const
-  {
-    return obj::nil::nil_const();
-  }
-
-  object_ptr obj::multi_function::call(object_ptr, object_ptr, object_ptr, object_ptr) const
-  {
-    return obj::nil::nil_const();
+    return dynamic_call(get_fn(dispatch->call(a1, a2)), a1, a2);
   }
 
   object_ptr
-  obj::multi_function::call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const
+  obj::multi_function::call(object_ptr const a1, object_ptr const a2, object_ptr const a3)
   {
-    return obj::nil::nil_const();
+    return dynamic_call(get_fn(dispatch->call(a1, a2, a3)), a1, a2, a3);
   }
 
-  object_ptr
-  obj::multi_function::call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr)
-    const
+  object_ptr obj::multi_function::call(object_ptr const a1,
+                                       object_ptr const a2,
+                                       object_ptr const a3,
+                                       object_ptr const a4)
   {
-    return obj::nil::nil_const();
+    return dynamic_call(get_fn(dispatch->call(a1, a2, a3, a4)), a1, a2, a3, a4);
   }
 
-  object_ptr obj::multi_function::call(object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr) const
+  object_ptr obj::multi_function::call(object_ptr const a1,
+                                       object_ptr const a2,
+                                       object_ptr const a3,
+                                       object_ptr const a4,
+                                       object_ptr const a5)
   {
-    return obj::nil::nil_const();
+    return dynamic_call(get_fn(dispatch->call(a1, a2, a3, a4, a5)), a1, a2, a3, a4, a5);
   }
 
-  object_ptr obj::multi_function::call(object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr) const
+  object_ptr obj::multi_function::call(object_ptr const a1,
+                                       object_ptr const a2,
+                                       object_ptr const a3,
+                                       object_ptr const a4,
+                                       object_ptr const a5,
+                                       object_ptr const a6)
   {
-    return obj::nil::nil_const();
+    return dynamic_call(get_fn(dispatch->call(a1, a2, a3, a4, a5, a6)), a1, a2, a3, a4, a5, a6);
   }
 
-  object_ptr obj::multi_function::call(object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr) const
+  object_ptr obj::multi_function::call(object_ptr const a1,
+                                       object_ptr const a2,
+                                       object_ptr const a3,
+                                       object_ptr const a4,
+                                       object_ptr const a5,
+                                       object_ptr const a6,
+                                       object_ptr const a7)
   {
-    return obj::nil::nil_const();
+    return dynamic_call(get_fn(dispatch->call(a1, a2, a3, a4, a5, a6, a7)),
+                        a1,
+                        a2,
+                        a3,
+                        a4,
+                        a5,
+                        a6,
+                        a7);
   }
 
-  object_ptr obj::multi_function::call(object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr,
-                                       object_ptr) const
+  object_ptr obj::multi_function::call(object_ptr const a1,
+                                       object_ptr const a2,
+                                       object_ptr const a3,
+                                       object_ptr const a4,
+                                       object_ptr const a5,
+                                       object_ptr const a6,
+                                       object_ptr const a7,
+                                       object_ptr const a8)
   {
-    return obj::nil::nil_const();
+    return dynamic_call(get_fn(dispatch->call(a1, a2, a3, a4, a5, a6, a7, a8)),
+                        a1,
+                        a2,
+                        a3,
+                        a4,
+                        a5,
+                        a6,
+                        a7,
+                        a8);
   }
 
-  object_ptr obj::multi_function::this_object_ptr() const
+  object_ptr obj::multi_function::call(object_ptr const a1,
+                                       object_ptr const a2,
+                                       object_ptr const a3,
+                                       object_ptr const a4,
+                                       object_ptr const a5,
+                                       object_ptr const a6,
+                                       object_ptr const a7,
+                                       object_ptr const a8,
+                                       object_ptr const a9)
   {
-    return &const_cast<obj::multi_function *>(this)->base;
+    return dynamic_call(get_fn(dispatch->call(a1, a2, a3, a4, a5, a6, a7, a8, a9)),
+                        a1,
+                        a2,
+                        a3,
+                        a4,
+                        a5,
+                        a6,
+                        a7,
+                        a8,
+                        a9);
+  }
+
+  object_ptr obj::multi_function::call(object_ptr const a1,
+                                       object_ptr const a2,
+                                       object_ptr const a3,
+                                       object_ptr const a4,
+                                       object_ptr const a5,
+                                       object_ptr const a6,
+                                       object_ptr const a7,
+                                       object_ptr const a8,
+                                       object_ptr const a9,
+                                       object_ptr const a10)
+  {
+    return dynamic_call(get_fn(dispatch->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)),
+                        a1,
+                        a2,
+                        a3,
+                        a4,
+                        a5,
+                        a6,
+                        a7,
+                        a8,
+                        a9,
+                        a10);
+  }
+
+  object_ptr obj::multi_function::this_object_ptr()
+  {
+    return &this->base;
+  }
+
+  obj::multi_function_ptr obj::multi_function::reset()
+  {
+    std::lock_guard<std::recursive_mutex> const locked{ data_lock };
+    cached_hierarchy = nullptr;
+    method_table = prefer_table = method_cache = obj::persistent_hash_map::empty();
+    return this;
+  }
+
+  obj::persistent_hash_map_ptr obj::multi_function::reset_cache()
+  {
+    std::lock_guard<std::recursive_mutex> const locked{ data_lock };
+    cached_hierarchy = hierarchy;
+    method_cache = method_table;
+    return method_cache;
+  }
+
+  obj::multi_function_ptr
+  obj::multi_function::add_method(object_ptr const dispatch_val, object_ptr const method)
+  {
+    std::lock_guard<std::recursive_mutex> const locked{ data_lock };
+
+    method_table = method_table->assoc(dispatch_val, method);
+    reset_cache();
+    return this;
+  }
+
+  obj::multi_function_ptr obj::multi_function::remove_method(object_ptr const dispatch_val)
+  {
+    std::lock_guard<std::recursive_mutex> const locked{ data_lock };
+    method_table = method_table->dissoc(dispatch_val);
+    reset_cache();
+    return this;
+  }
+
+  obj::multi_function_ptr obj::multi_function::prefer_method(object_ptr const x, object_ptr const y)
+  {
+    std::lock_guard<std::recursive_mutex> const locked{ data_lock };
+
+    if(is_preferred(hierarchy->deref(), y, x))
+    {
+      throw std::runtime_error{ fmt::format(
+        "Preference conflict in multimethod '{}': {} is already preferred to {}",
+        name,
+        runtime::detail::to_string(y),
+        runtime::detail::to_string(x)) };
+    }
+
+    prefer_table = prefer_table->assoc(
+      x,
+      runtime::conj(runtime::get(prefer_table, x, persistent_set::empty()), y));
+    reset_cache();
+    return this;
+  }
+
+  native_bool obj::multi_function::is_preferred(object_ptr const hierarchy,
+                                                object_ptr const x,
+                                                object_ptr const y) const
+  {
+    auto const x_prefs(prefer_table->get(x));
+    if(x_prefs && expect_object<obj::persistent_set>(x_prefs)->contains(y))
+    {
+      return true;
+    }
+
+    static object_ptr const parents{
+      __rt_ctx->intern_var("clojure.core", "parents").expect_ok()->deref()
+    };
+
+    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, y))); it != nullptr;
+        it = next_in_place(it))
+    {
+      if(is_preferred(hierarchy, x, first(it)))
+      {
+        return true;
+      }
+    }
+
+    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, x))); it != nullptr;
+        it = next_in_place(it))
+    {
+      if(is_preferred(hierarchy, first(it), y))
+      {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  native_bool
+  obj::multi_function::is_a(object_ptr const hierarchy, object_ptr const x, object_ptr const y)
+  {
+    static object_ptr const isa{
+      __rt_ctx->intern_var("clojure.core", "isa?").expect_ok()->deref()
+    };
+    return runtime::detail::truthy(dynamic_call(isa, hierarchy, x, y));
+  }
+
+  native_bool obj::multi_function::is_dominant(object_ptr const hierarchy,
+                                               object_ptr const x,
+                                               object_ptr const y) const
+  {
+    return is_preferred(hierarchy, x, y) || is_a(hierarchy, x, y);
+  }
+
+  object_ptr obj::multi_function::get_fn(object_ptr const dispatch_val)
+  {
+    auto const target(get_method(dispatch_val));
+    if(target == obj::nil::nil_const())
+    {
+      throw std::runtime_error{ fmt::format("No method in multimethod '{}' for dispatch value: {}",
+                                            name,
+                                            runtime::detail::to_string(dispatch_val)) };
+    }
+    return target;
+  }
+
+  object_ptr obj::multi_function::get_method(object_ptr const dispatch_val)
+  {
+    if(cached_hierarchy != hierarchy->deref())
+    {
+      reset_cache();
+    }
+
+    auto const target(method_cache->get(dispatch_val));
+    if(target != obj::nil::nil_const())
+    {
+      return target;
+    }
+
+    return find_and_cache_best_method(dispatch_val);
+  }
+
+  object_ptr obj::multi_function::find_and_cache_best_method(object_ptr const dispatch_val)
+  {
+    /* TODO: Clojure uses a RW lock here for better parallelism. */
+    std::lock_guard<std::recursive_mutex> const locked{ data_lock };
+    object_ptr best_value{ obj::nil::nil_const() };
+    obj::persistent_vector_sequence_ptr best_entry{};
+
+    for(auto it(fresh_seq(method_table)); it != nullptr; it = it->next_in_place())
+    {
+      auto const entry(it->first());
+      auto const entry_key(entry->seq()->first());
+
+      if(is_a(cached_hierarchy, dispatch_val, entry_key))
+      {
+        if(best_entry == nullptr || is_dominant(cached_hierarchy, entry_key, best_entry->first()))
+        {
+          best_entry = entry->seq();
+        }
+
+        if(!is_dominant(cached_hierarchy, best_entry->first(), entry_key))
+        {
+          throw std::runtime_error{ fmt::format(
+            "Multiple methods in multimethod '{}' match dispatch value: {} -> {} and {}, and "
+            "neither is preferred",
+            name,
+            runtime::detail::to_string(dispatch_val),
+            runtime::detail::to_string(entry_key),
+            runtime::detail::to_string(best_entry->first())) };
+        }
+      }
+    }
+
+    if(best_entry)
+    {
+      best_value = second(best_entry);
+    }
+    else
+    {
+      best_value = method_table->get(default_dispatch_value);
+      if(best_value == obj::nil::nil_const())
+      {
+        return best_value;
+      }
+    }
+
+    method_cache = method_cache->assoc(dispatch_val, best_value);
+
+    return best_value;
   }
 }
