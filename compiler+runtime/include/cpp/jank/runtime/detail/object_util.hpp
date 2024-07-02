@@ -37,6 +37,7 @@ namespace jank
     using persistent_string = static_object<object_type::persistent_string>;
     using persistent_list = static_object<object_type::persistent_list>;
     using symbol = static_object<object_type::symbol>;
+    using character = static_object<object_type::character>;
   }
 
   /* TODO: Constexpr these. */
@@ -63,6 +64,12 @@ namespace jank
   inline auto make_box(native_integer const i)
   {
     return make_box<runtime::obj::integer>(i);
+  }
+
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(char const i)
+  {
+    return make_box<runtime::obj::character>(i);
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]

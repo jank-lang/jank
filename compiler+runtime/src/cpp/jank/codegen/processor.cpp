@@ -79,6 +79,14 @@ namespace jank::codegen
             }
             return "jank::native_integer";
           }
+        case jank::runtime::object_type::character:
+          {
+            if(boxed)
+            {
+              return "jank::runtime::obj::character_ptr";
+            }
+            return "jank::runtime::obj::character";
+          }
         case jank::runtime::object_type::real:
           {
             if(boxed)
@@ -185,6 +193,12 @@ namespace jank::codegen
                              typed_o->ns,
                              typed_o->name);
             }
+          }
+          else if constexpr(std::same_as<T, runtime::obj::character>)
+          {
+            fmt::format_to(inserter,
+                           R"(jank::make_box<jank::runtime::obj::character>({}))",
+                           typed_o->data);
           }
           else if constexpr(std::same_as<T, runtime::obj::keyword>)
           {
