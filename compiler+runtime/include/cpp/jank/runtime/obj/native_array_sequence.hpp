@@ -14,7 +14,7 @@ namespace jank::runtime
     static_object(object_ptr * const arr, size_t const index, size_t const size);
 
     template <typename... Args>
-    static_object(object_ptr first, Args... rest)
+    static_object(object_ptr const first, Args const... rest)
       : arr{ make_array_box<object_ptr>(first, rest...) }
       , size{ sizeof...(Args) + 1 }
     {

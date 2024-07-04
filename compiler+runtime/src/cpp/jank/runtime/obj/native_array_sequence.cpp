@@ -58,7 +58,7 @@ namespace jank::runtime
   /* behavior::countable */
   size_t obj::native_array_sequence::count() const
   {
-    return size;
+    return size - index;
   }
 
   /* behavior::sequence */

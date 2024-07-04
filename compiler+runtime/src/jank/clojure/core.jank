@@ -3541,7 +3541,6 @@
             (conj (meta mm-name) m)
             m)
         mm-name (with-meta mm-name m)]
-    (println "options" options (type options) (apply hash-map options))
     (let [options (apply hash-map options)
           default (get options :default :default)
           hierarchy (get options :hierarchy #'global-hierarchy)]
