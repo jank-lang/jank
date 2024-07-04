@@ -1096,7 +1096,6 @@ namespace jank::analyze
             }
             has_finally = true;
 
-            /* TODO: into list */
             auto const finally_list(runtime::into_list(item));
             auto const do_list(
               finally_list->data.rest().conj(make_box<runtime::obj::symbol>("do")));

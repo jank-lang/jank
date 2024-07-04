@@ -1481,6 +1481,9 @@ namespace jank::codegen
   {
     auto inserter(std::back_inserter(body_buffer));
     auto const &value_tmp(gen(expr.value, fn_arity, true));
+    /* We static_cast to object_ptr here, since we'll be trying to catch an object_ptr in any
+     * try/catch forms. This loses us our type info, but C++ doesn't do implicit conversions
+     * when catching and we're not using inheritance. */
     fmt::format_to(inserter,
                    "throw static_cast<jank::runtime::object_ptr>({});",
                    value_tmp.unwrap().str(true));
@@ -1492,7 +1495,7 @@ namespace jank::codegen
                                 native_bool const box_needed)
   {
     auto inserter(std::back_inserter(body_buffer));
-    auto ret_tmp(runtime::munge(runtime::context::unique_string("try")));
+    auto const ret_tmp(runtime::munge(runtime::context::unique_string("try")));
     fmt::format_to(inserter, "object_ptr {}{{ obj::nil::nil_const() }};", ret_tmp);
 
     fmt::format_to(inserter, "{{");
@@ -1515,6 +1518,14 @@ namespace jank::codegen
     }
     fmt::format_to(inserter, "}}");
 
+    /* There's a gotcha here, tied to how we throw exceptions. We're catching an object_ptr, which
+     * means we need to be throwing an object_ptr. Since we're not using inheritance, we can't
+     * rely on a catch-all and C++ doesn't do implicit conversions into catch types. So, if we
+     * throw a persistent_string_ptr, for example, it will not be caught as an object_ptr.
+     *
+     * We mitigate this by ensuring during the codegen for throw that we type-erase to
+     * an object_ptr.
+     */
     fmt::format_to(inserter,
                    "catch(jank::runtime::object_ptr const {}) {{",
                    runtime::munge(expr.catch_body.sym->name));
