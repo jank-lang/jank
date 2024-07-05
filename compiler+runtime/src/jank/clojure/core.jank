@@ -52,6 +52,22 @@
                    ~{ o }
                    );"))))
 
+(def empty
+  (fn* empty [o]
+    (native/raw "__value = visit_object
+                (
+                 [=](auto const typed_o) -> object_ptr
+                 {
+                   using T = typename decltype(typed_o)::value_type;
+
+                   if constexpr(behavior::collection_like<T>)
+                   { return T::empty(); }
+                   else
+                   { return ~{ nil }; }
+                 },
+                 ~{ o }
+                 );")))
+
 (def count
   (fn* count [o]
     (if (nil? o)
@@ -135,6 +151,22 @@
 (def cons
   (fn* cons [head tail]
     (native/raw "__value = runtime::cons(~{ head }, ~{ tail });")))
+
+(def coll?
+  (fn* coll? [o]
+    (native/raw "__value = visit_object
+                 (
+                   [=](auto const typed_tail) -> object_ptr
+                   {
+                     using T = typename decltype(typed_tail)::value_type;
+
+                     if constexpr(behavior::collection_like<T>)
+                     { return ~{ true }; }
+                     else
+                     { return ~{ false }; }
+                   },
+                   ~{ o }
+                 );")))
 
 (def seq?
   (fn* seq? [o]

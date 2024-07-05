@@ -26,6 +26,7 @@
 #include <jank/runtime/math.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
+#include <jank/runtime/behavior/collection_like.hpp>
 #include <jank/runtime/behavior/numberable.hpp>
 #include <jank/runtime/behavior/nameable.hpp>
 #include <jank/runtime/behavior/derefable.hpp>
