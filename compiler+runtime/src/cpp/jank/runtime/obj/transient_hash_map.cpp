@@ -103,7 +103,7 @@ namespace jank::runtime
     return this;
   }
 
-  obj::transient_hash_map_ptr obj::transient_hash_map::cons_in_place(object_ptr const head)
+  obj::transient_hash_map_ptr obj::transient_hash_map::conj_in_place(object_ptr const head)
   {
     assert_active();
 

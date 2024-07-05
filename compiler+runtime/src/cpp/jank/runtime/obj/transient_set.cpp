@@ -46,7 +46,7 @@ namespace jank::runtime
     return data.size();
   }
 
-  obj::transient_set_ptr obj::transient_set::cons_in_place(object_ptr const elem)
+  obj::transient_set_ptr obj::transient_set::conj_in_place(object_ptr const elem)
   {
     assert_active();
     data.insert(elem);

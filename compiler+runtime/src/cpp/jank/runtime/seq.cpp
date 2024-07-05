@@ -259,7 +259,7 @@ namespace jank::runtime
         }
         else if constexpr(behavior::conjable_in_place<T>)
         {
-          return typed_s->cons_in_place(o);
+          return typed_s->conj_in_place(o);
         }
         else if constexpr(behavior::conjable<T>)
         {

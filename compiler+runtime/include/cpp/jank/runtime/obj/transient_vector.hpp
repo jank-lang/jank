@@ -32,7 +32,7 @@ namespace jank::runtime
     size_t count() const;
 
     /* behavior::conjable_in_place */
-    native_box<static_object> cons_in_place(object_ptr head);
+    native_box<static_object> conj_in_place(object_ptr head);
 
     /* behavior::persistentable */
     native_box<persistent_type> to_persistent();
