@@ -3707,6 +3707,14 @@
                (partition 2 deriv-seq))
        h))))
 
+(defmacro defonce
+  "defs name to have the root value of the expr iff the named var has no root value,
+  else expr is unevaluated"
+  [name expr]
+  `(let [v# (def ~name)]
+     (when-not (bound? v#)
+       (def ~name ~expr))))
+
 ;; Miscellaneous.
 ; TODO: jank.core
 (defn sleep [ms]
@@ -4064,5 +4072,10 @@
               ;(dosync (commute @#'*loaded-libs* conj '~name))
               'nil))
           )))
+
+(defmacro refer-clojure
+  "Same as (refer 'clojure.core <filters>)"
+  [& filters]
+  `(clojure.core/refer '~'clojure.core ~@filters))
 
 (println "Bottom of clojure.core")
