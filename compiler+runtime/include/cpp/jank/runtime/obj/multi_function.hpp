@@ -13,9 +13,6 @@ namespace jank::runtime
     using persistent_hash_map_ptr = native_box<persistent_hash_map>;
   }
 
-  using var = static_object<object_type::var>;
-  using var_ptr = native_box<var>;
-
   template <>
   struct static_object<object_type::multi_function>
     : gc
@@ -92,7 +89,7 @@ namespace jank::runtime
     object base{ object_type::multi_function };
     behavior::callable_ptr dispatch{};
     object_ptr default_dispatch_value{};
-    var_ptr hierarchy{};
+    object_ptr hierarchy{};
     mutable object_ptr cached_hierarchy{};
     obj::persistent_hash_map_ptr method_table{};
     mutable obj::persistent_hash_map_ptr method_cache{};

@@ -8,7 +8,7 @@ namespace jank::runtime
                                      object_ptr const hierarchy)
     : dispatch{ runtime::behavior::to_callable(dispatch) }
     , default_dispatch_value{ default_ }
-    , hierarchy{ try_object<var>(hierarchy) }
+    , hierarchy{ hierarchy }
     , method_table{ obj::persistent_hash_map::empty() }
     , method_cache{ obj::persistent_hash_map::empty() }
     , prefer_table{ obj::persistent_hash_map::empty() }
@@ -217,7 +217,7 @@ namespace jank::runtime
   {
     std::lock_guard<std::recursive_mutex> const locked{ data_lock };
 
-    if(is_preferred(hierarchy->deref(), y, x))
+    if(is_preferred(behavior::deref(hierarchy), y, x))
     {
       throw std::runtime_error{ fmt::format(
         "Preference conflict in multimethod '{}': {} is already preferred to {}",
@@ -238,7 +238,7 @@ namespace jank::runtime
                                                 object_ptr const y) const
   {
     auto const x_prefs(prefer_table->get(x));
-    if(x_prefs && expect_object<obj::persistent_set>(x_prefs)->contains(y))
+    if(x_prefs != obj::nil::nil_const() && expect_object<obj::persistent_set>(x_prefs)->contains(y))
     {
       return true;
     }
@@ -247,7 +247,8 @@ namespace jank::runtime
       __rt_ctx->intern_var("clojure.core", "parents").expect_ok()->deref()
     };
 
-    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, y))); it != nullptr;
+    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, y)));
+        it != nullptr && it != obj::nil::nil_const();
         it = next_in_place(it))
     {
       if(is_preferred(hierarchy, x, first(it)))
@@ -256,7 +257,8 @@ namespace jank::runtime
       }
     }
 
-    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, x))); it != nullptr;
+    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, x)));
+        it != nullptr && it != obj::nil::nil_const();
         it = next_in_place(it))
     {
       if(is_preferred(hierarchy, first(it), y))
@@ -274,7 +276,7 @@ namespace jank::runtime
     static object_ptr const isa{
       __rt_ctx->intern_var("clojure.core", "isa?").expect_ok()->deref()
     };
-    return runtime::detail::truthy(dynamic_call(isa, hierarchy, x, y));
+    return runtime::detail::truthy(dynamic_call(isa, behavior::deref(hierarchy), x, y));
   }
 
   native_bool obj::multi_function::is_dominant(object_ptr const hierarchy,
@@ -298,7 +300,7 @@ namespace jank::runtime
 
   object_ptr obj::multi_function::get_method(object_ptr const dispatch_val)
   {
-    if(cached_hierarchy != hierarchy->deref())
+    if(cached_hierarchy != behavior::deref(hierarchy))
     {
       reset_cache();
     }

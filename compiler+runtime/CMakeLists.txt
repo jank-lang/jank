@@ -191,6 +191,7 @@ add_library(
   src/cpp/jank/runtime/obj/reduced.cpp
   src/cpp/jank/runtime/behavior/callable.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
+  src/cpp/jank/runtime/behavior/derefable.cpp
   src/cpp/jank/runtime/math.cpp
   src/cpp/jank/analyze/processor.cpp
   src/cpp/jank/analyze/local_frame.cpp

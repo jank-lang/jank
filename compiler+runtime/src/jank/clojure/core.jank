@@ -802,19 +802,7 @@
   timeout-val if the timeout (in milliseconds) is reached before a
   value is available. See also - realized?."
   ([ref]
-   (native/raw "__value = visit_object
-               (
-                [=](auto const typed_ref) -> object_ptr
-                {
-                 using T = typename decltype(typed_ref)::value_type;
-
-                 if constexpr(behavior::derefable<T>)
-                 { return typed_ref->deref(); }
-                 else
-                 { ~{ (throw (ex-info :not-derefable {:ref ref})) }; }
-                 },
-                ~{ ref }
-               );"))
+   (native/raw "__value = runtime::behavior::deref(~{ ref });"))
   ; TODO: Blocking.
   ([ref timeout-ms timeout-val]
    ;(if (instance? clojure.lang.IBlockingDeref ref)
