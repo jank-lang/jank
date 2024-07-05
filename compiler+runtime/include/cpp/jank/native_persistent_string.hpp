@@ -399,6 +399,18 @@ namespace jank
     }
 
     [[gnu::const]]
+    constexpr native_bool starts_with(native_persistent_string_view const &s) const noexcept
+    {
+      auto const this_sz(size());
+      auto const s_sz(s.size());
+      if(this_sz < s_sz)
+      {
+        return false;
+      }
+      return traits_type::compare(data(), s.data(), s_sz) == 0;
+    }
+
+    [[gnu::const]]
     constexpr native_bool ends_with(value_type const c) const noexcept
     {
       auto const s(size());
@@ -415,6 +427,36 @@ namespace jank
         return false;
       }
       return traits_type::compare(data() + this_sz - s_sz, s, s_sz) == 0;
+    }
+
+    [[gnu::const]]
+    constexpr native_bool ends_with(native_persistent_string_view const &s) const noexcept
+    {
+      auto const this_sz(size());
+      auto const s_sz(s.size());
+      if(this_sz < s_sz)
+      {
+        return false;
+      }
+      return traits_type::compare(data() + this_sz - s_sz, s.data(), s_sz) == 0;
+    }
+
+    [[gnu::const]]
+    constexpr native_bool contains(value_type const c) const noexcept
+    {
+      return find(c) != npos;
+    }
+
+    [[gnu::const]]
+    constexpr native_bool contains(const_pointer_type const s) const noexcept
+    {
+      return find(s) != npos;
+    }
+
+    [[gnu::const]]
+    constexpr native_bool contains(native_persistent_string_view const &s) const noexcept
+    {
+      return find(s) != npos;
     }
 
     /*** Immutable modifications. ***/
@@ -571,6 +613,21 @@ namespace jank
     constexpr operator native_persistent_string_view() const
     {
       return { data(), size() };
+    }
+
+    /*** Miscellaneous predicates. ***/
+    [[gnu::const]]
+    constexpr native_bool is_blank() const noexcept
+    {
+      native_bool ret{ true };
+      for(auto const c : *this)
+      {
+        if(!std::isspace(c))
+        {
+          return false;
+        }
+      }
+      return ret;
     }
 
     /*** Hashing. ***/
