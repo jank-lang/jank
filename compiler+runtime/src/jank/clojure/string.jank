@@ -1,11 +1,12 @@
 (ns clojure.string
   (:refer-clojure :exclude [replace reverse]))
 
-;(defn reverse
-;  "Returns s with its characters reversed."
-;  [s]
-;  (.toString (.reverse (StringBuilder. s))))
-;
+(defn reverse
+  "Returns s with its characters reversed."
+  [s]
+  (native/raw "auto const s_str(runtime::detail::to_string(~{ s }));
+              __value = make_box<obj::persistent_string>(native_persistent_string{ s_str.rbegin(), s_str.rend() });"))
+
 ;(defn re-quote-replacement
 ;  "Given a replacement string that you wish to be a literal
 ;  replacement for a pattern match in replace or replace-first, do the

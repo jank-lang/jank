@@ -182,6 +182,20 @@ namespace jank
       }
     }
 
+    template <typename It>
+    constexpr native_persistent_string(It const begin, It const end)
+    {
+      auto const size(std::distance(begin, end));
+      if(size <= max_small_size)
+      {
+        init_small(begin, end);
+      }
+      else
+      {
+        init_large_owned(begin, end);
+      }
+    }
+
     constexpr ~native_persistent_string() noexcept
     {
       destroy();
@@ -774,6 +788,16 @@ namespace jank
       set_small_size(lhs_size + rhs_size);
     }
 
+    template <typename It>
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
+    constexpr void init_small(It const begin, It const end) noexcept
+    {
+      auto const size(std::distance(begin, end));
+      assert(size <= max_small_size);
+      std::copy(begin, end, store.small);
+      set_small_size(size);
+    }
+
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
     constexpr void init_small_fill(value_type const fill, uint8_t const size) noexcept
     {
@@ -826,6 +850,19 @@ namespace jank
       store.large.data = std::assume_aligned<sizeof(pointer_type)>(store.allocate(size + 1));
       traits_type::copy(store.large.data, lhs, lhs_size);
       traits_type::copy(store.large.data + lhs_size, rhs, rhs_size);
+      store.large.data[size] = 0;
+      store.large.size = size;
+      store.large.set_category(category::large_owned);
+    }
+
+    template <typename It>
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
+    constexpr void init_large_owned(It const begin, It const end) noexcept
+    {
+      auto const size(std::distance(begin, end));
+      assert(max_small_size < size);
+      store.large.data = std::assume_aligned<sizeof(pointer_type)>(store.allocate(size + 1));
+      std::copy(begin, end, store.large.data);
       store.large.data[size] = 0;
       store.large.size = size;
       store.large.set_category(category::large_owned);
