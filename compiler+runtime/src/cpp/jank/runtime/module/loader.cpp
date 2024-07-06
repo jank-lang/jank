@@ -37,18 +37,71 @@ namespace jank::runtime::module
     return ret;
   }
 
-  native_persistent_string module_to_native_ns(native_persistent_string_view const &module)
+  native_persistent_string module_to_native_ns_old(native_transient_string module)
   {
     static std::regex const dash{ "-" };
     static std::regex const dot{ "\\." };
     static std::regex const last_module{ "\\$[a-zA-Z_0-9]+$" };
     static std::regex const dollar{ "\\$" };
 
+    fmt::println("// BINGBONG module in: {}", module);
+
     std::string ret{ module };
     ret = std::regex_replace(ret, dash, "_");
     ret = std::regex_replace(ret, dot, "::");
     ret = std::regex_replace(ret, last_module, "");
     ret = std::regex_replace(ret, dollar, "::");
+
+    fmt::println("// BINGBONG module out: {}", ret);
+
+    return ret;
+  }
+
+  /* This is a somewhat complicated function. We take in a module (doesn't need to be munged) and
+   * we return a native namespace name. So foo.bar will become foo::bar. But we also strip off
+   * the last nested module, since the way the codegen works is that foo.bar$spam lives in the
+   * native namespace foo::bar. Lastly, we need to split the module into parts and munge each
+   * individually, since we can have a module like clojure.template which will munge cleanly
+   * on its own, but template is a C++ keyword and the resulting clojure::template namespace
+   * will be a problem. So we split the module on each ., munge, and put it back together
+   * using ::. */
+  native_persistent_string module_to_native_ns(native_persistent_string_view const &orig_module)
+  {
+    static std::regex const dollar{ "\\$" };
+
+    native_transient_string module{ munge(orig_module) };
+
+    native_vector<native_transient_string> module_parts;
+    for(size_t dot_pos{}; (dot_pos = module.find('.')) != native_persistent_string::npos;)
+    {
+      module_parts.emplace_back(munge(module.substr(0, dot_pos)));
+      module.erase(0, dot_pos + 1);
+    }
+
+    if(module.find('$') != native_transient_string::npos)
+    {
+      for(size_t dollar_pos{}; (dollar_pos = module.find('$')) != native_persistent_string::npos;)
+      {
+        module_parts.emplace_back(munge(module.substr(0, dollar_pos)));
+        module.erase(0, dollar_pos + 1);
+      }
+    }
+    else
+    {
+      module_parts.emplace_back(munge(module));
+    }
+
+    std::string ret;
+    for(auto &part : module_parts)
+    {
+      part = std::regex_replace(part, dollar, "::");
+
+      if(!ret.empty())
+      {
+        ret += "::";
+      }
+      ret += part;
+    }
 
     return ret;
   }
@@ -80,7 +133,7 @@ namespace jank::runtime::module
   {
     auto const &path(entry.archive_path.unwrap());
     libzippp::ZipArchive zf{ std::string{ path } };
-    auto success(zf.open(libzippp::ZipArchive::ReadOnly));
+    auto const success(zf.open(libzippp::ZipArchive::ReadOnly));
     if(!success)
     {
       throw std::runtime_error{ fmt::format("Failed to open jar on classpath: {}", path) };

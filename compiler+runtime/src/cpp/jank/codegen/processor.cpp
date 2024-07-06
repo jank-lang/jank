@@ -1642,9 +1642,7 @@ namespace jank::codegen
      * Local fns are within a struct already, so we can't enter the ns again. */
     if(!runtime::module::is_nested_module(module))
     {
-      fmt::format_to(inserter,
-                     "namespace {} {{",
-                     runtime::module::module_to_native_ns(runtime::munge(module)));
+      fmt::format_to(inserter, "namespace {} {{", runtime::module::module_to_native_ns(module));
     }
 
     fmt::format_to(inserter,
@@ -1908,7 +1906,7 @@ namespace jank::codegen
 
   native_persistent_string processor::expression_str(native_bool const box_needed)
   {
-    auto const module_ns(runtime::module::module_to_native_ns(runtime::munge(module)));
+    auto const module_ns(runtime::module::module_to_native_ns(module));
 
     if(!generated_expression)
     {
@@ -1965,9 +1963,7 @@ namespace jank::codegen
     fmt::memory_buffer module_buffer;
     auto inserter(std::back_inserter(module_buffer));
 
-    fmt::format_to(inserter,
-                   "namespace {} {{",
-                   runtime::module::module_to_native_ns(runtime::munge(module)));
+    fmt::format_to(inserter, "namespace {} {{", runtime::module::module_to_native_ns(module));
 
     fmt::format_to(inserter,
                    R"(

@@ -1,5 +1,5 @@
 ; Namespace management.
-(def *ns*)
+(def ^:dynamic *ns*)
 
 ; Syntax quoting.
 (def unquote
