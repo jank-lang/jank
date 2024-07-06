@@ -40,7 +40,11 @@ namespace jank::runtime
 
   option<var_ptr> ns::find_var(obj::symbol_ptr const &sym)
   {
-    assert(sym->ns.empty());
+    if(!sym->ns.empty())
+    {
+      return __rt_ctx->find_var(sym);
+    }
+
     auto const locked_vars(vars.rlock());
     auto const found((*locked_vars)->data.find(sym));
     if(!found)

@@ -1,5 +1,5 @@
-; Namespace management.
 (def ^:dynamic *ns*)
+(def ^:dynamic *out* nil)
 
 ; Syntax quoting.
 (def unquote
@@ -2183,6 +2183,14 @@
 (defn print [o]
   (native/raw "__value = jank::runtime::context::print(~{ o });"))
 
+(defn pr-str [o]
+  ; TODO: Representation printing.
+  (str o))
+
+(defn prn [o]
+  ; TODO: Representation printing.
+  (println o))
+
 ;; Keywords.
 (defn keyword? [o]
   (native/raw "__value = make_box(~{ o }->type == object_type::keyword)"))
@@ -3917,6 +3925,27 @@
                   acc)))
             {}
             (ns-map ns))))
+
+(defn ns-resolve
+  "Returns the var to which a symbol will be resolved in the
+  namespace (unless found in the environment), else nil.  Note that
+  if the symbol is fully qualified, the var to which it resolves
+  need not be present in the namespace."
+  ([ns sym]
+    (ns-resolve ns nil sym))
+  ([ns env sym]
+    (when-not (contains? env sym)
+      (native/raw "auto const n(expect_object<runtime::ns>(~{ (the-ns ns) }));
+                   auto const found(n->find_var(try_object<obj::symbol>(~{ sym })));
+                   if(found.is_some())
+                   { __value = found.unwrap(); }"))))
+
+(defn resolve
+  "Same as (ns-resolve *ns* symbol) or (ns-resolve *ns* &env symbol)"
+  ([sym]
+   (ns-resolve *ns* sym))
+  ([env sym]
+   (ns-resolve *ns* env sym)))
 
 (defn- libspec? [x]
   (or (symbol? x)
