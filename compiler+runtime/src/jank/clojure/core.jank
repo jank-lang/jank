@@ -987,6 +987,22 @@
   [coll]
   (native/raw "__value = runtime::pop(~{ coll });"))
 
+(defn vary-meta
+  "Returns an object of the same type and value as obj, with
+  (apply f (meta obj) args) as its metadata."
+  [o f & args]
+  (with-meta o (apply f (meta o) args)))
+
+(defn alter-meta!
+  "Atomically sets the metadata for a namespace/var/ref/agent/atom to be:
+
+  (apply f its-current-meta args)
+
+  f must be free of side-effects"
+  [o f & args]
+  ; TODO: Atomics.
+  (reset-meta! o (apply f (meta o) args)))
+
 ;; Atoms.
 (defn atom
   "Creates and returns an Atom with an initial value of x and zero or
@@ -1419,11 +1435,11 @@
               (
                visit_object
                (
-                [=](auto const typed_o) -> native_bool
+                [](auto const typed_o) -> native_bool
                 {
                  using T = typename decltype(typed_o)::value_type;
 
-                 if constexpr(behavior::sequenceable<T>)
+                 if constexpr(behavior::sequential<T>)
                  { return true; }
                  else
                  { return false; }

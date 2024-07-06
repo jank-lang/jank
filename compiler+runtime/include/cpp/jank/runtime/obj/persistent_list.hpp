@@ -14,6 +14,7 @@ namespace jank::runtime
     using value_type = runtime::detail::native_persistent_list;
 
     static constexpr native_bool pointer_free{ false };
+    static constexpr native_bool is_sequential{ true };
 
     /* Create from a sequence. */
     static native_box<static_object> create(object_ptr s);
