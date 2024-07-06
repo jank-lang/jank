@@ -41,7 +41,7 @@ namespace jank::runtime
     void to_string(fmt::memory_buffer &buff) const;
     native_hash to_hash() const;
 
-    /* behavior::numberable */
+    /* behavior::number_like */
     native_integer to_integer() const;
     native_real to_real() const;
 
@@ -65,7 +65,7 @@ namespace jank::runtime
     void to_string(fmt::memory_buffer &buff) const;
     native_hash to_hash() const;
 
-    /* behavior::numberable */
+    /* behavior::number_like */
     native_integer to_integer() const;
     native_real to_real() const;
 

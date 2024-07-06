@@ -8,7 +8,7 @@
 
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
-#include <jank/runtime/behavior/numberable.hpp>
+#include <jank/runtime/behavior/number_like.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/analyze/step/force_boxed.hpp>
@@ -1532,7 +1532,8 @@ namespace jank::analyze
         {
           return analyze_set(typed_o, current_frame, expr_type, fn_ctx, needs_box);
         }
-        else if constexpr(runtime::behavior::numberable<T> || std::same_as<T, runtime::obj::boolean>
+        else if constexpr(runtime::behavior::number_like<T>
+                          || std::same_as<T, runtime::obj::boolean>
                           || std::same_as<T, runtime::obj::keyword>
                           || std::same_as<T, runtime::obj::nil>
                           || std::same_as<T, runtime::obj::persistent_string>)

@@ -6,7 +6,7 @@ namespace jank::runtime
                                      object_ptr const dispatch,
                                      object_ptr const default_,
                                      object_ptr const hierarchy)
-    : dispatch{ runtime::behavior::to_callable(dispatch) }
+    : dispatch{ dispatch }
     , default_dispatch_value{ default_ }
     , hierarchy{ hierarchy }
     , method_table{ obj::persistent_hash_map::empty() }
@@ -44,23 +44,23 @@ namespace jank::runtime
 
   object_ptr obj::multi_function::call()
   {
-    return dynamic_call(get_fn(dispatch->call()));
+    return dynamic_call(get_fn(dynamic_call(dispatch)));
   }
 
   object_ptr obj::multi_function::call(object_ptr const a1)
   {
-    return dynamic_call(get_fn(dispatch->call(a1)), a1);
+    return dynamic_call(get_fn(dynamic_call(dispatch, a1)), a1);
   }
 
   object_ptr obj::multi_function::call(object_ptr const a1, object_ptr const a2)
   {
-    return dynamic_call(get_fn(dispatch->call(a1, a2)), a1, a2);
+    return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2)), a1, a2);
   }
 
   object_ptr
   obj::multi_function::call(object_ptr const a1, object_ptr const a2, object_ptr const a3)
   {
-    return dynamic_call(get_fn(dispatch->call(a1, a2, a3)), a1, a2, a3);
+    return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3)), a1, a2, a3);
   }
 
   object_ptr obj::multi_function::call(object_ptr const a1,
@@ -68,7 +68,7 @@ namespace jank::runtime
                                        object_ptr const a3,
                                        object_ptr const a4)
   {
-    return dynamic_call(get_fn(dispatch->call(a1, a2, a3, a4)), a1, a2, a3, a4);
+    return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4)), a1, a2, a3, a4);
   }
 
   object_ptr obj::multi_function::call(object_ptr const a1,
@@ -77,7 +77,7 @@ namespace jank::runtime
                                        object_ptr const a4,
                                        object_ptr const a5)
   {
-    return dynamic_call(get_fn(dispatch->call(a1, a2, a3, a4, a5)), a1, a2, a3, a4, a5);
+    return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5)), a1, a2, a3, a4, a5);
   }
 
   object_ptr obj::multi_function::call(object_ptr const a1,
@@ -87,7 +87,13 @@ namespace jank::runtime
                                        object_ptr const a5,
                                        object_ptr const a6)
   {
-    return dynamic_call(get_fn(dispatch->call(a1, a2, a3, a4, a5, a6)), a1, a2, a3, a4, a5, a6);
+    return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6)),
+                        a1,
+                        a2,
+                        a3,
+                        a4,
+                        a5,
+                        a6);
   }
 
   object_ptr obj::multi_function::call(object_ptr const a1,
@@ -98,7 +104,7 @@ namespace jank::runtime
                                        object_ptr const a6,
                                        object_ptr const a7)
   {
-    return dynamic_call(get_fn(dispatch->call(a1, a2, a3, a4, a5, a6, a7)),
+    return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6, a7)),
                         a1,
                         a2,
                         a3,
@@ -117,7 +123,7 @@ namespace jank::runtime
                                        object_ptr const a7,
                                        object_ptr const a8)
   {
-    return dynamic_call(get_fn(dispatch->call(a1, a2, a3, a4, a5, a6, a7, a8)),
+    return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6, a7, a8)),
                         a1,
                         a2,
                         a3,
@@ -138,7 +144,7 @@ namespace jank::runtime
                                        object_ptr const a8,
                                        object_ptr const a9)
   {
-    return dynamic_call(get_fn(dispatch->call(a1, a2, a3, a4, a5, a6, a7, a8, a9)),
+    return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6, a7, a8, a9)),
                         a1,
                         a2,
                         a3,
@@ -161,7 +167,7 @@ namespace jank::runtime
                                        object_ptr const a9,
                                        object_ptr const a10)
   {
-    return dynamic_call(get_fn(dispatch->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)),
+    return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)),
                         a1,
                         a2,
                         a3,

@@ -90,7 +90,7 @@
                   {
                    using T = typename decltype(typed_o)::value_type;
 
-                   if constexpr(behavior::numberable<T>)
+                   if constexpr(behavior::number_like<T>)
                    { return typed_o->to_real(); }
                    else
                    { ~{ (throw (ex-info :not-a-number {:o o})) }; }
@@ -1143,23 +1143,89 @@
        res
        (recur res (first args) (next args))))))
 
-; TODO: Symbol creation for generated names related to instances of this
-; will result in a name like `/384`, which gets parsed as `384`. Fix the parsing
-; in the symbol string separation fn.
-(def
+(defn
   ^{:arities {2 {:supports-unboxed-input? true
                  :unboxed-output? true}}}
   /
-  (fn /
-    ([x]
-     (/ 1 x))
-    ([l r]
-     (native/raw "__value = runtime::div(~{ l }, ~{ r });"))
-    ([l r & args]
-     (let [res (native/raw "__value = runtime::div(~{ l }, ~{ r });")]
-       (if (empty? args)
-         res
-         (recur res (first args) (next args)))))))
+  ([x]
+   (/ 1 x))
+  ([l r]
+   (native/raw "__value = runtime::div(~{ l }, ~{ r });"))
+  ([l r & args]
+   (let [res (native/raw "__value = runtime::div(~{ l }, ~{ r });")]
+     (if (empty? args)
+       res
+       (recur res (first args) (next args))))))
+
+;; Bit operations.
+; TODO: Unboxing and inlining for these.
+(defn bit-not
+  "Bitwise complement"
+  [x]
+  (native/raw "__value = make_box(runtime::bit_not(~{ x }));"))
+
+(defn bit-and
+  "Bitwise and"
+  ([x y]
+   (native/raw "__value = make_box(runtime::bit_and(~{ x }, ~{ y }));"))
+  ([x y & more]
+   (reduce bit-and (bit-and x y) more)))
+
+(defn bit-or
+  "Bitwise or"
+  ([x y]
+   (native/raw "__value = make_box(runtime::bit_or(~{ x }, ~{ y }));"))
+  ([x y & more]
+   (reduce bit-or (bit-or x y) more)))
+
+(defn bit-xor
+  "Bitwise exclusive or"
+  ([x y]
+   (native/raw "__value = make_box(runtime::bit_xor(~{ x }, ~{ y }));"))
+  ([x y & more]
+   (reduce bit-xor (bit-xor x y) more)))
+
+(defn bit-and-not
+  "Bitwise and with complement"
+  ([x y]
+   (native/raw "__value = make_box(runtime::bit_and_not(~{ x }, ~{ y }));"))
+  ([x y & more]
+   (reduce bit-and-not (bit-and-not x y) more)))
+
+(defn bit-clear
+  "Clear bit at index n"
+  [x n]
+  (native/raw "__value = make_box(runtime::bit_clear(~{ x }, ~{ n }));"))
+
+(defn bit-set
+  "Set bit at index n"
+  [x n]
+  (native/raw "__value = make_box(runtime::bit_set(~{ x }, ~{ n }));"))
+
+(defn bit-flip
+  "Flip bit at index n"
+  [x n]
+  (native/raw "__value = make_box(runtime::bit_flip(~{ x }, ~{ n }));"))
+
+(defn bit-test
+  "Test bit at index n"
+  [x n]
+  (native/raw "__value = make_box(runtime::bit_test(~{ x }, ~{ n }));"))
+
+(defn bit-shift-left
+  "Bitwise shift left"
+  [x n]
+  (native/raw "__value = make_box(runtime::bit_shift_left(~{ x }, ~{ n }));"))
+
+(defn bit-shift-right
+  "Bitwise shift right"
+  [x n]
+  (native/raw "__value = make_box(runtime::bit_shift_right(~{ x }, ~{ n }));"))
+
+(defn unsigned-bit-shift-right
+  "Bitwise shift right, without sign-extension."
+  [x n]
+  (native/raw "__value = make_box(runtime::bit_unsigned_shift_right(~{ x }, ~{ n }));"))
 
 (defn =
   ([x]
@@ -1171,6 +1237,18 @@
      (if (next args)
        (recur r (first args) (next args))
        (native/raw "__value = make_box(runtime::detail::equal(~{ r }, ~{ (first args) }));"))
+     false)))
+
+(defn ==
+  ([x]
+   true)
+  ([l r]
+   (native/raw "__value = make_box(runtime::is_equiv(~{ l }, ~{ r }));"))
+  ([l r & args]
+   (if (native/raw "__value = make_box(runtime::is_equiv(~{ l }, ~{ r }));")
+     (if (next args)
+       (recur r (first args) (next args))
+       (native/raw "__value = make_box(runtime::is_equiv(~{ r }, ~{ (first args) }));"))
      false)))
 
 (defn not=
@@ -1305,7 +1383,7 @@
                 {
                  using T = typename decltype(typed_o)::value_type;
 
-                 if constexpr(behavior::numberable<T>)
+                 if constexpr(behavior::number_like<T>)
                  { return true; }
                  else
                  { return false; }
@@ -3119,12 +3197,14 @@
                                           (= k :when) `(if ~v
                                                          ~(do-cmod etc)
                                                          (recur
-                                                           (unchecked-inc ~gi)))
+                                                           ; TODO: unchecked-inc
+                                                           (inc ~gi)))
                                           (keyword? k)
                                           (err "Invalid 'for' keyword " k)
                                           :else
                                           `(do (chunk-append ~gb ~body-expr)
-                                               (recur (unchecked-inc ~gi)))))]
+                                               ; TODO: unchecked-inc
+                                               (recur (inc ~gi)))))]
                           `(fn ~giter [~gxs]
                              (lazy-seq
                                (loop [~gxs ~gxs]

@@ -195,8 +195,6 @@ namespace jank::runtime
 
     using callable_ptr = native_box<callable>;
 
-    callable_ptr to_callable(object_ptr fn);
-
     /* TODO: Is this needed? A non-callable function-like would need to define all call overloads? :( */
     template <typename T>
     concept function_like = requires(T * const t) {

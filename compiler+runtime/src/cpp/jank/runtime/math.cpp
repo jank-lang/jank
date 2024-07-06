@@ -1,22 +1,22 @@
 #include <jank/runtime/math.hpp>
-#include <jank/runtime/behavior/numberable.hpp>
+#include <jank/runtime/behavior/number_like.hpp>
 
 namespace jank::runtime
 {
-  /* TODO: visit_numberable */
+  /* TODO: visit_number_like */
   object_ptr add(object_ptr const l, object_ptr const r)
   {
     return visit_object(
       [](auto const typed_l, auto const r) -> object_ptr {
         using L = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<L>)
+        if constexpr(behavior::number_like<L>)
         {
           return visit_object(
             [](auto const typed_r, auto const typed_l) -> object_ptr {
               using R = typename decltype(typed_r)::value_type;
 
-              if constexpr(behavior::numberable<R>)
+              if constexpr(behavior::number_like<R>)
               {
                 return make_box(typed_l + typed_r->data);
               }
@@ -43,7 +43,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> object_ptr {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return make_box(typed_l + typed_r->data);
         }
@@ -62,7 +62,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> object_ptr {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return make_box(typed_l->data + typed_r);
         }
@@ -91,7 +91,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_real {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l + typed_r->data;
         }
@@ -110,7 +110,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_real {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l->data + typed_r;
         }
@@ -139,7 +139,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_real {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l->data + typed_r;
         }
@@ -158,7 +158,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_real {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l + typed_r->data;
         }
@@ -192,7 +192,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> object_ptr {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return make_box(typed_l->data + typed_r);
         }
@@ -211,7 +211,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> object_ptr {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return make_box(typed_l + typed_r->data);
         }
@@ -235,13 +235,13 @@ namespace jank::runtime
       [](auto const typed_l, auto const r) -> object_ptr {
         using L = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<L>)
+        if constexpr(behavior::number_like<L>)
         {
           return visit_object(
             [](auto const typed_r, auto const typed_l) -> object_ptr {
               using R = typename decltype(typed_r)::value_type;
 
-              if constexpr(behavior::numberable<R>)
+              if constexpr(behavior::number_like<R>)
               {
                 return make_box(typed_l - typed_r->data);
               }
@@ -268,7 +268,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> object_ptr {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return make_box(typed_l - typed_r->data);
         }
@@ -287,7 +287,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> object_ptr {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return make_box(typed_l->data - typed_r);
         }
@@ -316,7 +316,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_real {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l - typed_r->data;
         }
@@ -335,7 +335,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_real {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l->data - typed_r;
         }
@@ -364,7 +364,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_real {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l->data - typed_r;
         }
@@ -383,7 +383,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_real {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l - typed_r->data;
         }
@@ -417,7 +417,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> object_ptr {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return make_box(typed_l->data - typed_r);
         }
@@ -436,7 +436,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> object_ptr {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return make_box(typed_l - typed_r->data);
         }
@@ -460,13 +460,13 @@ namespace jank::runtime
       [](auto const typed_l, auto const r) -> object_ptr {
         using L = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<L>)
+        if constexpr(behavior::number_like<L>)
         {
           return visit_object(
             [](auto const typed_r, auto const typed_l) -> object_ptr {
               using R = typename decltype(typed_r)::value_type;
 
-              if constexpr(behavior::numberable<R>)
+              if constexpr(behavior::number_like<R>)
               {
                 return make_box(typed_l / typed_r->data);
               }
@@ -493,7 +493,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> object_ptr {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return make_box(typed_l / typed_r->data);
         }
@@ -512,7 +512,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> object_ptr {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return make_box(typed_l->data / typed_r);
         }
@@ -541,7 +541,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_real {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l / typed_r->data;
         }
@@ -560,7 +560,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_real {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l->data / typed_r;
         }
@@ -589,7 +589,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_real {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l->data / typed_r;
         }
@@ -608,7 +608,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_real {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l / typed_r->data;
         }
@@ -642,7 +642,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> object_ptr {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return make_box(typed_l->data / typed_r);
         }
@@ -661,7 +661,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> object_ptr {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return make_box(typed_l / typed_r->data);
         }
@@ -685,13 +685,13 @@ namespace jank::runtime
       [](auto const typed_l, auto const r) -> object_ptr {
         using L = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<L>)
+        if constexpr(behavior::number_like<L>)
         {
           return visit_object(
             [](auto const typed_r, auto const typed_l) -> object_ptr {
               using R = typename decltype(typed_r)::value_type;
 
-              if constexpr(behavior::numberable<R>)
+              if constexpr(behavior::number_like<R>)
               {
                 return make_box(typed_l * typed_r->data);
               }
@@ -718,7 +718,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> object_ptr {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return make_box(typed_l * typed_r->data);
         }
@@ -737,7 +737,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> object_ptr {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return make_box(typed_l->data * typed_r);
         }
@@ -766,7 +766,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_real {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l * typed_r->data;
         }
@@ -785,7 +785,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_real {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l->data * typed_r;
         }
@@ -814,7 +814,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_real {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l->data * typed_r;
         }
@@ -833,7 +833,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_real {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l * typed_r->data;
         }
@@ -867,7 +867,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> object_ptr {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return make_box(typed_l->data * typed_r);
         }
@@ -886,7 +886,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> object_ptr {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return make_box(typed_l * typed_r->data);
         }
@@ -910,13 +910,13 @@ namespace jank::runtime
       [](auto const typed_l, auto const r) -> object_ptr {
         using L = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<L>)
+        if constexpr(behavior::number_like<L>)
         {
           return visit_object(
             [](auto const typed_r, auto const typed_l) -> object_ptr {
               using R = typename decltype(typed_r)::value_type;
 
-              if constexpr(behavior::numberable<R>)
+              if constexpr(behavior::number_like<R>)
               {
                 if constexpr(std::is_same_v<L, obj::real> || std::is_same_v<R, obj::real>)
                 {
@@ -950,7 +950,7 @@ namespace jank::runtime
       [](auto const typed_l) -> object_ptr {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return make_box(typed_l->data + 1);
         }
@@ -968,7 +968,7 @@ namespace jank::runtime
       [](auto const typed_l) -> object_ptr {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return make_box(typed_l->data - 1);
         }
@@ -986,7 +986,7 @@ namespace jank::runtime
       [](auto const typed_l) -> native_bool {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
         {
@@ -1007,7 +1007,7 @@ namespace jank::runtime
       [](auto const typed_l) -> native_bool {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
         {
@@ -1028,7 +1028,7 @@ namespace jank::runtime
       [](auto const typed_l) -> native_bool {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
         {
@@ -1049,13 +1049,13 @@ namespace jank::runtime
       [](auto const typed_l, auto const r) -> native_bool {
         using L = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<L>)
+        if constexpr(behavior::number_like<L>)
         {
           return visit_object(
             [](auto const typed_r, auto const typed_l) -> native_bool {
               using R = typename decltype(typed_r)::value_type;
 
-              if constexpr(behavior::numberable<R>)
+              if constexpr(behavior::number_like<R>)
               {
                 using C = std::common_type_t<decltype(L::data), decltype(R::data)>;
 #pragma clang diagnostic push
@@ -1080,6 +1080,179 @@ namespace jank::runtime
       r);
   }
 
+  native_integer bit_not(object_ptr const l)
+  {
+    return visit_object<obj::integer>(
+      [](auto const typed_l) -> native_integer { return ~typed_l->data; },
+      l);
+  }
+
+  native_integer bit_and(object_ptr const l, object_ptr const r)
+  {
+    return visit_object<obj::integer>(
+      [](auto const typed_l, auto const r) -> native_integer {
+        return visit_object<obj::integer>(
+          [](auto const typed_r, auto const typed_l) -> native_integer {
+            return typed_l & typed_r->data;
+          },
+          r,
+          typed_l->data);
+      },
+      l,
+      r);
+  }
+
+  native_integer bit_or(object_ptr const l, object_ptr const r)
+  {
+    return visit_object<obj::integer>(
+      [](auto const typed_l, auto const r) -> native_integer {
+        return visit_object<obj::integer>(
+          [](auto const typed_r, auto const typed_l) -> native_integer {
+            return typed_l | typed_r->data;
+          },
+          r,
+          typed_l->data);
+      },
+      l,
+      r);
+  }
+
+  native_integer bit_xor(object_ptr const l, object_ptr const r)
+  {
+    return visit_object<obj::integer>(
+      [](auto const typed_l, auto const r) -> native_integer {
+        return visit_object<obj::integer>(
+          [](auto const typed_r, auto const typed_l) -> native_integer {
+            return typed_l ^ typed_r->data;
+          },
+          r,
+          typed_l->data);
+      },
+      l,
+      r);
+  }
+
+  native_integer bit_and_not(object_ptr const l, object_ptr const r)
+  {
+    return visit_object<obj::integer>(
+      [](auto const typed_l, auto const r) -> native_integer {
+        return visit_object<obj::integer>(
+          [](auto const typed_r, auto const typed_l) -> native_integer {
+            return typed_l & (~typed_r->data);
+          },
+          r,
+          typed_l->data);
+      },
+      l,
+      r);
+  }
+
+  native_integer bit_clear(object_ptr const l, object_ptr const r)
+  {
+    return visit_object<obj::integer>(
+      [](auto const typed_l, auto const r) -> native_integer {
+        return visit_object<obj::integer>(
+          [](auto const typed_r, auto const typed_l) -> native_integer {
+            return typed_l & ~(static_cast<native_integer>(1) << typed_r->data);
+          },
+          r,
+          typed_l->data);
+      },
+      l,
+      r);
+  }
+
+  native_integer bit_set(object_ptr const l, object_ptr const r)
+  {
+    return visit_object<obj::integer>(
+      [](auto const typed_l, auto const r) -> native_integer {
+        return visit_object<obj::integer>(
+          [](auto const typed_r, auto const typed_l) -> native_integer {
+            return typed_l | (static_cast<native_integer>(1) << typed_r->data);
+          },
+          r,
+          typed_l->data);
+      },
+      l,
+      r);
+  }
+
+  native_integer bit_flip(object_ptr const l, object_ptr const r)
+  {
+    return visit_object<obj::integer>(
+      [](auto const typed_l, auto const r) -> native_integer {
+        return visit_object<obj::integer>(
+          [](auto const typed_r, auto const typed_l) -> native_integer {
+            return typed_l ^ (static_cast<native_integer>(1) << typed_r->data);
+          },
+          r,
+          typed_l->data);
+      },
+      l,
+      r);
+  }
+
+  native_bool bit_test(object_ptr const l, object_ptr const r)
+  {
+    return visit_object<obj::integer>(
+      [](auto const typed_l, auto const r) -> native_bool {
+        return visit_object<obj::integer>(
+          [](auto const typed_r, auto const typed_l) -> native_bool {
+            return (typed_l >> typed_r->data) & static_cast<native_integer>(1);
+          },
+          r,
+          typed_l->data);
+      },
+      l,
+      r);
+  }
+
+  native_integer bit_shift_left(object_ptr const l, object_ptr const r)
+  {
+    return visit_object<obj::integer>(
+      [](auto const typed_l, auto const r) -> native_integer {
+        return visit_object<obj::integer>(
+          [](auto const typed_r, auto const typed_l) -> native_integer {
+            return typed_l << typed_r->data;
+          },
+          r,
+          typed_l->data);
+      },
+      l,
+      r);
+  }
+
+  native_integer bit_shift_right(object_ptr const l, object_ptr const r)
+  {
+    return visit_object<obj::integer>(
+      [](auto const typed_l, auto const r) -> native_integer {
+        return visit_object<obj::integer>(
+          [](auto const typed_r, auto const typed_l) -> native_integer {
+            return typed_l >> typed_r->data;
+          },
+          r,
+          typed_l->data);
+      },
+      l,
+      r);
+  }
+
+  native_integer bit_unsigned_shift_right(object_ptr const l, object_ptr const r)
+  {
+    return visit_object<obj::integer>(
+      [](auto const typed_l, auto const r) -> native_integer {
+        return visit_object<obj::integer>(
+          [](auto const typed_r, auto const typed_l) -> native_integer {
+            using uni = std::make_unsigned_t<native_integer>;
+            return static_cast<uni>(typed_l) >> static_cast<uni>(typed_r->data);
+          },
+          r,
+          typed_l->data);
+      },
+      l,
+      r);
+  }
+
   native_real rand()
   {
     static std::mt19937 gen;
@@ -1093,13 +1266,13 @@ namespace jank::runtime
       [](auto const typed_l, auto const r) -> native_bool {
         using L = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<L>)
+        if constexpr(behavior::number_like<L>)
         {
           return visit_object(
             [](auto const typed_r, auto const typed_l) -> native_bool {
               using R = typename decltype(typed_r)::value_type;
 
-              if constexpr(behavior::numberable<R>)
+              if constexpr(behavior::number_like<R>)
               {
                 return typed_l < typed_r->data;
               }
@@ -1126,7 +1299,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_bool {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l < typed_r->data;
         }
@@ -1145,7 +1318,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_bool {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l->data < typed_r;
         }
@@ -1174,7 +1347,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_bool {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l < typed_r->data;
         }
@@ -1193,7 +1366,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_bool {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l->data < typed_r;
         }
@@ -1222,7 +1395,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_bool {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l->data < typed_r;
         }
@@ -1241,7 +1414,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_bool {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l < typed_r->data;
         }
@@ -1275,7 +1448,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_bool {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l->data < typed_r;
         }
@@ -1294,7 +1467,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_bool {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l < typed_r->data;
         }
@@ -1318,13 +1491,13 @@ namespace jank::runtime
       [](auto const typed_l, auto const r) -> native_bool {
         using L = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<L>)
+        if constexpr(behavior::number_like<L>)
         {
           return visit_object(
             [](auto const typed_r, auto const typed_l) -> native_bool {
               using R = typename decltype(typed_r)::value_type;
 
-              if constexpr(behavior::numberable<R>)
+              if constexpr(behavior::number_like<R>)
               {
                 return typed_l <= typed_r->data;
               }
@@ -1351,7 +1524,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_bool {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l <= typed_r->data;
         }
@@ -1370,7 +1543,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_bool {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l->data <= typed_r;
         }
@@ -1399,7 +1572,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_bool {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l <= typed_r->data;
         }
@@ -1418,7 +1591,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_bool {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l->data <= typed_r;
         }
@@ -1447,7 +1620,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_bool {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l->data <= typed_r;
         }
@@ -1466,7 +1639,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_bool {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l <= typed_r->data;
         }
@@ -1500,7 +1673,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_bool {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l->data <= typed_r;
         }
@@ -1519,7 +1692,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_bool {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l <= typed_r->data;
         }
@@ -1543,13 +1716,13 @@ namespace jank::runtime
       [](auto const typed_l, auto const r) -> object_ptr {
         using L = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<L>)
+        if constexpr(behavior::number_like<L>)
         {
           return visit_object(
             [](auto const typed_r, auto const typed_l) -> object_ptr {
               using R = typename decltype(typed_r)::value_type;
 
-              if constexpr(behavior::numberable<R>)
+              if constexpr(behavior::number_like<R>)
               {
                 using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
                 return make_box(std::min(static_cast<C>(typed_l), static_cast<C>(typed_r->data)));
@@ -1577,7 +1750,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> object_ptr {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
           return make_box(std::min(static_cast<C>(typed_l), static_cast<C>(typed_r->data)));
@@ -1597,7 +1770,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> object_ptr {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
           return make_box(std::min(static_cast<C>(typed_l->data), static_cast<C>(typed_r)));
@@ -1627,7 +1800,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_real {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
           return std::min(static_cast<C>(typed_l), static_cast<C>(typed_r->data));
@@ -1647,7 +1820,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_real {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
           return std::min(static_cast<C>(typed_l->data), static_cast<C>(typed_r));
@@ -1677,7 +1850,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_real {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
           return std::min(static_cast<C>(typed_l->data), static_cast<C>(typed_r));
@@ -1697,7 +1870,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_real {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
           return std::min(static_cast<C>(typed_l), static_cast<C>(typed_r->data));
@@ -1732,7 +1905,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> object_ptr {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
           return make_box(std::min(static_cast<C>(typed_l->data), static_cast<C>(typed_r)));
@@ -1752,7 +1925,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> object_ptr {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
           return make_box(std::min(static_cast<C>(typed_l), static_cast<C>(typed_r->data)));
@@ -1777,13 +1950,13 @@ namespace jank::runtime
       [](auto const typed_l, auto const r) -> object_ptr {
         using L = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<L>)
+        if constexpr(behavior::number_like<L>)
         {
           return visit_object(
             [](auto const typed_r, auto const typed_l) -> object_ptr {
               using R = typename decltype(typed_r)::value_type;
 
-              if constexpr(behavior::numberable<R>)
+              if constexpr(behavior::number_like<R>)
               {
                 using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
                 return make_box(std::max(static_cast<C>(typed_l), static_cast<C>(typed_r->data)));
@@ -1811,7 +1984,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> object_ptr {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
           return make_box(std::max(static_cast<C>(typed_l), static_cast<C>(typed_r->data)));
@@ -1831,7 +2004,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> object_ptr {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
           return make_box(std::max(static_cast<C>(typed_l->data), static_cast<C>(typed_r)));
@@ -1861,7 +2034,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_real {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
           return std::max(static_cast<C>(typed_l), static_cast<C>(typed_r->data));
@@ -1881,7 +2054,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_real {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
           return std::max(static_cast<C>(typed_l->data), static_cast<C>(typed_r));
@@ -1911,7 +2084,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_real {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
           return std::max(static_cast<C>(typed_l->data), static_cast<C>(typed_r));
@@ -1931,7 +2104,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_real {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
           return std::max(static_cast<C>(typed_l), static_cast<C>(typed_r->data));
@@ -1966,7 +2139,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> object_ptr {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
           return make_box(std::max(static_cast<C>(typed_l->data), static_cast<C>(typed_r)));
@@ -1986,7 +2159,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> object_ptr {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
           return make_box(std::max(static_cast<C>(typed_l), static_cast<C>(typed_r->data)));
@@ -2053,7 +2226,7 @@ namespace jank::runtime
       [](auto const typed_l) -> native_real {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return std::sqrt(typed_l->to_real());
         }
@@ -2091,13 +2264,13 @@ namespace jank::runtime
       [](auto const typed_l, auto const r) -> native_real {
         using L = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<L>)
+        if constexpr(behavior::number_like<L>)
         {
           return visit_object(
             [](auto const typed_r, auto const typed_l) -> native_real {
               using R = typename decltype(typed_r)::value_type;
 
-              if constexpr(behavior::numberable<R>)
+              if constexpr(behavior::number_like<R>)
               {
                 using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
                 return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r->data));
@@ -2125,7 +2298,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_real {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
           return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r->data));
@@ -2145,7 +2318,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_real {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
           return std::pow(static_cast<C>(typed_l->data), static_cast<C>(typed_r));
@@ -2175,7 +2348,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_real {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
           return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r->data));
@@ -2195,7 +2368,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_real {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
           return std::pow(static_cast<C>(typed_l->data), static_cast<C>(typed_r));
@@ -2225,7 +2398,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_real {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
           return std::pow(static_cast<C>(typed_l->data), static_cast<C>(typed_r));
@@ -2245,7 +2418,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_real {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
           return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r->data));
@@ -2280,7 +2453,7 @@ namespace jank::runtime
       [](auto const typed_l, auto const typed_r) -> native_real {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l->data), decltype(typed_r)>;
           return std::pow(static_cast<C>(typed_l->data), static_cast<C>(typed_r));
@@ -2300,7 +2473,7 @@ namespace jank::runtime
       [](auto const typed_r, auto const typed_l) -> native_real {
         using T = typename decltype(typed_r)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           using C = std::common_type_t<decltype(typed_l), decltype(typed_r->data)>;
           return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r->data));
@@ -2325,7 +2498,7 @@ namespace jank::runtime
       [](auto const typed_l) -> native_integer {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_l->to_integer();
         }
