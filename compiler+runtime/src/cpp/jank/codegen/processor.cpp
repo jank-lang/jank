@@ -2,6 +2,7 @@
 
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/codegen/processor.hpp>
 #include <jank/util/escape.hpp>
@@ -196,9 +197,10 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, runtime::obj::character>)
           {
-            fmt::format_to(inserter,
-                           R"(jank::make_box<jank::runtime::obj::character>({}))",
-                           typed_o->data);
+            fmt::format_to(
+              inserter,
+              R"(jank::make_box<jank::runtime::obj::character>(jank::runtime::get_char_from_repr({}).unwrap()))",
+              util::escaped_quoted_view(typed_o->data));
           }
           else if constexpr(std::same_as<T, runtime::obj::keyword>)
           {

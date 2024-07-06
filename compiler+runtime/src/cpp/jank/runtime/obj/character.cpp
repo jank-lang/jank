@@ -3,7 +3,7 @@
 namespace jank::runtime
 {
 
-  static option<char> get_char_from_repr(native_persistent_string const &sv)
+  option<char> get_char_from_repr(native_persistent_string const &sv)
   {
     if(sv.size() == 2)
     {
@@ -37,6 +37,27 @@ namespace jank::runtime
     return none;
   }
 
+  native_persistent_string get_repr_from_char(char const ch)
+  {
+    switch(ch)
+    {
+      case '\n':
+        return "\\newline";
+      case ' ':
+        return "\\space";
+      case '\t':
+        return "\\tab";
+      case '\b':
+        return "\\backspace";
+      case '\f':
+        return "\\formfeed";
+      case '\r':
+        return "\\return";
+      default:
+        return fmt::format("\\{}", ch);
+    }
+  }
+
   obj::character::static_object(native_persistent_string_view const &d)
     : data{ d }
   {
@@ -47,8 +68,8 @@ namespace jank::runtime
   {
   }
 
-  obj::character::static_object(char ch)
-    : data{ 1, ch }
+  obj::character::static_object(char const ch)
+    : data{ get_repr_from_char(ch) }
   {
   }
 
@@ -68,11 +89,9 @@ namespace jank::runtime
     fmt::format_to(std::back_inserter(buff), "{}", data);
   }
 
-  native_persistent_string obj::character::to_string() const
+  native_persistent_string const &obj::character::to_string() const
   {
-    fmt::memory_buffer buff;
-    to_string(buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return data;
   }
 
   native_hash obj::character::to_hash() const

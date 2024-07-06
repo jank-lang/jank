@@ -4,6 +4,10 @@
 
 namespace jank::runtime
 {
+
+  option<char> get_char_from_repr(native_persistent_string const &sv);
+  native_persistent_string get_repr_from_char(char const ch);
+
   template <>
   struct static_object<object_type::character> : gc
   {
@@ -18,7 +22,7 @@ namespace jank::runtime
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
-    native_persistent_string to_string() const;
+    native_persistent_string const &to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
     native_hash to_hash() const;
 
