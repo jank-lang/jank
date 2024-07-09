@@ -199,7 +199,7 @@ namespace jank::codegen
           {
             fmt::format_to(
               inserter,
-              R"(jank::make_box<jank::runtime::obj::character>(jank::runtime::get_char_from_repr({}).unwrap()))",
+              R"(jank::make_box<jank::runtime::obj::character>({}))",
               util::escaped_quoted_view(typed_o->data));
           }
           else if constexpr(std::same_as<T, runtime::obj::keyword>)

@@ -2,8 +2,7 @@
 
 namespace jank::runtime
 {
-
-  option<char> get_char_from_repr(native_persistent_string const &sv)
+  static option<char> get_char_from_repr(native_persistent_string const &sv)
   {
     if(sv.size() == 2)
     {
@@ -37,7 +36,7 @@ namespace jank::runtime
     return none;
   }
 
-  native_persistent_string get_repr_from_char(char const ch)
+  static native_persistent_string get_repr_from_char(char const ch)
   {
     switch(ch)
     {
@@ -56,11 +55,6 @@ namespace jank::runtime
       default:
         return fmt::format("\\{}", ch);
     }
-  }
-
-  obj::character::static_object(native_persistent_string_view const &d)
-    : data{ d }
-  {
   }
 
   obj::character::static_object(native_persistent_string const &d)

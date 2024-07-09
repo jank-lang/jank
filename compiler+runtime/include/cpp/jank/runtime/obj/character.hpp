@@ -4,10 +4,6 @@
 
 namespace jank::runtime
 {
-
-  option<char> get_char_from_repr(native_persistent_string const &sv);
-  native_persistent_string get_repr_from_char(char const ch);
-
   template <>
   struct static_object<object_type::character> : gc
   {
@@ -16,7 +12,6 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(native_persistent_string_view const &);
     static_object(native_persistent_string const &);
     static_object(char);
 
