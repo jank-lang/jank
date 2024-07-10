@@ -2,6 +2,7 @@
 
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/codegen/processor.hpp>
 #include <jank/util/escape.hpp>
@@ -78,6 +79,14 @@ namespace jank::codegen
               return "jank::runtime::obj::integer_ptr";
             }
             return "jank::native_integer";
+          }
+        case jank::runtime::object_type::character:
+          {
+            if(boxed)
+            {
+              return "jank::runtime::obj::character_ptr";
+            }
+            return "jank::runtime::obj::character";
           }
         case jank::runtime::object_type::real:
           {
@@ -185,6 +194,13 @@ namespace jank::codegen
                              typed_o->ns,
                              typed_o->name);
             }
+          }
+          else if constexpr(std::same_as<T, runtime::obj::character>)
+          {
+            fmt::format_to(
+              inserter,
+              R"(jank::make_box<jank::runtime::obj::character>({}))",
+              util::escaped_quoted_view(typed_o->data));
           }
           else if constexpr(std::same_as<T, runtime::obj::keyword>)
           {

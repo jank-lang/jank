@@ -9,6 +9,7 @@
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/symbol.hpp>
+#include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_set.hpp>
@@ -170,6 +171,11 @@ namespace jank::runtime
       case object_type::symbol:
         {
           return fn(expect_object<obj::symbol>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::character:
+        {
+          return fn(expect_object<obj::character>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::persistent_vector:

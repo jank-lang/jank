@@ -33,6 +33,8 @@ namespace jank::read::lex
     /* Has bool data. */
     boolean,
     /* Has string data. */
+    character,
+    /* Has string data. */
     symbol,
     /* Has string data. */
     keyword,

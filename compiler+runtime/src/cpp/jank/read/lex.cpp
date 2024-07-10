@@ -289,6 +289,42 @@ namespace jank::read
         case '\'':
           require_space = false;
           return ok(token{ pos++, token_kind::single_quote });
+        case '\\':
+          {
+            require_space = false;
+
+            auto const ch(peek());
+            pos++;
+            if(ch.is_none() || std::isspace(ch.unwrap()))
+            {
+              return err(error{ token_start, "Expecting a valid character literal after \\" });
+            }
+
+            while(true)
+            {
+              auto const pt(peek());
+              if(pt.is_none() || !is_symbol_char(pt.unwrap()))
+              {
+                break;
+              }
+              pos++;
+            }
+
+            native_persistent_string_view const data{ file.data() + token_start,
+                                                      ++pos - token_start };
+
+            if(data.size() == 2 || data == "\\newline" || data == "\\backspace" || data == "\\space"
+               || data == "\\formfeed" || data == "\\return" || data == "\\tab")
+            {
+              return ok(token{ token_start, pos - token_start, token_kind::character, data });
+            }
+
+            return err(error{ token_start,
+                              pos - token_start,
+                              fmt::format("Invalid character literal `{}` \nNote: Jank "
+                                          "doesn't support unicode characters yet!",
+                                          data) });
+          }
         case ';':
           {
             size_t leading_semis{ 1 };
@@ -456,9 +492,16 @@ namespace jank::read
               return err(std::move(e.unwrap()));
             }
 
-            /* Support auto-resolved qualified keywords. */
             auto const oc(peek());
-            if(oc.is_some() && oc.unwrap() == ':')
+            if(oc.is_none() || std::isspace(oc.unwrap()))
+            {
+              ++pos;
+              return err(
+                error{ token_start, "invalid keyword: expected non-whitespace character after :" });
+            }
+
+            /* Support auto-resolved qualified keywords. */
+            if(oc.unwrap() == ':')
             {
               ++pos;
             }

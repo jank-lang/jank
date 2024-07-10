@@ -1,6 +1,3 @@
-#include <iostream>
-#include <iomanip>
-
 #include <magic_enum.hpp>
 
 #include <jank/runtime/obj/number.hpp>
@@ -124,6 +121,8 @@ namespace jank::read::parse
           return ok(none);
         case lex::token_kind::single_quote:
           return parse_quote();
+        case lex::token_kind::character:
+          return parse_character();
         case lex::token_kind::meta_hint:
           return parse_meta_hint();
         case lex::token_kind::reader_macro:
@@ -337,6 +336,15 @@ namespace jank::read::parse
                                  val_result.expect_ok().unwrap().ptr)),
                                start_token,
                                latest_token };
+  }
+
+  processor::object_result processor::parse_character()
+  {
+    auto const token((*token_current).expect_ok());
+    ++token_current;
+    auto const sv(boost::get<native_persistent_string_view>(token.data));
+
+    return object_source_info{ make_box<runtime::obj::character>(sv), token, token };
   }
 
   processor::object_result processor::parse_meta_hint()

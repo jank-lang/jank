@@ -582,6 +582,92 @@ namespace jank::read::lex
       }
     }
 
+    TEST_CASE("Character")
+    {
+      SUBCASE("Whitespace after \\")
+      {
+        processor p{ R"(\ )" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({ { error(0, "Expecting a valid character literal after \\") } }));
+      }
+
+      SUBCASE("Dangling \\")
+      {
+        processor p{ R"(\)" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({ { error(0, "Expecting a valid character literal after \\") } }));
+      }
+
+      SUBCASE("Alphabetic")
+      {
+        processor p{ R"(\a)" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                {0, 2, token_kind::character, "\\a"sv}
+        }));
+      }
+
+      SUBCASE("Numeric")
+      {
+        processor p{ R"(\1)" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                {0, 2, token_kind::character, "\\1"sv}
+        }));
+      }
+
+      SUBCASE("Multiple characters after \\")
+      {
+        processor p{ R"(\11)" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({ { error(0,
+                                        3,
+                                        "Invalid character literal `\\11` \nNote: Jank "
+                                        "doesn't support unicode characters yet!"sv) } }));
+      }
+
+      SUBCASE("Invalid symbol after a valid char")
+      {
+        processor p{ R"(\1:)" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                token{ 0, 2, token_kind::character, "\\1"sv },
+                error{ 2, "invalid keyword: expected non-whitespace character after :" }
+        }));
+      }
+
+      SUBCASE("Valid consecutive characters")
+      {
+        processor p{ R"(\1 \newline\' \\)" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 2, token_kind::character,       "\\1"sv},
+                { 3, 8, token_kind::character, "\\newline"sv},
+                {11, 2, token_kind::character,       "\\'"sv},
+                {14, 2, token_kind::character,      "\\\\"sv}
+        }));
+      }
+
+      SUBCASE("Character followed by a backticked keyword")
+      {
+        processor p{ R"(\a`:kw)" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                token{ 0, 2, token_kind::character, "\\a"sv },
+                token{ 2, token_kind::syntax_quote },
+                token{ 3, 3, token_kind::keyword, "kw"sv }
+        }));
+      }
+    }
+
     TEST_CASE("Symbol")
     {
       SUBCASE("Single-char")
@@ -705,6 +791,16 @@ namespace jank::read::lex
         CHECK(tokens
               == make_tokens({
                 {0, 4, token_kind::keyword, "abc"sv}
+        }));
+      }
+
+      SUBCASE("Whitespace after :")
+      {
+        processor p{ ": " };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                error{0, "invalid keyword: expected non-whitespace character after :"}
         }));
       }
 
