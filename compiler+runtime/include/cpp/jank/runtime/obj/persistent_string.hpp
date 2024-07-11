@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/persistent_string_sequence.hpp>
 
 namespace jank::runtime
 {
@@ -40,6 +41,10 @@ namespace jank::runtime
 
     /* behavior::countable */
     size_t count() const;
+
+    /* behavior::seqable */
+    obj::persistent_string_sequence_ptr seq() const;
+    obj::persistent_string_sequence_ptr fresh_seq() const;
 
     object base{ object_type::persistent_string };
     native_persistent_string data;

@@ -30,6 +30,7 @@
 #include <jank/runtime/obj/multi_function.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_vector_sequence.hpp>
+#include <jank/runtime/obj/persistent_string_sequence.hpp>
 #include <jank/runtime/obj/persistent_list_sequence.hpp>
 #include <jank/runtime/obj/persistent_set_sequence.hpp>
 #include <jank/runtime/obj/native_array_sequence.hpp>
@@ -251,6 +252,12 @@ namespace jank::runtime
                     std::forward<Args>(args)...);
         }
         break;
+      case object_type::persistent_string_sequence:
+        {
+          return fn(expect_object<obj::persistent_string_sequence>(erased),
+                    std::forward<Args>(args)...);
+        }
+        break;
       case object_type::persistent_vector_sequence:
         {
           return fn(expect_object<obj::persistent_vector_sequence>(erased),
@@ -456,6 +463,12 @@ namespace jank::runtime
       case object_type::native_vector_sequence:
         {
           return fn(expect_object<obj::native_vector_sequence>(erased),
+                    std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_string_sequence:
+        {
+          return fn(expect_object<obj::persistent_string_sequence>(erased),
                     std::forward<Args>(args)...);
         }
         break;

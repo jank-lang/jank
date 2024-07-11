@@ -14,6 +14,7 @@ namespace jank::runtime
     integer,
     real,
     persistent_string,
+    persistent_string_sequence,
     keyword,
     symbol,
     character,

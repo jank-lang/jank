@@ -178,6 +178,7 @@ add_library(
   src/cpp/jank/runtime/obj/persistent_set.cpp
   src/cpp/jank/runtime/obj/transient_set.cpp
   src/cpp/jank/runtime/obj/persistent_string.cpp
+  src/cpp/jank/runtime/obj/persistent_string_sequence.cpp
   src/cpp/jank/runtime/obj/cons.cpp
   src/cpp/jank/runtime/obj/range.cpp
   src/cpp/jank/runtime/obj/iterator.cpp

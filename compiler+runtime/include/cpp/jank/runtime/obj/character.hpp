@@ -23,7 +23,7 @@ namespace jank::runtime
 
     object base{ object_type::character };
 
-    /* Holds the litereal form of the character as it's written eg. "\\tab" */
+    /* Holds the literal form of the character as it's written eg. "\\tab" */
     native_persistent_string data;
   };
 
