@@ -28,10 +28,8 @@ flags=$*
         -isystem /home/jeaye/projects/third-party/llvm-project/build/include \
         -isystem /home/jeaye/projects/third-party/llvm-project/llvm/tools/clang/include \
         -isystem /home/jeaye/projects/jank/compiler+runtime/build/vcpkg_installed/x64-clang-static/include \
-        ${flags} \
+        ${flags[@]} \
         -std=gnu++20 \
-        -DHAVE_CXX14=1 \
-        -DIMMER_HAS_LIBGC=1 \
         -w \
         -Xclang -fincremental-extensions \
         -Xclang -emit-pch \

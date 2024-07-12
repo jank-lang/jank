@@ -79,10 +79,15 @@ set(
   -DJANK_CLING_BUILD_DIR="${jank_cling_build_dir_absolute}"
   -DIMMER_HAS_LIBGC=1 -DHAVE_CXX14=1
   -DFMT_HEADER_ONLY=1
+  #-DLIBASSERT_USE_MAGIC_ENUM=1
+  #-DLIBASSERT_USE_FMT=1
+  #-DLIBASSERT_STATIC_DEFINE=1
   -fno-common
   -frtti
   -fexceptions
-  $<$<CONFIG:Release>:-Ofast>
+  -ggdb
+  $<$<CONFIG:Debug>:-O0>
+  $<$<CONFIG:Release>:-O3;-ffast-math>
   #-stdlib=libc++
 )
 set(
@@ -92,7 +97,7 @@ set(
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   list(APPEND jank_compiler_flags #-Werror
     -DJANK_DEBUG)
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
   list(APPEND jank_compiler_flags -DJANK_RELEASE)
 endif()
 
@@ -200,10 +205,6 @@ set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 
 target_compile_features(jank_lib PUBLIC ${jank_cxx_standard})
 target_compile_options(jank_lib PUBLIC ${jank_compiler_flags})
-list(JOIN jank_compiler_flags " " jank_compiler_flags_str)
-string(REPLACE "\"" "\\\"" jank_compiler_flags_str ${jank_compiler_flags_str})
-target_compile_options(jank_lib PUBLIC -DJANK_COMPILER_FLAGS="${jank_compiler_flags_str}")
-target_link_options(jank_lib PRIVATE ${jank_linker_flags})
 
 find_package(Immer CONFIG REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
@@ -212,6 +213,7 @@ find_package(Boost REQUIRED COMPONENTS filesystem preprocessor)
 find_package(BDWgc CONFIG REQUIRED)
 find_package(libzippp CONFIG REQUIRED)
 find_package(CLI11 CONFIG REQUIRED)
+#find_package(libassert CONFIG REQUIRED)
 
 target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 
@@ -221,6 +223,7 @@ target_link_libraries(
   BDWgc::gc BDWgc::cord BDWgc::gccpp BDWgc::gctba
   libzippp::libzippp
   CLI11::CLI11
+  #libassert::assert
   readline
   #clang-cpp
   clangInterpreter
@@ -234,7 +237,13 @@ target_link_libraries(
 
 jank_hook_llvm(jank_lib)
 
-set_target_properties(jank_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
+get_target_property(jank_lib_compile_flags_list jank_lib COMPILE_OPTIONS)
+list(JOIN jank_lib_compile_flags_list " " jank_lib_compile_flags_str)
+
+target_compile_options(jank_lib PUBLIC -DJANK_COMPILER_FLAGS="${jank_lib_compile_flags_str}")
+target_link_options(jank_lib PRIVATE ${jank_linker_flags})
+
+#set_target_properties(jank_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
 
 # Symbol exporting for JIT.
 set_target_properties(jank_lib PROPERTIES ENABLE_EXPORTS 1)
@@ -268,7 +277,7 @@ target_compile_features(nanobench_lib PUBLIC ${jank_cxx_standard})
 target_compile_options(nanobench_lib PUBLIC ${jank_compiler_flags})
 target_link_options(nanobench_lib PRIVATE ${jank_linker_flags})
 
-set_target_properties(nanobench_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
+#set_target_properties(nanobench_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
 
 # Symbol exporting for JIT.
 set_target_properties(nanobench_lib PROPERTIES ENABLE_EXPORTS 1)
@@ -320,7 +329,7 @@ target_compile_features(folly_lib PUBLIC ${jank_cxx_standard})
 target_compile_options(folly_lib PUBLIC ${jank_compiler_flags} -w)
 target_link_options(folly_lib PRIVATE ${jank_linker_flags})
 
-set_target_properties(folly_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
+#set_target_properties(folly_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
 
 # Symbol exporting for JIT.
 set_target_properties(folly_lib PROPERTIES ENABLE_EXPORTS 1)
@@ -360,7 +369,7 @@ target_link_libraries(
 
 jank_hook_llvm(jank_exe)
 
-set_target_properties(jank_exe PROPERTIES LINK_FLAGS_RELEASE "-s")
+#set_target_properties(jank_exe PROPERTIES LINK_FLAGS_RELEASE "-s")
 # ---- jank executable ----
 
 # ---- Tests ----
@@ -419,7 +428,7 @@ set(jank_incremental_pch_flag ${CMAKE_BINARY_DIR}/incremental.pch)
 add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/CMakeFiles/jank_lib.dir/cmake_pch.hxx ${CMAKE_SOURCE_DIR}/bin/build-pch
   OUTPUT ${jank_incremental_pch_flag}
-  COMMAND "${CMAKE_SOURCE_DIR}/bin/build-pch" "${CMAKE_SOURCE_DIR}/include" "${jank_incremental_pch_flag}" $<$<CONFIG:Release>:-Ofast>
+  COMMAND "${CMAKE_SOURCE_DIR}/bin/build-pch" "${CMAKE_SOURCE_DIR}/include" "${jank_incremental_pch_flag}" "${jank_lib_compile_flags_str}"
 )
 add_custom_target(
   jank_incremental_pch

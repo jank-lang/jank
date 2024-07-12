@@ -159,7 +159,7 @@ namespace jank::jit
   {
     profile::timer timer{ "jit eval" };
     auto const str(cg_prc.declaration_str());
-    fmt::println("// declaration\n{}\n", str);
+    //fmt::println("// declaration\n{}\n", str);
 
     auto declare_res(interpreter->ParseAndExecute({ str.data(), str.size() }));
     native_bool const declare_error{ declare_res };
@@ -177,7 +177,7 @@ namespace jank::jit
 
     std::string full_expr{ fmt::format("&{}->base", expr) };
 
-    fmt::println("// expression:\n{}\n", full_expr);
+    //fmt::println("// expression:\n{}\n", full_expr);
 
     clang::Value ret;
     auto expr_res(interpreter->ParseAndExecute(full_expr, &ret));
@@ -194,7 +194,7 @@ namespace jank::jit
   void processor::eval_string(native_persistent_string const &s) const
   {
     jank::profile::timer timer{ "jit eval_string" };
-    fmt::println("// eval_string:\n{}\n", s);
+    //fmt::println("// eval_string:\n{}\n", s);
     auto err(interpreter->ParseAndExecute({ s.data(), s.size() }));
     llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
   }
