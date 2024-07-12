@@ -132,10 +132,9 @@ namespace jank::jit
     }
 
     auto const vcpkg_path(include_path / "../build/vcpkg_installed/x64-clang-static/include");
-    std::vector<char const *> args{
-      "-std=gnu++20", "-DHAVE_CXX14=1", "-DIMMER_HAS_LIBGC=1", "-w",
-      "-g",           O.data(),         "-include-pch",        pch_path_str.c_str()
-    };
+    /* TODO: Turn JANK_COMPILER_FLAGS into a list here. */
+    std::vector<char const *> args{ "-std=gnu++20", "-DHAVE_CXX14=1", "-DIMMER_HAS_LIBGC=1", "-w",
+                                    O.data(),       "-include-pch",   pch_path_str.c_str() };
 
     clang::IncrementalCompilerBuilder CB;
     CB.SetCompilerArgs(args);
