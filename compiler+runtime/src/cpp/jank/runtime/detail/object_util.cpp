@@ -18,7 +18,7 @@ namespace jank::runtime::detail
       [](auto const typed_o) -> native_real {
         using T = typename decltype(typed_o)::value_type;
 
-        if constexpr(behavior::numberable<T>)
+        if constexpr(behavior::number_like<T>)
         {
           return typed_o->to_real();
         }

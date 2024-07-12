@@ -149,8 +149,10 @@ add_library(
   src/cpp/jank/runtime/obj/number.cpp
   src/cpp/jank/runtime/obj/native_function_wrapper.cpp
   src/cpp/jank/runtime/obj/jit_function.cpp
+  src/cpp/jank/runtime/obj/multi_function.cpp
   src/cpp/jank/runtime/obj/symbol.cpp
   src/cpp/jank/runtime/obj/keyword.cpp
+  src/cpp/jank/runtime/obj/character.cpp
   src/cpp/jank/runtime/obj/persistent_list.cpp
   src/cpp/jank/runtime/obj/persistent_vector.cpp
   src/cpp/jank/runtime/obj/persistent_vector_sequence.cpp
@@ -175,6 +177,7 @@ add_library(
   src/cpp/jank/runtime/obj/reduced.cpp
   src/cpp/jank/runtime/behavior/callable.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
+  src/cpp/jank/runtime/behavior/derefable.cpp
   src/cpp/jank/runtime/math.cpp
   src/cpp/jank/analyze/processor.cpp
   src/cpp/jank/analyze/local_frame.cpp

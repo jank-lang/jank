@@ -116,7 +116,7 @@ namespace jank::runtime
     }
   }
 
-  object_ptr obj::persistent_array_map::call(object_ptr const o) const
+  object_ptr obj::persistent_array_map::call(object_ptr const o)
   {
     auto const found(data.find(o));
     if(!found)
@@ -126,7 +126,7 @@ namespace jank::runtime
     return found;
   }
 
-  object_ptr obj::persistent_array_map::call(object_ptr const o, object_ptr const fallback) const
+  object_ptr obj::persistent_array_map::call(object_ptr const o, object_ptr const fallback)
   {
     auto const found(data.find(o));
     if(!found)

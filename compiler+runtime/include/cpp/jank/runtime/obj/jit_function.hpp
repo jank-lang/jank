@@ -5,12 +5,6 @@
 
 namespace jank::runtime
 {
-  namespace obj
-  {
-    using persistent_array_map = static_object<object_type::persistent_array_map>;
-    using persistent_array_map_ptr = native_box<persistent_array_map>;
-  }
-
   template <>
   struct static_object<object_type::jit_function>
     : gc
@@ -32,8 +26,8 @@ namespace jank::runtime
     /* behavior::metadatable */
     native_box<static_object> with_meta(object_ptr m);
 
-    /* behavior::metadatable */
-    object_ptr this_object_ptr() const final;
+    /* behavior::callable */
+    object_ptr this_object_ptr() final;
 
     object base{ object_type::jit_function };
     behavior::callable_ptr data{};

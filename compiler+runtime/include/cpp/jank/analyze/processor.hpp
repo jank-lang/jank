@@ -93,11 +93,16 @@ namespace jank::analyze
                                     expression_type,
                                     option<expr::function_context_ptr> const &,
                                     native_bool needs_box);
-    expression_result analyze_var(runtime::obj::persistent_list_ptr const &,
-                                  local_frame_ptr &,
-                                  expression_type,
-                                  option<expr::function_context_ptr> const &,
-                                  native_bool needs_box);
+    expression_result analyze_var_call(runtime::obj::persistent_list_ptr const &,
+                                       local_frame_ptr &,
+                                       expression_type,
+                                       option<expr::function_context_ptr> const &,
+                                       native_bool needs_box);
+    expression_result analyze_var_val(runtime::var_ptr const &,
+                                      local_frame_ptr &,
+                                      expression_type,
+                                      option<expr::function_context_ptr> const &,
+                                      native_bool needs_box);
     expression_result analyze_throw(runtime::obj::persistent_list_ptr const &,
                                     local_frame_ptr &,
                                     expression_type,

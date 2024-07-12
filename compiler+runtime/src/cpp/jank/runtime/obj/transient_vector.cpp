@@ -46,7 +46,7 @@ namespace jank::runtime
     return data.size();
   }
 
-  obj::transient_vector_ptr obj::transient_vector::cons_in_place(object_ptr const head)
+  obj::transient_vector_ptr obj::transient_vector::conj_in_place(object_ptr const head)
   {
     assert_active();
     data.push_back(head);
@@ -60,7 +60,7 @@ namespace jank::runtime
     return make_box<obj::persistent_vector>(data.persistent());
   }
 
-  object_ptr obj::transient_vector::call(object_ptr const idx) const
+  object_ptr obj::transient_vector::call(object_ptr const idx)
   {
     assert_active();
     if(idx->type == object_type::integer)

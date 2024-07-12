@@ -79,17 +79,16 @@ namespace jank::runtime
     native_hash to_hash() const;
 
     /* behavior::callable */
-    object_ptr call() const final;
-    object_ptr call(object_ptr) const final;
-    object_ptr call(object_ptr, object_ptr) const final;
-    object_ptr call(object_ptr, object_ptr, object_ptr) const final;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr) const final;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const final;
-    object_ptr
-      call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const final;
+    object_ptr call() final;
+    object_ptr call(object_ptr) final;
+    object_ptr call(object_ptr, object_ptr) final;
+    object_ptr call(object_ptr, object_ptr, object_ptr) final;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr) final;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) final;
+    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) final;
     object_ptr
       call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr)
-        const final;
+        final;
     object_ptr call(object_ptr,
                     object_ptr,
                     object_ptr,
@@ -97,16 +96,7 @@ namespace jank::runtime
                     object_ptr,
                     object_ptr,
                     object_ptr,
-                    object_ptr) const final;
-    object_ptr call(object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr) const final;
+                    object_ptr) final;
     object_ptr call(object_ptr,
                     object_ptr,
                     object_ptr,
@@ -115,10 +105,19 @@ namespace jank::runtime
                     object_ptr,
                     object_ptr,
                     object_ptr,
+                    object_ptr) final;
+    object_ptr call(object_ptr,
                     object_ptr,
-                    object_ptr) const final;
+                    object_ptr,
+                    object_ptr,
+                    object_ptr,
+                    object_ptr,
+                    object_ptr,
+                    object_ptr,
+                    object_ptr,
+                    object_ptr) final;
 
-    object_ptr this_object_ptr() const final;
+    object_ptr this_object_ptr() final;
 
     /* behavior::metadatable */
     native_box<static_object> with_meta(object_ptr m) const;

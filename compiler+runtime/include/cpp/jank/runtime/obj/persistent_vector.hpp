@@ -18,6 +18,7 @@ namespace jank::runtime
     using value_type = runtime::detail::native_persistent_vector;
 
     static constexpr native_bool pointer_free{ false };
+    static constexpr native_bool is_sequential{ true };
 
     static_object() = default;
     static_object(static_object &&) = default;

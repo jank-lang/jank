@@ -3,7 +3,7 @@
 #include <fmt/core.h>
 
 #include <jank/runtime/util.hpp>
-#include <jank/runtime/behavior/numberable.hpp>
+#include <jank/runtime/behavior/number_like.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/local_frame.hpp>
 #include <jank/detail/to_runtime_data.hpp>
@@ -237,7 +237,7 @@ namespace jank::analyze
       [&](auto const typed_constant) -> option<runtime::obj::symbol> {
         using T = typename decltype(typed_constant)::value_type;
 
-        if constexpr(runtime::behavior::numberable<T>)
+        if constexpr(runtime::behavior::number_like<T>)
         {
           return runtime::obj::symbol{ name.ns, name.name + "__unboxed" };
         }

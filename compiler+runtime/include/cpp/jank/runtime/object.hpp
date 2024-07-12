@@ -16,6 +16,7 @@ namespace jank::runtime
     persistent_string,
     keyword,
     symbol,
+    character,
     persistent_list,
     persistent_vector,
     persistent_array_map,
@@ -35,6 +36,7 @@ namespace jank::runtime
     iterator,
     native_function_wrapper,
     jit_function,
+    multi_function,
     native_array_sequence,
     native_vector_sequence,
     persistent_vector_sequence,
@@ -46,6 +48,7 @@ namespace jank::runtime
     ns,
     var,
     var_thread_binding,
+    var_unbound_root,
   };
 
   struct object

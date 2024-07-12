@@ -6,6 +6,7 @@ namespace jank::runtime
   struct static_object<object_type::native_array_sequence> : gc
   {
     static constexpr native_bool pointer_free{ false };
+    static constexpr native_bool is_sequential{ true };
 
     static_object() = delete;
     static_object(static_object &&) = default;
@@ -14,7 +15,7 @@ namespace jank::runtime
     static_object(object_ptr * const arr, size_t const index, size_t const size);
 
     template <typename... Args>
-    static_object(object_ptr first, Args... rest)
+    static_object(object_ptr const first, Args const... rest)
       : arr{ make_array_box<object_ptr>(first, rest...) }
       , size{ sizeof...(Args) + 1 }
     {

@@ -86,8 +86,8 @@ namespace jank::runtime
     native_box<static_object> conj(object_ptr head) const;
 
     /* behavior::callable */
-    object_ptr call(object_ptr) const;
-    object_ptr call(object_ptr, object_ptr) const;
+    object_ptr call(object_ptr);
+    object_ptr call(object_ptr, object_ptr);
 
     /* behavior::transientable */
     obj::transient_hash_map_ptr to_transient() const;

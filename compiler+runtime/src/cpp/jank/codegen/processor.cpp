@@ -2,6 +2,7 @@
 
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/util.hpp>
 #include <jank/codegen/processor.hpp>
 #include <jank/util/escape.hpp>
@@ -78,6 +79,14 @@ namespace jank::codegen
               return "jank::runtime::obj::integer_ptr";
             }
             return "jank::native_integer";
+          }
+        case jank::runtime::object_type::character:
+          {
+            if(boxed)
+            {
+              return "jank::runtime::obj::character_ptr";
+            }
+            return "jank::runtime::obj::character";
           }
         case jank::runtime::object_type::real:
           {
@@ -189,6 +198,13 @@ namespace jank::codegen
                              typed_o->ns,
                              typed_o->name);
             }
+          }
+          else if constexpr(std::same_as<T, runtime::obj::character>)
+          {
+            fmt::format_to(
+              inserter,
+              R"(jank::make_box<jank::runtime::obj::character>({}))",
+              util::escaped_quoted_view(typed_o->data));
           }
           else if constexpr(std::same_as<T, runtime::obj::keyword>)
           {
@@ -1485,6 +1501,9 @@ namespace jank::codegen
   {
     auto inserter(std::back_inserter(body_buffer));
     auto const &value_tmp(gen(expr.value, fn_arity, true));
+    /* We static_cast to object_ptr here, since we'll be trying to catch an object_ptr in any
+     * try/catch forms. This loses us our type info, but C++ doesn't do implicit conversions
+     * when catching and we're not using inheritance. */
     fmt::format_to(inserter,
                    "throw static_cast<jank::runtime::object_ptr>({});",
                    value_tmp.unwrap().str(true));
@@ -1496,7 +1515,7 @@ namespace jank::codegen
                                 native_bool const box_needed)
   {
     auto inserter(std::back_inserter(body_buffer));
-    auto ret_tmp(runtime::munge(runtime::context::unique_string("try")));
+    auto const ret_tmp(runtime::munge(runtime::context::unique_string("try")));
     fmt::format_to(inserter, "object_ptr {}{{ obj::nil::nil_const() }};", ret_tmp);
 
     fmt::format_to(inserter, "{{");
@@ -1519,6 +1538,14 @@ namespace jank::codegen
     }
     fmt::format_to(inserter, "}}");
 
+    /* There's a gotcha here, tied to how we throw exceptions. We're catching an object_ptr, which
+     * means we need to be throwing an object_ptr. Since we're not using inheritance, we can't
+     * rely on a catch-all and C++ doesn't do implicit conversions into catch types. So, if we
+     * throw a persistent_string_ptr, for example, it will not be caught as an object_ptr.
+     *
+     * We mitigate this by ensuring during the codegen for throw that we type-erase to
+     * an object_ptr.
+     */
     fmt::format_to(inserter,
                    "catch(jank::runtime::object_ptr const {}) {{",
                    runtime::munge(expr.catch_body.sym->name));
@@ -1635,9 +1662,7 @@ namespace jank::codegen
      * Local fns are within a struct already, so we can't enter the ns again. */
     if(!runtime::module::is_nested_module(module))
     {
-      fmt::format_to(inserter,
-                     "namespace {} {{",
-                     runtime::module::module_to_native_ns(runtime::munge(module)));
+      fmt::format_to(inserter, "namespace {} {{", runtime::module::module_to_native_ns(module));
     }
 
     fmt::format_to(inserter,
@@ -1823,7 +1848,7 @@ namespace jank::codegen
 
       fmt::format_to(inserter,
                      R"(
-          ) const final {{
+          ) final {{
           using namespace jank;
           using namespace jank::runtime;
         )");
@@ -1901,7 +1926,7 @@ namespace jank::codegen
 
   native_persistent_string processor::expression_str(native_bool const box_needed)
   {
-    auto const module_ns(runtime::module::module_to_native_ns(runtime::munge(module)));
+    auto const module_ns(runtime::module::module_to_native_ns(module));
 
     if(!generated_expression)
     {
@@ -1958,9 +1983,7 @@ namespace jank::codegen
     fmt::memory_buffer module_buffer;
     auto inserter(std::back_inserter(module_buffer));
 
-    fmt::format_to(inserter,
-                   "namespace {} {{",
-                   runtime::module::module_to_native_ns(runtime::munge(module)));
+    fmt::format_to(inserter, "namespace {} {{", runtime::module::module_to_native_ns(module));
 
     fmt::format_to(inserter,
                    R"(

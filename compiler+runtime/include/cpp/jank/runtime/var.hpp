@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <mutex>
 
 #include <folly/Synchronized.h>
 
@@ -39,9 +38,11 @@ namespace jank::runtime
     /* behavior::metadatable */
     native_box<static_object> with_meta(object_ptr m);
 
+    native_bool is_bound() const;
     object_ptr get_root() const;
     /* Binding a root changes it for all threads. */
     native_box<static_object> bind_root(object_ptr r);
+    object_ptr alter_root(object_ptr f, object_ptr args);
     /* Setting a var does not change its root, it only affects the current thread
      * binding. If there is no thread binding, a var cannot be set. */
     string_result<void> set(object_ptr r) const;
@@ -59,6 +60,7 @@ namespace jank::runtime
 
     object base{ object_type::var };
     ns_ptr n{};
+    /* Unqualified. */
     obj::symbol_ptr name{};
     option<object_ptr> meta;
     mutable native_hash hash{};
@@ -99,6 +101,26 @@ namespace jank::runtime
   {
     obj::persistent_hash_map_ptr bindings{};
   };
+
+  template <>
+  struct static_object<object_type::var_unbound_root> : gc
+  {
+    static constexpr native_bool pointer_free{ true };
+
+    static_object(var_ptr var);
+
+    /* behavior::objectable */
+    native_bool equal(object const &) const;
+    native_persistent_string to_string() const;
+    void to_string(fmt::memory_buffer &buff) const;
+    native_hash to_hash() const;
+
+    object base{ object_type::var_unbound_root };
+    var_ptr var{};
+  };
+
+  using var_unbound_root = static_object<object_type::var_unbound_root>;
+  using var_unbound_root_ptr = native_box<var_unbound_root>;
 }
 
 namespace std

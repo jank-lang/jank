@@ -63,7 +63,7 @@ There are pre-compiled binaries for Ubuntu 22.04, which are built to follow the
 
 ## Sponsors
 If you'd like your name, company, or logo here, you can
-[sponsor this project](https://github.com/sponsors/jeaye).
+[sponsor this project](https://github.com/sponsors/jeaye) for at least $25/m.
 
 <br/>
 
@@ -76,6 +76,12 @@ If you'd like your name, company, or logo here, you can
 <p align="center">
   <a href="https://devcarbon.com/">
     devcarbon.com
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://pitch.com/">
+    Misha Karpenko
   </a>
 </p>
 

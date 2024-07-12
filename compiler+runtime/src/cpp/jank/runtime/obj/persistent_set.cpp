@@ -20,6 +20,29 @@ namespace jank::runtime
   {
   }
 
+  obj::persistent_set_ptr obj::persistent_set::create_from_seq(object_ptr const seq)
+  {
+    return make_box<obj::persistent_set>(visit_object(
+      [](auto const typed_seq) -> obj::persistent_set::value_type {
+        using T = typename decltype(typed_seq)::value_type;
+
+        if constexpr(behavior::seqable<T>)
+        {
+          detail::native_transient_set transient;
+          for(auto it(typed_seq->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
+          {
+            transient.insert(it->first());
+          }
+          return transient.persistent();
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("Not seqable: {}", typed_seq->to_string()) };
+        }
+      },
+      seq));
+  }
+
   native_bool obj::persistent_set::equal(object const &o) const
   {
     return detail::equal(o, data.begin(), data.end());
@@ -72,12 +95,12 @@ namespace jank::runtime
 
   obj::persistent_set_ptr obj::persistent_set::conj(object_ptr const head) const
   {
-    auto vec(data.insert(head));
-    auto ret(make_box<obj::persistent_set>(std::move(vec)));
+    auto set(data.insert(head));
+    auto ret(make_box<obj::persistent_set>(std::move(set)));
     return ret;
   }
 
-  object_ptr obj::persistent_set::call(object_ptr const o) const
+  object_ptr obj::persistent_set::call(object_ptr const o)
   {
     auto const found(data.find(o));
     if(!found)
@@ -95,5 +118,12 @@ namespace jank::runtime
   native_bool obj::persistent_set::contains(object_ptr const o) const
   {
     return data.find(o);
+  }
+
+  obj::persistent_set_ptr obj::persistent_set::disj(object_ptr const o) const
+  {
+    auto set(data.erase(o));
+    auto ret(make_box<obj::persistent_set>(std::move(set)));
+    return ret;
   }
 }

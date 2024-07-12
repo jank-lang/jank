@@ -8,7 +8,7 @@ a.out
 
 # lein
 target
-/classes
+classes
 /checkouts
 pom.xml
 pom.xml.asc

@@ -6,9 +6,10 @@
 
 #include <fmt/core.h>
 
+#include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
-#include <jank/runtime/behavior/numberable.hpp>
+#include <jank/runtime/behavior/number_like.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/analyze/step/force_boxed.hpp>
@@ -33,18 +34,18 @@ namespace jank::analyze
       };
     };
     specials = {
-      {        make_box<symbol>("def"),        make_fn(&processor::analyze_def) },
-      {        make_box<symbol>("fn*"),         make_fn(&processor::analyze_fn) },
-      {      make_box<symbol>("recur"),      make_fn(&processor::analyze_recur) },
-      {         make_box<symbol>("do"),         make_fn(&processor::analyze_do) },
-      {       make_box<symbol>("let*"),        make_fn(&processor::analyze_let) },
-      {      make_box<symbol>("loop*"),       make_fn(&processor::analyze_loop) },
-      {         make_box<symbol>("if"),         make_fn(&processor::analyze_if) },
-      {      make_box<symbol>("quote"),      make_fn(&processor::analyze_quote) },
-      {        make_box<symbol>("var"),        make_fn(&processor::analyze_var) },
-      {      make_box<symbol>("throw"),      make_fn(&processor::analyze_throw) },
-      {        make_box<symbol>("try"),        make_fn(&processor::analyze_try) },
-      { make_box<symbol>("native/raw"), make_fn(&processor::analyze_native_raw) },
+      {       make_box<symbol>("def"),        make_fn(&processor::analyze_def)},
+      {       make_box<symbol>("fn*"),         make_fn(&processor::analyze_fn)},
+      {     make_box<symbol>("recur"),      make_fn(&processor::analyze_recur)},
+      {        make_box<symbol>("do"),         make_fn(&processor::analyze_do)},
+      {      make_box<symbol>("let*"),        make_fn(&processor::analyze_let)},
+      {     make_box<symbol>("loop*"),       make_fn(&processor::analyze_loop)},
+      {        make_box<symbol>("if"),         make_fn(&processor::analyze_if)},
+      {     make_box<symbol>("quote"),      make_fn(&processor::analyze_quote)},
+      {       make_box<symbol>("var"),   make_fn(&processor::analyze_var_call)},
+      {     make_box<symbol>("throw"),      make_fn(&processor::analyze_throw)},
+      {       make_box<symbol>("try"),        make_fn(&processor::analyze_try)},
+      {make_box<symbol>("native/raw"), make_fn(&processor::analyze_native_raw)},
     };
   }
 
@@ -543,7 +544,8 @@ namespace jank::analyze
     {
       return err(error{ "unable to use recur outside of a function or loop" });
     }
-    else if(runtime::detail::truthy(rt_ctx.no_recur_var->deref()))
+    else if(rt_ctx.no_recur_var->is_bound()
+            && runtime::detail::truthy(rt_ctx.no_recur_var->deref()))
     {
       return err(error{ "recur is not permitted through a try/catch" });
     }
@@ -890,11 +892,12 @@ namespace jank::analyze
                                      needs_box);
   }
 
-  processor::expression_result processor::analyze_var(runtime::obj::persistent_list_ptr const &o,
-                                                      local_frame_ptr &current_frame,
-                                                      expression_type const expr_type,
-                                                      option<expr::function_context_ptr> const &,
-                                                      native_bool const)
+  processor::expression_result
+  processor::analyze_var_call(runtime::obj::persistent_list_ptr const &o,
+                              local_frame_ptr &current_frame,
+                              expression_type const expr_type,
+                              option<expr::function_context_ptr> const &,
+                              native_bool const)
   {
     if(o->count() != 2)
     {
@@ -920,6 +923,22 @@ namespace jank::analyze
       expression_base{ {}, expr_type, current_frame, true },
       qualified_sym,
       found_var.unwrap()
+    });
+  }
+
+  processor::expression_result
+  processor::analyze_var_val(runtime::var_ptr const &o,
+                             local_frame_ptr &current_frame,
+                             expression_type const expr_type,
+                             option<expr::function_context_ptr> const &,
+                             native_bool const)
+  {
+    auto const qualified_sym(
+      current_frame->lift_var(make_box<runtime::obj::symbol>(o->n->name->name, o->name->name)));
+    return make_box<expression>(expr::var_ref<expression>{
+      expression_base{{}, expr_type, current_frame, true},
+      qualified_sym,
+      o
     });
   }
 
@@ -1031,7 +1050,7 @@ namespace jank::analyze
             has_catch = true;
 
             /* Verify we have (catch <sym> ...) */
-            auto const catch_list(runtime::expect_object<runtime::obj::persistent_list>(item));
+            auto const catch_list(runtime::into_list(item));
             auto const catch_body_size(catch_list->count());
             if(catch_body_size == 1)
             {
@@ -1079,7 +1098,7 @@ namespace jank::analyze
             }
             has_finally = true;
 
-            auto const finally_list(runtime::expect_object<runtime::obj::persistent_list>(item));
+            auto const finally_list(runtime::into_list(item));
             auto const do_list(
               finally_list->data.rest().conj(make_box<runtime::obj::symbol>("do")));
             auto do_res(
@@ -1515,10 +1534,12 @@ namespace jank::analyze
         {
           return analyze_set(typed_o, current_frame, expr_type, fn_ctx, needs_box);
         }
-        else if constexpr(runtime::behavior::numberable<T> || std::same_as<T, runtime::obj::boolean>
+        else if constexpr(runtime::behavior::number_like<T>
+                          || std::same_as<T, runtime::obj::boolean>
                           || std::same_as<T, runtime::obj::keyword>
                           || std::same_as<T, runtime::obj::nil>
-                          || std::same_as<T, runtime::obj::persistent_string>)
+                          || std::same_as<T, runtime::obj::persistent_string>
+                          || std::same_as<T, runtime::obj::character>)
         {
           return analyze_primitive_literal(o, current_frame, expr_type, fn_ctx, needs_box);
         }
@@ -1536,10 +1557,14 @@ namespace jank::analyze
                               fn_ctx,
                               needs_box);
         }
+        else if constexpr(std::same_as<T, runtime::var>)
+        {
+          return analyze_var_val(typed_o, current_frame, expr_type, fn_ctx, needs_box);
+        }
         else
         {
           std::cerr << fmt::format("unsupported analysis of type {} with value {}\n",
-                                   boost::core::demangle(typeid(T).name()),
+                                   magic_enum::enum_name(typed_o->base.type),
                                    typed_o->to_string());
           return err(error{ "unimplemented analysis" });
         }
@@ -1554,7 +1579,13 @@ namespace jank::analyze
       return false;
     }
 
-    auto const found_special(specials.find(runtime::expect_object<runtime::obj::symbol>(form)));
+    auto const sym(runtime::expect_object<runtime::obj::symbol>(form));
+    if(sym->ns.empty() && (sym->name == "finally" || sym->name == "catch"))
+    {
+      return true;
+    }
+
+    auto const found_special(specials.find(sym));
     return found_special != specials.end();
   }
 }

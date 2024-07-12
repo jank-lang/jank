@@ -126,6 +126,18 @@ namespace jank
       }
     }
 
+    constexpr native_persistent_string(size_type const size, value_type const fill) noexcept
+    {
+      if(size <= max_small_size)
+      {
+        init_small_fill(fill, size);
+      }
+      else
+      {
+        init_large_fill(fill, size);
+      }
+    }
+
     constexpr native_persistent_string(native_persistent_string_view const &s)
       : native_persistent_string{ s.data(), s.size() }
     {
@@ -167,6 +179,20 @@ namespace jank
         /* NOTE: Not necessarily null-terminated! */
         const_cast<native_persistent_string &>(s).store.large.set_category(category::large_shared);
         init_large_shared(s.store.large.data + pos, count);
+      }
+    }
+
+    template <typename It>
+    constexpr native_persistent_string(It const begin, It const end)
+    {
+      auto const size(std::distance(begin, end));
+      if(size <= max_small_size)
+      {
+        init_small(begin, end);
+      }
+      else
+      {
+        init_large_owned(begin, end);
       }
     }
 
@@ -387,6 +413,18 @@ namespace jank
     }
 
     [[gnu::const]]
+    constexpr native_bool starts_with(native_persistent_string_view const &s) const noexcept
+    {
+      auto const this_sz(size());
+      auto const s_sz(s.size());
+      if(this_sz < s_sz)
+      {
+        return false;
+      }
+      return traits_type::compare(data(), s.data(), s_sz) == 0;
+    }
+
+    [[gnu::const]]
     constexpr native_bool ends_with(value_type const c) const noexcept
     {
       auto const s(size());
@@ -403,6 +441,36 @@ namespace jank
         return false;
       }
       return traits_type::compare(data() + this_sz - s_sz, s, s_sz) == 0;
+    }
+
+    [[gnu::const]]
+    constexpr native_bool ends_with(native_persistent_string_view const &s) const noexcept
+    {
+      auto const this_sz(size());
+      auto const s_sz(s.size());
+      if(this_sz < s_sz)
+      {
+        return false;
+      }
+      return traits_type::compare(data() + this_sz - s_sz, s.data(), s_sz) == 0;
+    }
+
+    [[gnu::const]]
+    constexpr native_bool contains(value_type const c) const noexcept
+    {
+      return find(c) != npos;
+    }
+
+    [[gnu::const]]
+    constexpr native_bool contains(const_pointer_type const s) const noexcept
+    {
+      return find(s) != npos;
+    }
+
+    [[gnu::const]]
+    constexpr native_bool contains(native_persistent_string_view const &s) const noexcept
+    {
+      return find(s) != npos;
     }
 
     /*** Immutable modifications. ***/
@@ -561,6 +629,21 @@ namespace jank
       return { data(), size() };
     }
 
+    /*** Miscellaneous predicates. ***/
+    [[gnu::const]]
+    constexpr native_bool is_blank() const noexcept
+    {
+      native_bool ret{ true };
+      for(auto const c : *this)
+      {
+        if(!std::isspace(c))
+        {
+          return false;
+        }
+      }
+      return ret;
+    }
+
     /*** Hashing. ***/
     constexpr native_hash to_hash() const noexcept
     {
@@ -711,6 +794,24 @@ namespace jank
       set_small_size(lhs_size + rhs_size);
     }
 
+    template <typename It>
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
+    constexpr void init_small(It const begin, It const end) noexcept
+    {
+      auto const size(std::distance(begin, end));
+      assert(size <= max_small_size);
+      std::copy(begin, end, store.small);
+      set_small_size(size);
+    }
+
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
+    constexpr void init_small_fill(value_type const fill, uint8_t const size) noexcept
+    {
+      assert(size <= max_small_size);
+      traits_type::assign(store.small, size, fill);
+      set_small_size(size);
+    }
+
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
     constexpr void init_large_shared(const_pointer_type const data, size_type const size) noexcept
     {
@@ -734,6 +835,17 @@ namespace jank
     }
 
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
+    constexpr void init_large_fill(value_type const fill, uint8_t const size) noexcept
+    {
+      assert(max_small_size < size);
+      store.large.data = std::assume_aligned<sizeof(pointer_type)>(store.allocate(size + 1));
+      traits_type::assign(store.large.data, size, fill);
+      store.large.data[size] = 0;
+      store.large.size = size;
+      store.large.set_category(category::large_owned);
+    }
+
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
     constexpr void init_large_owned(const_pointer_type const lhs,
                                     size_type const lhs_size,
                                     const_pointer_type const rhs,
@@ -744,6 +856,19 @@ namespace jank
       store.large.data = std::assume_aligned<sizeof(pointer_type)>(store.allocate(size + 1));
       traits_type::copy(store.large.data, lhs, lhs_size);
       traits_type::copy(store.large.data + lhs_size, rhs, rhs_size);
+      store.large.data[size] = 0;
+      store.large.size = size;
+      store.large.set_category(category::large_owned);
+    }
+
+    template <typename It>
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
+    constexpr void init_large_owned(It const begin, It const end) noexcept
+    {
+      auto const size(std::distance(begin, end));
+      assert(max_small_size < size);
+      store.large.data = std::assume_aligned<sizeof(pointer_type)>(store.allocate(size + 1));
+      std::copy(begin, end, store.large.data);
       store.large.data[size] = 0;
       store.large.size = size;
       store.large.set_category(category::large_owned);

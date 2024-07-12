@@ -9,6 +9,7 @@
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/symbol.hpp>
+#include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_set.hpp>
@@ -26,6 +27,7 @@
 #include <jank/runtime/obj/chunked_cons.hpp>
 #include <jank/runtime/obj/range.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
+#include <jank/runtime/obj/multi_function.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_vector_sequence.hpp>
 #include <jank/runtime/obj/persistent_list_sequence.hpp>
@@ -72,8 +74,28 @@ namespace jank::runtime
     return const_cast<object *>(&o->base);
   }
 
-  /* This is dangerous. You probably don't want it. Just use `visit_object`. However, if you're
-   * absolutely certain you know the type of an erased object, I guess you can use this. */
+  /* This is dangerous. You probably don't want it. Just use `try_object` or `visit_object`.
+   * However, if you're absolutely certain you know the type of an erased object, I guess
+   * you can use this. */
+  template <typename T>
+  requires behavior::objectable<T>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  constexpr native_box<T> try_object(object const * const o)
+  {
+    assert(o);
+    if(o->type != detail::object_type_to_enum<T>::value)
+    {
+      /* TODO: Use fmt when possible. */
+      throw std::runtime_error{ "invalid object type" };
+      //throw std::runtime_error{ fmt::format(
+      //  "invalid object type (expected {}, found {})",
+      //  magic_enum::enum_name(detail::object_type_to_enum<T>::value),
+      //  magic_enum::enum_name(o->type)) };
+    }
+    return reinterpret_cast<T *>(reinterpret_cast<char *>(const_cast<object *>(o))
+                                 - offsetof(T, base));
+  }
+
   template <typename T>
   requires behavior::objectable<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
@@ -149,6 +171,11 @@ namespace jank::runtime
       case object_type::symbol:
         {
           return fn(expect_object<obj::symbol>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::character:
+        {
+          return fn(expect_object<obj::character>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::persistent_vector:
@@ -278,6 +305,11 @@ namespace jank::runtime
           return fn(expect_object<obj::jit_function>(erased), std::forward<Args>(args)...);
         }
         break;
+      case object_type::multi_function:
+        {
+          return fn(expect_object<obj::multi_function>(erased), std::forward<Args>(args)...);
+        }
+        break;
       case object_type::atom:
         {
           return fn(expect_object<obj::atom>(erased), std::forward<Args>(args)...);
@@ -308,8 +340,15 @@ namespace jank::runtime
           return fn(expect_object<var_thread_binding>(erased), std::forward<Args>(args)...);
         }
         break;
+      case object_type::var_unbound_root:
+        {
+          return fn(expect_object<var_unbound_root>(erased), std::forward<Args>(args)...);
+        }
+        break;
       default:
         {
+          /* TODO: Use fmt when possible. */
+          throw std::runtime_error{ "invalid object type" };
           //throw std::runtime_error
           //{
           //  fmt::format
@@ -322,6 +361,28 @@ namespace jank::runtime
         }
         break;
     }
+  }
+
+  /* Allows the visiting of a single type. */
+  template <typename T, typename F, typename... Args>
+  requires visitable<F, Args...>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  constexpr auto visit_object(F const &fn, object const * const const_erased, Args &&...args)
+  {
+    return visit_object(
+      [&](auto const typed) -> decltype(fn(native_box<T>{}, std::declval<Args>()...)) {
+        using TT = typename decltype(typed)::value_type;
+
+        if constexpr(std::same_as<T, TT>)
+        {
+          return fn(typed, std::forward<Args>(args)...);
+        }
+        else
+        {
+          throw std::runtime_error{ "invalid object type" };
+        }
+      },
+      const_erased);
   }
 
   template <typename F1, typename F2, typename... Args>

@@ -86,6 +86,74 @@ namespace jank::read::parse
       CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
     }
 
+    TEST_CASE("Character")
+    {
+      SUBCASE("Single")
+      {
+        lex::processor lp{ R"(\a\1\`\:\#)" };
+        processor p{ lp.begin(), lp.end() };
+
+        size_t offset{};
+        for(native_persistent_string const &ch : { "\\a", "\\1", "\\`", "\\:", "\\#" })
+        {
+          auto const r(p.next());
+          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
+                                       make_box<runtime::obj::character>(ch)));
+
+          CHECK(r.expect_ok().unwrap().start
+                == lex::token{ offset, 2, lex::token_kind::character, ch });
+          CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+
+          /* Current character and then a backslash */
+          offset += 2;
+        }
+      }
+
+      SUBCASE("Special")
+      {
+        lex::processor lp{ R"(\newline \backspace \return \formfeed \tab \space)" };
+        processor p{ lp.begin(), lp.end() };
+
+        size_t offset{};
+        for(native_persistent_string const &ch :
+            { "\\newline", "\\backspace", "\\return", "\\formfeed", "\\tab", "\\space" })
+        {
+          auto const r(p.next());
+          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
+                                       make_box<runtime::obj::character>(ch)));
+
+          auto const len(ch.size());
+          CHECK(r.expect_ok().unwrap().start
+                == lex::token{ offset, len, lex::token_kind::character, ch });
+          CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+
+          /* +1 for space */
+          offset += len + 1;
+        }
+      }
+
+      SUBCASE("Special and single")
+      {
+        lex::processor lp{ R"(\newline\a\tab\`\space)" };
+        processor p{ lp.begin(), lp.end() };
+
+        size_t offset{};
+        for(native_persistent_string const &ch : { "\\newline", "\\a", "\\tab", "\\`", "\\space" })
+        {
+          auto const r(p.next());
+          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
+                                       make_box<runtime::obj::character>(ch)));
+
+          auto const len(ch.size());
+          CHECK(r.expect_ok().unwrap().start
+                == lex::token{ offset, len, lex::token_kind::character, ch });
+          CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+
+          offset += len;
+        }
+      }
+    }
+
     TEST_CASE("String")
     {
       SUBCASE("Unescaped")
@@ -747,6 +815,44 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(r1.is_err());
+      }
+
+      SUBCASE("Deref")
+      {
+        SUBCASE("Unterminated")
+        {
+          lex::processor lp{ "@" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r1(p.next());
+          CHECK(r1.is_err());
+        }
+
+        SUBCASE("Single")
+        {
+          lex::processor lp{ "@foo" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(runtime::detail::equal(
+            r.expect_ok().unwrap().ptr,
+            make_box<runtime::obj::persistent_list>(std::in_place,
+                                                    make_box<runtime::obj::symbol>("deref"),
+                                                    make_box<runtime::obj::symbol>("foo"))));
+        }
+
+        SUBCASE("Double")
+        {
+          lex::processor lp{ "@@foo" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(runtime::detail::equal(
+            r.expect_ok().unwrap().ptr,
+            make_box<runtime::obj::persistent_list>(
+              std::in_place,
+              make_box<runtime::obj::symbol>("deref"),
+              make_box<runtime::obj::persistent_list>(std::in_place,
+                                                      make_box<runtime::obj::symbol>("deref"),
+                                                      make_box<runtime::obj::symbol>("foo")))));
+        }
       }
 
       SUBCASE("Set")

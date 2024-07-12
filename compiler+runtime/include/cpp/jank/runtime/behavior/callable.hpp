@@ -97,17 +97,16 @@ namespace jank::runtime
 
       virtual ~callable() = default;
 
-      virtual object_ptr call() const;
-      virtual object_ptr call(object_ptr) const;
-      virtual object_ptr call(object_ptr, object_ptr) const;
-      virtual object_ptr call(object_ptr, object_ptr, object_ptr) const;
-      virtual object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr) const;
-      virtual object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const;
+      virtual object_ptr call();
+      virtual object_ptr call(object_ptr);
+      virtual object_ptr call(object_ptr, object_ptr);
+      virtual object_ptr call(object_ptr, object_ptr, object_ptr);
+      virtual object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr);
+      virtual object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr);
       virtual object_ptr
-        call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) const;
+        call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr);
       virtual object_ptr
-        call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr)
-          const;
+        call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr);
       virtual object_ptr call(object_ptr,
                               object_ptr,
                               object_ptr,
@@ -115,16 +114,7 @@ namespace jank::runtime
                               object_ptr,
                               object_ptr,
                               object_ptr,
-                              object_ptr) const;
-      virtual object_ptr call(object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr) const;
+                              object_ptr);
       virtual object_ptr call(object_ptr,
                               object_ptr,
                               object_ptr,
@@ -133,12 +123,21 @@ namespace jank::runtime
                               object_ptr,
                               object_ptr,
                               object_ptr,
+                              object_ptr);
+      virtual object_ptr call(object_ptr,
                               object_ptr,
-                              object_ptr) const;
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr,
+                              object_ptr);
 
       /* Callables need a way to get back to the root object so we can do helpful
        * error reporting on failed calls. */
-      virtual object_ptr this_object_ptr() const = 0;
+      virtual object_ptr this_object_ptr() = 0;
 
       /* When dynamically calling a function, we need to know three things:
        *

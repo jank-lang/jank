@@ -259,7 +259,7 @@ namespace jank::runtime
         }
         else if constexpr(behavior::conjable_in_place<T>)
         {
-          return typed_s->cons_in_place(o);
+          return typed_s->conj_in_place(o);
         }
         else if constexpr(behavior::conjable<T>)
         {
@@ -275,6 +275,23 @@ namespace jank::runtime
         }
       },
       s);
+  }
+
+  object_ptr disj(object_ptr const s, object_ptr const o)
+  {
+    if(s->type == object_type::nil)
+    {
+      return s;
+    }
+    else if(s->type == object_type::persistent_set)
+    {
+      auto const set(expect_object<obj::persistent_set>(s));
+      return set->disj(o);
+    }
+    else
+    {
+      throw std::runtime_error{ fmt::format("not disjoinable: {}", runtime::detail::to_string(s)) };
+    }
   }
 
   object_ptr assoc(object_ptr const m, object_ptr const k, object_ptr const v)
@@ -703,4 +720,15 @@ namespace jank::runtime
       o);
   }
 
-} // namespace jank::runtime
+  obj::persistent_list_ptr into_list(object_ptr const s)
+  {
+    return visit_seqable(
+      [](auto const typed_s) -> obj::persistent_list_ptr {
+        return obj::persistent_list::create(typed_s);
+      },
+      [=]() -> obj::persistent_list_ptr {
+        throw std::runtime_error{ fmt::format("not seqable: {}", runtime::detail::to_string(s)) };
+      },
+      s);
+  }
+}

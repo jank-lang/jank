@@ -1,5 +1,5 @@
-; Namespace management.
-(def *ns*)
+(def ^:dynamic *ns*)
+(def ^:dynamic *out* nil)
 
 ; Syntax quoting.
 (def unquote
@@ -52,6 +52,22 @@
                    ~{ o }
                    );"))))
 
+(def empty
+  (fn* empty [o]
+    (native/raw "__value = visit_object
+                (
+                 [=](auto const typed_o) -> object_ptr
+                 {
+                   using T = typename decltype(typed_o)::value_type;
+
+                   if constexpr(behavior::collection_like<T>)
+                   { return T::empty(); }
+                   else
+                   { return ~{ nil }; }
+                 },
+                 ~{ o }
+                 );")))
+
 (def count
   (fn* count [o]
     (if (nil? o)
@@ -74,7 +90,7 @@
                   {
                    using T = typename decltype(typed_o)::value_type;
 
-                   if constexpr(behavior::numberable<T>)
+                   if constexpr(behavior::number_like<T>)
                    { return typed_o->to_real(); }
                    else
                    { ~{ (throw (ex-info :not-a-number {:o o})) }; }
@@ -135,6 +151,22 @@
 (def cons
   (fn* cons [head tail]
     (native/raw "__value = runtime::cons(~{ head }, ~{ tail });")))
+
+(def coll?
+  (fn* coll? [o]
+    (native/raw "__value = visit_object
+                 (
+                   [=](auto const typed_tail) -> object_ptr
+                   {
+                     using T = typename decltype(typed_tail)::value_type;
+
+                     if constexpr(behavior::collection_like<T>)
+                     { return ~{ true }; }
+                     else
+                     { return ~{ false }; }
+                   },
+                   ~{ o }
+                 );")))
 
 (def seq?
   (fn* seq? [o]
@@ -662,7 +694,7 @@
                     using T = typename decltype(typed_coll)::value_type;
 
                     if constexpr(behavior::conjable_in_place<T>)
-                    { return typed_coll->cons_in_place(head); }
+                    { return typed_coll->conj_in_place(head); }
                     else
                     { ~{ (throw (ex-info :not-conjable-in-place {:o coll})) }; }
                    },
@@ -720,25 +752,14 @@
 
 (defn pop!
   ([coll]
-   (native/raw "if( ~{ coll }->type == object_type::transient_vector )
-                {
-                  auto transient_coll = expect_object<obj::transient_vector>(~{ coll });
-                  __value = transient_coll->pop_in_place();
-                }
-                else
-                { ~{ (throw (ex-info :not-transient-vector {:o coll})) }; }
-               ")))
+   (native/raw "auto transient_coll = try_object<obj::transient_vector>(~{ coll });
+                __value = transient_coll->pop_in_place();")))
 
 (defn disj!
   ([set] set)
   ([set elem]
-   (native/raw "if( ~{ set }->type == object_type::transient_set)
-                {
-                  auto typed_set = expect_object<obj::transient_set>(~{ set });
-                  __value = typed_set->disjoin_in_place(~{ elem });
-                }
-                else
-                { ~{ (throw (ex-info :not-transient-set {:o set})) }; }
+   (native/raw "auto typed_set = try_object<obj::transient_set>(~{ set });
+                __value = typed_set->disjoin_in_place(~{ elem });
                "))
   ([set elem & elems]
     (let [ret (disj! set elem)]
@@ -746,7 +767,7 @@
         (recur ret (first elems) (next elems))
         ret))))
 
-; Functions.
+;; Functions.
 (defn spread
   {:private true}
   [arglist]
@@ -813,19 +834,7 @@
   timeout-val if the timeout (in milliseconds) is reached before a
   value is available. See also - realized?."
   ([ref]
-   (native/raw "__value = visit_object
-               (
-                [=](auto const typed_ref) -> object_ptr
-                {
-                 using T = typename decltype(typed_ref)::value_type;
-
-                 if constexpr(behavior::derefable<T>)
-                 { return typed_ref->deref(); }
-                 else
-                 { ~{ (throw (ex-info :not-derefable {:ref ref})) }; }
-                 },
-                ~{ ref }
-               );"))
+   (native/raw "__value = runtime::behavior::deref(~{ ref });"))
   ; TODO: Blocking.
   ([ref timeout-ms timeout-val]
    ;(if (instance? clojure.lang.IBlockingDeref ref)
@@ -978,6 +987,22 @@
   [coll]
   (native/raw "__value = runtime::pop(~{ coll });"))
 
+(defn vary-meta
+  "Returns an object of the same type and value as obj, with
+  (apply f (meta obj) args) as its metadata."
+  [o f & args]
+  (with-meta o (apply f (meta o) args)))
+
+(defn alter-meta!
+  "Atomically sets the metadata for a namespace/var/ref/agent/atom to be:
+
+  (apply f its-current-meta args)
+
+  f must be free of side-effects"
+  [o f & args]
+  ; TODO: Atomics.
+  (reset-meta! o (apply f (meta o) args)))
+
 ;; Atoms.
 (defn atom
   "Creates and returns an Atom with an initial value of x and zero or
@@ -1003,13 +1028,13 @@
   multiple times, and thus should be free of side effects.  Returns
   the value that was swapped in."
   ([atom f]
-   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap(~{ f });"))
+   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap(~{ f });"))
   ([atom f x]
-   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x });"))
+   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x });"))
   ([atom f x y]
-   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x }, ~{ y });"))
+   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x }, ~{ y });"))
   ([atom f x y & args]
-   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x }, ~{ y }, ~{ args });")))
+   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x }, ~{ y }, ~{ args });")))
 
 (defn swap-vals!
   "Atomically swaps the value of atom to be:
@@ -1017,32 +1042,32 @@
   multiple times, and thus should be free of side effects.
   Returns [old new], the value of the atom before and after the swap."
   ([atom f]
-   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap_vals(~{ f });"))
+   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap_vals(~{ f });"))
   ([atom f x]
-   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x });"))
+   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x });"))
   ([atom f x y]
-   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x }, ~{ y });"))
+   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x }, ~{ y });"))
   ([atom f x y & args]
-   (native/raw "__value = expect_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x }, ~{ y }, ~{ args });")))
+   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x }, ~{ y }, ~{ args });")))
 
 (defn compare-and-set!
   "Atomically sets the value of atom to newval if and only if the
   current value of the atom is identical to oldval. Returns true if
   set happened, else false"
   [atom oldval newval]
-  (native/raw "__value = expect_object<obj::atom>(~{ atom })->compare_and_set(~{ oldval }, ~{ newval });"))
+  (native/raw "__value = try_object<obj::atom>(~{ atom })->compare_and_set(~{ oldval }, ~{ newval });"))
 
 (defn reset!
   "Sets the value of atom to newval without regard for the
   current value. Returns newval."
   [atom newval]
-  (native/raw "__value = expect_object<obj::atom>(~{ atom })->reset(~{ newval });"))
+  (native/raw "__value = try_object<obj::atom>(~{ atom })->reset(~{ newval });"))
 
 (defn reset-vals!
   "Sets the value of atom to newval. Returns [old new], the value of the
    atom before and after the reset."
   [atom newval]
-  (native/raw "__value = expect_object<obj::atom>(~{ atom })->reset_vals(~{ newval });"))
+  (native/raw "__value = try_object<obj::atom>(~{ atom })->reset_vals(~{ newval });"))
 
 ;; Volatiles.
 (defn volatile!
@@ -1054,7 +1079,7 @@
   "Sets the value of volatile to newval without regard for the
    current value. Returns newval."
   [vol newval]
-  (native/raw "__value = expect_object<obj::volatile_>(~{ vol })->reset(~{ newval });"))
+  (native/raw "__value = try_object<obj::volatile_>(~{ vol })->reset(~{ newval });"))
 
 ; XXX: In Clojure, this is a macro (for perf reasons). However, building native/raw
 ; forms from macros is quite cumbersome right now. A function will do until it doesn't.
@@ -1063,7 +1088,7 @@
   (apply f current-value-of-vol args). Returns the value that
   was swapped in."
   [vol f & args]
-  (native/raw "__value = expect_object<obj::volatile_>(~{ vol })->reset(~{ (apply f (deref vol) args) });"))
+  (native/raw "__value = try_object<obj::volatile_>(~{ vol })->reset(~{ (apply f (deref vol) args) });"))
 
 (defn volatile?
   "Returns true if x is a volatile."
@@ -1118,23 +1143,89 @@
        res
        (recur res (first args) (next args))))))
 
-; TODO: Symbol creation for generated names related to instances of this
-; will result in a name like `/384`, which gets parsed as `384`. Fix the parsing
-; in the symbol string separation fn.
-(def
+(defn
   ^{:arities {2 {:supports-unboxed-input? true
                  :unboxed-output? true}}}
   /
-  (fn /
-    ([x]
-     (/ 1 x))
-    ([l r]
-     (native/raw "__value = runtime::div(~{ l }, ~{ r });"))
-    ([l r & args]
-     (let [res (native/raw "__value = runtime::div(~{ l }, ~{ r });")]
-       (if (empty? args)
-         res
-         (recur res (first args) (next args)))))))
+  ([x]
+   (/ 1 x))
+  ([l r]
+   (native/raw "__value = runtime::div(~{ l }, ~{ r });"))
+  ([l r & args]
+   (let [res (native/raw "__value = runtime::div(~{ l }, ~{ r });")]
+     (if (empty? args)
+       res
+       (recur res (first args) (next args))))))
+
+;; Bit operations.
+; TODO: Unboxing and inlining for these.
+(defn bit-not
+  "Bitwise complement"
+  [x]
+  (native/raw "__value = make_box(runtime::bit_not(~{ x }));"))
+
+(defn bit-and
+  "Bitwise and"
+  ([x y]
+   (native/raw "__value = make_box(runtime::bit_and(~{ x }, ~{ y }));"))
+  ([x y & more]
+   (reduce bit-and (bit-and x y) more)))
+
+(defn bit-or
+  "Bitwise or"
+  ([x y]
+   (native/raw "__value = make_box(runtime::bit_or(~{ x }, ~{ y }));"))
+  ([x y & more]
+   (reduce bit-or (bit-or x y) more)))
+
+(defn bit-xor
+  "Bitwise exclusive or"
+  ([x y]
+   (native/raw "__value = make_box(runtime::bit_xor(~{ x }, ~{ y }));"))
+  ([x y & more]
+   (reduce bit-xor (bit-xor x y) more)))
+
+(defn bit-and-not
+  "Bitwise and with complement"
+  ([x y]
+   (native/raw "__value = make_box(runtime::bit_and_not(~{ x }, ~{ y }));"))
+  ([x y & more]
+   (reduce bit-and-not (bit-and-not x y) more)))
+
+(defn bit-clear
+  "Clear bit at index n"
+  [x n]
+  (native/raw "__value = make_box(runtime::bit_clear(~{ x }, ~{ n }));"))
+
+(defn bit-set
+  "Set bit at index n"
+  [x n]
+  (native/raw "__value = make_box(runtime::bit_set(~{ x }, ~{ n }));"))
+
+(defn bit-flip
+  "Flip bit at index n"
+  [x n]
+  (native/raw "__value = make_box(runtime::bit_flip(~{ x }, ~{ n }));"))
+
+(defn bit-test
+  "Test bit at index n"
+  [x n]
+  (native/raw "__value = make_box(runtime::bit_test(~{ x }, ~{ n }));"))
+
+(defn bit-shift-left
+  "Bitwise shift left"
+  [x n]
+  (native/raw "__value = make_box(runtime::bit_shift_left(~{ x }, ~{ n }));"))
+
+(defn bit-shift-right
+  "Bitwise shift right"
+  [x n]
+  (native/raw "__value = make_box(runtime::bit_shift_right(~{ x }, ~{ n }));"))
+
+(defn unsigned-bit-shift-right
+  "Bitwise shift right, without sign-extension."
+  [x n]
+  (native/raw "__value = make_box(runtime::bit_unsigned_shift_right(~{ x }, ~{ n }));"))
 
 (defn =
   ([x]
@@ -1146,6 +1237,18 @@
      (if (next args)
        (recur r (first args) (next args))
        (native/raw "__value = make_box(runtime::detail::equal(~{ r }, ~{ (first args) }));"))
+     false)))
+
+(defn ==
+  ([x]
+   true)
+  ([l r]
+   (native/raw "__value = make_box(runtime::is_equiv(~{ l }, ~{ r }));"))
+  ([l r & args]
+   (if (native/raw "__value = make_box(runtime::is_equiv(~{ l }, ~{ r }));")
+     (if (next args)
+       (recur r (first args) (next args))
+       (native/raw "__value = make_box(runtime::is_equiv(~{ r }, ~{ (first args) }));"))
      false)))
 
 (defn not=
@@ -1280,7 +1383,7 @@
                 {
                  using T = typename decltype(typed_o)::value_type;
 
-                 if constexpr(behavior::numberable<T>)
+                 if constexpr(behavior::number_like<T>)
                  { return true; }
                  else
                  { return false; }
@@ -1410,11 +1513,11 @@
               (
                visit_object
                (
-                [=](auto const typed_o) -> native_bool
+                [](auto const typed_o) -> native_bool
                 {
                  using T = typename decltype(typed_o)::value_type;
 
-                 if constexpr(behavior::sequenceable<T>)
+                 if constexpr(behavior::sequential<T>)
                  { return true; }
                  else
                  { return false; }
@@ -1484,11 +1587,11 @@
   (native/raw "__value = make_box<obj::chunk_buffer>(~{ capacity });"))
 
 (defn chunk-append [b x]
-  (native/raw "auto const buffer(expect_object<obj::chunk_buffer>(b));
+  (native/raw "auto const buffer(try_object<obj::chunk_buffer>(b));
                buffer->append(~{ x });"))
 
 (defn chunk [b]
-  (native/raw "auto const buffer(expect_object<obj::chunk_buffer>(b));
+  (native/raw "auto const buffer(try_object<obj::chunk_buffer>(b));
                __value = buffer->chunk();"))
 
 (defn chunk-first [o]
@@ -1895,6 +1998,27 @@
       (persistent! map))))
 
 ;; Sets.
+(defn hash-set
+  "Returns a new hash set with supplied keys.  Any equal keys are
+  handled as if by repeated uses of conj."
+  ([]
+   #{})
+  ([& keys]
+   (native/raw "__value = obj::persistent_set::create_from_seq(~{ keys });")))
+
+(defn disj
+  "disj[oin]. Returns a new set of the same (hashed/sorted) type, that
+  does not contain key(s)."
+  ([set]
+   set)
+  ([set key]
+   (native/raw "__value = jank::runtime::disj(~{ set }, ~{ key });"))
+  ([set key & ks]
+   (let* [res (disj set key)]
+     (if (empty? ks)
+       res
+       (recur res (first ks) (next ks))))))
+
 (defn set? [o]
   (native/raw "__value = make_box(~{ o }->type == object_type::persistent_set);"))
 
@@ -2127,19 +2251,21 @@
   (assert-macro-args
     (vector? bindings) "a vector for its binding"
     (even? (count bindings)) "an even number of forms in binding vector")
-  (let [->var-pairs (fn [var-vals ret]
-                      ; TODO: loop
-                      (let [vvs (seq var-vals)]
+  (let [->var-pairs (fn ->var-pairs [var-vals]
+                      (loop [ret []
+                             vvs (seq var-vals)]
                         (if vvs
-                          (recur (nnext vvs)
-                                 (conj (conj ret (list 'var (first vvs))) (second vvs)))
+                          (recur (conj (conj ret `(var ~(first vvs))) (second vvs))
+                                 (next (next vvs)))
                           (seq ret))))]
-    (list* 'clojure.core/let []
-           (list 'clojure.core/push-thread-bindings
-                 (list* 'clojure.core/hash-map
-                        (->var-pairs bindings [])))
-           (list (cons 'do body)
-                 (list 'clojure.core/pop-thread-bindings)))))
+    `(do
+       (push-thread-bindings (hash-map ~@(->var-pairs bindings)))
+       (try
+         ~@body
+         (catch e#
+           (throw e#))
+         (finally
+           (pop-thread-bindings))))))
 
 ;; Input/output.
 (defn println [& args]
@@ -2150,6 +2276,14 @@
 
 (defn print [o]
   (native/raw "__value = jank::runtime::context::print(~{ o });"))
+
+(defn pr-str [o]
+  ; TODO: Representation printing.
+  (str o))
+
+(defn prn [o]
+  ; TODO: Representation printing.
+  (println o))
 
 ;; Keywords.
 (defn keyword? [o]
@@ -3063,12 +3197,14 @@
                                           (= k :when) `(if ~v
                                                          ~(do-cmod etc)
                                                          (recur
-                                                           (unchecked-inc ~gi)))
+                                                           ; TODO: unchecked-inc
+                                                           (inc ~gi)))
                                           (keyword? k)
                                           (err "Invalid 'for' keyword " k)
                                           :else
                                           `(do (chunk-append ~gb ~body-expr)
-                                               (recur (unchecked-inc ~gi)))))]
+                                               ; TODO: unchecked-inc
+                                               (recur (inc ~gi)))))]
                           `(fn ~giter [~gxs]
                              (lazy-seq
                                (loop [~gxs ~gxs]
@@ -3092,7 +3228,10 @@
        (iter# ~(second seq-exprs)))))
 
 (defn not-empty
-  [coll] (when (seq coll) coll))
+  "If coll is empty, returns nil, else coll"
+  [coll]
+  (when (seq coll)
+    coll))
 
 (defn get-in
   "Returns the value in a nested associative structure,
@@ -3434,7 +3573,286 @@
                );
               __value = make_box(fn);"))
 
+; Vars.
+(defn var? [o]
+  (native/raw "__value = make_box(~{ o }->type == object_type::var);"))
+
+(defn var-get [v]
+  (native/raw "__value = try_object<runtime::var>(~{ v })->deref();"))
+
+(defn alter-var-root
+  "Atomically alters the root binding of var v by applying f to its
+  current value plus any args"
+  [v f & args]
+  (native/raw "__value = try_object<runtime::var>(~{ v })->alter_root(~{ f }, ~{ args });"))
+
+(defn bound?
+  "Returns true if all of the vars provided as arguments have any bound value, root or thread-local.
+  Implies that deref'ing the provided vars will succeed. Returns true if no vars are provided."
+  [& vars]
+  (every? (fn [v]
+            (native/raw "__value = make_box(try_object<runtime::var>(~{ v })->is_bound());"))
+          vars))
+
+(defn thread-bound?
+  "Returns true if all of the vars provided as arguments have thread-local bindings.
+  Implies that set!'ing the provided vars will succeed.  Returns true if no vars are provided."
+  [& vars]
+  (every? (fn [v]
+            (native/raw "__value = make_box(try_object<runtime::var>(~{ v })->get_thread_binding() != nullptr);"))
+          vars))
+
+;; Multimethods.
+(defn- check-valid-options
+  "Throws an exception if the given option map contains keys not listed
+  as valid, else returns nil."
+  [options & valid-keys]
+  (when (seq (apply disj (apply hash-set (keys options)) valid-keys))
+    (throw (apply str "Only these options are valid: "
+                  (first valid-keys)
+                  (map #(str ", " %) (rest valid-keys))))))
+
+(defn- multi-fn? [o]
+  (native/raw "__value = make_box(~{ o }->type == object_type::multi_function);"))
+
+(defn- multi-fn* [name dispatch-fn default hierarchy]
+  (native/raw "__value = make_box<obj::multi_function>(~{ name }, ~{ dispatch-fn }, ~{ default }, ~{ hierarchy });"))
+
+(def global-hierarchy)
+
+(defmacro defmulti
+  "Creates a new multimethod with the associated dispatch function.
+  The docstring and attr-map are optional.
+
+  Options are key-value pairs and may be one of:
+
+  :default
+
+  The default dispatch value, defaults to :default
+
+  :hierarchy
+
+  The value used for hierarchical dispatch (e.g. ::square is-a ::shape)
+
+  Hierarchies are type-like relationships that do not depend upon type
+  inheritance. By default Clojure's multimethods dispatch off of a
+  global hierarchy map.  However, a hierarchy relationship can be
+  created with the derive function used to augment the root ancestor
+  created with make-hierarchy.
+
+  Multimethods expect the value of the hierarchy option to be supplied as
+  a reference type e.g. a var (i.e. via the Var-quote dispatch macro #'
+  or the var special form)."
+  [mm-name & options]
+  (let [docstring (if (string? (first options))
+                    (first options)
+                    nil)
+        options (if (string? (first options))
+                  (next options)
+                  options)
+        m (if (map? (first options))
+            (first options)
+            {})
+        options (if (map? (first options))
+                  (next options)
+                  options)
+        dispatch-fn (first options)
+        options (next options)
+        m (if docstring
+            (assoc m :doc docstring)
+            m)
+        m (if (meta mm-name)
+            (conj (meta mm-name) m)
+            m)
+        mm-name (with-meta mm-name m)]
+    (let [options (apply hash-map options)
+          default (get options :default :default)
+          hierarchy (get options :hierarchy #'global-hierarchy)]
+      (check-valid-options options :default :hierarchy)
+      ; TODO: This returns nil, due to an issue with let*. Why?
+      `(let [v# (def ~mm-name)]
+         (when-not (multi-fn? (deref v#))
+           (def ~mm-name (multi-fn* '~(symbol *ns* mm-name) ~dispatch-fn ~default ~hierarchy)))))))
+
+(defn- defmethod* [multifn dispatch-val fun]
+  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->add_method(~{ dispatch-val }, ~{ fun });"))
+
+(defmacro defmethod
+  "Creates and installs a new method of multimethod associated with dispatch-value. "
+  [multifn dispatch-val & fn-tail]
+  `(defmethod* ~multifn ~dispatch-val (fn ~@fn-tail)))
+
+;(defn remove-all-methods
+;  "Removes all of the methods of multimethod."
+;  {:added "1.2"
+;   :static true}
+; [^clojure.lang.MultiFn multifn]
+; (.reset multifn))
+;
+;(defn remove-method
+;  "Removes the method of multimethod associated with dispatch-value."
+;  {:added "1.0"
+;   :static true}
+; [^clojure.lang.MultiFn multifn dispatch-val]
+; (. multifn removeMethod dispatch-val))
+;
+;(defn prefer-method
+;  "Causes the multimethod to prefer matches of dispatch-val-x over dispatch-val-y
+;   when there is a conflict"
+;  {:added "1.0"
+;   :static true}
+;  [^clojure.lang.MultiFn multifn dispatch-val-x dispatch-val-y]
+;  (. multifn preferMethod dispatch-val-x dispatch-val-y))
+;
+;(defn methods
+;  "Given a multimethod, returns a map of dispatch values -> dispatch fns"
+;  {:added "1.0"
+;   :static true}
+;  [^clojure.lang.MultiFn multifn] (.getMethodTable multifn))
+;
+;(defn get-method
+;  "Given a multimethod and a dispatch value, returns the dispatch fn
+;  that would apply to that value, or nil if none apply and no default"
+;  {:added "1.0"
+;   :static true}
+;  [^clojure.lang.MultiFn multifn dispatch-val] (.getMethod multifn dispatch-val))
+;
+;(defn prefers
+;  "Given a multimethod, returns a map of preferred value -> set of other values"
+;  {:added "1.0"
+;   :static true}
+;  [^clojure.lang.MultiFn multifn] (.getPreferTable multifn))
+
+;; Hierarchies.
+(defn make-hierarchy
+  "Creates a hierarchy object for use with derive, isa? etc."
+  []
+  {:parents {}
+   :descendants {}
+   :ancestors {}})
+
+(def ^:private global-hierarchy (make-hierarchy))
+
+(defn isa?
+  "Returns true if (= child parent), or child is directly or indirectly derived from
+  parent, either via a Java type inheritance relationship or a
+  relationship established via derive. h must be a hierarchy obtained
+  from make-hierarchy, if not supplied defaults to the global
+  hierarchy"
+  ([child parent]
+   (isa? global-hierarchy child parent))
+  ([h child parent]
+   (or (= child parent)
+       (contains? (get (:ancestors h) child) parent)
+       (and (vector? parent) (vector? child)
+            (= (count parent) (count child))
+            (loop [ret true
+                   i 0]
+              (if (or (not ret) (= i (count parent)))
+                ret
+                (recur (isa? h (get child i) (get parent i)) (inc i))))))))
+
+(defn parents
+  "Returns the immediate parents of tag, either via a Java type
+  inheritance relationship or a relationship established via derive. h
+  must be a hierarchy obtained from make-hierarchy, if not supplied
+  defaults to the global hierarchy"
+  ([tag]
+   (parents global-hierarchy tag))
+  ([h tag]
+   (not-empty (get (:parents h) tag))))
+
+(defn ancestors
+  "Returns the immediate and indirect parents of tag, either via a Java type
+  inheritance relationship or a relationship established via derive. h
+  must be a hierarchy obtained from make-hierarchy, if not supplied
+  defaults to the global hierarchy"
+  ([tag]
+   (ancestors global-hierarchy tag))
+  ([h tag]
+   (not-empty (get (:ancestors h) tag))))
+
+(defn descendants
+  "Returns the immediate and indirect children of tag, through a
+  relationship established via derive. h must be a hierarchy obtained
+  from make-hierarchy, if not supplied defaults to the global
+  hierarchy. Note: does not work on Java type inheritance
+  relationships."
+  ([tag]
+   (descendants global-hierarchy tag))
+  ([h tag]
+   (not-empty (get (:descendants h) tag))))
+
+(defn derive
+  "Establishes a parent/child relationship between parent and
+  tag. Parent must be a namespace-qualified symbol or keyword and
+  child can be either a namespace-qualified symbol or keyword or a
+  class. h must be a hierarchy obtained from make-hierarchy, if not
+  supplied defaults to, and modifies, the global hierarchy."
+  ([tag parent]
+   (assert (namespace parent))
+   (assert (and (named? tag) (namespace tag)))
+   (alter-var-root #'global-hierarchy derive tag parent)
+   nil)
+  ([h tag parent]
+   (assert (not= tag parent))
+   (assert (named? tag))
+   (assert (named? parent))
+   (let [tp (:parents h)
+         td (:descendants h)
+         ta (:ancestors h)
+         tf (fn [m source sources target targets]
+              (reduce (fn [ret k]
+                        (assoc ret
+                               k
+                               (reduce conj
+                                       (get targets k #{})
+                                       (cons target (targets target)))))
+                      m
+                      (cons source (sources source))))]
+     (or
+       (when-not (contains? (tp tag) parent)
+         (when (contains? (ta tag) parent)
+           (throw (str tag " already has " parent " as ancestor")))
+         (when (contains? (ta parent) tag)
+           (throw (str "Cyclic derivation: " parent " has " tag " as ancestor")))
+         {:parents (assoc (:parents h) tag (conj (get tp tag #{}) parent))
+          :ancestors (tf (:ancestors h) tag td parent ta)
+          :descendants (tf (:descendants h) parent ta tag td)})
+       h))))
+
+(defn underive
+  "Removes a parent/child relationship between parent and
+  tag. h must be a hierarchy obtained from make-hierarchy, if not
+  supplied defaults to, and modifies, the global hierarchy."
+  ([tag parent]
+   (alter-var-root #'global-hierarchy underive tag parent) nil)
+  ([h tag parent]
+   (let [parent-map (:parents h)
+         child-parents (if (parent-map tag)
+                         (disj (parent-map tag) parent)
+                         #{})
+         new-parents (if (not-empty child-parents)
+                       (assoc parent-map tag child-parents)
+                       (dissoc parent-map tag))
+         deriv-seq (flatten (map #(cons (key %) (interpose (key %) (val %)))
+                                 (seq new-parents)))]
+     (if (contains? (parent-map tag) parent)
+       (reduce #(apply derive %1 %2)
+               (make-hierarchy)
+               (partition 2 deriv-seq))
+       h))))
+
+(defmacro defonce
+  "defs name to have the root value of the expr iff the named var has no root value,
+  else expr is unevaluated"
+  [name expr]
+  `(let [v# (def ~name)]
+     (when-not (bound? v#)
+       (def ~name ~expr))))
+
 ;; Miscellaneous.
+; TODO: jank.core
 (defn sleep [ms]
   (let [ms (int ms)]
     (native/raw "std::this_thread::sleep_for(std::chrono::milliseconds(~{ ms }->data));")))
@@ -3458,10 +3876,10 @@
 (defn with-redefs-fn [binding-map fun]
   (let [root-bind (fn [m]
                     (doseq [kv m]
-                      (native/raw "expect_object<runtime::var>(~{ (first kv) })->bind_root(~{ (second kv) });")))
+                      (native/raw "try_object<runtime::var>(~{ (first kv) })->bind_root(~{ (second kv) });")))
         old-vals (zipmap (keys binding-map)
                          (map (fn [v]
-                                (native/raw "__value = expect_object<runtime::var>(~{ v })->get_root();"))
+                                (native/raw "__value = try_object<runtime::var>(~{ v })->get_root();"))
                               (keys binding-map)))]
     (try
       (root-bind binding-map)
@@ -3491,7 +3909,7 @@
 ;; jank.compiler things.
 ; TODO: Options, following what criterium offers.
 (defn benchmark [label fun]
-  (native/raw "auto const label_str(expect_object<obj::persistent_string>(~{ (str label) }));
+  (native/raw "auto const label_str(try_object<obj::persistent_string>(~{ (str label) }));
               visit_object
               (
                [=](auto const typed_fun)
@@ -3558,28 +3976,17 @@
     (native/raw "__rt_ctx->current_ns_var->set(__rt_ctx->intern_ns(expect_object<obj::symbol>(sym))).expect_ok();")
     (throw "argument to in-ns must be a symbol")))
 
-; Vars.
-(defn var? [o]
-  (native/raw "__value = make_box(~{ o }->type == object_type::var);"))
-
-(defn var-get [v]
-  (assert (var? v))
-  (native/raw "__value = expect_object<runtime::var>(~{ v })->deref();"))
-
 ; Namespaces (again).
 (defn create-ns [sym]
-  (assert (symbol? sym))
-  (native/raw "__value = __rt_ctx->intern_ns(expect_object<obj::symbol>(~{ sym }));"))
+  (native/raw "__value = __rt_ctx->intern_ns(try_object<obj::symbol>(~{ sym }));"))
 
 (defn find-ns [sym]
-  (assert (symbol? sym))
-  (native/raw "__value = __rt_ctx->find_ns(expect_object<obj::symbol>(~{ sym })).unwrap_or(nullptr);
+  (native/raw "__value = __rt_ctx->find_ns(try_object<obj::symbol>(~{ sym })).unwrap_or(nullptr);
                if(!__value)
                { __value = obj::nil::nil_const(); }"))
 
 (defn remove-ns [sym]
-  (assert (symbol? sym))
-  (native/raw "__value = __rt_ctx->remove_ns(expect_object<obj::symbol>(~{ sym })).unwrap_or(nullptr);
+  (native/raw "__value = __rt_ctx->remove_ns(try_object<obj::symbol>(~{ sym })).unwrap_or(nullptr);
                if(!__value)
                { __value = obj::nil::nil_const(); }"))
 
@@ -3615,6 +4022,27 @@
             {}
             (ns-map ns))))
 
+(defn ns-resolve
+  "Returns the var to which a symbol will be resolved in the
+  namespace (unless found in the environment), else nil.  Note that
+  if the symbol is fully qualified, the var to which it resolves
+  need not be present in the namespace."
+  ([ns sym]
+    (ns-resolve ns nil sym))
+  ([ns env sym]
+    (when-not (contains? env sym)
+      (native/raw "auto const n(expect_object<runtime::ns>(~{ (the-ns ns) }));
+                   auto const found(n->find_var(try_object<obj::symbol>(~{ sym })));
+                   if(found.is_some())
+                   { __value = found.unwrap(); }"))))
+
+(defn resolve
+  "Same as (ns-resolve *ns* symbol) or (ns-resolve *ns* &env symbol)"
+  ([sym]
+   (ns-resolve *ns* sym))
+  ([env sym]
+   (ns-resolve *ns* env sym)))
+
 (defn- libspec? [x]
   (or (symbol? x)
       (and (vector? x)
@@ -3635,10 +4063,9 @@
 
 (defn alias [alias ns-sym]
   (let [ns-obj (the-ns ns-sym)]
-    (assert (symbol? alias))
     (native/raw "expect_object<ns>(~{ *ns* })->add_alias
                  (
-                   expect_object<obj::symbol>(~{ alias }),
+                   try_object<obj::symbol>(~{ alias }),
                    expect_object<ns>(~{ ns-obj })
                  ).expect_ok();")))
 
@@ -3662,7 +4089,7 @@
                     (throw (ex-info :var-does-not-exist {:value sym})))
                   (native/raw "expect_object<runtime::ns>(~{ *ns* })->refer
                               (
-                               expect_object<obj::symbol>(~{ sym }),
+                               try_object<obj::symbol>(~{ sym }),
                                expect_object<runtime::var>(~{ v })
                                ).expect_ok();"))))
             nil
@@ -3802,5 +4229,10 @@
               ;(dosync (commute @#'*loaded-libs* conj '~name))
               'nil))
           )))
+
+(defmacro refer-clojure
+  "Same as (refer 'clojure.core <filters>)"
+  [& filters]
+  `(clojure.core/refer '~'clojure.core ~@filters))
 
 (println "Bottom of clojure.core")

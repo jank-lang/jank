@@ -46,7 +46,7 @@ namespace jank::runtime
     return data.size();
   }
 
-  obj::transient_set_ptr obj::transient_set::cons_in_place(object_ptr const elem)
+  obj::transient_set_ptr obj::transient_set::conj_in_place(object_ptr const elem)
   {
     assert_active();
     data.insert(elem);
@@ -60,7 +60,7 @@ namespace jank::runtime
     return make_box<obj::persistent_set>(data.persistent());
   }
 
-  object_ptr obj::transient_set::call(object_ptr const elem) const
+  object_ptr obj::transient_set::call(object_ptr const elem)
   {
     assert_active();
     auto const found(data.find(elem));
@@ -71,7 +71,7 @@ namespace jank::runtime
     return *found;
   }
 
-  object_ptr obj::transient_set::call(object_ptr const elem, object_ptr const fallback) const
+  object_ptr obj::transient_set::call(object_ptr const elem, object_ptr const fallback)
   {
     assert_active();
     auto const found(data.find(elem));
@@ -82,17 +82,17 @@ namespace jank::runtime
     return *found;
   }
 
-  object_ptr obj::transient_set::get(object_ptr const elem) const
+  object_ptr obj::transient_set::get(object_ptr const elem)
   {
     return call(elem);
   }
 
-  object_ptr obj::transient_set::get(object_ptr const elem, object_ptr const fallback) const
+  object_ptr obj::transient_set::get(object_ptr const elem, object_ptr const fallback)
   {
     return call(elem, fallback);
   }
 
-  object_ptr obj::transient_set::get_entry(object_ptr const elem) const
+  object_ptr obj::transient_set::get_entry(object_ptr const elem)
   {
     auto const found = call(elem);
     auto const nil(obj::nil::nil_const());
