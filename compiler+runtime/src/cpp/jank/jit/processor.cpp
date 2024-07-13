@@ -144,8 +144,6 @@ namespace jank::jit
     }
     /* We can override the optimization level. */
     args.emplace_back(strdup(O.data()));
-    /* We don't actually want to see any warnings for JIT compiled code. */
-    args.emplace_back("-w");
     /* We need to include our special incremental PCH. */
     args.emplace_back("-include-pch");
     args.emplace_back(strdup(pch_path_str.c_str()));

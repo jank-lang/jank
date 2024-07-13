@@ -67,39 +67,49 @@ if(
   )
 endif()
 
-# TODO: Remove FMT_HEADER_ONLY once the extern template Clang bug is fixed.
 set(
-  jank_compiler_flags
-  -std=gnu++20
+  jank_aot_compiler_flags
   -Wall -Wextra -Wpedantic
   -Wfloat-equal -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor
   -Wold-style-cast -Wno-gnu-case-range
   -Wno-gnu-conditional-omitted-operand
   -Wno-implicit-fallthrough
   -Wno-covered-switch-default
+  -fno-common
+  -frtti
+  -fexceptions
+)
+
+set(
+  jank_jit_compiler_flags
+  # We don't actually want to see any warnings for JIT compiled code.
+  -w
+)
+
+# TODO: Remove FMT_HEADER_ONLY once the extern template Clang bug is fixed.
+set(
+  jank_common_compiler_flags
+  -std=gnu++20
   -DJANK_CLING_BUILD_DIR="${jank_cling_build_dir_absolute}"
   -DIMMER_HAS_LIBGC=1 -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1
   -DFMT_HEADER_ONLY=1
   #-DLIBASSERT_USE_MAGIC_ENUM=1
   #-DLIBASSERT_USE_FMT=1
   #-DLIBASSERT_STATIC_DEFINE=1
-  -fno-common
-  -frtti
-  -fexceptions
-  -ggdb
   $<$<CONFIG:Debug>:-O0>
   $<$<CONFIG:Release>:-O3;-ffast-math>
   #-stdlib=libc++
 )
+
 set(
   jank_linker_flags
   #-stdlib=libc++ -lc++abi
   )
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  list(APPEND jank_compiler_flags #-Werror
+  list(APPEND jank_common_compiler_flags #-Werror
     -DJANK_DEBUG)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-  list(APPEND jank_compiler_flags -DJANK_RELEASE)
+  list(APPEND jank_common_compiler_flags -DJANK_RELEASE)
 endif()
 
 include(cmake/coverage.cmake)
@@ -208,7 +218,7 @@ target_precompile_headers(
 set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 
 target_compile_features(jank_lib PUBLIC ${jank_cxx_standard})
-target_compile_options(jank_lib PUBLIC ${jank_compiler_flags})
+target_compile_options(jank_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
 
 find_package(Immer CONFIG REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
@@ -241,7 +251,7 @@ target_link_libraries(
 
 jank_hook_llvm(jank_lib)
 
-get_target_property(jank_lib_compile_flags_list jank_lib COMPILE_OPTIONS)
+set(jank_lib_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags})
 list(JOIN jank_lib_compile_flags_list " " jank_lib_compile_flags_str)
 
 target_compile_options(jank_lib PUBLIC -DJANK_COMPILER_FLAGS="${jank_lib_compile_flags_str}")
@@ -278,7 +288,7 @@ target_include_directories(
 set_property(TARGET nanobench_lib PROPERTY OUTPUT_NAME nanobench)
 
 target_compile_features(nanobench_lib PUBLIC ${jank_cxx_standard})
-target_compile_options(nanobench_lib PUBLIC ${jank_compiler_flags})
+target_compile_options(nanobench_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
 target_link_options(nanobench_lib PRIVATE ${jank_linker_flags})
 
 #set_target_properties(nanobench_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
@@ -330,7 +340,7 @@ target_include_directories(
 set_property(TARGET folly_lib PROPERTY OUTPUT_NAME folly)
 
 target_compile_features(folly_lib PUBLIC ${jank_cxx_standard})
-target_compile_options(folly_lib PUBLIC ${jank_compiler_flags} -w)
+target_compile_options(folly_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags} -w)
 target_link_options(folly_lib PRIVATE ${jank_linker_flags})
 
 #set_target_properties(folly_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
@@ -357,7 +367,7 @@ set_property(TARGET jank_exe PROPERTY OUTPUT_NAME jank)
 set_target_properties(jank_exe PROPERTIES ENABLE_EXPORTS 1)
 
 target_compile_features(jank_exe PRIVATE ${jank_cxx_standard})
-target_compile_options(jank_exe PUBLIC ${jank_compiler_flags})
+target_compile_options(jank_exe PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
 target_link_options(jank_exe PRIVATE ${jank_linker_flags})
 
 target_include_directories(jank_exe SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
@@ -394,7 +404,7 @@ if(jank_tests)
   set_property(TARGET jank_test_exe PROPERTY OUTPUT_NAME jank-test)
 
   target_compile_features(jank_test_exe PRIVATE ${jank_cxx_standard})
-  target_compile_options(jank_test_exe PUBLIC ${jank_compiler_flags})
+  target_compile_options(jank_test_exe PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
   target_compile_options(jank_test_exe PRIVATE -DDOCTEST_CONFIG_SUPER_FAST_ASSERTS)
   target_link_options(jank_test_exe PRIVATE ${jank_linker_flags})
 
