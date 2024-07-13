@@ -90,7 +90,6 @@ set(
 set(
   jank_common_compiler_flags
   -std=gnu++20
-  -DJANK_CLING_BUILD_DIR="${jank_cling_build_dir_absolute}"
   -DIMMER_HAS_LIBGC=1 -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1
   -DFMT_HEADER_ONLY=1
   #-DLIBASSERT_USE_MAGIC_ENUM=1
@@ -251,6 +250,8 @@ target_link_libraries(
 
 jank_hook_llvm(jank_lib)
 
+# Build a string of all of our JIT compilation flags so we can load them up in the runtime.
+# This is also used for building our incremental PCH.
 set(jank_lib_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags})
 list(JOIN jank_lib_compile_flags_list " " jank_lib_compile_flags_str)
 
@@ -438,11 +439,26 @@ endif()
 #
 # Here, we set up the incremental PCH to be built whenever the normal PCH is changed or the script
 # for building the incremental PCH changes. Any other changes don't matter.
+
+get_target_property(jank_lib_includes jank_lib INCLUDE_DIRECTORIES)
+set(jank_lib_includes_str "")
+foreach(dir ${jank_lib_includes})
+  # System includes are just the path, but normal includes have this format:
+  # $<BUILD_INTERFACE:/home/jeaye/projects/jank/compiler+runtime/include/cpp>
+  # We need to strip all of that out.
+  if(${dir} MATCHES "BUILD_INTERFACE:")
+    string(REGEX REPLACE "\\$<BUILD_INTERFACE:(.*)>" "\\1" dir_path ${dir})
+    string(APPEND jank_lib_includes_str "-I${dir_path} ")
+  else()
+    string(APPEND jank_lib_includes_str "-isystem ${dir} ")
+  endif()
+endforeach()
+
 set(jank_incremental_pch_flag ${CMAKE_BINARY_DIR}/incremental.pch)
 add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/bin/build-pch
   OUTPUT ${jank_incremental_pch_flag}
-  COMMAND "${CMAKE_SOURCE_DIR}/bin/build-pch" "${CMAKE_SOURCE_DIR}/include" "${jank_incremental_pch_flag}" "${jank_lib_compile_flags_str}"
+  COMMAND "${CMAKE_SOURCE_DIR}/bin/build-pch" "${CLANG_INSTALL_PREFIX}" "${CMAKE_SOURCE_DIR}/include" "${jank_incremental_pch_flag}" "${jank_lib_compile_flags_str}" "${jank_lib_includes_str}"
 )
 add_custom_target(
   jank_incremental_pch

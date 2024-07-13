@@ -84,6 +84,7 @@ endif()
 
 message(STATUS "Found supported version: LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${llvm_dir}")
+message(STATUS "Clang install prefix: ${CLANG_INSTALL_PREFIX}")
 
 ## Find supported Clang
 
