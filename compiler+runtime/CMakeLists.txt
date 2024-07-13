@@ -70,6 +70,7 @@ endif()
 # TODO: Remove FMT_HEADER_ONLY once the extern template Clang bug is fixed.
 set(
   jank_compiler_flags
+  -std=gnu++20
   -Wall -Wextra -Wpedantic
   -Wfloat-equal -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor
   -Wold-style-cast -Wno-gnu-case-range

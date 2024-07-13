@@ -131,10 +131,26 @@ namespace jank::jit
                                               optimization_level) };
     }
 
-    auto const vcpkg_path(include_path / "../build/vcpkg_installed/x64-clang-static/include");
-    /* TODO: Turn JANK_COMPILER_FLAGS into a list here. */
-    std::vector<char const *> args{ "-std=gnu++20", "-DHAVE_CXX14=1", "-DIMMER_HAS_LIBGC=1", "-w",
-                                    O.data(),       "-include-pch",   pch_path_str.c_str() };
+    /* When we AOT compile the jank compiler/runtime, we keep track of the compiler
+     * flags used so we can use the same set during JIT compilation. Here we parse these
+     * into a vector for Clang. Since Clang wants a vector<char const*>, we need to
+     * dynamically allocate. These will never be freed. */
+    std::vector<char const *> args{};
+    std::stringstream flags{ JANK_COMPILER_FLAGS };
+    std::string flag;
+    while(std::getline(flags, flag, ' '))
+    {
+      args.emplace_back(strdup(flag.c_str()));
+    }
+    /* We can override the optimization level. */
+    args.emplace_back(strdup(O.data()));
+    /* We don't actually want to see any warnings for JIT compiled code. */
+    args.emplace_back("-w");
+    /* We need to include our special incremental PCH. */
+    args.emplace_back("-include-pch");
+    args.emplace_back(strdup(pch_path_str.c_str()));
+
+    //fmt::println("compiler flags {}", JANK_COMPILER_FLAGS);
 
     clang::IncrementalCompilerBuilder CB;
     CB.SetCompilerArgs(args);
@@ -144,8 +160,6 @@ namespace jank::jit
     CI->LoadRequestedPlugins();
 
     interpreter = llvm::cantFail(clang::Interpreter::create(std::move(CI)));
-
-    //eval_string(fmt::format("#include \"{}\"", prelude_path.c_str()));
   }
 
   processor::~processor()

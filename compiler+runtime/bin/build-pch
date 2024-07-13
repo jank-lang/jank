@@ -29,7 +29,6 @@ flags=$*
         -isystem /home/jeaye/projects/third-party/llvm-project/llvm/tools/clang/include \
         -isystem /home/jeaye/projects/jank/compiler+runtime/build/vcpkg_installed/x64-clang-static/include \
         ${flags[@]} \
-        -std=gnu++20 \
         -w \
         -Xclang -fincremental-extensions \
         -Xclang -emit-pch \
