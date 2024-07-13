@@ -69,19 +69,6 @@ namespace jank::jit
     return jank_path / "../include/cpp/jank/prelude.hpp.pch";
   }
 
-  /* TODO: https://github.com/llvm/llvm-project/blob/4d04a40adb68f284350831911a658715134c66d8/clang/docs/StandardCPlusPlusModules.rst#L1558 */
-  option<boost::filesystem::path> find_llvm_resource_path()
-  {
-    auto const jank_path(jank::util::process_location().unwrap().parent_path());
-
-    if(boost::filesystem::exists(jank_path / "../lib/clang"))
-    {
-      return jank_path / "..";
-    }
-
-    return JANK_CLING_BUILD_DIR;
-  }
-
   processor::processor(native_integer const optimization_level)
     : optimization_level{ optimization_level }
   {
@@ -101,13 +88,6 @@ namespace jank::jit
       }
     }
     auto const &pch_path_str(pch_path.unwrap().string());
-
-    auto const llvm_resource_path(find_llvm_resource_path());
-    if(llvm_resource_path.is_none())
-    /* TODO: Better error handling. */
-    {
-      throw std::runtime_error{ "unable to find LLVM resource path" };
-    }
 
     auto const include_path(jank_path / "../include");
 

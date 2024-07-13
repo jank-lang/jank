@@ -44,8 +44,6 @@ namespace jank::jit
        * here. The outcome is nice, though. */
       native_vector<failure> failures;
 
-      std::vector<char const *> args{ "clang++", "-w" };
-
       /* TODO: Disable diagnostic printing. The below works in non-test code, but crashes
        * in test code. Even when it did work, it had two issues.
        *
@@ -53,6 +51,7 @@ namespace jank::jit
        * 2. It still showed the "error: Parsing failed." line
        *
        */
+      //std::vector<char const *> args{ "clang++", "-w" };
       //static llvm::IntrusiveRefCntPtr<clang::DiagnosticOptions> diag_opts{
       //  clang::CreateAndPopulateDiagOpts(args)
       //};
