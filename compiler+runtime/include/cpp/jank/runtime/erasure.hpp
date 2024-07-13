@@ -367,22 +367,16 @@ namespace jank::runtime
   template <typename T, typename F, typename... Args>
   requires visitable<F, Args...>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr auto visit_object(F const &fn, object const * const const_erased, Args &&...args)
+  constexpr auto visit_type(F const &fn, object const * const const_erased, Args &&...args)
   {
-    return visit_object(
-      [&](auto const typed) -> decltype(fn(native_box<T>{}, std::declval<Args>()...)) {
-        using TT = typename decltype(typed)::value_type;
-
-        if constexpr(std::same_as<T, TT>)
-        {
-          return fn(typed, std::forward<Args>(args)...);
-        }
-        else
-        {
-          throw std::runtime_error{ "invalid object type" };
-        }
-      },
-      const_erased);
+    if(const_erased->type == detail::object_type_to_enum<T>::value)
+    {
+      return fn(expect_object<T>(const_erased), std::forward<Args>(args)...);
+    }
+    else
+    {
+      throw std::runtime_error{ "invalid object type" };
+    }
   }
 
   template <typename F1, typename F2, typename... Args>
