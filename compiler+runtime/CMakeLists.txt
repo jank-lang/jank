@@ -77,7 +77,7 @@ set(
   -Wno-implicit-fallthrough
   -Wno-covered-switch-default
   -DJANK_CLING_BUILD_DIR="${jank_cling_build_dir_absolute}"
-  -DIMMER_HAS_LIBGC=1 -DHAVE_CXX14=1
+  -DIMMER_HAS_LIBGC=1 -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1
   -DFMT_HEADER_ONLY=1
   #-DLIBASSERT_USE_MAGIC_ENUM=1
   #-DLIBASSERT_USE_FMT=1
@@ -429,7 +429,7 @@ endif()
 # for building the incremental PCH changes. Any other changes don't matter.
 set(jank_incremental_pch_flag ${CMAKE_BINARY_DIR}/incremental.pch)
 add_custom_command(
-  DEPENDS ${CMAKE_BINARY_DIR}/CMakeFiles/jank_lib.dir/cmake_pch.hxx ${CMAKE_SOURCE_DIR}/bin/build-pch
+  DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/bin/build-pch
   OUTPUT ${jank_incremental_pch_flag}
   COMMAND "${CMAKE_SOURCE_DIR}/bin/build-pch" "${CMAKE_SOURCE_DIR}/include" "${jank_incremental_pch_flag}" "${jank_lib_compile_flags_str}"
 )

@@ -1498,12 +1498,12 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze(runtime::object_ptr o, expression_type const expr_type)
+  processor::analyze(runtime::object_ptr const o, expression_type const expr_type)
   {
     return analyze(o, root_frame, expr_type, none, true);
   }
 
-  processor::expression_result processor::analyze(runtime::object_ptr o,
+  processor::expression_result processor::analyze(runtime::object_ptr const o,
                                                   local_frame_ptr &current_frame,
                                                   expression_type const expr_type,
                                                   option<expr::function_context_ptr> const &fn_ctx,
