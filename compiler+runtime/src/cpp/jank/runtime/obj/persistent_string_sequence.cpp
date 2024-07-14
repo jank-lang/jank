@@ -2,60 +2,40 @@
 
 namespace jank::runtime
 {
-  obj::persistent_string_sequence::static_object(obj::persistent_string_ptr s)
+  obj::persistent_string_sequence::static_object(obj::persistent_string_ptr const s)
     : str{ s }
   {
-    assert(s->count() > 0);
+    assert(!s->data.empty());
   }
 
-  obj::persistent_string_sequence::static_object(obj::persistent_string_ptr s, size_t i)
+  obj::persistent_string_sequence::static_object(obj::persistent_string_ptr const s, size_t const i)
     : str{ s }
     , index{ i }
   {
-    assert(s->count() > 0);
+    assert(!s->data.empty() && i < s->data.size());
   }
 
   /* behavior::objectable */
   native_bool obj::persistent_string_sequence::equal(object const &o) const
   {
-    if(o.type != object_type::persistent_string_sequence)
-    {
-      return false;
-    }
-    auto const seq(expect_object<obj::persistent_string_sequence>(&o));
-    return std::equal(str->data.begin() + index,
-                      str->data.end(),
-                      seq->str->data.begin() + seq->index,
-                      seq->str->data.end());
+    return detail::equal(o, str->data.begin(), str->data.end());
   }
 
   void obj::persistent_string_sequence::to_string(fmt::memory_buffer &buff) const
   {
-    return behavior::detail::to_string(
-      str->data.begin()
-        + static_cast<decltype(obj::persistent_string::data)::difference_type>(index),
-      str->data.end(),
-      "(",
-      ')',
-      buff);
+    return behavior::detail::to_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
   }
 
   native_persistent_string obj::persistent_string_sequence::to_string() const
   {
     fmt::memory_buffer buff;
-    behavior::detail::to_string(
-      str->data.begin()
-        + static_cast<decltype(obj::persistent_string::data)::difference_type>(index),
-      str->data.end(),
-      "(",
-      ')',
-      buff);
+    behavior::detail::to_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
     return { buff.data(), buff.size() };
   }
 
   native_hash obj::persistent_string_sequence::to_hash() const
   {
-    return str->data.substr(index).to_hash();
+    return hash::ordered(str->data.begin(), str->data.end());
   }
 
   /* behavior::countable */
@@ -72,7 +52,7 @@ namespace jank::runtime
 
   obj::persistent_string_sequence_ptr obj::persistent_string_sequence::fresh_seq() const
   {
-    return jank::make_box<obj::persistent_string_sequence>(str, index);
+    return make_box<obj::persistent_string_sequence>(str, index);
   }
 
   /* behavior::sequenceable */

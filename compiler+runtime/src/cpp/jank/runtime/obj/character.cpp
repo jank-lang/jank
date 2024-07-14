@@ -90,6 +90,6 @@ namespace jank::runtime
 
   native_hash obj::character::to_hash() const
   {
-    return static_cast<native_hash>(get_char_from_repr(data).unwrap());
+    return hash::visit(get_char_from_repr(data).unwrap());
   }
 }

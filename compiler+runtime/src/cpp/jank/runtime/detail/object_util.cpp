@@ -9,7 +9,7 @@ namespace jank::runtime::detail
 
   void to_string(char const ch, fmt::memory_buffer &buff)
   {
-    make_box(ch)->to_string(buff);
+    obj::character{ ch }.to_string(buff);
   }
 
   void to_string(object_ptr const o, fmt::memory_buffer &buff)
@@ -33,6 +33,17 @@ namespace jank::runtime::detail
         }
       },
       o);
+  }
+
+  bool equal(char const lhs, object_ptr const rhs)
+  {
+    if(!rhs || rhs->type != object_type::character)
+    {
+      return false;
+    }
+
+    auto const typed_rhs = expect_object<obj::character>(rhs);
+    return typed_rhs->to_hash() == static_cast<unsigned int>(lhs);
   }
 
   bool equal(object_ptr const lhs, object_ptr const rhs)

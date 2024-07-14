@@ -16,8 +16,8 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(obj::persistent_string_ptr s);
-    static_object(obj::persistent_string_ptr s, size_t i);
+    static_object(obj::persistent_string_ptr const s);
+    static_object(obj::persistent_string_ptr const s, size_t const i);
 
     /* behavior::objectable */
     native_bool equal(object const &) const;
