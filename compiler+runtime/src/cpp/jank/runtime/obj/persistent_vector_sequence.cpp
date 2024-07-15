@@ -18,7 +18,11 @@ namespace jank::runtime
   /* behavior::objectable */
   native_bool obj::persistent_vector_sequence::equal(object const &o) const
   {
-    return detail::equal(o, vec->data.begin(), vec->data.end());
+    return detail::equal(
+      o,
+      vec->data.begin()
+        + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
+      vec->data.end());
   }
 
   void obj::persistent_vector_sequence::to_string(fmt::memory_buffer &buff) const
@@ -47,13 +51,16 @@ namespace jank::runtime
 
   native_hash obj::persistent_vector_sequence::to_hash() const
   {
-    return hash::ordered(vec->data.begin(), vec->data.end());
+    return hash::ordered(
+      vec->data.begin()
+        + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
+      vec->data.end());
   }
 
   /* behavior::countable */
   size_t obj::persistent_vector_sequence::count() const
   {
-    return vec->data.size();
+    return vec->data.size() - index;
   }
 
   /* behavior::seqable */
@@ -64,7 +71,7 @@ namespace jank::runtime
 
   obj::persistent_vector_sequence_ptr obj::persistent_vector_sequence::fresh_seq() const
   {
-    return jank::make_box<obj::persistent_vector_sequence>(vec, index);
+    return make_box<obj::persistent_vector_sequence>(vec, index);
   }
 
   /* behavior::sequenceable */
@@ -83,7 +90,7 @@ namespace jank::runtime
       return nullptr;
     }
 
-    return jank::make_box<obj::persistent_vector_sequence>(vec, n);
+    return make_box<obj::persistent_vector_sequence>(vec, n);
   }
 
   obj::persistent_vector_sequence_ptr obj::persistent_vector_sequence::next_in_place()

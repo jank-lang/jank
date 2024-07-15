@@ -52,7 +52,6 @@ namespace jank
     using const_iterator = const_pointer_type;
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-    using difference_type = std::ptrdiff_t;
 
     static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 

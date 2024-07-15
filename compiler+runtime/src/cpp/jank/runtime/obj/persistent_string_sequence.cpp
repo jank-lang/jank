@@ -18,7 +18,7 @@ namespace jank::runtime
   /* behavior::objectable */
   native_bool obj::persistent_string_sequence::equal(object const &o) const
   {
-    return detail::equal(o, str->data.begin(), str->data.end());
+    return detail::equal(o, str->data.begin() + index, str->data.end());
   }
 
   void obj::persistent_string_sequence::to_string(fmt::memory_buffer &buff) const
@@ -35,7 +35,7 @@ namespace jank::runtime
 
   native_hash obj::persistent_string_sequence::to_hash() const
   {
-    return hash::ordered(str->data.begin(), str->data.end());
+    return hash::ordered(str->data.begin() + index, str->data.end());
   }
 
   /* behavior::countable */
@@ -71,7 +71,7 @@ namespace jank::runtime
       return nullptr;
     }
 
-    return jank::make_box<obj::persistent_string_sequence>(str, n);
+    return make_box<obj::persistent_string_sequence>(str, n);
   }
 
   obj::persistent_string_sequence_ptr obj::persistent_string_sequence::next_in_place()
