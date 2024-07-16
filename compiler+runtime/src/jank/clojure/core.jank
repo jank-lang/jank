@@ -752,15 +752,14 @@
 
 (defn pop!
   ([coll]
-   (native/raw "auto transient_coll = try_object<obj::transient_vector>(~{ coll });
+   (native/raw "auto transient_coll(try_object<obj::transient_vector>(~{ coll }));
                 __value = transient_coll->pop_in_place();")))
 
 (defn disj!
   ([set] set)
   ([set elem]
-   (native/raw "auto typed_set = try_object<obj::transient_set>(~{ set });
-                __value = typed_set->disjoin_in_place(~{ elem });
-               "))
+   (native/raw "auto typed_set(try_object<obj::transient_set>(~{ set }));
+                __value = typed_set->disjoin_in_place(~{ elem });"))
   ([set elem & elems]
     (let [ret (disj! set elem)]
       (if elems
