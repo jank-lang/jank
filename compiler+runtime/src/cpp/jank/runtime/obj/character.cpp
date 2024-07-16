@@ -80,6 +80,7 @@ namespace jank::runtime
 
   void obj::character::to_string(fmt::memory_buffer &buff) const
   {
+    /* TODO: This is actually to_representation, since the string version of \a is just a. */
     fmt::format_to(std::back_inserter(buff), "{}", data);
   }
 
