@@ -43,6 +43,7 @@ file(
 file(
   GLOB_RECURSE third_party_includes
   ${CMAKE_SOURCE_DIR}/third-party/nanobench/include/*
+  ${CMAKE_SOURCE_DIR}/third-party/folly/*
   #${CMAKE_BINARY_DIR}/llvm/tools/cling/include/*
   #${CMAKE_BINARY_DIR}/llvm/tools/clang/include/*
   #${CMAKE_BINARY_DIR}/llvm/include/*
