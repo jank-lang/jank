@@ -34,10 +34,6 @@ project(
 
 set(jank_cxx_standard cxx_std_20)
 
-# TODO: Unify this with LLVM version.
-set(jank_required_compiler_id "Clang")
-set(jank_required_compiler_version "19.0.0")
-
 # We need different flags for linking whole libraries on different OSes.
 # We need to be mindful to wrap each library with ${jank_link_whole_start} and ${jank_link_whole_end}.
 # For example:
@@ -54,19 +50,6 @@ else()
   message(FATAL_ERROR "Unsupported OS: " ${CMAKE_SYSTEM_NAME})
 endif()
 
-if(
-  NOT CMAKE_CXX_COMPILER_ID STREQUAL jank_required_compiler_id
-  OR
-  NOT CMAKE_CXX_COMPILER_VERSION STREQUAL jank_required_compiler_version
-)
-  message(
-    FATAL_ERROR
-    "${jank_required_compiler_id} ${jank_required_compiler_version} is required to build jank, "
-    "but ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} was found. "
-    "Please follow the README.md for build instructions."
-  )
-endif()
-
 set(
   jank_aot_compiler_flags
   -Wall -Wextra -Wpedantic
@@ -79,14 +62,13 @@ set(
   -frtti
   -fexceptions
   $<$<CONFIG:Debug>:-O0>
-  $<$<CONFIG:Release>:-O3;-ffast-math>
+  $<$<CONFIG:Release>:-O2>
 )
 
 set(
   jank_jit_compiler_flags
   # We don't actually want to see any warnings for JIT compiled code.
   -w
-  $<$<CONFIG:Release>:-ffast-math>
 )
 
 # TODO: Remove FMT_HEADER_ONLY once the extern template Clang bug is fixed.
@@ -449,7 +431,7 @@ foreach(dir ${jank_lib_includes})
 endforeach()
 
 # Build a string of all of our AOT compilation flags so we can share them with our incremental PCH.
-set(jank_pch_compile_flags_list ${jank_common_compiler_flags} ${jank_aot_compiler_flags} -w)
+set(jank_pch_compile_flags_list ${jank_common_compiler_flags} -w)
 list(JOIN jank_pch_compile_flags_list " " jank_pch_compile_flags_str)
 
 set(jank_incremental_pch_flag ${CMAKE_BINARY_DIR}/incremental.pch)

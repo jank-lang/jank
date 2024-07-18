@@ -13,21 +13,21 @@
 
 namespace jank::jit
 {
-  static void LLVMErrorHandler(void *UserData, char const *Message, bool GenCrashDiag)
+  static void handle_fatal_llvm_error(void * const user_data,
+                                      char const *message,
+                                      native_bool const gen_crash_diag)
   {
-    auto &Diags = *static_cast<clang::DiagnosticsEngine *>(UserData);
+    auto &diags(*static_cast<clang::DiagnosticsEngine *>(user_data));
+    diags.Report(clang::diag::err_fe_error_backend) << message;
 
-    Diags.Report(clang::diag::err_fe_error_backend) << Message;
-
-    // Run the interrupt handlers to make sure any special cleanups get done, in
-    // particular that we remove files registered with RemoveFileOnSignal.
+    /* Run the interrupt handlers to make sure any special cleanups get done, in
+       particular that we remove files registered with RemoveFileOnSignal. */
     llvm::sys::RunInterruptHandlers();
 
-    // We cannot recover from llvm errors.  When reporting a fatal error, exit
-    // with status 70 to generate crash diagnostics.  For BSD systems this is
-    // defined as an internal software error. Otherwise, exit with status 1.
-
-    exit(GenCrashDiag ? 70 : 1);
+    /* We cannot recover from llvm errors.  When reporting a fatal error, exit
+       with status 70 to generate crash diagnostics.  For BSD systems this is
+       defined as an internal software error. Otherwise, exit with status 1. */
+    std::exit(gen_crash_diag ? 70 : 1);
   }
 
   option<boost::filesystem::path> find_pch()
@@ -91,7 +91,6 @@ namespace jank::jit
 
     auto const include_path(jank_path / "../include");
 
-    /* TODO: Default based on debug/release build. */
     native_persistent_string_view O{ "-O0" };
     switch(optimization_level)
     {
@@ -122,22 +121,22 @@ namespace jank::jit
     {
       args.emplace_back(strdup(flag.c_str()));
     }
-    /* We can override the optimization level. */
     args.emplace_back(strdup(O.data()));
     /* We need to include our special incremental PCH. */
     args.emplace_back("-include-pch");
     args.emplace_back(strdup(pch_path_str.c_str()));
 
-    fmt::println("compiler flags {}", JANK_COMPILER_FLAGS);
+    //fmt::println("compiler flags {}", JANK_COMPILER_FLAGS);
 
-    clang::IncrementalCompilerBuilder CB;
-    CB.SetCompilerArgs(args);
-    auto CI = llvm::cantFail(CB.CreateCpp());
-    llvm::install_fatal_error_handler(LLVMErrorHandler, static_cast<void *>(&CI->getDiagnostics()));
+    clang::IncrementalCompilerBuilder compiler_builder;
+    compiler_builder.SetCompilerArgs(args);
+    auto compiler_instance(llvm::cantFail(compiler_builder.CreateCpp()));
+    llvm::install_fatal_error_handler(handle_fatal_llvm_error,
+                                      static_cast<void *>(&compiler_instance->getDiagnostics()));
 
-    CI->LoadRequestedPlugins();
+    compiler_instance->LoadRequestedPlugins();
 
-    interpreter = llvm::cantFail(clang::Interpreter::create(std::move(CI)));
+    interpreter = llvm::cantFail(clang::Interpreter::create(std::move(compiler_instance)));
   }
 
   processor::~processor()

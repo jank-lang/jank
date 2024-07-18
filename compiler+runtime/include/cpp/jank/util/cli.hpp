@@ -22,15 +22,7 @@ namespace jank::util::cli
 
     /* Compilation. */
     native_transient_string compilation_path{ "classes" };
-#ifdef JANK_RELEASE
-    /* TODO: Make this 0 when we can.
-     * Right now, Clang requires us to have JIT optimizations enabled if jank was
-     * compiled with AOT optimizations. This is unforunate, since JIT -O1 is *significantly*
-     * slower to compile than -O0. Something like 3x slower, based on my experience. */
-    native_integer optimization_level{ 1 };
-#else
-    native_integer optimization_level{ 0 };
-#endif
+    native_integer optimization_level{};
 
     /* Run command. */
     native_transient_string target_file;
