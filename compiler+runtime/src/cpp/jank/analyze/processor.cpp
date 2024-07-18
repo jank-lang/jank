@@ -34,18 +34,18 @@ namespace jank::analyze
       };
     };
     specials = {
-      {       make_box<symbol>("def"),        make_fn(&processor::analyze_def)},
-      {       make_box<symbol>("fn*"),         make_fn(&processor::analyze_fn)},
-      {     make_box<symbol>("recur"),      make_fn(&processor::analyze_recur)},
-      {        make_box<symbol>("do"),         make_fn(&processor::analyze_do)},
-      {      make_box<symbol>("let*"),        make_fn(&processor::analyze_let)},
-      {     make_box<symbol>("loop*"),       make_fn(&processor::analyze_loop)},
-      {        make_box<symbol>("if"),         make_fn(&processor::analyze_if)},
-      {     make_box<symbol>("quote"),      make_fn(&processor::analyze_quote)},
-      {       make_box<symbol>("var"),   make_fn(&processor::analyze_var_call)},
-      {     make_box<symbol>("throw"),      make_fn(&processor::analyze_throw)},
-      {       make_box<symbol>("try"),        make_fn(&processor::analyze_try)},
-      {make_box<symbol>("native/raw"), make_fn(&processor::analyze_native_raw)},
+      {        make_box<symbol>("def"),        make_fn(&processor::analyze_def) },
+      {        make_box<symbol>("fn*"),         make_fn(&processor::analyze_fn) },
+      {      make_box<symbol>("recur"),      make_fn(&processor::analyze_recur) },
+      {         make_box<symbol>("do"),         make_fn(&processor::analyze_do) },
+      {       make_box<symbol>("let*"),        make_fn(&processor::analyze_let) },
+      {      make_box<symbol>("loop*"),       make_fn(&processor::analyze_loop) },
+      {         make_box<symbol>("if"),         make_fn(&processor::analyze_if) },
+      {      make_box<symbol>("quote"),      make_fn(&processor::analyze_quote) },
+      {        make_box<symbol>("var"),   make_fn(&processor::analyze_var_call) },
+      {      make_box<symbol>("throw"),      make_fn(&processor::analyze_throw) },
+      {        make_box<symbol>("try"),        make_fn(&processor::analyze_try) },
+      { make_box<symbol>("native/raw"), make_fn(&processor::analyze_native_raw) },
     };
   }
 
@@ -936,7 +936,7 @@ namespace jank::analyze
     auto const qualified_sym(
       current_frame->lift_var(make_box<runtime::obj::symbol>(o->n->name->name, o->name->name)));
     return make_box<expression>(expr::var_ref<expression>{
-      expression_base{{}, expr_type, current_frame, true},
+      expression_base{ {}, expr_type, current_frame, true },
       qualified_sym,
       o
     });

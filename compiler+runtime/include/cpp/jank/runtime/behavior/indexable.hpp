@@ -12,13 +12,9 @@ namespace jank::runtime::behavior
   template <typename T>
   concept indexable = requires(T * const t) {
     /* Given an index, return the item at that index or throw. */
-    {
-      t->nth(object_ptr{})
-    } -> std::convertible_to<object_ptr>;
+    { t->nth(object_ptr{}) } -> std::convertible_to<object_ptr>;
 
     /* Given an index, return the item at that index or return the fallback. */
-    {
-      t->nth(object_ptr{}, object_ptr{})
-    } -> std::convertible_to<object_ptr>;
+    { t->nth(object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
   };
 }
