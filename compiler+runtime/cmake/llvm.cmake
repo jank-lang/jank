@@ -1,13 +1,9 @@
 # LLVM/Clang default paths
-if (DEFINED llvm_dir)
-  if (NOT DEFINED clang_dir)
-    set(clang_dir ${llvm_dir})
-  endif()
+if (NOT DEFINED llvm_dir)
+  set(llvm_dir "${CMAKE_BINARY_DIR}/llvm-install/usr/local")
 endif()
-if (DEFINED clang_dir)
-  if (NOT DEFINED llvm_dir)
-    set(llvm_dir ${clang_dir})
-  endif()
+if (NOT DEFINED clang_dir)
+  set(clang_dir ${llvm_dir})
 endif()
 
 ## Define supported version of clang and llvm
@@ -18,7 +14,7 @@ set(LLVM_MIN_SUPPORTED 19.0)
 set(LLVM_MAX_SUPPORTED "19.0.x")
 set(LLVM_VERSION_UPPER_BOUND 19.1.0)
 
-set(LLVM_ENABLE_EH YES)
+#set(LLVM_ENABLE_EH YES)
 set(LLVM_REQUIRES_RTTI YES)
 
 ## Set Cmake packages search order

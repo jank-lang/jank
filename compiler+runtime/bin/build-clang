@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# We build Clang with Clang for consistency.
+export CC=clang
+export CXX=clang++
+
+make_j="$(nproc || echo 4)"
+
+while getopts ":hj:" opt; do
+  case "${opt}" in
+    h)
+      echo "Usage ${0} [-j N] [srcdir]"
+      exit 0
+      ;;
+    j)
+      make_j="${OPTARG}"
+      ;;
+    \?)
+      echo "Invalid option: ${OPTARG}" 1>&2
+      exit 1
+      ;;
+    :)
+      echo "Invalid option: ${OPTARG} requires an argument" 1>&2
+      exit 1
+      ;;
+    *)
+      echo "Unexpected input: ${OPTARG}" 1>&2
+      exit 1
+      ;;
+  esac
+done
+shift $((OPTIND -1))
+
+echo "Using ${make_j} cores to build"
+
+srcdir="${PWD}"
+
+llvm_url="https://github.com/jank-lang/llvm-project.git"
+llvm_branch="main"
+
+function prepare()
+{
+  if [[ ! -d "${srcdir}/llvm" ]];
+  then
+    git clone -b "${llvm_branch}" --shallow-submodules --single-branch "${llvm_url}" "${srcdir}"/llvm
+  fi
+}
+
+function build()
+{
+  mkdir -p "${srcdir}/llvm-build"
+  cd "${srcdir}/llvm-build"
+
+  cmake -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_CXX_STANDARD=20 \
+        -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" \
+        -DLLVM_TARGETS_TO_BUILD="host" \
+        -DLLVM_ENABLE_EH=OFF \
+        -DLLVM_ENABLE_RTTI=OFF \
+        -DLLVM_INCLUDE_BENCHMARKS=OFF \
+        -DLLVM_INCLUDE_EXAMPLES=OFF \
+        -DLLVM_INCLUDE_TESTS=OFF \
+        -G "Unix Makefiles" \
+        ../llvm/llvm
+
+  DESTDIR="${srcdir}/llvm-install" make clang clang-repl clang-cpp clang-tidy install -j"${make_j}"
+}
+
+prepare
+build
+
+echo
+echo "Clang/LLVM successfully compiled. You can now build jank."

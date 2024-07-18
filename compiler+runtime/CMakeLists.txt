@@ -78,12 +78,15 @@ set(
   -fno-common
   -frtti
   -fexceptions
+  $<$<CONFIG:Debug>:-O0>
+  $<$<CONFIG:Release>:-O3;-ffast-math>
 )
 
 set(
   jank_jit_compiler_flags
   # We don't actually want to see any warnings for JIT compiled code.
   -w
+  $<$<CONFIG:Release>:-ffast-math>
 )
 
 # TODO: Remove FMT_HEADER_ONLY once the extern template Clang bug is fixed.
@@ -95,8 +98,6 @@ set(
   #-DLIBASSERT_USE_MAGIC_ENUM=1
   #-DLIBASSERT_USE_FMT=1
   #-DLIBASSERT_STATIC_DEFINE=1
-  $<$<CONFIG:Debug>:-O0>
-  $<$<CONFIG:Release>:-O3;-ffast-math>
   #-stdlib=libc++
 )
 
@@ -238,24 +239,17 @@ target_link_libraries(
   CLI11::CLI11
   #libassert::assert
   readline
-  #clang-cpp
   clangInterpreter
-  #clang-repl
-  #${jank_llvm_libs}
-  #z
-  #lzma
-  #ncursesw
   Boost::boost
 )
 
 jank_hook_llvm(jank_lib)
 
 # Build a string of all of our JIT compilation flags so we can load them up in the runtime.
-# This is also used for building our incremental PCH.
-set(jank_lib_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags})
-list(JOIN jank_lib_compile_flags_list " " jank_lib_compile_flags_str)
+set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags})
+list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str)
 
-target_compile_options(jank_lib PUBLIC -DJANK_COMPILER_FLAGS="${jank_lib_compile_flags_str}")
+target_compile_options(jank_lib PUBLIC -DJANK_COMPILER_FLAGS="${jank_jit_compile_flags_str}")
 target_link_options(jank_lib PRIVATE ${jank_linker_flags})
 
 #set_target_properties(jank_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
@@ -454,11 +448,15 @@ foreach(dir ${jank_lib_includes})
   endif()
 endforeach()
 
+# Build a string of all of our AOT compilation flags so we can share them with our incremental PCH.
+set(jank_pch_compile_flags_list ${jank_common_compiler_flags} ${jank_aot_compiler_flags} -w)
+list(JOIN jank_pch_compile_flags_list " " jank_pch_compile_flags_str)
+
 set(jank_incremental_pch_flag ${CMAKE_BINARY_DIR}/incremental.pch)
 add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/bin/build-pch
   OUTPUT ${jank_incremental_pch_flag}
-  COMMAND "${CMAKE_SOURCE_DIR}/bin/build-pch" "${CLANG_INSTALL_PREFIX}" "${CMAKE_SOURCE_DIR}/include" "${jank_incremental_pch_flag}" "${jank_lib_compile_flags_str}" "${jank_lib_includes_str}"
+  COMMAND "${CMAKE_SOURCE_DIR}/bin/build-pch" "${CLANG_INSTALL_PREFIX}" "${CMAKE_SOURCE_DIR}/include" "${jank_incremental_pch_flag}" "${jank_pch_compile_flags_str}" "${jank_lib_includes_str}"
 )
 add_custom_target(
   jank_incremental_pch

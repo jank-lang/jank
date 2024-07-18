@@ -29,12 +29,12 @@ runs:
           ~/.cache/vcpkg
           ${{ github.workspace }}/build/vcpkg_installed
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('vcpkg.json') }}
-    - name: Cache Cling
+    - name: Cache Clang/LLVM
       uses: actions/cache@v3
       with:
         path: |
           ${{ github.workspace }}/build
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('compiler+runtime/bin/build-cling') }}
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
     - name: Compile and test
       shell: bash
       working-directory: ${{ github.workspace }}/compiler+runtime
