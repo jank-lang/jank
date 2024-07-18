@@ -2,8 +2,6 @@
 
 set -euo pipefail
 
-here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 clang_prefix="${1}"
 include="${2}"
 output="${3:-${include}/cpp/jank/prelude.hpp.pch}"
@@ -12,9 +10,8 @@ shift
 shift
 flags=$*
 
-# shellcheck disable=SC2086
-"${clang_prefix}"/bin/clang++ \
-        ${flags[@]} \
+# shellcheck disable=SC2086,SC2068
+"${clang_prefix}"/bin/clang++ ${flags[@]} \
         -Xclang -fincremental-extensions \
         -Xclang -emit-pch \
         -x c++-header \
