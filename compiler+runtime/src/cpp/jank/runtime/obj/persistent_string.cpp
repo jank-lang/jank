@@ -100,4 +100,22 @@ namespace jank::runtime
   {
     return data.size();
   }
+
+  obj::persistent_string_sequence_ptr obj::persistent_string::seq() const
+  {
+    if(data.empty())
+    {
+      return nullptr;
+    }
+    return make_box<obj::persistent_string_sequence>(const_cast<obj::persistent_string *>(this));
+  }
+
+  obj::persistent_string_sequence_ptr obj::persistent_string::fresh_seq() const
+  {
+    if(data.empty())
+    {
+      return nullptr;
+    }
+    return make_box<obj::persistent_string_sequence>(const_cast<obj::persistent_string *>(this));
+  }
 }

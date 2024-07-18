@@ -145,6 +145,11 @@ namespace jank::hash
     return fmix(h1, 2 * length);
   }
 
+  uint32_t visit(char const ch)
+  {
+    return static_cast<uint32_t>(ch);
+  }
+
   uint32_t visit(runtime::object const * const o)
   {
     assert(o);

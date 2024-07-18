@@ -12,6 +12,7 @@
 
 namespace jank::runtime::detail
 {
+  native_bool equal(char const lhs, object_ptr const rhs);
   native_bool equal(object_ptr const lhs, object_ptr const rhs);
 
   struct object_ptr_equal

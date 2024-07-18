@@ -7,6 +7,11 @@ namespace jank::runtime::detail
     return visit_object([](auto const typed_o) { return typed_o->to_string(); }, o);
   }
 
+  void to_string(char const ch, fmt::memory_buffer &buff)
+  {
+    obj::character{ ch }.to_string(buff);
+  }
+
   void to_string(object_ptr const o, fmt::memory_buffer &buff)
   {
     visit_object([&](auto const typed_o) { typed_o->to_string(buff); }, o);
@@ -30,7 +35,18 @@ namespace jank::runtime::detail
       o);
   }
 
-  bool equal(object_ptr const lhs, object_ptr const rhs)
+  native_bool equal(char const lhs, object_ptr const rhs)
+  {
+    if(!rhs || rhs->type != object_type::character)
+    {
+      return false;
+    }
+
+    auto const typed_rhs = expect_object<obj::character>(rhs);
+    return typed_rhs->to_hash() == static_cast<native_hash>(lhs);
+  }
+
+  native_bool equal(object_ptr const lhs, object_ptr const rhs)
   {
     if(!lhs)
     {
@@ -59,7 +75,7 @@ namespace std
   }
 
   // NOLINTNEXTLINE(bugprone-exception-escape): TODO: Sort this out.
-  bool equal_to<jank::runtime::object_ptr>::operator()(
+  jank::native_bool equal_to<jank::runtime::object_ptr>::operator()(
     jank::runtime::object_ptr const lhs,
     jank::runtime::object_ptr const rhs) const noexcept
   {

@@ -29,6 +29,7 @@ namespace jank::hash
   uint32_t string(native_persistent_string_view const &input);
 
   uint32_t visit(runtime::object const * const o);
+  uint32_t visit(char const ch);
 
   uint32_t ordered(runtime::object const * const sequence);
   uint32_t unordered(runtime::object const * const sequence);
