@@ -36,9 +36,9 @@ cd compiler+runtime
 mkdir -p build
 cd build
 export CC=clang; export CXX=clang++;
-../bin/build-cling
+../bin/build-clang
 cd -
-export CC=$PWD/build/cling-build/bin/clang; export CXX=$PWD/build/cling-build/bin/clang++;
+export CC=$PWD/build/llvm-install/usr/local/bin/clang; export CXX=$PWD/build/llvm-install/usr/local/bin/clang++
 ```
 
 At this point, you're ready to build jank.
@@ -50,7 +50,7 @@ At this point, you're ready to build jank.
 A typical release build just needs the following:
 
 ```bash
-./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_cling_build_dir=build/cling-build
+./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release
 ./bin/compile
 ```
 
@@ -58,7 +58,7 @@ A typical release build just needs the following:
 To make a debug build, specify the build type when configuring.
 
 ```bash
-./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_cling_build_dir=build/cling-build -Djank_tests=on
+./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_tests=on
 ./bin/compile
 
 # When developing, continuously run the tests locally.
@@ -71,6 +71,6 @@ Note that this includes a lot of header files, which are necessary for jank's
 JIT compilation.
 
 ```bash
-./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_cling_build_dir=build/cling-build
+./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release
 ./bin/install
 ```

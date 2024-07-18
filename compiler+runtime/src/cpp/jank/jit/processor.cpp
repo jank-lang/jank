@@ -128,7 +128,7 @@ namespace jank::jit
     args.emplace_back("-include-pch");
     args.emplace_back(strdup(pch_path_str.c_str()));
 
-    //fmt::println("compiler flags {}", JANK_COMPILER_FLAGS);
+    fmt::println("compiler flags {}", JANK_COMPILER_FLAGS);
 
     clang::IncrementalCompilerBuilder CB;
     CB.SetCompilerArgs(args);
