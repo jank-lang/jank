@@ -196,7 +196,6 @@ try
     return parse_result.expect_err();
   }
   auto const &opts(parse_result.expect_ok());
-  //llvm::cl::ParseCommandLineOptions(argc, argv);
 
   if(opts.gc_incremental)
   {
