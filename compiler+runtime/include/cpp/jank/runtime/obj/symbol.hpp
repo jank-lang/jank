@@ -29,14 +29,20 @@ namespace jank::runtime
     static_object &operator=(static_object const &) = default;
     static_object &operator=(static_object &&) = default;
 
-    /* behavior::objectable */
+    /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
     native_hash to_hash() const;
 
-    /* behavior::objectable extended */
+    /* behavior::object_like extended */
     native_bool equal(static_object const &) const;
+
+    /* behavior::comparable */
+    native_integer compare(object const &) const;
+
+    /* behavior::comparable extended */
+    native_integer compare(static_object const &) const;
 
     /* behavior::metadatable */
     native_box<static_object> with_meta(object_ptr m) const;

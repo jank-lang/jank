@@ -5,18 +5,18 @@
 namespace jank::runtime
 {
   template <>
-  struct static_object<object_type::transient_hash_map> : gc
+  struct static_object<object_type::transient_sorted_map> : gc
   {
     static constexpr bool pointer_free{ false };
 
-    using value_type = detail::native_transient_hash_map;
-    using persistent_type = static_object<object_type::persistent_hash_map>;
+    using value_type = detail::native_transient_sorted_map;
+    using persistent_type = static_object<object_type::persistent_sorted_map>;
 
     static_object() = default;
     static_object(static_object &&) noexcept = default;
     static_object(static_object const &) = default;
-    static_object(detail::native_persistent_hash_map const &d);
-    static_object(detail::native_persistent_hash_map &&d);
+    static_object(detail::native_persistent_sorted_map const &d);
+    static_object(detail::native_persistent_sorted_map &&d);
     static_object(value_type &&d);
 
     static native_box<static_object> empty()
@@ -55,7 +55,7 @@ namespace jank::runtime
 
     void assert_active() const;
 
-    object base{ object_type::transient_hash_map };
+    object base{ object_type::transient_sorted_map };
     value_type data;
     mutable native_hash hash{};
     native_bool active{ true };
@@ -63,7 +63,7 @@ namespace jank::runtime
 
   namespace obj
   {
-    using transient_hash_map = static_object<object_type::transient_hash_map>;
-    using transient_hash_map_ptr = native_box<transient_hash_map>;
+    using transient_sorted_map = static_object<object_type::transient_sorted_map>;
+    using transient_sorted_map_ptr = native_box<transient_sorted_map>;
   }
 }

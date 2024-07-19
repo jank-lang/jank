@@ -29,6 +29,16 @@ namespace jank::runtime
     return 0;
   }
 
+  native_integer obj::nil::compare(object const &o) const
+  {
+    return (o.type == object_type::nil ? 0 : -1);
+  }
+
+  native_integer obj::nil::compare(obj::nil const &) const
+  {
+    return 0;
+  }
+
   object_ptr obj::nil::get(object_ptr const)
   {
     return &base;

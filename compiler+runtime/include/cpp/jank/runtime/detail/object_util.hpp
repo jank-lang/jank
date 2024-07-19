@@ -5,11 +5,11 @@
 
 namespace jank::runtime::detail
 {
-  native_persistent_string to_string(object_ptr const o);
+  native_persistent_string to_string(object const *o);
   void to_string(char const ch, fmt::memory_buffer &buff);
-  native_real to_real(object_ptr const o);
   void to_string(object_ptr const o, fmt::memory_buffer &buff);
   native_bool equal(object_ptr const lhs, object_ptr const rhs);
+  native_real to_real(object_ptr const o);
 
   template <typename T>
   struct object_type_to_enum;
@@ -124,7 +124,7 @@ namespace jank
   }
 
   template <typename T>
-  requires runtime::behavior::objectable<T>
+  requires runtime::behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(T * const d)
   {
@@ -132,7 +132,7 @@ namespace jank
   }
 
   template <typename T>
-  requires runtime::behavior::objectable<T>
+  requires runtime::behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(T const * const d)
   {
@@ -140,7 +140,7 @@ namespace jank
   }
 
   template <typename T>
-  requires runtime::behavior::objectable<T>
+  requires runtime::behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(native_box<T> const &d)
   {

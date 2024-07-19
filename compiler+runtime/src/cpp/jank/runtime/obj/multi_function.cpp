@@ -234,7 +234,7 @@ namespace jank::runtime
 
     prefer_table = prefer_table->assoc(
       x,
-      runtime::conj(runtime::get(prefer_table, x, persistent_set::empty()), y));
+      runtime::conj(runtime::get(prefer_table, x, persistent_hash_set::empty()), y));
     reset_cache();
     return this;
   }
@@ -244,7 +244,7 @@ namespace jank::runtime
                                                 object_ptr const y) const
   {
     auto const x_prefs(prefer_table->get(x));
-    if(x_prefs != obj::nil::nil_const() && expect_object<obj::persistent_set>(x_prefs)->contains(y))
+    if(x_prefs != obj::nil::nil_const() && expect_object<obj::persistent_hash_set>(x_prefs)->contains(y))
     {
       return true;
     }

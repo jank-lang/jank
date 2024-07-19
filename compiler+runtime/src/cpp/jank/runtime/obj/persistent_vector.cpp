@@ -76,6 +76,39 @@ namespace jank::runtime
     return hash = hash::ordered(data.begin(), data.end());
   }
 
+  native_integer obj::persistent_vector::compare(object const &o) const
+  {
+    return visit_type<obj::persistent_vector>(
+      [this](auto const typed_o) { return compare(*typed_o); },
+      &o);
+  }
+
+  native_integer obj::persistent_vector::compare(obj::persistent_vector const &v) const
+  {
+    auto const size(data.size());
+    auto const v_size(v.data.size());
+
+    if(size < v_size)
+    {
+      return -1;
+    }
+    if(size > v_size)
+    {
+      return 1;
+    }
+
+    for(size_t i{}; i < size; ++i)
+    {
+      auto const res(runtime::compare(data[i], v.data[i]));
+      if(res != 0)
+      {
+        return res;
+      }
+    }
+
+    return 0;
+  }
+
   obj::persistent_vector_sequence_ptr obj::persistent_vector::seq() const
   {
     if(data.empty())

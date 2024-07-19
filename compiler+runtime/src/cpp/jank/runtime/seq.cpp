@@ -283,9 +283,9 @@ namespace jank::runtime
     {
       return s;
     }
-    else if(s->type == object_type::persistent_set)
+    else if(s->type == object_type::persistent_hash_set)
     {
-      auto const set(expect_object<obj::persistent_set>(s));
+      auto const set(expect_object<obj::persistent_hash_set>(s));
       return set->disj(o);
     }
     else
@@ -492,7 +492,7 @@ namespace jank::runtime
         {
           return typed_s->contains(key);
         }
-        if constexpr(std::same_as<S, obj::persistent_set>)
+        if constexpr(std::same_as<S, obj::persistent_hash_set>)
         {
           return typed_s->contains(key);
         }

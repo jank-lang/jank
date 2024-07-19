@@ -3,18 +3,18 @@
 namespace jank::runtime
 {
   template <>
-  struct static_object<object_type::transient_set> : gc
+  struct static_object<object_type::transient_hash_set> : gc
   {
     static constexpr bool pointer_free{ false };
 
-    using value_type = detail::native_transient_set;
-    using persistent_type = static_object<object_type::persistent_set>;
+    using value_type = detail::native_transient_hash_set;
+    using persistent_type = static_object<object_type::persistent_hash_set>;
 
     static_object() = default;
     static_object(static_object &&) noexcept = default;
     static_object(static_object const &) = default;
-    static_object(detail::native_persistent_set const &d);
-    static_object(detail::native_persistent_set &&d);
+    static_object(detail::native_persistent_hash_set const &d);
+    static_object(detail::native_persistent_hash_set &&d);
     static_object(value_type &&d);
 
     static native_box<static_object> empty()
@@ -22,7 +22,7 @@ namespace jank::runtime
       return make_box<static_object>();
     }
 
-    /* behavior::objectable */
+    /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
@@ -51,7 +51,7 @@ namespace jank::runtime
 
     void assert_active() const;
 
-    object base{ object_type::transient_set };
+    object base{ object_type::transient_hash_set };
     value_type data;
     mutable native_hash hash{};
     native_bool active{ true };
@@ -59,7 +59,7 @@ namespace jank::runtime
 
   namespace obj
   {
-    using transient_set = static_object<object_type::transient_set>;
-    using transient_set_ptr = native_box<transient_set>;
+    using transient_hash_set = static_object<object_type::transient_hash_set>;
+    using transient_hash_set_ptr = native_box<transient_hash_set>;
   }
 }

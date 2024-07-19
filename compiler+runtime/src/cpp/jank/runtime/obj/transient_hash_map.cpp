@@ -139,24 +139,12 @@ namespace jank::runtime
 
   object_ptr obj::transient_hash_map::call(object_ptr const o)
   {
-    assert_active();
-    auto const found(data.find(o));
-    if(!found)
-    {
-      return obj::nil::nil_const();
-    }
-    return *found;
+    return get(o);
   }
 
   object_ptr obj::transient_hash_map::call(object_ptr const o, object_ptr const fallback)
   {
-    assert_active();
-    auto const found(data.find(o));
-    if(!found)
-    {
-      return fallback;
-    }
-    return *found;
+    return get(o, fallback);
   }
 
   void obj::transient_hash_map::assert_active() const

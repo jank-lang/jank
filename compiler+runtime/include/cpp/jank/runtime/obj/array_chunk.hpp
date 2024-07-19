@@ -14,7 +14,7 @@ namespace jank::runtime
     static_object(native_vector<object_ptr> const &buffer, size_t offset);
     static_object(native_vector<object_ptr> &&buffer, size_t offset);
 
-    /* behavior::objectable */
+    /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;

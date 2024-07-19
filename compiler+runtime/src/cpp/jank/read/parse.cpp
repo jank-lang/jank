@@ -4,7 +4,7 @@
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
-#include <jank/runtime/obj/persistent_set.hpp>
+#include <jank/runtime/obj/persistent_hash_set.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
@@ -476,7 +476,7 @@ namespace jank::read::parse
       .expect_ok();
     util::scope_exit const finally{ [&]() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
-    runtime::detail::native_transient_set ret;
+    runtime::detail::native_transient_hash_set ret;
     for(auto it(begin()); it != end(); ++it)
     {
       if(it.latest.unwrap().is_err())
@@ -491,7 +491,7 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
-    return object_source_info{ make_box<runtime::obj::persistent_set>(std::move(ret).persistent()),
+    return object_source_info{ make_box<runtime::obj::persistent_hash_set>(std::move(ret).persistent()),
                                start_token,
                                latest_token };
   }
@@ -910,7 +910,7 @@ namespace jank::read::parse
                 runtime::conj(expanded.expect_ok(),
                               make_box<runtime::obj::symbol>("clojure.core/concat"))));
           }
-          if constexpr(std::same_as<T, runtime::obj::persistent_set>)
+          if constexpr(std::same_as<T, runtime::obj::persistent_hash_set>)
           {
             return err("nyi: set");
           }

@@ -59,6 +59,24 @@ namespace jank::runtime
     return data ? 1231 : 1237;
   }
 
+  native_integer obj::boolean::compare(object const &o) const
+  {
+    return visit_number_like(
+      [this](auto const typed_o) -> native_integer {
+        return (data > typed_o->data) - (data < typed_o->data);
+      },
+      [&]() -> native_integer {
+        throw std::runtime_error{ fmt::format("not comparable: {}",
+                                              runtime::detail::to_string(&o)) };
+      },
+      &o);
+  }
+
+  native_integer obj::boolean::compare(obj::boolean const &o) const
+  {
+    return (data > o.data) - (data < o.data);
+  }
+
   /***** integer *****/
   obj::integer::static_object(native_integer const d)
     : data{ d }
@@ -89,6 +107,24 @@ namespace jank::runtime
   native_hash obj::integer::to_hash() const
   {
     return hash::integer(data);
+  }
+
+  native_integer obj::integer::compare(object const &o) const
+  {
+    return visit_number_like(
+      [this](auto const typed_o) -> native_integer {
+        return (data > typed_o->data) - (data < typed_o->data);
+      },
+      [&]() -> native_integer {
+        throw std::runtime_error{ fmt::format("not comparable: {}",
+                                              runtime::detail::to_string(&o)) };
+      },
+      &o);
+  }
+
+  native_integer obj::integer::compare(obj::integer const &o) const
+  {
+    return (data > o.data) - (data < o.data);
   }
 
   native_integer obj::integer::to_integer() const
@@ -132,6 +168,24 @@ namespace jank::runtime
   native_hash obj::real::to_hash() const
   {
     return hash::real(data);
+  }
+
+  native_integer obj::real::compare(object const &o) const
+  {
+    return visit_number_like(
+      [this](auto const typed_o) -> native_integer {
+        return (data > typed_o->data) - (data < typed_o->data);
+      },
+      [&]() -> native_integer {
+        throw std::runtime_error{ fmt::format("not comparable: {}",
+                                              runtime::detail::to_string(&o)) };
+      },
+      &o);
+  }
+
+  native_integer obj::real::compare(obj::real const &o) const
+  {
+    return (data > o.data) - (data < o.data);
   }
 
   native_integer obj::real::to_integer() const

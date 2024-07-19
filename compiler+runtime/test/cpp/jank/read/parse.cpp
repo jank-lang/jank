@@ -786,7 +786,7 @@ namespace jank::read::parse
           r.expect_ok().unwrap().ptr,
           make_box<runtime::obj::persistent_list>(std::in_place,
                                                   make_box<runtime::obj::symbol>("str"),
-                                                  runtime::obj::persistent_set::empty())));
+                                                  runtime::obj::persistent_hash_set::empty())));
         CHECK(runtime::detail::equal(
           runtime::meta(
             runtime::expect_object<runtime::obj::persistent_list>(r.expect_ok().unwrap().ptr)
@@ -863,7 +863,7 @@ namespace jank::read::parse
           processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
           CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       runtime::obj::persistent_set::empty()));
+                                       runtime::obj::persistent_hash_set::empty()));
         }
 
         SUBCASE("Non-empty")
@@ -873,7 +873,7 @@ namespace jank::read::parse
           auto const r(p.next());
           CHECK(runtime::detail::equal(
             r.expect_ok().unwrap().ptr,
-            make_box<runtime::obj::persistent_set>(std::in_place, make_box(1))));
+            make_box<runtime::obj::persistent_hash_set>(std::in_place, make_box(1))));
         }
 
         SUBCASE("Nested")
@@ -883,10 +883,10 @@ namespace jank::read::parse
           auto const r(p.next());
           CHECK(runtime::detail::equal(
             r.expect_ok().unwrap().ptr,
-            make_box<runtime::obj::persistent_set>(
+            make_box<runtime::obj::persistent_hash_set>(
               std::in_place,
               make_box(1),
-              make_box<runtime::obj::persistent_set>(std::in_place, make_box(2)))));
+              make_box<runtime::obj::persistent_hash_set>(std::in_place, make_box(2)))));
         }
       }
 
@@ -907,7 +907,7 @@ namespace jank::read::parse
           auto const r(p.next());
           CHECK(runtime::detail::equal(
             r.expect_ok().unwrap().ptr,
-            make_box<runtime::obj::persistent_set>(std::in_place, make_box(2))));
+            make_box<runtime::obj::persistent_hash_set>(std::in_place, make_box(2))));
         }
 
         SUBCASE("Adjacent")
@@ -1010,7 +1010,7 @@ namespace jank::read::parse
           auto const r(p.next());
           CHECK(runtime::detail::equal(
             r.expect_ok().unwrap().ptr,
-            make_box<runtime::obj::persistent_set>(std::in_place, make_box(1))));
+            make_box<runtime::obj::persistent_hash_set>(std::in_place, make_box(1))));
         }
 
         SUBCASE("Splice")
@@ -1072,7 +1072,7 @@ namespace jank::read::parse
             processor p{ lp.begin(), lp.end() };
             auto const r(p.next());
             CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                         make_box<runtime::obj::persistent_set>(std::in_place,
+                                         make_box<runtime::obj::persistent_hash_set>(std::in_place,
                                                                                 make_box(0),
                                                                                 make_box(1),
                                                                                 make_box(2))));

@@ -26,13 +26,13 @@ namespace jank::runtime
                   native_bool dynamic,
                   native_bool thread_bound);
 
-    /* behavior::objectable */
+    /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
     native_hash to_hash() const;
 
-    /* behavior::objectable extended */
+    /* behavior::object_like extended */
     native_bool equal(static_object const &) const;
 
     /* behavior::metadatable */
@@ -83,7 +83,7 @@ namespace jank::runtime
 
     static_object(object_ptr value, std::thread::id id);
 
-    /* behavior::objectable */
+    /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
@@ -109,7 +109,7 @@ namespace jank::runtime
 
     static_object(var_ptr var);
 
-    /* behavior::objectable */
+    /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;

@@ -1321,7 +1321,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_set(runtime::obj::persistent_set_ptr const &o,
+  processor::analyze_set(runtime::obj::persistent_hash_set_ptr const &o,
                          local_frame_ptr &current_frame,
                          expression_type const expr_type,
                          option<expr::function_context_ptr> const &fn_ctx,
@@ -1530,7 +1530,7 @@ namespace jank::analyze
         {
           return analyze_map(typed_o, current_frame, expr_type, fn_ctx, needs_box);
         }
-        else if constexpr(std::same_as<T, runtime::obj::persistent_set>)
+        else if constexpr(std::same_as<T, runtime::obj::persistent_hash_set>)
         {
           return analyze_set(typed_o, current_frame, expr_type, fn_ctx, needs_box);
         }

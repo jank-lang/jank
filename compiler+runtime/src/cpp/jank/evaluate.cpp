@@ -253,7 +253,7 @@ namespace jank::evaluate
               }
           }
         }
-        else if constexpr(std::same_as<T, runtime::obj::persistent_set>
+        else if constexpr(std::same_as<T, runtime::obj::persistent_hash_set>
                           || std::same_as<T, runtime::obj::transient_vector>)
         {
           auto const s(expr.arg_exprs.size());
@@ -268,7 +268,7 @@ namespace jank::evaluate
         else if constexpr(std::same_as<T, runtime::obj::keyword>
                           || std::same_as<T, runtime::obj::persistent_hash_map>
                           || std::same_as<T, runtime::obj::persistent_array_map>
-                          || std::same_as<T, runtime::obj::transient_set>)
+                          || std::same_as<T, runtime::obj::transient_hash_set>)
         {
           auto const s(expr.arg_exprs.size());
           switch(s)
@@ -377,19 +377,19 @@ namespace jank::evaluate
                            jit::processor const &jit_prc,
                            analyze::expr::set<analyze::expression> const &expr)
   {
-    runtime::detail::native_transient_set ret;
+    runtime::detail::native_transient_hash_set ret;
     for(auto const &e : expr.data_exprs)
     {
       ret.insert(eval(rt_ctx, jit_prc, e));
     }
     if(expr.meta.is_some())
     {
-      return make_box<runtime::obj::persistent_set>(expr.meta.unwrap(),
+      return make_box<runtime::obj::persistent_hash_set>(expr.meta.unwrap(),
                                                     std::move(ret).persistent());
     }
     else
     {
-      return make_box<runtime::obj::persistent_set>(std::move(ret).persistent());
+      return make_box<runtime::obj::persistent_hash_set>(std::move(ret).persistent());
     }
   }
 

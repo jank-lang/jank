@@ -24,7 +24,7 @@ namespace jank::runtime::obj::detail
       assert(begin != end);
     }
 
-    /* behavior::objectable */
+    /* behavior::object_like */
     native_bool equal(object const &o) const
     {
       return visit_object(

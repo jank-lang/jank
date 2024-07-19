@@ -66,14 +66,14 @@ namespace jank::detail
   }
 
   template <typename T>
-  requires runtime::behavior::objectable<T>
+  requires runtime::behavior::object_like<T>
   runtime::object_ptr to_runtime_data(native_box<T> const &m)
   {
     return m;
   }
 
   template <typename T>
-  requires runtime::behavior::objectable<T>
+  requires runtime::behavior::object_like<T>
   runtime::object_ptr to_runtime_data(T const * const m)
   {
     return m;

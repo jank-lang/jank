@@ -45,6 +45,18 @@ namespace jank::runtime
     return data.to_hash();
   }
 
+  native_integer obj::persistent_string::compare(object const &o) const
+  {
+    return visit_type<obj::persistent_string>(
+      [this](auto const typed_o) { return compare(*typed_o); },
+      &o);
+  }
+
+  native_integer obj::persistent_string::compare(obj::persistent_string const &s) const
+  {
+    return data.compare(s.data);
+  }
+
   result<obj::persistent_string_ptr, native_persistent_string>
   obj::persistent_string::substring(native_integer start) const
   {

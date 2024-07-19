@@ -46,6 +46,16 @@ namespace jank::runtime
     return sym.to_hash() + 0x9e3779b9;
   }
 
+  native_integer obj::keyword::compare(object const &o) const
+  {
+    return visit_type<obj::keyword>([this](auto const typed_o) { return compare(*typed_o); }, &o);
+  }
+
+  native_integer obj::keyword::compare(obj::keyword const &s) const
+  {
+    return sym.compare(s.sym);
+  }
+
   native_persistent_string const &obj::keyword::get_name() const
   {
     return sym.name;

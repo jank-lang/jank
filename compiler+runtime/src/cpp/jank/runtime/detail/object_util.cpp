@@ -2,7 +2,7 @@
 
 namespace jank::runtime::detail
 {
-  native_persistent_string to_string(object_ptr const o)
+  native_persistent_string to_string(object const * const o)
   {
     return visit_object([](auto const typed_o) { return typed_o->to_string(); }, o);
   }

@@ -69,6 +69,37 @@ namespace jank::runtime
     return ns == s.ns && name == s.name;
   }
 
+  native_integer obj::symbol::compare(object const &o) const
+  {
+    return visit_type<obj::symbol>([this](auto const typed_o) { return compare(*typed_o); }, &o);
+  }
+
+  native_integer obj::symbol::compare(obj::symbol const &s) const
+  {
+    if(equal(s))
+    {
+      return 0;
+    }
+    if(ns.empty() && !s.ns.empty())
+    {
+      return -1;
+    }
+    if(!ns.empty())
+    {
+      if(s.ns.empty())
+      {
+        return 1;
+      }
+
+      auto const ns_compare(ns.compare(s.ns));
+      if(ns_compare != 0)
+      {
+        return ns_compare;
+      }
+    }
+    return name.compare(s.name);
+  }
+
   void to_string_impl(native_persistent_string const &ns,
                       native_persistent_string const &name,
                       fmt::memory_buffer &buff)

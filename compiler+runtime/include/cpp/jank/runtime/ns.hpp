@@ -33,7 +33,7 @@ namespace jank::runtime
 
     obj::persistent_hash_map_ptr get_mappings() const;
 
-    /* behavior::objectable */
+    /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;

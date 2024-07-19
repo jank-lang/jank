@@ -1,20 +1,20 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/persistent_set_sequence.hpp>
+#include <jank/runtime/obj/persistent_hash_set_sequence.hpp>
 
 namespace jank::runtime
 {
   namespace obj
   {
-    using transient_set = static_object<object_type::transient_set>;
-    using transient_set_ptr = native_box<transient_set>;
+    using transient_hash_set = static_object<object_type::transient_hash_set>;
+    using transient_hash_set_ptr = native_box<transient_hash_set>;
   }
 
   template <>
-  struct static_object<object_type::persistent_set> : gc
+  struct static_object<object_type::persistent_hash_set> : gc
   {
-    using value_type = runtime::detail::native_persistent_set;
+    using value_type = runtime::detail::native_persistent_hash_set;
 
     static constexpr native_bool pointer_free{ false };
 
@@ -46,7 +46,7 @@ namespace jank::runtime
 
     static native_box<static_object> create_from_seq(object_ptr const seq);
 
-    /* behavior::objectable */
+    /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
@@ -56,8 +56,8 @@ namespace jank::runtime
     native_box<static_object> with_meta(object_ptr m) const;
 
     /* behavior::seqable */
-    obj::persistent_set_sequence_ptr seq() const;
-    obj::persistent_set_sequence_ptr fresh_seq() const;
+    obj::persistent_hash_set_sequence_ptr seq() const;
+    obj::persistent_hash_set_sequence_ptr fresh_seq() const;
 
     /* behavior::countable */
     size_t count() const;
@@ -69,16 +69,16 @@ namespace jank::runtime
     object_ptr call(object_ptr);
 
     /* behavior::transientable */
-    obj::transient_set_ptr to_transient() const;
+    obj::transient_hash_set_ptr to_transient() const;
 
     native_bool contains(object_ptr o) const;
     native_box<static_object> disj(object_ptr o) const;
 
-    object base{ object_type::persistent_set };
+    object base{ object_type::persistent_hash_set };
     value_type data;
     option<object_ptr> meta;
   };
 
-  using persistent_set = static_object<object_type::persistent_set>;
-  using persistent_set_ptr = native_box<persistent_set>;
+  using persistent_hash_set = static_object<object_type::persistent_hash_set>;
+  using persistent_hash_set_ptr = native_box<persistent_hash_set>;
 }

@@ -12,14 +12,17 @@
 #include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
-#include <jank/runtime/obj/persistent_set.hpp>
+#include <jank/runtime/obj/persistent_hash_set.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/persistent_array_map_sequence.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_hash_map_sequence.hpp>
+#include <jank/runtime/obj/persistent_sorted_map.hpp>
+#include <jank/runtime/obj/persistent_sorted_map_sequence.hpp>
 #include <jank/runtime/obj/transient_hash_map.hpp>
+#include <jank/runtime/obj/transient_sorted_map.hpp>
 #include <jank/runtime/obj/transient_vector.hpp>
-#include <jank/runtime/obj/transient_set.hpp>
+#include <jank/runtime/obj/transient_hash_set.hpp>
 #include <jank/runtime/obj/iterator.hpp>
 #include <jank/runtime/obj/lazy_sequence.hpp>
 #include <jank/runtime/obj/chunk_buffer.hpp>
@@ -32,7 +35,7 @@
 #include <jank/runtime/obj/persistent_vector_sequence.hpp>
 #include <jank/runtime/obj/persistent_string_sequence.hpp>
 #include <jank/runtime/obj/persistent_list_sequence.hpp>
-#include <jank/runtime/obj/persistent_set_sequence.hpp>
+#include <jank/runtime/obj/persistent_hash_set_sequence.hpp>
 #include <jank/runtime/obj/native_array_sequence.hpp>
 #include <jank/runtime/obj/native_vector_sequence.hpp>
 #include <jank/runtime/obj/atom.hpp>
@@ -46,7 +49,7 @@ namespace jank::runtime
   /* Most of the system is polymorphic using type-erased objects. Given any object, an erase call
    * will get you what you need. If you don't need to type-erase, though, don't! */
   template <typename T>
-  requires behavior::objectable<T>
+  requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr object_ptr erase(native_box<T> const o)
   {
@@ -54,7 +57,7 @@ namespace jank::runtime
   }
 
   template <typename T>
-  requires behavior::objectable<T>
+  requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr object_ptr erase(native_box<T const> const o)
   {
@@ -68,7 +71,7 @@ namespace jank::runtime
   }
 
   template <typename T>
-  requires behavior::objectable<std::decay_t<std::remove_pointer_t<T>>>
+  requires behavior::object_like<std::decay_t<std::remove_pointer_t<T>>>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr object_ptr erase(T const o)
   {
@@ -79,7 +82,7 @@ namespace jank::runtime
    * However, if you're absolutely certain you know the type of an erased object, I guess
    * you can use this. */
   template <typename T>
-  requires behavior::objectable<T>
+  requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr native_box<T> try_object(object const * const o)
   {
@@ -98,7 +101,7 @@ namespace jank::runtime
   }
 
   template <typename T>
-  requires behavior::objectable<T>
+  requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr native_box<T> expect_object(object_ptr const o)
   {
@@ -108,7 +111,7 @@ namespace jank::runtime
   }
 
   template <typename T>
-  requires behavior::objectable<T>
+  requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr native_box<T> expect_object(object const * const o)
   {
@@ -119,7 +122,7 @@ namespace jank::runtime
   }
 
   template <typename T, typename F, typename... Args>
-  requires behavior::objectable<T>
+  requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr auto visit_object(F const &fn, native_box<T const> const not_erased, Args &&...args)
   {
@@ -211,9 +214,25 @@ namespace jank::runtime
                     std::forward<Args>(args)...);
         }
         break;
+      case object_type::persistent_sorted_map:
+        {
+          return fn(expect_object<obj::persistent_sorted_map>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_sorted_map_sequence:
+        {
+          return fn(expect_object<obj::persistent_sorted_map_sequence>(erased),
+                    std::forward<Args>(args)...);
+        }
+        break;
       case object_type::transient_hash_map:
         {
           return fn(expect_object<obj::transient_hash_map>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::transient_sorted_map:
+        {
+          return fn(expect_object<obj::transient_sorted_map>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::transient_vector:
@@ -221,14 +240,14 @@ namespace jank::runtime
           return fn(expect_object<obj::transient_vector>(erased), std::forward<Args>(args)...);
         }
         break;
-      case object_type::persistent_set:
+      case object_type::persistent_hash_set:
         {
-          return fn(expect_object<obj::persistent_set>(erased), std::forward<Args>(args)...);
+          return fn(expect_object<obj::persistent_hash_set>(erased), std::forward<Args>(args)...);
         }
         break;
-      case object_type::transient_set:
+      case object_type::transient_hash_set:
         {
-          return fn(expect_object<obj::transient_set>(erased), std::forward<Args>(args)...);
+          return fn(expect_object<obj::transient_hash_set>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::cons:
@@ -270,9 +289,9 @@ namespace jank::runtime
                     std::forward<Args>(args)...);
         }
         break;
-      case object_type::persistent_set_sequence:
+      case object_type::persistent_hash_set_sequence:
         {
-          return fn(expect_object<obj::persistent_set_sequence>(erased),
+          return fn(expect_object<obj::persistent_hash_set_sequence>(erased),
                     std::forward<Args>(args)...);
         }
         break;
@@ -372,7 +391,6 @@ namespace jank::runtime
 
   /* Allows the visiting of a single type. */
   template <typename T, typename F, typename... Args>
-  requires visitable<F, Args...>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr auto visit_type(F const &fn, object const * const const_erased, Args &&...args)
   {
@@ -395,6 +413,8 @@ namespace jank::runtime
     assert(const_erased);
     auto * const erased(const_cast<object *>(const_erased));
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
     switch(erased->type)
     {
       case object_type::nil:
@@ -434,9 +454,20 @@ namespace jank::runtime
                     std::forward<Args>(args)...);
         }
         break;
-      case object_type::persistent_set:
+      case object_type::persistent_sorted_map:
         {
-          return fn(expect_object<obj::persistent_set>(erased), std::forward<Args>(args)...);
+          return fn(expect_object<obj::persistent_sorted_map>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_sorted_map_sequence:
+        {
+          return fn(expect_object<obj::persistent_sorted_map_sequence>(erased),
+                    std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_hash_set:
+        {
+          return fn(expect_object<obj::persistent_hash_set>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::cons:
@@ -478,9 +509,9 @@ namespace jank::runtime
                     std::forward<Args>(args)...);
         }
         break;
-      case object_type::persistent_set_sequence:
+      case object_type::persistent_hash_set_sequence:
         {
-          return fn(expect_object<obj::persistent_set_sequence>(erased),
+          return fn(expect_object<obj::persistent_hash_set_sequence>(erased),
                     std::forward<Args>(args)...);
         }
         break;
@@ -499,22 +530,51 @@ namespace jank::runtime
           return fn(expect_object<obj::chunked_cons>(erased), std::forward<Args>(args)...);
         }
         break;
+      case object_type::persistent_string:
+        {
+          return fn(expect_object<obj::persistent_string>(erased), std::forward<Args>(args)...);
+        }
+        break;
 
       /* Not seqable. */
-      /* TODO: persistent_string should be seqable, once we support char objects. */
-      case object_type::persistent_string:
-      case object_type::boolean:
-      case object_type::integer:
-      case object_type::real:
-      case object_type::keyword:
-      case object_type::symbol:
-      case object_type::native_function_wrapper:
-      case object_type::jit_function:
-      case object_type::ns:
-      case object_type::var:
-      case object_type::var_thread_binding:
       default:
         return else_fn();
     }
+#pragma clang diagnostic pop
+  }
+
+  template <typename F1, typename F2, typename... Args>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  constexpr auto visit_number_like(F1 const &fn,
+                                   F2 const &else_fn,
+                                   object const * const const_erased,
+                                   Args &&...args)
+  {
+    assert(const_erased);
+    auto * const erased(const_cast<object *>(const_erased));
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+    switch(erased->type)
+    {
+      case object_type::boolean:
+        {
+          return fn(expect_object<obj::boolean>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::integer:
+        {
+          return fn(expect_object<obj::integer>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::real:
+        {
+          return fn(expect_object<obj::real>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      default:
+        return else_fn();
+    }
+#pragma clang diagnostic pop
   }
 }

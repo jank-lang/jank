@@ -30,7 +30,7 @@ namespace jank::runtime::obj::detail
     {
     }
 
-    /* behavior::objectable */
+    /* behavior::object_like */
     native_bool equal(object const &o) const
     {
       object_ptr p{ const_cast<object *>(&o) };

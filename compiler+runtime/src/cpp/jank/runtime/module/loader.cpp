@@ -371,7 +371,10 @@ namespace jank::runtime::module
 
   result<void, native_persistent_string> loader::load(native_persistent_string_view const &module)
   {
-    auto const &entry(entries.find(module));
+    static std::regex const underscore{ "_" };
+    native_transient_string patched_module{ module };
+    patched_module = std::regex_replace(patched_module, underscore, "-");
+    auto const &entry(entries.find(patched_module));
     if(entry == entries.end())
     {
       return err(fmt::format("unable to find module: {}", module));

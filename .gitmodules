@@ -4,3 +4,6 @@
 [submodule "compiler+runtime/third-party/folly"]
 	path = compiler+runtime/third-party/folly
 	url = git@github.com:jank-lang/folly.git
+[submodule "compiler+runtime/third-party/bpptree"]
+	path = compiler+runtime/third-party/bpptree
+	url = git@github.com:jank-lang/BppTree.git

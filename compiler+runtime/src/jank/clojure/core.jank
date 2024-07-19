@@ -109,6 +109,9 @@
 (def first
   (fn* first [o]
     (native/raw "__value = jank::runtime::first(~{ o });")))
+(def ffirst
+  (fn* ffirst [o]
+    (first (first o))))
 ; Returns a fresh seq.
 (def next
   (fn* next [o]
@@ -758,7 +761,7 @@
 (defn disj!
   ([set] set)
   ([set elem]
-   (native/raw "auto typed_set(try_object<obj::transient_set>(~{ set }));
+   (native/raw "auto typed_set(try_object<obj::transient_hash_set>(~{ set }));
                 __value = typed_set->disjoin_in_place(~{ elem });"))
   ([set elem & elems]
     (let [ret (disj! set elem)]
@@ -1915,6 +1918,12 @@
   ([& kvs]
    (native/raw "__value = obj::persistent_hash_map::create_from_seq(~{ kvs });")))
 
+(defn sorted-map
+  ([]
+   (native/raw "__value = obj::persistent_sorted_map::empty();"))
+  ([& kvs]
+   (native/raw "__value = obj::persistent_sorted_map::create_from_seq(~{ kvs });")))
+
 (defn key
   "Returns the key of the map entry."
   [e]
@@ -2003,7 +2012,21 @@
   ([]
    #{})
   ([& keys]
-   (native/raw "__value = obj::persistent_set::create_from_seq(~{ keys });")))
+   (native/raw "__value = obj::persistent_hash_set::create_from_seq(~{ keys });")))
+
+(defn sorted-set
+  "Returns a new sorted set with supplied keys.  Any equal keys are
+  handled as if by repeated uses of conj."
+  ([& keys]
+   (throw "not yet implemented: sorted-set-by")
+   #_(native/raw "__value = obj::persistent_sorted_set::create_from_seq(~{ keys });")))
+
+(defn sorted-set-by
+  "Returns a new sorted set with supplied keys, using the supplied
+  comparator.  Any equal keys are handled as if by repeated uses of
+  conj."
+  ([comparator & keys]
+   (throw "not yet implemented: sorted-set-by")))
 
 (defn disj
   "disj[oin]. Returns a new set of the same (hashed/sorted) type, that
@@ -2019,7 +2042,7 @@
        (recur res (first ks) (next ks))))))
 
 (defn set? [o]
-  (native/raw "__value = make_box(~{ o }->type == object_type::persistent_set);"))
+  (native/raw "__value = make_box(~{ o }->type == object_type::persistent_hash_set);"))
 
 ; Returns a set of the distinct elements of coll.
 (defn set [coll]
@@ -2028,7 +2051,7 @@
     ; TODO: Transient
     (reduce (fn [acc e]
               (conj acc e))
-            (native/raw "__value = make_box<obj::persistent_set>();")
+            (native/raw "__value = make_box<obj::persistent_hash_set>();")
             coll)))
 
 ;; Other.
@@ -3180,13 +3203,13 @@
                                      :else `(cons ~body-expr
                                                   (~giter (rest ~gxs)))))]
                       (if next-groups
-                        #_"not the inner-most loop"
+                        ; Not the inner-most loop.
                         `(fn ~giter [~gxs]
                            (lazy-seq
                              (loop [~gxs ~gxs]
                                (when-first [~bind ~gxs]
                                  ~(do-mod mod-pairs)))))
-                        #_"inner-most loop"
+                        ; Inner-most loop.
                         (let [gi (gensym "i__")
                               gb (gensym "b__")
                               do-cmod (fn do-cmod [[[k v :as pair] & etc]]
@@ -3473,11 +3496,51 @@
                      (cons x (step x more))))))]
      (step ::none coll))))
 
-; Takes an expression and a set of test/form pairs. Threads expr (via ->)
-; through each form for which the corresponding test
-; expression is true. Note that, unlike cond branching, cond-> threading does
-; not short circuit after the first true test expression.
-(defmacro cond-> [expr & clauses]
+(defmacro condp
+  "Takes a binary predicate, an expression, and a set of clauses.
+  Each clause can take the form of either:
+
+  test-expr result-expr
+
+  test-expr :>> result-fn
+
+  Note :>> is an ordinary keyword.
+
+  For each clause, (pred test-expr expr) is evaluated. If it returns
+  logical true, the clause is a match. If a binary clause matches, the
+  result-expr is returned, if a ternary clause matches, its result-fn,
+  which must be a unary function, is called with the result of the
+  predicate as its argument, the result of that call being the return
+  value of condp. A single default expression can follow the clauses,
+  and its value will be returned if no clause matches. If no default
+  expression is provided and no clause matches, an
+  IllegalArgumentException is thrown."
+  [pred expr & clauses]
+  (let [gpred (gensym "pred__")
+        gexpr (gensym "expr__")
+        emit (fn emit [pred expr args]
+               (let [[[a b c :as clause] more]
+                       (split-at (if (= :>> (second args)) 3 2) args)
+                       n (count clause)]
+                 (cond
+                  (= 0 n) `(throw (str "No matching clause: " ~expr))
+                  (= 1 n) a
+                  (= 2 n) `(if (~pred ~a ~expr)
+                             ~b
+                             ~(emit pred expr more))
+                  :else `(if-let [p# (~pred ~a ~expr)]
+                           (~c p#)
+                           ~(emit pred expr more)))))]
+    `(let [~gpred ~pred
+           ~gexpr ~expr]
+       ~(emit gpred gexpr clauses))))
+
+(defmacro cond->
+  "Takes an expression and a set of test/form pairs. Threads expr (via ->)
+  through each form for which the corresponding test
+  expression is true. Note that, unlike cond branching, cond-> threading does
+  not short circuit after the first true test expression."
+  [expr & clauses]
   (assert (even? (count clauses)))
   (let [g (gensym)
         steps (map (fn [test+step]
@@ -3849,6 +3912,186 @@
   `(let [v# (def ~name)]
      (when-not (bound? v#)
        (def ~name ~expr))))
+
+;; Case.
+(defn- shift-mask [shift mask x]
+  (-> x (bit-shift-right shift) (bit-and mask)))
+
+(def ^:private max-mask-bits 13)
+(def ^:private max-switch-table-size (bit-shift-left 1 max-mask-bits))
+(def ^:private int-min-value (native/raw "__value = make_box(std::numeric_limits<native_integer>::min());"))
+(def ^:private int-max-value (native/raw "__value = make_box(std::numeric_limits<native_integer>::max());"))
+
+(defn- maybe-min-hash
+  "Takes a collection of hashes and returns [shift mask] or nil if none found"
+  [hashes]
+  (first
+    (filter (fn [[s m]]
+              (apply distinct? (map #(shift-mask s m %) hashes)))
+            (for [mask (map #(dec (bit-shift-left 1 %)) (range 1 (inc max-mask-bits)))
+                  shift (range 0 31)]
+              [shift mask]))))
+
+(defn- case-map
+  "Transforms a sequence of test constants and a corresponding sequence of then
+  expressions into a sorted map to be consumed by case*. The form of the map
+  entries are {(case-f test) [(test-f test) then]}."
+  [case-f test-f tests thens]
+  (into (sorted-map)
+        (zipmap (map case-f tests)
+                (map vector
+                     (map test-f tests)
+                     thens))))
+
+(defn- fits-table?
+  "Returns true if the collection of ints can fit within the
+  max-table-switch-size, false otherwise."
+  [ints]
+  (< (- (apply max (seq ints)) (apply min (seq ints))) max-switch-table-size))
+
+(defn- prep-ints
+  "Takes a sequence of int-sized test constants and a corresponding sequence of
+  then expressions. Returns a tuple of [shift mask case-map switch-type] where
+  case-map is a map of int case values to [test then] tuples, and switch-type
+  is either :sparse or :compact."
+  [tests thens]
+  (if (fits-table? tests)
+    ; compact case ints, no shift-mask
+    [0 0 (case-map int int tests thens) :compact]
+    (let [[shift mask] (or (maybe-min-hash (map int tests)) [0 0])]
+      (if (zero? mask)
+        ; sparse case ints, no shift-mask
+        [0 0 (case-map int int tests thens) :sparse]
+        ; compact case ints, with shift-mask
+        [shift mask (case-map #(shift-mask shift mask (int %)) int tests thens) :compact]))))
+
+(defn- merge-hash-collisions
+  "Takes a case expression, default expression, and a sequence of test constants
+  and a corresponding sequence of then expressions. Returns a tuple of
+  [tests thens skip-check-set] where no tests have the same hash. Each set of
+  input test constants with the same hash is replaced with a single test
+  constant (the case int), and their respective thens are combined into:
+  (condp = expr
+    test-1 then-1
+    ...
+    test-n then-n
+    default).
+  The skip-check is a set of case ints for which post-switch equivalence
+  checking must not be done (the cases holding the above condp thens)."
+  [expr-sym default tests thens]
+  (let [buckets (loop [m {} ks tests vs thens]
+                  (if (and ks vs)
+                    (recur
+                      (update m (hash (first ks)) (fnil conj []) [(first ks) (first vs)])
+                      (next ks) (next vs))
+                    m))
+        assoc-multi (fn [m h bucket]
+                      (let [testexprs (mapcat (fn [kv] [(list 'quote (first kv)) (second kv)]) bucket)
+                            expr `(condp = ~expr-sym ~@testexprs ~default)]
+                        (assoc m h expr)))
+        hmap (reduce (fn [m [h bucket]]
+                       (if (== 1 (count bucket))
+                         (assoc m (ffirst bucket) (second (first bucket)))
+                         (assoc-multi m h bucket)))
+                     {} buckets)
+        skip-check (->> buckets
+                        (filter #(< 1 (count (second %))))
+                        (map first)
+                        (into #{}))]
+    [(keys hmap) (vals hmap) skip-check]))
+
+(defn- prep-hashes
+  "Takes a sequence of test constants and a corresponding sequence of then
+  expressions. Returns a tuple of [shift mask case-map switch-type skip-check]
+  where case-map is a map of int case values to [test then] tuples, switch-type
+  is either :sparse or :compact, and skip-check is a set of case ints for which
+  post-switch equivalence checking must not be done (occurs with hash
+  collisions)."
+  [expr-sym default tests thens]
+  (let [hashes (into #{} (map hash tests))]
+    (if (== (count tests) (count hashes))
+      (if (fits-table? hashes)
+        ; compact case ints, no shift-mask
+        [0 0 (case-map hash identity tests thens) :compact]
+        (let [[shift mask] (or (maybe-min-hash hashes) [0 0])]
+          (if (zero? mask)
+            ; sparse case ints, no shift-mask
+            [0 0 (case-map hash identity tests thens) :sparse]
+            ; compact case ints, with shift-mask
+            [shift mask (case-map #(shift-mask shift mask (hash %)) identity tests thens) :compact])))
+      ; resolve hash collisions and try again
+      (let [[tests thens skip-check] (merge-hash-collisions expr-sym default tests thens)
+            [shift mask case-map switch-type] (prep-hashes expr-sym default tests thens)
+            skip-check (if (zero? mask)
+                         skip-check
+                         (into #{} (map #(shift-mask shift mask %) skip-check)))]
+        [shift mask case-map switch-type skip-check]))))
+
+(defmacro case
+  "Takes an expression, and a set of clauses.
+
+  Each clause can take the form of either:
+
+  test-constant result-expr
+
+  (test-constant1 ... test-constantN)  result-expr
+
+  The test-constants are not evaluated. They must be compile-time
+  literals, and need not be quoted.  If the expression is equal to a
+  test-constant, the corresponding result-expr is returned. A single
+  default expression can follow the clauses, and its value will be
+  returned if no clause matches. If no default expression is provided
+  and no clause matches, an IllegalArgumentException is thrown.
+
+  Unlike cond and condp, case does a constant-time dispatch, the
+  clauses are not considered sequentially.  All manner of constant
+  expressions are acceptable in case, including numbers, strings,
+  symbols, keywords, and (Clojure) composites thereof. Note that since
+  lists are used to group multiple constants that map to the same
+  expression, a vector can be used to match a list if needed. The
+  test-constants need not be all of the same type."
+  {:added "1.2"}
+
+  [e & clauses]
+  (let [ge (gensym)
+        default (if (odd? (count clauses))
+                  (last clauses)
+                  `(throw (str "No matching clause: " ~ge)))]
+    (if (> 2 (count clauses))
+      `(let [~ge ~e] ~default)
+      (let [pairs (partition 2 clauses)
+            assoc-test (fn assoc-test [m test expr]
+                         (if (contains? m test)
+                           (throw (str "Duplicate case test constant: " test))
+                           (assoc m test expr)))
+            pairs (reduce
+                       (fn [m [test expr]]
+                         (if (seq? test)
+                           (reduce #(assoc-test %1 %2 expr) m test)
+                           (assoc-test m test expr)))
+                       {} pairs)
+            tests (keys pairs)
+            thens (vals pairs)
+            mode (cond
+                   (every? #(and (integer? %) (<= int-min-value % int-max-value))
+                           tests)
+                   :ints
+
+                   (every? keyword? tests)
+                   :identity
+
+                   :else
+                   :hashes)]
+        (condp = mode
+          :ints
+          (let [[shift mask imap switch-type] (prep-ints tests thens)]
+            `(let [~ge ~e] (case* ~ge ~shift ~mask ~default ~imap ~switch-type :int)))
+          :hashes
+          (let [[shift mask imap switch-type skip-check] (prep-hashes ge default tests thens)]
+            `(let [~ge ~e] (case* ~ge ~shift ~mask ~default ~imap ~switch-type :hash-equiv ~skip-check)))
+          :identity
+          (let [[shift mask imap switch-type skip-check] (prep-hashes ge default tests thens)]
+            `(let [~ge ~e] (case* ~ge ~shift ~mask ~default ~imap ~switch-type :hash-identity ~skip-check))))))))
 
 ;; Miscellaneous.
 ; TODO: jank.core

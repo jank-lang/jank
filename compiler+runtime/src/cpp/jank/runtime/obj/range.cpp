@@ -81,12 +81,6 @@ namespace jank::runtime
 
   object_ptr obj::range::create(object_ptr const start, object_ptr const end, object_ptr const step)
   {
-    fmt::println("(pos {}, lt {}), (neg {}, lt {}), equiv {}",
-                 is_pos(step),
-                 lt(end, start),
-                 is_neg(step),
-                 lt(start, end),
-                 is_equiv(start, end));
     if((is_pos(step) && lt(end, start)) || (is_neg(step) && lt(start, end)) || is_equiv(start, end))
     {
       return obj::persistent_list::empty();

@@ -129,6 +129,7 @@ add_library(
   src/cpp/jank/profile/time.cpp
   src/cpp/jank/read/lex.cpp
   src/cpp/jank/read/parse.cpp
+  src/cpp/jank/runtime/core.cpp
   src/cpp/jank/runtime/module/loader.cpp
   src/cpp/jank/runtime/util.cpp
   src/cpp/jank/runtime/seq.cpp
@@ -152,9 +153,11 @@ add_library(
   src/cpp/jank/runtime/obj/persistent_array_map.cpp
   src/cpp/jank/runtime/obj/persistent_hash_map.cpp
   src/cpp/jank/runtime/obj/transient_hash_map.cpp
+  src/cpp/jank/runtime/obj/persistent_sorted_map.cpp
+  src/cpp/jank/runtime/obj/transient_sorted_map.cpp
   src/cpp/jank/runtime/obj/transient_vector.cpp
-  src/cpp/jank/runtime/obj/persistent_set.cpp
-  src/cpp/jank/runtime/obj/transient_set.cpp
+  src/cpp/jank/runtime/obj/persistent_hash_set.cpp
+  src/cpp/jank/runtime/obj/transient_hash_set.cpp
   src/cpp/jank/runtime/obj/persistent_string.cpp
   src/cpp/jank/runtime/obj/persistent_string_sequence.cpp
   src/cpp/jank/runtime/obj/cons.cpp
@@ -192,6 +195,7 @@ target_include_directories(
     PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bpptree/include>"
 )
 target_precompile_headers(
   jank_lib

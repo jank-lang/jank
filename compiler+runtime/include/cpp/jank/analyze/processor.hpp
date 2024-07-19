@@ -133,7 +133,7 @@ namespace jank::analyze
                                   expression_type,
                                   option<expr::function_context_ptr> const &,
                                   native_bool needs_box);
-    expression_result analyze_set(runtime::obj::persistent_set_ptr const &,
+    expression_result analyze_set(runtime::obj::persistent_hash_set_ptr const &,
                                   local_frame_ptr &,
                                   expression_type,
                                   option<expr::function_context_ptr> const &,

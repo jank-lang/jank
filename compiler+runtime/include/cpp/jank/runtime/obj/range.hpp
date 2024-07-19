@@ -34,7 +34,7 @@ namespace jank::runtime
     static object_ptr create(object_ptr start, object_ptr end);
     static object_ptr create(object_ptr start, object_ptr end, object_ptr step);
 
-    /* behavior::objectable */
+    /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string to_string();
     void to_string(fmt::memory_buffer &buff);

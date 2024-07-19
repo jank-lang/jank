@@ -21,7 +21,7 @@ namespace jank::runtime
     {
     }
 
-    /* behavior::objectable */
+    /* behavior::object_like */
     native_bool equal(object const &o) const;
     void to_string(fmt::memory_buffer &buff) const;
     native_persistent_string to_string() const;

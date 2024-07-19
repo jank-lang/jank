@@ -116,9 +116,9 @@ namespace jank::codegen
           {
             return "jank::runtime::obj::persistent_vector_ptr";
           }
-        case jank::runtime::object_type::persistent_set:
+        case jank::runtime::object_type::persistent_hash_set:
           {
-            return "jank::runtime::obj::persistent_set_ptr";
+            return "jank::runtime::obj::persistent_hash_set_ptr";
           }
         case jank::runtime::object_type::persistent_array_map:
           {
@@ -251,9 +251,9 @@ namespace jank::codegen
             }
             fmt::format_to(inserter, ")");
           }
-          else if constexpr(std::same_as<T, runtime::obj::persistent_set>)
+          else if constexpr(std::same_as<T, runtime::obj::persistent_hash_set>)
           {
-            fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::persistent_set>(");
+            fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::persistent_hash_set>(");
             if(typed_o->meta.is_some())
             {
               gen_constant(typed_o->meta.unwrap(), buffer, true);
@@ -1213,7 +1213,7 @@ namespace jank::codegen
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::munge(runtime::context::unique_string("set")));
     fmt::format_to(inserter,
-                   "auto const {}(jank::make_box<jank::runtime::obj::persistent_set>(",
+                   "auto const {}(jank::make_box<jank::runtime::obj::persistent_hash_set>(",
                    ret_tmp);
     if(expr.meta.is_some())
     {

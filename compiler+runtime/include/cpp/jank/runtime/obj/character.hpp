@@ -15,7 +15,7 @@ namespace jank::runtime
     static_object(native_persistent_string const &);
     static_object(char);
 
-    /* behavior::objectable */
+    /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string const &to_string() const;
     void to_string(fmt::memory_buffer &buff) const;
