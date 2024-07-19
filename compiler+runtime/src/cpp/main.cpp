@@ -4,10 +4,10 @@
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include <cling/Interpreter/Interpreter.h>
-#include <cling/Interpreter/Value.h>
-#include <clang/Frontend/CompilerInstance.h>
-#include <clang/Lex/Preprocessor.h>
+#include <llvm-c/Target.h>
+#include <llvm/Support/CommandLine.h>
+#include <llvm/Support/ManagedStatic.h>
+#include <llvm/Support/TargetSelect.h>
 
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -38,7 +38,7 @@ namespace jank
 
     {
       profile::timer timer{ "eval user code" };
-      std::cout << runtime::detail::to_string(__rt_ctx->eval_file(opts.target_file)) << std::endl;
+      std::cout << runtime::detail::to_string(__rt_ctx->eval_file(opts.target_file)) << "\n";
     }
 
     //ankerl::nanobench::Config config;
@@ -147,6 +147,7 @@ namespace jank
         auto const res(__rt_ctx->eval_string(line));
         fmt::println("");
         fmt::println("{}", runtime::detail::to_string(res));
+        //rt_ctx.jit_prc.eval_string(line);
       }
       /* TODO: Unify error handling. JEEZE! */
       catch(std::exception const &e)
@@ -180,6 +181,14 @@ try
    * like strings, use the GC for allocations. It can still be configured later. */
   GC_set_all_interior_pointers(1);
   GC_enable();
+
+  llvm::llvm_shutdown_obj Y{};
+
+  llvm::InitializeAllTargetInfos();
+  llvm::InitializeAllTargets();
+  llvm::InitializeAllTargetMCs();
+  llvm::InitializeAllAsmPrinters();
+  llvm::InitializeAllAsmParsers();
 
   auto const parse_result(util::cli::parse(argc, argv));
   if(parse_result.is_err())

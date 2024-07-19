@@ -10,6 +10,7 @@ readability-*,\
 -modernize-use-nodiscard,\
 -modernize-pass-by-value,\
 -modernize-avoid-c-arrays,\
+-modernize-use-designated-initializers,\
 -cppcoreguidelines-non-private-member-variables-in-classes,\
 -cppcoreguidelines-avoid-c-arrays,\
 -cppcoreguidelines-avoid-magic-numbers,\

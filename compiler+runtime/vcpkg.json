@@ -11,6 +11,7 @@
     "cli11",
     "fmt",
     "immer",
+    "libassert",
     "libzippp",
     "magic-enum",
     "readline"

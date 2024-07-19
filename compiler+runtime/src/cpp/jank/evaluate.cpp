@@ -52,10 +52,10 @@ namespace jank::evaluate
     if(exprs.empty())
     {
       return wrap_expression(analyze::expr::primitive_literal<analyze::expression>{
-        analyze::expression_base{{},
+        analyze::expression_base{ {},
                                  analyze::expression_type::return_statement,
                                  an_prc.root_frame,
-                                 true},
+                                 true },
         runtime::obj::nil::nil_const()
       });
     }
@@ -404,11 +404,9 @@ namespace jank::evaluate
                            jit::processor const &jit_prc,
                            analyze::expr::function<analyze::expression> const &expr)
   {
-    auto const &module(
-      runtime::module::nest_module(runtime::expect_object<runtime::ns>(
-                                     rt_ctx.intern_var("clojure.core", "*ns*").expect_ok()->deref())
-                                     ->to_string(),
-                                   runtime::munge(expr.unique_name)));
+    auto const &module(runtime::module::nest_module(
+      runtime::expect_object<runtime::ns>(rt_ctx.current_ns_var->deref())->to_string(),
+      runtime::munge(expr.unique_name)));
     codegen::processor cg_prc{ rt_ctx, expr, module, codegen::compilation_target::repl };
     return jit_prc.eval(cg_prc).expect_ok().unwrap();
   }

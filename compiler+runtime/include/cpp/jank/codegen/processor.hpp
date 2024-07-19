@@ -163,6 +163,7 @@ namespace jank::codegen
     fmt::memory_buffer body_buffer;
     fmt::memory_buffer footer_buffer;
     fmt::memory_buffer expression_buffer;
+    native_persistent_string expression_fn_name;
     native_bool generated_declaration{};
     native_bool generated_expression{};
   };

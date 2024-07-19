@@ -17,7 +17,7 @@ runs:
     - if: runner.os == 'Linux'
       name: Install apt packages
       shell: bash
-      run: sudo apt-get install -y curl git zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev entr libffi-dev clang libjemalloc-dev libreadline-dev
+      run: sudo apt-get install -y curl git zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev entr libffi-dev clang libjemalloc-dev libreadline-dev libzstd-dev
     - if: runner.os == 'macOS'
       name: Install brew packages
       shell: bash
@@ -29,12 +29,12 @@ runs:
           ~/.cache/vcpkg
           ${{ github.workspace }}/build/vcpkg_installed
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('vcpkg.json') }}
-    - name: Cache Cling
+    - name: Cache Clang/LLVM
       uses: actions/cache@v3
       with:
         path: |
           ${{ github.workspace }}/build
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('compiler+runtime/bin/build-cling') }}
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
     - name: Compile and test
       shell: bash
       working-directory: ${{ github.workspace }}/compiler+runtime

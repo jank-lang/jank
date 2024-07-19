@@ -1082,16 +1082,16 @@ namespace jank::runtime
 
   native_integer bit_not(object_ptr const l)
   {
-    return visit_object<obj::integer>(
+    return visit_type<obj::integer>(
       [](auto const typed_l) -> native_integer { return ~typed_l->data; },
       l);
   }
 
   native_integer bit_and(object_ptr const l, object_ptr const r)
   {
-    return visit_object<obj::integer>(
+    return visit_type<obj::integer>(
       [](auto const typed_l, auto const r) -> native_integer {
-        return visit_object<obj::integer>(
+        return visit_type<obj::integer>(
           [](auto const typed_r, auto const typed_l) -> native_integer {
             return typed_l & typed_r->data;
           },
@@ -1104,9 +1104,9 @@ namespace jank::runtime
 
   native_integer bit_or(object_ptr const l, object_ptr const r)
   {
-    return visit_object<obj::integer>(
+    return visit_type<obj::integer>(
       [](auto const typed_l, auto const r) -> native_integer {
-        return visit_object<obj::integer>(
+        return visit_type<obj::integer>(
           [](auto const typed_r, auto const typed_l) -> native_integer {
             return typed_l | typed_r->data;
           },
@@ -1119,9 +1119,9 @@ namespace jank::runtime
 
   native_integer bit_xor(object_ptr const l, object_ptr const r)
   {
-    return visit_object<obj::integer>(
+    return visit_type<obj::integer>(
       [](auto const typed_l, auto const r) -> native_integer {
-        return visit_object<obj::integer>(
+        return visit_type<obj::integer>(
           [](auto const typed_r, auto const typed_l) -> native_integer {
             return typed_l ^ typed_r->data;
           },
@@ -1134,9 +1134,9 @@ namespace jank::runtime
 
   native_integer bit_and_not(object_ptr const l, object_ptr const r)
   {
-    return visit_object<obj::integer>(
+    return visit_type<obj::integer>(
       [](auto const typed_l, auto const r) -> native_integer {
-        return visit_object<obj::integer>(
+        return visit_type<obj::integer>(
           [](auto const typed_r, auto const typed_l) -> native_integer {
             return typed_l & (~typed_r->data);
           },
@@ -1149,9 +1149,9 @@ namespace jank::runtime
 
   native_integer bit_clear(object_ptr const l, object_ptr const r)
   {
-    return visit_object<obj::integer>(
+    return visit_type<obj::integer>(
       [](auto const typed_l, auto const r) -> native_integer {
-        return visit_object<obj::integer>(
+        return visit_type<obj::integer>(
           [](auto const typed_r, auto const typed_l) -> native_integer {
             return typed_l & ~(static_cast<native_integer>(1) << typed_r->data);
           },
@@ -1164,9 +1164,9 @@ namespace jank::runtime
 
   native_integer bit_set(object_ptr const l, object_ptr const r)
   {
-    return visit_object<obj::integer>(
+    return visit_type<obj::integer>(
       [](auto const typed_l, auto const r) -> native_integer {
-        return visit_object<obj::integer>(
+        return visit_type<obj::integer>(
           [](auto const typed_r, auto const typed_l) -> native_integer {
             return typed_l | (static_cast<native_integer>(1) << typed_r->data);
           },
@@ -1179,9 +1179,9 @@ namespace jank::runtime
 
   native_integer bit_flip(object_ptr const l, object_ptr const r)
   {
-    return visit_object<obj::integer>(
+    return visit_type<obj::integer>(
       [](auto const typed_l, auto const r) -> native_integer {
-        return visit_object<obj::integer>(
+        return visit_type<obj::integer>(
           [](auto const typed_r, auto const typed_l) -> native_integer {
             return typed_l ^ (static_cast<native_integer>(1) << typed_r->data);
           },
@@ -1194,9 +1194,9 @@ namespace jank::runtime
 
   native_bool bit_test(object_ptr const l, object_ptr const r)
   {
-    return visit_object<obj::integer>(
+    return visit_type<obj::integer>(
       [](auto const typed_l, auto const r) -> native_bool {
-        return visit_object<obj::integer>(
+        return visit_type<obj::integer>(
           [](auto const typed_r, auto const typed_l) -> native_bool {
             return (typed_l >> typed_r->data) & static_cast<native_integer>(1);
           },
@@ -1209,9 +1209,9 @@ namespace jank::runtime
 
   native_integer bit_shift_left(object_ptr const l, object_ptr const r)
   {
-    return visit_object<obj::integer>(
+    return visit_type<obj::integer>(
       [](auto const typed_l, auto const r) -> native_integer {
-        return visit_object<obj::integer>(
+        return visit_type<obj::integer>(
           [](auto const typed_r, auto const typed_l) -> native_integer {
             return typed_l << typed_r->data;
           },
@@ -1224,9 +1224,9 @@ namespace jank::runtime
 
   native_integer bit_shift_right(object_ptr const l, object_ptr const r)
   {
-    return visit_object<obj::integer>(
+    return visit_type<obj::integer>(
       [](auto const typed_l, auto const r) -> native_integer {
-        return visit_object<obj::integer>(
+        return visit_type<obj::integer>(
           [](auto const typed_r, auto const typed_l) -> native_integer {
             return typed_l >> typed_r->data;
           },
@@ -1239,9 +1239,9 @@ namespace jank::runtime
 
   native_integer bit_unsigned_shift_right(object_ptr const l, object_ptr const r)
   {
-    return visit_object<obj::integer>(
+    return visit_type<obj::integer>(
       [](auto const typed_l, auto const r) -> native_integer {
-        return visit_object<obj::integer>(
+        return visit_type<obj::integer>(
           [](auto const typed_r, auto const typed_l) -> native_integer {
             using uni = std::make_unsigned_t<native_integer>;
             return static_cast<uni>(typed_l) >> static_cast<uni>(typed_r->data);

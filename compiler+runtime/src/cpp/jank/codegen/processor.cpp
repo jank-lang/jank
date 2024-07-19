@@ -168,13 +168,17 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, runtime::obj::integer>)
           {
-            fmt::format_to(inserter,
-                           "jank::make_box<jank::runtime::obj::integer>({})",
-                           typed_o->data);
+            fmt::format_to(
+              inserter,
+              "jank::make_box<jank::runtime::obj::integer>(static_cast<jank::native_integer>({}))",
+              typed_o->data);
           }
           else if constexpr(std::same_as<T, runtime::obj::real>)
           {
-            fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::real>({})", typed_o->data);
+            fmt::format_to(
+              inserter,
+              "jank::make_box<jank::runtime::obj::real>(static_cast<jank::native_real>({}))",
+              typed_o->data);
           }
           else if constexpr(std::same_as<T, runtime::obj::symbol>)
           {
@@ -197,10 +201,9 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, runtime::obj::character>)
           {
-            fmt::format_to(
-              inserter,
-              R"(jank::make_box<jank::runtime::obj::character>({}))",
-              util::escaped_quoted_view(typed_o->data));
+            fmt::format_to(inserter,
+                           R"(jank::make_box<jank::runtime::obj::character>({}))",
+                           util::escaped_quoted_view(typed_o->data));
           }
           else if constexpr(std::same_as<T, runtime::obj::keyword>)
           {

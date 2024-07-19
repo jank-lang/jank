@@ -12,31 +12,23 @@ namespace jank::runtime::behavior
     /* Returns a (potentially shared) seq, which could just be `this`, if we're already a
      * seq. However, must return a nullptr for empty seqs. Returning a non-null pointer to
      * an empty seq is UB. */
-    {
-      t->seq()
-    } -> std::convertible_to<object_ptr>;
+    { t->seq() } -> std::convertible_to<object_ptr>;
 
     /* Returns a unique seq which can be updated in place. This is an optimization which allows
      * one allocation for a fresh seq which can then be mutated any number of times to traverse
      * the data. Also must return nullptr when the sequence is empty. */
-    {
-      t->fresh_seq()
-    } -> std::convertible_to<object_ptr>;
+    { t->fresh_seq() } -> std::convertible_to<object_ptr>;
   };
 
   template <typename T>
   concept sequenceable = requires(T * const t) {
-    {
-      t->first()
-    } -> std::convertible_to<object_ptr>;
+    { t->first() } -> std::convertible_to<object_ptr>;
 
     /* Steps the sequence forward and returns nullptr if there is no more remaining
      * or a pointer to the remaining sequence.
      *
      * Next must always return a fresh seq. */
-    {
-      t->next()
-    }; // -> sequenceable;
+    { t->next() }; // -> sequenceable;
   } && conjable<T>;
 
   template <typename T>
@@ -48,9 +40,7 @@ namespace jank::runtime::behavior
      *
      * If you don't own your sequence_ptr, you can call next() on it once, to get one you
      * do own, and then next_in_place() on that to your heart's content. */
-    {
-      t->next_in_place()
-    }; // -> sequenceable;
+    { t->next_in_place() }; // -> sequenceable;
   };
 
   namespace detail

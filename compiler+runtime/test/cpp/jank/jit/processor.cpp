@@ -1,4 +1,5 @@
-#include <filesystem>
+#include <clang/Frontend/CompilerInstance.h>
+#include <clang/Frontend/TextDiagnosticPrinter.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -15,9 +16,6 @@
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/jit/processor.hpp>
-
-#include <cling/Interpreter/Interpreter.h>
-#include <cling/Interpreter/Value.h>
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #include <doctest/doctest.h>
@@ -46,6 +44,27 @@ namespace jank::jit
        * here. The outcome is nice, though. */
       native_vector<failure> failures;
 
+      /* TODO: Disable diagnostic printing. The below works in non-test code, but crashes
+       * in test code. Even when it did work, it had two issues.
+       *
+       * 1. It didn't capture the output to display later
+       * 2. It still showed the "error: Parsing failed." line
+       *
+       */
+      //std::vector<char const *> args{ "clang++", "-w" };
+      //static llvm::IntrusiveRefCntPtr<clang::DiagnosticOptions> diag_opts{
+      //  clang::CreateAndPopulateDiagOpts(args)
+      //};
+      //static clang::TextDiagnosticPrinter diag_printer(llvm::nulls(), &*diag_opts);
+      //static clang::DiagnosticsEngine diags(
+      //  llvm::IntrusiveRefCntPtr<clang::DiagnosticIDs>(new clang::DiagnosticIDs()),
+      //  &*diag_opts,
+      //  &diag_printer,
+      //  false);
+      /* TODO: Why does this crash? Should be what we want. */
+      //diags.setSuppressAllDiagnostics(true);
+      //__rt_ctx->jit_prc.interpreter->getCompilerInstance()->setDiagnostics(&diags);
+
       for(auto const &dir_entry : boost::filesystem::recursive_directory_iterator("test/jank"))
       {
         if(!boost::filesystem::is_regular_file(dir_entry.path()))
@@ -72,8 +91,8 @@ namespace jank::jit
 
         try
         {
-          /* Silence ouptut when running these. This include compilation errors from Cling, since we're
-           * going to intentionally make that happen. */
+          /* Silence ouptut when running these. This include compilation errors from Clang,
+           * since we're going to intentionally make that happen. */
           std::streambuf * const old_cout{ std::cout.rdbuf(captured_output.rdbuf()) };
           std::streambuf * const old_cerr{ std::cerr.rdbuf(captured_output.rdbuf()) };
           util::scope_exit const _{ [=]() {
@@ -162,7 +181,8 @@ namespace jank::jit
         else
         {
           fmt::print(fmt::fg(fmt::color::red), "failure\n");
-          std::cerr << captured_output.rdbuf() << std::endl;
+          std::cerr << captured_output.rdbuf() << "\n";
+          std::cerr.flush();
         }
       }
 

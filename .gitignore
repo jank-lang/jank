@@ -27,7 +27,6 @@ pom.xml.asc
 inst
 deb-cache
 build
-build-*
 coverage.txt
 vcpkg_installed
 .idea/
@@ -37,7 +36,6 @@ cmake-build-*/
 prefix/
 CMakeLists.txt.user
 CMakeUserPresets.json
-
 
 # Rust
 rust/jank

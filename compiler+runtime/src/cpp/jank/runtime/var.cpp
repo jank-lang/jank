@@ -192,7 +192,7 @@ namespace jank::runtime
 
   void var_thread_binding::to_string(fmt::memory_buffer &buff) const
   {
-    return runtime::detail::to_string(value, buff);
+    runtime::detail::to_string(value, buff);
   }
 
   native_hash var_thread_binding::to_hash() const

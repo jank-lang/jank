@@ -3,21 +3,21 @@
 set_target_properties(jank_exe PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib")
 
 install(
-  TARGETS jank_exe jank_cling_lib
+  TARGETS jank_exe
   # Tempting to do this, to include all dynamic libs, but it doesn't reliably work.
   #RUNTIME_DEPENDENCIES DIRECTORIES
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
 )
-install(
-  DIRECTORY ${jank_cling_build_dir}/lib/clang
-  DESTINATION lib
-)
-install(
-  PROGRAMS ${jank_cling_build_dir}/bin/clang++ ${jank_cling_build_dir}/bin/clang-13
-  DESTINATION bin
-)
+#install(
+#  DIRECTORY ${jank_cling_build_dir}/lib/clang
+#  DESTINATION lib
+#)
+#install(
+#  PROGRAMS ${jank_cling_build_dir}/bin/clang++ ${jank_cling_build_dir}/bin/clang-13
+#  DESTINATION bin
+#)
 install(
   PROGRAMS ${CMAKE_SOURCE_DIR}/bin/build-pch
   DESTINATION bin
@@ -43,12 +43,13 @@ file(
 file(
   GLOB_RECURSE third_party_includes
   ${CMAKE_SOURCE_DIR}/third-party/nanobench/include/*
-  ${CMAKE_BINARY_DIR}/llvm/tools/cling/include/*
-  ${CMAKE_BINARY_DIR}/llvm/tools/clang/include/*
-  ${CMAKE_BINARY_DIR}/llvm/include/*
-  ${jank_cling_build_dir}/tools/cling/include/*
-  ${jank_cling_build_dir}/tools/clang/include/*
-  ${jank_cling_build_dir}/include/*
+  ${CMAKE_SOURCE_DIR}/third-party/folly/*
+  #${CMAKE_BINARY_DIR}/llvm/tools/cling/include/*
+  #${CMAKE_BINARY_DIR}/llvm/tools/clang/include/*
+  #${CMAKE_BINARY_DIR}/llvm/include/*
+  #${jank_cling_build_dir}/tools/cling/include/*
+  #${jank_cling_build_dir}/tools/clang/include/*
+  #${jank_cling_build_dir}/include/*
 )
 set(jank_public_headers ${jank_includes} ${vcpkg_includes} ${third_party_includes})
 

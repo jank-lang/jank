@@ -1,9 +1,11 @@
 #include <cstdlib>
 
-#include <cling/Interpreter/Value.h>
 #include <clang/AST/Type.h>
-//#include <Interpreter/IncrementalExecutor.h>
-//#include <llvm/Support/MemoryBuffer.h>
+#include <clang/Basic/Diagnostic.h>
+#include <clang/Frontend/CompilerInstance.h>
+#include <clang/Frontend/FrontendDiagnostic.h>
+#include <llvm/Support/Signals.h>
+#include <llvm/ExecutionEngine/Orc/LLJIT.h>
 
 #include <jank/util/process_location.hpp>
 #include <jank/util/make_array.hpp>
@@ -11,23 +13,34 @@
 
 namespace jank::jit
 {
+  static void handle_fatal_llvm_error(void * const user_data,
+                                      char const *message,
+                                      native_bool const gen_crash_diag)
+  {
+    auto &diags(*static_cast<clang::DiagnosticsEngine *>(user_data));
+    diags.Report(clang::diag::err_fe_error_backend) << message;
+
+    /* Run the interrupt handlers to make sure any special cleanups get done, in
+       particular that we remove files registered with RemoveFileOnSignal. */
+    llvm::sys::RunInterruptHandlers();
+
+    /* We cannot recover from llvm errors.  When reporting a fatal error, exit
+       with status 70 to generate crash diagnostics.  For BSD systems this is
+       defined as an internal software error. Otherwise, exit with status 1. */
+    std::exit(gen_crash_diag ? 70 : 1);
+  }
+
   option<boost::filesystem::path> find_pch()
   {
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
 
-    auto dev_path(jank_path / "CMakeFiles/jank_lib.dir/cmake_pch.hxx.pch");
+    auto dev_path(jank_path / "incremental.pch");
     if(boost::filesystem::exists(dev_path))
     {
       return std::move(dev_path);
     }
 
-    auto dev_arm64_path(jank_path / "CMakeFiles/jank_lib.dir/cmake_pch_arm64.hxx.pch");
-    if(boost::filesystem::exists(dev_arm64_path))
-    {
-      return std::move(dev_arm64_path);
-    }
-
-    auto installed_path(jank_path / "../include/cpp/jank/prelude.hpp.pch");
+    auto installed_path(jank_path / "../include/cpp/jank/incremental.pch");
     if(boost::filesystem::exists(installed_path))
     {
       return std::move(installed_path);
@@ -48,24 +61,12 @@ namespace jank::jit
 
     if(std::system(command.c_str()) != 0)
     {
-      std::cerr << "failed to build using this script: " << script_path << std::endl;
+      std::cerr << "failed to build using this script: " << script_path << "\n";
       return none;
     }
 
-    std::cerr << "done!" << std::endl;
+    std::cerr << "done!\n";
     return jank_path / "../include/cpp/jank/prelude.hpp.pch";
-  }
-
-  option<boost::filesystem::path> find_llvm_resource_path()
-  {
-    auto const jank_path(jank::util::process_location().unwrap().parent_path());
-
-    if(boost::filesystem::exists(jank_path / "../lib/clang"))
-    {
-      return jank_path / "..";
-    }
-
-    return JANK_CLING_BUILD_DIR;
   }
 
   processor::processor(native_integer const optimization_level)
@@ -88,14 +89,6 @@ namespace jank::jit
     }
     auto const &pch_path_str(pch_path.unwrap().string());
 
-    auto const llvm_resource_path(find_llvm_resource_path());
-    if(llvm_resource_path.is_none())
-    /* TODO: Better error handling. */
-    {
-      throw std::runtime_error{ "unable to find LLVM resource path" };
-    }
-    auto const &llvm_resource_path_str(llvm_resource_path.unwrap().string());
-
     auto const include_path(jank_path / "../include");
 
     native_persistent_string_view O{ "-O0" };
@@ -117,28 +110,54 @@ namespace jank::jit
                                               optimization_level) };
     }
 
-    auto const args(jank::util::make_array("-std=c++17",
-                                           "-DHAVE_CXX14=1",
-                                           "-DIMMER_HAS_LIBGC=1",
-                                           "-include-pch",
-                                           pch_path_str.c_str(),
-                                           "-isystem",
-                                           include_path.c_str(),
-                                           O.data()));
-    interpreter = std::make_unique<cling::Interpreter>(args.size(),
-                                                       args.data(),
-                                                       llvm_resource_path_str.c_str());
+    /* When we AOT compile the jank compiler/runtime, we keep track of the compiler
+     * flags used so we can use the same set during JIT compilation. Here we parse these
+     * into a vector for Clang. Since Clang wants a vector<char const*>, we need to
+     * dynamically allocate. These will never be freed. */
+    std::vector<char const *> args{};
+    std::stringstream flags{ JANK_COMPILER_FLAGS };
+    std::string flag;
+    while(std::getline(flags, flag, ' '))
+    {
+      args.emplace_back(strdup(flag.c_str()));
+    }
+    args.emplace_back(strdup(O.data()));
+    /* We need to include our special incremental PCH. */
+    args.emplace_back("-include-pch");
+    args.emplace_back(strdup(pch_path_str.c_str()));
+
+    //fmt::println("compiler flags {}", JANK_COMPILER_FLAGS);
+
+    clang::IncrementalCompilerBuilder compiler_builder;
+    compiler_builder.SetCompilerArgs(args);
+    auto compiler_instance(llvm::cantFail(compiler_builder.CreateCpp()));
+    llvm::install_fatal_error_handler(handle_fatal_llvm_error,
+                                      static_cast<void *>(&compiler_instance->getDiagnostics()));
+
+    compiler_instance->LoadRequestedPlugins();
+
+    interpreter = llvm::cantFail(clang::Interpreter::create(std::move(compiler_instance)));
+  }
+
+  processor::~processor()
+  {
+    llvm::remove_fatal_error_handler();
   }
 
   result<option<runtime::object_ptr>, native_persistent_string>
   processor::eval(codegen::processor &cg_prc) const
   {
     profile::timer timer{ "jit eval" };
-    /* TODO: Improve Cling to accept string_views instead. */
     auto const str(cg_prc.declaration_str());
-    // fmt::println("{}", str);
+    //fmt::println("// declaration\n{}\n", str);
 
-    interpreter->declare(static_cast<std::string>(cg_prc.declaration_str()));
+    auto declare_res(interpreter->ParseAndExecute({ str.data(), str.size() }));
+    native_bool const declare_error{ declare_res };
+    llvm::logAllUnhandledErrors(std::move(declare_res), llvm::errs(), "error: ");
+    if(declare_error)
+    {
+      return err("compilation error: declaration");
+    }
 
     auto const expr(cg_prc.expression_str(true));
     if(expr.empty())
@@ -146,36 +165,27 @@ namespace jank::jit
       return ok(none);
     }
 
-    cling::Value v;
-    /* TODO: Format this for erasure during codegen. */
-    auto const result(interpreter->evaluate(fmt::format("&{}->base", expr), v));
-    if(result != cling::Interpreter::CompilationResult::kSuccess)
+    std::string full_expr{ fmt::format("&{}->base", expr) };
+
+    //fmt::println("// expression:\n{}\n", full_expr);
+
+    clang::Value ret;
+    auto expr_res(interpreter->ParseAndExecute(full_expr, &ret));
+    native_bool const expr_error{ expr_res };
+    llvm::logAllUnhandledErrors(std::move(expr_res), llvm::errs(), "error: ");
+    if(expr_error)
     {
-      return err("compilation error");
+      return err("compilation error: expression");
     }
 
-    // clang::QualType::getFromOpaquePtr(v.m_Type).getAsString()
-    auto const ret_val(v.castAs<runtime::object *>());
-    return ok(ret_val);
+    return ret.convertTo<runtime::object *>();
   }
 
   void processor::eval_string(native_persistent_string const &s) const
   {
     jank::profile::timer timer{ "jit eval_string" };
-    //fmt::println("JIT eval string {}", s);
-    interpreter->process(static_cast<std::string>(s));
+    //fmt::println("// eval_string:\n{}\n", s);
+    auto err(interpreter->ParseAndExecute({ s.data(), s.size() }));
+    llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
   }
-
-  //void processor::load_object(native_persistent_string_view const &path) const
-  //{
-  //  auto buf(std::move(llvm::MemoryBuffer::getFile(path.data()).get()));
-  //  llvm::cantFail(interpreter->m_Executor->m_JIT->Jit->addObjectFile(std::move(buf)));
-  //  auto sym(interpreter->m_Executor->m_JIT->Jit->lookup("wow1"));
-  //  if(auto e = sym.takeError())
-  //  {
-  //    fmt::println("sym error: {}", toString(std::move(e)));
-  //    return;
-  //  }
-  //  reinterpret_cast<void (*)()>(sym->getAddress())();
-  //}
 }

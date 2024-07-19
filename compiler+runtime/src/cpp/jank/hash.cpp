@@ -63,7 +63,7 @@ namespace jank::hash
 
   uint32_t combine(uint32_t const seed, uint32_t const t)
   {
-    return seed ^ t + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    return seed ^ (t + 0x9e3779b9 + (seed << 6) + (seed >> 2));
   }
 
   uint32_t integer(uint32_t const input)

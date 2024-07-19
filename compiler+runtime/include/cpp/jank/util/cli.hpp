@@ -22,11 +22,7 @@ namespace jank::util::cli
 
     /* Compilation. */
     native_transient_string compilation_path{ "classes" };
-#ifdef JANK_RELEASE
-    native_integer optimization_level{ 3 };
-#else
-    native_integer optimization_level{ 0 };
-#endif
+    native_integer optimization_level{};
 
     /* Run command. */
     native_transient_string target_file;

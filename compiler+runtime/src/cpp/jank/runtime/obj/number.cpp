@@ -44,7 +44,7 @@ namespace jank::runtime
 
   void obj::boolean::to_string(fmt::memory_buffer &buff) const
   {
-    return to_string_impl(data, buff);
+    to_string_impl(data, buff);
   }
 
   native_persistent_string obj::boolean::to_string() const

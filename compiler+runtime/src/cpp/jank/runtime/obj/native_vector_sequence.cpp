@@ -30,7 +30,7 @@ namespace jank::runtime
 
   void obj::native_vector_sequence::to_string(fmt::memory_buffer &buff) const
   {
-    return behavior::detail::to_string(data.begin(), data.end(), "(", ')', buff);
+    behavior::detail::to_string(data.begin(), data.end(), "(", ')', buff);
   }
 
   native_persistent_string obj::native_vector_sequence::to_string() const

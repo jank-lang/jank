@@ -147,7 +147,7 @@ namespace jank::runtime::module
                       boost::filesystem::path const &resource_path,
                       file_entry const &entry)
   {
-    boost::filesystem::path p{ entry.path };
+    boost::filesystem::path p{ native_transient_string{ entry.path } };
     /* We need the file path relative to the class path, since the class
      * path portion is not included in part of the module name. For example,
      * the file may live in `src/jank/clojure/core.jank` but the module
