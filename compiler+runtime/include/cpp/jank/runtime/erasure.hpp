@@ -13,6 +13,7 @@
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_hash_set.hpp>
+#include <jank/runtime/obj/persistent_sorted_set.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/persistent_array_map_sequence.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
@@ -23,6 +24,7 @@
 #include <jank/runtime/obj/transient_sorted_map.hpp>
 #include <jank/runtime/obj/transient_vector.hpp>
 #include <jank/runtime/obj/transient_hash_set.hpp>
+#include <jank/runtime/obj/transient_sorted_set.hpp>
 #include <jank/runtime/obj/iterator.hpp>
 #include <jank/runtime/obj/lazy_sequence.hpp>
 #include <jank/runtime/obj/chunk_buffer.hpp>
@@ -36,6 +38,7 @@
 #include <jank/runtime/obj/persistent_string_sequence.hpp>
 #include <jank/runtime/obj/persistent_list_sequence.hpp>
 #include <jank/runtime/obj/persistent_hash_set_sequence.hpp>
+#include <jank/runtime/obj/persistent_sorted_set_sequence.hpp>
 #include <jank/runtime/obj/native_array_sequence.hpp>
 #include <jank/runtime/obj/native_vector_sequence.hpp>
 #include <jank/runtime/obj/atom.hpp>
@@ -245,9 +248,19 @@ namespace jank::runtime
           return fn(expect_object<obj::persistent_hash_set>(erased), std::forward<Args>(args)...);
         }
         break;
+      case object_type::persistent_sorted_set:
+        {
+          return fn(expect_object<obj::persistent_sorted_set>(erased), std::forward<Args>(args)...);
+        }
+        break;
       case object_type::transient_hash_set:
         {
           return fn(expect_object<obj::transient_hash_set>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::transient_sorted_set:
+        {
+          return fn(expect_object<obj::transient_sorted_set>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::cons:
@@ -292,6 +305,12 @@ namespace jank::runtime
       case object_type::persistent_hash_set_sequence:
         {
           return fn(expect_object<obj::persistent_hash_set_sequence>(erased),
+                    std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_sorted_set_sequence:
+        {
+          return fn(expect_object<obj::persistent_sorted_set_sequence>(erased),
                     std::forward<Args>(args)...);
         }
         break;
@@ -470,6 +489,11 @@ namespace jank::runtime
           return fn(expect_object<obj::persistent_hash_set>(erased), std::forward<Args>(args)...);
         }
         break;
+      case object_type::persistent_sorted_set:
+        {
+          return fn(expect_object<obj::persistent_sorted_set>(erased), std::forward<Args>(args)...);
+        }
+        break;
       case object_type::cons:
         {
           return fn(expect_object<obj::cons>(erased), std::forward<Args>(args)...);
@@ -512,6 +536,12 @@ namespace jank::runtime
       case object_type::persistent_hash_set_sequence:
         {
           return fn(expect_object<obj::persistent_hash_set_sequence>(erased),
+                    std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_sorted_set_sequence:
+        {
+          return fn(expect_object<obj::persistent_sorted_set_sequence>(erased),
                     std::forward<Args>(args)...);
         }
         break;

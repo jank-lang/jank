@@ -9,47 +9,66 @@ namespace jank::runtime
 {
   enum class object_type
   {
-    nil = 1,
+    nil,
+
     boolean,
     integer,
     real,
+
     persistent_string,
     persistent_string_sequence,
+
     keyword,
     symbol,
     character,
+
     persistent_list,
+    persistent_list_sequence,
+
     persistent_vector,
-    persistent_array_map,
-    persistent_array_map_sequence,
-    persistent_hash_map,
-    persistent_hash_map_sequence,
-    persistent_sorted_map,
-    persistent_sorted_map_sequence,
-    transient_hash_map,
-    transient_sorted_map,
-    transient_hash_set,
     transient_vector,
+    persistent_vector_sequence,
+
+    persistent_array_map,
+    /* TODO: transient_array_map */
+    persistent_array_map_sequence,
+
+    persistent_hash_map,
+    transient_hash_map,
+    persistent_hash_map_sequence,
+
+    persistent_sorted_map,
+    transient_sorted_map,
+    persistent_sorted_map_sequence,
+
     persistent_hash_set,
+    transient_hash_set,
+    persistent_hash_set_sequence,
+
+    persistent_sorted_set,
+    transient_sorted_set,
+    persistent_sorted_set_sequence,
+
     cons,
     lazy_sequence,
+    range,
+    iterator,
+    native_array_sequence,
+    native_vector_sequence,
+
     chunk_buffer,
     array_chunk,
     chunked_cons,
-    range,
-    iterator,
+
     native_function_wrapper,
     jit_function,
     multi_function,
-    native_array_sequence,
-    native_vector_sequence,
-    persistent_vector_sequence,
-    persistent_list_sequence,
-    persistent_hash_set_sequence,
+
     atom,
     volatile_,
     reduced,
     ns,
+
     var,
     var_thread_binding,
     var_unbound_root,

@@ -2018,8 +2018,7 @@
   "Returns a new sorted set with supplied keys.  Any equal keys are
   handled as if by repeated uses of conj."
   ([& keys]
-   (throw "not yet implemented: sorted-set-by")
-   #_(native/raw "__value = obj::persistent_sorted_set::create_from_seq(~{ keys });")))
+   (native/raw "__value = obj::persistent_sorted_set::create_from_seq(~{ keys });")))
 
 (defn sorted-set-by
   "Returns a new sorted set with supplied keys, using the supplied

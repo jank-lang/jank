@@ -158,6 +158,8 @@ add_library(
   src/cpp/jank/runtime/obj/transient_vector.cpp
   src/cpp/jank/runtime/obj/persistent_hash_set.cpp
   src/cpp/jank/runtime/obj/transient_hash_set.cpp
+  src/cpp/jank/runtime/obj/persistent_sorted_set.cpp
+  src/cpp/jank/runtime/obj/transient_sorted_set.cpp
   src/cpp/jank/runtime/obj/persistent_string.cpp
   src/cpp/jank/runtime/obj/persistent_string_sequence.cpp
   src/cpp/jank/runtime/obj/cons.cpp
