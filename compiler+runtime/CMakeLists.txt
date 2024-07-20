@@ -133,6 +133,7 @@ add_library(
   src/cpp/jank/runtime/core/seq.cpp
   src/cpp/jank/runtime/core/truthy.cpp
   src/cpp/jank/runtime/core/munge.cpp
+  src/cpp/jank/runtime/core/math.cpp
   src/cpp/jank/runtime/module/loader.cpp
   src/cpp/jank/runtime/object.cpp
   src/cpp/jank/runtime/detail/native_persistent_array_map.cpp
@@ -177,7 +178,6 @@ add_library(
   src/cpp/jank/runtime/behavior/callable.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
   src/cpp/jank/runtime/behavior/derefable.cpp
-  src/cpp/jank/runtime/math.cpp
   src/cpp/jank/analyze/processor.cpp
   src/cpp/jank/analyze/local_frame.cpp
   src/cpp/jank/analyze/step/force_boxed.cpp

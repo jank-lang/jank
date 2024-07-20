@@ -1,6 +1,5 @@
 #include <jank/runtime/obj/range.hpp>
 #include <jank/runtime/obj/number.hpp>
-#include <jank/runtime/math.hpp>
 
 namespace jank::runtime
 {

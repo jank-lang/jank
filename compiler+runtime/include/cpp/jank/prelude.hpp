@@ -27,7 +27,6 @@
 #include <jank/runtime/erasure.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/math.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/behavior/collection_like.hpp>
 #include <jank/runtime/behavior/sequential.hpp>

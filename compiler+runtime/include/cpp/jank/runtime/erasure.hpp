@@ -436,7 +436,7 @@ namespace jank::runtime
   }
 
   template <typename F1, typename F2, typename... Args>
-  requires visitable<F1, Args...>
+  requires(visitable<F1, Args...> && !std::convertible_to<F2, object const *>)
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr auto
   visit_seqable(F1 const &fn, F2 const &else_fn, object const * const const_erased, Args &&...args)
@@ -585,7 +585,22 @@ namespace jank::runtime
 #pragma clang diagnostic pop
   }
 
+  /* Throws if the object isn't seqable. */
+  template <typename F1, typename... Args>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  constexpr auto visit_seqable(F1 const &fn, object const * const const_erased, Args &&...args)
+  {
+    return visit_seqable(
+      fn,
+      [=]() -> decltype(fn(obj::integer_ptr{}, std::forward<Args>(args)...)) {
+        throw std::runtime_error{ "not seqable: " + to_string(const_erased) };
+      },
+      const_erased,
+      std::forward<Args>(args)...);
+  }
+
   template <typename F1, typename F2, typename... Args>
+  requires(!std::convertible_to<F2, object const *>)
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr auto visit_number_like(F1 const &fn,
                                    F2 const &else_fn,
@@ -613,5 +628,19 @@ namespace jank::runtime
         return else_fn();
     }
 #pragma clang diagnostic pop
+  }
+
+  /* Throws if the object isn't number-like. */
+  template <typename F1, typename... Args>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  constexpr auto visit_number_like(F1 const &fn, object const * const const_erased, Args &&...args)
+  {
+    return visit_number_like(
+      fn,
+      [=]() -> decltype(fn(obj::integer_ptr{}, std::forward<Args>(args)...)) {
+        throw std::runtime_error{ "not a number: " + to_string(const_erased) };
+      },
+      const_erased,
+      std::forward<Args>(args)...);
   }
 }

@@ -234,4 +234,6 @@ namespace jank::runtime
   native_integer to_int(obj::real_ptr l);
   native_integer to_int(native_integer l);
   native_integer to_int(native_real l);
+
+  native_real to_real(object_ptr o);
 }
