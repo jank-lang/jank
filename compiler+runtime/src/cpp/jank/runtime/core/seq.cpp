@@ -8,7 +8,6 @@
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
-#include <jank/runtime/util.hpp>
 
 namespace jank::runtime
 {

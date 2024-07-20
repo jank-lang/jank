@@ -8,6 +8,8 @@
 
 namespace jank::analyze::expr
 {
+  using namespace jank::runtime;
+
   template <typename E>
   struct if_ : expression_base
   {
@@ -15,18 +17,18 @@ namespace jank::analyze::expr
     native_box<E> then{};
     option<native_box<E>> else_;
 
-    runtime::object_ptr to_runtime_data() const
+    object_ptr to_runtime_data() const
     {
-      return runtime::merge(
+      return merge(
         static_cast<expression_base const *>(this)->to_runtime_data(),
-        runtime::obj::persistent_array_map::create_unique(make_box("__type"),
-                                                          make_box("expr::if"),
-                                                          make_box("condition"),
-                                                          detail::to_runtime_data(*condition),
-                                                          make_box("then"),
-                                                          detail::to_runtime_data(*then),
-                                                          make_box("else"),
-                                                          detail::to_runtime_data(else_)));
+        obj::persistent_array_map::create_unique(make_box("__type"),
+                                                 make_box("expr::if"),
+                                                 make_box("condition"),
+                                                 jank::detail::to_runtime_data(*condition),
+                                                 make_box("then"),
+                                                 jank::detail::to_runtime_data(*then),
+                                                 make_box("else"),
+                                                 jank::detail::to_runtime_data(else_)));
     }
   };
 }

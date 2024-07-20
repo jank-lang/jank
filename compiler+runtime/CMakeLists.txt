@@ -120,7 +120,6 @@ endfunction()
 
 add_library(
   jank_lib STATIC
-  src/cpp/jank/native_box.cpp
   src/cpp/jank/hash.cpp
   src/cpp/jank/util/cli.cpp
   src/cpp/jank/util/mapped_file.cpp
@@ -132,8 +131,9 @@ add_library(
   src/cpp/jank/runtime/core.cpp
   src/cpp/jank/runtime/core/to_string.cpp
   src/cpp/jank/runtime/core/seq.cpp
+  src/cpp/jank/runtime/core/truthy.cpp
+  src/cpp/jank/runtime/core/munge.cpp
   src/cpp/jank/runtime/module/loader.cpp
-  src/cpp/jank/runtime/util.cpp
   src/cpp/jank/runtime/object.cpp
   src/cpp/jank/runtime/detail/native_persistent_array_map.cpp
   src/cpp/jank/runtime/context.cpp

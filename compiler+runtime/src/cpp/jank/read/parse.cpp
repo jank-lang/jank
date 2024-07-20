@@ -13,7 +13,7 @@
 
 namespace jank::read::parse
 {
-  using runtime::__rt_ctx;
+  using namespace jank::runtime;
 
   native_bool
   processor::object_source_info::operator==(processor::object_source_info const &rhs) const
@@ -62,10 +62,10 @@ namespace jank::read::parse
   processor::processor(lex::processor::iterator const &b, lex::processor::iterator const &e)
     : token_current{ b }
     , token_end{ e }
-    , splicing_allowed_var{ make_box<runtime::var>(
-                              __rt_ctx->intern_ns(make_box<runtime::obj::symbol>("clojure.core")),
-                              make_box<runtime::obj::symbol>("*splicing-allowed?*"),
-                              runtime::obj::boolean::false_const())
+    , splicing_allowed_var{ make_box<var>(
+                              __rt_ctx->intern_ns(make_box<obj::symbol>("clojure.core")),
+                              make_box<obj::symbol>("*splicing-allowed?*"),
+                              obj::boolean::false_const())
                               ->set_dynamic(true) }
   {
   }
@@ -206,8 +206,8 @@ namespace jank::read::parse
     expected_closer = some(lex::token_kind::close_paren);
 
     __rt_ctx
-      ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
-        std::make_pair(splicing_allowed_var, runtime::obj::boolean::true_const())))
+      ->push_thread_bindings(obj::persistent_hash_map::create_unique(
+        std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
       .expect_ok();
     util::scope_exit const finally{ [&]() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
@@ -227,7 +227,7 @@ namespace jank::read::parse
 
     expected_closer = prev_expected_closer;
     return object_source_info{
-      make_box<runtime::obj::persistent_list>(std::in_place, ret.rbegin(), ret.rend()),
+      make_box<obj::persistent_list>(std::in_place, ret.rbegin(), ret.rend()),
       start_token,
       latest_token
     };
@@ -241,8 +241,8 @@ namespace jank::read::parse
     expected_closer = some(lex::token_kind::close_square_bracket);
 
     __rt_ctx
-      ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
-        std::make_pair(splicing_allowed_var, runtime::obj::boolean::true_const())))
+      ->push_thread_bindings(obj::persistent_hash_map::create_unique(
+        std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
       .expect_ok();
     util::scope_exit const finally{ [&]() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
@@ -261,7 +261,7 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
-    return object_source_info{ make_box<runtime::obj::persistent_vector>(ret.persistent()),
+    return object_source_info{ make_box<obj::persistent_vector>(ret.persistent()),
                                start_token,
                                latest_token };
   }
@@ -275,8 +275,8 @@ namespace jank::read::parse
     expected_closer = some(lex::token_kind::close_curly_bracket);
 
     __rt_ctx
-      ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
-        std::make_pair(splicing_allowed_var, runtime::obj::boolean::true_const())))
+      ->push_thread_bindings(obj::persistent_hash_map::create_unique(
+        std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
       .expect_ok();
     util::scope_exit const finally{ [&]() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
@@ -308,7 +308,7 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
-    return object_source_info{ make_box<runtime::obj::persistent_array_map>(ret),
+    return object_source_info{ make_box<obj::persistent_array_map>(ret),
                                start_token,
                                latest_token };
   }
@@ -330,9 +330,9 @@ namespace jank::read::parse
       return err(error{ start_token.pos, native_persistent_string{ "invalid value after quote" } });
     }
 
-    return object_source_info{ runtime::erase(make_box<runtime::obj::persistent_list>(
+    return object_source_info{ erase(make_box<obj::persistent_list>(
                                  std::in_place,
-                                 make_box<runtime::obj::symbol>("quote"),
+                                 make_box<obj::symbol>("quote"),
                                  val_result.expect_ok().unwrap().ptr)),
                                start_token,
                                latest_token };
@@ -344,7 +344,7 @@ namespace jank::read::parse
     ++token_current;
     auto const sv(boost::get<native_persistent_string_view>(token.data));
 
-    return object_source_info{ make_box<runtime::obj::character>(sv), token, token };
+    return object_source_info{ make_box<obj::character>(sv), token, token };
   }
 
   processor::object_result processor::parse_meta_hint()
@@ -362,20 +362,20 @@ namespace jank::read::parse
         error{ start_token.pos, native_persistent_string{ "invalid meta value after meta hint" } });
     }
 
-    auto meta_result(runtime::visit_object(
+    auto meta_result(visit_object(
       [&](auto const typed_val) -> processor::object_result {
         using T = typename decltype(typed_val)::value_type;
-        if constexpr(std::same_as<T, runtime::obj::keyword>)
+        if constexpr(std::same_as<T, obj::keyword>)
         {
-          return object_source_info{ runtime::obj::persistent_array_map::create_unique(
-                                       typed_val,
-                                       runtime::obj::boolean::true_const()),
-                                     start_token,
-                                     latest_token };
+          return object_source_info{
+            obj::persistent_array_map::create_unique(typed_val, obj::boolean::true_const()),
+            start_token,
+            latest_token
+          };
         }
         /* TODO: Concept for map-like. */
-        if constexpr(std::same_as<T, runtime::obj::persistent_hash_map>
-                     || std::same_as<T, runtime::obj::persistent_array_map>)
+        if constexpr(std::same_as<T, obj::persistent_hash_map>
+                     || std::same_as<T, obj::persistent_array_map>)
         {
           return object_source_info{ typed_val, start_token, latest_token };
         }
@@ -403,10 +403,10 @@ namespace jank::read::parse
                         native_persistent_string{ "invalid target value after meta hint" } });
     }
 
-    return runtime::visit_object(
+    return visit_object(
       [&](auto const typed_val) -> processor::object_result {
         using T = typename decltype(typed_val)::value_type;
-        if constexpr(runtime::behavior::metadatable<T>)
+        if constexpr(behavior::metadatable<T>)
         {
           if(typed_val->meta.is_none())
           {
@@ -417,8 +417,8 @@ namespace jank::read::parse
           else
           {
             return object_source_info{ typed_val->with_meta(
-                                         runtime::merge(typed_val->meta.unwrap(),
-                                                        meta_result.expect_ok().unwrap().ptr)),
+                                         merge(typed_val->meta.unwrap(),
+                                               meta_result.expect_ok().unwrap().ptr)),
                                        start_token,
                                        latest_token };
           }
@@ -471,8 +471,8 @@ namespace jank::read::parse
     expected_closer = some(lex::token_kind::close_curly_bracket);
 
     __rt_ctx
-      ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
-        std::make_pair(splicing_allowed_var, runtime::obj::boolean::true_const())))
+      ->push_thread_bindings(obj::persistent_hash_map::create_unique(
+        std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
       .expect_ok();
     util::scope_exit const finally{ [&]() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
@@ -491,8 +491,7 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
-    return object_source_info{ make_box<runtime::obj::persistent_hash_set>(
-                                 std::move(ret).persistent()),
+    return object_source_info{ make_box<obj::persistent_hash_set>(std::move(ret).persistent()),
                                start_token,
                                latest_token };
   }
@@ -519,14 +518,13 @@ namespace jank::read::parse
       return err(
         error{ start_token.pos, native_persistent_string{ "value after #( must be present" } });
     }
-    else if(list_result.expect_ok().unwrap().ptr->type != runtime::object_type::persistent_list)
+    else if(list_result.expect_ok().unwrap().ptr->type != object_type::persistent_list)
     {
       return err(
         error{ start_token.pos, native_persistent_string{ "value after #( must be a list" } });
     }
 
-    auto const call(
-      runtime::expect_object<runtime::obj::persistent_list>(list_result.expect_ok().unwrap().ptr));
+    auto const call(expect_object<obj::persistent_list>(list_result.expect_ok().unwrap().ptr));
     auto const call_end(list_result.expect_ok().unwrap().end);
 
     runtime::detail::native_transient_vector arg_trans;
@@ -534,21 +532,18 @@ namespace jank::read::parse
     {
       for(uint8_t i{}; i < shorthand.unwrap().max_fixed_arity.unwrap(); ++i)
       {
-        arg_trans.push_back(make_box<runtime::obj::symbol>(fmt::format("%{}#", i + 1)));
+        arg_trans.push_back(make_box<obj::symbol>(fmt::format("%{}#", i + 1)));
       }
     }
     if(shorthand.unwrap().variadic)
     {
-      arg_trans.push_back(make_box<runtime::obj::symbol>("&"));
-      arg_trans.push_back(make_box<runtime::obj::symbol>("%&#"));
+      arg_trans.push_back(make_box<obj::symbol>("&"));
+      arg_trans.push_back(make_box<obj::symbol>("%&#"));
     }
 
-    auto const args(make_box<runtime::obj::persistent_vector>(arg_trans.persistent()));
+    auto const args(make_box<obj::persistent_vector>(arg_trans.persistent()));
     auto const wrapped(
-      make_box<runtime::obj::persistent_list>(std::in_place,
-                                              make_box<runtime::obj::symbol>("fn*"),
-                                              args,
-                                              call));
+      make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("fn*"), args, call));
 
     shorthand = none;
 
@@ -570,20 +565,17 @@ namespace jank::read::parse
       return err(
         error{ start_token.pos, native_persistent_string{ "value after #' must be present" } });
     }
-    else if(sym_result.expect_ok().unwrap().ptr->type != runtime::object_type::symbol)
+    else if(sym_result.expect_ok().unwrap().ptr->type != object_type::symbol)
     {
       return err(
         error{ start_token.pos, native_persistent_string{ "value after #' must be a symbol" } });
     }
 
-    auto const sym(
-      runtime::expect_object<runtime::obj::symbol>(sym_result.expect_ok().unwrap().ptr));
+    auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
     auto const sym_end(sym_result.expect_ok().unwrap().end);
 
     auto const wrapped(
-      make_box<runtime::obj::persistent_list>(std::in_place,
-                                              make_box<runtime::obj::symbol>("var"),
-                                              sym));
+      make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("var"), sym));
 
     return object_source_info{ wrapped, start_token, sym_end };
   }
@@ -622,14 +614,13 @@ namespace jank::read::parse
       return err(
         error{ start_token.pos, native_persistent_string{ "value after #? must be present" } });
     }
-    else if(list_result.expect_ok().unwrap().ptr->type != runtime::object_type::persistent_list)
+    else if(list_result.expect_ok().unwrap().ptr->type != object_type::persistent_list)
     {
       return err(
         error{ start_token.pos, native_persistent_string{ "value after #? must be a list" } });
     }
 
-    auto const list(
-      runtime::expect_object<runtime::obj::persistent_list>(list_result.expect_ok().unwrap().ptr));
+    auto const list(expect_object<obj::persistent_list>(list_result.expect_ok().unwrap().ptr));
     auto const list_end(list_result.expect_ok().unwrap().end);
 
     if(list.data->count() % 2 == 1)
@@ -647,18 +638,18 @@ namespace jank::read::parse
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
        * matter. If :default comes first, we'll always take it. In short, order is important. This
        * matches Clojure's behavior. */
-      if(runtime::equal(kw, jank_keyword) || runtime::equal(kw, default_keyword))
+      if(equal(kw, jank_keyword) || equal(kw, default_keyword))
       {
         if(splice)
         {
-          if(!runtime::detail::truthy(splicing_allowed_var->deref()))
+          if(!truthy(splicing_allowed_var->deref()))
           {
             return err(error{ start_token.pos,
                               native_persistent_string{ "#?@ splice must not be top-level" } });
           }
 
           auto const s(next_in_place(it)->first());
-          return runtime::visit_seqable(
+          return visit_seqable(
             [&](auto const typed_s) -> processor::object_result {
               auto const seq(typed_s->fresh_seq());
               if(!seq)
@@ -693,16 +684,15 @@ namespace jank::read::parse
     return ok(none);
   }
 
-  string_result<runtime::object_ptr>
-  processor::syntax_quote_expand_seq(runtime::object_ptr const seq)
+  string_result<object_ptr> processor::syntax_quote_expand_seq(object_ptr const seq)
   {
     if(!seq)
     {
-      return runtime::obj::nil::nil_const();
+      return obj::nil::nil_const();
     }
 
-    return runtime::visit_seqable(
-      [this](auto const typed_seq) -> string_result<runtime::object_ptr> {
+    return visit_seqable(
+      [this](auto const typed_seq) -> string_result<object_ptr> {
         runtime::detail::native_transient_vector ret;
         for(auto it(typed_seq->fresh_seq()); it != nullptr; it = next_in_place(it))
         {
@@ -710,14 +700,13 @@ namespace jank::read::parse
 
           if(syntax_quote_is_unquote(item, false))
           {
-            ret.push_back(make_box<runtime::obj::persistent_list>(
-              std::in_place,
-              make_box<runtime::obj::symbol>("clojure.core/list"),
-              runtime::second(item)));
+            ret.push_back(make_box<obj::persistent_list>(std::in_place,
+                                                         make_box<obj::symbol>("clojure.core/list"),
+                                                         second(item)));
           }
           else if(syntax_quote_is_unquote(item, true))
           {
-            ret.push_back(runtime::second(item));
+            ret.push_back(second(item));
           }
           else
           {
@@ -726,66 +715,63 @@ namespace jank::read::parse
             {
               return quoted_item;
             }
-            ret.push_back(make_box<runtime::obj::persistent_list>(
-              std::in_place,
-              make_box<runtime::obj::symbol>("clojure.core/list"),
-              quoted_item.expect_ok()));
+            ret.push_back(make_box<obj::persistent_list>(std::in_place,
+                                                         make_box<obj::symbol>("clojure.core/list"),
+                                                         quoted_item.expect_ok()));
           }
         }
-        auto const vec(make_box<runtime::obj::persistent_vector>(ret.persistent())->seq());
-        return vec ?: runtime::obj::nil::nil_const();
+        auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
+        return vec ?: obj::nil::nil_const();
       },
-      []() -> string_result<runtime::object_ptr> {
+      []() -> string_result<object_ptr> {
         /* TODO: ICE */
         return err("not seqable");
       },
       seq);
   }
 
-  string_result<runtime::object_ptr>
-  processor::syntax_quote_flatten_map(runtime::object_ptr const seq)
+  string_result<object_ptr> processor::syntax_quote_flatten_map(object_ptr const seq)
   {
     if(!seq)
     {
-      return runtime::obj::nil::nil_const();
+      return obj::nil::nil_const();
     }
 
-    return runtime::visit_seqable(
-      [](auto const typed_seq) -> string_result<runtime::object_ptr> {
+    return visit_seqable(
+      [](auto const typed_seq) -> string_result<object_ptr> {
         runtime::detail::native_transient_vector ret;
         for(auto it(typed_seq->fresh_seq()); it != nullptr; it = next_in_place(it))
         {
           auto item(it->first());
-          ret.push_back(runtime::first(item));
-          ret.push_back(runtime::second(item));
+          ret.push_back(first(item));
+          ret.push_back(second(item));
         }
-        auto const vec(make_box<runtime::obj::persistent_vector>(ret.persistent())->seq());
-        return vec ?: runtime::obj::nil::nil_const();
+        auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
+        return vec ?: obj::nil::nil_const();
       },
-      []() -> string_result<runtime::object_ptr> {
+      []() -> string_result<object_ptr> {
         /* TODO: ICE */
         return err("not seqable");
       },
       seq);
   }
 
-  native_bool
-  processor::syntax_quote_is_unquote(runtime::object_ptr const form, native_bool const splice)
+  native_bool processor::syntax_quote_is_unquote(object_ptr const form, native_bool const splice)
   {
-    return runtime::visit_seqable(
+    return visit_seqable(
       [splice](auto const typed_form) {
-        runtime::object_ptr item{};
+        object_ptr item{};
         auto const s(typed_form->seq());
         if(!s)
         {
-          item = runtime::obj::nil::nil_const();
+          item = obj::nil::nil_const();
         }
         else
         {
           item = s->first();
         }
 
-        return make_box<runtime::obj::symbol>(
+        return make_box<obj::symbol>(
                  (splice ? "clojure.core/unquote-splicing" : "clojure.core/unquote"))
           ->equal(*item);
       },
@@ -793,57 +779,53 @@ namespace jank::read::parse
       form);
   }
 
-  string_result<runtime::object_ptr> processor::syntax_quote(runtime::object_ptr const form)
+  string_result<object_ptr> processor::syntax_quote(object_ptr const form)
   {
     /* Specials, such as fn*, let*, try, etc. just get left alone. We can't qualify them more. */
     if(__rt_ctx->an_prc.is_special(form))
     {
-      return make_box<runtime::obj::persistent_list>(std::in_place,
-                                                     make_box<runtime::obj::symbol>("quote"),
-                                                     form);
+      return make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("quote"), form);
     }
     /* By default, all symbols get qualified. However, any symbol ending in # does not get
      * qualified, but instead gets a gensym (a unique name). The unique names are kept in
      * a bound map for reproducibility. */
-    else if(form->type == runtime::object_type::symbol)
+    else if(form->type == object_type::symbol)
     {
-      auto sym(runtime::expect_object<runtime::obj::symbol>(form));
+      auto sym(expect_object<obj::symbol>(form));
       if(sym->ns.empty() && sym->name.ends_with('#'))
       {
         auto const env(__rt_ctx->gensym_env_var->deref());
-        if(env->type == runtime::object_type::nil)
+        if(env->type == object_type::nil)
         {
           return err("gensym literal is not within a syntax quote");
         }
 
-        auto gensym(runtime::get(env, sym));
-        if(gensym->type == runtime::object_type::nil)
+        auto gensym(get(env, sym));
+        if(gensym->type == object_type::nil)
         {
-          gensym = make_box<runtime::obj::symbol>(runtime::context::unique_symbol(sym->name));
-          __rt_ctx->gensym_env_var->set(runtime::assoc(env, sym, gensym)).expect_ok();
+          gensym = make_box<obj::symbol>(context::unique_symbol(sym->name));
+          __rt_ctx->gensym_env_var->set(assoc(env, sym, gensym)).expect_ok();
         }
-        sym = runtime::expect_object<runtime::obj::symbol>(gensym);
+        sym = expect_object<obj::symbol>(gensym);
       }
       else if(sym->ns.empty() && sym->name != "&")
       {
         auto var(__rt_ctx->find_var(sym));
         if(var.is_none())
         {
-          sym = make_box<runtime::obj::symbol>(__rt_ctx->current_ns()->name->name, sym->name);
+          sym = make_box<obj::symbol>(__rt_ctx->current_ns()->name->name, sym->name);
         }
         else
         {
-          sym = make_box<runtime::obj::symbol>(var.unwrap()->n->name->name, sym->name);
+          sym = make_box<obj::symbol>(var.unwrap()->n->name->name, sym->name);
         }
       }
 
-      return make_box<runtime::obj::persistent_list>(std::in_place,
-                                                     make_box<runtime::obj::symbol>("quote"),
-                                                     sym);
+      return make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("quote"), sym);
     }
     else if(syntax_quote_is_unquote(form, false))
     {
-      return runtime::second(form);
+      return second(form);
     }
     else if(syntax_quote_is_unquote(form, true))
     {
@@ -852,10 +834,9 @@ namespace jank::read::parse
     /* Clojure treats these specially, perhaps as a small optimization, by not quoting. We can
      * do the same for now, but quoting all of these has no effect. */
     /* TODO: Characters. */
-    else if(form->type == runtime::object_type::keyword
-            || form->type == runtime::object_type::persistent_string
-            || form->type == runtime::object_type::integer
-            || form->type == runtime::object_type::real || form->type == runtime::object_type::nil)
+    else if(form->type == object_type::keyword || form->type == object_type::persistent_string
+            || form->type == object_type::integer || form->type == object_type::real
+            || form->type == object_type::nil)
     {
       return form;
     }
@@ -864,11 +845,11 @@ namespace jank::read::parse
       /* Handle all sorts of sequences. We do this by recursively walking through them,
        * flattening them, qualifying the symbols, and then building up code which will
        * reassemble them. */
-      return runtime::visit_seqable(
-        [&](auto const typed_form) -> string_result<runtime::object_ptr> {
+      return visit_seqable(
+        [&](auto const typed_form) -> string_result<object_ptr> {
           using T = typename decltype(typed_form)::value_type;
 
-          if constexpr(std::same_as<T, runtime::obj::persistent_vector>)
+          if constexpr(std::same_as<T, obj::persistent_vector>)
           {
             auto expanded(syntax_quote_expand_seq(typed_form->seq()));
             if(expanded.is_err())
@@ -876,18 +857,17 @@ namespace jank::read::parse
               return expanded;
             }
 
-            return make_box<runtime::obj::persistent_list>(
+            return make_box<obj::persistent_list>(
               std::in_place,
-              make_box<runtime::obj::symbol>("clojure.core/apply"),
-              make_box<runtime::obj::symbol>("clojure.core/vector"),
-              make_box<runtime::obj::persistent_list>(
+              make_box<obj::symbol>("clojure.core/apply"),
+              make_box<obj::symbol>("clojure.core/vector"),
+              make_box<obj::persistent_list>(
                 std::in_place,
-                make_box<runtime::obj::symbol>("clojure.core/seq"),
-                runtime::conj(expanded.expect_ok(),
-                              make_box<runtime::obj::symbol>("clojure.core/concat"))));
+                make_box<obj::symbol>("clojure.core/seq"),
+                conj(expanded.expect_ok(), make_box<obj::symbol>("clojure.core/concat"))));
           }
-          if constexpr(std::same_as<T, runtime::obj::persistent_hash_map>
-                       || std::same_as<T, runtime::obj::persistent_array_map>)
+          if constexpr(std::same_as<T, obj::persistent_hash_map>
+                       || std::same_as<T, obj::persistent_array_map>)
           {
             auto flattened(syntax_quote_flatten_map(typed_form->seq()));
             if(flattened.is_err())
@@ -901,28 +881,26 @@ namespace jank::read::parse
               return expanded;
             }
 
-            return make_box<runtime::obj::persistent_list>(
+            return make_box<obj::persistent_list>(
               std::in_place,
-              make_box<runtime::obj::symbol>("clojure.core/apply"),
-              make_box<runtime::obj::symbol>("clojure.core/hash-map"),
-              make_box<runtime::obj::persistent_list>(
+              make_box<obj::symbol>("clojure.core/apply"),
+              make_box<obj::symbol>("clojure.core/hash-map"),
+              make_box<obj::persistent_list>(
                 std::in_place,
-                make_box<runtime::obj::symbol>("clojure.core/seq"),
-                runtime::conj(expanded.expect_ok(),
-                              make_box<runtime::obj::symbol>("clojure.core/concat"))));
+                make_box<obj::symbol>("clojure.core/seq"),
+                conj(expanded.expect_ok(), make_box<obj::symbol>("clojure.core/concat"))));
           }
-          if constexpr(std::same_as<T, runtime::obj::persistent_hash_set>)
+          if constexpr(std::same_as<T, obj::persistent_hash_set>)
           {
             return err("nyi: set");
           }
-          if constexpr(std::same_as<T, runtime::obj::persistent_list>)
+          if constexpr(std::same_as<T, obj::persistent_list>)
           {
             auto const seq(typed_form->seq());
             if(!seq)
             {
-              return make_box<runtime::obj::persistent_list>(
-                std::in_place,
-                make_box<runtime::obj::symbol>("clojure.core/list"));
+              return make_box<obj::persistent_list>(std::in_place,
+                                                    make_box<obj::symbol>("clojure.core/list"));
             }
             else
             {
@@ -932,11 +910,10 @@ namespace jank::read::parse
                 return expanded;
               }
 
-              return make_box<runtime::obj::persistent_list>(
+              return make_box<obj::persistent_list>(
                 std::in_place,
-                make_box<runtime::obj::symbol>("clojure.core/seq"),
-                runtime::conj(expanded.expect_ok(),
-                              make_box<runtime::obj::symbol>("clojure.core/concat")));
+                make_box<obj::symbol>("clojure.core/seq"),
+                conj(expanded.expect_ok(), make_box<obj::symbol>("clojure.core/concat")));
             }
           }
           else
@@ -946,10 +923,10 @@ namespace jank::read::parse
           }
         },
         /* For anything else, do nothing special aside from quoting. Hopefully that works. */
-        [=]() -> string_result<runtime::object_ptr> {
-          return make_box<runtime::obj::persistent_list>(std::in_place,
-                                                         make_box<runtime::obj::symbol>("quote"),
-                                                         form);
+        [=]() -> string_result<object_ptr> {
+          return make_box<obj::persistent_list>(std::in_place,
+                                                make_box<obj::symbol>("quote"),
+                                                form);
         },
         form);
     }
@@ -960,11 +937,10 @@ namespace jank::read::parse
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
 
-    runtime::context::binding_scope const scope{
-      *__rt_ctx,
-      runtime::obj::persistent_hash_map::create_unique(
-        std::make_pair(__rt_ctx->gensym_env_var, runtime::obj::persistent_hash_map::empty()))
-    };
+    context::binding_scope const scope{ *__rt_ctx,
+                                        obj::persistent_hash_map::create_unique(
+                                          std::make_pair(__rt_ctx->gensym_env_var,
+                                                         obj::persistent_hash_map::empty())) };
 
     auto const old_quoted(quoted);
     quoted = true;
@@ -1005,10 +981,9 @@ namespace jank::read::parse
     }
 
     return object_source_info{
-      runtime::erase(make_box<runtime::obj::persistent_list>(
+      erase(make_box<obj::persistent_list>(
         std::in_place,
-        make_box<runtime::obj::symbol>(
-          (splice ? "clojure.core/unquote-splicing" : "clojure.core/unquote")),
+        make_box<obj::symbol>((splice ? "clojure.core/unquote-splicing" : "clojure.core/unquote")),
         val_result.expect_ok().unwrap().ptr)),
       start_token,
       latest_token
@@ -1029,9 +1004,9 @@ namespace jank::read::parse
       return err(error{ start_token.pos, native_persistent_string{ "invalid value after @" } });
     }
 
-    return object_source_info{ runtime::erase(make_box<runtime::obj::persistent_list>(
+    return object_source_info{ erase(make_box<obj::persistent_list>(
                                  std::in_place,
-                                 make_box<runtime::obj::symbol>("deref"),
+                                 make_box<obj::symbol>("deref"),
                                  val_result.expect_ok().unwrap().ptr)),
                                start_token,
                                latest_token };
@@ -1040,7 +1015,7 @@ namespace jank::read::parse
   processor::object_result processor::parse_nil()
   {
     ++token_current;
-    return object_source_info{ runtime::obj::nil::nil_const(), latest_token, latest_token };
+    return object_source_info{ obj::nil::nil_const(), latest_token, latest_token };
   }
 
   processor::object_result processor::parse_boolean()
@@ -1048,7 +1023,7 @@ namespace jank::read::parse
     auto const token((*token_current).expect_ok());
     ++token_current;
     auto const b(boost::get<native_bool>(token.data));
-    return object_source_info{ make_box<runtime::obj::boolean>(b), token, token };
+    return object_source_info{ make_box<obj::boolean>(b), token, token };
   }
 
   processor::object_result processor::parse_symbol()
@@ -1076,7 +1051,7 @@ namespace jank::read::parse
         /* Normal symbols will have the ns resolved immediately. */
         else
         {
-          auto const resolved_ns(__rt_ctx->resolve_ns(make_box<runtime::obj::symbol>(ns_portion)));
+          auto const resolved_ns(__rt_ctx->resolve_ns(make_box<obj::symbol>(ns_portion)));
           if(resolved_ns.is_none())
           {
             return err(error{ token.pos, fmt::format("unknown namespace: {}", ns_portion) });
@@ -1136,7 +1111,7 @@ namespace jank::read::parse
         name = name + "#";
       }
     }
-    return object_source_info{ make_box<runtime::obj::symbol>(ns, name), token, token };
+    return object_source_info{ make_box<obj::symbol>(ns, name), token, token };
   }
 
   processor::object_result processor::parse_keyword()
@@ -1179,8 +1154,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return object_source_info{ make_box<runtime::obj::integer>(
-                                 boost::get<native_integer>(token.data)),
+    return object_source_info{ make_box<obj::integer>(boost::get<native_integer>(token.data)),
                                token,
                                token };
   }
@@ -1189,7 +1163,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return object_source_info{ make_box<runtime::obj::real>(boost::get<native_real>(token.data)),
+    return object_source_info{ make_box<obj::real>(boost::get<native_real>(token.data)),
                                token,
                                token };
   }
@@ -1199,7 +1173,7 @@ namespace jank::read::parse
     auto const token(token_current->expect_ok());
     ++token_current;
     auto const sv(boost::get<native_persistent_string_view>(token.data));
-    return object_source_info{ make_box<runtime::obj::persistent_string>(
+    return object_source_info{ make_box<obj::persistent_string>(
                                  native_persistent_string{ sv.data(), sv.size() }),
                                token,
                                token };
@@ -1215,7 +1189,7 @@ namespace jank::read::parse
     {
       return err(error{ token.pos, res.expect_err_move() });
     }
-    return object_source_info{ make_box<runtime::obj::persistent_string>(res.expect_ok_move()),
+    return object_source_info{ make_box<obj::persistent_string>(res.expect_ok_move()),
                                token,
                                token };
   }

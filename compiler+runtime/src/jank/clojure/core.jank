@@ -76,7 +76,7 @@
 
 (def boolean
   (fn* boolean [o]
-    (native/raw "__value = make_box(runtime::detail::truthy(~{ o }));")))
+    (native/raw "__value = make_box(truthy(~{ o }));")))
 (def int
   (fn* int [o]
     (native/raw "__value = make_box(to_int(~{ o }));")))

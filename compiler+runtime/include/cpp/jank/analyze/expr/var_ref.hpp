@@ -7,22 +7,23 @@
 
 namespace jank::analyze::expr
 {
+  using namespace jank::runtime;
+
   template <typename E>
   struct var_ref : expression_base
   {
-    runtime::obj::symbol_ptr qualified_name{};
-    runtime::var_ptr var{};
+    obj::symbol_ptr qualified_name{};
+    var_ptr var{};
 
-    runtime::object_ptr to_runtime_data() const
+    object_ptr to_runtime_data() const
     {
-      return runtime::merge(
-        static_cast<expression_base const *>(this)->to_runtime_data(),
-        runtime::obj::persistent_array_map::create_unique(make_box("__type"),
-                                                          make_box("expr::var_ref"),
-                                                          make_box("qualified_name"),
-                                                          qualified_name,
-                                                          make_box("var"),
-                                                          var));
+      return merge(static_cast<expression_base const *>(this)->to_runtime_data(),
+                   obj::persistent_array_map::create_unique(make_box("__type"),
+                                                            make_box("expr::var_ref"),
+                                                            make_box("qualified_name"),
+                                                            qualified_name,
+                                                            make_box("var"),
+                                                            var));
     }
   };
 }

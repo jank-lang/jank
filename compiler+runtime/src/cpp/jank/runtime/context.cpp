@@ -7,7 +7,6 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/number.hpp>
-#include <jank/runtime/util.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/codegen/processor.hpp>
 #include <jank/evaluate.hpp>
@@ -199,7 +198,7 @@ namespace jank::runtime
       exprs.emplace_back(expr.expect_ok());
     }
 
-    if(detail::truthy(compile_files_var->deref()))
+    if(truthy(compile_files_var->deref()))
     {
       auto const &current_module(
         expect_object<obj::persistent_string>(current_module_var->deref())->data);
@@ -521,7 +520,7 @@ namespace jank::runtime
 
           auto const meta(var.unwrap()->meta.unwrap());
           auto const found_macro(get(meta, intern_keyword("", "macro", true).expect_ok()));
-          if(!found_macro || !detail::truthy(found_macro))
+          if(!found_macro || !truthy(found_macro))
           {
             return typed_o;
           }

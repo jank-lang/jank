@@ -3,10 +3,9 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/native_persistent_list.hpp>
 
-/* TODO: Rename this file. It only contains make_box overloads. */
-namespace jank
+namespace jank::runtime
 {
-  namespace runtime::obj
+  namespace obj
   {
     using nil = static_object<object_type::nil>;
     using boolean = static_object<object_type::boolean>;
@@ -19,7 +18,6 @@ namespace jank
   }
 
   /* TODO: Constexpr these. */
-
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(std::nullptr_t const &)
   {

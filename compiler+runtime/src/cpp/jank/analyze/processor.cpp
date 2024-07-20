@@ -511,7 +511,7 @@ namespace jank::analyze
       meta
     }));
 
-    if(runtime::detail::truthy(rt_ctx.compile_files_var->deref()))
+    if(runtime::truthy(rt_ctx.compile_files_var->deref()))
     {
       /* Register this module as a dependency of the current module so we can generate
        * code to load it. */
@@ -544,8 +544,7 @@ namespace jank::analyze
     {
       return err(error{ "unable to use recur outside of a function or loop" });
     }
-    else if(rt_ctx.no_recur_var->is_bound()
-            && runtime::detail::truthy(rt_ctx.no_recur_var->deref()))
+    else if(rt_ctx.no_recur_var->is_bound() && runtime::truthy(rt_ctx.no_recur_var->deref()))
     {
       return err(error{ "recur is not permitted through a try/catch" });
     }
@@ -1433,10 +1432,10 @@ namespace jank::analyze
                             /* NOTE: We don't support unboxed meta on variadic arities. */
                             make_box(arg_count))));
 
-        native_bool const supports_unboxed_input(runtime::detail::truthy(
+        native_bool const supports_unboxed_input(runtime::truthy(
           get(arity_meta, rt_ctx.intern_keyword("", "supports-unboxed-input?", true).expect_ok())));
         native_bool const supports_unboxed_output(
-          runtime::detail::truthy
+          runtime::truthy
           /* TODO: Rename key. */
           (get(arity_meta, rt_ctx.intern_keyword("", "unboxed-output?", true).expect_ok())));
 

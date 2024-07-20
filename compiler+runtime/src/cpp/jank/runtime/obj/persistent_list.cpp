@@ -1,4 +1,3 @@
-#include <jank/runtime/util.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
 
 namespace jank::runtime

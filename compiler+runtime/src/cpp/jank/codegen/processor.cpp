@@ -3,7 +3,6 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/character.hpp>
-#include <jank/runtime/util.hpp>
 #include <jank/codegen/processor.hpp>
 #include <jank/util/escape.hpp>
 #include <jank/detail/to_runtime_data.hpp>
@@ -168,24 +167,24 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, runtime::obj::integer>)
           {
-            fmt::format_to(
-              inserter,
-              "jank::make_box<jank::runtime::obj::integer>(static_cast<jank::native_integer>({}))",
-              typed_o->data);
+            fmt::format_to(inserter,
+                           "jank::runtime::make_box<jank::runtime::obj::integer>(static_cast<jank::"
+                           "native_integer>({}))",
+                           typed_o->data);
           }
           else if constexpr(std::same_as<T, runtime::obj::real>)
           {
-            fmt::format_to(
-              inserter,
-              "jank::make_box<jank::runtime::obj::real>(static_cast<jank::native_real>({}))",
-              typed_o->data);
+            fmt::format_to(inserter,
+                           "jank::runtime::make_box<jank::runtime::obj::real>(static_cast<jank::"
+                           "native_real>({}))",
+                           typed_o->data);
           }
           else if constexpr(std::same_as<T, runtime::obj::symbol>)
           {
             if(typed_o->meta.is_some())
             {
               fmt::format_to(inserter,
-                             R"(jank::make_box<jank::runtime::obj::symbol>("{}", "{}", )",
+                             R"(jank::runtime::make_box<jank::runtime::obj::symbol>("{}", "{}", )",
                              typed_o->ns,
                              typed_o->name);
               gen_constant(typed_o->meta.unwrap(), buffer, true);
@@ -194,7 +193,7 @@ namespace jank::codegen
             else
             {
               fmt::format_to(inserter,
-                             R"(jank::make_box<jank::runtime::obj::symbol>("{}", "{}"))",
+                             R"(jank::runtime::make_box<jank::runtime::obj::symbol>("{}", "{}"))",
                              typed_o->ns,
                              typed_o->name);
             }
@@ -202,7 +201,7 @@ namespace jank::codegen
           else if constexpr(std::same_as<T, runtime::obj::character>)
           {
             fmt::format_to(inserter,
-                           R"(jank::make_box<jank::runtime::obj::character>({}))",
+                           R"(jank::runtime::make_box<jank::runtime::obj::character>({}))",
                            util::escaped_quoted_view(typed_o->data));
           }
           else if constexpr(std::same_as<T, runtime::obj::keyword>)
@@ -216,12 +215,13 @@ namespace jank::codegen
           else if constexpr(std::same_as<T, runtime::obj::persistent_string>)
           {
             fmt::format_to(inserter,
-                           "jank::make_box<jank::runtime::obj::persistent_string>({})",
+                           "jank::runtime::make_box<jank::runtime::obj::persistent_string>({})",
                            util::escaped_quoted_view(typed_o->data));
           }
           else if constexpr(std::same_as<T, runtime::obj::persistent_vector>)
           {
-            fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::persistent_vector>(");
+            fmt::format_to(inserter,
+                           "jank::runtime::make_box<jank::runtime::obj::persistent_vector>(");
             if(typed_o->meta.is_some())
             {
               gen_constant(typed_o->meta.unwrap(), buffer, true);
@@ -237,7 +237,8 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, runtime::obj::persistent_list>)
           {
-            fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::persistent_list>(");
+            fmt::format_to(inserter,
+                           "jank::runtime::make_box<jank::runtime::obj::persistent_list>(");
             if(typed_o->meta.is_some())
             {
               gen_constant(typed_o->meta.unwrap(), buffer, true);
@@ -253,7 +254,8 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, runtime::obj::persistent_hash_set>)
           {
-            fmt::format_to(inserter, "jank::make_box<jank::runtime::obj::persistent_hash_set>(");
+            fmt::format_to(inserter,
+                           "jank::runtime::make_box<jank::runtime::obj::persistent_hash_set>(");
             if(typed_o->meta.is_some())
             {
               gen_constant(typed_o->meta.unwrap(), buffer, true);
@@ -324,8 +326,9 @@ namespace jank::codegen
           /* Cons, etc. */
           else if constexpr(runtime::behavior::seqable<T>)
           {
-            fmt::format_to(inserter,
-                           "jank::make_box<jank::runtime::obj::persistent_list>(std::in_place");
+            fmt::format_to(
+              inserter,
+              "jank::runtime::make_box<jank::runtime::obj::persistent_list>(std::in_place");
             for(auto it(typed_o->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
             {
               fmt::format_to(inserter, ", ");
@@ -358,7 +361,7 @@ namespace jank::codegen
     else
     {
       unboxed_name = name;
-      boxed_name = fmt::format("jank::make_box({})", unboxed_name);
+      boxed_name = fmt::format("jank::runtime::make_box({})", unboxed_name);
     }
   }
 
@@ -375,7 +378,7 @@ namespace jank::codegen
   {
     if(this->boxed_name.empty())
     {
-      this->boxed_name = fmt::format("jank::make_box({})", unboxed_name);
+      this->boxed_name = fmt::format("jank::runtime::make_box({})", unboxed_name);
     }
   }
 
@@ -595,7 +598,7 @@ namespace jank::codegen
     native_persistent_string_view ret_box;
     if(ret_box_needed)
     {
-      ret_box = "jank::make_box(";
+      ret_box = "jank::runtime::make_box(";
     }
     fmt::format_to(inserter, "auto const {}({}{}", ret_tmp, ret_box, start);
     native_bool need_comma{};
@@ -664,8 +667,9 @@ namespace jank::codegen
 
     if(runtime::max_params < arg_tmps.size())
     {
-      fmt::format_to(inserter,
-                     ", jank::make_box<jank::runtime::obj::persistent_list>(std::in_place");
+      fmt::format_to(
+        inserter,
+        ", jank::runtime::make_box<jank::runtime::obj::persistent_list>(std::in_place");
       for(size_t i{ runtime::max_params }; i < arg_tmps.size(); ++i)
       {
         fmt::format_to(inserter, ", {}", arg_tmps[i].str(true));
@@ -1096,7 +1100,7 @@ namespace jank::codegen
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::munge(runtime::context::unique_string("vec")));
     fmt::format_to(inserter,
-                   "auto const {}(jank::make_box<jank::runtime::obj::persistent_vector>(",
+                   "auto const {}(jank::runtime::make_box<jank::runtime::obj::persistent_vector>(",
                    ret_tmp);
     if(expr.meta.is_some())
     {
@@ -1212,9 +1216,10 @@ namespace jank::codegen
 
     auto inserter(std::back_inserter(body_buffer));
     auto ret_tmp(runtime::munge(runtime::context::unique_string("set")));
-    fmt::format_to(inserter,
-                   "auto const {}(jank::make_box<jank::runtime::obj::persistent_hash_set>(",
-                   ret_tmp);
+    fmt::format_to(
+      inserter,
+      "auto const {}(jank::runtime::make_box<jank::runtime::obj::persistent_hash_set>(",
+      ret_tmp);
     if(expr.meta.is_some())
     {
       detail::gen_constant(expr.meta.unwrap(), body_buffer, true);
@@ -1273,7 +1278,7 @@ namespace jank::codegen
                                 analyze::expr::function_arity<analyze::expression> const &,
                                 native_bool const box_needed)
   {
-    auto const compiling(runtime::detail::truthy(rt_ctx.compile_files_var->deref()));
+    auto const compiling(truthy(rt_ctx.compile_files_var->deref()));
     /* Since each codegen proc handles one callable struct, we create a new one for this fn. */
     processor prc{ rt_ctx,
                    expr,
@@ -1458,9 +1463,7 @@ namespace jank::codegen
     auto ret_tmp(runtime::munge(runtime::context::unique_string("if")));
     fmt::format_to(inserter, "object_ptr {}{{ obj::nil::nil_const() }};", ret_tmp);
     auto const &condition_tmp(gen(expr.condition, fn_arity, false));
-    fmt::format_to(inserter,
-                   "if(jank::runtime::detail::truthy({})) {{",
-                   condition_tmp.unwrap().str(false));
+    fmt::format_to(inserter, "if(jank::runtime::truthy({})) {{", condition_tmp.unwrap().str(false));
     auto const &then_tmp(gen(expr.then, fn_arity, true));
     if(then_tmp.is_some())
     {
@@ -1936,7 +1939,7 @@ namespace jank::codegen
       {
         fmt::format_to(
           inserter,
-          "jank::make_box<{0}>(",
+          "jank::runtime::make_box<{0}>(",
           runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name)));
       }
       else

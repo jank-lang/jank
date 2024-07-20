@@ -1,7 +1,6 @@
 #pragma once
 
 #include <jank/runtime/behavior/seqable.hpp>
-#include <jank/runtime/detail/object_util.hpp>
 #include <jank/runtime/core/to_string.hpp>
 
 namespace jank::runtime

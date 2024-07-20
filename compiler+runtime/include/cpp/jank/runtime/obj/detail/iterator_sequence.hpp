@@ -1,6 +1,5 @@
 #pragma once
 
-#include <jank/runtime/detail/object_util.hpp>
 #include <jank/runtime/obj/cons.hpp>
 #include <jank/runtime/core/seq.hpp>
 

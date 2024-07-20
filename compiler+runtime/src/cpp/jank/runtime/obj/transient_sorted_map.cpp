@@ -1,4 +1,3 @@
-#include <jank/runtime/util.hpp>
 #include <jank/runtime/obj/transient_sorted_map.hpp>
 
 namespace jank::runtime

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/detail/object_util.hpp>
 #include <jank/runtime/detail/native_persistent_array_map.hpp>
 #include <jank/runtime/obj/persistent_array_map_sequence.hpp>
 #include <jank/runtime/obj/detail/base_persistent_map.hpp>

@@ -334,7 +334,7 @@ namespace jank::runtime::module
 
     //fmt::println("loading ns {}", module);
 
-    native_bool const compiling{ runtime::detail::truthy(rt_ctx.compile_files_var->deref()) };
+    native_bool const compiling{ truthy(rt_ctx.compile_files_var->deref()) };
     native_bool const needs_init{ !compiling && entries.contains(fmt::format("{}--init", module)) };
     if(needs_init)
     {
@@ -385,7 +385,7 @@ namespace jank::runtime::module
 
     //fmt::println("loading nested module {}", module);
 
-    bool const compiling{ runtime::detail::truthy(rt_ctx.compile_files_var->deref()) };
+    bool const compiling{ truthy(rt_ctx.compile_files_var->deref()) };
     if(compiling)
     {
       if(entry->second.jank.is_some())

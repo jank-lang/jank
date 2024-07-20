@@ -167,7 +167,7 @@ namespace jank::runtime
   obj::native_function_wrapper_ptr obj::native_function_wrapper::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(jank::make_box<obj::native_function_wrapper>(data));
+    auto ret(make_box<obj::native_function_wrapper>(data));
     ret->meta = meta;
     return ret;
   }

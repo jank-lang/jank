@@ -1,4 +1,3 @@
-#include <jank/runtime/detail/object_util.hpp>
 #include <jank/hash.hpp>
 
 namespace std

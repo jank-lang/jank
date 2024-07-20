@@ -2,6 +2,8 @@
 
 namespace jank::analyze
 {
+  using namespace jank::runtime;
+
   enum class expression_type
   {
     expression,
@@ -17,13 +19,12 @@ namespace jank::analyze
   /* Common base class for every expression. */
   struct expression_base : gc
   {
-    runtime::object_ptr to_runtime_data() const
+    object_ptr to_runtime_data() const
     {
-      using namespace runtime::obj;
-      return persistent_array_map::create_unique(make_box("expr_type"),
-                                                 make_box(magic_enum::enum_name(expr_type)),
-                                                 make_box("needs_box"),
-                                                 make_box(needs_box));
+      return obj::persistent_array_map::create_unique(make_box("expr_type"),
+                                                      make_box(magic_enum::enum_name(expr_type)),
+                                                      make_box("needs_box"),
+                                                      make_box(needs_box));
     }
 
     expression_type expr_type{};

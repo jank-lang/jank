@@ -1,4 +1,3 @@
-#include <jank/runtime/util.hpp>
 #include <jank/runtime/obj/persistent_sorted_map.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/transient_sorted_map.hpp>

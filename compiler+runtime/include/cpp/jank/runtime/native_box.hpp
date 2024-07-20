@@ -4,7 +4,7 @@
 
 #include <jank/runtime/object.hpp>
 
-namespace jank
+namespace jank::runtime
 {
   template <typename T>
   struct native_box
@@ -86,7 +86,7 @@ namespace jank
       return data;
     }
 
-    operator runtime::object *() const
+    operator object *() const
     {
       return &data->base;
     }
@@ -100,9 +100,9 @@ namespace jank
   };
 
   template <>
-  struct native_box<runtime::object>
+  struct native_box<object>
   {
-    using value_type = runtime::object;
+    using value_type = object;
 
     native_box() = default;
 
@@ -115,20 +115,20 @@ namespace jank
     {
     }
 
-    template <runtime::object_type T>
-    native_box(runtime::static_object<T> * const typed_data)
+    template <object_type T>
+    native_box(static_object<T> * const typed_data)
       : data{ &typed_data->base }
     {
     }
 
-    template <runtime::object_type T>
-    native_box(runtime::static_object<T> const * const typed_data)
-      : data{ typed_data ? const_cast<runtime::object *>(&typed_data->base) : nullptr }
+    template <object_type T>
+    native_box(static_object<T> const * const typed_data)
+      : data{ typed_data ? const_cast<object *>(&typed_data->base) : nullptr }
     {
     }
 
-    template <runtime::object_type T>
-    native_box(native_box<runtime::static_object<T>> const typed_data)
+    template <object_type T>
+    native_box(native_box<static_object<T>> const typed_data)
       : data{ typed_data ? &typed_data->base : nullptr }
     {
     }
@@ -160,14 +160,14 @@ namespace jank
       return data == rhs.data;
     }
 
-    template <runtime::object_type T>
-    native_bool operator==(runtime::static_object<T> const &rhs) const
+    template <object_type T>
+    native_bool operator==(static_object<T> const &rhs) const
     {
       return data == &rhs->base;
     }
 
-    template <runtime::object_type T>
-    native_bool operator==(native_box<runtime::static_object<T>> const &rhs) const
+    template <object_type T>
+    native_bool operator==(native_box<static_object<T>> const &rhs) const
     {
       return data == &rhs->base;
     }
@@ -182,14 +182,14 @@ namespace jank
       return data != rhs.data;
     }
 
-    template <runtime::object_type T>
-    native_bool operator!=(runtime::static_object<T> const &rhs) const
+    template <object_type T>
+    native_bool operator!=(static_object<T> const &rhs) const
     {
       return data != &rhs->base;
     }
 
-    template <runtime::object_type T>
-    native_bool operator!=(native_box<runtime::static_object<T>> const &rhs) const
+    template <object_type T>
+    native_bool operator!=(native_box<static_object<T>> const &rhs) const
     {
       return data != &rhs->base;
     }
@@ -233,7 +233,6 @@ namespace jank
   using remove_box_t = typename remove_box<T>::type;
 
   /* TODO: Constexpr these. */
-
   template <typename T>
   constexpr native_box<T> make_box(native_box<T> const &o)
   {
@@ -310,7 +309,7 @@ namespace jank
 namespace fmt
 {
   template <typename T>
-  struct formatter<jank::native_box<T>> : fmt::ostream_formatter
+  struct formatter<jank::runtime::native_box<T>> : fmt::ostream_formatter
   {
   };
 }

@@ -8,10 +8,12 @@
 
 namespace jank::analyze::expr
 {
+  using namespace jank::runtime;
+
   template <typename E>
   struct let : expression_base
   {
-    using pair_type = std::pair<runtime::obj::symbol_ptr, native_box<E>>;
+    using pair_type = std::pair<obj::symbol_ptr, native_box<E>>;
 
     let(expression_type const type, native_bool const needs_box, local_frame_ptr const f)
       : expression_base{ gc{}, type, f, needs_box }
@@ -21,27 +23,26 @@ namespace jank::analyze::expr
     native_vector<pair_type> pairs;
     do_<E> body;
 
-    runtime::object_ptr to_runtime_data() const
+    object_ptr to_runtime_data() const
     {
-      runtime::object_ptr pair_maps(make_box<runtime::obj::persistent_vector>());
+      object_ptr pair_maps(make_box<obj::persistent_vector>());
       for(auto const &e : pairs)
       {
-        pair_maps = runtime::conj(
+        pair_maps = conj(
           pair_maps,
-          make_box<runtime::obj::persistent_vector>(
+          make_box<obj::persistent_vector>(
             std::in_place,
-            detail::to_runtime_data(frame->find_local_or_capture(e.first).unwrap().binding),
+            jank::detail::to_runtime_data(frame->find_local_or_capture(e.first).unwrap().binding),
             e.second->to_runtime_data()));
       }
 
-      return runtime::merge(
-        static_cast<expression_base const *>(this)->to_runtime_data(),
-        runtime::obj::persistent_array_map::create_unique(make_box("__type"),
-                                                          make_box("expr::let"),
-                                                          make_box("pairs"),
-                                                          pair_maps,
-                                                          make_box("body"),
-                                                          detail::to_runtime_data(body)));
+      return merge(static_cast<expression_base const *>(this)->to_runtime_data(),
+                   obj::persistent_array_map::create_unique(make_box("__type"),
+                                                            make_box("expr::let"),
+                                                            make_box("pairs"),
+                                                            pair_maps,
+                                                            make_box("body"),
+                                                            jank::detail::to_runtime_data(body)));
     }
   };
 }

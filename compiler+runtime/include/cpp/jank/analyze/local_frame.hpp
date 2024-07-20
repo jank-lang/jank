@@ -9,6 +9,7 @@
 namespace jank::analyze
 {
   struct expression;
+  using jank::runtime::native_box;
 
   namespace expr
   {

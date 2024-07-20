@@ -1,55 +1,7 @@
-#include <unordered_map>
-
-#include <jank/runtime/util.hpp>
-#include <jank/runtime/obj/persistent_string.hpp>
+#include <jank/runtime/core/munge.hpp>
 
 namespace jank::runtime
 {
-  namespace detail
-  {
-    native_bool truthy(object_ptr const o)
-    {
-      if(!o)
-      {
-        return false;
-      }
-
-      return visit_object(
-        [](auto const typed_o) {
-          using T = typename decltype(typed_o)::value_type;
-
-          if constexpr(std::same_as<T, obj::nil>)
-          {
-            return false;
-          }
-          else if constexpr(std::same_as<T, obj::boolean>)
-          {
-            return typed_o->data;
-          }
-          else
-          {
-            return true;
-          }
-        },
-        o);
-    }
-
-    native_bool truthy(obj::nil_ptr)
-    {
-      return false;
-    }
-
-    native_bool truthy(obj::boolean_ptr const o)
-    {
-      return o && o->data;
-    }
-
-    native_bool truthy(native_bool const o)
-    {
-      return o;
-    }
-  }
-
   static native_unordered_map<char, native_persistent_string_view> const munge_chars{
     {  '-',        "_" },
     {  ':',  "_COLON_" },

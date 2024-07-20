@@ -1,4 +1,3 @@
-#include <jank/runtime/util.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 

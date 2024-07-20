@@ -1,5 +1,4 @@
 #include <jank/runtime/detail/native_persistent_array_map.hpp>
-#include <jank/runtime/detail/object_util.hpp>
 
 namespace jank::runtime::detail
 {

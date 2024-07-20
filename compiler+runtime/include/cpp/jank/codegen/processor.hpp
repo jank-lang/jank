@@ -12,6 +12,8 @@ namespace jank::runtime
 
 namespace jank::codegen
 {
+  using namespace jank::runtime;
+
   /* Each codegen operation generates its results into named C++ variables and then returns
    * an instance of this handle. Sometimes multiple variables are generated, if there's an
    * unboxed value as well as a boxed value.

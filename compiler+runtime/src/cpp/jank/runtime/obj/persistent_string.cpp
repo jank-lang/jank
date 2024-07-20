@@ -3,7 +3,6 @@
 
 #include <fmt/compile.h>
 
-#include <jank/runtime/util.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/util/escape.hpp>
 

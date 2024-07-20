@@ -12,6 +12,7 @@
 #include <bpptree/ordered.hpp>
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/detail/native_persistent_list.hpp>
 
 namespace jank::runtime
 {

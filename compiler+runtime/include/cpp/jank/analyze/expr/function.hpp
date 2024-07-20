@@ -1,7 +1,5 @@
 #pragma once
 
-#include <list>
-
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/analyze/local_frame.hpp>
 #include <jank/analyze/expr/do.hpp>
@@ -10,6 +8,8 @@
 
 namespace jank::analyze::expr
 {
+  using namespace jank::runtime;
+
   struct function_context : gc
   {
     static constexpr native_bool pointer_free{ true };
@@ -25,29 +25,29 @@ namespace jank::analyze::expr
   template <typename E>
   struct function_arity
   {
-    native_vector<runtime::obj::symbol_ptr> params;
+    native_vector<obj::symbol_ptr> params;
     do_<E> body;
     local_frame_ptr frame{};
     function_context_ptr fn_ctx{};
 
-    runtime::object_ptr to_runtime_data() const
+    object_ptr to_runtime_data() const
     {
-      runtime::object_ptr param_maps(make_box<runtime::obj::persistent_vector>());
+      object_ptr param_maps(make_box<obj::persistent_vector>());
       for(auto const &e : params)
       {
-        param_maps = runtime::conj(param_maps, e);
+        param_maps = conj(param_maps, e);
       }
 
-      return runtime::obj::persistent_array_map::create_unique(make_box("__type"),
-                                                               make_box("expr::function_arity"),
-                                                               make_box("params"),
-                                                               param_maps,
-                                                               make_box("body"),
-                                                               detail::to_runtime_data(body),
-                                                               make_box("frame"),
-                                                               detail::to_runtime_data(frame),
-                                                               make_box("fn_ctx"),
-                                                               detail::to_runtime_data(fn_ctx));
+      return obj::persistent_array_map::create_unique(make_box("__type"),
+                                                      make_box("expr::function_arity"),
+                                                      make_box("params"),
+                                                      param_maps,
+                                                      make_box("body"),
+                                                      jank::detail::to_runtime_data(body),
+                                                      make_box("frame"),
+                                                      jank::detail::to_runtime_data(frame),
+                                                      make_box("fn_ctx"),
+                                                      jank::detail::to_runtime_data(fn_ctx));
     }
   };
 
@@ -68,26 +68,26 @@ namespace jank::analyze::expr
     native_persistent_string name;
     native_persistent_string unique_name;
     native_vector<function_arity<E>> arities;
-    runtime::obj::persistent_hash_map_ptr meta{};
+    obj::persistent_hash_map_ptr meta{};
 
-    runtime::object_ptr to_runtime_data() const
+    object_ptr to_runtime_data() const
     {
-      runtime::object_ptr arity_maps(make_box<runtime::obj::persistent_vector>());
+      object_ptr arity_maps(make_box<obj::persistent_vector>());
       for(auto const &e : arities)
       {
-        arity_maps = runtime::conj(arity_maps, e.to_runtime_data());
+        arity_maps = conj(arity_maps, e.to_runtime_data());
       }
 
-      return runtime::merge(
+      return merge(
         static_cast<expression_base const *>(this)->to_runtime_data(),
-        runtime::obj::persistent_array_map::create_unique(make_box("__type"),
-                                                          make_box("expr::function"),
-                                                          make_box("name"),
-                                                          detail::to_runtime_data(name),
-                                                          make_box("unique_name"),
-                                                          detail::to_runtime_data(unique_name),
-                                                          make_box("arities"),
-                                                          arity_maps));
+        obj::persistent_array_map::create_unique(make_box("__type"),
+                                                 make_box("expr::function"),
+                                                 make_box("name"),
+                                                 jank::detail::to_runtime_data(name),
+                                                 make_box("unique_name"),
+                                                 jank::detail::to_runtime_data(unique_name),
+                                                 make_box("arities"),
+                                                 arity_maps));
     }
   };
 }

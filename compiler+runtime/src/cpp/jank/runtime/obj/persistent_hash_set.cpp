@@ -1,4 +1,3 @@
-#include <jank/runtime/util.hpp>
 #include <jank/runtime/obj/persistent_hash_set.hpp>
 
 namespace jank::runtime

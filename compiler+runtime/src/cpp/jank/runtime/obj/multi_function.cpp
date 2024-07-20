@@ -283,7 +283,7 @@ namespace jank::runtime
     static object_ptr const isa{
       __rt_ctx->intern_var("clojure.core", "isa?").expect_ok()->deref()
     };
-    return runtime::detail::truthy(dynamic_call(isa, behavior::deref(hierarchy), x, y));
+    return truthy(dynamic_call(isa, behavior::deref(hierarchy), x, y));
   }
 
   native_bool obj::multi_function::is_dominant(object_ptr const hierarchy,
