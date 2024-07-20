@@ -491,7 +491,8 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
-    return object_source_info{ make_box<runtime::obj::persistent_hash_set>(std::move(ret).persistent()),
+    return object_source_info{ make_box<runtime::obj::persistent_hash_set>(
+                                 std::move(ret).persistent()),
                                start_token,
                                latest_token };
   }
@@ -646,7 +647,7 @@ namespace jank::read::parse
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
        * matter. If :default comes first, we'll always take it. In short, order is important. This
        * matches Clojure's behavior. */
-      if(runtime::detail::equal(kw, jank_keyword) || runtime::detail::equal(kw, default_keyword))
+      if(runtime::equal(kw, jank_keyword) || runtime::equal(kw, default_keyword))
       {
         if(splice)
         {

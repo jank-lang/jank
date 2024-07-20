@@ -7,7 +7,6 @@
 #include <jank/analyze/expr/do.hpp>
 #include <jank/analyze/expression_base.hpp>
 #include <jank/detail/to_runtime_data.hpp>
-#include <jank/runtime/seq.hpp>
 
 namespace jank::analyze::expr
 {

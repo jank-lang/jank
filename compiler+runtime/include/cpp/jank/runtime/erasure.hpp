@@ -11,7 +11,6 @@
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
-#include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_hash_set.hpp>
 #include <jank/runtime/obj/persistent_sorted_set.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
@@ -46,9 +45,22 @@
 #include <jank/runtime/obj/reduced.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
 
 namespace jank::runtime
 {
+  namespace detail
+  {
+    template <typename T>
+    struct object_type_to_enum;
+
+    template <object_type O>
+    struct object_type_to_enum<static_object<O>>
+    {
+      static constexpr object_type value{ O };
+    };
+  }
+
   /* Most of the system is polymorphic using type-erased objects. Given any object, an erase call
    * will get you what you need. If you don't need to type-erase, though, don't! */
   template <typename T>
@@ -587,11 +599,6 @@ namespace jank::runtime
 #pragma clang diagnostic ignored "-Wswitch-enum"
     switch(erased->type)
     {
-      case object_type::boolean:
-        {
-          return fn(expect_object<obj::boolean>(erased), std::forward<Args>(args)...);
-        }
-        break;
       case object_type::integer:
         {
           return fn(expect_object<obj::integer>(erased), std::forward<Args>(args)...);

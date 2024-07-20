@@ -2,7 +2,7 @@
 
 #include <jank/runtime/detail/object_util.hpp>
 #include <jank/runtime/obj/cons.hpp>
-#include <jank/runtime/seq.hpp>
+#include <jank/runtime/core/seq.hpp>
 
 namespace jank::runtime::obj::detail
 {
@@ -39,7 +39,7 @@ namespace jank::runtime::obj::detail
             auto seq(typed_o->seq());
             for(auto it(begin); it != end; ++it, seq = runtime::next_in_place(seq))
             {
-              if(seq == nullptr || !runtime::detail::equal(*it, seq->first()))
+              if(seq == nullptr || !runtime::equal(*it, seq->first()))
               {
                 return false;
               }
@@ -52,13 +52,13 @@ namespace jank::runtime::obj::detail
 
     void to_string(fmt::memory_buffer &buff) const
     {
-      return behavior::detail::to_string(begin, end, "(", ')', buff);
+      runtime::to_string(begin, end, "(", ')', buff);
     }
 
     native_persistent_string to_string() const
     {
       fmt::memory_buffer buff;
-      behavior::detail::to_string(begin, end, "(", ')', buff);
+      runtime::to_string(begin, end, "(", ')', buff);
       return native_persistent_string{ buff.data(), buff.size() };
     }
 

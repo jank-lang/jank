@@ -16,22 +16,21 @@
 namespace jank::runtime
 {
   native_integer compare(object_ptr, object_ptr);
+  native_bool equal(char const lhs, object_ptr const rhs);
+  native_bool equal(object_ptr const lhs, object_ptr const rhs);
 
   namespace detail
   {
-    native_bool equal(char const lhs, object_ptr const rhs);
-    native_bool equal(object_ptr const lhs, object_ptr const rhs);
-
     struct object_ptr_equal
     {
       static native_bool equal(object_ptr const l, object_ptr const r)
       {
-        return detail::equal(l, r);
+        return runtime::equal(l, r);
       }
 
       inline native_bool operator()(object_ptr const l, object_ptr const r) const
       {
-        return detail::equal(l, r);
+        return runtime::equal(l, r);
       }
     };
 
@@ -63,5 +62,11 @@ namespace jank::runtime
       = bpptree::BppTreeMap<object_ptr, object_ptr, object_ptr_compare>::Persistent;
     using native_transient_sorted_map
       = bpptree::BppTreeMap<object_ptr, object_ptr, object_ptr_compare>::Transient;
+
+    /* If an object requires this in its constructor, use your runtime context to intern
+   * it instead. */
+    struct must_be_interned
+    {
+    };
   }
 }

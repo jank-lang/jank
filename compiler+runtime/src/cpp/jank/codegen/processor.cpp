@@ -141,7 +141,7 @@ namespace jank::codegen
     {
       if(!boxed)
       {
-        runtime::detail::to_string(o, buffer);
+        runtime::to_string(o, buffer);
         return;
       }
 

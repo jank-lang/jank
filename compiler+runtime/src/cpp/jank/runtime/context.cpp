@@ -8,7 +8,6 @@
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/util.hpp>
-#include <jank/runtime/seq.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/codegen/processor.hpp>
 #include <jank/evaluate.hpp>
@@ -277,7 +276,7 @@ namespace jank::runtime
     }
     catch(object_ptr const &e)
     {
-      return err(detail::to_string(e));
+      return err(runtime::to_string(e));
     }
   }
 
@@ -353,7 +352,7 @@ namespace jank::runtime
         }
         else
         {
-          std::cout << "    " << v->to_string() << " = " << detail::to_string(v->deref()) << "\n";
+          std::cout << "    " << v->to_string() << " = " << runtime::to_string(v->deref()) << "\n";
         }
       }
     }
@@ -547,7 +546,7 @@ namespace jank::runtime
 
   object_ptr context::print(object_ptr const o)
   {
-    auto const s(detail::to_string(o));
+    auto const s(runtime::to_string(o));
     std::fwrite(s.data(), 1, s.size(), stdout);
     return obj::nil::nil_const();
   }
@@ -562,12 +561,12 @@ namespace jank::runtime
         {
           fmt::memory_buffer buff;
           auto inserter(std::back_inserter(buff));
-          detail::to_string(o, buff);
-          detail::to_string(typed_more->first(), buff);
+          runtime::to_string(o, buff);
+          runtime::to_string(typed_more->first(), buff);
           for(auto it(next_in_place(typed_more)); it != nullptr; it = next_in_place(it))
           {
             fmt::format_to(inserter, " ");
-            detail::to_string(it->first(), buff);
+            runtime::to_string(it->first(), buff);
           }
           std::fwrite(buff.data(), 1, buff.size(), stdout);
         }
@@ -595,11 +594,11 @@ namespace jank::runtime
         {
           fmt::memory_buffer buff;
           auto inserter(std::back_inserter(buff));
-          detail::to_string(typed_more->first(), buff);
+          runtime::to_string(typed_more->first(), buff);
           for(auto it(next_in_place(typed_more)); it != nullptr; it = next_in_place(it))
           {
             fmt::format_to(inserter, " ");
-            detail::to_string(it->first(), buff);
+            runtime::to_string(it->first(), buff);
           }
           std::fwrite(buff.data(), 1, buff.size(), stdout);
           std::putc('\n', stdout);
@@ -664,7 +663,7 @@ namespace jank::runtime
     if(bindings->type != object_type::persistent_hash_map)
     {
       return err(fmt::format("invalid thread binding map (must be hash map): {}",
-                             detail::to_string(bindings)));
+                             runtime::to_string(bindings)));
     }
 
     return push_thread_bindings(expect_object<obj::persistent_hash_map>(bindings));

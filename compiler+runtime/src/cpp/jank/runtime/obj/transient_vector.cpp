@@ -78,7 +78,7 @@ namespace jank::runtime
     else
     {
       throw std::runtime_error{ fmt::format("key must be an integer; found {}",
-                                            runtime::detail::to_string(idx)) };
+                                            runtime::to_string(idx)) };
     }
   }
 
@@ -98,7 +98,7 @@ namespace jank::runtime
     else
     {
       throw std::runtime_error{ fmt::format("key must be an integer; found {}",
-                                            runtime::detail::to_string(idx)) };
+                                            runtime::to_string(idx)) };
     }
   }
 
@@ -118,7 +118,7 @@ namespace jank::runtime
     else
     {
       throw std::runtime_error{ fmt::format("key must be an integer; found {}",
-                                            runtime::detail::to_string(idx)) };
+                                            runtime::to_string(idx)) };
     }
   }
 
@@ -137,7 +137,7 @@ namespace jank::runtime
     else
     {
       throw std::runtime_error{ fmt::format("get_entry on a vector must be an integer; found {}",
-                                            runtime::detail::to_string(idx)) };
+                                            runtime::to_string(idx)) };
     }
   }
 

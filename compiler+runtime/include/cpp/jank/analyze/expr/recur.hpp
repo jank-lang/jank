@@ -4,7 +4,6 @@
 
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/analyze/expression_base.hpp>
-#include <jank/runtime/seq.hpp>
 
 namespace jank::analyze::expr
 {

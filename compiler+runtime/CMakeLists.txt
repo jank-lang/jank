@@ -130,11 +130,11 @@ add_library(
   src/cpp/jank/read/lex.cpp
   src/cpp/jank/read/parse.cpp
   src/cpp/jank/runtime/core.cpp
+  src/cpp/jank/runtime/core/to_string.cpp
+  src/cpp/jank/runtime/core/seq.cpp
   src/cpp/jank/runtime/module/loader.cpp
   src/cpp/jank/runtime/util.cpp
-  src/cpp/jank/runtime/seq.cpp
   src/cpp/jank/runtime/object.cpp
-  src/cpp/jank/runtime/detail/object_util.cpp
   src/cpp/jank/runtime/detail/native_persistent_array_map.cpp
   src/cpp/jank/runtime/context.cpp
   src/cpp/jank/runtime/ns.cpp

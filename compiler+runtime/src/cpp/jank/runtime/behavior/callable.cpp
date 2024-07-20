@@ -5,7 +5,6 @@
 #include <jank/runtime/obj/native_array_sequence.hpp>
 #include <jank/runtime/obj/native_vector_sequence.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
-#include <jank/runtime/seq.hpp>
 #include <jank/util/make_array.hpp>
 
 namespace jank::runtime
@@ -67,7 +66,8 @@ namespace jank::runtime
                           || std::same_as<T, obj::persistent_hash_map>
                           || std::same_as<T, obj::persistent_array_map>
                           || std::same_as<T, obj::transient_vector>
-                          || std::same_as<T, obj::transient_hash_set> || std::same_as<T, obj::keyword>)
+                          || std::same_as<T, obj::transient_hash_set>
+                          || std::same_as<T, obj::keyword>)
         {
           return typed_source->call(a1);
         }
@@ -108,7 +108,8 @@ namespace jank::runtime
         }
         else if constexpr(std::same_as<T, obj::persistent_hash_map>
                           || std::same_as<T, obj::persistent_array_map>
-                          || std::same_as<T, obj::transient_hash_set> || std::same_as<T, obj::keyword>)
+                          || std::same_as<T, obj::transient_hash_set>
+                          || std::same_as<T, obj::keyword>)
         {
           return typed_source->call(a1, a2);
         }
@@ -798,7 +799,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ fmt::format("invalid call with {} args to: {}",
-                                                10 + runtime::detail::sequence_length(rest),
+                                                10 + sequence_length(rest),
                                                 typed_source->to_string()) };
         }
       },
@@ -810,7 +811,7 @@ namespace jank::runtime
     return visit_seqable(
       [=](auto const typed_args) -> object_ptr {
         auto const s(typed_args->fresh_seq());
-        auto const length(runtime::detail::sequence_length(s, max_params + 1));
+        auto const length(sequence_length(s, max_params + 1));
         switch(length)
         {
           case 0:
@@ -903,8 +904,7 @@ namespace jank::runtime
         }
       },
       [&]() -> object_ptr {
-        throw std::runtime_error{ fmt::format("not seqable: {}",
-                                              runtime::detail::to_string(args)) };
+        throw std::runtime_error{ fmt::format("not seqable: {}", runtime::to_string(args)) };
       },
       args);
   }
@@ -913,38 +913,38 @@ namespace jank::runtime
   {
     object_ptr callable::call()
     {
-      throw invalid_arity<0>{ runtime::detail::to_string(this_object_ptr()) };
+      throw invalid_arity<0>{ runtime::to_string(this_object_ptr()) };
     }
 
     object_ptr callable::call(object_ptr)
     {
-      throw invalid_arity<1>{ runtime::detail::to_string(this_object_ptr()) };
+      throw invalid_arity<1>{ runtime::to_string(this_object_ptr()) };
     }
 
     object_ptr callable::call(object_ptr, object_ptr)
     {
-      throw invalid_arity<2>{ runtime::detail::to_string(this_object_ptr()) };
+      throw invalid_arity<2>{ runtime::to_string(this_object_ptr()) };
     }
 
     object_ptr callable::call(object_ptr, object_ptr, object_ptr)
     {
-      throw invalid_arity<3>{ runtime::detail::to_string(this_object_ptr()) };
+      throw invalid_arity<3>{ runtime::to_string(this_object_ptr()) };
     }
 
     object_ptr callable::call(object_ptr, object_ptr, object_ptr, object_ptr)
     {
-      throw invalid_arity<4>{ runtime::detail::to_string(this_object_ptr()) };
+      throw invalid_arity<4>{ runtime::to_string(this_object_ptr()) };
     }
 
     object_ptr callable::call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr)
     {
-      throw invalid_arity<5>{ runtime::detail::to_string(this_object_ptr()) };
+      throw invalid_arity<5>{ runtime::to_string(this_object_ptr()) };
     }
 
     object_ptr
     callable::call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr)
     {
-      throw invalid_arity<6>{ runtime::detail::to_string(this_object_ptr()) };
+      throw invalid_arity<6>{ runtime::to_string(this_object_ptr()) };
     }
 
     object_ptr callable::call(object_ptr,
@@ -955,7 +955,7 @@ namespace jank::runtime
                               object_ptr,
                               object_ptr)
     {
-      throw invalid_arity<7>{ runtime::detail::to_string(this_object_ptr()) };
+      throw invalid_arity<7>{ runtime::to_string(this_object_ptr()) };
     }
 
     object_ptr callable::call(object_ptr,
@@ -967,7 +967,7 @@ namespace jank::runtime
                               object_ptr,
                               object_ptr)
     {
-      throw invalid_arity<8>{ runtime::detail::to_string(this_object_ptr()) };
+      throw invalid_arity<8>{ runtime::to_string(this_object_ptr()) };
     }
 
     object_ptr callable::call(object_ptr,
@@ -980,7 +980,7 @@ namespace jank::runtime
                               object_ptr,
                               object_ptr)
     {
-      throw invalid_arity<9>{ runtime::detail::to_string(this_object_ptr()) };
+      throw invalid_arity<9>{ runtime::to_string(this_object_ptr()) };
     }
 
     object_ptr callable::call(object_ptr,
@@ -994,7 +994,7 @@ namespace jank::runtime
                               object_ptr,
                               object_ptr)
     {
-      throw invalid_arity<10>{ runtime::detail::to_string(this_object_ptr()) };
+      throw invalid_arity<10>{ runtime::to_string(this_object_ptr()) };
     }
 
     callable::arity_flag_t callable::get_arity_flags() const

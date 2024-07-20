@@ -122,3 +122,25 @@ namespace jank::runtime
     };
   }
 }
+
+namespace std
+{
+  template <>
+  struct hash<jank::runtime::object_ptr>
+  {
+    size_t operator()(jank::runtime::object_ptr const o) const noexcept;
+  };
+
+  template <>
+  struct hash<jank::runtime::object>
+  {
+    size_t operator()(jank::runtime::object const &o) const noexcept;
+  };
+
+  template <>
+  struct equal_to<jank::runtime::object_ptr>
+  {
+    bool operator()(jank::runtime::object_ptr const lhs,
+                    jank::runtime::object_ptr const rhs) const noexcept;
+  };
+}

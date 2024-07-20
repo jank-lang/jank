@@ -1,5 +1,4 @@
 #include <jank/runtime/behavior/metadatable.hpp>
-#include <jank/runtime/seq.hpp>
 
 namespace jank::runtime::behavior::detail
 {
@@ -12,7 +11,7 @@ namespace jank::runtime::behavior::detail
 
     if(!is_map(m) && m != obj::nil::nil_const())
     {
-      throw std::runtime_error{ fmt::format("invalid meta: {}", runtime::detail::to_string(m)) };
+      throw std::runtime_error{ fmt::format("invalid meta: {}", runtime::to_string(m)) };
     }
 
     return m;

@@ -3,30 +3,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/native_persistent_list.hpp>
 
-namespace jank::runtime::detail
-{
-  native_persistent_string to_string(object const *o);
-  void to_string(char const ch, fmt::memory_buffer &buff);
-  void to_string(object_ptr const o, fmt::memory_buffer &buff);
-  native_bool equal(object_ptr const lhs, object_ptr const rhs);
-  native_real to_real(object_ptr const o);
-
-  template <typename T>
-  struct object_type_to_enum;
-
-  template <object_type O>
-  struct object_type_to_enum<static_object<O>>
-  {
-    static constexpr object_type value{ O };
-  };
-
-  /* If an object requires this in its constructor, use your runtime context to intern
-   * it instead. */
-  struct must_be_interned
-  {
-  };
-}
-
+/* TODO: Rename this file. It only contains make_box overloads. */
 namespace jank
 {
   namespace runtime::obj
@@ -146,26 +123,4 @@ namespace jank
   {
     return d;
   }
-}
-
-namespace std
-{
-  template <>
-  struct hash<jank::runtime::object_ptr>
-  {
-    size_t operator()(jank::runtime::object_ptr const o) const noexcept;
-  };
-
-  template <>
-  struct hash<jank::runtime::object>
-  {
-    size_t operator()(jank::runtime::object const &o) const noexcept;
-  };
-
-  template <>
-  struct equal_to<jank::runtime::object_ptr>
-  {
-    bool operator()(jank::runtime::object_ptr const lhs,
-                    jank::runtime::object_ptr const rhs) const noexcept;
-  };
 }

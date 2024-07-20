@@ -4,7 +4,7 @@
 (defn reverse
   "Returns s with its characters reversed."
   [s]
-  (native/raw "auto const s_str(runtime::detail::to_string(~{ s }));
+  (native/raw "auto const s_str(runtime::to_string(~{ s }));
               __value = make_box<obj::persistent_string>(native_persistent_string{ s_str.rbegin(), s_str.rend() });"))
 
 ;(defn re-quote-replacement
@@ -242,7 +242,7 @@
 (defn blank?
   "True if s is nil, empty, or contains only whitespace."
   [s]
-  (native/raw "auto const s_str(runtime::detail::to_string(~{ s }));
+  (native/raw "auto const s_str(runtime::to_string(~{ s }));
               __value = make_box(s_str.is_blank());"))
 
 ;(defn escape
@@ -304,20 +304,20 @@
 (defn starts-with?
   "True if s starts with substr."
   [s substr]
-  (native/raw "auto const s_str(runtime::detail::to_string(~{ s }));
-              auto const substr_str(runtime::detail::to_string(~{ substr }));
+  (native/raw "auto const s_str(runtime::to_string(~{ s }));
+              auto const substr_str(runtime::to_string(~{ substr }));
               __value = make_box(s_str.starts_with(substr_str));"))
 
 (defn ends-with?
   "True if s ends with substr."
   [s substr]
-  (native/raw "auto const s_str(runtime::detail::to_string(~{ s }));
-              auto const substr_str(runtime::detail::to_string(~{ substr }));
+  (native/raw "auto const s_str(runtime::to_string(~{ s }));
+              auto const substr_str(runtime::to_string(~{ substr }));
               __value = make_box(s_str.ends_with(substr_str));"))
 
 (defn includes?
   "True if s includes substr."
   [s substr]
-  (native/raw "auto const s_str(runtime::detail::to_string(~{ s }));
-              auto const substr_str(runtime::detail::to_string(~{ substr }));
+  (native/raw "auto const s_str(runtime::to_string(~{ s }));
+              auto const substr_str(runtime::to_string(~{ substr }));
               __value = make_box(s_str.contains(substr_str));"))

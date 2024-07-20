@@ -2,7 +2,6 @@
 
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
-#include <jank/runtime/seq.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/keyword.hpp>
@@ -35,7 +34,7 @@ namespace jank::read::parse
       lex::processor lp{ "nil" };
       processor p{ lp.begin(), lp.end() };
       auto const r(p.next());
-      CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr, runtime::obj::nil::nil_const()));
+      CHECK(runtime::equal(r.expect_ok().unwrap().ptr, runtime::obj::nil::nil_const()));
       CHECK(r.expect_ok().unwrap().start == lex::token{ 0, 3, lex::token_kind::nil });
       CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
     }
@@ -45,12 +44,12 @@ namespace jank::read::parse
       lex::processor lp{ "true false" };
       processor p{ lp.begin(), lp.end() };
       auto const t(p.next());
-      CHECK(runtime::detail::equal(t.expect_ok().unwrap().ptr, make_box(true)));
+      CHECK(runtime::equal(t.expect_ok().unwrap().ptr, make_box(true)));
       CHECK(t.expect_ok().unwrap().start == lex::token{ 0, 4, lex::token_kind::boolean, true });
       CHECK(t.expect_ok().unwrap().end == t.expect_ok().unwrap().start);
 
       auto const f(p.next());
-      CHECK(runtime::detail::equal(f.expect_ok().unwrap().ptr, make_box(false)));
+      CHECK(runtime::equal(f.expect_ok().unwrap().ptr, make_box(false)));
       CHECK(f.expect_ok().unwrap().start == lex::token{ 5, 5, lex::token_kind::boolean, false });
       CHECK(f.expect_ok().unwrap().end == f.expect_ok().unwrap().start);
     }
@@ -60,7 +59,7 @@ namespace jank::read::parse
       lex::processor lp{ "1234" };
       processor p{ lp.begin(), lp.end() };
       auto const r(p.next());
-      CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr, make_box(1234)));
+      CHECK(runtime::equal(r.expect_ok().unwrap().ptr, make_box(1234)));
       CHECK(r.expect_ok().unwrap().start == lex::token{ 0, 4, lex::token_kind::integer, 1234ll });
       CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
     }
@@ -70,7 +69,7 @@ namespace jank::read::parse
       lex::processor lp{ ";meow \n1234 ; bar\n;\n\n" };
       processor p{ lp.begin(), lp.end() };
       auto const i(p.next());
-      CHECK(runtime::detail::equal(i.expect_ok().unwrap().ptr, make_box(1234)));
+      CHECK(runtime::equal(i.expect_ok().unwrap().ptr, make_box(1234)));
 
       auto const eof(p.next());
       CHECK(eof.expect_ok().is_none());
@@ -81,7 +80,7 @@ namespace jank::read::parse
       lex::processor lp{ "12.34" };
       processor p{ lp.begin(), lp.end() };
       auto const r(p.next());
-      CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr, make_box(12.34l)));
+      CHECK(runtime::equal(r.expect_ok().unwrap().ptr, make_box(12.34l)));
       CHECK(r.expect_ok().unwrap().start == lex::token{ 0, 5, lex::token_kind::real, 12.34l });
       CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
     }
@@ -97,8 +96,7 @@ namespace jank::read::parse
         for(native_persistent_string const &ch : { "\\a", "\\1", "\\`", "\\:", "\\#" })
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       make_box<runtime::obj::character>(ch)));
+          CHECK(runtime::equal(r.expect_ok().unwrap().ptr, make_box<runtime::obj::character>(ch)));
 
           CHECK(r.expect_ok().unwrap().start
                 == lex::token{ offset, 2, lex::token_kind::character, ch });
@@ -119,8 +117,7 @@ namespace jank::read::parse
             { "\\newline", "\\backspace", "\\return", "\\formfeed", "\\tab", "\\space" })
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       make_box<runtime::obj::character>(ch)));
+          CHECK(runtime::equal(r.expect_ok().unwrap().ptr, make_box<runtime::obj::character>(ch)));
 
           auto const len(ch.size());
           CHECK(r.expect_ok().unwrap().start
@@ -141,8 +138,7 @@ namespace jank::read::parse
         for(native_persistent_string const &ch : { "\\newline", "\\a", "\\tab", "\\`", "\\space" })
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       make_box<runtime::obj::character>(ch)));
+          CHECK(runtime::equal(r.expect_ok().unwrap().ptr, make_box<runtime::obj::character>(ch)));
 
           auto const len(ch.size());
           CHECK(r.expect_ok().unwrap().start
@@ -165,7 +161,7 @@ namespace jank::read::parse
         for(auto const &s : { "foo", "bar" })
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr, make_box(s)));
+          CHECK(runtime::equal(r.expect_ok().unwrap().ptr, make_box(s)));
 
           /* We add 2 for the surrounding quotes. */
           auto const len(strlen(s) + 2);
@@ -186,7 +182,7 @@ namespace jank::read::parse
         for(auto const &s : { "foo\n", "\t\"bar\"" })
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr, make_box(s)));
+          CHECK(runtime::equal(r.expect_ok().unwrap().ptr, make_box(s)));
 
           /* We add 2 for the surrounding quotes. */
           auto const escaped(util::escape(s));
@@ -211,8 +207,7 @@ namespace jank::read::parse
         for(auto const &s : { "foo", "bar", "spam" })
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       make_box<runtime::obj::symbol>("", s)));
+          CHECK(runtime::equal(r.expect_ok().unwrap().ptr, make_box<runtime::obj::symbol>("", s)));
 
           auto const len(strlen(s));
           CHECK(r.expect_ok().unwrap().start
@@ -228,8 +223,7 @@ namespace jank::read::parse
         lex::processor lp{ "/" };
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
-        CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                     make_box<runtime::obj::symbol>("", "/")));
+        CHECK(runtime::equal(r.expect_ok().unwrap().ptr, make_box<runtime::obj::symbol>("", "/")));
         CHECK(r.expect_ok().unwrap().start == lex::token{ 0, 1, lex::token_kind::symbol, "/" });
         CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
       }
@@ -248,8 +242,8 @@ namespace jank::read::parse
                               std::make_pair("spam.bar", "spam") })
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       make_box<runtime::obj::symbol>(s.first, s.second)));
+          CHECK(runtime::equal(r.expect_ok().unwrap().ptr,
+                               make_box<runtime::obj::symbol>(s.first, s.second)));
 
           /* We add one for the slash. */
           auto const len(strlen(s.first) + strlen(s.second) + 1);
@@ -275,8 +269,8 @@ namespace jank::read::parse
         for(auto const &s : { std::make_pair("meow", "bar") })
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       make_box<runtime::obj::symbol>(s.first, s.second)));
+          CHECK(runtime::equal(r.expect_ok().unwrap().ptr,
+                               make_box<runtime::obj::symbol>(s.first, s.second)));
         }
       }
 
@@ -299,11 +293,11 @@ namespace jank::read::parse
                               std::make_pair("foo.bar", "bar") })
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       make_box<runtime::obj::persistent_list>(
-                                         std::in_place,
-                                         make_box<runtime::obj::symbol>("quote"),
-                                         make_box<runtime::obj::symbol>(s.first, s.second))));
+          CHECK(runtime::equal(r.expect_ok().unwrap().ptr,
+                               make_box<runtime::obj::persistent_list>(
+                                 std::in_place,
+                                 make_box<runtime::obj::symbol>("quote"),
+                                 make_box<runtime::obj::symbol>(s.first, s.second))));
 
           auto const ns_len(strlen(s.first));
           /* We add one for the slash. */
@@ -334,8 +328,8 @@ namespace jank::read::parse
         for(auto const &s : { "foo", "bar", "spam" })
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       __rt_ctx->intern_keyword(s).expect_ok()));
+          CHECK(
+            runtime::equal(r.expect_ok().unwrap().ptr, __rt_ctx->intern_keyword(s).expect_ok()));
 
           /* We add one for the colon. */
           auto const len(strlen(s) + 1);
@@ -358,8 +352,8 @@ namespace jank::read::parse
                               std::make_pair("spam.bar", "spam") })
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       __rt_ctx->intern_keyword(s.first, s.second).expect_ok()));
+          CHECK(runtime::equal(r.expect_ok().unwrap().ptr,
+                               __rt_ctx->intern_keyword(s.first, s.second).expect_ok()));
 
           /* We add one for the colon and one for the slash. */
           auto const len(strlen(s.first) + strlen(s.second) + 2);
@@ -383,8 +377,8 @@ namespace jank::read::parse
         for(auto const &s : { "foo", "spam" })
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       __rt_ctx->intern_keyword("", s, false).expect_ok()));
+          CHECK(runtime::equal(r.expect_ok().unwrap().ptr,
+                               __rt_ctx->intern_keyword("", s, false).expect_ok()));
 
           /* We add one for each colon. */
           auto const len(strlen(s) + 2);
@@ -412,8 +406,8 @@ namespace jank::read::parse
         clojure_ns.unwrap()->add_alias(make_box<runtime::obj::symbol>("foo"), foo_ns).expect_ok();
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
-        CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                     __rt_ctx->intern_keyword("foo.bar.spam", "foo").expect_ok()));
+        CHECK(runtime::equal(r.expect_ok().unwrap().ptr,
+                             __rt_ctx->intern_keyword("foo.bar.spam", "foo").expect_ok()));
         CHECK(r.expect_ok().unwrap().start
               == lex::token{ 0, 9, lex::token_kind::keyword, ":foo/foo" });
         CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
@@ -431,8 +425,7 @@ namespace jank::read::parse
         for(size_t i{}; i < 3; ++i)
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       runtime::obj::persistent_list::empty()));
+          CHECK(runtime::equal(r.expect_ok().unwrap().ptr, runtime::obj::persistent_list::empty()));
 
           /* We add one for each paren. */
           auto const len(2 + i);
@@ -454,7 +447,7 @@ namespace jank::read::parse
         for(size_t i{ 1 }; i < 3; ++i)
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(
+          CHECK(runtime::equal(
             r.expect_ok().unwrap().ptr,
             make_box<runtime::obj::persistent_list>(std::in_place,
                                                     make_box<runtime::obj::integer>(1 * i),
@@ -478,15 +471,15 @@ namespace jank::read::parse
         lex::processor lp{ "(def foo-bar 1) foo-bar" };
         processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
-        CHECK(runtime::detail::equal(
+        CHECK(runtime::equal(
           r1.expect_ok().unwrap().ptr,
           make_box<runtime::obj::persistent_list>(std::in_place,
                                                   make_box<runtime::obj::symbol>("def"),
                                                   make_box<runtime::obj::symbol>("foo-bar"),
                                                   make_box<runtime::obj::integer>(1))));
         auto const r2(p.next());
-        CHECK(runtime::detail::equal(r2.expect_ok().unwrap().ptr,
-                                     make_box<runtime::obj::symbol>("foo-bar")));
+        CHECK(
+          runtime::equal(r2.expect_ok().unwrap().ptr, make_box<runtime::obj::symbol>("foo-bar")));
       }
 
       SUBCASE("Extra close")
@@ -494,7 +487,7 @@ namespace jank::read::parse
         lex::processor lp{ "1)" };
         processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
-        CHECK(runtime::detail::equal(r1.expect_ok().unwrap().ptr, make_box(1)));
+        CHECK(runtime::equal(r1.expect_ok().unwrap().ptr, make_box(1)));
         auto const r2(p.next());
         CHECK(r2.is_err());
       }
@@ -519,8 +512,8 @@ namespace jank::read::parse
         for(size_t i{}; i < 3; ++i)
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       make_box<runtime::obj::persistent_vector>()));
+          CHECK(runtime::equal(r.expect_ok().unwrap().ptr,
+                               make_box<runtime::obj::persistent_vector>()));
 
           /* We add one for each bracket. */
           auto const len(2 + i);
@@ -542,7 +535,7 @@ namespace jank::read::parse
         for(size_t i{ 1 }; i < 3; ++i)
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(
+          CHECK(runtime::equal(
             r.expect_ok().unwrap().ptr,
             make_box<runtime::obj::persistent_vector>(runtime::detail::native_persistent_vector{
               make_box<runtime::obj::integer>(1 * i),
@@ -567,7 +560,7 @@ namespace jank::read::parse
         lex::processor lp{ "1]" };
         processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
-        CHECK(runtime::detail::equal(r1.expect_ok().unwrap().ptr, make_box(1)));
+        CHECK(runtime::equal(r1.expect_ok().unwrap().ptr, make_box(1)));
         auto const r2(p.next());
         CHECK(r2.is_err());
       }
@@ -592,8 +585,8 @@ namespace jank::read::parse
         for(size_t i{}; i < 3; ++i)
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       make_box<runtime::obj::persistent_array_map>()));
+          CHECK(runtime::equal(r.expect_ok().unwrap().ptr,
+                               make_box<runtime::obj::persistent_array_map>()));
 
           /* We add one for each bracket. */
           auto const len(2 + i);
@@ -615,7 +608,7 @@ namespace jank::read::parse
         for(size_t i{ 1 }; i < 3; ++i)
         {
           auto const r(p.next());
-          CHECK(runtime::detail::equal(
+          CHECK(runtime::equal(
             r.expect_ok().unwrap().ptr,
             make_box<runtime::obj::persistent_array_map>(
               runtime::detail::in_place_unique{},
@@ -641,7 +634,7 @@ namespace jank::read::parse
         lex::processor lp{ R"({:foo true 1 :one "meow" "meow"})" };
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
-        CHECK(runtime::detail::equal(
+        CHECK(runtime::equal(
           r.expect_ok().unwrap().ptr,
           make_box<runtime::obj::persistent_array_map>(
             runtime::detail::in_place_unique{},
@@ -671,8 +664,8 @@ namespace jank::read::parse
         lex::processor lp{ ":foo}" };
         processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
-        CHECK(runtime::detail::equal(r1.expect_ok().unwrap().ptr,
-                                     __rt_ctx->intern_keyword("foo").expect_ok()));
+        CHECK(
+          runtime::equal(r1.expect_ok().unwrap().ptr, __rt_ctx->intern_keyword("foo").expect_ok()));
         auto const r2(p.next());
         CHECK(r2.is_err());
       }
@@ -709,12 +702,12 @@ namespace jank::read::parse
         lex::processor lp{ "^:foo {}" };
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
-        CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                     runtime::obj::persistent_array_map::empty()));
-        CHECK(runtime::detail::equal(runtime::meta(r.expect_ok().unwrap().ptr),
-                                     runtime::obj::persistent_array_map::create_unique(
-                                       __rt_ctx->intern_keyword("foo").expect_ok(),
-                                       runtime::obj::boolean::true_const())));
+        CHECK(
+          runtime::equal(r.expect_ok().unwrap().ptr, runtime::obj::persistent_array_map::empty()));
+        CHECK(runtime::equal(runtime::meta(r.expect_ok().unwrap().ptr),
+                             runtime::obj::persistent_array_map::create_unique(
+                               __rt_ctx->intern_keyword("foo").expect_ok(),
+                               runtime::obj::boolean::true_const())));
       }
 
       SUBCASE("Keyword meta for non-metadatable target")
@@ -730,12 +723,11 @@ namespace jank::read::parse
         lex::processor lp{ "^{:foo :bar} []" };
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
-        CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                     runtime::obj::persistent_vector::empty()));
-        CHECK(runtime::detail::equal(runtime::meta(r.expect_ok().unwrap().ptr),
-                                     runtime::obj::persistent_array_map::create_unique(
-                                       __rt_ctx->intern_keyword("foo").expect_ok(),
-                                       __rt_ctx->intern_keyword("bar").expect_ok())));
+        CHECK(runtime::equal(r.expect_ok().unwrap().ptr, runtime::obj::persistent_vector::empty()));
+        CHECK(runtime::equal(runtime::meta(r.expect_ok().unwrap().ptr),
+                             runtime::obj::persistent_array_map::create_unique(
+                               __rt_ctx->intern_keyword("foo").expect_ok(),
+                               __rt_ctx->intern_keyword("bar").expect_ok())));
       }
 
       SUBCASE("Map meta for non-metadatable target")
@@ -751,14 +743,13 @@ namespace jank::read::parse
         lex::processor lp{ "^{:foo :bar} ^:meow ()" };
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
-        CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                     runtime::obj::persistent_list::empty()));
-        CHECK(runtime::detail::equal(runtime::meta(r.expect_ok().unwrap().ptr),
-                                     runtime::obj::persistent_array_map::create_unique(
-                                       __rt_ctx->intern_keyword("foo").expect_ok(),
-                                       __rt_ctx->intern_keyword("bar").expect_ok(),
-                                       __rt_ctx->intern_keyword("meow").expect_ok(),
-                                       runtime::obj::boolean::true_const())));
+        CHECK(runtime::equal(r.expect_ok().unwrap().ptr, runtime::obj::persistent_list::empty()));
+        CHECK(runtime::equal(runtime::meta(r.expect_ok().unwrap().ptr),
+                             runtime::obj::persistent_array_map::create_unique(
+                               __rt_ctx->intern_keyword("foo").expect_ok(),
+                               __rt_ctx->intern_keyword("bar").expect_ok(),
+                               __rt_ctx->intern_keyword("meow").expect_ok(),
+                               runtime::obj::boolean::true_const())));
       }
 
       SUBCASE("Nested hints")
@@ -766,9 +757,8 @@ namespace jank::read::parse
         lex::processor lp{ "^{:foo ^:meow 'bar} []" };
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
-        CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                     runtime::obj::persistent_vector::empty()));
-        CHECK(runtime::detail::equal(
+        CHECK(runtime::equal(r.expect_ok().unwrap().ptr, runtime::obj::persistent_vector::empty()));
+        CHECK(runtime::equal(
           runtime::meta(r.expect_ok().unwrap().ptr),
           runtime::obj::persistent_array_map::create_unique(
             __rt_ctx->intern_keyword("foo").expect_ok(),
@@ -782,20 +772,19 @@ namespace jank::read::parse
         lex::processor lp{ "(str ^:foo #{})" };
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
-        CHECK(runtime::detail::equal(
+        CHECK(runtime::equal(
           r.expect_ok().unwrap().ptr,
           make_box<runtime::obj::persistent_list>(std::in_place,
                                                   make_box<runtime::obj::symbol>("str"),
                                                   runtime::obj::persistent_hash_set::empty())));
-        CHECK(runtime::detail::equal(
-          runtime::meta(
-            runtime::expect_object<runtime::obj::persistent_list>(r.expect_ok().unwrap().ptr)
-              ->data.rest()
-              .first()
-              .unwrap()),
-          runtime::obj::persistent_array_map::create_unique(
-            __rt_ctx->intern_keyword("foo").expect_ok(),
-            runtime::obj::boolean::true_const())));
+        CHECK(runtime::equal(runtime::meta(runtime::expect_object<runtime::obj::persistent_list>(
+                                             r.expect_ok().unwrap().ptr)
+                                             ->data.rest()
+                                             .first()
+                                             .unwrap()),
+                             runtime::obj::persistent_array_map::create_unique(
+                               __rt_ctx->intern_keyword("foo").expect_ok(),
+                               runtime::obj::boolean::true_const())));
       }
     }
 
@@ -832,7 +821,7 @@ namespace jank::read::parse
           lex::processor lp{ "@foo" };
           processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
-          CHECK(runtime::detail::equal(
+          CHECK(runtime::equal(
             r.expect_ok().unwrap().ptr,
             make_box<runtime::obj::persistent_list>(std::in_place,
                                                     make_box<runtime::obj::symbol>("deref"),
@@ -844,7 +833,7 @@ namespace jank::read::parse
           lex::processor lp{ "@@foo" };
           processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
-          CHECK(runtime::detail::equal(
+          CHECK(runtime::equal(
             r.expect_ok().unwrap().ptr,
             make_box<runtime::obj::persistent_list>(
               std::in_place,
@@ -862,8 +851,8 @@ namespace jank::read::parse
           lex::processor lp{ "#{}" };
           processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
-          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                       runtime::obj::persistent_hash_set::empty()));
+          CHECK(
+            runtime::equal(r.expect_ok().unwrap().ptr, runtime::obj::persistent_hash_set::empty()));
         }
 
         SUBCASE("Non-empty")
@@ -871,7 +860,7 @@ namespace jank::read::parse
           lex::processor lp{ "#{1}" };
           processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
-          CHECK(runtime::detail::equal(
+          CHECK(runtime::equal(
             r.expect_ok().unwrap().ptr,
             make_box<runtime::obj::persistent_hash_set>(std::in_place, make_box(1))));
         }
@@ -881,7 +870,7 @@ namespace jank::read::parse
           lex::processor lp{ "#{1, #{2}}" };
           processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
-          CHECK(runtime::detail::equal(
+          CHECK(runtime::equal(
             r.expect_ok().unwrap().ptr,
             make_box<runtime::obj::persistent_hash_set>(
               std::in_place,
@@ -905,7 +894,7 @@ namespace jank::read::parse
           lex::processor lp{ "#_#{1} #{2}" };
           processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
-          CHECK(runtime::detail::equal(
+          CHECK(runtime::equal(
             r.expect_ok().unwrap().ptr,
             make_box<runtime::obj::persistent_hash_set>(std::in_place, make_box(2))));
         }
@@ -915,7 +904,7 @@ namespace jank::read::parse
           lex::processor lp{ "#_#_1 2 3" };
           processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
-          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr, make_box(3)));
+          CHECK(runtime::equal(r.expect_ok().unwrap().ptr, make_box(3)));
         }
 
         SUBCASE("Number")
@@ -923,7 +912,7 @@ namespace jank::read::parse
           lex::processor lp{ "#_1.23 \"ok\"" };
           processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
-          CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr, make_box("ok")));
+          CHECK(runtime::equal(r.expect_ok().unwrap().ptr, make_box("ok")));
         }
 
         SUBCASE("Invalid form")
@@ -958,9 +947,9 @@ namespace jank::read::parse
           lex::processor lp{ "[#?(:clj 0 :cljs 1) 9]" };
           processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
-          CHECK(runtime::detail::equal(
-            r.expect_ok().unwrap().ptr,
-            make_box<runtime::obj::persistent_vector>(std::in_place, make_box(9))));
+          CHECK(
+            runtime::equal(r.expect_ok().unwrap().ptr,
+                           make_box<runtime::obj::persistent_vector>(std::in_place, make_box(9))));
         }
 
         SUBCASE("Default match")
@@ -968,7 +957,7 @@ namespace jank::read::parse
           lex::processor lp{ "[#?(:clj 0 :cljs 1 :default 8) 9]" };
           processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
-          CHECK(runtime::detail::equal(
+          CHECK(runtime::equal(
             r.expect_ok().unwrap().ptr,
             make_box<runtime::obj::persistent_vector>(std::in_place, make_box(8), make_box(9))));
         }
@@ -978,7 +967,7 @@ namespace jank::read::parse
           lex::processor lp{ "[#?(:clj 0 :cljs 1 :jank 7 :default 8) 9]" };
           processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
-          CHECK(runtime::detail::equal(
+          CHECK(runtime::equal(
             r.expect_ok().unwrap().ptr,
             make_box<runtime::obj::persistent_vector>(std::in_place, make_box(7), make_box(9))));
         }
@@ -988,7 +977,7 @@ namespace jank::read::parse
           lex::processor lp{ "[#?(:default -1 :clj 0 :cljs 1 :jank 7 :default 8) 9]" };
           processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
-          CHECK(runtime::detail::equal(
+          CHECK(runtime::equal(
             r.expect_ok().unwrap().ptr,
             make_box<runtime::obj::persistent_vector>(std::in_place, make_box(-1), make_box(9))));
         }
@@ -998,7 +987,7 @@ namespace jank::read::parse
           lex::processor lp{ "[#?(:clj 0 :cljs 1 :jank #?(:default 5) :default 8) 9]" };
           processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
-          CHECK(runtime::detail::equal(
+          CHECK(runtime::equal(
             r.expect_ok().unwrap().ptr,
             make_box<runtime::obj::persistent_vector>(std::in_place, make_box(5), make_box(9))));
         }
@@ -1008,7 +997,7 @@ namespace jank::read::parse
           lex::processor lp{ "#?(:default #{1})" };
           processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
-          CHECK(runtime::detail::equal(
+          CHECK(runtime::equal(
             r.expect_ok().unwrap().ptr,
             make_box<runtime::obj::persistent_hash_set>(std::in_place, make_box(1))));
         }
@@ -1046,7 +1035,7 @@ namespace jank::read::parse
             lex::processor lp{ "(#?@(:jank #{1 2}))" };
             processor p{ lp.begin(), lp.end() };
             auto const r(p.next());
-            CHECK(runtime::detail::equal(
+            CHECK(runtime::equal(
               r.expect_ok().unwrap().ptr,
               make_box<runtime::obj::persistent_list>(std::in_place, make_box(1), make_box(2))));
           }
@@ -1056,14 +1045,14 @@ namespace jank::read::parse
             lex::processor lp{ "[#?@(:jank [1 #?@(:clj [1.2 1.3]) 2 #?@(:default [3 4]) 5 6])]" };
             processor p{ lp.begin(), lp.end() };
             auto const r(p.next());
-            CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                         make_box<runtime::obj::persistent_vector>(std::in_place,
-                                                                                   make_box(1),
-                                                                                   make_box(2),
-                                                                                   make_box(3),
-                                                                                   make_box(4),
-                                                                                   make_box(5),
-                                                                                   make_box(6))));
+            CHECK(runtime::equal(r.expect_ok().unwrap().ptr,
+                                 make_box<runtime::obj::persistent_vector>(std::in_place,
+                                                                           make_box(1),
+                                                                           make_box(2),
+                                                                           make_box(3),
+                                                                           make_box(4),
+                                                                           make_box(5),
+                                                                           make_box(6))));
           }
 
           SUBCASE("Within a set, non-empty splice")
@@ -1071,11 +1060,11 @@ namespace jank::read::parse
             lex::processor lp{ "#{0 #?@(:default [1]) 2}" };
             processor p{ lp.begin(), lp.end() };
             auto const r(p.next());
-            CHECK(runtime::detail::equal(r.expect_ok().unwrap().ptr,
-                                         make_box<runtime::obj::persistent_hash_set>(std::in_place,
-                                                                                make_box(0),
-                                                                                make_box(1),
-                                                                                make_box(2))));
+            CHECK(runtime::equal(r.expect_ok().unwrap().ptr,
+                                 make_box<runtime::obj::persistent_hash_set>(std::in_place,
+                                                                             make_box(0),
+                                                                             make_box(1),
+                                                                             make_box(2))));
           }
         }
       }

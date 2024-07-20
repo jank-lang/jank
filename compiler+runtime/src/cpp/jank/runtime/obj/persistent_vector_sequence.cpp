@@ -19,7 +19,7 @@ namespace jank::runtime
   /* behavior::objectable */
   native_bool obj::persistent_vector_sequence::equal(object const &o) const
   {
-    return detail::equal(
+    return runtime::equal(
       o,
       vec->data.begin()
         + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
@@ -28,7 +28,7 @@ namespace jank::runtime
 
   void obj::persistent_vector_sequence::to_string(fmt::memory_buffer &buff) const
   {
-    behavior::detail::to_string(
+    runtime::to_string(
       vec->data.begin()
         + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
       vec->data.end(),
@@ -40,7 +40,7 @@ namespace jank::runtime
   native_persistent_string obj::persistent_vector_sequence::to_string() const
   {
     fmt::memory_buffer buff;
-    behavior::detail::to_string(
+    runtime::to_string(
       vec->data.begin()
         + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
       vec->data.end(),

@@ -1,6 +1,5 @@
 #include "jank/runtime/obj/persistent_list.hpp"
 #include <jank/runtime/obj/lazy_sequence.hpp>
-#include <jank/runtime/seq.hpp>
 
 namespace jank::runtime
 {
@@ -86,7 +85,7 @@ namespace jank::runtime
           for(auto it(fresh_seq()); it != nullptr;
               it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
           {
-            if(seq == nullptr || !runtime::detail::equal(it, seq->first()))
+            if(seq == nullptr || !runtime::equal(it, seq->first()))
             {
               return false;
             }
@@ -99,12 +98,12 @@ namespace jank::runtime
 
   void obj::lazy_sequence::to_string(fmt::memory_buffer &buff) const
   {
-    runtime::detail::to_string(seq(), buff);
+    runtime::to_string(seq(), buff);
   }
 
   native_persistent_string obj::lazy_sequence::to_string() const
   {
-    return runtime::detail::to_string(seq());
+    return runtime::to_string(seq());
   }
 
   native_hash obj::lazy_sequence::to_hash() const

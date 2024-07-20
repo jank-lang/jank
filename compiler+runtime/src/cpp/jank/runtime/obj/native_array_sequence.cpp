@@ -24,18 +24,18 @@ namespace jank::runtime
   /* behavior::objectable */
   native_bool obj::native_array_sequence::equal(object const &o) const
   {
-    return detail::equal(o, arr + index, arr + size);
+    return runtime::equal(o, arr + index, arr + size);
   }
 
   void obj::native_array_sequence::to_string(fmt::memory_buffer &buff) const
   {
-    behavior::detail::to_string(arr + index, arr + size, "(", ')', buff);
+    runtime::to_string(arr + index, arr + size, "(", ')', buff);
   }
 
   native_persistent_string obj::native_array_sequence::to_string() const
   {
     fmt::memory_buffer buff;
-    behavior::detail::to_string(arr + index, arr + size, "(", ')', buff);
+    runtime::to_string(arr + index, arr + size, "(", ')', buff);
     return native_persistent_string{ buff.data(), buff.size() };
   }
 

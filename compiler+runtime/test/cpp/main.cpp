@@ -41,7 +41,7 @@ catch(std::exception const &e)
 }
 catch(jank::runtime::object_ptr const o)
 {
-  fmt::println("Exception: {}", jank::runtime::detail::to_string(o));
+  fmt::println("Exception: {}", jank::runtime::to_string(o));
 }
 catch(jank::native_persistent_string const &s)
 {

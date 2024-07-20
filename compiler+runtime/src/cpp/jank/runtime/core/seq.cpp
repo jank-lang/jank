@@ -8,54 +8,50 @@
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
-#include <jank/runtime/seq.hpp>
 #include <jank/runtime/util.hpp>
 
 namespace jank::runtime
 {
-  namespace detail
+  size_t sequence_length(object_ptr const s)
   {
-    size_t sequence_length(object_ptr const s)
+    return sequence_length(s, std::numeric_limits<size_t>::max());
+  }
+
+  size_t sequence_length(object_ptr const s, size_t const max)
+  {
+    if(s == nullptr)
     {
-      return sequence_length(s, std::numeric_limits<size_t>::max());
+      return 0;
     }
 
-    size_t sequence_length(object_ptr const s, size_t const max)
-    {
-      if(s == nullptr)
-      {
-        return 0;
-      }
+    return visit_object(
+      [&](auto const typed_s) -> size_t {
+        using T = typename decltype(typed_s)::value_type;
 
-      return visit_object(
-        [&](auto const typed_s) -> size_t {
-          using T = typename decltype(typed_s)::value_type;
-
-          if constexpr(std::same_as<T, obj::nil>)
+        if constexpr(std::same_as<T, obj::nil>)
+        {
+          return 0;
+        }
+        else if constexpr(behavior::countable<T>)
+        {
+          return typed_s->count();
+        }
+        else if constexpr(behavior::seqable<T>)
+        {
+          size_t length{ 0 };
+          for(auto i(typed_s->fresh_seq()); i != nullptr && length < max; i = next_in_place(i))
           {
-            return 0;
+            ++length;
           }
-          else if constexpr(behavior::countable<T>)
-          {
-            return typed_s->count();
-          }
-          else if constexpr(behavior::seqable<T>)
-          {
-            size_t length{ 0 };
-            for(auto i(typed_s->fresh_seq()); i != nullptr && length < max; i = next_in_place(i))
-            {
-              ++length;
-            }
-            return length;
-          }
-          else
-          {
-            throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) };
-          }
-        },
-        s);
-    }
-  } // namespace detail
+          return length;
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) };
+        }
+      },
+      s);
+  }
 
   native_bool is_nil(object_ptr const o)
   {
@@ -241,8 +237,7 @@ namespace jank::runtime
         return make_box<jank::runtime::obj::cons>(head, typed_tail->seq());
       },
       [=]() -> object_ptr {
-        throw std::runtime_error{ fmt::format("not seqable: {}",
-                                              runtime::detail::to_string(tail)) };
+        throw std::runtime_error{ fmt::format("not seqable: {}", runtime::to_string(tail)) };
       },
       tail);
   }
@@ -290,7 +285,7 @@ namespace jank::runtime
     }
     else
     {
-      throw std::runtime_error{ fmt::format("not disjoinable: {}", runtime::detail::to_string(s)) };
+      throw std::runtime_error{ fmt::format("not disjoinable: {}", runtime::to_string(s)) };
     }
   }
 
@@ -727,7 +722,7 @@ namespace jank::runtime
         return obj::persistent_list::create(typed_s);
       },
       [=]() -> obj::persistent_list_ptr {
-        throw std::runtime_error{ fmt::format("not seqable: {}", runtime::detail::to_string(s)) };
+        throw std::runtime_error{ fmt::format("not seqable: {}", runtime::to_string(s)) };
       },
       s);
   }

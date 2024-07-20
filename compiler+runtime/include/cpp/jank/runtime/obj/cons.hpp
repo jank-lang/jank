@@ -1,7 +1,5 @@
 #pragma once
 
-#include <jank/runtime/behavior/seqable.hpp>
-
 namespace jank::runtime
 {
   template <>

@@ -228,8 +228,8 @@ namespace jank::runtime
       throw std::runtime_error{ fmt::format(
         "Preference conflict in multimethod '{}': {} is already preferred to {}",
         name,
-        runtime::detail::to_string(y),
-        runtime::detail::to_string(x)) };
+        runtime::to_string(y),
+        runtime::to_string(x)) };
     }
 
     prefer_table = prefer_table->assoc(
@@ -244,7 +244,8 @@ namespace jank::runtime
                                                 object_ptr const y) const
   {
     auto const x_prefs(prefer_table->get(x));
-    if(x_prefs != obj::nil::nil_const() && expect_object<obj::persistent_hash_set>(x_prefs)->contains(y))
+    if(x_prefs != obj::nil::nil_const()
+       && expect_object<obj::persistent_hash_set>(x_prefs)->contains(y))
     {
       return true;
     }
@@ -299,7 +300,7 @@ namespace jank::runtime
     {
       throw std::runtime_error{ fmt::format("No method in multimethod '{}' for dispatch value: {}",
                                             name,
-                                            runtime::detail::to_string(dispatch_val)) };
+                                            runtime::to_string(dispatch_val)) };
     }
     return target;
   }
@@ -345,9 +346,9 @@ namespace jank::runtime
             "Multiple methods in multimethod '{}' match dispatch value: {} -> {} and {}, and "
             "neither is preferred",
             name,
-            runtime::detail::to_string(dispatch_val),
-            runtime::detail::to_string(entry_key),
-            runtime::detail::to_string(best_entry->first())) };
+            runtime::to_string(dispatch_val),
+            runtime::to_string(entry_key),
+            runtime::to_string(best_entry->first())) };
         }
       }
     }

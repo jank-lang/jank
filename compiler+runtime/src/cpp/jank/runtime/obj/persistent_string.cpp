@@ -88,7 +88,7 @@ namespace jank::runtime
 
   native_integer obj::persistent_string::first_index_of(object_ptr const c) const
   {
-    auto const s(runtime::detail::to_string(c));
+    auto const s(runtime::to_string(c));
     auto const found(data.find(s));
     if(found == native_persistent_string::npos)
     {
@@ -99,7 +99,7 @@ namespace jank::runtime
 
   native_integer obj::persistent_string::last_index_of(object_ptr const c) const
   {
-    auto const s(runtime::detail::to_string(c));
+    auto const s(runtime::to_string(c));
     auto const found(data.rfind(s));
     if(found == native_persistent_string::npos)
     {

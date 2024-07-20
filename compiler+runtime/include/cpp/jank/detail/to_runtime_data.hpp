@@ -2,8 +2,6 @@
 
 #include <boost/filesystem/path.hpp>
 
-#include <jank/runtime/seq.hpp>
-
 namespace jank::detail
 {
   template <typename T>

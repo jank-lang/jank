@@ -105,9 +105,8 @@ namespace jank::jit
           {
             failures.push_back(
               { dir_entry.path(),
-                fmt::format(
-                  "Test failure was expected, but it passed with {}",
-                  (result == nullptr ? "nullptr" : runtime::detail::to_string(result))) });
+                fmt::format("Test failure was expected, but it passed with {}",
+                            (result == nullptr ? "nullptr" : runtime::to_string(result))) });
             passed = false;
           }
           else
@@ -117,11 +116,11 @@ namespace jank::jit
               failures.push_back({ dir_entry.path(), "Returned object is nullptr" });
               passed = false;
             }
-            else if(!runtime::detail::equal(result, cardinal_result))
+            else if(!runtime::equal(result, cardinal_result))
             {
               failures.push_back(
                 { dir_entry.path(),
-                  fmt::format("Result is not :success: {}", runtime::detail::to_string(result)) });
+                  fmt::format("Result is not :success: {}", runtime::to_string(result)) });
               passed = false;
             }
           }
@@ -136,28 +135,26 @@ namespace jank::jit
         }
         catch(runtime::object_ptr const e)
         {
-          if(expect_success || (expect_throw && !runtime::detail::equal(e, cardinal_result)))
+          if(expect_success || (expect_throw && !runtime::equal(e, cardinal_result)))
           {
             failures.push_back(
-              { dir_entry.path(),
-                fmt::format("Exception thrown: {}", runtime::detail::to_string(e)) });
+              { dir_entry.path(), fmt::format("Exception thrown: {}", runtime::to_string(e)) });
             passed = false;
           }
-          else if(expect_failure && runtime::detail::equal(e, cardinal_result))
+          else if(expect_failure && runtime::equal(e, cardinal_result))
           {
             failures.push_back(
               { dir_entry.path(),
-                fmt::format("Expected failure, thrown: {}", runtime::detail::to_string(e)) });
+                fmt::format("Expected failure, thrown: {}", runtime::to_string(e)) });
             passed = false;
           }
         }
         catch(runtime::obj::keyword_ptr const e)
         {
-          if(!expect_throw || !runtime::detail::equal(e, cardinal_result))
+          if(!expect_throw || !runtime::equal(e, cardinal_result))
           {
             failures.push_back(
-              { dir_entry.path(),
-                fmt::format("Exception thrown: {}", runtime::detail::to_string(e)) });
+              { dir_entry.path(), fmt::format("Exception thrown: {}", runtime::to_string(e)) });
             passed = false;
           }
         }

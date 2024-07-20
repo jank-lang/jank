@@ -9,7 +9,7 @@
 
 namespace jank::analyze
 {
-  using runtime::detail::equal;
+  using runtime::equal;
   using runtime::__rt_ctx;
 
   TEST_SUITE("analyze::box")

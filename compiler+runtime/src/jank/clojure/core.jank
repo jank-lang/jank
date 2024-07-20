@@ -72,7 +72,7 @@
   (fn* count [o]
     (if (nil? o)
       0
-      (native/raw "__value = make_box(runtime::detail::sequence_length(~{ o }));"))))
+      (native/raw "__value = make_box(sequence_length(~{ o }));"))))
 
 (def boolean
   (fn* boolean [o]
@@ -310,7 +310,7 @@
     ([]
      "")
     ([o]
-     (native/raw "__value = make_box(runtime::detail::to_string(~{ o }));"))
+     (native/raw "__value = make_box(runtime::to_string(~{ o }));"))
     ([o & args]
      (native/raw "__value = visit_object
                  (
@@ -322,13 +322,13 @@
                      {
                        fmt::memory_buffer buff;
                        buff.reserve(16);
-                       runtime::detail::to_string(~{ o }, buff);
-                       if(0 < runtime::detail::sequence_length(typed_args))
+                       runtime::to_string(~{ o }, buff);
+                       if(0 < sequence_length(typed_args))
                        {
                          auto const fresh(typed_args->fresh_seq());
-                         runtime::detail::to_string(fresh->first(), buff);
+                         runtime::to_string(fresh->first(), buff);
                          for(auto it(fresh->next_in_place()); it != nullptr; it = it->next_in_place())
-                         { runtime::detail::to_string(it->first(), buff); }
+                         { runtime::to_string(it->first(), buff); }
                        }
                        return make_box<obj::persistent_string>(native_persistent_string{ buff.data(), buff.size() });
                      }
@@ -347,16 +347,16 @@
 ;; Miscellaneous.
 (def true?
   (fn* true? [o]
-    (native/raw "__value = runtime::detail::equal(~{ o }, ~{ true }) ? ~{ true } : ~{ false }")))
+    (native/raw "__value = runtime::equal(~{ o }, ~{ true }) ? ~{ true } : ~{ false }")))
 (def false?
   (fn* false? [o]
-    (native/raw "__value = runtime::detail::equal(~{ o }, ~{ false }) ? ~{ true } : ~{ false }")))
+    (native/raw "__value = runtime::equal(~{ o }, ~{ false }) ? ~{ true } : ~{ false }")))
 (def not
   (fn* not [o]
     (native/raw "if(o == obj::nil::nil_const())
                  { __value = ~{ true }; }
                  else
-                 { __value = runtime::detail::equal(~{ o }, ~{ false }) ? ~{ true } : ~{ false }; }")))
+                 { __value = runtime::equal(~{ o }, ~{ false }) ? ~{ true } : ~{ false }; }")))
 (def some?
   (fn* some? [o]
     (native/raw "__value = (o == obj::nil::nil_const()) ? ~{ false } : ~{ true }")))
@@ -420,7 +420,7 @@
     (let* [asig (fn* asig [fdecl]
                   (let* [arglist (first fdecl)
                          ;elide implicit macro args
-                         arglist (if (native/raw "__value = make_box(runtime::detail::equal(~{ '&form }, ~{ (first arglist) }));")
+                         arglist (if (native/raw "__value = make_box(runtime::equal(~{ '&form }, ~{ (first arglist) }));")
                                    (subvec arglist 2 (count arglist))
                                    arglist)
                          body (next fdecl)]
@@ -477,7 +477,7 @@
                     ifn (first inline)
                     iname (second inline)]
                ;; same as: (if (and (= 'fn ifn) (not (symbol? iname))) ...)
-               (if (if (native/raw "__value = make_box(runtime::detail::equal(~{ 'fn }, ~{ ifn }));")
+               (if (if (native/raw "__value = make_box(runtime::equal(~{ 'fn }, ~{ ifn }));")
                      (if (native/raw "__value = make_box(~{ name }->type == object_type::symbol);")
                        false
                        true))
@@ -502,7 +502,7 @@
   ([]
    (native/raw "__value = make_box<obj::symbol>(runtime::context::unique_symbol());"))
   ([prefix]
-   (native/raw "__value = make_box<obj::symbol>(runtime::context::unique_symbol(runtime::detail::to_string(~{ prefix })));")))
+   (native/raw "__value = make_box<obj::symbol>(runtime::context::unique_symbol(runtime::to_string(~{ prefix })));")))
 
 (defn
   ^{:macro true
@@ -1233,12 +1233,12 @@
   ([x]
    true)
   ([l r]
-   (native/raw "__value = make_box(runtime::detail::equal(~{ l }, ~{ r }));"))
+   (native/raw "__value = make_box(runtime::equal(~{ l }, ~{ r }));"))
   ([l r & args]
-   (if (native/raw "__value = make_box(runtime::detail::equal(~{ l }, ~{ r }));")
+   (if (native/raw "__value = make_box(runtime::equal(~{ l }, ~{ r }));")
      (if (next args)
        (recur r (first args) (next args))
-       (native/raw "__value = make_box(runtime::detail::equal(~{ r }, ~{ (first args) }));"))
+       (native/raw "__value = make_box(runtime::equal(~{ r }, ~{ (first args) }));"))
      false)))
 
 (defn ==
@@ -2328,12 +2328,12 @@
   ([name]
    (if (keyword? name)
      name
-     (native/raw "__value = __rt_ctx->intern_keyword(runtime::detail::to_string(~{ name })).expect_ok();")))
+     (native/raw "__value = __rt_ctx->intern_keyword(runtime::to_string(~{ name })).expect_ok();")))
   ([ns name]
    (native/raw "__value = __rt_ctx->intern_keyword
                 (
-                  runtime::detail::to_string(~{ ns }),
-                  runtime::detail::to_string(~{ name })
+                  runtime::to_string(~{ ns }),
+                  runtime::to_string(~{ name })
                 ).expect_ok();")))
 
 (defn simple-symbol? [o]
@@ -2362,7 +2362,7 @@
   ([ns o]
    (if (nil? ns)
      (symbol o)
-     (native/raw "__value = make_box<obj::symbol>(runtime::detail::to_string(~{ ns }), runtime::detail::to_string(~{ o }));"))))
+     (native/raw "__value = make_box<obj::symbol>(runtime::to_string(~{ ns }), runtime::to_string(~{ o }));"))))
 
 (defn ident?
   "Returns true if x is a symbol or keyword"
@@ -4191,13 +4191,13 @@
 
 ;; Extra things that usually come from Java.
 (defn tan [o]
-  (native/raw "__value = make_box(std::tan(runtime::detail::to_real(~{ o })));"))
+  (native/raw "__value = make_box(std::tan(to_real(~{ o })));"))
 
 (defn
   ^{:arities {1 {:supports-unboxed-input? true
                  :unboxed-output? true}}}
   sqrt [o]
-  (native/raw "__value = make_box(std::sqrt(runtime::detail::to_real(~{ o })));"))
+  (native/raw "__value = make_box(std::sqrt(to_real(~{ o })));"))
 
 (defn
   ^{:arities {1 {:supports-unboxed-input? true
@@ -4209,7 +4209,7 @@
   ^{:arities {2 {:supports-unboxed-input? true
                  :unboxed-output? true}}}
   pow [x y]
-  (native/raw "__value = make_box(std::pow(runtime::detail::to_real(~{ x }), runtime::detail::to_real(~{ y })));"))
+  (native/raw "__value = make_box(std::pow(to_real(~{ x }), to_real(~{ y })));"))
 
 ; Namespaces.
 (defn in-ns [sym]
@@ -4341,7 +4341,7 @@
     nil
     (let [path (first paths)]
       ; TODO: Check for cyclic deps, once we have dynamic vars.
-      (native/raw "__rt_ctx->load_module(runtime::detail::to_string(~{ path })).expect_ok();")
+      (native/raw "__rt_ctx->load_module(runtime::to_string(~{ path })).expect_ok();")
       (recur (rest paths)))))
 
 ; Loads a lib given its name. If `need-ns?`, ensures that the associated
@@ -4384,7 +4384,7 @@
         as-alias (:as-alias opts)
         ; TODO: Dynamic var
         ;loaded (contains? @*loaded-libs* lib)
-        loaded? (native/raw "__value = make_box(__rt_ctx->module_loader.is_loaded(runtime::detail::to_string(~{ lib })));")
+        loaded? (native/raw "__value = make_box(__rt_ctx->module_loader.is_loaded(runtime::to_string(~{ lib })));")
         need-ns? (or as use)
         load (cond reload-all load-all
                    reload load-one
@@ -4432,7 +4432,7 @@
       (apply load-lib (prependss arg opts)))))
 
 (defn compile [path]
-  (native/raw "__rt_ctx->compile_module(runtime::detail::to_string(~{ path })).expect_ok();"))
+  (native/raw "__rt_ctx->compile_module(runtime::to_string(~{ path })).expect_ok();"))
 
 (defn require [& args]
   (apply load-libs :require args))
@@ -4465,7 +4465,7 @@
           (list 'if (list '= (list 'quote name) (list 'quote 'clojure.core))
             'nil
             (list 'let (vector 'name (list 'quote name))
-              (list 'native/raw "__rt_ctx->module_loader.set_loaded(runtime::detail::to_string(~{ name }));")
+              (list 'native/raw "__rt_ctx->module_loader.set_loaded(runtime::to_string(~{ name }));")
               ; TODO: Dynamic vars
               ;(dosync (commute @#'*loaded-libs* conj '~name))
               'nil))

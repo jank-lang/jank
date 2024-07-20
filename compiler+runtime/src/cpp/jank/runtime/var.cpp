@@ -187,12 +187,12 @@ namespace jank::runtime
 
   native_persistent_string var_thread_binding::to_string() const
   {
-    return runtime::detail::to_string(value);
+    return runtime::to_string(value);
   }
 
   void var_thread_binding::to_string(fmt::memory_buffer &buff) const
   {
-    runtime::detail::to_string(value, buff);
+    runtime::to_string(value, buff);
   }
 
   native_hash var_thread_binding::to_hash() const

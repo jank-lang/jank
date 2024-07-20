@@ -87,7 +87,7 @@ namespace jank::runtime
     else
     {
       throw std::runtime_error{ fmt::format("nth on a array_chunk must be an integer; found {}",
-                                            runtime::detail::to_string(index)) };
+                                            runtime::to_string(index)) };
     }
   }
 

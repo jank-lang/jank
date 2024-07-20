@@ -53,9 +53,9 @@ namespace jank::runtime::obj::detail
       for(auto i(begin); i != end; ++i)
       {
         auto const pair(*i);
-        runtime::detail::to_string(pair.first, buff);
+        runtime::to_string(pair.first, buff);
         inserter = ' ';
-        runtime::detail::to_string(pair.second, buff);
+        runtime::to_string(pair.second, buff);
         auto n(i);
         if(++n != end)
         {

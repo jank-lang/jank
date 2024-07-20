@@ -45,18 +45,18 @@ namespace jank::runtime
 
   native_bool obj::persistent_sorted_set::equal(object const &o) const
   {
-    return detail::equal(o, data.begin(), data.end());
+    return runtime::equal(o, data.begin(), data.end());
   }
 
   void obj::persistent_sorted_set::to_string(fmt::memory_buffer &buff) const
   {
-    return behavior::detail::to_string(data.begin(), data.end(), "#{", '}', buff);
+    return runtime::to_string(data.begin(), data.end(), "#{", '}', buff);
   }
 
   native_persistent_string obj::persistent_sorted_set::to_string() const
   {
     fmt::memory_buffer buff;
-    behavior::detail::to_string(data.begin(), data.end(), "#{", '}', buff);
+    runtime::to_string(data.begin(), data.end(), "#{", '}', buff);
     return native_persistent_string{ buff.data(), buff.size() };
   }
 

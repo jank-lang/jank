@@ -131,7 +131,7 @@ namespace jank::runtime::detail
     {
       for(size_t i{}; i < length; i += 2)
       {
-        if(detail::equal(data[i], key))
+        if(runtime::equal(data[i], key))
         {
           data[i + 1] = val;
           hash = 0;
@@ -158,7 +158,7 @@ namespace jank::runtime::detail
     {
       for(size_t i{}; i < length; i += 2)
       {
-        if(detail::equal(data[i], key))
+        if(runtime::equal(data[i], key))
         {
           return data[i + 1];
         }
@@ -191,7 +191,7 @@ namespace jank::runtime::detail
     {
       for(size_t i{}; i < length; i += 2)
       {
-        if(detail::equal(data[i], key))
+        if(runtime::equal(data[i], key))
         {
           for(size_t k{ i + 2 }; k < length; k += 2)
           {

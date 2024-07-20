@@ -42,31 +42,4 @@ namespace jank::runtime::behavior
      * do own, and then next_in_place() on that to your heart's content. */
     { t->next_in_place() }; // -> sequenceable;
   };
-
-  namespace detail
-  {
-    template <typename It>
-    void to_string(It const &begin,
-                   It const &end,
-                   native_persistent_string_view const open,
-                   char const close,
-                   fmt::memory_buffer &buff)
-    {
-      auto inserter(std::back_inserter(buff));
-      for(auto const c : open)
-      {
-        inserter = c;
-      }
-      for(auto i(begin); i != end; ++i)
-      {
-        runtime::detail::to_string(*i, buff);
-        auto n(i);
-        if(++n != end)
-        {
-          inserter = ' ';
-        }
-      }
-      inserter = close;
-    }
-  }
 }

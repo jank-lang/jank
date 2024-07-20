@@ -41,7 +41,7 @@ namespace jank::runtime::obj::detail
             for(auto it(fresh_seq()); it != nullptr;
                 it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
             {
-              if(seq == nullptr || !runtime::detail::equal(it, seq->first()))
+              if(seq == nullptr || !runtime::equal(it, seq->first()))
               {
                 return false;
               }
@@ -59,9 +59,9 @@ namespace jank::runtime::obj::detail
       for(auto i(begin); i != end; ++i)
       {
         fmt::format_to(inserter, "[");
-        runtime::detail::to_string((*i).first, buff);
+        runtime::to_string((*i).first, buff);
         fmt::format_to(inserter, " ");
-        runtime::detail::to_string((*i).second, buff);
+        runtime::to_string((*i).second, buff);
         fmt::format_to(inserter, "]");
         auto n(i);
         if(++n != end)

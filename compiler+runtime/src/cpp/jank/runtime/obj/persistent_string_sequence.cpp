@@ -18,18 +18,18 @@ namespace jank::runtime
   /* behavior::objectable */
   native_bool obj::persistent_string_sequence::equal(object const &o) const
   {
-    return detail::equal(o, str->data.begin() + index, str->data.end());
+    return runtime::equal(o, str->data.begin() + index, str->data.end());
   }
 
   void obj::persistent_string_sequence::to_string(fmt::memory_buffer &buff) const
   {
-    return behavior::detail::to_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
+    return runtime::to_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
   }
 
   native_persistent_string obj::persistent_string_sequence::to_string() const
   {
     fmt::memory_buffer buff;
-    behavior::detail::to_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
+    runtime::to_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
     return { buff.data(), buff.size() };
   }
 

@@ -66,8 +66,7 @@ namespace jank::runtime
         return (data > typed_o->data) - (data < typed_o->data);
       },
       [&]() -> native_integer {
-        throw std::runtime_error{ fmt::format("not comparable: {}",
-                                              runtime::detail::to_string(&o)) };
+        throw std::runtime_error{ fmt::format("not comparable: {}", runtime::to_string(&o)) };
       },
       &o);
   }
@@ -116,8 +115,7 @@ namespace jank::runtime
         return (data > typed_o->data) - (data < typed_o->data);
       },
       [&]() -> native_integer {
-        throw std::runtime_error{ fmt::format("not comparable: {}",
-                                              runtime::detail::to_string(&o)) };
+        throw std::runtime_error{ fmt::format("not comparable: {}", runtime::to_string(&o)) };
       },
       &o);
   }
@@ -177,8 +175,7 @@ namespace jank::runtime
         return (data > typed_o->data) - (data < typed_o->data);
       },
       [&]() -> native_integer {
-        throw std::runtime_error{ fmt::format("not comparable: {}",
-                                              runtime::detail::to_string(&o)) };
+        throw std::runtime_error{ fmt::format("not comparable: {}", runtime::to_string(&o)) };
       },
       &o);
   }

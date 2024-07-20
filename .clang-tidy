@@ -24,6 +24,7 @@ readability-*,\
 -cppcoreguidelines-owning-memory,\
 -bugprone-easily-swappable-parameters,\
 -bugprone-reserved-identifier,\
+-readability-redundant-member-init,\
 -readability-implicit-bool-conversion,\
 -readability-magic-numbers,\
 -readability-identifier-length,\

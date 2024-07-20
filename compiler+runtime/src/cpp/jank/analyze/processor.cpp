@@ -139,7 +139,7 @@ namespace jank::analyze
       if(docstring_obj->type != runtime::object_type::persistent_string)
       {
         return err(error{ fmt::format("invalid def: docstring must be a string: {}",
-                                      runtime::detail::to_string(docstring_obj)) });
+                                      runtime::to_string(docstring_obj)) });
       }
       auto const meta_with_doc(
         runtime::assoc(qualified_sym->meta.unwrap_or(runtime::obj::nil::nil_const()),
@@ -266,8 +266,8 @@ namespace jank::analyze
       auto const p(*it);
       if(p->type != runtime::object_type::symbol)
       {
-        return err(error{ fmt::format("invalid parameter; must be a symbol, not {}",
-                                      runtime::detail::to_string(p)) });
+        return err(error{
+          fmt::format("invalid parameter; must be a symbol, not {}", runtime::to_string(p)) });
       }
 
       auto const sym(runtime::expect_object<runtime::obj::symbol>(p));
@@ -518,12 +518,12 @@ namespace jank::analyze
       auto const &ns_sym(make_box<runtime::obj::symbol>("clojure.core/*ns*"));
       auto const &ns_var(rt_ctx.find_var(ns_sym).unwrap());
       auto const module(
-        runtime::module::nest_module(runtime::detail::to_string(ns_var->deref()), unique_name));
+        runtime::module::nest_module(runtime::to_string(ns_var->deref()), unique_name));
       auto const &current_module(
         expect_object<runtime::obj::persistent_string>(rt_ctx.current_module_var->deref())->data);
       rt_ctx.module_dependencies[current_module].emplace_back(module);
       //fmt::println("module dep {} -> {}",
-      //             runtime::detail::to_string(rt_ctx.current_module_var->deref()),
+      //             runtime::to_string(rt_ctx.current_module_var->deref()),
       //             module);
 
       codegen::processor cg_prc{ rt_ctx, ret, module, codegen::compilation_target::function };
@@ -662,7 +662,7 @@ namespace jank::analyze
       if(sym_obj->type != runtime::object_type::symbol)
       {
         return err(error{ fmt::format("invalid let* binding: left hand must be a symbol, not {}",
-                                      runtime::detail::to_string(sym_obj)) });
+                                      runtime::to_string(sym_obj)) });
       }
       auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
       if(!sym->ns.empty())
@@ -745,7 +745,7 @@ namespace jank::analyze
       if(sym_obj->type != runtime::object_type::symbol)
       {
         return err(error{ fmt::format("invalid loop* binding: left hand must be a symbol, not {}",
-                                      runtime::detail::to_string(sym_obj)) });
+                                      runtime::to_string(sym_obj)) });
       }
       auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
       if(!sym->ns.empty())
@@ -1001,11 +1001,11 @@ namespace jank::analyze
       auto const type(runtime::visit_seqable(
         [](auto const typed_item) {
           auto const first(typed_item->seq()->first());
-          if(runtime::detail::equal(first, &catch_))
+          if(runtime::equal(first, &catch_))
           {
             return try_expression_type::catch_;
           }
-          else if(runtime::detail::equal(first, &finally_))
+          else if(runtime::equal(first, &finally_))
           {
             return try_expression_type::finally_;
           }
