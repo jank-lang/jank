@@ -62,6 +62,7 @@ function build()
         -DLLVM_INCLUDE_BENCHMARKS=OFF \
         -DLLVM_INCLUDE_EXAMPLES=OFF \
         -DLLVM_INCLUDE_TESTS=OFF \
+        -DLLVM_ENABLE_ZSTD=OFF \
         -G "Unix Makefiles" \
         ../llvm/llvm
 
