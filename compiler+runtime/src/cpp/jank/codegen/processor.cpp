@@ -1760,6 +1760,8 @@ namespace jank::codegen
     {
       native_set<native_integer> used_vars, used_constants, used_captures;
       fmt::format_to(inserter, ") : jank::runtime::obj::jit_function{{ ");
+      /* TODO: All of the meta in clojure.core alone costs 2s to JIT compile at run-time.
+       * How can this be faster? */
       detail::gen_constant(root_fn.meta, header_buffer, true);
       fmt::format_to(inserter, "}}");
 
