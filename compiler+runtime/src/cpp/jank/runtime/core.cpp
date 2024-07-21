@@ -69,4 +69,169 @@ namespace jank::runtime
 
     return visit_object([&](auto const typed_lhs) { return typed_lhs->equal(*rhs); }, lhs);
   }
+
+  object_ptr meta(object_ptr const m)
+  {
+    if(m == nullptr || m == obj::nil::nil_const())
+    {
+      return obj::nil::nil_const();
+    }
+
+    return visit_object(
+      [](auto const typed_m) -> object_ptr {
+        using T = typename decltype(typed_m)::value_type;
+
+        if constexpr(behavior::metadatable<T>)
+        {
+          return typed_m->meta.unwrap_or(obj::nil::nil_const());
+        }
+        else
+        {
+          return obj::nil::nil_const();
+        }
+      },
+      m);
+  }
+
+  object_ptr with_meta(object_ptr const o, object_ptr const m)
+  {
+    return visit_object(
+      [](auto const typed_o, object_ptr const m) -> object_ptr {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::metadatable<T>)
+        {
+          return typed_o->with_meta(m);
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not metadatable: {}", to_string(m)) };
+        }
+      },
+      o,
+      m);
+  }
+
+  object_ptr reset_meta(object_ptr const o, object_ptr const m)
+  {
+    return visit_object(
+      [](auto const typed_o, object_ptr const m) -> object_ptr {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::metadatable<T>)
+        {
+          auto const meta(behavior::detail::validate_meta(m));
+          typed_o->meta = meta;
+          return m;
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not metadatable: {}", to_string(m)) };
+        }
+      },
+      o,
+      m);
+  }
+
+  obj::persistent_string_ptr subs(object_ptr const s, object_ptr const start)
+  {
+    return visit_type<obj::persistent_string>(
+      [](auto const typed_s, native_integer const start) -> obj::persistent_string_ptr {
+        return typed_s->substring(start).expect_ok();
+      },
+      s,
+      to_int(start));
+  }
+
+  obj::persistent_string_ptr subs(object_ptr const s, object_ptr const start, object_ptr const end)
+  {
+    return visit_type<obj::persistent_string>(
+      [](auto const typed_s, native_integer const start, native_integer const end)
+        -> obj::persistent_string_ptr { return typed_s->substring(start, end).expect_ok(); },
+      s,
+      to_int(start),
+      to_int(end));
+  }
+
+  native_integer first_index_of(object_ptr const s, object_ptr const m)
+  {
+    return visit_type<obj::persistent_string>(
+      [](auto const typed_s, object_ptr const m) -> native_integer {
+        return typed_s->first_index_of(m);
+      },
+      s,
+      m);
+  }
+
+  native_integer last_index_of(object_ptr const s, object_ptr const m)
+  {
+    return visit_type<obj::persistent_string>(
+      [](auto const typed_s, object_ptr const m) -> native_integer {
+        return typed_s->last_index_of(m);
+      },
+      s,
+      m);
+  }
+
+  native_bool is_named(object_ptr const o)
+  {
+    return visit_object(
+      [](auto const typed_o) {
+        using T = typename decltype(typed_o)::value_type;
+
+        return behavior::nameable<T>;
+      },
+      o);
+  }
+
+  native_persistent_string name(object_ptr const o)
+  {
+    return visit_object(
+      [](auto const typed_o) -> native_persistent_string {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(std::same_as<T, obj::persistent_string>)
+        {
+          return typed_o->data;
+        }
+        else if constexpr(behavior::nameable<T>)
+        {
+          return typed_o->get_name();
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not nameable: {}", typed_o->to_string()) };
+        }
+      },
+      o);
+  }
+
+  native_persistent_string namespace_(object_ptr const o)
+  {
+    return visit_object(
+      [](auto const typed_o) -> native_persistent_string {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::nameable<T>)
+        {
+          return typed_o->get_namespace();
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not nameable: {}", typed_o->to_string()) };
+        }
+      },
+      o);
+  }
+
+  native_bool is_callable(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> native_bool {
+        using T = typename decltype(typed_o)::value_type;
+
+        return std::is_base_of_v<behavior::callable, T>;
+      },
+      o);
+  }
 }

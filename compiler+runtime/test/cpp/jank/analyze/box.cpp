@@ -147,7 +147,7 @@ namespace jank::analyze
             (let* [r 0.0
                   r2 (* r r)]
               (* (+ r2 (- 1.0 r2))
-                (pow (- 1.0 r) 5.0)))
+                 (/ (- 1.0 r) 5.0)))
             )"));
         CHECK_EQ(res.size(), 1);
 

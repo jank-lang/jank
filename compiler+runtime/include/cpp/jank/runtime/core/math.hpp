@@ -208,9 +208,12 @@ namespace jank::runtime
   object_ptr rem(object_ptr l, object_ptr r);
   object_ptr inc(object_ptr l);
   object_ptr dec(object_ptr l);
+
   native_bool is_zero(object_ptr l);
   native_bool is_pos(object_ptr l);
   native_bool is_neg(object_ptr l);
+  native_bool is_even(object_ptr l);
+  native_bool is_odd(object_ptr l);
 
   native_bool is_equiv(object_ptr l, object_ptr r);
 
@@ -236,4 +239,6 @@ namespace jank::runtime
   native_integer to_int(native_real l);
 
   native_real to_real(object_ptr o);
+
+  native_bool is_number(object_ptr o);
 }

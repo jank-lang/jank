@@ -62,10 +62,178 @@ namespace jank::runtime
     return (o != obj::nil::nil_const());
   }
 
+  native_bool is_empty(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> native_bool {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(std::same_as<T, obj::nil>)
+        {
+          return true;
+        }
+        else if constexpr(behavior::seqable<T>)
+        {
+          return typed_o->seq() == nullptr;
+        }
+        else if constexpr(behavior::countable<T>)
+        {
+          return typed_o->count() == 0;
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("cannot check if this is empty: {}",
+                                                typed_o->to_string()) };
+        }
+      },
+      o);
+  }
+
+  native_bool is_seq(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> native_bool {
+        using T = typename decltype(typed_o)::value_type;
+
+        return behavior::sequenceable<T>;
+      },
+      o);
+  }
+
+  native_bool is_sequential(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> native_bool {
+        using T = typename decltype(typed_o)::value_type;
+
+        return behavior::sequential<T>;
+      },
+      o);
+  }
+
+  native_bool is_collection(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> native_bool {
+        using T = typename decltype(typed_o)::value_type;
+
+        return behavior::collection_like<T>;
+      },
+      o);
+  }
+
   native_bool is_map(object_ptr const o)
   {
     return (o->type == object_type::persistent_hash_map
             || o->type == object_type::persistent_array_map);
+  }
+
+  native_bool is_transientable(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> native_bool {
+        using T = typename decltype(typed_o)::value_type;
+
+        return behavior::transientable<T>;
+      },
+      o);
+  }
+
+  object_ptr transient(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> object_ptr {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::transientable<T>)
+        {
+          return typed_o->to_transient();
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not transientable: {}", typed_o->to_string()) };
+        }
+      },
+      o);
+  }
+
+  object_ptr persistent(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> object_ptr {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::persistentable<T>)
+        {
+          return typed_o->to_persistent();
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not persistentable: {}", typed_o->to_string()) };
+        }
+      },
+      o);
+  }
+
+  object_ptr conj_in_place(object_ptr const coll, object_ptr const o)
+  {
+    return visit_object(
+      [](auto const typed_coll, auto const o) -> object_ptr {
+        using T = typename decltype(typed_coll)::value_type;
+
+        if constexpr(behavior::conjable_in_place<T>)
+        {
+          return typed_coll->conj_in_place(o);
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not conjable_in_place: {}",
+                                                typed_coll->to_string()) };
+        }
+      },
+      coll,
+      o);
+  }
+
+  object_ptr assoc_in_place(object_ptr const coll, object_ptr const k, object_ptr const v)
+  {
+    return visit_object(
+      [](auto const typed_coll, auto const k, auto const v) -> object_ptr {
+        using T = typename decltype(typed_coll)::value_type;
+
+        if constexpr(behavior::associatively_writable_in_place<T>)
+        {
+          return typed_coll->assoc_in_place(k, v);
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not associatively_writable_in_place: {}",
+                                                typed_coll->to_string()) };
+        }
+      },
+      coll,
+      k,
+      v);
+  }
+
+  object_ptr dissoc_in_place(object_ptr const coll, object_ptr const k)
+  {
+    return visit_object(
+      [](auto const typed_coll, auto const k) -> object_ptr {
+        using T = typename decltype(typed_coll)::value_type;
+
+        if constexpr(behavior::associatively_writable_in_place<T>)
+        {
+          return typed_coll->dissoc_in_place(k);
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not associatively_writable_in_place: {}",
+                                                typed_coll->to_string()) };
+        }
+      },
+      coll,
+      k);
   }
 
   object_ptr seq(object_ptr const s)
@@ -225,6 +393,29 @@ namespace jank::runtime
         {
           throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) };
         }
+      },
+      s);
+  }
+
+  object_ptr rest(object_ptr const s)
+  {
+    if(!s || s == obj::nil::nil_const())
+    {
+      return obj::persistent_list::empty();
+    }
+    return visit_seqable(
+      [=](auto const typed_s) -> object_ptr {
+        auto const seq(typed_s->seq());
+        if(!seq)
+        {
+          return obj::persistent_list::empty();
+        }
+        auto const ret(seq->next());
+        if(ret == nullptr)
+        {
+          return obj::persistent_list::empty();
+        }
+        return ret;
       },
       s);
   }
@@ -540,29 +731,6 @@ namespace jank::runtime
       m);
   }
 
-  object_ptr meta(object_ptr const m)
-  {
-    if(m == nullptr || m == obj::nil::nil_const())
-    {
-      return obj::nil::nil_const();
-    }
-
-    return visit_object(
-      [&](auto const typed_m) -> object_ptr {
-        using T = typename decltype(typed_m)::value_type;
-
-        if constexpr(behavior::metadatable<T>)
-        {
-          return typed_m->meta.unwrap_or(obj::nil::nil_const());
-        }
-        else
-        {
-          return obj::nil::nil_const();
-        }
-      },
-      m);
-  }
-
   object_ptr subvec(object_ptr const o, native_integer const start, native_integer const end)
   {
     if(o->type != object_type::persistent_vector)
@@ -714,15 +882,143 @@ namespace jank::runtime
       o);
   }
 
-  obj::persistent_list_ptr into_list(object_ptr const s)
+  object_ptr empty(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> object_ptr {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::collection_like<T>)
+        {
+          return T::empty();
+        }
+        else
+        {
+          return obj::nil::nil_const();
+        }
+      },
+      o);
+  }
+
+  object_ptr chunk_first(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> object_ptr {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::chunkable<T>)
+        {
+          return typed_o->chunked_first();
+        }
+        {
+          throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_string()) };
+        }
+      },
+      o);
+  }
+
+  object_ptr chunk_next(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> object_ptr {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::chunkable<T>)
+        {
+          return typed_o->chunked_next() ?: obj::nil::nil_const();
+        }
+        {
+          throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_string()) };
+        }
+      },
+      o);
+  }
+
+  object_ptr chunk_rest(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> object_ptr {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::chunkable<T>)
+        {
+          return typed_o->chunked_next() ?: obj::persistent_list::empty();
+        }
+        {
+          throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_string()) };
+        }
+      },
+      o);
+  }
+
+  native_bool is_chunked_seq(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> native_bool {
+        using T = typename decltype(typed_o)::value_type;
+
+        return behavior::chunkable<T>;
+      },
+      o);
+  }
+
+  native_persistent_string str(object_ptr const o, object_ptr const args)
+  {
+    return visit_seqable(
+      [=](auto const typed_args) -> native_persistent_string {
+        fmt::memory_buffer buff;
+        buff.reserve(16);
+        runtime::to_string(o, buff);
+        if(0 < sequence_length(typed_args))
+        {
+          auto const fresh(typed_args->fresh_seq());
+          runtime::to_string(fresh->first(), buff);
+          for(auto it(fresh->next_in_place()); it != nullptr; it = it->next_in_place())
+          {
+            runtime::to_string(it->first(), buff);
+          }
+        }
+        return native_persistent_string{ buff.data(), buff.size() };
+      },
+      args);
+  }
+
+  obj::persistent_list_ptr list(object_ptr const s)
   {
     return visit_seqable(
       [](auto const typed_s) -> obj::persistent_list_ptr {
         return obj::persistent_list::create(typed_s);
       },
-      [=]() -> obj::persistent_list_ptr {
-        throw std::runtime_error{ fmt::format("not seqable: {}", runtime::to_string(s)) };
+      s);
+  }
+
+  obj::persistent_vector_ptr vec(object_ptr const s)
+  {
+    return visit_seqable(
+      [](auto const typed_s) -> obj::persistent_vector_ptr {
+        return obj::persistent_vector::create(typed_s);
       },
       s);
+  }
+
+  object_ptr reduce(object_ptr const f, object_ptr const init, object_ptr const s)
+  {
+    return visit_seqable(
+      [](auto const typed_coll, object_ptr const f, object_ptr const init) -> object_ptr {
+        object_ptr res{ init };
+        for(auto it(typed_coll->fresh_seq()); it != nullptr; it = it->next_in_place())
+        {
+          res = dynamic_call(f, res, it->first());
+          if(res->type == object_type::reduced)
+          {
+            res = expect_object<obj::reduced>(res)->val;
+            break;
+          }
+        }
+        return res;
+      },
+      s,
+      f,
+      init);
   }
 }

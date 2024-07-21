@@ -56,6 +56,25 @@ namespace jank::runtime
 
   object_ptr next_in_place(object_ptr s);
 
+  /* TODO: core header post-erasure? */
+  //template <typename T>
+  //requires behavior::sequenceable<T>
+  //auto rest(native_box<T> const seq)
+  //{
+  //  if(!seq || seq == obj::nil::nil_const())
+  //  {
+  //    return obj::persistent_list::empty();
+  //  }
+  //  auto const ret(seq->next());
+  //  if(ret == nullptr)
+  //  {
+  //    return obj::persistent_list::empty();
+  //  }
+  //  return ret;
+  //}
+
+  object_ptr rest(object_ptr s);
+
   template <typename T>
   requires behavior::sequenceable<T>
   auto first(native_box<T> const s)
@@ -76,7 +95,19 @@ namespace jank::runtime
 
   native_bool is_nil(object_ptr o);
   native_bool is_some(object_ptr o);
+  native_bool is_empty(object_ptr o);
+  native_bool is_seq(object_ptr o);
+  native_bool is_sequential(object_ptr o);
+  native_bool is_collection(object_ptr o);
   native_bool is_map(object_ptr o);
+  native_bool is_transientable(object_ptr o);
+
+  object_ptr transient(object_ptr o);
+  object_ptr persistent(object_ptr o);
+  object_ptr conj_in_place(object_ptr coll, object_ptr o);
+  object_ptr assoc_in_place(object_ptr coll, object_ptr k, object_ptr v);
+  object_ptr dissoc_in_place(object_ptr coll, object_ptr k);
+
   object_ptr cons(object_ptr head, object_ptr tail);
   object_ptr conj(object_ptr s, object_ptr o);
   object_ptr disj(object_ptr s, object_ptr o);
@@ -89,13 +120,22 @@ namespace jank::runtime
   object_ptr find(object_ptr s, object_ptr key);
   native_bool contains(object_ptr s, object_ptr key);
   object_ptr merge(object_ptr m, object_ptr other);
-  object_ptr meta(object_ptr m);
   object_ptr subvec(object_ptr o, native_integer start, native_integer end);
   object_ptr nth(object_ptr o, object_ptr idx);
   object_ptr nth(object_ptr o, object_ptr idx, object_ptr fallback);
   object_ptr peek(object_ptr o);
   object_ptr pop(object_ptr o);
-  obj::persistent_list_ptr into_list(object_ptr s);
+  object_ptr empty(object_ptr o);
+
+  object_ptr chunk_first(object_ptr o);
+  object_ptr chunk_next(object_ptr o);
+  object_ptr chunk_rest(object_ptr o);
+  native_bool is_chunked_seq(object_ptr o);
+
+  native_persistent_string str(object_ptr o, object_ptr args);
+
+  obj::persistent_list_ptr list(object_ptr s);
+  obj::persistent_vector_ptr vec(object_ptr s);
 
   template <typename It>
   native_bool equal(object const &o, It const begin, It const end)
@@ -105,7 +145,7 @@ namespace jank::runtime
         using T = typename decltype(typed_o)::value_type;
 
         /* nil is seqable, but we don't want it to be equal to an empty collection.
-           * An empty seq itself is nil, but that's different. */
+           An empty seq itself is nil, but that's different. */
         if constexpr(std::same_as<T, obj::nil> || !behavior::seqable<T>)
         {
           return false;
@@ -131,4 +171,6 @@ namespace jank::runtime
 
   size_t sequence_length(object_ptr const s);
   size_t sequence_length(object_ptr const s, size_t const max);
+
+  object_ptr reduce(object_ptr f, object_ptr init, object_ptr s);
 }

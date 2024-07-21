@@ -85,9 +85,9 @@ namespace jank::runtime
     return ok(make_box(data.substr(start, end)));
   }
 
-  native_integer obj::persistent_string::first_index_of(object_ptr const c) const
+  native_integer obj::persistent_string::first_index_of(object_ptr const m) const
   {
-    auto const s(runtime::to_string(c));
+    auto const s(runtime::to_string(m));
     auto const found(data.find(s));
     if(found == native_persistent_string::npos)
     {
@@ -96,9 +96,9 @@ namespace jank::runtime
     return static_cast<native_integer>(found);
   }
 
-  native_integer obj::persistent_string::last_index_of(object_ptr const c) const
+  native_integer obj::persistent_string::last_index_of(object_ptr const m) const
   {
-    auto const s(runtime::to_string(c));
+    auto const s(runtime::to_string(m));
     auto const found(data.rfind(s));
     if(found == native_persistent_string::npos)
     {

@@ -1,0 +1,5 @@
+(ns jank.perf)
+
+; TODO: Options, following what criterium offers.
+(defn benchmark [label fun]
+  (native/raw "__value = runtime::perf::benchmark(~{ label }, ~{ fun });"))

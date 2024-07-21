@@ -34,39 +34,11 @@
 ;; Collections.
 (def empty?
   (fn* empty? [o]
-    (if (nil? o)
-      true
-      (native/raw "__value = visit_object
-                  (
-                   [=](auto const typed_o) -> obj::boolean_ptr
-                   {
-                    using T = typename decltype(typed_o)::value_type;
-
-                    if constexpr(behavior::seqable<T>)
-                    { return make_box(typed_o->seq() == nullptr); }
-                    else if constexpr(behavior::countable<T>)
-                    { return make_box(typed_o->count() == 0); }
-                    else
-                    { ~{ (throw (ex-info :not-seqable {:o o})) }; }
-                   },
-                   ~{ o }
-                   );"))))
+    (native/raw "__value = make_box(is_empty(~{ o }));")))
 
 (def empty
   (fn* empty [o]
-    (native/raw "__value = visit_object
-                (
-                 [=](auto const typed_o) -> object_ptr
-                 {
-                   using T = typename decltype(typed_o)::value_type;
-
-                   if constexpr(behavior::collection_like<T>)
-                   { return T::empty(); }
-                   else
-                   { return ~{ nil }; }
-                 },
-                 ~{ o }
-                 );")))
+    (native/raw "__value = runtime::empty(~{ o });")))
 
 (def count
   (fn* count [o]
@@ -82,22 +54,7 @@
     (native/raw "__value = make_box(to_int(~{ o }));")))
 (def float
   (fn* float [o]
-    (native/raw "__value = make_box
-                (
-                 visit_object
-                 (
-                  [=](auto const typed_o) -> native_real
-                  {
-                   using T = typename decltype(typed_o)::value_type;
-
-                   if constexpr(behavior::number_like<T>)
-                   { return typed_o->to_real(); }
-                   else
-                   { ~{ (throw (ex-info :not-a-number {:o o})) }; }
-                   },
-                  ~{ o }
-                  )
-                 );")))
+    (native/raw "__value = make_box(to_real(~{ o }));")))
 
 ; Lists.
 (def seq
@@ -127,29 +84,7 @@
     (native/raw "__value = jank::runtime::second(~{ o });")))
 (def rest
   (fn* rest [o]
-    (if (nil? o)
-      '()
-      (native/raw "__value = visit_object
-                   (
-                     [=](auto const typed_o) -> object_ptr
-                     {
-                       using T = typename decltype(typed_o)::value_type;
-
-                       if constexpr(behavior::seqable<T>)
-                       {
-                         auto const seq(typed_o->seq());
-                         if(!seq)
-                         { return ~{ '() }; }
-                         auto const ret(seq->next());
-                         if(ret == nullptr)
-                         { return ~{ '() }; }
-                         return ret;
-                       }
-                       else
-                       { ~{ (throw (ex-info :not-seqable {:o o})) }; }
-                     },
-                     ~{ o }
-                   );"))))
+    (native/raw "__value = jank::runtime::rest(~{ o });")))
 
 (def cons
   (fn* cons [head tail]
@@ -157,35 +92,11 @@
 
 (def coll?
   (fn* coll? [o]
-    (native/raw "__value = visit_object
-                 (
-                   [=](auto const typed_tail) -> object_ptr
-                   {
-                     using T = typename decltype(typed_tail)::value_type;
-
-                     if constexpr(behavior::collection_like<T>)
-                     { return ~{ true }; }
-                     else
-                     { return ~{ false }; }
-                   },
-                   ~{ o }
-                 );")))
+    (native/raw "__value = make_box(is_collection(~{ o }));")))
 
 (def seq?
   (fn* seq? [o]
-    (native/raw "__value = visit_object
-                 (
-                   [=](auto const typed_tail) -> object_ptr
-                   {
-                     using T = typename decltype(typed_tail)::value_type;
-
-                     if constexpr(behavior::sequenceable<T>)
-                     { return ~{ true }; }
-                     else
-                     { return ~{ false }; }
-                   },
-                   ~{ o }
-                 );")))
+    (native/raw "__value = make_box(is_seq(~{ o }));")))
 
 (def list?
   (fn* list? [o]
@@ -194,21 +105,7 @@
 
 (def list
   (fn* list [& items]
-    (native/raw "__value = visit_object
-                 (
-                   [=](auto const typed_items) -> object_ptr
-                   {
-                     using T = typename decltype(typed_items)::value_type;
-
-                     if constexpr(std::same_as<runtime::obj::nil, T>)
-                     { return runtime::obj::persistent_list::empty(); }
-                     else if constexpr(behavior::seqable<T>)
-                     { return runtime::obj::persistent_list::create(typed_items); }
-                     else
-                     { ~{ (throw (ex-info :invalid-seq {:items items})) }; }
-                   },
-                   ~{ items }
-                 );")))
+    (native/raw "__value = runtime::list(~{ items });")))
 
 ;; Vectors.
 (def vector?
@@ -217,19 +114,7 @@
 
 (def vec
   (fn* vec [coll]
-    (native/raw "__value = visit_object
-                 (
-                   [=](auto const typed_coll) -> object_ptr
-                   {
-                     using T = typename decltype(typed_coll)::value_type;
-
-                     if constexpr(behavior::seqable<T>)
-                     { return jank::runtime::obj::persistent_vector::create(typed_coll); }
-                     else
-                     { ~{ (throw (ex-info :invalid-seq {:coll coll})) }; }
-                   },
-                   ~{ coll }
-                 );")))
+    (native/raw "__value = runtime::vec(~{ coll });")))
 
 ; Returns a persistent vector of the items in vector from
 ; start (inclusive) to end (exclusive).  If end is not supplied,
@@ -283,6 +168,7 @@
                  (
                    ~{ o }->type == object_type::persistent_array_map
                    || ~{ o }->type == object_type::persistent_hash_map
+                   || ~{ o }->type == object_type::persistent_sorted_map
                  );")))
 
 (def assoc
@@ -312,31 +198,7 @@
     ([o]
      (native/raw "__value = make_box(runtime::to_string(~{ o }));"))
     ([o & args]
-     (native/raw "__value = visit_object
-                 (
-                   [=](auto const typed_args) -> object_ptr
-                   {
-                     using T = typename decltype(typed_args)::value_type;
-
-                     if constexpr(behavior::sequenceable<T>)
-                     {
-                       fmt::memory_buffer buff;
-                       buff.reserve(16);
-                       runtime::to_string(~{ o }, buff);
-                       if(0 < sequence_length(typed_args))
-                       {
-                         auto const fresh(typed_args->fresh_seq());
-                         runtime::to_string(fresh->first(), buff);
-                         for(auto it(fresh->next_in_place()); it != nullptr; it = it->next_in_place())
-                         { runtime::to_string(it->first(), buff); }
-                       }
-                       return make_box<obj::persistent_string>(native_persistent_string{ buff.data(), buff.size() });
-                     }
-                     else
-                     { ~{ (throw (ex-info :invalid-seq {:args args})) }; }
-                   },
-                   ~{ args }
-                 );"))))
+     (native/raw "__value = make_box<obj::persistent_string>(runtime::str(~{ o }, ~{ args }));"))))
 
 ;; Symbols.
 (def symbol?
@@ -368,39 +230,10 @@
     (native/raw "__value = runtime::meta(~{ o });")))
 (def with-meta
   (fn* with-meta [o m]
-    (native/raw "__value = visit_object
-                 (
-                   [=](auto const typed_o) -> object_ptr
-                   {
-                     using T = typename decltype(typed_o)::value_type;
-
-                     if constexpr(behavior::metadatable<T>)
-                     { return typed_o->with_meta(~{ m }); }
-                     else
-                     { ~{ (throw (ex-info :not-metadatable {:o o
-                                                            :type (type o)})) }; }
-                   },
-                   ~{ o }
-                 );")))
+    (native/raw "__value = runtime::with_meta(~{ o }, ~{ m });")))
 (def reset-meta!
   (fn* reset-meta! [o m]
-    (native/raw "__value = visit_object
-                 (
-                   [=](auto const typed_o) -> object_ptr
-                   {
-                     using T = typename decltype(typed_o)::value_type;
-
-                     if constexpr(behavior::metadatable<T>)
-                     {
-                       auto const meta(behavior::detail::validate_meta(~{ m }));
-                       typed_o->meta = meta;
-                       return ~{ m };
-                     }
-                     else
-                     { ~{ (throw (ex-info :not-metadatable {:o o})) }; }
-                   },
-                   ~{ o }
-                 );")))
+    (native/raw "__value = runtime::reset_meta(~{ o }, ~{ m })")))
 
 (def ^{:macro true} let
   (fn* let [&form &env & decl]
@@ -414,8 +247,7 @@
   (fn* fn [&form &env & decl]
     (with-meta (cons 'fn* decl) (meta &form))))
 
-; TODO: Private
-(def sigs
+(def ^:private sigs
   (fn* [fdecl]
     (let* [asig (fn* asig [fdecl]
                   (let* [arglist (first fdecl)
@@ -636,53 +468,19 @@
 
 ; XXX: Clojure doesn't specify this fn, but I find it useful.
 (defn transientable? [o]
-  (native/raw "__value = visit_object
-               (
-                 [=](auto const typed_o) -> object_ptr
-                 {
-                   using T = typename decltype(typed_o)::value_type;
+  (native/raw "__value = make_box(is_transientable(~{ o }));"))
 
-                   if constexpr(behavior::transientable<T>)
-                   { return ~{ true } ; }
-                   else
-                   { return ~{ false }; }
-                 },
-                 ~{ o }
-               );"))
+(defn transient
+  "Returns a new, transient version of the collection, in constant time."
+  [o]
+  (native/raw "__value = runtime::transient(~{ o });"))
 
-; Returns a new, transient version of the collection, in constant time.
-(defn transient [o]
-  (native/raw "__value = visit_object
-               (
-                 [=](auto const typed_o) -> object_ptr
-                 {
-                   using T = typename decltype(typed_o)::value_type;
-
-                   if constexpr(behavior::transientable<T>)
-                   { return typed_o->to_transient(); }
-                   else
-                   { ~{ (throw (ex-info :not-transientable {:o o})) }; }
-                 },
-                 ~{ o }
-               );"))
-
-; Returns a new, persistent version of the transient collection, in
-; constant time. The transient collection cannot be used after this
-; call, any such use will throw an exception.
-(defn persistent! [o]
-  (native/raw "__value = visit_object
-               (
-                 [=](auto const typed_o) -> object_ptr
-                 {
-                   using T = typename decltype(typed_o)::value_type;
-
-                   if constexpr(behavior::persistentable<T>)
-                   { return typed_o->to_persistent(); }
-                   else
-                   { ~{ (throw (ex-info :not-persistentable {:o o})) }; }
-                 },
-                 ~{ o }
-               );"))
+(defn persistent!
+  "Returns a new, persistent version of the transient collection, in
+  constant time. The transient collection cannot be used after this
+  call, any such use will throw an exception."
+  [o]
+  (native/raw "__value = runtime::persistent(~{ o });"))
 
 (defn conj!
   ([]
@@ -690,40 +488,11 @@
   ([coll]
    coll)
   ([coll x]
-   (native/raw "__value = visit_object
-                (
-                  [=](auto const typed_coll, auto const head) -> object_ptr
-                  {
-                    using T = typename decltype(typed_coll)::value_type;
-
-                    if constexpr(behavior::conjable_in_place<T>)
-                    { return typed_coll->conj_in_place(head); }
-                    else
-                    { ~{ (throw (ex-info :not-conjable-in-place {:o coll})) }; }
-                   },
-                   ~{ coll },
-                   ~{ x }
-                 );
-               ")))
+   (native/raw "__value = runtime::conj_in_place(~{ coll }, ~{ x });")))
 
 (defn assoc!
   ([coll k v]
-   (native/raw "__value = visit_object
-                (
-                  [=](auto const typed_coll, auto const key, auto const val) -> object_ptr
-                  {
-                    using T = typename decltype(typed_coll)::value_type;
-
-                    if constexpr(behavior::associatively_writable_in_place<T>)
-                    { return typed_coll->assoc_in_place(key, val); }
-                    else
-                    { ~{ (throw (ex-info :not-associatively_writable_in_place {:o coll})) }; }
-                  },
-                  ~{ coll },
-                  ~{ k },
-                  ~{ v }
-                );
-               "))
+   (native/raw "__value = runtime::assoc_in_place(~{ coll }, ~{ k }, ~{ v });"))
   ([coll k v & kvs]
     (let [ret (assoc! coll k v)]
       (if kvs
@@ -732,21 +501,7 @@
 
 (defn dissoc!
   ([coll k]
-   (native/raw "__value = visit_object
-                (
-                  [=](auto const typed_coll, auto const key) -> object_ptr
-                  {
-                    using T = typename decltype(typed_coll)::value_type;
-
-                    if constexpr(behavior::associatively_writable_in_place<T>)
-                    { return typed_coll->dissoc_in_place(key); }
-                    else
-                    { ~{ (throw (ex-info :not-associatively_writable_in_place {:o coll})) }; }
-                  },
-                  ~{ coll },
-                  ~{ k }
-                );
-               "))
+   (native/raw "__value = runtime::dissoc_in_place(~{ coll }, ~{ k });"))
   ([coll k & ks]
     (let [ret (dissoc! coll k)]
       (if ks
@@ -884,26 +639,7 @@
        (reduce f (first s) (next s))
        (f))))
   ([f val coll]
-   (native/raw "__value = visit_seqable
-               (
-                [=](auto const typed_coll) -> object_ptr
-                {
-                  object_ptr res{ ~{ val } };
-                  for(auto it(typed_coll->fresh_seq()); it != nullptr; it = it->next_in_place())
-                  {
-                    res = dynamic_call(~{ f }, res, it->first());
-                    if(res->type == object_type::reduced)
-                    {
-                      res = expect_object<obj::reduced>(res)->val;
-                      break;
-                    }
-                  }
-                  return res;
-                 },
-                [=]() -> object_ptr
-                { ~{ (throw (ex-info :invalid-seq {:coll coll})) }; },
-                ~{ coll }
-                );")))
+   (native/raw "__value = runtime::reduce(~{ f }, ~{ val }, ~{ coll });")))
 
 (defn completing
   "Takes a reducing function f of 2 args and returns a fn suitable for
@@ -1377,57 +1113,12 @@
 (defn boolean? [o]
   (native/raw "__value = make_box(~{ o }->type == object_type::boolean)"))
 (defn number? [o]
-  (native/raw "__value = make_box
-              (
-               visit_object
-               (
-                [=](auto const typed_o) -> native_bool
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(behavior::number_like<T>)
-                 { return true; }
-                 else
-                 { return false; }
-                 },
-                ~{ o }
-                )
-               );"))
+  (native/raw "__value = make_box(is_number(~{ o }));"))
 
 (defn even? [o]
-  (native/raw "__value = make_box
-              (
-               visit_object
-               (
-                [=](auto const typed_o) -> native_bool
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(std::is_same_v<T, obj::integer>)
-                 { return typed_o->data % 2 == 0; }
-                 else
-                 { ~{ (throw (ex-info :not-an-integer {:o o})) }; }
-                 },
-                ~{ o }
-                )
-               );"))
+  (native/raw "__value = make_box(is_even(~{ o }));"))
 (defn odd? [o]
-  (native/raw "__value = make_box
-              (
-               visit_object
-               (
-                [=](auto const typed_o) -> native_bool
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(std::is_same_v<T, obj::integer>)
-                 { return typed_o->data % 2 == 1; }
-                 else
-                 { ~{ (throw (ex-info :not-an-integer {:o o})) }; }
-                 },
-                ~{ o }
-                )
-               );"))
+  (native/raw "__value = make_box(is_odd(~{ o }));"))
 
 ;; Random.
 (defn
@@ -1446,87 +1137,18 @@
 
 (defn subs
   ([s start]
-   (native/raw "__value = visit_object
-               (
-                 [=](auto const typed_s) -> obj::persistent_string_ptr
-                 {
-                   using T = typename decltype(typed_s)::value_type;
-
-                   if constexpr(std::is_same_v<T, obj::persistent_string>)
-                   { return typed_s->substring(to_int(~{ start })).expect_ok(); }
-                   else
-                   { ~{ (throw (ex-info :not-a-string {:s s})) }; }
-                 },
-                 ~{ s }
-               );"))
+   (native/raw "__value = runtime::subs(~{ s }, ~{ start });"))
   ([s start end]
-   (native/raw "__value = visit_object
-               (
-                 [=](auto const typed_s) -> obj::persistent_string_ptr
-                 {
-                   using T = typename decltype(typed_s)::value_type;
+   (native/raw "__value = runtime::subs(~{ s }, ~{ start }, ~{ end });")))
 
-                   if constexpr(std::is_same_v<T, obj::persistent_string>)
-                   { return typed_s->substring(to_int(~{ start }), to_int(~{ end })).expect_ok(); }
-                   else
-                   { ~{ (throw (ex-info :not-a-string {:s s})) }; }
-                 },
-                 ~{ s }
-               );")))
-
-(defn- first-index-of [s c]
-  (native/raw "__value = make_box
-              (
-                visit_object
-                (
-                  [=](auto const typed_s) -> native_integer
-                  {
-                    using T = typename decltype(typed_s)::value_type;
-
-                    if constexpr(std::is_same_v<T, obj::persistent_string>)
-                    { return typed_s->first_index_of(~{ c }); }
-                    else
-                    { ~{ (throw (ex-info :not-a-string {:s s})) }; }
-                  },
-                  ~{ s }
-                )
-              );"))
-(defn- last-index-of [s c]
-  (native/raw "__value = make_box
-              (
-                visit_object
-                (
-                  [=](auto const typed_s) -> native_integer
-                  {
-                    using T = typename decltype(typed_s)::value_type;
-
-                    if constexpr(std::is_same_v<T, obj::persistent_string>)
-                    { return typed_s->last_index_of(~{ c }); }
-                    else
-                    { ~{ (throw (ex-info :not-a-string {:s s})) }; }
-                  },
-                  ~{ s }
-                )
-              );"))
+(defn- first-index-of [s m]
+  (native/raw "__value = make_box(runtime::first_index_of(~{ s }, ~{ m }));"))
+(defn- last-index-of [s m]
+  (native/raw "__value = make_box(runtime::last_index_of(~{ s }, ~{ m }));"))
 
 ;; Sequences (again).
 (defn sequential? [o]
-  (native/raw "__value = make_box
-              (
-               visit_object
-               (
-                [](auto const typed_o) -> native_bool
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(behavior::sequential<T>)
-                 { return true; }
-                 else
-                 { return false; }
-                 },
-                ~{ o }
-                )
-               );"))
+  (native/raw "__value = make_box(is_sequential(~{ o }));"))
 
 (defn reverse [coll]
   (reduce conj () coll))
@@ -1597,49 +1219,13 @@
                __value = buffer->chunk();"))
 
 (defn chunk-first [o]
-  (native/raw "__value = visit_object
-               (
-                [=](auto const typed_o) -> object_ptr
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(behavior::chunkable<T>)
-                 { return typed_o->chunked_first(); }
-                 else
-                 { ~{ (throw (ex-info :not-chunkable {:o o})) }; }
-                 },
-                ~{ o }
-               );"))
+  (native/raw "__value = runtime::chunk_first(~{ o });"))
 
 (defn chunk-next [o]
-  (native/raw "__value = visit_object
-               (
-                [=](auto const typed_o) -> object_ptr
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(behavior::chunkable<T>)
-                 { return typed_o->chunked_next() ?: ~{ nil }; }
-                 else
-                 { ~{ (throw (ex-info :not-chunkable {:o o})) }; }
-                 },
-                ~{ o }
-               );"))
+  (native/raw "__value = runtime::chunk_next(~{ o });"))
 
 (defn chunk-rest [o]
-  (native/raw "__value = visit_object
-               (
-                [=](auto const typed_o) -> object_ptr
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(behavior::chunkable<T>)
-                 { return typed_o->chunked_next() ?: ~{ '() }; }
-                 else
-                 { ~{ (throw (ex-info :not-chunkable {:o o})) }; }
-                 },
-                ~{ o }
-               );"))
+  (native/raw "__value = runtime::chunk_rest(~{ o });"))
 
 (defn chunk-cons [chunk rest]
   (if (empty? chunk)
@@ -1647,19 +1233,7 @@
     (native/raw "__value = make_box<obj::chunked_cons>(~{ chunk }, ~{ (seq rest) });")))
 
 (defn chunked-seq? [o]
-  (native/raw "__value = visit_object
-               (
-                [=](auto const typed_o) -> object_ptr
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(behavior::chunkable<T>)
-                 { return ~{ true }; }
-                 else
-                 { return ~{ false }; }
-                 },
-                ~{ o }
-               );"))
+  (native/raw "__value = make_box(is_chunked_seq(~{ o }));"))
 
 ; Repeatedly executes body (presumably for side-effects) with
 ; bindings and filtering as provided by `for`.  Does not retain
@@ -2060,57 +1634,13 @@
 (defn named?
   {:private true}
   [o]
-  (native/raw "__value = visit_object
-               (
-                [=](auto const typed_o)
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(behavior::nameable<T>)
-                 { return ~{ true }; }
-                 else
-                 { return ~{ false }; }
-                 },
-                ~{ o }
-               );"))
+  (native/raw "__value = make_box(is_named(~{ o }));"))
 
 (defn name [o]
-  (if (string? o)
-    o
-    (native/raw "__value = make_box
-                (
-                  visit_object
-                  (
-                    [=](auto const typed_o) -> native_persistent_string
-                    {
-                      using T = typename decltype(typed_o)::value_type;
-
-                      if constexpr(behavior::nameable<T>)
-                      { return typed_o->get_name(); }
-                      else
-                      { ~{ (throw (ex-info :not-nameable {:o o})) }; }
-                    },
-                    ~{ o }
-                  )
-                );")))
+  (native/raw "__value = make_box(runtime::name(~{ o }));"))
 
 (defn namespace [o]
-  (native/raw "__value = make_box
-              (
-                visit_object
-                (
-                  [=](auto const typed_o) -> native_persistent_string
-                  {
-                    using T = typename decltype(typed_o)::value_type;
-
-                    if constexpr(behavior::nameable<T>)
-                    { return typed_o->get_namespace(); }
-                    else
-                    { ~{ (throw (ex-info :not-nameable {:o o})) }; }
-                  },
-                  ~{ o }
-                )
-              );"))
+  (native/raw "__value = make_box(runtime::namespace_(~{ o }));"))
 
 ;; Sequences.
 ; This is defined to be lazy later on.
@@ -2381,19 +1911,7 @@
 
 ;; Sequences.
 (defn iterate [f x]
-  (native/raw "__value = visit_object
-              (
-               [=](auto const typed_f) -> object_ptr
-               {
-                using T = typename decltype(typed_f)::value_type;
-
-                if constexpr(std::is_base_of_v<behavior::callable, T>)
-                { return make_box<obj::iterator>(typed_f, ~{ x }); }
-                else
-                { ~{ (throw (ex-info :not-callable {:f f})) }; }
-                },
-               ~{ f }
-               );"))
+  (native/raw "__value = make_box<obj::iterator>(~{ f }, ~{ x });"))
 
 ; TODO: integer_range
 (defn range
@@ -3610,22 +3128,7 @@
 
 ;; Functions.
 (defn ifn? [o]
-  (native/raw "__value = make_box
-              (
-               visit_object
-               (
-                [=](auto const typed_o) -> native_bool
-                {
-                 using T = typename decltype(typed_o)::value_type;
-
-                 if constexpr(std::is_base_of_v<behavior::callable, T>)
-                 { return true; }
-                 else
-                 { return false; }
-                 },
-                ~{ o }
-                )
-               );"))
+  (native/raw "__value = make_box(is_callable(~{ o }));"))
 (defn fn? [o]
   (native/raw "auto const fn
               (
@@ -4147,70 +3650,6 @@
         (list* 'clojure.core/fn []
                body)))
 
-;; jank.compiler things.
-; TODO: Options, following what criterium offers.
-(defn benchmark [label fun]
-  (native/raw "auto const label_str(try_object<obj::persistent_string>(~{ (str label) }));
-              visit_object
-              (
-               [=](auto const typed_fun)
-               {
-                using T = typename decltype(typed_fun)::value_type;
-
-                if constexpr(std::is_base_of_v<behavior::callable, T>)
-                {
-                 ankerl::nanobench::Config config;
-                 //config.mTimeUnitName = TODO
-                 config.mOut = &std::cout;
-
-                 /* Larger things. */
-                 config.mTimeUnit = std::chrono::milliseconds{ 1 };
-                 config.mMinEpochIterations = 20;
-                 config.mWarmup = 10;
-
-                 /* Smaller things. */
-                 //config.mTimeUnit = std::chrono::nanoseconds{ 1 };
-                 //config.mMinEpochIterations = 1000000;
-                 //config.mWarmup = 1000;
-
-                 ankerl::nanobench::Bench().config(config).run
-                 (
-                  static_cast<std::string>(label_str->data),
-                  [&]
-                  {
-                   auto const res(typed_fun->call());
-                   ankerl::nanobench::doNotOptimizeAway(res);
-                   }
-                  );
-                 }
-                else
-                { ~{ (throw (ex-info :not-callable {:fun fun})) }; }
-                },
-               ~{ fun }
-               );"))
-
-;; Extra things that usually come from Java.
-(defn tan [o]
-  (native/raw "__value = make_box(std::tan(to_real(~{ o })));"))
-
-(defn
-  ^{:arities {1 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
-  sqrt [o]
-  (native/raw "__value = make_box(std::sqrt(to_real(~{ o })));"))
-
-(defn
-  ^{:arities {1 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
-  abs [o]
-  (native/raw "__value = runtime::abs(~{ o });"))
-
-(defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
-  pow [x y]
-  (native/raw "__value = make_box(std::pow(to_real(~{ x }), to_real(~{ y })));"))
-
 ; Namespaces.
 (defn in-ns [sym]
   (if (symbol? sym)
@@ -4272,7 +3711,7 @@
     (ns-resolve ns nil sym))
   ([ns env sym]
     (when-not (contains? env sym)
-      (native/raw "auto const n(expect_object<runtime::ns>(~{ (the-ns ns) }));
+      (native/raw "auto const n(try_object<runtime::ns>(~{ (the-ns ns) }));
                    auto const found(n->find_var(try_object<obj::symbol>(~{ sym })));
                    if(found.is_some())
                    { __value = found.unwrap(); }"))))

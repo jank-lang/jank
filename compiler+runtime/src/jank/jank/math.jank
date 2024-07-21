@@ -1,0 +1,22 @@
+(ns jank.math)
+
+(defn tan [o]
+  (native/raw "__value = make_box(std::tan(to_real(~{ o })));"))
+
+(defn
+  ^{:arities {1 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  sqrt [o]
+  (native/raw "__value = make_box(std::sqrt(to_real(~{ o })));"))
+
+(defn
+  ^{:arities {1 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  abs [o]
+  (native/raw "__value = runtime::abs(~{ o });"))
+
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  pow [x y]
+  (native/raw "__value = make_box(std::pow(to_real(~{ x }), to_real(~{ y })));"))

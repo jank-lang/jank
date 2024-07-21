@@ -594,6 +594,20 @@ namespace jank::runtime
       l);
   }
 
+  native_bool is_even(object_ptr const l)
+  {
+    return visit_type<obj::integer>(
+      [=](auto const typed_l) -> native_bool { return typed_l->data % 2 == 0; },
+      l);
+  }
+
+  native_bool is_odd(object_ptr const l)
+  {
+    return visit_type<obj::integer>(
+      [=](auto const typed_l) -> native_bool { return typed_l->data % 2 == 1; },
+      l);
+  }
+
   native_bool is_equiv(object_ptr const l, object_ptr const r)
   {
     return visit_number_like(
@@ -1573,5 +1587,12 @@ namespace jank::runtime
   native_integer to_int(native_real const l)
   {
     return static_cast<native_integer>(l);
+  }
+
+  native_bool is_number(object_ptr const o)
+  {
+    return visit_number_like([=](auto const) -> native_bool { return true; },
+                             [=]() -> native_bool { return false; },
+                             o);
   }
 }

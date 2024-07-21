@@ -134,6 +134,7 @@ add_library(
   src/cpp/jank/runtime/core/truthy.cpp
   src/cpp/jank/runtime/core/munge.cpp
   src/cpp/jank/runtime/core/math.cpp
+  src/cpp/jank/runtime/perf.cpp
   src/cpp/jank/runtime/module/loader.cpp
   src/cpp/jank/runtime/object.cpp
   src/cpp/jank/runtime/detail/native_persistent_array_map.cpp
