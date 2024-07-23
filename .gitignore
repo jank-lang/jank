@@ -27,6 +27,7 @@ pom.xml.asc
 inst
 deb-cache
 build
+/compiler+runtime/build-*
 coverage.txt
 vcpkg_installed
 .idea/
