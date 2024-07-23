@@ -3,7 +3,6 @@ let pkgsUnstable = import
 (
   fetchTarball https://github.com/NixOS/nixpkgs-channels/archive/nixos-unstable.tar.gz
 );
-#local-cling = callPackage ./cling.nix { };
 in
 mkShell
 {
@@ -14,10 +13,6 @@ mkShell
     ninja
     pkg-config
     clang
-    libffi
-    libxcrypt
-
-    #local-cling
 
     # Dev tools.
     entr
@@ -27,6 +22,18 @@ mkShell
     shellcheck
     # For clangd
     llvm
+
+    # Libs.
+    boehmgc
+    # TODO: CMake fails to find boost::preprocessor.
+    boost
+    cli11
+    fmt
+    immer
+    # TODO: Doesn't have a nix pkg.
+    #libzippp
+    magic-enum
+    readline
   ];
   shellHook =
   ''
