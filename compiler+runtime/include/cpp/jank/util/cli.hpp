@@ -9,6 +9,7 @@ namespace jank::util::cli
     run,
     compile,
     repl,
+    cpp_repl,
     run_main
   };
 

@@ -147,7 +147,62 @@ namespace jank
         auto const res(__rt_ctx->eval_string(line));
         fmt::println("");
         fmt::println("{}", runtime::to_string(res));
-        //rt_ctx.jit_prc.eval_string(line);
+      }
+      /* TODO: Unify error handling. JEEZE! */
+      catch(std::exception const &e)
+      {
+        fmt::println("Exception: {}", e.what());
+      }
+      catch(jank::runtime::object_ptr const o)
+      {
+        fmt::println("Exception: {}", jank::runtime::to_string(o));
+      }
+      catch(jank::native_persistent_string const &s)
+      {
+        fmt::println("Exception: {}", s);
+      }
+      catch(jank::read::error const &e)
+      {
+        fmt::println("Read error ({} - {}): {}", e.start, e.end, e.message);
+      }
+    }
+  }
+
+  void cpp_repl(util::cli::options const &opts)
+  {
+    using namespace jank;
+    using namespace jank::runtime;
+
+    {
+      profile::timer timer{ "require clojure.core" };
+      __rt_ctx->load_module("/clojure.core").expect_ok();
+    }
+
+    if(!opts.target_module.empty())
+    {
+      profile::timer timer{ "load main" };
+      __rt_ctx->load_module("/" + opts.target_module).expect_ok();
+      dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
+    }
+
+    /* By default, RL will do tab completion for files. We disable that here. */
+    rl_bind_key('\t', rl_insert);
+
+    while(auto const buf = readline("native> "))
+    {
+      native_transient_string line{ buf };
+      boost::trim(line);
+      if(line.empty())
+      {
+        continue;
+      }
+
+      /* TODO: Persist history to disk, á la .lein-repl-history. */
+      /* History is persisted for this session only. */
+      add_history(line.data());
+      try
+      {
+        __rt_ctx->jit_prc.eval_string(line);
       }
       /* TODO: Unify error handling. JEEZE! */
       catch(std::exception const &e)
@@ -217,6 +272,9 @@ try
       break;
     case util::cli::command::repl:
       repl(opts);
+      break;
+    case util::cli::command::cpp_repl:
+      cpp_repl(opts);
       break;
     case util::cli::command::run_main:
       run_main(opts);

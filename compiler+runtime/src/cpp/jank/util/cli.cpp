@@ -49,6 +49,9 @@ namespace jank::util::cli
     cli_repl.add_option("module", opts.target_module, "The entrypoint module");
     cli_repl.add_flag("--server", opts.repl_server, "Start an nREPL server");
 
+    /* C++ REPL subcommand. */
+    auto &cli_cpp_repl(*cli.add_subcommand("cpp-repl", "Start up a terminal C++ REPL"));
+
     /* Run subcommand. */
     auto &cli_run_main(*cli.add_subcommand("run-main", "Load and execute -main"));
     cli_run_main.fallthrough();
@@ -83,6 +86,10 @@ namespace jank::util::cli
     else if(cli.got_subcommand(&cli_repl))
     {
       opts.command = command::repl;
+    }
+    else if(cli.got_subcommand(&cli_cpp_repl))
+    {
+      opts.command = command::cpp_repl;
     }
     else if(cli.got_subcommand(&cli_run_main))
     {
