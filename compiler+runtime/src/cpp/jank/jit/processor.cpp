@@ -4,14 +4,12 @@
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/FrontendDiagnostic.h>
-#include <clang/Basic/Version.h>
 #include <llvm/Support/Signals.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
-#include <llvm/TargetParser/Host.h>
 
 #include <jank/util/process_location.hpp>
 #include <jank/util/make_array.hpp>
-#include <jank/util/sha256.hpp>
+#include <jank/util/dir.hpp>
 #include <jank/jit/processor.hpp>
 
 namespace jank::jit
@@ -33,90 +31,9 @@ namespace jank::jit
     std::exit(gen_crash_diag ? 70 : 1);
   }
 
-  std::string user_home_dir()
-  {
-    static std::string res;
-    if(!res.empty())
-    {
-      return res;
-    }
-
-    auto const home(getenv("HOME"));
-    if(home)
-    {
-      res = home;
-    }
-    return res;
-  }
-
-  std::string user_cache_dir()
-  {
-    static std::string res;
-    if(!res.empty())
-    {
-      return res;
-    }
-
-    auto const home(getenv("XDG_CACHE_HOME"));
-    if(home)
-    {
-      res = fmt::format("{}/jank", home);
-      return res;
-    }
-    res = fmt::format("{}/.cache/jank", user_home_dir());
-    return res;
-  }
-
-  std::string user_config_dir()
-  {
-    static std::string res;
-    if(!res.empty())
-    {
-      return res;
-    }
-
-    auto const home(getenv("XDG_CONFIG_HOME"));
-    if(home)
-    {
-      res = fmt::format("{}/jank", home);
-      return res;
-    }
-    res = fmt::format("{}/.config/jank", user_home_dir());
-    return res;
-  }
-
-  std::string binary_version()
-  {
-    static std::string res;
-    if(!res.empty())
-    {
-      return res;
-    }
-
-    /* triple + jank version + clang version + jit flags */
-    auto const input(
-      fmt::format("{}.{}.{}", JANK_VERSION, clang::getClangRevision(), JANK_JIT_FLAGS));
-    res = fmt::format("{}-{}", llvm::sys::getDefaultTargetTriple(), util::sha256(input));
-
-    //fmt::println("binary_version {}", res);
-
-    return res;
-  }
-
-  std::string binary_cache_dir()
-  {
-    static std::string res;
-    if(!res.empty())
-    {
-      return res;
-    }
-
-    return res = fmt::format("{}/{}", user_cache_dir(), binary_version());
-  }
-
   option<boost::filesystem::path> find_pch()
   {
-    auto const jank_path(jank::util::process_location().unwrap().parent_path());
+    auto const jank_path(util::process_location().unwrap().parent_path());
 
     auto dev_path(jank_path / "incremental.pch");
     if(boost::filesystem::exists(dev_path))
@@ -124,7 +41,7 @@ namespace jank::jit
       return std::move(dev_path);
     }
 
-    auto installed_path(fmt::format("{}/incremental.pch", binary_cache_dir()));
+    auto installed_path(fmt::format("{}/incremental.pch", util::binary_cache_dir()));
     if(boost::filesystem::exists(installed_path))
     {
       return std::move(installed_path);
@@ -135,11 +52,11 @@ namespace jank::jit
 
   option<boost::filesystem::path> build_pch()
   {
-    auto const jank_path(jank::util::process_location().unwrap().parent_path());
+    auto const jank_path(util::process_location().unwrap().parent_path());
     auto const script_path(jank_path / "build-pch");
     auto const include_path(jank_path / "../include");
     boost::filesystem::path const output_path{ fmt::format("{}/incremental.pch",
-                                                           binary_cache_dir()) };
+                                                           util::binary_cache_dir()) };
     boost::filesystem::create_directories(output_path.parent_path());
     auto const command(fmt::format("{} {} {} {} {}",
                                    script_path.string(),
@@ -152,7 +69,8 @@ namespace jank::jit
 
     if(std::system(command.c_str()) != 0)
     {
-      std::cerr << "failed to build using this script: " << script_path << "\n";
+      std::cerr << "error!\n"
+                << "Failed to build using this script: " << script_path << "\n";
       return none;
     }
 
@@ -165,7 +83,7 @@ namespace jank::jit
   {
     profile::timer timer{ "jit ctor" };
     /* TODO: Pass this into each fn below so we only do this once on startup. */
-    auto const jank_path(jank::util::process_location().unwrap().parent_path());
+    auto const jank_path(util::process_location().unwrap().parent_path());
 
     auto pch_path(find_pch());
     if(pch_path.is_none())
@@ -274,7 +192,7 @@ namespace jank::jit
 
   void processor::eval_string(native_persistent_string const &s) const
   {
-    jank::profile::timer timer{ "jit eval_string" };
+    profile::timer timer{ "jit eval_string" };
     //fmt::println("// eval_string:\n{}\n", s);
     auto err(interpreter->ParseAndExecute({ s.data(), s.size() }));
     llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");

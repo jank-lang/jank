@@ -133,6 +133,7 @@ add_library(
   src/cpp/jank/hash.cpp
   src/cpp/jank/util/cli.cpp
   src/cpp/jank/util/sha256.cpp
+  src/cpp/jank/util/dir.cpp
   src/cpp/jank/util/mapped_file.cpp
   src/cpp/jank/util/scope_exit.cpp
   src/cpp/jank/util/escape.cpp
