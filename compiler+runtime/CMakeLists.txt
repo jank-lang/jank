@@ -32,6 +32,16 @@ project(
     LANGUAGES C CXX
 )
 
+find_package(Git REQUIRED)
+execute_process(
+  COMMAND "${GIT_EXECUTABLE}" rev-parse HEAD
+  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+  OUTPUT_VARIABLE jank_git_hash
+  ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+set(jank_version "${CMAKE_PROJECT_VERSION}-${jank_git_hash}")
+
 set(jank_cxx_standard cxx_std_20)
 
 # We need different flags for linking whole libraries on different OSes.
@@ -122,6 +132,7 @@ add_library(
   jank_lib STATIC
   src/cpp/jank/hash.cpp
   src/cpp/jank/util/cli.cpp
+  src/cpp/jank/util/sha256.cpp
   src/cpp/jank/util/mapped_file.cpp
   src/cpp/jank/util/scope_exit.cpp
   src/cpp/jank/util/escape.cpp
@@ -239,7 +250,29 @@ jank_hook_llvm(jank_lib)
 set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags})
 list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str)
 
-target_compile_options(jank_lib PUBLIC -DJANK_COMPILER_FLAGS="${jank_jit_compile_flags_str}")
+# Build a string of all include flags for jank. This will be used for building the PCH at build
+# time as well as building the PCH on first run, after installation.
+get_target_property(jank_lib_includes jank_lib INCLUDE_DIRECTORIES)
+set(jank_lib_includes_str "")
+foreach(dir ${jank_lib_includes})
+  # System includes are just the path, but normal includes have this format:
+  # $<BUILD_INTERFACE:/home/jeaye/projects/jank/compiler+runtime/include/cpp>
+  # We need to strip all of that out.
+  if(${dir} MATCHES "BUILD_INTERFACE:")
+    string(REGEX REPLACE "\\$<BUILD_INTERFACE:(.*)>" "\\1" dir_path ${dir})
+    string(APPEND jank_lib_includes_str "-I${dir_path} ")
+  else()
+    string(APPEND jank_lib_includes_str "-isystem ${dir} ")
+  endif()
+endforeach()
+
+target_compile_options(
+  jank_lib
+  PUBLIC
+  -DJANK_VERSION="${jank_version}"
+  -DJANK_JIT_FLAGS="${jank_jit_compile_flags_str}"
+  -DJANK_CLANG_PREFIX="${CLANG_INSTALL_PREFIX}"
+)
 target_link_options(jank_lib PRIVATE ${jank_linker_flags})
 
 #set_target_properties(jank_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
@@ -423,20 +456,6 @@ endif()
 #
 # Here, we set up the incremental PCH to be built whenever the normal PCH is changed or the script
 # for building the incremental PCH changes. Any other changes don't matter.
-
-get_target_property(jank_lib_includes jank_lib INCLUDE_DIRECTORIES)
-set(jank_lib_includes_str "")
-foreach(dir ${jank_lib_includes})
-  # System includes are just the path, but normal includes have this format:
-  # $<BUILD_INTERFACE:/home/jeaye/projects/jank/compiler+runtime/include/cpp>
-  # We need to strip all of that out.
-  if(${dir} MATCHES "BUILD_INTERFACE:")
-    string(REGEX REPLACE "\\$<BUILD_INTERFACE:(.*)>" "\\1" dir_path ${dir})
-    string(APPEND jank_lib_includes_str "-I${dir_path} ")
-  else()
-    string(APPEND jank_lib_includes_str "-isystem ${dir} ")
-  endif()
-endforeach()
 
 # Build a string of all of our AOT compilation flags so we can share them with our incremental PCH.
 set(jank_pch_compile_flags_list ${jank_common_compiler_flags} -w)

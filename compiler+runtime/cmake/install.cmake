@@ -10,14 +10,6 @@ install(
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
 )
-#install(
-#  DIRECTORY ${jank_cling_build_dir}/lib/clang
-#  DESTINATION lib
-#)
-#install(
-#  PROGRAMS ${jank_cling_build_dir}/bin/clang++ ${jank_cling_build_dir}/bin/clang-13
-#  DESTINATION bin
-#)
 install(
   PROGRAMS ${CMAKE_SOURCE_DIR}/bin/build-pch
   DESTINATION bin
@@ -32,38 +24,52 @@ install(
 # since we need to package all of those headers along with jank. Why?
 # Because JIT compilation means that any headers we need at compile-time
 # we'll also need at run-time.
-file(
-  GLOB_RECURSE jank_includes
-  ${CMAKE_SOURCE_DIR}/include/cpp/*
-)
-file(
-  GLOB_RECURSE vcpkg_includes
-  ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include/*
-)
-file(
-  GLOB_RECURSE third_party_includes
-  ${CMAKE_SOURCE_DIR}/third-party/nanobench/include/*
-  ${CMAKE_SOURCE_DIR}/third-party/folly/*
-  #${CMAKE_BINARY_DIR}/llvm/tools/cling/include/*
-  #${CMAKE_BINARY_DIR}/llvm/tools/clang/include/*
-  #${CMAKE_BINARY_DIR}/llvm/include/*
-  #${jank_cling_build_dir}/tools/cling/include/*
-  #${jank_cling_build_dir}/tools/clang/include/*
-  #${jank_cling_build_dir}/include/*
-)
-set(jank_public_headers ${jank_includes} ${vcpkg_includes} ${third_party_includes})
 
-# Normal installation doesn't keep directory information, so
-# we do it ourselves.
-macro(install_headers_with_directory header_list)
-  foreach(header ${${header_list}})
-    string(REGEX REPLACE ".*/(include/.*)[^/]*$" "\\1" relative_path ${header})
-    cmake_path(GET relative_path PARENT_PATH relative_dir)
-    install(FILES ${header} DESTINATION ${relative_dir})
+function(jank_glob_install_without_prefix)
+  set(options )
+  set(one_value_args INPUT_PREFIX OUTPUT_PREFIX PATTERN)
+  set(multi_value_args )
+  cmake_parse_arguments(jank_glob "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
+
+  file(GLOB_RECURSE jank_glob_result ${jank_glob_PATTERN})
+  string(LENGTH "${jank_glob_INPUT_PREFIX}" prefix_length)
+  foreach(header ${jank_glob_result})
+    string(SUBSTRING ${header} ${prefix_length} -1 header_without_prefix)
+    cmake_path(GET header_without_prefix PARENT_PATH relative_dir)
+    install(FILES ${header} DESTINATION "${jank_glob_OUTPUT_PREFIX}${relative_dir}")
   endforeach(header)
-endmacro(install_headers_with_directory)
+endfunction()
 
-install_headers_with_directory(jank_public_headers)
+jank_glob_install_without_prefix(
+  INPUT_PREFIX "${CMAKE_SOURCE_DIR}/"
+  PATTERN "${CMAKE_SOURCE_DIR}/include/cpp/*"
+)
+
+jank_glob_install_without_prefix(
+  INPUT_PREFIX "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/"
+  PATTERN "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include/*"
+)
+
+jank_glob_install_without_prefix(
+  INPUT_PREFIX "${CMAKE_SOURCE_DIR}/third-party/nanobench/"
+  PATTERN "${CMAKE_SOURCE_DIR}/third-party/nanobench/include/*"
+)
+
+jank_glob_install_without_prefix(
+  INPUT_PREFIX "${CMAKE_SOURCE_DIR}/third-party/bpptree/"
+  PATTERN "${CMAKE_SOURCE_DIR}/third-party/bpptree/include/*"
+)
+
+jank_glob_install_without_prefix(
+  INPUT_PREFIX "${CMAKE_SOURCE_DIR}/third-party/folly/"
+  OUTPUT_PREFIX "include/"
+  PATTERN "${CMAKE_SOURCE_DIR}/third-party/folly/folly/*.h"
+)
+
+jank_glob_install_without_prefix(
+  INPUT_PREFIX "${CLANG_INSTALL_PREFIX}/"
+  PATTERN "${CLANG_INSTALL_PREFIX}/include/*"
+)
 
 if(PROJECT_IS_TOP_LEVEL)
   include(CPack)

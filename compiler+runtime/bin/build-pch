@@ -12,6 +12,8 @@ flags=$*
 
 # shellcheck disable=SC2086,SC2068
 "${clang_prefix}"/bin/clang++ ${flags[@]} \
+        -I "${include}" \
+        -I "${include}/cpp" \
         -Xclang -fincremental-extensions \
         -Xclang -emit-pch \
         -x c++-header \

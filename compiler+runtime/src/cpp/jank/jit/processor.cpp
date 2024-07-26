@@ -4,11 +4,14 @@
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/FrontendDiagnostic.h>
+#include <clang/Basic/Version.h>
 #include <llvm/Support/Signals.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
+#include <llvm/TargetParser/Host.h>
 
 #include <jank/util/process_location.hpp>
 #include <jank/util/make_array.hpp>
+#include <jank/util/sha256.hpp>
 #include <jank/jit/processor.hpp>
 
 namespace jank::jit
@@ -30,6 +33,87 @@ namespace jank::jit
     std::exit(gen_crash_diag ? 70 : 1);
   }
 
+  std::string user_home_dir()
+  {
+    static std::string res;
+    if(!res.empty())
+    {
+      return res;
+    }
+
+    auto const home(getenv("HOME"));
+    if(home)
+    {
+      res = home;
+    }
+    return res;
+  }
+
+  std::string user_cache_dir()
+  {
+    static std::string res;
+    if(!res.empty())
+    {
+      return res;
+    }
+
+    auto const home(getenv("XDG_CACHE_HOME"));
+    if(home)
+    {
+      res = fmt::format("{}/jank", home);
+      return res;
+    }
+    res = fmt::format("{}/.cache/jank", user_home_dir());
+    return res;
+  }
+
+  std::string user_config_dir()
+  {
+    static std::string res;
+    if(!res.empty())
+    {
+      return res;
+    }
+
+    auto const home(getenv("XDG_CONFIG_HOME"));
+    if(home)
+    {
+      res = fmt::format("{}/jank", home);
+      return res;
+    }
+    res = fmt::format("{}/.config/jank", user_home_dir());
+    return res;
+  }
+
+  std::string binary_version()
+  {
+    static std::string res;
+    if(!res.empty())
+    {
+      return res;
+    }
+
+    /* triple + jank version + clang version + jit flags */
+    auto const input(
+      fmt::format("{}.{}.{}", JANK_VERSION, clang::getClangRevision(), JANK_JIT_FLAGS));
+    res = fmt::format("{}-{}", llvm::sys::getDefaultTargetTriple(), util::sha256(input));
+
+    //fmt::println("binary_version {}", res);
+
+    return res;
+  }
+
+  std::string binary_cache_dir()
+  {
+    static std::string res;
+    if(!res.empty())
+    {
+      return res;
+    }
+
+    return res = fmt::format("{}/{}", user_cache_dir(), binary_version());
+  }
+
   option<boost::filesystem::path> find_pch()
   {
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
@@ -40,7 +124,7 @@ namespace jank::jit
       return std::move(dev_path);
     }
 
-    auto installed_path(jank_path / "../include/cpp/jank/incremental.pch");
+    auto installed_path(fmt::format("{}/incremental.pch", binary_cache_dir()));
     if(boost::filesystem::exists(installed_path))
     {
       return std::move(installed_path);
@@ -54,8 +138,15 @@ namespace jank::jit
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
     auto const script_path(jank_path / "build-pch");
     auto const include_path(jank_path / "../include");
-    auto const command(script_path.string() + " " + include_path.string() + " "
-                       + std::string{ JANK_COMPILER_FLAGS });
+    boost::filesystem::path const output_path{ fmt::format("{}/incremental.pch",
+                                                           binary_cache_dir()) };
+    boost::filesystem::create_directories(output_path.parent_path());
+    auto const command(fmt::format("{} {} {} {} {}",
+                                   script_path.string(),
+                                   native_persistent_string_view{ JANK_CLANG_PREFIX },
+                                   include_path.string(),
+                                   output_path.string(),
+                                   native_persistent_string_view{ JANK_JIT_FLAGS }));
 
     std::cerr << "Note: Looks like your first run. Building pre-compiled header… " << std::flush;
 
@@ -66,7 +157,7 @@ namespace jank::jit
     }
 
     std::cerr << "done!\n";
-    return jank_path / "../include/cpp/jank/prelude.hpp.pch";
+    return output_path;
   }
 
   processor::processor(native_integer const optimization_level)
@@ -115,7 +206,7 @@ namespace jank::jit
      * into a vector for Clang. Since Clang wants a vector<char const*>, we need to
      * dynamically allocate. These will never be freed. */
     std::vector<char const *> args{};
-    std::stringstream flags{ JANK_COMPILER_FLAGS };
+    std::stringstream flags{ JANK_JIT_FLAGS };
     std::string flag;
     while(std::getline(flags, flag, ' '))
     {
@@ -126,7 +217,7 @@ namespace jank::jit
     args.emplace_back("-include-pch");
     args.emplace_back(strdup(pch_path_str.c_str()));
 
-    //fmt::println("compiler flags {}", JANK_COMPILER_FLAGS);
+    //fmt::println("jit flags {}", JANK_JIT_FLAGS);
 
     clang::IncrementalCompilerBuilder compiler_builder;
     compiler_builder.SetCompilerArgs(args);
