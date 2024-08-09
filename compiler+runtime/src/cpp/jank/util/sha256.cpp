@@ -1,3 +1,5 @@
+#include <iomanip>
+
 #include <openssl/sha.h>
 
 #include <jank/util/sha256.hpp>
