@@ -85,6 +85,12 @@ If you'd like your name, company, or logo here, you can
   </a>
 </p>
 
+<p align="center">
+  <a href="http://www.somethingdoneright.net/about">
+    Bert Muthalaly
+  </a>
+</p>
+
 ## In the news
 <div align="center">
 
