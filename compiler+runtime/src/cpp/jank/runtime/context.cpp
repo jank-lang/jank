@@ -13,6 +13,7 @@
 #include <jank/jit/processor.hpp>
 #include <jank/util/mapped_file.hpp>
 #include <jank/util/process_location.hpp>
+#include <jank/util/clang_format.hpp>
 
 namespace jank::runtime
 {
@@ -541,6 +542,21 @@ namespace jank::runtime
       return macroexpand(expanded);
     }
     return o;
+  }
+
+  obj::persistent_string_ptr context::native_source(object_ptr const o)
+  {
+    /* We use a clean analyze::processor so we don't share lifted items from other REPL
+     * evaluations. */
+    analyze::processor an_prc{ *this };
+    auto const expr(an_prc.analyze(o, analyze::expression_type::expression).expect_ok());
+    auto const wrapped_expr(evaluate::wrap_expression(expr));
+    auto const &module(
+      expect_object<runtime::ns>(intern_var("clojure.core", "*ns*").expect_ok()->deref())
+        ->to_string());
+    codegen::processor cg_prc{ *this, wrapped_expr, module, codegen::compilation_target::repl };
+
+    return make_box(util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
   }
 
   object_ptr context::print(object_ptr const o)

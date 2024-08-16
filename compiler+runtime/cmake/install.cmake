@@ -71,6 +71,8 @@ jank_glob_install_without_prefix(
   PATTERN "${CLANG_INSTALL_PREFIX}/include/*"
 )
 
+install(FILES ${CMAKE_SOURCE_DIR}/../.clang-format DESTINATION share)
+
 if(PROJECT_IS_TOP_LEVEL)
   include(CPack)
 endif()

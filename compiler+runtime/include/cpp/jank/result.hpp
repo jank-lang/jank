@@ -50,6 +50,8 @@ namespace jank
   template <typename R, typename E>
   struct [[nodiscard]] result
   {
+    static_assert(!std::same_as<R, E>, "Result and error type must be different.");
+
     constexpr result(detail::result<true, R> &&r)
       : data{ std::move(r.data) }
     {

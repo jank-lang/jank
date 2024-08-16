@@ -137,6 +137,7 @@ add_library(
   src/cpp/jank/util/mapped_file.cpp
   src/cpp/jank/util/scope_exit.cpp
   src/cpp/jank/util/escape.cpp
+  src/cpp/jank/util/clang_format.cpp
   src/cpp/jank/profile/time.cpp
   src/cpp/jank/read/lex.cpp
   src/cpp/jank/read/parse.cpp
@@ -498,6 +499,12 @@ add_custom_target(
   DEPENDS ${jank_core_libraries_flag}
 )
 # ---- Compiled Clojure libraries ----
+
+# ---- Clang format YAML ----
+# We copy this into our binary directory so that jank can use it to format code. It's also
+# installed alongside jank, for the same reason.
+file(COPY ${CMAKE_SOURCE_DIR}/../.clang-format DESTINATION ${CMAKE_BINARY_DIR})
+# ---- Clang format YAML ----
 
 # ---- Install rules ----
 if(NOT CMAKE_SKIP_INSTALL_RULES)

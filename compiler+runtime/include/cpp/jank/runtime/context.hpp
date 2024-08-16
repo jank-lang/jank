@@ -68,6 +68,7 @@ namespace jank::runtime
 
     object_ptr macroexpand1(object_ptr o);
     object_ptr macroexpand(object_ptr o);
+    obj::persistent_string_ptr native_source(object_ptr o);
 
     static object_ptr print(object_ptr o);
     static object_ptr print(object_ptr o, object_ptr more);
