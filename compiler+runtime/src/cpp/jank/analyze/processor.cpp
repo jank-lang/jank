@@ -72,7 +72,7 @@ namespace jank::analyze
       fn.push_back(parse_current->expect_ok().unwrap().ptr);
     }
     auto fn_list(make_box<runtime::obj::persistent_list>(std::in_place, fn.rbegin(), fn.rend()));
-    return analyze(fn_list, expression_type::expression);
+    return analyze(fn_list, expression_type::nested);
   }
 
   processor::expression_result
@@ -123,7 +123,7 @@ namespace jank::analyze
       auto const value_opt(has_docstring ? l->data.rest().rest().rest().first()
                                          : l->data.rest().rest().first());
       auto value_result(
-        analyze(value_opt.unwrap(), current_frame, expression_type::expression, fn_ctx, true));
+        analyze(value_opt.unwrap(), current_frame, expression_type::nested, fn_ctx, true));
       if(value_result.is_err())
       {
         return value_result;
@@ -567,7 +567,7 @@ namespace jank::analyze
     arg_exprs.reserve(arg_count);
     for(auto const &form : list->data.rest())
     {
-      auto arg_expr(analyze(form, current_frame, expression_type::expression, fn_ctx, true));
+      auto arg_expr(analyze(form, current_frame, expression_type::nested, fn_ctx, true));
       if(arg_expr.is_err())
       {
         return arg_expr;
@@ -671,7 +671,7 @@ namespace jank::analyze
                       sym->to_string()) });
       }
 
-      auto res(analyze(val, ret.frame, expression_type::expression, fn_ctx, false));
+      auto res(analyze(val, ret.frame, expression_type::nested, fn_ctx, false));
       if(res.is_err())
       {
         return res.expect_err_move();
@@ -838,7 +838,7 @@ namespace jank::analyze
 
     auto const condition(o->data.rest().first().unwrap());
     auto condition_expr(
-      analyze(condition, current_frame, expression_type::expression, fn_ctx, false));
+      analyze(condition, current_frame, expression_type::nested, fn_ctx, false));
     if(condition_expr.is_err())
     {
       return condition_expr.expect_err_move();
@@ -954,7 +954,7 @@ namespace jank::analyze
     }
 
     auto const arg(o->data.rest().first().unwrap());
-    auto arg_expr(analyze(arg, current_frame, expression_type::expression, fn_ctx, true));
+    auto arg_expr(analyze(arg, current_frame, expression_type::nested, fn_ctx, true));
     if(arg_expr.is_err())
     {
       return arg_expr.expect_err_move();
@@ -1182,7 +1182,7 @@ namespace jank::analyze
       /* We get back an AST expression and keep track of it as a chunk for later codegen. */
       auto result(analyze(parsed_obj.expect_ok().unwrap().ptr,
                           current_frame,
-                          expression_type::expression,
+                          expression_type::nested,
                           fn_ctx,
                           true));
       if(result.is_err())
@@ -1248,7 +1248,7 @@ namespace jank::analyze
     native_bool literal{ true };
     for(auto d = o->fresh_seq(); d != nullptr; d = next_in_place(d))
     {
-      auto res(analyze(d->first(), current_frame, expression_type::expression, fn_ctx, true));
+      auto res(analyze(d->first(), current_frame, expression_type::nested, fn_ctx, true));
       if(res.is_err())
       {
         return res.expect_err_move();
@@ -1298,12 +1298,12 @@ namespace jank::analyze
     exprs.reserve(o->data.size());
     for(auto const &kv : o->data)
     {
-      auto k_expr(analyze(kv.first, current_frame, expression_type::expression, fn_ctx, true));
+      auto k_expr(analyze(kv.first, current_frame, expression_type::nested, fn_ctx, true));
       if(k_expr.is_err())
       {
         return k_expr.expect_err_move();
       }
-      auto v_expr(analyze(kv.second, current_frame, expression_type::expression, fn_ctx, true));
+      auto v_expr(analyze(kv.second, current_frame, expression_type::nested, fn_ctx, true));
       if(v_expr.is_err())
       {
         return v_expr.expect_err_move();
@@ -1331,7 +1331,7 @@ namespace jank::analyze
     native_bool literal{ true };
     for(auto d = o->fresh_seq(); d != nullptr; d = next_in_place(d))
     {
-      auto res(analyze(d->first(), current_frame, expression_type::expression, fn_ctx, true));
+      auto res(analyze(d->first(), current_frame, expression_type::nested, fn_ctx, true));
       if(res.is_err())
       {
         return res.expect_err_move();
@@ -1403,7 +1403,7 @@ namespace jank::analyze
       }
 
       auto sym_result(
-        analyze_symbol(sym, current_frame, expression_type::expression, fn_ctx, true));
+        analyze_symbol(sym, current_frame, expression_type::nested, fn_ctx, true));
       if(sym_result.is_err())
       {
         return sym_result;
@@ -1467,7 +1467,7 @@ namespace jank::analyze
     else
     {
       auto callable_expr(
-        analyze(first, current_frame, expression_type::expression, fn_ctx, needs_box));
+        analyze(first, current_frame, expression_type::nested, fn_ctx, needs_box));
       if(callable_expr.is_err())
       {
         return callable_expr;
@@ -1479,7 +1479,7 @@ namespace jank::analyze
     arg_exprs.reserve(arg_count);
     for(auto const &s : o->data.rest())
     {
-      auto arg_expr(analyze(s, current_frame, expression_type::expression, fn_ctx, needs_arg_box));
+      auto arg_expr(analyze(s, current_frame, expression_type::nested, fn_ctx, needs_arg_box));
       if(arg_expr.is_err())
       {
         return arg_expr;

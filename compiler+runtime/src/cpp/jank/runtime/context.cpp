@@ -549,7 +549,7 @@ namespace jank::runtime
     /* We use a clean analyze::processor so we don't share lifted items from other REPL
      * evaluations. */
     analyze::processor an_prc{ *this };
-    auto const expr(an_prc.analyze(o, analyze::expression_type::expression).expect_ok());
+    auto const expr(an_prc.analyze(o, analyze::expression_type::nested).expect_ok());
     auto const wrapped_expr(evaluate::wrap_expression(expr));
     auto const &module(
       expect_object<runtime::ns>(intern_var("clojure.core", "*ns*").expect_ok()->deref())

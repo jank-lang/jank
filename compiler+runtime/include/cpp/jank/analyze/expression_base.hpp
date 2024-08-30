@@ -6,14 +6,14 @@ namespace jank::analyze
 
   enum class expression_type
   {
-    expression,
+    nested,
     statement,
     return_statement
   };
 
   inline native_bool is_statement(expression_type const expr_type)
   {
-    return expr_type != expression_type::expression;
+    return expr_type != expression_type::nested;
   }
 
   /* Common base class for every expression. */

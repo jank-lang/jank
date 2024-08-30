@@ -492,7 +492,7 @@ namespace jank::codegen
     auto const val(gen(expr.value.unwrap(), fn_arity, true).unwrap());
     switch(expr.expr_type)
     {
-      case analyze::expression_type::expression:
+      case analyze::expression_type::nested:
         {
           if(meta.is_some())
           {
@@ -543,7 +543,7 @@ namespace jank::codegen
     switch(expr.expr_type)
     {
       case analyze::expression_type::statement:
-      case analyze::expression_type::expression:
+      case analyze::expression_type::nested:
         {
           return fmt::format("{}->deref()", runtime::munge(var.native_name.name));
         }
@@ -564,7 +564,7 @@ namespace jank::codegen
     switch(expr.expr_type)
     {
       case analyze::expression_type::statement:
-      case analyze::expression_type::expression:
+      case analyze::expression_type::nested:
         {
           return runtime::munge(var.native_name.name);
         }
@@ -1073,7 +1073,7 @@ namespace jank::codegen
     switch(expr.expr_type)
     {
       case analyze::expression_type::statement:
-      case analyze::expression_type::expression:
+      case analyze::expression_type::nested:
         {
           return ret;
         }
@@ -1261,7 +1261,7 @@ namespace jank::codegen
     switch(expr.expr_type)
     {
       case analyze::expression_type::statement:
-      case analyze::expression_type::expression:
+      case analyze::expression_type::nested:
         {
           return ret;
         }
@@ -1295,7 +1295,7 @@ namespace jank::codegen
     switch(expr.expr_type)
     {
       case analyze::expression_type::statement:
-      case analyze::expression_type::expression:
+      case analyze::expression_type::nested:
         /* TODO: Return a handle. */
         {
           return prc.expression_str(box_needed);
@@ -1434,7 +1434,7 @@ namespace jank::codegen
     switch(expr.expr_type)
     {
       case analyze::expression_type::statement:
-      case analyze::expression_type::expression:
+      case analyze::expression_type::nested:
         {
           return last;
         }
