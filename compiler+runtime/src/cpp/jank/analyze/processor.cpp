@@ -340,7 +340,7 @@ namespace jank::analyze
       {
         return form.expect_err_move();
       }
-      body_do.body.emplace_back(form.expect_ok());
+      body_do.values.emplace_back(form.expect_ok());
     }
 
     /* If it turns out this function uses recur, we need to ensure that its tail expression
@@ -616,7 +616,7 @@ namespace jank::analyze
         ret.needs_box = form.expect_ok()->get_base()->needs_box;
       }
 
-      ret.body.emplace_back(form.expect_ok());
+      ret.values.emplace_back(form.expect_ok());
     }
 
     return make_box<expression>(std::move(ret));
@@ -703,7 +703,7 @@ namespace jank::analyze
         ret.needs_box = res.expect_ok()->get_base()->needs_box;
       }
 
-      ret.body.body.emplace_back(res.expect_ok_move());
+      ret.body.values.emplace_back(res.expect_ok_move());
     }
 
     return make_box<expression>(std::move(ret));
@@ -1033,7 +1033,7 @@ namespace jank::analyze
               return form.expect_err_move();
             }
 
-            ret.body.body.emplace_back(form.expect_ok());
+            ret.body.values.emplace_back(form.expect_ok());
           }
           break;
         case try_expression_type::catch_:

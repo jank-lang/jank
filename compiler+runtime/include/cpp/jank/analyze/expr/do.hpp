@@ -9,12 +9,12 @@ namespace jank::analyze::expr
   template <typename E>
   struct do_ : expression_base
   {
-    native_vector<native_box<E>> body{};
+    native_vector<native_box<E>> values{};
 
     object_ptr to_runtime_data() const
     {
       object_ptr body_maps{ make_box<obj::persistent_vector>() };
-      for(auto const &e : body)
+      for(auto const &e : values)
       {
         body_maps = conj(body_maps, e->to_runtime_data());
       }

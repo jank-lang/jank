@@ -18,16 +18,16 @@ namespace jank::analyze::step
         }
         else if constexpr(std::same_as<T, expr::do_<expression>>)
         {
-          if(!typed_expr.body.empty())
+          if(!typed_expr.values.empty())
           {
-            boost::apply_visitor(f, typed_expr.body.back()->data);
+            boost::apply_visitor(f, typed_expr.values.back()->data);
           }
         }
         else if constexpr(std::same_as<T, expr::let<expression>>)
         {
-          if(!typed_expr.body.body.empty())
+          if(!typed_expr.body.values.empty())
           {
-            boost::apply_visitor(f, typed_expr.body.body.back()->data);
+            boost::apply_visitor(f, typed_expr.body.values.back()->data);
           }
         }
         else
@@ -47,9 +47,9 @@ namespace jank::analyze::step
 
     do_.needs_box = true;
 
-    if(!do_.body.empty())
+    if(!do_.values.empty())
     {
-      auto &last(do_.body.back());
+      auto &last(do_.values.back());
       walk(last, [](auto &typed_expr) {
         //using T = std::decay_t<decltype(typed_expr)>;
         typed_expr.needs_box = true;

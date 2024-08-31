@@ -31,7 +31,7 @@ namespace jank::evaluate
     arity.frame->type = analyze::local_frame::frame_type::fn;
     expr.expr_type = analyze::expression_type::return_statement;
     /* TODO: Avoid allocation by using existing ptr. */
-    arity.body.body.push_back(make_box<analyze::expression>(expr));
+    arity.body.values.push_back(make_box<analyze::expression>(expr));
     arity.fn_ctx = make_box<analyze::expr::function_context>();
     arity.body.frame = arity.frame;
 
@@ -63,7 +63,7 @@ namespace jank::evaluate
       /* We'll cheat a little and build a fn using just the first expression. Then we can just
        * add the rest. I'd rather do this than duplicate all of the wrapping logic. */
       auto ret(wrap_expression(exprs[0]));
-      auto &body(ret.arities[0].body.body);
+      auto &body(ret.arities[0].body.values);
       /* We normally wrap one expression, which is a return statement, but we'll be potentially
        * adding more, so let's not make assumptions yet. */
       body[0]->get_base()->expr_type = analyze::expression_type::statement;
@@ -414,7 +414,7 @@ namespace jank::evaluate
                   analyze::expr::do_<analyze::expression> const &expr)
   {
     object_ptr ret{ obj::nil::nil_const() };
-    for(auto const &form : expr.body)
+    for(auto const &form : expr.values)
     {
       ret = eval(rt_ctx, jit_prc, form);
     }

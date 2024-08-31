@@ -1377,12 +1377,12 @@ namespace jank::codegen
       }
     }
 
-    for(auto it(expr.body.body.begin()); it != expr.body.body.end();)
+    for(auto it(expr.body.values.begin()); it != expr.body.values.end();)
     {
       auto const &val_tmp(gen(*it, fn_arity, true));
 
       /* We ignore all values but the last. */
-      if(++it == expr.body.body.end() && val_tmp.is_some())
+      if(++it == expr.body.values.end() && val_tmp.is_some())
       {
         if(expr.needs_box)
         {
@@ -1426,7 +1426,7 @@ namespace jank::codegen
                                 native_bool const)
   {
     option<handle> last;
-    for(auto const &form : expr.body)
+    for(auto const &form : expr.values)
     {
       last = gen(form, arity, true);
     }
@@ -1880,12 +1880,12 @@ namespace jank::codegen
           )");
       }
 
-      for(auto const &form : arity.body.body)
+      for(auto const &form : arity.body.values)
       {
         gen(form, arity, true);
       }
 
-      if(arity.body.body.empty())
+      if(arity.body.values.empty())
       {
         fmt::format_to(inserter, "return jank::runtime::obj::nil::nil_const();");
       }
