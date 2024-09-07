@@ -339,6 +339,7 @@ set(
   third-party/folly/folly/synchronization/SanitizeThread.cpp
   third-party/folly/folly/lang/SafeAssert.cpp
   third-party/folly/folly/lang/ToAscii.cpp
+  third-party/folly/folly/lang/Exception.cpp
   third-party/folly/folly/system/ThreadId.cpp
   third-party/folly/folly/system/AtFork.cpp
   third-party/folly/folly/detail/Futex.cpp
