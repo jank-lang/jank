@@ -6,7 +6,7 @@
 }:
 
 let
-  stdenv = pkgs.clangStdenv;
+  stdenv = pkgs.llvmPackages_18.stdenv;
   lib = pkgs.lib;
 in
 
@@ -14,4 +14,16 @@ stdenv.mkDerivation {
   pname = "jank-lang";
   version = "dev";
   src = lib.cleanSource ./.;
+
+  nativeBuildInputs = with pkgs; [
+    llvmPackages_18.llvm
+    llvmPackages_18.clang-unwrapped
+    llvmPackages_18.clangUseLLVM
+    cmake
+    git
+  ];
+
+  buildInputs = with pkgs; [
+    glibc
+  ];
 }
