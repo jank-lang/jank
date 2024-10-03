@@ -7,7 +7,11 @@
 
 let
   stdenv = pkgs.clangStdenv;
+  lib = pkgs.lib;
 in
 
 stdenv.mkDerivation {
+  pname = "jank-lang";
+  version = "dev";
+  src = lib.cleanSource ./.;
 }
