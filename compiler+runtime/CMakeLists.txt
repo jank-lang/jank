@@ -15,7 +15,6 @@ set(CMAKE_MODULE_PATH
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules"
   )
 
-include(cmake/vcpkg.cmake)
 # LTO is explicitly not used, since it leads to runtime symbol lookup issues with the JIT.
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
 
@@ -507,7 +506,9 @@ add_custom_target(
 # ---- Clang format YAML ----
 # We copy this into our binary directory so that jank can use it to format code. It's also
 # installed alongside jank, for the same reason.
-file(COPY ${CMAKE_SOURCE_DIR}/../.clang-format DESTINATION ${CMAKE_BINARY_DIR})
+#
+# Comment out by @haruki7049
+#file(COPY ${CMAKE_SOURCE_DIR}/../.clang-format DESTINATION ${CMAKE_BINARY_DIR})
 # ---- Clang format YAML ----
 
 # ---- Install rules ----
