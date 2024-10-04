@@ -41,6 +41,11 @@ cd -
 export CC=$PWD/build/llvm-install/usr/local/bin/clang; export CXX=$PWD/build/llvm-install/usr/local/bin/clang++
 ```
 
+On macOS also do this:
+```
+export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
+```
+
 At this point, you're ready to build jank.
 
 
