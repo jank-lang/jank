@@ -62,6 +62,7 @@ endif()
 
 set(
   jank_aot_compiler_flags
+  $<$<PLATFORM_ID:Darwin>:-I/opt/homebrew/include>
   -Wall -Wextra -Wpedantic
   -Wfloat-equal -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor
   -Wold-style-cast -Wno-gnu-case-range
@@ -95,6 +96,7 @@ set(
 
 set(
   jank_linker_flags
+  $<$<PLATFORM_ID:Darwin>:-L/opt/homebrew/lib>
   #-stdlib=libc++ -lc++abi
   )
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -244,6 +246,7 @@ target_link_libraries(
   readline
   clangInterpreter
   Boost::boost
+  $<$<PLATFORM_ID:Darwin>:crypto>
 )
 
 jank_hook_llvm(jank_lib)
