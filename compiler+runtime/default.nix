@@ -6,7 +6,14 @@
 }:
 
 let
-  stdenv = pkgs.llvmPackages_18.stdenv;
+  #stdenv = pkgs.llvm_19.stdenv;
+  llvm = pkgs.llvm_19.override (oldAttrs: rec {
+    version = "19.1.0";
+    src = oldAttrs.src.overrideAttrs {
+      outputHash = "";
+    };
+  });
+  stdenv = llvm.stdenv;
   lib = pkgs.lib;
 in
 
@@ -16,14 +23,26 @@ stdenv.mkDerivation {
   src = lib.cleanSource ./.;
 
   nativeBuildInputs = with pkgs; [
-    llvmPackages_18.llvm
-    llvmPackages_18.clang-unwrapped
-    llvmPackages_18.clangUseLLVM
+    llvm
+    #llvmPackages_19.clang-unwrapped
+    #llvmPackages_19.clangUseLLVM
     cmake
     git
+    ninja
   ];
 
   buildInputs = with pkgs; [
     glibc
+    llvmPackages_19.clang-unwrapped
+    llvmPackages_19.clangUseLLVM
+  ];
+
+  CFLAGS = "-B${stdenv.cc.cc}/lib/gcc/${stdenv.targetPlatform.config}/${stdenv.cc.cc.version} -B${stdenv.cc.libc}/lib";
+
+  cmakeFlags = [
+    "-GNinja"
+    "-DDMAKE_BUILD_TYPE=Debug"
+    #"-DDCC_INSTALL_PREFIX=${pkgs.gcc}"
+    "-Djank_tests=on"
   ];
 }
