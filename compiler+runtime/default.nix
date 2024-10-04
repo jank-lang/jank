@@ -33,8 +33,10 @@ stdenv.mkDerivation {
     boehmgc
     libzippp
   ] ++ (with pkgs; [
-    glibc
+    openssl
     doctest
+    double-conversion
+    readline
     libzip
     immer
     cli11
