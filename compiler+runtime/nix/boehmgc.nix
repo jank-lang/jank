@@ -24,4 +24,8 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [
     pkgs.cmake
   ];
+
+  cmakeFlags = [
+    "-Denable_cplusplus=ON"
+  ];
 }
