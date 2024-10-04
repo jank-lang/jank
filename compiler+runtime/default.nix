@@ -25,6 +25,10 @@ stdenv.mkDerivation {
 
   buildInputs = with pkgs; [
     glibc
+    boost
+    immer
+    magic-enum
+    fmt
     llvmPackages_19.clang-unwrapped
     llvmPackages_19.clangUseLLVM
   ];
