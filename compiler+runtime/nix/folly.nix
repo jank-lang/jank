@@ -7,6 +7,7 @@
 
 let
   stdenv = pkgs.stdenv;
+  lib = pkgs.lib;
   cc = stdenv.cc.cc;
 in
 
@@ -14,12 +15,7 @@ stdenv.mkDerivation rec {
   pname = "folly";
   version = "jank-fork";
 
-  src = pkgs.fetchFromGitHub {
-    owner = "jank-lang";
-    repo = pname;
-    rev = "086e7f8ee80a613d1cddd52c3d6a2092e11195a1";
-    hash = "sha256-r4yjioqOWxRAqWhzR8v0/m31Svlwd/VKV6isMAl5WOE=";
-  };
+  src = lib.cleanSource ../third-party/folly;
 
   buildInputs = [
     pkgs.boost
