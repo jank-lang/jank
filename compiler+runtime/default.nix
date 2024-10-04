@@ -9,6 +9,11 @@ let
   llvm = pkgs.llvm_19;
   stdenv = llvm.stdenv;
   lib = pkgs.lib;
+
+  # Deps
+  boost = pkgs.callPackage ./nix/boost.nix { };
+  boehmgc = pkgs.callPackage ./nix/boehmgc.nix { };
+  libzippp = pkgs.callPackage ./nix/libzippp.nix { };
 in
 
 stdenv.mkDerivation {
@@ -23,15 +28,21 @@ stdenv.mkDerivation {
     ninja
   ];
 
-  buildInputs = with pkgs; [
-    glibc
+  buildInputs = [
     boost
+    boehmgc
+    libzippp
+  ] ++ (with pkgs; [
+    glibc
+    doctest
+    libzip
     immer
+    cli11
     magic-enum
     fmt
     llvmPackages_19.clang-unwrapped
     llvmPackages_19.clangUseLLVM
-  ];
+  ]);
 
   cmakeFlags = [
     "-GNinja"
