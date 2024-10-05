@@ -229,6 +229,7 @@ find_package(Boost REQUIRED COMPONENTS filesystem preprocessor)
 find_package(BDWgc CONFIG REQUIRED)
 find_package(libzippp CONFIG REQUIRED)
 find_package(CLI11 CONFIG REQUIRED)
+find_package(OpenSSL CONFIG REQUIRED)
 #find_package(libassert CONFIG REQUIRED)
 
 target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
@@ -243,6 +244,7 @@ target_link_libraries(
   readline
   clangInterpreter
   Boost::boost
+  OpenSSL::SSL
 )
 
 jank_hook_llvm(jank_lib)
