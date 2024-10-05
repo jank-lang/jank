@@ -6,45 +6,48 @@
 }:
 
 let
-  llvm = pkgs.llvm_19;
-  stdenv = llvm.stdenv;
   lib = pkgs.lib;
 
   # Deps
   boost = pkgs.callPackage ./nix/boost.nix { };
   boehmgc = pkgs.callPackage ./nix/boehmgc.nix { };
   libzippp = pkgs.callPackage ./nix/libzippp.nix { };
+  openssl = pkgs.callPackage ./nix/openssl.nix { };
 in
 
-stdenv.mkDerivation {
+pkgs.stdenv.mkDerivation {
   pname = "jank-lang";
   version = "dev";
   src = lib.cleanSource ./.;
 
   nativeBuildInputs = with pkgs; [
-    llvm
+    llvm_19
     cmake
     git
     ninja
   ];
 
+  patchPhase = ''
+    patchShebangs --host "${pkgs.bash}" bin/build-pch
+  '';
+
   buildInputs = [
     boost
     boehmgc
     libzippp
-  ] ++ (with pkgs; [
     openssl
-    doctest
-    double-conversion
-    readline
-    libzip
-    immer
-    cli11
-    magic-enum
-    fmt
-    llvmPackages_19.clang-unwrapped
-    llvmPackages_19.clangUseLLVM
-  ]);
+    pkgs.libcxx
+    pkgs.doctest
+    pkgs.double-conversion
+    pkgs.readline
+    pkgs.libzip
+    pkgs.immer
+    pkgs.cli11
+    pkgs.magic-enum
+    pkgs.fmt
+    pkgs.llvmPackages_19.clang-unwrapped
+    pkgs.llvmPackages_19.clangUseLLVM
+  ];
 
   cmakeFlags = [
     "-GNinja"
