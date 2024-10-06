@@ -564,6 +564,7 @@ namespace jank::read
                 {
                   case 'n':
                   case 't':
+                  case 'r':
                   case '"':
                     break;
                   default:
