@@ -962,11 +962,11 @@ namespace jank::read::lex
 
       SUBCASE("With escapes")
       {
-        processor p{ R"("foo\"\nbar\nspam\t")" };
+        processor p{ R"("foo\"\nbar\nspam\t\r")" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 20, token_kind::escaped_string, "foo\\\"\\nbar\\nspam\\t"sv }
+                { 0, 22, token_kind::escaped_string, "foo\\\"\\nbar\\nspam\\t\\r"sv }
         }));
       }
 
