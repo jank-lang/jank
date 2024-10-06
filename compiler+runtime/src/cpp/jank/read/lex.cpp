@@ -566,6 +566,13 @@ namespace jank::read
                   case 't':
                   case 'r':
                   case '"':
+                  case '\'':
+                  case '?':
+                  case '\\':
+                  case 'a':
+                  case 'b':
+                  case 'f':
+                  case 'v':
                     break;
                   default:
                     return err(error{ pos, "unsupported escape character" });
