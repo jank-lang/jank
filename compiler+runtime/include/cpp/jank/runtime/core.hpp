@@ -27,4 +27,6 @@ namespace jank::runtime
   native_persistent_string namespace_(object_ptr o);
 
   native_bool is_callable(object_ptr o);
+
+  native_hash to_hash(object_ptr o);
 }

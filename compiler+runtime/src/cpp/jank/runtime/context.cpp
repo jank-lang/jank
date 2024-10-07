@@ -14,6 +14,7 @@
 #include <jank/util/mapped_file.hpp>
 #include <jank/util/process_location.hpp>
 #include <jank/util/clang_format.hpp>
+#include <jank/codegen/llvm_processor.hpp>
 
 namespace jank::runtime
 {
@@ -215,6 +216,21 @@ namespace jank::runtime
     }
 
     assert(ret);
+    return ret;
+  }
+
+  object_ptr context::read_string(native_persistent_string_view const &code)
+  {
+    profile::timer timer{ "rt read_string" };
+    read::lex::processor l_prc{ code };
+    read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+
+    object_ptr ret{ obj::nil::nil_const() };
+    for(auto const &form : p_prc)
+    {
+      ret = form.expect_ok().unwrap().ptr;
+    }
+
     return ret;
   }
 
@@ -554,9 +570,12 @@ namespace jank::runtime
     auto const &module(
       expect_object<runtime::ns>(intern_var("clojure.core", "*ns*").expect_ok()->deref())
         ->to_string());
-    codegen::processor cg_prc{ *this, wrapped_expr, module, codegen::compilation_target::repl };
 
-    return make_box(util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
+    codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::repl };
+    return make_box(cg_prc.to_string());
+
+    //codegen::processor cg_prc{ *this, wrapped_expr, module, codegen::compilation_target::repl };
+    //return make_box(util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
   }
 
   object_ptr context::print(object_ptr const o)

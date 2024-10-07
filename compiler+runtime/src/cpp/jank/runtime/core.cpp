@@ -234,4 +234,13 @@ namespace jank::runtime
       },
       o);
   }
+
+  native_hash to_hash(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> native_hash {
+        return typed_o->to_hash();
+      },
+      o);
+  }
 }

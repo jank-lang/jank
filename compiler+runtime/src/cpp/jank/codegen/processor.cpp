@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/character.hpp>

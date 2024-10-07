@@ -76,6 +76,7 @@ namespace jank::runtime
 
     object_ptr eval_file(native_persistent_string_view const &path);
     object_ptr eval_string(native_persistent_string_view const &code);
+    object_ptr read_string(native_persistent_string_view const &code);
     native_vector<analyze::expression_ptr>
     analyze_string(native_persistent_string_view const &code, native_bool const eval = true);
 

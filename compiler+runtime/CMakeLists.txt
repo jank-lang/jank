@@ -132,6 +132,7 @@ endfunction()
 
 add_library(
   jank_lib STATIC
+  src/cpp/jank/c_api.cpp
   src/cpp/jank/hash.cpp
   src/cpp/jank/util/cli.cpp
   src/cpp/jank/util/sha256.cpp
@@ -199,6 +200,7 @@ add_library(
   src/cpp/jank/analyze/step/force_boxed.cpp
   src/cpp/jank/evaluate.cpp
   src/cpp/jank/codegen/processor.cpp
+  src/cpp/jank/codegen/llvm_processor.cpp
   src/cpp/jank/jit/processor.cpp
 )
 
