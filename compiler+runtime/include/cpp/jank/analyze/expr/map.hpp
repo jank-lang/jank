@@ -11,6 +11,7 @@ namespace jank::analyze::expr
   {
     native_vector<std::pair<native_box<E>, native_box<E>>> data_exprs;
     option<object_ptr> meta;
+    object_ptr data{};
 
     object_ptr to_runtime_data() const
     {

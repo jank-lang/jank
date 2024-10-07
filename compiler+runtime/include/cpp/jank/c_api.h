@@ -22,6 +22,8 @@ extern "C"
   jank_object_ptr jank_var_intern(jank_object_ptr ns, jank_object_ptr name);
   jank_object_ptr jank_var_bind_root(jank_object_ptr var, jank_object_ptr val);
 
+  jank_object_ptr jank_keyword_intern(jank_object_ptr ns, jank_object_ptr name);
+
   jank_object_ptr jank_deref(jank_object_ptr o);
 
   jank_object_ptr jank_call0(jank_object_ptr f);
@@ -36,6 +38,8 @@ extern "C"
   jank_object_ptr jank_create_integer(jank_native_integer i);
   jank_object_ptr jank_create_real(jank_native_real r);
   jank_object_ptr jank_create_string(char const *s);
+  jank_object_ptr jank_create_symbol(jank_object_ptr ns, jank_object_ptr name);
+  jank_object_ptr jank_create_character(char const *s);
 
   jank_object_ptr jank_create_function0(jank_object_ptr (*f)());
   jank_object_ptr jank_create_function1(jank_object_ptr (*f)(jank_object_ptr));

@@ -30,9 +30,12 @@ namespace jank::codegen
   {
     assert(root_fn.frame.data);
 
-    install_global_ctors();
+    create_global_ctor();
     create_function();
     gen();
+
+    llvm::verifyFunction(*fn);
+    llvm::verifyFunction(*global_ctor_block->getParent());
   }
 
   void llvm_processor::create_function()
@@ -43,7 +46,6 @@ namespace jank::codegen
                                 llvm::Function::ExternalLinkage,
                                 munged_name.c_str(),
                                 *module);
-    llvm::verifyFunction(*fn);
 
     auto const entry(llvm::BasicBlock::Create(*context, "entry", fn));
     builder->SetInsertPoint(entry);
@@ -74,7 +76,6 @@ namespace jank::codegen
   {
     auto const ref(gen_var(expr.name));
 
-    /* TODO: Move vars into globals. */
     if(expr.value.is_some())
     {
       auto const fn_type(llvm::FunctionType::get(builder->getPtrTy(),
@@ -155,77 +156,50 @@ namespace jank::codegen
       [&](auto const typed_o) -> llvm::Value * {
         using T = typename decltype(typed_o)::value_type;
 
-        if constexpr(std::same_as<T, runtime::obj::nil>)
+        if constexpr(std::same_as<T, runtime::obj::nil> || std::same_as<T, runtime::obj::boolean>
+                     || std::same_as<T, runtime::obj::integer>
+                     || std::same_as<T, runtime::obj::real> || std::same_as<T, runtime::obj::symbol>
+                     || std::same_as<T, runtime::obj::character>
+                     || std::same_as<T, runtime::obj::keyword>
+                     || std::same_as<T, runtime::obj::persistent_string>)
         {
-          return nil_global();
+          return gen_global(typed_o);
         }
-        else if constexpr(std::same_as<T, runtime::obj::boolean>)
+        else if constexpr(std::same_as<T, runtime::obj::persistent_vector>
+                          || std::same_as<T, runtime::obj::persistent_list>
+                          || std::same_as<T, runtime::obj::persistent_hash_set>
+                          || std::same_as<T, runtime::obj::persistent_array_map>
+                          || std::same_as<T, runtime::obj::persistent_hash_map>
+                          /* Cons, etc. */
+                          || runtime::behavior::seqable<T>)
         {
-        }
-        else if constexpr(std::same_as<T, runtime::obj::integer>)
-        {
-        }
-        else if constexpr(std::same_as<T, runtime::obj::real>)
-        {
-        }
-        else if constexpr(std::same_as<T, runtime::obj::symbol>)
-        {
-        }
-        else if constexpr(std::same_as<T, runtime::obj::character>)
-        {
-        }
-        else if constexpr(std::same_as<T, runtime::obj::keyword>)
-        {
-        }
-        else if constexpr(std::same_as<T, runtime::obj::persistent_string>)
-        {
-          return string_global(typed_o);
-        }
-        else if constexpr(std::same_as<T, runtime::obj::persistent_vector>)
-        {
-        }
-        else if constexpr(std::same_as<T, runtime::obj::persistent_list>)
-        {
-        }
-        else if constexpr(std::same_as<T, runtime::obj::persistent_hash_set>)
-        {
-        }
-        else if constexpr(std::same_as<T, runtime::obj::persistent_array_map>)
-        {
-        }
-        else if constexpr(std::same_as<T, runtime::obj::persistent_hash_map>)
-        {
-        }
-        /* Cons, etc. */
-        else if constexpr(runtime::behavior::seqable<T>)
-        {
+          return gen_global_from_read_string(typed_o);
         }
         else
         {
           throw std::runtime_error{ fmt::format("unimplemented constant codegen: {}\n",
                                                 typed_o->to_string()) };
         }
-        return nullptr;
       },
       expr.data);
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::vector<analyze::expression> const &,
+  llvm::Value *llvm_processor::gen(analyze::expr::vector<analyze::expression> const &expr,
                                    analyze::expr::function_arity<analyze::expression> const &)
   {
-    return nullptr;
+    return gen_global_from_read_string(expr.data);
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::map<analyze::expression> const &,
+  llvm::Value *llvm_processor::gen(analyze::expr::map<analyze::expression> const &expr,
                                    analyze::expr::function_arity<analyze::expression> const &)
   {
-    return nullptr;
+    return gen_global_from_read_string(expr.data);
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::set<analyze::expression> const &,
+  llvm::Value *llvm_processor::gen(analyze::expr::set<analyze::expression> const &expr,
                                    analyze::expr::function_arity<analyze::expression> const &)
   {
-    return nullptr;
+    return gen_global_from_read_string(expr.data);
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::local_reference const &,
@@ -272,13 +246,12 @@ namespace jank::codegen
         {
           if(!last)
           {
-            builder->CreateRet(nil_global());
+            return builder->CreateRet(gen_global(obj::nil::nil_const()));
           }
           else
           {
-            builder->CreateRet(last);
+            return builder->CreateRet(last);
           }
-          return nullptr;
         }
     }
   }
@@ -319,15 +292,6 @@ namespace jank::codegen
     auto const global(module->getOrInsertGlobal(name, builder->getPtrTy()));
     var_globals[qualified_name] = global;
 
-    //llvm::IRBuilder<> builder{ *context };
-    //auto const init_type(llvm::FunctionType::get(builder.getVoidTy(), false));
-    //auto const init(llvm::Function::Create(init_type,
-    //                                       llvm::Function::InternalLinkage,
-    //                                       "jank_global_var_init",
-    //                                       *module));
-    //auto const entry(llvm::BasicBlock::Create(*context, "entry", init));
-    //builder.SetInsertPoint(entry);
-
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
       builder->SetInsertPoint(global_ctor_block);
@@ -336,63 +300,130 @@ namespace jank::codegen
                                                  false));
       auto const fn(module->getOrInsertFunction("jank_var_intern", fn_type));
 
-      llvm::SmallVector<llvm::Value *, 2> args{
-        builder->CreateGlobalStringPtr(qualified_name->ns.c_str()),
-        builder->CreateGlobalStringPtr(qualified_name->name.c_str())
-      };
+      llvm::SmallVector<llvm::Value *, 2> args{ gen_c_string(qualified_name->ns.c_str()),
+                                                gen_c_string(qualified_name->name.c_str()) };
       auto const call(builder->CreateCall(fn, args));
       builder->CreateStore(call, global);
     }
 
-    //builder.CreateRet(call);
-
-    //llvm::verifyFunction(*init);
-
-    //global_ctors.emplace_back(init);
-
     return global;
   }
 
-  llvm::Value *llvm_processor::nil_global()
+  llvm::Value *llvm_processor::gen_c_string(native_persistent_string const &s)
   {
-    auto const found(literal_globals.find(obj::nil::nil_const()));
+    auto const found(c_string_globals.find(s));
+    if(found != c_string_globals.end())
+    {
+      return found->second;
+    }
+    return c_string_globals[s] = builder->CreateGlobalStringPtr(s.c_str());
+  }
+
+  llvm::Value *llvm_processor::gen_global(obj::nil_ptr const nil)
+  {
+    auto const found(literal_globals.find(nil));
     if(found != literal_globals.end())
     {
       return found->second;
     }
 
-    auto &global(literal_globals[obj::nil::nil_const()]);
+    auto &global(literal_globals[nil]);
     global = module->getOrInsertGlobal("nil", builder->getPtrTy());
-
-    //llvm::IRBuilder<> builder{ *context };
-    //auto const init_type(llvm::FunctionType::get(builder.getVoidTy(), false));
-    //auto const init(llvm::Function::Create(init_type,
-    //                                       llvm::Function::InternalLinkage,
-    //                                       "jank_global_nil_init",
-    //                                       *module));
-    //auto const entry(llvm::BasicBlock::Create(*context, "entry", init));
-    //builder.SetInsertPoint(entry);
-
-    auto const create_fn_type(llvm::FunctionType::get(builder->getPtrTy(), false));
-    auto const create_fn(module->getOrInsertFunction("jank_nil", create_fn_type));
 
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
       builder->SetInsertPoint(global_ctor_block);
+
+      auto const create_fn_type(llvm::FunctionType::get(builder->getPtrTy(), false));
+      auto const create_fn(module->getOrInsertFunction("jank_nil", create_fn_type));
       auto const call(builder->CreateCall(create_fn));
       builder->CreateStore(call, global);
     }
 
-    //builder.CreateRetVoid();
+    return global;
+  }
 
-    //llvm::verifyFunction(*init);
+  llvm::Value *llvm_processor::gen_global(obj::boolean_ptr const b)
+  {
+    auto const found(literal_globals.find(b));
+    if(found != literal_globals.end())
+    {
+      return found->second;
+    }
 
-    //global_ctors.emplace_back(init);
+    auto &global(literal_globals[b]);
+    auto const name(b->data ? "true" : "false");
+    global = module->getOrInsertGlobal(name, builder->getPtrTy());
+
+    {
+      llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
+      builder->SetInsertPoint(global_ctor_block);
+
+      auto const create_fn_type(llvm::FunctionType::get(builder->getPtrTy(), false));
+      auto const create_fn(
+        module->getOrInsertFunction(fmt::format("jank_{}", name), create_fn_type));
+      auto const call(builder->CreateCall(create_fn));
+      builder->CreateStore(call, global);
+    }
 
     return global;
   }
 
-  llvm::Value *llvm_processor::string_global(obj::persistent_string_ptr const s)
+  llvm::Value *llvm_processor::gen_global(obj::integer_ptr const i)
+  {
+    auto const found(literal_globals.find(i));
+    if(found != literal_globals.end())
+    {
+      return found->second;
+    }
+
+    auto &global(literal_globals[i]);
+    auto const name(fmt::format("int_{}", i->data));
+    global = module->getOrInsertGlobal(name, builder->getPtrTy());
+
+    {
+      llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
+      builder->SetInsertPoint(global_ctor_block);
+
+      auto const create_fn_type(
+        llvm::FunctionType::get(builder->getPtrTy(), { builder->getPtrTy() }, false));
+      auto const create_fn(module->getOrInsertFunction("jank_create_integer", create_fn_type));
+      auto const arg(llvm::ConstantInt::getSigned(builder->getInt64Ty(), i->data));
+      auto const call(builder->CreateCall(create_fn, { arg }));
+      builder->CreateStore(call, global);
+    }
+
+    return global;
+  }
+
+  llvm::Value *llvm_processor::gen_global(obj::real_ptr const r)
+  {
+    auto const found(literal_globals.find(r));
+    if(found != literal_globals.end())
+    {
+      return found->second;
+    }
+
+    auto &global(literal_globals[r]);
+    auto const name(fmt::format("real_{}", r->to_hash()));
+    global = module->getOrInsertGlobal(name, builder->getPtrTy());
+
+    {
+      llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
+      builder->SetInsertPoint(global_ctor_block);
+
+      auto const create_fn_type(
+        llvm::FunctionType::get(builder->getPtrTy(), { builder->getPtrTy() }, false));
+      auto const create_fn(module->getOrInsertFunction("jank_create_integer", create_fn_type));
+      auto const arg(llvm::ConstantFP::get(builder->getDoubleTy(), r->data));
+      auto const call(builder->CreateCall(create_fn, { arg }));
+      builder->CreateStore(call, global);
+    }
+
+    return global;
+  }
+
+  llvm::Value *llvm_processor::gen_global(obj::persistent_string_ptr const s)
   {
     auto const found(literal_globals.find(s));
     if(found != literal_globals.end())
@@ -404,15 +435,6 @@ namespace jank::codegen
     auto const name(fmt::format("string_{}", s->to_hash()));
     global = module->getOrInsertGlobal(name, builder->getPtrTy());
 
-    //llvm::IRBuilder<> builder{ *context };
-    //auto const init_type(llvm::FunctionType::get(builder.getVoidTy(), false));
-    //auto const init(llvm::Function::Create(init_type,
-    //                                       llvm::Function::InternalLinkage,
-    //                                       "jank_global_string_init",
-    //                                       *module));
-    //auto const entry(llvm::BasicBlock::Create(*context, "entry", init));
-    //builder.SetInsertPoint(entry);
-
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
       builder->SetInsertPoint(global_ctor_block);
@@ -421,45 +443,143 @@ namespace jank::codegen
         llvm::FunctionType::get(builder->getPtrTy(), { builder->getPtrTy() }, false));
       auto const create_fn(module->getOrInsertFunction("jank_create_string", create_fn_type));
 
-      llvm::SmallVector<llvm::Value *, 1> args{ builder->CreateGlobalStringPtr(s->data.c_str()) };
+      llvm::SmallVector<llvm::Value *, 1> args{ gen_c_string(s->data.c_str()) };
       auto const call(builder->CreateCall(create_fn, args));
       builder->CreateStore(call, global);
     }
-    //builder.CreateRetVoid();
-
-    //llvm::verifyFunction(*init);
-
-    //global_ctors.emplace_back(init);
 
     return global;
   }
 
-  void llvm_processor::install_global_ctors()
+  llvm::Value *llvm_processor::gen_global(obj::symbol_ptr const s)
   {
-    //if(global_ctors.empty())
-    //{
-    //  return;
-    //}
+    auto const found(literal_globals.find(s));
+    if(found != literal_globals.end())
+    {
+      return found->second;
+    }
 
-    //return;
+    auto &global(literal_globals[s]);
+    auto const name(fmt::format("symbol_{}", s->to_hash()));
+    global = module->getOrInsertGlobal(name, builder->getPtrTy());
 
+    {
+      llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
+      builder->SetInsertPoint(global_ctor_block);
+
+      auto const create_fn_type(
+        llvm::FunctionType::get(builder->getPtrTy(),
+                                { builder->getPtrTy(), builder->getPtrTy() },
+                                false));
+      auto const create_fn(module->getOrInsertFunction("jank_create_symbol", create_fn_type));
+
+      llvm::SmallVector<llvm::Value *, 2> args{ gen_c_string(s->ns.c_str()),
+                                                gen_c_string(s->name.c_str()) };
+      auto const call(builder->CreateCall(create_fn, args));
+      builder->CreateStore(call, global);
+    }
+
+    return global;
+  }
+
+  llvm::Value *llvm_processor::gen_global(obj::keyword_ptr const k)
+  {
+    auto const found(literal_globals.find(k));
+    if(found != literal_globals.end())
+    {
+      return found->second;
+    }
+
+    auto &global(literal_globals[k]);
+    auto const name(fmt::format("keyword_{}", k->to_hash()));
+    global = module->getOrInsertGlobal(name, builder->getPtrTy());
+
+    {
+      llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
+      builder->SetInsertPoint(global_ctor_block);
+
+      auto const create_fn_type(
+        llvm::FunctionType::get(builder->getPtrTy(),
+                                { builder->getPtrTy(), builder->getPtrTy() },
+                                false));
+      auto const create_fn(module->getOrInsertFunction("jank_create_keyword", create_fn_type));
+
+      llvm::SmallVector<llvm::Value *, 2> args{ gen_c_string(k->sym.ns.c_str()),
+                                                gen_c_string(k->sym.name.c_str()) };
+      auto const call(builder->CreateCall(create_fn, args));
+      builder->CreateStore(call, global);
+    }
+
+    return global;
+  }
+
+  llvm::Value *llvm_processor::gen_global(obj::character_ptr const c)
+  {
+    auto const found(literal_globals.find(c));
+    if(found != literal_globals.end())
+    {
+      return found->second;
+    }
+
+    auto &global(literal_globals[c]);
+    auto const name(fmt::format("char_{}", c->to_hash()));
+    global = module->getOrInsertGlobal(name, builder->getPtrTy());
+
+    {
+      llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
+      builder->SetInsertPoint(global_ctor_block);
+
+      auto const create_fn_type(
+        llvm::FunctionType::get(builder->getPtrTy(), { builder->getPtrTy() }, false));
+      auto const create_fn(module->getOrInsertFunction("jank_create_character", create_fn_type));
+
+      llvm::SmallVector<llvm::Value *, 1> args{ gen_c_string(c->to_string()) };
+      auto const call(builder->CreateCall(create_fn, args));
+      builder->CreateStore(call, global);
+    }
+
+    return global;
+  }
+
+  llvm::Value *llvm_processor::gen_global_from_read_string(object_ptr const o)
+  {
+    auto const found(literal_globals.find(o));
+    if(found != literal_globals.end())
+    {
+      return found->second;
+    }
+
+    auto &global(literal_globals[o]);
+    auto const name(fmt::format("data_{}", to_hash(o)));
+    global = module->getOrInsertGlobal(name, builder->getPtrTy());
+
+    {
+      llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
+      builder->SetInsertPoint(global_ctor_block);
+
+      auto const create_fn_type(
+        llvm::FunctionType::get(builder->getPtrTy(), { builder->getPtrTy() }, false));
+      auto const create_fn(module->getOrInsertFunction("jank_read_string", create_fn_type));
+
+      llvm::SmallVector<llvm::Value *, 1> args{ gen_c_string(runtime::to_string(o)) };
+      auto const call(builder->CreateCall(create_fn, args));
+      builder->CreateStore(call, global);
+    }
+
+    return global;
+  }
+
+  void llvm_processor::create_global_ctor()
+  {
     llvm::IRBuilder<> builder{ *context };
     auto const init_type(llvm::FunctionType::get(builder.getVoidTy(), false));
     auto const init(llvm::Function::Create(init_type,
                                            llvm::Function::InternalLinkage,
                                            "jank_global_init",
                                            *module));
-    //auto const entry(llvm::BasicBlock::Create(*context, "entry", init));
-    //builder.SetInsertPoint(entry);
     global_ctor_block->insertInto(init);
 
-    //for(auto const ctor : global_ctors)
-    //{
-    //  builder.CreateCall(ctor);
-    //}
     llvm::appendToGlobalCtors(*module, init, 65535);
-
-    llvm::verifyFunction(*init);
   }
 
   native_persistent_string llvm_processor::to_string()

@@ -62,13 +62,22 @@ namespace jank::codegen
                      analyze::expr::function_arity<analyze::expression> const &);
 
     llvm::Value *gen_var(obj::symbol_ptr qualified_name);
+    llvm::Value *gen_c_string(native_persistent_string const &s);
 
     native_persistent_string to_string();
 
     void create_function();
-    void install_global_ctors();
-    llvm::Value *nil_global();
-    llvm::Value *string_global(obj::persistent_string_ptr const s);
+    void create_global_ctor();
+
+    llvm::Value *gen_global(obj::nil_ptr);
+    llvm::Value *gen_global(obj::boolean_ptr b);
+    llvm::Value *gen_global(obj::integer_ptr i);
+    llvm::Value *gen_global(obj::real_ptr r);
+    llvm::Value *gen_global(obj::persistent_string_ptr s);
+    llvm::Value *gen_global(obj::symbol_ptr s);
+    llvm::Value *gen_global(obj::keyword_ptr k);
+    llvm::Value *gen_global(obj::character_ptr c);
+    llvm::Value *gen_global_from_read_string(object_ptr o);
 
     /* This is stored just to keep the expression alive. */
     analyze::expression_ptr root_expr{};
@@ -85,7 +94,7 @@ namespace jank::codegen
     llvm::Value *nil{};
     native_unordered_map<object_ptr, llvm::Value *> literal_globals;
     native_unordered_map<obj::symbol_ptr, llvm::Value *> var_globals;
-    native_vector<llvm::Function *> global_ctors;
+    native_unordered_map<native_persistent_string, llvm::Value *> c_string_globals;
     llvm::BasicBlock *global_ctor_block{};
   };
 }

@@ -837,8 +837,7 @@ namespace jank::analyze
     }
 
     auto const condition(o->data.rest().first().unwrap());
-    auto condition_expr(
-      analyze(condition, current_frame, expression_type::nested, fn_ctx, false));
+    auto condition_expr(analyze(condition, current_frame, expression_type::nested, fn_ctx, false));
     if(condition_expr.is_err())
     {
       return condition_expr.expect_err_move();
@@ -1282,7 +1281,8 @@ namespace jank::analyze
     return make_box<expression>(expr::vector<expression>{
       expression_base{ {}, expr_type, current_frame, true },
       std::move(exprs),
-      o->meta
+      o->meta,
+      o
     });
   }
 
@@ -1315,7 +1315,8 @@ namespace jank::analyze
     return make_box<expression>(expr::map<expression>{
       expression_base{ {}, expr_type, current_frame, true },
       std::move(exprs),
-      o->meta
+      o->meta,
+      o
     });
   }
 
@@ -1365,7 +1366,8 @@ namespace jank::analyze
     return make_box<expression>(expr::set<expression>{
       expression_base{ {}, expr_type, current_frame, true },
       std::move(exprs),
-      o->meta
+      o->meta,
+      o
     });
   }
 
@@ -1402,8 +1404,7 @@ namespace jank::analyze
         return found_special->second(o, current_frame, expr_type, fn_ctx, needs_box);
       }
 
-      auto sym_result(
-        analyze_symbol(sym, current_frame, expression_type::nested, fn_ctx, true));
+      auto sym_result(analyze_symbol(sym, current_frame, expression_type::nested, fn_ctx, true));
       if(sym_result.is_err())
       {
         return sym_result;
@@ -1466,8 +1467,7 @@ namespace jank::analyze
     }
     else
     {
-      auto callable_expr(
-        analyze(first, current_frame, expression_type::nested, fn_ctx, needs_box));
+      auto callable_expr(analyze(first, current_frame, expression_type::nested, fn_ctx, needs_box));
       if(callable_expr.is_err())
       {
         return callable_expr;

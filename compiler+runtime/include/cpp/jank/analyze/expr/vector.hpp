@@ -11,6 +11,7 @@ namespace jank::analyze::expr
   {
     native_vector<native_box<E>> data_exprs;
     option<object_ptr> meta;
+    obj::persistent_vector_ptr data{};
 
     object_ptr to_runtime_data() const
     {
