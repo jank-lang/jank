@@ -79,8 +79,8 @@ namespace jank::read::parse
       lex::processor lp{ "12.34" };
       processor p{ lp.begin(), lp.end() };
       auto const r(p.next());
-      CHECK(equal(r.expect_ok().unwrap().ptr, make_box(12.34l)));
-      CHECK(r.expect_ok().unwrap().start == lex::token{ 0, 5, lex::token_kind::real, 12.34l });
+      CHECK(equal(r.expect_ok().unwrap().ptr, make_box(12.34)));
+      CHECK(r.expect_ok().unwrap().start == lex::token{ 0, 5, lex::token_kind::real, 12.34 });
       CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
     }
 

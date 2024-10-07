@@ -17,7 +17,7 @@ namespace jank
                                              false>;
 
   using native_integer = long long;
-  using native_real = long double;
+  using native_real = double;
   using native_bool = bool;
   using native_hash = uint32_t;
   using native_persistent_string_view = std::string_view;

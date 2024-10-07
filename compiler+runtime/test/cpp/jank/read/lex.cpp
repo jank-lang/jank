@@ -453,7 +453,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 2, token_kind::real, 0.0l }
+                { 0, 2, token_kind::real, 0.0 }
         }));
       }
 
@@ -463,7 +463,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 3, token_kind::real, 0.0l }
+                { 0, 3, token_kind::real, 0.0 }
         }));
       }
 
@@ -473,7 +473,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 3, token_kind::real, -1.0l }
+                { 0, 3, token_kind::real, -1.0 }
         }));
       }
 
@@ -483,7 +483,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 4, token_kind::real, -1.5l }
+                { 0, 4, token_kind::real, -1.5 }
         }));
       }
 
@@ -493,7 +493,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 10, token_kind::real, -1234.1234l }
+                { 0, 10, token_kind::real, -1234.1234 }
         }));
       }
 
@@ -562,7 +562,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_results({
-                  token{ 0, 5, token_kind::real, 12.34l },
+                  token{ 0, 5, token_kind::real, 12.34 },
                   error{ 5, "expected whitespace before next token" },
                   token{ 5, 3, token_kind::symbol, "abc"sv },
           }));
@@ -575,7 +575,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   token{ 0, token_kind::open_paren },
-                  token{ 1, 5, token_kind::real, 12.34l },
+                  token{ 1, 5, token_kind::real, 12.34 },
                   token{ 6, token_kind::close_paren },
           }));
         }

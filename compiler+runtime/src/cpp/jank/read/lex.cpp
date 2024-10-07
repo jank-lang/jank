@@ -415,7 +415,7 @@ namespace jank::read
                 return ok(token{ token_start,
                                  pos - token_start,
                                  token_kind::real,
-                                 std::strtold(file.data() + token_start, nullptr) });
+                                 std::strtod(file.data() + token_start, nullptr) });
               }
               else
               {
