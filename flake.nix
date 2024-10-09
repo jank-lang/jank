@@ -30,6 +30,7 @@
             programs.shellcheck.enable = true;
             programs.nixfmt.enable = true;
             programs.actionlint.enable = true;
+            programs.clang-format.enable = true;
           };
 
           devShells.default = pkgs.mkShell {
