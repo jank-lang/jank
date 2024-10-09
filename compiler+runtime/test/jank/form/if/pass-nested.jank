@@ -1,12 +1,12 @@
 (def consistent?
   (fn* [n]
-    (if (even? n)
-      (if (even? n)
-        :consistently-even
-        :inconsistently-even)
-      (if (even? n)
-        :inconsistently-odd
-        :consistently-odd))))
+       (if (even? n)
+         (if (even? n)
+           :consistently-even
+           :inconsistently-even)
+         (if (even? n)
+           :inconsistently-odd
+           :consistently-odd))))
 (assert (= :consistently-even (consistent? 0)))
 (assert (= :consistently-odd (consistent? 1)))
 

@@ -1,10 +1,10 @@
 (def do-fn
   (fn* [x?]
-    (if x?
-      (do
-        (assert x?)
-        x?)
-      false)))
+       (if x?
+         (do
+           (assert x?)
+           x?)
+         false)))
 
 (assert (= true (do-fn true)))
 (assert (= false (do-fn false)))

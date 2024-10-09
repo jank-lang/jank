@@ -1,5 +1,3 @@
 (try
-  (catch a
-    )
-  (catch b
-    ))
+  (catch a)
+  (catch b))

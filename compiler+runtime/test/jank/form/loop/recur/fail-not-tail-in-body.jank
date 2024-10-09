@@ -1,4 +1,4 @@
 (def not-tail
   (loop* [n 1]
-    (recur (+ n -1))
-    n))
+         (recur (+ n -1))
+         n))

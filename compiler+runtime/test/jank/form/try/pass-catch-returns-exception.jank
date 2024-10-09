@@ -1,4 +1,4 @@
 (try
   (throw :success)
   (catch e
-    e))
+         e))

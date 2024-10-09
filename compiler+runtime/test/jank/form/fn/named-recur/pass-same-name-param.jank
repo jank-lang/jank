@@ -1,7 +1,7 @@
 (assert (= :wow
            ((fn* wow [wow]
-              (wow))
+                 (wow))
             (fn* []
-              :wow))))
+                 :wow))))
 
 :success

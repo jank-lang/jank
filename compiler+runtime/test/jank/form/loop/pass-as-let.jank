@@ -1,38 +1,38 @@
 ; Top-level, as a let
 (loop* [a 1
         b 2]
-  (assert (= [1 2] [a b])))
+       (assert (= [1 2] [a b])))
 
 ; Nested expression, as a let.
 (assert (= 1 (loop* [a 1
                      b (if (= 1 a)
                          :bee
                          :uh-oh)]
-               (assert (= b :bee))
-               a)))
+                    (assert (= b :bee))
+                    a)))
 
 ; Within fns.
 (def fn-with-let
   (fn* [n]
-    (loop* [n+1 (+ 1 n)
-            n-1 (+ n+1 -2)]
-      [n+1 n-1])))
+       (loop* [n+1 (+ 1 n)
+               n-1 (+ n+1 -2)]
+              [n+1 n-1])))
 (assert (= (fn-with-let 0) [1 -1]))
 (assert (= (fn-with-let 100) [101 99]))
 
 ; Fn values within loop* as a let*.
 (loop* [inc (fn* [n]
-              (+ 1 n))
+                 (+ 1 n))
         also-inc inc
         kw->str (fn* [kw]
-                  (str kw))]
-  (assert (= (inc -7) (also-inc -7)))
-  (assert (= ":foo" (kw->str :foo))))
+                     (str kw))]
+       (assert (= (inc -7) (also-inc -7)))
+       (assert (= ":foo" (kw->str :foo))))
 
 ; loop* within loop*.
 (loop* [a 5
         b (loop* [c -2]
-            (+ a c))]
-  (assert (= b 3)))
+                 (+ a c))]
+       (assert (= b 3)))
 
 :success

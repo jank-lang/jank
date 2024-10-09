@@ -47,10 +47,10 @@
 
 (defn print-help! [& _args]
   (pp/print-table
-    (map (fn [[sub fn-ref]]
-           {:sub-command (name sub)
-            :help (-> fn-ref meta :doc)})
-         subtask-kw->var)))
+   (map (fn [[sub fn-ref]]
+          {:sub-command (name sub)
+           :help (-> fn-ref meta :doc)})
+        subtask-kw->var)))
 
 (defn jank
   "Compile, run and repl into jank"

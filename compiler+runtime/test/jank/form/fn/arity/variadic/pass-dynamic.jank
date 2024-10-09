@@ -1,13 +1,13 @@
 (def variadic
   (fn*
-    ([] 0)
-    ([a] 1)
-    ([a b] 2)
-    ([a b & args] args)))
+   ([] 0)
+   ([a] 1)
+   ([a b] 2)
+   ([a b & args] args)))
 
 (def dynamic+variadic
   (fn* [f]
-    (f 'wow 'two {} nil :meow)))
+       (f 'wow 'two {} nil :meow)))
 (assert (= (dynamic+variadic variadic) [{} nil :meow]))
 
 :success

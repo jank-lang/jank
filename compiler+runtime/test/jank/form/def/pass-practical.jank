@@ -23,7 +23,7 @@
 (def a :default)
 (def change-a
   (fn* [v]
-    (def a v)))
+       (def a v)))
 (assert (= a :default))
 (change-a :meow)
 (assert (= a :meow))

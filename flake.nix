@@ -31,6 +31,13 @@
             programs.nixfmt.enable = true;
             programs.actionlint.enable = true;
             programs.clang-format.enable = true;
+            programs.cljfmt.enable = true;
+
+            settings.formatter = {
+              cljfmt.includes = [
+                "*.jank"
+              ];
+            };
           };
 
           devShells.default = pkgs.mkShell {

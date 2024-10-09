@@ -1,6 +1,6 @@
 (assert (= 55 (loop* [sum 0
                       cnt 10]
-                (if (= cnt 0)
-                  sum
-                  (recur (+ cnt sum) (dec cnt))))))
+                     (if (= cnt 0)
+                       sum
+                       (recur (+ cnt sum) (dec cnt))))))
 :success

@@ -1,6 +1,6 @@
 (do
   (let* [a 1
          b 2]
-    (assert (= b (+ a a)))))
+        (assert (= b (+ a a)))))
 
 :success

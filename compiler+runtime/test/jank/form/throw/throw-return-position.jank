@@ -1,4 +1,4 @@
 (def foo (fn* []
-           (throw :success)))
+              (throw :success)))
 
 (foo)

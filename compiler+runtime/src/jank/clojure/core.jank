@@ -4,117 +4,117 @@
 ; Syntax quoting.
 (def unquote
   (fn* unquote [_]
-    (throw "~ cannot be used outside of syntax quote")))
+       (throw "~ cannot be used outside of syntax quote")))
 (def unquote-splicing
   (fn* unquote-splicing [_]
-    (throw "~@ cannot be used outside of syntax quote")))
+       (throw "~@ cannot be used outside of syntax quote")))
 
 (def type
   (fn* type [o]
-    (native/raw "__value = make_box(magic_enum::enum_name(~{ o }->type));")))
+       (native/raw "__value = make_box(magic_enum::enum_name(~{ o }->type));")))
 
 ; Exceptions
 (def ex-info
   (fn* ex-info [msg map]
-    {:error msg
-     :data map}))
+       {:error msg
+        :data map}))
 
 ; Relations.
 ;; Miscellaneous.
 (def nil?
   (fn* nil? [o]
-    (native/raw "__value = (o == obj::nil::nil_const()) ? ~{ true } : ~{ false }")))
+       (native/raw "__value = (o == obj::nil::nil_const()) ? ~{ true } : ~{ false }")))
 
 (def
   ^{:doc "Tests if 2 arguments are the same object"}
   identical?
   (fn* identical? [l r]
-    (native/raw "__value = (~{ l } == ~{ r }) ? ~{ true } : ~{ false }")))
+       (native/raw "__value = (~{ l } == ~{ r }) ? ~{ true } : ~{ false }")))
 
 ;; Collections.
 (def empty?
   (fn* empty? [o]
-    (native/raw "__value = make_box(is_empty(~{ o }));")))
+       (native/raw "__value = make_box(is_empty(~{ o }));")))
 
 (def empty
   (fn* empty [o]
-    (native/raw "__value = runtime::empty(~{ o });")))
+       (native/raw "__value = runtime::empty(~{ o });")))
 
 (def count
   (fn* count [o]
-    (if (nil? o)
-      0
-      (native/raw "__value = make_box(sequence_length(~{ o }));"))))
+       (if (nil? o)
+         0
+         (native/raw "__value = make_box(sequence_length(~{ o }));"))))
 
 (def boolean
   (fn* boolean [o]
-    (native/raw "__value = make_box(truthy(~{ o }));")))
+       (native/raw "__value = make_box(truthy(~{ o }));")))
 (def int
   (fn* int [o]
-    (native/raw "__value = make_box(to_int(~{ o }));")))
+       (native/raw "__value = make_box(to_int(~{ o }));")))
 (def float
   (fn* float [o]
-    (native/raw "__value = make_box(to_real(~{ o }));")))
+       (native/raw "__value = make_box(to_real(~{ o }));")))
 
 ; Lists.
 (def seq
   (fn* seq [o]
-    (native/raw "__value = jank::runtime::seq(~{ o });")))
+       (native/raw "__value = jank::runtime::seq(~{ o });")))
 (def fresh-seq
   (fn* fresh-seq [o]
-    (native/raw "__value = jank::runtime::fresh_seq(~{ o });")))
+       (native/raw "__value = jank::runtime::fresh_seq(~{ o });")))
 (def first
   (fn* first [o]
-    (native/raw "__value = jank::runtime::first(~{ o });")))
+       (native/raw "__value = jank::runtime::first(~{ o });")))
 (def ffirst
   (fn* ffirst [o]
-    (first (first o))))
+       (first (first o))))
 ; Returns a fresh seq.
 (def next
   (fn* next [o]
-    (native/raw "__value = jank::runtime::next(~{ o });")))
+       (native/raw "__value = jank::runtime::next(~{ o });")))
 (def next-in-place
   (fn* next-in-place [o]
-    (native/raw "__value = jank::runtime::next_in_place(~{ o });")))
+       (native/raw "__value = jank::runtime::next_in_place(~{ o });")))
 (def nnext
   (fn* nnext [o]
-    (next-in-place (next o))))
+       (next-in-place (next o))))
 (def second
   (fn* second [o]
-    (native/raw "__value = jank::runtime::second(~{ o });")))
+       (native/raw "__value = jank::runtime::second(~{ o });")))
 (def rest
   (fn* rest [o]
-    (native/raw "__value = jank::runtime::rest(~{ o });")))
+       (native/raw "__value = jank::runtime::rest(~{ o });")))
 
 (def cons
   (fn* cons [head tail]
-    (native/raw "__value = runtime::cons(~{ head }, ~{ tail });")))
+       (native/raw "__value = runtime::cons(~{ head }, ~{ tail });")))
 
 (def coll?
   (fn* coll? [o]
-    (native/raw "__value = make_box(is_collection(~{ o }));")))
+       (native/raw "__value = make_box(is_collection(~{ o }));")))
 
 (def seq?
   (fn* seq? [o]
-    (native/raw "__value = make_box(is_seq(~{ o }));")))
+       (native/raw "__value = make_box(is_seq(~{ o }));")))
 
 (def list?
   (fn* list? [o]
     ; TODO: Visit and use a behavior for this check instead. It should apply to conses and others.
-    (native/raw "__value = make_box(~{ o }->type == object_type::persistent_list);")))
+       (native/raw "__value = make_box(~{ o }->type == object_type::persistent_list);")))
 
 (def list
   (fn* list [& items]
-    (native/raw "__value = runtime::list(~{ items });")))
+       (native/raw "__value = runtime::list(~{ items });")))
 
 ;; Vectors.
 (def vector?
   (fn* vector? [o]
-    (native/raw "__value = make_box(~{ o }->type == object_type::persistent_vector);")))
+       (native/raw "__value = make_box(~{ o }->type == object_type::persistent_vector);")))
 
 (def vec
   (fn* vec [coll]
-    (native/raw "__value = runtime::vec(~{ coll });")))
+       (native/raw "__value = runtime::vec(~{ coll });")))
 
 ; Returns a persistent vector of the items in vector from
 ; start (inclusive) to end (exclusive).  If end is not supplied,
@@ -123,48 +123,48 @@
 ; trimming is done.
 (def subvec
   (fn* subvec
-    ([v start]
-     (subvec v start (count v)))
-    ([v start end]
-     (let* [start (int start)
-            end (int end)]
-       (native/raw "__value = runtime::subvec(~{ v }, ~{ start }->data, ~{ end }->data);")))))
+       ([v start]
+        (subvec v start (count v)))
+       ([v start end]
+        (let* [start (int start)
+               end (int end)]
+              (native/raw "__value = runtime::subvec(~{ v }, ~{ start }->data, ~{ end }->data);")))))
 
 (def conj)
 (def conj
   (fn* conj
-    ([]
-     [])
-    ([coll]
-     coll)
-    ([coll x]
-     (native/raw "__value = jank::runtime::conj(~{ coll }, ~{ x });"))
-    ([coll x & args]
-     (let* [res (conj coll x)]
-       (if (empty? args)
-         res
-         (recur res (first args) (next args)))))))
+       ([]
+        [])
+       ([coll]
+        coll)
+       ([coll x]
+        (native/raw "__value = jank::runtime::conj(~{ coll }, ~{ x });"))
+       ([coll x & args]
+        (let* [res (conj coll x)]
+              (if (empty? args)
+                res
+                (recur res (first args) (next args)))))))
 
 ; Return the last item in coll, in linear time
 (def last
   (fn* last [s]
-    (if (next s)
-      (recur (next s))
-      (first s))))
+       (if (next s)
+         (recur (next s))
+         (first s))))
 
 ; Return a seq of all but the last item in coll, in linear time
 (def butlast
   (fn* butlast [s]
-    (loop* [ret []
-            s s]
-      (if (next s)
-        (recur (conj ret (first s)) (next s))
-        (seq ret)))))
+       (loop* [ret []
+               s s]
+              (if (next s)
+                (recur (conj ret (first s)) (next s))
+                (seq ret)))))
 
 ;; Maps.
 (def map?
   (fn* map? [o]
-    (native/raw "__value = make_box
+       (native/raw "__value = make_box
                  (
                    ~{ o }->type == object_type::persistent_array_map
                    || ~{ o }->type == object_type::persistent_hash_map
@@ -173,15 +173,15 @@
 
 (def assoc
   (fn* assoc
-    ([map key val]
-     (native/raw "__value = jank::runtime::assoc(~{ map }, ~{ key }, ~{ val });"))
-    ([map key val & kvs]
-     (let* [res (assoc map key val)]
-       (if kvs
-         (if (next kvs)
-           (recur res (first kvs) (second kvs) (nnext kvs))
-           (throw "assoc expects even number of args after the first"))
-         res)))))
+       ([map key val]
+        (native/raw "__value = jank::runtime::assoc(~{ map }, ~{ key }, ~{ val });"))
+       ([map key val & kvs]
+        (let* [res (assoc map key val)]
+              (if kvs
+                (if (next kvs)
+                  (recur res (first kvs) (second kvs) (nnext kvs))
+                  (throw "assoc expects even number of args after the first"))
+                res)))))
 
 ;; Strings.
 ; TODO: Proper version.
@@ -189,88 +189,87 @@
 
 (def string?
   (fn* string? [o]
-    (native/raw "__value = make_box(~{ o }->type == object_type::persistent_string);")))
+       (native/raw "__value = make_box(~{ o }->type == object_type::persistent_string);")))
 
 (def str
   (fn* str
-    ([]
-     "")
-    ([o]
-     (native/raw "__value = make_box(runtime::to_string(~{ o }));"))
-    ([o & args]
-     (native/raw "__value = make_box<obj::persistent_string>(runtime::str(~{ o }, ~{ args }));"))))
+       ([]
+        "")
+       ([o]
+        (native/raw "__value = make_box(runtime::to_string(~{ o }));"))
+       ([o & args]
+        (native/raw "__value = make_box<obj::persistent_string>(runtime::str(~{ o }, ~{ args }));"))))
 
 ;; Symbols.
 (def symbol?
   (fn* symbol? [o]
-    (native/raw "__value = make_box(~{ o }->type == object_type::symbol)")))
+       (native/raw "__value = make_box(~{ o }->type == object_type::symbol)")))
 
 ; Relations.
 ;; Miscellaneous.
 (def true?
   (fn* true? [o]
-    (native/raw "__value = runtime::equal(~{ o }, ~{ true }) ? ~{ true } : ~{ false }")))
+       (native/raw "__value = runtime::equal(~{ o }, ~{ true }) ? ~{ true } : ~{ false }")))
 (def false?
   (fn* false? [o]
-    (native/raw "__value = runtime::equal(~{ o }, ~{ false }) ? ~{ true } : ~{ false }")))
+       (native/raw "__value = runtime::equal(~{ o }, ~{ false }) ? ~{ true } : ~{ false }")))
 (def not
   (fn* not [o]
-    (native/raw "if(o == obj::nil::nil_const())
+       (native/raw "if(o == obj::nil::nil_const())
                  { __value = ~{ true }; }
                  else
                  { __value = runtime::equal(~{ o }, ~{ false }) ? ~{ true } : ~{ false }; }")))
 (def some?
   (fn* some? [o]
-    (native/raw "__value = (o == obj::nil::nil_const()) ? ~{ false } : ~{ true }")))
-
+       (native/raw "__value = (o == obj::nil::nil_const()) ? ~{ false } : ~{ true }")))
 
 ;; Metadata
 (def meta
   (fn* meta [o]
-    (native/raw "__value = runtime::meta(~{ o });")))
+       (native/raw "__value = runtime::meta(~{ o });")))
 (def with-meta
   (fn* with-meta [o m]
-    (native/raw "__value = runtime::with_meta(~{ o }, ~{ m });")))
+       (native/raw "__value = runtime::with_meta(~{ o }, ~{ m });")))
 (def reset-meta!
   (fn* reset-meta! [o m]
-    (native/raw "__value = runtime::reset_meta(~{ o }, ~{ m })")))
+       (native/raw "__value = runtime::reset_meta(~{ o }, ~{ m })")))
 
 (def ^{:macro true} let
   (fn* let [&form &env & decl]
-    (cons 'let* decl)))
+       (cons 'let* decl)))
 
 (def ^{:macro true} loop
   (fn* loop [&form &env & decl]
-    (cons 'loop* decl)))
+       (cons 'loop* decl)))
 
 (def ^{:macro true} fn
   (fn* fn [&form &env & decl]
-    (with-meta (cons 'fn* decl) (meta &form))))
+       (with-meta (cons 'fn* decl) (meta &form))))
 
 (def ^:private sigs
   (fn* [fdecl]
-    (let* [asig (fn* asig [fdecl]
-                  (let* [arglist (first fdecl)
+       (let* [asig (fn* asig [fdecl]
+                        (let* [arglist (first fdecl)
                          ;elide implicit macro args
-                         arglist (if (native/raw "__value = make_box(runtime::equal(~{ '&form }, ~{ (first arglist) }));")
-                                   (subvec arglist 2 (count arglist))
-                                   arglist)
-                         body (next fdecl)]
-                    (if (map? (first body))
-                      (if (next body)
-                        (with-meta arglist (conj (if (meta arglist)
-                                                   (meta arglist)
-                                                   {})
-                                                 (first body)))
-                        arglist)
-                      arglist)))]
-      (if (seq? (first fdecl))
-        (loop* [ret []
-                fdecls fdecl]
-          (if fdecls
-            (recur (conj ret (asig (first fdecls))) (next fdecls))
-            (seq ret)))
-        (list (asig fdecl))))))
+                               arglist (if (native/raw "__value = make_box(runtime::equal(~{ '&form }, ~{ (first arglist) }));")
+                                         (subvec arglist 2 (count arglist))
+                                         arglist)
+                               body (next fdecl)]
+                              (if (map? (first body))
+                                (if (next body)
+                                  (with-meta arglist (conj (if (meta arglist)
+                                                             (meta arglist)
+                                                             {})
+                                                           (first body)))
+                                  arglist)
+                                arglist)))]
+             (if (seq? (first fdecl))
+               (loop* [ret []
+                       fdecls fdecl]
+                      (if fdecls
+                        (recur (conj ret (asig (first fdecls))) (next fdecls))
+                        (seq ret)))
+               (list (asig fdecl))))))
 
 ; Macros.
 (def ^{:macro true
@@ -281,46 +280,46 @@
   defn
   (fn* defn [&form &env name & fdecl]
     ;; Note: Cannot delegate this check to def because of the call to (with-meta name ..)
-    (if (native/raw "__value = make_box(~{ name }->type != object_type::symbol);")
-      (throw "First argument to defn must be a symbol"))
-    (let* [m (if (string? (first fdecl))
-               {:doc (first fdecl)}
-               {})
-           fdecl (if (string? (first fdecl))
-                   (next fdecl)
-                   fdecl)
-           m (if (map? (first fdecl))
-               (conj m (first fdecl))
-               m)
-           fdecl (if (map? (first fdecl))
-                   (next fdecl)
-                   fdecl)
-           fdecl (if (vector? (first fdecl))
-                   (list fdecl)
-                   fdecl)
-           m (if (map? (last fdecl))
-               (conj m (last fdecl))
-               m)
-           fdecl (if (map? (last fdecl))
-                   (butlast fdecl)
-                   fdecl)
-           m (conj {:arglists (list 'quote (sigs fdecl))} m)
-           m (let* [inline (:inline m)
-                    ifn (first inline)
-                    iname (second inline)]
+       (if (native/raw "__value = make_box(~{ name }->type != object_type::symbol);")
+         (throw "First argument to defn must be a symbol"))
+       (let* [m (if (string? (first fdecl))
+                  {:doc (first fdecl)}
+                  {})
+              fdecl (if (string? (first fdecl))
+                      (next fdecl)
+                      fdecl)
+              m (if (map? (first fdecl))
+                  (conj m (first fdecl))
+                  m)
+              fdecl (if (map? (first fdecl))
+                      (next fdecl)
+                      fdecl)
+              fdecl (if (vector? (first fdecl))
+                      (list fdecl)
+                      fdecl)
+              m (if (map? (last fdecl))
+                  (conj m (last fdecl))
+                  m)
+              fdecl (if (map? (last fdecl))
+                      (butlast fdecl)
+                      fdecl)
+              m (conj {:arglists (list 'quote (sigs fdecl))} m)
+              m (let* [inline (:inline m)
+                       ifn (first inline)
+                       iname (second inline)]
                ;; same as: (if (and (= 'fn ifn) (not (symbol? iname))) ...)
-               (if (if (native/raw "__value = make_box(runtime::equal(~{ 'fn }, ~{ ifn }));")
-                     (if (native/raw "__value = make_box(~{ name }->type == object_type::symbol);")
-                       false
-                       true))
+                      (if (if (native/raw "__value = make_box(runtime::equal(~{ 'fn }, ~{ ifn }));")
+                            (if (native/raw "__value = make_box(~{ name }->type == object_type::symbol);")
+                              false
+                              true))
                  ;; inserts the same fn name to the inline fn if it does not have one
-                 (assoc m :inline (cons ifn (cons (native/raw "auto const n(expect_object<obj::symbol>(~{ name }));
+                        (assoc m :inline (cons ifn (cons (native/raw "auto const n(expect_object<obj::symbol>(~{ name }));
                                                               __value = make_box<obj::symbol>(n->name + \"__inliner\");")
-                                                  (next inline))))
-                 m))
-           m (conj (if (meta name) (meta name) {}) m)]
-      (list 'def (with-meta name m)
-            (with-meta (cons `fn (cons name fdecl)) {:rettag (:tag m)})))))
+                                                         (next inline))))
+                        m))
+              m (conj (if (meta name) (meta name) {}) m)]
+             (list 'def (with-meta name m)
+                   (with-meta (cons `fn (cons name fdecl)) {:rettag (:tag m)})))))
 
 (defn macroexpand-1 [form]
   (native/raw "__value = __rt_ctx->macroexpand1(~{ form });"))
@@ -494,19 +493,19 @@
   ([coll k v]
    (native/raw "__value = runtime::assoc_in_place(~{ coll }, ~{ k }, ~{ v });"))
   ([coll k v & kvs]
-    (let [ret (assoc! coll k v)]
-      (if kvs
-        (recur ret (first kvs) (second kvs) (nnext kvs))
-        ret))))
+   (let [ret (assoc! coll k v)]
+     (if kvs
+       (recur ret (first kvs) (second kvs) (nnext kvs))
+       ret))))
 
 (defn dissoc!
   ([coll k]
    (native/raw "__value = runtime::dissoc_in_place(~{ coll }, ~{ k });"))
   ([coll k & ks]
-    (let [ret (dissoc! coll k)]
-      (if ks
-        (recur ret (first ks) (next ks))
-        ret))))
+   (let [ret (dissoc! coll k)]
+     (if ks
+       (recur ret (first ks) (next ks))
+       ret))))
 
 (defn pop!
   ([coll]
@@ -519,10 +518,10 @@
    (native/raw "auto typed_set(try_object<obj::transient_hash_set>(~{ set }));
                 __value = typed_set->disjoin_in_place(~{ elem });"))
   ([set elem & elems]
-    (let [ret (disj! set elem)]
-      (if elems
-        (recur ret (first elems) (next elems))
-        ret))))
+   (let [ret (disj! set elem)]
+     (if elems
+       (recur ret (first elems) (next elems))
+       ret))))
 
 ;; Functions.
 (defn spread
@@ -1189,9 +1188,9 @@
    [a b c])
   ([a b c d]
    [a b c d])
-	([a b c d e]
+  ([a b c d e]
    [a b c d e])
-	([a b c d e f]
+  ([a b c d e f]
    [a b c d e f])
   ([a b c d e f & args]
    ; TODO: LazilyPersistentVector
@@ -1255,23 +1254,23 @@
   ([x] (lazy-seq x))
   ([x y]
    (lazy-seq
-     (let [s (seq x)]
-       (if s
-         (if (chunked-seq? s)
-           (chunk-cons (chunk-first s) (concat (chunk-rest s) y))
-           (cons (first s) (concat (rest s) y)))
-         y))))
+    (let [s (seq x)]
+      (if s
+        (if (chunked-seq? s)
+          (chunk-cons (chunk-first s) (concat (chunk-rest s) y))
+          (cons (first s) (concat (rest s) y)))
+        y))))
   ([x y & zs]
    (let [cat (fn cat [xys zs]
                (lazy-seq
-                 (let [xys (seq xys)]
-                   (if xys
-                     (if (chunked-seq? xys)
-                       (chunk-cons (chunk-first xys)
-                                   (cat (chunk-rest xys) zs))
-                       (cons (first xys) (cat (rest xys) zs)))
-                     (when zs
-                       (cat (first zs) (next zs)))))))]
+                (let [xys (seq xys)]
+                  (if xys
+                    (if (chunked-seq? xys)
+                      (chunk-cons (chunk-first xys)
+                                  (cat (chunk-rest xys) zs))
+                      (cons (first xys) (cat (rest xys) zs)))
+                    (when zs
+                      (cat (first zs) (next zs)))))))]
      (cat (concat x y) zs))))
 
 (defn juxt
@@ -1281,34 +1280,34 @@
   args (left-to-right).
   ((juxt a b c) x) => [(a x) (b x) (c x)]"
   ([f]
-     (fn
-       ([] [(f)])
-       ([x] [(f x)])
-       ([x y] [(f x y)])
-       ([x y z] [(f x y z)])
-       ([x y z & args] [(apply f x y z args)])))
+   (fn
+     ([] [(f)])
+     ([x] [(f x)])
+     ([x y] [(f x y)])
+     ([x y z] [(f x y z)])
+     ([x y z & args] [(apply f x y z args)])))
   ([f g]
-     (fn
-       ([] [(f) (g)])
-       ([x] [(f x) (g x)])
-       ([x y] [(f x y) (g x y)])
-       ([x y z] [(f x y z) (g x y z)])
-       ([x y z & args] [(apply f x y z args) (apply g x y z args)])))
+   (fn
+     ([] [(f) (g)])
+     ([x] [(f x) (g x)])
+     ([x y] [(f x y) (g x y)])
+     ([x y z] [(f x y z) (g x y z)])
+     ([x y z & args] [(apply f x y z args) (apply g x y z args)])))
   ([f g h]
-     (fn
-       ([] [(f) (g) (h)])
-       ([x] [(f x) (g x) (h x)])
-       ([x y] [(f x y) (g x y) (h x y)])
-       ([x y z] [(f x y z) (g x y z) (h x y z)])
-       ([x y z & args] [(apply f x y z args) (apply g x y z args) (apply h x y z args)])))
+   (fn
+     ([] [(f) (g) (h)])
+     ([x] [(f x) (g x) (h x)])
+     ([x y] [(f x y) (g x y) (h x y)])
+     ([x y z] [(f x y z) (g x y z) (h x y z)])
+     ([x y z & args] [(apply f x y z args) (apply g x y z args) (apply h x y z args)])))
   ([f g h & fs]
-     (let [fs (list* f g h fs)]
-       (fn
-         ([] (reduce #(conj %1 (%2)) [] fs))
-         ([x] (reduce #(conj %1 (%2 x)) [] fs))
-         ([x y] (reduce #(conj %1 (%2 x y)) [] fs))
-         ([x y z] (reduce #(conj %1 (%2 x y z)) [] fs))
-         ([x y z & args] (reduce #(conj %1 (apply %2 x y z args)) [] fs))))))
+   (let [fs (list* f g h fs)]
+     (fn
+       ([] (reduce #(conj %1 (%2)) [] fs))
+       ([x] (reduce #(conj %1 (%2 x)) [] fs))
+       ([x y] (reduce #(conj %1 (%2 x y)) [] fs))
+       ([x y z] (reduce #(conj %1 (%2 x y z)) [] fs))
+       ([x y z & args] (reduce #(conj %1 (apply %2 x y z args)) [] fs))))))
 
 (defn partial
   "Takes a function f and fewer than the normal arguments to f, and
@@ -1371,45 +1370,44 @@
     (when s
       (or (pred (first s)) (recur pred (next s))))))
 
-
 (defn every-pred
   "Takes a set of predicates and returns a function f that returns true if all of its
   composing predicates return a logical true value against all of its arguments, else it returns
   false. Note that f is short-circuiting in that it will stop execution on the first
   argument that triggers a logical false result against the original predicates."
   ([p]
-     (fn ep1
-       ([] true)
-       ([x] (boolean (p x)))
-       ([x y] (boolean (and (p x) (p y))))
-       ([x y z] (boolean (and (p x) (p y) (p z))))
-       ([x y z & args] (boolean (and (ep1 x y z)
-                                     (every? p args))))))
+   (fn ep1
+     ([] true)
+     ([x] (boolean (p x)))
+     ([x y] (boolean (and (p x) (p y))))
+     ([x y z] (boolean (and (p x) (p y) (p z))))
+     ([x y z & args] (boolean (and (ep1 x y z)
+                                   (every? p args))))))
   ([p1 p2]
-     (fn ep2
-       ([] true)
-       ([x] (boolean (and (p1 x) (p2 x))))
-       ([x y] (boolean (and (p1 x) (p1 y) (p2 x) (p2 y))))
-       ([x y z] (boolean (and (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z))))
-       ([x y z & args] (boolean (and (ep2 x y z)
-                                     (every? #(and (p1 %) (p2 %)) args))))))
+   (fn ep2
+     ([] true)
+     ([x] (boolean (and (p1 x) (p2 x))))
+     ([x y] (boolean (and (p1 x) (p1 y) (p2 x) (p2 y))))
+     ([x y z] (boolean (and (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z))))
+     ([x y z & args] (boolean (and (ep2 x y z)
+                                   (every? #(and (p1 %) (p2 %)) args))))))
   ([p1 p2 p3]
-     (fn ep3
-       ([] true)
-       ([x] (boolean (and (p1 x) (p2 x) (p3 x))))
-       ([x y] (boolean (and (p1 x) (p1 y) (p2 x) (p2 y) (p3 x) (p3 y))))
-       ([x y z] (boolean (and (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z) (p3 x) (p3 y) (p3 z))))
-       ([x y z & args] (boolean (and (ep3 x y z)
-                                     (every? #(and (p1 %) (p2 %) (p3 %)) args))))))
+   (fn ep3
+     ([] true)
+     ([x] (boolean (and (p1 x) (p2 x) (p3 x))))
+     ([x y] (boolean (and (p1 x) (p1 y) (p2 x) (p2 y) (p3 x) (p3 y))))
+     ([x y z] (boolean (and (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z) (p3 x) (p3 y) (p3 z))))
+     ([x y z & args] (boolean (and (ep3 x y z)
+                                   (every? #(and (p1 %) (p2 %) (p3 %)) args))))))
   ([p1 p2 p3 & ps]
-     (let [ps (list* p1 p2 p3 ps)]
-       (fn epn
-         ([] true)
-         ([x] (every? #(% x) ps))
-         ([x y] (every? #(and (% x) (% y)) ps))
-         ([x y z] (every? #(and (% x) (% y) (% z)) ps))
-         ([x y z & args] (boolean (and (epn x y z)
-                                       (every? #(every? % args) ps))))))))
+   (let [ps (list* p1 p2 p3 ps)]
+     (fn epn
+       ([] true)
+       ([x] (every? #(% x) ps))
+       ([x y] (every? #(and (% x) (% y)) ps))
+       ([x y z] (every? #(and (% x) (% y) (% z)) ps))
+       ([x y z & args] (boolean (and (epn x y z)
+                                     (every? #(every? % args) ps))))))))
 
 (defn some-fn
   "Takes a set of predicates and returns a function f that returns the first logical true value
@@ -1417,39 +1415,38 @@
   logical false. Note that f is short-circuiting in that it will stop execution on the first
   argument that triggers a logical true result against the original predicates."
   ([p]
-     (fn sp1
-       ([] nil)
-       ([x] (p x))
-       ([x y] (or (p x) (p y)))
-       ([x y z] (or (p x) (p y) (p z)))
-       ([x y z & args] (or (sp1 x y z)
-                           (some p args)))))
+   (fn sp1
+     ([] nil)
+     ([x] (p x))
+     ([x y] (or (p x) (p y)))
+     ([x y z] (or (p x) (p y) (p z)))
+     ([x y z & args] (or (sp1 x y z)
+                         (some p args)))))
   ([p1 p2]
-     (fn sp2
-       ([] nil)
-       ([x] (or (p1 x) (p2 x)))
-       ([x y] (or (p1 x) (p1 y) (p2 x) (p2 y)))
-       ([x y z] (or (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z)))
-       ([x y z & args] (or (sp2 x y z)
-                           (some #(or (p1 %) (p2 %)) args)))))
+   (fn sp2
+     ([] nil)
+     ([x] (or (p1 x) (p2 x)))
+     ([x y] (or (p1 x) (p1 y) (p2 x) (p2 y)))
+     ([x y z] (or (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z)))
+     ([x y z & args] (or (sp2 x y z)
+                         (some #(or (p1 %) (p2 %)) args)))))
   ([p1 p2 p3]
-     (fn sp3
-       ([] nil)
-       ([x] (or (p1 x) (p2 x) (p3 x)))
-       ([x y] (or (p1 x) (p1 y) (p2 x) (p2 y) (p3 x) (p3 y)))
-       ([x y z] (or (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z) (p3 x) (p3 y) (p3 z)))
-       ([x y z & args] (or (sp3 x y z)
-                           (some #(or (p1 %) (p2 %) (p3 %)) args)))))
+   (fn sp3
+     ([] nil)
+     ([x] (or (p1 x) (p2 x) (p3 x)))
+     ([x y] (or (p1 x) (p1 y) (p2 x) (p2 y) (p3 x) (p3 y)))
+     ([x y z] (or (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z) (p3 x) (p3 y) (p3 z)))
+     ([x y z & args] (or (sp3 x y z)
+                         (some #(or (p1 %) (p2 %) (p3 %)) args)))))
   ([p1 p2 p3 & ps]
-     (let [ps (list* p1 p2 p3 ps)]
-       (fn spn
-         ([] nil)
-         ([x] (some #(% x) ps))
-         ([x y] (some #(or (% x) (% y)) ps))
-         ([x y z] (some #(or (% x) (% y) (% z)) ps))
-         ([x y z & args] (or (spn x y z)
-                             (some #(some % args) ps)))))))
-
+   (let [ps (list* p1 p2 p3 ps)]
+     (fn spn
+       ([] nil)
+       ([x] (some #(% x) ps))
+       ([x y] (some #(or (% x) (% y)) ps))
+       ([x y z] (some #(or (% x) (% y) (% z)) ps))
+       ([x y z & args] (or (spn x y z)
+                           (some #(some % args) ps)))))))
 
 (defn not-any? [pred coll]
   (not (some pred coll)))
@@ -1461,13 +1458,13 @@
 (defmacro -> [x & forms]
   (loop* [x x
           forms forms]
-    (if forms
-      (let [form (first forms)
-            threaded (if (seq? form)
-                       (with-meta `(~(first form) ~x ~@(next form)) (meta form))
-                       (list form x))]
-        (recur threaded (next forms)))
-      x)))
+         (if forms
+           (let [form (first forms)
+                 threaded (if (seq? form)
+                            (with-meta `(~(first form) ~x ~@(next form)) (meta form))
+                            (list form x))]
+             (recur threaded (next forms)))
+           x)))
 
 ; Threads the expr through the forms. Inserts x as the
 ; last item in the first form, making a list of it if it is not a
@@ -1476,13 +1473,13 @@
 (defmacro ->> [x & forms]
   (loop* [x x
           forms forms]
-    (if forms
-      (let [form (first forms)
-            threaded (if (seq? form)
-                       (with-meta `(~(first form) ~@(next form)  ~x) (meta form))
-                       (list form x))]
-        (recur threaded (next forms)))
-      x)))
+         (if forms
+           (let [form (first forms)
+                 threaded (if (seq? form)
+                            (with-meta `(~(first form) ~@(next form)  ~x) (meta form))
+                            (list form x))]
+             (recur threaded (next forms)))
+           x)))
 
 ;; Maps.
 (defn hash-map
@@ -1542,9 +1539,9 @@
    (native/raw "__value = jank::runtime::dissoc(~{ m }, ~{ k });"))
   ([m k & ks]
    (let* [ret (dissoc m k)]
-     (if ks
-       (recur ret (first ks) (next ks))
-       ret))))
+         (if ks
+           (recur ret (first ks) (next ks))
+           ret))))
 
 ; Returns true if key is present in the given collection, otherwise
 ; returns false.  Note that for numerically indexed collections like
@@ -1573,11 +1570,11 @@
   (loop* [map (transient (hash-map))
           ks (seq keys)
           vs (seq vals)]
-    (if (and ks vs)
-      (recur (assoc! map (first ks) (first vs))
-             (next ks)
-             (next vs))
-      (persistent! map))))
+         (if (and ks vs)
+           (recur (assoc! map (first ks) (first vs))
+                  (next ks)
+                  (next vs))
+           (persistent! map))))
 
 ;; Sets.
 (defn hash-set
@@ -1610,9 +1607,9 @@
    (native/raw "__value = jank::runtime::disj(~{ set }, ~{ key });"))
   ([set key & ks]
    (let* [res (disj set key)]
-     (if (empty? ks)
-       res
-       (recur res (first ks) (next ks))))))
+         (if (empty? ks)
+           res
+           (recur res (first ks) (next ks))))))
 
 (defn set? [o]
   (native/raw "__value = make_box(~{ o }->type == object_type::persistent_hash_set);"))
@@ -1686,9 +1683,9 @@
    `(if-let ~bindings ~then nil))
   ([bindings then else & oldform]
    (assert-macro-args
-     (vector? bindings) "a vector for its binding"
-     (nil? oldform) "1 or 2 forms after binding vector"
-     (= 2 (count bindings)) "exactly 2 forms in binding vector")
+    (vector? bindings) "a vector for its binding"
+    (nil? oldform) "1 or 2 forms after binding vector"
+    (= 2 (count bindings)) "exactly 2 forms in binding vector")
    (let [form (get bindings 0) tst (get bindings 1)]
      `(let [temp# ~tst]
         (if temp#
@@ -1702,8 +1699,8 @@
   When test is true, evaluates body with binding-form bound to the value of test"
   [bindings & body]
   (assert-macro-args
-    (vector? bindings) "a vector for its binding"
-    (= 2 (count bindings)) "exactly 2 forms in binding vector")
+   (vector? bindings) "a vector for its binding"
+   (= 2 (count bindings)) "exactly 2 forms in binding vector")
   (let [form (get bindings 0)
         tst (get bindings 1)]
     `(let [temp# ~tst]
@@ -1720,9 +1717,9 @@
    `(if-some ~bindings ~then nil))
   ([bindings then else & oldform]
    (assert-macro-args
-     (vector? bindings) "a vector for its binding"
-     (nil? oldform) "1 or 2 forms after binding vector"
-     (= 2 (count bindings)) "exactly 2 forms in binding vector")
+    (vector? bindings) "a vector for its binding"
+    (nil? oldform) "1 or 2 forms after binding vector"
+    (= 2 (count bindings)) "exactly 2 forms in binding vector")
    (let [form (get bindings 0) tst (get bindings 1)]
      `(let [temp# ~tst]
         (if (nil? temp#)
@@ -1737,8 +1734,8 @@
   value of test"
   [bindings & body]
   (assert-macro-args
-    (vector? bindings) "a vector for its binding"
-    (= 2 (count bindings)) "exactly 2 forms in binding vector")
+   (vector? bindings) "a vector for its binding"
+   (= 2 (count bindings)) "exactly 2 forms in binding vector")
   (let [form (get bindings 0)
         tst (get bindings 1)]
     `(let [temp# ~tst]
@@ -1754,8 +1751,8 @@
   bound to integers from 0 through n-1."
   [bindings & body]
   (assert-macro-args
-    (vector? bindings) "a vector for its binding"
-    (= 2 (count bindings)) "exactly 2 forms in binding vector")
+   (vector? bindings) "a vector for its binding"
+   (= 2 (count bindings)) "exactly 2 forms in binding vector")
   (let [i (first bindings)
         n (second bindings)]
     `(let [n# (int ~n)]
@@ -1764,7 +1761,6 @@
            ~@body
            ; TODO: unchecked-inc
            (recur (inc ~i)))))))
-
 
 ; WARNING: This is a low-level function. Prefer high-level macros like
 ; binding where ever possible.
@@ -1800,8 +1796,8 @@
 ; before the vars are bound to their new values.
 (defmacro binding [bindings & body]
   (assert-macro-args
-    (vector? bindings) "a vector for its binding"
-    (even? (count bindings)) "an even number of forms in binding vector")
+   (vector? bindings) "a vector for its binding"
+   (even? (count bindings)) "an even number of forms in binding vector")
   (let [->var-pairs (fn ->var-pairs [var-vals]
                       (loop [ret []
                              vvs (seq var-vals)]
@@ -1814,7 +1810,7 @@
        (try
          ~@body
          (catch e#
-           (throw e#))
+                (throw e#))
          (finally
            (pop-thread-bindings))))))
 
@@ -1963,8 +1959,8 @@
               result)))))))
   ([n coll]
    (lazy-seq
-     (when-let [s (seq coll)]
-       (cons (first s) (take-nth n (drop n s)))))))
+    (when-let [s (seq coll)]
+      (cons (first s) (take-nth n (drop n s)))))))
 
 ; Returns a lazy sequence consisting of the result of applying f to
 ; the set of first items of each coll, followed by applying f to the
@@ -1984,15 +1980,15 @@
         (rf result (apply f input inputs))))))
   ([f coll]
    (lazy-seq
-     (when-let [s (seq coll)]
-       (if (chunked-seq? s)
-         (let [c (chunk-first s)
-               size (int (count c))
-               b (chunk-buffer size)]
-           (dotimes [i size]
-             (chunk-append b (f (nth c i))))
-           (chunk-cons (chunk b) (map f (chunk-rest s))))
-         (cons (f (first s)) (map f (rest s)))))))
+    (when-let [s (seq coll)]
+      (if (chunked-seq? s)
+        (let [c (chunk-first s)
+              size (int (count c))
+              b (chunk-buffer size)]
+          (dotimes [i size]
+            (chunk-append b (f (nth c i))))
+          (chunk-cons (chunk b) (map f (chunk-rest s))))
+        (cons (f (first s)) (map f (rest s)))))))
   ([f c1 c2]
    (lazy-seq
     (let [s1 (seq c1)
@@ -2011,9 +2007,9 @@
   ([f c1 c2 c3 & colls]
    (let [step (fn step [cs]
                 (lazy-seq
-                  (let [ss (map seq cs)]
-                    (when (every? identity ss)
-                      (cons (map first ss) (step (map rest ss)))))))]
+                 (let [ss (map seq cs)]
+                   (when (every? identity ss)
+                     (cons (map first ss) (step (map rest ss)))))))]
      (map #(apply f %) (step (conj colls c3 c2 c1))))))
 
 (defmacro doto
@@ -2070,10 +2066,10 @@
        ([] (rf))
        ([result] (rf result))
        ([result input]
-          (let [v (f input)]
-            (if (nil? v)
-              result
-              (rf result v)))))))
+        (let [v (f input)]
+          (if (nil? v)
+            result
+            (rf result v)))))))
   ([f coll]
    (lazy-seq
     (when-let [s (seq coll)]
@@ -2103,11 +2099,11 @@
          ([] (rf))
          ([result] (rf result))
          ([result input]
-            (let [i (vswap! iv inc)
-                  v (f i input)]
-              (if (nil? v)
-                result
-                (rf result v))))))))
+          (let [i (vswap! iv inc)
+                v (f i input)]
+            (if (nil? v)
+              result
+              (rf result v))))))))
   ([f coll]
    (let [keepi (fn keepi [idx coll]
                  (lazy-seq
@@ -2145,9 +2141,9 @@
               result)))))))
   ([n coll]
    (lazy-seq
-     (when (pos? n)
-       (when-let [s (seq coll)]
-         (cons (first s) (take (dec n) (rest s))))))))
+    (when (pos? n)
+      (when-let [s (seq coll)]
+        (cons (first s) (take (dec n) (rest s))))))))
 
 (defn repeatedly
   "Takes a function of no args, presumably with side effects, and
@@ -2255,15 +2251,15 @@
   ([c1] (lazy-seq c1))
   ([c1 c2]
    (lazy-seq
-     (let [s1 (seq c1) s2 (seq c2)]
-       (when (and s1 s2)
-         (cons (first s1) (cons (first s2)
-                                (interleave (rest s1) (rest s2))))))))
+    (let [s1 (seq c1) s2 (seq c2)]
+      (when (and s1 s2)
+        (cons (first s1) (cons (first s2)
+                               (interleave (rest s1) (rest s2))))))))
   ([c1 c2 & colls]
    (lazy-seq
-     (let [ss (map seq (conj colls c2 c1))]
-       (when (every? identity ss)
-         (concat (map first ss) (apply interleave (map rest ss))))))))
+    (let [ss (map seq (conj colls c2 c1))]
+      (when (every? identity ss)
+        (concat (map first ss) (apply interleave (map rest ss))))))))
 
 (defn interpose
   "Returns a lazy seq of the elements of coll separated by sep.
@@ -2323,17 +2319,17 @@
    (partition n n coll))
   ([n step coll]
    (lazy-seq
-     (when-let [s (seq coll)]
-       (let [p (doall (take n s))]
-         (when (= n (count p))
-           (cons p (partition n step (nthrest s step))))))))
+    (when-let [s (seq coll)]
+      (let [p (doall (take n s))]
+        (when (= n (count p))
+          (cons p (partition n step (nthrest s step))))))))
   ([n step pad coll]
    (lazy-seq
-     (when-let [s (seq coll)]
-       (let [p (doall (take n s))]
-         (if (= n (count p))
-           (cons p (partition n step pad (nthrest s step)))
-           (list (take n (concat p pad)))))))))
+    (when-let [s (seq coll)]
+      (let [p (doall (take n s))]
+        (if (= n (count p))
+          (cons p (partition n step pad (nthrest s step)))
+          (list (take n (concat p pad)))))))))
 
 (defn partition-all
   "Returns a lazy sequence of lists like partition, but may include
@@ -2361,9 +2357,9 @@
    (partition-all n n coll))
   ([n step coll]
    (lazy-seq
-     (when-let [s (seq coll)]
-       (let [seg (doall (take n s))]
-         (cons seg (partition-all n step (nthrest s step))))))))
+    (when-let [s (seq coll)]
+      (let [seg (doall (take n s))]
+        (cons seg (partition-all n step (nthrest s step))))))))
 
 (defn partition-by
   "Applies f to each value in coll, splitting it each time f returns a
@@ -2515,24 +2511,24 @@
                                            ret))))
                               bes (let [transforms
                                         (reduce
-                                          (fn pmap#transforms [transforms mk]
-                                            (if (keyword? mk)
-                                              (let [mkns (namespace mk)
-                                                    mkn (name mk)]
-                                                (cond (= mkn "keys") (assoc transforms mk #(keyword (or mkns (namespace %)) (name %)))
-                                                      (= mkn "syms") (assoc transforms mk #(list `quote (symbol (or mkns (namespace %)) (name %))))
-                                                      (= mkn "strs") (assoc transforms mk str)
-                                                      :else transforms))
-                                              transforms))
-                                          {}
-                                          (keys b))]
+                                         (fn pmap#transforms [transforms mk]
+                                           (if (keyword? mk)
+                                             (let [mkns (namespace mk)
+                                                   mkn (name mk)]
+                                               (cond (= mkn "keys") (assoc transforms mk #(keyword (or mkns (namespace %)) (name %)))
+                                                     (= mkn "syms") (assoc transforms mk #(list `quote (symbol (or mkns (namespace %)) (name %))))
+                                                     (= mkn "strs") (assoc transforms mk str)
+                                                     :else transforms))
+                                             transforms))
+                                         {}
+                                         (keys b))]
                                     (reduce
-                                      (fn pmap#bes [bes entry]
-                                        (reduce #(assoc %1 %2 ((val entry) %2))
-                                                (dissoc bes (key entry))
-                                                ((key entry) bes)))
-                                      (dissoc b :as :or)
-                                      transforms))]
+                                     (fn pmap#bes [bes entry]
+                                       (reduce #(assoc %1 %2 ((val entry) %2))
+                                               (dissoc bes (key entry))
+                                               ((key entry) bes)))
+                                     (dissoc b :as :or)
+                                     transforms))]
                          (if (seq bes)
                            (let [bb (key (first bes))
                                  bk (val (first bes))
@@ -2571,8 +2567,8 @@
   more information about destructuring."
   [bindings & body]
   (assert-macro-args
-     (vector? bindings) "a vector for its binding"
-     (even? (count bindings)) "an even number of forms in binding vector")
+   (vector? bindings) "a vector for its binding"
+   (even? (count bindings)) "an even number of forms in binding vector")
   `(let* ~(destructure bindings) ~@body))
 
 (defn maybe-destructured
@@ -2590,8 +2586,8 @@
             (recur (next params) (conj new-params gparam)
                    (-> lets (conj (first params)) (conj gparam)))))
         `(~new-params
-           (let ~lets
-             ~@body))))))
+          (let ~lets
+            ~@body))))))
 
 (defmacro fn
   "params => positional-params*, or positional-params* & rest-param
@@ -2617,36 +2613,36 @@
                           (str "Parameter declaration missing")))))
         psig (fn* [sig]
                ; Ensure correct type before destructuring sig
-               (when (not (seq? sig))
-                 (throw (str "Invalid signature " sig
-                             " should be a list")))
-               (let [[params & body] sig
-                     _ (when (not (vector? params))
-                         (throw (if (seq? (first sigs))
-                                  (str "Parameter declaration " params
-                                       " should be a vector")
-                                  (str "Invalid signature " sig
-                                       " should be a list"))))
-                     conds (when (and (next body) (map? (first body)))
-                             (first body))
-                     body (if conds (next body) body)
-                     conds (or conds (meta params))
-                     pre (:pre conds)
-                     post (:post conds)
-                     body (if post
-                            `((let [~'% ~(if (< 1 (count body))
-                                           `(do ~@body)
-                                           (first body))]
-                                ~@(map (fn* [c]
-                                         `(assert ~c)) post)
-                                ~'%))
-                            body)
-                     body (if pre
-                            (concat (map (fn* [c]
-                                           `(assert ~c)) pre)
-                                    body)
-                            body)]
-                 (maybe-destructured params body)))
+                  (when (not (seq? sig))
+                    (throw (str "Invalid signature " sig
+                                " should be a list")))
+                  (let [[params & body] sig
+                        _ (when (not (vector? params))
+                            (throw (if (seq? (first sigs))
+                                     (str "Parameter declaration " params
+                                          " should be a vector")
+                                     (str "Invalid signature " sig
+                                          " should be a list"))))
+                        conds (when (and (next body) (map? (first body)))
+                                (first body))
+                        body (if conds (next body) body)
+                        conds (or conds (meta params))
+                        pre (:pre conds)
+                        post (:post conds)
+                        body (if post
+                               `((let [~'% ~(if (< 1 (count body))
+                                              `(do ~@body)
+                                              (first body))]
+                                   ~@(map (fn* [c]
+                                               `(assert ~c)) post)
+                                   ~'%))
+                               body)
+                        body (if pre
+                               (concat (map (fn* [c]
+                                                 `(assert ~c)) pre)
+                                       body)
+                               body)]
+                    (maybe-destructured params body)))
         new-sigs (map psig sigs)]
     (with-meta
       (if name
@@ -2660,8 +2656,8 @@
   therein. Acts as a recur target."
   [bindings & body]
   (assert-macro-args
-    (vector? bindings) "a vector for its binding"
-    (even? (count bindings)) "an even number of forms in binding vector")
+   (vector? bindings) "a vector for its binding"
+   (even? (count bindings)) "an even number of forms in binding vector")
   (let [db (destructure bindings)]
     (if (= db bindings)
       `(loop* ~bindings ~@body)
@@ -2690,8 +2686,8 @@
   (take 100 (for [x (range 100000000) y (range 1000000) :while (< y x)] [x y]))"
   [seq-exprs body-expr]
   (assert-macro-args
-     (vector? seq-exprs) "a vector for its binding"
-     (even? (count seq-exprs)) "an even number of forms in binding vector")
+   (vector? seq-exprs) "a vector for its binding"
+   (even? (count seq-exprs)) "an even number of forms in binding vector")
   (let [to-groups (fn [seq-exprs]
                     (reduce (fn [groups [k v]]
                               (if (keyword? k)
@@ -2723,9 +2719,9 @@
                         ; Not the inner-most loop.
                         `(fn ~giter [~gxs]
                            (lazy-seq
-                             (loop [~gxs ~gxs]
-                               (when-first [~bind ~gxs]
-                                 ~(do-mod mod-pairs)))))
+                            (loop [~gxs ~gxs]
+                              (when-first [~bind ~gxs]
+                                ~(do-mod mod-pairs)))))
                         ; Inner-most loop.
                         (let [gi (gensym "i__")
                               gb (gensym "b__")
@@ -2737,7 +2733,7 @@
                                                          ~(do-cmod etc)
                                                          (recur
                                                            ; TODO: unchecked-inc
-                                                           (inc ~gi)))
+                                                          (inc ~gi)))
                                           (keyword? k)
                                           (err "Invalid 'for' keyword " k)
                                           :else
@@ -2746,23 +2742,23 @@
                                                (recur (inc ~gi)))))]
                           `(fn ~giter [~gxs]
                              (lazy-seq
-                               (loop [~gxs ~gxs]
-                                 (when-let [~gxs (seq ~gxs)]
-                                   (if (chunked-seq? ~gxs)
-                                     (let [c# (chunk-first ~gxs)
-                                           size# (int (count c#))
-                                           ~gb (chunk-buffer size#)]
-                                       (if (loop [~gi (int 0)]
-                                             (if (< ~gi size#)
-                                               (let [~bind (nth c# ~gi)]
-                                                 ~(do-cmod mod-pairs))
-                                               true))
-                                         (chunk-cons
-                                           (chunk ~gb)
-                                           (~giter (chunk-rest ~gxs)))
-                                         (chunk-cons (chunk ~gb) nil)))
-                                     (let [~bind (first ~gxs)]
-                                       ~(do-mod mod-pairs)))))))))))]
+                              (loop [~gxs ~gxs]
+                                (when-let [~gxs (seq ~gxs)]
+                                  (if (chunked-seq? ~gxs)
+                                    (let [c# (chunk-first ~gxs)
+                                          size# (int (count c#))
+                                          ~gb (chunk-buffer size#)]
+                                      (if (loop [~gi (int 0)]
+                                            (if (< ~gi size#)
+                                              (let [~bind (nth c# ~gi)]
+                                                ~(do-cmod mod-pairs))
+                                              true))
+                                        (chunk-cons
+                                         (chunk ~gb)
+                                         (~giter (chunk-rest ~gxs)))
+                                        (chunk-cons (chunk ~gb) nil)))
+                                    (let [~bind (first ~gxs)]
+                                      ~(do-mod mod-pairs)))))))))))]
     `(let [iter# ~(emit-bind (to-groups seq-exprs))]
        (iter# ~(second seq-exprs)))))
 
@@ -2833,8 +2829,8 @@
   Roughly the same as (when (seq xs) (let [x (first xs)] body)) but xs is evaluated only once"
   [bindings & body]
   (assert-macro-args
-    (vector? bindings) "a vector for its binding"
-    (= 2 (count bindings)) "exactly 2 forms in binding vector")
+   (vector? bindings) "a vector for its binding"
+   (= 2 (count bindings)) "exactly 2 forms in binding vector")
   (let [[x xs] bindings]
     `(when-let [xs# (seq ~xs)]
        (let [~x (first xs#)]
@@ -2957,20 +2953,20 @@
           result)))))
   ([pred coll]
    (lazy-seq
-     (when-let [s (seq coll)]
-       (if (chunked-seq? s)
-         (let [c (chunk-first s)
-               size (count c)
-               b (chunk-buffer size)]
-           (dotimes [i size]
-             (let [v (nth c i)]
-               (when (pred v)
-                 (chunk-append b v))))
-           (chunk-cons (chunk b) (filter pred (chunk-rest s))))
-         (let [f (first s) r (rest s)]
-           (if (pred f)
-             (cons f (filter pred r))
-             (filter pred r))))))))
+    (when-let [s (seq coll)]
+      (if (chunked-seq? s)
+        (let [c (chunk-first s)
+              size (count c)
+              b (chunk-buffer size)]
+          (dotimes [i size]
+            (let [v (nth c i)]
+              (when (pred v)
+                (chunk-append b v))))
+          (chunk-cons (chunk b) (filter pred (chunk-rest s))))
+        (let [f (first s) r (rest s)]
+          (if (pred f)
+            (cons f (filter pred r))
+            (filter pred r))))))))
 
 (defn flatten
   "Takes any nested combination of sequential things (lists, vectors,
@@ -3037,17 +3033,17 @@
         gexpr (gensym "expr__")
         emit (fn emit [pred expr args]
                (let [[[a b c :as clause] more]
-                       (split-at (if (= :>> (second args)) 3 2) args)
-                       n (count clause)]
+                     (split-at (if (= :>> (second args)) 3 2) args)
+                     n (count clause)]
                  (cond
-                  (= 0 n) `(throw (str "No matching clause: " ~expr))
-                  (= 1 n) a
-                  (= 2 n) `(if (~pred ~a ~expr)
-                             ~b
-                             ~(emit pred expr more))
-                  :else `(if-let [p# (~pred ~a ~expr)]
-                           (~c p#)
-                           ~(emit pred expr more)))))]
+                   (= 0 n) `(throw (str "No matching clause: " ~expr))
+                   (= 1 n) a
+                   (= 2 n) `(if (~pred ~a ~expr)
+                              ~b
+                              ~(emit pred expr more))
+                   :else `(if-let [p# (~pred ~a ~expr)]
+                            (~c p#)
+                            ~(emit pred expr more)))))]
     `(let [~gpred ~pred
            ~gexpr ~expr]
        ~(emit gpred gexpr clauses))))
@@ -3375,15 +3371,15 @@
                       m
                       (cons source (sources source))))]
      (or
-       (when-not (contains? (tp tag) parent)
-         (when (contains? (ta tag) parent)
-           (throw (str tag " already has " parent " as ancestor")))
-         (when (contains? (ta parent) tag)
-           (throw (str "Cyclic derivation: " parent " has " tag " as ancestor")))
-         {:parents (assoc (:parents h) tag (conj (get tp tag #{}) parent))
-          :ancestors (tf (:ancestors h) tag td parent ta)
-          :descendants (tf (:descendants h) parent ta tag td)})
-       h))))
+      (when-not (contains? (tp tag) parent)
+        (when (contains? (ta tag) parent)
+          (throw (str tag " already has " parent " as ancestor")))
+        (when (contains? (ta parent) tag)
+          (throw (str "Cyclic derivation: " parent " has " tag " as ancestor")))
+        {:parents (assoc (:parents h) tag (conj (get tp tag #{}) parent))
+         :ancestors (tf (:ancestors h) tag td parent ta)
+         :descendants (tf (:descendants h) parent ta tag td)})
+      h))))
 
 (defn underive
   "Removes a parent/child relationship between parent and
@@ -3428,11 +3424,11 @@
   "Takes a collection of hashes and returns [shift mask] or nil if none found"
   [hashes]
   (first
-    (filter (fn [[s m]]
-              (apply distinct? (map #(shift-mask s m %) hashes)))
-            (for [mask (map #(dec (bit-shift-left 1 %)) (range 1 (inc max-mask-bits)))
-                  shift (range 0 31)]
-              [shift mask]))))
+   (filter (fn [[s m]]
+             (apply distinct? (map #(shift-mask s m %) hashes)))
+           (for [mask (map #(dec (bit-shift-left 1 %)) (range 1 (inc max-mask-bits)))
+                 shift (range 0 31)]
+             [shift mask]))))
 
 (defn- case-map
   "Transforms a sequence of test constants and a corresponding sequence of then
@@ -3484,8 +3480,8 @@
   (let [buckets (loop [m {} ks tests vs thens]
                   (if (and ks vs)
                     (recur
-                      (update m (hash (first ks)) (fnil conj []) [(first ks) (first vs)])
-                      (next ks) (next vs))
+                     (update m (hash (first ks)) (fnil conj []) [(first ks) (first vs)])
+                     (next ks) (next vs))
                     m))
         assoc-multi (fn [m h bucket]
                       (let [testexprs (mapcat (fn [kv] [(list 'quote (first kv)) (second kv)]) bucket)
@@ -3567,11 +3563,11 @@
                            (throw (str "Duplicate case test constant: " test))
                            (assoc m test expr)))
             pairs (reduce
-                       (fn [m [test expr]]
-                         (if (seq? test)
-                           (reduce #(assoc-test %1 %2 expr) m test)
-                           (assoc-test m test expr)))
-                       {} pairs)
+                   (fn [m [test expr]]
+                     (if (seq? test)
+                       (reduce #(assoc-test %1 %2 expr) m test)
+                       (assoc-test m test expr)))
+                   {} pairs)
             tests (keys pairs)
             thens (vals pairs)
             mode (cond
@@ -3629,7 +3625,7 @@
       (root-bind binding-map)
       (fun)
       (catch e
-        (throw e))
+             (throw e))
       (finally
         (root-bind old-vals)))))
 
@@ -3708,10 +3704,10 @@
   if the symbol is fully qualified, the var to which it resolves
   need not be present in the namespace."
   ([ns sym]
-    (ns-resolve ns nil sym))
+   (ns-resolve ns nil sym))
   ([ns env sym]
-    (when-not (contains? env sym)
-      (native/raw "auto const n(try_object<runtime::ns>(~{ (the-ns ns) }));
+   (when-not (contains? env sym)
+     (native/raw "auto const n(try_object<runtime::ns>(~{ (the-ns ns) }));
                    auto const found(n->find_var(try_object<obj::symbol>(~{ sym })));
                    if(found.is_some())
                    { __value = found.unwrap(); }"))))
@@ -3838,8 +3834,8 @@
       (try
         (load lib need-ns? require)
         (catch e
-          (when undefined-on-entry?
-            (remove-ns lib))
+               (when undefined-on-entry?
+                 (remove-ns lib))
           (throw e)))
       (throw-if (and need-ns? (not (find-ns lib)))
                 (str "namespace " lib " not found")))
@@ -3902,13 +3898,12 @@
                     [(list 'clojure.core/refer '(quote clojure.core))])
                   (map process-reference references))
           (list 'if (list '= (list 'quote name) (list 'quote 'clojure.core))
-            'nil
-            (list 'let (vector 'name (list 'quote name))
-              (list 'native/raw "__rt_ctx->module_loader.set_loaded(runtime::to_string(~{ name }));")
+                'nil
+                (list 'let (vector 'name (list 'quote name))
+                      (list 'native/raw "__rt_ctx->module_loader.set_loaded(runtime::to_string(~{ name }));")
               ; TODO: Dynamic vars
               ;(dosync (commute @#'*loaded-libs* conj '~name))
-              'nil))
-          )))
+                      'nil)))))
 
 (defmacro refer-clojure
   "Same as (refer 'clojure.core <filters>)"
