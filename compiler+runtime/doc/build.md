@@ -70,6 +70,12 @@ To make a debug build, specify the build type when configuring.
 ./bin/watch ./bin/test
 ```
 
+# Run jank
+To run jank's repl, inside of /compiler+runtime, do
+```bash
+./build/jank repl
+```
+
 ## Packaging
 There's also a script for installing jank and all its necessary dependencies.
 Note that this includes a lot of header files, which are necessary for jank's
