@@ -26,6 +26,7 @@
         treefmt = {
           projectRootFile = "flake.nix";
           programs.shellcheck.enable = true;
+          programs.nixfmt.enable = true;
         };
 
         devShells.default = pkgs.mkShell {
