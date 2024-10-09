@@ -29,6 +29,7 @@
             projectRootFile = "flake.nix";
             programs.shellcheck.enable = true;
             programs.nixfmt.enable = true;
+            programs.actionlint.enable = true;
           };
 
           devShells.default = pkgs.mkShell {
