@@ -4,6 +4,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    treefmt-nix.url = "github:numtide/treefmt-nix";
   };
 
   outputs =
@@ -16,7 +17,16 @@
         "aarch64-darwin"
       ];
 
+      imports = [
+        inputs.treefmt-nix.flakeModule
+      ];
+
       perSystem = { pkgs, ... }: {
+        treefmt = {
+          projectRootFile = "flake.nix";
+          programs.shellcheck.enable = true;
+        };
+
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             # Build deps.
