@@ -15,7 +15,7 @@ jobs:
         with:
           nix_path: nixpkgs=channel:nixos-unstable
       - name: Run `nix flake check`
-        run: nix flake check --all-system
+        run: nix flake check --all-systems
 
   lint:
     runs-on: ubuntu-22.04
