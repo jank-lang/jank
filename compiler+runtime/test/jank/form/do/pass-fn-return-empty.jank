@@ -1,6 +1,6 @@
 (def do-fn
   (fn* do-fn []
-    (do)))
+       (do)))
 
 (assert (= nil (do-fn)))
 

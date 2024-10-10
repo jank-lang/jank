@@ -1,6 +1,6 @@
 (def add-n (fn* [n]
-             (fn* [x]
-               (+ x n))))
+                (fn* [x]
+                     (+ x n))))
 (def add-10 (add-n 10))
 (assert (= (add-10 -5) 5))
 

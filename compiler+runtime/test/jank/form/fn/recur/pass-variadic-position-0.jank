@@ -1,10 +1,10 @@
 (def print-things
   (fn* [& args]
-    (if (empty? args)
-      nil
-      (do
+       (if (empty? args)
+         nil
+         (do
         ;(println (first args))
-        (recur (rest args))))))
+           (recur (rest args))))))
 
 (assert (= nil (print-things 1 2 3 :four)))
 

@@ -1,4 +1,4 @@
 (loop* [a 1]
-  a)
+       a)
 
 :success

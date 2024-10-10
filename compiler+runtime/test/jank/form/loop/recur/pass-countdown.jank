@@ -1,9 +1,9 @@
 (def countdown
   (fn* [s]
-    (loop* [n s]
-      (if (< 0 n)
-        (recur (+ n -1))
-        n))))
+       (loop* [n s]
+              (if (< 0 n)
+                (recur (+ n -1))
+                n))))
 
 (assert (= 0 (countdown 10)))
 (assert (= 0 (countdown 0)))

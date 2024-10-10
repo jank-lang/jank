@@ -1,4 +1,5 @@
 name: "Build & Test"
+description: "Build and test jank-lang compiler"
 
 inputs:
   update_release:

@@ -1,10 +1,10 @@
 (def tail
   (fn* [s]
-    (loop* [n s]
-      (if (< 0 n)
-        (do
-          (assert (< 0 n))
-          (recur (+ n -1)))
-        n))))
+       (loop* [n s]
+              (if (< 0 n)
+                (do
+                  (assert (< 0 n))
+                  (recur (+ n -1)))
+                n))))
 
 :success

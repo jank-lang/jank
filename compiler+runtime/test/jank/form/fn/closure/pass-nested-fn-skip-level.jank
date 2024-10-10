@@ -1,7 +1,7 @@
 (def combine (fn* [n]
-               (fn* [] ; This will implicitly capture n as well.
-                 (fn* [x] ; This explicitly captures n.
-                   [n x]))))
+                  (fn* [] ; This will implicitly capture n as well.
+                       (fn* [x] ; This explicitly captures n.
+                            [n x]))))
 (def combine-20 ((combine 20)))
 (assert (= (combine-20 25) [20 25]))
 

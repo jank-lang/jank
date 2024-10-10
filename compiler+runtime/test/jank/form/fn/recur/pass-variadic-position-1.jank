@@ -1,12 +1,12 @@
 (def print-things
   (fn* [o & args]
-    (if (nil? o)
-      nil
-      (if (empty? args)
-        nil
-        (do
+       (if (nil? o)
+         nil
+         (if (empty? args)
+           nil
+           (do
           ;(println o)
-          (recur (first args) (rest args)))))))
+             (recur (first args) (rest args)))))))
 
 (assert (= nil (print-things 1 2 3 :four)))
 

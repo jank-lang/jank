@@ -306,64 +306,64 @@
 
 (defn -main []
   (do ;prof/profile
-      (let [aspect-ratio (/ 3.0 2.0)
-            image-width 10
-            image-height (int (/ image-width aspect-ratio))
-            samples-per-pixel 2
-            max-ray-bounces 10
+    (let [aspect-ratio (/ 3.0 2.0)
+          image-width 10
+          image-height (int (/ image-width aspect-ratio))
+          samples-per-pixel 2
+          max-ray-bounces 10
 
-            look-from (vec3-create 13 2 3)
-            look-at (vec3-create 0 0 0)
+          look-from (vec3-create 13 2 3)
+          look-at (vec3-create 0 0 0)
             ;look-from (vec3-create 3 3 2)
             ;look-at (vec3-create 0 0 -1)
-            aperture 0.1
+          aperture 0.1
             ;aperture 2.0
-            lens-radius (/ aperture 2)
-            focus-distance 10
+          lens-radius (/ aperture 2)
+          focus-distance 10
             ;focus-distance (vec3-length (vec3-sub look-from look-at))
-            camera-up (vec3-create 0 1 0)
-            field-of-view 20
-            field-of-view-theta (degrees->radians field-of-view)
-            viewport-height (* 2 (tan (/ field-of-view-theta 2.0)))
-            viewport-width (* aspect-ratio viewport-height)
-            _ (vec3-sub look-from look-at)
-            camera-w (vec3-normalize (vec3-sub look-from look-at))
-            camera-u (vec3-normalize (vec3-cross camera-up camera-w))
-            camera-v (vec3-cross camera-w camera-u)
+          camera-up (vec3-create 0 1 0)
+          field-of-view 20
+          field-of-view-theta (degrees->radians field-of-view)
+          viewport-height (* 2 (tan (/ field-of-view-theta 2.0)))
+          viewport-width (* aspect-ratio viewport-height)
+          _ (vec3-sub look-from look-at)
+          camera-w (vec3-normalize (vec3-sub look-from look-at))
+          camera-u (vec3-normalize (vec3-cross camera-up camera-w))
+          camera-v (vec3-cross camera-w camera-u)
 
-            origin look-from
-            horizontal (vec3-scale camera-u (* viewport-width focus-distance))
-            vertical (vec3-scale camera-v (* viewport-height focus-distance))
-            lower-left-corner (vec3-sub (vec3-sub (vec3-sub origin (vec3-div horizontal 2))
-                                                  (vec3-div vertical 2))
-                                        (vec3-scale camera-w focus-distance))
+          origin look-from
+          horizontal (vec3-scale camera-u (* viewport-width focus-distance))
+          vertical (vec3-scale camera-v (* viewport-height focus-distance))
+          lower-left-corner (vec3-sub (vec3-sub (vec3-sub origin (vec3-div horizontal 2))
+                                                (vec3-div vertical 2))
+                                      (vec3-scale camera-w focus-distance))
 
-            hittables (rand-scene!)
-            y-counter (reverse (range image-height))
-            x-counter (range image-width)
-            sample-counter (range samples-per-pixel)]
+          hittables (rand-scene!)
+          y-counter (reverse (range image-height))
+          x-counter (range image-width)
+          sample-counter (range samples-per-pixel)]
 
-        (println "P3")
-        (print+space image-width) (println image-height)
-        (println 255)
-        (doseq [y y-counter]
-          (doseq [x x-counter]
-            (let [sample (reduce* (fn main-reduce [acc _sample-count]
-                                    (let [u (/ (+ x (rand)) (- image-width 1))
-                                          v (/ (+ y (rand)) (- image-height 1))
-                                          rd (vec3-scale (vec3-rand-in-unit-disk) lens-radius)
-                                          offset (vec3-create 0 0 0)
-                                          ray (ray-create (vec3-add origin offset)
-                                                          (vec3-sub (vec3-add (vec3-add lower-left-corner
-                                                                                        (vec3-scale horizontal u))
-                                                                              (vec3-scale vertical v))
-                                                                    (vec3-sub origin offset)))]
-                                      (vec3-add acc (ray-cast ray max-ray-bounces hittables))))
-                                  (vec3-create 0 0 0)
-                                  sample-counter)]
-              (vec3-print sample samples-per-pixel))))
+      (println "P3")
+      (print+space image-width) (println image-height)
+      (println 255)
+      (doseq [y y-counter]
+        (doseq [x x-counter]
+          (let [sample (reduce* (fn main-reduce [acc _sample-count]
+                                  (let [u (/ (+ x (rand)) (- image-width 1))
+                                        v (/ (+ y (rand)) (- image-height 1))
+                                        rd (vec3-scale (vec3-rand-in-unit-disk) lens-radius)
+                                        offset (vec3-create 0 0 0)
+                                        ray (ray-create (vec3-add origin offset)
+                                                        (vec3-sub (vec3-add (vec3-add lower-left-corner
+                                                                                      (vec3-scale horizontal u))
+                                                                            (vec3-scale vertical v))
+                                                                  (vec3-sub origin offset)))]
+                                    (vec3-add acc (ray-cast ray max-ray-bounces hittables))))
+                                (vec3-create 0 0 0)
+                                sample-counter)]
+            (vec3-print sample samples-per-pixel))))
 
-        (println "meow"))))
+      (println "meow"))))
 
 ;(benchmark "ray" -main)
 ;(-main)

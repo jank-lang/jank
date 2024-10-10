@@ -1,9 +1,9 @@
 (def outer-count 0)
 (let [f (fn* outer [fn?]
-          (def outer-count (inc outer-count))
-          (when fn?
-            (fn* inner []
-              (outer false))))]
+             (def outer-count (inc outer-count))
+             (when fn?
+               (fn* inner []
+                    (outer false))))]
   (assert (= nil (f false)))
   (assert (= 1 outer-count))
   (def outer-count 0)

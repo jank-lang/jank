@@ -1,10 +1,9 @@
 ; A box will be required.
 (def a (fn* []
-         (let* [a 5
-                b (try
-                    7
-                    (catch _
-                      ))]
-           [])))
+            (let* [a 5
+                   b (try
+                       7
+                       (catch _))]
+                  [])))
 
 :success
