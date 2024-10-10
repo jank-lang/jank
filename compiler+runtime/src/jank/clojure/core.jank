@@ -185,7 +185,9 @@
 
 ;; Strings.
 ; TODO: Proper version.
-(def pr-str)
+(def pr-str
+  (fn* pr-str* [o]
+    (native/raw "__value = make_box(runtime::to_code_string(~{ o }))")))
 
 (def string?
   (fn* string? [o]

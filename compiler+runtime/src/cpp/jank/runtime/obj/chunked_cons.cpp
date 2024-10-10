@@ -186,6 +186,11 @@ namespace jank::runtime
     return runtime::to_string(seq());
   }
 
+  native_persistent_string obj::chunked_cons::to_code_string() const
+  {
+    return to_string();
+  }
+
   native_hash obj::chunked_cons::to_hash() const
   {
     return hash::ordered(&base);

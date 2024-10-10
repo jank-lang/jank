@@ -234,6 +234,11 @@ namespace jank::runtime
     return runtime::to_string(seq());
   }
 
+  native_persistent_string obj::range::to_code_string()
+  {
+    return to_string();
+  }
+
   native_hash obj::range::to_hash() const
   {
     return hash::ordered(&base);

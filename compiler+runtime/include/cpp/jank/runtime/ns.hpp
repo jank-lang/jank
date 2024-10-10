@@ -36,6 +36,7 @@ namespace jank::runtime
     /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
+    native_persistent_string to_code_string() const;
     void to_string(fmt::memory_buffer &buff) const;
     native_hash to_hash() const;
 

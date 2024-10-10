@@ -40,6 +40,13 @@ namespace jank::runtime
     return native_persistent_string{ buff.data(), buff.size() };
   }
 
+  native_persistent_string obj::native_vector_sequence::to_code_string() const
+  {
+    fmt::memory_buffer buff;
+    runtime::to_code_string(data.begin(), data.end(), "(", ')', buff);
+    return native_persistent_string{ buff.data(), buff.size() };
+  }
+
   native_hash obj::native_vector_sequence::to_hash()
   {
     return hash::ordered(data.begin(), data.end());

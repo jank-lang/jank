@@ -52,16 +52,30 @@ namespace jank::runtime::obj::detail
         &o);
     }
 
-    void to_string_impl(fmt::memory_buffer &buff) const
+    void to_string_impl(fmt::memory_buffer &buff, native_bool to_code = false) const
     {
       auto inserter(std::back_inserter(buff));
       fmt::format_to(inserter, "(");
       for(auto i(begin); i != end; ++i)
       {
         fmt::format_to(inserter, "[");
-        runtime::to_string((*i).first, buff);
+        if(to_code)
+        {
+          runtime::to_code_string((*i).first, buff);
+        }
+        else
+        {
+          runtime::to_string((*i).first, buff);
+        }
         fmt::format_to(inserter, " ");
-        runtime::to_string((*i).second, buff);
+        if(to_code)
+        {
+          runtime::to_code_string((*i).second, buff);
+        }
+        else
+        {
+          runtime::to_string((*i).second, buff);
+        }
         fmt::format_to(inserter, "]");
         auto n(i);
         if(++n != end)
@@ -81,6 +95,13 @@ namespace jank::runtime::obj::detail
     {
       fmt::memory_buffer buff;
       to_string_impl(buff);
+      return native_persistent_string{ buff.data(), buff.size() };
+    }
+
+    native_persistent_string to_code_string() const
+    {
+      fmt::memory_buffer buff;
+      to_string_impl(buff, true);
       return native_persistent_string{ buff.data(), buff.size() };
     }
 

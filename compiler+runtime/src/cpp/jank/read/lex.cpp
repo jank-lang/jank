@@ -310,18 +310,18 @@ namespace jank::read
               pos++;
             }
 
-            native_persistent_string_view const data{ file.data() + token_start,
-                                                      ++pos - token_start };
+            native_persistent_string_view const data{ file.data() + token_start + 1,
+                                                      ++pos - token_start - 1};
 
-            if(data.size() == 2 || data == "\\newline" || data == "\\backspace" || data == "\\space"
-               || data == "\\formfeed" || data == "\\return" || data == "\\tab")
+            if(data.size() == 1 || data == "newline" || data == "backspace" || data == "space"
+               || data == "formfeed" || data == "return" || data == "tab")
             {
               return ok(token{ token_start, pos - token_start, token_kind::character, data });
             }
 
             return err(error{ token_start,
                               pos - token_start,
-                              fmt::format("Invalid character literal `{}` \nNote: Jank "
+                              fmt::format("Invalid character literal `\\{}` \nNote: Jank "
                                           "doesn't support unicode characters yet!",
                                           data) });
           }
@@ -565,7 +565,10 @@ namespace jank::read
                   case 'n':
                   case 't':
                   case 'r':
+                  case 'f':
+                  case 'b':
                   case '"':
+                  case '\\':
                     break;
                   default:
                     return err(error{ pos, "unsupported escape character" });
