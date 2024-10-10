@@ -562,10 +562,17 @@ namespace jank::read
               {
                 switch(oc.unwrap())
                 {
-                  case 'n':
-                  case 't':
-                  case 'r':
                   case '"':
+                  case '?':
+                  case '\'':
+                  case '\\':
+                  case 'a':
+                  case 'b':
+                  case 'f':
+                  case 'n':
+                  case 'r':
+                  case 't':
+                  case 'v':
                     break;
                   default:
                     return err(error{ pos, "unsupported escape character" });

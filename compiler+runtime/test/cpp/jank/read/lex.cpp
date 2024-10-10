@@ -968,6 +968,13 @@ namespace jank::read::lex
               == make_tokens({
                 { 0, 22, token_kind::escaped_string, "foo\\\"\\nbar\\nspam\\t\\r"sv }
         }));
+
+        processor q{ R"("\??\' \\ a\a b\b f\f v\v")" };
+        native_vector<result<token, error>> tokens2(q.begin(), q.end());
+        CHECK(tokens2
+              == make_tokens({
+                { 0, 26, token_kind::escaped_string, "\\\?\?\\' \\\\ a\\a b\\b f\\f v\\v"sv }
+        }));
       }
 
       SUBCASE("Unterminated")
