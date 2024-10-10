@@ -29,7 +29,8 @@ namespace jank::runtime
 
   void to_code_string(object_ptr const o, fmt::memory_buffer &buff)
   {
-    auto const value = visit_object([](auto const typed_o) { return typed_o->to_code_string(); }, o);
+    auto const value{ visit_object([](auto const typed_o) { return typed_o->to_code_string(); },
+                                   o) };
     fmt::format_to(std::back_inserter(buff), "{}", value);
   }
 }

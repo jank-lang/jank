@@ -47,7 +47,7 @@ namespace jank::runtime::obj::detail
     static void to_string_impl(typename V::const_iterator const &begin,
                                typename V::const_iterator const &end,
                                fmt::memory_buffer &buff,
-                               native_bool to_code = false)
+                               native_bool const to_code)
     {
       auto inserter(std::back_inserter(buff));
       inserter = '{';
@@ -86,7 +86,8 @@ namespace jank::runtime::obj::detail
     {
       to_string_impl(static_cast<parent_type const *>(this)->data.begin(),
                      static_cast<parent_type const *>(this)->data.end(),
-                     buff);
+                     buff,
+                     false);
     }
 
     native_persistent_string to_string() const
@@ -94,7 +95,8 @@ namespace jank::runtime::obj::detail
       fmt::memory_buffer buff;
       to_string_impl(static_cast<parent_type const *>(this)->data.begin(),
                      static_cast<parent_type const *>(this)->data.end(),
-                     buff);
+                     buff,
+                     false);
       return native_persistent_string{ buff.data(), buff.size() };
     }
 

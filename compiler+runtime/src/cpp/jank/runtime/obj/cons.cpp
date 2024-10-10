@@ -104,7 +104,7 @@ namespace jank::runtime
 
   native_persistent_string obj::cons::to_code_string() const
   {
-    return to_string();
+    return runtime::to_code_string(seq());
   }
 
   native_hash obj::cons::to_hash() const
