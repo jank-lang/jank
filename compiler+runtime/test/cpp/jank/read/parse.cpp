@@ -92,7 +92,7 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
-        for(native_persistent_string const &ch : { "\\a", "\\1", "\\`", "\\:", "\\#" })
+        for(native_persistent_string const &ch : { "a", "1", "`", ":", "#" })
         {
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::character>(ch)));
@@ -113,12 +113,12 @@ namespace jank::read::parse
 
         size_t offset{};
         for(native_persistent_string const &ch :
-            { "\\newline", "\\backspace", "\\return", "\\formfeed", "\\tab", "\\space" })
+            { "newline", "backspace", "return", "formfeed", "tab", "space" })
         {
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::character>(ch)));
 
-          auto const len(ch.size());
+          auto const len(ch.size() + 1);
           CHECK(r.expect_ok().unwrap().start
                 == lex::token{ offset, len, lex::token_kind::character, ch });
           CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
@@ -134,12 +134,12 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
-        for(native_persistent_string const &ch : { "\\newline", "\\a", "\\tab", "\\`", "\\space" })
+        for(native_persistent_string const &ch : { "newline", "a", "tab", "`", "space" })
         {
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::character>(ch)));
 
-          auto const len(ch.size());
+          auto const len(ch.size() + 1);
           CHECK(r.expect_ok().unwrap().start
                 == lex::token{ offset, len, lex::token_kind::character, ch });
           CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);

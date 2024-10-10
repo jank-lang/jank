@@ -34,6 +34,11 @@ namespace jank::runtime
     fmt::format_to(inserter, "{}@{}", magic_enum::enum_name(base.type), fmt::ptr(&base));
   }
 
+  native_persistent_string obj::transient_hash_set::to_code_string() const
+  {
+    return to_string();
+  }
+
   native_hash obj::transient_hash_set::to_hash() const
   {
     /* Hash is also based only on identity. Clojure uses default hashCode, which does the same. */

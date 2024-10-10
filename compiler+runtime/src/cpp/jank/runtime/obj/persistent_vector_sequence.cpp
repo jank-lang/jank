@@ -50,6 +50,19 @@ namespace jank::runtime
     return { buff.data(), buff.size() };
   }
 
+  native_persistent_string obj::persistent_vector_sequence::to_code_string() const
+  {
+    fmt::memory_buffer buff;
+    runtime::to_code_string(
+      vec->data.begin()
+        + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
+      vec->data.end(),
+      "(",
+      ')',
+      buff);
+    return { buff.data(), buff.size() };
+  }
+
   native_hash obj::persistent_vector_sequence::to_hash() const
   {
     return hash::ordered(

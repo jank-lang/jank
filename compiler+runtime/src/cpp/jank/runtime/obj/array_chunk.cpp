@@ -39,6 +39,11 @@ namespace jank::runtime
                    fmt::ptr(&base));
   }
 
+  native_persistent_string obj::array_chunk::to_code_string() const
+  {
+    return to_string();
+  }
+
   native_hash obj::array_chunk::to_hash() const
   {
     return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));

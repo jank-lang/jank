@@ -145,8 +145,7 @@ namespace jank
       try
       {
         auto const res(__rt_ctx->eval_string(line));
-        fmt::println("");
-        fmt::println("{}", runtime::to_string(res));
+        fmt::println("{}", runtime::to_code_string(res));
       }
       /* TODO: Unify error handling. JEEZE! */
       catch(std::exception const &e)

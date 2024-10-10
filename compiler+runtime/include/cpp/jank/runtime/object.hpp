@@ -108,6 +108,9 @@ namespace jank::runtime
       { t->to_string() } -> std::convertible_to<native_persistent_string>;
       { t->to_string(std::declval<fmt::memory_buffer &>()) } -> std::same_as<void>;
 
+      /* Returns the code representation of the object. */
+      { t->to_code_string() } -> std::convertible_to<native_persistent_string>;
+
       /* Returns a deterministic hash value for the object. For some objects, like functions
        * and transients, the hash is actually just the object's address. For others, it's
        * based on the value, or values, within the object. There are a set of hash functions

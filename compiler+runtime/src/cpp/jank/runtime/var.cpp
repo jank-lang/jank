@@ -66,6 +66,11 @@ namespace jank::runtime
     return native_persistent_string{ buff.data(), buff.size() };
   }
 
+  native_persistent_string var::to_code_string() const
+  {
+    return to_string();
+  }
+
   native_hash var::to_hash() const
   {
     if(hash)
@@ -190,6 +195,11 @@ namespace jank::runtime
     return runtime::to_string(value);
   }
 
+  native_persistent_string var_thread_binding::to_code_string() const
+  {
+    return var_thread_binding::to_string();
+  }
+
   void var_thread_binding::to_string(fmt::memory_buffer &buff) const
   {
     runtime::to_string(value, buff);
@@ -223,6 +233,11 @@ namespace jank::runtime
                    "unbound@{} for var {}",
                    fmt::ptr(&base),
                    var->to_string());
+  }
+
+  native_persistent_string var_unbound_root::to_code_string() const
+  {
+    return var_unbound_root::to_string();
   }
 
   native_hash var_unbound_root::to_hash() const

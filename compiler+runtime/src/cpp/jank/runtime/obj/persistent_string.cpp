@@ -1,6 +1,3 @@
-#include <iostream>
-#include <sstream>
-
 #include <fmt/compile.h>
 
 #include <jank/runtime/obj/persistent_string.hpp>
@@ -37,6 +34,11 @@ namespace jank::runtime
   void obj::persistent_string::to_string(fmt::memory_buffer &buff) const
   {
     fmt::format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data);
+  }
+
+  native_persistent_string obj::persistent_string::to_code_string() const
+  {
+    return fmt::format(R"("{}")", util::escape(to_string()));
   }
 
   native_hash obj::persistent_string::to_hash() const

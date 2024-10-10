@@ -90,6 +90,11 @@ namespace jank::runtime
     return runtime::to_string(seq());
   }
 
+  native_persistent_string obj::iterator::to_code_string()
+  {
+    return runtime::to_code_string(seq());
+  }
+
   native_hash obj::iterator::to_hash() const
   {
     return hash::ordered(&base);

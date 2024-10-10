@@ -19,6 +19,11 @@ namespace jank::runtime
     return s;
   }
 
+  native_persistent_string const &obj::nil::to_code_string() const
+  {
+    return to_string();
+  }
+
   void obj::nil::to_string(fmt::memory_buffer &buff) const
   {
     fmt::format_to(std::back_inserter(buff), "nil");

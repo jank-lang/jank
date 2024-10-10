@@ -124,6 +124,11 @@ namespace jank::runtime
     return name->to_string();
   }
 
+  native_persistent_string ns::to_code_string() const
+  {
+    return to_string();
+  }
+
   void ns::to_string(fmt::memory_buffer &buff) const
   {
     name->to_string(buff);

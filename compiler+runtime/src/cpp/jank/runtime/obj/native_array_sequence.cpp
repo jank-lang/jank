@@ -39,6 +39,13 @@ namespace jank::runtime
     return native_persistent_string{ buff.data(), buff.size() };
   }
 
+  native_persistent_string obj::native_array_sequence::to_code_string() const
+  {
+    fmt::memory_buffer buff;
+    runtime::to_code_string(arr + index, arr + size, "(", ')', buff);
+    return native_persistent_string{ buff.data(), buff.size() };
+  }
+
   native_hash obj::native_array_sequence::to_hash() const
   {
     return hash::ordered(arr + index, arr + size);

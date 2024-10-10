@@ -28,6 +28,11 @@ namespace jank::runtime
                    fmt::ptr(&base));
   }
 
+  native_persistent_string obj::reduced::to_code_string() const
+  {
+    return to_string();
+  }
+
   native_hash obj::reduced::to_hash() const
   {
     return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));

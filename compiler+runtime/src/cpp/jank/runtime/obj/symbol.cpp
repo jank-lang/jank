@@ -126,6 +126,11 @@ namespace jank::runtime
     return native_persistent_string{ buff.data(), buff.size() };
   }
 
+  native_persistent_string obj::symbol::to_code_string() const
+  {
+    return to_string();
+  }
+
   native_hash obj::symbol::to_hash() const
   {
     if(hash)

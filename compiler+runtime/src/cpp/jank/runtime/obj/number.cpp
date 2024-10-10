@@ -54,6 +54,11 @@ namespace jank::runtime
     return native_persistent_string{ buff.data(), buff.size() };
   }
 
+  native_persistent_string obj::boolean::to_code_string() const
+  {
+    return to_string();
+  }
+
   native_hash obj::boolean::to_hash() const
   {
     return data ? 1231 : 1237;
@@ -101,6 +106,11 @@ namespace jank::runtime
   void obj::integer::to_string(fmt::memory_buffer &buff) const
   {
     fmt::format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data);
+  }
+
+  native_persistent_string obj::integer::to_code_string() const
+  {
+    return to_string();
   }
 
   native_hash obj::integer::to_hash() const
@@ -161,6 +171,11 @@ namespace jank::runtime
   void obj::real::to_string(fmt::memory_buffer &buff) const
   {
     fmt::format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data);
+  }
+
+  native_persistent_string obj::real::to_code_string() const
+  {
+    return to_string();
   }
 
   native_hash obj::real::to_hash() const

@@ -41,6 +41,11 @@ namespace jank::runtime
     return native_persistent_string{ buff.data(), buff.size() };
   }
 
+  native_persistent_string obj::keyword::to_code_string() const
+  {
+    return to_string();
+  }
+
   native_hash obj::keyword::to_hash() const
   {
     return sym.to_hash() + 0x9e3779b9;
