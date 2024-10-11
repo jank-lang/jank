@@ -102,6 +102,11 @@ namespace jank::runtime
     return runtime::to_string(seq());
   }
 
+  native_persistent_string obj::cons::to_code_string() const
+  {
+    return runtime::to_code_string(seq());
+  }
+
   native_hash obj::cons::to_hash() const
   {
     if(hash != 0)
