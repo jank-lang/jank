@@ -68,6 +68,7 @@ namespace jank::codegen
 
     void create_function();
     void create_global_ctor();
+    llvm::GlobalVariable *create_global_var(native_persistent_string const &name);
 
     llvm::Value *gen_global(obj::nil_ptr);
     llvm::Value *gen_global(obj::boolean_ptr b);
@@ -85,7 +86,7 @@ namespace jank::codegen
     native_persistent_string module_name;
     compilation_target target{};
     native_persistent_string struct_name;
-    native_persistent_string expression_fn_name;
+    native_persistent_string ctor_name;
 
     std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::Module> module;

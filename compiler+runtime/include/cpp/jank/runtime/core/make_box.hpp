@@ -67,12 +67,9 @@ namespace jank::runtime
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline runtime::object_ptr make_box(char const * const s)
+  inline runtime::obj::persistent_string_ptr make_box(char const * const s)
   {
-    if(!s) [[unlikely]]
-    {
-      return runtime::obj::nil::nil_const();
-    }
+    assert(s);
     return make_box<runtime::obj::persistent_string>(s);
   }
 

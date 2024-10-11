@@ -1,5 +1,7 @@
 #include <exception>
 
+#include <llvm/ExecutionEngine/Orc/LLJIT.h>
+
 #include <fmt/compile.h>
 
 #include <jank/read/lex.hpp>
@@ -572,7 +574,21 @@ namespace jank::runtime
         ->to_string());
 
     codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::repl };
-    return make_box(cg_prc.to_string());
+    fmt::println("{}\n", cg_prc.to_string());
+    llvm::cantFail(jit_prc.interpreter->getExecutionEngine().get().addIRModule(
+      llvm::orc::ThreadSafeModule{ std::move(cg_prc.module), std::move(cg_prc.context) }));
+
+    /* TODO: Why isn't this being run as a global ctor? */
+    auto const init(jit_prc.interpreter->getSymbolAddress(cg_prc.ctor_name.c_str()).get());
+    //fmt::println("calling ctor");
+    init.toPtr<void (*)()>()();
+
+    auto const fn(jit_prc.interpreter->getSymbolAddress(cg_prc.struct_name.c_str()).get());
+    //fmt::println("calling fn");
+    auto const ret(fn.toPtr<object *(*)()>()());
+    //fmt::println("ret {}", fmt::ptr(ret));
+    //fmt::println("ret type {}", static_cast<int>(ret->type));
+    return make_box(to_string(ret));
 
     //codegen::processor cg_prc{ *this, wrapped_expr, module, codegen::compilation_target::repl };
     //return make_box(util::format_cpp_source(cg_prc.declaration_str()).expect_ok());

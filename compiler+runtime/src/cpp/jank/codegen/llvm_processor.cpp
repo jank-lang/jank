@@ -3,8 +3,6 @@
 
 #include <jank/codegen/llvm_processor.hpp>
 
-/* https://www.youtube.com/watch?v=Nw9YmNuJhJ4 */
-
 namespace jank::codegen
 {
   llvm_processor::llvm_processor(analyze::expression_ptr const &expr,
@@ -22,9 +20,11 @@ namespace jank::codegen
     : root_fn{ expr }
     , module_name{ module_name }
     , target{ target }
-    , struct_name{ root_fn.unique_name }
+    , struct_name{ runtime::munge(root_fn.unique_name) }
+    , ctor_name{ runtime::munge(runtime::context::unique_string("jank_global_init")) }
     , context{ std::make_unique<llvm::LLVMContext>() }
-    , module{ std::make_unique<llvm::Module>(module_name.c_str(), *context) }
+    , module{ std::make_unique<llvm::Module>(runtime::context::unique_string(module_name).c_str(),
+                                             *context) }
     , builder{ std::make_unique<llvm::IRBuilder<>>(*context) }
     , global_ctor_block{ llvm::BasicBlock::Create(*context, "entry") }
   {
@@ -34,6 +34,12 @@ namespace jank::codegen
     create_function();
     gen();
 
+    {
+      llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
+      builder->SetInsertPoint(global_ctor_block);
+      builder->CreateRetVoid();
+    }
+
     llvm::verifyFunction(*fn);
     llvm::verifyFunction(*global_ctor_block->getParent());
   }
@@ -41,10 +47,9 @@ namespace jank::codegen
   void llvm_processor::create_function()
   {
     auto const fn_type(llvm::FunctionType::get(builder->getPtrTy(), false));
-    auto const munged_name(runtime::munge(struct_name));
     fn = llvm::Function::Create(fn_type,
                                 llvm::Function::ExternalLinkage,
-                                munged_name.c_str(),
+                                struct_name.c_str(),
                                 *module);
 
     auto const entry(llvm::BasicBlock::Create(*context, "entry", fn));
@@ -285,13 +290,16 @@ namespace jank::codegen
     auto const found(var_globals.find(qualified_name));
     if(found != var_globals.end())
     {
-      return found->second;
+      return builder->CreateLoad(builder->getPtrTy(), found->second);
     }
 
+    auto &global(literal_globals[qualified_name]);
     auto const name(fmt::format("var_{}", munge(qualified_name->to_string())));
-    auto const global(module->getOrInsertGlobal(name, builder->getPtrTy()));
-    var_globals[qualified_name] = global;
+    auto const var(create_global_var(name));
+    module->insertGlobalVariable(var);
+    global = var;
 
+    auto const prev_block(builder->GetInsertBlock());
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
       builder->SetInsertPoint(global_ctor_block);
@@ -300,13 +308,18 @@ namespace jank::codegen
                                                  false));
       auto const fn(module->getOrInsertFunction("jank_var_intern", fn_type));
 
-      llvm::SmallVector<llvm::Value *, 2> args{ gen_c_string(qualified_name->ns.c_str()),
-                                                gen_c_string(qualified_name->name.c_str()) };
+      llvm::SmallVector<llvm::Value *, 2> args{ gen_global(make_box(qualified_name->ns)),
+                                                gen_global(make_box(qualified_name->name)) };
       auto const call(builder->CreateCall(fn, args));
       builder->CreateStore(call, global);
+
+      if(prev_block == global_ctor_block)
+      {
+        return call;
+      }
     }
 
-    return global;
+    return builder->CreateLoad(builder->getPtrTy(), global);
   }
 
   llvm::Value *llvm_processor::gen_c_string(native_persistent_string const &s)
@@ -314,7 +327,7 @@ namespace jank::codegen
     auto const found(c_string_globals.find(s));
     if(found != c_string_globals.end())
     {
-      return found->second;
+      return builder->CreateLoad(builder->getPtrTy(), found->second);
     }
     return c_string_globals[s] = builder->CreateGlobalStringPtr(s.c_str());
   }
@@ -324,12 +337,16 @@ namespace jank::codegen
     auto const found(literal_globals.find(nil));
     if(found != literal_globals.end())
     {
-      return found->second;
+      return builder->CreateLoad(builder->getPtrTy(), found->second);
     }
 
     auto &global(literal_globals[nil]);
-    global = module->getOrInsertGlobal("nil", builder->getPtrTy());
+    auto const name("nil");
+    auto const var(create_global_var(name));
+    module->insertGlobalVariable(var);
+    global = var;
 
+    auto const prev_block(builder->GetInsertBlock());
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
       builder->SetInsertPoint(global_ctor_block);
@@ -338,9 +355,14 @@ namespace jank::codegen
       auto const create_fn(module->getOrInsertFunction("jank_nil", create_fn_type));
       auto const call(builder->CreateCall(create_fn));
       builder->CreateStore(call, global);
+
+      if(prev_block == global_ctor_block)
+      {
+        return call;
+      }
     }
 
-    return global;
+    return builder->CreateLoad(builder->getPtrTy(), global);
   }
 
   llvm::Value *llvm_processor::gen_global(obj::boolean_ptr const b)
@@ -348,13 +370,16 @@ namespace jank::codegen
     auto const found(literal_globals.find(b));
     if(found != literal_globals.end())
     {
-      return found->second;
+      return builder->CreateLoad(builder->getPtrTy(), found->second);
     }
 
     auto &global(literal_globals[b]);
     auto const name(b->data ? "true" : "false");
-    global = module->getOrInsertGlobal(name, builder->getPtrTy());
+    auto const var(create_global_var(name));
+    module->insertGlobalVariable(var);
+    global = var;
 
+    auto const prev_block(builder->GetInsertBlock());
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
       builder->SetInsertPoint(global_ctor_block);
@@ -364,9 +389,14 @@ namespace jank::codegen
         module->getOrInsertFunction(fmt::format("jank_{}", name), create_fn_type));
       auto const call(builder->CreateCall(create_fn));
       builder->CreateStore(call, global);
+
+      if(prev_block == global_ctor_block)
+      {
+        return call;
+      }
     }
 
-    return global;
+    return builder->CreateLoad(builder->getPtrTy(), global);
   }
 
   llvm::Value *llvm_processor::gen_global(obj::integer_ptr const i)
@@ -374,13 +404,16 @@ namespace jank::codegen
     auto const found(literal_globals.find(i));
     if(found != literal_globals.end())
     {
-      return found->second;
+      return builder->CreateLoad(builder->getPtrTy(), found->second);
     }
 
     auto &global(literal_globals[i]);
     auto const name(fmt::format("int_{}", i->data));
-    global = module->getOrInsertGlobal(name, builder->getPtrTy());
+    auto const var(create_global_var(name));
+    module->insertGlobalVariable(var);
+    global = var;
 
+    auto const prev_block(builder->GetInsertBlock());
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
       builder->SetInsertPoint(global_ctor_block);
@@ -391,9 +424,14 @@ namespace jank::codegen
       auto const arg(llvm::ConstantInt::getSigned(builder->getInt64Ty(), i->data));
       auto const call(builder->CreateCall(create_fn, { arg }));
       builder->CreateStore(call, global);
+
+      if(prev_block == global_ctor_block)
+      {
+        return call;
+      }
     }
 
-    return global;
+    return builder->CreateLoad(builder->getPtrTy(), global);
   }
 
   llvm::Value *llvm_processor::gen_global(obj::real_ptr const r)
@@ -401,13 +439,16 @@ namespace jank::codegen
     auto const found(literal_globals.find(r));
     if(found != literal_globals.end())
     {
-      return found->second;
+      return builder->CreateLoad(builder->getPtrTy(), found->second);
     }
 
     auto &global(literal_globals[r]);
     auto const name(fmt::format("real_{}", r->to_hash()));
-    global = module->getOrInsertGlobal(name, builder->getPtrTy());
+    auto const var(create_global_var(name));
+    module->insertGlobalVariable(var);
+    global = var;
 
+    auto const prev_block(builder->GetInsertBlock());
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
       builder->SetInsertPoint(global_ctor_block);
@@ -418,9 +459,14 @@ namespace jank::codegen
       auto const arg(llvm::ConstantFP::get(builder->getDoubleTy(), r->data));
       auto const call(builder->CreateCall(create_fn, { arg }));
       builder->CreateStore(call, global);
+
+      if(prev_block == global_ctor_block)
+      {
+        return call;
+      }
     }
 
-    return global;
+    return builder->CreateLoad(builder->getPtrTy(), global);
   }
 
   llvm::Value *llvm_processor::gen_global(obj::persistent_string_ptr const s)
@@ -428,13 +474,16 @@ namespace jank::codegen
     auto const found(literal_globals.find(s));
     if(found != literal_globals.end())
     {
-      return found->second;
+      return builder->CreateLoad(builder->getPtrTy(), found->second);
     }
 
     auto &global(literal_globals[s]);
     auto const name(fmt::format("string_{}", s->to_hash()));
-    global = module->getOrInsertGlobal(name, builder->getPtrTy());
+    auto const var(create_global_var(name));
+    module->insertGlobalVariable(var);
+    global = var;
 
+    auto const prev_block(builder->GetInsertBlock());
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
       builder->SetInsertPoint(global_ctor_block);
@@ -446,9 +495,14 @@ namespace jank::codegen
       llvm::SmallVector<llvm::Value *, 1> args{ gen_c_string(s->data.c_str()) };
       auto const call(builder->CreateCall(create_fn, args));
       builder->CreateStore(call, global);
+
+      if(prev_block == global_ctor_block)
+      {
+        return call;
+      }
     }
 
-    return global;
+    return builder->CreateLoad(builder->getPtrTy(), global);
   }
 
   llvm::Value *llvm_processor::gen_global(obj::symbol_ptr const s)
@@ -456,13 +510,16 @@ namespace jank::codegen
     auto const found(literal_globals.find(s));
     if(found != literal_globals.end())
     {
-      return found->second;
+      return builder->CreateLoad(builder->getPtrTy(), found->second);
     }
 
     auto &global(literal_globals[s]);
     auto const name(fmt::format("symbol_{}", s->to_hash()));
-    global = module->getOrInsertGlobal(name, builder->getPtrTy());
+    auto const var(create_global_var(name));
+    module->insertGlobalVariable(var);
+    global = var;
 
+    auto const prev_block(builder->GetInsertBlock());
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
       builder->SetInsertPoint(global_ctor_block);
@@ -473,13 +530,18 @@ namespace jank::codegen
                                 false));
       auto const create_fn(module->getOrInsertFunction("jank_create_symbol", create_fn_type));
 
-      llvm::SmallVector<llvm::Value *, 2> args{ gen_c_string(s->ns.c_str()),
-                                                gen_c_string(s->name.c_str()) };
+      llvm::SmallVector<llvm::Value *, 2> args{ gen_global(make_box(s->ns)),
+                                                gen_global(make_box(s->name)) };
       auto const call(builder->CreateCall(create_fn, args));
       builder->CreateStore(call, global);
+
+      if(prev_block == global_ctor_block)
+      {
+        return call;
+      }
     }
 
-    return global;
+    return builder->CreateLoad(builder->getPtrTy(), global);
   }
 
   llvm::Value *llvm_processor::gen_global(obj::keyword_ptr const k)
@@ -487,13 +549,16 @@ namespace jank::codegen
     auto const found(literal_globals.find(k));
     if(found != literal_globals.end())
     {
-      return found->second;
+      return builder->CreateLoad(builder->getPtrTy(), found->second);
     }
 
     auto &global(literal_globals[k]);
     auto const name(fmt::format("keyword_{}", k->to_hash()));
-    global = module->getOrInsertGlobal(name, builder->getPtrTy());
+    auto const var(create_global_var(name));
+    module->insertGlobalVariable(var);
+    global = var;
 
+    auto const prev_block(builder->GetInsertBlock());
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
       builder->SetInsertPoint(global_ctor_block);
@@ -508,9 +573,14 @@ namespace jank::codegen
                                                 gen_c_string(k->sym.name.c_str()) };
       auto const call(builder->CreateCall(create_fn, args));
       builder->CreateStore(call, global);
+
+      if(prev_block == global_ctor_block)
+      {
+        return call;
+      }
     }
 
-    return global;
+    return builder->CreateLoad(builder->getPtrTy(), global);
   }
 
   llvm::Value *llvm_processor::gen_global(obj::character_ptr const c)
@@ -518,13 +588,16 @@ namespace jank::codegen
     auto const found(literal_globals.find(c));
     if(found != literal_globals.end())
     {
-      return found->second;
+      return builder->CreateLoad(builder->getPtrTy(), found->second);
     }
 
     auto &global(literal_globals[c]);
     auto const name(fmt::format("char_{}", c->to_hash()));
-    global = module->getOrInsertGlobal(name, builder->getPtrTy());
+    auto const var(create_global_var(name));
+    module->insertGlobalVariable(var);
+    global = var;
 
+    auto const prev_block(builder->GetInsertBlock());
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
       builder->SetInsertPoint(global_ctor_block);
@@ -536,9 +609,14 @@ namespace jank::codegen
       llvm::SmallVector<llvm::Value *, 1> args{ gen_c_string(c->to_string()) };
       auto const call(builder->CreateCall(create_fn, args));
       builder->CreateStore(call, global);
+
+      if(prev_block == global_ctor_block)
+      {
+        return call;
+      }
     }
 
-    return global;
+    return builder->CreateLoad(builder->getPtrTy(), global);
   }
 
   llvm::Value *llvm_processor::gen_global_from_read_string(object_ptr const o)
@@ -546,13 +624,16 @@ namespace jank::codegen
     auto const found(literal_globals.find(o));
     if(found != literal_globals.end())
     {
-      return found->second;
+      return builder->CreateLoad(builder->getPtrTy(), found->second);
     }
 
     auto &global(literal_globals[o]);
     auto const name(fmt::format("data_{}", to_hash(o)));
-    global = module->getOrInsertGlobal(name, builder->getPtrTy());
+    auto const var(create_global_var(name));
+    module->insertGlobalVariable(var);
+    global = var;
 
+    auto const prev_block(builder->GetInsertBlock());
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
       builder->SetInsertPoint(global_ctor_block);
@@ -564,22 +645,35 @@ namespace jank::codegen
       llvm::SmallVector<llvm::Value *, 1> args{ gen_c_string(runtime::to_string(o)) };
       auto const call(builder->CreateCall(create_fn, args));
       builder->CreateStore(call, global);
+
+      if(prev_block == global_ctor_block)
+      {
+        return call;
+      }
     }
 
-    return global;
+    return builder->CreateLoad(builder->getPtrTy(), global);
   }
 
   void llvm_processor::create_global_ctor()
   {
-    llvm::IRBuilder<> builder{ *context };
-    auto const init_type(llvm::FunctionType::get(builder.getVoidTy(), false));
+    auto const init_type(llvm::FunctionType::get(builder->getVoidTy(), false));
     auto const init(llvm::Function::Create(init_type,
-                                           llvm::Function::InternalLinkage,
-                                           "jank_global_init",
+                                           llvm::Function::ExternalLinkage,
+                                           ctor_name.c_str(),
                                            *module));
     global_ctor_block->insertInto(init);
 
     llvm::appendToGlobalCtors(*module, init, 65535);
+  }
+
+  llvm::GlobalVariable *llvm_processor::create_global_var(native_persistent_string const &name)
+  {
+    return new llvm::GlobalVariable{ builder->getPtrTy(),
+                                     false,
+                                     llvm::GlobalVariable::InternalLinkage,
+                                     builder->getInt64(0),
+                                     name.c_str() };
   }
 
   native_persistent_string llvm_processor::to_string()

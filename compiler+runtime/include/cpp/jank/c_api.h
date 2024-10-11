@@ -10,7 +10,7 @@ extern "C"
   /* NOLINTNEXTLINE(modernize-use-using) */
   typedef long long jank_native_integer;
   /* NOLINTNEXTLINE(modernize-use-using) */
-  typedef long double jank_native_real;
+  typedef double jank_native_real;
   /* NOLINTNEXTLINE(modernize-use-using) */
   typedef char jank_native_bool;
   /* NOLINTNEXTLINE(modernize-use-using) */
