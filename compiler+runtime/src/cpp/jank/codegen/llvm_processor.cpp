@@ -261,10 +261,44 @@ namespace jank::codegen
     }
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::if_<analyze::expression> const &,
-                                   analyze::expr::function_arity<analyze::expression> const &)
+  llvm::Value *llvm_processor::gen(analyze::expr::if_<analyze::expression> const &expr,
+                                   analyze::expr::function_arity<analyze::expression> const &arity)
   {
-    return nullptr;
+    auto const condition(gen(expr.condition, arity));
+    auto const truthy_fn_type(
+      llvm::FunctionType::get(builder->getInt8Ty(), { builder->getPtrTy() }, false));
+    auto const fn(module->getOrInsertFunction("jank_truthy", truthy_fn_type));
+    llvm::SmallVector<llvm::Value *, 1> args{ condition };
+    auto const call(builder->CreateCall(fn, args));
+    auto const cmp(builder->CreateICmpEQ(call, builder->getInt8(1), "iftmp"));
+
+    auto const current_fn(builder->GetInsertBlock()->getParent());
+    auto then_block(llvm::BasicBlock::Create(*context, "then", current_fn));
+    auto else_block(llvm::BasicBlock::Create(*context, "else"));
+    auto const merge_block(llvm::BasicBlock::Create(*context, "ifcont"));
+
+    builder->CreateCondBr(cmp, then_block, else_block);
+    builder->SetInsertPoint(then_block);
+
+    auto const then(gen(expr.then, arity));
+    builder->CreateBr(merge_block);
+    /* Codegen for `then` can change the current block, so track that. */
+    then_block = builder->GetInsertBlock();
+    current_fn->insert(current_fn->end(), else_block);
+    builder->SetInsertPoint(else_block);
+
+    auto const else_(gen(expr.else_.unwrap(), arity));
+    builder->CreateBr(merge_block);
+    /* Codegen for `else` can change the current block, so track that. */
+    else_block = builder->GetInsertBlock();
+    current_fn->insert(current_fn->end(), merge_block);
+
+    builder->SetInsertPoint(merge_block);
+    auto const phi(builder->CreatePHI(builder->getPtrTy(), 2, "iftmp"));
+    phi->addIncoming(then, then_block);
+    phi->addIncoming(else_, else_block);
+
+    return phi;
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::throw_<analyze::expression> const &,
@@ -642,7 +676,7 @@ namespace jank::codegen
         llvm::FunctionType::get(builder->getPtrTy(), { builder->getPtrTy() }, false));
       auto const create_fn(module->getOrInsertFunction("jank_read_string", create_fn_type));
 
-      llvm::SmallVector<llvm::Value *, 1> args{ gen_c_string(runtime::to_string(o)) };
+      llvm::SmallVector<llvm::Value *, 1> args{ gen_global(make_box(runtime::to_code_string(o))) };
       auto const call(builder->CreateCall(create_fn, args));
       builder->CreateStore(call, global);
 

@@ -105,7 +105,8 @@ namespace jank::runtime
     if(o->type != detail::object_type_to_enum<T>::value)
     {
       /* TODO: Use fmt when possible. */
-      throw std::runtime_error{ "invalid object type" };
+      throw std::runtime_error{ "invalid object type: "
+                                + std::to_string(static_cast<int>(o->type)) };
       //throw std::runtime_error{ fmt::format(
       //  "invalid object type (expected {}, found {})",
       //  magic_enum::enum_name(detail::object_type_to_enum<T>::value),
@@ -405,7 +406,8 @@ namespace jank::runtime
       default:
         {
           /* TODO: Use fmt when possible. */
-          throw std::runtime_error{ "invalid object type" };
+          throw std::runtime_error{ "invalid object type: "
+                                    + std::to_string(static_cast<int>(const_erased->type)) };
           //throw std::runtime_error
           //{
           //  fmt::format
@@ -431,7 +433,8 @@ namespace jank::runtime
     }
     else
     {
-      throw std::runtime_error{ "invalid object type" };
+      throw std::runtime_error{ "invalid object type: "
+                                + std::to_string(static_cast<int>(const_erased->type)) };
     }
   }
 

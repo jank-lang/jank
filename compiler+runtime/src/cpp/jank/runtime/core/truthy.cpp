@@ -2,7 +2,7 @@
 
 namespace jank::runtime
 {
-  native_bool truthy(object_ptr const o)
+  native_bool truthy(object const *o)
   {
     if(!o)
     {
@@ -27,6 +27,11 @@ namespace jank::runtime
         }
       },
       o);
+  }
+
+  native_bool truthy(object_ptr const o)
+  {
+    return truthy(o.data);
   }
 
   native_bool truthy(obj::nil_ptr)
