@@ -33,6 +33,13 @@ namespace jank::runtime
     return { buff.data(), buff.size() };
   }
 
+  native_persistent_string obj::persistent_string_sequence::to_code_string() const
+  {
+    fmt::memory_buffer buff;
+    runtime::to_code_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
+    return { buff.data(), buff.size() };
+  }
+
   native_hash obj::persistent_string_sequence::to_hash() const
   {
     return hash::ordered(str->data.begin() + index, str->data.end());

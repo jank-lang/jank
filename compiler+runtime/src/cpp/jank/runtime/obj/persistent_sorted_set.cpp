@@ -59,6 +59,13 @@ namespace jank::runtime
     return native_persistent_string{ buff.data(), buff.size() };
   }
 
+  native_persistent_string obj::persistent_sorted_set::to_code_string() const
+  {
+    fmt::memory_buffer buff;
+    runtime::to_code_string(data.begin(), data.end(), "#{", '}', buff);
+    return native_persistent_string{ buff.data(), buff.size() };
+  }
+
   /* TODO: Cache this. */
   native_hash obj::persistent_sorted_set::to_hash() const
   {

@@ -606,7 +606,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 2, token_kind::character, "\\a"sv }
+                { 0, 2, token_kind::character, "a"sv }
         }));
       }
 
@@ -616,7 +616,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 2, token_kind::character, "\\1"sv }
+                { 0, 2, token_kind::character, "1"sv }
         }));
       }
 
@@ -637,7 +637,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                token{ 0, 2, token_kind::character, "\\1"sv },
+                token{ 0, 2, token_kind::character, "1"sv },
                 error{ 2, "invalid keyword: expected non-whitespace character after :" }
         }));
       }
@@ -648,10 +648,10 @@ namespace jank::read::lex
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                {  0, 2, token_kind::character,       "\\1"sv },
-                {  3, 8, token_kind::character, "\\newline"sv },
-                { 11, 2, token_kind::character,       "\\'"sv },
-                { 14, 2, token_kind::character,      "\\\\"sv }
+                {  0, 2, token_kind::character,       "1"sv },
+                {  3, 8, token_kind::character, "newline"sv },
+                { 11, 2, token_kind::character,       "'"sv },
+                { 14, 2, token_kind::character,      "\\"sv }
         }));
       }
 
@@ -661,7 +661,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                token{ 0, 2, token_kind::character, "\\a"sv },
+                token{ 0, 2, token_kind::character, "a"sv },
                 token{ 2, token_kind::syntax_quote },
                 token{ 3, 3, token_kind::keyword, "kw"sv }
         }));
@@ -962,11 +962,11 @@ namespace jank::read::lex
 
       SUBCASE("With escapes")
       {
-        processor p{ R"("foo\"\nbar\nspam\t")" };
+        processor p{ R"("foo\"\nbar\nspam\t\r")" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 20, token_kind::escaped_string, "foo\\\"\\nbar\\nspam\\t"sv }
+                { 0, 22, token_kind::escaped_string, "foo\\\"\\nbar\\nspam\\t\\r"sv }
         }));
       }
 
