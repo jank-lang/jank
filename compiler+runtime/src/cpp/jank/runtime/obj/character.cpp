@@ -1,34 +1,35 @@
 #include <jank/runtime/obj/character.hpp>
+#include <jank/util/escape.hpp>
 
 namespace jank::runtime
 {
-  static option<char> get_char_from_repr(native_persistent_string const &sv)
+  static option<char> get_char_from_literal(native_persistent_string const &sv)
   {
-    if(sv.size() == 2)
+    if(sv.size() == 1)
     {
-      return sv[1];
+      return sv[0];
     }
-    else if(sv == "\\newline")
+    else if(sv == "newline")
     {
       return '\n';
     }
-    else if(sv == "\\space")
+    else if(sv == "space")
     {
       return ' ';
     }
-    else if(sv == "\\tab")
+    else if(sv == "tab")
     {
       return '\t';
     }
-    else if(sv == "\\backspace")
+    else if(sv == "backspace")
     {
       return '\b';
     }
-    else if(sv == "\\formfeed")
+    else if(sv == "formfeed")
     {
       return '\f';
     }
-    else if(sv == "\\return")
+    else if(sv == "return")
     {
       return '\r';
     }
@@ -36,24 +37,24 @@ namespace jank::runtime
     return none;
   }
 
-  static native_persistent_string get_repr_from_char(char const ch)
+  static native_persistent_string get_literal_from_char(char const ch)
   {
     switch(ch)
     {
       case '\n':
-        return "\\newline";
+        return "newline";
       case ' ':
-        return "\\space";
+        return "space";
       case '\t':
-        return "\\tab";
+        return "tab";
       case '\b':
-        return "\\backspace";
+        return "backspace";
       case '\f':
-        return "\\formfeed";
+        return "formfeed";
       case '\r':
-        return "\\return";
+        return "return";
       default:
-        return fmt::format("\\{}", ch);
+        return fmt::format("{}", ch);
     }
   }
 
@@ -63,7 +64,7 @@ namespace jank::runtime
   }
 
   obj::character::static_object(char const ch)
-    : data{ get_repr_from_char(ch) }
+    : data{ get_literal_from_char(ch) }
   {
   }
 
@@ -81,16 +82,22 @@ namespace jank::runtime
   void obj::character::to_string(fmt::memory_buffer &buff) const
   {
     /* TODO: This is actually to_representation, since the string version of \a is just a. */
-    fmt::format_to(std::back_inserter(buff), "{}", data);
+    fmt::format_to(std::back_inserter(buff), "{}", get_char_from_literal(data).unwrap());
   }
 
-  native_persistent_string const &obj::character::to_string() const
+  native_persistent_string obj::character::to_string() const
   {
-    return data;
+    auto const char_repr{get_char_from_literal(data).unwrap()};
+    return native_persistent_string{1, char_repr};
+  }
+
+  native_persistent_string obj::character::to_code_string() const
+  {
+    return fmt::format("\\{}", data);
   }
 
   native_hash obj::character::to_hash() const
   {
-    return hash::visit(get_char_from_repr(data).unwrap());
+    return hash::visit(get_char_from_literal(data).unwrap());
   }
 }
