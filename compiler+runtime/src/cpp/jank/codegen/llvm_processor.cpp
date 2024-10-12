@@ -216,6 +216,13 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(analyze::expr::function<analyze::expression> const &,
                                    analyze::expr::function_arity<analyze::expression> const &)
   {
+    /* TODO:
+     * 1. Copy this into a local llvm_processor
+     * 2. Move module, context, and builder in
+     * 3. Do generation
+     * 4. Move module, context, builder back out
+     * 5. Reference fn names and gen call to build fn object
+     */
     return nullptr;
   }
 
