@@ -310,20 +310,10 @@ namespace jank::read
               pos++;
             }
 
-            native_persistent_string_view const data{ file.data() + token_start + 1,
-                                                      ++pos - token_start - 1};
+            native_persistent_string_view const data{ file.data() + token_start,
+                                                      ++pos - token_start };
 
-            if(data.size() == 1 || data == "newline" || data == "backspace" || data == "space"
-               || data == "formfeed" || data == "return" || data == "tab")
-            {
-              return ok(token{ token_start, pos - token_start, token_kind::character, data });
-            }
-
-            return err(error{ token_start,
-                              pos - token_start,
-                              fmt::format("Invalid character literal `\\{}` \nNote: Jank "
-                                          "doesn't support unicode characters yet!",
-                                          data) });
+            return ok(token{ token_start, pos - token_start, token_kind::character, data });
           }
         case ';':
           {
