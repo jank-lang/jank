@@ -97,5 +97,6 @@ namespace jank::codegen
     native_unordered_map<obj::symbol_ptr, llvm::Value *> var_globals;
     native_unordered_map<native_persistent_string, llvm::Value *> c_string_globals;
     llvm::BasicBlock *global_ctor_block{};
+    native_unordered_map<obj::symbol_ptr, llvm::Value *> locals;
   };
 }

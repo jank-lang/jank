@@ -207,10 +207,10 @@ namespace jank::codegen
     return gen_global_from_read_string(expr.data);
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::local_reference const &,
+  llvm::Value *llvm_processor::gen(analyze::expr::local_reference const &expr,
                                    analyze::expr::function_arity<analyze::expression> const &)
   {
-    return nullptr;
+    return locals[expr.binding.name];
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::function<analyze::expression> const &,
@@ -225,10 +225,25 @@ namespace jank::codegen
     return nullptr;
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::let<analyze::expression> const &,
-                                   analyze::expr::function_arity<analyze::expression> const &)
+  llvm::Value *llvm_processor::gen(analyze::expr::let<analyze::expression> const &expr,
+                                   analyze::expr::function_arity<analyze::expression> const &arity)
   {
-    return nullptr;
+    auto old_locals(locals);
+    for(auto const &pair : expr.pairs)
+    {
+      auto const local(expr.frame->find_local_or_capture(pair.first));
+      if(local.is_none())
+      {
+        throw std::runtime_error{ fmt::format("ICE: unable to find local: {}",
+                                              pair.first->to_string()) };
+      }
+
+      locals[pair.first] = gen(pair.second, arity);
+    }
+
+    auto const ret(gen(expr.body, arity));
+    locals = std::move(old_locals);
+    return ret;
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::do_<analyze::expression> const &expr,
