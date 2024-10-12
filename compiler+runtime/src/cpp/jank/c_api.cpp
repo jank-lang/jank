@@ -138,4 +138,9 @@ extern "C"
     auto const o_obj(reinterpret_cast<object *>(o));
     return to_hash(o_obj);
   }
+
+  void jank_throw(jank_object_ptr o)
+  {
+    throw runtime::object_ptr{ reinterpret_cast<object *>(o) };
+  }
 }

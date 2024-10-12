@@ -301,10 +301,17 @@ namespace jank::codegen
     return phi;
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::throw_<analyze::expression> const &,
-                                   analyze::expr::function_arity<analyze::expression> const &)
+  llvm::Value *llvm_processor::gen(analyze::expr::throw_<analyze::expression> const &expr,
+                                   analyze::expr::function_arity<analyze::expression> const &arity)
   {
-    return nullptr;
+    auto const value(gen(expr.value, arity));
+    auto const fn_type(
+      llvm::FunctionType::get(builder->getPtrTy(), { builder->getPtrTy() }, false));
+    auto const fn(module->getOrInsertFunction("jank_throw", fn_type));
+
+    llvm::SmallVector<llvm::Value *, 2> args{ value };
+    auto const call(builder->CreateCall(fn, args));
+    return call;
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::try_<analyze::expression> const &,
