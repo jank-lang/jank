@@ -36,7 +36,6 @@ pkgs.llvmPackages_19.stdenv.mkDerivation {
     boehmgc
     libzippp
     openssl
-    pkgs.libcxx
     pkgs.doctest
     pkgs.double-conversion
     pkgs.readline
