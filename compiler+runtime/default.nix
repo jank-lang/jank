@@ -21,7 +21,6 @@ pkgs.llvmPackages_19.stdenv.mkDerivation {
   src = lib.cleanSource ./.;
 
   nativeBuildInputs = with pkgs; [
-    llvm_19
     cmake
     git
     ninja
@@ -36,6 +35,7 @@ pkgs.llvmPackages_19.stdenv.mkDerivation {
     boehmgc
     libzippp
     openssl
+    pkgs.llvm_19
     pkgs.doctest
     pkgs.double-conversion
     pkgs.readline
@@ -48,9 +48,13 @@ pkgs.llvmPackages_19.stdenv.mkDerivation {
     pkgs.llvmPackages_19.clangUseLLVM
   ];
 
+  CC = "${pkgs.llvmPackages_19.libstdcxxClang}/bin/clang";
+  CXX = "${pkgs.llvmPackages_19.libstdcxxClang}/bin/clang++";
+  CLANG_INSTALL_PREFIX = "${pkgs.llvmPackages_19.libstdcxxClang}";
+
+  cmakeBuildType = "Debug";
+
   cmakeFlags = [
-    "-GNinja"
-    "-DCMAKE_BUILD_TYPE=Debug"
     "-Djank_tests=on"
   ];
 }
