@@ -366,6 +366,9 @@ namespace jank::read
             }
             native_bool contains_leading_digit{ file[token_start] != '-' };
             native_bool contains_dot{};
+            native_bool is_scientific{};
+            native_bool found_exponent_sign{};
+            native_bool expecting_exponent{};
             while(true)
             {
               auto const oc(peek());
@@ -377,16 +380,45 @@ namespace jank::read
               auto const c(oc.unwrap());
               if(c == '.')
               {
-                if(contains_dot || !contains_leading_digit)
+                if(contains_dot || is_scientific || !contains_leading_digit)
                 {
                   ++pos;
                   return err(error{ token_start, pos, "invalid number" });
                 }
                 contains_dot = true;
               }
+              else if(c == 'e' || c == 'E')
+              {
+                if(is_scientific || !contains_leading_digit)
+                {
+                  ++pos;
+                  return err(error{ token_start, pos, "invalid number" });
+                }
+                is_scientific = true;
+                expecting_exponent = true;
+              }
+              else if(c == '+' || c == '-')
+              {
+                if(found_exponent_sign || !is_scientific || !expecting_exponent)
+                {
+                  ++pos;
+                  return err(error{ token_start, pos, "invalid number" });
+                }
+                found_exponent_sign = true;
+              }
               else if(std::isdigit(c) == 0)
               {
+                if(expecting_exponent)
+                {
+                  ++pos;
+                  return err(
+                    error{ token_start, pos, "unexpected end of real, expecting exponent" });
+                }
                 break;
+              }
+              else if(expecting_exponent)
+              {
+                expecting_exponent = false;
               }
 
               contains_leading_digit = true;
@@ -394,13 +426,20 @@ namespace jank::read
               ++pos;
             }
 
+            if(expecting_exponent)
+            {
+              ++pos;
+              return err(error{ token_start, pos, "unexpected end of real, expecting exponent" });
+            }
+
             /* Tokens beginning with - are ambiguous; it's only a negative number if it has numbers
-             * to follow. */
+             * to follow.
+             * TODO: handle numbers starting with `+` */
             if(file[token_start] != '-' || (pos - token_start) >= 1)
             {
               require_space = true;
               ++pos;
-              if(contains_dot)
+              if(contains_dot || is_scientific)
               {
                 return ok(token{ token_start,
                                  pos - token_start,
