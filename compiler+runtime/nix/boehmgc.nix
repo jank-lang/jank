@@ -6,7 +6,7 @@
 }:
 
 let
-  stdenv = pkgs.stdenv;
+  stdenv = pkgs.llvmPackages_19.stdenv;
   cc = stdenv.cc.cc;
 in
 

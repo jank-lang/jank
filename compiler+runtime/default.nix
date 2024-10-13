@@ -15,7 +15,7 @@ let
   openssl = pkgs.callPackage ./nix/openssl.nix { };
 in
 
-pkgs.stdenv.mkDerivation {
+pkgs.llvmPackages_19.stdenv.mkDerivation {
   pname = "jank-lang";
   version = "dev";
   src = lib.cleanSource ./.;
