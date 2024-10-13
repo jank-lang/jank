@@ -51,7 +51,7 @@ pkgs.llvmPackages_19.stdenv.mkDerivation {
 
   cmakeFlags = [
     "-GNinja"
-    "-DDMAKE_BUILD_TYPE=Debug"
+    "-DCMAKE_BUILD_TYPE=Debug"
     "-Djank_tests=on"
   ];
 }
