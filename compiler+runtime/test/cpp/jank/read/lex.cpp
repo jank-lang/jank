@@ -585,7 +585,7 @@ namespace jank::read::lex
       {
         SUBCASE("Valid")
         {
-          processor p{ "1e3 -1e2 2.E-3 22.3e-8 -12E+18" };
+          processor p{ "1e3 -1e2 2.E-3 22.3e-8 -12E+18\\a" };
           native_vector<result<token, error>> tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_results({
@@ -594,6 +594,7 @@ namespace jank::read::lex
                   token{  9, 5, token_kind::real,    0.002l },
                   token{ 15, 7, token_kind::real, 2.23e-07l },
                   token{ 23, 7, token_kind::real, -1.2e+19l },
+                  token{ 30, 2, token_kind::character, "\\a"sv },
           }));
         }
 
@@ -637,6 +638,26 @@ namespace jank::read::lex
                   error{ 14, "unexpected character: ." },
                   error{ 15, "expected whitespace before next token" },
                   token{ 15, token_kind::integer, 3ll },
+          }));
+        }
+
+        SUBCASE("Extra characters in exponent")
+        {
+          processor p{ "2.ee4 -1e4E3 1.eFoo 3E5fOo" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_results({
+                  error{ 0, 3, "invalid number" },
+                  token{ 3, 2, token_kind::symbol, "e4"sv },
+                  error{ 6, 10, "invalid number" },
+                  error{ 10, "expected whitespace before next token" },
+                  token{ 10, 2, token_kind::symbol, "E3"sv },
+                  error{ 13, 16, "unexpected end of real, expecting exponent" },
+                  error{ 16, "expected whitespace before next token" },
+                  token{ 16, 3, token_kind::symbol, "Foo"sv },
+                  token{ 20, 3, token_kind::real, 300000.0l },
+                  error{ 23, "expected whitespace before next token" },
+                  token{ 23, 3, token_kind::symbol, "fOo"sv },
           }));
         }
       }
