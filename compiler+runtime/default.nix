@@ -35,7 +35,6 @@ pkgs.llvmPackages_19.stdenv.mkDerivation {
     boehmgc
     libzippp
     openssl
-    pkgs.llvm_19
     pkgs.doctest
     pkgs.double-conversion
     pkgs.readline
@@ -45,6 +44,7 @@ pkgs.llvmPackages_19.stdenv.mkDerivation {
     pkgs.magic-enum
     pkgs.fmt
     pkgs.llvmPackages_19.clang-unwrapped
+    pkgs.llvmPackages_19.llvm
   ];
 
   cmakeBuildType = "Debug";
