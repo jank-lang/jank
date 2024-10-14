@@ -45,12 +45,7 @@ pkgs.llvmPackages_19.stdenv.mkDerivation {
     pkgs.magic-enum
     pkgs.fmt
     pkgs.llvmPackages_19.clang-unwrapped
-    pkgs.llvmPackages_19.clangUseLLVM
   ];
-
-  CC = "${pkgs.llvmPackages_19.libstdcxxClang}/bin/clang";
-  CXX = "${pkgs.llvmPackages_19.libstdcxxClang}/bin/clang++";
-  CLANG_INSTALL_PREFIX = "${pkgs.llvmPackages_19.libstdcxxClang}";
 
   cmakeBuildType = "Debug";
 
