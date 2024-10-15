@@ -3,24 +3,31 @@
 
 namespace jank::runtime
 {
-  static native_persistent_string get_literal_from_char(char const ch)
+  static native_persistent_string get_literal_from_char_bytes(native_persistent_string const &bytes)
   {
-    switch(ch)
+    if(bytes.size() == 1)
     {
-      case '\n':
-        return R"(\newline)";
-      case ' ':
-        return R"(\space)";
-      case '\t':
-        return R"(\tab)";
-      case '\b':
-        return R"(\backspace)";
-      case '\f':
-        return R"(\formfeed)";
-      case '\r':
-        return R"(\return)";
-      default:
-        return fmt::format(R"(\{})", ch);
+      switch(bytes[0])
+      {
+        case '\n':
+          return R"(\newline)";
+        case ' ':
+          return R"(\space)";
+        case '\t':
+          return R"(\tab)";
+        case '\b':
+          return R"(\backspace)";
+        case '\f':
+          return R"(\formfeed)";
+        case '\r':
+          return R"(\return)";
+        default:
+          return fmt::format(R"(\{})", bytes[0]);
+      }
+    }
+    else
+    {
+      return fmt::format(R"(\{})", bytes);
     }
   }
 
@@ -57,7 +64,7 @@ namespace jank::runtime
 
   native_persistent_string obj::character::to_code_string() const
   {
-    return get_literal_from_char(data[0]);
+    return get_literal_from_char_bytes(data);
   }
 
   native_hash obj::character::to_hash() const
