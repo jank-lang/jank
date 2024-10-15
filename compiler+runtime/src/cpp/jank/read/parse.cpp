@@ -350,6 +350,41 @@ namespace jank::read::parse
 
     if(character.is_none())
     {
+      /* Unicode */
+      if(sv[0] == '\\' && sv[1] == 'u')
+      {
+        /* Should always be of length 6 eg. \uaBc5 */
+        if(sv.size() != 6)
+        {
+          return err(error{ token.pos, fmt::format("invalid unicode character literal `{}`", sv) });
+        }
+
+        auto const char_bytes(
+          parse_character_in_base(native_persistent_string{ sv.data(), sv.size() }, 16));
+
+        if(char_bytes.is_some())
+        {
+          return object_source_info{ make_box<obj::character>(char_bytes.unwrap()), token, token };
+        }
+      }
+      /* Octal */
+      else if(sv[0] == '\\' && sv[1] == 'o')
+      {
+        /* Should always be of length 5 eg. \o056 */
+        if(sv.size() != 5)
+        {
+          return err(error{ token.pos, fmt::format("invalid octal character literal `{}`", sv) });
+        }
+
+        auto const char_bytes(
+          parse_character_in_base(native_persistent_string{ sv.data(), sv.size() }, 8));
+
+        if(char_bytes.is_some())
+        {
+          return object_source_info{ make_box<obj::character>(char_bytes.unwrap()), token, token };
+        }
+      }
+
       return err(error{ token.pos, fmt::format("invalid character literal `{}`", sv) });
     }
 

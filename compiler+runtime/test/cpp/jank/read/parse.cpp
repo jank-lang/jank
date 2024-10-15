@@ -193,6 +193,105 @@ namespace jank::read::parse
         CHECK(r.expect_ok().unwrap().start
               == lex::token{ 9, 10, lex::token_kind::character, "\\backspace" });
       }
+
+      SUBCASE("Unicode")
+      {
+        SUBCASE("Valid")
+        {
+          lex::processor lp{ R"(\u1234 \u5678 \u90ab \ucdef \uABCD \uEFa0)" };
+          processor p{ lp.begin(), lp.end() };
+
+          size_t offset{};
+          for(native_persistent_string const &ch :
+              { "\\u1234", "\\u5678", "\\u90ab", "\\ucdef", "\\uABCD", "\\uEFa0" })
+          {
+            auto const r(p.next());
+            CHECK(equal(r.expect_ok().unwrap().ptr,
+                        make_box<obj::character>(parse_character_in_base(ch, 16).unwrap())));
+
+            auto const len(ch.size());
+            CHECK(r.expect_ok().unwrap().start
+                  == lex::token{ offset, len, lex::token_kind::character, ch });
+            CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+
+            /* +1 for space */
+            offset += len + 1;
+          }
+        }
+
+        SUBCASE("Invalid length")
+        {
+          lex::processor lp{ R"(\u123 \ucd \u1 \u12345)" };
+          processor p{ lp.begin(), lp.end() };
+
+          for(size_t i{}; i < 4; ++i)
+          {
+            auto const r(p.next());
+            CHECK(r.is_err());
+          }
+        }
+
+        SUBCASE("Invalid unicode characters")
+        {
+          lex::processor lp{ R"(\uabcg \u120x \uza19 \u1Gab)" };
+          processor p{ lp.begin(), lp.end() };
+
+          for(size_t i{}; i < 4; ++i)
+          {
+            auto const r(p.next());
+            CHECK(r.is_err());
+          }
+        }
+      }
+
+      SUBCASE("Octal")
+      {
+        SUBCASE("Valid")
+        {
+          lex::processor lp{ R"(\o012 \o345 \o670)" };
+          processor p{ lp.begin(), lp.end() };
+
+          size_t offset{};
+          for(native_persistent_string const &ch : { "\\o012", "\\o345", "\\o670" })
+          {
+            auto const r(p.next());
+            CHECK(equal(r.expect_ok().unwrap().ptr,
+                        make_box<obj::character>(parse_character_in_base(ch, 8).unwrap())));
+
+            auto const len(ch.size());
+            CHECK(r.expect_ok().unwrap().start
+                  == lex::token{ offset, len, lex::token_kind::character, ch });
+            CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+
+            /* +1 for space */
+            offset += len + 1;
+          }
+        }
+
+        SUBCASE("Invalid length")
+        {
+          lex::processor lp{ R"(\o1 \o23 \o4567 \o0123454)" };
+          processor p{ lp.begin(), lp.end() };
+
+          for(size_t i{}; i < 4; ++i)
+          {
+            auto const r(p.next());
+            CHECK(r.is_err());
+          }
+        }
+
+        SUBCASE("Invalid ocatal character")
+        {
+          lex::processor lp{ R"(\o128 \o962 \oAaa \oxf0)" };
+          processor p{ lp.begin(), lp.end() };
+
+          for(size_t i{}; i < 4; ++i)
+          {
+            auto const r(p.next());
+            CHECK(r.is_err());
+          }
+        }
+      }
     }
 
     TEST_CASE("String")

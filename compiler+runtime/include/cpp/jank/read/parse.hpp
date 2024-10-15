@@ -1,5 +1,7 @@
 #pragma once
 
+#include <codecvt>
+
 #include <jank/result.hpp>
 #include <jank/option.hpp>
 #include <jank/read/lex.hpp>
@@ -12,33 +14,75 @@ namespace jank::runtime
 /* TODO: Rename file to processor. */
 namespace jank::read::parse
 {
-  static option<char> get_char_from_literal(native_persistent_string const &sv)
+  static option<native_persistent_string>
+  parse_character_in_base(native_persistent_string_view const &char_literal, int const base)
   {
-    if(sv.size() == 2)
+    try
     {
-      return sv[1];
+      size_t chars_processed{};
+      auto const codepoint(
+        std::stol(native_persistent_string{ char_literal.data() + 2, char_literal.size() - 2 },
+                  &chars_processed,
+                  base));
+
+      /* Some characters that weren't processed at all.
+       * An example would be when trying to parse `12a` in octal base,
+       * `stol` will only parse `12` and will ignore `a`, returning `2`
+       * in `chars_processed`.
+       * We return none in that case, to represent to the downstream callers
+       * the enability to parse the char literal.
+       *
+       * Refer: https://en.cppreference.com/w/cpp/string/basic_string/stol
+       */
+      if(chars_processed != char_literal.size() - 2)
+      {
+        return none;
+      }
+
+      std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
+      return native_persistent_string{ converter.to_bytes(codepoint) };
     }
-    else if(sv == R"(\newline)")
+    catch(std::range_error const)
+    {
+      return none;
+    }
+    catch(std::invalid_argument const)
+    {
+      return none;
+    }
+    catch(std::out_of_range const)
+    {
+      return none;
+    }
+  }
+
+  static option<char> get_char_from_literal(native_persistent_string const &s)
+  {
+    if(s.size() == 2)
+    {
+      return s[1];
+    }
+    else if(s == R"(\newline)")
     {
       return '\n';
     }
-    else if(sv == R"(\space)")
+    else if(s == R"(\space)")
     {
       return ' ';
     }
-    else if(sv == R"(\tab)")
+    else if(s == R"(\tab)")
     {
       return '\t';
     }
-    else if(sv == R"(\backspace)")
+    else if(s == R"(\backspace)")
     {
       return '\b';
     }
-    else if(sv == R"(\formfeed)")
+    else if(s == R"(\formfeed)")
     {
       return '\f';
     }
-    else if(sv == R"(\return)")
+    else if(s == R"(\return)")
     {
       return '\r';
     }
