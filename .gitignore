@@ -40,3 +40,6 @@ CMakeUserPresets.json
 
 # Rust
 rust/jank
+/compiler+runtime/llvm-build/
+/compiler+runtime/llvm-install/
+/compiler+runtime/llvm/

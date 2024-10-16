@@ -62,7 +62,6 @@ endif()
 
 set(
   jank_aot_compiler_flags
-  $<$<PLATFORM_ID:Darwin>:-I/opt/homebrew/include>
   -Wall -Wextra -Wpedantic
   -Wfloat-equal -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor
   -Wold-style-cast -Wno-gnu-case-range
@@ -82,6 +81,7 @@ set(
   -w
 )
 
+
 # TODO: Remove FMT_HEADER_ONLY once the extern template Clang bug is fixed.
 set(
   jank_common_compiler_flags
@@ -98,6 +98,8 @@ set(
   jank_linker_flags
   $<$<PLATFORM_ID:Darwin>:-L/opt/homebrew/lib>
   #-stdlib=libc++ -lc++abi
+  ${CMAKE_SOURCE_DIR}/llvm-install/usr/local/lib/libunwind.a
+  ${CMAKE_SOURCE_DIR}/llvm-install/usr/local/lib/libc++abi.a
   )
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   list(APPEND jank_common_compiler_flags #-Werror
@@ -247,6 +249,8 @@ target_link_libraries(
   clangInterpreter
   Boost::boost
   $<$<PLATFORM_ID:Darwin>:crypto>
+  ${CMAKE_SOURCE_DIR}/llvm-install/usr/local/lib/libunwind.a
+  ${CMAKE_SOURCE_DIR}/llvm-install/usr/local/lib/libc++abi.a
 )
 
 jank_hook_llvm(jank_lib)
@@ -270,6 +274,13 @@ foreach(dir ${jank_lib_includes})
     string(APPEND jank_lib_includes_str "-isystem ${dir} ")
   endif()
 endforeach()
+target_include_directories(
+    jank_lib
+    SYSTEM
+    PUBLIC
+    "$<$<PLATFORM_ID:Darwin>:/opt/homebrew/include>"
+)
+
 
 target_compile_options(
   jank_lib
