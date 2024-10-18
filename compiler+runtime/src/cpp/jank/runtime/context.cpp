@@ -574,6 +574,7 @@ namespace jank::runtime
         ->to_string());
 
     codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::repl };
+    cg_prc.gen();
     fmt::println("{}\n", cg_prc.to_string());
     llvm::cantFail(jit_prc.interpreter->getExecutionEngine().get().addIRModule(
       llvm::orc::ThreadSafeModule{ std::move(cg_prc.module), std::move(cg_prc.context) }));
@@ -583,7 +584,8 @@ namespace jank::runtime
     //fmt::println("calling ctor");
     init.toPtr<void (*)()>()();
 
-    auto const fn(jit_prc.interpreter->getSymbolAddress(cg_prc.struct_name.c_str()).get());
+    auto const fn(
+      jit_prc.interpreter->getSymbolAddress(fmt::format("{}_0", cg_prc.struct_name)).get());
     //fmt::println("calling fn");
     auto const ret(fn.toPtr<object *(*)()>()());
     //fmt::println("ret {}", fmt::ptr(ret));

@@ -11,6 +11,10 @@ namespace jank::codegen
 {
   using namespace jank::runtime;
 
+  struct nested_tag
+  {
+  };
+
   struct llvm_processor
   {
     llvm_processor() = delete;
@@ -20,8 +24,13 @@ namespace jank::codegen
     llvm_processor(analyze::expr::function<analyze::expression> const &expr,
                    native_persistent_string const &module,
                    compilation_target target);
+    llvm_processor(nested_tag,
+                   analyze::expr::function<analyze::expression> const &expr,
+                   llvm_processor &&);
     llvm_processor(llvm_processor const &) = delete;
     llvm_processor(llvm_processor &&) noexcept = default;
+
+    void release(llvm_processor &into) &&;
 
     void gen();
     llvm::Value *gen(analyze::expression_ptr const &,
@@ -67,6 +76,7 @@ namespace jank::codegen
     native_persistent_string to_string();
 
     void create_function();
+    void create_function(analyze::expr::function_arity<analyze::expression> const &);
     void create_global_ctor();
     llvm::GlobalVariable *create_global_var(native_persistent_string const &name);
 
