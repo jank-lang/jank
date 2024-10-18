@@ -194,7 +194,7 @@ namespace jank::read::parse
               == lex::token{ 9, 10, lex::token_kind::character, "\\backspace" });
       }
 
-      SUBCASE("Unicode")
+      SUBCASE("Hex unicode")
       {
         SUBCASE("Valid")
         {
@@ -207,7 +207,8 @@ namespace jank::read::parse
           {
             auto const r(p.next());
             CHECK(equal(r.expect_ok().unwrap().ptr,
-                        make_box<obj::character>(parse_character_in_base(ch, 16).unwrap())));
+                        make_box<obj::character>(
+                          parse_character_in_base(ch.substr(2), 16).expect_ok().unwrap())));
 
             auto const len(ch.size());
             CHECK(r.expect_ok().unwrap().start
@@ -221,10 +222,10 @@ namespace jank::read::parse
 
         SUBCASE("Invalid length")
         {
-          lex::processor lp{ R"(\u123 \ucd \u1 \u12345)" };
+          lex::processor lp{ R"(\u123456 \uabcdef \u12abf5)" };
           processor p{ lp.begin(), lp.end() };
 
-          for(size_t i{}; i < 4; ++i)
+          for(size_t i{}; i < 3; ++i)
           {
             auto const r(p.next());
             CHECK(r.is_err());
@@ -244,7 +245,7 @@ namespace jank::read::parse
         }
       }
 
-      SUBCASE("Octal")
+      SUBCASE("Octal unicode")
       {
         SUBCASE("Valid")
         {
@@ -256,7 +257,8 @@ namespace jank::read::parse
           {
             auto const r(p.next());
             CHECK(equal(r.expect_ok().unwrap().ptr,
-                        make_box<obj::character>(parse_character_in_base(ch, 8).unwrap())));
+                        make_box<obj::character>(
+                          parse_character_in_base(ch.substr(2), 8).expect_ok().unwrap())));
 
             auto const len(ch.size());
             CHECK(r.expect_ok().unwrap().start
@@ -270,10 +272,10 @@ namespace jank::read::parse
 
         SUBCASE("Invalid length")
         {
-          lex::processor lp{ R"(\o1 \o23 \o4567 \o0123454)" };
+          lex::processor lp{ R"(\o12345677 \o23007673323)" };
           processor p{ lp.begin(), lp.end() };
 
-          for(size_t i{}; i < 4; ++i)
+          for(size_t i{}; i < 2; ++i)
           {
             auto const r(p.next());
             CHECK(r.is_err());

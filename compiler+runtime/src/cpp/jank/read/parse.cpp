@@ -15,6 +15,81 @@ namespace jank::read::parse
 {
   using namespace jank::runtime;
 
+  result<option<native_persistent_string>, native_persistent_string>
+  parse_character_in_base(native_persistent_string const &char_literal, int const base)
+  {
+    try
+    {
+      size_t chars_processed{};
+      auto const codepoint(std::stol(char_literal, &chars_processed, base));
+
+      /* `std::stol` will ignore any character that lies outside of
+       * the `base` digits range.
+       *
+       * For base `8`, valid digits are {0, 1, 2, 3, 4, 5, 6, 7}.
+       * For base `16`, valid digits are {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, a, b, c, d, e, f, A, B, C, D, E, F}
+       *
+       * If `std::stol` doesn't process all the
+       * characters in `char_literal`, we'll consider it as invalid.
+       *
+       * Refer: https://en.cppreference.com/w/cpp/string/basic_string/stol
+       */
+      if(chars_processed != char_literal.size())
+      {
+        return err("Invalid unicode digit");
+      }
+
+      std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
+
+      auto const converted(native_persistent_string{ converter.to_bytes(codepoint) });
+
+      if(converter.converted() != 1)
+      {
+        return err("Out of range");
+      }
+
+      return ok(converted);
+    }
+    catch(std::exception const &e)
+    {
+      return err(e.what());
+    }
+  }
+
+  option<char> get_char_from_literal(native_persistent_string const &s)
+  {
+    if(s.size() == 2)
+    {
+      return s[1];
+    }
+    else if(s == R"(\newline)")
+    {
+      return '\n';
+    }
+    else if(s == R"(\space)")
+    {
+      return ' ';
+    }
+    else if(s == R"(\tab)")
+    {
+      return '\t';
+    }
+    else if(s == R"(\backspace)")
+    {
+      return '\b';
+    }
+    else if(s == R"(\formfeed)")
+    {
+      return '\f';
+    }
+    else if(s == R"(\return)")
+    {
+      return '\r';
+    }
+
+    return none;
+  }
+
   native_bool
   processor::object_source_info::operator==(processor::object_source_info const &rhs) const
   {
@@ -350,38 +425,23 @@ namespace jank::read::parse
 
     if(character.is_none())
     {
-      /* Unicode */
-      if(sv[0] == '\\' && sv[1] == 'u')
+      /* Hexadecimal unicode */
+      if(sv[0] == '\\' && (sv[1] == 'u' || sv[1] == 'o'))
       {
-        /* Should always be of length 6 eg. \uaBc5 */
-        if(sv.size() != 6)
+        auto const base{ (sv[1] == 'u' ? 16 : 8) };
+        auto const char_bytes(parse_character_in_base(sv.substr(2), base));
+
+        if(char_bytes.is_ok())
         {
-          return err(error{ token.pos, fmt::format("invalid unicode character literal `{}`", sv) });
+          return object_source_info{ make_box<obj::character>(char_bytes.expect_ok().unwrap()),
+                                     token,
+                                     token };
         }
-
-        auto const char_bytes(
-          parse_character_in_base(native_persistent_string{ sv.data(), sv.size() }, 16));
-
-        if(char_bytes.is_some())
+        else
         {
-          return object_source_info{ make_box<obj::character>(char_bytes.unwrap()), token, token };
-        }
-      }
-      /* Octal */
-      else if(sv[0] == '\\' && sv[1] == 'o')
-      {
-        /* Should always be of length 5 eg. \o056 */
-        if(sv.size() != 5)
-        {
-          return err(error{ token.pos, fmt::format("invalid octal character literal `{}`", sv) });
-        }
-
-        auto const char_bytes(
-          parse_character_in_base(native_persistent_string{ sv.data(), sv.size() }, 8));
-
-        if(char_bytes.is_some())
-        {
-          return object_source_info{ make_box<obj::character>(char_bytes.unwrap()), token, token };
+          return err(
+            error{ token.pos,
+                   fmt::format("Error reading character `{}`: {}", sv, char_bytes.expect_err()) });
         }
       }
 
