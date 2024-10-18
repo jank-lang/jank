@@ -348,6 +348,26 @@ namespace jank::read::parse
 
     if(character.is_none())
     {
+      /* Hexadecimal unicode */
+      if(sv[0] == '\\' && (sv[1] == 'u' || sv[1] == 'o'))
+      {
+        auto const base{ (sv[1] == 'u' ? 16 : 8) };
+        auto const char_bytes(parse_character_in_base(sv.substr(2), base));
+
+        if(char_bytes.is_ok())
+        {
+          return object_source_info{ make_box<obj::character>(char_bytes.expect_ok().unwrap()),
+                                     token,
+                                     token };
+        }
+        else
+        {
+          return err(
+            error{ token.pos,
+                   fmt::format("Error reading character `{}`: {}", sv, char_bytes.expect_err()) });
+        }
+      }
+
       return err(error{ token.pos, fmt::format("invalid character literal `{}`", sv) });
     }
 
