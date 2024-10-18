@@ -14,45 +14,44 @@ namespace jank::runtime
 /* TODO: Rename file to processor. */
 namespace jank::read::parse
 {
-  static option<native_persistent_string>
-  parse_character_in_base(native_persistent_string_view const &char_literal, int const base)
+  static result<option<native_persistent_string>, native_persistent_string>
+  parse_character_in_base(native_persistent_string const &char_literal, int const base)
   {
     try
     {
       size_t chars_processed{};
-      auto const codepoint(
-        std::stol(native_persistent_string{ char_literal.data() + 2, char_literal.size() - 2 },
-                  &chars_processed,
-                  base));
+      auto const codepoint(std::stol(char_literal, &chars_processed, base));
 
-      /* Some characters that weren't processed at all.
-       * An example would be when trying to parse `12a` in octal base,
-       * `stol` will only parse `12` and will ignore `a`, returning `2`
-       * in `chars_processed`.
-       * We return none in that case, to represent to the downstream callers
-       * the enability to parse the char literal.
+      /* `std::stol` will ignore any character that lies outside of
+       * the `base` digits range.
+       *
+       * For base `8`, valid digits are {0, 1, 2, 3, 4, 5, 6, 7}.
+       * For base `16`, valid digits are {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, a, b, c, d, e, f, A, B, C, D, E, F}
+       *
+       * If `std::stol` doesn't process all the
+       * characters in `char_literal`, we'll consider it as invalid.
        *
        * Refer: https://en.cppreference.com/w/cpp/string/basic_string/stol
        */
-      if(chars_processed != char_literal.size() - 2)
+      if(chars_processed != char_literal.size())
       {
-        return none;
+        return err("Invalid unicode digit");
       }
 
       std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
-      return native_persistent_string{ converter.to_bytes(codepoint) };
+
+      auto const converted(native_persistent_string{ converter.to_bytes(codepoint) });
+
+      if(converter.converted() != 1)
+      {
+        return err("Out of range");
+      }
+
+      return ok(converted);
     }
-    catch(std::range_error const)
+    catch(std::exception const &e)
     {
-      return none;
-    }
-    catch(std::invalid_argument const)
-    {
-      return none;
-    }
-    catch(std::out_of_range const)
-    {
-      return none;
+      return err(e.what());
     }
   }
 
