@@ -62,7 +62,6 @@ endif()
 
 set(
   jank_aot_compiler_flags
-  $<$<PLATFORM_ID:Darwin>:-I/opt/homebrew/include>
   -Wall -Wextra -Wpedantic
   -Wfloat-equal -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor
   -Wold-style-cast -Wno-gnu-case-range
@@ -98,6 +97,8 @@ set(
   jank_linker_flags
   $<$<PLATFORM_ID:Darwin>:-L/opt/homebrew/lib>
   #-stdlib=libc++ -lc++abi
+  ${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libunwind.a
+  ${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libc++abi.a
   )
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   list(APPEND jank_common_compiler_flags #-Werror
@@ -270,6 +271,13 @@ foreach(dir ${jank_lib_includes})
     string(APPEND jank_lib_includes_str "-isystem ${dir} ")
   endif()
 endforeach()
+
+target_include_directories(
+    jank_lib
+    SYSTEM
+    PUBLIC
+    "$<$<PLATFORM_ID:Darwin>:/opt/homebrew/include>"
+)
 
 target_compile_options(
   jank_lib
