@@ -47,6 +47,7 @@ extern "C"
                                                    jank_native_bool is_variadic,
                                                    jank_native_bool is_variadic_ambiguous);
   jank_object_ptr jank_function_create(jank_arity_flags arity_flags);
+  jank_object_ptr jank_function_create_closure(jank_arity_flags arity_flags, void *context);
   jank_object_ptr jank_function_set_arity0(jank_object_ptr fn, jank_object_ptr (*f)());
   jank_object_ptr
   jank_function_set_arity1(jank_object_ptr fn, jank_object_ptr (*f)(jank_object_ptr));

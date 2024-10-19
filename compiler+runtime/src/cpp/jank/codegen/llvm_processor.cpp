@@ -68,7 +68,17 @@ namespace jank::codegen
   void
   llvm_processor::create_function(analyze::expr::function_arity<analyze::expression> const &arity)
   {
-    std::vector<llvm::Type *> const arg_types{ arity.params.size(), builder->getPtrTy() };
+    auto const captures(root_fn.captures());
+    auto const is_closure(!captures.empty());
+    fmt::println("Creating fn {} with arities: {} captures: {}",
+                 root_fn.unique_name,
+                 root_fn.arities.size(),
+                 captures.size());
+
+    /* Closures get one extra parameter, the first one, which is a pointer to the closure's
+     * context. The context is a struct containing all captured values. */
+    std::vector<llvm::Type *> const arg_types{ arity.params.size() + is_closure,
+                                               builder->getPtrTy() };
     auto const fn_type(llvm::FunctionType::get(builder->getPtrTy(), arg_types, false));
     fn = llvm::Function::Create(fn_type,
                                 llvm::Function::ExternalLinkage,
@@ -77,6 +87,28 @@ namespace jank::codegen
 
     auto const entry(llvm::BasicBlock::Create(*context, "entry", fn));
     builder->SetInsertPoint(entry);
+
+    for(size_t i{}; i < arity.params.size(); ++i)
+    {
+      locals[arity.params[i]] = fn->getArg(i + is_closure);
+    }
+
+    if(is_closure)
+    {
+      auto const context(fn->getArg(0));
+      for(auto const &capture : arity.frame->captures)
+      {
+        auto const captures(root_fn.captures());
+        std::vector<llvm::Type *> const capture_types{ captures.size(), builder->getPtrTy() };
+        auto const closure_ctx_type(
+          get_or_insert_struct_type(fmt::format("{}_context", munge(root_fn.unique_name)),
+                                    capture_types));
+        auto const field_ptr(builder->CreateStructGEP(closure_ctx_type, context, 0));
+        locals[capture.first] = builder->CreateLoad(builder->getPtrTy(),
+                                                    field_ptr,
+                                                    munge(capture.first->to_string()).c_str());
+      }
+    }
   }
 
   void llvm_processor::gen()
@@ -312,17 +344,10 @@ namespace jank::codegen
     return ret;
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::function<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &)
+  llvm::Value *
+  llvm_processor::gen(analyze::expr::function<analyze::expression> const &expr,
+                      analyze::expr::function_arity<analyze::expression> const &fn_arity)
   {
-    /* TODO:
-     * 1. Copy this into a local llvm_processor
-     * 2. Move module, context, and builder in
-     * 3. Do generation
-     * 4. Move module, context, builder back out
-     * 5. Reference fn names and gen call to build fn object
-     */
-
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
 
@@ -334,6 +359,7 @@ namespace jank::codegen
 
     analyze::expr::function_arity<analyze::expression> const *variadic_arity{};
     analyze::expr::function_arity<analyze::expression> const *highest_fixed_arity{};
+    auto const captures(expr.captures());
     for(auto const &arity : expr.arities)
     {
       if(arity.fn_ctx->is_variadic)
@@ -362,10 +388,47 @@ namespace jank::codegen
         builder->getInt8(!!variadic_arity),
         builder->getInt8(variadic_ambiguous) }));
 
-    auto const create_fn_type(
-      llvm::FunctionType::get(builder->getPtrTy(), { builder->getInt8Ty() }, false));
-    auto const create_fn(module->getOrInsertFunction("jank_function_create", create_fn_type));
-    auto const fn_obj(builder->CreateCall(create_fn, { arity_flags }));
+    llvm::Value *fn_obj{};
+
+    if(captures.empty())
+    {
+      auto const create_fn_type(
+        llvm::FunctionType::get(builder->getPtrTy(), { builder->getInt8Ty() }, false));
+      auto const create_fn(module->getOrInsertFunction("jank_function_create", create_fn_type));
+      fn_obj = builder->CreateCall(create_fn, { arity_flags });
+    }
+    else
+    {
+      std::vector<llvm::Type *> const capture_types{ captures.size(), builder->getPtrTy() };
+      auto const closure_ctx_type(
+        get_or_insert_struct_type(fmt::format("{}_context", munge(expr.unique_name)),
+                                  capture_types));
+
+      auto const malloc_fn_type(
+        llvm::FunctionType::get(builder->getPtrTy(), { builder->getInt64Ty() }, false));
+      auto const malloc_fn(module->getOrInsertFunction("malloc", malloc_fn_type));
+      auto const closure_obj(
+        builder->CreateCall(malloc_fn, { llvm::ConstantExpr::getSizeOf(closure_ctx_type) }));
+
+      for(auto const &capture : captures)
+      {
+        auto const field_ptr(builder->CreateStructGEP(closure_ctx_type, closure_obj, 0));
+        analyze::expr::local_reference const local_ref{
+          analyze::expression_base{ {}, expr.expr_type, expr.frame },
+          capture.first,
+          *capture.second
+        };
+        builder->CreateStore(gen(local_ref, fn_arity), field_ptr);
+      }
+
+      auto const create_fn_type(
+        llvm::FunctionType::get(builder->getPtrTy(),
+                                { builder->getInt8Ty(), builder->getPtrTy() },
+                                false));
+      auto const create_fn(
+        module->getOrInsertFunction("jank_function_create_closure", create_fn_type));
+      fn_obj = builder->CreateCall(create_fn, { arity_flags, closure_obj });
+    }
 
     for(auto const &arity : expr.arities)
     {
@@ -514,14 +577,8 @@ namespace jank::codegen
     auto const fn(module->getOrInsertFunction("jank_throw", fn_type));
 
     llvm::SmallVector<llvm::Value *, 2> args{ value };
-    auto const call(builder->CreateCall(fn, args));
-
-    if(expr.expr_type == analyze::expression_type::return_statement)
-    {
-      return builder->CreateRet(call);
-    }
-
-    return call;
+    builder->CreateCall(fn, args);
+    return builder->CreateUnreachable();
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::try_<analyze::expression> const &,
@@ -925,6 +982,21 @@ namespace jank::codegen
                                      llvm::GlobalVariable::InternalLinkage,
                                      builder->getInt64(0),
                                      name.c_str() };
+  }
+
+  llvm::StructType *
+  llvm_processor::get_or_insert_struct_type(std::string const &name,
+                                            std::vector<llvm::Type *> const &fields)
+  {
+    auto const found(llvm::StructType::getTypeByName(*context, name));
+    if(found)
+    {
+      return found;
+    }
+
+    std::vector<llvm::Type *> const field_types{ fields.size(), builder->getPtrTy() };
+    auto const struct_type(llvm::StructType::create(field_types, name));
+    return struct_type;
   }
 
   native_persistent_string llvm_processor::to_string()

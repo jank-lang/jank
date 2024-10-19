@@ -76,7 +76,7 @@ namespace jank::codegen
     native_persistent_string to_string();
 
     void create_function();
-    void create_function(analyze::expr::function_arity<analyze::expression> const &);
+    void create_function(analyze::expr::function_arity<analyze::expression> const &arity);
     void create_global_ctor();
     llvm::GlobalVariable *create_global_var(native_persistent_string const &name);
 
@@ -89,6 +89,9 @@ namespace jank::codegen
     llvm::Value *gen_global(obj::keyword_ptr k);
     llvm::Value *gen_global(obj::character_ptr c);
     llvm::Value *gen_global_from_read_string(object_ptr o);
+
+    llvm::StructType *
+    get_or_insert_struct_type(std::string const &name, std::vector<llvm::Type *> const &fields);
 
     /* This is stored just to keep the expression alive. */
     analyze::expression_ptr root_expr{};

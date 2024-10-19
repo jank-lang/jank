@@ -115,6 +115,13 @@ extern "C"
     return erase(obj::nil::nil_const());
   }
 
+  jank_object_ptr
+  jank_function_create_closure(jank_arity_flags const arity_flags, void * const context)
+  {
+    fmt::println("jank_function_create_closure {}", fmt::ptr(context));
+    return erase(obj::nil::nil_const());
+  }
+
   jank_object_ptr jank_function_set_arity0(jank_object_ptr const fn, jank_object_ptr (* const f)())
   {
     fmt::println("jank_function_set_arity0");

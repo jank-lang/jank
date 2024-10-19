@@ -70,6 +70,23 @@ namespace jank::analyze::expr
     native_vector<function_arity<E>> arities;
     obj::persistent_hash_map_ptr meta{};
 
+    /* Aggregates all `frame->captures` from each arity so that we can know the overall
+     * captures for all arities of this fn. This is necessary for codegen to IR, since we
+     * generate a context struct which is shared across all arities, even if one arity
+     * doesn't use any captures. */
+    native_unordered_map<obj::symbol_ptr, analyze::local_binding const *> captures() const
+    {
+      native_unordered_map<obj::symbol_ptr, analyze::local_binding const *> ret;
+      for(auto const &arity : arities)
+      {
+        for(auto const &capture : arity.frame->captures)
+        {
+          ret.emplace(capture.first, &capture.second);
+        }
+      }
+      return ret;
+    }
+
     object_ptr to_runtime_data() const
     {
       object_ptr arity_maps(make_box<obj::persistent_vector>());
