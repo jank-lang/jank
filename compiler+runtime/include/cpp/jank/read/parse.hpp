@@ -1,5 +1,7 @@
 #pragma once
 
+#include <codecvt>
+
 #include <jank/result.hpp>
 #include <jank/option.hpp>
 #include <jank/read/lex.hpp>
@@ -12,33 +14,74 @@ namespace jank::runtime
 /* TODO: Rename file to processor. */
 namespace jank::read::parse
 {
-  static option<char> get_char_from_literal(native_persistent_string const &sv)
+  static result<option<native_persistent_string>, native_persistent_string>
+  parse_character_in_base(native_persistent_string const &char_literal, int const base)
   {
-    if(sv.size() == 2)
+    try
     {
-      return sv[1];
+      size_t chars_processed{};
+      auto const codepoint(std::stol(char_literal, &chars_processed, base));
+
+      /* `std::stol` will ignore any character that lies outside of
+       * the `base` digits range.
+       *
+       * For base `8`, valid digits are {0, 1, 2, 3, 4, 5, 6, 7}.
+       * For base `16`, valid digits are {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, a, b, c, d, e, f, A, B, C, D, E, F}
+       *
+       * If `std::stol` doesn't process all the
+       * characters in `char_literal`, we'll consider it as invalid.
+       *
+       * Refer: https://en.cppreference.com/w/cpp/string/basic_string/stol
+       */
+      if(chars_processed != char_literal.size())
+      {
+        return err("Invalid unicode digit");
+      }
+
+      std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
+
+      auto const converted(native_persistent_string{ converter.to_bytes(codepoint) });
+
+      if(converter.converted() != 1)
+      {
+        return err("Out of range");
+      }
+
+      return ok(converted);
     }
-    else if(sv == R"(\newline)")
+    catch(std::exception const &e)
+    {
+      return err(e.what());
+    }
+  }
+
+  static option<char> get_char_from_literal(native_persistent_string const &s)
+  {
+    if(s.size() == 2)
+    {
+      return s[1];
+    }
+    else if(s == R"(\newline)")
     {
       return '\n';
     }
-    else if(sv == R"(\space)")
+    else if(s == R"(\space)")
     {
       return ' ';
     }
-    else if(sv == R"(\tab)")
+    else if(s == R"(\tab)")
     {
       return '\t';
     }
-    else if(sv == R"(\backspace)")
+    else if(s == R"(\backspace)")
     {
       return '\b';
     }
-    else if(sv == R"(\formfeed)")
+    else if(s == R"(\formfeed)")
     {
       return '\f';
     }
-    else if(sv == R"(\return)")
+    else if(s == R"(\return)")
     {
       return '\r';
     }
