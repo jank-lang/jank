@@ -344,7 +344,14 @@ namespace jank::read::parse
     ++token_current;
     auto const sv(boost::get<native_persistent_string_view>(token.data));
 
-    return object_source_info{ make_box<obj::character>(sv), token, token };
+    auto const character(get_char_from_literal(sv));
+
+    if(character.is_none())
+    {
+      return err(error{ token.pos, fmt::format("invalid character literal `{}`", sv) });
+    }
+
+    return object_source_info{ make_box<obj::character>(character.unwrap()), token, token };
   }
 
   processor::object_result processor::parse_meta_hint()

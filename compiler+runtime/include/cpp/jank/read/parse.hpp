@@ -12,6 +12,40 @@ namespace jank::runtime
 /* TODO: Rename file to processor. */
 namespace jank::read::parse
 {
+  static option<char> get_char_from_literal(native_persistent_string const &sv)
+  {
+    if(sv.size() == 2)
+    {
+      return sv[1];
+    }
+    else if(sv == R"(\newline)")
+    {
+      return '\n';
+    }
+    else if(sv == R"(\space)")
+    {
+      return ' ';
+    }
+    else if(sv == R"(\tab)")
+    {
+      return '\t';
+    }
+    else if(sv == R"(\backspace)")
+    {
+      return '\b';
+    }
+    else if(sv == R"(\formfeed)")
+    {
+      return '\f';
+    }
+    else if(sv == R"(\return)")
+    {
+      return '\r';
+    }
+
+    return none;
+  }
+
   struct processor
   {
     struct object_source_info

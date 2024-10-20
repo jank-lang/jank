@@ -40,6 +40,21 @@ namespace jank::util
           case '"':
             ss += '"';
             break;
+          case 'a':
+            ss += '\a';
+            break;
+          case 'v':
+            ss += '\v';
+            break;
+          case '?':
+            ss += '\?';
+            break;
+          case 'f':
+            ss += '\f';
+            break;
+          case 'b':
+            ss += '\b';
+            break;
           default:
             return err(fmt::format("invalid escape sequence: \\{}", c));
         }
@@ -81,6 +96,26 @@ namespace jank::util
         case '"':
           ss += '\\';
           ss += '"';
+          break;
+        case '\a':
+          ss += '\\';
+          ss += 'a';
+          break;
+        case '\v':
+          ss += '\\';
+          ss += 'v';
+          break;
+        case '\?':
+          ss += '\\';
+          ss += '?';
+          break;
+        case '\f':
+          ss += '\\';
+          ss += 'f';
+          break;
+        case '\b':
+          ss += '\\';
+          ss += 'b';
           break;
         default:
           ss += c;
