@@ -47,15 +47,22 @@ extern "C"
                                                    jank_native_bool is_variadic,
                                                    jank_native_bool is_variadic_ambiguous);
   jank_object_ptr jank_function_create(jank_arity_flags arity_flags);
-  jank_object_ptr jank_function_create_closure(jank_arity_flags arity_flags, void *context);
-  jank_object_ptr jank_function_set_arity0(jank_object_ptr fn, jank_object_ptr (*f)());
-  jank_object_ptr
-  jank_function_set_arity1(jank_object_ptr fn, jank_object_ptr (*f)(jank_object_ptr));
-  jank_object_ptr jank_function_set_arity2(jank_object_ptr fn,
-                                           jank_object_ptr (*f)(jank_object_ptr, jank_object_ptr));
-  jank_object_ptr
+  void jank_function_set_arity0(jank_object_ptr fn, jank_object_ptr (*f)());
+  void jank_function_set_arity1(jank_object_ptr fn, jank_object_ptr (*f)(jank_object_ptr));
+  void jank_function_set_arity2(jank_object_ptr fn,
+                                jank_object_ptr (*f)(jank_object_ptr, jank_object_ptr));
+  void
   jank_function_set_arity3(jank_object_ptr fn,
                            jank_object_ptr (*f)(jank_object_ptr, jank_object_ptr, jank_object_ptr));
+
+  jank_object_ptr jank_closure_create(jank_arity_flags arity_flags, void *context);
+  void jank_closure_set_arity0(jank_object_ptr fn, jank_object_ptr (*f)());
+  void jank_closure_set_arity1(jank_object_ptr fn, jank_object_ptr (*f)(jank_object_ptr));
+  void jank_closure_set_arity2(jank_object_ptr fn,
+                               jank_object_ptr (*f)(jank_object_ptr, jank_object_ptr));
+  void
+  jank_closure_set_arity3(jank_object_ptr fn,
+                          jank_object_ptr (*f)(jank_object_ptr, jank_object_ptr, jank_object_ptr));
 
   jank_native_bool jank_truthy(jank_object_ptr o);
   jank_native_bool jank_equal(jank_object_ptr l, jank_object_ptr r);

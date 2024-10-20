@@ -390,7 +390,9 @@ namespace jank::codegen
 
     llvm::Value *fn_obj{};
 
-    if(captures.empty())
+    auto const is_closure(!captures.empty());
+
+    if(!is_closure)
     {
       auto const create_fn_type(
         llvm::FunctionType::get(builder->getPtrTy(), { builder->getInt8Ty() }, false));
@@ -425,21 +427,24 @@ namespace jank::codegen
         llvm::FunctionType::get(builder->getPtrTy(),
                                 { builder->getInt8Ty(), builder->getPtrTy() },
                                 false));
-      auto const create_fn(
-        module->getOrInsertFunction("jank_function_create_closure", create_fn_type));
+      auto const create_fn(module->getOrInsertFunction("jank_closure_create", create_fn_type));
       fn_obj = builder->CreateCall(create_fn, { arity_flags, closure_obj });
     }
 
     for(auto const &arity : expr.arities)
     {
-      std::vector<llvm::Type *> const arg_types{ arity.params.size() + 1, builder->getPtrTy() };
-      auto const set_arity_fn_type(llvm::FunctionType::get(builder->getPtrTy(), arg_types, false));
-      auto const set_arity_fn(
-        module->getOrInsertFunction(fmt::format("jank_function_set_arity{}", arity.params.size()),
-                                    set_arity_fn_type));
+      auto const set_arity_fn_type(
+        llvm::FunctionType::get(builder->getVoidTy(),
+                                { builder->getPtrTy(), builder->getPtrTy() },
+                                false));
+      auto const set_arity_fn(module->getOrInsertFunction(
+        is_closure ? fmt::format("jank_closure_set_arity{}", arity.params.size())
+                   : fmt::format("jank_function_set_arity{}", arity.params.size()),
+        set_arity_fn_type));
 
       std::vector<llvm::Type *> const target_arg_types{ arity.params.size(), builder->getPtrTy() };
-      auto const target_fn_type(llvm::FunctionType::get(builder->getPtrTy(), arg_types, false));
+      auto const target_fn_type(
+        llvm::FunctionType::get(builder->getPtrTy(), target_arg_types, false));
       auto target_fn(module->getOrInsertFunction(
         fmt::format("{}_{}", munge(expr.unique_name), arity.params.size()),
         target_fn_type));

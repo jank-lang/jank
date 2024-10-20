@@ -3,6 +3,30 @@
 using namespace jank;
 using namespace jank::runtime;
 
+template <typename Is>
+struct make_closure_arity;
+
+template <size_t I>
+struct make_closure_arity_arg
+{
+  using type = object *;
+};
+
+template <size_t... Is>
+struct make_closure_arity<std::index_sequence<Is...>>
+{
+  using type = object *(*)(void *, typename make_closure_arity_arg<Is>::type...);
+};
+
+template <>
+struct make_closure_arity<std::index_sequence<>>
+{
+  using type = object *(*)(void *);
+};
+
+template <size_t N>
+using closure_arity = typename make_closure_arity<std::make_index_sequence<N>>::type;
+
 extern "C"
 {
   jank_object_ptr jank_eval(jank_object_ptr const s)
@@ -111,45 +135,74 @@ extern "C"
 
   jank_object_ptr jank_function_create(jank_arity_flags const arity_flags)
   {
-    fmt::println("jank_function_create");
-    return erase(obj::nil::nil_const());
+    return erase(make_box<obj::jit_closure>(arity_flags));
   }
 
-  jank_object_ptr
-  jank_function_create_closure(jank_arity_flags const arity_flags, void * const context)
+  void jank_function_set_arity0(jank_object_ptr const fn, jank_object_ptr (* const f)())
   {
-    fmt::println("jank_function_create_closure {}", fmt::ptr(context));
-    return erase(obj::nil::nil_const());
   }
 
-  jank_object_ptr jank_function_set_arity0(jank_object_ptr const fn, jank_object_ptr (* const f)())
-  {
-    fmt::println("jank_function_set_arity0");
-    return nullptr;
-  }
-
-  jank_object_ptr
+  void
   jank_function_set_arity1(jank_object_ptr const fn, jank_object_ptr (* const f)(jank_object_ptr))
   {
-    fmt::println("jank_function_set_arity1");
-    return nullptr;
   }
 
-  jank_object_ptr
-  jank_function_set_arity2(jank_object_ptr const fn,
-                           jank_object_ptr (* const f)(jank_object_ptr, jank_object_ptr))
+  void jank_function_set_arity2(jank_object_ptr const fn,
+                                jank_object_ptr (* const f)(jank_object_ptr, jank_object_ptr))
   {
-    fmt::println("jank_function_set_arity2");
-    return nullptr;
   }
 
-  jank_object_ptr jank_function_set_arity3(jank_object_ptr const fn,
-                                           jank_object_ptr (* const f)(jank_object_ptr,
-                                                                       jank_object_ptr,
-                                                                       jank_object_ptr))
+  void jank_function_set_arity3(jank_object_ptr const fn,
+                                jank_object_ptr (* const f)(jank_object_ptr,
+                                                            jank_object_ptr,
+                                                            jank_object_ptr))
   {
-    fmt::println("jank_function_set_arity3");
-    return nullptr;
+  }
+
+  jank_object_ptr jank_closure_create(jank_arity_flags const arity_flags, void * const context)
+  {
+    return erase(make_box<obj::jit_closure>(arity_flags, context));
+  }
+
+  void jank_closure_set_arity0(jank_object_ptr const fn, jank_object_ptr (* const f)())
+  {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
+    auto const fn_obj(reinterpret_cast<object *>(fn));
+    try_object<obj::jit_closure>(fn_obj)->arity_0 = reinterpret_cast<closure_arity<0>>(f);
+#pragma clang diagnostic pop
+  }
+
+  void
+  jank_closure_set_arity1(jank_object_ptr const fn, jank_object_ptr (* const f)(jank_object_ptr))
+  {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
+    auto const fn_obj(reinterpret_cast<object *>(fn));
+    try_object<obj::jit_closure>(fn_obj)->arity_1 = reinterpret_cast<closure_arity<1>>(f);
+#pragma clang diagnostic pop
+  }
+
+  void jank_closure_set_arity2(jank_object_ptr const fn,
+                               jank_object_ptr (* const f)(jank_object_ptr, jank_object_ptr))
+  {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
+    auto const fn_obj(reinterpret_cast<object *>(fn));
+    try_object<obj::jit_closure>(fn_obj)->arity_2 = reinterpret_cast<closure_arity<2>>(f);
+#pragma clang diagnostic pop
+  }
+
+  void jank_closure_set_arity3(jank_object_ptr const fn,
+                               jank_object_ptr (* const f)(jank_object_ptr,
+                                                           jank_object_ptr,
+                                                           jank_object_ptr))
+  {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
+    auto const fn_obj(reinterpret_cast<object *>(fn));
+    try_object<obj::jit_closure>(fn_obj)->arity_3 = reinterpret_cast<closure_arity<3>>(f);
+#pragma clang diagnostic pop
   }
 
   jank_native_bool jank_truthy(jank_object_ptr const o)

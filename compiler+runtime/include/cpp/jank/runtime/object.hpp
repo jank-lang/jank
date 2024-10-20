@@ -62,6 +62,7 @@ namespace jank::runtime
 
     native_function_wrapper,
     jit_function,
+    jit_closure,
     multi_function,
 
     atom,
