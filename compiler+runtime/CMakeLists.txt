@@ -95,10 +95,10 @@ set(
 
 set(
   jank_linker_flags
-  $<$<PLATFORM_ID:Darwin>:-L/opt/homebrew/lib>
   #-stdlib=libc++ -lc++abi
-  ${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libunwind.a
-  ${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libc++abi.a
+  $<$<PLATFORM_ID:Darwin>:-L/opt/homebrew/lib>
+  $<$<PLATFORM_ID:Darwin>:${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libunwind.a>
+  $<$<PLATFORM_ID:Darwin>:${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libc++abi.a>
   )
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   list(APPEND jank_common_compiler_flags #-Werror
