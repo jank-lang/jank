@@ -63,6 +63,23 @@ namespace jank::read::parse
       CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
     }
 
+    TEST_CASE("Ratio") {
+      SUBCASE("Single Ratio") {
+        lex::processor lp{ "4/5" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(equal(r.expect_ok().unwrap().ptr, make_box(0.8)));
+        CHECK(r.expect_ok().unwrap().start == lex::token{ 0, 3, lex::token_kind::ratio, {.numerator=4, .denominator=5} });
+        CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+      }
+      SUBCASE("Division by zero") {
+        lex::processor lp{ "1/0" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(r.is_err());
+      }
+    }
+
     TEST_CASE("Comments")
     {
       lex::processor lp{ ";meow \n1234 ; bar\n;\n\n" };

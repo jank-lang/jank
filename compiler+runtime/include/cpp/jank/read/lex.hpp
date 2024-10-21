@@ -42,11 +42,20 @@ namespace jank::read::lex
     integer,
     /* Has double data. */
     real,
+    /* Has two integer data. */
+    ratio,
     /* Has string data. */
     string,
     /* Has string data. */
     escaped_string,
     eof,
+  };
+
+  struct ratio {
+    native_integer numerator{};
+    native_integer denominator{};
+    native_bool operator==(ratio const &rhs) const;
+    native_bool operator!=(ratio const &rhs) const;
   };
 
   struct token
@@ -65,6 +74,7 @@ namespace jank::read::lex
     token(size_t const p, size_t const s, token_kind const k, native_persistent_string_view const);
     token(size_t const p, size_t const s, token_kind const k, char const * const);
     token(size_t const p, size_t const s, token_kind const k, native_bool const);
+    token(size_t const p, size_t const s, token_kind const k, ratio const);
 
     native_bool operator==(token const &rhs) const;
     native_bool operator!=(token const &rhs) const;
@@ -81,12 +91,13 @@ namespace jank::read::lex
     size_t pos{ ignore_pos };
     size_t size{ 1 };
     token_kind kind{ token_kind::eof };
-    boost::variant<no_data, native_integer, native_real, native_persistent_string_view, native_bool>
+    boost::variant<no_data, native_integer, native_real, native_persistent_string_view, native_bool, ratio>
       data;
   };
 
   std::ostream &operator<<(std::ostream &os, token const &t);
   std::ostream &operator<<(std::ostream &os, token::no_data const &t);
+  std::ostream &operator<<(std::ostream &os, ratio const &t);
 }
 
 namespace jank::read
@@ -142,6 +153,8 @@ namespace jank::read::lex
     size_t pos{};
     /* Whether or not the previous token requires a space after it. */
     native_bool require_space{};
+    /* True when seeing a '/' following a number. */
+    native_bool found_slash_after_number{};
     native_persistent_string_view file;
   };
 }
