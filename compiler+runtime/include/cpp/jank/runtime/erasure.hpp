@@ -386,7 +386,7 @@ namespace jank::runtime
         break;
       case object_type::reduced:
         {
-          return fn(expect_object<obj::volatile_>(erased), std::forward<Args>(args)...);
+          return fn(expect_object<obj::reduced>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::ns:
