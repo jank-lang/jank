@@ -427,6 +427,7 @@ namespace jank::read
                 }
                 found_exponent_sign = true;
               }
+
               else if(c == '/') {
                 require_space = false;
                 ++pos;
