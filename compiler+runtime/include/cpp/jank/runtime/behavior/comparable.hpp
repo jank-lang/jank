@@ -4,7 +4,7 @@ namespace jank::runtime::behavior
 {
   template <typename T>
   concept comparable = requires(T * const t) {
-      /* Returns how this object compares to the specified object. Comparison, unlike equality,
+    /* Returns how this object compares to the specified object. Comparison, unlike equality,
        * can only be done for objects of the same type. If there's a type mismatch, this function
        * is expected to throw. There are three cases to handle:
        *
@@ -14,6 +14,6 @@ namespace jank::runtime::behavior
        *
        * For sequences, all values need to be considered for comparison.
        */
-      { t->compare(std::declval<object const &>()) } -> std::convertible_to<native_integer>;
+    { t->compare(std::declval<object const &>()) } -> std::convertible_to<native_integer>;
   };
 }

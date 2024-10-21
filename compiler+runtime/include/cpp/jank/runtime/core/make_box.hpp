@@ -35,6 +35,7 @@ namespace jank::runtime
   {
     return make_box<runtime::obj::integer>(static_cast<native_integer>(i));
   }
+
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(native_integer const i)
   {
