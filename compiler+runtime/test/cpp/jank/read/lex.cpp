@@ -374,7 +374,76 @@ namespace jank::read::lex
         }));
       }
     }
-
+    TEST_CASE("Ratio")
+    {
+      SUBCASE("Success - x/x")
+      {
+        processor p{ "4/5" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 3, token_kind::ratio, { .numerator = 4, .denominator = 5 } }
+        }));
+      }
+      SUBCASE("Success - -x/x")
+      {
+        processor p{ "-4/5" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 4, token_kind::ratio, { .numerator = -4, .denominator = 5 } }
+        }));
+      }
+      SUBCASE("Success - -x/-x")
+      {
+        processor p{ "-4/-5" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 5, token_kind::ratio, { .numerator = -4, .denominator = -5 } }
+        }));
+      }
+      SUBCASE("Failures - x//x")
+      {
+        processor p{ "4//5" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(
+          tokens
+          == make_results({ { error(0, 4, "invalid ratio: expecting an integer denominator") } }));
+      }
+      SUBCASE("Failures - x/x/x")
+      {
+        processor p{ "4/5/4" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({ { error(0, 3, "invalid ratio: expecting an integer denominator") },
+                                { error(3, 3, "invalid symbol") } }));
+      }
+      SUBCASE("Failures - x/x/x/x")
+      {
+        processor p{ "4/5/4/5/6/7/7" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({ { error(0, 3, "invalid ratio: expecting an integer denominator") },
+                                { error(3, 3, "invalid symbol") } }));
+      }
+      SUBCASE("Failures - x.x/x")
+      {
+        processor p{ "4.4/5" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(
+          tokens
+          == make_results({ { error(0, 3, "invalid ratio") }, { error(3, 3, "invalid symbol") } }));
+      }
+      SUBCASE("Failures - x/x.x")
+      {
+        processor p{ "4/5.9" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(
+          tokens
+          == make_results({ { error(0, 5, "invalid ratio: expecting an integer denominator") } }));
+      }
+    }
     TEST_CASE("Integer")
     {
       SUBCASE("Positive single-char")
@@ -589,12 +658,12 @@ namespace jank::read::lex
           native_vector<result<token, error>> tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_results({
-                  token{  0, 3, token_kind::real,   1000.0l },
-                  token{  4, 4, token_kind::real,   -100.0l },
-                  token{  9, 5, token_kind::real,    0.002l },
-                  token{ 15, 7, token_kind::real, 2.23e-07l },
-                  token{ 23, 7, token_kind::real, -1.2e+19l },
-                  token{ 30, 2, token_kind::character, "\\a"sv },
+                  token{  0, 3,      token_kind::real,   1000.0l },
+                  token{  4, 4,      token_kind::real,   -100.0l },
+                  token{  9, 5,      token_kind::real,    0.002l },
+                  token{ 15, 7,      token_kind::real, 2.23e-07l },
+                  token{ 23, 7,      token_kind::real, -1.2e+19l },
+                  token{ 30, 2, token_kind::character,   "\\a"sv },
           }));
         }
 

@@ -182,6 +182,8 @@ namespace jank::read::parse
           return parse_integer();
         case lex::token_kind::real:
           return parse_real();
+        case lex::token_kind::ratio:
+          return parse_ratio();
         case lex::token_kind::string:
           return parse_string();
         case lex::token_kind::escaped_string:
@@ -1162,6 +1164,21 @@ namespace jank::read::parse
     auto const token(token_current->expect_ok());
     ++token_current;
     return object_source_info{ make_box<obj::integer>(boost::get<native_integer>(token.data)),
+                               token,
+                               token };
+  }
+
+  processor::object_result processor::parse_ratio()
+  {
+    auto const token(token_current->expect_ok());
+    ++token_current;
+    auto const &ratio_data(boost::get<lex::ratio>(token.data));
+    if(ratio_data.denominator == 0)
+    {
+      return err(error{ token.pos, "Divide by zero" });
+    }
+    return object_source_info{ make_box<obj::real>(static_cast<native_real>(ratio_data.numerator)
+                                                   / ratio_data.denominator),
                                token,
                                token };
   }
