@@ -70,7 +70,7 @@ namespace jank::read::parse
         lex::processor lp{ "4/5" };
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
-        CHECK(equal(r.expect_ok().unwrap().ptr, make_box(0.8)));
+        CHECK(is_equiv(runtime::mul(r.expect_ok().unwrap().ptr, make_box(10)), make_box(8)));
         CHECK(r.expect_ok().unwrap().start
               == lex::token{
                 0,
