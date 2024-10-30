@@ -74,12 +74,6 @@ If you'd like your name, company, or logo here, you can
 </p>
 
 <p align="center">
-  <a href="https://devcarbon.com/">
-    devcarbon.com
-  </a>
-</p>
-
-<p align="center">
   <a href="https://pitch.com/">
     Misha Karpenko
   </a>

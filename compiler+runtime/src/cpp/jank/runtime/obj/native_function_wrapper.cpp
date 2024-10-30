@@ -34,6 +34,11 @@ namespace jank::runtime
     return native_persistent_string{ buff.data(), buff.size() };
   }
 
+  native_persistent_string obj::native_function_wrapper::to_code_string() const
+  {
+    return to_string();
+  }
+
   native_hash obj::native_function_wrapper::to_hash() const
   {
     return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));

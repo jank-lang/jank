@@ -95,6 +95,9 @@ set(
 set(
   jank_linker_flags
   #-stdlib=libc++ -lc++abi
+  $<$<PLATFORM_ID:Darwin>:-L/opt/homebrew/lib>
+  $<$<PLATFORM_ID:Darwin>:${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libunwind.a>
+  $<$<PLATFORM_ID:Darwin>:${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libc++abi.a>
   )
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   list(APPEND jank_common_compiler_flags #-Werror
@@ -244,7 +247,7 @@ target_link_libraries(
   readline
   clangInterpreter
   Boost::boost
-  OpenSSL::SSL
+  $<$<PLATFORM_ID:Darwin>:crypto>
 )
 
 jank_hook_llvm(jank_lib)
@@ -255,19 +258,26 @@ list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str)
 
 # Build a string of all include flags for jank. This will be used for building the PCH at build
 # time as well as building the PCH on first run, after installation.
-get_target_property(jank_lib_includes jank_lib INCLUDE_DIRECTORIES)
-set(jank_lib_includes_str "")
-foreach(dir ${jank_lib_includes})
+get_target_property(jank_lib_includes_prop jank_lib INCLUDE_DIRECTORIES)
+set(jank_lib_includes "")
+foreach(dir ${jank_lib_includes_prop})
   # System includes are just the path, but normal includes have this format:
   # $<BUILD_INTERFACE:/home/jeaye/projects/jank/compiler+runtime/include/cpp>
   # We need to strip all of that out.
   if(${dir} MATCHES "BUILD_INTERFACE:")
     string(REGEX REPLACE "\\$<BUILD_INTERFACE:(.*)>" "\\1" dir_path ${dir})
-    string(APPEND jank_lib_includes_str "-I${dir_path} ")
+    list(APPEND jank_lib_includes -I${dir_path})
   else()
-    string(APPEND jank_lib_includes_str "-isystem ${dir} ")
+    list(APPEND jank_lib_includes -isystem ${dir})
   endif()
 endforeach()
+
+target_include_directories(
+    jank_lib
+    SYSTEM
+    PUBLIC
+    "$<$<PLATFORM_ID:Darwin>:/opt/homebrew/include>"
+)
 
 target_compile_options(
   jank_lib
@@ -340,6 +350,7 @@ set(
   third-party/folly/folly/synchronization/SanitizeThread.cpp
   third-party/folly/folly/lang/SafeAssert.cpp
   third-party/folly/folly/lang/ToAscii.cpp
+  third-party/folly/folly/lang/Exception.cpp
   third-party/folly/folly/system/ThreadId.cpp
   third-party/folly/folly/system/AtFork.cpp
   third-party/folly/folly/detail/Futex.cpp
@@ -465,10 +476,24 @@ set(jank_pch_compile_flags_list ${jank_common_compiler_flags} -w)
 list(JOIN jank_pch_compile_flags_list " " jank_pch_compile_flags_str)
 
 set(jank_incremental_pch_flag ${CMAKE_BINARY_DIR}/incremental.pch)
+
+separate_arguments(jank_incremental_pch_cxx_flags UNIX_COMMAND ${CMAKE_CXX_FLAGS})
+list(REMOVE_ITEM jank_incremental_pch_cxx_flags -fPIC)
 add_custom_command(
-  DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/bin/build-pch
+  DEPENDS ${CMAKE_BINARY_DIR}/jank
   OUTPUT ${jank_incremental_pch_flag}
-  COMMAND "${CMAKE_SOURCE_DIR}/bin/build-pch" "${CLANG_INSTALL_PREFIX}" "${CMAKE_SOURCE_DIR}/include" "${jank_incremental_pch_flag}" "${jank_pch_compile_flags_str}" "${jank_lib_includes_str}"
+  COMMAND_EXPAND_LISTS
+  VERBATIM
+  COMMAND ${CMAKE_CXX_COMPILER}
+          ${jank_incremental_pch_cxx_flags}
+          ${jank_common_compiler_flags} ${jank_aot_compiler_flags}
+          ${jank_lib_includes}
+          -Xclang -fincremental-extensions
+          -Xclang -emit-pch
+          -x c++-header
+          -w
+          -c ${PROJECT_SOURCE_DIR}/include/cpp/jank/prelude.hpp
+          -o ${jank_incremental_pch_flag}
 )
 add_custom_target(
   jank_incremental_pch

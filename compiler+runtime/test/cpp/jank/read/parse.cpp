@@ -63,6 +63,32 @@ namespace jank::read::parse
       CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
     }
 
+    TEST_CASE("Ratio")
+    {
+      SUBCASE("Single Ratio")
+      {
+        lex::processor lp{ "4/5" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(is_equiv(runtime::mul(r.expect_ok().unwrap().ptr, make_box(10)), make_box(8)));
+        CHECK(r.expect_ok().unwrap().start
+              == lex::token{
+                0,
+                3,
+                lex::token_kind::ratio,
+                { .numerator = 4, .denominator = 5 }
+        });
+        CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+      }
+      SUBCASE("Division by zero")
+      {
+        lex::processor lp{ "1/0" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(r.is_err());
+      }
+    }
+
     TEST_CASE("Comments")
     {
       lex::processor lp{ ";meow \n1234 ; bar\n;\n\n" };
@@ -92,10 +118,11 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
-        for(native_persistent_string const &ch : { "\\a", "\\1", "\\`", "\\:", "\\#" })
+        for(native_persistent_string const ch : { "\\a", "\\1", "\\`", "\\:", "\\#" })
         {
           auto const r(p.next());
-          CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::character>(ch)));
+          CHECK(equal(r.expect_ok().unwrap().ptr,
+                      make_box<obj::character>(get_char_from_literal(ch).unwrap())));
 
           CHECK(r.expect_ok().unwrap().start
                 == lex::token{ offset, 2, lex::token_kind::character, ch });
@@ -116,7 +143,8 @@ namespace jank::read::parse
             { "\\newline", "\\backspace", "\\return", "\\formfeed", "\\tab", "\\space" })
         {
           auto const r(p.next());
-          CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::character>(ch)));
+          CHECK(equal(r.expect_ok().unwrap().ptr,
+                      make_box<obj::character>(get_char_from_literal(ch).unwrap())));
 
           auto const len(ch.size());
           CHECK(r.expect_ok().unwrap().start
@@ -137,7 +165,8 @@ namespace jank::read::parse
         for(native_persistent_string const &ch : { "\\newline", "\\a", "\\tab", "\\`", "\\space" })
         {
           auto const r(p.next());
-          CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::character>(ch)));
+          CHECK(equal(r.expect_ok().unwrap().ptr,
+                      make_box<obj::character>(get_char_from_literal(ch).unwrap())));
 
           auto const len(ch.size());
           CHECK(r.expect_ok().unwrap().start
@@ -146,6 +175,23 @@ namespace jank::read::parse
 
           offset += len;
         }
+      }
+
+      SUBCASE("Invalid character literal")
+      {
+        lex::processor lp{ R"(\ne\apple\backspace)" };
+        processor p{ lp.begin(), lp.end() };
+
+        /* First two lex tokens are invalid characters i.e. \ne and \apple */
+        for(size_t i{}; i < 2; ++i)
+        {
+          auto const r(p.next());
+          CHECK(r.is_err());
+        }
+
+        auto const r(p.next());
+        CHECK(r.expect_ok().unwrap().start
+              == lex::token{ 9, 10, lex::token_kind::character, "\\backspace" });
       }
     }
 
@@ -174,15 +220,13 @@ namespace jank::read::parse
 
       SUBCASE("Escaped")
       {
-        lex::processor lp{ R"("foo\n" "\t\"bar\"")" };
+        lex::processor lp{ R"("foo\n" "\t\"bar\"" "\r" "\a" "\?" "\f" "\b")" };
         processor p{ lp.begin(), lp.end() };
-
         size_t offset{};
-        for(auto const &s : { "foo\n", "\t\"bar\"" })
+        for(auto const &s : { "foo\n", "\t\"bar\"", "\r", "\a", "\?", "\f", "\b" })
         {
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr, make_box(s)));
-
           /* We add 2 for the surrounding quotes. */
           auto const escaped(util::escape(s));
           auto const len(escaped.size() + 2);

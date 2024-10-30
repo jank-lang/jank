@@ -41,6 +41,11 @@ cd -
 export CC=$PWD/build/llvm-install/usr/local/bin/clang; export CXX=$PWD/build/llvm-install/usr/local/bin/clang++
 ```
 
+On macOS also do this:
+```
+export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
+```
+
 At this point, you're ready to build jank.
 
 
@@ -63,6 +68,12 @@ To make a debug build, specify the build type when configuring.
 
 # When developing, continuously run the tests locally.
 ./bin/watch ./bin/test
+```
+
+# Run jank
+To run jank's repl, inside of /compiler+runtime, do
+```bash
+./build/jank repl
 ```
 
 ## Packaging

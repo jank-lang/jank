@@ -182,6 +182,8 @@ namespace jank::read::parse
           return parse_integer();
         case lex::token_kind::real:
           return parse_real();
+        case lex::token_kind::ratio:
+          return parse_ratio();
         case lex::token_kind::string:
           return parse_string();
         case lex::token_kind::escaped_string:
@@ -344,7 +346,14 @@ namespace jank::read::parse
     ++token_current;
     auto const sv(boost::get<native_persistent_string_view>(token.data));
 
-    return object_source_info{ make_box<obj::character>(sv), token, token };
+    auto const character(get_char_from_literal(sv));
+
+    if(character.is_none())
+    {
+      return err(error{ token.pos, fmt::format("invalid character literal `{}`", sv) });
+    }
+
+    return object_source_info{ make_box<obj::character>(character.unwrap()), token, token };
   }
 
   processor::object_result processor::parse_meta_hint()
@@ -1155,6 +1164,21 @@ namespace jank::read::parse
     auto const token(token_current->expect_ok());
     ++token_current;
     return object_source_info{ make_box<obj::integer>(boost::get<native_integer>(token.data)),
+                               token,
+                               token };
+  }
+
+  processor::object_result processor::parse_ratio()
+  {
+    auto const token(token_current->expect_ok());
+    ++token_current;
+    auto const &ratio_data(boost::get<lex::ratio>(token.data));
+    if(ratio_data.denominator == 0)
+    {
+      return err(error{ token.pos, "Divide by zero" });
+    }
+    return object_source_info{ make_box<obj::real>(static_cast<native_real>(ratio_data.numerator)
+                                                   / ratio_data.denominator),
                                token,
                                token };
   }

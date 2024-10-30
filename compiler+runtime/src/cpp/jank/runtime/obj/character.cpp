@@ -1,59 +1,26 @@
 #include <jank/runtime/obj/character.hpp>
+#include <jank/util/escape.hpp>
 
 namespace jank::runtime
 {
-  static option<char> get_char_from_repr(native_persistent_string const &sv)
-  {
-    if(sv.size() == 2)
-    {
-      return sv[1];
-    }
-    else if(sv == "\\newline")
-    {
-      return '\n';
-    }
-    else if(sv == "\\space")
-    {
-      return ' ';
-    }
-    else if(sv == "\\tab")
-    {
-      return '\t';
-    }
-    else if(sv == "\\backspace")
-    {
-      return '\b';
-    }
-    else if(sv == "\\formfeed")
-    {
-      return '\f';
-    }
-    else if(sv == "\\return")
-    {
-      return '\r';
-    }
-
-    return none;
-  }
-
-  static native_persistent_string get_repr_from_char(char const ch)
+  static native_persistent_string get_literal_from_char(char const ch)
   {
     switch(ch)
     {
       case '\n':
-        return "\\newline";
+        return R"(\newline)";
       case ' ':
-        return "\\space";
+        return R"(\space)";
       case '\t':
-        return "\\tab";
+        return R"(\tab)";
       case '\b':
-        return "\\backspace";
+        return R"(\backspace)";
       case '\f':
-        return "\\formfeed";
+        return R"(\formfeed)";
       case '\r':
-        return "\\return";
+        return R"(\return)";
       default:
-        return fmt::format("\\{}", ch);
+        return fmt::format(R"(\{})", ch);
     }
   }
 
@@ -63,7 +30,7 @@ namespace jank::runtime
   }
 
   obj::character::static_object(char const ch)
-    : data{ get_repr_from_char(ch) }
+    : data{ 1, ch }
   {
   }
 
@@ -80,17 +47,21 @@ namespace jank::runtime
 
   void obj::character::to_string(fmt::memory_buffer &buff) const
   {
-    /* TODO: This is actually to_representation, since the string version of \a is just a. */
     fmt::format_to(std::back_inserter(buff), "{}", data);
   }
 
-  native_persistent_string const &obj::character::to_string() const
+  native_persistent_string obj::character::to_string() const
   {
     return data;
   }
 
+  native_persistent_string obj::character::to_code_string() const
+  {
+    return get_literal_from_char(data[0]);
+  }
+
   native_hash obj::character::to_hash() const
   {
-    return hash::visit(get_char_from_repr(data).unwrap());
+    return data.to_hash();
   }
 }

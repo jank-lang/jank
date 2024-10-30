@@ -154,6 +154,24 @@ namespace jank::read
     {
     }
 
+    token::token(size_t const p, size_t const s, token_kind const k, ratio const d)
+      : pos{ p }
+      , size{ s }
+      , kind{ k }
+      , data{ d }
+    {
+    }
+
+    native_bool ratio::operator==(ratio const &rhs) const
+    {
+      return numerator == rhs.numerator && denominator == rhs.denominator;
+    }
+
+    native_bool ratio::operator!=(ratio const &rhs) const
+    {
+      return !(*this == rhs);
+    }
+
     native_bool token::no_data::operator==(no_data const &) const
     {
       return true;
@@ -184,6 +202,11 @@ namespace jank::read
     std::ostream &operator<<(std::ostream &os, token::no_data const &)
     {
       return os << "<no data>";
+    }
+
+    std::ostream &operator<<(std::ostream &os, ratio const &r)
+    {
+      return os << r.numerator << "/" << r.denominator;
     }
 
     processor::processor(native_persistent_string_view const &f)
@@ -313,17 +336,7 @@ namespace jank::read
             native_persistent_string_view const data{ file.data() + token_start,
                                                       ++pos - token_start };
 
-            if(data.size() == 2 || data == "\\newline" || data == "\\backspace" || data == "\\space"
-               || data == "\\formfeed" || data == "\\return" || data == "\\tab")
-            {
-              return ok(token{ token_start, pos - token_start, token_kind::character, data });
-            }
-
-            return err(error{ token_start,
-                              pos - token_start,
-                              fmt::format("Invalid character literal `{}` \nNote: Jank "
-                                          "doesn't support unicode characters yet!",
-                                          data) });
+            return ok(token{ token_start, pos - token_start, token_kind::character, data });
           }
         case ';':
           {
@@ -376,6 +389,9 @@ namespace jank::read
             }
             native_bool contains_leading_digit{ file[token_start] != '-' };
             native_bool contains_dot{};
+            native_bool is_scientific{};
+            native_bool found_exponent_sign{};
+            native_bool expecting_exponent{};
             while(true)
             {
               auto const oc(peek());
@@ -387,16 +403,72 @@ namespace jank::read
               auto const c(oc.unwrap());
               if(c == '.')
               {
-                if(contains_dot || !contains_leading_digit)
+                if(contains_dot || is_scientific || !contains_leading_digit)
                 {
                   ++pos;
                   return err(error{ token_start, pos, "invalid number" });
                 }
                 contains_dot = true;
               }
+              else if(c == 'e' || c == 'E')
+              {
+                if(is_scientific || !contains_leading_digit)
+                {
+                  ++pos;
+                  return err(error{ token_start, pos, "invalid number" });
+                }
+                is_scientific = true;
+                expecting_exponent = true;
+              }
+              else if(c == '+' || c == '-')
+              {
+                if(found_exponent_sign || !is_scientific || !expecting_exponent)
+                {
+                  ++pos;
+                  return err(error{ token_start, pos, "invalid number" });
+                }
+                found_exponent_sign = true;
+              }
+              else if(c == '/')
+              {
+                require_space = false;
+                ++pos;
+                if(found_exponent_sign || is_scientific || expecting_exponent || contains_dot
+                   || found_slash_after_number)
+                {
+                  return err(error{ token_start, pos, "invalid ratio" });
+                }
+                found_slash_after_number = true;
+                /* skip the '/' char and look for the denominator number. */
+                ++pos;
+                auto const denominator(next());
+                if(denominator.is_ok() && denominator.expect_ok().kind == token_kind::integer)
+                {
+                  auto const &denominator_token(denominator.expect_ok());
+                  found_slash_after_number = false;
+                  return ok(
+                    token(token_start,
+                          pos - token_start,
+                          token_kind::ratio,
+                          { .numerator = std::strtoll(file.data() + token_start, nullptr, 10),
+                            .denominator = boost::get<native_integer>(denominator_token.data) }));
+                }
+                return err(
+                  error{ token_start, pos, "invalid ratio: expecting an integer denominator" });
+              }
               else if(std::isdigit(c) == 0)
               {
+                if(expecting_exponent)
+                {
+                  ++pos;
+                  return err(
+                    error{ token_start, pos, "unexpected end of real, expecting exponent" });
+                }
                 break;
+              }
+              else if(expecting_exponent)
+              {
+                expecting_exponent = false;
               }
 
               contains_leading_digit = true;
@@ -404,13 +476,20 @@ namespace jank::read
               ++pos;
             }
 
+            if(expecting_exponent)
+            {
+              ++pos;
+              return err(error{ token_start, pos, "unexpected end of real, expecting exponent" });
+            }
+
             /* Tokens beginning with - are ambiguous; it's only a negative number if it has numbers
-             * to follow. */
+             * to follow.
+             * TODO: handle numbers starting with `+` */
             if(file[token_start] != '-' || (pos - token_start) >= 1)
             {
               require_space = true;
               ++pos;
-              if(contains_dot)
+              if(contains_dot || is_scientific)
               {
                 return ok(token{ token_start,
                                  pos - token_start,
@@ -562,9 +641,17 @@ namespace jank::read
               {
                 switch(oc.unwrap())
                 {
-                  case 'n':
-                  case 't':
                   case '"':
+                  case '?':
+                  case '\'':
+                  case '\\':
+                  case 'a':
+                  case 'b':
+                  case 'f':
+                  case 'n':
+                  case 'r':
+                  case 't':
+                  case 'v':
                     break;
                   default:
                     return err(error{ pos, "unsupported escape character" });

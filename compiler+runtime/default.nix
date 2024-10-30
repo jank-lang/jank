@@ -26,10 +26,6 @@ pkgs.llvmPackages_19.stdenv.mkDerivation {
     ninja
   ];
 
-  patchPhase = ''
-    patchShebangs --host "${pkgs.bash}" bin/build-pch
-  '';
-
   buildInputs = [
     boost
     boehmgc
