@@ -208,7 +208,7 @@ namespace jank::read::parse
             auto const r(p.next());
             CHECK(equal(r.expect_ok().unwrap().ptr,
                         make_box<obj::character>(
-                          parse_character_in_base(ch.substr(2), 16).expect_ok().unwrap())));
+                          parse_character_in_base(ch.substr(2), 16).expect_ok())));
 
             auto const len(ch.size());
             CHECK(r.expect_ok().unwrap().start
@@ -258,7 +258,7 @@ namespace jank::read::parse
             auto const r(p.next());
             CHECK(equal(r.expect_ok().unwrap().ptr,
                         make_box<obj::character>(
-                          parse_character_in_base(ch.substr(2), 8).expect_ok().unwrap())));
+                          parse_character_in_base(ch.substr(2), 8).expect_ok())));
 
             auto const len(ch.size());
             CHECK(r.expect_ok().unwrap().start

@@ -14,7 +14,13 @@ namespace jank::runtime
 /* TODO: Rename file to processor. */
 namespace jank::read::parse
 {
-  result<option<native_persistent_string>, native_persistent_string>
+
+  struct char_parse_error
+  {
+    native_persistent_string error;
+  };
+
+  result<native_persistent_string, char_parse_error>
   parse_character_in_base(native_persistent_string const &char_literal, int const base);
 
   option<char> get_char_from_literal(native_persistent_string const &s);

@@ -15,7 +15,7 @@ namespace jank::read::parse
 {
   using namespace jank::runtime;
 
-  result<option<native_persistent_string>, native_persistent_string>
+  result<native_persistent_string, char_parse_error>
   parse_character_in_base(native_persistent_string const &char_literal, int const base)
   {
     try
@@ -41,7 +41,7 @@ namespace jank::read::parse
 
       std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
 
-      auto const converted(native_persistent_string{ converter.to_bytes(codepoint) });
+      native_persistent_string const converted(converter.to_bytes(codepoint));
 
       if(converter.converted() != 1)
       {
@@ -433,7 +433,7 @@ namespace jank::read::parse
 
         if(char_bytes.is_ok())
         {
-          return object_source_info{ make_box<obj::character>(char_bytes.expect_ok().unwrap()),
+          return object_source_info{ make_box<obj::character>(char_bytes.expect_ok()),
                                      token,
                                      token };
         }
@@ -441,7 +441,7 @@ namespace jank::read::parse
         {
           return err(
             error{ token.pos,
-                   fmt::format("Error reading character `{}`: {}", sv, char_bytes.expect_err()) });
+                   fmt::format("Error reading character `{}`: {}", sv, char_bytes.expect_err().error) });
         }
       }
 
