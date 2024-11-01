@@ -8,8 +8,7 @@
     "boost-variant",
     "boost-preprocessor",
     "cli11",
-    "libzippp",
-    "magic-enum"
+    "libzippp"
   ],
   "default-features": [],
   "features": {

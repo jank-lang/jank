@@ -217,6 +217,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bpptree/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bdwgc/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/magic_enum/include/magic_enum>"
 )
 target_precompile_headers(
   jank_lib
@@ -232,7 +233,6 @@ include(FetchContent)
 include(cmake/dependency/bdwgc.cmake)
 include(cmake/dependency/fmt.cmake)
 
-find_package(magic_enum CONFIG REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem preprocessor)
 find_package(libzippp CONFIG REQUIRED)
 find_package(CLI11 CONFIG REQUIRED)
