@@ -78,7 +78,7 @@ struct fmt::formatter<jank::util::escape_view<S>>
   }
 
   template <typename C>
-  auto format(jank::util::escape_view<S> const &s, C &ctx)
+  auto format(jank::util::escape_view<S> const &s, C &ctx) const
   {
     return s.copy(ctx.out());
   }

@@ -229,10 +229,10 @@ target_compile_options(jank_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_
 
 include(FetchContent)
 include(cmake/dependency/bdwgc.cmake)
+include(cmake/dependency/fmt.cmake)
 
 find_package(Immer CONFIG REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
-find_package(fmt CONFIG REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem preprocessor)
 find_package(libzippp CONFIG REQUIRED)
 find_package(CLI11 CONFIG REQUIRED)

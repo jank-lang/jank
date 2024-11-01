@@ -8,7 +8,6 @@
     "boost-variant",
     "boost-preprocessor",
     "cli11",
-    "fmt",
     "immer",
     "libassert",
     "libzippp",
