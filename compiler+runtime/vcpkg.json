@@ -7,7 +7,6 @@
     "boost-smart-ptr",
     "boost-variant",
     "boost-preprocessor",
-    "cli11",
     "libzippp"
   ],
   "default-features": [],

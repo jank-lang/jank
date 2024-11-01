@@ -218,6 +218,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bdwgc/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/magic_enum/include/magic_enum>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
 )
 target_precompile_headers(
   jank_lib
@@ -235,7 +236,6 @@ include(cmake/dependency/fmt.cmake)
 
 find_package(Boost REQUIRED COMPONENTS filesystem preprocessor)
 find_package(libzippp CONFIG REQUIRED)
-find_package(CLI11 CONFIG REQUIRED)
 
 target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 
@@ -244,7 +244,6 @@ target_link_libraries(
   fmt::fmt
   bdwgc::gc bdwgc::gccpp
   libzippp::libzippp
-  CLI11::CLI11
   readline
   clangInterpreter
   Boost::boost
