@@ -7,6 +7,7 @@ set(BUILD_SHARED_LIBS_OLD ${BUILD_SHARED_LIBS})
   set(enable_cplusplus ON CACHE BOOL "Enable C++")
   set(build_cord OFF CACHE BOOL "Build cord")
   set(enable_docs OFF CACHE BOOL "Enable docs")
+  set(enable_throw_bad_alloc_library OFF CACHE BOOL "Enable C++ gctba library build")
 
   add_subdirectory(third-party/bdwgc)
 
