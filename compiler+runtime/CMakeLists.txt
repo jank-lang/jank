@@ -237,9 +237,7 @@ include(cmake/dependency/fmt.cmake)
 include(cmake/dependency/libzippp.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
-find_package(Boost REQUIRED COMPONENTS filesystem preprocessor)
-
-target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
+find_package(Boost REQUIRED COMPONENTS filesystem)
 
 target_link_libraries(
   jank_lib PRIVATE
@@ -248,7 +246,7 @@ target_link_libraries(
   libzippp::libzippp
   readline
   clangInterpreter
-  Boost::boost
+  Boost::filesystem
   OpenSSL::Crypto
 )
 
@@ -368,7 +366,6 @@ target_include_directories(
     SYSTEM
     PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
-    ${BOOST_INCLUDE_DIRS}
 )
 
 set_property(TARGET folly_lib PROPERTY OUTPUT_NAME folly)
@@ -384,7 +381,7 @@ set_target_properties(folly_lib PROPERTIES ENABLE_EXPORTS 1)
 
 target_link_libraries(
   folly_lib PUBLIC
-  Boost::preprocessor
+  fmt::fmt
 )
 # ---- libfolly.a ----
 
@@ -404,15 +401,13 @@ target_compile_features(jank_exe PRIVATE ${jank_cxx_standard})
 target_compile_options(jank_exe PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
 target_link_options(jank_exe PRIVATE ${jank_linker_flags})
 
-target_include_directories(jank_exe SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
-
 target_link_libraries(
   jank_exe PUBLIC
   ${jank_link_whole_start} jank_lib ${jank_link_whole_end}
   ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
   folly_lib
   fmt::fmt
-  Boost::boost Boost::filesystem Boost::system
+  Boost::filesystem
 )
 
 jank_hook_llvm(jank_exe)
@@ -442,8 +437,6 @@ if(jank_tests)
   target_compile_options(jank_test_exe PRIVATE -DDOCTEST_CONFIG_SUPER_FAST_ASSERTS)
   target_link_options(jank_test_exe PRIVATE ${jank_linker_flags})
 
-  target_include_directories(jank_test_exe SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
-
   find_package(doctest REQUIRED)
   target_link_libraries(
     jank_test_exe PUBLIC
@@ -451,7 +444,7 @@ if(jank_tests)
     ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
     folly_lib
     doctest::doctest
-    Boost::boost Boost::filesystem
+    Boost::filesystem
   )
 
   jank_hook_llvm(jank_test_exe)

@@ -2,10 +2,5 @@
   "name": "jank",
   "version-semver": "0.1.0",
   "dependencies": [
-    "boost-algorithm",
-    "boost-filesystem",
-    "boost-smart-ptr",
-    "boost-variant",
-    "boost-preprocessor"
   ]
 }
