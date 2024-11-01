@@ -21,7 +21,7 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
 project(
     jank
     VERSION 0.1
-    DESCRIPTION "A native Clojure dialect built on LLVM."
+    DESCRIPTION "The native Clojure dialect on LLVM."
     HOMEPAGE_URL "https://jank-lang.org/"
     # C is needed here, due to a clang issue:
     # https://stackoverflow.com/questions/71740678/cmake-error-in-findterminfo-with-clang-15-on-macos

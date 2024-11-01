@@ -3,19 +3,19 @@
 For Debian-based distros, this should be all you need:
 
 ```bash
-sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev entr libffi-dev clang libreadline-dev libzip-dev libbz2-dev doctest-dev
+sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev entr libffi-dev clang libreadline-dev libzip-dev libbz2-dev doctest-dev libboost-all-dev
 ```
 
 For Arch:
 
 ```bash
-sudo pacman -S git git-lfs clang pkg-config cmake ninja make python3 libffi entr doctest
+sudo pacman -S git git-lfs clang pkg-config cmake ninja make python3 libffi entr doctest boost libzip lbzip2
 ```
 
 For macOS, try this:
 
 ```bash
-brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest
+brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost libzip lbzip2
 ```
 
 Clone the repo as follows:
@@ -27,8 +27,8 @@ git clone --recurse-submodules https://github.com/jank-lang/jank.git
 git submodule update --recursive --init
 ```
 
-## Compiling Cling
-Note that you must compile Cling/Clang/LLVM. This can take an hour or two,
+## Compiling Clang
+Note that you must compile Clang/LLVM. This can take an hour or two,
 depending on your machine. Building jank itself should take a minute or two.
 
 ```
