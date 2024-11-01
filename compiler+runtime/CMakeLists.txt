@@ -233,9 +233,9 @@ target_compile_options(jank_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_
 include(FetchContent)
 include(cmake/dependency/bdwgc.cmake)
 include(cmake/dependency/fmt.cmake)
+include(cmake/dependency/libzippp.cmake)
 
 find_package(Boost REQUIRED COMPONENTS filesystem preprocessor)
-find_package(libzippp CONFIG REQUIRED)
 
 target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 
@@ -247,7 +247,7 @@ target_link_libraries(
   readline
   clangInterpreter
   Boost::boost
-  $<$<PLATFORM_ID:Darwin>:crypto>
+  crypto
 )
 
 jank_hook_llvm(jank_lib)

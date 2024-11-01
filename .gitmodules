@@ -22,3 +22,6 @@
 [submodule "compiler+runtime/third-party/cli11"]
 	path = compiler+runtime/third-party/cli11
 	url = https://github.com/jank-lang/CLI11.git
+[submodule "compiler+runtime/third-party/libzippp"]
+	path = compiler+runtime/third-party/libzippp
+	url = https://github.com/jank-lang/libzippp.git

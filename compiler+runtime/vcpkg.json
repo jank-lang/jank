@@ -6,8 +6,7 @@
     "boost-filesystem",
     "boost-smart-ptr",
     "boost-variant",
-    "boost-preprocessor",
-    "libzippp"
+    "boost-preprocessor"
   ],
   "default-features": [],
   "features": {
