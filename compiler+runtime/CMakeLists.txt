@@ -13,14 +13,10 @@ set(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH}
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules"
-  )
+)
 
-include(cmake/vcpkg.cmake)
 # LTO is explicitly not used, since it leads to runtime symbol lookup issues with the JIT.
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
-
-set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/vcpkg-triplet")
-set(VCPKG_TARGET_TRIPLET "x64-clang-static")
 
 project(
     jank
@@ -330,7 +326,7 @@ set_target_properties(nanobench_lib PROPERTIES ENABLE_EXPORTS 1)
 
 # ---- libfolly.a ----
 # Folly is well and truly a pain in the ass to build through its
-# own build system (via vcpkg). It regularly fails to build for me
+# own build system. It regularly fails to build for me
 # on all sorts of standard systems (both Linux and macOS) and jank
 # has been running with custom patches for several months now. After
 # running into compilation issues with it yet again, I've decided to
