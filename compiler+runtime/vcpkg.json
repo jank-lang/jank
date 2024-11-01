@@ -7,14 +7,5 @@
     "boost-smart-ptr",
     "boost-variant",
     "boost-preprocessor"
-  ],
-  "default-features": [],
-  "features": {
-    "tests": {
-      "description": "Dependencies for testing",
-      "dependencies": [
-        "doctest"
-      ]
-    }
-  }
+  ]
 }

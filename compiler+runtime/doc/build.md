@@ -3,19 +3,19 @@
 For Debian-based distros, this should be all you need:
 
 ```bash
-sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev entr libffi-dev clang libjemalloc-dev libreadline-dev libzip-dev libbz2-dev
+sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev entr libffi-dev clang libreadline-dev libzip-dev libbz2-dev doctest-dev
 ```
 
 For Arch:
 
 ```bash
-sudo pacman -S git git-lfs clang pkg-config cmake ninja make python3 libffi jemalloc entr
+sudo pacman -S git git-lfs clang pkg-config cmake ninja make python3 libffi entr doctest
 ```
 
 For macOS, try this:
 
 ```bash
-brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib jemalloc
+brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest
 ```
 
 Clone the repo as follows:
