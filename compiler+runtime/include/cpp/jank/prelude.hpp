@@ -14,8 +14,6 @@
 
 #include <boost/unordered_map.hpp>
 
-//#include <libassert/assert.hpp>
-
 #include <nanobench.h>
 
 #include <jank/type.hpp>

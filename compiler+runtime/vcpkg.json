@@ -8,10 +8,8 @@
     "boost-variant",
     "boost-preprocessor",
     "cli11",
-    "libassert",
     "libzippp",
-    "magic-enum",
-    "readline"
+    "magic-enum"
   ],
   "default-features": [],
   "features": {

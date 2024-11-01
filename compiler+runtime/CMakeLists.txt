@@ -236,7 +236,6 @@ find_package(magic_enum CONFIG REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem preprocessor)
 find_package(libzippp CONFIG REQUIRED)
 find_package(CLI11 CONFIG REQUIRED)
-#find_package(libassert CONFIG REQUIRED)
 
 target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 
@@ -246,7 +245,6 @@ target_link_libraries(
   bdwgc::gc bdwgc::gccpp
   libzippp::libzippp
   CLI11::CLI11
-  #libassert::assert
   readline
   clangInterpreter
   Boost::boost
