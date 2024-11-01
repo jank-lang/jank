@@ -204,17 +204,18 @@ add_library(
 )
 
 target_include_directories(
-    jank_lib
-    PUBLIC
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/cpp>"
+  jank_lib
+  PUBLIC
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/cpp>"
 )
 target_include_directories(
-    jank_lib
-    SYSTEM
-    PUBLIC
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bpptree/include>"
+  jank_lib
+  SYSTEM
+  PUBLIC
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bpptree/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bdwgc/include>"
 )
 target_precompile_headers(
   jank_lib
@@ -226,11 +227,13 @@ set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 target_compile_features(jank_lib PUBLIC ${jank_cxx_standard})
 target_compile_options(jank_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
 
+include(FetchContent)
+include(cmake/dependency/bdwgc.cmake)
+
 find_package(Immer CONFIG REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem preprocessor)
-find_package(BDWgc CONFIG REQUIRED)
 find_package(libzippp CONFIG REQUIRED)
 find_package(CLI11 CONFIG REQUIRED)
 #find_package(libassert CONFIG REQUIRED)
@@ -240,7 +243,7 @@ target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(
   jank_lib PRIVATE
   immer fmt::fmt
-  BDWgc::gc BDWgc::cord BDWgc::gccpp BDWgc::gctba
+  bdwgc::gc bdwgc::gccpp
   libzippp::libzippp
   CLI11::CLI11
   #libassert::assert

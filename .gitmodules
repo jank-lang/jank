@@ -7,3 +7,6 @@
 [submodule "compiler+runtime/third-party/bpptree"]
 	path = compiler+runtime/third-party/bpptree
 	url = https://github.com/jank-lang/BppTree.git
+[submodule "compiler+runtime/third-party/bdwgc"]
+	path = compiler+runtime/third-party/bdwgc
+	url = https://github.com/jank-lang/bdwgc.git
