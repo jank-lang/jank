@@ -8,7 +8,6 @@
     "boost-variant",
     "boost-preprocessor",
     "cli11",
-    "immer",
     "libassert",
     "libzippp",
     "magic-enum",

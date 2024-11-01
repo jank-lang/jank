@@ -13,3 +13,6 @@
 [submodule "compiler+runtime/third-party/fmt"]
 	path = compiler+runtime/third-party/fmt
 	url = https://github.com/jank-lang/fmt.git
+[submodule "compiler+runtime/third-party/immer"]
+	path = compiler+runtime/third-party/immer
+	url = https://github.com/jank-lang/immer.git

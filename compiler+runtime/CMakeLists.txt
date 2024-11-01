@@ -216,6 +216,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bpptree/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bdwgc/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
 )
 target_precompile_headers(
   jank_lib
@@ -231,7 +232,6 @@ include(FetchContent)
 include(cmake/dependency/bdwgc.cmake)
 include(cmake/dependency/fmt.cmake)
 
-find_package(Immer CONFIG REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem preprocessor)
 find_package(libzippp CONFIG REQUIRED)
@@ -242,7 +242,7 @@ target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 
 target_link_libraries(
   jank_lib PRIVATE
-  immer fmt::fmt
+  fmt::fmt
   bdwgc::gc bdwgc::gccpp
   libzippp::libzippp
   CLI11::CLI11
