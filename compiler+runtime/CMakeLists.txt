@@ -219,6 +219,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/magic_enum/include/magic_enum>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
 )
 target_precompile_headers(
   jank_lib
@@ -235,6 +236,7 @@ include(cmake/dependency/bdwgc.cmake)
 include(cmake/dependency/fmt.cmake)
 include(cmake/dependency/libzippp.cmake)
 
+find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 find_package(Boost REQUIRED COMPONENTS filesystem preprocessor)
 
 target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
@@ -247,7 +249,7 @@ target_link_libraries(
   readline
   clangInterpreter
   Boost::boost
-  crypto
+  OpenSSL::Crypto
 )
 
 jank_hook_llvm(jank_lib)
