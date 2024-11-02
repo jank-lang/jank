@@ -13,18 +13,15 @@ set(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH}
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules"
-  )
+)
 
 # LTO is explicitly not used, since it leads to runtime symbol lookup issues with the JIT.
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
 
-set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/vcpkg-triplet")
-set(VCPKG_TARGET_TRIPLET "x64-clang-static")
-
 project(
     jank
     VERSION 0.1
-    DESCRIPTION "A native Clojure dialect built on LLVM."
+    DESCRIPTION "The native Clojure dialect on LLVM."
     HOMEPAGE_URL "https://jank-lang.org/"
     # C is needed here, due to a clang issue:
     # https://stackoverflow.com/questions/71740678/cmake-error-in-findterminfo-with-clang-15-on-macos
@@ -203,17 +200,22 @@ add_library(
 )
 
 target_include_directories(
-    jank_lib
-    PUBLIC
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/cpp>"
+  jank_lib
+  PUBLIC
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/cpp>"
 )
 target_include_directories(
-    jank_lib
-    SYSTEM
-    PUBLIC
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bpptree/include>"
+  jank_lib
+  SYSTEM
+  PUBLIC
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bpptree/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bdwgc/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/magic_enum/include/magic_enum>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
 )
 target_precompile_headers(
   jank_lib
@@ -225,29 +227,23 @@ set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 target_compile_features(jank_lib PUBLIC ${jank_cxx_standard})
 target_compile_options(jank_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
 
-find_package(Immer CONFIG REQUIRED)
-find_package(magic_enum CONFIG REQUIRED)
-find_package(fmt CONFIG REQUIRED)
-find_package(Boost REQUIRED COMPONENTS filesystem preprocessor)
-find_package(BDWgc CONFIG REQUIRED)
-find_package(libzippp CONFIG REQUIRED)
-find_package(CLI11 CONFIG REQUIRED)
-find_package(OpenSSL CONFIG REQUIRED)
-#find_package(libassert CONFIG REQUIRED)
+include(FetchContent)
+include(cmake/dependency/bdwgc.cmake)
+include(cmake/dependency/fmt.cmake)
+include(cmake/dependency/libzippp.cmake)
 
-target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
+find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+find_package(Boost REQUIRED COMPONENTS filesystem)
 
 target_link_libraries(
   jank_lib PRIVATE
-  immer fmt::fmt
-  BDWgc::gc BDWgc::cord BDWgc::gccpp BDWgc::gctba
+  fmt::fmt
+  bdwgc::gc bdwgc::gccpp
   libzippp::libzippp
-  CLI11::CLI11
-  #libassert::assert
   readline
   clangInterpreter
-  Boost::boost
-  $<$<PLATFORM_ID:Darwin>:crypto>
+  Boost::filesystem
+  OpenSSL::Crypto
 )
 
 jank_hook_llvm(jank_lib)
@@ -330,7 +326,7 @@ set_target_properties(nanobench_lib PROPERTIES ENABLE_EXPORTS 1)
 
 # ---- libfolly.a ----
 # Folly is well and truly a pain in the ass to build through its
-# own build system (via vcpkg). It regularly fails to build for me
+# own build system. It regularly fails to build for me
 # on all sorts of standard systems (both Linux and macOS) and jank
 # has been running with custom patches for several months now. After
 # running into compilation issues with it yet again, I've decided to
@@ -366,7 +362,6 @@ target_include_directories(
     SYSTEM
     PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
-    ${BOOST_INCLUDE_DIRS}
 )
 
 set_property(TARGET folly_lib PROPERTY OUTPUT_NAME folly)
@@ -382,7 +377,7 @@ set_target_properties(folly_lib PROPERTIES ENABLE_EXPORTS 1)
 
 target_link_libraries(
   folly_lib PUBLIC
-  Boost::preprocessor
+  fmt::fmt
 )
 # ---- libfolly.a ----
 
@@ -402,15 +397,13 @@ target_compile_features(jank_exe PRIVATE ${jank_cxx_standard})
 target_compile_options(jank_exe PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
 target_link_options(jank_exe PRIVATE ${jank_linker_flags})
 
-target_include_directories(jank_exe SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
-
 target_link_libraries(
   jank_exe PUBLIC
   ${jank_link_whole_start} jank_lib ${jank_link_whole_end}
   ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
   folly_lib
   fmt::fmt
-  Boost::boost Boost::filesystem Boost::system
+  Boost::filesystem
 )
 
 jank_hook_llvm(jank_exe)
@@ -440,8 +433,6 @@ if(jank_tests)
   target_compile_options(jank_test_exe PRIVATE -DDOCTEST_CONFIG_SUPER_FAST_ASSERTS)
   target_link_options(jank_test_exe PRIVATE ${jank_linker_flags})
 
-  target_include_directories(jank_test_exe SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
-
   find_package(doctest REQUIRED)
   target_link_libraries(
     jank_test_exe PUBLIC
@@ -449,7 +440,7 @@ if(jank_tests)
     ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
     folly_lib
     doctest::doctest
-    Boost::boost Boost::filesystem
+    Boost::filesystem
   )
 
   jank_hook_llvm(jank_test_exe)

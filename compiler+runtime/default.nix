@@ -10,8 +10,6 @@ let
 
   # Deps
   boost = pkgs.callPackage ./nix/boost.nix { };
-  boehmgc = pkgs.callPackage ./nix/boehmgc.nix { };
-  libzippp = pkgs.callPackage ./nix/libzippp.nix { };
   openssl = pkgs.callPackage ./nix/openssl.nix { };
 in
 
@@ -28,17 +26,11 @@ pkgs.llvmPackages_19.stdenv.mkDerivation {
 
   buildInputs = [
     boost
-    boehmgc
-    libzippp
     openssl
     pkgs.doctest
     pkgs.double-conversion
     pkgs.readline
     pkgs.libzip
-    pkgs.immer
-    pkgs.cli11
-    pkgs.magic-enum
-    pkgs.fmt
     pkgs.llvmPackages_19.clang-unwrapped
     pkgs.llvmPackages_19.llvm
   ];
