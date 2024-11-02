@@ -87,6 +87,7 @@ set(
   #-DLIBASSERT_USE_FMT=1
   #-DLIBASSERT_STATIC_DEFINE=1
   #-stdlib=libc++
+  $<$<PLATFORM_ID:Darwin>:-I/opt/homebrew/include>
 )
 
 set(
