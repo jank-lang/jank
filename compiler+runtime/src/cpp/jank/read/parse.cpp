@@ -39,7 +39,12 @@ namespace jank::read::parse
         return err("Invalid unicode digit");
       }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+      /* C++ helpfully deprecated the only standard way of converting Unicode formats.
+       * We'll use it while we can. It'll be gone in C++26. */
       std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
+#pragma clang diagnostic pop
 
       native_persistent_string const converted(converter.to_bytes(codepoint));
 
@@ -439,9 +444,9 @@ namespace jank::read::parse
         }
         else
         {
-          return err(
-            error{ token.pos,
-                   fmt::format("Error reading character `{}`: {}", sv, char_bytes.expect_err().error) });
+          return err(error{
+            token.pos,
+            fmt::format("Error reading character `{}`: {}", sv, char_bytes.expect_err().error) });
         }
       }
 
