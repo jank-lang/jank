@@ -604,7 +604,16 @@ namespace jank::codegen
     current_fn->insert(current_fn->end(), else_block);
 
     builder->SetInsertPoint(else_block);
-    auto const else_(gen(expr.else_.unwrap(), arity));
+    llvm::Value *else_{};
+
+    if(expr.else_.is_some())
+    {
+      else_ = gen(expr.else_.unwrap(), arity);
+    }
+    else
+    {
+      else_ = gen_global(obj::nil::nil_const());
+    }
 
     if(!is_return)
     {
