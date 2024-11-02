@@ -205,6 +205,7 @@ add_library(
   src/cpp/jank/runtime/obj/native_vector_sequence.cpp
   src/cpp/jank/runtime/obj/atom.cpp
   src/cpp/jank/runtime/obj/volatile.cpp
+  src/cpp/jank/runtime/obj/delay.cpp
   src/cpp/jank/runtime/obj/reduced.cpp
   src/cpp/jank/runtime/behavior/callable.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
