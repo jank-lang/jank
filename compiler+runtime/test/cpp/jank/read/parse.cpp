@@ -63,6 +63,32 @@ namespace jank::read::parse
       CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
     }
 
+    TEST_CASE("Ratio")
+    {
+      SUBCASE("Single Ratio")
+      {
+        lex::processor lp{ "4/5" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(is_equiv(runtime::mul(r.expect_ok().unwrap().ptr, make_box(10)), make_box(8)));
+        CHECK(r.expect_ok().unwrap().start
+              == lex::token{
+                0,
+                3,
+                lex::token_kind::ratio,
+                { .numerator = 4, .denominator = 5 }
+        });
+        CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+      }
+      SUBCASE("Division by zero")
+      {
+        lex::processor lp{ "1/0" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(r.is_err());
+      }
+    }
+
     TEST_CASE("Comments")
     {
       lex::processor lp{ ";meow \n1234 ; bar\n;\n\n" };
@@ -166,6 +192,107 @@ namespace jank::read::parse
         auto const r(p.next());
         CHECK(r.expect_ok().unwrap().start
               == lex::token{ 9, 10, lex::token_kind::character, "\\backspace" });
+      }
+
+      SUBCASE("Hex unicode")
+      {
+        SUBCASE("Valid")
+        {
+          lex::processor lp{ R"(\u1234 \u5678 \u90ab \ucdef \uABCD \uEFa0)" };
+          processor p{ lp.begin(), lp.end() };
+
+          size_t offset{};
+          for(native_persistent_string const &ch :
+              { "\\u1234", "\\u5678", "\\u90ab", "\\ucdef", "\\uABCD", "\\uEFa0" })
+          {
+            auto const r(p.next());
+            CHECK(equal(r.expect_ok().unwrap().ptr,
+                        make_box<obj::character>(
+                          parse_character_in_base(ch.substr(2), 16).expect_ok())));
+
+            auto const len(ch.size());
+            CHECK(r.expect_ok().unwrap().start
+                  == lex::token{ offset, len, lex::token_kind::character, ch });
+            CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+
+            /* +1 for space */
+            offset += len + 1;
+          }
+        }
+
+        SUBCASE("Invalid length")
+        {
+          lex::processor lp{ R"(\u123456 \uabcdef \u12abf5)" };
+          processor p{ lp.begin(), lp.end() };
+
+          for(size_t i{}; i < 3; ++i)
+          {
+            auto const r(p.next());
+            CHECK(r.is_err());
+          }
+        }
+
+        SUBCASE("Invalid unicode characters")
+        {
+          lex::processor lp{ R"(\uabcg \u120x \uza19 \u1Gab)" };
+          processor p{ lp.begin(), lp.end() };
+
+          for(size_t i{}; i < 4; ++i)
+          {
+            auto const r(p.next());
+            CHECK(r.is_err());
+          }
+        }
+      }
+
+      SUBCASE("Octal unicode")
+      {
+        SUBCASE("Valid")
+        {
+          lex::processor lp{ R"(\o012 \o345 \o670)" };
+          processor p{ lp.begin(), lp.end() };
+
+          size_t offset{};
+          for(native_persistent_string const &ch : { "\\o012", "\\o345", "\\o670" })
+          {
+            auto const r(p.next());
+            CHECK(equal(r.expect_ok().unwrap().ptr,
+                        make_box<obj::character>(
+                          parse_character_in_base(ch.substr(2), 8).expect_ok())));
+
+            auto const len(ch.size());
+            CHECK(r.expect_ok().unwrap().start
+                  == lex::token{ offset, len, lex::token_kind::character, ch });
+            CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+
+            /* +1 for space */
+            offset += len + 1;
+          }
+        }
+
+        SUBCASE("Invalid length")
+        {
+          lex::processor lp{ R"(\o12345677 \o23007673323)" };
+          processor p{ lp.begin(), lp.end() };
+
+          for(size_t i{}; i < 2; ++i)
+          {
+            auto const r(p.next());
+            CHECK(r.is_err());
+          }
+        }
+
+        SUBCASE("Invalid ocatal character")
+        {
+          lex::processor lp{ R"(\o128 \o962 \oAaa \oxf0)" };
+          processor p{ lp.begin(), lp.end() };
+
+          for(size_t i{}; i < 4; ++i)
+          {
+            auto const r(p.next());
+            CHECK(r.is_err());
+          }
+        }
       }
     }
 

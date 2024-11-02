@@ -7,6 +7,8 @@
 #include <llvm/Support/Signals.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 
+#include <fmt/ranges.h>
+
 #include <jank/util/process_location.hpp>
 #include <jank/util/make_array.hpp>
 #include <jank/util/dir.hpp>
@@ -135,7 +137,7 @@ namespace jank::jit
     args.emplace_back("-include-pch");
     args.emplace_back(strdup(pch_path_str.c_str()));
 
-    //fmt::println("jit flags {}", JANK_JIT_FLAGS);
+    //fmt::println("jit flags {}", args);
 
     clang::IncrementalCompilerBuilder compiler_builder;
     compiler_builder.SetCompilerArgs(args);

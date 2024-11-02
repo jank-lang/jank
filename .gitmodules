@@ -7,3 +7,21 @@
 [submodule "compiler+runtime/third-party/bpptree"]
 	path = compiler+runtime/third-party/bpptree
 	url = https://github.com/jank-lang/BppTree.git
+[submodule "compiler+runtime/third-party/bdwgc"]
+	path = compiler+runtime/third-party/bdwgc
+	url = https://github.com/jank-lang/bdwgc.git
+[submodule "compiler+runtime/third-party/fmt"]
+	path = compiler+runtime/third-party/fmt
+	url = https://github.com/jank-lang/fmt.git
+[submodule "compiler+runtime/third-party/immer"]
+	path = compiler+runtime/third-party/immer
+	url = https://github.com/jank-lang/immer.git
+[submodule "compiler+runtime/third-party/magic_enum"]
+	path = compiler+runtime/third-party/magic_enum
+	url = https://github.com/jank-lang/magic_enum.git
+[submodule "compiler+runtime/third-party/cli11"]
+	path = compiler+runtime/third-party/cli11
+	url = https://github.com/jank-lang/CLI11.git
+[submodule "compiler+runtime/third-party/libzippp"]
+	path = compiler+runtime/third-party/libzippp
+	url = https://github.com/jank-lang/libzippp.git

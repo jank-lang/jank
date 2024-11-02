@@ -1,0 +1,8 @@
+set(CMAKE_C_FLAGS_OLD "${CMAKE_C_FLAGS}")
+set(CMAKE_CXX_FLAGS_OLD "${CMAKE_CXX_FLAGS}")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
+
+  add_subdirectory(third-party/libzippp)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS_OLD}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_OLD}")

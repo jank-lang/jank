@@ -1,5 +1,7 @@
 #pragma once
 
+#include <codecvt>
+
 #include <jank/result.hpp>
 #include <jank/option.hpp>
 #include <jank/read/lex.hpp>
@@ -12,39 +14,16 @@ namespace jank::runtime
 /* TODO: Rename file to processor. */
 namespace jank::read::parse
 {
-  static option<char> get_char_from_literal(native_persistent_string const &sv)
-  {
-    if(sv.size() == 2)
-    {
-      return sv[1];
-    }
-    else if(sv == R"(\newline)")
-    {
-      return '\n';
-    }
-    else if(sv == R"(\space)")
-    {
-      return ' ';
-    }
-    else if(sv == R"(\tab)")
-    {
-      return '\t';
-    }
-    else if(sv == R"(\backspace)")
-    {
-      return '\b';
-    }
-    else if(sv == R"(\formfeed)")
-    {
-      return '\f';
-    }
-    else if(sv == R"(\return)")
-    {
-      return '\r';
-    }
 
-    return none;
-  }
+  struct char_parse_error
+  {
+    native_persistent_string error;
+  };
+
+  result<native_persistent_string, char_parse_error>
+  parse_character_in_base(native_persistent_string const &char_literal, int const base);
+
+  option<char> get_char_from_literal(native_persistent_string const &s);
 
   struct processor
   {
@@ -107,6 +86,7 @@ namespace jank::read::parse
     object_result parse_boolean();
     object_result parse_keyword();
     object_result parse_integer();
+    object_result parse_ratio();
     object_result parse_real();
     object_result parse_string();
     object_result parse_escaped_string();

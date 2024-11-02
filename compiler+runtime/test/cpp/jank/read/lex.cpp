@@ -374,7 +374,76 @@ namespace jank::read::lex
         }));
       }
     }
-
+    TEST_CASE("Ratio")
+    {
+      SUBCASE("Success - x/x")
+      {
+        processor p{ "4/5" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 3, token_kind::ratio, { .numerator = 4, .denominator = 5 } }
+        }));
+      }
+      SUBCASE("Success - -x/x")
+      {
+        processor p{ "-4/5" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 4, token_kind::ratio, { .numerator = -4, .denominator = 5 } }
+        }));
+      }
+      SUBCASE("Success - -x/-x")
+      {
+        processor p{ "-4/-5" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 5, token_kind::ratio, { .numerator = -4, .denominator = -5 } }
+        }));
+      }
+      SUBCASE("Failures - x//x")
+      {
+        processor p{ "4//5" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(
+          tokens
+          == make_results({ { error(0, 4, "invalid ratio: expecting an integer denominator") } }));
+      }
+      SUBCASE("Failures - x/x/x")
+      {
+        processor p{ "4/5/4" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({ { error(0, 3, "invalid ratio: expecting an integer denominator") },
+                                { error(3, 3, "invalid symbol") } }));
+      }
+      SUBCASE("Failures - x/x/x/x")
+      {
+        processor p{ "4/5/4/5/6/7/7" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({ { error(0, 3, "invalid ratio: expecting an integer denominator") },
+                                { error(3, 3, "invalid symbol") } }));
+      }
+      SUBCASE("Failures - x.x/x")
+      {
+        processor p{ "4.4/5" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(
+          tokens
+          == make_results({ { error(0, 3, "invalid ratio") }, { error(3, 3, "invalid symbol") } }));
+      }
+      SUBCASE("Failures - x/x.x")
+      {
+        processor p{ "4/5.9" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(
+          tokens
+          == make_results({ { error(0, 5, "invalid ratio: expecting an integer denominator") } }));
+      }
+    }
     TEST_CASE("Integer")
     {
       SUBCASE("Positive single-char")
@@ -577,6 +646,87 @@ namespace jank::read::lex
                   token{ 0, token_kind::open_paren },
                   token{ 1, 5, token_kind::real, 12.34 },
                   token{ 6, token_kind::close_paren },
+          }));
+        }
+      }
+
+      SUBCASE("Scientific notation")
+      {
+        SUBCASE("Valid")
+        {
+          processor p{ "1e3 -1e2 2.E-3 22.3e-8 -12E+18\\a" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_results({
+                  token{  0, 3,      token_kind::real,   1000.0l },
+                  token{  4, 4,      token_kind::real,   -100.0l },
+                  token{  9, 5,      token_kind::real,    0.002l },
+                  token{ 15, 7,      token_kind::real, 2.23e-07l },
+                  token{ 23, 7,      token_kind::real, -1.2e+19l },
+                  token{ 30, 2, token_kind::character,   "\\a"sv },
+          }));
+        }
+
+        SUBCASE("Missing exponent")
+        {
+          processor p{ "1e 23E-1 12e- -0.2e" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_results({
+                  error{ 0, 2, "unexpected end of real, expecting exponent" },
+                  token{ 3, 5, token_kind::real, 2.3l },
+                  error{ 9, 13, "unexpected end of real, expecting exponent" },
+                  error{ 14, 19, "unexpected end of real, expecting exponent" },
+          }));
+        }
+
+        SUBCASE("Signs after exponent found")
+        {
+          processor p{ "12.3 -1e3- 2.3E+" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_results({
+                  token{ 0, 4, token_kind::real, 12.3l },
+                  error{ 5, 9, "invalid number" },
+                  error{ 9, "expected whitespace before next token" },
+                  token{ 9, token_kind::symbol, "-"sv },
+                  error{ 11, 16, "unexpected end of real, expecting exponent" },
+          }));
+        }
+
+        SUBCASE("Extra dots")
+        {
+          processor p{ "1e3. 12.3 -1e4.3" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_results({
+                  error{ 0, 3, "invalid number" },
+                  error{ 3, "unexpected character: ." },
+                  token{ 5, 4, token_kind::real, 12.3l },
+                  error{ 10, 14, "invalid number" },
+                  error{ 14, "unexpected character: ." },
+                  error{ 15, "expected whitespace before next token" },
+                  token{ 15, token_kind::integer, 3ll },
+          }));
+        }
+
+        SUBCASE("Extra characters in exponent")
+        {
+          processor p{ "2.ee4 -1e4E3 1.eFoo 3E5fOo" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_results({
+                  error{ 0, 3, "invalid number" },
+                  token{ 3, 2, token_kind::symbol, "e4"sv },
+                  error{ 6, 10, "invalid number" },
+                  error{ 10, "expected whitespace before next token" },
+                  token{ 10, 2, token_kind::symbol, "E3"sv },
+                  error{ 13, 16, "unexpected end of real, expecting exponent" },
+                  error{ 16, "expected whitespace before next token" },
+                  token{ 16, 3, token_kind::symbol, "Foo"sv },
+                  token{ 20, 3, token_kind::real, 300000.0l },
+                  error{ 23, "expected whitespace before next token" },
+                  token{ 23, 3, token_kind::symbol, "fOo"sv },
           }));
         }
       }

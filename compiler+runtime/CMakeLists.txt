@@ -13,19 +13,15 @@ set(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH}
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules"
-  )
+)
 
-include(cmake/vcpkg.cmake)
 # LTO is explicitly not used, since it leads to runtime symbol lookup issues with the JIT.
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
-
-set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/vcpkg-triplet")
-set(VCPKG_TARGET_TRIPLET "x64-clang-static")
 
 project(
     jank
     VERSION 0.1
-    DESCRIPTION "A native Clojure dialect built on LLVM."
+    DESCRIPTION "The native Clojure dialect on LLVM."
     HOMEPAGE_URL "https://jank-lang.org/"
     # C is needed here, due to a clang issue:
     # https://stackoverflow.com/questions/71740678/cmake-error-in-findterminfo-with-clang-15-on-macos
@@ -97,6 +93,7 @@ set(
   jank_linker_flags
   #-stdlib=libc++ -lc++abi
   $<$<PLATFORM_ID:Darwin>:-L/opt/homebrew/lib>
+  # TODO: Fix these.
   $<$<PLATFORM_ID:Darwin>:${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libunwind.a>
   $<$<PLATFORM_ID:Darwin>:${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libc++abi.a>
   )
@@ -115,6 +112,22 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
 # ---- Clang/LLVM ----
 include(cmake/llvm.cmake)
+
+if(
+  NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+  OR
+  NOT CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL CLANG_PACKAGE_VERSION
+)
+  message(
+    FATAL_ERROR
+    "Found Clang ${CLANG_PACKAGE_VERSION} to embed in jank, "
+    "but trying to use ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} to compile it. "
+    "Please ensure you're using the same Clang to compile jank as you are embedding in jank. "
+    "Follow the build.md documentation."
+  )
+endif()
+
+# TODO: Optimize
 llvm_map_components_to_libnames(jank_llvm_libs ${LLVM_TARGETS_TO_BUILD} support lineeditor orcjit native core)
 
 function(jank_hook_llvm target)
@@ -207,17 +220,22 @@ add_library(
 )
 
 target_include_directories(
-    jank_lib
-    PUBLIC
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/cpp>"
+  jank_lib
+  PUBLIC
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/cpp>"
 )
 target_include_directories(
-    jank_lib
-    SYSTEM
-    PUBLIC
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bpptree/include>"
+  jank_lib
+  SYSTEM
+  PUBLIC
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bpptree/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bdwgc/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/magic_enum/include/magic_enum>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
 )
 target_precompile_headers(
   jank_lib
@@ -229,28 +247,23 @@ set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 target_compile_features(jank_lib PUBLIC ${jank_cxx_standard})
 target_compile_options(jank_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
 
-find_package(Immer CONFIG REQUIRED)
-find_package(magic_enum CONFIG REQUIRED)
-find_package(fmt CONFIG REQUIRED)
-find_package(Boost REQUIRED COMPONENTS filesystem preprocessor)
-find_package(BDWgc CONFIG REQUIRED)
-find_package(libzippp CONFIG REQUIRED)
-find_package(CLI11 CONFIG REQUIRED)
-#find_package(libassert CONFIG REQUIRED)
+include(FetchContent)
+include(cmake/dependency/bdwgc.cmake)
+include(cmake/dependency/fmt.cmake)
+include(cmake/dependency/libzippp.cmake)
 
-target_include_directories(jank_lib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
+find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+find_package(Boost REQUIRED COMPONENTS filesystem)
 
 target_link_libraries(
   jank_lib PRIVATE
-  immer fmt::fmt
-  BDWgc::gc BDWgc::cord BDWgc::gccpp BDWgc::gctba
+  fmt::fmt
+  bdwgc::gc bdwgc::gccpp
   libzippp::libzippp
-  CLI11::CLI11
-  #libassert::assert
   readline
   clangInterpreter
-  Boost::boost
-  $<$<PLATFORM_ID:Darwin>:crypto>
+  Boost::filesystem
+  OpenSSL::Crypto
 )
 
 jank_hook_llvm(jank_lib)
@@ -261,17 +274,17 @@ list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str)
 
 # Build a string of all include flags for jank. This will be used for building the PCH at build
 # time as well as building the PCH on first run, after installation.
-get_target_property(jank_lib_includes jank_lib INCLUDE_DIRECTORIES)
-set(jank_lib_includes_str "")
-foreach(dir ${jank_lib_includes})
+get_target_property(jank_lib_includes_prop jank_lib INCLUDE_DIRECTORIES)
+set(jank_lib_includes "")
+foreach(dir ${jank_lib_includes_prop})
   # System includes are just the path, but normal includes have this format:
   # $<BUILD_INTERFACE:/home/jeaye/projects/jank/compiler+runtime/include/cpp>
   # We need to strip all of that out.
   if(${dir} MATCHES "BUILD_INTERFACE:")
     string(REGEX REPLACE "\\$<BUILD_INTERFACE:(.*)>" "\\1" dir_path ${dir})
-    string(APPEND jank_lib_includes_str "-I${dir_path} ")
+    list(APPEND jank_lib_includes -I${dir_path})
   else()
-    string(APPEND jank_lib_includes_str "-isystem ${dir} ")
+    list(APPEND jank_lib_includes -isystem ${dir})
   endif()
 endforeach()
 
@@ -333,7 +346,7 @@ set_target_properties(nanobench_lib PROPERTIES ENABLE_EXPORTS 1)
 
 # ---- libfolly.a ----
 # Folly is well and truly a pain in the ass to build through its
-# own build system (via vcpkg). It regularly fails to build for me
+# own build system. It regularly fails to build for me
 # on all sorts of standard systems (both Linux and macOS) and jank
 # has been running with custom patches for several months now. After
 # running into compilation issues with it yet again, I've decided to
@@ -369,7 +382,6 @@ target_include_directories(
     SYSTEM
     PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
-    ${BOOST_INCLUDE_DIRS}
 )
 
 set_property(TARGET folly_lib PROPERTY OUTPUT_NAME folly)
@@ -385,7 +397,7 @@ set_target_properties(folly_lib PROPERTIES ENABLE_EXPORTS 1)
 
 target_link_libraries(
   folly_lib PUBLIC
-  Boost::preprocessor
+  fmt::fmt
 )
 # ---- libfolly.a ----
 
@@ -405,15 +417,13 @@ target_compile_features(jank_exe PRIVATE ${jank_cxx_standard})
 target_compile_options(jank_exe PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
 target_link_options(jank_exe PRIVATE ${jank_linker_flags})
 
-target_include_directories(jank_exe SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
-
 target_link_libraries(
   jank_exe PUBLIC
   ${jank_link_whole_start} jank_lib ${jank_link_whole_end}
   ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
   folly_lib
   fmt::fmt
-  Boost::boost Boost::filesystem Boost::system
+  Boost::filesystem
 )
 
 jank_hook_llvm(jank_exe)
@@ -443,8 +453,6 @@ if(jank_tests)
   target_compile_options(jank_test_exe PRIVATE -DDOCTEST_CONFIG_SUPER_FAST_ASSERTS)
   target_link_options(jank_test_exe PRIVATE ${jank_linker_flags})
 
-  target_include_directories(jank_test_exe SYSTEM PRIVATE ${BOOST_INCLUDE_DIRS})
-
   find_package(doctest REQUIRED)
   target_link_libraries(
     jank_test_exe PUBLIC
@@ -452,7 +460,7 @@ if(jank_tests)
     ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
     folly_lib
     doctest::doctest
-    Boost::boost Boost::filesystem
+    Boost::filesystem
   )
 
   jank_hook_llvm(jank_test_exe)
@@ -479,10 +487,24 @@ set(jank_pch_compile_flags_list ${jank_common_compiler_flags} -w)
 list(JOIN jank_pch_compile_flags_list " " jank_pch_compile_flags_str)
 
 set(jank_incremental_pch_flag ${CMAKE_BINARY_DIR}/incremental.pch)
+
+separate_arguments(jank_incremental_pch_cxx_flags UNIX_COMMAND ${CMAKE_CXX_FLAGS})
+list(REMOVE_ITEM jank_incremental_pch_cxx_flags -fPIC)
 add_custom_command(
-  DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/bin/build-pch
+  DEPENDS ${CMAKE_BINARY_DIR}/jank
   OUTPUT ${jank_incremental_pch_flag}
-  COMMAND "${CMAKE_SOURCE_DIR}/bin/build-pch" "${CLANG_INSTALL_PREFIX}" "${CMAKE_SOURCE_DIR}/include" "${jank_incremental_pch_flag}" "${jank_pch_compile_flags_str}" "${jank_lib_includes_str}"
+  COMMAND_EXPAND_LISTS
+  VERBATIM
+  COMMAND ${CMAKE_CXX_COMPILER}
+          ${jank_incremental_pch_cxx_flags}
+          ${jank_common_compiler_flags} ${jank_aot_compiler_flags}
+          ${jank_lib_includes}
+          -Xclang -fincremental-extensions
+          -Xclang -emit-pch
+          -x c++-header
+          -w
+          -c ${PROJECT_SOURCE_DIR}/include/cpp/jank/prelude.hpp
+          -o ${jank_incremental_pch_flag}
 )
 add_custom_target(
   jank_incremental_pch
