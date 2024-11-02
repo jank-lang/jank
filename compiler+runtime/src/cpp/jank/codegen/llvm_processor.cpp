@@ -129,6 +129,7 @@ namespace jank::codegen
       builder->SetInsertPoint(global_ctor_block);
       builder->CreateRetVoid();
 
+      /* TODO: Verify module? */
       llvm::verifyFunction(*fn);
       llvm::verifyFunction(*global_ctor_block->getParent());
     }
@@ -501,14 +502,17 @@ namespace jank::codegen
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::recur<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &)
+                                   analyze::expr::function_arity<analyze::expression> const &arity)
   {
-    if(expr.expr_type == analyze::expression_type::return_statement)
-    {
-      return builder->CreateRet(nullptr);
-    }
-
-    return nullptr;
+    analyze::expr::call<analyze::expression> call_expr{
+      analyze::expression_base{ {}, expr.expr_type, expr.frame },
+      nullptr,
+      expr.args,
+      expr.arg_exprs,
+      true
+    };
+    auto const call(gen(call_expr, arity));
+    return call;
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::let<analyze::expression> const &expr,
@@ -530,10 +534,7 @@ namespace jank::codegen
     auto const ret(gen(expr.body, arity));
     locals = std::move(old_locals);
 
-    if(expr.expr_type == analyze::expression_type::return_statement)
-    {
-      return builder->CreateRet(ret);
-    }
+    /* XXX: No return creation, since we rely on the body to do that. */
 
     return ret;
   }
@@ -571,6 +572,10 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(analyze::expr::if_<analyze::expression> const &expr,
                                    analyze::expr::function_arity<analyze::expression> const &arity)
   {
+    /* If we're in return position, our then/else branches will generate return instructions
+     * for us. Since LLVM basic blocks can only have one terminating instruction, we need
+     * to take care to not generate our own, too. */
+    auto const is_return(expr.expr_type == analyze::expression_type::return_statement);
     auto const condition(gen(expr.condition, arity));
     auto const truthy_fn_type(
       llvm::FunctionType::get(builder->getInt8Ty(), { builder->getPtrTy() }, false));
@@ -585,32 +590,42 @@ namespace jank::codegen
     auto const merge_block(llvm::BasicBlock::Create(*context, "ifcont"));
 
     builder->CreateCondBr(cmp, then_block, else_block);
-    builder->SetInsertPoint(then_block);
 
+    builder->SetInsertPoint(then_block);
     auto const then(gen(expr.then, arity));
-    builder->CreateBr(merge_block);
+
+    if(!is_return)
+    {
+      builder->CreateBr(merge_block);
+    }
+
     /* Codegen for `then` can change the current block, so track that. */
     then_block = builder->GetInsertBlock();
     current_fn->insert(current_fn->end(), else_block);
+
     builder->SetInsertPoint(else_block);
-
     auto const else_(gen(expr.else_.unwrap(), arity));
-    builder->CreateBr(merge_block);
-    /* Codegen for `else` can change the current block, so track that. */
-    else_block = builder->GetInsertBlock();
-    current_fn->insert(current_fn->end(), merge_block);
 
-    builder->SetInsertPoint(merge_block);
-    auto const phi(builder->CreatePHI(builder->getPtrTy(), 2, "iftmp"));
-    phi->addIncoming(then, then_block);
-    phi->addIncoming(else_, else_block);
-
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(!is_return)
     {
-      return builder->CreateRet(phi);
+      builder->CreateBr(merge_block);
     }
 
-    return phi;
+    /* Codegen for `else` can change the current block, so track that. */
+    else_block = builder->GetInsertBlock();
+
+    if(!is_return)
+    {
+      current_fn->insert(current_fn->end(), merge_block);
+      builder->SetInsertPoint(merge_block);
+      auto const phi(
+        builder->CreatePHI(is_return ? builder->getVoidTy() : builder->getPtrTy(), 2, "iftmp"));
+      phi->addIncoming(then, then_block);
+      phi->addIncoming(else_, else_block);
+
+      return phi;
+    }
+    return nullptr;
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::throw_<analyze::expression> const &expr,
