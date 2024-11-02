@@ -233,7 +233,6 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/magic_enum/include/magic_enum>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
 )
 target_precompile_headers(
   jank_lib
@@ -376,10 +375,11 @@ add_library(folly_lib STATIC ${folly_sources})
 set_source_files_properties(${folly_sources} PROPERTIES SKIP_LINTING ON)
 
 target_include_directories(
-    folly_lib
-    SYSTEM
-    PUBLIC
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
+  folly_lib
+  SYSTEM
+  PUBLIC
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
 )
 
 set_property(TARGET folly_lib PROPERTY OUTPUT_NAME folly)
