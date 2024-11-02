@@ -1,18 +1,21 @@
 # LLVM/Clang default paths
-if (NOT DEFINED llvm_dir)
-  set(llvm_dir "${CMAKE_BINARY_DIR}/llvm-install/usr/local")
+option(jank_local_clang "Whether or not to use a local Clang/LLVM source build" ON)
+if(NOT DEFINED llvm_dir)
+  if(jank_local_clang)
+    set(llvm_dir "${CMAKE_BINARY_DIR}/llvm-install/usr/local")
+  endif()
 endif()
-if (NOT DEFINED clang_dir)
+if(NOT DEFINED clang_dir AND DEFINED llvm_dir)
   set(clang_dir ${llvm_dir})
 endif()
 
 ## Define supported version of clang and llvm
 set(CLANG_MIN_SUPPORTED 19.0)
-set(CLANG_MAX_SUPPORTED "19.0.x")
-set(CLANG_VERSION_UPPER_BOUND 19.1.0)
+set(CLANG_MAX_SUPPORTED "20.0.x")
+set(CLANG_VERSION_UPPER_BOUND 21.0.0)
 set(LLVM_MIN_SUPPORTED 19.0)
-set(LLVM_MAX_SUPPORTED "19.0.x")
-set(LLVM_VERSION_UPPER_BOUND 19.1.0)
+set(LLVM_MAX_SUPPORTED "20.0.x")
+set(LLVM_VERSION_UPPER_BOUND 21.0.0)
 
 #set(LLVM_ENABLE_EH YES)
 set(LLVM_REQUIRES_RTTI YES)
@@ -34,8 +37,8 @@ endif()
 
 ## Find supported LLVM
 
-find_package(LLVM REQUIRED CONFIG ${llvm_search_hints} NO_DEFAULT_PATH)
-find_package(Clang REQUIRED CONFIG ${clang_search_hints} NO_DEFAULT_PATH)
+find_package(LLVM CONFIG ${llvm_search_hints} NO_DEFAULT_PATH)
+find_package(Clang CONFIG ${clang_search_hints} NO_DEFAULT_PATH)
 
 if (LLVM_FOUND)
   if (LLVM_PACKAGE_VERSION VERSION_LESS LLVM_MIN_SUPPORTED OR LLVM_PACKAGE_VERSION VERSION_GREATER_EQUAL LLVM_VERSION_UPPER_BOUND)
@@ -59,15 +62,15 @@ if (NOT LLVM_FOUND AND DEFINED LLVM_VERSION)
     set(LLVM_VERSION ${LLVM_MIN_SUPPORTED})
   endif()
 
-  find_package(LLVM ${LLVM_VERSION} REQUIRED CONFIG ${llvm_search_hints} NO_DEFAULT_PATHS)
+  find_package(LLVM ${LLVM_VERSION} CONFIG ${llvm_search_hints} NO_DEFAULT_PATHS)
 endif()
 
 if (NOT LLVM_FOUND AND DEFINED llvm_dir)
-  find_package(LLVM REQUIRED CONFIG ${llvm_search_hints} NO_DEFAULT_PATH)
+  find_package(LLVM CONFIG ${llvm_search_hints} NO_DEFAULT_PATH)
 endif()
 
 if (NOT LLVM_FOUND)
-  find_package(LLVM REQUIRED CONFIG)
+  find_package(LLVM CONFIG)
 endif()
 
 if (NOT LLVM_FOUND)
@@ -92,15 +95,15 @@ if (DEFINED CLANG_VERSION)
     set(CLANG_VERSION ${CLANG_MIN_SUPPORTED})
   endif()
 
-  find_package(Clang ${CLANG_VERSION} REQUIRED CONFIG ${clang_extra_hints} NO_DEFAULT_PATH)
+  find_package(Clang ${CLANG_VERSION} CONFIG ${clang_extra_hints} NO_DEFAULT_PATH)
 endif()
 
 if (NOT Clang_FOUND AND DEFINED clang_dir)
-  find_package(Clang REQUIRED CONFIG ${clang_extra_hints} NO_DEFAULT_PATH)
+  find_package(Clang CONFIG ${clang_extra_hints} NO_DEFAULT_PATH)
 endif()
 
 if (NOT Clang_FOUND)
-  find_package(Clang REQUIRED CONFIG)
+  find_package(Clang CONFIG)
 endif()
 
 if (NOT Clang_FOUND)

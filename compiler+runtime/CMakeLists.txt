@@ -93,6 +93,7 @@ set(
   jank_linker_flags
   #-stdlib=libc++ -lc++abi
   $<$<PLATFORM_ID:Darwin>:-L/opt/homebrew/lib>
+  # TODO: Fix these.
   $<$<PLATFORM_ID:Darwin>:${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libunwind.a>
   $<$<PLATFORM_ID:Darwin>:${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libc++abi.a>
   )
@@ -111,6 +112,22 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
 # ---- Clang/LLVM ----
 include(cmake/llvm.cmake)
+
+if(
+  NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+  OR
+  NOT CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL CLANG_PACKAGE_VERSION
+)
+  message(
+    FATAL_ERROR
+    "Found Clang ${CLANG_PACKAGE_VERSION} to embed in jank, "
+    "but trying to use ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} to compile it. "
+    "Please ensure you're using the same Clang to compile jank as you are embedding in jank. "
+    "Follow the build.md documentation."
+  )
+endif()
+
+# TODO: Optimize
 llvm_map_components_to_libnames(jank_llvm_libs ${LLVM_TARGETS_TO_BUILD} support lineeditor orcjit native core)
 
 function(jank_hook_llvm target)
