@@ -25,3 +25,6 @@
 [submodule "compiler+runtime/third-party/libzippp"]
 	path = compiler+runtime/third-party/libzippp
 	url = https://github.com/jank-lang/libzippp.git
+[submodule "compiler+runtime/third-party/boost-preprocessor"]
+	path = compiler+runtime/third-party/boost-preprocessor
+	url = https://github.com/jank-lang/boost-preprocessor.git

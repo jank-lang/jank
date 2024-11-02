@@ -87,6 +87,7 @@ set(
   #-DLIBASSERT_USE_FMT=1
   #-DLIBASSERT_STATIC_DEFINE=1
   #-stdlib=libc++
+  $<$<PLATFORM_ID:Darwin>:-I/opt/homebrew/include>
 )
 
 set(
@@ -378,10 +379,11 @@ add_library(folly_lib STATIC ${folly_sources})
 set_source_files_properties(${folly_sources} PROPERTIES SKIP_LINTING ON)
 
 target_include_directories(
-    folly_lib
-    SYSTEM
-    PUBLIC
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
+  folly_lib
+  SYSTEM
+  PUBLIC
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
 )
 
 set_property(TARGET folly_lib PROPERTY OUTPUT_NAME folly)
