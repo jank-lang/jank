@@ -70,20 +70,16 @@ namespace jank::codegen
   {
     auto const captures(root_fn.captures());
     auto const is_closure(!captures.empty());
-    fmt::println("Creating fn {} with arities: {} captures: {}",
-                 root_fn.unique_name,
-                 root_fn.arities.size(),
-                 captures.size());
 
     /* Closures get one extra parameter, the first one, which is a pointer to the closure's
      * context. The context is a struct containing all captured values. */
     std::vector<llvm::Type *> const arg_types{ arity.params.size() + is_closure,
                                                builder->getPtrTy() };
     auto const fn_type(llvm::FunctionType::get(builder->getPtrTy(), arg_types, false));
-    fn = llvm::Function::Create(fn_type,
-                                llvm::Function::ExternalLinkage,
-                                fmt::format("{}_{}", struct_name, arity.params.size()),
-                                *module);
+    auto fn_value(
+      module->getOrInsertFunction(fmt::format("{}_{}", struct_name, arity.params.size()), fn_type));
+    fn = llvm::dyn_cast<llvm::Function>(fn_value.getCallee());
+    fn->setLinkage(llvm::Function::ExternalLinkage);
 
     auto const entry(llvm::BasicBlock::Create(*context, "entry", fn));
     builder->SetInsertPoint(entry);
@@ -219,34 +215,78 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(analyze::expr::call<analyze::expression> const &expr,
                                    analyze::expr::function_arity<analyze::expression> const &arity)
   {
-    auto const callee(gen(expr.source_expr, arity));
-
-    llvm::SmallVector<llvm::Value *> arg_handles;
-    llvm::SmallVector<llvm::Type *> arg_types;
-    arg_handles.reserve(expr.arg_exprs.size() + 1);
-    arg_types.reserve(expr.arg_exprs.size() + 1);
-
-    arg_handles.emplace_back(callee);
-    arg_types.emplace_back(builder->getPtrTy());
-
-    for(auto const &arg_expr : expr.arg_exprs)
+    /* Named recursion is a special kind of call. We can't go always through a var, since there
+     * may not be one. We can't just use the fn's name, since we could be recursing into a
+     * different arity. Finally, we need to keep in account whether or not this fn is a closure.
+     *
+     * For named recursion calls, we don't use dynamic_call. We just call the generated C fn
+     * directly. This doesn't impede interactivity, since the whole thing will be redefined
+     * if a new fn is created. */
+    if(expr.is_named_recur)
     {
-      arg_handles.emplace_back(gen(arg_expr, arity));
+      auto const is_closure(!root_fn.captures().empty());
+
+      llvm::SmallVector<llvm::Value *> arg_handles;
+      llvm::SmallVector<llvm::Type *> arg_types;
+      arg_handles.reserve(expr.arg_exprs.size() + is_closure);
+      arg_types.reserve(expr.arg_exprs.size() + is_closure);
+
+      if(is_closure)
+      {
+        arg_handles.emplace_back(builder->GetInsertBlock()->getParent()->getArg(0));
+        arg_types.emplace_back(builder->getPtrTy());
+      }
+
+      for(auto const &arg_expr : expr.arg_exprs)
+      {
+        arg_handles.emplace_back(gen(arg_expr, arity));
+        arg_types.emplace_back(builder->getPtrTy());
+      }
+
+      auto const call_fn_name(
+        fmt::format("{}_{}", munge(root_fn.unique_name), expr.arg_exprs.size()));
+      auto const fn_type(llvm::FunctionType::get(builder->getPtrTy(), arg_types, false));
+      auto const fn(module->getOrInsertFunction(call_fn_name, fn_type));
+      auto const call(builder->CreateCall(fn, arg_handles));
+
+      if(expr.expr_type == analyze::expression_type::return_statement)
+      {
+        return builder->CreateRet(call);
+      }
+
+      return call;
+    }
+    else
+    {
+      auto const callee(gen(expr.source_expr, arity));
+
+      llvm::SmallVector<llvm::Value *> arg_handles;
+      llvm::SmallVector<llvm::Type *> arg_types;
+      arg_handles.reserve(expr.arg_exprs.size() + 1);
+      arg_types.reserve(expr.arg_exprs.size() + 1);
+
+      arg_handles.emplace_back(callee);
       arg_types.emplace_back(builder->getPtrTy());
+
+      for(auto const &arg_expr : expr.arg_exprs)
+      {
+        arg_handles.emplace_back(gen(arg_expr, arity));
+        arg_types.emplace_back(builder->getPtrTy());
+      }
+
+      auto const call_fn_name(arity_to_call_fn(expr.arg_exprs.size()));
+
+      auto const fn_type(llvm::FunctionType::get(builder->getPtrTy(), arg_types, false));
+      auto const fn(module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
+      auto const call(builder->CreateCall(fn, arg_handles));
+
+      if(expr.expr_type == analyze::expression_type::return_statement)
+      {
+        return builder->CreateRet(call);
+      }
+
+      return call;
     }
-
-    auto const call_fn_name(arity_to_call_fn(expr.arg_exprs.size()));
-
-    auto const fn_type(llvm::FunctionType::get(builder->getPtrTy(), arg_types, false));
-    auto const fn(module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
-    auto const call(builder->CreateCall(fn, arg_handles));
-
-    if(expr.expr_type == analyze::expression_type::return_statement)
-    {
-      return builder->CreateRet(call);
-    }
-
-    return call;
   }
 
   llvm::Value *
@@ -586,15 +626,18 @@ namespace jank::codegen
     return builder->CreateUnreachable();
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::try_<analyze::expression> const &,
-                                   analyze::expr::function_arity<analyze::expression> const &)
+  /* TODO: Remove arity from gen */
+  llvm::Value *llvm_processor::gen(analyze::expr::try_<analyze::expression> const &expr,
+                                   analyze::expr::function_arity<analyze::expression> const &arity)
   {
-    return nullptr;
+    /* TODO: Implement try. */
+    return gen(expr.body, arity);
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::native_raw<analyze::expression> const &,
                                    analyze::expr::function_arity<analyze::expression> const &)
   {
+    throw std::runtime_error{ "no ir codegen for native/raw" };
     return nullptr;
   }
 
