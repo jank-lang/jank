@@ -488,9 +488,9 @@ namespace jank::codegen
     }
 
     auto const val(gen(expr.value.unwrap(), fn_arity, true).unwrap());
-    switch(expr.expr_type)
+    switch(expr.position)
     {
-      case analyze::expression_type::nested:
+      case analyze::expression_position::value:
         {
           if(meta.is_some())
           {
@@ -506,12 +506,12 @@ namespace jank::codegen
                                val.str(true));
           }
         }
-      case analyze::expression_type::return_statement:
+      case analyze::expression_position::tail:
         {
           fmt::format_to(inserter, "return ");
         }
       /* Fallthrough */
-      case analyze::expression_type::statement:
+      case analyze::expression_position::statement:
         {
           if(meta.is_some())
           {
@@ -538,14 +538,14 @@ namespace jank::codegen
                                 native_bool const)
   {
     auto const &var(expr.frame->find_lifted_var(expr.qualified_name).unwrap().get());
-    switch(expr.expr_type)
+    switch(expr.position)
     {
-      case analyze::expression_type::statement:
-      case analyze::expression_type::nested:
+      case analyze::expression_position::statement:
+      case analyze::expression_position::value:
         {
           return fmt::format("{}->deref()", runtime::munge(var.native_name.name));
         }
-      case analyze::expression_type::return_statement:
+      case analyze::expression_position::tail:
         {
           auto inserter(std::back_inserter(body_buffer));
           fmt::format_to(inserter, "return {}->deref();", runtime::munge(var.native_name.name));
@@ -559,14 +559,14 @@ namespace jank::codegen
                                 native_bool const)
   {
     auto const &var(expr.frame->find_lifted_var(expr.qualified_name).unwrap().get());
-    switch(expr.expr_type)
+    switch(expr.position)
     {
-      case analyze::expression_type::statement:
-      case analyze::expression_type::nested:
+      case analyze::expression_position::statement:
+      case analyze::expression_position::value:
         {
           return runtime::munge(var.native_name.name);
         }
-      case analyze::expression_type::return_statement:
+      case analyze::expression_position::tail:
         {
           auto inserter(std::back_inserter(body_buffer));
           fmt::format_to(inserter, "return {};", runtime::munge(var.native_name.name));
@@ -1044,7 +1044,7 @@ namespace jank::codegen
                           true);
     }
 
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(expr.position == analyze::expression_position::tail)
     {
       /* TODO: Box here, not in the calls above. Using false when we mean true is not good. */
       /* No need for extra boxing on this, since the boxing was done on the call above. */
@@ -1068,14 +1068,14 @@ namespace jank::codegen
               runtime::munge(constant.unboxed_native_name.unwrap().name) };
     }
 
-    switch(expr.expr_type)
+    switch(expr.position)
     {
-      case analyze::expression_type::statement:
-      case analyze::expression_type::nested:
+      case analyze::expression_position::statement:
+      case analyze::expression_position::value:
         {
           return ret;
         }
-      case analyze::expression_type::return_statement:
+      case analyze::expression_position::tail:
         {
           auto inserter(std::back_inserter(body_buffer));
           fmt::format_to(inserter, "return {};", ret.str(expr.needs_box));
@@ -1113,7 +1113,7 @@ namespace jank::codegen
     }
     fmt::format_to(inserter, "));");
 
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(expr.position == analyze::expression_position::tail)
     {
       fmt::format_to(inserter, "return {};", ret_tmp);
       return none;
@@ -1192,7 +1192,7 @@ namespace jank::codegen
       fmt::format_to(inserter, "));");
     }
 
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(expr.position == analyze::expression_position::tail)
     {
       fmt::format_to(inserter, "return {};", ret_tmp);
       return none;
@@ -1231,7 +1231,7 @@ namespace jank::codegen
     }
     fmt::format_to(inserter, "));");
 
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(expr.position == analyze::expression_position::tail)
     {
       fmt::format_to(inserter, "return {};", ret_tmp);
       return none;
@@ -1256,14 +1256,14 @@ namespace jank::codegen
       ret = handle{ detail::boxed_local_name(munged_name), munged_name };
     }
 
-    switch(expr.expr_type)
+    switch(expr.position)
     {
-      case analyze::expression_type::statement:
-      case analyze::expression_type::nested:
+      case analyze::expression_position::statement:
+      case analyze::expression_position::value:
         {
           return ret;
         }
-      case analyze::expression_type::return_statement:
+      case analyze::expression_position::tail:
         {
           auto inserter(std::back_inserter(body_buffer));
           fmt::format_to(inserter, "return {};", ret.str(expr.needs_box));
@@ -1290,15 +1290,15 @@ namespace jank::codegen
       fmt::format_to(header_inserter, "{}", prc.declaration_str());
     }
 
-    switch(expr.expr_type)
+    switch(expr.position)
     {
-      case analyze::expression_type::statement:
-      case analyze::expression_type::nested:
+      case analyze::expression_position::statement:
+      case analyze::expression_position::value:
         /* TODO: Return a handle. */
         {
           return prc.expression_str(box_needed);
         }
-      case analyze::expression_type::return_statement:
+      case analyze::expression_position::tail:
         {
           auto body_inserter(std::back_inserter(body_buffer));
           fmt::format_to(body_inserter, "return {};", prc.expression_str(box_needed));
@@ -1410,7 +1410,7 @@ namespace jank::codegen
       fmt::format_to(inserter, "}}());");
     }
 
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(expr.position == analyze::expression_position::tail)
     {
       fmt::format_to(inserter, "return {};", ret_tmp.str(expr.needs_box));
       return none;
@@ -1429,14 +1429,14 @@ namespace jank::codegen
       last = gen(form, arity, true);
     }
 
-    switch(expr.expr_type)
+    switch(expr.position)
     {
-      case analyze::expression_type::statement:
-      case analyze::expression_type::nested:
+      case analyze::expression_position::statement:
+      case analyze::expression_position::value:
         {
           return last;
         }
-      case analyze::expression_type::return_statement:
+      case analyze::expression_position::tail:
         {
           auto inserter(std::back_inserter(body_buffer));
           if(last.is_none())
@@ -1487,7 +1487,7 @@ namespace jank::codegen
     }
     /* If we don't have an else, but we're in return position, we need to be sure to return
      * something, so we return nil. */
-    else if(expr.expr_type == analyze::expression_type::return_statement)
+    else if(expr.position == analyze::expression_position::tail)
     {
       fmt::format_to(inserter, "else {{ return {}; }}", ret_tmp);
     }
@@ -1532,7 +1532,7 @@ namespace jank::codegen
     {
       fmt::format_to(inserter, "{} = {};", ret_tmp, body_tmp.unwrap().str(box_needed));
     }
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(expr.position == analyze::expression_position::tail)
     {
       fmt::format_to(inserter, "return {};", ret_tmp);
     }
@@ -1554,7 +1554,7 @@ namespace jank::codegen
     {
       fmt::format_to(inserter, "{} = {};", ret_tmp, catch_tmp.unwrap().str(box_needed));
     }
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(expr.position == analyze::expression_position::tail)
     {
       fmt::format_to(inserter, "return {};", ret_tmp);
     }
@@ -1624,7 +1624,7 @@ namespace jank::codegen
     }
     fmt::format_to(inserter, ";{} = __value; }}", ret_tmp);
 
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(expr.position == analyze::expression_position::tail)
     {
       fmt::format_to(inserter, "return {};", ret_tmp);
       return none;

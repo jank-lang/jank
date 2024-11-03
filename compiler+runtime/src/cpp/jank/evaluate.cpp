@@ -38,7 +38,7 @@ namespace jank::evaluate
      *
      * Another option is to keep this only at the highest level and pass it down during codegen.
      * The highest level could hold anything, though. */
-    expr.expr_type = analyze::expression_type::return_statement;
+    expr.position = analyze::expression_position::tail;
     /* TODO: Avoid allocation by using existing ptr. */
     arity.body.values.push_back(make_box<analyze::expression>(expr));
     arity.fn_ctx = make_box<analyze::expr::function_context>();
@@ -61,7 +61,7 @@ namespace jank::evaluate
     {
       return wrap_expression(analyze::expr::primitive_literal<analyze::expression>{
         analyze::expression_base{ {},
-                                 analyze::expression_type::return_statement,
+                                 analyze::expression_position::tail,
                                  an_prc.root_frame,
                                  true },
         obj::nil::nil_const()
@@ -75,7 +75,7 @@ namespace jank::evaluate
       auto &body(ret.arities[0].body.values);
       /* We normally wrap one expression, which is a return statement, but we'll be potentially
        * adding more, so let's not make assumptions yet. */
-      body[0]->get_base()->expr_type = analyze::expression_type::statement;
+      body[0]->get_base()->position = analyze::expression_position::statement;
 
       for(auto const &expr : exprs)
       {
@@ -84,7 +84,7 @@ namespace jank::evaluate
 
       /* Finally, mark the last body item as our return. */
       auto const last_body_index(body.size() - 1);
-      body[last_body_index]->get_base()->expr_type = analyze::expression_type::return_statement;
+      body[last_body_index]->get_base()->position = analyze::expression_position::tail;
 
       return ret;
     }

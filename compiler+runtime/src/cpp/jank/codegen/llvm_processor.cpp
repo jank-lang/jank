@@ -162,7 +162,7 @@ namespace jank::codegen
       builder->CreateCall(fn, args);
     }
 
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(expr.position == analyze::expression_position::tail)
     {
       return builder->CreateRet(ref);
     }
@@ -181,7 +181,7 @@ namespace jank::codegen
     llvm::SmallVector<llvm::Value *, 1> args{ ref };
     auto const call(builder->CreateCall(fn, args));
 
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(expr.position == analyze::expression_position::tail)
     {
       return builder->CreateRet(call);
     }
@@ -194,7 +194,7 @@ namespace jank::codegen
   {
     auto const var(gen_var(expr.qualified_name));
 
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(expr.position == analyze::expression_position::tail)
     {
       return builder->CreateRet(var);
     }
@@ -250,7 +250,7 @@ namespace jank::codegen
       auto const fn(module->getOrInsertFunction(call_fn_name, fn_type));
       auto const call(builder->CreateCall(fn, arg_handles));
 
-      if(expr.expr_type == analyze::expression_type::return_statement)
+      if(expr.position == analyze::expression_position::tail)
       {
         return builder->CreateRet(call);
       }
@@ -281,7 +281,7 @@ namespace jank::codegen
       auto const fn(module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
       auto const call(builder->CreateCall(fn, arg_handles));
 
-      if(expr.expr_type == analyze::expression_type::return_statement)
+      if(expr.position == analyze::expression_position::tail)
       {
         return builder->CreateRet(call);
       }
@@ -325,7 +325,7 @@ namespace jank::codegen
       },
       expr.data));
 
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(expr.position == analyze::expression_position::tail)
     {
       return builder->CreateRet(ret);
     }
@@ -338,7 +338,7 @@ namespace jank::codegen
   {
     auto const ret(gen_global_from_read_string(expr.data));
 
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(expr.position == analyze::expression_position::tail)
     {
       return builder->CreateRet(ret);
     }
@@ -351,7 +351,7 @@ namespace jank::codegen
   {
     auto const ret(gen_global_from_read_string(expr.data));
 
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(expr.position == analyze::expression_position::tail)
     {
       return builder->CreateRet(ret);
     }
@@ -364,7 +364,7 @@ namespace jank::codegen
   {
     auto const ret(gen_global_from_read_string(expr.data));
 
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(expr.position == analyze::expression_position::tail)
     {
       return builder->CreateRet(ret);
     }
@@ -377,7 +377,7 @@ namespace jank::codegen
   {
     auto const ret(locals[expr.binding.name]);
 
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(expr.position == analyze::expression_position::tail)
     {
       return builder->CreateRet(ret);
     }
@@ -457,7 +457,7 @@ namespace jank::codegen
       {
         auto const field_ptr(builder->CreateStructGEP(closure_ctx_type, closure_obj, 0));
         analyze::expr::local_reference const local_ref{
-          analyze::expression_base{ {}, expr.expr_type, expr.frame },
+          analyze::expression_base{ {}, expr.position, expr.frame },
           capture.first,
           *capture.second
         };
@@ -493,7 +493,7 @@ namespace jank::codegen
       builder->CreateCall(set_arity_fn, { fn_obj, target_fn.getCallee() });
     }
 
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(expr.position == analyze::expression_position::tail)
     {
       return builder->CreateRet(fn_obj);
     }
@@ -505,7 +505,7 @@ namespace jank::codegen
                                    analyze::expr::function_arity<analyze::expression> const &arity)
   {
     analyze::expr::call<analyze::expression> call_expr{
-      analyze::expression_base{ {}, expr.expr_type, expr.frame },
+      analyze::expression_base{ {}, expr.position, expr.frame },
       nullptr,
       expr.args,
       expr.arg_exprs,
@@ -518,6 +518,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(analyze::expr::let<analyze::expression> const &expr,
                                    analyze::expr::function_arity<analyze::expression> const &arity)
   {
+    fmt::println("let {}", runtime::to_code_string(expr.to_runtime_data()));
     auto old_locals(locals);
     for(auto const &pair : expr.pairs)
     {
@@ -548,14 +549,14 @@ namespace jank::codegen
       last = gen(form, arity);
     }
 
-    switch(expr.expr_type)
+    switch(expr.position)
     {
-      case analyze::expression_type::statement:
-      case analyze::expression_type::nested:
+      case analyze::expression_position::statement:
+      case analyze::expression_position::value:
         {
           return last;
         }
-      case analyze::expression_type::return_statement:
+      case analyze::expression_position::tail:
         {
           if(!last)
           {
@@ -576,7 +577,7 @@ namespace jank::codegen
     /* If we're in return position, our then/else branches will generate return instructions
      * for us. Since LLVM basic blocks can only have one terminating instruction, we need
      * to take care to not generate our own, too. */
-    auto const is_return(expr.expr_type == analyze::expression_type::return_statement);
+    auto const is_return(expr.position == analyze::expression_position::tail);
     auto const condition(gen(expr.condition, arity));
     auto const truthy_fn_type(
       llvm::FunctionType::get(builder->getInt8Ty(), { builder->getPtrTy() }, false));
@@ -614,7 +615,7 @@ namespace jank::codegen
     else
     {
       else_ = gen_global(obj::nil::nil_const());
-      if(expr.expr_type == analyze::expression_type::return_statement)
+      if(expr.position == analyze::expression_position::tail)
       {
         else_ = builder->CreateRet(else_);
       }
@@ -654,7 +655,7 @@ namespace jank::codegen
     llvm::SmallVector<llvm::Value *, 2> args{ value };
     auto const call(builder->CreateCall(fn, args));
 
-    if(expr.expr_type == analyze::expression_type::return_statement)
+    if(expr.position == analyze::expression_position::tail)
     {
       return builder->CreateRet(call);
     }
