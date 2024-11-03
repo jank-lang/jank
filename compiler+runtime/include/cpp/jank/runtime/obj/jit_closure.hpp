@@ -15,7 +15,6 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(arity_flag_t arity_flags);
     static_object(arity_flag_t arity_flags, void *context);
     static_object(object_ptr meta);
 

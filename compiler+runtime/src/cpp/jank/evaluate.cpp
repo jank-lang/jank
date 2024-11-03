@@ -1,8 +1,11 @@
+#include <llvm/ExecutionEngine/Orc/LLJIT.h>
+
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/codegen/processor.hpp>
+#include <jank/codegen/llvm_processor.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/evaluate.hpp>
 
@@ -29,6 +32,12 @@ namespace jank::evaluate
       arity.frame = arity.frame->parent.unwrap();
     }
     arity.frame->type = analyze::local_frame::frame_type::fn;
+    /* TODO: Setting this on a let doesn't update the body.
+     *
+     * Need a mutator fn? That would need to dig all the way down, updating things.
+     *
+     * Another option is to keep this only at the highest level and pass it down during codegen.
+     * The highest level could hold anything, though. */
     expr.expr_type = analyze::expression_type::return_statement;
     /* TODO: Avoid allocation by using existing ptr. */
     arity.body.values.push_back(make_box<analyze::expression>(expr));
@@ -398,8 +407,22 @@ namespace jank::evaluate
     auto const &module(
       module::nest_module(expect_object<ns>(rt_ctx.current_ns_var->deref())->to_string(),
                           munge(expr.unique_name)));
-    codegen::processor cg_prc{ rt_ctx, expr, module, codegen::compilation_target::repl };
-    return jit_prc.eval(cg_prc).expect_ok().unwrap();
+
+    /* TODO: Clean up. */
+    auto const wrapped_expr(evaluate::wrap_expression(expr));
+    codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::repl };
+    cg_prc.gen();
+    fmt::println("{}\n", cg_prc.to_string());
+    llvm::cantFail(jit_prc.interpreter->getExecutionEngine().get().addIRModule(
+      llvm::orc::ThreadSafeModule{ std::move(cg_prc.module), std::move(cg_prc.context) }));
+
+    auto const init(jit_prc.interpreter->getSymbolAddress(cg_prc.ctor_name.c_str()).get());
+    init.toPtr<void (*)()>()();
+
+    auto const fn(
+      jit_prc.interpreter->getSymbolAddress(fmt::format("{}_0", cg_prc.struct_name)).get());
+    auto const ret(fn.toPtr<object *(*)()>()());
+    return ret;
   }
 
   object_ptr

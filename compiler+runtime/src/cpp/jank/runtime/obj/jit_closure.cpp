@@ -2,10 +2,6 @@
 
 namespace jank::runtime
 {
-  obj::jit_closure::static_object(arity_flag_t const arity_flags)
-  {
-  }
-
   obj::jit_closure::static_object(arity_flag_t const arity_flags, void * const context)
     : context{ context }
     , arity_flags{ arity_flags }

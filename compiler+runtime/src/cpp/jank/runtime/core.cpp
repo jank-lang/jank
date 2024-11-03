@@ -35,6 +35,46 @@ namespace jank::runtime
     return -1;
   }
 
+  native_bool is_identical(object_ptr const lhs, object_ptr const rhs)
+  {
+    return lhs == rhs;
+  }
+
+  native_persistent_string type(object_ptr const o)
+  {
+    return magic_enum::enum_name(o->type);
+  }
+
+  native_bool is_nil(object_ptr const o)
+  {
+    return o == obj::nil::nil_const();
+  }
+
+  native_bool is_true(object_ptr const o)
+  {
+    return o == obj::boolean::true_const();
+  }
+
+  native_bool is_false(object_ptr const o)
+  {
+    return o == obj::boolean::false_const();
+  }
+
+  native_bool is_some(object_ptr const o)
+  {
+    return o != obj::nil::nil_const();
+  }
+
+  native_bool is_string(object_ptr const o)
+  {
+    return o->type == object_type::persistent_string;
+  }
+
+  native_bool is_symbol(object_ptr const o)
+  {
+    return o->type == object_type::symbol;
+  }
+
   native_real to_real(object_ptr const o)
   {
     return visit_number_like(
@@ -237,10 +277,21 @@ namespace jank::runtime
 
   native_hash to_hash(object_ptr const o)
   {
-    return visit_object(
-      [=](auto const typed_o) -> native_hash {
-        return typed_o->to_hash();
-      },
-      o);
+    return visit_object([=](auto const typed_o) -> native_hash { return typed_o->to_hash(); }, o);
+  }
+
+  object_ptr macroexpand1(object_ptr const o)
+  {
+    return __rt_ctx->macroexpand1(o);
+  }
+
+  object_ptr macroexpand(object_ptr const o)
+  {
+    return __rt_ctx->macroexpand(o);
+  }
+
+  object_ptr gensym(object_ptr const o)
+  {
+    return make_box<obj::symbol>(runtime::context::unique_symbol(to_string(o)));
   }
 }

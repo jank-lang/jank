@@ -12,6 +12,15 @@ namespace jank::runtime
   /* TODO: Header for this, with sequence equality fns. */
   native_bool equal(object_ptr lhs, object_ptr rhs);
   native_integer compare(object_ptr, object_ptr);
+  native_bool is_identical(object_ptr lhs, object_ptr rhs);
+
+  native_persistent_string type(object_ptr o);
+  native_bool is_nil(object_ptr o);
+  native_bool is_true(object_ptr o);
+  native_bool is_false(object_ptr o);
+  native_bool is_some(object_ptr o);
+  native_bool is_string(object_ptr o);
+  native_bool is_symbol(object_ptr o);
 
   object_ptr meta(object_ptr m);
   object_ptr with_meta(object_ptr o, object_ptr m);
@@ -29,4 +38,9 @@ namespace jank::runtime
   native_bool is_callable(object_ptr o);
 
   native_hash to_hash(object_ptr o);
+
+  object_ptr macroexpand1(object_ptr o);
+  object_ptr macroexpand(object_ptr o);
+
+  object_ptr gensym(object_ptr o);
 }

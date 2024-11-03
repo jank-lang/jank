@@ -653,6 +653,7 @@ namespace jank::analyze
       needs_box,
       make_box<local_frame>(local_frame::frame_type::let, current_frame->rt_ctx, current_frame)
     };
+    ret.body.expr_type = expr_type;
     for(size_t i{}; i < binding_parts; i += 2)
     {
       auto const &sym_obj(bindings->data[i]);

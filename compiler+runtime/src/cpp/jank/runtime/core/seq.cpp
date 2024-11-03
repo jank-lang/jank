@@ -52,16 +52,6 @@ namespace jank::runtime
       s);
   }
 
-  native_bool is_nil(object_ptr const o)
-  {
-    return (o == obj::nil::nil_const());
-  }
-
-  native_bool is_some(object_ptr const o)
-  {
-    return (o != obj::nil::nil_const());
-  }
-
   native_bool is_empty(object_ptr const o)
   {
     return visit_object(
@@ -120,6 +110,18 @@ namespace jank::runtime
         return behavior::collection_like<T>;
       },
       o);
+  }
+
+  native_bool is_list(object_ptr const o)
+  {
+    /* TODO: Visit and use a behavior for this check instead.
+     * It should apply to conses and others. */
+    return o->type == object_type::persistent_list;
+  }
+
+  native_bool is_vector(object_ptr const o)
+  {
+    return o->type == object_type::persistent_vector;
   }
 
   native_bool is_map(object_ptr const o)

@@ -563,7 +563,8 @@ namespace jank::codegen
           }
           else
           {
-            return builder->CreateRet(last);
+            /* Codegen for this already generated a return. */
+            return last;
           }
         }
     }

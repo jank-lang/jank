@@ -54,6 +54,60 @@ extern "C"
   void
   jank_function_set_arity3(jank_object_ptr fn,
                            jank_object_ptr (*f)(jank_object_ptr, jank_object_ptr, jank_object_ptr));
+  void jank_function_set_arity4(
+    jank_object_ptr fn,
+    jank_object_ptr (*f)(jank_object_ptr, jank_object_ptr, jank_object_ptr, jank_object_ptr));
+  void jank_function_set_arity5(jank_object_ptr fn,
+                                jank_object_ptr (*f)(jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr));
+  void jank_function_set_arity6(jank_object_ptr fn,
+                                jank_object_ptr (*f)(jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr));
+  void jank_function_set_arity7(jank_object_ptr fn,
+                                jank_object_ptr (*f)(jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr));
+  void jank_function_set_arity8(jank_object_ptr fn,
+                                jank_object_ptr (*f)(jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr));
+  void jank_function_set_arity9(jank_object_ptr fn,
+                                jank_object_ptr (*f)(jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr));
+  void jank_function_set_arity10(jank_object_ptr fn,
+                                 jank_object_ptr (*f)(jank_object_ptr,
+                                                      jank_object_ptr,
+                                                      jank_object_ptr,
+                                                      jank_object_ptr,
+                                                      jank_object_ptr,
+                                                      jank_object_ptr,
+                                                      jank_object_ptr,
+                                                      jank_object_ptr,
+                                                      jank_object_ptr,
+                                                      jank_object_ptr));
 
   jank_object_ptr jank_closure_create(jank_arity_flags arity_flags, void *context);
   void jank_closure_set_arity0(jank_object_ptr fn, jank_object_ptr (*f)());
@@ -63,6 +117,60 @@ extern "C"
   void
   jank_closure_set_arity3(jank_object_ptr fn,
                           jank_object_ptr (*f)(jank_object_ptr, jank_object_ptr, jank_object_ptr));
+  void jank_closure_set_arity4(
+    jank_object_ptr fn,
+    jank_object_ptr (*f)(jank_object_ptr, jank_object_ptr, jank_object_ptr, jank_object_ptr));
+  void jank_closure_set_arity5(jank_object_ptr fn,
+                               jank_object_ptr (*f)(jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr));
+  void jank_closure_set_arity6(jank_object_ptr fn,
+                               jank_object_ptr (*f)(jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr));
+  void jank_closure_set_arity7(jank_object_ptr fn,
+                               jank_object_ptr (*f)(jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr));
+  void jank_closure_set_arity8(jank_object_ptr fn,
+                               jank_object_ptr (*f)(jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr));
+  void jank_closure_set_arity9(jank_object_ptr fn,
+                               jank_object_ptr (*f)(jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr,
+                                                    jank_object_ptr));
+  void jank_closure_set_arity10(jank_object_ptr fn,
+                                jank_object_ptr (*f)(jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr,
+                                                     jank_object_ptr));
 
   jank_native_bool jank_truthy(jank_object_ptr o);
   jank_native_bool jank_equal(jank_object_ptr l, jank_object_ptr r);

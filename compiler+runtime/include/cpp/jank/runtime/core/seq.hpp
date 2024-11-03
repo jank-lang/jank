@@ -93,12 +93,12 @@ namespace jank::runtime
 
   object_ptr second(object_ptr s);
 
-  native_bool is_nil(object_ptr o);
-  native_bool is_some(object_ptr o);
   native_bool is_empty(object_ptr o);
   native_bool is_seq(object_ptr o);
   native_bool is_sequential(object_ptr o);
   native_bool is_collection(object_ptr o);
+  native_bool is_list(object_ptr o);
+  native_bool is_vector(object_ptr o);
   native_bool is_map(object_ptr o);
   native_bool is_transientable(object_ptr o);
 
