@@ -19,6 +19,11 @@ namespace jank::analyze::expr
 
     native_vector<chunk_t> chunks;
 
+    void propagate_position(expression_position const pos)
+    {
+      position = pos;
+    }
+
     runtime::object_ptr to_runtime_data() const
     {
       runtime::object_ptr chunk_maps(make_box<runtime::obj::persistent_vector>());

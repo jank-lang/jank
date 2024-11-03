@@ -65,6 +65,11 @@ namespace jank::analyze
                                   data);
     }
 
+    void propagate_position(expression_position const pos)
+    {
+      return boost::apply_visitor([=](auto &typed_ex) { typed_ex.propagate_position(pos); }, data);
+    }
+
     runtime::object_ptr to_runtime_data() const
     {
       return boost::apply_visitor([](auto &typed_ex) { return typed_ex.to_runtime_data(); }, data);

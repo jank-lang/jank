@@ -32,13 +32,14 @@ namespace jank::evaluate
       arity.frame = arity.frame->parent.unwrap();
     }
     arity.frame->type = analyze::local_frame::frame_type::fn;
-    /* TODO: Setting this on a let doesn't update the body.
+
+    /* We can't just assign the position here, since we need the position to propagate
+     * downward. For example, if this expr is a let, setting its position to tail
+     * wouldn't affect the last form of its body, which should also be in tail position.
      *
-     * Need a mutator fn? That would need to dig all the way down, updating things.
-     *
-     * Another option is to keep this only at the highest level and pass it down during codegen.
-     * The highest level could hold anything, though. */
-    expr.position = analyze::expression_position::tail;
+     * This is what propagation does. */
+    expr.propagate_position(analyze::expression_position::tail);
+
     /* TODO: Avoid allocation by using existing ptr. */
     arity.body.values.push_back(make_box<analyze::expression>(expr));
     arity.fn_ctx = make_box<analyze::expr::function_context>();
@@ -60,10 +61,7 @@ namespace jank::evaluate
     if(exprs.empty())
     {
       return wrap_expression(analyze::expr::primitive_literal<analyze::expression>{
-        analyze::expression_base{ {},
-                                 analyze::expression_position::tail,
-                                 an_prc.root_frame,
-                                 true },
+        analyze::expression_base{ {}, analyze::expression_position::tail, an_prc.root_frame, true },
         obj::nil::nil_const()
       });
     }

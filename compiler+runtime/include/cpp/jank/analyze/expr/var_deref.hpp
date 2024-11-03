@@ -13,6 +13,11 @@ namespace jank::analyze::expr
     runtime::obj::symbol_ptr qualified_name{};
     runtime::var_ptr var{};
 
+    void propagate_position(expression_position const pos)
+    {
+      position = pos;
+    }
+
     runtime::object_ptr to_runtime_data() const
     {
       return runtime::merge(

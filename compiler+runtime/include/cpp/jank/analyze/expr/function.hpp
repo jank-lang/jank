@@ -70,6 +70,11 @@ namespace jank::analyze::expr
     native_vector<function_arity<E>> arities;
     obj::persistent_hash_map_ptr meta{};
 
+    void propagate_position(expression_position const pos)
+    {
+      position = pos;
+    }
+
     /* Aggregates all `frame->captures` from each arity so that we can know the overall
      * captures for all arities of this fn. This is necessary for codegen to IR, since we
      * generate a context struct which is shared across all arities, even if one arity

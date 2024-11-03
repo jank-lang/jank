@@ -23,6 +23,12 @@ namespace jank::analyze::expr
     native_vector<pair_type> pairs;
     do_<E> body;
 
+    void propagate_position(expression_position const pos)
+    {
+      position = pos;
+      body.propagate_position(pos);
+    }
+
     object_ptr to_runtime_data() const
     {
       object_ptr pair_maps(make_box<obj::persistent_vector>());

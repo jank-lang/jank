@@ -15,6 +15,11 @@ namespace jank::analyze::expr
     /* Do we recur through calling our own fn name? */
     native_bool is_named_recur{};
 
+    void propagate_position(expression_position const pos)
+    {
+      position = pos;
+    }
+
     runtime::object_ptr to_runtime_data() const
     {
       runtime::object_ptr arg_expr_maps(make_box<runtime::obj::persistent_vector>());
