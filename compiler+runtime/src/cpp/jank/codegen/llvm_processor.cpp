@@ -613,6 +613,10 @@ namespace jank::codegen
     else
     {
       else_ = gen_global(obj::nil::nil_const());
+      if(expr.expr_type == analyze::expression_type::return_statement)
+      {
+        else_ = builder->CreateRet(else_);
+      }
     }
 
     if(!is_return)
@@ -643,11 +647,17 @@ namespace jank::codegen
     auto const value(gen(expr.value, arity));
     auto const fn_type(
       llvm::FunctionType::get(builder->getPtrTy(), { builder->getPtrTy() }, false));
-    auto const fn(module->getOrInsertFunction("jank_throw", fn_type));
+    auto fn(module->getOrInsertFunction("jank_throw", fn_type));
+    llvm::dyn_cast<llvm::Function>(fn.getCallee())->setDoesNotReturn();
 
     llvm::SmallVector<llvm::Value *, 2> args{ value };
-    builder->CreateCall(fn, args);
-    return builder->CreateUnreachable();
+    auto const call(builder->CreateCall(fn, args));
+
+    if(expr.expr_type == analyze::expression_type::return_statement)
+    {
+      return builder->CreateRet(call);
+    }
+    return call;
   }
 
   /* TODO: Remove arity from gen */
@@ -949,8 +959,8 @@ namespace jank::codegen
                                 false));
       auto const create_fn(module->getOrInsertFunction("jank_keyword_intern", create_fn_type));
 
-      llvm::SmallVector<llvm::Value *, 2> args{ gen_c_string(k->sym.ns.c_str()),
-                                                gen_c_string(k->sym.name.c_str()) };
+      llvm::SmallVector<llvm::Value *, 2> args{ gen_global(make_box(k->sym.ns)),
+                                                gen_global(make_box(k->sym.name)) };
       auto const call(builder->CreateCall(create_fn, args));
       builder->CreateStore(call, global);
 
