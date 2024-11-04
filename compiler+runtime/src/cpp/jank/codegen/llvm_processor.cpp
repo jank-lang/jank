@@ -121,6 +121,12 @@ namespace jank::codegen
       {
         gen(form, arity);
       }
+
+      /* If we have an empty function, ensure we're still returning nil. */
+      if(arity.body.values.empty())
+      {
+        builder->CreateRet(gen_global(obj::nil::nil_const()));
+      }
     }
 
     if(target != compilation_target::function)
@@ -456,9 +462,14 @@ namespace jank::codegen
         highest_fixed_arity = &arity;
       }
     }
-    native_bool const variadic_ambiguous{ highest_fixed_arity && variadic_arity
-                                          && highest_fixed_arity->fn_ctx->param_count
-                                            == variadic_arity->fn_ctx->param_count - 1 };
+    auto const variadic_ambiguous(highest_fixed_arity && variadic_arity
+                                  && highest_fixed_arity->fn_ctx->param_count
+                                    == variadic_arity->fn_ctx->param_count - 1);
+
+    /* We find the highest fixed arity above, but there may not actually be one. In which
+     * case, the value we need to specify is how many fixed args are in the variadic arity. */
+    auto const highest_fixed_args(highest_fixed_arity ? highest_fixed_arity->fn_ctx->param_count
+                                                      : variadic_arity->fn_ctx->param_count - 1);
 
     auto const arity_flags_fn_type(
       llvm::FunctionType::get(builder->getInt8Ty(),
@@ -466,11 +477,10 @@ namespace jank::codegen
                               false));
     auto const arity_flags_fn(
       module->getOrInsertFunction("jank_function_build_arity_flags", arity_flags_fn_type));
-    auto const arity_flags(builder->CreateCall(
-      arity_flags_fn,
-      { builder->getInt8(highest_fixed_arity ? highest_fixed_arity->params.size() : 0),
-        builder->getInt8(!!variadic_arity),
-        builder->getInt8(variadic_ambiguous) }));
+    auto const arity_flags(builder->CreateCall(arity_flags_fn,
+                                               { builder->getInt8(highest_fixed_args),
+                                                 builder->getInt8(!!variadic_arity),
+                                                 builder->getInt8(variadic_ambiguous) }));
 
     llvm::Value *fn_obj{};
 
