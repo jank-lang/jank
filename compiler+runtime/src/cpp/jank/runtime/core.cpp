@@ -75,6 +75,128 @@ namespace jank::runtime
     return o->type == object_type::symbol;
   }
 
+  object_ptr print(object_ptr const args)
+  {
+    visit_object(
+      [](auto const typed_args) {
+        using T = typename decltype(typed_args)::value_type;
+
+        if constexpr(behavior::sequenceable<T>)
+        {
+          fmt::memory_buffer buff;
+          auto inserter(std::back_inserter(buff));
+          runtime::to_string(typed_args->first(), buff);
+          for(auto it(next_in_place(typed_args)); it != nullptr; it = next_in_place(it))
+          {
+            fmt::format_to(inserter, " ");
+            runtime::to_string(it->first(), buff);
+          }
+          std::fwrite(buff.data(), 1, buff.size(), stdout);
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("expected a sequence: {}",
+                                                typed_args->to_string()) };
+        }
+      },
+      args);
+    return obj::nil::nil_const();
+  }
+
+  object_ptr println(object_ptr const more)
+  {
+    visit_object(
+      [](auto const typed_more) {
+        using T = typename decltype(typed_more)::value_type;
+
+        if constexpr(std::same_as<T, obj::nil>)
+        {
+          std::putc('\n', stdout);
+        }
+        else if constexpr(behavior::sequenceable<T>)
+        {
+          fmt::memory_buffer buff;
+          auto inserter(std::back_inserter(buff));
+          runtime::to_string(typed_more->first(), buff);
+          for(auto it(next_in_place(typed_more)); it != nullptr; it = next_in_place(it))
+          {
+            fmt::format_to(inserter, " ");
+            runtime::to_string(it->first(), buff);
+          }
+          std::fwrite(buff.data(), 1, buff.size(), stdout);
+          std::putc('\n', stdout);
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("expected a sequence: {}",
+                                                typed_more->to_string()) };
+        }
+      },
+      more);
+    return obj::nil::nil_const();
+  }
+
+  object_ptr pr(object_ptr const args)
+  {
+    visit_object(
+      [](auto const typed_args) {
+        using T = typename decltype(typed_args)::value_type;
+
+        if constexpr(behavior::sequenceable<T>)
+        {
+          fmt::memory_buffer buff;
+          auto inserter(std::back_inserter(buff));
+          runtime::to_code_string(typed_args->first(), buff);
+          for(auto it(next_in_place(typed_args)); it != nullptr; it = next_in_place(it))
+          {
+            fmt::format_to(inserter, " ");
+            runtime::to_code_string(it->first(), buff);
+          }
+          std::fwrite(buff.data(), 1, buff.size(), stdout);
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("expected a sequence: {}",
+                                                typed_args->to_string()) };
+        }
+      },
+      args);
+    return obj::nil::nil_const();
+  }
+
+  object_ptr prn(object_ptr const more)
+  {
+    visit_object(
+      [](auto const typed_more) {
+        using T = typename decltype(typed_more)::value_type;
+
+        if constexpr(std::same_as<T, obj::nil>)
+        {
+          std::putc('\n', stdout);
+        }
+        else if constexpr(behavior::sequenceable<T>)
+        {
+          fmt::memory_buffer buff;
+          auto inserter(std::back_inserter(buff));
+          runtime::to_code_string(typed_more->first(), buff);
+          for(auto it(next_in_place(typed_more)); it != nullptr; it = next_in_place(it))
+          {
+            fmt::format_to(inserter, " ");
+            runtime::to_code_string(it->first(), buff);
+          }
+          std::fwrite(buff.data(), 1, buff.size(), stdout);
+          std::putc('\n', stdout);
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("expected a sequence: {}",
+                                                typed_more->to_string()) };
+        }
+      },
+      more);
+    return obj::nil::nil_const();
+  }
+
   native_real to_real(object_ptr const o)
   {
     return visit_number_like(

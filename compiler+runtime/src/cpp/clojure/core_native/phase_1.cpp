@@ -157,5 +157,33 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
     intern_fn_obj("=", fn);
   }
 
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
+    fn->arity_1 = [](object * const seq) -> object * { return println(seq); };
+    intern_fn_obj("println", fn);
+  }
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
+    fn->arity_1 = [](object * const seq) -> object * { return print(seq); };
+    intern_fn_obj("print", fn);
+  }
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
+    fn->arity_1 = [](object * const seq) -> object * { return prn(seq); };
+    intern_fn_obj("prn", fn);
+  }
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
+    fn->arity_1 = [](object * const seq) -> object * { return pr(seq); };
+    intern_fn_obj("pr", fn);
+  }
+
   return erase(obj::nil::nil_const());
 }

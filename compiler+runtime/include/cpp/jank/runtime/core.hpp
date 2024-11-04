@@ -22,6 +22,11 @@ namespace jank::runtime
   native_bool is_string(object_ptr o);
   native_bool is_symbol(object_ptr o);
 
+  object_ptr print(object_ptr args);
+  object_ptr println(object_ptr args);
+  object_ptr pr(object_ptr args);
+  object_ptr prn(object_ptr args);
+
   object_ptr meta(object_ptr m);
   object_ptr with_meta(object_ptr o, object_ptr m);
   object_ptr reset_meta(object_ptr o, object_ptr m);

@@ -162,6 +162,12 @@
 (def with-meta clojure.core-native.phase-1/with-meta)
 (def reset-meta! clojure.core-native.phase-1/reset-meta!)
 
+;; Input/output.
+(def print clojure.core-native.phase-1/print)
+(def println clojure.core-native.phase-1/println)
+(def pr clojure.core-native.phase-1/pr)
+(def prn clojure.core-native.phase-1/prn)
+
 (def ^{:macro true} let
   (fn* let [&form &env & decl]
     (cons 'let* decl)))
@@ -257,52 +263,52 @@
   gensym
   clojure.core-native.phase-1/gensym)
 
-(defn
-  ^{:macro true
-    :doc "Like defn, but the resulting function name is declared as a
-         macro and will be used as a macro by the compiler when it is
-         called."}
-  defmacro
-  [&form &env name & args]
-  (let [prefix (loop [p (list name) args args]
-                 (let [f (first args)]
-                   (if (string? f)
-                     (recur (cons f p) (next args))
-                     (if (map? f)
-                       (recur (cons f p) (next args))
-                       p))))
-        fdecl (loop [fd args]
-                (if (string? (first fd))
-                  (recur (next fd))
-                  (if (map? (first fd))
-                    (recur (next fd))
-                    fd)))
-        fdecl (if (vector? (first fdecl))
-                (list fdecl)
-                fdecl)
-        add-implicit-args (fn [fd]
-                            (let [args (first fd)]
-                              (cons (vec (cons '&form (cons '&env args))) (next fd))))
-        add-args (fn [acc ds]
-                   (if (nil? ds)
-                     acc
-                     (let [d (first ds)]
-                       (if (map? d)
-                         (conj acc d)
-                         (recur (conj acc (add-implicit-args d)) (next ds))))))
-        fdecl (seq (add-args [] fdecl))
-        decl (loop [p prefix d fdecl]
-               (if p
-                 (recur (next p) (cons (first p) d))
-                 d))]
-    (list 'do
-          (cons `defn decl)
-          (list `reset-meta! (list 'var name) (list 'assoc
-                                                    (list 'meta (list 'var name))
-                                                    :macro
-                                                    true))
-          (list 'var name))))
-
+;(defn
+;  ^{:macro true
+;    :doc "Like defn, but the resulting function name is declared as a
+;         macro and will be used as a macro by the compiler when it is
+;         called."}
+;  defmacro
+;  [&form &env name & args]
+;  (let [prefix (loop [p (list name) args args]
+;                 (let [f (first args)]
+;                   (if (string? f)
+;                     (recur (cons f p) (next args))
+;                     (if (map? f)
+;                       (recur (cons f p) (next args))
+;                       p))))
+;        fdecl (loop [fd args]
+;                (if (string? (first fd))
+;                  (recur (next fd))
+;                  (if (map? (first fd))
+;                    (recur (next fd))
+;                    fd)))
+;        fdecl (if (vector? (first fdecl))
+;                (list fdecl)
+;                fdecl)
+;        add-implicit-args (fn [fd]
+;                            (let [args (first fd)]
+;                              (cons (vec (cons '&form (cons '&env args))) (next fd))))
+;        add-args (fn [acc ds]
+;                   (if (nil? ds)
+;                     acc
+;                     (let [d (first ds)]
+;                       (if (map? d)
+;                         (conj acc d)
+;                         (recur (conj acc (add-implicit-args d)) (next ds))))))
+;        fdecl (seq (add-args [] fdecl))
+;        decl (loop [p prefix d fdecl]
+;               (if p
+;                 (recur (next p) (cons (first p) d))
+;                 d))]
+;    (list 'do
+;          (cons `defn decl)
+;          (list `reset-meta! (list 'var name) (list 'assoc
+;                                                    (list 'meta (list 'var name))
+;                                                    :macro
+;                                                    true))
+;          (list 'var name))))
+;
 ;(defmacro defn-
 ;  "Same as defn, yielding non-public def."
 ;  {:added "1.0"}
@@ -1735,20 +1741,6 @@
 ;           (throw e#))
 ;         (finally
 ;           (pop-thread-bindings))))))
-;
-;;; Input/output.
-;(defn println [& args]
-;  ; TODO: Move println back into here once I sort out two things:
-;  ; 1. Escaped strings, so I can do the space in between each
-;  ; 2. The linker errors showing up when using fmt::format_to here
-;  (native/raw "__value = jank::runtime::context::println(~{ args });"))
-;
-;(defn print [o]
-;  (native/raw "__value = jank::runtime::context::print(~{ o });"))
-;
-;(defn prn [o]
-;  ; TODO: Representation printing.
-;  (println o))
 ;
 ;;; Keywords.
 ;(defn keyword? [o]

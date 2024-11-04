@@ -571,7 +571,6 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(analyze::expr::let<analyze::expression> const &expr,
                                    analyze::expr::function_arity<analyze::expression> const &arity)
   {
-    fmt::println("let {}", runtime::to_code_string(expr.to_runtime_data()));
     auto old_locals(locals);
     for(auto const &pair : expr.pairs)
     {
@@ -611,7 +610,7 @@ namespace jank::codegen
         }
       case analyze::expression_position::tail:
         {
-          if(!last)
+          if(expr.values.empty())
           {
             return builder->CreateRet(gen_global(obj::nil::nil_const()));
           }
