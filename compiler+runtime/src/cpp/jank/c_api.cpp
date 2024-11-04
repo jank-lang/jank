@@ -164,11 +164,77 @@ extern "C"
     return erase(make_box<obj::symbol>(ns_obj, name_obj));
   }
 
+  jank_object_ptr jank_character_create(char const *s)
+  {
+    assert(s);
+    return erase(make_box<obj::character>(read::parse::get_char_from_literal(s).unwrap()));
+  }
+
+  jank_object_ptr jank_vector_create(uint64_t const size, ...)
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    va_list args;
+    va_start(args, size);
+
+    obj::transient_vector trans;
+
+    for(uint64_t i{}; i < size; ++i)
+    {
+      /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+      trans.conj_in_place(reinterpret_cast<object *>(va_arg(args, jank_object_ptr)));
+    }
+
+    va_end(args);
+    return erase(trans.to_persistent());
+  }
+
+  /* TODO: Meta for maps, vectors, sets, symbols, and fns. */
+  jank_object_ptr jank_map_create(uint64_t const pairs, ...)
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    va_list args;
+    va_start(args, pairs);
+
+    /* TODO: Could optimize to build an array map, if it's small enough. */
+    obj::transient_hash_map trans;
+
+    for(uint64_t i{}; i < pairs; ++i)
+    {
+      /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+      trans.assoc_in_place(reinterpret_cast<object *>(va_arg(args, jank_object_ptr)),
+                           /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+                           reinterpret_cast<object *>(va_arg(args, jank_object_ptr)));
+    }
+
+    va_end(args);
+    return erase(trans.to_persistent());
+  }
+
+  jank_object_ptr jank_set_create(uint64_t const size, ...)
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    va_list args;
+    va_start(args, size);
+
+    obj::transient_hash_set trans;
+
+    for(uint64_t i{}; i < size; ++i)
+    {
+      /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+      trans.conj_in_place(reinterpret_cast<object *>(va_arg(args, jank_object_ptr)));
+    }
+
+    va_end(args);
+    return erase(trans.to_persistent());
+  }
+
   jank_arity_flags jank_function_build_arity_flags(uint8_t const highest_fixed_arity,
                                                    jank_native_bool const is_variadic,
                                                    jank_native_bool const is_variadic_ambiguous)
   {
-    return (is_variadic << 7) | (is_variadic_ambiguous << 6) | highest_fixed_arity;
+    return behavior::callable::build_arity_flags(highest_fixed_arity,
+                                                 is_variadic,
+                                                 is_variadic_ambiguous);
   }
 
   jank_object_ptr jank_function_create(jank_arity_flags const arity_flags)

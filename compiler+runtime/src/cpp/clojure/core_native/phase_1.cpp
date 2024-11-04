@@ -101,7 +101,6 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("coll?", &is_collection);
   intern_fn("seq?", &is_seq);
   intern_fn("list?", &is_list);
-  intern_fn("list", &list);
   intern_fn("vector?", &is_vector);
   intern_fn("vec", &vec);
   intern_fn("subvec", &phase_1::subvec);
@@ -125,6 +124,13 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("->unqualified-symbol", &phase_1::to_unqualified_symbol);
   intern_fn("->qualified-symbol", &phase_1::to_qualified_symbol);
   intern_fn("gensym", &gensym);
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
+    fn->arity_1 = [](object * const seq) -> object * { return list(seq); };
+    intern_fn_obj("list", fn);
+  }
 
   {
     auto const fn(

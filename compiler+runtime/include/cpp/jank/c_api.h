@@ -43,6 +43,10 @@ extern "C"
   jank_object_ptr jank_symbol_create(jank_object_ptr ns, jank_object_ptr name);
   jank_object_ptr jank_character_create(char const *s);
 
+  jank_object_ptr jank_vector_create(uint64_t size, ...);
+  jank_object_ptr jank_map_create(uint64_t pairs, ...);
+  jank_object_ptr jank_set_create(uint64_t size, ...);
+
   jank_arity_flags jank_function_build_arity_flags(uint8_t highest_fixed_arity,
                                                    jank_native_bool is_variadic,
                                                    jank_native_bool is_variadic_ambiguous);

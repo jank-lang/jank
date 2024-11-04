@@ -334,42 +334,85 @@ namespace jank::codegen
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::vector<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &)
+                                   analyze::expr::function_arity<analyze::expression> const &arity)
   {
-    auto const ret(gen_global_from_read_string(expr.data));
+    auto const fn_type(
+      llvm::FunctionType::get(builder->getPtrTy(), { builder->getInt64Ty() }, true));
+    auto const fn(module->getOrInsertFunction("jank_vector_create", fn_type));
+
+    auto const size(expr.data_exprs.size());
+    std::vector<llvm::Value *> args;
+    args.reserve(1 + size);
+    args.emplace_back(builder->getInt64(size));
+
+    for(auto const &expr : expr.data_exprs)
+    {
+      args.emplace_back(gen(expr, arity));
+    }
+
+    auto const call(builder->CreateCall(fn, args));
 
     if(expr.position == analyze::expression_position::tail)
     {
-      return builder->CreateRet(ret);
+      return builder->CreateRet(call);
     }
 
-    return ret;
+    return call;
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::map<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &)
+                                   analyze::expr::function_arity<analyze::expression> const &arity)
   {
-    auto const ret(gen_global_from_read_string(expr.data));
+    auto const fn_type(
+      llvm::FunctionType::get(builder->getPtrTy(), { builder->getInt64Ty() }, true));
+    auto const fn(module->getOrInsertFunction("jank_map_create", fn_type));
+
+    auto const size(expr.data_exprs.size());
+    std::vector<llvm::Value *> args;
+    args.reserve(1 + (size * 2));
+    args.emplace_back(builder->getInt64(size));
+
+    for(auto const &pair : expr.data_exprs)
+    {
+      args.emplace_back(gen(pair.first, arity));
+      args.emplace_back(gen(pair.second, arity));
+    }
+
+    auto const call(builder->CreateCall(fn, args));
 
     if(expr.position == analyze::expression_position::tail)
     {
-      return builder->CreateRet(ret);
+      return builder->CreateRet(call);
     }
 
-    return ret;
+    return call;
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::set<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &)
+                                   analyze::expr::function_arity<analyze::expression> const &arity)
   {
-    auto const ret(gen_global_from_read_string(expr.data));
+    auto const fn_type(
+      llvm::FunctionType::get(builder->getPtrTy(), { builder->getInt64Ty() }, true));
+    auto const fn(module->getOrInsertFunction("jank_set_create", fn_type));
+
+    auto const size(expr.data_exprs.size());
+    std::vector<llvm::Value *> args;
+    args.reserve(1 + size);
+    args.emplace_back(builder->getInt64(size));
+
+    for(auto const &expr : expr.data_exprs)
+    {
+      args.emplace_back(gen(expr, arity));
+    }
+
+    auto const call(builder->CreateCall(fn, args));
 
     if(expr.position == analyze::expression_position::tail)
     {
-      return builder->CreateRet(ret);
+      return builder->CreateRet(call);
     }
 
-    return ret;
+    return call;
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::local_reference const &expr,
