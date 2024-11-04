@@ -1,5 +1,4 @@
 #include <iostream>
-#include <filesystem>
 
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
@@ -8,9 +7,7 @@
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/ManagedStatic.h>
 #include <llvm/Support/TargetSelect.h>
-
-#include <readline/readline.h>
-#include <readline/history.h>
+#include <llvm/LineEditor/LineEditor.h>
 
 #include <folly/FBString.h>
 
@@ -124,27 +121,40 @@ namespace jank
       dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
     }
 
-    /* By default, RL will do tab completion for files. We disable that here. */
-    rl_bind_key('\t', rl_insert);
+    auto const get_prompt([&](native_persistent_string const &suffix) {
+      return __rt_ctx->current_ns()->name->to_code_string() + suffix;
+    });
+
+    /* By default we are placed in clojure.core ns as of now.
+     * TODO: Set default ns to `user` when we are dropped in that ns.*/
+    llvm::LineEditor le("jank", ".jank-repl-history");
+    le.setPrompt(get_prompt("=> "));
+    native_transient_string input{};
 
     /* TODO: Completion. */
     /* TODO: Syntax highlighting. */
     /* TODO: Multi-line input. */
-    while(auto const buf = readline("> "))
+    while(std::optional<native_persistent_string> buf = le.readLine())
     {
-      native_transient_string line{ buf };
+      native_transient_string line(*buf);
       boost::trim(line);
-      if(line.empty())
+
+      if(line.ends_with("\\"))
       {
+        input.append(line.substr(0, line.size() - 1));
+        le.setPrompt(get_prompt("=>... "));
         continue;
       }
 
-      /* TODO: Persist history to disk, á la .lein-repl-history. */
-      /* History is persisted for this session only. */
-      add_history(line.data());
+      input += line;
+      if(input == "(exit)")
+      {
+        break;
+      }
+
       try
       {
-        auto const res(__rt_ctx->eval_string(line));
+        auto const res(__rt_ctx->eval_string(input));
         fmt::println("{}", runtime::to_code_string(res));
       }
       /* TODO: Unify error handling. JEEZE! */
@@ -164,6 +174,9 @@ namespace jank
       {
         fmt::println("Read error ({} - {}): {}", e.start, e.end, e.message);
       }
+
+      input.clear();
+      le.setPrompt(get_prompt("=> "));
     }
   }
 
@@ -184,24 +197,32 @@ namespace jank
       dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
     }
 
-    /* By default, RL will do tab completion for files. We disable that here. */
-    rl_bind_key('\t', rl_insert);
+    llvm::LineEditor le("jank-native", ".jank-native-repl-history");
+    le.setPrompt("native> ");
+    native_transient_string input{};
 
-    while(auto const buf = readline("native> "))
+    while(std::optional<native_persistent_string> buf = le.readLine())
     {
-      native_transient_string line{ buf };
+      native_transient_string line(*buf);
       boost::trim(line);
+
       if(line.empty())
       {
         continue;
       }
 
-      /* TODO: Persist history to disk, á la .lein-repl-history. */
-      /* History is persisted for this session only. */
-      add_history(line.data());
+      if(line.ends_with("\\"))
+      {
+        input.append(line.substr(0, line.size() - 1));
+        le.setPrompt("native>... ");
+        continue;
+      }
+
+      input += line;
+
       try
       {
-        __rt_ctx->jit_prc.eval_string(line);
+        __rt_ctx->jit_prc.eval_string(input);
       }
       /* TODO: Unify error handling. JEEZE! */
       catch(std::exception const &e)
@@ -220,6 +241,9 @@ namespace jank
       {
         fmt::println("Read error ({} - {}): {}", e.start, e.end, e.message);
       }
+
+      input.clear();
+      le.setPrompt("native> ");
     }
   }
 }
