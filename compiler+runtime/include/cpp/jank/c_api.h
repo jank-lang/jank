@@ -33,6 +33,62 @@ extern "C"
   jank_object_ptr jank_call2(jank_object_ptr f, jank_object_ptr a1, jank_object_ptr a2);
   jank_object_ptr
   jank_call3(jank_object_ptr f, jank_object_ptr a1, jank_object_ptr a2, jank_object_ptr a3);
+  jank_object_ptr jank_call4(jank_object_ptr f,
+                             jank_object_ptr a1,
+                             jank_object_ptr a2,
+                             jank_object_ptr a3,
+                             jank_object_ptr a4);
+  jank_object_ptr jank_call5(jank_object_ptr f,
+                             jank_object_ptr a1,
+                             jank_object_ptr a2,
+                             jank_object_ptr a3,
+                             jank_object_ptr a4,
+                             jank_object_ptr a5);
+  jank_object_ptr jank_call6(jank_object_ptr f,
+                             jank_object_ptr a1,
+                             jank_object_ptr a2,
+                             jank_object_ptr a3,
+                             jank_object_ptr a4,
+                             jank_object_ptr a5,
+                             jank_object_ptr a6);
+  jank_object_ptr jank_call7(jank_object_ptr f,
+                             jank_object_ptr a1,
+                             jank_object_ptr a2,
+                             jank_object_ptr a3,
+                             jank_object_ptr a4,
+                             jank_object_ptr a5,
+                             jank_object_ptr a6,
+                             jank_object_ptr a7);
+  jank_object_ptr jank_call8(jank_object_ptr f,
+                             jank_object_ptr a1,
+                             jank_object_ptr a2,
+                             jank_object_ptr a3,
+                             jank_object_ptr a4,
+                             jank_object_ptr a5,
+                             jank_object_ptr a6,
+                             jank_object_ptr a7,
+                             jank_object_ptr a8);
+  jank_object_ptr jank_call9(jank_object_ptr f,
+                             jank_object_ptr a1,
+                             jank_object_ptr a2,
+                             jank_object_ptr a3,
+                             jank_object_ptr a4,
+                             jank_object_ptr a5,
+                             jank_object_ptr a6,
+                             jank_object_ptr a7,
+                             jank_object_ptr a8,
+                             jank_object_ptr a9);
+  jank_object_ptr jank_call10(jank_object_ptr f,
+                              jank_object_ptr a1,
+                              jank_object_ptr a2,
+                              jank_object_ptr a3,
+                              jank_object_ptr a4,
+                              jank_object_ptr a5,
+                              jank_object_ptr a6,
+                              jank_object_ptr a7,
+                              jank_object_ptr a8,
+                              jank_object_ptr a9,
+                              jank_object_ptr a10);
 
   jank_object_ptr jank_nil();
   jank_object_ptr jank_true();

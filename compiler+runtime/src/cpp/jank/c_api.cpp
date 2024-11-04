@@ -126,6 +126,165 @@ extern "C"
     return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj);
   }
 
+  jank_object_ptr jank_call4(jank_object_ptr const f,
+                             jank_object_ptr const a1,
+                             jank_object_ptr const a2,
+                             jank_object_ptr const a3,
+                             jank_object_ptr const a4)
+  {
+    auto const f_obj(reinterpret_cast<object *>(f));
+    auto const a1_obj(reinterpret_cast<object *>(a1));
+    auto const a2_obj(reinterpret_cast<object *>(a2));
+    auto const a3_obj(reinterpret_cast<object *>(a3));
+    auto const a4_obj(reinterpret_cast<object *>(a4));
+    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj);
+  }
+
+  jank_object_ptr jank_call5(jank_object_ptr const f,
+                             jank_object_ptr const a1,
+                             jank_object_ptr const a2,
+                             jank_object_ptr const a3,
+                             jank_object_ptr const a4,
+                             jank_object_ptr const a5)
+  {
+    auto const f_obj(reinterpret_cast<object *>(f));
+    auto const a1_obj(reinterpret_cast<object *>(a1));
+    auto const a2_obj(reinterpret_cast<object *>(a2));
+    auto const a3_obj(reinterpret_cast<object *>(a3));
+    auto const a4_obj(reinterpret_cast<object *>(a4));
+    auto const a5_obj(reinterpret_cast<object *>(a5));
+    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj);
+  }
+
+  jank_object_ptr jank_call6(jank_object_ptr const f,
+                             jank_object_ptr const a1,
+                             jank_object_ptr const a2,
+                             jank_object_ptr const a3,
+                             jank_object_ptr const a4,
+                             jank_object_ptr const a5,
+                             jank_object_ptr const a6)
+  {
+    auto const f_obj(reinterpret_cast<object *>(f));
+    auto const a1_obj(reinterpret_cast<object *>(a1));
+    auto const a2_obj(reinterpret_cast<object *>(a2));
+    auto const a3_obj(reinterpret_cast<object *>(a3));
+    auto const a4_obj(reinterpret_cast<object *>(a4));
+    auto const a5_obj(reinterpret_cast<object *>(a5));
+    auto const a6_obj(reinterpret_cast<object *>(a6));
+    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj);
+  }
+
+  jank_object_ptr jank_call7(jank_object_ptr const f,
+                             jank_object_ptr const a1,
+                             jank_object_ptr const a2,
+                             jank_object_ptr const a3,
+                             jank_object_ptr const a4,
+                             jank_object_ptr const a5,
+                             jank_object_ptr const a6,
+                             jank_object_ptr const a7)
+  {
+    auto const f_obj(reinterpret_cast<object *>(f));
+    auto const a1_obj(reinterpret_cast<object *>(a1));
+    auto const a2_obj(reinterpret_cast<object *>(a2));
+    auto const a3_obj(reinterpret_cast<object *>(a3));
+    auto const a4_obj(reinterpret_cast<object *>(a4));
+    auto const a5_obj(reinterpret_cast<object *>(a5));
+    auto const a6_obj(reinterpret_cast<object *>(a6));
+    auto const a7_obj(reinterpret_cast<object *>(a7));
+    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj);
+  }
+
+  jank_object_ptr jank_call8(jank_object_ptr const f,
+                             jank_object_ptr const a1,
+                             jank_object_ptr const a2,
+                             jank_object_ptr const a3,
+                             jank_object_ptr const a4,
+                             jank_object_ptr const a5,
+                             jank_object_ptr const a6,
+                             jank_object_ptr const a7,
+                             jank_object_ptr const a8)
+  {
+    auto const f_obj(reinterpret_cast<object *>(f));
+    auto const a1_obj(reinterpret_cast<object *>(a1));
+    auto const a2_obj(reinterpret_cast<object *>(a2));
+    auto const a3_obj(reinterpret_cast<object *>(a3));
+    auto const a4_obj(reinterpret_cast<object *>(a4));
+    auto const a5_obj(reinterpret_cast<object *>(a5));
+    auto const a6_obj(reinterpret_cast<object *>(a6));
+    auto const a7_obj(reinterpret_cast<object *>(a7));
+    auto const a8_obj(reinterpret_cast<object *>(a8));
+    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj, a8_obj);
+  }
+
+  jank_object_ptr jank_call9(jank_object_ptr const f,
+                             jank_object_ptr const a1,
+                             jank_object_ptr const a2,
+                             jank_object_ptr const a3,
+                             jank_object_ptr const a4,
+                             jank_object_ptr const a5,
+                             jank_object_ptr const a6,
+                             jank_object_ptr const a7,
+                             jank_object_ptr const a8,
+                             jank_object_ptr const a9)
+  {
+    auto const f_obj(reinterpret_cast<object *>(f));
+    auto const a1_obj(reinterpret_cast<object *>(a1));
+    auto const a2_obj(reinterpret_cast<object *>(a2));
+    auto const a3_obj(reinterpret_cast<object *>(a3));
+    auto const a4_obj(reinterpret_cast<object *>(a4));
+    auto const a5_obj(reinterpret_cast<object *>(a5));
+    auto const a6_obj(reinterpret_cast<object *>(a6));
+    auto const a7_obj(reinterpret_cast<object *>(a7));
+    auto const a8_obj(reinterpret_cast<object *>(a8));
+    auto const a9_obj(reinterpret_cast<object *>(a9));
+    return dynamic_call(f_obj,
+                        a1_obj,
+                        a2_obj,
+                        a3_obj,
+                        a4_obj,
+                        a5_obj,
+                        a6_obj,
+                        a7_obj,
+                        a8_obj,
+                        a9_obj);
+  }
+
+  jank_object_ptr jank_call10(jank_object_ptr const f,
+                              jank_object_ptr const a1,
+                              jank_object_ptr const a2,
+                              jank_object_ptr const a3,
+                              jank_object_ptr const a4,
+                              jank_object_ptr const a5,
+                              jank_object_ptr const a6,
+                              jank_object_ptr const a7,
+                              jank_object_ptr const a8,
+                              jank_object_ptr const a9,
+                              jank_object_ptr const a10)
+  {
+    auto const f_obj(reinterpret_cast<object *>(f));
+    auto const a1_obj(reinterpret_cast<object *>(a1));
+    auto const a2_obj(reinterpret_cast<object *>(a2));
+    auto const a3_obj(reinterpret_cast<object *>(a3));
+    auto const a4_obj(reinterpret_cast<object *>(a4));
+    auto const a5_obj(reinterpret_cast<object *>(a5));
+    auto const a6_obj(reinterpret_cast<object *>(a6));
+    auto const a7_obj(reinterpret_cast<object *>(a7));
+    auto const a8_obj(reinterpret_cast<object *>(a8));
+    auto const a9_obj(reinterpret_cast<object *>(a9));
+    auto const a10_obj(reinterpret_cast<object *>(a10));
+    return dynamic_call(f_obj,
+                        a1_obj,
+                        a2_obj,
+                        a3_obj,
+                        a4_obj,
+                        a5_obj,
+                        a6_obj,
+                        a7_obj,
+                        a8_obj,
+                        a9_obj,
+                        a10_obj);
+  }
+
   jank_object_ptr jank_nil()
   {
     return erase(obj::nil::nil_const());
