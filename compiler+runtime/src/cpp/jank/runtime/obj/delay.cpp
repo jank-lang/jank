@@ -16,9 +16,8 @@ namespace jank::runtime
   {
     fmt::memory_buffer buff;
     to_string(buff);
-    return native_persistent_string{buff.data(), buff.size()};
+    return native_persistent_string{ buff.data(), buff.size() };
   }
-
 
   void obj::delay::to_string(fmt::memory_buffer &buff) const
   {
@@ -40,25 +39,28 @@ namespace jank::runtime
 
   object_ptr obj::delay::deref()
   {
-    std::lock_guard<std::mutex> const lock{mutex};
+    std::lock_guard<std::mutex> const lock{ mutex };
     if(val != nullptr)
     {
       return val;
     }
 
-    if (error != nullptr) {
+    if(error != nullptr)
+    {
       throw error;
     }
 
-    try {
+    try
+    {
       val = dynamic_call(fn);
     }
-    catch (std::exception const &e)
+    catch(std::exception const &e)
     {
       error = make_box(e.what());
       throw;
     }
-    catch (object_ptr const e) {
+    catch(object_ptr const e)
+    {
       error = e;
       throw;
     }
