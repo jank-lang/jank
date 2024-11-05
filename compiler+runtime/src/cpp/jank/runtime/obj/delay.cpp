@@ -64,40 +64,22 @@ namespace jank::runtime
       return val;
     }
 
-    if(delay_exception_ptr != nullptr)
-    {
-      throw *delay_exception_ptr;
+    if (error.load() != nullptr) {
+      throw error.load();
     }
 
-    return visit_object(
-      [&]<typename T>(T const typed_s) -> object_ptr {
-        if constexpr(behavior::function_like<T> && !std::same_as<T, obj::nil>)
-        {
-          try
-          {
-            val = typed_s->call();
-            return val;
-          }
-          catch(...)
-          {
-            *delay_exception_ptr = std::current_exception();
-            throw *delay_exception_ptr;
-          }
-        }
-        else
-        {
-          try
-          {
-            throw std::runtime_error{ fmt::format("Invalid expression provided: {}",
-                                                  typed_s->to_string()) };
-          }
-          catch(...)
-          {
-            *delay_exception_ptr = std::current_exception();
-            std::rethrow_exception(*delay_exception_ptr);
-          }
-        }
-      },
-      fn);
+    try {
+      val = dynamic_call(fn);
+    }
+    catch (std::exception const &e)
+    {
+      error.store(make_box(e.what()));
+      throw;
+    }
+    catch (object_ptr const &e) {
+      error.store(e);
+      throw;
+    }
+    return val;
   }
 }

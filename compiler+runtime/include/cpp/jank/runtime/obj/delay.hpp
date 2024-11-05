@@ -23,8 +23,9 @@ namespace jank::runtime
     static object_ptr force(object_ptr const &d);
 
     object base{ object_type::delay };
-    object_ptr val{};
+    mutable object_ptr val{};
     object_ptr fn{};
+    mutable std::atomic<object_ptr> error{};
     std::unique_ptr<std::exception_ptr> delay_exception_ptr
       = std::make_unique<std::exception_ptr>(nullptr);
   };
