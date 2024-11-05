@@ -16,28 +16,9 @@ namespace jank::runtime
   {
     fmt::memory_buffer buff;
     to_string(buff);
-    return native_persistent_string{ reinterpret_cast<native_persistent_string::size_type>(
-                                       buff.data()),
-                                     static_cast<char>(buff.size()) };
+    return native_persistent_string{buff.data(), buff.size()};
   }
 
-  object_ptr obj::delay::force(object_ptr const &d)
-  {
-    return visit_object(
-  [d](auto const typed_d) -> object_ptr {
-    using T = typename decltype(typed_d)::value_type;
-
-    if constexpr(behavior::derefable<T>)
-    {
-      return typed_d->deref();
-    }
-    else
-    {
-      return d;
-    }
-  },
-  d);
-  }
 
   void obj::delay::to_string(fmt::memory_buffer &buff) const
   {
@@ -57,15 +38,16 @@ namespace jank::runtime
     return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  object_ptr obj::delay::deref() const
+  object_ptr obj::delay::deref()
   {
+    std::lock_guard<std::mutex> const lock{mutex};
     if(val != nullptr)
     {
       return val;
     }
 
-    if (error.load() != nullptr) {
-      throw error.load();
+    if (error != nullptr) {
+      throw error;
     }
 
     try {
@@ -73,11 +55,11 @@ namespace jank::runtime
     }
     catch (std::exception const &e)
     {
-      error.store(make_box(e.what()));
+      error = make_box(e.what());
       throw;
     }
-    catch (object_ptr const &e) {
-      error.store(e);
+    catch (object_ptr const e) {
+      error = e;
       throw;
     }
     return val;

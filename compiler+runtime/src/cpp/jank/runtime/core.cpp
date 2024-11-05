@@ -234,4 +234,11 @@ namespace jank::runtime
       },
       o);
   }
+
+  object_ptr force(object_ptr const o) {
+    if (o->type == object_type::delay) {
+      return expect_object<obj::delay>(o)->deref();
+    }
+    return o;
+  }
 }

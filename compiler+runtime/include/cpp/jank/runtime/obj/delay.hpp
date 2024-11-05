@@ -18,16 +18,13 @@ namespace jank::runtime
     native_hash to_hash() const;
 
     /* behavior::derefable */
-    object_ptr deref() const;
-
-    static object_ptr force(object_ptr const &d);
+    object_ptr deref();
 
     object base{ object_type::delay };
-    mutable object_ptr val{};
+    object_ptr val{};
     object_ptr fn{};
-    mutable std::atomic<object_ptr> error{};
-    std::unique_ptr<std::exception_ptr> delay_exception_ptr
-      = std::make_unique<std::exception_ptr>(nullptr);
+    object_ptr error{};
+    std::mutex mutex;
   };
 
   namespace obj
