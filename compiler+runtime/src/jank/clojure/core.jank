@@ -834,6 +834,15 @@
   [x]
   (native/raw "__value = make_box(~{ x }->type == object_type::volatile_);"))
 
+(defn delay* [f]
+  (native/raw "__value = make_box<obj::delay>(~{ f });"))
+
+(defmacro delay [& body]
+  (list 'delay* (cons 'fn (cons '[] body))))
+
+(defn force [o]
+  (native/raw "__value = runtime::force(~{ o });"))
+
 ; Primitives.
 ;; Arithmetic.
 (defn

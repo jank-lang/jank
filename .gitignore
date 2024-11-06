@@ -40,3 +40,6 @@ CMakeUserPresets.json
 
 # Rust
 rust/jank
+
+# secrets
+.github_access_token
