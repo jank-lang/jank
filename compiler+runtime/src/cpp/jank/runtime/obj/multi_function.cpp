@@ -232,7 +232,7 @@ namespace jank::runtime
     {
       throw std::runtime_error{ fmt::format(
         "Preference conflict in multimethod '{}': {} is already preferred to {}",
-        name,
+        runtime::to_string(name),
         runtime::to_string(y),
         runtime::to_string(x)) };
     }
@@ -304,7 +304,7 @@ namespace jank::runtime
     if(target == obj::nil::nil_const())
     {
       throw std::runtime_error{ fmt::format("No method in multimethod '{}' for dispatch value: {}",
-                                            name,
+                                            runtime::to_string(name),
                                             runtime::to_string(dispatch_val)) };
     }
     return target;
@@ -350,7 +350,7 @@ namespace jank::runtime
           throw std::runtime_error{ fmt::format(
             "Multiple methods in multimethod '{}' match dispatch value: {} -> {} and {}, and "
             "neither is preferred",
-            name,
+            runtime::to_string(name),
             runtime::to_string(dispatch_val),
             runtime::to_string(entry_key),
             runtime::to_string(best_entry->first())) };
