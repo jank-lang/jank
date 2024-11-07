@@ -50,6 +50,7 @@ namespace jank::runtime
       = immer::set<object_ptr, std::hash<object_ptr>, object_ptr_equal, memory_policy>;
     using native_transient_hash_set = native_persistent_hash_set::transient_type;
 
+    /* TODO: These BppTree types will leak until we get them GC allocated. */
     using native_persistent_sorted_set
       = bpptree::BppTreeSet<object_ptr, object_ptr_compare>::Persistent;
     using native_transient_sorted_set
@@ -65,7 +66,7 @@ namespace jank::runtime
       = bpptree::BppTreeMap<object_ptr, object_ptr, object_ptr_compare>::Transient;
 
     /* If an object requires this in its constructor, use your runtime context to intern
-   * it instead. */
+     * it instead. */
     struct must_be_interned
     {
     };
