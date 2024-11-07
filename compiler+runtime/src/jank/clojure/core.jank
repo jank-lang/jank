@@ -392,30 +392,24 @@
 
 ;; Transients.
 
-;; XXX: Clojure doesn't specify this fn, but I find it useful.
-;(defn transientable? [o]
-;  (native/raw "__value = make_box(is_transientable(~{ o }));"))
-;
-;(defn transient
-;  "Returns a new, transient version of the collection, in constant time."
-;  [o]
-;  (native/raw "__value = runtime::transient(~{ o });"))
-;
-;(defn persistent!
-;  "Returns a new, persistent version of the transient collection, in
-;  constant time. The transient collection cannot be used after this
-;  call, any such use will throw an exception."
-;  [o]
-;  (native/raw "__value = runtime::persistent(~{ o });"))
-;
-;(defn conj!
-;  ([]
-;   (transient []))
-;  ([coll]
-;   coll)
-;  ([coll x]
-;   (native/raw "__value = runtime::conj_in_place(~{ coll }, ~{ x });")))
-;
+(def ^{:doc "Returns a new, transient version of the collection, in constant time."}
+  transient
+  clojure.core-native.phase-1/transient)
+
+(def ^{:doc "Returns a new, persistent version of the transient collection, in
+             constant time. The transient collection cannot be used after this
+             call, any such use will throw an exception."}
+  persistent
+  clojure.core-native.phase-1/persistent)
+
+(defn conj!
+  ([]
+   (transient []))
+  ([coll]
+   coll)
+  ([coll x]
+   (clojure.core-native.phase-1/conj-in-place! coll x)))
+
 ;(defn assoc!
 ;  ([coll k v]
 ;   (native/raw "__value = runtime::assoc_in_place(~{ coll }, ~{ k }, ~{ v });"))

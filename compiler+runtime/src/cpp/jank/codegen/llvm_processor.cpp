@@ -109,6 +109,7 @@ namespace jank::codegen
 
   void llvm_processor::gen()
   {
+    profile::timer timer{ "ir gen" };
     if(target == compilation_target::repl)
     {
       create_global_ctor();

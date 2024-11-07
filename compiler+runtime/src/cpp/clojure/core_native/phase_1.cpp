@@ -125,6 +125,10 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("->qualified-symbol", &phase_1::to_qualified_symbol);
   intern_fn("gensym", &gensym);
   intern_fn("apply*", &apply_to);
+  intern_fn("transientable?", &is_transientable);
+  intern_fn("transient", &transient);
+  intern_fn("persistent", &persistent);
+  intern_fn("conj-in-place!", &conj_in_place);
 
   {
     auto const fn(

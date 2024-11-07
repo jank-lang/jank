@@ -96,6 +96,7 @@ namespace jank::evaluate
 
   object_ptr eval(context &rt_ctx, jit::processor const &jit_prc, analyze::expression_ptr const &ex)
   {
+    profile::timer timer{ "eval ast node" };
     object_ptr ret{};
     boost::apply_visitor(
       [&rt_ctx, &jit_prc, &ret](auto const &typed_ex) { ret = eval(rt_ctx, jit_prc, typed_ex); },
@@ -410,17 +411,21 @@ namespace jank::evaluate
     auto const wrapped_expr(evaluate::wrap_expression(expr));
     codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::repl };
     cg_prc.gen();
-    fmt::println("{}\n", cg_prc.to_string());
-    llvm::cantFail(jit_prc.interpreter->getExecutionEngine().get().addIRModule(
-      llvm::orc::ThreadSafeModule{ std::move(cg_prc.module), std::move(cg_prc.context) }));
 
-    auto const init(jit_prc.interpreter->getSymbolAddress(cg_prc.ctor_name.c_str()).get());
-    init.toPtr<void (*)()>()();
+    {
+      profile::timer timer{ "ir jit compile" };
+      //fmt::println("{}\n", cg_prc.to_string());
+      llvm::cantFail(jit_prc.interpreter->getExecutionEngine().get().addIRModule(
+        llvm::orc::ThreadSafeModule{ std::move(cg_prc.module), std::move(cg_prc.context) }));
 
-    auto const fn(
-      jit_prc.interpreter->getSymbolAddress(fmt::format("{}_0", cg_prc.struct_name)).get());
-    auto const ret(fn.toPtr<object *(*)()>()());
-    return ret;
+      auto const init(jit_prc.interpreter->getSymbolAddress(cg_prc.ctor_name.c_str()).get());
+      init.toPtr<void (*)()>()();
+
+      auto const fn(
+        jit_prc.interpreter->getSymbolAddress(fmt::format("{}_0", cg_prc.struct_name)).get());
+      auto const ret(fn.toPtr<object *(*)()>()());
+      return ret;
+    }
   }
 
   object_ptr
