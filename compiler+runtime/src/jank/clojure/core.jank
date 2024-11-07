@@ -410,227 +410,224 @@
   ([coll x]
    (clojure.core-native.phase-1/conj-in-place! coll x)))
 
-;(defn assoc!
-;  ([coll k v]
-;   (native/raw "__value = runtime::assoc_in_place(~{ coll }, ~{ k }, ~{ v });"))
-;  ([coll k v & kvs]
-;    (let [ret (assoc! coll k v)]
-;      (if kvs
-;        (recur ret (first kvs) (second kvs) (nnext kvs))
-;        ret))))
-;
-;(defn dissoc!
-;  ([coll k]
-;   (native/raw "__value = runtime::dissoc_in_place(~{ coll }, ~{ k });"))
-;  ([coll k & ks]
-;    (let [ret (dissoc! coll k)]
-;      (if ks
-;        (recur ret (first ks) (next ks))
-;        ret))))
-;
-;(defn pop!
-;  ([coll]
-;   (native/raw "auto transient_coll(try_object<obj::transient_vector>(~{ coll }));
-;                __value = transient_coll->pop_in_place();")))
-;
-;(defn disj!
-;  ([set] set)
-;  ([set elem]
-;   (native/raw "auto typed_set(try_object<obj::transient_hash_set>(~{ set }));
-;                __value = typed_set->disjoin_in_place(~{ elem });"))
-;  ([set elem & elems]
-;    (let [ret (disj! set elem)]
-;      (if elems
-;        (recur ret (first elems) (next elems))
-;        ret))))
-;
-;;; Functions.
-;(defn spread
-;  {:private true}
-;  [arglist]
-;  (cond
-;    (nil? arglist) nil
-;    (nil? (next arglist)) (seq (first arglist))
-;    :else (cons (first arglist) (spread (next arglist)))))
-;
-;; Creates a new seq containing the items prepended to the rest, the
-;; last of which will be treated as a sequence.
-;(defn list*
-;  ([args]
-;   (seq args))
-;  ([a args]
-;   (cons a args))
-;  ([a b args]
-;   (cons a (cons b args)))
-;  ([a b c args]
-;   (cons a (cons b (cons c args))))
-;  ([a b c d & more]
-;   (cons a (cons b (cons c (cons d (spread more)))))))
-;
-;; Applies fn f to the argument list formed by prepending intervening arguments to args.
-;(defn apply
-;  ([f args]
-;   (native/raw "__value = runtime::apply_to(~{ f }, ~{ args });"))
-;  ([f x args]
-;   (native/raw "__value = runtime::apply_to(~{ f }, ~{ (list* x args) });"))
-;  ([f x y args]
-;   (native/raw "__value = runtime::apply_to(~{ f }, ~{ (list* x y args) });"))
-;  ([f x y z args]
-;   (native/raw "__value = runtime::apply_to(~{ f }, ~{ (list* x y z args) });"))
-;  ([f a b c d & args]
-;   (native/raw "__value = runtime::apply_to(~{ f }, ~{ (cons a (cons b (cons c (cons d (spread args))))) });")))
-;
-;; Returns a function that takes any number of arguments and returns x.
-;(defn constantly [x]
-;  (fn [& args]
-;    x))
-;
-;; Returns its argument.
-;(defn identity [x]
-;  x)
-;
-;; Takes a fn f and returns a fn that takes the same arguments as f,
-;; has the same effects, if any, and returns the opposite truth value.
-;(defn complement [f]
-;  (fn
-;    ([] (not (f)))
-;    ([x] (not (f x)))
-;    ([x y] (not (f x y)))
-;    ([x y & zs] (not (apply f x y zs)))))
-;
-;; Utils.
-;(defn deref
-;  "Also reader macro: @ref/@agent/@var/@atom/@delay/@future/@promise. Within a transaction,
-;  returns the in-transaction-value of ref, else returns the
-;  most-recently-committed value of ref. When applied to a var, agent
-;  or atom, returns its current state. When applied to a delay, forces
-;  it if not already forced. When applied to a future, will block if
-;  computation not complete. When applied to a promise, will block
-;  until a value is delivered.  The variant taking a timeout can be
-;  used for blocking references (futures and promises), and will return
-;  timeout-val if the timeout (in milliseconds) is reached before a
-;  value is available. See also - realized?."
-;  ([ref]
-;   (native/raw "__value = runtime::behavior::deref(~{ ref });"))
-;  ; TODO: Blocking.
-;  ([ref timeout-ms timeout-val]
-;   ;(if (instance? clojure.lang.IBlockingDeref ref)
-;   ;  (.deref ^clojure.lang.IBlockingDeref ref timeout-ms timeout-val)
-;   ;  (deref-future ref timeout-ms timeout-val))
-;   ))
-;
-;(defn reduced
-;  "Wraps x in a way such that a reduce will terminate with the value x"
-;  [x]
-;  (native/raw "__value = make_box<obj::reduced>(~{ x });"))
-;
-;(defn reduced?
-;  "Returns true if x is the result of a call to reduced"
-;  ([x]
-;   (native/raw "__value = make_box(~{ x }->type == object_type::reduced);")))
-;
-;(defn ensure-reduced
-;  "If x is already reduced?, returns it, else returns (reduced x)"
-;  [x]
-;  (if (reduced? x)
-;    x
-;    (reduced x)))
-;
-;(defn unreduced
-;  "If x is reduced?, returns (deref x), else returns x"
-;  [x]
-;  (if (reduced? x)
-;    (deref x)
-;    x))
-;
-;(defn reduce
-;  "f should be a function of 2 arguments. If val is not supplied,
-;  returns the result of applying f to the first 2 items in coll, then
-;  applying f to that result and the 3rd item, etc. If coll contains no
-;  items, f must accept no arguments as well, and reduce returns the
-;  result of calling f with no arguments.  If coll has only 1 item, it
-;  is returned and f is not called.  If val is supplied, returns the
-;  result of applying f to val and the first item in coll, then
-;  applying f to that result and the 2nd item, etc. If coll contains no
-;  items, returns val and f is not called."
-;  ([f coll]
-;   (let [s (seq coll)]
-;     (if s
-;       (reduce f (first s) (next s))
-;       (f))))
-;  ([f val coll]
-;   (native/raw "__value = runtime::reduce(~{ f }, ~{ val }, ~{ coll });")))
-;
-;(defn completing
-;  "Takes a reducing function f of 2 args and returns a fn suitable for
-;  transduce by adding an arity-1 signature that calls cf (default -
-;  identity) on the result argument."
-;  ([f] (completing f identity))
-;  ([f cf]
-;   (fn
-;     ([] (f))
-;     ([x] (cf x))
-;     ([x y] (f x y)))))
-;
-;(defn transduce
-;  "reduce with a transformation of rf (xf). If init is not
-;  supplied, (rf) will be called to produce it. f should be a reducing
-;  step function that accepts both 1 and 2 arguments, if it accepts
-;  only 2 you can add the arity-1 with 'completing'. Returns the result
-;  of applying (the transformed) xf to init and the first item in coll,
-;  then applying xf to that result and the 2nd item, etc. If coll
-;  contains no items, returns init and rf is not called. Note that
-;  certain transforms may inject or skip items."
-;  ([xform rf coll]
-;   (transduce xform rf (rf) coll))
-;  ([xform rf init coll]
-;   (let [f (xform rf)
-;         ret (reduce f init coll)]
-;     (f ret))))
-;
-;;; TODO: private
-;(defn preserving-reduced
-;  [rf]
-;  #(let [ret (rf %1 %2)]
-;     (if (reduced? ret)
-;       (reduced ret)
-;       ret)))
-;
-;(defn cat
-;  "A transducer which concatenates the contents of each input, which must be a
-;  collection, into the reduction."
-;  [rf]
-;  (let [rrf (preserving-reduced rf)]
-;    (fn
-;      ([] (rf))
-;      ([result] (rf result))
-;      ([result input]
-;       (reduce rrf result input)))))
-;
-;(defn run!
-;  "Runs the supplied procedure (via reduce), for purposes of side
-;  effects, on successive items in the collection. Returns nil"
-;  [proc coll]
-;  (reduce #(proc %2) nil coll)
-;  nil)
-;
-;(defn comp
-;  "Takes a set of functions and returns a fn that is the composition
-;  of those fns.  The returned fn takes a variable number of args,
-;  applies the rightmost of fns to the args, the next
-;  fn (right-to-left) to the result, etc."
-;  ([] identity)
-;  ([f] f)
-;  ([f g]
-;   (fn
-;     ([] (f (g)))
-;     ([x] (f (g x)))
-;     ([x y] (f (g x y)))
-;     ([x y z] (f (g x y z)))
-;     ([x y z & args] (f (apply g x y z args)))))
-;  ([f g & fs]
-;   (reduce comp (list* f g fs))))
-;
+(defn assoc!
+  ([coll k v]
+   (clojure.core-native.phase-1/assoc-in-place! coll k v))
+  ([coll k v & kvs]
+    (let [ret (assoc! coll k v)]
+      (if kvs
+        (recur ret (first kvs) (second kvs) (nnext kvs))
+        ret))))
+
+(defn dissoc!
+  ([coll k]
+   (clojure.core-native.phase-1/dissoc-in-place! coll k))
+  ([coll k & ks]
+    (let [ret (dissoc! coll k)]
+      (if ks
+        (recur ret (first ks) (next ks))
+        ret))))
+
+(defn pop!
+  ([coll]
+   (clojure.core-native.phase-1/pop-in-place! coll)))
+
+(defn disj!
+  ([set] set)
+  ([set elem]
+   (clojure.core-native.phase-1/disj-in-place! set elem))
+  ([set elem & elems]
+    (let [ret (disj! set elem)]
+      (if elems
+        (recur ret (first elems) (next elems))
+        ret))))
+
+;; Functions.
+(defn spread
+  {:private true}
+  [arglist]
+  (cond
+    (nil? arglist) nil
+    (nil? (next arglist)) (seq (first arglist))
+    :else (cons (first arglist) (spread (next arglist)))))
+
+; Creates a new seq containing the items prepended to the rest, the
+; last of which will be treated as a sequence.
+(defn list*
+  ([args]
+   (seq args))
+  ([a args]
+   (cons a args))
+  ([a b args]
+   (cons a (cons b args)))
+  ([a b c args]
+   (cons a (cons b (cons c args))))
+  ([a b c d & more]
+   (cons a (cons b (cons c (cons d (spread more)))))))
+
+; Applies fn f to the argument list formed by prepending intervening arguments to args.
+(defn apply
+  ([f args]
+   (clojure.core-native.phase-1/apply-to f args))
+  ([f x args]
+   (clojure.core-native.phase-1/apply-to f (list* x args)))
+  ([f x y args]
+   (clojure.core-native.phase-1/apply-to f (list* x y args)))
+  ([f x y z args]
+   (clojure.core-native.phase-1/apply-to f (list* x y z args)))
+  ([f a b c d & args]
+   (clojure.core-native.phase-1/apply-to f (cons a (cons b (cons c (cons d (spread args))))))))
+
+; Returns a function that takes any number of arguments and returns x.
+(defn constantly [x]
+  (fn [& args]
+    x))
+
+; Returns its argument.
+(defn identity [x]
+  x)
+
+; Takes a fn f and returns a fn that takes the same arguments as f,
+; has the same effects, if any, and returns the opposite truth value.
+(defn complement [f]
+  (fn
+    ([] (not (f)))
+    ([x] (not (f x)))
+    ([x y] (not (f x y)))
+    ([x y & zs] (not (apply f x y zs)))))
+
+; Utils.
+(defn deref
+  "Also reader macro: @ref/@agent/@var/@atom/@delay/@future/@promise. Within a transaction,
+  returns the in-transaction-value of ref, else returns the
+  most-recently-committed value of ref. When applied to a var, agent
+  or atom, returns its current state. When applied to a delay, forces
+  it if not already forced. When applied to a future, will block if
+  computation not complete. When applied to a promise, will block
+  until a value is delivered.  The variant taking a timeout can be
+  used for blocking references (futures and promises), and will return
+  timeout-val if the timeout (in milliseconds) is reached before a
+  value is available. See also - realized?."
+  ([ref]
+   (clojure.core-native.phase-1/deref ref))
+  ; TODO: Blocking.
+  ([ref timeout-ms timeout-val]
+   ;(if (instance? clojure.lang.IBlockingDeref ref)
+   ;  (.deref ^clojure.lang.IBlockingDeref ref timeout-ms timeout-val)
+   ;  (deref-future ref timeout-ms timeout-val))
+   ))
+
+(def ^{:doc "Wraps x in a way such that a reduce will terminate with the value x"}
+  reduced
+  clojure.core-native.phase-1/reduced)
+
+(def ^{:doc "Returns true if x is the result of a call to reduced"}
+  reduced?
+  clojure.core-native.phase-1/reduced?)
+
+(defn ensure-reduced
+  "If x is already reduced?, returns it, else returns (reduced x)"
+  [x]
+  (if (reduced? x)
+    x
+    (reduced x)))
+
+(defn unreduced
+  "If x is reduced?, returns (deref x), else returns x"
+  [x]
+  (if (reduced? x)
+    (deref x)
+    x))
+
+(defn reduce
+  "f should be a function of 2 arguments. If val is not supplied,
+  returns the result of applying f to the first 2 items in coll, then
+  applying f to that result and the 3rd item, etc. If coll contains no
+  items, f must accept no arguments as well, and reduce returns the
+  result of calling f with no arguments.  If coll has only 1 item, it
+  is returned and f is not called.  If val is supplied, returns the
+  result of applying f to val and the first item in coll, then
+  applying f to that result and the 2nd item, etc. If coll contains no
+  items, returns val and f is not called."
+  ([f coll]
+   (let [s (seq coll)]
+     (if s
+       (reduce f (first s) (next s))
+       (f))))
+  ([f init coll]
+   (clojure.core-native.phase-1/reduce f init coll)))
+
+(defn completing
+  "Takes a reducing function f of 2 args and returns a fn suitable for
+  transduce by adding an arity-1 signature that calls cf (default -
+  identity) on the result argument."
+  ([f] (completing f identity))
+  ([f cf]
+   (fn
+     ([] (f))
+     ([x] (cf x))
+     ([x y] (f x y)))))
+
+(defn transduce
+  "reduce with a transformation of rf (xf). If init is not
+  supplied, (rf) will be called to produce it. f should be a reducing
+  step function that accepts both 1 and 2 arguments, if it accepts
+  only 2 you can add the arity-1 with 'completing'. Returns the result
+  of applying (the transformed) xf to init and the first item in coll,
+  then applying xf to that result and the 2nd item, etc. If coll
+  contains no items, returns init and rf is not called. Note that
+  certain transforms may inject or skip items."
+  ([xform rf coll]
+   (transduce xform rf (rf) coll))
+  ([xform rf init coll]
+   (let [f (xform rf)
+         ret (reduce f init coll)]
+     (f ret))))
+
+;; TODO: private
+(defn preserving-reduced
+  [rf]
+  #(let [ret (rf %1 %2)]
+     (if (reduced? ret)
+       (reduced ret)
+       ret)))
+
+(defn cat
+  "A transducer which concatenates the contents of each input, which must be a
+  collection, into the reduction."
+  [rf]
+  (let [rrf (preserving-reduced rf)]
+    (fn
+      ([] (rf))
+      ([result] (rf result))
+      ([result input]
+       (reduce rrf result input)))))
+
+(defn run!
+  "Runs the supplied procedure (via reduce), for purposes of side
+   effects, on successive items in the collection. Returns nil"
+  [proc coll]
+  (reduce #(proc %2) nil coll)
+  nil)
+
+(defn comp
+  "Takes a set of functions and returns a fn that is the composition
+   of those fns.  The returned fn takes a variable number of args,
+   applies the rightmost of fns to the args, the next
+   fn (right-to-left) to the result, etc."
+  ([] identity)
+  ;([f] f)
+  ;([f g]
+  ; (fn
+  ;   ([] (f (g)))
+  ;   ([x] (f (g x)))
+  ;   ([x y] (f (g x y)))
+  ;   ([x y z] (f (g x y z)))
+  ;   ([x y z & args] (f (apply g x y z args)))))
+  ([f g & fs]
+   ; TODO: This local ref is not in the locals map.
+   (reduce comp (list* f g fs))))
+
 ;(defn peek
 ;  "For a list or queue, same as first, for a vector, same as, but much
 ;  more efficient than, last. If the collection is empty, returns nil."
@@ -644,23 +641,23 @@
 ;  as next/butlast."
 ;  [coll]
 ;  (native/raw "__value = runtime::pop(~{ coll });"))
-;
-;(defn vary-meta
-;  "Returns an object of the same type and value as obj, with
-;  (apply f (meta obj) args) as its metadata."
-;  [o f & args]
-;  (with-meta o (apply f (meta o) args)))
-;
-;(defn alter-meta!
-;  "Atomically sets the metadata for a namespace/var/ref/agent/atom to be:
-;
-;  (apply f its-current-meta args)
-;
-;  f must be free of side-effects"
-;  [o f & args]
-;  ; TODO: Atomics.
-;  (reset-meta! o (apply f (meta o) args)))
-;
+
+(defn vary-meta
+  "Returns an object of the same type and value as obj, with
+  (apply f (meta obj) args) as its metadata."
+  [o f & args]
+  (with-meta o (apply f (meta o) args)))
+
+(defn alter-meta!
+  "Atomically sets the metadata for a namespace/var/ref/agent/atom to be:
+
+  (apply f its-current-meta args)
+
+  f must be free of side-effects"
+  [o f & args]
+  ; TODO: Atomics.
+  (reset-meta! o (apply f (meta o) args)))
+
 ;;; Atoms.
 ;(defn atom
 ;  "Creates and returns an Atom with an initial value of x and zero or

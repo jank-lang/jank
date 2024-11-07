@@ -197,6 +197,22 @@ namespace jank::runtime
       o);
   }
 
+  object_ptr disj_in_place(object_ptr const coll, object_ptr const o)
+  {
+    /* TODO: disjoinable_in_place */
+    if(coll->type == object_type::transient_hash_set)
+    {
+      return expect_object<obj::transient_hash_set>(coll)->disjoin_in_place(o);
+    }
+    else if(coll->type == object_type::transient_sorted_set)
+    {
+      return expect_object<obj::transient_sorted_set>(coll)->disjoin_in_place(o);
+    }
+
+    throw std::runtime_error{ fmt::format("not disjoinable_in_place: {}",
+                                          runtime::to_string(coll)) };
+  }
+
   object_ptr assoc_in_place(object_ptr const coll, object_ptr const k, object_ptr const v)
   {
     return visit_object(
@@ -236,6 +252,12 @@ namespace jank::runtime
       },
       coll,
       k);
+  }
+
+  object_ptr pop_in_place(object_ptr const coll)
+  {
+    auto const trans(try_object<obj::transient_vector>(coll));
+    return trans->pop_in_place();
   }
 
   object_ptr seq(object_ptr const s)
@@ -1022,5 +1044,15 @@ namespace jank::runtime
       s,
       f,
       init);
+  }
+
+  object_ptr reduced(object_ptr const o)
+  {
+    return make_box<obj::reduced>(o);
+  }
+
+  native_bool is_reduced(object_ptr const o)
+  {
+    return o->type == object_type::reduced;
   }
 }

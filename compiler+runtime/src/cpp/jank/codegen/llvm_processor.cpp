@@ -511,7 +511,7 @@ namespace jank::codegen
       {
         auto const field_ptr(builder->CreateStructGEP(closure_ctx_type, closure_obj, 0));
         analyze::expr::local_reference const local_ref{
-          analyze::expression_base{ {}, expr.position, expr.frame },
+          analyze::expression_base{ {}, analyze::expression_position::value, expr.frame },
           capture.first,
           *capture.second
         };

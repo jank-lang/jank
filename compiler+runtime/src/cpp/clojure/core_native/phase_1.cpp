@@ -129,6 +129,15 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("transient", &transient);
   intern_fn("persistent", &persistent);
   intern_fn("conj-in-place!", &conj_in_place);
+  intern_fn("assoc-in-place!", &assoc_in_place);
+  intern_fn("dissoc-in-place!", &dissoc_in_place);
+  intern_fn("pop-in-place!", &pop_in_place);
+  intern_fn("disj-in-place!", &disj_in_place);
+  intern_fn("apply-to", &apply_to);
+  intern_fn("deref", &deref);
+  intern_fn("reduced", &reduced);
+  intern_fn("reduced?", &is_reduced);
+  intern_fn("reduce", &reduce);
 
   {
     auto const fn(

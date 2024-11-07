@@ -48,4 +48,6 @@ namespace jank::runtime
   object_ptr macroexpand(object_ptr o);
 
   object_ptr gensym(object_ptr o);
+
+  object_ptr deref(object_ptr o);
 }

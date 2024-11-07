@@ -416,4 +416,22 @@ namespace jank::runtime
   {
     return make_box<obj::symbol>(runtime::context::unique_symbol(to_string(o)));
   }
+
+  object_ptr deref(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> object_ptr {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::derefable<T>)
+        {
+          return typed_o->deref();
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not derefable: {}", typed_o->to_string()) };
+        }
+      },
+      o);
+  }
 }

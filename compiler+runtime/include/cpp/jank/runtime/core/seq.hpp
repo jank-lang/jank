@@ -105,8 +105,10 @@ namespace jank::runtime
   object_ptr transient(object_ptr o);
   object_ptr persistent(object_ptr o);
   object_ptr conj_in_place(object_ptr coll, object_ptr o);
+  object_ptr disj_in_place(object_ptr coll, object_ptr o);
   object_ptr assoc_in_place(object_ptr coll, object_ptr k, object_ptr v);
   object_ptr dissoc_in_place(object_ptr coll, object_ptr k);
+  object_ptr pop_in_place(object_ptr coll);
 
   object_ptr cons(object_ptr head, object_ptr tail);
   object_ptr conj(object_ptr s, object_ptr o);
@@ -173,4 +175,6 @@ namespace jank::runtime
   size_t sequence_length(object_ptr const s, size_t const max);
 
   object_ptr reduce(object_ptr f, object_ptr init, object_ptr s);
+  object_ptr reduced(object_ptr o);
+  native_bool is_reduced(object_ptr o);
 }
