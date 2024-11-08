@@ -430,9 +430,25 @@ namespace jank::evaluate
 
   object_ptr
   eval(context &, jit::processor const &, analyze::expr::recur<analyze::expression> const &)
-  /* Recur will always be in a fn or loop, which will be JIT compiled. */
+  /* This will always be in a fn or loop, which will be JIT compiled. */
   {
     throw make_box("unsupported eval: recur");
+  }
+
+  object_ptr eval(context &,
+                  jit::processor const &,
+                  analyze::expr::recursion_reference<analyze::expression> const &)
+  /* This will always be in a fn, which will be JIT compiled. */
+  {
+    throw make_box("unsupported eval: recursion_reference");
+  }
+
+  object_ptr eval(context &,
+                  jit::processor const &,
+                  analyze::expr::named_recursion<analyze::expression> const &)
+  /* This will always be in a fn, which will be JIT compiled. */
+  {
+    throw make_box("unsupported eval: named_recursion");
   }
 
   object_ptr eval(context &rt_ctx,

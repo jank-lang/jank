@@ -40,6 +40,12 @@ namespace jank::evaluate
   runtime::object_ptr eval(runtime::context &,
                            jit::processor const &,
                            analyze::expr::recur<analyze::expression> const &);
+  runtime::object_ptr eval(runtime::context &,
+                           jit::processor const &,
+                           analyze::expr::recursion_reference<analyze::expression> const &);
+  runtime::object_ptr eval(runtime::context &,
+                           jit::processor const &,
+                           analyze::expr::named_recursion<analyze::expression> const &);
   runtime::object_ptr
   eval(runtime::context &, jit::processor const &, analyze::expr::let<analyze::expression> const &);
   runtime::object_ptr

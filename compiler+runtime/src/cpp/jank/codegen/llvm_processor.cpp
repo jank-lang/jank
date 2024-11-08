@@ -223,78 +223,34 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(analyze::expr::call<analyze::expression> const &expr,
                                    analyze::expr::function_arity<analyze::expression> const &arity)
   {
-    /* Named recursion is a special kind of call. We can't go always through a var, since there
-     * may not be one. We can't just use the fn's name, since we could be recursing into a
-     * different arity. Finally, we need to keep in account whether or not this fn is a closure.
-     *
-     * For named recursion calls, we don't use dynamic_call. We just call the generated C fn
-     * directly. This doesn't impede interactivity, since the whole thing will be redefined
-     * if a new fn is created. */
-    if(expr.is_named_recur)
+    auto const callee(gen(expr.source_expr, arity));
+
+    llvm::SmallVector<llvm::Value *> arg_handles;
+    llvm::SmallVector<llvm::Type *> arg_types;
+    arg_handles.reserve(expr.arg_exprs.size() + 1);
+    arg_types.reserve(expr.arg_exprs.size() + 1);
+
+    arg_handles.emplace_back(callee);
+    arg_types.emplace_back(builder->getPtrTy());
+
+    for(auto const &arg_expr : expr.arg_exprs)
     {
-      auto const is_closure(!root_fn.captures().empty());
-
-      llvm::SmallVector<llvm::Value *> arg_handles;
-      llvm::SmallVector<llvm::Type *> arg_types;
-      arg_handles.reserve(expr.arg_exprs.size() + is_closure);
-      arg_types.reserve(expr.arg_exprs.size() + is_closure);
-
-      if(is_closure)
-      {
-        arg_handles.emplace_back(builder->GetInsertBlock()->getParent()->getArg(0));
-        arg_types.emplace_back(builder->getPtrTy());
-      }
-
-      for(auto const &arg_expr : expr.arg_exprs)
-      {
-        arg_handles.emplace_back(gen(arg_expr, arity));
-        arg_types.emplace_back(builder->getPtrTy());
-      }
-
-      auto const call_fn_name(
-        fmt::format("{}_{}", munge(root_fn.unique_name), expr.arg_exprs.size()));
-      auto const fn_type(llvm::FunctionType::get(builder->getPtrTy(), arg_types, false));
-      auto const fn(module->getOrInsertFunction(call_fn_name, fn_type));
-      auto const call(builder->CreateCall(fn, arg_handles));
-
-      if(expr.position == analyze::expression_position::tail)
-      {
-        return builder->CreateRet(call);
-      }
-
-      return call;
-    }
-    else
-    {
-      auto const callee(gen(expr.source_expr, arity));
-
-      llvm::SmallVector<llvm::Value *> arg_handles;
-      llvm::SmallVector<llvm::Type *> arg_types;
-      arg_handles.reserve(expr.arg_exprs.size() + 1);
-      arg_types.reserve(expr.arg_exprs.size() + 1);
-
-      arg_handles.emplace_back(callee);
+      arg_handles.emplace_back(gen(arg_expr, arity));
       arg_types.emplace_back(builder->getPtrTy());
-
-      for(auto const &arg_expr : expr.arg_exprs)
-      {
-        arg_handles.emplace_back(gen(arg_expr, arity));
-        arg_types.emplace_back(builder->getPtrTy());
-      }
-
-      auto const call_fn_name(arity_to_call_fn(expr.arg_exprs.size()));
-
-      auto const fn_type(llvm::FunctionType::get(builder->getPtrTy(), arg_types, false));
-      auto const fn(module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
-      auto const call(builder->CreateCall(fn, arg_handles));
-
-      if(expr.position == analyze::expression_position::tail)
-      {
-        return builder->CreateRet(call);
-      }
-
-      return call;
     }
+
+    auto const call_fn_name(arity_to_call_fn(expr.arg_exprs.size()));
+
+    auto const fn_type(llvm::FunctionType::get(builder->getPtrTy(), arg_types, false));
+    auto const fn(module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
+    auto const call(builder->CreateCall(fn, arg_handles));
+
+    if(expr.position == analyze::expression_position::tail)
+    {
+      return builder->CreateRet(call);
+    }
+
+    return call;
   }
 
   llvm::Value *
@@ -448,104 +404,7 @@ namespace jank::codegen
       std::move(nested).release(*this);
     }
 
-    analyze::expr::function_arity<analyze::expression> const *variadic_arity{};
-    analyze::expr::function_arity<analyze::expression> const *highest_fixed_arity{};
-    auto const captures(expr.captures());
-    for(auto const &arity : expr.arities)
-    {
-      if(arity.fn_ctx->is_variadic)
-      {
-        variadic_arity = &arity;
-      }
-      else if(!highest_fixed_arity
-              || highest_fixed_arity->fn_ctx->param_count < arity.fn_ctx->param_count)
-      {
-        highest_fixed_arity = &arity;
-      }
-    }
-    auto const variadic_ambiguous(highest_fixed_arity && variadic_arity
-                                  && highest_fixed_arity->fn_ctx->param_count
-                                    == variadic_arity->fn_ctx->param_count - 1);
-
-    /* We find the highest fixed arity above, but there may not actually be one. In which
-     * case, the value we need to specify is how many fixed args are in the variadic arity. */
-    auto const highest_fixed_args(highest_fixed_arity ? highest_fixed_arity->fn_ctx->param_count
-                                                      : variadic_arity->fn_ctx->param_count - 1);
-
-    auto const arity_flags_fn_type(
-      llvm::FunctionType::get(builder->getInt8Ty(),
-                              { builder->getInt8Ty(), builder->getInt8Ty(), builder->getInt8Ty() },
-                              false));
-    auto const arity_flags_fn(
-      module->getOrInsertFunction("jank_function_build_arity_flags", arity_flags_fn_type));
-    auto const arity_flags(builder->CreateCall(arity_flags_fn,
-                                               { builder->getInt8(highest_fixed_args),
-                                                 builder->getInt8(!!variadic_arity),
-                                                 builder->getInt8(variadic_ambiguous) }));
-
-    llvm::Value *fn_obj{};
-
-    auto const is_closure(!captures.empty());
-
-    if(!is_closure)
-    {
-      auto const create_fn_type(
-        llvm::FunctionType::get(builder->getPtrTy(), { builder->getInt8Ty() }, false));
-      auto const create_fn(module->getOrInsertFunction("jank_function_create", create_fn_type));
-      fn_obj = builder->CreateCall(create_fn, { arity_flags });
-    }
-    else
-    {
-      std::vector<llvm::Type *> const capture_types{ captures.size(), builder->getPtrTy() };
-      auto const closure_ctx_type(
-        get_or_insert_struct_type(fmt::format("{}_context", munge(expr.unique_name)),
-                                  capture_types));
-
-      auto const malloc_fn_type(
-        llvm::FunctionType::get(builder->getPtrTy(), { builder->getInt64Ty() }, false));
-      auto const malloc_fn(module->getOrInsertFunction("malloc", malloc_fn_type));
-      auto const closure_obj(
-        builder->CreateCall(malloc_fn, { llvm::ConstantExpr::getSizeOf(closure_ctx_type) }));
-
-      for(auto const &capture : captures)
-      {
-        auto const field_ptr(builder->CreateStructGEP(closure_ctx_type, closure_obj, 0));
-        analyze::expr::local_reference const local_ref{
-          analyze::expression_base{ {}, analyze::expression_position::value, expr.frame },
-          capture.first,
-          *capture.second
-        };
-        builder->CreateStore(gen(local_ref, fn_arity), field_ptr);
-      }
-
-      auto const create_fn_type(
-        llvm::FunctionType::get(builder->getPtrTy(),
-                                { builder->getInt8Ty(), builder->getPtrTy() },
-                                false));
-      auto const create_fn(module->getOrInsertFunction("jank_closure_create", create_fn_type));
-      fn_obj = builder->CreateCall(create_fn, { arity_flags, closure_obj });
-    }
-
-    for(auto const &arity : expr.arities)
-    {
-      auto const set_arity_fn_type(
-        llvm::FunctionType::get(builder->getVoidTy(),
-                                { builder->getPtrTy(), builder->getPtrTy() },
-                                false));
-      auto const set_arity_fn(module->getOrInsertFunction(
-        is_closure ? fmt::format("jank_closure_set_arity{}", arity.params.size())
-                   : fmt::format("jank_function_set_arity{}", arity.params.size()),
-        set_arity_fn_type));
-
-      std::vector<llvm::Type *> const target_arg_types{ arity.params.size(), builder->getPtrTy() };
-      auto const target_fn_type(
-        llvm::FunctionType::get(builder->getPtrTy(), target_arg_types, false));
-      auto target_fn(module->getOrInsertFunction(
-        fmt::format("{}_{}", munge(expr.unique_name), arity.params.size()),
-        target_fn_type));
-
-      builder->CreateCall(set_arity_fn, { fn_obj, target_fn.getCallee() });
-    }
+    auto const fn_obj(gen_function_instance(expr, fn_arity));
 
     if(expr.position == analyze::expression_position::tail)
     {
@@ -558,14 +417,78 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(analyze::expr::recur<analyze::expression> const &expr,
                                    analyze::expr::function_arity<analyze::expression> const &arity)
   {
-    analyze::expr::call<analyze::expression> call_expr{
+    analyze::expr::named_recursion<analyze::expression> call_expr{
       analyze::expression_base{ {}, expr.position, expr.frame },
-      nullptr,
       expr.args,
-      expr.arg_exprs,
-      true
+      expr.arg_exprs
     };
     auto const call(gen(call_expr, arity));
+    return call;
+  }
+
+  llvm::Value *
+  llvm_processor::gen(analyze::expr::recursion_reference<analyze::expression> const &expr,
+                      analyze::expr::function_arity<analyze::expression> const &arity)
+  {
+    /* With each recursion reference, we generate a new function instance. This is different
+     * from what Clojure does, but is functionally the same so long as one doesn't rely on
+     * identity checks for this sort of thing.
+     *
+     * We generate a new fn instance because the C fns generated for a jank fn don't belong
+     * inside of a class which has a `this` which can just be used. They're standalone. So,
+     * if you want an instance of that fn within the fn itself, we need to make one. For
+     * closures, this will copy the current context to the new one. */
+    auto const fn_obj(gen_function_instance(root_fn, arity));
+
+    if(expr.position == analyze::expression_position::tail)
+    {
+      return builder->CreateRet(fn_obj);
+    }
+
+    return fn_obj;
+  }
+
+  llvm::Value *llvm_processor::gen(analyze::expr::named_recursion<analyze::expression> const &expr,
+                                   analyze::expr::function_arity<analyze::expression> const &arity)
+  {
+    /* Named recursion is a special kind of call. We can't go always through a var, since there
+     * may not be one. We can't just use the fn's name, since we could be recursing into a
+     * different arity. Finally, we need to keep in account whether or not this fn is a closure.
+     *
+     * For named recursion calls, we don't use dynamic_call. We just call the generated C fn
+     * directly. This doesn't impede interactivity, since the whole thing will be redefined
+     * if a new fn is created. */
+    auto const is_closure(!root_fn.captures().empty());
+
+    /* TODO: We need to worry about arg packing here. */
+    llvm::SmallVector<llvm::Value *> arg_handles;
+    llvm::SmallVector<llvm::Type *> arg_types;
+    arg_handles.reserve(expr.arg_exprs.size() + is_closure);
+    arg_types.reserve(expr.arg_exprs.size() + is_closure);
+
+    if(is_closure)
+    {
+      arg_handles.emplace_back(builder->GetInsertBlock()->getParent()->getArg(0));
+      arg_types.emplace_back(builder->getPtrTy());
+    }
+
+    for(auto const &arg_expr : expr.arg_exprs)
+    {
+      arg_handles.emplace_back(gen(arg_expr, arity));
+      arg_types.emplace_back(builder->getPtrTy());
+    }
+
+    auto const call_fn_name(
+      fmt::format("{}_{}", munge(root_fn.unique_name), expr.arg_exprs.size()));
+    auto const fn_type(llvm::FunctionType::get(builder->getPtrTy(), arg_types, false));
+    auto const fn(module->getOrInsertFunction(call_fn_name, fn_type));
+    auto const call(builder->CreateCall(fn, arg_handles));
+
+    if(expr.position == analyze::expression_position::tail)
+    {
+      return builder->CreateRet(call);
+    }
+
     return call;
   }
 
@@ -1099,6 +1022,112 @@ namespace jank::codegen
     }
 
     return builder->CreateLoad(builder->getPtrTy(), global);
+  }
+
+  llvm::Value *llvm_processor::gen_function_instance(
+    analyze::expr::function<analyze::expression> const &expr,
+    analyze::expr::function_arity<analyze::expression> const &fn_arity)
+  {
+    analyze::expr::function_arity<analyze::expression> const *variadic_arity{};
+    analyze::expr::function_arity<analyze::expression> const *highest_fixed_arity{};
+    auto const captures(expr.captures());
+    for(auto const &arity : expr.arities)
+    {
+      if(arity.fn_ctx->is_variadic)
+      {
+        variadic_arity = &arity;
+      }
+      else if(!highest_fixed_arity
+              || highest_fixed_arity->fn_ctx->param_count < arity.fn_ctx->param_count)
+      {
+        highest_fixed_arity = &arity;
+      }
+    }
+    auto const variadic_ambiguous(highest_fixed_arity && variadic_arity
+                                  && highest_fixed_arity->fn_ctx->param_count
+                                    == variadic_arity->fn_ctx->param_count - 1);
+
+    /* We find the highest fixed arity above, but there may not actually be one. In which
+     * case, the value we need to specify is how many fixed args are in the variadic arity. */
+    auto const highest_fixed_args(highest_fixed_arity ? highest_fixed_arity->fn_ctx->param_count
+                                                      : variadic_arity->fn_ctx->param_count - 1);
+
+    auto const arity_flags_fn_type(
+      llvm::FunctionType::get(builder->getInt8Ty(),
+                              { builder->getInt8Ty(), builder->getInt8Ty(), builder->getInt8Ty() },
+                              false));
+    auto const arity_flags_fn(
+      module->getOrInsertFunction("jank_function_build_arity_flags", arity_flags_fn_type));
+    auto const arity_flags(builder->CreateCall(arity_flags_fn,
+                                               { builder->getInt8(highest_fixed_args),
+                                                 builder->getInt8(!!variadic_arity),
+                                                 builder->getInt8(variadic_ambiguous) }));
+
+    llvm::Value *fn_obj{};
+
+    auto const is_closure(!captures.empty());
+
+    if(!is_closure)
+    {
+      auto const create_fn_type(
+        llvm::FunctionType::get(builder->getPtrTy(), { builder->getInt8Ty() }, false));
+      auto const create_fn(module->getOrInsertFunction("jank_function_create", create_fn_type));
+      fn_obj = builder->CreateCall(create_fn, { arity_flags });
+    }
+    else
+    {
+      std::vector<llvm::Type *> const capture_types{ captures.size(), builder->getPtrTy() };
+      auto const closure_ctx_type(
+        get_or_insert_struct_type(fmt::format("{}_context", munge(expr.unique_name)),
+                                  capture_types));
+
+      auto const malloc_fn_type(
+        llvm::FunctionType::get(builder->getPtrTy(), { builder->getInt64Ty() }, false));
+      auto const malloc_fn(module->getOrInsertFunction("malloc", malloc_fn_type));
+      auto const closure_obj(
+        builder->CreateCall(malloc_fn, { llvm::ConstantExpr::getSizeOf(closure_ctx_type) }));
+
+      for(auto const &capture : captures)
+      {
+        auto const field_ptr(builder->CreateStructGEP(closure_ctx_type, closure_obj, 0));
+        analyze::expr::local_reference const local_ref{
+          analyze::expression_base{ {}, analyze::expression_position::value, expr.frame },
+          capture.first,
+          *capture.second
+        };
+        builder->CreateStore(gen(local_ref, fn_arity), field_ptr);
+      }
+
+      auto const create_fn_type(
+        llvm::FunctionType::get(builder->getPtrTy(),
+                                { builder->getInt8Ty(), builder->getPtrTy() },
+                                false));
+      auto const create_fn(module->getOrInsertFunction("jank_closure_create", create_fn_type));
+      fn_obj = builder->CreateCall(create_fn, { arity_flags, closure_obj });
+    }
+
+    for(auto const &arity : expr.arities)
+    {
+      auto const set_arity_fn_type(
+        llvm::FunctionType::get(builder->getVoidTy(),
+                                { builder->getPtrTy(), builder->getPtrTy() },
+                                false));
+      auto const set_arity_fn(module->getOrInsertFunction(
+        is_closure ? fmt::format("jank_closure_set_arity{}", arity.params.size())
+                   : fmt::format("jank_function_set_arity{}", arity.params.size()),
+        set_arity_fn_type));
+
+      std::vector<llvm::Type *> const target_arg_types{ arity.params.size(), builder->getPtrTy() };
+      auto const target_fn_type(
+        llvm::FunctionType::get(builder->getPtrTy(), target_arg_types, false));
+      auto target_fn(module->getOrInsertFunction(
+        fmt::format("{}_{}", munge(expr.unique_name), arity.params.size()),
+        target_fn_type));
+
+      builder->CreateCall(set_arity_fn, { fn_obj, target_fn.getCallee() });
+    }
+
+    return fn_obj;
   }
 
   void llvm_processor::create_global_ctor()

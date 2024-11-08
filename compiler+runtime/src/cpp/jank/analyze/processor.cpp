@@ -161,11 +161,12 @@ namespace jank::analyze
     });
   }
 
-  processor::expression_result processor::analyze_symbol(runtime::obj::symbol_ptr const &sym,
-                                                         local_frame_ptr &current_frame,
-                                                         expression_position const position,
-                                                         option<expr::function_context_ptr> const &,
-                                                         native_bool needs_box)
+  processor::expression_result
+  processor::analyze_symbol(runtime::obj::symbol_ptr const &sym,
+                            local_frame_ptr &current_frame,
+                            expression_position const position,
+                            option<expr::function_context_ptr> const &fn_ctx,
+                            native_bool needs_box)
   {
     assert(!sym->to_string().empty());
 
@@ -212,6 +213,14 @@ namespace jank::analyze
         unwrapped_local.binding
       });
     }
+    /* If it's not a local and it matches the current fn's name, we're dealing with a
+     * reference to the current fn. We don't want to go to var lookup now. */
+    else if(fn_ctx.is_some() && sym->to_string() == fn_ctx.unwrap()->name)
+    {
+      return make_box<expression>(expr::recursion_reference<expression>{
+        expression_base{ {}, position, current_frame, needs_box }
+      });
+    }
 
     auto const qualified_sym(rt_ctx.qualify_symbol(sym));
     auto const var(rt_ctx.find_var(qualified_sym));
@@ -251,10 +260,6 @@ namespace jank::analyze
     local_frame_ptr frame{
       make_box<local_frame>(local_frame::frame_type::fn, current_frame->rt_ctx, current_frame)
     };
-    auto const fn_name(make_box<runtime::obj::symbol>(name));
-    local_binding fn_name_binding{ fn_name, fn_name->name, none, current_frame };
-    fn_name_binding.is_named_recur = true;
-    frame->locals.emplace(fn_name, std::move(fn_name_binding));
 
     native_vector<runtime::obj::symbol_ptr> param_symbols;
     param_symbols.reserve(params->data.size());
@@ -324,6 +329,7 @@ namespace jank::analyze
     }
 
     auto fn_ctx(make_box<expr::function_context>());
+    fn_ctx->name = name;
     fn_ctx->is_variadic = is_variadic;
     fn_ctx->param_count = param_symbols.size();
     expr::do_<expression> body_do{
@@ -334,9 +340,8 @@ namespace jank::analyze
     for(auto const &item : list->data.rest())
     {
       auto const position((++i == form_count) ? expression_position::tail
-                                               : expression_position::statement);
-      auto form(
-        analyze(item, frame, position, fn_ctx, position != expression_position::statement));
+                                              : expression_position::statement);
+      auto form(analyze(item, frame, position, fn_ctx, position != expression_position::statement));
       if(form.is_err())
       {
         return form.expect_err_move();
@@ -352,12 +357,10 @@ namespace jank::analyze
       body_do = step::force_boxed(std::move(body_do));
     }
 
-    return {
-      expr::function_arity<expression>{ std::move(param_symbols),
-                                       std::move(body_do),
-                                       std::move(frame),
-                                       std::move(fn_ctx) }
-    };
+    return ok(expr::function_arity<expression>{ std::move(param_symbols),
+                                                std::move(body_do),
+                                                std::move(frame),
+                                                std::move(fn_ctx) });
   }
 
   processor::expression_result
@@ -1397,8 +1400,6 @@ namespace jank::analyze
     expression_ptr source{};
     native_bool needs_ret_box{ true };
     native_bool needs_arg_box{ true };
-    /* Do we recur through calling our own fn name? */
-    native_bool is_named_recur{};
 
     /* TODO: If this is a recursive call, note that and skip the var lookup. */
     if(first->type == runtime::object_type::symbol)
@@ -1410,8 +1411,7 @@ namespace jank::analyze
         return found_special->second(o, current_frame, position, fn_ctx, needs_box);
       }
 
-      auto sym_result(
-        analyze_symbol(sym, current_frame, expression_position::value, fn_ctx, true));
+      auto sym_result(analyze_symbol(sym, current_frame, expression_position::value, fn_ctx, true));
       if(sym_result.is_err())
       {
         return sym_result;
@@ -1425,8 +1425,7 @@ namespace jank::analyze
       }
 
       source = sym_result.expect_ok();
-      auto var_deref(boost::get<expr::var_deref<expression>>(&source->data));
-      auto local_ref(boost::get<expr::local_reference>(&source->data));
+      auto const var_deref(boost::get<expr::var_deref<expression>>(&source->data));
 
       /* If this expression doesn't need to be boxed, based on where it's called, we can dig
        * into the call details itself to see if the function supports unboxed returns. Most don't. */
@@ -1467,10 +1466,6 @@ namespace jank::analyze
           needs_ret_box = needs_box | !supports_unboxed_output;
         }
       }
-      else if(local_ref && local_ref->binding.is_named_recur)
-      {
-        is_named_recur = true;
-      }
     }
     else
     {
@@ -1495,13 +1490,24 @@ namespace jank::analyze
       arg_exprs.emplace_back(arg_expr.expect_ok());
     }
 
-    return make_box<expression>(expr::call<expression>{
-      expression_base{ {}, position, current_frame, needs_ret_box },
-      source,
-      make_box<runtime::obj::persistent_list>(o->data.rest()),
-      arg_exprs,
-      is_named_recur
-    });
+    auto const recursion_ref(boost::get<expr::recursion_reference<expression>>(&source->data));
+    if(recursion_ref)
+    {
+      return make_box<expression>(expr::named_recursion<expression>{
+        expression_base{ {}, position, current_frame, needs_ret_box },
+        make_box<runtime::obj::persistent_list>(o->data.rest()),
+        arg_exprs
+      });
+    }
+    else
+    {
+      return make_box<expression>(expr::call<expression>{
+        expression_base{ {}, position, current_frame, needs_ret_box },
+        source,
+        make_box<runtime::obj::persistent_list>(o->data.rest()),
+        arg_exprs
+      });
+    }
   }
 
   processor::expression_result

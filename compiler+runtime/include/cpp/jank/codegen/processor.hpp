@@ -108,6 +108,12 @@ namespace jank::codegen
     option<handle> gen(analyze::expr::recur<analyze::expression> const &,
                        analyze::expr::function_arity<analyze::expression> const &,
                        native_bool box_needed);
+    option<handle> gen(analyze::expr::recursion_reference<analyze::expression> const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
+    option<handle> gen(analyze::expr::named_recursion<analyze::expression> const &,
+                       analyze::expr::function_arity<analyze::expression> const &,
+                       native_bool box_needed);
     option<handle> gen(analyze::expr::let<analyze::expression> const &,
                        analyze::expr::function_arity<analyze::expression> const &,
                        native_bool box_needed);

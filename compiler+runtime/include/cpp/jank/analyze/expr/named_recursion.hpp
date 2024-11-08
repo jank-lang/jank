@@ -6,10 +6,8 @@
 namespace jank::analyze::expr
 {
   template <typename E>
-  struct call : expression_base
+  struct named_recursion : expression_base
   {
-    /* Var, local, or callable. */
-    native_box<E> source_expr{};
     runtime::obj::persistent_list_ptr args{};
     native_vector<native_box<E>> arg_exprs;
 
@@ -29,9 +27,7 @@ namespace jank::analyze::expr
       return runtime::merge(
         static_cast<expression_base const *>(this)->to_runtime_data(),
         runtime::obj::persistent_array_map::create_unique(make_box("__type"),
-                                                          make_box("expr::call"),
-                                                          make_box("source_expr"),
-                                                          source_expr->to_runtime_data(),
+                                                          make_box("expr::named_recursion"),
                                                           make_box("args"),
                                                           args,
                                                           make_box("arg_exprs"),

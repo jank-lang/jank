@@ -14,6 +14,7 @@ namespace jank::analyze::expr
   {
     static constexpr native_bool pointer_free{ true };
 
+    native_persistent_string name;
     size_t param_count{};
     native_bool is_variadic{};
     native_bool is_tail_recursive{};

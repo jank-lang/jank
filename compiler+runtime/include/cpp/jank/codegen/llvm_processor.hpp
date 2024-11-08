@@ -57,6 +57,10 @@ namespace jank::codegen
                      analyze::expr::function_arity<analyze::expression> const &);
     llvm::Value *gen(analyze::expr::recur<analyze::expression> const &,
                      analyze::expr::function_arity<analyze::expression> const &);
+    llvm::Value *gen(analyze::expr::recursion_reference<analyze::expression> const &,
+                     analyze::expr::function_arity<analyze::expression> const &);
+    llvm::Value *gen(analyze::expr::named_recursion<analyze::expression> const &,
+                     analyze::expr::function_arity<analyze::expression> const &);
     llvm::Value *gen(analyze::expr::let<analyze::expression> const &,
                      analyze::expr::function_arity<analyze::expression> const &);
     llvm::Value *gen(analyze::expr::do_<analyze::expression> const &,
@@ -89,6 +93,9 @@ namespace jank::codegen
     llvm::Value *gen_global(obj::keyword_ptr k);
     llvm::Value *gen_global(obj::character_ptr c);
     llvm::Value *gen_global_from_read_string(object_ptr o);
+    llvm::Value *
+    gen_function_instance(analyze::expr::function<analyze::expression> const &expr,
+                          analyze::expr::function_arity<analyze::expression> const &fn_arity);
 
     llvm::StructType *
     get_or_insert_struct_type(std::string const &name, std::vector<llvm::Type *> const &fields);

@@ -1330,6 +1330,20 @@ namespace jank::codegen
     return none;
   }
 
+  option<handle> processor::gen(analyze::expr::recursion_reference<analyze::expression> const &expr,
+                                analyze::expr::function_arity<analyze::expression> const &fn_arity,
+                                native_bool const)
+  {
+    return none;
+  }
+
+  option<handle> processor::gen(analyze::expr::named_recursion<analyze::expression> const &expr,
+                                analyze::expr::function_arity<analyze::expression> const &fn_arity,
+                                native_bool const)
+  {
+    return none;
+  }
+
   option<handle> processor::gen(analyze::expr::let<analyze::expression> const &expr,
                                 analyze::expr::function_arity<analyze::expression> const &fn_arity,
                                 native_bool const)

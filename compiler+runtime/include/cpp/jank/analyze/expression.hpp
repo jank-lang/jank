@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include <boost/variant.hpp>
 
 #include <jank/analyze/expr/def.hpp>
@@ -14,6 +12,8 @@
 #include <jank/analyze/expr/set.hpp>
 #include <jank/analyze/expr/function.hpp>
 #include <jank/analyze/expr/recur.hpp>
+#include <jank/analyze/expr/recursion_reference.hpp>
+#include <jank/analyze/expr/named_recursion.hpp>
 #include <jank/analyze/expr/local_reference.hpp>
 #include <jank/analyze/expr/let.hpp>
 #include <jank/analyze/expr/do.hpp>
@@ -27,6 +27,7 @@ namespace jank::analyze
   struct expression : gc
   {
     using E = expression;
+    /* TODO: Custom variant which is more minimal. */
     using value_type = boost::variant<expr::def<E>,
                                       expr::var_deref<E>,
                                       expr::var_ref<E>,
@@ -37,6 +38,8 @@ namespace jank::analyze
                                       expr::set<E>,
                                       expr::function<E>,
                                       expr::recur<E>,
+                                      expr::recursion_reference<E>,
+                                      expr::named_recursion<E>,
                                       expr::local_reference,
                                       expr::let<E>,
                                       expr::do_<E>,
