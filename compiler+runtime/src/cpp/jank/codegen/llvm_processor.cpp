@@ -92,6 +92,7 @@ namespace jank::codegen
     if(is_closure)
     {
       auto const context(fn->getArg(0));
+      size_t index{};
       for(auto const &capture : arity.frame->captures)
       {
         auto const captures(root_fn.captures());
@@ -99,7 +100,7 @@ namespace jank::codegen
         auto const closure_ctx_type(
           get_or_insert_struct_type(fmt::format("{}_context", munge(root_fn.unique_name)),
                                     capture_types));
-        auto const field_ptr(builder->CreateStructGEP(closure_ctx_type, context, 0));
+        auto const field_ptr(builder->CreateStructGEP(closure_ctx_type, context, index++));
         locals[capture.first] = builder->CreateLoad(builder->getPtrTy(),
                                                     field_ptr,
                                                     munge(capture.first->to_string()).c_str());
@@ -506,6 +507,7 @@ namespace jank::codegen
       }
 
       locals[pair.first] = gen(pair.second, arity);
+      locals[pair.first]->setName(pair.first->to_string().c_str());
     }
 
     auto const ret(gen(expr.body, arity));
@@ -1083,13 +1085,14 @@ namespace jank::codegen
 
       auto const malloc_fn_type(
         llvm::FunctionType::get(builder->getPtrTy(), { builder->getInt64Ty() }, false));
-      auto const malloc_fn(module->getOrInsertFunction("malloc", malloc_fn_type));
+      auto const malloc_fn(module->getOrInsertFunction("GC_malloc", malloc_fn_type));
       auto const closure_obj(
         builder->CreateCall(malloc_fn, { llvm::ConstantExpr::getSizeOf(closure_ctx_type) }));
 
+      size_t index{};
       for(auto const &capture : captures)
       {
-        auto const field_ptr(builder->CreateStructGEP(closure_ctx_type, closure_obj, 0));
+        auto const field_ptr(builder->CreateStructGEP(closure_ctx_type, closure_obj, index++));
         analyze::expr::local_reference const local_ref{
           analyze::expression_base{ {}, analyze::expression_position::value, expr.frame },
           capture.first,

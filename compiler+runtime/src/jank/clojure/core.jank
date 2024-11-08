@@ -616,16 +616,15 @@
    applies the rightmost of fns to the args, the next
    fn (right-to-left) to the result, etc."
   ([] identity)
-  ;([f] f)
-  ;([f g]
-  ; (fn
-  ;   ([] (f (g)))
-  ;   ([x] (f (g x)))
-  ;   ([x y] (f (g x y)))
-  ;   ([x y z] (f (g x y z)))
-  ;   ([x y z & args] (f (apply g x y z args)))))
+  ([f] f)
+  ([f g]
+   (let [a 1] (fn
+     ([] (f (g)))
+     ([x] (f (g x)))
+     ([x y] (f (g x y)))
+     ([x y z] (f (g x y z)))
+     ([x y z & args] (f (apply g x y z args))))))
   ([f g & fs]
-   ; TODO: This local ref is not in the locals map.
    (reduce comp (list* f g fs))))
 
 ;(defn peek
@@ -641,23 +640,23 @@
 ;  as next/butlast."
 ;  [coll]
 ;  (native/raw "__value = runtime::pop(~{ coll });"))
-
-(defn vary-meta
-  "Returns an object of the same type and value as obj, with
-  (apply f (meta obj) args) as its metadata."
-  [o f & args]
-  (with-meta o (apply f (meta o) args)))
-
-(defn alter-meta!
-  "Atomically sets the metadata for a namespace/var/ref/agent/atom to be:
-
-  (apply f its-current-meta args)
-
-  f must be free of side-effects"
-  [o f & args]
-  ; TODO: Atomics.
-  (reset-meta! o (apply f (meta o) args)))
-
+;
+;(defn vary-meta
+;  "Returns an object of the same type and value as obj, with
+;  (apply f (meta obj) args) as its metadata."
+;  [o f & args]
+;  (with-meta o (apply f (meta o) args)))
+;
+;(defn alter-meta!
+;  "Atomically sets the metadata for a namespace/var/ref/agent/atom to be:
+;
+;  (apply f its-current-meta args)
+;
+;  f must be free of side-effects"
+;  [o f & args]
+;  ; TODO: Atomics.
+;  (reset-meta! o (apply f (meta o) args)))
+;
 ;;; Atoms.
 ;(defn atom
 ;  "Creates and returns an Atom with an initial value of x and zero or
