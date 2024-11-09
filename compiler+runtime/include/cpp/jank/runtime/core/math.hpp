@@ -241,4 +241,7 @@ namespace jank::runtime
   native_real to_real(object_ptr o);
 
   native_bool is_number(object_ptr o);
+  native_bool is_integer(object_ptr o);
+  native_bool is_real(object_ptr o);
+  native_bool is_boolean(object_ptr o);
 }

@@ -984,20 +984,26 @@
       (+ m div))))
 
 ;; Numbers.
-;(defn integer? [o]
-;  (native/raw "__value = make_box(~{ o }->type == object_type::integer)"))
-;(defn float? [o]
-;  (native/raw "__value = make_box(~{ o }->type == object_type::real)"))
-;(defn boolean? [o]
-;  (native/raw "__value = make_box(~{ o }->type == object_type::boolean)"))
-;(defn number? [o]
-;  (native/raw "__value = make_box(is_number(~{ o }));"))
-;
-;(defn even? [o]
-;  (native/raw "__value = make_box(is_even(~{ o }));"))
-;(defn odd? [o]
-;  (native/raw "__value = make_box(is_odd(~{ o }));"))
-;
+(def integer?
+  "Returns true if n is an integer"
+  clojure.core-native.phase-1/integer?)
+(def float?
+  "Returns true if n is a floating point number"
+  clojure.core-native.phase-1/real?)
+(def boolean?
+  "Returns true if x is a boolean"
+  clojure.core-native.phase-1/boolean?)
+(def number?
+  "Returns true if x is a number"
+  clojure.core-native.phase-1/number?)
+
+(def even?
+  "Returns true if n is even, throws an exception if n is not an integer"
+  clojure.core-native.phase-1/even?)
+(def odd?
+  "Returns true if n is odd, throws an exception if n is not an integer"
+  clojure.core-native.phase-1/odd?)
+
 ;;; Random.
 ;(defn
 ;  ^{:arities {0 {:supports-unboxed-input? true

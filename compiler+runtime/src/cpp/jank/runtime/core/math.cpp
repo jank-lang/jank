@@ -1595,4 +1595,19 @@ namespace jank::runtime
                              [=]() -> native_bool { return false; },
                              o);
   }
+
+  native_bool is_integer(object_ptr const o)
+  {
+    return o->type == object_type::integer;
+  }
+
+  native_bool is_real(object_ptr const o)
+  {
+    return o->type == object_type::real;
+  }
+
+  native_bool is_boolean(object_ptr const o)
+  {
+    return o->type == object_type::boolean;
+  }
 }

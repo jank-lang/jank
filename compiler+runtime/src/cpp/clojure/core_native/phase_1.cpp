@@ -173,6 +173,12 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("neg?", &is_neg);
   intern_fn("zero?", &is_zero);
   intern_fn("rem", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&rem));
+  intern_fn("integer?", &is_integer);
+  intern_fn("real?", &is_real);
+  intern_fn("boolean?", &is_boolean);
+  intern_fn("number?", &is_number);
+  intern_fn("even?", &is_even);
+  intern_fn("odd?", &is_odd);
 
   {
     auto const fn(
