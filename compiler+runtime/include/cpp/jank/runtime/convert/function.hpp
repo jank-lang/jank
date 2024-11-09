@@ -21,7 +21,15 @@ namespace jank::runtime
     {
       return std::function<object_ptr(typename always_object_ptr<Args>::type...)>{
         [fn](Args &&...args) -> object_ptr {
-          return convert<R, object_ptr>::call(fn(convert<Args, object_ptr>::call(args)...));
+          if constexpr(std::is_void_v<R>)
+          {
+            fn(convert<Args, object_ptr>::call(args)...);
+            return convert<R, object_ptr>::call();
+          }
+          else
+          {
+            return convert<R, object_ptr>::call(fn(convert<Args, object_ptr>::call(args)...));
+          }
         }
       };
     }

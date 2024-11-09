@@ -7,6 +7,15 @@ namespace jank::runtime
   template <typename T, typename... U>
   concept same_as_any = (std::same_as<T, U> || ...);
 
+  template <>
+  struct convert<void, object_ptr>
+  {
+    static object_ptr call()
+    {
+      return obj::nil::nil_const();
+    }
+  };
+
   template <typename T>
   requires behavior::object_like<T>
   struct convert<native_box<T>, object_ptr>

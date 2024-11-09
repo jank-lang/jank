@@ -20,7 +20,10 @@ namespace jank::runtime
   native_bool is_false(object_ptr o);
   native_bool is_some(object_ptr o);
   native_bool is_string(object_ptr o);
+
   native_bool is_symbol(object_ptr o);
+  native_bool is_simple_symbol(object_ptr o);
+  native_bool is_qualified_symbol(object_ptr o);
 
   object_ptr print(object_ptr args);
   object_ptr println(object_ptr args);
@@ -39,6 +42,11 @@ namespace jank::runtime
   native_bool is_named(object_ptr o);
   native_persistent_string name(object_ptr o);
   native_persistent_string namespace_(object_ptr o);
+
+  object_ptr keyword(object_ptr ns, object_ptr name);
+  native_bool is_keyword(object_ptr o);
+  native_bool is_simple_keyword(object_ptr o);
+  native_bool is_qualified_keyword(object_ptr o);
 
   native_bool is_callable(object_ptr o);
 
@@ -68,4 +76,8 @@ namespace jank::runtime
   native_bool is_volatile(object_ptr o);
   object_ptr vswap(object_ptr v, object_ptr fn, object_ptr args);
   object_ptr vreset(object_ptr v, object_ptr new_val);
+
+  void push_thread_bindings(object_ptr o);
+  void pop_thread_bindings();
+  object_ptr get_thread_bindings();
 }

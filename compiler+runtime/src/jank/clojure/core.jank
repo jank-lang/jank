@@ -141,7 +141,9 @@
      (clojure.core-native.phase-1/str o args))))
 
 ;; Symbols.
-(def symbol? clojure.core-native.phase-1/symbol?)
+(def symbol?
+  "Return true if x is a Symbol"
+  clojure.core-native.phase-1/symbol?)
 (def
   symbol
   "Returns a Symbol with the given namespace and name. Arity-1 works
@@ -153,6 +155,12 @@
      (if (nil? ns)
        (symbol o)
        (clojure.core-native.phase-1/->qualified-symbol ns o)))))
+(def simple-symbol?
+  "Return true if x is a symbol without a namespace"
+  clojure.core-native.phase-1/simple-symbol?)
+(def qualified-symbol?
+  "Return true if x is a symbol with a namespace"
+  clojure.core-native.phase-1/qualified-symbol?)
 
 ; Relations.
 ;; Miscellaneous.
@@ -555,13 +563,11 @@
   items, returns val and f is not called."
   ([f coll]
    (let [s (seq coll)]
-     (prn :reduce :s s)
      (if s
        (reduce f (first s) (next s))
        (f))))
   ([f init coll]
    ; TODO: Chunking support.
-   (prn :reduce f :init init :coll coll)
    (clojure.core-native.phase-1/reduce f init coll)))
 
 (defn completing
@@ -1526,229 +1532,207 @@
                     acc)))]
      (step n coll))))
 
-;;; Vars.
-;(defn var? [o]
-;  (native/raw "__value = make_box(~{ o }->type == object_type::var)"))
-;
-;; TODO: Make this private.
-;(defmacro assert-macro-args
-;  [& pairs]
-;  (list 'do
-;        (list 'clojure.core/when-not (first pairs)
-;              ; TODO: No need for ex-info, if we had a simpler exception type
-;              (list 'throw (list 'clojure.core/ex-info
-;                                 (list 'clojure.core/str
-;                                       '&form
-;                                       " requires "
-;                                       (second pairs)
-;                                       " in "
-;                                       'clojure.core/*ns*
-;                                       ":"
-;                                       (:line (meta '&form)))
-;                                 {})))
-;        (let [more (next (next pairs))]
-;          (when more
-;            (list* 'clojure.core/assert-macro-args more)))))
-;
-;(defmacro if-let
-;  "bindings => binding-form test
-;
-;  If test is true, evaluates then with binding-form bound to the value of
-;  test, if not, yields else"
-;  ([bindings then]
-;   `(if-let ~bindings ~then nil))
-;  ([bindings then else & oldform]
-;   (assert-macro-args
-;     (vector? bindings) "a vector for its binding"
-;     (nil? oldform) "1 or 2 forms after binding vector"
-;     (= 2 (count bindings)) "exactly 2 forms in binding vector")
-;   (let [form (get bindings 0) tst (get bindings 1)]
-;     `(let [temp# ~tst]
-;        (if temp#
-;          (let [~form temp#]
-;            ~then)
-;          ~else)))))
-;
-;(defmacro when-let
-;  "bindings => binding-form test
-;
-;  When test is true, evaluates body with binding-form bound to the value of test"
-;  [bindings & body]
-;  (assert-macro-args
-;    (vector? bindings) "a vector for its binding"
-;    (= 2 (count bindings)) "exactly 2 forms in binding vector")
-;  (let [form (get bindings 0)
-;        tst (get bindings 1)]
-;    `(let [temp# ~tst]
-;       (when temp#
-;         (let [~form temp#]
-;           ~@body)))))
-;
-;(defmacro if-some
-;  "bindings => binding-form test
-;
-;  If test is not nil, evaluates then with binding-form bound to the
-;  value of test, if not, yields else"
-;  ([bindings then]
-;   `(if-some ~bindings ~then nil))
-;  ([bindings then else & oldform]
-;   (assert-macro-args
-;     (vector? bindings) "a vector for its binding"
-;     (nil? oldform) "1 or 2 forms after binding vector"
-;     (= 2 (count bindings)) "exactly 2 forms in binding vector")
-;   (let [form (get bindings 0) tst (get bindings 1)]
-;     `(let [temp# ~tst]
-;        (if (nil? temp#)
-;          ~else
-;          (let [~form temp#]
-;            ~then))))))
-;
-;(defmacro when-some
-;  "bindings => binding-form test
-;
-;  When test is not nil, evaluates body with binding-form bound to the
-;  value of test"
-;  [bindings & body]
-;  (assert-macro-args
-;    (vector? bindings) "a vector for its binding"
-;    (= 2 (count bindings)) "exactly 2 forms in binding vector")
-;  (let [form (get bindings 0)
-;        tst (get bindings 1)]
-;    `(let [temp# ~tst]
-;       (if (nil? temp#)
-;         nil
-;         (let [~form temp#]
-;           ~@body)))))
-;
-;(defmacro dotimes
-;  "bindings => name n
-;
-;  Repeatedly executes body (presumably for side-effects) with name
-;  bound to integers from 0 through n-1."
-;  [bindings & body]
-;  (assert-macro-args
-;    (vector? bindings) "a vector for its binding"
-;    (= 2 (count bindings)) "exactly 2 forms in binding vector")
-;  (let [i (first bindings)
-;        n (second bindings)]
-;    `(let [n# (int ~n)]
-;       (loop [~i 0]
-;         (when (< ~i n#)
-;           ~@body
-;           ; TODO: unchecked-inc
-;           (recur (inc ~i)))))))
-;
-;
-;; WARNING: This is a low-level function. Prefer high-level macros like
-;; binding where ever possible.
-;;
-;; Takes a map of Var/value pairs. Binds each Var to the associated value for
-;; the current thread. Each call *MUST* be accompanied by a matching call to
-;; pop-thread-bindings wrapped in a try-finally!
-;;
-;;   (push-thread-bindings bindings)
-;;   (try
-;;     ...
-;;     (finally
-;;       (pop-thread-bindings)))
-;(defn push-thread-bindings [bindings]
-;  (native/raw "__rt_ctx->push_thread_bindings(~{ bindings }).expect_ok();"))
-;
-;; Pop one set of bindings pushed with push-binding before. It is an error to
-;; pop bindings without pushing before.
-;(defn pop-thread-bindings []
-;  (native/raw "__rt_ctx->pop_thread_bindings().expect_ok();"))
-;
-;; Get a map with the Var/value pairs which is currently in effect for the
-;; current thread.
-;(defn get-thread-bindings []
-;  (native/raw "__value = __rt_ctx->get_thread_bindings();"))
-;
-;; binding => var-symbol init-expr
-;;
-;; Creates new bindings for the (already-existing) vars, with the
-;; supplied initial values, executes the exprs in an implicit do, then
-;; re-establishes the bindings that existed before.  The new bindings
-;; are made in parallel (unlike let); all init-exprs are evaluated
-;; before the vars are bound to their new values.
-;(defmacro binding [bindings & body]
-;  (assert-macro-args
-;    (vector? bindings) "a vector for its binding"
-;    (even? (count bindings)) "an even number of forms in binding vector")
-;  (let [->var-pairs (fn ->var-pairs [var-vals]
-;                      (loop [ret []
-;                             vvs (seq var-vals)]
-;                        (if vvs
-;                          (recur (conj (conj ret `(var ~(first vvs))) (second vvs))
-;                                 (next (next vvs)))
-;                          (seq ret))))]
-;    `(do
-;       (push-thread-bindings (hash-map ~@(->var-pairs bindings)))
-;       (try
-;         ~@body
-;         (catch e#
-;           (throw e#))
-;         (finally
-;           (pop-thread-bindings))))))
-;
-;;; Keywords.
-;(defn keyword? [o]
-;  (native/raw "__value = make_box(~{ o }->type == object_type::keyword)"))
-;(defn simple-keyword? [o]
-;  (native/raw "__value = make_box
-;               (
-;                 ~{ o }->type == object_type::keyword
-;                 && expect_object<obj::keyword>(~{ o })->sym.ns.empty()
-;               );"))
-;(defn qualified-keyword? [o]
-;  (native/raw "__value = make_box
-;               (
-;                 ~{ o }->type == object_type::keyword
-;                 && !expect_object<obj::keyword>(~{ o })->sym.ns.empty()
-;               );"))
-;
-;; Returns a Keyword with the given namespace and name.  Do not use :
-;; in the keyword strings, it will be added automatically.
-;(defn keyword
-;  ([name]
-;   (if (keyword? name)
-;     name
-;     (native/raw "__value = __rt_ctx->intern_keyword(runtime::to_string(~{ name })).expect_ok();")))
-;  ([ns name]
-;   (native/raw "__value = __rt_ctx->intern_keyword
-;                (
-;                  runtime::to_string(~{ ns }),
-;                  runtime::to_string(~{ name })
-;                ).expect_ok();")))
-;
-;(defn simple-symbol? [o]
-;  (native/raw "__value = make_box
-;               (
-;                 ~{ o }->type == object_type::symbol
-;                 && expect_object<obj::symbol>(~{ o })->ns.empty()
-;               );"))
-;(defn qualified-symbol? [o]
-;  (native/raw "__value = make_box
-;               (
-;                 ~{ o }->type == object_type::symbol
-;                 && !expect_object<obj::symbol>(~{ o })->ns.empty()
-;               );"))
-;
-;(defn ident?
-;  "Returns true if x is a symbol or keyword"
-;  [x]
-;  (or (keyword? x) (symbol? x)))
-;
-;(defn simple-ident?
-;  "Returns true if x is a symbol or keyword without a namespace"
-;  [x]
-;  (and (ident? x) (nil? (namespace x))))
-;
-;(defn qualified-ident?
-;  "Returns true if x is a symbol or keyword with a namespace"
-;  [x]
-;  (boolean (and (ident? x) (namespace x) true)))
-;
+;; Vars.
+(def var?
+  "Returns true if v is a var."
+  clojure.core-native.phase-1/var?)
+
+(defmacro ^:private assert-macro-args
+  [& pairs]
+  (list 'do
+        (list 'clojure.core/when-not (first pairs)
+              ; TODO: No need for ex-info, if we had a simpler exception type
+              (list 'throw (list 'clojure.core/ex-info
+                                 (list 'clojure.core/str
+                                       '&form
+                                       " requires "
+                                       (second pairs)
+                                       " in "
+                                       'clojure.core/*ns*
+                                       ":"
+                                       (:line (meta '&form)))
+                                 {})))
+        (let [more (next (next pairs))]
+          (when more
+            (list* 'clojure.core/assert-macro-args more)))))
+
+(defmacro if-let
+  "bindings => binding-form test
+
+  If test is true, evaluates then with binding-form bound to the value of
+  test, if not, yields else"
+  ([bindings then]
+   `(if-let ~bindings ~then nil))
+  ([bindings then else & oldform]
+   (assert-macro-args
+     (vector? bindings) "a vector for its binding"
+     (nil? oldform) "1 or 2 forms after binding vector"
+     (= 2 (count bindings)) "exactly 2 forms in binding vector")
+   (let [form (get bindings 0) tst (get bindings 1)]
+     `(let [temp# ~tst]
+        (if temp#
+          (let [~form temp#]
+            ~then)
+          ~else)))))
+
+(defmacro when-let
+  "bindings => binding-form test
+
+  When test is true, evaluates body with binding-form bound to the value of test"
+  [bindings & body]
+  (assert-macro-args
+    (vector? bindings) "a vector for its binding"
+    (= 2 (count bindings)) "exactly 2 forms in binding vector")
+  (let [form (get bindings 0)
+        tst (get bindings 1)]
+    `(let [temp# ~tst]
+       (when temp#
+         (let [~form temp#]
+           ~@body)))))
+
+(defmacro if-some
+  "bindings => binding-form test
+
+  If test is not nil, evaluates then with binding-form bound to the
+  value of test, if not, yields else"
+  ([bindings then]
+   `(if-some ~bindings ~then nil))
+  ([bindings then else & oldform]
+   (assert-macro-args
+     (vector? bindings) "a vector for its binding"
+     (nil? oldform) "1 or 2 forms after binding vector"
+     (= 2 (count bindings)) "exactly 2 forms in binding vector")
+   (let [form (get bindings 0) tst (get bindings 1)]
+     `(let [temp# ~tst]
+        (if (nil? temp#)
+          ~else
+          (let [~form temp#]
+            ~then))))))
+
+(defmacro when-some
+  "bindings => binding-form test
+
+  When test is not nil, evaluates body with binding-form bound to the
+  value of test"
+  [bindings & body]
+  (assert-macro-args
+    (vector? bindings) "a vector for its binding"
+    (= 2 (count bindings)) "exactly 2 forms in binding vector")
+  (let [form (get bindings 0)
+        tst (get bindings 1)]
+    `(let [temp# ~tst]
+       (if (nil? temp#)
+         nil
+         (let [~form temp#]
+           ~@body)))))
+
+(defmacro dotimes
+  "bindings => name n
+
+   Repeatedly executes body (presumably for side-effects) with name
+   bound to integers from 0 through n-1."
+  [bindings & body]
+  (assert-macro-args
+    (vector? bindings) "a vector for its binding"
+    (= 2 (count bindings)) "exactly 2 forms in binding vector")
+  (let [i (first bindings)
+        n (second bindings)]
+    `(let [n# (int ~n)]
+       (loop [~i 0]
+         (when (< ~i n#)
+           ~@body
+           ; TODO: unchecked-inc
+           (recur (inc ~i)))))))
+
+(def push-thread-bindings
+  "WARNING: This is a low-level function. Prefer high-level macros like
+   binding where ever possible.
+
+   Takes a map of Var/value pairs. Binds each Var to the associated value for
+   the current thread. Each call *MUST* be accompanied by a matching call to
+   pop-thread-bindings wrapped in a try-finally!
+
+   (push-thread-bindings bindings)
+   (try
+     ...
+     (finally
+       (pop-thread-bindings)))"
+  clojure.core-native.phase-1/push-thread-bindings)
+
+(def pop-thread-bindings
+  "Pop one set of bindings pushed with push-binding before. It is an error to
+   pop bindings without pushing before."
+  clojure.core-native.phase-1/pop-thread-bindings)
+
+(def get-thread-bindings
+  "Get a map with the Var/value pairs which is currently in effect for the
+   current thread."
+  clojure.core-native.phase-1/get-thread-bindings)
+
+(defmacro binding
+  "binding => var-symbol init-expr
+
+   Creates new bindings for the (already-existing) vars, with the
+   supplied initial values, executes the exprs in an implicit do, then
+   re-establishes the bindings that existed before.  The new bindings
+   are made in parallel (unlike let); all init-exprs are evaluated
+   before the vars are bound to their new values."
+  [bindings & body]
+  (assert-macro-args
+    (vector? bindings) "a vector for its binding"
+    (even? (count bindings)) "an even number of forms in binding vector")
+  (let [->var-pairs (fn ->var-pairs [var-vals]
+                      (loop [ret []
+                             vvs (seq var-vals)]
+                        (if vvs
+                          (recur (conj (conj ret `(var ~(first vvs))) (second vvs))
+                                 (next (next vvs)))
+                          (seq ret))))]
+    `(do
+       (push-thread-bindings (hash-map ~@(->var-pairs bindings)))
+       (try
+         ~@body
+         (catch e#
+           (throw e#))
+         (finally
+           (pop-thread-bindings))))))
+
+;; Keywords.
+(def keyword?
+  "Return true if x is a Keyword"
+  clojure.core-native.phase-1/keyword?)
+(def simple-keyword?
+  "Return true if x is a keyword without a namespace"
+  clojure.core-native.phase-1/simple-keyword?)
+(def qualified-keyword?
+  "Return true if x is a keyword with a namespace"
+  clojure.core-native.phase-1/qualified-keyword?)
+
+(defn keyword
+  "Returns a Keyword with the given namespace and name.  Do not use :
+   in the keyword strings, it will be added automatically."
+  ([name]
+   (if (keyword? name)
+     name
+     (clojure.core-native.phase-1/keyword "" name)))
+  ([ns name]
+   (clojure.core-native.phase-1/keyword ns name)))
+
+(defn ident?
+  "Returns true if x is a symbol or keyword"
+  [x]
+  (or (keyword? x) (symbol? x)))
+
+(defn simple-ident?
+  "Returns true if x is a symbol or keyword without a namespace"
+  [x]
+  (and (ident? x) (nil? (namespace x))))
+
+(defn qualified-ident?
+  "Returns true if x is a symbol or keyword with a namespace"
+  [x]
+  (boolean (and (ident? x) (namespace x) true)))
+
 ;;; Sequences.
 ;(defn iterate [f x]
 ;  (native/raw "__value = make_box<obj::iterator>(~{ f }, ~{ x });"))

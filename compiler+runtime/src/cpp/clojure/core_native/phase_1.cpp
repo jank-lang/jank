@@ -61,6 +61,11 @@ namespace clojure::core_native::phase_1
   {
     return make_box<obj::lazy_sequence>(o);
   }
+
+  object_ptr is_var(object_ptr const o)
+  {
+    return make_box(o->type == object_type::var);
+  }
 }
 
 jank_object_ptr jank_load_clojure_core_native_phase_1()
@@ -206,6 +211,16 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("named?", &is_named);
   intern_fn("name", &name);
   intern_fn("namespace", &namespace_);
+  intern_fn("var?", &phase_1::is_var);
+  intern_fn("push-thread-bindings", &push_thread_bindings);
+  intern_fn("pop-thread-bindings", &pop_thread_bindings);
+  intern_fn("get-thread-bindings", &get_thread_bindings);
+  intern_fn("keyword?", &is_keyword);
+  intern_fn("simple-keyword?", &is_simple_keyword);
+  intern_fn("qualified-keyword?", &is_qualified_keyword);
+  intern_fn("keyword", &keyword);
+  intern_fn("simple-symbol?", &is_simple_symbol);
+  intern_fn("qualified-symbol?", &is_qualified_symbol);
 
   {
     auto const fn(

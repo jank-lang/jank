@@ -75,6 +75,16 @@ namespace jank::runtime
     return o->type == object_type::symbol;
   }
 
+  native_bool is_simple_symbol(object_ptr const o)
+  {
+    return o->type == object_type::symbol && expect_object<obj::symbol>(o)->ns.empty();
+  }
+
+  native_bool is_qualified_symbol(object_ptr const o)
+  {
+    return o->type == object_type::symbol && !expect_object<obj::symbol>(o)->ns.empty();
+  }
+
   object_ptr print(object_ptr const args)
   {
     visit_object(
@@ -386,6 +396,26 @@ namespace jank::runtime
       o);
   }
 
+  object_ptr keyword(object_ptr const ns, object_ptr const name)
+  {
+    return __rt_ctx->intern_keyword(runtime::to_string(ns), runtime::to_string(name)).expect_ok();
+  }
+
+  native_bool is_keyword(object_ptr const o)
+  {
+    return o->type == object_type::keyword;
+  }
+
+  native_bool is_simple_keyword(object_ptr const o)
+  {
+    return o->type == object_type::keyword && expect_object<obj::keyword>(o)->sym.ns.empty();
+  }
+
+  native_bool is_qualified_keyword(object_ptr const o)
+  {
+    return o->type == object_type::keyword && !expect_object<obj::keyword>(o)->sym.ns.empty();
+  }
+
   native_bool is_callable(object_ptr const o)
   {
     return visit_object(
@@ -525,5 +555,20 @@ namespace jank::runtime
   object_ptr vreset(object_ptr const v, object_ptr const new_val)
   {
     return expect_object<obj::volatile_>(v)->reset(new_val);
+  }
+
+  void push_thread_bindings(object_ptr const o)
+  {
+    __rt_ctx->push_thread_bindings(o).expect_ok();
+  }
+
+  void pop_thread_bindings()
+  {
+    __rt_ctx->pop_thread_bindings().expect_ok();
+  }
+
+  object_ptr get_thread_bindings()
+  {
+    return __rt_ctx->get_thread_bindings();
   }
 }
