@@ -131,7 +131,7 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("apply*", &apply_to);
   intern_fn("transientable?", &is_transientable);
   intern_fn("transient", &transient);
-  intern_fn("persistent", &persistent);
+  intern_fn("persistent!", &persistent);
   intern_fn("conj-in-place!", &conj_in_place);
   intern_fn("assoc-in-place!", &assoc_in_place);
   intern_fn("dissoc-in-place!", &dissoc_in_place);
@@ -285,7 +285,7 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
 
   {
     auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, false, false)));
     fn->arity_0 = []() -> object * { return gensym(make_box("G__")); };
     fn->arity_1 = [](object * const prefix) -> object * { return gensym(prefix); };
     intern_fn_obj("gensym", fn);
@@ -339,12 +339,32 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
 
   {
     auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, false, false)));
     fn->arity_2 = [](object * const s, object * const start) -> object * { return subs(s, start); };
     fn->arity_3 = [](object * const s, object * const start, object * const end) -> object * {
       return subs(s, start, end);
     };
     intern_fn_obj("subs", fn);
+  }
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
+    fn->arity_0 = []() -> object * { return obj::persistent_hash_map::empty(); };
+    fn->arity_1 = [](object * const kvs) -> object * {
+      return obj::persistent_hash_map::create_from_seq(kvs);
+    };
+    intern_fn_obj("hash-map", fn);
+  }
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
+    fn->arity_0 = []() -> object * { return obj::persistent_sorted_map::empty(); };
+    fn->arity_1 = [](object * const kvs) -> object * {
+      return obj::persistent_sorted_map::create_from_seq(kvs);
+    };
+    intern_fn_obj("sorted-map", fn);
   }
 
   return erase(obj::nil::nil_const());

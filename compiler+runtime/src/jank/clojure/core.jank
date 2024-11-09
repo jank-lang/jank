@@ -400,11 +400,11 @@
   "Returns a new, transient version of the collection, in constant time."
   clojure.core-native.phase-1/transient)
 
-(def persistent
+(def persistent!
   "Returns a new, persistent version of the transient collection, in
    constant time. The transient collection cannot be used after this
    call, any such use will throw an exception."
-  clojure.core-native.phase-1/persistent)
+  clojure.core-native.phase-1/persistent!)
 
 (defn conj!
   ([]
@@ -1358,44 +1358,44 @@
         (recur threaded (next forms)))
       x)))
 
-;;; Maps.
-;(defn hash-map
-;  ([]
-;   ; XXX: Clojure returns an array map for this arity, but that sucks.
-;   (native/raw "__value = obj::persistent_hash_map::empty();"))
-;  ([& kvs]
-;   (native/raw "__value = obj::persistent_hash_map::create_from_seq(~{ kvs });")))
-;
-;(defn sorted-map
-;  ([]
-;   (native/raw "__value = obj::persistent_sorted_map::empty();"))
-;  ([& kvs]
-;   (native/raw "__value = obj::persistent_sorted_map::create_from_seq(~{ kvs });")))
-;
-;(defn key
-;  "Returns the key of the map entry."
-;  [e]
-;  (first e))
-;
-;(defn val
-;  "Returns the value in the map entry."
-;  [e]
-;  (second e))
-;
-;(defn keys [m]
-;  ; TODO: Use a proper key seq instead.
-;  (reduce (fn [acc kv]
-;            (conj acc (first kv)))
-;          []
-;          m))
-;
-;(defn vals [m]
-;  ; TODO: Use a proper val seq instead.
-;  (reduce (fn [acc kv]
-;            (conj acc (second kv)))
-;          []
-;          m))
-;
+;; Maps.
+; XXX: Clojure returns an array map for the nullary arity, but that sucks.
+(def hash-map
+  "keyval => key val
+   Returns a new hash map with supplied mappings. If any keys are
+   equal, they are handled as if by repeated uses of assoc."
+  clojure.core-native.phase-1/hash-map)
+
+(def sorted-map
+  "keyval => key val
+   Returns a new sorted map with supplied mappings. If any keys are
+   equal, they are handled as if by repeated uses of assoc."
+  clojure.core-native.phase-1/sorted-map)
+
+(defn key
+  "Returns the key of the map entry."
+  [e]
+  (first e))
+
+(defn val
+  "Returns the value in the map entry."
+  [e]
+  (second e))
+
+(defn keys [m]
+  ; TODO: Use a proper key seq instead.
+  (reduce (fn [acc kv]
+            (conj acc (first kv)))
+          []
+          m))
+
+(defn vals [m]
+  ; TODO: Use a proper val seq instead.
+  (reduce (fn [acc kv]
+            (conj acc (second kv)))
+          []
+          m))
+
 ;(defn get
 ;  ([m k]
 ;   (native/raw "__value = jank::runtime::get(~{ m }, ~{ k });"))
@@ -1441,19 +1441,19 @@
 ;                acc)))
 ;          {}
 ;          ks))
-;
-;; Returns a map with the keys mapped to the corresponding vals.
-;(defn zipmap [keys vals]
-;  (loop* [map (transient (hash-map))
-;          ks (seq keys)
-;          vs (seq vals)]
-;    (if (and ks vs)
-;      (recur (assoc! map (first ks) (first vs))
-;             (next ks)
-;             (next vs))
-;      (persistent! map))))
-;
-;;; Sets.
+
+; Returns a map with the keys mapped to the corresponding vals.
+(defn zipmap [keys vals]
+  (loop* [map (transient (hash-map))
+          ks (seq keys)
+          vs (seq vals)]
+    (if (and ks vs)
+      (recur (assoc! map (first ks) (first vs))
+             (next ks)
+             (next vs))
+      (persistent! map))))
+
+;; Sets.
 ;(defn hash-set
 ;  "Returns a new hash set with supplied keys.  Any equal keys are
 ;  handled as if by repeated uses of conj."
@@ -1515,18 +1515,18 @@
 ;
 ;(defn namespace [o]
 ;  (native/raw "__value = make_box(runtime::namespace_(~{ o }));"))
-;
-;;; Sequences.
-;; This is defined to be lazy later on.
-;(defn drop
-;  ([n coll]
-;   (let [step (fn [n acc]
-;                (let [s (seq acc)]
-;                  (if (and (pos? n) s)
-;                    (recur (dec n) (rest s))
-;                    acc)))]
-;     (step n coll))))
-;
+
+;; Sequences.
+; This is defined to be lazy later on.
+(defn drop
+  ([n coll]
+   (let [step (fn [n acc]
+                (let [s (seq acc)]
+                  (if (and (pos? n) s)
+                    (recur (dec n) (rest s))
+                    acc)))]
+     (step n coll))))
+
 ;;; Vars.
 ;(defn var? [o]
 ;  (native/raw "__value = make_box(~{ o }->type == object_type::var)"))
