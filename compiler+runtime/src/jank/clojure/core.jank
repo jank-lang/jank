@@ -1004,367 +1004,360 @@
   "Returns true if n is odd, throws an exception if n is not an integer"
   clojure.core-native.phase-1/odd?)
 
-;;; Random.
-;(defn
-;  ^{:arities {0 {:supports-unboxed-input? true
-;                 :unboxed-output? true}}}
-;  rand
-;  ([]
-;   (native/raw "__value = make_box(jank::runtime::rand());"))
-;  ([n]
-;   (* (rand) n)))
-;
+;; Random.
+(defn rand
+  "Returns a random floating point number between 0 (inclusive) and
+   n (default 1) (exclusive)."
+  ([]
+   (clojure.core-native.phase-1/rand))
+  ([n]
+   (* (rand) n)))
+
 ;; Strings.
-;
-;(defn subs
-;  ([s start]
-;   (native/raw "__value = runtime::subs(~{ s }, ~{ start });"))
-;  ([s start end]
-;   (native/raw "__value = runtime::subs(~{ s }, ~{ start }, ~{ end });")))
-;
-;(defn- first-index-of [s m]
-;  (native/raw "__value = make_box(runtime::first_index_of(~{ s }, ~{ m }));"))
-;(defn- last-index-of [s m]
-;  (native/raw "__value = make_box(runtime::last_index_of(~{ s }, ~{ m }));"))
-;
-;;; Sequences (again).
-;(defn sequential? [o]
-;  (native/raw "__value = make_box(is_sequential(~{ o }));"))
-;
-;(defn reverse [coll]
-;  (reduce conj () coll))
-;
-;; XXX: This will be redefined later on, to be lazy.
-;(defn concat
-;  ([]
-;   '())
-;  ([x]
-;   (seq x))
-;  ([x y]
-;   (reduce (fn [acc e]
-;             (cons e acc))
-;           y
-;           (reverse x)))
-;  ([x y & zs]
-;   (let [r (concat x y)]
-;     (if (empty? zs)
-;       r
-;       (recur r (first zs) (rest zs))))))
-;
-;; Returns true if (pred x) is logical true for every x in coll, else false.
-;(defn every? [pred coll]
-;  (cond
-;    (nil? (seq coll)) true
-;    (pred (first coll)) (recur pred (next coll))
-;    :else false))
-;
-;; Creates a new vector containing the args.
-;(defn vector
-;  ([]
-;   [])
-;  ([a]
-;   [a])
-;  ([a b]
-;   [a b])
-;  ([a b c]
-;   [a b c])
-;  ([a b c d]
-;   [a b c d])
-;	([a b c d e]
-;   [a b c d e])
-;	([a b c d e f]
-;   [a b c d e f])
-;  ([a b c d e f & args]
-;   ; TODO: LazilyPersistentVector
-;   (vec (concat [a b c d e f] args))))
-;
-;(defn lazy-seq* [fun]
-;  (native/raw "__value = make_box<obj::lazy_sequence>(~{ fun });"))
-;
-;; Takes a body of expressions that returns an ISeq or nil, and yields
-;; a Seqable object that will invoke the body only the first time seq
-;; is called, and will cache the result and return it on all subsequent
-;; seq calls. See also - realized?
-;(defmacro lazy-seq [& body]
-;  `(lazy-seq* (fn lazy-seq# [] ~@body)))
-;
-;(defn chunk-buffer [capacity]
-;  (native/raw "__value = make_box<obj::chunk_buffer>(~{ capacity });"))
-;
-;(defn chunk-append [b x]
-;  (native/raw "auto const buffer(try_object<obj::chunk_buffer>(b));
-;               buffer->append(~{ x });"))
-;
-;(defn chunk [b]
-;  (native/raw "auto const buffer(try_object<obj::chunk_buffer>(b));
-;               __value = buffer->chunk();"))
-;
-;(defn chunk-first [o]
-;  (native/raw "__value = runtime::chunk_first(~{ o });"))
-;
-;(defn chunk-next [o]
-;  (native/raw "__value = runtime::chunk_next(~{ o });"))
-;
-;(defn chunk-rest [o]
-;  (native/raw "__value = runtime::chunk_rest(~{ o });"))
-;
-;(defn chunk-cons [chunk rest]
-;  (if (empty? chunk)
-;    rest
-;    (native/raw "__value = make_box<obj::chunked_cons>(~{ chunk }, ~{ (seq rest) });")))
-;
-;(defn chunked-seq? [o]
-;  (native/raw "__value = make_box(is_chunked_seq(~{ o }));"))
-;
-;; Repeatedly executes body (presumably for side-effects) with
-;; bindings and filtering as provided by `for`.  Does not retain
-;; the head of the sequence. Returns nil.
-;; TODO: Support more bindings
-;; TODO: Support `for` functionality
-;(defmacro doseq [bindings & body]
-;  (let [arg (first bindings)
-;        s (second bindings)]
-;    (list 'clojure.core/reduce (concat (list 'clojure.core/fn ['_ arg])
-;                                       body
-;                                       [nil])
-;          nil
-;          s)))
-;
-;; Returns a lazy seq representing the concatenation of the elements in the supplied colls.
-;(defn concat
-;  ([] (lazy-seq nil))
-;  ([x] (lazy-seq x))
-;  ([x y]
-;   (lazy-seq
-;     (let [s (seq x)]
-;       (if s
-;         (if (chunked-seq? s)
-;           (chunk-cons (chunk-first s) (concat (chunk-rest s) y))
-;           (cons (first s) (concat (rest s) y)))
-;         y))))
-;  ([x y & zs]
-;   (let [cat (fn cat [xys zs]
-;               (lazy-seq
-;                 (let [xys (seq xys)]
-;                   (if xys
-;                     (if (chunked-seq? xys)
-;                       (chunk-cons (chunk-first xys)
-;                                   (cat (chunk-rest xys) zs))
-;                       (cons (first xys) (cat (rest xys) zs)))
-;                     (when zs
-;                       (cat (first zs) (next zs)))))))]
-;     (cat (concat x y) zs))))
-;
-;(defn juxt
-;  "Takes a set of functions and returns a fn that is the juxtaposition
-;  of those fns.  The returned fn takes a variable number of args, and
-;  returns a vector containing the result of applying each fn to the
-;  args (left-to-right).
-;  ((juxt a b c) x) => [(a x) (b x) (c x)]"
-;  ([f]
-;     (fn
-;       ([] [(f)])
-;       ([x] [(f x)])
-;       ([x y] [(f x y)])
-;       ([x y z] [(f x y z)])
-;       ([x y z & args] [(apply f x y z args)])))
-;  ([f g]
-;     (fn
-;       ([] [(f) (g)])
-;       ([x] [(f x) (g x)])
-;       ([x y] [(f x y) (g x y)])
-;       ([x y z] [(f x y z) (g x y z)])
-;       ([x y z & args] [(apply f x y z args) (apply g x y z args)])))
-;  ([f g h]
-;     (fn
-;       ([] [(f) (g) (h)])
-;       ([x] [(f x) (g x) (h x)])
-;       ([x y] [(f x y) (g x y) (h x y)])
-;       ([x y z] [(f x y z) (g x y z) (h x y z)])
-;       ([x y z & args] [(apply f x y z args) (apply g x y z args) (apply h x y z args)])))
-;  ([f g h & fs]
-;     (let [fs (list* f g h fs)]
-;       (fn
-;         ([] (reduce #(conj %1 (%2)) [] fs))
-;         ([x] (reduce #(conj %1 (%2 x)) [] fs))
-;         ([x y] (reduce #(conj %1 (%2 x y)) [] fs))
-;         ([x y z] (reduce #(conj %1 (%2 x y z)) [] fs))
-;         ([x y z & args] (reduce #(conj %1 (apply %2 x y z args)) [] fs))))))
-;
-;(defn partial
-;  "Takes a function f and fewer than the normal arguments to f, and
-;  returns a fn that takes a variable number of additional args. When
-;  called, the returned function calls f with args + additional args."
-;  ([f] f)
-;  ([f arg1]
-;   (fn
-;     ([] (f arg1))
-;     ([x] (f arg1 x))
-;     ([x y] (f arg1 x y))
-;     ([x y z] (f arg1 x y z))
-;     ([x y z & args] (apply f arg1 x y z args))))
-;  ([f arg1 arg2]
-;   (fn
-;     ([] (f arg1 arg2))
-;     ([x] (f arg1 arg2 x))
-;     ([x y] (f arg1 arg2 x y))
-;     ([x y z] (f arg1 arg2 x y z))
-;     ([x y z & args] (apply f arg1 arg2 x y z args))))
-;  ([f arg1 arg2 arg3]
-;   (fn
-;     ([] (f arg1 arg2 arg3))
-;     ([x] (f arg1 arg2 arg3 x))
-;     ([x y] (f arg1 arg2 arg3 x y))
-;     ([x y z] (f arg1 arg2 arg3 x y z))
-;     ([x y z & args] (apply f arg1 arg2 arg3 x y z args))))
-;  ([f arg1 arg2 arg3 & more]
-;   (fn [& args] (apply f arg1 arg2 arg3 (concat more args)))))
-;
-;(defn fnil
-;  "Takes a function f, and returns a function that calls f, replacing
-;  a nil first argument to f with the supplied value x. Higher arity
-;  versions can replace arguments in the second and third
-;  positions (y, z). Note that the function f can take any number of
-;  arguments, not just the one(s) being nil-patched."
-;  ([f x]
-;   (fn
-;     ([a] (f (if (nil? a) x a)))
-;     ([a b] (f (if (nil? a) x a) b))
-;     ([a b c] (f (if (nil? a) x a) b c))
-;     ([a b c & ds] (apply f (if (nil? a) x a) b c ds))))
-;  ([f x y]
-;   (fn
-;     ([a b] (f (if (nil? a) x a) (if (nil? b) y b)))
-;     ([a b c] (f (if (nil? a) x a) (if (nil? b) y b) c))
-;     ([a b c & ds] (apply f (if (nil? a) x a) (if (nil? b) y b) c ds))))
-;  ([f x y z]
-;   (fn
-;     ([a b] (f (if (nil? a) x a) (if (nil? b) y b)))
-;     ([a b c] (f (if (nil? a) x a) (if (nil? b) y b) (if (nil? c) z c)))
-;     ([a b c & ds] (apply f (if (nil? a) x a) (if (nil? b) y b) (if (nil? c) z c) ds)))))
-;
-;; Returns the first logical true value of (pred x) for any x in coll,
-;; else nil.  One common idiom is to use a set as pred, for example
-;; this will return :fred if :fred is in the sequence, otherwise nil:
-;; (some #{:fred} coll)
-;(defn some [pred coll]
-;  (let [s (seq coll)]
-;    (when s
-;      (or (pred (first s)) (recur pred (next s))))))
-;
-;
-;(defn every-pred
-;  "Takes a set of predicates and returns a function f that returns true if all of its
-;  composing predicates return a logical true value against all of its arguments, else it returns
-;  false. Note that f is short-circuiting in that it will stop execution on the first
-;  argument that triggers a logical false result against the original predicates."
-;  ([p]
-;     (fn ep1
-;       ([] true)
-;       ([x] (boolean (p x)))
-;       ([x y] (boolean (and (p x) (p y))))
-;       ([x y z] (boolean (and (p x) (p y) (p z))))
-;       ([x y z & args] (boolean (and (ep1 x y z)
-;                                     (every? p args))))))
-;  ([p1 p2]
-;     (fn ep2
-;       ([] true)
-;       ([x] (boolean (and (p1 x) (p2 x))))
-;       ([x y] (boolean (and (p1 x) (p1 y) (p2 x) (p2 y))))
-;       ([x y z] (boolean (and (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z))))
-;       ([x y z & args] (boolean (and (ep2 x y z)
-;                                     (every? #(and (p1 %) (p2 %)) args))))))
-;  ([p1 p2 p3]
-;     (fn ep3
-;       ([] true)
-;       ([x] (boolean (and (p1 x) (p2 x) (p3 x))))
-;       ([x y] (boolean (and (p1 x) (p1 y) (p2 x) (p2 y) (p3 x) (p3 y))))
-;       ([x y z] (boolean (and (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z) (p3 x) (p3 y) (p3 z))))
-;       ([x y z & args] (boolean (and (ep3 x y z)
-;                                     (every? #(and (p1 %) (p2 %) (p3 %)) args))))))
-;  ([p1 p2 p3 & ps]
-;     (let [ps (list* p1 p2 p3 ps)]
-;       (fn epn
-;         ([] true)
-;         ([x] (every? #(% x) ps))
-;         ([x y] (every? #(and (% x) (% y)) ps))
-;         ([x y z] (every? #(and (% x) (% y) (% z)) ps))
-;         ([x y z & args] (boolean (and (epn x y z)
-;                                       (every? #(every? % args) ps))))))))
-;
-;(defn some-fn
-;  "Takes a set of predicates and returns a function f that returns the first logical true value
-;  returned by one of its composing predicates against any of its arguments, else it returns
-;  logical false. Note that f is short-circuiting in that it will stop execution on the first
-;  argument that triggers a logical true result against the original predicates."
-;  ([p]
-;     (fn sp1
-;       ([] nil)
-;       ([x] (p x))
-;       ([x y] (or (p x) (p y)))
-;       ([x y z] (or (p x) (p y) (p z)))
-;       ([x y z & args] (or (sp1 x y z)
-;                           (some p args)))))
-;  ([p1 p2]
-;     (fn sp2
-;       ([] nil)
-;       ([x] (or (p1 x) (p2 x)))
-;       ([x y] (or (p1 x) (p1 y) (p2 x) (p2 y)))
-;       ([x y z] (or (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z)))
-;       ([x y z & args] (or (sp2 x y z)
-;                           (some #(or (p1 %) (p2 %)) args)))))
-;  ([p1 p2 p3]
-;     (fn sp3
-;       ([] nil)
-;       ([x] (or (p1 x) (p2 x) (p3 x)))
-;       ([x y] (or (p1 x) (p1 y) (p2 x) (p2 y) (p3 x) (p3 y)))
-;       ([x y z] (or (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z) (p3 x) (p3 y) (p3 z)))
-;       ([x y z & args] (or (sp3 x y z)
-;                           (some #(or (p1 %) (p2 %) (p3 %)) args)))))
-;  ([p1 p2 p3 & ps]
-;     (let [ps (list* p1 p2 p3 ps)]
-;       (fn spn
-;         ([] nil)
-;         ([x] (some #(% x) ps))
-;         ([x y] (some #(or (% x) (% y)) ps))
-;         ([x y z] (some #(or (% x) (% y) (% z)) ps))
-;         ([x y z & args] (or (spn x y z)
-;                             (some #(some % args) ps)))))))
-;
-;
-;(defn not-any? [pred coll]
-;  (not (some pred coll)))
-;
-;; Threads the expr through the forms. Inserts x as the
-;; second item in the first form, making a list of it if it is not a
-;; list already. If there are more forms, inserts the first form as the
-;; second item in second form, etc.
-;(defmacro -> [x & forms]
-;  (loop* [x x
-;          forms forms]
-;    (if forms
-;      (let [form (first forms)
-;            threaded (if (seq? form)
-;                       (with-meta `(~(first form) ~x ~@(next form)) (meta form))
-;                       (list form x))]
-;        (recur threaded (next forms)))
-;      x)))
-;
-;; Threads the expr through the forms. Inserts x as the
-;; last item in the first form, making a list of it if it is not a
-;; list already. If there are more forms, inserts the first form as the
-;; last item in second form, etc.
-;(defmacro ->> [x & forms]
-;  (loop* [x x
-;          forms forms]
-;    (if forms
-;      (let [form (first forms)
-;            threaded (if (seq? form)
-;                       (with-meta `(~(first form) ~@(next form)  ~x) (meta form))
-;                       (list form x))]
-;        (recur threaded (next forms)))
-;      x)))
-;
+(def subs
+  "Returns the substring of s beginning at start inclusive, and ending
+   at end (defaults to length of string), exclusive."
+  clojure.core-native.phase-1/subs)
+
+(def ^:private first-index-of clojure.core-native.phase-1/first-index-of)
+(def ^:private last-index-of clojure.core-native.phase-1/last-index-of)
+
+;; Sequences (again).
+(def sequential?
+  "Returns true if coll implements sequential"
+  clojure.core-native.phase-1/sequential?)
+
+(defn reverse [coll]
+  (reduce conj '() coll))
+
+; XXX: This will be redefined later on, to be lazy.
+(defn concat
+  ([]
+   '())
+  ([x]
+   (seq x))
+  ([x y]
+   (reduce (fn [acc e]
+             (cons e acc))
+           y
+           (reverse x)))
+  ([x y & zs]
+   (let [r (concat x y)]
+     (if (empty? zs)
+       r
+       (recur r (first zs) (rest zs))))))
+
+; Returns true if (pred x) is logical true for every x in coll, else false.
+(defn every? [pred coll]
+  (cond
+    (nil? (seq coll)) true
+    (pred (first coll)) (recur pred (next coll))
+    :else false))
+
+; Creates a new vector containing the args.
+(defn vector
+  ([]
+   [])
+  ([a]
+   [a])
+  ([a b]
+   [a b])
+  ([a b c]
+   [a b c])
+  ([a b c d]
+   [a b c d])
+	([a b c d e]
+   [a b c d e])
+	([a b c d e f]
+   [a b c d e f])
+  ([a b c d e f & args]
+   ; TODO: LazilyPersistentVector
+   (vec (concat [a b c d e f] args))))
+
+(def ^:private lazy-seq* clojure.core-native.phase-1/lazy-seq*)
+
+; Takes a body of expressions that returns an ISeq or nil, and yields
+; a Seqable object that will invoke the body only the first time seq
+; is called, and will cache the result and return it on all subsequent
+; seq calls. See also - realized?
+(defmacro lazy-seq [& body]
+  `(lazy-seq* (fn lazy-seq# [] ~@body)))
+
+(def chunk-buffer
+  clojure.core-native.phase-1/chunk-buffer)
+
+(def chunk-append
+  clojure.core-native.phase-1/chunk-append)
+
+(def chunk
+  clojure.core-native.phase-1/chunk)
+
+(def chunk-first
+  clojure.core-native.phase-1/chunk-first)
+
+(def chunk-next
+  clojure.core-native.phase-1/chunk-next)
+
+(def chunk-rest
+  clojure.core-native.phase-1/chunk-rest)
+
+(defn chunk-cons [chunk rest]
+  (if (empty? chunk)
+    rest
+    (clojure.core-native.phase-1/chunk-cons chunk rest)))
+
+(def chunked-seq?
+  clojure.core-native.phase-1/chunk-seq?)
+
+; Repeatedly executes body (presumably for side-effects) with
+; bindings and filtering as provided by `for`.  Does not retain
+; the head of the sequence. Returns nil.
+; TODO: Support more bindings
+; TODO: Support `for` functionality
+(defmacro doseq [bindings & body]
+  (let [arg (first bindings)
+        s (second bindings)]
+    (list 'clojure.core/reduce (concat (list 'clojure.core/fn ['_ arg])
+                                       body
+                                       [nil])
+          nil
+          s)))
+
+; Returns a lazy seq representing the concatenation of the elements in the supplied colls.
+(defn concat
+  ([] (lazy-seq nil))
+  ([x] (lazy-seq x))
+  ([x y]
+   (lazy-seq
+     (let [s (seq x)]
+       (if s
+         (if (chunked-seq? s)
+           (chunk-cons (chunk-first s) (concat (chunk-rest s) y))
+           (cons (first s) (concat (rest s) y)))
+         y))))
+  ([x y & zs]
+   (let [cat (fn cat [xys zs]
+               (lazy-seq
+                 (let [xys (seq xys)]
+                   (if xys
+                     (if (chunked-seq? xys)
+                       (chunk-cons (chunk-first xys)
+                                   (cat (chunk-rest xys) zs))
+                       (cons (first xys) (cat (rest xys) zs)))
+                     (when zs
+                       (cat (first zs) (next zs)))))))]
+     (cat (concat x y) zs))))
+
+(defn juxt
+  "Takes a set of functions and returns a fn that is the juxtaposition
+  of those fns.  The returned fn takes a variable number of args, and
+  returns a vector containing the result of applying each fn to the
+  args (left-to-right).
+  ((juxt a b c) x) => [(a x) (b x) (c x)]"
+  ([f]
+     (fn
+       ([] [(f)])
+       ([x] [(f x)])
+       ([x y] [(f x y)])
+       ([x y z] [(f x y z)])
+       ([x y z & args] [(apply f x y z args)])))
+  ([f g]
+     (fn
+       ([] [(f) (g)])
+       ([x] [(f x) (g x)])
+       ([x y] [(f x y) (g x y)])
+       ([x y z] [(f x y z) (g x y z)])
+       ([x y z & args] [(apply f x y z args) (apply g x y z args)])))
+  ([f g h]
+     (fn
+       ([] [(f) (g) (h)])
+       ([x] [(f x) (g x) (h x)])
+       ([x y] [(f x y) (g x y) (h x y)])
+       ([x y z] [(f x y z) (g x y z) (h x y z)])
+       ([x y z & args] [(apply f x y z args) (apply g x y z args) (apply h x y z args)])))
+  ([f g h & fs]
+     (let [fs (list* f g h fs)]
+       (fn
+         ([] (reduce #(conj %1 (%2)) [] fs))
+         ([x] (reduce #(conj %1 (%2 x)) [] fs))
+         ([x y] (reduce #(conj %1 (%2 x y)) [] fs))
+         ([x y z] (reduce #(conj %1 (%2 x y z)) [] fs))
+         ([x y z & args] (reduce #(conj %1 (apply %2 x y z args)) [] fs))))))
+
+(defn partial
+  "Takes a function f and fewer than the normal arguments to f, and
+  returns a fn that takes a variable number of additional args. When
+  called, the returned function calls f with args + additional args."
+  ([f] f)
+  ([f arg1]
+   (fn
+     ([] (f arg1))
+     ([x] (f arg1 x))
+     ([x y] (f arg1 x y))
+     ([x y z] (f arg1 x y z))
+     ([x y z & args] (apply f arg1 x y z args))))
+  ([f arg1 arg2]
+   (fn
+     ([] (f arg1 arg2))
+     ([x] (f arg1 arg2 x))
+     ([x y] (f arg1 arg2 x y))
+     ([x y z] (f arg1 arg2 x y z))
+     ([x y z & args] (apply f arg1 arg2 x y z args))))
+  ([f arg1 arg2 arg3]
+   (fn
+     ([] (f arg1 arg2 arg3))
+     ([x] (f arg1 arg2 arg3 x))
+     ([x y] (f arg1 arg2 arg3 x y))
+     ([x y z] (f arg1 arg2 arg3 x y z))
+     ([x y z & args] (apply f arg1 arg2 arg3 x y z args))))
+  ([f arg1 arg2 arg3 & more]
+   (fn [& args] (apply f arg1 arg2 arg3 (concat more args)))))
+
+(defn fnil
+  "Takes a function f, and returns a function that calls f, replacing
+  a nil first argument to f with the supplied value x. Higher arity
+  versions can replace arguments in the second and third
+  positions (y, z). Note that the function f can take any number of
+  arguments, not just the one(s) being nil-patched."
+  ([f x]
+   (fn
+     ([a] (f (if (nil? a) x a)))
+     ([a b] (f (if (nil? a) x a) b))
+     ([a b c] (f (if (nil? a) x a) b c))
+     ([a b c & ds] (apply f (if (nil? a) x a) b c ds))))
+  ([f x y]
+   (fn
+     ([a b] (f (if (nil? a) x a) (if (nil? b) y b)))
+     ([a b c] (f (if (nil? a) x a) (if (nil? b) y b) c))
+     ([a b c & ds] (apply f (if (nil? a) x a) (if (nil? b) y b) c ds))))
+  ([f x y z]
+   (fn
+     ([a b] (f (if (nil? a) x a) (if (nil? b) y b)))
+     ([a b c] (f (if (nil? a) x a) (if (nil? b) y b) (if (nil? c) z c)))
+     ([a b c & ds] (apply f (if (nil? a) x a) (if (nil? b) y b) (if (nil? c) z c) ds)))))
+
+; Returns the first logical true value of (pred x) for any x in coll,
+; else nil.  One common idiom is to use a set as pred, for example
+; this will return :fred if :fred is in the sequence, otherwise nil:
+; (some #{:fred} coll)
+(defn some [pred coll]
+  (let [s (seq coll)]
+    (when s
+      (or (pred (first s)) (recur pred (next s))))))
+
+
+(defn every-pred
+  "Takes a set of predicates and returns a function f that returns true if all of its
+  composing predicates return a logical true value against all of its arguments, else it returns
+  false. Note that f is short-circuiting in that it will stop execution on the first
+  argument that triggers a logical false result against the original predicates."
+  ([p]
+     (fn ep1
+       ([] true)
+       ([x] (boolean (p x)))
+       ([x y] (boolean (and (p x) (p y))))
+       ([x y z] (boolean (and (p x) (p y) (p z))))
+       ([x y z & args] (boolean (and (ep1 x y z)
+                                     (every? p args))))))
+  ([p1 p2]
+     (fn ep2
+       ([] true)
+       ([x] (boolean (and (p1 x) (p2 x))))
+       ([x y] (boolean (and (p1 x) (p1 y) (p2 x) (p2 y))))
+       ([x y z] (boolean (and (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z))))
+       ([x y z & args] (boolean (and (ep2 x y z)
+                                     (every? #(and (p1 %) (p2 %)) args))))))
+  ([p1 p2 p3]
+     (fn ep3
+       ([] true)
+       ([x] (boolean (and (p1 x) (p2 x) (p3 x))))
+       ([x y] (boolean (and (p1 x) (p1 y) (p2 x) (p2 y) (p3 x) (p3 y))))
+       ([x y z] (boolean (and (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z) (p3 x) (p3 y) (p3 z))))
+       ([x y z & args] (boolean (and (ep3 x y z)
+                                     (every? #(and (p1 %) (p2 %) (p3 %)) args))))))
+  ([p1 p2 p3 & ps]
+     (let [ps (list* p1 p2 p3 ps)]
+       (fn epn
+         ([] true)
+         ([x] (every? #(% x) ps))
+         ([x y] (every? #(and (% x) (% y)) ps))
+         ([x y z] (every? #(and (% x) (% y) (% z)) ps))
+         ([x y z & args] (boolean (and (epn x y z)
+                                       (every? #(every? % args) ps))))))))
+
+(defn some-fn
+  "Takes a set of predicates and returns a function f that returns the first logical true value
+  returned by one of its composing predicates against any of its arguments, else it returns
+  logical false. Note that f is short-circuiting in that it will stop execution on the first
+  argument that triggers a logical true result against the original predicates."
+  ([p]
+     (fn sp1
+       ([] nil)
+       ([x] (p x))
+       ([x y] (or (p x) (p y)))
+       ([x y z] (or (p x) (p y) (p z)))
+       ([x y z & args] (or (sp1 x y z)
+                           (some p args)))))
+  ([p1 p2]
+     (fn sp2
+       ([] nil)
+       ([x] (or (p1 x) (p2 x)))
+       ([x y] (or (p1 x) (p1 y) (p2 x) (p2 y)))
+       ([x y z] (or (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z)))
+       ([x y z & args] (or (sp2 x y z)
+                           (some #(or (p1 %) (p2 %)) args)))))
+  ([p1 p2 p3]
+     (fn sp3
+       ([] nil)
+       ([x] (or (p1 x) (p2 x) (p3 x)))
+       ([x y] (or (p1 x) (p1 y) (p2 x) (p2 y) (p3 x) (p3 y)))
+       ([x y z] (or (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z) (p3 x) (p3 y) (p3 z)))
+       ([x y z & args] (or (sp3 x y z)
+                           (some #(or (p1 %) (p2 %) (p3 %)) args)))))
+  ([p1 p2 p3 & ps]
+     (let [ps (list* p1 p2 p3 ps)]
+       (fn spn
+         ([] nil)
+         ([x] (some #(% x) ps))
+         ([x y] (some #(or (% x) (% y)) ps))
+         ([x y z] (some #(or (% x) (% y) (% z)) ps))
+         ([x y z & args] (or (spn x y z)
+                             (some #(some % args) ps)))))))
+
+
+(defn not-any? [pred coll]
+  (not (some pred coll)))
+
+; Threads the expr through the forms. Inserts x as the
+; second item in the first form, making a list of it if it is not a
+; list already. If there are more forms, inserts the first form as the
+; second item in second form, etc.
+(defmacro -> [x & forms]
+  (loop* [x x
+          forms forms]
+    (if forms
+      (let [form (first forms)
+            threaded (if (seq? form)
+                       (with-meta `(~(first form) ~x ~@(next form)) (meta form))
+                       (list form x))]
+        (recur threaded (next forms)))
+      x)))
+
+; Threads the expr through the forms. Inserts x as the
+; last item in the first form, making a list of it if it is not a
+; list already. If there are more forms, inserts the first form as the
+; last item in second form, etc.
+(defmacro ->> [x & forms]
+  (loop* [x x
+          forms forms]
+    (if forms
+      (let [form (first forms)
+            threaded (if (seq? form)
+                       (with-meta `(~(first form) ~@(next form)  ~x) (meta form))
+                       (list form x))]
+        (recur threaded (next forms)))
+      x)))
+
 ;;; Maps.
 ;(defn hash-map
 ;  ([]

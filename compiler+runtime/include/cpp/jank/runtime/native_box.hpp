@@ -115,6 +115,11 @@ namespace jank::runtime
     {
     }
 
+    native_box(value_type const * const data)
+      : data{ const_cast<value_type *>(data) }
+    {
+    }
+
     template <object_type T>
     native_box(static_object<T> * const typed_data)
       : data{ &typed_data->base }

@@ -56,6 +56,11 @@ namespace clojure::core_native::phase_1
   {
     return make_box<obj::symbol>(ns, name);
   }
+
+  object_ptr lazy_seq(object_ptr const o)
+  {
+    return make_box<obj::lazy_sequence>(o);
+  }
 }
 
 jank_object_ptr jank_load_clojure_core_native_phase_1()
@@ -179,6 +184,19 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("number?", &is_number);
   intern_fn("even?", &is_even);
   intern_fn("odd?", &is_odd);
+  intern_fn("rand", &runtime::rand);
+  intern_fn("sequential?", &is_sequential);
+  intern_fn("first-index-of", &first_index_of);
+  intern_fn("last-index-of", &last_index_of);
+  intern_fn("lazy-seq*", &phase_1::lazy_seq);
+  intern_fn("chunk-buffer", &chunk_buffer);
+  intern_fn("chunk-append", &chunk_append);
+  intern_fn("chunk", &chunk);
+  intern_fn("chunk-first", &chunk_first);
+  intern_fn("chunk-next", &chunk_next);
+  intern_fn("chunk-rest", &chunk_rest);
+  intern_fn("chunk-cons", &chunk_cons);
+  intern_fn("chunk-seq?", &is_chunked_seq);
 
   {
     auto const fn(
@@ -317,6 +335,16 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
       return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2, rest);
     };
     intern_fn_obj("swap-vals!", fn);
+  }
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
+    fn->arity_2 = [](object * const s, object * const start) -> object * { return subs(s, start); };
+    fn->arity_3 = [](object * const s, object * const start, object * const end) -> object * {
+      return subs(s, start, end);
+    };
+    intern_fn_obj("subs", fn);
   }
 
   return erase(obj::nil::nil_const());

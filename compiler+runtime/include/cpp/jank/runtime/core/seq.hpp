@@ -129,11 +129,6 @@ namespace jank::runtime
   object_ptr pop(object_ptr o);
   object_ptr empty(object_ptr o);
 
-  object_ptr chunk_first(object_ptr o);
-  object_ptr chunk_next(object_ptr o);
-  object_ptr chunk_rest(object_ptr o);
-  native_bool is_chunked_seq(object_ptr o);
-
   native_persistent_string str(object_ptr o, object_ptr args);
 
   obj::persistent_list_ptr list(object_ptr s);
@@ -177,4 +172,14 @@ namespace jank::runtime
   object_ptr reduce(object_ptr f, object_ptr init, object_ptr s);
   object_ptr reduced(object_ptr o);
   native_bool is_reduced(object_ptr o);
+
+  object_ptr chunk_buffer(object_ptr capacity);
+  object_ptr chunk_append(object_ptr buff, object_ptr val);
+  object_ptr chunk(object_ptr buff);
+  object_ptr chunk_first(object_ptr o);
+  object_ptr chunk_next(object_ptr o);
+  object_ptr chunk_rest(object_ptr o);
+  object_ptr chunk_cons(object_ptr chunk, object_ptr rest);
+  native_bool is_chunked_seq(object_ptr o);
+
 }

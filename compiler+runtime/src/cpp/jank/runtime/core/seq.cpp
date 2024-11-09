@@ -924,68 +924,6 @@ namespace jank::runtime
       o);
   }
 
-  object_ptr chunk_first(object_ptr const o)
-  {
-    return visit_object(
-      [=](auto const typed_o) -> object_ptr {
-        using T = typename decltype(typed_o)::value_type;
-
-        if constexpr(behavior::chunkable<T>)
-        {
-          return typed_o->chunked_first();
-        }
-        {
-          throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_string()) };
-        }
-      },
-      o);
-  }
-
-  object_ptr chunk_next(object_ptr const o)
-  {
-    return visit_object(
-      [=](auto const typed_o) -> object_ptr {
-        using T = typename decltype(typed_o)::value_type;
-
-        if constexpr(behavior::chunkable<T>)
-        {
-          return typed_o->chunked_next() ?: obj::nil::nil_const();
-        }
-        {
-          throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_string()) };
-        }
-      },
-      o);
-  }
-
-  object_ptr chunk_rest(object_ptr const o)
-  {
-    return visit_object(
-      [=](auto const typed_o) -> object_ptr {
-        using T = typename decltype(typed_o)::value_type;
-
-        if constexpr(behavior::chunkable<T>)
-        {
-          return typed_o->chunked_next() ?: obj::persistent_list::empty();
-        }
-        {
-          throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_string()) };
-        }
-      },
-      o);
-  }
-
-  native_bool is_chunked_seq(object_ptr const o)
-  {
-    return visit_object(
-      [=](auto const typed_o) -> native_bool {
-        using T = typename decltype(typed_o)::value_type;
-
-        return behavior::chunkable<T>;
-      },
-      o);
-  }
-
   native_persistent_string str(object_ptr const o, object_ptr const args)
   {
     return visit_seqable(
@@ -1054,5 +992,90 @@ namespace jank::runtime
   native_bool is_reduced(object_ptr const o)
   {
     return o->type == object_type::reduced;
+  }
+
+  object_ptr chunk_buffer(object_ptr const capacity)
+  {
+    return make_box<obj::chunk_buffer>(to_int(capacity));
+  }
+
+  object_ptr chunk_append(object_ptr const buff, object_ptr const val)
+  {
+    auto const buffer(try_object<obj::chunk_buffer>(buff));
+    buffer->append(val);
+    return obj::nil::nil_const();
+  }
+
+  object_ptr chunk(object_ptr const buff)
+  {
+    auto const buffer(try_object<obj::chunk_buffer>(buff));
+    return buffer->chunk();
+  }
+
+  object_ptr chunk_first(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> object_ptr {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::chunkable<T>)
+        {
+          return typed_o->chunked_first();
+        }
+        {
+          throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_string()) };
+        }
+      },
+      o);
+  }
+
+  object_ptr chunk_next(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> object_ptr {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::chunkable<T>)
+        {
+          return typed_o->chunked_next() ?: obj::nil::nil_const();
+        }
+        {
+          throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_string()) };
+        }
+      },
+      o);
+  }
+
+  object_ptr chunk_rest(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> object_ptr {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::chunkable<T>)
+        {
+          return typed_o->chunked_next() ?: obj::persistent_list::empty();
+        }
+        {
+          throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_string()) };
+        }
+      },
+      o);
+  }
+
+  object_ptr chunk_cons(object_ptr const chunk, object_ptr const rest)
+  {
+    return make_box<obj::chunked_cons>(chunk, seq(rest));
+  }
+
+  native_bool is_chunked_seq(object_ptr const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> native_bool {
+        using T = typename decltype(typed_o)::value_type;
+
+        return behavior::chunkable<T>;
+      },
+      o);
   }
 }
