@@ -86,7 +86,10 @@ namespace jank::codegen
 
     for(size_t i{}; i < arity.params.size(); ++i)
     {
-      locals[arity.params[i]] = fn->getArg(i + is_closure);
+      auto &param(arity.params[i]);
+      auto arg(fn->getArg(i + is_closure));
+      arg->setName(param->get_name().c_str());
+      locals[param] = arg;
     }
 
     if(is_closure)

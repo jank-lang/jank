@@ -123,7 +123,6 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("macroexpand", &macroexpand);
   intern_fn("->unqualified-symbol", &phase_1::to_unqualified_symbol);
   intern_fn("->qualified-symbol", &phase_1::to_qualified_symbol);
-  intern_fn("gensym", &gensym);
   intern_fn("apply*", &apply_to);
   intern_fn("transientable?", &is_transientable);
   intern_fn("transient", &transient);
@@ -148,6 +147,32 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("volatile?", &is_volatile);
   intern_fn("vreset!", &vreset);
   intern_fn("vswap!", &vswap);
+  intern_fn("+", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&add));
+  intern_fn("-", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&sub));
+  intern_fn("/", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&div));
+  intern_fn("*", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&mul));
+  intern_fn("bit-not", &bit_not);
+  intern_fn("bit-and", &bit_and);
+  intern_fn("bit-or", &bit_or);
+  intern_fn("bit-xor", &bit_xor);
+  intern_fn("bit-and-not", &bit_and_not);
+  intern_fn("bit-clear", &bit_clear);
+  intern_fn("bit-set", &bit_set);
+  intern_fn("bit-flip", &bit_flip);
+  intern_fn("bit-test", &bit_test);
+  intern_fn("bit-shift-left", &bit_shift_left);
+  intern_fn("bit-shift-right", &bit_shift_right);
+  intern_fn("unsigned-bit-shift-right", &bit_unsigned_shift_right);
+  intern_fn("<", static_cast<native_bool (*)(object_ptr, object_ptr)>(&lt));
+  intern_fn("<=", static_cast<native_bool (*)(object_ptr, object_ptr)>(&lte));
+  intern_fn("min", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&min));
+  intern_fn("max", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&max));
+  intern_fn("inc", static_cast<object_ptr (*)(object_ptr)>(&inc));
+  intern_fn("dec", static_cast<object_ptr (*)(object_ptr)>(&dec));
+  intern_fn("pos?", &is_pos);
+  intern_fn("neg?", &is_neg);
+  intern_fn("zero?", &is_zero);
+  intern_fn("rem", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&rem));
 
   {
     auto const fn(
@@ -183,6 +208,31 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
 
   {
     auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(2, true, true)));
+    fn->arity_1 = [](object *) -> object * { return obj::boolean::true_const(); };
+    fn->arity_2
+      = [](object * const l, object * const r) -> object * { return make_box(is_equiv(l, r)); };
+    fn->arity_3 = [](object * const l, object * const r, object * const rest) -> object * {
+      if(!is_equiv(l, r))
+      {
+        return obj::boolean::false_const();
+      }
+
+      for(auto it(fresh_seq(rest)); it != nullptr; it = next_in_place(it))
+      {
+        if(!is_equiv(l, first(it)))
+        {
+          return obj::boolean::false_const();
+        }
+      }
+
+      return obj::boolean::true_const();
+    };
+    intern_fn_obj("==", fn);
+  }
+
+  {
+    auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
     fn->arity_1 = [](object * const seq) -> object * { return println(seq); };
     intern_fn_obj("println", fn);
@@ -207,6 +257,14 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
     fn->arity_1 = [](object * const seq) -> object * { return pr(seq); };
     intern_fn_obj("pr", fn);
+  }
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
+    fn->arity_0 = []() -> object * { return gensym(make_box("G__")); };
+    fn->arity_1 = [](object * const prefix) -> object * { return gensym(prefix); };
+    intern_fn_obj("gensym", fn);
   }
 
   {

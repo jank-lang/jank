@@ -32,6 +32,11 @@
    thus =) as a value, not an identity, comparison."
   clojure.core-native.phase-1/=)
 
+(def ==
+  "Returns non-nil if nums all have the equivalent
+   value (type-independent), otherwise false"
+  clojure.core-native.phase-1/==)
+
 ;; Collections.
 (def empty? clojure.core-native.phase-1/empty?)
 (def empty clojure.core-native.phase-1/empty)
@@ -351,10 +356,10 @@
    x)
   ([x & more]
    (let [x-res (gensym)]
-     (list 'clojure.core/let [x-res x]
+     (list `let [x-res x]
            (list 'if x-res
                  x-res
-                 (cons 'clojure.core/or more))))))
+                 (cons `or more))))))
 
 (defmacro and
   ([]
@@ -368,7 +373,7 @@
                  (cons 'clojure.core/and more)
                  x-res)))))
 
-(defmacro ^{:jank/link-name "assert_"} assert
+(defmacro assert
   "Evaluates expr and throws an exception if it does not evaluate to
   logical true."
   ([x]
@@ -729,278 +734,256 @@
   clojure.core-native.phase-1/volatile?)
 
 ;; Primitives.
-;;; Arithmetic.
-;(defn
-;  ^{:arities {2 {:supports-unboxed-input? true
-;                 :unboxed-output? true}}}
-;  +
-;  ([]
-;   0)
-;  ([x]
-;   x)
-;  ([l r]
-;   (native/raw "__value = runtime::add(~{ l }, ~{ r });"))
-;  ([l r & args]
-;   (let [res (native/raw "__value = runtime::add(~{ l }, ~{ r });")]
-;     (if (empty? args)
-;       res
-;       (recur res (first args) (next args))))))
-;
-;(defn
-;  ^{:arities {2 {:supports-unboxed-input? true
-;                 :unboxed-output? true}}}
-;  -
-;  ([x]
-;   (- 0 x))
-;  ([l r]
-;   (native/raw "__value = runtime::sub(~{ l }, ~{ r });"))
-;  ([l r & args]
-;   (let [res (native/raw "__value = runtime::sub(~{ l }, ~{ r });")]
-;     (if (empty? args)
-;       res
-;       (recur res (first args) (next args))))))
-;
-;(defn
-;  ^{:arities {2 {:supports-unboxed-input? true
-;                 :unboxed-output? true}}}
-;  *
-;  ([]
-;   1)
-;  ([x]
-;   x)
-;  ([l r]
-;   (native/raw "__value = runtime::mul(~{ l }, ~{ r });"))
-;  ([l r & args]
-;   (let [res (native/raw "__value = runtime::mul(~{ l }, ~{ r });")]
-;     (if (empty? args)
-;       res
-;       (recur res (first args) (next args))))))
-;
-;(defn
-;  ^{:arities {2 {:supports-unboxed-input? true
-;                 :unboxed-output? true}}}
-;  /
-;  ([x]
-;   (/ 1 x))
-;  ([l r]
-;   (native/raw "__value = runtime::div(~{ l }, ~{ r });"))
-;  ([l r & args]
-;   (let [res (native/raw "__value = runtime::div(~{ l }, ~{ r });")]
-;     (if (empty? args)
-;       res
-;       (recur res (first args) (next args))))))
-;
-;;; Bit operations.
-;; TODO: Unboxing and inlining for these.
-;(defn bit-not
-;  "Bitwise complement"
-;  [x]
-;  (native/raw "__value = make_box(runtime::bit_not(~{ x }));"))
-;
-;(defn bit-and
-;  "Bitwise and"
-;  ([x y]
-;   (native/raw "__value = make_box(runtime::bit_and(~{ x }, ~{ y }));"))
-;  ([x y & more]
-;   (reduce bit-and (bit-and x y) more)))
-;
-;(defn bit-or
-;  "Bitwise or"
-;  ([x y]
-;   (native/raw "__value = make_box(runtime::bit_or(~{ x }, ~{ y }));"))
-;  ([x y & more]
-;   (reduce bit-or (bit-or x y) more)))
-;
-;(defn bit-xor
-;  "Bitwise exclusive or"
-;  ([x y]
-;   (native/raw "__value = make_box(runtime::bit_xor(~{ x }, ~{ y }));"))
-;  ([x y & more]
-;   (reduce bit-xor (bit-xor x y) more)))
-;
-;(defn bit-and-not
-;  "Bitwise and with complement"
-;  ([x y]
-;   (native/raw "__value = make_box(runtime::bit_and_not(~{ x }, ~{ y }));"))
-;  ([x y & more]
-;   (reduce bit-and-not (bit-and-not x y) more)))
-;
-;(defn bit-clear
-;  "Clear bit at index n"
-;  [x n]
-;  (native/raw "__value = make_box(runtime::bit_clear(~{ x }, ~{ n }));"))
-;
-;(defn bit-set
-;  "Set bit at index n"
-;  [x n]
-;  (native/raw "__value = make_box(runtime::bit_set(~{ x }, ~{ n }));"))
-;
-;(defn bit-flip
-;  "Flip bit at index n"
-;  [x n]
-;  (native/raw "__value = make_box(runtime::bit_flip(~{ x }, ~{ n }));"))
-;
-;(defn bit-test
-;  "Test bit at index n"
-;  [x n]
-;  (native/raw "__value = make_box(runtime::bit_test(~{ x }, ~{ n }));"))
-;
-;(defn bit-shift-left
-;  "Bitwise shift left"
-;  [x n]
-;  (native/raw "__value = make_box(runtime::bit_shift_left(~{ x }, ~{ n }));"))
-;
-;(defn bit-shift-right
-;  "Bitwise shift right"
-;  [x n]
-;  (native/raw "__value = make_box(runtime::bit_shift_right(~{ x }, ~{ n }));"))
-;
-;(defn unsigned-bit-shift-right
-;  "Bitwise shift right, without sign-extension."
-;  [x n]
-;  (native/raw "__value = make_box(runtime::bit_unsigned_shift_right(~{ x }, ~{ n }));"))
-;
-;(defn =
-;  ([x]
-;   true)
-;  ([l r]
-;   (native/raw "__value = make_box(runtime::equal(~{ l }, ~{ r }));"))
-;  ([l r & args]
-;   (if (native/raw "__value = make_box(runtime::equal(~{ l }, ~{ r }));")
-;     (if (next args)
-;       (recur r (first args) (next args))
-;       (native/raw "__value = make_box(runtime::equal(~{ r }, ~{ (first args) }));"))
-;     false)))
-;
-;(defn ==
-;  ([x]
-;   true)
-;  ([l r]
-;   (native/raw "__value = make_box(runtime::is_equiv(~{ l }, ~{ r }));"))
-;  ([l r & args]
-;   (if (native/raw "__value = make_box(runtime::is_equiv(~{ l }, ~{ r }));")
-;     (if (next args)
-;       (recur r (first args) (next args))
-;       (native/raw "__value = make_box(runtime::is_equiv(~{ r }, ~{ (first args) }));"))
-;     false)))
-;
-;(defn not=
-;  ([x]
-;   false)
-;  ([x y]
-;   (not (= x y)))
-;  ([x y & more]
-;   (not (apply = x y more))))
-;
-;(defn
-;  ^{:arities {2 {:supports-unboxed-input? true
-;                 :unboxed-output? true}}}
-;  <
-;  ([x]
-;   true)
-;  ([l r]
-;   (native/raw "__value = make_box(runtime::lt(~{ l }, ~{ r }));"))
-;  ([l r & args]
-;   (if (native/raw "__value = make_box(runtime::lt(~{ l }, ~{ r }));")
-;     (if (next args)
-;       (recur r (first args) (next args))
-;       (native/raw "__value = make_box(runtime::lt(~{ r }, ~{ (first args) }));"))
-;     false)))
-;
-;(defn
-;  ^{:arities {2 {:supports-unboxed-input? true
-;                 :unboxed-output? true}}}
-;  <=
-;  ([x]
-;   true)
-;  ([l r]
-;   (native/raw "__value = make_box(runtime::lte(~{ l }, ~{ r }));"))
-;  ([l r & args]
-;   (if (native/raw "__value = make_box(runtime::lte(~{ l }, ~{ r }));")
-;     (if (next args)
-;       (recur r (first args) (next args))
-;       (native/raw "__value = make_box(runtime::lte(~{ r }, ~{ (first args) }));"))
-;     false)))
-;
-;(defn
-;  ^{:arities {2 {:supports-unboxed-input? true
-;                 :unboxed-output? true}}}
-;  >
-;  ([x]
-;   true)
-;  ([l r]
-;   (native/raw "__value = make_box(runtime::lt(~{ r }, ~{ l }));"))
-;  ([l r & args]
-;   (if (native/raw "__value = make_box(runtime::lt(~{ r }, ~{ l }));")
-;     (if (next args)
-;       (recur r (first args) (next args))
-;       (native/raw "__value = make_box(runtime::lt(~{ (first args) }, ~{ r }));"))
-;     false)))
-;
-;(defn
-;  ^{:arities {2 {:supports-unboxed-input? true
-;                 :unboxed-output? true}}}
-;  >=
-;  ([x]
-;   true)
-;  ([l r]
-;   (native/raw "__value = make_box(runtime::lte(~{ r }, ~{ l }));"))
-;  ([l r & args]
-;   (if (native/raw "__value = make_box(runtime::lte(~{ r }, ~{ l }));")
-;     (if (next args)
-;       (recur r (first args) (next args))
-;       (native/raw "__value = make_box(runtime::lte(~{ (first args) }, ~{ r }));"))
-;     false)))
-;
-;(defn
-;  ^{:arities {2 {:supports-unboxed-input? true
-;                 :unboxed-output? true}}}
-;  min
-;  ([x]
-;   x)
-;  ([l r]
-;   (native/raw "__value = runtime::min(~{ l }, ~{ r });"))
-;  ([l r & args]
-;   (let [res (native/raw "__value = runtime::min(~{ l }, ~{ r });")]
-;     (if (empty? args)
-;       res
-;       (recur res (first args) (next args))))))
-;
-;(defn
-;  ^{:arities {2 {:supports-unboxed-input? true
-;                 :unboxed-output? true}}}
-;  max
-;  ([x]
-;   x)
-;  ([l r]
-;   (native/raw "__value = runtime::max(~{ l }, ~{ r });"))
-;  ([l r & args]
-;   (let [res (native/raw "__value = runtime::max(~{ l }, ~{ r });")]
-;     (if (empty? args)
-;       res
-;       (recur res (first args) (next args))))))
-;
-;(defn inc [n]
-;  (native/raw "__value = runtime::inc(~{ n });"))
-;(defn dec [n]
-;  (native/raw "__value = runtime::dec(~{ n });"))
-;
-;(defn pos? [n]
-;  (native/raw "__value = make_box(runtime::is_pos(~{ n }));"))
-;(defn neg? [n]
-;  (native/raw "__value = make_box(runtime::is_neg(~{ n }));"))
-;(defn zero? [n]
-;  (native/raw "__value = make_box(runtime::is_zero(~{ n }));"))
-;
-;(defn rem [num div]
-;  (native/raw "__value = runtime::rem(~{ num }, ~{ div });"))
-;(defn mod [num div]
-;  (let [m (rem num div)]
-;    (if (or (zero? m) (= (pos? num) (pos? div)))
-;      m
-;      (+ m div))))
-;
-;;; Numbers.
+;; Arithmetic.
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  +
+  ([]
+   0)
+  ([x]
+   x)
+  ([l r]
+   (clojure.core-native.phase-1/+ l r))
+  ([l r & args]
+   (let [res (clojure.core-native.phase-1/+ l r)]
+     (if (empty? args)
+       res
+       (recur res (first args) (next args))))))
+
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  -
+  ([x]
+   (- 0 x))
+  ([l r]
+   (clojure.core-native.phase-1/- l r))
+  ([l r & args]
+   (let [res (clojure.core-native.phase-1/- l r)]
+     (if (empty? args)
+       res
+       (recur res (first args) (next args))))))
+
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  *
+  ([]
+   1)
+  ([x]
+   x)
+  ([l r]
+   (clojure.core-native.phase-1/* l r))
+  ([l r & args]
+   (let [res (clojure.core-native.phase-1/* l r)]
+     (if (empty? args)
+       res
+       (recur res (first args) (next args))))))
+
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  /
+  ([x]
+   (/ 1 x))
+  ([l r]
+   (clojure.core-native.phase-1// l r))
+  ([l r & args]
+   (let [res (clojure.core-native.phase-1// l r)]
+     (if (empty? args)
+       res
+       (recur res (first args) (next args))))))
+
+;; Bit operations.
+; TODO: Unboxing and inlining for these.
+(def bit-not
+  "Bitwise complement"
+  clojure.core-native.phase-1/bit-not)
+
+(defn bit-and
+  "Bitwise and"
+  ([x y]
+   (clojure.core-native.phase-1/bit-and x y))
+  ([x y & more]
+   (reduce bit-and (bit-and x y) more)))
+
+(defn bit-or
+  "Bitwise or"
+  ([x y]
+   (clojure.core-native.phase-1/bit-or x y))
+  ([x y & more]
+   (reduce bit-or (bit-or x y) more)))
+
+(defn bit-xor
+  "Bitwise exclusive or"
+  ([x y]
+   (clojure.core-native.phase-1/bit-xor x y))
+  ([x y & more]
+   (reduce bit-xor (bit-xor x y) more)))
+
+(defn bit-and-not
+  "Bitwise and with complement"
+  ([x y]
+   (clojure.core-native.phase-1/bit-and-not x y))
+  ([x y & more]
+   (reduce bit-and-not (bit-and-not x y) more)))
+
+(def bit-clear
+  "Clear bit at index n"
+  clojure.core-native.phase-1/bit-clear)
+
+(def bit-set
+  "Set bit at index n"
+  clojure.core-native.phase-1/bit-set)
+
+(def bit-flip
+  "Flip bit at index n"
+  clojure.core-native.phase-1/bit-flip)
+
+(def bit-test
+  "Test bit at index n"
+  clojure.core-native.phase-1/bit-test)
+
+(def bit-shift-left
+  "Bitwise shift left"
+  clojure.core-native.phase-1/bit-shift-left)
+
+(def bit-shift-right
+  "Bitwise shift right"
+  clojure.core-native.phase-1/bit-shift-right)
+
+(def unsigned-bit-shift-right
+  "Bitwise shift right, without sign-extension."
+  clojure.core-native.phase-1/unsigned-bit-shift-right)
+
+(defn not=
+  ([x]
+   false)
+  ([x y]
+   (not (= x y)))
+  ([x y & more]
+   (not (apply = x y more))))
+
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  <
+  ([x]
+   true)
+  ([l r]
+   (clojure.core-native.phase-1/< l r))
+  ([l r & args]
+   (if (clojure.core-native.phase-1/< l r)
+     (if (next args)
+       (recur r (first args) (next args))
+       (clojure.core-native.phase-1/< r (first args)))
+     false)))
+
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  <=
+  ([x]
+   true)
+  ([l r]
+   (clojure.core-native.phase-1/<= l r))
+  ([l r & args]
+   (if (clojure.core-native.phase-1/<= l r)
+     (if (next args)
+       (recur r (first args) (next args))
+       (clojure.core-native.phase-1/<= r (first args)))
+     false)))
+
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  >
+  ([x]
+   true)
+  ([l r]
+   (clojure.core-native.phase-1/< r l))
+  ([l r & args]
+   (if (clojure.core-native.phase-1/< r l)
+     (if (next args)
+       (recur r (first args) (next args))
+       (clojure.core-native.phase-1/< (first args) r))
+     false)))
+
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  >=
+  ([x]
+   true)
+  ([l r]
+   (clojure.core-native.phase-1/<= r l))
+  ([l r & args]
+   (if (clojure.core-native.phase-1/<= r l)
+     (if (next args)
+       (recur r (first args) (next args))
+       (clojure.core-native.phase-1/<= (first args) r))
+     false)))
+
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  min
+  ([x]
+   x)
+  ([l r]
+   (clojure.core-native.phase-1/min l r))
+  ([l r & args]
+   (let [res (clojure.core-native.phase-1/min l r)]
+     (if (empty? args)
+       res
+       (recur res (first args) (next args))))))
+
+(defn
+  ^{:arities {2 {:supports-unboxed-input? true
+                 :unboxed-output? true}}}
+  max
+  ([x]
+   x)
+  ([l r]
+   (clojure.core-native.phase-1/max l r))
+  ([l r & args]
+   (let [res (clojure.core-native.phase-1/max l r)]
+     (if (empty? args)
+       res
+       (recur res (first args) (next args))))))
+
+(def inc
+  "Returns a number one greater than num. Does not auto-promote
+   longs, will throw on overflow. See also: inc'"
+  clojure.core-native.phase-1/inc)
+(def dec
+  "Returns a number one less than num. Does not auto-promote
+   longs, will throw on overflow. See also: dec"
+  clojure.core-native.phase-1/dec)
+
+(def pos?
+  "Returns true if num is greater than zero, else false"
+  clojure.core-native.phase-1/pos?)
+(def neg?
+  "Returns true if num is less than zero, else false"
+  clojure.core-native.phase-1/neg?)
+(def zero?
+  "Returns true if num is zero, else false"
+  clojure.core-native.phase-1/zero?)
+
+(def rem
+  "Returns the remainder of dividing numerator by denominator."
+  clojure.core-native.phase-1/rem)
+(defn mod
+  "Modulus of num and div. Truncates toward negative infinity."
+  [num div]
+  (let [m (rem num div)]
+    (if (or (zero? m) (= (pos? num) (pos? div)))
+      m
+      (+ m div))))
+
+;; Numbers.
 ;(defn integer? [o]
 ;  (native/raw "__value = make_box(~{ o }->type == object_type::integer)"))
 ;(defn float? [o]
