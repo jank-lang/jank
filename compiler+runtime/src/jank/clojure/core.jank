@@ -1396,125 +1396,124 @@
           []
           m))
 
-;(defn get
-;  ([m k]
-;   (native/raw "__value = jank::runtime::get(~{ m }, ~{ k });"))
-;  ([m k fallback]
-;   (native/raw "__value = jank::runtime::get(~{ m }, ~{ k }, ~{ fallback });")))
-;(defn get-in
-;  ([m ks]
-;   (native/raw "__value = jank::runtime::get_in(~{ m }, ~{ ks });"))
-;  ([m ks fallback]
-;   (native/raw "__value = jank::runtime::get_in(~{ m }, ~{ ks }, ~{ fallback });")))
-;
-;(defn dissoc
-;  "dissoc[iate]. Returns a new map of the same (hashed/sorted) type,
-;  that does not contain a mapping for key(s)."
-;  ([m]
-;   m)
-;  ([m k]
-;   (native/raw "__value = jank::runtime::dissoc(~{ m }, ~{ k });"))
-;  ([m k & ks]
-;   (let* [ret (dissoc m k)]
-;     (if ks
-;       (recur ret (first ks) (next ks))
-;       ret))))
-;
-;; Returns true if key is present in the given collection, otherwise
-;; returns false.  Note that for numerically indexed collections like
-;; vectors and Java arrays, this tests if the numeric key is within the
-;; range of indexes. 'contains?' operates constant or logarithmic time;
-;; it will not perform a linear search for a value.  See also 'some'.
-;(defn contains? [coll k]
-;  (native/raw "__value = make_box(jank::runtime::contains(~{ coll }, ~{ k }));"))
-;
-;; Returns the map entry for key, or nil if key not present.
-;(defn find [coll k]
-;  (native/raw "__value = jank::runtime::find(~{ coll }, ~{ k });"))
-;
-;; Returns a map containing only those entries in map whose key is in keys
-;(defn select-keys [m ks]
-;  (reduce (fn [acc k]
-;            (let [e (native/raw "__value = jank::runtime::find(~{ m }, ~{ k });")]
-;              (if e
-;                (conj acc e)
-;                acc)))
-;          {}
-;          ks))
+(def get
+  "Returns the value mapped to key, not-found or nil if key not present
+   in associative collection, set, string, array, or ILookup instance."
+  clojure.core-native.phase-1/get)
+(def get-in
+  "Returns the value in a nested associative structure,
+   where ks is a sequence of keys. Returns nil if the key
+   is not present, or the not-found value if supplied."
+  clojure.core-native.phase-1/get-in)
 
-; Returns a map with the keys mapped to the corresponding vals.
-(defn zipmap [keys vals]
+(defn dissoc
+  "dissoc[iate]. Returns a new map of the same (hashed/sorted) type,
+  that does not contain a mapping for key(s)."
+  ([m]
+   m)
+  ([m k]
+   (clojure.core-native.phase-1/dissoc m k))
+  ([m k & ks]
+   (let* [ret (dissoc m k)]
+     (if ks
+       (recur ret (first ks) (next ks))
+       ret))))
+
+(def contains?
+  "Returns true if key is present in the given collection, otherwise
+   returns false.  Note that for numerically indexed collections like
+   vectors and Java arrays, this tests if the numeric key is within the
+   range of indexes. 'contains?' operates constant or logarithmic time;
+   it will not perform a linear search for a value.  See also 'some'."
+  clojure.core-native.phase-1/contains?)
+
+(def find
+  "Returns the map entry for key, or nil if key not present."
+  clojure.core-native.phase-1/find)
+
+; Returns a map containing only those entries in map whose key is in keys
+(defn select-keys [m ks]
+  (reduce (fn [acc k]
+            (let [e (find m k)]
+              (if e
+                (conj acc e)
+                acc)))
+          {}
+          ks))
+
+(defn zipmap
+  "Returns a map with the keys mapped to the corresponding vals."
+  [keys vals]
   (loop* [map (transient (hash-map))
           ks (seq keys)
           vs (seq vals)]
-    (if (and ks vs)
-      (recur (assoc! map (first ks) (first vs))
-             (next ks)
-             (next vs))
-      (persistent! map))))
+         (if (and ks vs)
+           (recur (assoc! map (first ks) (first vs))
+                  (next ks)
+                  (next vs))
+           (persistent! map))))
 
 ;; Sets.
-;(defn hash-set
-;  "Returns a new hash set with supplied keys.  Any equal keys are
-;  handled as if by repeated uses of conj."
-;  ([]
-;   #{})
-;  ([& keys]
-;   (native/raw "__value = obj::persistent_hash_set::create_from_seq(~{ keys });")))
-;
-;(defn sorted-set
-;  "Returns a new sorted set with supplied keys.  Any equal keys are
-;  handled as if by repeated uses of conj."
-;  ([& keys]
-;   (native/raw "__value = obj::persistent_sorted_set::create_from_seq(~{ keys });")))
-;
-;(defn sorted-set-by
-;  "Returns a new sorted set with supplied keys, using the supplied
-;  comparator.  Any equal keys are handled as if by repeated uses of
-;  conj."
-;  ([comparator & keys]
-;   (throw "not yet implemented: sorted-set-by")))
-;
-;(defn disj
-;  "disj[oin]. Returns a new set of the same (hashed/sorted) type, that
-;  does not contain key(s)."
-;  ([set]
-;   set)
-;  ([set key]
-;   (native/raw "__value = jank::runtime::disj(~{ set }, ~{ key });"))
-;  ([set key & ks]
-;   (let* [res (disj set key)]
-;     (if (empty? ks)
-;       res
-;       (recur res (first ks) (next ks))))))
-;
-;(defn set? [o]
-;  (native/raw "__value = make_box(~{ o }->type == object_type::persistent_hash_set);"))
-;
-;; Returns a set of the distinct elements of coll.
-;(defn set [coll]
-;  (if (set? coll)
-;    (with-meta coll nil)
-;    ; TODO: Transient
-;    (reduce (fn [acc e]
-;              (conj acc e))
-;            (native/raw "__value = make_box<obj::persistent_hash_set>();")
-;            coll)))
-;
-;;; Other.
-;(defn hash [o]
-;  (native/raw "__value = make_box(hash::visit(~{ o }));"))
-;
-;(defn named?
-;  {:private true}
-;  [o]
-;  (native/raw "__value = make_box(is_named(~{ o }));"))
-;
-;(defn name [o]
-;  (native/raw "__value = make_box(runtime::name(~{ o }));"))
-;
-;(defn namespace [o]
-;  (native/raw "__value = make_box(runtime::namespace_(~{ o }));"))
+(def hash-set
+  "Returns a new hash set with supplied keys.  Any equal keys are
+   handled as if by repeated uses of conj."
+  clojure.core-native.phase-1/hash-set)
+
+(def sorted-set
+  "Returns a new sorted set with supplied keys.  Any equal keys are
+   handled as if by repeated uses of conj."
+  clojure.core-native.phase-1/sorted-set)
+
+(defn sorted-set-by
+  "Returns a new sorted set with supplied keys, using the supplied
+   comparator.  Any equal keys are handled as if by repeated uses of
+   conj."
+  ([comparator & keys]
+   (throw "not yet implemented: sorted-set-by")))
+
+(defn disj
+  "disj[oin]. Returns a new set of the same (hashed/sorted) type, that
+  does not contain key(s)."
+  ([set]
+   set)
+  ([set key]
+   (clojure.core-native.phase-1/disj set key))
+  ([set key & ks]
+   (let* [res (disj set key)]
+     (if (empty? ks)
+       res
+       (recur res (first ks) (next ks))))))
+
+(def set?
+  "Returns true if x implements IPersistentSet"
+  clojure.core-native.phase-1/set?)
+
+(defn set
+  "Returns a set of the distinct elements of coll."
+  [coll]
+  (if (set? coll)
+    (with-meta coll nil)
+    (persistent! (reduce (fn [acc e]
+                           (conj! acc e))
+                         (transient #{})
+                         coll))))
+
+;; Other.
+(def hash
+  "Returns the hash code of its argument. Note this is the hash code
+   consistent with =, and thus is different than .hashCode for Integer,
+   Short, Byte and Clojure collections."
+  clojure.core-native.phase-1/hash)
+
+(def ^:private named? clojure.core-native.phase-1/named?)
+
+(def name
+  "Returns the name String of a string, symbol or keyword."
+  clojure.core-native.phase-1/name)
+
+(def namespace
+  "Returns the namespace String of a symbol or keyword, or nil if not present."
+  clojure.core-native.phase-1/namespace)
 
 ;; Sequences.
 ; This is defined to be lazy later on.

@@ -100,6 +100,7 @@ namespace jank::runtime
   native_bool is_list(object_ptr o);
   native_bool is_vector(object_ptr o);
   native_bool is_map(object_ptr o);
+  native_bool is_set(object_ptr o);
   native_bool is_transientable(object_ptr o);
 
   object_ptr transient(object_ptr o);

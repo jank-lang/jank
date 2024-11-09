@@ -127,7 +127,14 @@ namespace jank::runtime
   native_bool is_map(object_ptr const o)
   {
     return (o->type == object_type::persistent_hash_map
-            || o->type == object_type::persistent_array_map);
+            || o->type == object_type::persistent_array_map
+            || o->type == object_type::persistent_sorted_map);
+  }
+
+  native_bool is_set(object_ptr const o)
+  {
+    return (o->type == object_type::persistent_hash_set
+            || o->type == object_type::persistent_sorted_set);
   }
 
   native_bool is_transientable(object_ptr const o)

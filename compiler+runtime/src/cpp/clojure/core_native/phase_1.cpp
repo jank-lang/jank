@@ -197,6 +197,15 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("chunk-rest", &chunk_rest);
   intern_fn("chunk-cons", &chunk_cons);
   intern_fn("chunk-seq?", &is_chunked_seq);
+  intern_fn("dissoc", &dissoc);
+  intern_fn("contains?", &contains);
+  intern_fn("find", &find);
+  intern_fn("disj", &disj);
+  intern_fn("hash", &to_hash);
+  intern_fn("set?", &is_set);
+  intern_fn("named?", &is_named);
+  intern_fn("name", &name);
+  intern_fn("namespace", &namespace_);
 
   {
     auto const fn(
@@ -365,6 +374,46 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
       return obj::persistent_sorted_map::create_from_seq(kvs);
     };
     intern_fn_obj("sorted-map", fn);
+  }
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
+    fn->arity_0 = []() -> object * { return obj::persistent_hash_set::empty(); };
+    fn->arity_1 = [](object * const kvs) -> object * {
+      return obj::persistent_hash_set::create_from_seq(kvs);
+    };
+    intern_fn_obj("hash-set", fn);
+  }
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
+    fn->arity_0 = []() -> object * { return obj::persistent_sorted_set::empty(); };
+    fn->arity_1 = [](object * const kvs) -> object * {
+      return obj::persistent_sorted_set::create_from_seq(kvs);
+    };
+    intern_fn_obj("sorted-set", fn);
+  }
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
+    fn->arity_2 = [](object * const o, object * const k) -> object * { return get(o, k); };
+    fn->arity_3 = [](object * const o, object * const k, object * const fallback) -> object * {
+      return get(o, k, fallback);
+    };
+    intern_fn_obj("get", fn);
+  }
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
+    fn->arity_2 = [](object * const o, object * const k) -> object * { return get_in(o, k); };
+    fn->arity_3 = [](object * const o, object * const k, object * const fallback) -> object * {
+      return get_in(o, k, fallback);
+    };
+    intern_fn_obj("get-in", fn);
   }
 
   return erase(obj::nil::nil_const());
