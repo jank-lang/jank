@@ -21,16 +21,15 @@
 ;; Miscellaneous.
 (def nil? clojure.core-native.phase-1/nil?)
 
-(def
-  ^{:doc "Tests if 2 arguments are the same object, meaning the same pointer address."}
-  identical?
+(def identical?
+  "Tests if 2 arguments are the same object, meaning the same pointer address."
   clojure.core-native.phase-1/identical?)
 
-(def ^{:doc "Equality. Returns true if x equals y, false if not. It also works
-             for nil and compares numbers and collections in a type-independent
-             manner. Clojure's immutable data structures define equals() (and
-             thus =) as a value, not an identity, comparison."}
-  =
+(def =
+  "Equality. Returns true if x equals y, false if not. It also works
+   for nil and compares numbers and collections in a type-independent
+   manner. Clojure's immutable data structures define equals() (and
+   thus =) as a value, not an identity, comparison."
   clojure.core-native.phase-1/=)
 
 ;; Collections.
@@ -67,12 +66,12 @@
 (def vector? clojure.core-native.phase-1/vector?)
 (def vec clojure.core-native.phase-1/vec)
 
-(def ^{:doc "Returns a persistent vector of the items in vector from
-             start (inclusive) to end (exclusive).  If end is not supplied,
-             defaults to (count vector). This operation is O(1) and very fast, as
-             the resulting vector shares structure with the original and no
-             trimming is done."}
-  subvec
+(def subvec
+  "Returns a persistent vector of the items in vector from
+   start (inclusive) to end (exclusive).  If end is not supplied,
+   defaults to (count vector). This operation is O(1) and very fast, as
+   the resulting vector shares structure with the original and no
+   trimming is done."
   (fn* subvec
     ([v start]
      (subvec v start (count v)))
@@ -94,15 +93,15 @@
          res
          (recur res (first args) (next args)))))))
 
-(def ^{:doc "Return the last item in coll, in linear time."}
-  last
+(def last
+  "Return the last item in coll, in linear time."
   (fn* last [s]
     (if (next s)
       (recur (next s))
       (first s))))
 
-(def ^{:doc "Return a seq of all but the last item in coll, in linear time."}
-  butlast
+(def butlast
+  "Return a seq of all but the last item in coll, in linear time."
   (fn* butlast [s]
     (loop* [ret []
             s s]
@@ -139,9 +138,9 @@
 ;; Symbols.
 (def symbol? clojure.core-native.phase-1/symbol?)
 (def
-  ^{:doc "Returns a Symbol with the given namespace and name. Arity-1 works
-          on strings, keywords, and vars."}
   symbol
+  "Returns a Symbol with the given namespace and name. Arity-1 works
+   on strings, keywords, and vars."
   (fn* symbol
     ([o]
      (clojure.core-native.phase-1/->unqualified-symbol o))
@@ -257,10 +256,10 @@
 (def macroexpand-1 clojure.core-native.phase-1/macroexpand-1)
 (def macroexpand clojure.core-native.phase-1/macroexpand)
 
-(def ^{:doc "Returns a new symbol with a unique name. If a prefix string is
-             supplied, the name is prefix# where # is some unique number. If
-             prefix is not supplied, the prefix is 'G__'."}
-  gensym
+(def gensym
+  "Returns a new symbol with a unique name. If a prefix string is
+   supplied, the name is prefix# where # is some unique number. If
+   prefix is not supplied, the prefix is 'G__'."
   clojure.core-native.phase-1/gensym)
 
 (defn
@@ -392,14 +391,14 @@
 
 ;; Transients.
 
-(def ^{:doc "Returns a new, transient version of the collection, in constant time."}
-  transient
+(def transient
+  "Returns a new, transient version of the collection, in constant time."
   clojure.core-native.phase-1/transient)
 
-(def ^{:doc "Returns a new, persistent version of the transient collection, in
-             constant time. The transient collection cannot be used after this
-             call, any such use will throw an exception."}
-  persistent
+(def persistent
+  "Returns a new, persistent version of the transient collection, in
+   constant time. The transient collection cannot be used after this
+   call, any such use will throw an exception."
   clojure.core-native.phase-1/persistent)
 
 (defn conj!
@@ -517,12 +516,12 @@
    ;  (deref-future ref timeout-ms timeout-val))
    ))
 
-(def ^{:doc "Wraps x in a way such that a reduce will terminate with the value x"}
-  reduced
+(def reduced
+  "Wraps x in a way such that a reduce will terminate with the value x"
   clojure.core-native.phase-1/reduced)
 
-(def ^{:doc "Returns true if x is the result of a call to reduced"}
-  reduced?
+(def reduced?
+  "Returns true if x is the result of a call to reduced"
   clojure.core-native.phase-1/reduced?)
 
 (defn ensure-reduced
@@ -551,10 +550,13 @@
   items, returns val and f is not called."
   ([f coll]
    (let [s (seq coll)]
+     (prn :reduce :s s)
      (if s
        (reduce f (first s) (next s))
        (f))))
   ([f init coll]
+   ; TODO: Chunking support.
+   (prn :reduce f :init init :coll coll)
    (clojure.core-native.phase-1/reduce f init coll)))
 
 (defn completing
@@ -627,128 +629,105 @@
   ([f g & fs]
    (reduce comp (list* f g fs))))
 
-;(defn peek
-;  "For a list or queue, same as first, for a vector, same as, but much
-;  more efficient than, last. If the collection is empty, returns nil."
-;  [coll]
-;  (native/raw "__value = runtime::peek(~{ coll });"))
-;
-;(defn pop
-;  "For a list or queue, returns a new list/queue without the first
-;  item, for a vector, returns a new vector without the last item. If
-;  the collection is empty, throws an exception. Note - not the same
-;  as next/butlast."
-;  [coll]
-;  (native/raw "__value = runtime::pop(~{ coll });"))
-;
-;(defn vary-meta
-;  "Returns an object of the same type and value as obj, with
-;  (apply f (meta obj) args) as its metadata."
-;  [o f & args]
-;  (with-meta o (apply f (meta o) args)))
-;
-;(defn alter-meta!
-;  "Atomically sets the metadata for a namespace/var/ref/agent/atom to be:
-;
-;  (apply f its-current-meta args)
-;
-;  f must be free of side-effects"
-;  [o f & args]
-;  ; TODO: Atomics.
-;  (reset-meta! o (apply f (meta o) args)))
-;
-;;; Atoms.
-;(defn atom
-;  "Creates and returns an Atom with an initial value of x and zero or
-;  more options (in any order):
-;
-;  :meta metadata-map
-;
-;  :validator validate-fn
-;
-;  If metadata-map is supplied, it will become the metadata on the
-;  atom. validate-fn must be nil or a side-effect-free fn of one
-;  argument, which will be passed the intended new state on any state
-;  change. If the new state is unacceptable, the validate-fn should
-;  return false or throw an exception."
-;  ([x]
-;   (native/raw "__value = make_box<obj::atom>(~{ x });"))
-;  ; TODO: Validators.
-;  #_([x & options] (setup-reference (atom x) options)))
-;
-;(defn swap!
-;  "Atomically swaps the value of atom to be:
-;  (apply f current-value-of-atom args). Note that f may be called
-;  multiple times, and thus should be free of side effects.  Returns
-;  the value that was swapped in."
-;  ([atom f]
-;   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap(~{ f });"))
-;  ([atom f x]
-;   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x });"))
-;  ([atom f x y]
-;   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x }, ~{ y });"))
-;  ([atom f x y & args]
-;   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x }, ~{ y }, ~{ args });")))
-;
-;(defn swap-vals!
-;  "Atomically swaps the value of atom to be:
-;  (apply f current-value-of-atom args). Note that f may be called
-;  multiple times, and thus should be free of side effects.
-;  Returns [old new], the value of the atom before and after the swap."
-;  ([atom f]
-;   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap_vals(~{ f });"))
-;  ([atom f x]
-;   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x });"))
-;  ([atom f x y]
-;   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x }, ~{ y });"))
-;  ([atom f x y & args]
-;   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x }, ~{ y }, ~{ args });")))
-;
-;(defn compare-and-set!
-;  "Atomically sets the value of atom to newval if and only if the
-;  current value of the atom is identical to oldval. Returns true if
-;  set happened, else false"
-;  [atom oldval newval]
-;  (native/raw "__value = try_object<obj::atom>(~{ atom })->compare_and_set(~{ oldval }, ~{ newval });"))
-;
-;(defn reset!
-;  "Sets the value of atom to newval without regard for the
-;  current value. Returns newval."
-;  [atom newval]
-;  (native/raw "__value = try_object<obj::atom>(~{ atom })->reset(~{ newval });"))
-;
-;(defn reset-vals!
-;  "Sets the value of atom to newval. Returns [old new], the value of the
-;   atom before and after the reset."
-;  [atom newval]
-;  (native/raw "__value = try_object<obj::atom>(~{ atom })->reset_vals(~{ newval });"))
-;
-;;; Volatiles.
-;(defn volatile!
-;  "Creates and returns a Volatile with an initial value of val."
-;  [val]
-;  (native/raw "__value = make_box<obj::volatile_>(~{ val });"))
-;
-;(defn vreset!
-;  "Sets the value of volatile to newval without regard for the
-;   current value. Returns newval."
-;  [vol newval]
-;  (native/raw "__value = try_object<obj::volatile_>(~{ vol })->reset(~{ newval });"))
-;
-;; XXX: In Clojure, this is a macro (for perf reasons). However, building native/raw
-;; forms from macros is quite cumbersome right now. A function will do until it doesn't.
-;(defn vswap!
-;  "Non-atomically swaps the value of the volatile as if:
-;  (apply f current-value-of-vol args). Returns the value that
-;  was swapped in."
-;  [vol f & args]
-;  (native/raw "__value = try_object<obj::volatile_>(~{ vol })->reset(~{ (apply f (deref vol) args) });"))
-;
-;(defn volatile?
-;  "Returns true if x is a volatile."
-;  [x]
-;  (native/raw "__value = make_box(~{ x }->type == object_type::volatile_);"))
-;
+(def peek
+  "For a list or queue, same as first, for a vector, same as, but much
+   more efficient than, last. If the collection is empty, returns nil."
+  clojure.core-native.phase-1/peek)
+
+(def pop
+  "For a list or queue, returns a new list/queue without the first
+   item, for a vector, returns a new vector without the last item. If
+   the collection is empty, throws an exception. Note - not the same
+   as next/butlast."
+  clojure.core-native.phase-1/pop)
+
+(defn vary-meta
+  "Returns an object of the same type and value as obj, with
+  (apply f (meta obj) args) as its metadata."
+  [o f & args]
+  (with-meta o (apply f (meta o) args)))
+
+(defn alter-meta!
+  "Atomically sets the metadata for a namespace/var/ref/agent/atom to be:
+
+  (apply f its-current-meta args)
+
+  f must be free of side-effects"
+  [o f & args]
+  ; TODO: Atomics.
+  (reset-meta! o (apply f (meta o) args)))
+
+;; Atoms.
+(defn atom
+  "Creates and returns an Atom with an initial value of x and zero or
+  more options (in any order):
+
+  :meta metadata-map
+
+  :validator validate-fn
+
+  If metadata-map is supplied, it will become the metadata on the
+  atom. validate-fn must be nil or a side-effect-free fn of one
+  argument, which will be passed the intended new state on any state
+  change. If the new state is unacceptable, the validate-fn should
+  return false or throw an exception."
+  ([x]
+   (clojure.core-native.phase-1/atom x))
+  ; TODO: Validators.
+  #_([x & options]
+     (setup-reference (atom x) options)))
+
+(def swap!
+  "Atomically swaps the value of atom to be:
+   (apply f current-value-of-atom args). Note that f may be called
+   multiple times, and thus should be free of side effects. Returns
+   the value that was swapped in."
+  clojure.core-native.phase-1/swap!)
+
+(def swap-vals!
+  "Atomically swaps the value of atom to be:
+   (apply f current-value-of-atom args). Note that f may be called
+   multiple times, and thus should be free of side effects.
+   Returns [old new], the value of the atom before and after the swap."
+  clojure.core-native.phase-1/swap-vals!)
+
+(def compare-and-set!
+  "Atomically sets the value of atom to newval if and only if the
+   current value of the atom is identical to oldval. Returns true if
+   set happened, else false"
+  clojure.core-native.phase-1/compare-and-set!)
+
+(def reset!
+  "Sets the value of atom to newval without regard for the
+   current value. Returns newval."
+  clojure.core-native.phase-1/reset!)
+
+(def reset-vals!
+  "Sets the value of atom to newval. Returns [old new], the value of the
+   atom before and after the reset."
+  clojure.core-native.phase-1/reset-vals!)
+
+;; Volatiles.
+(def volatile!
+  "Creates and returns a volatile with an initial value of val."
+  clojure.core-native.phase-1/volatile!)
+
+(def vreset!
+  "Sets the value of volatile to newval without regard for the
+   current value. Returns newval."
+  clojure.core-native.phase-1/vreset!)
+
+; TODO: In Clojure, this is a macro (for perf reasons).
+(def vswap!
+  "Non-atomically swaps the value of the volatile as if:
+  (apply f current-value-of-vol args). Returns the value that
+  was swapped in."
+  clojure.core-native.phase-1/vswap!)
+
+(def volatile?
+  "Returns true if x is a volatile."
+  clojure.core-native.phase-1/volatile?)
+
 ;; Primitives.
 ;;; Arithmetic.
 ;(defn

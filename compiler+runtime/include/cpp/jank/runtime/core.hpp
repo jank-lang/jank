@@ -49,5 +49,23 @@ namespace jank::runtime
 
   object_ptr gensym(object_ptr o);
 
+  object_ptr atom(object_ptr o);
   object_ptr deref(object_ptr o);
+  object_ptr swap(object_ptr atom, object_ptr fn);
+  object_ptr swap(object_ptr atom, object_ptr fn, object_ptr a1);
+  object_ptr swap(object_ptr atom, object_ptr fn, object_ptr a1, object_ptr a2);
+  object_ptr swap(object_ptr atom, object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest);
+  object_ptr swap_vals(object_ptr atom, object_ptr fn);
+  object_ptr swap_vals(object_ptr atom, object_ptr fn, object_ptr a1);
+  object_ptr swap_vals(object_ptr atom, object_ptr fn, object_ptr a1, object_ptr a2);
+  object_ptr
+  swap_vals(object_ptr atom, object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest);
+  object_ptr compare_and_set(object_ptr atom, object_ptr old_val, object_ptr new_val);
+  object_ptr reset(object_ptr atom, object_ptr new_val);
+  object_ptr reset_vals(object_ptr atom, object_ptr new_val);
+
+  object_ptr volatile_(object_ptr o);
+  native_bool is_volatile(object_ptr o);
+  object_ptr vswap(object_ptr v, object_ptr fn, object_ptr args);
+  object_ptr vreset(object_ptr v, object_ptr new_val);
 }

@@ -138,6 +138,16 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("reduced", &reduced);
   intern_fn("reduced?", &is_reduced);
   intern_fn("reduce", &reduce);
+  intern_fn("peek", &peek);
+  intern_fn("pop", &pop);
+  intern_fn("atom", &atom);
+  intern_fn("compare-and-set!", &compare_and_set);
+  intern_fn("reset!", &reset);
+  intern_fn("reset-vals!", &reset_vals);
+  intern_fn("volatile!", &volatile_);
+  intern_fn("volatile?", &is_volatile);
+  intern_fn("vreset!", &vreset);
+  intern_fn("vswap!", &vswap);
 
   {
     auto const fn(
@@ -197,6 +207,52 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
     fn->arity_1 = [](object * const seq) -> object * { return pr(seq); };
     intern_fn_obj("pr", fn);
+  }
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(4, true, true)));
+    fn->arity_2 = [](object * const atom, object * const fn) -> object * {
+      return try_object<obj::atom>(atom)->swap(fn);
+    };
+    fn->arity_3 = [](object * const atom, object * const fn, object * const a1) -> object * {
+      return try_object<obj::atom>(atom)->swap(fn, a1);
+    };
+    fn->arity_4 =
+      [](object * const atom, object * const fn, object * const a1, object * const a2) -> object * {
+      return try_object<obj::atom>(atom)->swap(fn, a1, a2);
+    };
+    fn->arity_5 = [](object * const atom,
+                     object * const fn,
+                     object * const a1,
+                     object * const a2,
+                     object * const rest) -> object * {
+      return try_object<obj::atom>(atom)->swap(fn, a1, a2, rest);
+    };
+    intern_fn_obj("swap!", fn);
+  }
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(4, true, true)));
+    fn->arity_2 = [](object * const atom, object * const fn) -> object * {
+      return try_object<obj::atom>(atom)->swap_vals(fn);
+    };
+    fn->arity_3 = [](object * const atom, object * const fn, object * const a1) -> object * {
+      return try_object<obj::atom>(atom)->swap_vals(fn, a1);
+    };
+    fn->arity_4 =
+      [](object * const atom, object * const fn, object * const a1, object * const a2) -> object * {
+      return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2);
+    };
+    fn->arity_5 = [](object * const atom,
+                     object * const fn,
+                     object * const a1,
+                     object * const a2,
+                     object * const rest) -> object * {
+      return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2, rest);
+    };
+    intern_fn_obj("swap-vals!", fn);
   }
 
   return erase(obj::nil::nil_const());

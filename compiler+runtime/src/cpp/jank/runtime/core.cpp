@@ -417,6 +417,77 @@ namespace jank::runtime
     return make_box<obj::symbol>(runtime::context::unique_symbol(to_string(o)));
   }
 
+  object_ptr atom(object_ptr const o)
+  {
+    return make_box<obj::atom>(o);
+  }
+
+  object_ptr swap(object_ptr const atom, object_ptr const fn)
+  {
+    return try_object<obj::atom>(atom)->swap(fn);
+  }
+
+  object_ptr swap(object_ptr const atom, object_ptr const fn, object_ptr const a1)
+  {
+    return try_object<obj::atom>(atom)->swap(fn, a1);
+  }
+
+  object_ptr
+  swap(object_ptr const atom, object_ptr const fn, object_ptr const a1, object_ptr const a2)
+  {
+    return try_object<obj::atom>(atom)->swap(fn, a1, a2);
+  }
+
+  object_ptr swap(object_ptr const atom,
+                  object_ptr const fn,
+                  object_ptr const a1,
+                  object_ptr const a2,
+                  object_ptr const rest)
+  {
+    return try_object<obj::atom>(atom)->swap(fn, a1, a2, rest);
+  }
+
+  object_ptr swap_vals(object_ptr const atom, object_ptr const fn)
+  {
+    return try_object<obj::atom>(atom)->swap_vals(fn);
+  }
+
+  object_ptr swap_vals(object_ptr const atom, object_ptr const fn, object_ptr const a1)
+  {
+    return try_object<obj::atom>(atom)->swap_vals(fn, a1);
+  }
+
+  object_ptr
+  swap_vals(object_ptr const atom, object_ptr const fn, object_ptr const a1, object_ptr const a2)
+  {
+    return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2);
+  }
+
+  object_ptr swap_vals(object_ptr const atom,
+                       object_ptr const fn,
+                       object_ptr const a1,
+                       object_ptr const a2,
+                       object_ptr const rest)
+  {
+    return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2, rest);
+  }
+
+  object_ptr
+  compare_and_set(object_ptr const atom, object_ptr const old_val, object_ptr const new_val)
+  {
+    return try_object<obj::atom>(atom)->compare_and_set(old_val, new_val);
+  }
+
+  object_ptr reset(object_ptr const atom, object_ptr const new_val)
+  {
+    return try_object<obj::atom>(atom)->reset(new_val);
+  }
+
+  object_ptr reset_vals(object_ptr const atom, object_ptr const new_val)
+  {
+    return try_object<obj::atom>(atom)->reset_vals(new_val);
+  }
+
   object_ptr deref(object_ptr const o)
   {
     return visit_object(
@@ -433,5 +504,26 @@ namespace jank::runtime
         }
       },
       o);
+  }
+
+  object_ptr volatile_(object_ptr const o)
+  {
+    return make_box<obj::volatile_>(o);
+  }
+
+  native_bool is_volatile(object_ptr const o)
+  {
+    return o->type == object_type::volatile_;
+  }
+
+  object_ptr vswap(object_ptr const v, object_ptr const fn, object_ptr const args)
+  {
+    auto const v_obj(expect_object<obj::volatile_>(v));
+    return v_obj->reset(apply_to(fn, make_box<obj::cons>(v_obj->deref(), args)));
+  }
+
+  object_ptr vreset(object_ptr const v, object_ptr const new_val)
+  {
+    return expect_object<obj::volatile_>(v)->reset(new_val);
   }
 }
