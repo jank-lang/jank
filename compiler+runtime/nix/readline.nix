@@ -1,5 +1,0 @@
-{
-  pkgs,
-}:
-
-pkgs.readline
