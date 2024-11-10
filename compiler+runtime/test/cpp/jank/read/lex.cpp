@@ -1336,5 +1336,18 @@ namespace jank::read::lex
         }
       }
     }
+    
+    TEST_CASE("UTF-8")
+    {
+      SUBCASE("Symbol name with UTF-8 character")
+      {
+        processor p{ "👍" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                  { 0, 4, token_kind::symbol }
+                }));
+      }
+    }
   }
 }
