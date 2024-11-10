@@ -183,4 +183,5 @@ namespace jank::runtime
   object_ptr chunk_cons(object_ptr chunk, object_ptr rest);
   native_bool is_chunked_seq(object_ptr o);
 
+  object_ptr iterate(object_ptr fn, object_ptr o);
 }

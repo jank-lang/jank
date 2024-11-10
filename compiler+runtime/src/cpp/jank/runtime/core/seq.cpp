@@ -1085,4 +1085,9 @@ namespace jank::runtime
       },
       o);
   }
+
+  object_ptr iterate(object_ptr const fn, object_ptr const o)
+  {
+    return make_box<obj::iterator>(fn, o);
+  }
 }

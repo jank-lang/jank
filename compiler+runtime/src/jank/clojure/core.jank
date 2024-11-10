@@ -58,7 +58,7 @@
 (def next-in-place clojure.core-native.phase-1/next-in-place)
 (def nnext
   (fn* nnext [o]
-    (next-in-place (next o))))
+    (next (next o))))
 (def second clojure.core-native.phase-1/second)
 (def rest clojure.core-native.phase-1/rest)
 (def cons clojure.core-native.phase-1/cons)
@@ -1082,11 +1082,12 @@
 
 (def ^:private lazy-seq* clojure.core-native.phase-1/lazy-seq*)
 
-; Takes a body of expressions that returns an ISeq or nil, and yields
-; a Seqable object that will invoke the body only the first time seq
-; is called, and will cache the result and return it on all subsequent
-; seq calls. See also - realized?
-(defmacro lazy-seq [& body]
+(defmacro lazy-seq
+  "Takes a body of expressions that returns an ISeq or nil, and yields
+   a Seqable object that will invoke the body only the first time seq
+   is called, and will cache the result and return it on all subsequent
+   seq calls. See also - realized?"
+  [& body]
   `(lazy-seq* (fn lazy-seq# [] ~@body)))
 
 (def chunk-buffer
@@ -1733,63 +1734,63 @@
   [x]
   (boolean (and (ident? x) (namespace x) true)))
 
-;;; Sequences.
-;(defn iterate [f x]
-;  (native/raw "__value = make_box<obj::iterator>(~{ f }, ~{ x });"))
-;
-;; TODO: integer_range
-;(defn range
-;  ([]
-;   (iterate inc 0))
-;  ([end]
-;   (native/raw "__value = obj::range::create(~{ end });"))
-;  ([start end]
-;   (native/raw "__value = obj::range::create(~{ start }, ~{ end });"))
-;  ([start end step]
-;   (native/raw "__value = obj::range::create(~{ start }, ~{ end }, ~{ step });")))
-;
-;(defn nth
-;  "Returns the value at the index. get returns nil if index out of
-;  bounds, nth throws an exception unless not-found is supplied.  nth
-;  also works for strings, Java arrays, regex Matchers and Lists, and,
-;  in O(n) time, for sequences."
-;  ([coll index]
-;   (native/raw "__value = runtime::nth(~{ coll }, ~{ index });"))
-;  ([coll index not-found]
-;   (native/raw "__value = runtime::nth(~{ coll }, ~{ index }, ~{ not-found });")))
-;
-;; Returns the nth next of coll, (seq coll) when n is 0.
-;(defn nthnext [coll n]
-;  (if (and (seq coll) (pos? n))
-;    (recur (next coll) (dec n))
-;    coll))
-;
-;; Returns the nth rest of coll, coll when n is 0.
-;(defn nthrest [coll n]
-;  (let [xs (and (pos? n) (seq coll))]
-;    (if xs
-;      (recur (rest coll) (dec n))
-;      coll)))
-;
-;(defn take-nth
-;  "Returns a lazy seq of every nth item in coll.  Returns a stateful
-;  transducer when no collection is provided."
-;  ([n]
-;   (fn [rf]
-;     (let [iv (volatile! -1)]
-;       (fn
-;         ([] (rf))
-;         ([result] (rf result))
-;         ([result input]
-;          (let [i (vswap! iv inc)]
-;            (if (zero? (rem i n))
-;              (rf result input)
-;              result)))))))
-;  ([n coll]
-;   (lazy-seq
-;     (when-let [s (seq coll)]
-;       (cons (first s) (take-nth n (drop n s)))))))
-;
+;; Sequences.
+(def iterate
+  "Returns a lazy (infinite!) sequence of x, (f x), (f (f x)) etc.
+   f must be free of side-effects"
+  clojure.core-native.phase-1/iterate)
+
+; TODO: integer_range
+(def range
+  "Returns a lazy seq of nums from start (inclusive) to end
+   (exclusive), by step, where start defaults to 0, step to 1, and end to
+   infinity. When step is equal to 0, returns an infinite sequence of
+   start. When start is equal to end, returns empty list."
+  clojure.core-native.phase-1/range)
+
+(def nth
+  "Returns the value at the index. get returns nil if index out of
+  bounds, nth throws an exception unless not-found is supplied.  nth
+  also works for strings, Java arrays, regex Matchers and Lists, and,
+  in O(n) time, for sequences."
+  clojure.core-native.phase-1/nth)
+
+(defn nthnext
+  "Returns the nth next of coll, (seq coll) when n is 0."
+  [coll n]
+  (if (and (seq coll) (pos? n))
+    (recur (next coll) (dec n))
+    coll))
+
+(defn nthrest
+  "Returns the nth rest of coll, coll when n is 0."
+  [coll n]
+  (let [xs (and (pos? n) (seq coll))]
+    (if xs
+      (recur (rest coll) (dec n))
+      coll)))
+
+#_(macroexpand '(lazy-seq 1))
+
+#_(defn take-nth
+  "Returns a lazy seq of every nth item in coll.  Returns a stateful
+   transducer when no collection is provided."
+  ([n]
+   (fn [rf]
+     (let [iv (volatile! -1)]
+       (fn
+         ([] (rf))
+         ([result] (rf result))
+         ([result input]
+          (let [i (vswap! iv inc)]
+            (if (zero? (rem i n))
+              (rf result input)
+              result)))))))
+  ([n coll]
+   (lazy-seq
+     (when-let [s (seq coll)]
+       (cons (first s) (take-nth n (drop n s)))))))
+
 ;; Returns a lazy sequence consisting of the result of applying f to
 ;; the set of first items of each coll, followed by applying f to the
 ;; set of second items in each coll, until any one of the colls is
@@ -2235,7 +2236,8 @@
 ;  ;; OPTIMIZE: transient
 ;  (reduce (fn [counts x]
 ;            (assoc counts x (inc (get counts x 0))))
-;          {} coll))
+;          {}
+;          coll))
 ;
 ;(defn group-by
 ;  "Returns a map of the elements of coll keyed by the result of
@@ -2247,7 +2249,8 @@
 ;   (fn [ret x]
 ;     (let [k (f x)]
 ;       (assoc ret k (conj (get ret k []) x))))
-;   {} coll))
+;   {}
+;   coll))
 ;
 ;(defn reductions
 ;  "Returns a lazy seq of the intermediate values of the reduction (as

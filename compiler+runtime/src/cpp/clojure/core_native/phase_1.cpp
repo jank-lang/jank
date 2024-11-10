@@ -221,6 +221,7 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("keyword", &keyword);
   intern_fn("simple-symbol?", &is_simple_symbol);
   intern_fn("qualified-symbol?", &is_qualified_symbol);
+  intern_fn("iterate", &iterate);
 
   {
     auto const fn(
@@ -413,7 +414,7 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
 
   {
     auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
     fn->arity_2 = [](object * const o, object * const k) -> object * { return get(o, k); };
     fn->arity_3 = [](object * const o, object * const k, object * const fallback) -> object * {
       return get(o, k, fallback);
@@ -423,12 +424,43 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
 
   {
     auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
     fn->arity_2 = [](object * const o, object * const k) -> object * { return get_in(o, k); };
     fn->arity_3 = [](object * const o, object * const k, object * const fallback) -> object * {
       return get_in(o, k, fallback);
     };
     intern_fn_obj("get-in", fn);
+  }
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
+    fn->arity_0 = []() -> object * {
+      return iterate(__rt_ctx->intern_var("clojure.core", "inc").expect_ok()->deref(), make_box(0));
+    };
+    fn->arity_1 = [](object * const end) -> object * { return obj::range::create(end); };
+    fn->arity_2 = [](object * const start, object * const end) -> object * {
+      return obj::range::create(start, end);
+    };
+    fn->arity_3 = [](object * const start, object * const end, object * const step) -> object * {
+      return obj::range::create(start, end, step);
+    };
+    intern_fn_obj("range", fn);
+  }
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
+    fn->arity_0 = []() -> object * {
+      return iterate(__rt_ctx->intern_var("clojure.core", "inc").expect_ok()->deref(), make_box(0));
+    };
+    fn->arity_2
+      = [](object * const coll, object * const index) -> object * { return nth(coll, index); };
+    fn->arity_3
+      = [](object * const coll, object * const index, object * const fallback) -> object * {
+      return nth(coll, index, fallback);
+    };
+    intern_fn_obj("nth", fn);
   }
 
   return erase(obj::nil::nil_const());

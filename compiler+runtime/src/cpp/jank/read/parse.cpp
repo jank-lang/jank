@@ -942,10 +942,9 @@ namespace jank::read::parse
     }
     /* Clojure treats these specially, perhaps as a small optimization, by not quoting. We can
      * do the same for now, but quoting all of these has no effect. */
-    /* TODO: Characters. */
     else if(form->type == object_type::keyword || form->type == object_type::persistent_string
             || form->type == object_type::integer || form->type == object_type::real
-            || form->type == object_type::nil)
+            || form->type == object_type::character || form->type == object_type::nil)
     {
       return form;
     }
