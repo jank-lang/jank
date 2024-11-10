@@ -87,12 +87,14 @@ set(
   #-DLIBASSERT_USE_FMT=1
   #-DLIBASSERT_STATIC_DEFINE=1
   #-stdlib=libc++
+  $<$<PLATFORM_ID:Darwin>:-I/opt/homebrew/include>
 )
 
 set(
   jank_linker_flags
   #-stdlib=libc++ -lc++abi
   $<$<PLATFORM_ID:Darwin>:-L/opt/homebrew/lib>
+  # TODO: Fix these.
   $<$<PLATFORM_ID:Darwin>:${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libunwind.a>
   $<$<PLATFORM_ID:Darwin>:${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libc++abi.a>
   )
@@ -111,6 +113,22 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
 # ---- Clang/LLVM ----
 include(cmake/llvm.cmake)
+
+if(
+  NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+  OR
+  NOT CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL CLANG_PACKAGE_VERSION
+)
+  message(
+    FATAL_ERROR
+    "Found Clang ${CLANG_PACKAGE_VERSION} to embed in jank, "
+    "but trying to use ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} to compile it. "
+    "Please ensure you're using the same Clang to compile jank as you are embedding in jank. "
+    "Follow the build.md documentation."
+  )
+endif()
+
+# TODO: Optimize
 llvm_map_components_to_libnames(jank_llvm_libs ${LLVM_TARGETS_TO_BUILD} support lineeditor orcjit native core)
 
 function(jank_hook_llvm target)
@@ -187,6 +205,7 @@ add_library(
   src/cpp/jank/runtime/obj/native_vector_sequence.cpp
   src/cpp/jank/runtime/obj/atom.cpp
   src/cpp/jank/runtime/obj/volatile.cpp
+  src/cpp/jank/runtime/obj/delay.cpp
   src/cpp/jank/runtime/obj/reduced.cpp
   src/cpp/jank/runtime/behavior/callable.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
@@ -215,6 +234,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/magic_enum/include/magic_enum>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/fmt/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
 )
 target_precompile_headers(
@@ -358,10 +378,11 @@ add_library(folly_lib STATIC ${folly_sources})
 set_source_files_properties(${folly_sources} PROPERTIES SKIP_LINTING ON)
 
 target_include_directories(
-    folly_lib
-    SYSTEM
-    PUBLIC
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
+  folly_lib
+  SYSTEM
+  PUBLIC
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
 )
 
 set_property(TARGET folly_lib PROPERTY OUTPUT_NAME folly)

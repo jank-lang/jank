@@ -67,6 +67,7 @@ namespace jank::runtime
     atom,
     volatile_,
     reduced,
+    delay,
     ns,
 
     var,
