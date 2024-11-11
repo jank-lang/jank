@@ -206,9 +206,9 @@ namespace jank::read::parse
               { "\\u1234", "\\u5678", "\\u90ab", "\\ucdef", "\\uABCD", "\\uEFa0" })
           {
             auto const r(p.next());
-            CHECK(equal(r.expect_ok().unwrap().ptr,
-                        make_box<obj::character>(
-                          parse_character_in_base(ch.substr(2), 16).expect_ok())));
+            CHECK(equal(
+              r.expect_ok().unwrap().ptr,
+              make_box<obj::character>(parse_character_in_base(ch.substr(2), 16).expect_ok())));
 
             auto const len(ch.size());
             CHECK(r.expect_ok().unwrap().start
@@ -256,9 +256,9 @@ namespace jank::read::parse
           for(native_persistent_string const &ch : { "\\o012", "\\o345", "\\o670" })
           {
             auto const r(p.next());
-            CHECK(equal(r.expect_ok().unwrap().ptr,
-                        make_box<obj::character>(
-                          parse_character_in_base(ch.substr(2), 8).expect_ok())));
+            CHECK(equal(
+              r.expect_ok().unwrap().ptr,
+              make_box<obj::character>(parse_character_in_base(ch.substr(2), 8).expect_ok())));
 
             auto const len(ch.size());
             CHECK(r.expect_ok().unwrap().start
