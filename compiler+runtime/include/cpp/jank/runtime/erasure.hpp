@@ -30,6 +30,7 @@
 #include <jank/runtime/obj/array_chunk.hpp>
 #include <jank/runtime/obj/chunked_cons.hpp>
 #include <jank/runtime/obj/range.hpp>
+#include <jank/runtime/obj/repeat.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
 #include <jank/runtime/obj/multi_function.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
@@ -286,6 +287,11 @@ namespace jank::runtime
           return fn(expect_object<obj::range>(erased), std::forward<Args>(args)...);
         }
         break;
+      case object_type::repeat:
+        {
+          return fn(expect_object<obj::repeat>(erased), std::forward<Args>(args)...);
+        }
+        break;
       case object_type::native_array_sequence:
         {
           return fn(expect_object<obj::native_array_sequence>(erased), std::forward<Args>(args)...);
@@ -520,6 +526,11 @@ namespace jank::runtime
       case object_type::range:
         {
           return fn(expect_object<obj::range>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::repeat:
+        {
+          return fn(expect_object<obj::repeat>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::native_array_sequence:

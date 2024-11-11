@@ -2236,13 +2236,12 @@
   ; TODO: Custom cycle object
   (lazy-seq (concat coll (cycle coll))))
 
-; Returns a lazy (infinite!, or length n if supplied) sequence of xs.
+; Returns a lazy (infinite!, or length n if supplied) sequence of val.
 (defn repeat
-  ; TODO: Custom repeat object
-  ([x]
-   (lazy-seq (cons x (repeat x))))
-  ([n x]
-   (take n (repeat x))))
+  ([val]
+   (native/raw "__value = obj::repeat::create(~{ val });"))
+  ([count val]
+   (native/raw "__value = obj::repeat::create(~{ count }, ~{ val });")))
 
 ; Returns a vector of [(take n coll) (drop n coll)]
 (defn split-at [n coll]
