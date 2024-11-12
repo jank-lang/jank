@@ -121,7 +121,7 @@ namespace jank
       dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
     }
 
-    auto const get_prompt([&](native_persistent_string const &suffix) {
+    auto const get_prompt([](native_persistent_string const &suffix) {
       return __rt_ctx->current_ns()->name->to_code_string() + suffix;
     });
 
@@ -133,10 +133,9 @@ namespace jank
 
     /* TODO: Completion. */
     /* TODO: Syntax highlighting. */
-    /* TODO: Multi-line input. */
-    while(std::optional<native_persistent_string> buf = le.readLine())
+    while(std::optional<native_transient_string> const &buf = le.readLine())
     {
-      native_transient_string line(*buf);
+      auto line(std::move(*buf));
       boost::trim(line);
 
       if(line.ends_with("\\"))
@@ -147,10 +146,6 @@ namespace jank
       }
 
       input += line;
-      if(input == "(exit)")
-      {
-        break;
-      }
 
       try
       {
@@ -201,9 +196,9 @@ namespace jank
     le.setPrompt("native> ");
     native_transient_string input{};
 
-    while(std::optional<native_persistent_string> buf = le.readLine())
+    while(std::optional<native_transient_string> const &buf = le.readLine())
     {
-      native_transient_string line(*buf);
+      auto line(std::move(*buf));
       boost::trim(line);
 
       if(line.empty())
