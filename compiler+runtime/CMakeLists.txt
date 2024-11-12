@@ -128,14 +128,11 @@ if(
   )
 endif()
 
-# TODO: Optimize
-llvm_map_components_to_libnames(jank_llvm_libs ${LLVM_TARGETS_TO_BUILD} support lineeditor orcjit native core)
-
 function(jank_hook_llvm target)
   set(tgt "${target}")
   target_include_directories("${tgt}" SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
   target_compile_definitions("${tgt}" PRIVATE ${LLVM_DEFINITIONS})
-  target_link_libraries("${tgt}" PRIVATE ${jank_llvm_libs})
+  target_link_directories("${tgt}" PRIVATE ${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib)
 endfunction()
 # ---- Clang/LLVM ----
 
@@ -263,7 +260,9 @@ target_link_libraries(
   bdwgc::gc bdwgc::gccpp
   libzippp::libzippp
   readline
-  clangInterpreter
+  libclang.so
+  libclang-cpp.so
+  libLLVM.so
   Boost::filesystem
   OpenSSL::Crypto
 )
