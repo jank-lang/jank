@@ -212,6 +212,7 @@ namespace jank::read
     processor::processor(native_persistent_string_view const &f)
       : file{ f }
     {
+      std::setlocale(LC_ALL, "en_US.utf8");
     }
 
     processor::iterator::value_type const &processor::iterator::operator*() const
@@ -260,15 +261,23 @@ namespace jank::read
       return none;
     }
 
-    static native_bool is_symbol_char(char const c)
+    static native_bool is_symbol_char(char32_t const c)
     {
       return std::isalnum(static_cast<unsigned char>(c)) != 0 || c == '_' || c == '-' || c == '/'
         || c == '?' || c == '!' || c == '+' || c == '*' || c == '=' || c == '.' || c == '&'
         || c == '<' || c == '>' || c == '#' || c == '%';
     }
 
+    static native_bool is_ascii_char(char32_t const c) { return static_cast<native_bool>(c); }
+
+    static native_bool is_multibyte(char32_t const c)
+    {
+      return static_cast<native_bool>(c);
+    }
+
     result<token, error> processor::next()
     {
+      
       /* Skip whitespace. */
       native_bool found_space{};
       while(true)
@@ -289,7 +298,7 @@ namespace jank::read
       }
 
       auto const token_start(pos);
-      switch(file[token_start])
+      switch(static_cast<char32_t>(file[token_start]))
       {
         case '(':
           require_space = false;
@@ -782,6 +791,33 @@ namespace jank::read
             return ok(token{ token_start, pos - token_start, token_kind::deref });
           }
         default:
+          // Handle possible non-ascii character (utf-8)
+          std::mbstate_t state{};
+          size_t len{};
+          while (pos < file.size())
+          {
+            wchar_t wc{};
+            len = std::mbrtowc(&wc, &file[token_start], file.size() - pos, &state);
+            if (len == static_cast<size_t>(-1))
+            {
+              return err(error {token_start, native_persistent_string{ "incomplete character" }});
+            }
+            else if (len == static_cast<size_t>(-2))
+            {
+              return err(error {token_start, native_persistent_string{ "invalid character: " + file[token_start]}});
+            }
+
+            if (len == 0)
+            {
+              break;
+            }
+            if (std::iswspace(wc))
+            {
+              break;
+            }
+            pos += len;
+            return ok(token{token_start, pos - token_start, token_kind::symbol, file.substr(token_start, pos - token_start)});
+          }
           ++pos;
           return err(
             error{ token_start,

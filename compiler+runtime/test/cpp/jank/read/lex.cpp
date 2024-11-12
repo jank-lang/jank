@@ -1339,13 +1339,31 @@ namespace jank::read::lex
     
     TEST_CASE("UTF-8")
     {
-      SUBCASE("Symbol name with UTF-8 character")
+      SUBCASE("UTF-8 symbol")
       {
         processor p{ "👍" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                  { 0, 4, token_kind::symbol }
+                  { 0, 4, token_kind::symbol, "👍"sv }
+                }));
+      }
+      SUBCASE("UTF-8 keyword")
+      {
+        processor p{ ":🍙" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                  { 0, 5, token_kind::keyword, "🍙"sv },
+        }));
+      }
+      SUBCASE("Multiple UTF-8 characters symbol")
+      {
+        processor p{ "😎👍" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                  { 0, 8, token_kind::symbol, "😎👍"sv }
                 }));
       }
     }
