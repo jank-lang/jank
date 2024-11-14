@@ -992,7 +992,6 @@ namespace jank::codegen
     return builder->CreateLoad(builder->getPtrTy(), global);
   }
 
-  /* TODO: This is broken for non-literals. [a] will become "[a]". */
   llvm::Value *llvm_processor::gen_global_from_read_string(object_ptr const o)
   {
     auto const found(literal_globals.find(o));
