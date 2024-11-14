@@ -38,7 +38,7 @@ echo "Using ${make_j} cores to build"
 srcdir="${PWD}"
 
 llvm_url="https://github.com/jank-lang/llvm-project.git"
-llvm_branch="jank/llvm-20"
+llvm_branch="main"
 
 function prepare()
 {

@@ -66,6 +66,11 @@ namespace clojure::core_native::phase_1
   {
     return make_box(o->type == object_type::var);
   }
+
+  object_ptr delay(object_ptr const fn)
+  {
+    return make_box<obj::delay>(fn);
+  }
 }
 
 jank_object_ptr jank_load_clojure_core_native_phase_1()
@@ -222,6 +227,8 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("simple-symbol?", &is_simple_symbol);
   intern_fn("qualified-symbol?", &is_qualified_symbol);
   intern_fn("iterate", &iterate);
+  intern_fn("delay*", &phase_1::delay);
+  intern_fn("force", &force);
 
   {
     auto const fn(

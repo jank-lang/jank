@@ -739,14 +739,19 @@
   "Returns true if x is a volatile."
   clojure.core-native.phase-1/volatile?)
 
-(defn delay* [f]
-  (native/raw "__value = make_box<obj::delay>(~{ f });"))
+(def ^:private delay* clojure.core-native.phase-1/delay*)
 
-(defmacro delay [& body]
+(defmacro delay
+  "Takes a body of expressions and yields a Delay object that will
+   invoke the body only the first time it is forced (with force or deref/@), and
+   will cache the result and return it on all subsequent force
+   calls. See also - realized?"
+  [& body]
   (list 'delay* (cons 'fn (cons '[] body))))
 
-(defn force [o]
-  (native/raw "__value = runtime::force(~{ o });"))
+(def force
+  "If x is a Delay, returns the (possibly cached) value of its expression, else returns x"
+  clojure.core-native.phase-1/delay*)
 
 ;; Primitives.
 ;;; Arithmetic.
