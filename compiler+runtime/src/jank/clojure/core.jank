@@ -739,8 +739,17 @@
   "Returns true if x is a volatile."
   clojure.core-native.phase-1/volatile?)
 
+(defn delay* [f]
+  (native/raw "__value = make_box<obj::delay>(~{ f });"))
+
+(defmacro delay [& body]
+  (list 'delay* (cons 'fn (cons '[] body))))
+
+(defn force [o]
+  (native/raw "__value = runtime::force(~{ o });"))
+
 ;; Primitives.
-;; Arithmetic.
+;;; Arithmetic.
 (defn
   ^{:arities {2 {:supports-unboxed-input? true
                  :unboxed-output? true}}}
@@ -2058,13 +2067,12 @@ _(defn take-nth
   ; TODO: Custom cycle object
   (lazy-seq (concat coll (cycle coll))))
 
-; Returns a lazy (infinite!, or length n if supplied) sequence of xs.
+; Returns a lazy (infinite!, or length n if supplied) sequence of val.
 (defn repeat
-  ; TODO: Custom repeat object
-  ([x]
-   (lazy-seq (cons x (repeat x))))
-  ([n x]
-   (take n (repeat x))))
+  ([val]
+   (native/raw "__value = obj::repeat::create(~{ val });"))
+  ([count val]
+   (native/raw "__value = obj::repeat::create(~{ count }, ~{ val });")))
 
 ; Returns a vector of [(take n coll) (drop n coll)]
 (defn split-at [n coll]
@@ -3073,46 +3081,37 @@ _(defn take-nth
   [multifn dispatch-val & fn-tail]
   `(defmethod* ~multifn ~dispatch-val (fn ~@fn-tail)))
 
-;(defn remove-all-methods
-;  "Removes all of the methods of multimethod."
-;  {:added "1.2"
-;   :static true}
-; [^clojure.lang.MultiFn multifn]
-; (.reset multifn))
-;
-;(defn remove-method
-;  "Removes the method of multimethod associated with dispatch-value."
-;  {:added "1.0"
-;   :static true}
-; [^clojure.lang.MultiFn multifn dispatch-val]
-; (. multifn removeMethod dispatch-val))
-;
-;(defn prefer-method
-;  "Causes the multimethod to prefer matches of dispatch-val-x over dispatch-val-y
-;   when there is a conflict"
-;  {:added "1.0"
-;   :static true}
-;  [^clojure.lang.MultiFn multifn dispatch-val-x dispatch-val-y]
-;  (. multifn preferMethod dispatch-val-x dispatch-val-y))
-;
-;(defn methods
-;  "Given a multimethod, returns a map of dispatch values -> dispatch fns"
-;  {:added "1.0"
-;   :static true}
-;  [^clojure.lang.MultiFn multifn] (.getMethodTable multifn))
-;
-;(defn get-method
-;  "Given a multimethod and a dispatch value, returns the dispatch fn
-;  that would apply to that value, or nil if none apply and no default"
-;  {:added "1.0"
-;   :static true}
-;  [^clojure.lang.MultiFn multifn dispatch-val] (.getMethod multifn dispatch-val))
-;
-;(defn prefers
-;  "Given a multimethod, returns a map of preferred value -> set of other values"
-;  {:added "1.0"
-;   :static true}
-;  [^clojure.lang.MultiFn multifn] (.getPreferTable multifn))
+(defn remove-all-methods
+  "Removes all of the methods of multimethod."
+  [multifn]
+  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->reset();"))
+
+(defn remove-method
+  "Removes the method of multimethod associated with dispatch-value."
+  [multifn dispatch-val]
+  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->remove_method(~{ dispatch-val });"))
+
+(defn prefer-method
+  "Causes the multimethod to prefer matches of dispatch-val-x over dispatch-val-y
+  when there is a conflict"
+  [multifn dispatch-val-x dispatch-val-y]
+  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->prefer_method(~{ dispatch-val-x }, ~{ dispatch-val-y });"))
+
+(defn methods
+  "Given a multimethod, returns a map of dispatch values -> dispatch fns"
+  [multifn]
+  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->method_table;"))
+
+(defn get-method
+  "Given a multimethod and a dispatch value, returns the dispatch fn
+  that would apply to that value, or nil if none apply and no default"
+  [multifn dispatch-val]
+  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->get_fn(~{ dispatch-val });"))
+
+(defn prefers
+  "Given a multimethod, returns a map of preferred value -> set of other values"
+  [multifn]
+  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->prefer_table;"))
 
 ;; Hierarchies.
 (defn make-hierarchy

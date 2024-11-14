@@ -195,6 +195,7 @@ add_library(
   src/cpp/jank/runtime/obj/persistent_string_sequence.cpp
   src/cpp/jank/runtime/obj/cons.cpp
   src/cpp/jank/runtime/obj/range.cpp
+  src/cpp/jank/runtime/obj/repeat.cpp
   src/cpp/jank/runtime/obj/iterator.cpp
   src/cpp/jank/runtime/obj/lazy_sequence.cpp
   src/cpp/jank/runtime/obj/chunk_buffer.cpp
@@ -204,6 +205,7 @@ add_library(
   src/cpp/jank/runtime/obj/native_vector_sequence.cpp
   src/cpp/jank/runtime/obj/atom.cpp
   src/cpp/jank/runtime/obj/volatile.cpp
+  src/cpp/jank/runtime/obj/delay.cpp
   src/cpp/jank/runtime/obj/reduced.cpp
   src/cpp/jank/runtime/behavior/callable.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
@@ -234,6 +236,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/magic_enum/include/magic_enum>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/fmt/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
 )
 target_precompile_headers(

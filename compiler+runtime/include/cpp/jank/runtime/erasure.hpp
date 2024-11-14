@@ -30,6 +30,7 @@
 #include <jank/runtime/obj/array_chunk.hpp>
 #include <jank/runtime/obj/chunked_cons.hpp>
 #include <jank/runtime/obj/range.hpp>
+#include <jank/runtime/obj/repeat.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
 #include <jank/runtime/obj/jit_closure.hpp>
 #include <jank/runtime/obj/multi_function.hpp>
@@ -43,6 +44,7 @@
 #include <jank/runtime/obj/native_vector_sequence.hpp>
 #include <jank/runtime/obj/atom.hpp>
 #include <jank/runtime/obj/volatile.hpp>
+#include <jank/runtime/obj/delay.hpp>
 #include <jank/runtime/obj/reduced.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
@@ -287,6 +289,11 @@ namespace jank::runtime
           return fn(expect_object<obj::range>(erased), std::forward<Args>(args)...);
         }
         break;
+      case object_type::repeat:
+        {
+          return fn(expect_object<obj::repeat>(erased), std::forward<Args>(args)...);
+        }
+        break;
       case object_type::native_array_sequence:
         {
           return fn(expect_object<obj::native_array_sequence>(erased), std::forward<Args>(args)...);
@@ -387,6 +394,11 @@ namespace jank::runtime
       case object_type::reduced:
         {
           return fn(expect_object<obj::reduced>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::delay:
+        {
+          return fn(expect_object<obj::delay>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::ns:
@@ -523,6 +535,11 @@ namespace jank::runtime
       case object_type::range:
         {
           return fn(expect_object<obj::range>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::repeat:
+        {
+          return fn(expect_object<obj::repeat>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::native_array_sequence:

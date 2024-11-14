@@ -80,4 +80,6 @@ namespace jank::runtime
   void push_thread_bindings(object_ptr o);
   void pop_thread_bindings();
   object_ptr get_thread_bindings();
+
+  object_ptr force(object_ptr o);
 }

@@ -52,6 +52,7 @@ namespace jank::runtime
     cons,
     lazy_sequence,
     range,
+    repeat,
     iterator,
     native_array_sequence,
     native_vector_sequence,
@@ -68,6 +69,7 @@ namespace jank::runtime
     atom,
     volatile_,
     reduced,
+    delay,
     ns,
 
     var,
