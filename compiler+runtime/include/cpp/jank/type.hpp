@@ -34,6 +34,7 @@ namespace jank
   using native_unordered_map
     = boost::unordered_map<K, V, Hash, Pred, native_allocator<std::pair<K const, V>>>;
 
+  /* TODO: This will leak if it's stored in a GC-tracked object. */
   using native_transient_string = std::string;
 }
 
