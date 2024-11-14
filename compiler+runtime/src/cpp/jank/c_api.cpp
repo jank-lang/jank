@@ -1,3 +1,5 @@
+#include <cstdarg>
+
 #include <jank/c_api.h>
 
 using namespace jank;
