@@ -138,13 +138,13 @@ namespace jank::runtime
   template <typename It>
   native_bool equal(object const &o, It const begin, It const end)
   {
-    return visit_object(
+    return visit_seqable(
       [](auto const typed_o, auto const begin, auto const end) -> native_bool {
         using T = typename decltype(typed_o)::value_type;
 
         /* nil is seqable, but we don't want it to be equal to an empty collection.
            An empty seq itself is nil, but that's different. */
-        if constexpr(std::same_as<T, obj::nil> || !behavior::seqable<T>)
+        if constexpr(std::same_as<T, obj::nil>)
         {
           return false;
         }
@@ -162,10 +162,13 @@ namespace jank::runtime
           return seq == nullptr && it == end;
         }
       },
+      []() { return false; },
       &o,
       begin,
       end);
   }
+
+  native_bool sequence_equal(object_ptr l, object_ptr r);
 
   size_t sequence_length(object_ptr const s);
   size_t sequence_length(object_ptr const s, size_t const max);

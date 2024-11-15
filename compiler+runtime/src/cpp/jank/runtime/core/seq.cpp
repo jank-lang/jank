@@ -11,47 +11,6 @@
 
 namespace jank::runtime
 {
-  size_t sequence_length(object_ptr const s)
-  {
-    return sequence_length(s, std::numeric_limits<size_t>::max());
-  }
-
-  size_t sequence_length(object_ptr const s, size_t const max)
-  {
-    if(s == nullptr)
-    {
-      return 0;
-    }
-
-    return visit_object(
-      [&](auto const typed_s) -> size_t {
-        using T = typename decltype(typed_s)::value_type;
-
-        if constexpr(std::same_as<T, obj::nil>)
-        {
-          return 0;
-        }
-        else if constexpr(behavior::countable<T>)
-        {
-          return typed_s->count();
-        }
-        else if constexpr(behavior::seqable<T>)
-        {
-          size_t length{ 0 };
-          for(auto i(typed_s->fresh_seq()); i != nullptr && length < max; i = next_in_place(i))
-          {
-            ++length;
-          }
-          return length;
-        }
-        else
-        {
-          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) };
-        }
-      },
-      s);
-  }
-
   native_bool is_empty(object_ptr const o)
   {
     return visit_object(
@@ -968,6 +927,90 @@ namespace jank::runtime
         return obj::persistent_vector::create(typed_s);
       },
       s);
+  }
+
+  size_t sequence_length(object_ptr const s)
+  {
+    return sequence_length(s, std::numeric_limits<size_t>::max());
+  }
+
+  size_t sequence_length(object_ptr const s, size_t const max)
+  {
+    if(s == nullptr)
+    {
+      return 0;
+    }
+
+    return visit_object(
+      [&](auto const typed_s) -> size_t {
+        using T = typename decltype(typed_s)::value_type;
+
+        if constexpr(std::same_as<T, obj::nil>)
+        {
+          return 0;
+        }
+        else if constexpr(behavior::countable<T>)
+        {
+          return typed_s->count();
+        }
+        else if constexpr(behavior::seqable<T>)
+        {
+          size_t length{ 0 };
+          for(auto i(typed_s->fresh_seq()); i != nullptr && length < max; i = next_in_place(i))
+          {
+            ++length;
+          }
+          return length;
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) };
+        }
+      },
+      s);
+  }
+
+  native_bool sequence_equal(object_ptr const l, object_ptr const r)
+  {
+    if(l == r)
+    {
+      return true;
+    }
+
+    /* TODO: visit_sequence. */
+    return visit_seqable(
+      [](auto const typed_l, object_ptr const r) -> native_bool {
+        return visit_seqable(
+          [](auto const typed_r, auto const typed_l) -> native_bool {
+            auto r_it(typed_r->fresh_seq());
+            auto l_it(typed_l->fresh_seq());
+            if(!r_it)
+            {
+              return l_it == nullptr;
+            }
+            if(!l_it)
+            {
+              return r_it == nullptr;
+            }
+
+            for(; l_it != nullptr; l_it = l_it->next_in_place(), r_it = r_it->next_in_place())
+            {
+              if(!r_it)
+              {
+                return false;
+              }
+              if(!runtime::equal(l_it->first(), r_it->first()))
+              {
+                return false;
+              }
+            }
+            return r_it == nullptr;
+          },
+          r,
+          typed_l);
+      },
+      l,
+      r);
   }
 
   object_ptr reduce(object_ptr const f, object_ptr const init, object_ptr const s)

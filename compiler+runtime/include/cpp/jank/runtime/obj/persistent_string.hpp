@@ -5,7 +5,6 @@
 
 namespace jank::runtime
 {
-  /* TODO: Seqable. */
   template <>
   struct static_object<object_type::persistent_string> : gc
   {

@@ -44,7 +44,30 @@ namespace jank::runtime
 
   native_bool obj::persistent_hash_set::equal(object const &o) const
   {
-    return runtime::equal(o, data.begin(), data.end());
+    if(&o == &base)
+    {
+      return true;
+    }
+
+    return visit_set_like(
+      [&](auto const typed_o) -> native_bool {
+        if(typed_o->count() != count())
+        {
+          return false;
+        }
+
+        for(auto const entry : data)
+        {
+          if(!typed_o->contains(entry))
+          {
+            return false;
+          }
+        }
+
+        return true;
+      },
+      []() { return false; },
+      &o);
   }
 
   void obj::persistent_hash_set::to_string(fmt::memory_buffer &buff) const

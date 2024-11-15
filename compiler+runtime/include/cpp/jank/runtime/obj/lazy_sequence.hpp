@@ -15,6 +15,7 @@ namespace jank::runtime
   struct static_object<object_type::lazy_sequence> : gc
   {
     static constexpr native_bool pointer_free{ false };
+    static constexpr native_bool is_sequential{ true };
 
     static_object() = default;
     static_object(static_object &&) = default;

@@ -25,16 +25,8 @@ namespace jank::runtime::obj::detail
     /* behavior::object_like */
     native_bool equal(object const &o) const
     {
-      return visit_object(
+      return visit_seqable(
         [this](auto const typed_o) {
-          using T = typename decltype(typed_o)::value_type;
-
-          if constexpr(!behavior::seqable<T>)
-          {
-            return false;
-          }
-          else
-          {
             auto seq(typed_o->seq());
             for(auto it(begin); it != end; ++it, seq = runtime::next_in_place(seq))
             {
@@ -44,8 +36,8 @@ namespace jank::runtime::obj::detail
               }
             }
             return true;
-          }
         },
+        [](){ return false; },
         &o);
     }
 

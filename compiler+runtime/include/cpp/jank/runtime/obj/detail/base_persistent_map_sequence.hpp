@@ -8,6 +8,7 @@ namespace jank::runtime::obj::detail
   struct base_persistent_map_sequence : gc
   {
     static constexpr native_bool pointer_free{ false };
+    static constexpr native_bool is_sequential{ true };
 
     using parent_type = static_object<OT>;
     using iterator_type = It;
@@ -27,16 +28,8 @@ namespace jank::runtime::obj::detail
     /* behavior::object_like */
     native_bool equal(object const &o) const
     {
-      return visit_object(
+      return visit_seqable(
         [this](auto const typed_o) {
-          using T = typename decltype(typed_o)::value_type;
-
-          if constexpr(!behavior::seqable<T>)
-          {
-            return false;
-          }
-          else
-          {
             auto seq(typed_o->fresh_seq());
             for(auto it(fresh_seq()); it != nullptr;
                 it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
@@ -47,8 +40,8 @@ namespace jank::runtime::obj::detail
               }
             }
             return true;
-          }
         },
+        [](){ return false; },
         &o);
     }
 

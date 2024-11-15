@@ -96,9 +96,29 @@ namespace jank::runtime
     return const_cast<object *>(&o->base);
   }
 
-  /* This is dangerous. You probably don't want it. Just use `try_object` or `visit_object`.
-   * However, if you're absolutely certain you know the type of an erased object, I guess
-   * you can use this. */
+  template <typename T>
+  requires behavior::object_like<T>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  constexpr native_box<T> isa(object const * const o)
+  {
+    assert(o);
+    return o->type == detail::object_type_to_enum<T>::value;
+  }
+
+  template <typename T>
+  requires behavior::object_like<T>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  constexpr native_box<T> dyn_cast(object const * const o)
+  {
+    assert(o);
+    if(o->type != detail::object_type_to_enum<T>::value)
+    {
+      return nullptr;
+    }
+    return reinterpret_cast<T *>(reinterpret_cast<char *>(const_cast<object *>(o))
+                                 - offsetof(T, base));
+  }
+
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
@@ -119,6 +139,9 @@ namespace jank::runtime
                                  - offsetof(T, base));
   }
 
+  /* This is dangerous. You probably don't want it. Just use `try_object` or `visit_object`.
+   * However, if you're absolutely certain you know the type of an erased object, I guess
+   * you can use this. */
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
@@ -142,7 +165,7 @@ namespace jank::runtime
 
   template <typename T, typename F, typename... Args>
   requires behavior::object_like<T>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  [[gnu::hot]]
   constexpr auto visit_object(F const &fn, native_box<T const> const not_erased, Args &&...args)
   {
     return fn(const_cast<T *>(&not_erased->base), std::forward<Args>(args)...);
@@ -153,7 +176,7 @@ namespace jank::runtime
 
   template <typename F, typename... Args>
   requires visitable<F, Args...>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  [[gnu::hot]]
   constexpr auto visit_object(F const &fn, object const * const const_erased, Args &&...args)
   {
     assert(const_erased);
@@ -442,7 +465,7 @@ namespace jank::runtime
 
   /* Allows the visiting of a single type. */
   template <typename T, typename F, typename... Args>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  [[gnu::hot]]
   constexpr auto visit_type(F const &fn, object const * const const_erased, Args &&...args)
   {
     if(const_erased->type == detail::object_type_to_enum<T>::value)
@@ -458,7 +481,7 @@ namespace jank::runtime
 
   template <typename F1, typename F2, typename... Args>
   requires(visitable<F1, Args...> && !std::convertible_to<F2, object const *>)
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  [[gnu::hot]]
   constexpr auto
   visit_seqable(F1 const &fn, F2 const &else_fn, object const * const const_erased, Args &&...args)
   {
@@ -613,7 +636,7 @@ namespace jank::runtime
 
   /* Throws if the object isn't seqable. */
   template <typename F1, typename... Args>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  [[gnu::hot]]
   constexpr auto visit_seqable(F1 const &fn, object const * const const_erased, Args &&...args)
   {
     return visit_seqable(
@@ -626,8 +649,73 @@ namespace jank::runtime
   }
 
   template <typename F1, typename F2, typename... Args>
+  requires(visitable<F1, Args...> && !std::convertible_to<F2, object const *>)
+  [[gnu::hot]]
+  constexpr auto
+  visit_map_like(F1 const &fn, F2 const &else_fn, object const * const const_erased, Args &&...args)
+  {
+    assert(const_erased);
+    auto * const erased(const_cast<object *>(const_erased));
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+    switch(erased->type)
+    {
+      case object_type::persistent_array_map:
+        {
+          return fn(expect_object<obj::persistent_array_map>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_hash_map:
+        {
+          return fn(expect_object<obj::persistent_hash_map>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_sorted_map:
+        {
+          return fn(expect_object<obj::persistent_sorted_map>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      /* Not map-like. */
+      default:
+        return else_fn();
+    }
+#pragma clang diagnostic pop
+  }
+
+  template <typename F1, typename F2, typename... Args>
+  requires(visitable<F1, Args...> && !std::convertible_to<F2, object const *>)
+  [[gnu::hot]]
+  constexpr auto
+  visit_set_like(F1 const &fn, F2 const &else_fn, object const * const const_erased, Args &&...args)
+  {
+    assert(const_erased);
+    auto * const erased(const_cast<object *>(const_erased));
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+    switch(erased->type)
+    {
+      case object_type::persistent_hash_set:
+        {
+          return fn(expect_object<obj::persistent_hash_set>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_sorted_set:
+        {
+          return fn(expect_object<obj::persistent_sorted_set>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      /* Not map-like. */
+      default:
+        return else_fn();
+    }
+#pragma clang diagnostic pop
+  }
+
+  template <typename F1, typename F2, typename... Args>
   requires(!std::convertible_to<F2, object const *>)
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  [[gnu::hot]]
   constexpr auto visit_number_like(F1 const &fn,
                                    F2 const &else_fn,
                                    object const * const const_erased,
@@ -658,7 +746,7 @@ namespace jank::runtime
 
   /* Throws if the object isn't number-like. */
   template <typename F1, typename... Args>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  [[gnu::hot]]
   constexpr auto visit_number_like(F1 const &fn, object const * const const_erased, Args &&...args)
   {
     return visit_number_like(

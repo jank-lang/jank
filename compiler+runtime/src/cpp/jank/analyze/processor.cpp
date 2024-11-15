@@ -373,7 +373,7 @@ namespace jank::analyze
     auto const length(full_list->count());
     if(length < 2)
     {
-      return err(error{ "fn missing forms" });
+      return err(error{ fmt::format("fn missing forms: {}", full_list->to_string()) });
     }
     auto list(full_list);
 
@@ -387,6 +387,10 @@ namespace jank::analyze
        * conflict with the RT `min` fn, for example. */
       name = s->name;
       unique_name = runtime::context::unique_string(name);
+      if(length < 3)
+      {
+        return err(error{ fmt::format("fn missing forms: {}", full_list->to_string()) });
+      }
       first_elem = list->data.rest().rest().first().unwrap();
       list = make_box(list->data.rest());
     }
@@ -641,7 +645,8 @@ namespace jank::analyze
     auto const bindings_obj(o->data.rest().first().unwrap());
     if(bindings_obj->type != runtime::object_type::persistent_vector)
     {
-      return err(error{ "invalid let* bindings: must be a vector" });
+      return err(error{
+        fmt::format("invalid let* bindings: must be a vector, not {}", to_string(bindings_obj)) });
     }
 
     auto const bindings(runtime::expect_object<runtime::obj::persistent_vector>(bindings_obj));
