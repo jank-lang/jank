@@ -152,7 +152,7 @@ namespace jank::read::lex
     result<token, error> next();
     option<char> peek() const;
     option<error> check_whitespace(native_bool const found_space);
-
+    
     iterator begin();
     iterator end();
 
@@ -162,5 +162,11 @@ namespace jank::read::lex
     /* True when seeing a '/' following a number. */
     native_bool found_slash_after_number{};
     native_persistent_string_view file;
+
+  private:
+    /* State for conversion */
+    void reset_state();
+    native_bool check_mb_error(size_t len);
+    std::mbstate_t state;
   };
 }
