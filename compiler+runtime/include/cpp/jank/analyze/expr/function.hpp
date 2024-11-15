@@ -6,6 +6,11 @@
 #include <jank/analyze/expression_base.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 
+namespace jank::analyze
+{
+  struct expression;
+}
+
 namespace jank::analyze::expr
 {
   using namespace jank::runtime;
@@ -14,7 +19,9 @@ namespace jank::analyze::expr
   {
     static constexpr native_bool pointer_free{ true };
 
+    native_box<expression> fn{};
     native_persistent_string name;
+    native_persistent_string unique_name;
     size_t param_count{};
     native_bool is_variadic{};
     native_bool is_tail_recursive{};
@@ -22,6 +29,9 @@ namespace jank::analyze::expr
   };
 
   using function_context_ptr = native_box<function_context>;
+
+  template <typename E>
+  struct function;
 
   template <typename E>
   struct function_arity
@@ -34,7 +44,7 @@ namespace jank::analyze::expr
     object_ptr to_runtime_data() const
     {
       object_ptr param_maps(make_box<obj::persistent_vector>());
-      for(auto const &e : params)
+      for(auto const e : params)
       {
         param_maps = conj(param_maps, e);
       }

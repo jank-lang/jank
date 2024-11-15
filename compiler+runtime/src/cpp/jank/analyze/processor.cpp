@@ -213,12 +213,15 @@ namespace jank::analyze
         unwrapped_local.binding
       });
     }
-    /* If it's not a local and it matches the current fn's name, we're dealing with a
-     * reference to the current fn. We don't want to go to var lookup now. */
-    else if(fn_ctx.is_some() && sym->to_string() == fn_ctx.unwrap()->name)
+
+    /* If it's not a local and it matches a fn's name, we're dealing with a
+     * reference to a fn. We don't want to go to var lookup now. */
+    auto const found_named_recursion(current_frame->find_named_recursion(sym));
+    if(found_named_recursion.is_some())
     {
       return make_box<expression>(expr::recursion_reference<expression>{
-        expression_base{ {}, position, current_frame, needs_box }
+        expression_base{ {}, position, current_frame, needs_box },
+        found_named_recursion.unwrap()
       });
     }
 
@@ -332,6 +335,7 @@ namespace jank::analyze
     fn_ctx->name = name;
     fn_ctx->is_variadic = is_variadic;
     fn_ctx->param_count = param_symbols.size();
+    frame->fn_ctx = fn_ctx;
     expr::do_<expression> body_do{
       expression_base{ {}, expression_position::tail, frame }
     };
@@ -382,9 +386,6 @@ namespace jank::analyze
     if(first_elem->type == runtime::object_type::symbol)
     {
       auto const s(runtime::expect_object<runtime::obj::symbol>(first_elem));
-      /* TODO: Remove the generated portion here once we support codegen for making all references
-       * to generated code use the fully qualified name. Right now, a jank fn named `min` will
-       * conflict with the RT `min` fn, for example. */
       name = s->name;
       unique_name = runtime::context::unique_string(name);
       if(length < 3)
@@ -486,9 +487,27 @@ namespace jank::analyze
       }
     }
 
+    auto const meta(runtime::obj::persistent_hash_map::create_unique(
+      std::make_pair(rt_ctx.intern_keyword("source").expect_ok(), make_box(full_list->to_string())),
+      std::make_pair(
+        rt_ctx.intern_keyword("name").expect_ok(),
+        make_box(runtime::obj::symbol{ runtime::__rt_ctx->current_ns()->to_string(), name }
+                   .to_string()))));
+
+    auto ret(make_box<expression>(expr::function<expression>{
+      expression_base{ {}, position, current_frame },
+      name,
+      unique_name,
+      {},
+      meta
+    }));
+
     /* Assert that arities are unique. Lazy implementation, but N is small anyway. */
     for(auto base(arities.begin()); base != arities.end(); ++base)
     {
+      base->fn_ctx->fn = ret;
+      base->fn_ctx->name = name;
+      base->fn_ctx->unique_name = unique_name;
       if(base + 1 == arities.end())
       {
         break;
@@ -504,20 +523,7 @@ namespace jank::analyze
       }
     }
 
-    auto const meta(runtime::obj::persistent_hash_map::create_unique(
-      std::make_pair(rt_ctx.intern_keyword("source").expect_ok(), make_box(full_list->to_string())),
-      std::make_pair(
-        rt_ctx.intern_keyword("name").expect_ok(),
-        make_box(runtime::obj::symbol{ runtime::__rt_ctx->current_ns()->to_string(), name }
-                   .to_string()))));
-
-    auto ret(make_box<expression>(expr::function<expression>{
-      expression_base{ {}, position, current_frame },
-      name,
-      unique_name,
-      std::move(arities),
-      meta
-    }));
+    boost::get<expr::function<expression>>(ret->data).arities = std::move(arities);
 
     if(runtime::truthy(rt_ctx.compile_files_var->deref()))
     {
@@ -1500,6 +1506,7 @@ namespace jank::analyze
     {
       return make_box<expression>(expr::named_recursion<expression>{
         expression_base{ {}, position, current_frame, needs_ret_box },
+        *recursion_ref,
         make_box<runtime::obj::persistent_list>(o->data.rest()),
         arg_exprs
       });

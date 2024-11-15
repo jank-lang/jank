@@ -1169,911 +1169,908 @@
                         (cat* (first zs) (next zs)))))))]
      (cat* (concat x y) zs))))
 
-; TODO: Remove.
-(concat [1] [2] [3])
+(defn juxt
+  "Takes a set of functions and returns a fn that is the juxtaposition
+  of those fns. The returned fn takes a variable number of args, and
+  returns a vector containing the result of applying each fn to the
+  args (left-to-right).
+  ((juxt a b c) x) => [(a x) (b x) (c x)]"
+  ([f]
+     (fn
+       ([] [(f)])
+       ([x] [(f x)])
+       ([x y] [(f x y)])
+       ([x y z] [(f x y z)])
+       ([x y z & args] [(apply f x y z args)])))
+  ([f g]
+     (fn
+       ([] [(f) (g)])
+       ([x] [(f x) (g x)])
+       ([x y] [(f x y) (g x y)])
+       ([x y z] [(f x y z) (g x y z)])
+       ([x y z & args] [(apply f x y z args) (apply g x y z args)])))
+  ([f g h]
+     (fn
+       ([] [(f) (g) (h)])
+       ([x] [(f x) (g x) (h x)])
+       ([x y] [(f x y) (g x y) (h x y)])
+       ([x y z] [(f x y z) (g x y z) (h x y z)])
+       ([x y z & args] [(apply f x y z args) (apply g x y z args) (apply h x y z args)])))
+  ([f g h & fs]
+     (let [fs (list* f g h fs)]
+       (fn
+         ([] (reduce #(conj %1 (%2)) [] fs))
+         ([x] (reduce #(conj %1 (%2 x)) [] fs))
+         ([x y] (reduce #(conj %1 (%2 x y)) [] fs))
+         ([x y z] (reduce #(conj %1 (%2 x y z)) [] fs))
+         ([x y z & args] (reduce #(conj %1 (apply %2 x y z args)) [] fs))))))
 
-;(defn juxt
-;  "Takes a set of functions and returns a fn that is the juxtaposition
-;  of those fns. The returned fn takes a variable number of args, and
-;  returns a vector containing the result of applying each fn to the
-;  args (left-to-right).
-;  ((juxt a b c) x) => [(a x) (b x) (c x)]"
-;  ([f]
-;     (fn
-;       ([] [(f)])
-;       ([x] [(f x)])
-;       ([x y] [(f x y)])
-;       ([x y z] [(f x y z)])
-;       ([x y z & args] [(apply f x y z args)])))
-;  ([f g]
-;     (fn
-;       ([] [(f) (g)])
-;       ([x] [(f x) (g x)])
-;       ([x y] [(f x y) (g x y)])
-;       ([x y z] [(f x y z) (g x y z)])
-;       ([x y z & args] [(apply f x y z args) (apply g x y z args)])))
-;  ([f g h]
-;     (fn
-;       ([] [(f) (g) (h)])
-;       ([x] [(f x) (g x) (h x)])
-;       ([x y] [(f x y) (g x y) (h x y)])
-;       ([x y z] [(f x y z) (g x y z) (h x y z)])
-;       ([x y z & args] [(apply f x y z args) (apply g x y z args) (apply h x y z args)])))
-;  ([f g h & fs]
-;     (let [fs (list* f g h fs)]
-;       (fn
-;         ([] (reduce #(conj %1 (%2)) [] fs))
-;         ([x] (reduce #(conj %1 (%2 x)) [] fs))
-;         ([x y] (reduce #(conj %1 (%2 x y)) [] fs))
-;         ([x y z] (reduce #(conj %1 (%2 x y z)) [] fs))
-;         ([x y z & args] (reduce #(conj %1 (apply %2 x y z args)) [] fs))))))
-;
-;(defn partial
-;  "Takes a function f and fewer than the normal arguments to f, and
-;  returns a fn that takes a variable number of additional args. When
-;  called, the returned function calls f with args + additional args."
-;  ([f] f)
-;  ([f arg1]
-;   (fn
-;     ([] (f arg1))
-;     ([x] (f arg1 x))
-;     ([x y] (f arg1 x y))
-;     ([x y z] (f arg1 x y z))
-;     ([x y z & args] (apply f arg1 x y z args))))
-;  ([f arg1 arg2]
-;   (fn
-;     ([] (f arg1 arg2))
-;     ([x] (f arg1 arg2 x))
-;     ([x y] (f arg1 arg2 x y))
-;     ([x y z] (f arg1 arg2 x y z))
-;     ([x y z & args] (apply f arg1 arg2 x y z args))))
-;  ([f arg1 arg2 arg3]
-;   (fn
-;     ([] (f arg1 arg2 arg3))
-;     ([x] (f arg1 arg2 arg3 x))
-;     ([x y] (f arg1 arg2 arg3 x y))
-;     ([x y z] (f arg1 arg2 arg3 x y z))
-;     ([x y z & args] (apply f arg1 arg2 arg3 x y z args))))
-;  ([f arg1 arg2 arg3 & more]
-;   (fn [& args] (apply f arg1 arg2 arg3 (concat more args)))))
-;
-;(defn fnil
-;  "Takes a function f, and returns a function that calls f, replacing
-;  a nil first argument to f with the supplied value x. Higher arity
-;  versions can replace arguments in the second and third
-;  positions (y, z). Note that the function f can take any number of
-;  arguments, not just the one(s) being nil-patched."
-;  ([f x]
-;   (fn
-;     ([a] (f (if (nil? a) x a)))
-;     ([a b] (f (if (nil? a) x a) b))
-;     ([a b c] (f (if (nil? a) x a) b c))
-;     ([a b c & ds] (apply f (if (nil? a) x a) b c ds))))
-;  ([f x y]
-;   (fn
-;     ([a b] (f (if (nil? a) x a) (if (nil? b) y b)))
-;     ([a b c] (f (if (nil? a) x a) (if (nil? b) y b) c))
-;     ([a b c & ds] (apply f (if (nil? a) x a) (if (nil? b) y b) c ds))))
-;  ([f x y z]
-;   (fn
-;     ([a b] (f (if (nil? a) x a) (if (nil? b) y b)))
-;     ([a b c] (f (if (nil? a) x a) (if (nil? b) y b) (if (nil? c) z c)))
-;     ([a b c & ds] (apply f (if (nil? a) x a) (if (nil? b) y b) (if (nil? c) z c) ds)))))
-;
-;; Returns the first logical true value of (pred x) for any x in coll,
-;; else nil.  One common idiom is to use a set as pred, for example
-;; this will return :fred if :fred is in the sequence, otherwise nil:
-;; (some #{:fred} coll)
-;(defn some [pred coll]
-;  (let [s (seq coll)]
-;    (when s
-;      (or (pred (first s)) (recur pred (next s))))))
-;
-;
-;(defn every-pred
-;  "Takes a set of predicates and returns a function f that returns true if all of its
-;  composing predicates return a logical true value against all of its arguments, else it returns
-;  false. Note that f is short-circuiting in that it will stop execution on the first
-;  argument that triggers a logical false result against the original predicates."
-;  ([p]
-;     (fn ep1
-;       ([] true)
-;       ([x] (boolean (p x)))
-;       ([x y] (boolean (and (p x) (p y))))
-;       ([x y z] (boolean (and (p x) (p y) (p z))))
-;       ([x y z & args] (boolean (and (ep1 x y z)
-;                                     (every? p args))))))
-;  ([p1 p2]
-;     (fn ep2
-;       ([] true)
-;       ([x] (boolean (and (p1 x) (p2 x))))
-;       ([x y] (boolean (and (p1 x) (p1 y) (p2 x) (p2 y))))
-;       ([x y z] (boolean (and (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z))))
-;       ([x y z & args] (boolean (and (ep2 x y z)
-;                                     (every? #(and (p1 %) (p2 %)) args))))))
-;  ([p1 p2 p3]
-;     (fn ep3
-;       ([] true)
-;       ([x] (boolean (and (p1 x) (p2 x) (p3 x))))
-;       ([x y] (boolean (and (p1 x) (p1 y) (p2 x) (p2 y) (p3 x) (p3 y))))
-;       ([x y z] (boolean (and (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z) (p3 x) (p3 y) (p3 z))))
-;       ([x y z & args] (boolean (and (ep3 x y z)
-;                                     (every? #(and (p1 %) (p2 %) (p3 %)) args))))))
-;  ([p1 p2 p3 & ps]
-;     (let [ps (list* p1 p2 p3 ps)]
-;       (fn epn
-;         ([] true)
-;         ([x] (every? #(% x) ps))
-;         ([x y] (every? #(and (% x) (% y)) ps))
-;         ([x y z] (every? #(and (% x) (% y) (% z)) ps))
-;         ([x y z & args] (boolean (and (epn x y z)
-;                                       (every? #(every? % args) ps))))))))
-;
-;(defn some-fn
-;  "Takes a set of predicates and returns a function f that returns the first logical true value
-;  returned by one of its composing predicates against any of its arguments, else it returns
-;  logical false. Note that f is short-circuiting in that it will stop execution on the first
-;  argument that triggers a logical true result against the original predicates."
-;  ([p]
-;     (fn sp1
-;       ([] nil)
-;       ([x] (p x))
-;       ([x y] (or (p x) (p y)))
-;       ([x y z] (or (p x) (p y) (p z)))
-;       ([x y z & args] (or (sp1 x y z)
-;                           (some p args)))))
-;  ([p1 p2]
-;     (fn sp2
-;       ([] nil)
-;       ([x] (or (p1 x) (p2 x)))
-;       ([x y] (or (p1 x) (p1 y) (p2 x) (p2 y)))
-;       ([x y z] (or (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z)))
-;       ([x y z & args] (or (sp2 x y z)
-;                           (some #(or (p1 %) (p2 %)) args)))))
-;  ([p1 p2 p3]
-;     (fn sp3
-;       ([] nil)
-;       ([x] (or (p1 x) (p2 x) (p3 x)))
-;       ([x y] (or (p1 x) (p1 y) (p2 x) (p2 y) (p3 x) (p3 y)))
-;       ([x y z] (or (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z) (p3 x) (p3 y) (p3 z)))
-;       ([x y z & args] (or (sp3 x y z)
-;                           (some #(or (p1 %) (p2 %) (p3 %)) args)))))
-;  ([p1 p2 p3 & ps]
-;     (let [ps (list* p1 p2 p3 ps)]
-;       (fn spn
-;         ([] nil)
-;         ([x] (some #(% x) ps))
-;         ([x y] (some #(or (% x) (% y)) ps))
-;         ([x y z] (some #(or (% x) (% y) (% z)) ps))
-;         ([x y z & args] (or (spn x y z)
-;                             (some #(some % args) ps)))))))
-;
-;
-;(defn not-any? [pred coll]
-;  (not (some pred coll)))
-;
-;; Threads the expr through the forms. Inserts x as the
-;; second item in the first form, making a list of it if it is not a
-;; list already. If there are more forms, inserts the first form as the
-;; second item in second form, etc.
-;(defmacro -> [x & forms]
-;  (loop* [x x
-;          forms forms]
-;    (if forms
-;      (let [form (first forms)
-;            threaded (if (seq? form)
-;                       (with-meta `(~(first form) ~x ~@(next form)) (meta form))
-;                       (list form x))]
-;        (recur threaded (next forms)))
-;      x)))
-;
-;; Threads the expr through the forms. Inserts x as the
-;; last item in the first form, making a list of it if it is not a
-;; list already. If there are more forms, inserts the first form as the
-;; last item in second form, etc.
-;(defmacro ->> [x & forms]
-;  (loop* [x x
-;          forms forms]
-;    (if forms
-;      (let [form (first forms)
-;            threaded (if (seq? form)
-;                       (with-meta `(~(first form) ~@(next form)  ~x) (meta form))
-;                       (list form x))]
-;        (recur threaded (next forms)))
-;      x)))
-;
-;;; Maps.
-;; XXX: Clojure returns an array map for the nullary arity, but that sucks.
-;(def hash-map
-;  "keyval => key val
-;   Returns a new hash map with supplied mappings. If any keys are
-;   equal, they are handled as if by repeated uses of assoc."
-;  clojure.core-native.phase-1/hash-map)
-;
-;(def sorted-map
-;  "keyval => key val
-;   Returns a new sorted map with supplied mappings. If any keys are
-;   equal, they are handled as if by repeated uses of assoc."
-;  clojure.core-native.phase-1/sorted-map)
-;
-;(defn key
-;  "Returns the key of the map entry."
-;  [e]
-;  (first e))
-;
-;(defn val
-;  "Returns the value in the map entry."
-;  [e]
-;  (second e))
-;
-;(defn keys [m]
-;  ; TODO: Use a proper key seq instead.
-;  (reduce (fn [acc kv]
-;            (conj acc (first kv)))
-;          []
-;          m))
-;
-;(defn vals [m]
-;  ; TODO: Use a proper val seq instead.
-;  (reduce (fn [acc kv]
-;            (conj acc (second kv)))
-;          []
-;          m))
-;
-;(def get
-;  "Returns the value mapped to key, not-found or nil if key not present
-;   in associative collection, set, string, array, or ILookup instance."
-;  clojure.core-native.phase-1/get)
-;(def get-in
-;  "Returns the value in a nested associative structure,
-;   where ks is a sequence of keys. Returns nil if the key
-;   is not present, or the not-found value if supplied."
-;  clojure.core-native.phase-1/get-in)
-;
-;(defn dissoc
-;  "dissoc[iate]. Returns a new map of the same (hashed/sorted) type,
-;  that does not contain a mapping for key(s)."
-;  ([m]
-;   m)
-;  ([m k]
-;   (clojure.core-native.phase-1/dissoc m k))
-;  ([m k & ks]
-;   (let* [ret (dissoc m k)]
-;     (if ks
-;       (recur ret (first ks) (next ks))
-;       ret))))
-;
-;(def contains?
-;  "Returns true if key is present in the given collection, otherwise
-;   returns false.  Note that for numerically indexed collections like
-;   vectors and Java arrays, this tests if the numeric key is within the
-;   range of indexes. 'contains?' operates constant or logarithmic time;
-;   it will not perform a linear search for a value.  See also 'some'."
-;  clojure.core-native.phase-1/contains?)
-;
-;(def find
-;  "Returns the map entry for key, or nil if key not present."
-;  clojure.core-native.phase-1/find)
-;
-;; Returns a map containing only those entries in map whose key is in keys
-;(defn select-keys [m ks]
-;  (reduce (fn [acc k]
-;            (let [e (find m k)]
-;              (if e
-;                (conj acc e)
-;                acc)))
-;          {}
-;          ks))
-;
-;(defn zipmap
-;  "Returns a map with the keys mapped to the corresponding vals."
-;  [keys vals]
-;  (loop* [map (transient (hash-map))
-;          ks (seq keys)
-;          vs (seq vals)]
-;         (if (and ks vs)
-;           (recur (assoc! map (first ks) (first vs))
-;                  (next ks)
-;                  (next vs))
-;           (persistent! map))))
-;
-;;; Sets.
-;(def hash-set
-;  "Returns a new hash set with supplied keys.  Any equal keys are
-;   handled as if by repeated uses of conj."
-;  clojure.core-native.phase-1/hash-set)
-;
-;(def sorted-set
-;  "Returns a new sorted set with supplied keys.  Any equal keys are
-;   handled as if by repeated uses of conj."
-;  clojure.core-native.phase-1/sorted-set)
-;
-;(defn sorted-set-by
-;  "Returns a new sorted set with supplied keys, using the supplied
-;   comparator.  Any equal keys are handled as if by repeated uses of
-;   conj."
-;  ([comparator & keys]
-;   (throw "not yet implemented: sorted-set-by")))
-;
-;(defn disj
-;  "disj[oin]. Returns a new set of the same (hashed/sorted) type, that
-;  does not contain key(s)."
-;  ([set]
-;   set)
-;  ([set key]
-;   (clojure.core-native.phase-1/disj set key))
-;  ([set key & ks]
-;   (let* [res (disj set key)]
-;     (if (empty? ks)
-;       res
-;       (recur res (first ks) (next ks))))))
-;
-;(def set?
-;  "Returns true if x implements IPersistentSet"
-;  clojure.core-native.phase-1/set?)
-;
-;(defn set
-;  "Returns a set of the distinct elements of coll."
-;  [coll]
-;  (if (set? coll)
-;    (with-meta coll nil)
-;    (persistent! (reduce (fn [acc e]
-;                           (conj! acc e))
-;                         (transient #{})
-;                         coll))))
-;
-;;; Other.
-;(def hash
-;  "Returns the hash code of its argument. Note this is the hash code
-;   consistent with =, and thus is different than .hashCode for Integer,
-;   Short, Byte and Clojure collections."
-;  clojure.core-native.phase-1/hash)
-;
-;(def ^:private named? clojure.core-native.phase-1/named?)
-;
-;(def name
-;  "Returns the name String of a string, symbol or keyword."
-;  clojure.core-native.phase-1/name)
-;
-;(def namespace
-;  "Returns the namespace String of a symbol or keyword, or nil if not present."
-;  clojure.core-native.phase-1/namespace)
-;
-;;; Sequences.
-;; This is defined to be lazy later on.
-;(defn drop
-;  ([n coll]
-;   (let [step (fn [n acc]
-;                (let [s (seq acc)]
-;                  (if (and (pos? n) s)
-;                    (recur (dec n) (rest s))
-;                    acc)))]
-;     (step n coll))))
-;
-;;; Vars.
-;(def var?
-;  "Returns true if v is a var."
-;  clojure.core-native.phase-1/var?)
-;
-;(defmacro ^:private assert-macro-args
-;  [& pairs]
-;  (list 'do
-;        (list 'clojure.core/when-not (first pairs)
-;              ; TODO: No need for ex-info, if we had a simpler exception type
-;              (list 'throw (list 'clojure.core/ex-info
-;                                 (list 'clojure.core/str
-;                                       '&form
-;                                       " requires "
-;                                       (second pairs)
-;                                       " in "
-;                                       'clojure.core/*ns*
-;                                       ":"
-;                                       (:line (meta '&form)))
-;                                 {})))
-;        (let [more (next (next pairs))]
-;          (when more
-;            (list* 'clojure.core/assert-macro-args more)))))
-;
-;(defmacro if-let
-;  "bindings => binding-form test
-;
-;  If test is true, evaluates then with binding-form bound to the value of
-;  test, if not, yields else"
-;  ([bindings then]
-;   `(if-let ~bindings ~then nil))
-;  ([bindings then else & oldform]
-;   (assert-macro-args
-;     (vector? bindings) "a vector for its binding"
-;     (nil? oldform) "1 or 2 forms after binding vector"
-;     (= 2 (count bindings)) "exactly 2 forms in binding vector")
-;   (let [form (get bindings 0)
-;         tst (get bindings 1)]
-;     `(let [temp# ~tst]
-;        (if temp#
-;          (let [~form temp#]
-;            ~then)
-;          ~else)))))
-;
-;(defmacro when-let
-;  "bindings => binding-form test
-;
-;  When test is true, evaluates body with binding-form bound to the value of test"
-;  [bindings & body]
-;  (assert-macro-args
-;    (vector? bindings) "a vector for its binding"
-;    (= 2 (count bindings)) "exactly 2 forms in binding vector")
-;  (let [form (get bindings 0)
-;        tst (get bindings 1)]
-;    `(let [temp# ~tst]
-;       (when temp#
-;         (let [~form temp#]
-;           ~@body)))))
-;
-;(defmacro if-some
-;  "bindings => binding-form test
-;
-;  If test is not nil, evaluates then with binding-form bound to the
-;  value of test, if not, yields else"
-;  ([bindings then]
-;   `(if-some ~bindings ~then nil))
-;  ([bindings then else & oldform]
-;   (assert-macro-args
-;     (vector? bindings) "a vector for its binding"
-;     (nil? oldform) "1 or 2 forms after binding vector"
-;     (= 2 (count bindings)) "exactly 2 forms in binding vector")
-;   (let [form (get bindings 0) tst (get bindings 1)]
-;     `(let [temp# ~tst]
-;        (if (nil? temp#)
-;          ~else
-;          (let [~form temp#]
-;            ~then))))))
-;
-;(defmacro when-some
-;  "bindings => binding-form test
-;
-;  When test is not nil, evaluates body with binding-form bound to the
-;  value of test"
-;  [bindings & body]
-;  (assert-macro-args
-;    (vector? bindings) "a vector for its binding"
-;    (= 2 (count bindings)) "exactly 2 forms in binding vector")
-;  (let [form (get bindings 0)
-;        tst (get bindings 1)]
-;    `(let [temp# ~tst]
-;       (if (nil? temp#)
-;         nil
-;         (let [~form temp#]
-;           ~@body)))))
-;
-;(defmacro dotimes
-;  "bindings => name n
-;
-;   Repeatedly executes body (presumably for side-effects) with name
-;   bound to integers from 0 through n-1."
-;  [bindings & body]
-;  (assert-macro-args
-;    (vector? bindings) "a vector for its binding"
-;    (= 2 (count bindings)) "exactly 2 forms in binding vector")
-;  (let [i (first bindings)
-;        n (second bindings)]
-;    `(let [n# (int ~n)]
-;       (loop [~i 0]
-;         (when (< ~i n#)
-;           ~@body
-;           ; TODO: unchecked-inc
-;           (recur (inc ~i)))))))
-;
-;(def push-thread-bindings
-;  "WARNING: This is a low-level function. Prefer high-level macros like
-;   binding where ever possible.
-;
-;   Takes a map of Var/value pairs. Binds each Var to the associated value for
-;   the current thread. Each call *MUST* be accompanied by a matching call to
-;   pop-thread-bindings wrapped in a try-finally!
-;
-;   (push-thread-bindings bindings)
-;   (try
-;     ...
-;     (finally
-;       (pop-thread-bindings)))"
-;  clojure.core-native.phase-1/push-thread-bindings)
-;
-;(def pop-thread-bindings
-;  "Pop one set of bindings pushed with push-binding before. It is an error to
-;   pop bindings without pushing before."
-;  clojure.core-native.phase-1/pop-thread-bindings)
-;
-;(def get-thread-bindings
-;  "Get a map with the Var/value pairs which is currently in effect for the
-;   current thread."
-;  clojure.core-native.phase-1/get-thread-bindings)
-;
-;(defmacro binding
-;  "binding => var-symbol init-expr
-;
-;   Creates new bindings for the (already-existing) vars, with the
-;   supplied initial values, executes the exprs in an implicit do, then
-;   re-establishes the bindings that existed before.  The new bindings
-;   are made in parallel (unlike let); all init-exprs are evaluated
-;   before the vars are bound to their new values."
-;  [bindings & body]
-;  (assert-macro-args
-;    (vector? bindings) "a vector for its binding"
-;    (even? (count bindings)) "an even number of forms in binding vector")
-;  (let [->var-pairs (fn ->var-pairs [var-vals]
-;                      (loop [ret []
-;                             vvs (seq var-vals)]
-;                        (if vvs
-;                          (recur (conj (conj ret `(var ~(first vvs))) (second vvs))
-;                                 (next (next vvs)))
-;                          (seq ret))))]
-;    `(do
-;       (push-thread-bindings (hash-map ~@(->var-pairs bindings)))
-;       (try
-;         ~@body
-;         (catch e#
-;           (throw e#))
-;         (finally
-;           (pop-thread-bindings))))))
-;
-;;; Keywords.
-;(def keyword?
-;  "Return true if x is a Keyword"
-;  clojure.core-native.phase-1/keyword?)
-;(def simple-keyword?
-;  "Return true if x is a keyword without a namespace"
-;  clojure.core-native.phase-1/simple-keyword?)
-;(def qualified-keyword?
-;  "Return true if x is a keyword with a namespace"
-;  clojure.core-native.phase-1/qualified-keyword?)
-;
-;(defn keyword
-;  "Returns a Keyword with the given namespace and name.  Do not use :
-;   in the keyword strings, it will be added automatically."
-;  ([name]
-;   (if (keyword? name)
-;     name
-;     (clojure.core-native.phase-1/keyword "" name)))
-;  ([ns name]
-;   (clojure.core-native.phase-1/keyword ns name)))
-;
-;(defn ident?
-;  "Returns true if x is a symbol or keyword"
-;  [x]
-;  (or (keyword? x) (symbol? x)))
-;
-;(defn simple-ident?
-;  "Returns true if x is a symbol or keyword without a namespace"
-;  [x]
-;  (and (ident? x) (nil? (namespace x))))
-;
-;(defn qualified-ident?
-;  "Returns true if x is a symbol or keyword with a namespace"
-;  [x]
-;  (boolean (and (ident? x) (namespace x) true)))
-;
-;;; Sequences.
-;(def iterate
-;  "Returns a lazy (infinite!) sequence of x, (f x), (f (f x)) etc.
-;   f must be free of side-effects"
-;  clojure.core-native.phase-1/iterate)
-;
-;; TODO: integer_range
-;(def range
-;  "Returns a lazy seq of nums from start (inclusive) to end
-;   (exclusive), by step, where start defaults to 0, step to 1, and end to
-;   infinity. When step is equal to 0, returns an infinite sequence of
-;   start. When start is equal to end, returns empty list."
-;  clojure.core-native.phase-1/range)
-;
-;(def nth
-;  "Returns the value at the index. get returns nil if index out of
-;  bounds, nth throws an exception unless not-found is supplied.  nth
-;  also works for strings, Java arrays, regex Matchers and Lists, and,
-;  in O(n) time, for sequences."
-;  clojure.core-native.phase-1/nth)
-;
-;(defn nthnext
-;  "Returns the nth next of coll, (seq coll) when n is 0."
-;  [coll n]
-;  (if (and (seq coll) (pos? n))
-;    (recur (next coll) (dec n))
-;    coll))
-;
-;(defn nthrest
-;  "Returns the nth rest of coll, coll when n is 0."
-;  [coll n]
-;  (let [xs (and (pos? n) (seq coll))]
-;    (if xs
-;      (recur (rest coll) (dec n))
-;      coll)))
-;
-;(defn take-nth
-; "Returns a lazy seq of every nth item in coll.  Returns a stateful
-;  transducer when no collection is provided."
-; ([n]
-;  (fn [rf]
-;    (let [iv (volatile! -1)]
-;      (fn
-;        ([] (rf))
-;        ([result] (rf result))
-;        ([result input]
-;         (let [i (vswap! iv inc)]
-;           (if (zero? (rem i n))
-;             (rf result input)
-;             result)))))))
-; ([n coll]
-;  (lazy-seq
-;    (when-let [s (seq coll)]
-;      (cons (first s) (take-nth n (drop n s)))))))
-;
-;; Returns a lazy sequence consisting of the result of applying f to
-;; the set of first items of each coll, followed by applying f to the
-;; set of second items in each coll, until any one of the colls is
-;; exhausted.  Any remaining items in other colls are ignored. Function
-;; f should accept number-of-colls arguments. Returns a transducer when
-;; no collection is provided.
-;(defn map
-;  ([f]
-;   (fn [rf]
-;     (fn
-;       ([] (rf))
-;       ([result] (rf result))
-;       ([result input]
-;        (rf result (f input)))
-;       ([result input & inputs]
-;        (rf result (apply f input inputs))))))
-;  ([f coll]
-;   (lazy-seq
-;     (when-let [s (seq coll)]
-;       (if (chunked-seq? s)
-;         (let [c (chunk-first s)
-;               size (int (count c))
-;               b (chunk-buffer size)]
-;           (dotimes [i size]
-;             (chunk-append b (f (nth c i))))
-;           (chunk-cons (chunk b) (map f (chunk-rest s))))
-;         (cons (f (first s)) (map f (rest s)))))))
-;  ([f c1 c2]
-;   (lazy-seq
-;    (let [s1 (seq c1)
-;          s2 (seq c2)]
-;      (when (and s1 s2)
-;        (cons (f (first s1) (first s2))
-;              (map f (rest s1) (rest s2)))))))
-;  ([f c1 c2 c3]
-;   (lazy-seq
-;    (let [s1 (seq c1)
-;          s2 (seq c2)
-;          s3 (seq c3)]
-;      (when (and s1 s2 s3)
-;        (cons (f (first s1) (first s2) (first s3))
-;              (map f (rest s1) (rest s2) (rest s3)))))))
-;  ([f c1 c2 c3 & colls]
-;   (let [step (fn step [cs]
-;                (lazy-seq
-;                  (let [ss (map seq cs)]
-;                    (when (every? identity ss)
-;                      (cons (map first ss) (step (map rest ss)))))))]
-;     (map #(apply f %) (step (conj colls c3 c2 c1))))))
-;
-;(defmacro doto
-;  "Evaluates x then calls all of the methods and functions with the
-;  value of x supplied at the front of the given arguments.  The forms
-;  are evaluated in order.  Returns x."
-;  [x & forms]
-;  (let [gx (gensym)]
-;    `(let [~gx ~x]
-;       ~@(map (fn [f]
-;                (with-meta
-;                  (if (seq? f)
-;                    `(~(first f) ~gx ~@(next f))
-;                    `(~f ~gx))
-;                  (meta f)))
-;              forms)
-;       ~gx)))
-;
-;(defn map-indexed
-;  "Returns a lazy sequence consisting of the result of applying f to 0
-;  and the first item of coll, followed by applying f to 1 and the second
-;  item in coll, etc, until coll is exhausted. Thus function f should
-;  accept 2 arguments, index and item. Returns a stateful transducer when
-;  no collection is provided."
-;  ([f]
-;   (fn [rf]
-;     (let [i (volatile! -1)]
-;       (fn
-;         ([] (rf))
-;         ([result] (rf result))
-;         ([result input]
-;          (rf result (f (vswap! i inc) input)))))))
-;  ([f coll]
-;   (let [mapi (fn mapi [idx coll]
-;                (lazy-seq
-;                 (when-let [s (seq coll)]
-;                   (if (chunked-seq? s)
-;                     (let [c (chunk-first s)
-;                           size (int (count c))
-;                           b (chunk-buffer size)]
-;                       (dotimes [i size]
-;                         (chunk-append b (f (+ idx i) (nth c i))))
-;                       (chunk-cons (chunk b) (mapi (+ idx size) (chunk-rest s))))
-;                     (cons (f idx (first s)) (mapi (inc idx) (rest s)))))))]
-;     (mapi 0 coll))))
-;
-;(defn keep
-;  "Returns a lazy sequence of the non-nil results of (f item). Note,
-;  this means false return values will be included.  f must be free of
-;  side-effects.  Returns a transducer when no collection is provided."
-;  ([f]
-;   (fn [rf]
-;     (fn
-;       ([] (rf))
-;       ([result] (rf result))
-;       ([result input]
-;          (let [v (f input)]
-;            (if (nil? v)
-;              result
-;              (rf result v)))))))
-;  ([f coll]
-;   (lazy-seq
-;    (when-let [s (seq coll)]
-;      (if (chunked-seq? s)
-;        (let [c (chunk-first s)
-;              size (count c)
-;              b (chunk-buffer size)]
-;          (dotimes [i size]
-;            (let [x (f (nth c i))]
-;              (when-not (nil? x)
-;                (chunk-append b x))))
-;          (chunk-cons (chunk b) (keep f (chunk-rest s))))
-;        (let [x (f (first s))]
-;          (if (nil? x)
-;            (keep f (rest s))
-;            (cons x (keep f (rest s))))))))))
-;
-;(defn keep-indexed
-;  "Returns a lazy sequence of the non-nil results of (f index item). Note,
-;  this means false return values will be included.  f must be free of
-;  side-effects.  Returns a stateful transducer when no collection is
-;  provided."
-;  ([f]
-;   (fn [rf]
-;     (let [iv (volatile! -1)]
-;       (fn
-;         ([] (rf))
-;         ([result] (rf result))
-;         ([result input]
-;            (let [i (vswap! iv inc)
-;                  v (f i input)]
-;              (if (nil? v)
-;                result
-;                (rf result v))))))))
-;  ([f coll]
-;   (let [keepi (fn keepi [idx coll]
-;                 (lazy-seq
-;                  (when-let [s (seq coll)]
-;                    (if (chunked-seq? s)
-;                      (let [c (chunk-first s)
-;                            size (count c)
-;                            b (chunk-buffer size)]
-;                        (dotimes [i size]
-;                          (let [x (f (+ idx i) (nth c i))]
-;                            (when-not (nil? x)
-;                              (chunk-append b x))))
-;                        (chunk-cons (chunk b) (keepi (+ idx size) (chunk-rest s))))
-;                      (let [x (f idx (first s))]
-;                        (if (nil? x)
-;                          (keepi (inc idx) (rest s))
-;                          (cons x (keepi (inc idx) (rest s)))))))))]
-;     (keepi 0 coll))))
-;
-;(defn take
-;  ([n]
-;   (fn [rf]
-;     (let [nv (volatile! n)]
-;       (fn
-;         ([] (rf))
-;         ([result] (rf result))
-;         ([result input]
-;          (let [n (deref nv)
-;                nn (vswap! nv dec)
-;                result (if (pos? n)
-;                         (rf result input)
-;                         result)]
-;            (if (not (pos? nn))
-;              (ensure-reduced result)
-;              result)))))))
-;  ([n coll]
-;   (lazy-seq
-;     (when (pos? n)
-;       (when-let [s (seq coll)]
-;         (cons (first s) (take (dec n) (rest s))))))))
-;
-;(defn repeatedly
-;  "Takes a function of no args, presumably with side effects, and
-;  returns an infinite (or length n if supplied) lazy sequence of calls
-;  to it"
-;  ([f] (lazy-seq (cons (f) (repeatedly f))))
-;  ([n f] (take n (repeatedly f))))
-;
-;(defn take-while
-;  "Returns a lazy sequence of successive items from coll while
-;  (pred item) returns logical true. pred must be free of side-effects.
-;  Returns a transducer when no collection is provided"
-;  ([pred]
-;   (fn [rf]
-;     (fn
-;       ([] (rf))
-;       ([result] (rf result))
-;       ([result input]
-;        (if (pred input)
-;          (rf result input)
-;          (reduced result))))))
-;  ([pred coll]
-;   (lazy-seq
-;    (when-let [s (seq coll)]
-;      (when (pred (first s))
-;        (cons (first s) (take-while pred (rest s))))))))
-;
-;(defn drop
-;  "Returns a lazy sequence of all but the first n items in coll.
-;  Returns a stateful transducer when no collection is provided."
-;  ([n]
-;   (fn [rf]
-;     (let [nv (volatile! n)]
-;       (fn
-;         ([] (rf))
-;         ([result] (rf result))
-;         ([result input]
-;          (let [n (deref nv)]
-;            (vswap! nv dec)
-;            (if (pos? n)
-;              result
-;              (rf result input))))))))
-;  ([n coll]
-;   (let [step (fn [n coll]
-;                (let [s (seq coll)]
-;                  (if (and (pos? n) s)
-;                    (recur (dec n) (rest s))
-;                    s)))]
-;     (lazy-seq (step n coll)))))
-;
-;; Return a lazy sequence of all but the last n (default 1) items in coll
-;(defn drop-last
-;  ([coll] (drop-last 1 coll))
-;  ([n coll] (map (fn [x _] x) coll (drop n coll))))
-;
-;(defn drop-while
-;  "Returns a lazy sequence of the items in coll starting from the
-;  first item for which (pred item) returns logical false.  Returns a
-;  stateful transducer when no collection is provided."
-;  ([pred]
-;   (fn [rf]
-;     (let [dv (volatile! true)]
-;       (fn
-;         ([] (rf))
-;         ([result] (rf result))
-;         ([result input]
-;          (let [drop? (deref dv)]
-;            (if (and drop? (pred input))
-;              result
-;              (do
-;                (vreset! dv nil)
-;                (rf result input)))))))))
-;  ([pred coll]
-;   (let [step (fn [pred coll]
-;                (let [s (seq coll)]
-;                  (if (and s (pred (first s)))
-;                    (recur pred (rest s))
-;                    s)))]
-;     (lazy-seq (step pred coll)))))
-;
-;; Returns a lazy (infinite!) sequence of repetitions of the items in coll.
-;(defn cycle [coll]
-;  ; TODO: Custom cycle object
-;  (lazy-seq (concat coll (cycle coll))))
-;
+(defn partial
+  "Takes a function f and fewer than the normal arguments to f, and
+  returns a fn that takes a variable number of additional args. When
+  called, the returned function calls f with args + additional args."
+  ([f] f)
+  ([f arg1]
+   (fn
+     ([] (f arg1))
+     ([x] (f arg1 x))
+     ([x y] (f arg1 x y))
+     ([x y z] (f arg1 x y z))
+     ([x y z & args] (apply f arg1 x y z args))))
+  ([f arg1 arg2]
+   (fn
+     ([] (f arg1 arg2))
+     ([x] (f arg1 arg2 x))
+     ([x y] (f arg1 arg2 x y))
+     ([x y z] (f arg1 arg2 x y z))
+     ([x y z & args] (apply f arg1 arg2 x y z args))))
+  ([f arg1 arg2 arg3]
+   (fn
+     ([] (f arg1 arg2 arg3))
+     ([x] (f arg1 arg2 arg3 x))
+     ([x y] (f arg1 arg2 arg3 x y))
+     ([x y z] (f arg1 arg2 arg3 x y z))
+     ([x y z & args] (apply f arg1 arg2 arg3 x y z args))))
+  ([f arg1 arg2 arg3 & more]
+   (fn [& args] (apply f arg1 arg2 arg3 (concat more args)))))
+
+(defn fnil
+  "Takes a function f, and returns a function that calls f, replacing
+  a nil first argument to f with the supplied value x. Higher arity
+  versions can replace arguments in the second and third
+  positions (y, z). Note that the function f can take any number of
+  arguments, not just the one(s) being nil-patched."
+  ([f x]
+   (fn
+     ([a] (f (if (nil? a) x a)))
+     ([a b] (f (if (nil? a) x a) b))
+     ([a b c] (f (if (nil? a) x a) b c))
+     ([a b c & ds] (apply f (if (nil? a) x a) b c ds))))
+  ([f x y]
+   (fn
+     ([a b] (f (if (nil? a) x a) (if (nil? b) y b)))
+     ([a b c] (f (if (nil? a) x a) (if (nil? b) y b) c))
+     ([a b c & ds] (apply f (if (nil? a) x a) (if (nil? b) y b) c ds))))
+  ([f x y z]
+   (fn
+     ([a b] (f (if (nil? a) x a) (if (nil? b) y b)))
+     ([a b c] (f (if (nil? a) x a) (if (nil? b) y b) (if (nil? c) z c)))
+     ([a b c & ds] (apply f (if (nil? a) x a) (if (nil? b) y b) (if (nil? c) z c) ds)))))
+
+; Returns the first logical true value of (pred x) for any x in coll,
+; else nil.  One common idiom is to use a set as pred, for example
+; this will return :fred if :fred is in the sequence, otherwise nil:
+; (some #{:fred} coll)
+(defn some [pred coll]
+  (let [s (seq coll)]
+    (when s
+      (or (pred (first s)) (recur pred (next s))))))
+
+
+(defn every-pred
+  "Takes a set of predicates and returns a function f that returns true if all of its
+  composing predicates return a logical true value against all of its arguments, else it returns
+  false. Note that f is short-circuiting in that it will stop execution on the first
+  argument that triggers a logical false result against the original predicates."
+  ([p]
+     (fn ep1
+       ([] true)
+       ([x] (boolean (p x)))
+       ([x y] (boolean (and (p x) (p y))))
+       ([x y z] (boolean (and (p x) (p y) (p z))))
+       ([x y z & args] (boolean (and (ep1 x y z)
+                                     (every? p args))))))
+  ([p1 p2]
+     (fn ep2
+       ([] true)
+       ([x] (boolean (and (p1 x) (p2 x))))
+       ([x y] (boolean (and (p1 x) (p1 y) (p2 x) (p2 y))))
+       ([x y z] (boolean (and (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z))))
+       ([x y z & args] (boolean (and (ep2 x y z)
+                                     (every? #(and (p1 %) (p2 %)) args))))))
+  ([p1 p2 p3]
+     (fn ep3
+       ([] true)
+       ([x] (boolean (and (p1 x) (p2 x) (p3 x))))
+       ([x y] (boolean (and (p1 x) (p1 y) (p2 x) (p2 y) (p3 x) (p3 y))))
+       ([x y z] (boolean (and (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z) (p3 x) (p3 y) (p3 z))))
+       ([x y z & args] (boolean (and (ep3 x y z)
+                                     (every? #(and (p1 %) (p2 %) (p3 %)) args))))))
+  ([p1 p2 p3 & ps]
+     (let [ps (list* p1 p2 p3 ps)]
+       (fn epn
+         ([] true)
+         ([x] (every? #(% x) ps))
+         ([x y] (every? #(and (% x) (% y)) ps))
+         ([x y z] (every? #(and (% x) (% y) (% z)) ps))
+         ([x y z & args] (boolean (and (epn x y z)
+                                       (every? #(every? % args) ps))))))))
+
+(defn some-fn
+  "Takes a set of predicates and returns a function f that returns the first logical true value
+  returned by one of its composing predicates against any of its arguments, else it returns
+  logical false. Note that f is short-circuiting in that it will stop execution on the first
+  argument that triggers a logical true result against the original predicates."
+  ([p]
+     (fn sp1
+       ([] nil)
+       ([x] (p x))
+       ([x y] (or (p x) (p y)))
+       ([x y z] (or (p x) (p y) (p z)))
+       ([x y z & args] (or (sp1 x y z)
+                           (some p args)))))
+  ([p1 p2]
+     (fn sp2
+       ([] nil)
+       ([x] (or (p1 x) (p2 x)))
+       ([x y] (or (p1 x) (p1 y) (p2 x) (p2 y)))
+       ([x y z] (or (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z)))
+       ([x y z & args] (or (sp2 x y z)
+                           (some #(or (p1 %) (p2 %)) args)))))
+  ([p1 p2 p3]
+     (fn sp3
+       ([] nil)
+       ([x] (or (p1 x) (p2 x) (p3 x)))
+       ([x y] (or (p1 x) (p1 y) (p2 x) (p2 y) (p3 x) (p3 y)))
+       ([x y z] (or (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z) (p3 x) (p3 y) (p3 z)))
+       ([x y z & args] (or (sp3 x y z)
+                           (some #(or (p1 %) (p2 %) (p3 %)) args)))))
+  ([p1 p2 p3 & ps]
+     (let [ps (list* p1 p2 p3 ps)]
+       (fn spn
+         ([] nil)
+         ([x] (some #(% x) ps))
+         ([x y] (some #(or (% x) (% y)) ps))
+         ([x y z] (some #(or (% x) (% y) (% z)) ps))
+         ([x y z & args] (or (spn x y z)
+                             (some #(some % args) ps)))))))
+
+
+(defn not-any? [pred coll]
+  (not (some pred coll)))
+
+; Threads the expr through the forms. Inserts x as the
+; second item in the first form, making a list of it if it is not a
+; list already. If there are more forms, inserts the first form as the
+; second item in second form, etc.
+(defmacro -> [x & forms]
+  (loop* [x x
+          forms forms]
+    (if forms
+      (let [form (first forms)
+            threaded (if (seq? form)
+                       (with-meta `(~(first form) ~x ~@(next form)) (meta form))
+                       (list form x))]
+        (recur threaded (next forms)))
+      x)))
+
+; Threads the expr through the forms. Inserts x as the
+; last item in the first form, making a list of it if it is not a
+; list already. If there are more forms, inserts the first form as the
+; last item in second form, etc.
+(defmacro ->> [x & forms]
+  (loop* [x x
+          forms forms]
+    (if forms
+      (let [form (first forms)
+            threaded (if (seq? form)
+                       (with-meta `(~(first form) ~@(next form)  ~x) (meta form))
+                       (list form x))]
+        (recur threaded (next forms)))
+      x)))
+
+;; Maps.
+; XXX: Clojure returns an array map for the nullary arity, but that sucks.
+(def hash-map
+  "keyval => key val
+   Returns a new hash map with supplied mappings. If any keys are
+   equal, they are handled as if by repeated uses of assoc."
+  clojure.core-native.phase-1/hash-map)
+
+(def sorted-map
+  "keyval => key val
+   Returns a new sorted map with supplied mappings. If any keys are
+   equal, they are handled as if by repeated uses of assoc."
+  clojure.core-native.phase-1/sorted-map)
+
+(defn key
+  "Returns the key of the map entry."
+  [e]
+  (first e))
+
+(defn val
+  "Returns the value in the map entry."
+  [e]
+  (second e))
+
+(defn keys [m]
+  ; TODO: Use a proper key seq instead.
+  (reduce (fn [acc kv]
+            (conj acc (first kv)))
+          []
+          m))
+
+(defn vals [m]
+  ; TODO: Use a proper val seq instead.
+  (reduce (fn [acc kv]
+            (conj acc (second kv)))
+          []
+          m))
+
+(def get
+  "Returns the value mapped to key, not-found or nil if key not present
+   in associative collection, set, string, array, or ILookup instance."
+  clojure.core-native.phase-1/get)
+(def get-in
+  "Returns the value in a nested associative structure,
+   where ks is a sequence of keys. Returns nil if the key
+   is not present, or the not-found value if supplied."
+  clojure.core-native.phase-1/get-in)
+
+(defn dissoc
+  "dissoc[iate]. Returns a new map of the same (hashed/sorted) type,
+  that does not contain a mapping for key(s)."
+  ([m]
+   m)
+  ([m k]
+   (clojure.core-native.phase-1/dissoc m k))
+  ([m k & ks]
+   (let* [ret (dissoc m k)]
+     (if ks
+       (recur ret (first ks) (next ks))
+       ret))))
+
+(def contains?
+  "Returns true if key is present in the given collection, otherwise
+   returns false.  Note that for numerically indexed collections like
+   vectors and Java arrays, this tests if the numeric key is within the
+   range of indexes. 'contains?' operates constant or logarithmic time;
+   it will not perform a linear search for a value.  See also 'some'."
+  clojure.core-native.phase-1/contains?)
+
+(def find
+  "Returns the map entry for key, or nil if key not present."
+  clojure.core-native.phase-1/find)
+
+; Returns a map containing only those entries in map whose key is in keys
+(defn select-keys [m ks]
+  (reduce (fn [acc k]
+            (let [e (find m k)]
+              (if e
+                (conj acc e)
+                acc)))
+          {}
+          ks))
+
+(defn zipmap
+  "Returns a map with the keys mapped to the corresponding vals."
+  [keys vals]
+  (loop* [map (transient (hash-map))
+          ks (seq keys)
+          vs (seq vals)]
+         (if (and ks vs)
+           (recur (assoc! map (first ks) (first vs))
+                  (next ks)
+                  (next vs))
+           (persistent! map))))
+
+;; Sets.
+(def hash-set
+  "Returns a new hash set with supplied keys.  Any equal keys are
+   handled as if by repeated uses of conj."
+  clojure.core-native.phase-1/hash-set)
+
+(def sorted-set
+  "Returns a new sorted set with supplied keys.  Any equal keys are
+   handled as if by repeated uses of conj."
+  clojure.core-native.phase-1/sorted-set)
+
+(defn sorted-set-by
+  "Returns a new sorted set with supplied keys, using the supplied
+   comparator.  Any equal keys are handled as if by repeated uses of
+   conj."
+  ([comparator & keys]
+   (throw "not yet implemented: sorted-set-by")))
+
+(defn disj
+  "disj[oin]. Returns a new set of the same (hashed/sorted) type, that
+  does not contain key(s)."
+  ([set]
+   set)
+  ([set key]
+   (clojure.core-native.phase-1/disj set key))
+  ([set key & ks]
+   (let* [res (disj set key)]
+     (if (empty? ks)
+       res
+       (recur res (first ks) (next ks))))))
+
+(def set?
+  "Returns true if x implements IPersistentSet"
+  clojure.core-native.phase-1/set?)
+
+(defn set
+  "Returns a set of the distinct elements of coll."
+  [coll]
+  (if (set? coll)
+    (with-meta coll nil)
+    (persistent! (reduce (fn [acc e]
+                           (conj! acc e))
+                         (transient #{})
+                         coll))))
+
+;; Other.
+(def hash
+  "Returns the hash code of its argument. Note this is the hash code
+   consistent with =, and thus is different than .hashCode for Integer,
+   Short, Byte and Clojure collections."
+  clojure.core-native.phase-1/hash)
+
+(def ^:private named? clojure.core-native.phase-1/named?)
+
+(def name
+  "Returns the name String of a string, symbol or keyword."
+  clojure.core-native.phase-1/name)
+
+(def namespace
+  "Returns the namespace String of a symbol or keyword, or nil if not present."
+  clojure.core-native.phase-1/namespace)
+
+;; Sequences.
+; This is defined to be lazy later on.
+(defn drop
+  ([n coll]
+   (let [step (fn [n acc]
+                (let [s (seq acc)]
+                  (if (and (pos? n) s)
+                    (recur (dec n) (rest s))
+                    acc)))]
+     (step n coll))))
+
+;; Vars.
+(def var?
+  "Returns true if v is a var."
+  clojure.core-native.phase-1/var?)
+
+(defmacro ^:private assert-macro-args
+  [& pairs]
+  (list 'do
+        (list 'clojure.core/when-not (first pairs)
+              ; TODO: No need for ex-info, if we had a simpler exception type
+              (list 'throw (list 'clojure.core/ex-info
+                                 (list 'clojure.core/str
+                                       '&form
+                                       " requires "
+                                       (second pairs)
+                                       " in "
+                                       'clojure.core/*ns*
+                                       ":"
+                                       (:line (meta '&form)))
+                                 {})))
+        (let [more (next (next pairs))]
+          (when more
+            (list* 'clojure.core/assert-macro-args more)))))
+
+(defmacro if-let
+  "bindings => binding-form test
+
+  If test is true, evaluates then with binding-form bound to the value of
+  test, if not, yields else"
+  ([bindings then]
+   `(if-let ~bindings ~then nil))
+  ([bindings then else & oldform]
+   (assert-macro-args
+     (vector? bindings) "a vector for its binding"
+     (nil? oldform) "1 or 2 forms after binding vector"
+     (= 2 (count bindings)) "exactly 2 forms in binding vector")
+   (let [form (get bindings 0)
+         tst (get bindings 1)]
+     `(let [temp# ~tst]
+        (if temp#
+          (let [~form temp#]
+            ~then)
+          ~else)))))
+
+(defmacro when-let
+  "bindings => binding-form test
+
+  When test is true, evaluates body with binding-form bound to the value of test"
+  [bindings & body]
+  (assert-macro-args
+    (vector? bindings) "a vector for its binding"
+    (= 2 (count bindings)) "exactly 2 forms in binding vector")
+  (let [form (get bindings 0)
+        tst (get bindings 1)]
+    `(let [temp# ~tst]
+       (when temp#
+         (let [~form temp#]
+           ~@body)))))
+
+(defmacro if-some
+  "bindings => binding-form test
+
+  If test is not nil, evaluates then with binding-form bound to the
+  value of test, if not, yields else"
+  ([bindings then]
+   `(if-some ~bindings ~then nil))
+  ([bindings then else & oldform]
+   (assert-macro-args
+     (vector? bindings) "a vector for its binding"
+     (nil? oldform) "1 or 2 forms after binding vector"
+     (= 2 (count bindings)) "exactly 2 forms in binding vector")
+   (let [form (get bindings 0) tst (get bindings 1)]
+     `(let [temp# ~tst]
+        (if (nil? temp#)
+          ~else
+          (let [~form temp#]
+            ~then))))))
+
+(defmacro when-some
+  "bindings => binding-form test
+
+  When test is not nil, evaluates body with binding-form bound to the
+  value of test"
+  [bindings & body]
+  (assert-macro-args
+    (vector? bindings) "a vector for its binding"
+    (= 2 (count bindings)) "exactly 2 forms in binding vector")
+  (let [form (get bindings 0)
+        tst (get bindings 1)]
+    `(let [temp# ~tst]
+       (if (nil? temp#)
+         nil
+         (let [~form temp#]
+           ~@body)))))
+
+(defmacro dotimes
+  "bindings => name n
+
+   Repeatedly executes body (presumably for side-effects) with name
+   bound to integers from 0 through n-1."
+  [bindings & body]
+  (assert-macro-args
+    (vector? bindings) "a vector for its binding"
+    (= 2 (count bindings)) "exactly 2 forms in binding vector")
+  (let [i (first bindings)
+        n (second bindings)]
+    `(let [n# (int ~n)]
+       (loop [~i 0]
+         (when (< ~i n#)
+           ~@body
+           ; TODO: unchecked-inc
+           (recur (inc ~i)))))))
+
+(def push-thread-bindings
+  "WARNING: This is a low-level function. Prefer high-level macros like
+   binding where ever possible.
+
+   Takes a map of Var/value pairs. Binds each Var to the associated value for
+   the current thread. Each call *MUST* be accompanied by a matching call to
+   pop-thread-bindings wrapped in a try-finally!
+
+   (push-thread-bindings bindings)
+   (try
+     ...
+     (finally
+       (pop-thread-bindings)))"
+  clojure.core-native.phase-1/push-thread-bindings)
+
+(def pop-thread-bindings
+  "Pop one set of bindings pushed with push-binding before. It is an error to
+   pop bindings without pushing before."
+  clojure.core-native.phase-1/pop-thread-bindings)
+
+(def get-thread-bindings
+  "Get a map with the Var/value pairs which is currently in effect for the
+   current thread."
+  clojure.core-native.phase-1/get-thread-bindings)
+
+(defmacro binding
+  "binding => var-symbol init-expr
+
+   Creates new bindings for the (already-existing) vars, with the
+   supplied initial values, executes the exprs in an implicit do, then
+   re-establishes the bindings that existed before.  The new bindings
+   are made in parallel (unlike let); all init-exprs are evaluated
+   before the vars are bound to their new values."
+  [bindings & body]
+  (assert-macro-args
+    (vector? bindings) "a vector for its binding"
+    (even? (count bindings)) "an even number of forms in binding vector")
+  (let [->var-pairs (fn ->var-pairs [var-vals]
+                      (loop [ret []
+                             vvs (seq var-vals)]
+                        (if vvs
+                          (recur (conj (conj ret `(var ~(first vvs))) (second vvs))
+                                 (next (next vvs)))
+                          (seq ret))))]
+    `(do
+       (push-thread-bindings (hash-map ~@(->var-pairs bindings)))
+       (try
+         ~@body
+         (catch e#
+           (throw e#))
+         (finally
+           (pop-thread-bindings))))))
+
+;; Keywords.
+(def keyword?
+  "Return true if x is a Keyword"
+  clojure.core-native.phase-1/keyword?)
+(def simple-keyword?
+  "Return true if x is a keyword without a namespace"
+  clojure.core-native.phase-1/simple-keyword?)
+(def qualified-keyword?
+  "Return true if x is a keyword with a namespace"
+  clojure.core-native.phase-1/qualified-keyword?)
+
+(defn keyword
+  "Returns a Keyword with the given namespace and name.  Do not use :
+   in the keyword strings, it will be added automatically."
+  ([name]
+   (if (keyword? name)
+     name
+     (clojure.core-native.phase-1/keyword "" name)))
+  ([ns name]
+   (clojure.core-native.phase-1/keyword ns name)))
+
+(defn ident?
+  "Returns true if x is a symbol or keyword"
+  [x]
+  (or (keyword? x) (symbol? x)))
+
+(defn simple-ident?
+  "Returns true if x is a symbol or keyword without a namespace"
+  [x]
+  (and (ident? x) (nil? (namespace x))))
+
+(defn qualified-ident?
+  "Returns true if x is a symbol or keyword with a namespace"
+  [x]
+  (boolean (and (ident? x) (namespace x) true)))
+
+;; Sequences.
+(def iterate
+  "Returns a lazy (infinite!) sequence of x, (f x), (f (f x)) etc.
+   f must be free of side-effects"
+  clojure.core-native.phase-1/iterate)
+
+; TODO: integer_range
+(def range
+  "Returns a lazy seq of nums from start (inclusive) to end
+   (exclusive), by step, where start defaults to 0, step to 1, and end to
+   infinity. When step is equal to 0, returns an infinite sequence of
+   start. When start is equal to end, returns empty list."
+  clojure.core-native.phase-1/range)
+
+(def nth
+  "Returns the value at the index. get returns nil if index out of
+  bounds, nth throws an exception unless not-found is supplied.  nth
+  also works for strings, Java arrays, regex Matchers and Lists, and,
+  in O(n) time, for sequences."
+  clojure.core-native.phase-1/nth)
+
+(defn nthnext
+  "Returns the nth next of coll, (seq coll) when n is 0."
+  [coll n]
+  (if (and (seq coll) (pos? n))
+    (recur (next coll) (dec n))
+    coll))
+
+(defn nthrest
+  "Returns the nth rest of coll, coll when n is 0."
+  [coll n]
+  (let [xs (and (pos? n) (seq coll))]
+    (if xs
+      (recur (rest coll) (dec n))
+      coll)))
+
+(defn take-nth
+ "Returns a lazy seq of every nth item in coll.  Returns a stateful
+  transducer when no collection is provided."
+ ([n]
+  (fn [rf]
+    (let [iv (volatile! -1)]
+      (fn
+        ([] (rf))
+        ([result] (rf result))
+        ([result input]
+         (let [i (vswap! iv inc)]
+           (if (zero? (rem i n))
+             (rf result input)
+             result)))))))
+ ([n coll]
+  (lazy-seq
+    (when-let [s (seq coll)]
+      (cons (first s) (take-nth n (drop n s)))))))
+
+; Returns a lazy sequence consisting of the result of applying f to
+; the set of first items of each coll, followed by applying f to the
+; set of second items in each coll, until any one of the colls is
+; exhausted.  Any remaining items in other colls are ignored. Function
+; f should accept number-of-colls arguments. Returns a transducer when
+; no collection is provided.
+(defn map
+  ([f]
+   (fn [rf]
+     (fn
+       ([] (rf))
+       ([result] (rf result))
+       ([result input]
+        (rf result (f input)))
+       ([result input & inputs]
+        (rf result (apply f input inputs))))))
+  ([f coll]
+   (lazy-seq
+     (when-let [s (seq coll)]
+       (if (chunked-seq? s)
+         (let [c (chunk-first s)
+               size (int (count c))
+               b (chunk-buffer size)]
+           (dotimes [i size]
+             (chunk-append b (f (nth c i))))
+           (chunk-cons (chunk b) (map f (chunk-rest s))))
+         (cons (f (first s)) (map f (rest s)))))))
+  ([f c1 c2]
+   (lazy-seq
+    (let [s1 (seq c1)
+          s2 (seq c2)]
+      (when (and s1 s2)
+        (cons (f (first s1) (first s2))
+              (map f (rest s1) (rest s2)))))))
+  ([f c1 c2 c3]
+   (lazy-seq
+    (let [s1 (seq c1)
+          s2 (seq c2)
+          s3 (seq c3)]
+      (when (and s1 s2 s3)
+        (cons (f (first s1) (first s2) (first s3))
+              (map f (rest s1) (rest s2) (rest s3)))))))
+  ([f c1 c2 c3 & colls]
+   (let [step (fn step [cs]
+                (lazy-seq
+                  (let [ss (map seq cs)]
+                    (when (every? identity ss)
+                      (cons (map first ss) (step (map rest ss)))))))]
+     (map #(apply f %) (step (conj colls c3 c2 c1))))))
+
+(defmacro doto
+  "Evaluates x then calls all of the methods and functions with the
+  value of x supplied at the front of the given arguments.  The forms
+  are evaluated in order.  Returns x."
+  [x & forms]
+  (let [gx (gensym)]
+    `(let [~gx ~x]
+       ~@(map (fn [f]
+                (with-meta
+                  (if (seq? f)
+                    `(~(first f) ~gx ~@(next f))
+                    `(~f ~gx))
+                  (meta f)))
+              forms)
+       ~gx)))
+
+(defn map-indexed
+  "Returns a lazy sequence consisting of the result of applying f to 0
+  and the first item of coll, followed by applying f to 1 and the second
+  item in coll, etc, until coll is exhausted. Thus function f should
+  accept 2 arguments, index and item. Returns a stateful transducer when
+  no collection is provided."
+  ([f]
+   (fn [rf]
+     (let [i (volatile! -1)]
+       (fn
+         ([] (rf))
+         ([result] (rf result))
+         ([result input]
+          (rf result (f (vswap! i inc) input)))))))
+  ([f coll]
+   (let [mapi (fn mapi [idx coll]
+                (lazy-seq
+                 (when-let [s (seq coll)]
+                   (if (chunked-seq? s)
+                     (let [c (chunk-first s)
+                           size (int (count c))
+                           b (chunk-buffer size)]
+                       (dotimes [i size]
+                         (chunk-append b (f (+ idx i) (nth c i))))
+                       (chunk-cons (chunk b) (mapi (+ idx size) (chunk-rest s))))
+                     (cons (f idx (first s)) (mapi (inc idx) (rest s)))))))]
+     (mapi 0 coll))))
+
+(defn keep
+  "Returns a lazy sequence of the non-nil results of (f item). Note,
+  this means false return values will be included.  f must be free of
+  side-effects.  Returns a transducer when no collection is provided."
+  ([f]
+   (fn [rf]
+     (fn
+       ([] (rf))
+       ([result] (rf result))
+       ([result input]
+          (let [v (f input)]
+            (if (nil? v)
+              result
+              (rf result v)))))))
+  ([f coll]
+   (lazy-seq
+    (when-let [s (seq coll)]
+      (if (chunked-seq? s)
+        (let [c (chunk-first s)
+              size (count c)
+              b (chunk-buffer size)]
+          (dotimes [i size]
+            (let [x (f (nth c i))]
+              (when-not (nil? x)
+                (chunk-append b x))))
+          (chunk-cons (chunk b) (keep f (chunk-rest s))))
+        (let [x (f (first s))]
+          (if (nil? x)
+            (keep f (rest s))
+            (cons x (keep f (rest s))))))))))
+
+(defn keep-indexed
+  "Returns a lazy sequence of the non-nil results of (f index item). Note,
+  this means false return values will be included.  f must be free of
+  side-effects.  Returns a stateful transducer when no collection is
+  provided."
+  ([f]
+   (fn [rf]
+     (let [iv (volatile! -1)]
+       (fn
+         ([] (rf))
+         ([result] (rf result))
+         ([result input]
+            (let [i (vswap! iv inc)
+                  v (f i input)]
+              (if (nil? v)
+                result
+                (rf result v))))))))
+  ([f coll]
+   (let [keepi (fn keepi [idx coll]
+                 (lazy-seq
+                  (when-let [s (seq coll)]
+                    (if (chunked-seq? s)
+                      (let [c (chunk-first s)
+                            size (count c)
+                            b (chunk-buffer size)]
+                        (dotimes [i size]
+                          (let [x (f (+ idx i) (nth c i))]
+                            (when-not (nil? x)
+                              (chunk-append b x))))
+                        (chunk-cons (chunk b) (keepi (+ idx size) (chunk-rest s))))
+                      (let [x (f idx (first s))]
+                        (if (nil? x)
+                          (keepi (inc idx) (rest s))
+                          (cons x (keepi (inc idx) (rest s)))))))))]
+     (keepi 0 coll))))
+
+(defn take
+  ([n]
+   (fn [rf]
+     (let [nv (volatile! n)]
+       (fn
+         ([] (rf))
+         ([result] (rf result))
+         ([result input]
+          (let [n (deref nv)
+                nn (vswap! nv dec)
+                result (if (pos? n)
+                         (rf result input)
+                         result)]
+            (if (not (pos? nn))
+              (ensure-reduced result)
+              result)))))))
+  ([n coll]
+   (lazy-seq
+     (when (pos? n)
+       (when-let [s (seq coll)]
+         (cons (first s) (take (dec n) (rest s))))))))
+
+(defn repeatedly
+  "Takes a function of no args, presumably with side effects, and
+  returns an infinite (or length n if supplied) lazy sequence of calls
+  to it"
+  ([f] (lazy-seq (cons (f) (repeatedly f))))
+  ([n f] (take n (repeatedly f))))
+
+(defn take-while
+  "Returns a lazy sequence of successive items from coll while
+  (pred item) returns logical true. pred must be free of side-effects.
+  Returns a transducer when no collection is provided"
+  ([pred]
+   (fn [rf]
+     (fn
+       ([] (rf))
+       ([result] (rf result))
+       ([result input]
+        (if (pred input)
+          (rf result input)
+          (reduced result))))))
+  ([pred coll]
+   (lazy-seq
+    (when-let [s (seq coll)]
+      (when (pred (first s))
+        (cons (first s) (take-while pred (rest s))))))))
+
+(defn drop
+  "Returns a lazy sequence of all but the first n items in coll.
+  Returns a stateful transducer when no collection is provided."
+  ([n]
+   (fn [rf]
+     (let [nv (volatile! n)]
+       (fn
+         ([] (rf))
+         ([result] (rf result))
+         ([result input]
+          (let [n (deref nv)]
+            (vswap! nv dec)
+            (if (pos? n)
+              result
+              (rf result input))))))))
+  ([n coll]
+   (let [step (fn [n coll]
+                (let [s (seq coll)]
+                  (if (and (pos? n) s)
+                    (recur (dec n) (rest s))
+                    s)))]
+     (lazy-seq (step n coll)))))
+
+; Return a lazy sequence of all but the last n (default 1) items in coll
+(defn drop-last
+  ([coll] (drop-last 1 coll))
+  ([n coll] (map (fn [x _] x) coll (drop n coll))))
+
+(defn drop-while
+  "Returns a lazy sequence of the items in coll starting from the
+  first item for which (pred item) returns logical false.  Returns a
+  stateful transducer when no collection is provided."
+  ([pred]
+   (fn [rf]
+     (let [dv (volatile! true)]
+       (fn
+         ([] (rf))
+         ([result] (rf result))
+         ([result input]
+          (let [drop? (deref dv)]
+            (if (and drop? (pred input))
+              result
+              (do
+                (vreset! dv nil)
+                (rf result input)))))))))
+  ([pred coll]
+   (let [step (fn [pred coll]
+                (let [s (seq coll)]
+                  (if (and s (pred (first s)))
+                    (recur pred (rest s))
+                    s)))]
+     (lazy-seq (step pred coll)))))
+
+; Returns a lazy (infinite!) sequence of repetitions of the items in coll.
+(defn cycle [coll]
+  ; TODO: Custom cycle object
+  (lazy-seq (concat coll (cycle coll))))
+
 ; Returns a lazy (infinite!, or length n if supplied) sequence of val.
 ;#_(defn repeat
 ;  ([val]

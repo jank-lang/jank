@@ -12,6 +12,7 @@
 namespace jank::evaluate
 {
   using namespace jank::runtime;
+  using namespace jank::analyze;
 
   /* Some expressions don't make sense to eval outright and aren't fns that can be JIT compiled.
    * For those, we wrap them in a fn expression and then JIT compile and call them.
@@ -21,47 +22,50 @@ namespace jank::evaluate
    * root frame. So, when wrapping this expr, we give the fn the root frame, but change its
    * type to a fn frame. */
   template <typename E>
-  analyze::expr::function<analyze::expression> wrap_expression(E expr)
+  expression_ptr wrap_expression(E expr)
   {
-    analyze::expr::function<analyze::expression> wrapper;
-    analyze::expr::function_arity<analyze::expression> arity;
+    auto ret(make_box<expression>(expr::function<expression>{}));
+    auto &fn(boost::get<expr::function<expression>>(ret->data));
+    expr::function_arity<expression> arity;
+    fn.name = "repl_fn";
+    fn.unique_name = context::unique_string(fn.name);
+    fn.meta = obj::persistent_hash_map::empty();
+    fn.frame = expr.frame;
 
     arity.frame = expr.frame;
     while(arity.frame->parent.is_some())
     {
       arity.frame = arity.frame->parent.unwrap();
     }
-    arity.frame->type = analyze::local_frame::frame_type::fn;
+    arity.frame->type = local_frame::frame_type::fn;
 
     /* We can't just assign the position here, since we need the position to propagate
      * downward. For example, if this expr is a let, setting its position to tail
      * wouldn't affect the last form of its body, which should also be in tail position.
      *
      * This is what propagation does. */
-    expr.propagate_position(analyze::expression_position::tail);
+    expr.propagate_position(expression_position::tail);
 
     /* TODO: Avoid allocation by using existing ptr. */
-    arity.body.values.push_back(make_box<analyze::expression>(expr));
-    arity.fn_ctx = make_box<analyze::expr::function_context>();
+    arity.body.values.push_back(make_box<expression>(expr));
+    arity.fn_ctx = make_box<expr::function_context>();
+    arity.frame->fn_ctx = arity.fn_ctx;
     arity.body.frame = arity.frame;
+    arity.fn_ctx->name = fn.name;
+    arity.fn_ctx->unique_name = fn.unique_name;
+    arity.fn_ctx->fn = ret;
+    fn.arities.emplace_back(std::move(arity));
 
-    wrapper.arities.emplace_back(std::move(arity));
-    wrapper.frame = expr.frame;
-    wrapper.name = "repl_fn";
-    wrapper.unique_name = context::unique_string(wrapper.name);
-    wrapper.meta = obj::persistent_hash_map::empty();
-
-    return wrapper;
+    return ret;
   }
 
-  analyze::expr::function<analyze::expression>
-  wrap_expressions(native_vector<analyze::expression_ptr> const &exprs,
-                   analyze::processor const &an_prc)
+  expression_ptr
+  wrap_expressions(native_vector<expression_ptr> const &exprs, processor const &an_prc)
   {
     if(exprs.empty())
     {
-      return wrap_expression(analyze::expr::primitive_literal<analyze::expression>{
-        analyze::expression_base{ {}, analyze::expression_position::tail, an_prc.root_frame, true },
+      return wrap_expression(expr::primitive_literal<expression>{
+        expression_base{ {}, expression_position::tail, an_prc.root_frame, true },
         obj::nil::nil_const()
       });
     }
@@ -70,10 +74,11 @@ namespace jank::evaluate
       /* We'll cheat a little and build a fn using just the first expression. Then we can just
        * add the rest. I'd rather do this than duplicate all of the wrapping logic. */
       auto ret(wrap_expression(exprs[0]));
-      auto &body(ret.arities[0].body.values);
+      auto &fn(boost::get<expr::function<expression>>(ret->data));
+      auto &body(fn.arities[0].body.values);
       /* We normally wrap one expression, which is a return statement, but we'll be potentially
        * adding more, so let's not make assumptions yet. */
-      body[0]->get_base()->position = analyze::expression_position::statement;
+      body[0]->get_base()->position = expression_position::statement;
 
       for(auto const &expr : exprs)
       {
@@ -82,19 +87,19 @@ namespace jank::evaluate
 
       /* Finally, mark the last body item as our return. */
       auto const last_body_index(body.size() - 1);
-      body[last_body_index]->get_base()->position = analyze::expression_position::tail;
+      body[last_body_index]->propagate_position(expression_position::tail);
 
       return ret;
     }
   }
 
-  analyze::expr::function<analyze::expression> wrap_expression(analyze::expression_ptr const expr)
+  expression_ptr wrap_expression(expression_ptr const expr)
   {
     return boost::apply_visitor([](auto const &typed_expr) { return wrap_expression(typed_expr); },
                                 expr->data);
   }
 
-  object_ptr eval(context &rt_ctx, jit::processor const &jit_prc, analyze::expression_ptr const &ex)
+  object_ptr eval(context &rt_ctx, jit::processor const &jit_prc, expression_ptr const &ex)
   {
     profile::timer timer{ "eval ast node" };
     object_ptr ret{};
@@ -106,9 +111,7 @@ namespace jank::evaluate
     return ret;
   }
 
-  object_ptr eval(context &rt_ctx,
-                  jit::processor const &jit_prc,
-                  analyze::expr::def<analyze::expression> const &expr)
+  object_ptr eval(context &rt_ctx, jit::processor const &jit_prc, expr::def<expression> const &expr)
   {
     auto var(rt_ctx.intern_var(expr.name).expect_ok());
     var->meta = expr.name->meta;
@@ -128,25 +131,20 @@ namespace jank::evaluate
     return var;
   }
 
-  object_ptr eval(context &rt_ctx,
-                  jit::processor const &,
-                  analyze::expr::var_deref<analyze::expression> const &expr)
+  object_ptr eval(context &rt_ctx, jit::processor const &, expr::var_deref<expression> const &expr)
   {
     auto const var(rt_ctx.find_var(expr.qualified_name));
     return var.unwrap()->deref();
   }
 
-  object_ptr eval(context &rt_ctx,
-                  jit::processor const &,
-                  analyze::expr::var_ref<analyze::expression> const &expr)
+  object_ptr eval(context &rt_ctx, jit::processor const &, expr::var_ref<expression> const &expr)
   {
     auto const var(rt_ctx.find_var(expr.qualified_name));
     return var.unwrap();
   }
 
-  object_ptr eval(context &rt_ctx,
-                  jit::processor const &jit_prc,
-                  analyze::expr::call<analyze::expression> const &expr)
+  object_ptr
+  eval(context &rt_ctx, jit::processor const &jit_prc, expr::call<expression> const &expr)
   {
     auto const source(eval(rt_ctx, jit_prc, expr.source_expr));
     return visit_object(
@@ -295,9 +293,8 @@ namespace jank::evaluate
       source);
   }
 
-  object_ptr eval(context &rt_ctx,
-                  jit::processor const &,
-                  analyze::expr::primitive_literal<analyze::expression> const &expr)
+  object_ptr
+  eval(context &rt_ctx, jit::processor const &, expr::primitive_literal<expression> const &expr)
   {
     if(expr.data->type == object_type::keyword)
     {
@@ -307,9 +304,8 @@ namespace jank::evaluate
     return expr.data;
   }
 
-  object_ptr eval(context &rt_ctx,
-                  jit::processor const &jit_prc,
-                  analyze::expr::vector<analyze::expression> const &expr)
+  object_ptr
+  eval(context &rt_ctx, jit::processor const &jit_prc, expr::vector<expression> const &expr)
   {
     runtime::detail::native_transient_vector ret;
     for(auto const &e : expr.data_exprs)
@@ -326,9 +322,7 @@ namespace jank::evaluate
     }
   }
 
-  object_ptr eval(context &rt_ctx,
-                  jit::processor const &jit_prc,
-                  analyze::expr::map<analyze::expression> const &expr)
+  object_ptr eval(context &rt_ctx, jit::processor const &jit_prc, expr::map<expression> const &expr)
   {
     auto const size(expr.data_exprs.size());
     if(size <= obj::persistent_array_map::max_size)
@@ -374,9 +368,7 @@ namespace jank::evaluate
     }
   }
 
-  object_ptr eval(context &rt_ctx,
-                  jit::processor const &jit_prc,
-                  analyze::expr::set<analyze::expression> const &expr)
+  object_ptr eval(context &rt_ctx, jit::processor const &jit_prc, expr::set<expression> const &expr)
   {
     runtime::detail::native_transient_hash_set ret;
     for(auto const &e : expr.data_exprs)
@@ -393,15 +385,14 @@ namespace jank::evaluate
     }
   }
 
-  object_ptr eval(context &, jit::processor const &, analyze::expr::local_reference const &)
+  object_ptr eval(context &, jit::processor const &, expr::local_reference const &)
   /* Doesn't make sense to eval these, since let is wrapped in a fn and JIT compiled. */
   {
     throw make_box("unsupported eval: local_reference");
   }
 
-  object_ptr eval(context &rt_ctx,
-                  jit::processor const &jit_prc,
-                  analyze::expr::function<analyze::expression> const &expr)
+  object_ptr
+  eval(context &rt_ctx, jit::processor const &jit_prc, expr::function<expression> const &expr)
   {
     auto const &module(
       module::nest_module(expect_object<ns>(rt_ctx.current_ns_var->deref())->to_string(),
@@ -414,7 +405,7 @@ namespace jank::evaluate
 
     {
       profile::timer timer{ "ir jit compile" };
-      //fmt::println("{}\n", cg_prc.to_string());
+      fmt::println("{}\n", cg_prc.to_string());
       llvm::cantFail(jit_prc.interpreter->getExecutionEngine().get().addIRModule(
         llvm::orc::ThreadSafeModule{ std::move(cg_prc.module), std::move(cg_prc.context) }));
 
@@ -428,32 +419,25 @@ namespace jank::evaluate
     }
   }
 
-  object_ptr
-  eval(context &, jit::processor const &, analyze::expr::recur<analyze::expression> const &)
+  object_ptr eval(context &, jit::processor const &, expr::recur<expression> const &)
   /* This will always be in a fn or loop, which will be JIT compiled. */
   {
     throw make_box("unsupported eval: recur");
   }
 
-  object_ptr eval(context &,
-                  jit::processor const &,
-                  analyze::expr::recursion_reference<analyze::expression> const &)
+  object_ptr eval(context &, jit::processor const &, expr::recursion_reference<expression> const &)
   /* This will always be in a fn, which will be JIT compiled. */
   {
     throw make_box("unsupported eval: recursion_reference");
   }
 
-  object_ptr eval(context &,
-                  jit::processor const &,
-                  analyze::expr::named_recursion<analyze::expression> const &)
+  object_ptr eval(context &, jit::processor const &, expr::named_recursion<expression> const &)
   /* This will always be in a fn, which will be JIT compiled. */
   {
     throw make_box("unsupported eval: named_recursion");
   }
 
-  object_ptr eval(context &rt_ctx,
-                  jit::processor const &jit_prc,
-                  analyze::expr::do_<analyze::expression> const &expr)
+  object_ptr eval(context &rt_ctx, jit::processor const &jit_prc, expr::do_<expression> const &expr)
   {
     object_ptr ret{ obj::nil::nil_const() };
     for(auto const &form : expr.values)
@@ -463,16 +447,12 @@ namespace jank::evaluate
     return ret;
   }
 
-  object_ptr eval(context &rt_ctx,
-                  jit::processor const &jit_prc,
-                  analyze::expr::let<analyze::expression> const &expr)
+  object_ptr eval(context &rt_ctx, jit::processor const &jit_prc, expr::let<expression> const &expr)
   {
     return dynamic_call(eval(rt_ctx, jit_prc, wrap_expression(expr)));
   }
 
-  object_ptr eval(context &rt_ctx,
-                  jit::processor const &jit_prc,
-                  analyze::expr::if_<analyze::expression> const &expr)
+  object_ptr eval(context &rt_ctx, jit::processor const &jit_prc, expr::if_<expression> const &expr)
   {
     auto const condition(eval(rt_ctx, jit_prc, expr.condition));
     if(truthy(condition))
@@ -486,23 +466,20 @@ namespace jank::evaluate
     return obj::nil::nil_const();
   }
 
-  object_ptr eval(context &rt_ctx,
-                  jit::processor const &jit_prc,
-                  analyze::expr::throw_<analyze::expression> const &expr)
+  object_ptr
+  eval(context &rt_ctx, jit::processor const &jit_prc, expr::throw_<expression> const &expr)
   {
     throw eval(rt_ctx, jit_prc, expr.value);
   }
 
-  object_ptr eval(context &rt_ctx,
-                  jit::processor const &jit_prc,
-                  analyze::expr::try_<analyze::expression> const &expr)
+  object_ptr
+  eval(context &rt_ctx, jit::processor const &jit_prc, expr::try_<expression> const &expr)
   {
     return dynamic_call(eval(rt_ctx, jit_prc, wrap_expression(expr)));
   }
 
-  object_ptr eval(context &rt_ctx,
-                  jit::processor const &jit_prc,
-                  analyze::expr::native_raw<analyze::expression> const &expr)
+  object_ptr
+  eval(context &rt_ctx, jit::processor const &jit_prc, expr::native_raw<expression> const &expr)
   {
     return dynamic_call(eval(rt_ctx, jit_prc, wrap_expression(expr)));
   }

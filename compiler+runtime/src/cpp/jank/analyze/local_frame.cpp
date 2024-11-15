@@ -146,9 +146,31 @@ namespace jank::analyze
     }
   }
 
-  option<local_frame::find_result> local_frame::find_originating_local(obj::symbol_ptr sym)
+  option<local_frame::find_result> local_frame::find_originating_local(obj::symbol_ptr const sym)
   {
     return find_local_impl(this, sym, false);
+  }
+
+  option<expr::function_context_ptr> local_frame::find_named_recursion(obj::symbol_ptr const sym)
+  {
+    auto const sym_str(sym->to_string());
+    for(local_frame_ptr it{ this }; it != nullptr;)
+    {
+      if(it->type == frame_type::fn && it->fn_ctx->name == sym_str)
+      {
+        return it->fn_ctx;
+      }
+
+      if(it->parent.is_some())
+      {
+        it = it->parent.unwrap();
+      }
+      else
+      {
+        break;
+      }
+    }
+    return none;
   }
 
   local_frame const &local_frame::find_closest_fn_frame(local_frame const &frame)

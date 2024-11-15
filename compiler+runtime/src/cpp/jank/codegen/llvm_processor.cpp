@@ -423,6 +423,9 @@ namespace jank::codegen
   {
     analyze::expr::named_recursion<analyze::expression> call_expr{
       analyze::expression_base{ {}, expr.position, expr.frame },
+      analyze::expr::recursion_reference<analyze::expression>{
+                               analyze::expression_base{ {}, expr.position, expr.frame },
+                               root_fn.arities[0].fn_ctx },
       expr.args,
       expr.arg_exprs
     };
@@ -442,7 +445,9 @@ namespace jank::codegen
      * inside of a class which has a `this` which can just be used. They're standalone. So,
      * if you want an instance of that fn within the fn itself, we need to make one. For
      * closures, this will copy the current context to the new one. */
-    auto const fn_obj(gen_function_instance(root_fn, arity));
+    auto const fn_obj(gen_function_instance(
+      boost::get<analyze::expr::function<analyze::expression>>(expr.fn_ctx->fn->data),
+      arity));
 
     if(expr.position == analyze::expression_position::tail)
     {
@@ -455,6 +460,8 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(analyze::expr::named_recursion<analyze::expression> const &expr,
                                    analyze::expr::function_arity<analyze::expression> const &arity)
   {
+    auto const fn_expr(boost::get<analyze::expr::function<analyze::expression>>(
+      expr.recursion_ref.fn_ctx->fn->data));
     /* Named recursion is a special kind of call. We can't go always through a var, since there
      * may not be one. We can't just use the fn's name, since we could be recursing into a
      * different arity. Finally, we need to keep in account whether or not this fn is a closure.
@@ -462,7 +469,7 @@ namespace jank::codegen
      * For named recursion calls, we don't use dynamic_call. We just call the generated C fn
      * directly. This doesn't impede interactivity, since the whole thing will be redefined
      * if a new fn is created. */
-    auto const is_closure(!root_fn.captures().empty());
+    auto const is_closure(!fn_expr.captures().empty());
 
     /* TODO: We need to worry about arg packing here. */
     llvm::SmallVector<llvm::Value *> arg_handles;
@@ -483,7 +490,7 @@ namespace jank::codegen
     }
 
     auto const call_fn_name(
-      fmt::format("{}_{}", munge(root_fn.unique_name), expr.arg_exprs.size()));
+      fmt::format("{}_{}", munge(fn_expr.unique_name), expr.arg_exprs.size()));
     auto const fn_type(llvm::FunctionType::get(builder->getPtrTy(), arg_types, false));
     auto const fn(module->getOrInsertFunction(call_fn_name, fn_type));
     auto const call(builder->CreateCall(fn, arg_handles));

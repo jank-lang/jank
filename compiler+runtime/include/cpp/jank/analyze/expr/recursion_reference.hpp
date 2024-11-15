@@ -7,6 +7,8 @@ namespace jank::analyze::expr
   template <typename E>
   struct recursion_reference : expression_base
   {
+    function_context_ptr fn_ctx{};
+
     void propagate_position(expression_position const pos)
     {
       position = pos;

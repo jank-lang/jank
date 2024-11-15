@@ -87,6 +87,8 @@ namespace jank::analyze
      * originating local. */
     option<find_result> find_originating_local(runtime::obj::symbol_ptr sym);
 
+    option<expr::function_context_ptr> find_named_recursion(runtime::obj::symbol_ptr sym);
+
     static native_bool within_same_fn(native_box<local_frame>, native_box<local_frame>);
 
     runtime::obj::symbol_ptr lift_var(runtime::obj::symbol_ptr const &);
@@ -108,6 +110,8 @@ namespace jank::analyze
     native_unordered_map<runtime::obj::symbol_ptr, local_binding> captures;
     native_unordered_map<runtime::obj::symbol_ptr, lifted_var> lifted_vars;
     native_unordered_map<runtime::object_ptr, lifted_constant> lifted_constants;
+    /* This is only set if the frame type is fn. */
+    expr::function_context_ptr fn_ctx{};
     runtime::context &rt_ctx;
   };
 

@@ -8,6 +8,7 @@ namespace jank::analyze::expr
   template <typename E>
   struct named_recursion : expression_base
   {
+    recursion_reference<E> recursion_ref{};
     runtime::obj::persistent_list_ptr args{};
     native_vector<native_box<E>> arg_exprs;
 
