@@ -97,6 +97,56 @@ namespace clojure::core_native
     return make_box(o->type == object_type::native_function_wrapper
                     || o->type == object_type::jit_function);
   }
+
+  object_ptr is_multi_fn(object_ptr const o)
+  {
+    return make_box(o->type == object_type::multi_function);
+  }
+
+  object_ptr multi_fn(object_ptr const name,
+                      object_ptr const dispatch_fn,
+                      object_ptr const default_,
+                      object_ptr const hierarchy)
+  {
+    return make_box<obj::multi_function>(name, dispatch_fn, default_, hierarchy);
+  }
+
+  object_ptr defmethod(object_ptr const multifn, object_ptr const dispatch_val, object_ptr const fn)
+  {
+    return try_object<obj::multi_function>(multifn)->add_method(dispatch_val, fn);
+  }
+
+  object_ptr remove_all_methods(object_ptr const multifn)
+  {
+    return try_object<obj::multi_function>(multifn)->reset();
+  }
+
+  object_ptr remove_method(object_ptr const multifn, object_ptr const dispatch_val)
+  {
+    return try_object<obj::multi_function>(multifn)->remove_method(dispatch_val);
+  }
+
+  object_ptr prefer_method(object_ptr const multifn,
+                           object_ptr const dispatch_val_x,
+                           object_ptr const dispatch_val_y)
+  {
+    return try_object<obj::multi_function>(multifn)->prefer_method(dispatch_val_x, dispatch_val_y);
+  }
+
+  object_ptr methods(object_ptr const multifn)
+  {
+    return try_object<obj::multi_function>(multifn)->method_table;
+  }
+
+  object_ptr get_method(object_ptr const multifn, object_ptr const dispatch_val)
+  {
+    return try_object<obj::multi_function>(multifn)->get_fn(dispatch_val);
+  }
+
+  object_ptr prefers(object_ptr const multifn)
+  {
+    return try_object<obj::multi_function>(multifn)->prefer_table;
+  }
 }
 
 jank_object_ptr jank_load_clojure_core_native()
@@ -261,6 +311,15 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("force", &force);
   intern_fn("ifn?", &is_callable);
   intern_fn("fn?", &core_native::is_fn);
+  intern_fn("multi-fn?", &core_native::is_multi_fn);
+  intern_fn("multi-fn*", &core_native::multi_fn);
+  intern_fn("defmethod*", &core_native::defmethod);
+  intern_fn("remove-all-methods", &core_native::remove_all_methods);
+  intern_fn("remove-method", &core_native::remove_method);
+  intern_fn("prefer-method", &core_native::prefer_method);
+  intern_fn("methods", &core_native::methods);
+  intern_fn("get-method", &core_native::get_method);
+  intern_fn("prefers", &core_native::prefers);
 
   {
     auto const fn(

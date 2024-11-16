@@ -3004,246 +3004,237 @@
   "Returns true if x implements Fn, i.e. is an object created via fn."
   clojure.core-native/fn?)
 
-;;; Multimethods.
-;(defn- check-valid-options
-;  "Throws an exception if the given option map contains keys not listed
-;  as valid, else returns nil."
-;  [options & valid-keys]
-;  (when (seq (apply disj (apply hash-set (keys options)) valid-keys))
-;    (throw (apply str "Only these options are valid: "
-;                  (first valid-keys)
-;                  (map #(str ", " %) (rest valid-keys))))))
-;
-;(defn- multi-fn? [o]
-;  (native/raw "__value = make_box(~{ o }->type == object_type::multi_function);"))
-;
-;(defn- multi-fn* [name dispatch-fn default hierarchy]
-;  (native/raw "__value = make_box<obj::multi_function>(~{ name }, ~{ dispatch-fn }, ~{ default }, ~{ hierarchy });"))
-;
-;(def global-hierarchy)
-;
-;(defmacro defmulti
-;  "Creates a new multimethod with the associated dispatch function.
-;  The docstring and attr-map are optional.
-;
-;  Options are key-value pairs and may be one of:
-;
-;  :default
-;
-;  The default dispatch value, defaults to :default
-;
-;  :hierarchy
-;
-;  The value used for hierarchical dispatch (e.g. ::square is-a ::shape)
-;
-;  Hierarchies are type-like relationships that do not depend upon type
-;  inheritance. By default Clojure's multimethods dispatch off of a
-;  global hierarchy map.  However, a hierarchy relationship can be
-;  created with the derive function used to augment the root ancestor
-;  created with make-hierarchy.
-;
-;  Multimethods expect the value of the hierarchy option to be supplied as
-;  a reference type e.g. a var (i.e. via the Var-quote dispatch macro #'
-;  or the var special form)."
-;  [mm-name & options]
-;  (let [docstring (if (string? (first options))
-;                    (first options)
-;                    nil)
-;        options (if (string? (first options))
-;                  (next options)
-;                  options)
-;        m (if (map? (first options))
-;            (first options)
-;            {})
-;        options (if (map? (first options))
-;                  (next options)
-;                  options)
-;        dispatch-fn (first options)
-;        options (next options)
-;        m (if docstring
-;            (assoc m :doc docstring)
-;            m)
-;        m (if (meta mm-name)
-;            (conj (meta mm-name) m)
-;            m)
-;        mm-name (with-meta mm-name m)]
-;    (let [options (apply hash-map options)
-;          default (get options :default :default)
-;          hierarchy (get options :hierarchy #'global-hierarchy)]
-;      (check-valid-options options :default :hierarchy)
-;      ; TODO: This returns nil, due to an issue with let*. Why?
-;      `(let [v# (def ~mm-name)]
-;         (when-not (multi-fn? (deref v#))
-;           (def ~mm-name (multi-fn* '~(symbol *ns* mm-name) ~dispatch-fn ~default ~hierarchy)))))))
-;
-;(defn- defmethod* [multifn dispatch-val fun]
-;  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->add_method(~{ dispatch-val }, ~{ fun });"))
-;
-;(defmacro defmethod
-;  "Creates and installs a new method of multimethod associated with dispatch-value. "
-;  [multifn dispatch-val & fn-tail]
-;  `(defmethod* ~multifn ~dispatch-val (fn ~@fn-tail)))
-;
-;(defn remove-all-methods
-;  "Removes all of the methods of multimethod."
-;  [multifn]
-;  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->reset();"))
-;
-;(defn remove-method
-;  "Removes the method of multimethod associated with dispatch-value."
-;  [multifn dispatch-val]
-;  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->remove_method(~{ dispatch-val });"))
-;
-;(defn prefer-method
-;  "Causes the multimethod to prefer matches of dispatch-val-x over dispatch-val-y
-;  when there is a conflict"
-;  [multifn dispatch-val-x dispatch-val-y]
-;  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->prefer_method(~{ dispatch-val-x }, ~{ dispatch-val-y });"))
-;
-;(defn methods
-;  "Given a multimethod, returns a map of dispatch values -> dispatch fns"
-;  [multifn]
-;  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->method_table;"))
-;
-;(defn get-method
-;  "Given a multimethod and a dispatch value, returns the dispatch fn
-;  that would apply to that value, or nil if none apply and no default"
-;  [multifn dispatch-val]
-;  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->get_fn(~{ dispatch-val });"))
-;
-;(defn prefers
-;  "Given a multimethod, returns a map of preferred value -> set of other values"
-;  [multifn]
-;  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->prefer_table;"))
-;
-;;; Hierarchies.
-;(defn make-hierarchy
-;  "Creates a hierarchy object for use with derive, isa? etc."
-;  []
-;  {:parents {}
-;   :descendants {}
-;   :ancestors {}})
-;
-;(def ^:private global-hierarchy (make-hierarchy))
-;
-;(defn isa?
-;  "Returns true if (= child parent), or child is directly or indirectly derived from
-;  parent, either via a Java type inheritance relationship or a
-;  relationship established via derive. h must be a hierarchy obtained
-;  from make-hierarchy, if not supplied defaults to the global
-;  hierarchy"
-;  ([child parent]
-;   (isa? global-hierarchy child parent))
-;  ([h child parent]
-;   (or (= child parent)
-;       (contains? (get (:ancestors h) child) parent)
-;       (and (vector? parent) (vector? child)
-;            (= (count parent) (count child))
-;            (loop [ret true
-;                   i 0]
-;              (if (or (not ret) (= i (count parent)))
-;                ret
-;                (recur (isa? h (get child i) (get parent i)) (inc i))))))))
-;
-;(defn parents
-;  "Returns the immediate parents of tag, either via a Java type
-;  inheritance relationship or a relationship established via derive. h
-;  must be a hierarchy obtained from make-hierarchy, if not supplied
-;  defaults to the global hierarchy"
-;  ([tag]
-;   (parents global-hierarchy tag))
-;  ([h tag]
-;   (not-empty (get (:parents h) tag))))
-;
-;(defn ancestors
-;  "Returns the immediate and indirect parents of tag, either via a Java type
-;  inheritance relationship or a relationship established via derive. h
-;  must be a hierarchy obtained from make-hierarchy, if not supplied
-;  defaults to the global hierarchy"
-;  ([tag]
-;   (ancestors global-hierarchy tag))
-;  ([h tag]
-;   (not-empty (get (:ancestors h) tag))))
-;
-;(defn descendants
-;  "Returns the immediate and indirect children of tag, through a
-;  relationship established via derive. h must be a hierarchy obtained
-;  from make-hierarchy, if not supplied defaults to the global
-;  hierarchy. Note: does not work on Java type inheritance
-;  relationships."
-;  ([tag]
-;   (descendants global-hierarchy tag))
-;  ([h tag]
-;   (not-empty (get (:descendants h) tag))))
-;
-;(defn derive
-;  "Establishes a parent/child relationship between parent and
-;  tag. Parent must be a namespace-qualified symbol or keyword and
-;  child can be either a namespace-qualified symbol or keyword or a
-;  class. h must be a hierarchy obtained from make-hierarchy, if not
-;  supplied defaults to, and modifies, the global hierarchy."
-;  ([tag parent]
-;   (assert (namespace parent))
-;   (assert (and (named? tag) (namespace tag)))
-;   (alter-var-root #'global-hierarchy derive tag parent)
-;   nil)
-;  ([h tag parent]
-;   (assert (not= tag parent))
-;   (assert (named? tag))
-;   (assert (named? parent))
-;   (let [tp (:parents h)
-;         td (:descendants h)
-;         ta (:ancestors h)
-;         tf (fn [m source sources target targets]
-;              (reduce (fn [ret k]
-;                        (assoc ret
-;                               k
-;                               (reduce conj
-;                                       (get targets k #{})
-;                                       (cons target (targets target)))))
-;                      m
-;                      (cons source (sources source))))]
-;     (or
-;       (when-not (contains? (tp tag) parent)
-;         (when (contains? (ta tag) parent)
-;           (throw (str tag " already has " parent " as ancestor")))
-;         (when (contains? (ta parent) tag)
-;           (throw (str "Cyclic derivation: " parent " has " tag " as ancestor")))
-;         {:parents (assoc (:parents h) tag (conj (get tp tag #{}) parent))
-;          :ancestors (tf (:ancestors h) tag td parent ta)
-;          :descendants (tf (:descendants h) parent ta tag td)})
-;       h))))
-;
-;(defn underive
-;  "Removes a parent/child relationship between parent and
-;  tag. h must be a hierarchy obtained from make-hierarchy, if not
-;  supplied defaults to, and modifies, the global hierarchy."
-;  ([tag parent]
-;   (alter-var-root #'global-hierarchy underive tag parent) nil)
-;  ([h tag parent]
-;   (let [parent-map (:parents h)
-;         child-parents (if (parent-map tag)
-;                         (disj (parent-map tag) parent)
-;                         #{})
-;         new-parents (if (not-empty child-parents)
-;                       (assoc parent-map tag child-parents)
-;                       (dissoc parent-map tag))
-;         deriv-seq (flatten (map #(cons (key %) (interpose (key %) (val %)))
-;                                 (seq new-parents)))]
-;     (if (contains? (parent-map tag) parent)
-;       (reduce #(apply derive %1 %2)
-;               (make-hierarchy)
-;               (partition 2 deriv-seq))
-;       h))))
-;
-;(defmacro defonce
-;  "defs name to have the root value of the expr iff the named var has no root value,
-;  else expr is unevaluated"
-;  [name expr]
-;  `(let [v# (def ~name)]
-;     (when-not (bound? v#)
-;       (def ~name ~expr))))
-;
+;; Multimethods.
+(defn- check-valid-options
+  "Throws an exception if the given option map contains keys not listed
+   as valid, else returns nil."
+  [options & valid-keys]
+  (when (seq (apply disj (apply hash-set (keys options)) valid-keys))
+    (throw (apply str "Only these options are valid: "
+                  (first valid-keys)
+                  (map #(str ", " %) (rest valid-keys))))))
+
+(def ^:private multi-fn? clojure.core-native/multi-fn?)
+
+(def ^:private multi-fn* clojure.core-native/multi-fn*)
+
+(def global-hierarchy)
+
+(defmacro defmulti
+  "Creates a new multimethod with the associated dispatch function.
+  The docstring and attr-map are optional.
+
+  Options are key-value pairs and may be one of:
+
+  :default
+
+  The default dispatch value, defaults to :default
+
+  :hierarchy
+
+  The value used for hierarchical dispatch (e.g. ::square is-a ::shape)
+
+  Hierarchies are type-like relationships that do not depend upon type
+  inheritance. By default Clojure's multimethods dispatch off of a
+  global hierarchy map.  However, a hierarchy relationship can be
+  created with the derive function used to augment the root ancestor
+  created with make-hierarchy.
+
+  Multimethods expect the value of the hierarchy option to be supplied as
+  a reference type e.g. a var (i.e. via the Var-quote dispatch macro #'
+  or the var special form)."
+  [mm-name & options]
+  (let [docstring (if (string? (first options))
+                    (first options)
+                    nil)
+        options (if (string? (first options))
+                  (next options)
+                  options)
+        m (if (map? (first options))
+            (first options)
+            {})
+        options (if (map? (first options))
+                  (next options)
+                  options)
+        dispatch-fn (first options)
+        options (next options)
+        m (if docstring
+            (assoc m :doc docstring)
+            m)
+        m (if (meta mm-name)
+            (conj (meta mm-name) m)
+            m)
+        mm-name (with-meta mm-name m)]
+    (let [options (apply hash-map options)
+          default (get options :default :default)
+          hierarchy (get options :hierarchy #'global-hierarchy)]
+      (check-valid-options options :default :hierarchy)
+      ; TODO: This returns nil, due to an issue with let*. Why?
+      `(let [v# (def ~mm-name)]
+         (when-not (multi-fn? (deref v#))
+           (def ~mm-name (multi-fn* '~(symbol *ns* mm-name) ~dispatch-fn ~default ~hierarchy)))))))
+
+(def ^:private defmethod* clojure.core-native/defmethod*)
+
+(defmacro defmethod
+  "Creates and installs a new method of multimethod associated with dispatch-value. "
+  [multifn dispatch-val & fn-tail]
+  `(defmethod* ~multifn ~dispatch-val (fn ~@fn-tail)))
+
+(def remove-all-methods
+  "Removes all of the methods of multimethod."
+  clojure.core-native/remove-all-methods)
+
+(def remove-method
+  "Removes the method of multimethod associated with dispatch-value."
+  clojure.core-native/remove-method)
+
+(def prefer-method
+  "Causes the multimethod to prefer matches of dispatch-val-x over dispatch-val-y
+  when there is a conflict"
+  clojure.core-native/prefer-method)
+
+(def methods
+  "Given a multimethod, returns a map of dispatch values -> dispatch fns"
+  clojure.core-native/methods)
+
+(def get-method
+  "Given a multimethod and a dispatch value, returns the dispatch fn
+  that would apply to that value, or nil if none apply and no default"
+  clojure.core-native/get-method)
+
+(def prefers
+  "Given a multimethod, returns a map of preferred value -> set of other values"
+  clojure.core-native/prefers)
+
+;; Hierarchies.
+(defn make-hierarchy
+  "Creates a hierarchy object for use with derive, isa? etc."
+  []
+  {:parents {}
+   :descendants {}
+   :ancestors {}})
+
+(def ^:private global-hierarchy (make-hierarchy))
+
+(defn isa?
+  "Returns true if (= child parent), or child is directly or indirectly derived from
+  parent, either via a Java type inheritance relationship or a
+  relationship established via derive. h must be a hierarchy obtained
+  from make-hierarchy, if not supplied defaults to the global
+  hierarchy"
+  ([child parent]
+   (isa? global-hierarchy child parent))
+  ([h child parent]
+   (or (= child parent)
+       (contains? (get (:ancestors h) child) parent)
+       (and (vector? parent) (vector? child)
+            (= (count parent) (count child))
+            (loop [ret true
+                   i 0]
+              (if (or (not ret) (= i (count parent)))
+                ret
+                (recur (isa? h (get child i) (get parent i)) (inc i))))))))
+
+(defn parents
+  "Returns the immediate parents of tag, either via a Java type
+  inheritance relationship or a relationship established via derive. h
+  must be a hierarchy obtained from make-hierarchy, if not supplied
+  defaults to the global hierarchy"
+  ([tag]
+   (parents global-hierarchy tag))
+  ([h tag]
+   (not-empty (get (:parents h) tag))))
+
+(defn ancestors
+  "Returns the immediate and indirect parents of tag, either via a Java type
+  inheritance relationship or a relationship established via derive. h
+  must be a hierarchy obtained from make-hierarchy, if not supplied
+  defaults to the global hierarchy"
+  ([tag]
+   (ancestors global-hierarchy tag))
+  ([h tag]
+   (not-empty (get (:ancestors h) tag))))
+
+(defn descendants
+  "Returns the immediate and indirect children of tag, through a
+  relationship established via derive. h must be a hierarchy obtained
+  from make-hierarchy, if not supplied defaults to the global
+  hierarchy. Note: does not work on Java type inheritance
+  relationships."
+  ([tag]
+   (descendants global-hierarchy tag))
+  ([h tag]
+   (not-empty (get (:descendants h) tag))))
+
+(defn derive
+  "Establishes a parent/child relationship between parent and
+  tag. Parent must be a namespace-qualified symbol or keyword and
+  child can be either a namespace-qualified symbol or keyword or a
+  class. h must be a hierarchy obtained from make-hierarchy, if not
+  supplied defaults to, and modifies, the global hierarchy."
+  ([tag parent]
+   (assert (namespace parent))
+   (assert (and (named? tag) (namespace tag)))
+   (alter-var-root #'global-hierarchy derive tag parent)
+   nil)
+  ([h tag parent]
+   (assert (not= tag parent))
+   (assert (named? tag))
+   (assert (named? parent))
+   (let [tp (:parents h)
+         td (:descendants h)
+         ta (:ancestors h)
+         tf (fn [m source sources target targets]
+              (reduce (fn [ret k]
+                        (assoc ret
+                               k
+                               (reduce conj
+                                       (get targets k #{})
+                                       (cons target (targets target)))))
+                      m
+                      (cons source (sources source))))]
+     (or
+       (when-not (contains? (tp tag) parent)
+         (when (contains? (ta tag) parent)
+           (throw (str tag " already has " parent " as ancestor")))
+         (when (contains? (ta parent) tag)
+           (throw (str "Cyclic derivation: " parent " has " tag " as ancestor")))
+         {:parents (assoc (:parents h) tag (conj (get tp tag #{}) parent))
+          :ancestors (tf (:ancestors h) tag td parent ta)
+          :descendants (tf (:descendants h) parent ta tag td)})
+       h))))
+
+(defn underive
+  "Removes a parent/child relationship between parent and
+  tag. h must be a hierarchy obtained from make-hierarchy, if not
+  supplied defaults to, and modifies, the global hierarchy."
+  ([tag parent]
+   (alter-var-root #'global-hierarchy underive tag parent) nil)
+  ([h tag parent]
+   (let [parent-map (:parents h)
+         child-parents (if (parent-map tag)
+                         (disj (parent-map tag) parent)
+                         #{})
+         new-parents (if (not-empty child-parents)
+                       (assoc parent-map tag child-parents)
+                       (dissoc parent-map tag))
+         deriv-seq (flatten (map #(cons (key %) (interpose (key %) (val %)))
+                                 (seq new-parents)))]
+     (if (contains? (parent-map tag) parent)
+       (reduce #(apply derive %1 %2)
+               (make-hierarchy)
+               (partition 2 deriv-seq))
+       h))))
+
+(defmacro defonce
+  "defs name to have the root value of the expr iff the named var has no root value,
+  else expr is unevaluated"
+  [name expr]
+  `(let [v# (def ~name)]
+     (when-not (bound? v#)
+       (def ~name ~expr))))
+
 ;;; Case.
 ;(defn- shift-mask [shift mask x]
 ;  (-> x (bit-shift-right shift) (bit-and mask)))
