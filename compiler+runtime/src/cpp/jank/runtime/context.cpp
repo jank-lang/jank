@@ -546,6 +546,7 @@ namespace jank::runtime
             return typed_o;
           }
 
+          /* TODO: Provide &env. */
           auto const args(make_box<obj::persistent_list>(
             typed_o->data.rest().conj(obj::nil::nil_const()).conj(typed_o)));
           return apply_to(var.unwrap()->deref(), args);

@@ -1107,10 +1107,10 @@ namespace jank::codegen
                                   && highest_fixed_arity->fn_ctx->param_count
                                     == variadic_arity->fn_ctx->param_count - 1);
 
-    /* We find the highest fixed arity above, but there may not actually be one. In which
-     * case, the value we need to specify is how many fixed args are in the variadic arity. */
-    auto const highest_fixed_args(highest_fixed_arity ? highest_fixed_arity->fn_ctx->param_count
-                                                      : variadic_arity->fn_ctx->param_count - 1);
+    /* If there's a variadic arity, the highest fixed args is however many precede the "rest"
+     * args. Otherwise, the highest fixed args is just the highest fixed arity. */
+    auto const highest_fixed_args(variadic_arity ? variadic_arity->fn_ctx->param_count - 1
+                                                 : highest_fixed_arity->fn_ctx->param_count);
 
     auto const arity_flags_fn_type(
       llvm::FunctionType::get(builder->getInt8Ty(),
