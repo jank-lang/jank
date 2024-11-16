@@ -127,6 +127,14 @@ namespace jank::runtime
       { t->base } -> std::same_as<object &>;
     };
   }
+
+  /* This isn't a great name, but it represents more than just value equality, since it
+   * also includes type equality. Otherwise, [] equals '(). This is important when deduping
+   * constants during codegen, since we don't want to be lossy in how we generate values. */
+  struct very_equal_to
+  {
+    bool operator()(object_ptr const lhs, object_ptr const rhs) const noexcept;
+  };
 }
 
 namespace std

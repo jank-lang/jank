@@ -113,7 +113,8 @@ namespace jank::codegen
     std::unique_ptr<llvm::IRBuilder<>> builder;
     llvm::Function *fn{};
     llvm::Value *nil{};
-    native_unordered_map<object_ptr, llvm::Value *> literal_globals;
+    native_unordered_map<object_ptr, llvm::Value *, std::hash<object_ptr>, very_equal_to>
+      literal_globals;
     native_unordered_map<obj::symbol_ptr, llvm::Value *> var_globals;
     native_unordered_map<native_persistent_string, llvm::Value *> c_string_globals;
     llvm::BasicBlock *global_ctor_block{};

@@ -1,5 +1,17 @@
 #include <jank/hash.hpp>
 
+namespace jank::runtime
+{
+  bool very_equal_to::operator()(object_ptr const lhs, object_ptr const rhs) const noexcept
+  {
+    if(lhs->type != rhs->type)
+    {
+      return false;
+    }
+    return equal(lhs, rhs);
+  }
+}
+
 namespace std
 {
   using namespace jank;

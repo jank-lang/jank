@@ -109,7 +109,11 @@ namespace jank::analyze
     native_unordered_map<runtime::obj::symbol_ptr, local_binding> locals;
     native_unordered_map<runtime::obj::symbol_ptr, local_binding> captures;
     native_unordered_map<runtime::obj::symbol_ptr, lifted_var> lifted_vars;
-    native_unordered_map<runtime::object_ptr, lifted_constant> lifted_constants;
+    native_unordered_map<runtime::object_ptr,
+                         lifted_constant,
+                         std::hash<runtime::object_ptr>,
+                         runtime::very_equal_to>
+      lifted_constants;
     /* This is only set if the frame type is fn. */
     expr::function_context_ptr fn_ctx{};
     runtime::context &rt_ctx;

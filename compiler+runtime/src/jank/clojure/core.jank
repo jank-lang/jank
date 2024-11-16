@@ -83,7 +83,6 @@
     ([v start end]
      (clojure.core-native.phase-1/subvec v start end))))
 
-(def conj)
 (def conj
   (fn* conj
     ([]
@@ -2498,26 +2497,31 @@
 
 (defmacro loop
   "Evaluates the exprs in a lexical context in which the symbols in
-  the binding-forms are bound to their respective init-exprs or parts
-  therein. Acts as a recur target."
-  [bindings & body]
+   the binding-forms are bound to their respective init-exprs or parts
+   therein. Acts as a recur target."
+  [all-bindings & body]
   (assert-macro-args
-    (vector? bindings) "a vector for its binding"
-    (even? (count bindings)) "an even number of forms in binding vector")
-  (let [db (destructure bindings)]
-    (if (= db bindings)
-      `(loop* ~bindings ~@body)
-      (let [vs (take-nth 2 (drop 1 bindings))
-            bs (take-nth 2 bindings)
-            gs (map (fn [b] (if (symbol? b) b (gensym))) bs)
-            bfs (reduce (fn [ret [b v g]]
-                          (if (symbol? b)
-                            (conj ret g v)
-                            (conj ret g v b g)))
-                        [] (map vector bs vs gs))]
-        `(let ~bfs
-           (loop* ~(vec (interleave gs gs))
-                  (let ~(vec (interleave bs gs))
+    (vector? all-bindings) "a vector for its binding"
+    (even? (count all-bindings)) "an even number of forms in binding vector")
+  (let [db (destructure all-bindings)]
+    (if (= db all-bindings)
+      `(loop* ~all-bindings ~@body)
+      (let [values (take-nth 2 (drop 1 all-bindings))
+            bindings (take-nth 2 all-bindings)
+            syms (map (fn [b]
+                        (if (symbol? b)
+                          b
+                          (gensym)))
+                      bindings)
+            final-bindings (reduce (fn [ret [b v g]]
+                                     (if (symbol? b)
+                                       (conj ret g v)
+                                       (conj ret g v b g)))
+                                   []
+                                   (map vector bindings values syms))]
+        `(let ~final-bindings
+           (loop* ~(vec (interleave syms syms))
+                  (let ~(vec (interleave bindings syms))
                     ~@body)))))))
 
 (defmacro for
@@ -2614,362 +2618,363 @@
   (when (seq coll)
     coll))
 
-;(defn get-in
-;  "Returns the value in a nested associative structure,
-;  where ks is a sequence of keys. Returns nil if the key
-;  is not present, or the not-found value if supplied."
-;  ([m ks]
-;   (reduce get m ks))
-;  ([m ks not-found]
-;   (loop [m m
-;          ks (seq ks)]
-;     (if ks
-;       (let [m (get m (first ks) ::none)]
-;         (if (identical? ::none m)
-;           not-found
-;           (recur m (next ks))))
-;       m))))
-;
-;(defn assoc-in
-;  "Associates a value in a nested associative structure, where ks is a
-;  sequence of keys and v is the new value and returns a new nested structure.
-;  If any levels do not exist, hash-maps will be created."
-;  [m [k & ks] v]
-;  (if ks
-;    (assoc m k (assoc-in (get m k) ks v))
-;    (assoc m k v)))
-;
-;(defn update-in
-;  "'Updates' a value in a nested associative structure, where ks is a
-;  sequence of keys and f is a function that will take the old value
-;  and any supplied args and return the new value, and returns a new
-;  nested structure.  If any levels do not exist, hash-maps will be
-;  created."
-;  [m ks f & args]
-;  (let [up (fn up [m ks f args]
-;             (let [[k & ks] ks]
-;               (if ks
-;                 (assoc m k (up (get m k) ks f args))
-;                 (assoc m k (apply f (get m k) args)))))]
-;    (up m ks f args)))
-;
-;(defn update
-;  "'Updates' a value in an associative structure, where k is a
-;  key and f is a function that will take the old value
-;  and any supplied args and return the new value, and returns a new
-;  structure.  If the key does not exist, nil is passed as the old value."
-;  ([m k f]
-;   (assoc m k (f (get m k))))
-;  ([m k f x]
-;   (assoc m k (f (get m k) x)))
-;  ([m k f x y]
-;   (assoc m k (f (get m k) x y)))
-;  ([m k f x y z]
-;   (assoc m k (f (get m k) x y z)))
-;  ([m k f x y z & more]
-;   (assoc m k (apply f (get m k) x y z more))))
-;
-;(defmacro when-first
-;  "bindings => x xs
-;
-;  Roughly the same as (when (seq xs) (let [x (first xs)] body)) but xs is evaluated only once"
-;  [bindings & body]
-;  (assert-macro-args
-;    (vector? bindings) "a vector for its binding"
-;    (= 2 (count bindings)) "exactly 2 forms in binding vector")
-;  (let [[x xs] bindings]
-;    `(when-let [xs# (seq ~xs)]
-;       (let [~x (first xs#)]
-;         ~@body))))
-;
-;(defn take-last
-;  "Returns a seq of the last n items in coll.  Depending on the type
-;   of coll may be no better than linear time.  For vectors, see also subvec."
-;  [n coll]
-;  (loop [s (seq coll)
-;         lead (seq (drop n coll))]
-;    (if lead
-;      (recur (next s) (next lead))
-;      s)))
-;
-;(defn mapv
-;  "Returns a vector consisting of the result of applying f to the
-;   set of first items of each coll, followed by applying f to the set
-;   of second items in each coll, until any one of the colls is
-;   exhausted.  Any remaining items in other colls are ignored. Function
-;   f should accept number-of-colls arguments."
-;  ([f coll]
-;   (-> (reduce (fn [v o]
-;                 (conj! v (f o)))
-;               (transient [])
-;               coll)
-;       persistent!))
-;  ([f c1 c2]
-;   (into [] (map f c1 c2)))
-;  ([f c1 c2 c3]
-;   (into [] (map f c1 c2 c3)))
-;  ([f c1 c2 c3 & colls]
-;   (into [] (apply map f c1 c2 c3 colls))))
-;
-;(defn filterv
-;  "Returns a vector of the items in coll for which
-;   (pred item) returns logical true. pred must be free of side-effects."
-;  [pred coll]
-;  (-> (reduce (fn [v o]
-;                (if (pred o)
-;                  (conj! v o)
-;                  v))
-;              (transient [])
-;              coll)
-;      persistent!))
-;
-;(defn mapcat
-;  "Returns the result of applying concat to the result of applying map
-;  to f and colls. Thus function f should return a collection. Returns
-;  a transducer when no collections are provided"
-;  ([f] (comp (map f) cat))
-;  ; TODO: Variadic.
-;  ([f coll]
-;   (apply concat (map f coll))))
-;
-;(defn tree-seq
-;  "Returns a lazy sequence of the nodes in a tree, via a depth-first walk.
-;   branch? must be a fn of one arg that returns true if passed a node
-;   that can have children (but may not).  children must be a fn of one
-;   arg that returns a sequence of the children. Will only be called on
-;   nodes for which branch? returns true. Root is the root node of the
-;  tree."
-;  [branch? children root]
-;  (let [walk (fn walk [node]
-;               (lazy-seq
-;                (cons node
-;                      (when (branch? node)
-;                        (mapcat walk (children node))))))]
-;    (walk root)))
-;
-;(defn distinct
-;  "Returns a lazy sequence of the elements of coll with duplicates removed.
-;  Returns a stateful transducer when no collection is provided."
-;  ([]
-;   (fn [rf]
-;     (let [seen (volatile! #{})]
-;       (fn
-;         ([] (rf))
-;         ([result] (rf result))
-;         ([result input]
-;          (if (contains? (deref seen) input)
-;            result
-;            (do (vswap! seen conj input)
-;                (rf result input))))))))
-;  ([coll]
-;   (let [step (fn step [xs seen]
-;                (lazy-seq
-;                 ((fn [[f :as xs] seen]
-;                    (when-let [s (seq xs)]
-;                      (if (contains? seen f)
-;                        (recur (rest s) seen)
-;                        (cons f (step (rest s) (conj seen f))))))
-;                  xs seen)))]
-;     (step coll #{}))))
-;
-;(defn distinct?
-;  "Returns true if no two of the arguments are ="
-;  ([x] true)
-;  ([x y] (not (= x y)))
-;  ([x y & more]
-;   (if (not= x y)
-;     (loop [s #{x y} [x & etc :as xs] more]
-;       (if xs
-;         (if (contains? s x)
-;           false
-;           (recur (conj s x) etc))
-;         true))
-;     false)))
-;
-;; Returns a lazy sequence of the items in coll for which
-;; (pred item) returns logical true. pred must be free of side-effects.
-;; Returns a transducer when no collection is provided.
-;(defn filter
-;  ([pred]
-;   (fn [rf]
-;     (fn
-;       ([] (rf))
-;       ([result] (rf result))
-;       ([result input]
-;        (if (pred input)
-;          (rf result input)
-;          result)))))
-;  ([pred coll]
-;   (lazy-seq
-;     (when-let [s (seq coll)]
-;       (if (chunked-seq? s)
-;         (let [c (chunk-first s)
-;               size (count c)
-;               b (chunk-buffer size)]
-;           (dotimes [i size]
-;             (let [v (nth c i)]
-;               (when (pred v)
-;                 (chunk-append b v))))
-;           (chunk-cons (chunk b) (filter pred (chunk-rest s))))
-;         (let [f (first s) r (rest s)]
-;           (if (pred f)
-;             (cons f (filter pred r))
-;             (filter pred r))))))))
-;
-;(defn flatten
-;  "Takes any nested combination of sequential things (lists, vectors,
-;  etc.) and returns their contents as a single, flat lazy sequence.
-;  (flatten nil) returns an empty sequence."
-;  [x]
-;  (filter (complement sequential?)
-;          (rest (tree-seq sequential? seq x))))
-;
-;; Returns a lazy sequence of the items in coll for which
-;; (pred item) returns logical false. pred must be free of side-effects.
-;; Returns a transducer when no collection is provided.
-;(defn remove
-;  ([pred]
-;   (filter (complement pred)))
-;  ([pred coll]
-;   (filter (complement pred) coll)))
-;
-;(defn dedupe
-;  "Returns a lazy sequence removing consecutive duplicates in coll.
-;  Returns a transducer when no collection is provided."
-;  ([]
-;   (fn [rf]
-;     (let [pv (volatile! ::none)]
-;       (fn
-;         ([] (rf))
-;         ([result] (rf result))
-;         ([result input]
-;          (let [prior (deref pv)]
-;            (vreset! pv input)
-;            (if (= prior input)
-;              result
-;              (rf result input))))))))
-;  ([coll]
-;   (let [step (fn step [prior xs]
-;                (lazy-seq
-;                 (when-some [[x & more] (seq xs)]
-;                   (if (= x prior)
-;                     (step prior more)
-;                     (cons x (step x more))))))]
-;     (step ::none coll))))
-;
-;(defmacro condp
-;  "Takes a binary predicate, an expression, and a set of clauses.
-;  Each clause can take the form of either:
-;
-;  test-expr result-expr
-;
-;  test-expr :>> result-fn
-;
-;  Note :>> is an ordinary keyword.
-;
-;  For each clause, (pred test-expr expr) is evaluated. If it returns
-;  logical true, the clause is a match. If a binary clause matches, the
-;  result-expr is returned, if a ternary clause matches, its result-fn,
-;  which must be a unary function, is called with the result of the
-;  predicate as its argument, the result of that call being the return
-;  value of condp. A single default expression can follow the clauses,
-;  and its value will be returned if no clause matches. If no default
-;  expression is provided and no clause matches, an
-;  IllegalArgumentException is thrown."
-;  [pred expr & clauses]
-;  (let [gpred (gensym "pred__")
-;        gexpr (gensym "expr__")
-;        emit (fn emit [pred expr args]
-;               (let [[[a b c :as clause] more]
-;                       (split-at (if (= :>> (second args)) 3 2) args)
-;                       n (count clause)]
-;                 (cond
-;                  (= 0 n) `(throw (str "No matching clause: " ~expr))
-;                  (= 1 n) a
-;                  (= 2 n) `(if (~pred ~a ~expr)
-;                             ~b
-;                             ~(emit pred expr more))
-;                  :else `(if-let [p# (~pred ~a ~expr)]
-;                           (~c p#)
-;                           ~(emit pred expr more)))))]
-;    `(let [~gpred ~pred
-;           ~gexpr ~expr]
-;       ~(emit gpred gexpr clauses))))
-;
-;(defmacro cond->
-;  "Takes an expression and a set of test/form pairs. Threads expr (via ->)
-;  through each form for which the corresponding test
-;  expression is true. Note that, unlike cond branching, cond-> threading does
-;  not short circuit after the first true test expression."
-;  [expr & clauses]
-;  (assert (even? (count clauses)))
-;  (let [g (gensym)
-;        steps (map (fn [test+step]
-;                     (let [test (first test+step)
-;                           step (second test+step)]
-;                       `(if ~test
-;                          (-> ~g ~step)
-;                          ~g)))
-;                   (partition 2 clauses))]
-;    `(let [~g ~expr
-;           ~@(interleave (repeat g) (butlast steps))]
-;       ~(if (empty? steps)
-;          g
-;          (last steps)))))
-;
-;(defmacro cond->>
-;  "Takes an expression and a set of test/form pairs. Threads expr (via ->>)
-;  through each form for which the corresponding test expression
-;  is true.  Note that, unlike cond branching, cond->> threading does not short circuit
-;  after the first true test expression."
-;  [expr & clauses]
-;  (assert (even? (count clauses)))
-;  (let [g (gensym)
-;        steps (map (fn [[test step]] `(if ~test (->> ~g ~step) ~g))
-;                   (partition 2 clauses))]
-;    `(let [~g ~expr
-;           ~@(interleave (repeat g) (butlast steps))]
-;       ~(if (empty? steps)
-;          g
-;          (last steps)))))
-;
-;(defmacro as->
-;  "Binds name to expr, evaluates the first form in the lexical context
-;  of that binding, then binds name to that result, repeating for each
-;  successive form, returning the result of the last form."
-;  [expr name & forms]
-;  `(let [~name ~expr
-;         ~@(interleave (repeat name) (butlast forms))]
-;     ~(if (empty? forms)
-;        name
-;        (last forms))))
-;
-;(defmacro some->
-;  "When expr is not nil, threads it into the first form (via ->),
-;  and when that result is not nil, through the next etc"
-;  [expr & forms]
-;  (let [g (gensym)
-;        steps (map (fn [step] `(if (nil? ~g) nil (-> ~g ~step)))
-;                   forms)]
-;    `(let [~g ~expr
-;           ~@(interleave (repeat g) (butlast steps))]
-;       ~(if (empty? steps)
-;          g
-;          (last steps)))))
-;
-;(defmacro some->>
-;  "When expr is not nil, threads it into the first form (via ->>),
-;  and when that result is not nil, through the next etc"
-;  [expr & forms]
-;  (let [g (gensym)
-;        steps (map (fn [step] `(if (nil? ~g) nil (->> ~g ~step)))
-;                   forms)]
-;    `(let [~g ~expr
-;           ~@(interleave (repeat g) (butlast steps))]
-;       ~(if (empty? steps)
-;          g
-;          (last steps)))))
-;
+(defn get-in
+  "Returns the value in a nested associative structure,
+  where ks is a sequence of keys. Returns nil if the key
+  is not present, or the not-found value if supplied."
+  ([m ks]
+   (reduce get m ks))
+  ([m ks not-found]
+   (loop [m m
+          ks (seq ks)]
+     (if ks
+       (let [m (get m (first ks) ::none)]
+         (if (identical? ::none m)
+           not-found
+           (recur m (next ks))))
+       m))))
+
+(defn assoc-in
+  "Associates a value in a nested associative structure, where ks is a
+  sequence of keys and v is the new value and returns a new nested structure.
+  If any levels do not exist, hash-maps will be created."
+  [m [k & ks] v]
+  (if ks
+    (assoc m k (assoc-in (get m k) ks v))
+    (assoc m k v)))
+
+(defn update-in
+  "'Updates' a value in a nested associative structure, where ks is a
+  sequence of keys and f is a function that will take the old value
+  and any supplied args and return the new value, and returns a new
+  nested structure.  If any levels do not exist, hash-maps will be
+  created."
+  [m ks f & args]
+  (let [up (fn up [m ks f args]
+             (let [[k & ks] ks]
+               (if ks
+                 (assoc m k (up (get m k) ks f args))
+                 (assoc m k (apply f (get m k) args)))))]
+    (up m ks f args)))
+
+(defn update
+  "'Updates' a value in an associative structure, where k is a
+  key and f is a function that will take the old value
+  and any supplied args and return the new value, and returns a new
+  structure.  If the key does not exist, nil is passed as the old value."
+  ([m k f]
+   (assoc m k (f (get m k))))
+  ([m k f x]
+   (assoc m k (f (get m k) x)))
+  ([m k f x y]
+   (assoc m k (f (get m k) x y)))
+  ([m k f x y z]
+   (assoc m k (f (get m k) x y z)))
+  ([m k f x y z & more]
+   (assoc m k (apply f (get m k) x y z more))))
+
+(defmacro when-first
+  "bindings => x xs
+
+  Roughly the same as (when (seq xs) (let [x (first xs)] body)) but xs is evaluated only once"
+  [bindings & body]
+  (assert-macro-args
+    (vector? bindings) "a vector for its binding"
+    (= 2 (count bindings)) "exactly 2 forms in binding vector")
+  (let [[x xs] bindings]
+    `(when-let [xs# (seq ~xs)]
+       (let [~x (first xs#)]
+         ~@body))))
+
+(defn take-last
+  "Returns a seq of the last n items in coll.  Depending on the type
+   of coll may be no better than linear time.  For vectors, see also subvec."
+  [n coll]
+  (loop [s (seq coll)
+         lead (seq (drop n coll))]
+    (if lead
+      (recur (next s) (next lead))
+      s)))
+
+(defn mapv
+  "Returns a vector consisting of the result of applying f to the
+   set of first items of each coll, followed by applying f to the set
+   of second items in each coll, until any one of the colls is
+   exhausted.  Any remaining items in other colls are ignored. Function
+   f should accept number-of-colls arguments."
+  ([f coll]
+   (-> (reduce (fn [v o]
+                 (conj! v (f o)))
+               (transient [])
+               coll)
+       persistent!))
+  ([f c1 c2]
+   (into [] (map f c1 c2)))
+  ([f c1 c2 c3]
+   (into [] (map f c1 c2 c3)))
+  ([f c1 c2 c3 & colls]
+   (into [] (apply map f c1 c2 c3 colls))))
+
+(defn filterv
+  "Returns a vector of the items in coll for which
+   (pred item) returns logical true. pred must be free of side-effects."
+  [pred coll]
+  (-> (reduce (fn [v o]
+                (if (pred o)
+                  (conj! v o)
+                  v))
+              (transient [])
+              coll)
+      persistent!))
+
+(defn mapcat
+  "Returns the result of applying concat to the result of applying map
+  to f and colls. Thus function f should return a collection. Returns
+  a transducer when no collections are provided"
+  ([f] (comp (map f) cat))
+  ; TODO: Variadic.
+  ([f coll]
+   (apply concat (map f coll))))
+
+(defn tree-seq
+  "Returns a lazy sequence of the nodes in a tree, via a depth-first walk.
+   branch? must be a fn of one arg that returns true if passed a node
+   that can have children (but may not).  children must be a fn of one
+   arg that returns a sequence of the children. Will only be called on
+   nodes for which branch? returns true. Root is the root node of the
+  tree."
+  [branch? children root]
+  (let [walk (fn walk [node]
+               (lazy-seq
+                (cons node
+                      (when (branch? node)
+                        (mapcat walk (children node))))))]
+    (walk root)))
+
+(defn distinct
+  "Returns a lazy sequence of the elements of coll with duplicates removed.
+   Returns a stateful transducer when no collection is provided."
+  ([]
+   (fn [rf]
+     (let [seen (volatile! #{})]
+       (fn
+         ([] (rf))
+         ([result] (rf result))
+         ([result input]
+          (if (contains? (deref seen) input)
+            result
+            (do (vswap! seen conj input)
+                (rf result input))))))))
+  ([coll]
+   (let [step (fn step [xs seen]
+                (lazy-seq
+                  ((fn [[f :as xs] seen]
+                     (when-let [s (seq xs)]
+                       (if (contains? seen f)
+                         (recur (rest s) seen)
+                         (cons f (step (rest s) (conj seen f))))))
+                   xs seen)))]
+     (step coll #{}))))
+
+(defn distinct?
+  "Returns true if no two of the arguments are ="
+  ([x] true)
+  ([x y] (not (= x y)))
+  ([x y & more]
+   (if (not= x y)
+     (loop [s #{x y}
+            [x & etc :as xs] more]
+       (if xs
+         (if (contains? s x)
+           false
+           (recur (conj s x) etc))
+         true))
+     false)))
+
+(defn filter
+  "Returns a lazy sequence of the items in coll for which
+   (pred item) returns logical true. pred must be free of side-effects.
+   Returns a transducer when no collection is provided."
+  ([pred]
+   (fn [rf]
+     (fn
+       ([] (rf))
+       ([result] (rf result))
+       ([result input]
+        (if (pred input)
+          (rf result input)
+          result)))))
+  ([pred coll]
+   (lazy-seq
+     (when-let [s (seq coll)]
+       (if (chunked-seq? s)
+         (let [c (chunk-first s)
+               size (count c)
+               b (chunk-buffer size)]
+           (dotimes [i size]
+             (let [v (nth c i)]
+               (when (pred v)
+                 (chunk-append b v))))
+           (chunk-cons (chunk b) (filter pred (chunk-rest s))))
+         (let [f (first s) r (rest s)]
+           (if (pred f)
+             (cons f (filter pred r))
+             (filter pred r))))))))
+
+(defn flatten
+  "Takes any nested combination of sequential things (lists, vectors,
+  etc.) and returns their contents as a single, flat lazy sequence.
+  (flatten nil) returns an empty sequence."
+  [x]
+  (filter (complement sequential?)
+          (rest (tree-seq sequential? seq x))))
+
+(defn remove
+  "Returns a lazy sequence of the items in coll for which
+   (pred item) returns logical false. pred must be free of side-effects.
+   Returns a transducer when no collection is provided."
+  ([pred]
+   (filter (complement pred)))
+  ([pred coll]
+   (filter (complement pred) coll)))
+
+(defn dedupe
+  "Returns a lazy sequence removing consecutive duplicates in coll.
+  Returns a transducer when no collection is provided."
+  ([]
+   (fn [rf]
+     (let [pv (volatile! ::none)]
+       (fn
+         ([] (rf))
+         ([result] (rf result))
+         ([result input]
+          (let [prior (deref pv)]
+            (vreset! pv input)
+            (if (= prior input)
+              result
+              (rf result input))))))))
+  ([coll]
+   (let [step (fn step [prior xs]
+                (lazy-seq
+                 (when-some [[x & more] (seq xs)]
+                   (if (= x prior)
+                     (step prior more)
+                     (cons x (step x more))))))]
+     (step ::none coll))))
+
+(defmacro condp
+  "Takes a binary predicate, an expression, and a set of clauses.
+  Each clause can take the form of either:
+
+  test-expr result-expr
+
+  test-expr :>> result-fn
+
+  Note :>> is an ordinary keyword.
+
+  For each clause, (pred test-expr expr) is evaluated. If it returns
+  logical true, the clause is a match. If a binary clause matches, the
+  result-expr is returned, if a ternary clause matches, its result-fn,
+  which must be a unary function, is called with the result of the
+  predicate as its argument, the result of that call being the return
+  value of condp. A single default expression can follow the clauses,
+  and its value will be returned if no clause matches. If no default
+  expression is provided and no clause matches, an
+  IllegalArgumentException is thrown."
+  [pred expr & clauses]
+  (let [gpred (gensym "pred__")
+        gexpr (gensym "expr__")
+        emit (fn emit [pred expr args]
+               (let [[[a b c :as clause] more]
+                       (split-at (if (= :>> (second args)) 3 2) args)
+                       n (count clause)]
+                 (cond
+                  (= 0 n) `(throw (str "No matching clause: " ~expr))
+                  (= 1 n) a
+                  (= 2 n) `(if (~pred ~a ~expr)
+                             ~b
+                             ~(emit pred expr more))
+                  :else `(if-let [p# (~pred ~a ~expr)]
+                           (~c p#)
+                           ~(emit pred expr more)))))]
+    `(let [~gpred ~pred
+           ~gexpr ~expr]
+       ~(emit gpred gexpr clauses))))
+
+(defmacro cond->
+  "Takes an expression and a set of test/form pairs. Threads expr (via ->)
+  through each form for which the corresponding test
+  expression is true. Note that, unlike cond branching, cond-> threading does
+  not short circuit after the first true test expression."
+  [expr & clauses]
+  (assert (even? (count clauses)))
+  (let [g (gensym)
+        steps (map (fn [test+step]
+                     (let [test (first test+step)
+                           step (second test+step)]
+                       `(if ~test
+                          (-> ~g ~step)
+                          ~g)))
+                   (partition 2 clauses))]
+    `(let [~g ~expr
+           ~@(interleave (repeat g) (butlast steps))]
+       ~(if (empty? steps)
+          g
+          (last steps)))))
+
+(defmacro cond->>
+  "Takes an expression and a set of test/form pairs. Threads expr (via ->>)
+  through each form for which the corresponding test expression
+  is true.  Note that, unlike cond branching, cond->> threading does not short circuit
+  after the first true test expression."
+  [expr & clauses]
+  (assert (even? (count clauses)))
+  (let [g (gensym)
+        steps (map (fn [[test step]] `(if ~test (->> ~g ~step) ~g))
+                   (partition 2 clauses))]
+    `(let [~g ~expr
+           ~@(interleave (repeat g) (butlast steps))]
+       ~(if (empty? steps)
+          g
+          (last steps)))))
+
+(defmacro as->
+  "Binds name to expr, evaluates the first form in the lexical context
+  of that binding, then binds name to that result, repeating for each
+  successive form, returning the result of the last form."
+  [expr name & forms]
+  `(let [~name ~expr
+         ~@(interleave (repeat name) (butlast forms))]
+     ~(if (empty? forms)
+        name
+        (last forms))))
+
+(defmacro some->
+  "When expr is not nil, threads it into the first form (via ->),
+  and when that result is not nil, through the next etc"
+  [expr & forms]
+  (let [g (gensym)
+        steps (map (fn [step] `(if (nil? ~g) nil (-> ~g ~step)))
+                   forms)]
+    `(let [~g ~expr
+           ~@(interleave (repeat g) (butlast steps))]
+       ~(if (empty? steps)
+          g
+          (last steps)))))
+
+(defmacro some->>
+  "When expr is not nil, threads it into the first form (via ->>),
+  and when that result is not nil, through the next etc"
+  [expr & forms]
+  (let [g (gensym)
+        steps (map (fn [step] `(if (nil? ~g) nil (->> ~g ~step)))
+                   forms)]
+    `(let [~g ~expr
+           ~@(interleave (repeat g) (butlast steps))]
+       ~(if (empty? steps)
+          g
+          (last steps)))))
+
 ;;; Functions.
 ;(defn ifn? [o]
 ;  (native/raw "__value = make_box(is_callable(~{ o }));"))

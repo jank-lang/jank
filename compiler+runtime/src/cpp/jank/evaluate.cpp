@@ -146,7 +146,12 @@ namespace jank::evaluate
   object_ptr
   eval(context &rt_ctx, jit::processor const &jit_prc, expr::call<expression> const &expr)
   {
-    auto const source(eval(rt_ctx, jit_prc, expr.source_expr));
+    auto source(eval(rt_ctx, jit_prc, expr.source_expr));
+    if(source->type == object_type::var)
+    {
+      source = deref(source);
+    }
+
     return visit_object(
       [&](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;

@@ -11,8 +11,13 @@ namespace jank::runtime
 {
   using namespace behavior;
 
-  object_ptr dynamic_call(object_ptr const source)
+  object_ptr dynamic_call(object_ptr source)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -38,8 +43,13 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source, object_ptr const a1)
+  object_ptr dynamic_call(object_ptr source, object_ptr const a1)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -80,8 +90,13 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2)
+  object_ptr dynamic_call(object_ptr source, object_ptr const a1, object_ptr const a2)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -122,11 +137,14 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source,
-                          object_ptr const a1,
-                          object_ptr const a2,
-                          object_ptr const a3)
+  object_ptr
+  dynamic_call(object_ptr source, object_ptr const a1, object_ptr const a2, object_ptr const a3)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -162,12 +180,17 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source,
+  object_ptr dynamic_call(object_ptr source,
                           object_ptr const a1,
                           object_ptr const a2,
                           object_ptr const a3,
                           object_ptr const a4)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -205,13 +228,18 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source,
+  object_ptr dynamic_call(object_ptr source,
                           object_ptr const a1,
                           object_ptr const a2,
                           object_ptr const a3,
                           object_ptr const a4,
                           object_ptr const a5)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -251,7 +279,7 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source,
+  object_ptr dynamic_call(object_ptr source,
                           object_ptr const a1,
                           object_ptr const a2,
                           object_ptr const a3,
@@ -259,6 +287,11 @@ namespace jank::runtime
                           object_ptr const a5,
                           object_ptr const a6)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -312,7 +345,7 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source,
+  object_ptr dynamic_call(object_ptr source,
                           object_ptr const a1,
                           object_ptr const a2,
                           object_ptr const a3,
@@ -321,6 +354,11 @@ namespace jank::runtime
                           object_ptr const a6,
                           object_ptr const a7)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -378,7 +416,7 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source,
+  object_ptr dynamic_call(object_ptr source,
                           object_ptr const a1,
                           object_ptr const a2,
                           object_ptr const a3,
@@ -388,6 +426,11 @@ namespace jank::runtime
                           object_ptr const a7,
                           object_ptr const a8)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -449,7 +492,7 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source,
+  object_ptr dynamic_call(object_ptr source,
                           object_ptr const a1,
                           object_ptr const a2,
                           object_ptr const a3,
@@ -460,6 +503,11 @@ namespace jank::runtime
                           object_ptr const a8,
                           object_ptr const a9)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -523,7 +571,7 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source,
+  object_ptr dynamic_call(object_ptr source,
                           object_ptr const a1,
                           object_ptr const a2,
                           object_ptr const a3,
@@ -535,6 +583,11 @@ namespace jank::runtime
                           object_ptr const a9,
                           object_ptr const a10)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -643,7 +696,7 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source,
+  object_ptr dynamic_call(object_ptr source,
                           object_ptr const a1,
                           object_ptr const a2,
                           object_ptr const a3,
@@ -656,6 +709,11 @@ namespace jank::runtime
                           object_ptr const a10,
                           obj::persistent_list_ptr const rest)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
