@@ -113,6 +113,8 @@ namespace jank::codegen
     std::unique_ptr<llvm::IRBuilder<>> builder;
     llvm::Function *fn{};
     llvm::Value *nil{};
+
+    /* TODO: Is this needed, given lifted constants? */
     native_unordered_map<object_ptr, llvm::Value *, std::hash<object_ptr>, very_equal_to>
       literal_globals;
     native_unordered_map<obj::symbol_ptr, llvm::Value *> var_globals;

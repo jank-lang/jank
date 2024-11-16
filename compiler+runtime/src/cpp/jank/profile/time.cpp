@@ -31,6 +31,11 @@ namespace jank::profile
     }
   }
 
+  native_bool is_enabled()
+  {
+    return enabled;
+  }
+
   void enter(native_persistent_string_view const &region)
   {
     if(enabled)

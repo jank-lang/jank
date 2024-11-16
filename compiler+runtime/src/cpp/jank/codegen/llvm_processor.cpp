@@ -121,6 +121,7 @@ namespace jank::codegen
 
     for(auto const &arity : root_fn.arities)
     {
+      /* TODO: Add profiling to the fn body? Need to exit on every return. */
       create_function(arity);
       for(auto const &form : arity.body.values)
       {
@@ -138,6 +139,15 @@ namespace jank::codegen
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
       builder->SetInsertPoint(global_ctor_block);
+
+      if(profile::is_enabled())
+      {
+        auto const fn_type(
+          llvm::FunctionType::get(builder->getVoidTy(), { builder->getPtrTy() }, false));
+        auto const fn(module->getOrInsertFunction("jank_profile_exit", fn_type));
+        builder->CreateCall(fn, { gen_c_string(fmt::format("global ctor for {}", root_fn.name)) });
+      }
+
       builder->CreateRetVoid();
 
       /* TODO: Verify module? */
@@ -722,7 +732,7 @@ namespace jank::codegen
     auto const found(c_string_globals.find(s));
     if(found != c_string_globals.end())
     {
-      return builder->CreateLoad(builder->getPtrTy(), found->second);
+      return found->second;
     }
     return c_string_globals[s] = builder->CreateGlobalStringPtr(s.c_str());
   }
@@ -1213,6 +1223,17 @@ namespace jank::codegen
     global_ctor_block->insertInto(init);
 
     llvm::appendToGlobalCtors(*module, init, 65535);
+
+    if(profile::is_enabled())
+    {
+      llvm::IRBuilder<>::InsertPointGuard const guard{ *builder };
+      builder->SetInsertPoint(global_ctor_block);
+
+      auto const fn_type(
+        llvm::FunctionType::get(builder->getVoidTy(), { builder->getPtrTy() }, false));
+      auto const fn(module->getOrInsertFunction("jank_profile_enter", fn_type));
+      builder->CreateCall(fn, { gen_c_string(fmt::format("global ctor for {}", root_fn.name)) });
+    }
   }
 
   llvm::GlobalVariable *llvm_processor::create_global_var(native_persistent_string const &name)

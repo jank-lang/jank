@@ -243,6 +243,10 @@ extern "C"
 
   void jank_throw(jank_object_ptr o);
 
+  void jank_profile_enter(char const *label);
+  void jank_profile_exit(char const *label);
+  void jank_profile_report(char const *label);
+
 #ifdef __cplusplus
 }
 #endif

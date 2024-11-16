@@ -749,4 +749,19 @@ extern "C"
   {
     throw runtime::object_ptr{ reinterpret_cast<object *>(o) };
   }
+
+  void jank_profile_enter(char const * const label)
+  {
+    profile::enter(label);
+  }
+
+  void jank_profile_exit(char const * const label)
+  {
+    profile::exit(label);
+  }
+
+  void jank_profile_report(char const * const label)
+  {
+    profile::report(label);
+  }
 }
