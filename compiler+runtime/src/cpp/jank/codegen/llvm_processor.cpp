@@ -173,6 +173,21 @@ namespace jank::codegen
       builder->CreateCall(fn, args);
     }
 
+    option<std::reference_wrapper<analyze::lifted_constant const>> meta;
+    if(expr.name->meta.is_some())
+    {
+      meta = expr.frame->find_lifted_constant(expr.name->meta.unwrap()).unwrap();
+
+      auto const set_meta_fn_type(
+        llvm::FunctionType::get(builder->getVoidTy(),
+                                { builder->getPtrTy(), builder->getPtrTy() },
+                                false));
+      auto const set_meta_fn(module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
+
+      auto const meta(gen_global_from_read_string(expr.name->meta.unwrap()));
+      builder->CreateCall(set_meta_fn, { ref, meta });
+    }
+
     if(expr.position == analyze::expression_position::tail)
     {
       return builder->CreateRet(ref);
@@ -915,6 +930,18 @@ namespace jank::codegen
       auto const call(builder->CreateCall(create_fn, args));
       builder->CreateStore(call, global);
 
+      if(s->meta)
+      {
+        auto const set_meta_fn_type(
+          llvm::FunctionType::get(builder->getVoidTy(),
+                                  { builder->getPtrTy(), builder->getPtrTy() },
+                                  false));
+        auto const set_meta_fn(module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
+
+        auto const meta(gen_global_from_read_string(s->meta.unwrap()));
+        builder->CreateCall(set_meta_fn, { global, meta });
+      }
+
       if(prev_block == global_ctor_block)
       {
         return call;
@@ -1025,6 +1052,28 @@ namespace jank::codegen
       llvm::SmallVector<llvm::Value *, 1> args{ gen_global(make_box(runtime::to_code_string(o))) };
       auto const call(builder->CreateCall(create_fn, args));
       builder->CreateStore(call, global);
+
+      runtime::visit_object(
+        [&](auto const typed_o) {
+          using T = typename decltype(typed_o)::value_type;
+
+          if constexpr(behavior::metadatable<T>)
+          {
+            if(typed_o->meta)
+            {
+              auto const set_meta_fn_type(
+                llvm::FunctionType::get(builder->getVoidTy(),
+                                        { builder->getPtrTy(), builder->getPtrTy() },
+                                        false));
+              auto const set_meta_fn(
+                module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
+
+              auto const meta(gen_global_from_read_string(typed_o->meta.unwrap()));
+              builder->CreateCall(set_meta_fn, { global, meta });
+            }
+          }
+        },
+        o);
 
       if(prev_block == global_ctor_block)
       {
@@ -1137,6 +1186,18 @@ namespace jank::codegen
         target_fn_type));
 
       builder->CreateCall(set_arity_fn, { fn_obj, target_fn.getCallee() });
+    }
+
+    if(expr.meta)
+    {
+      auto const set_meta_fn_type(
+        llvm::FunctionType::get(builder->getVoidTy(),
+                                { builder->getPtrTy(), builder->getPtrTy() },
+                                false));
+      auto const set_meta_fn(module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
+
+      auto const meta(gen_global_from_read_string(expr.meta));
+      builder->CreateCall(set_meta_fn, { fn_obj, meta });
     }
 
     return fn_obj;

@@ -1133,4 +1133,14 @@ namespace jank::runtime
   {
     return make_box<obj::iterator>(fn, o);
   }
+
+  object_ptr repeat(object_ptr const val)
+  {
+    return make_box<obj::repeat>(val);
+  }
+
+  object_ptr repeat(object_ptr const n, object_ptr const val)
+  {
+    return make_box<obj::repeat>(n, val);
+  }
 }

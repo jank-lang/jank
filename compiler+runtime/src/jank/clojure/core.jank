@@ -1804,13 +1804,13 @@
     (when-let [s (seq coll)]
       (cons (first s) (take-nth n (drop n s)))))))
 
-; Returns a lazy sequence consisting of the result of applying f to
-; the set of first items of each coll, followed by applying f to the
-; set of second items in each coll, until any one of the colls is
-; exhausted.  Any remaining items in other colls are ignored. Function
-; f should accept number-of-colls arguments. Returns a transducer when
-; no collection is provided.
 (defn map
+  "Returns a lazy sequence consisting of the result of applying f to
+   the set of first items of each coll, followed by applying f to the
+   set of second items in each coll, until any one of the colls is
+   exhausted.  Any remaining items in other colls are ignored. Function
+   f should accept number-of-colls arguments. Returns a transducer when
+   no collection is provided."
   ([f]
    (fn [rf]
      (fn
@@ -2036,8 +2036,8 @@
                     s)))]
      (lazy-seq (step n coll)))))
 
-; Return a lazy sequence of all but the last n (default 1) items in coll
 (defn drop-last
+  "Return a lazy sequence of all but the last n (default 1) items in coll"
   ([coll] (drop-last 1 coll))
   ([n coll] (map (fn [x _] x) coll (drop n coll))))
 
@@ -2066,220 +2066,220 @@
                     s)))]
      (lazy-seq (step pred coll)))))
 
-; Returns a lazy (infinite!) sequence of repetitions of the items in coll.
-(defn cycle [coll]
+(defn cycle
+  "Returns a lazy (infinite!) sequence of repetitions of the items in coll."
+  [coll]
   ; TODO: Custom cycle object
   (lazy-seq (concat coll (cycle coll))))
 
-; Returns a lazy (infinite!, or length n if supplied) sequence of val.
-;#_(defn repeat
-;  ([val]
-;   (native/raw "__value = obj::repeat::create(~{ val });"))
-;  ([count val]
-;   (native/raw "__value = obj::repeat::create(~{ count }, ~{ val });")))
-;
-;; Returns a vector of [(take n coll) (drop n coll)]
-;(defn split-at [n coll]
-;  [(take n coll) (drop n coll)])
-;
-;; Returns a vector of [(take-while pred coll) (drop-while pred coll)]
-;(defn split-with [pred coll]
-;  [(take-while pred coll) (drop-while pred coll)])
-;
-;; Returns a lazy seq of the first item in each coll, then the second etc.
-;(defn interleave
-;  ([] ())
-;  ([c1] (lazy-seq c1))
-;  ([c1 c2]
-;   (lazy-seq
-;     (let [s1 (seq c1) s2 (seq c2)]
-;       (when (and s1 s2)
-;         (cons (first s1) (cons (first s2)
-;                                (interleave (rest s1) (rest s2))))))))
-;  ([c1 c2 & colls]
-;   (lazy-seq
-;     (let [ss (map seq (conj colls c2 c1))]
-;       (when (every? identity ss)
-;         (concat (map first ss) (apply interleave (map rest ss))))))))
-;
-;(defn interpose
-;  "Returns a lazy seq of the elements of coll separated by sep.
-;  Returns a stateful transducer when no collection is provided."
-;  ([sep]
-;   (fn [rf]
-;     (let [started (volatile! false)]
-;       (fn
-;         ([] (rf))
-;         ([result] (rf result))
-;         ([result input]
-;          (if (deref started)
-;            (let [sepr (rf result sep)]
-;              (if (reduced? sepr)
-;                sepr
-;                (rf sepr input)))
-;            (do
-;              (vreset! started true)
-;              (rf result input))))))))
-;  ([sep coll]
-;   (drop 1 (interleave (repeat sep) coll))))
-;
-;; When lazy sequences are produced via functions that have side
-;; effects, any effects other than those needed to produce the first
-;; element in the seq do not occur until the seq is consumed. dorun can
-;; be used to force any effects. Walks through the successive nexts of
-;; the seq, does not retain the head and returns nil.
-;(defn dorun
-;  ([coll]
-;   (when-let [s (seq coll)]
-;     (recur (next s))))
-;  ([n coll]
-;   (when (and (seq coll) (pos? n))
-;     (recur (dec n) (next coll)))))
-;
-;; When lazy sequences are produced via functions that have side
-;; effects, any effects other than those needed to produce the first
-;; element in the seq do not occur until the seq is consumed. doall can
-;; be used to force any effects. Walks through the successive nexts of
-;; the seq, retains the head and returns it, thus causing the entire
-;; seq to reside in memory at one time.
-;(defn doall
-;  ([coll]
-;   (dorun coll)
-;   coll)
-;  ([n coll]
-;   (dorun n coll)
-;   coll))
-;
-;; Returns a lazy sequence of lists of n items each, at offsets step
-;; apart. If step is not supplied, defaults to n, i.e. the partitions
-;; do not overlap. If a pad collection is supplied, use its elements as
-;; necessary to complete last partition upto n items. In case there are
-;; not enough padding elements, return a partition with less than n items.
-;(defn partition
-;  ([n coll]
-;   (partition n n coll))
-;  ([n step coll]
-;   (lazy-seq
-;     (when-let [s (seq coll)]
-;       (let [p (doall (take n s))]
-;         (when (= n (count p))
-;           (cons p (partition n step (nthrest s step))))))))
-;  ([n step pad coll]
-;   (lazy-seq
-;     (when-let [s (seq coll)]
-;       (let [p (doall (take n s))]
-;         (if (= n (count p))
-;           (cons p (partition n step pad (nthrest s step)))
-;           (list (take n (concat p pad)))))))))
-;
-;(defn partition-all
-;  "Returns a lazy sequence of lists like partition, but may include
-;  partitions with fewer than n items at the end.  Returns a stateful
-;  transducer when no collection is provided."
-;  ([n]
-;   (fn [rf]
-;     ;; OPTIMIZE: jvm clojure uses an array here for perf
-;     (let [part (volatile! [])]
-;       (fn
-;         ([] (rf))
-;         ([result]
-;          (let [p (deref part)
-;                result (if (empty? p)
-;                         result
-;                         (unreduced (rf result p)))]
-;            (rf result)))
-;         ([result input]
-;          (let [p (vswap! part conj input)]
-;            (if (= n (count p))
-;              (do (vreset! part [])
-;                  (rf result p))
-;              result)))))))
-;  ([n coll]
-;   (partition-all n n coll))
-;  ([n step coll]
-;   (lazy-seq
-;     (when-let [s (seq coll)]
-;       (let [seg (doall (take n s))]
-;         (cons seg (partition-all n step (nthrest s step))))))))
-;
-;(defn partition-by
-;  "Applies f to each value in coll, splitting it each time f returns a
-;  new value.  Returns a lazy seq of partitions.  Returns a stateful
-;  transducer when no collection is provided."
-;  ([f]
-;   (fn [rf]
-;     ;; OPTIMIZE: jvm clojure uses an array here for perf
-;     (let [vv (volatile! [])
-;           pv (volatile! ::none)]
-;       (fn
-;         ([] (rf))
-;         ([result]
-;          (let [v (deref vv)
-;                result (if (empty? v)
-;                         result
-;                         (unreduced (rf result v)))]
-;            (rf result)))
-;         ([result input]
-;          (let [pval (deref pv)
-;                val (f input)]
-;            (vreset! pv val)
-;            (if (or (identical? pval ::none)
-;                    (= val pval))
-;              (do
-;                (vswap! vv conj input)
-;                result)
-;              (let [v (deref vv)
-;                    ret (rf result v)]
-;                (when-not (reduced? ret)
-;                  (vreset! vv [input]))
-;                ret))))))))
-;  ([f coll]
-;   (lazy-seq
-;    (when-let [s (seq coll)]
-;      (let [fst (first s)
-;            fv (f fst)
-;            run (cons fst (take-while #(= fv (f %)) (next s)))]
-;        (cons run (partition-by f (lazy-seq (drop (count run) s)))))))))
-;
-;(defn frequencies
-;  "Returns a map from distinct items in coll to the number of times
-;  they appear."
-;  [coll]
-;  ;; OPTIMIZE: transient
-;  (reduce (fn [counts x]
-;            (assoc counts x (inc (get counts x 0))))
-;          {}
-;          coll))
-;
-;(defn group-by
-;  "Returns a map of the elements of coll keyed by the result of
-;  f on each element. The value at each key will be a vector of the
-;  corresponding elements, in the order they appeared in coll."
-;  [f coll]
-;  ;; OPTIMIZE: transient
-;  (reduce
-;   (fn [ret x]
-;     (let [k (f x)]
-;       (assoc ret k (conj (get ret k []) x))))
-;   {}
-;   coll))
-;
-;(defn reductions
-;  "Returns a lazy seq of the intermediate values of the reduction (as
-;  per reduce) of coll by f, starting with init."
-;  ([f coll]
-;   (lazy-seq
-;    (if-let [s (seq coll)]
-;      (reductions f (first s) (rest s))
-;      (list (f)))))
-;  ([f init coll]
-;   (if (reduced? init)
-;     (list (deref init))
-;     (cons init
-;           (lazy-seq
-;            (when-let [s (seq coll)]
-;              (reductions f (f init (first s)) (rest s))))))))
-;
+(def repeat
+  "Returns a lazy (infinite!, or length n if supplied) sequence of val."
+  clojure.core-native.phase-1/repeat)
+
+(defn split-at
+  "Returns a vector of [(take n coll) (drop n coll)]"
+  [n coll]
+  [(take n coll) (drop n coll)])
+
+(defn split-with
+  "Returns a vector of [(take-while pred coll) (drop-while pred coll)]"
+  [pred coll]
+  [(take-while pred coll) (drop-while pred coll)])
+
+(defn interleave
+  "Returns a lazy seq of the first item in each coll, then the second etc."
+  ([] ())
+  ([c1] (lazy-seq c1))
+  ([c1 c2]
+   (lazy-seq
+     (let [s1 (seq c1) s2 (seq c2)]
+       (when (and s1 s2)
+         (cons (first s1) (cons (first s2)
+                                (interleave (rest s1) (rest s2))))))))
+  ([c1 c2 & colls]
+   (lazy-seq
+     (let [ss (map seq (conj colls c2 c1))]
+       (when (every? identity ss)
+         (concat (map first ss) (apply interleave (map rest ss))))))))
+
+(defn interpose
+  "Returns a lazy seq of the elements of coll separated by sep.
+  Returns a stateful transducer when no collection is provided."
+  ([sep]
+   (fn [rf]
+     (let [started (volatile! false)]
+       (fn
+         ([] (rf))
+         ([result] (rf result))
+         ([result input]
+          (if (deref started)
+            (let [sepr (rf result sep)]
+              (if (reduced? sepr)
+                sepr
+                (rf sepr input)))
+            (do
+              (vreset! started true)
+              (rf result input))))))))
+  ([sep coll]
+   (drop 1 (interleave (repeat sep) coll))))
+
+(defn dorun
+  "When lazy sequences are produced via functions that have side
+   effects, any effects other than those needed to produce the first
+   element in the seq do not occur until the seq is consumed. dorun can
+   be used to force any effects. Walks through the successive nexts of
+   the seq, does not retain the head and returns nil."
+  ([coll]
+   (when-let [s (seq coll)]
+     (recur (next s))))
+  ([n coll]
+   (when (and (seq coll) (pos? n))
+     (recur (dec n) (next coll)))))
+
+(defn doall
+  "When lazy sequences are produced via functions that have side
+   effects, any effects other than those needed to produce the first
+   element in the seq do not occur until the seq is consumed. doall can
+   be used to force any effects. Walks through the successive nexts of
+   the seq, retains the head and returns it, thus causing the entire
+   seq to reside in memory at one time."
+  ([coll]
+   (dorun coll)
+   coll)
+  ([n coll]
+   (dorun n coll)
+   coll))
+
+(defn partition
+  "Returns a lazy sequence of lists of n items each, at offsets step
+   apart. If step is not supplied, defaults to n, i.e. the partitions
+   do not overlap. If a pad collection is supplied, use its elements as
+   necessary to complete last partition upto n items. In case there are
+   not enough padding elements, return a partition with less than n items."
+  ([n coll]
+   (partition n n coll))
+  ([n step coll]
+   (lazy-seq
+     (when-let [s (seq coll)]
+       (let [p (doall (take n s))]
+         (when (= n (count p))
+           (cons p (partition n step (nthrest s step))))))))
+  ([n step pad coll]
+   (lazy-seq
+     (when-let [s (seq coll)]
+       (let [p (doall (take n s))]
+         (if (= n (count p))
+           (cons p (partition n step pad (nthrest s step)))
+           (list (take n (concat p pad)))))))))
+
+(defn partition-all
+  "Returns a lazy sequence of lists like partition, but may include
+   partitions with fewer than n items at the end.  Returns a stateful
+   transducer when no collection is provided."
+  ([n]
+   (fn [rf]
+     ;; OPTIMIZE: jvm clojure uses an array here for perf
+     (let [part (volatile! [])]
+       (fn
+         ([] (rf))
+         ([result]
+          (let [p (deref part)
+                result (if (empty? p)
+                         result
+                         (unreduced (rf result p)))]
+            (rf result)))
+         ([result input]
+          (let [p (vswap! part conj input)]
+            (if (= n (count p))
+              (do (vreset! part [])
+                  (rf result p))
+              result)))))))
+  ([n coll]
+   (partition-all n n coll))
+  ([n step coll]
+   (lazy-seq
+     (when-let [s (seq coll)]
+       (let [seg (doall (take n s))]
+         (cons seg (partition-all n step (nthrest s step))))))))
+
+(defn partition-by
+  "Applies f to each value in coll, splitting it each time f returns a
+  new value.  Returns a lazy seq of partitions.  Returns a stateful
+  transducer when no collection is provided."
+  ([f]
+   (fn [rf]
+     ;; OPTIMIZE: jvm clojure uses an array here for perf
+     (let [vv (volatile! [])
+           pv (volatile! ::none)]
+       (fn
+         ([] (rf))
+         ([result]
+          (let [v (deref vv)
+                result (if (empty? v)
+                         result
+                         (unreduced (rf result v)))]
+            (rf result)))
+         ([result input]
+          (let [pval (deref pv)
+                val (f input)]
+            (vreset! pv val)
+            (if (or (identical? pval ::none)
+                    (= val pval))
+              (do
+                (vswap! vv conj input)
+                result)
+              (let [v (deref vv)
+                    ret (rf result v)]
+                (when-not (reduced? ret)
+                  (vreset! vv [input]))
+                ret))))))))
+  ([f coll]
+   (lazy-seq
+    (when-let [s (seq coll)]
+      (let [fst (first s)
+            fv (f fst)
+            run (cons fst (take-while #(= fv (f %)) (next s)))]
+        (cons run (partition-by f (lazy-seq (drop (count run) s)))))))))
+
+(defn frequencies
+  "Returns a map from distinct items in coll to the number of times
+   they appear."
+  [coll]
+  ;; OPTIMIZE: transient
+  (reduce (fn [counts x]
+            (assoc counts x (inc (get counts x 0))))
+          {}
+          coll))
+
+(defn group-by
+  "Returns a map of the elements of coll keyed by the result of
+   f on each element. The value at each key will be a vector of the
+   corresponding elements, in the order they appeared in coll."
+  [f coll]
+  ;; OPTIMIZE: transient
+  (reduce
+    (fn [ret x]
+      (let [k (f x)]
+        (assoc ret k (conj (get ret k []) x))))
+    {}
+    coll))
+
+(defn reductions
+  "Returns a lazy seq of the intermediate values of the reduction (as
+   per reduce) of coll by f, starting with init."
+  ([f coll]
+   (lazy-seq
+     (if-let [s (seq coll)]
+       (reductions f (first s) (rest s))
+       (list (f)))))
+  ([f init coll]
+   (if (reduced? init)
+     (list (deref init))
+     (cons init
+           (lazy-seq
+             (when-let [s (seq coll)]
+               (reductions f (f init (first s)) (rest s))))))))
+
 ;(defn into
 ;  "Returns a new coll consisting of to-coll with all of the items of
 ;  from-coll conjoined. A transducer may be supplied."
@@ -2679,21 +2679,22 @@
 ;       (let [~x (first xs#)]
 ;         ~@body))))
 ;
-;; Returns a seq of the last n items in coll.  Depending on the type
-;; of coll may be no better than linear time.  For vectors, see also subvec.
-;(defn take-last [n coll]
+;(defn take-last
+;  "Returns a seq of the last n items in coll.  Depending on the type
+;   of coll may be no better than linear time.  For vectors, see also subvec."
+;  [n coll]
 ;  (loop [s (seq coll)
 ;         lead (seq (drop n coll))]
 ;    (if lead
 ;      (recur (next s) (next lead))
 ;      s)))
 ;
-;; Returns a vector consisting of the result of applying f to the
-;; set of first items of each coll, followed by applying f to the set
-;; of second items in each coll, until any one of the colls is
-;; exhausted.  Any remaining items in other colls are ignored. Function
-;; f should accept number-of-colls arguments.
 ;(defn mapv
+;  "Returns a vector consisting of the result of applying f to the
+;   set of first items of each coll, followed by applying f to the set
+;   of second items in each coll, until any one of the colls is
+;   exhausted.  Any remaining items in other colls are ignored. Function
+;   f should accept number-of-colls arguments."
 ;  ([f coll]
 ;   (-> (reduce (fn [v o]
 ;                 (conj! v (f o)))
@@ -2707,9 +2708,10 @@
 ;  ([f c1 c2 c3 & colls]
 ;   (into [] (apply map f c1 c2 c3 colls))))
 ;
-;; Returns a vector of the items in coll for which
-;; (pred item) returns logical true. pred must be free of side-effects.
-;(defn filterv [pred coll]
+;(defn filterv
+;  "Returns a vector of the items in coll for which
+;   (pred item) returns logical true. pred must be free of side-effects."
+;  [pred coll]
 ;  (-> (reduce (fn [v o]
 ;                (if (pred o)
 ;                  (conj! v o)

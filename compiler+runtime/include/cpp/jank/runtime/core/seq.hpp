@@ -187,4 +187,7 @@ namespace jank::runtime
   native_bool is_chunked_seq(object_ptr o);
 
   object_ptr iterate(object_ptr fn, object_ptr o);
+
+  object_ptr repeat(object_ptr val);
+  object_ptr repeat(object_ptr n, object_ptr val);
 }

@@ -239,6 +239,8 @@ extern "C"
   jank_native_bool jank_equal(jank_object_ptr l, jank_object_ptr r);
   jank_native_hash jank_to_hash(jank_object_ptr o);
 
+  void jank_set_meta(jank_object_ptr o, jank_object_ptr meta);
+
   void jank_throw(jank_object_ptr o);
 
 #ifdef __cplusplus

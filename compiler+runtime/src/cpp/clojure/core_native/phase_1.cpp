@@ -470,5 +470,13 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
     intern_fn_obj("nth", fn);
   }
 
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(2, false, false)));
+    fn->arity_1 = [](object * const val) -> object * { return repeat(val); };
+    fn->arity_2 = [](object * const n, object * const val) -> object * { return repeat(n, val); };
+    intern_fn_obj("repeat", fn);
+  }
+
   return erase(obj::nil::nil_const());
 }

@@ -729,6 +729,22 @@ extern "C"
     return to_hash(o_obj);
   }
 
+  void jank_set_meta(jank_object_ptr const o, jank_object_ptr const meta)
+  {
+    auto const o_obj(reinterpret_cast<object *>(o));
+    auto const meta_obj(reinterpret_cast<object *>(meta));
+    runtime::visit_object(
+      [&](auto const typed_o) {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::metadatable<T>)
+        {
+          typed_o->meta = behavior::detail::validate_meta(meta_obj);
+        }
+      },
+      o_obj);
+  }
+
   void jank_throw(jank_object_ptr const o)
   {
     throw runtime::object_ptr{ reinterpret_cast<object *>(o) };
