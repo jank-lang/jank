@@ -9,7 +9,7 @@
   (fn* unquote-splicing [_]
     (throw "~@ cannot be used outside of syntax quote")))
 
-(def type clojure.core-native.phase-1/type)
+(def type clojure.core-native/type)
 
 ; Exceptions
 (def ex-info
@@ -19,57 +19,57 @@
 
 ; Relations.
 ;; Miscellaneous.
-(def nil? clojure.core-native.phase-1/nil?)
+(def nil? clojure.core-native/nil?)
 
 (def identical?
   "Tests if 2 arguments are the same object, meaning the same pointer address."
-  clojure.core-native.phase-1/identical?)
+  clojure.core-native/identical?)
 
 (def =
   "Equality. Returns true if x equals y, false if not. It also works
    for nil and compares numbers and collections in a type-independent
    manner. Clojure's immutable data structures define equals() (and
    thus =) as a value, not an identity, comparison."
-  clojure.core-native.phase-1/=)
+  clojure.core-native/=)
 
 (def ==
   "Returns non-nil if nums all have the equivalent
    value (type-independent), otherwise false"
-  clojure.core-native.phase-1/==)
+  clojure.core-native/==)
 
 ;; Collections.
-(def empty? clojure.core-native.phase-1/empty?)
-(def empty clojure.core-native.phase-1/empty)
-(def count clojure.core-native.phase-1/count)
+(def empty? clojure.core-native/empty?)
+(def empty clojure.core-native/empty)
+(def count clojure.core-native/count)
 
-(def boolean clojure.core-native.phase-1/boolean)
-(def int clojure.core-native.phase-1/integer)
-(def float clojure.core-native.phase-1/real)
+(def boolean clojure.core-native/boolean)
+(def int clojure.core-native/integer)
+(def float clojure.core-native/real)
 
 ; Lists.
-(def seq clojure.core-native.phase-1/seq)
-(def fresh-seq clojure.core-native.phase-1/fresh-seq)
-(def first clojure.core-native.phase-1/first)
+(def seq clojure.core-native/seq)
+(def fresh-seq clojure.core-native/fresh-seq)
+(def first clojure.core-native/first)
 (def ffirst
   (fn* ffirst [o]
     (first (first o))))
 ; Returns a fresh seq.
-(def next clojure.core-native.phase-1/next)
-(def next-in-place clojure.core-native.phase-1/next-in-place)
+(def next clojure.core-native/next)
+(def next-in-place clojure.core-native/next-in-place)
 (def nnext
   (fn* nnext [o]
     (next (next o))))
-(def second clojure.core-native.phase-1/second)
-(def rest clojure.core-native.phase-1/rest)
-(def cons clojure.core-native.phase-1/cons)
-(def coll? clojure.core-native.phase-1/coll?)
-(def seq? clojure.core-native.phase-1/seq?)
-(def list? clojure.core-native.phase-1/list?)
-(def list clojure.core-native.phase-1/list)
+(def second clojure.core-native/second)
+(def rest clojure.core-native/rest)
+(def cons clojure.core-native/cons)
+(def coll? clojure.core-native/coll?)
+(def seq? clojure.core-native/seq?)
+(def list? clojure.core-native/list?)
+(def list clojure.core-native/list)
 
 ;; Vectors.
-(def vector? clojure.core-native.phase-1/vector?)
-(def vec clojure.core-native.phase-1/vec)
+(def vector? clojure.core-native/vector?)
+(def vec clojure.core-native/vec)
 
 (def subvec
   "Returns a persistent vector of the items in vector from
@@ -81,7 +81,7 @@
     ([v start]
      (subvec v start (count v)))
     ([v start end]
-     (clojure.core-native.phase-1/subvec v start end))))
+     (clojure.core-native/subvec v start end))))
 
 (def conj
   (fn* conj
@@ -90,7 +90,7 @@
     ([coll]
      coll)
     ([coll x]
-     (clojure.core-native.phase-1/conj coll x))
+     (clojure.core-native/conj coll x))
     ([coll x & args]
      (let* [res (conj coll x)]
        (if (empty? args)
@@ -114,11 +114,11 @@
         (seq ret)))))
 
 ;; Maps.
-(def map? clojure.core-native.phase-1/map?)
+(def map? clojure.core-native/map?)
 (def assoc
   (fn* assoc
     ([map key val]
-     (clojure.core-native.phase-1/assoc map key val))
+     (clojure.core-native/assoc map key val))
     ([map key val & kvs]
      (let* [res (assoc map key val)]
        (if kvs
@@ -128,56 +128,56 @@
          res)))))
 
 ;; Strings.
-(def pr-str clojure.core-native.phase-1/pr-str)
-(def string? clojure.core-native.phase-1/string?)
+(def pr-str clojure.core-native/pr-str)
+(def string? clojure.core-native/string?)
 (def str
   (fn* str
     ([]
      "")
     ([o]
-     (clojure.core-native.phase-1/to-string o))
+     (clojure.core-native/to-string o))
     ([o & args]
-     (clojure.core-native.phase-1/str o args))))
+     (clojure.core-native/str o args))))
 
 ;; Symbols.
 (def symbol?
   "Return true if x is a Symbol"
-  clojure.core-native.phase-1/symbol?)
+  clojure.core-native/symbol?)
 (def
   symbol
   "Returns a Symbol with the given namespace and name. Arity-1 works
    on strings, keywords, and vars."
   (fn* symbol
     ([o]
-     (clojure.core-native.phase-1/->unqualified-symbol o))
+     (clojure.core-native/->unqualified-symbol o))
     ([ns o]
      (if (nil? ns)
        (symbol o)
-       (clojure.core-native.phase-1/->qualified-symbol ns o)))))
+       (clojure.core-native/->qualified-symbol ns o)))))
 (def simple-symbol?
   "Return true if x is a symbol without a namespace"
-  clojure.core-native.phase-1/simple-symbol?)
+  clojure.core-native/simple-symbol?)
 (def qualified-symbol?
   "Return true if x is a symbol with a namespace"
-  clojure.core-native.phase-1/qualified-symbol?)
+  clojure.core-native/qualified-symbol?)
 
 ; Relations.
 ;; Miscellaneous.
-(def true? clojure.core-native.phase-1/true?)
-(def false? clojure.core-native.phase-1/false?)
-(def not clojure.core-native.phase-1/not)
-(def some? clojure.core-native.phase-1/some?)
+(def true? clojure.core-native/true?)
+(def false? clojure.core-native/false?)
+(def not clojure.core-native/not)
+(def some? clojure.core-native/some?)
 
 ;; Metadata
-(def meta clojure.core-native.phase-1/meta)
-(def with-meta clojure.core-native.phase-1/with-meta)
-(def reset-meta! clojure.core-native.phase-1/reset-meta!)
+(def meta clojure.core-native/meta)
+(def with-meta clojure.core-native/with-meta)
+(def reset-meta! clojure.core-native/reset-meta!)
 
 ;; Input/output.
-(def print clojure.core-native.phase-1/print)
-(def println clojure.core-native.phase-1/println)
-(def pr clojure.core-native.phase-1/pr)
-(def prn clojure.core-native.phase-1/prn)
+(def print clojure.core-native/print)
+(def println clojure.core-native/println)
+(def pr clojure.core-native/pr)
+(def prn clojure.core-native/prn)
 
 (def ^{:macro true} let
   (fn* let [&form &env & decl]
@@ -265,14 +265,14 @@
       (list 'def (with-meta name m)
             (with-meta (cons `fn (cons name fdecl)) {:rettag (:tag m)})))))
 
-(def macroexpand-1 clojure.core-native.phase-1/macroexpand-1)
-(def macroexpand clojure.core-native.phase-1/macroexpand)
+(def macroexpand-1 clojure.core-native/macroexpand-1)
+(def macroexpand clojure.core-native/macroexpand)
 
 (def gensym
   "Returns a new symbol with a unique name. If a prefix string is
    supplied, the name is prefix# where # is some unique number. If
    prefix is not supplied, the prefix is 'G__'."
-  clojure.core-native.phase-1/gensym)
+  clojure.core-native/gensym)
 
 (defn
   ^{:macro true
@@ -354,7 +354,7 @@
 
 ; The full `apply` will be defined below, but it requires more helpers to support
 ; all of its arities.
-(def apply* clojure.core-native.phase-1/apply*)
+(def apply* clojure.core-native/apply*)
 
 (defmacro or
   ([]
@@ -404,17 +404,17 @@
 ;; Transients.
 (def transientable?
   "Returns a whether the collection can be made transient."
-  clojure.core-native.phase-1/transientable?)
+  clojure.core-native/transientable?)
 
 (def transient
   "Returns a new, transient version of the collection, in constant time."
-  clojure.core-native.phase-1/transient)
+  clojure.core-native/transient)
 
 (def persistent!
   "Returns a new, persistent version of the transient collection, in
    constant time. The transient collection cannot be used after this
    call, any such use will throw an exception."
-  clojure.core-native.phase-1/persistent!)
+  clojure.core-native/persistent!)
 
 (defn conj!
   ([]
@@ -422,11 +422,11 @@
   ([coll]
    coll)
   ([coll x]
-   (clojure.core-native.phase-1/conj-in-place! coll x)))
+   (clojure.core-native/conj-in-place! coll x)))
 
 (defn assoc!
   ([coll k v]
-   (clojure.core-native.phase-1/assoc-in-place! coll k v))
+   (clojure.core-native/assoc-in-place! coll k v))
   ([coll k v & kvs]
     (let [ret (assoc! coll k v)]
       (if kvs
@@ -435,7 +435,7 @@
 
 (defn dissoc!
   ([coll k]
-   (clojure.core-native.phase-1/dissoc-in-place! coll k))
+   (clojure.core-native/dissoc-in-place! coll k))
   ([coll k & ks]
     (let [ret (dissoc! coll k)]
       (if ks
@@ -444,12 +444,12 @@
 
 (defn pop!
   ([coll]
-   (clojure.core-native.phase-1/pop-in-place! coll)))
+   (clojure.core-native/pop-in-place! coll)))
 
 (defn disj!
   ([set] set)
   ([set elem]
-   (clojure.core-native.phase-1/disj-in-place! set elem))
+   (clojure.core-native/disj-in-place! set elem))
   ([set elem & elems]
     (let [ret (disj! set elem)]
       (if elems
@@ -482,15 +482,15 @@
 ; Applies fn f to the argument list formed by prepending intervening arguments to args.
 (defn apply
   ([f args]
-   (clojure.core-native.phase-1/apply-to f args))
+   (clojure.core-native/apply-to f args))
   ([f x args]
-   (clojure.core-native.phase-1/apply-to f (list* x args)))
+   (clojure.core-native/apply-to f (list* x args)))
   ([f x y args]
-   (clojure.core-native.phase-1/apply-to f (list* x y args)))
+   (clojure.core-native/apply-to f (list* x y args)))
   ([f x y z args]
-   (clojure.core-native.phase-1/apply-to f (list* x y z args)))
+   (clojure.core-native/apply-to f (list* x y z args)))
   ([f a b c d & args]
-   (clojure.core-native.phase-1/apply-to f (cons a (cons b (cons c (cons d (spread args))))))))
+   (clojure.core-native/apply-to f (cons a (cons b (cons c (cons d (spread args))))))))
 
 ; Returns a function that takes any number of arguments and returns x.
 (defn constantly [x]
@@ -523,7 +523,7 @@
   timeout-val if the timeout (in milliseconds) is reached before a
   value is available. See also - realized?."
   ([ref]
-   (clojure.core-native.phase-1/deref ref))
+   (clojure.core-native/deref ref))
   ; TODO: Blocking.
   ([ref timeout-ms timeout-val]
    ;(if (instance? clojure.lang.IBlockingDeref ref)
@@ -533,11 +533,11 @@
 
 (def reduced
   "Wraps x in a way such that a reduce will terminate with the value x"
-  clojure.core-native.phase-1/reduced)
+  clojure.core-native/reduced)
 
 (def reduced?
   "Returns true if x is the result of a call to reduced"
-  clojure.core-native.phase-1/reduced?)
+  clojure.core-native/reduced?)
 
 (defn ensure-reduced
   "If x is already reduced?, returns it, else returns (reduced x)"
@@ -570,7 +570,7 @@
        (f))))
   ([f init coll]
    ; TODO: Chunking support.
-   (clojure.core-native.phase-1/reduce f init coll)))
+   (clojure.core-native/reduce f init coll)))
 
 (defn completing
   "Takes a reducing function f of 2 args and returns a fn suitable for
@@ -645,14 +645,14 @@
 (def peek
   "For a list or queue, same as first, for a vector, same as, but much
    more efficient than, last. If the collection is empty, returns nil."
-  clojure.core-native.phase-1/peek)
+  clojure.core-native/peek)
 
 (def pop
   "For a list or queue, returns a new list/queue without the first
    item, for a vector, returns a new vector without the last item. If
    the collection is empty, throws an exception. Note - not the same
    as next/butlast."
-  clojure.core-native.phase-1/pop)
+  clojure.core-native/pop)
 
 (defn vary-meta
   "Returns an object of the same type and value as obj, with
@@ -685,7 +685,7 @@
   change. If the new state is unacceptable, the validate-fn should
   return false or throw an exception."
   ([x]
-   (clojure.core-native.phase-1/atom x))
+   (clojure.core-native/atom x))
   ; TODO: Validators.
   #_([x & options]
      (setup-reference (atom x) options)))
@@ -695,53 +695,53 @@
    (apply f current-value-of-atom args). Note that f may be called
    multiple times, and thus should be free of side effects. Returns
    the value that was swapped in."
-  clojure.core-native.phase-1/swap!)
+  clojure.core-native/swap!)
 
 (def swap-vals!
   "Atomically swaps the value of atom to be:
    (apply f current-value-of-atom args). Note that f may be called
    multiple times, and thus should be free of side effects.
    Returns [old new], the value of the atom before and after the swap."
-  clojure.core-native.phase-1/swap-vals!)
+  clojure.core-native/swap-vals!)
 
 (def compare-and-set!
   "Atomically sets the value of atom to newval if and only if the
    current value of the atom is identical to oldval. Returns true if
    set happened, else false"
-  clojure.core-native.phase-1/compare-and-set!)
+  clojure.core-native/compare-and-set!)
 
 (def reset!
   "Sets the value of atom to newval without regard for the
    current value. Returns newval."
-  clojure.core-native.phase-1/reset!)
+  clojure.core-native/reset!)
 
 (def reset-vals!
   "Sets the value of atom to newval. Returns [old new], the value of the
    atom before and after the reset."
-  clojure.core-native.phase-1/reset-vals!)
+  clojure.core-native/reset-vals!)
 
 ;; Volatiles.
 (def volatile!
   "Creates and returns a volatile with an initial value of val."
-  clojure.core-native.phase-1/volatile!)
+  clojure.core-native/volatile!)
 
 (def vreset!
   "Sets the value of volatile to newval without regard for the
    current value. Returns newval."
-  clojure.core-native.phase-1/vreset!)
+  clojure.core-native/vreset!)
 
 ; TODO: In Clojure, this is a macro (for perf reasons).
 (def vswap!
   "Non-atomically swaps the value of the volatile as if:
   (apply f current-value-of-vol args). Returns the value that
   was swapped in."
-  clojure.core-native.phase-1/vswap!)
+  clojure.core-native/vswap!)
 
 (def volatile?
   "Returns true if x is a volatile."
-  clojure.core-native.phase-1/volatile?)
+  clojure.core-native/volatile?)
 
-(def ^:private delay* clojure.core-native.phase-1/delay*)
+(def ^:private delay* clojure.core-native/delay*)
 
 (defmacro delay
   "Takes a body of expressions and yields a Delay object that will
@@ -753,7 +753,7 @@
 
 (def force
   "If x is a Delay, returns the (possibly cached) value of its expression, else returns x"
-  clojure.core-native.phase-1/delay*)
+  clojure.core-native/delay*)
 
 ;; Primitives.
 ;;; Arithmetic.
@@ -766,9 +766,9 @@
   ([x]
    x)
   ([l r]
-   (clojure.core-native.phase-1/+ l r))
+   (clojure.core-native/+ l r))
   ([l r & args]
-   (let [res (clojure.core-native.phase-1/+ l r)]
+   (let [res (clojure.core-native/+ l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -780,9 +780,9 @@
   ([x]
    (- 0 x))
   ([l r]
-   (clojure.core-native.phase-1/- l r))
+   (clojure.core-native/- l r))
   ([l r & args]
-   (let [res (clojure.core-native.phase-1/- l r)]
+   (let [res (clojure.core-native/- l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -796,9 +796,9 @@
   ([x]
    x)
   ([l r]
-   (clojure.core-native.phase-1/* l r))
+   (clojure.core-native/* l r))
   ([l r & args]
-   (let [res (clojure.core-native.phase-1/* l r)]
+   (let [res (clojure.core-native/* l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -810,9 +810,9 @@
   ([x]
    (/ 1 x))
   ([l r]
-   (clojure.core-native.phase-1// l r))
+   (clojure.core-native// l r))
   ([l r & args]
-   (let [res (clojure.core-native.phase-1// l r)]
+   (let [res (clojure.core-native// l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -821,63 +821,63 @@
 ; TODO: Unboxing and inlining for these.
 (def bit-not
   "Bitwise complement"
-  clojure.core-native.phase-1/bit-not)
+  clojure.core-native/bit-not)
 
 (defn bit-and
   "Bitwise and"
   ([x y]
-   (clojure.core-native.phase-1/bit-and x y))
+   (clojure.core-native/bit-and x y))
   ([x y & more]
    (reduce bit-and (bit-and x y) more)))
 
 (defn bit-or
   "Bitwise or"
   ([x y]
-   (clojure.core-native.phase-1/bit-or x y))
+   (clojure.core-native/bit-or x y))
   ([x y & more]
    (reduce bit-or (bit-or x y) more)))
 
 (defn bit-xor
   "Bitwise exclusive or"
   ([x y]
-   (clojure.core-native.phase-1/bit-xor x y))
+   (clojure.core-native/bit-xor x y))
   ([x y & more]
    (reduce bit-xor (bit-xor x y) more)))
 
 (defn bit-and-not
   "Bitwise and with complement"
   ([x y]
-   (clojure.core-native.phase-1/bit-and-not x y))
+   (clojure.core-native/bit-and-not x y))
   ([x y & more]
    (reduce bit-and-not (bit-and-not x y) more)))
 
 (def bit-clear
   "Clear bit at index n"
-  clojure.core-native.phase-1/bit-clear)
+  clojure.core-native/bit-clear)
 
 (def bit-set
   "Set bit at index n"
-  clojure.core-native.phase-1/bit-set)
+  clojure.core-native/bit-set)
 
 (def bit-flip
   "Flip bit at index n"
-  clojure.core-native.phase-1/bit-flip)
+  clojure.core-native/bit-flip)
 
 (def bit-test
   "Test bit at index n"
-  clojure.core-native.phase-1/bit-test)
+  clojure.core-native/bit-test)
 
 (def bit-shift-left
   "Bitwise shift left"
-  clojure.core-native.phase-1/bit-shift-left)
+  clojure.core-native/bit-shift-left)
 
 (def bit-shift-right
   "Bitwise shift right"
-  clojure.core-native.phase-1/bit-shift-right)
+  clojure.core-native/bit-shift-right)
 
 (def unsigned-bit-shift-right
   "Bitwise shift right, without sign-extension."
-  clojure.core-native.phase-1/unsigned-bit-shift-right)
+  clojure.core-native/unsigned-bit-shift-right)
 
 (defn not=
   ([x]
@@ -894,12 +894,12 @@
   ([x]
    true)
   ([l r]
-   (clojure.core-native.phase-1/< l r))
+   (clojure.core-native/< l r))
   ([l r & args]
-   (if (clojure.core-native.phase-1/< l r)
+   (if (clojure.core-native/< l r)
      (if (next args)
        (recur r (first args) (next args))
-       (clojure.core-native.phase-1/< r (first args)))
+       (clojure.core-native/< r (first args)))
      false)))
 
 (defn
@@ -909,12 +909,12 @@
   ([x]
    true)
   ([l r]
-   (clojure.core-native.phase-1/<= l r))
+   (clojure.core-native/<= l r))
   ([l r & args]
-   (if (clojure.core-native.phase-1/<= l r)
+   (if (clojure.core-native/<= l r)
      (if (next args)
        (recur r (first args) (next args))
-       (clojure.core-native.phase-1/<= r (first args)))
+       (clojure.core-native/<= r (first args)))
      false)))
 
 (defn
@@ -924,12 +924,12 @@
   ([x]
    true)
   ([l r]
-   (clojure.core-native.phase-1/< r l))
+   (clojure.core-native/< r l))
   ([l r & args]
-   (if (clojure.core-native.phase-1/< r l)
+   (if (clojure.core-native/< r l)
      (if (next args)
        (recur r (first args) (next args))
-       (clojure.core-native.phase-1/< (first args) r))
+       (clojure.core-native/< (first args) r))
      false)))
 
 (defn
@@ -939,12 +939,12 @@
   ([x]
    true)
   ([l r]
-   (clojure.core-native.phase-1/<= r l))
+   (clojure.core-native/<= r l))
   ([l r & args]
-   (if (clojure.core-native.phase-1/<= r l)
+   (if (clojure.core-native/<= r l)
      (if (next args)
        (recur r (first args) (next args))
-       (clojure.core-native.phase-1/<= (first args) r))
+       (clojure.core-native/<= (first args) r))
      false)))
 
 (defn
@@ -954,9 +954,9 @@
   ([x]
    x)
   ([l r]
-   (clojure.core-native.phase-1/min l r))
+   (clojure.core-native/min l r))
   ([l r & args]
-   (let [res (clojure.core-native.phase-1/min l r)]
+   (let [res (clojure.core-native/min l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -968,9 +968,9 @@
   ([x]
    x)
   ([l r]
-   (clojure.core-native.phase-1/max l r))
+   (clojure.core-native/max l r))
   ([l r & args]
-   (let [res (clojure.core-native.phase-1/max l r)]
+   (let [res (clojure.core-native/max l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -978,25 +978,25 @@
 (def inc
   "Returns a number one greater than num. Does not auto-promote
    longs, will throw on overflow. See also: inc'"
-  clojure.core-native.phase-1/inc)
+  clojure.core-native/inc)
 (def dec
   "Returns a number one less than num. Does not auto-promote
    longs, will throw on overflow. See also: dec"
-  clojure.core-native.phase-1/dec)
+  clojure.core-native/dec)
 
 (def pos?
   "Returns true if num is greater than zero, else false"
-  clojure.core-native.phase-1/pos?)
+  clojure.core-native/pos?)
 (def neg?
   "Returns true if num is less than zero, else false"
-  clojure.core-native.phase-1/neg?)
+  clojure.core-native/neg?)
 (def zero?
   "Returns true if num is zero, else false"
-  clojure.core-native.phase-1/zero?)
+  clojure.core-native/zero?)
 
 (def rem
   "Returns the remainder of dividing numerator by denominator."
-  clojure.core-native.phase-1/rem)
+  clojure.core-native/rem)
 (defn mod
   "Modulus of num and div. Truncates toward negative infinity."
   [num div]
@@ -1008,30 +1008,30 @@
 ;; Numbers.
 (def integer?
   "Returns true if n is an integer"
-  clojure.core-native.phase-1/integer?)
+  clojure.core-native/integer?)
 (def float?
   "Returns true if n is a floating point number"
-  clojure.core-native.phase-1/real?)
+  clojure.core-native/real?)
 (def boolean?
   "Returns true if x is a boolean"
-  clojure.core-native.phase-1/boolean?)
+  clojure.core-native/boolean?)
 (def number?
   "Returns true if x is a number"
-  clojure.core-native.phase-1/number?)
+  clojure.core-native/number?)
 
 (def even?
   "Returns true if n is even, throws an exception if n is not an integer"
-  clojure.core-native.phase-1/even?)
+  clojure.core-native/even?)
 (def odd?
   "Returns true if n is odd, throws an exception if n is not an integer"
-  clojure.core-native.phase-1/odd?)
+  clojure.core-native/odd?)
 
 ;; Random.
 (defn rand
   "Returns a random floating point number between 0 (inclusive) and
    n (default 1) (exclusive)."
   ([]
-   (clojure.core-native.phase-1/rand))
+   (clojure.core-native/rand))
   ([n]
    (* (rand) n)))
 
@@ -1039,15 +1039,15 @@
 (def subs
   "Returns the substring of s beginning at start inclusive, and ending
    at end (defaults to length of string), exclusive."
-  clojure.core-native.phase-1/subs)
+  clojure.core-native/subs)
 
-(def ^:private first-index-of clojure.core-native.phase-1/first-index-of)
-(def ^:private last-index-of clojure.core-native.phase-1/last-index-of)
+(def ^:private first-index-of clojure.core-native/first-index-of)
+(def ^:private last-index-of clojure.core-native/last-index-of)
 
 ;; Sequences (again).
 (def sequential?
   "Returns true if coll implements sequential"
-  clojure.core-native.phase-1/sequential?)
+  clojure.core-native/sequential?)
 
 (defn reverse [coll]
   (reduce conj '() coll))
@@ -1096,7 +1096,7 @@
    ; TODO: LazilyPersistentVector
    (vec (concat* [a b c d e f] args))))
 
-(def ^:private lazy-seq* clojure.core-native.phase-1/lazy-seq*)
+(def ^:private lazy-seq* clojure.core-native/lazy-seq*)
 
 (defmacro lazy-seq
   "Takes a body of expressions that returns an ISeq or nil, and yields
@@ -1107,30 +1107,30 @@
   (list `lazy-seq* (list* `fn 'lazy-seq# [] body)))
 
 (def chunk-buffer
-  clojure.core-native.phase-1/chunk-buffer)
+  clojure.core-native/chunk-buffer)
 
 (def chunk-append
-  clojure.core-native.phase-1/chunk-append)
+  clojure.core-native/chunk-append)
 
 (def chunk
-  clojure.core-native.phase-1/chunk)
+  clojure.core-native/chunk)
 
 (def chunk-first
-  clojure.core-native.phase-1/chunk-first)
+  clojure.core-native/chunk-first)
 
 (def chunk-next
-  clojure.core-native.phase-1/chunk-next)
+  clojure.core-native/chunk-next)
 
 (def chunk-rest
-  clojure.core-native.phase-1/chunk-rest)
+  clojure.core-native/chunk-rest)
 
 (defn chunk-cons [chunk rest]
   (if (empty? chunk)
     rest
-    (clojure.core-native.phase-1/chunk-cons chunk rest)))
+    (clojure.core-native/chunk-cons chunk rest)))
 
 (def chunked-seq?
-  clojure.core-native.phase-1/chunk-seq?)
+  clojure.core-native/chunk-seq?)
 
 ; Repeatedly executes body (presumably for side-effects) with
 ; bindings and filtering as provided by `for`.  Does not retain
@@ -1387,13 +1387,13 @@
   "keyval => key val
    Returns a new hash map with supplied mappings. If any keys are
    equal, they are handled as if by repeated uses of assoc."
-  clojure.core-native.phase-1/hash-map)
+  clojure.core-native/hash-map)
 
 (def sorted-map
   "keyval => key val
    Returns a new sorted map with supplied mappings. If any keys are
    equal, they are handled as if by repeated uses of assoc."
-  clojure.core-native.phase-1/sorted-map)
+  clojure.core-native/sorted-map)
 
 (defn key
   "Returns the key of the map entry."
@@ -1422,12 +1422,12 @@
 (def get
   "Returns the value mapped to key, not-found or nil if key not present
    in associative collection, set, string, array, or ILookup instance."
-  clojure.core-native.phase-1/get)
+  clojure.core-native/get)
 (def get-in
   "Returns the value in a nested associative structure,
    where ks is a sequence of keys. Returns nil if the key
    is not present, or the not-found value if supplied."
-  clojure.core-native.phase-1/get-in)
+  clojure.core-native/get-in)
 
 (defn dissoc
   "dissoc[iate]. Returns a new map of the same (hashed/sorted) type,
@@ -1435,7 +1435,7 @@
   ([m]
    m)
   ([m k]
-   (clojure.core-native.phase-1/dissoc m k))
+   (clojure.core-native/dissoc m k))
   ([m k & ks]
    (let* [ret (dissoc m k)]
      (if ks
@@ -1448,11 +1448,11 @@
    vectors and Java arrays, this tests if the numeric key is within the
    range of indexes. 'contains?' operates constant or logarithmic time;
    it will not perform a linear search for a value.  See also 'some'."
-  clojure.core-native.phase-1/contains?)
+  clojure.core-native/contains?)
 
 (def find
   "Returns the map entry for key, or nil if key not present."
-  clojure.core-native.phase-1/find)
+  clojure.core-native/find)
 
 ; Returns a map containing only those entries in map whose key is in keys
 (defn select-keys [m ks]
@@ -1480,12 +1480,12 @@
 (def hash-set
   "Returns a new hash set with supplied keys.  Any equal keys are
    handled as if by repeated uses of conj."
-  clojure.core-native.phase-1/hash-set)
+  clojure.core-native/hash-set)
 
 (def sorted-set
   "Returns a new sorted set with supplied keys.  Any equal keys are
    handled as if by repeated uses of conj."
-  clojure.core-native.phase-1/sorted-set)
+  clojure.core-native/sorted-set)
 
 (defn sorted-set-by
   "Returns a new sorted set with supplied keys, using the supplied
@@ -1500,7 +1500,7 @@
   ([set]
    set)
   ([set key]
-   (clojure.core-native.phase-1/disj set key))
+   (clojure.core-native/disj set key))
   ([set key & ks]
    (let* [res (disj set key)]
      (if (empty? ks)
@@ -1509,7 +1509,7 @@
 
 (def set?
   "Returns true if x implements IPersistentSet"
-  clojure.core-native.phase-1/set?)
+  clojure.core-native/set?)
 
 (defn set
   "Returns a set of the distinct elements of coll."
@@ -1526,17 +1526,17 @@
   "Returns the hash code of its argument. Note this is the hash code
    consistent with =, and thus is different than .hashCode for Integer,
    Short, Byte and Clojure collections."
-  clojure.core-native.phase-1/hash)
+  clojure.core-native/hash)
 
-(def ^:private named? clojure.core-native.phase-1/named?)
+(def ^:private named? clojure.core-native/named?)
 
 (def name
   "Returns the name String of a string, symbol or keyword."
-  clojure.core-native.phase-1/name)
+  clojure.core-native/name)
 
 (def namespace
   "Returns the namespace String of a symbol or keyword, or nil if not present."
-  clojure.core-native.phase-1/namespace)
+  clojure.core-native/namespace)
 
 ;; Sequences.
 ; This is defined to be lazy later on.
@@ -1552,27 +1552,27 @@
 ;; Vars.
 (def var?
   "Returns true if v is a var."
-  clojure.core-native.phase-1/var?)
+  clojure.core-native/var?)
 (def var-get
   "Gets the value in the var object."
-  clojure.core-native.phase-1/var-get)
+  clojure.core-native/var-get)
 
 (def alter-var-root
   "Atomically alters the root binding of var v by applying f to its
    current value plus any args"
-  clojure.core-native.phase-1/alter-var-root)
+  clojure.core-native/alter-var-root)
 
 (defn bound?
   "Returns true if all of the vars provided as arguments have any bound value, root or thread-local.
    Implies that deref'ing the provided vars will succeed. Returns true if no vars are provided."
   [& vars]
-  (every? clojure.core-native.phase-1/var-bound? vars))
+  (every? clojure.core-native/var-bound? vars))
 
 (defn thread-bound?
   "Returns true if all of the vars provided as arguments have thread-local bindings.
    Implies that set!'ing the provided vars will succeed.  Returns true if no vars are provided."
   [& vars]
-  (every? clojure.core-native.phase-1/var-thread-bound? vars))
+  (every? clojure.core-native/var-thread-bound? vars))
 
 (defmacro ^:private assert-macro-args
   [& pairs]
@@ -1695,17 +1695,17 @@
      ...
      (finally
        (pop-thread-bindings)))"
-  clojure.core-native.phase-1/push-thread-bindings)
+  clojure.core-native/push-thread-bindings)
 
 (def pop-thread-bindings
   "Pop one set of bindings pushed with push-binding before. It is an error to
    pop bindings without pushing before."
-  clojure.core-native.phase-1/pop-thread-bindings)
+  clojure.core-native/pop-thread-bindings)
 
 (def get-thread-bindings
   "Get a map with the Var/value pairs which is currently in effect for the
    current thread."
-  clojure.core-native.phase-1/get-thread-bindings)
+  clojure.core-native/get-thread-bindings)
 
 (defmacro binding
   "binding => var-symbol init-expr
@@ -1738,13 +1738,13 @@
 ;; Keywords.
 (def keyword?
   "Return true if x is a Keyword"
-  clojure.core-native.phase-1/keyword?)
+  clojure.core-native/keyword?)
 (def simple-keyword?
   "Return true if x is a keyword without a namespace"
-  clojure.core-native.phase-1/simple-keyword?)
+  clojure.core-native/simple-keyword?)
 (def qualified-keyword?
   "Return true if x is a keyword with a namespace"
-  clojure.core-native.phase-1/qualified-keyword?)
+  clojure.core-native/qualified-keyword?)
 
 (defn keyword
   "Returns a Keyword with the given namespace and name.  Do not use :
@@ -1752,9 +1752,9 @@
   ([name]
    (if (keyword? name)
      name
-     (clojure.core-native.phase-1/keyword "" name)))
+     (clojure.core-native/keyword "" name)))
   ([ns name]
-   (clojure.core-native.phase-1/keyword ns name)))
+   (clojure.core-native/keyword ns name)))
 
 (defn ident?
   "Returns true if x is a symbol or keyword"
@@ -1775,7 +1775,7 @@
 (def iterate
   "Returns a lazy (infinite!) sequence of x, (f x), (f (f x)) etc.
    f must be free of side-effects"
-  clojure.core-native.phase-1/iterate)
+  clojure.core-native/iterate)
 
 ; TODO: integer_range
 (def range
@@ -1783,14 +1783,14 @@
    (exclusive), by step, where start defaults to 0, step to 1, and end to
    infinity. When step is equal to 0, returns an infinite sequence of
    start. When start is equal to end, returns empty list."
-  clojure.core-native.phase-1/range)
+  clojure.core-native/range)
 
 (def nth
   "Returns the value at the index. get returns nil if index out of
   bounds, nth throws an exception unless not-found is supplied.  nth
   also works for strings, Java arrays, regex Matchers and Lists, and,
   in O(n) time, for sequences."
-  clojure.core-native.phase-1/nth)
+  clojure.core-native/nth)
 
 (defn nthnext
   "Returns the nth next of coll, (seq coll) when n is 0."
@@ -2096,7 +2096,7 @@
 
 (def repeat
   "Returns a lazy (infinite!, or length n if supplied) sequence of val."
-  clojure.core-native.phase-1/repeat)
+  clojure.core-native/repeat)
 
 (defn split-at
   "Returns a vector of [(take n coll) (drop n coll)]"
@@ -2999,10 +2999,10 @@
 (def ifn?
   "Returns true if x implements IFn. Note that many data structures
    (e.g. sets and maps) implement IFn"
-  clojure.core-native.phase-1/ifn?)
+  clojure.core-native/ifn?)
 (def fn?
   "Returns true if x implements Fn, i.e. is an object created via fn."
-  clojure.core-native.phase-1/fn?)
+  clojure.core-native/fn?)
 
 ;;; Multimethods.
 ;(defn- check-valid-options

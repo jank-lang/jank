@@ -217,7 +217,7 @@ add_library(
   src/cpp/jank/codegen/processor.cpp
   src/cpp/jank/codegen/llvm_processor.cpp
   src/cpp/jank/jit/processor.cpp
-  src/cpp/clojure/core_native/phase_1.cpp
+  src/cpp/clojure/core_native.cpp
 )
 
 target_include_directories(

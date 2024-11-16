@@ -23,7 +23,7 @@
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/native_persistent_string.hpp>
-#include <clojure/core_native/phase_1.hpp>
+#include <clojure/core_native.hpp>
 
 namespace jank
 {
@@ -34,7 +34,7 @@ namespace jank
 
     {
       profile::timer timer{ "require clojure.core" };
-      jank_load_clojure_core_native_phase_1();
+      jank_load_clojure_core_native();
       //__rt_ctx->load_module("/clojure.core").expect_ok();
     }
 

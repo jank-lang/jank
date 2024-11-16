@@ -2,7 +2,7 @@
 
 #include <jank/runtime/convert.hpp>
 
-namespace clojure::core_native::phase_1
+namespace clojure::core_native
 {
   using namespace jank;
   using namespace jank::runtime;
@@ -99,13 +99,13 @@ namespace clojure::core_native::phase_1
   }
 }
 
-jank_object_ptr jank_load_clojure_core_native_phase_1()
+jank_object_ptr jank_load_clojure_core_native()
 {
   using namespace jank;
   using namespace jank::runtime;
-  using namespace clojure::core_native;
+  using namespace clojure;
 
-  auto const ns(__rt_ctx->intern_ns("clojure.core-native.phase-1"));
+  auto const ns(__rt_ctx->intern_ns("clojure.core-native"));
 
   auto const intern_fn([=](native_persistent_string const &name, auto const fn) {
     ns->intern_var(name)->bind_root(
@@ -144,7 +144,7 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("list?", &is_list);
   intern_fn("vector?", &is_vector);
   intern_fn("vec", &vec);
-  intern_fn("subvec", &phase_1::subvec);
+  intern_fn("subvec", &core_native::subvec);
   intern_fn("conj", &conj);
   intern_fn("map?", &is_map);
   intern_fn("assoc", &assoc);
@@ -155,15 +155,15 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("symbol?", &is_symbol);
   intern_fn("true?", &is_true);
   intern_fn("false?", &is_false);
-  intern_fn("not", &phase_1::not_);
+  intern_fn("not", &core_native::not_);
   intern_fn("some?", &is_some);
   intern_fn("meta", &meta);
   intern_fn("with-meta", &with_meta);
   intern_fn("reset-meta!", &reset_meta);
   intern_fn("macroexpand-1", &macroexpand1);
   intern_fn("macroexpand", &macroexpand);
-  intern_fn("->unqualified-symbol", &phase_1::to_unqualified_symbol);
-  intern_fn("->qualified-symbol", &phase_1::to_qualified_symbol);
+  intern_fn("->unqualified-symbol", &core_native::to_unqualified_symbol);
+  intern_fn("->qualified-symbol", &core_native::to_qualified_symbol);
   intern_fn("apply*", &apply_to);
   intern_fn("transientable?", &is_transientable);
   intern_fn("transient", &transient);
@@ -224,7 +224,7 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("sequential?", &is_sequential);
   intern_fn("first-index-of", &first_index_of);
   intern_fn("last-index-of", &last_index_of);
-  intern_fn("lazy-seq*", &phase_1::lazy_seq);
+  intern_fn("lazy-seq*", &core_native::lazy_seq);
   intern_fn("chunk-buffer", &chunk_buffer);
   intern_fn("chunk-append", &chunk_append);
   intern_fn("chunk", &chunk);
@@ -242,11 +242,11 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("named?", &is_named);
   intern_fn("name", &name);
   intern_fn("namespace", &namespace_);
-  intern_fn("var?", &phase_1::is_var);
-  intern_fn("var-get", &phase_1::var_get);
-  intern_fn("alter-var-root", &phase_1::alter_var_root);
-  intern_fn("var-bound?", &phase_1::is_var_bound);
-  intern_fn("var-thread-bound?", &phase_1::is_var_thread_bound);
+  intern_fn("var?", &core_native::is_var);
+  intern_fn("var-get", &core_native::var_get);
+  intern_fn("alter-var-root", &core_native::alter_var_root);
+  intern_fn("var-bound?", &core_native::is_var_bound);
+  intern_fn("var-thread-bound?", &core_native::is_var_thread_bound);
   intern_fn("push-thread-bindings", &push_thread_bindings);
   intern_fn("pop-thread-bindings", &pop_thread_bindings);
   intern_fn("get-thread-bindings", &get_thread_bindings);
@@ -257,10 +257,10 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("simple-symbol?", &is_simple_symbol);
   intern_fn("qualified-symbol?", &is_qualified_symbol);
   intern_fn("iterate", &iterate);
-  intern_fn("delay*", &phase_1::delay);
+  intern_fn("delay*", &core_native::delay);
   intern_fn("force", &force);
   intern_fn("ifn?", &is_callable);
-  intern_fn("fn?", &phase_1::is_fn);
+  intern_fn("fn?", &core_native::is_fn);
 
   {
     auto const fn(
