@@ -410,7 +410,7 @@ namespace jank::evaluate
 
     {
       profile::timer timer{ "ir jit compile" };
-      fmt::println("{}\n", cg_prc.to_string());
+      //fmt::println("{}\n", cg_prc.to_string());
       llvm::cantFail(jit_prc.interpreter->getExecutionEngine().get().addIRModule(
         llvm::orc::ThreadSafeModule{ std::move(cg_prc.module), std::move(cg_prc.context) }));
 

@@ -1553,6 +1553,26 @@
 (def var?
   "Returns true if v is a var."
   clojure.core-native.phase-1/var?)
+(def var-get
+  "Gets the value in the var object."
+  clojure.core-native.phase-1/var-get)
+
+(def alter-var-root
+  "Atomically alters the root binding of var v by applying f to its
+   current value plus any args"
+  clojure.core-native.phase-1/alter-var-root)
+
+(defn bound?
+  "Returns true if all of the vars provided as arguments have any bound value, root or thread-local.
+   Implies that deref'ing the provided vars will succeed. Returns true if no vars are provided."
+  [& vars]
+  (every? clojure.core-native.phase-1/var-bound? vars))
+
+(defn thread-bound?
+  "Returns true if all of the vars provided as arguments have thread-local bindings.
+   Implies that set!'ing the provided vars will succeed.  Returns true if no vars are provided."
+  [& vars]
+  (every? clojure.core-native.phase-1/var-thread-bound? vars))
 
 (defmacro ^:private assert-macro-args
   [& pairs]
@@ -2975,46 +2995,15 @@
           g
           (last steps)))))
 
-;;; Functions.
-;(defn ifn? [o]
-;  (native/raw "__value = make_box(is_callable(~{ o }));"))
-;(defn fn? [o]
-;  (native/raw "auto const fn
-;              (
-;               ~{ o }->type == object_type::native_function_wrapper
-;               || ~{ o }->type == object_type::jit_function
-;               );
-;              __value = make_box(fn);"))
-;
-;; Vars.
-;(defn var? [o]
-;  (native/raw "__value = make_box(~{ o }->type == object_type::var);"))
-;
-;(defn var-get [v]
-;  (native/raw "__value = try_object<runtime::var>(~{ v })->deref();"))
-;
-;(defn alter-var-root
-;  "Atomically alters the root binding of var v by applying f to its
-;  current value plus any args"
-;  [v f & args]
-;  (native/raw "__value = try_object<runtime::var>(~{ v })->alter_root(~{ f }, ~{ args });"))
-;
-;(defn bound?
-;  "Returns true if all of the vars provided as arguments have any bound value, root or thread-local.
-;  Implies that deref'ing the provided vars will succeed. Returns true if no vars are provided."
-;  [& vars]
-;  (every? (fn [v]
-;            (native/raw "__value = make_box(try_object<runtime::var>(~{ v })->is_bound());"))
-;          vars))
-;
-;(defn thread-bound?
-;  "Returns true if all of the vars provided as arguments have thread-local bindings.
-;  Implies that set!'ing the provided vars will succeed.  Returns true if no vars are provided."
-;  [& vars]
-;  (every? (fn [v]
-;            (native/raw "__value = make_box(try_object<runtime::var>(~{ v })->get_thread_binding() != nullptr);"))
-;          vars))
-;
+;; Functions.
+(def ifn?
+  "Returns true if x implements IFn. Note that many data structures
+   (e.g. sets and maps) implement IFn"
+  clojure.core-native.phase-1/ifn?)
+(def fn?
+  "Returns true if x implements Fn, i.e. is an object created via fn."
+  clojure.core-native.phase-1/fn?)
+
 ;;; Multimethods.
 ;(defn- check-valid-options
 ;  "Throws an exception if the given option map contains keys not listed

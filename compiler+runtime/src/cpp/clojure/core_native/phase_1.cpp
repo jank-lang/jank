@@ -67,9 +67,35 @@ namespace clojure::core_native::phase_1
     return make_box(o->type == object_type::var);
   }
 
+  object_ptr var_get(object_ptr const o)
+  {
+    return try_object<var>(o)->deref();
+  }
+
+  object_ptr alter_var_root(object_ptr const o, object_ptr const fn, object_ptr const args)
+  {
+    return try_object<var>(o)->alter_root(fn, args);
+  }
+
+  object_ptr is_var_bound(object_ptr const o)
+  {
+    return make_box(try_object<runtime::var>(o)->is_bound());
+  }
+
+  object_ptr is_var_thread_bound(object_ptr const o)
+  {
+    return make_box(try_object<runtime::var>(o)->get_thread_binding() != nullptr);
+  }
+
   object_ptr delay(object_ptr const fn)
   {
     return make_box<obj::delay>(fn);
+  }
+
+  object_ptr is_fn(object_ptr const o)
+  {
+    return make_box(o->type == object_type::native_function_wrapper
+                    || o->type == object_type::jit_function);
   }
 }
 
@@ -217,6 +243,10 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("name", &name);
   intern_fn("namespace", &namespace_);
   intern_fn("var?", &phase_1::is_var);
+  intern_fn("var-get", &phase_1::var_get);
+  intern_fn("alter-var-root", &phase_1::alter_var_root);
+  intern_fn("var-bound?", &phase_1::is_var_bound);
+  intern_fn("var-thread-bound?", &phase_1::is_var_thread_bound);
   intern_fn("push-thread-bindings", &push_thread_bindings);
   intern_fn("pop-thread-bindings", &pop_thread_bindings);
   intern_fn("get-thread-bindings", &get_thread_bindings);
@@ -229,6 +259,8 @@ jank_object_ptr jank_load_clojure_core_native_phase_1()
   intern_fn("iterate", &iterate);
   intern_fn("delay*", &phase_1::delay);
   intern_fn("force", &force);
+  intern_fn("ifn?", &is_callable);
+  intern_fn("fn?", &phase_1::is_fn);
 
   {
     auto const fn(
