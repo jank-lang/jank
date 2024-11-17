@@ -162,6 +162,12 @@ namespace jank::read
     {
     }
 
+    struct codepoint
+    {
+      char32_t character{};
+      size_t len{};
+    };
+
     native_bool ratio::operator==(ratio const &rhs) const
     {
       return numerator == rhs.numerator && denominator == rhs.denominator;
@@ -261,24 +267,22 @@ namespace jank::read
       return none;
     }
 
-    void processor::reset_state()
+    static result<codepoint, error> convert_to_codepoint(native_persistent_string_view sv, size_t pos)
     {
-      std::memset(&state, 0, sizeof(state));
-    }
-
-    native_bool processor::check_mb_error(size_t const len)
-    {
-      if (len == static_cast<size_t>(-1) || len == static_cast<size_t>(-2)) {
-        ++pos;
-        reset_state();
-        return true;
-      } else if (len == 0) {
-        ++pos;
-        return true;
+      std::mbstate_t state{};
+      wchar_t wc{};
+      size_t len = std::mbrtowc(&wc, sv.data(), sv.size(), &state);
+      if (len == static_cast<size_t>(-1))
+      {
+        return err(error{ pos, "Unexpected character"} );
       }
-      return false;
+      else if (len == static_cast<size_t>(-2))
+      {
+        return err(error{ pos, "Invalid character" });
+      }
+      return ok(codepoint{ static_cast<char32_t>(wc), len });
     }
-
+    
     static native_bool is_symbol_char(char32_t const c)
     {
       return std::iswalnum(static_cast<wint_t>(c)) != 0 || c == '_' || c == '-' || c == '/'
@@ -309,17 +313,15 @@ namespace jank::read
       }
 
       auto const token_start(pos);
-      wchar_t wc{};
-      reset_state();
-      size_t first_len = std::mbrtowc(&wc, &file[token_start], file.size() - pos, &state);
-      if (check_mb_error(first_len))
+      auto const oc = convert_to_codepoint(file.substr(token_start), token_start);
+      char32_t start{};
+      size_t len{};
+      if (oc.is_ok())
       {
-        return err(
-          error{ token_start,
-                 native_persistent_string{ "unexpected character: " } + file[token_start] });
-
+        start = oc.expect_ok().character;
+        len = oc.expect_ok().len;
       }
-      switch(wc)
+      switch(start)
       {
         case '(':
           require_space = false;
@@ -348,7 +350,15 @@ namespace jank::read
 
             auto const ch(peek());
             pos++;
-            if(ch.is_none() || std::isspace(ch.unwrap()))
+
+            char32_t cpoint{};
+            size_t size{};
+            if (ch.is_ok())
+            {
+              cpoint = ch.expect_ok().character;
+              size = ch.expect_ok().len;
+            }
+            if(ch.is_err() || std::iswspace(cpoint))
             {
               return err(error{ token_start, "Expecting a valid character literal after \\" });
             }
@@ -356,11 +366,16 @@ namespace jank::read
             while(true)
             {
               auto const pt(peek());
-              if(pt.is_none() || !is_symbol_char(pt.unwrap()))
+              if (pt.is_ok())
+              {
+                cpoint = pt.expect_ok().character;
+                size = pt.expect_ok().len;
+              }
+              if(pt.is_err() || !is_symbol_char(cpoint))
               {
                 break;
               }
-              pos++;
+              pos += size;
             }
 
             native_persistent_string_view const data{ file.data() + token_start,
@@ -375,11 +390,11 @@ namespace jank::read
             while(true)
             {
               auto const oc(peek());
-              if(oc.is_none())
+              if(oc.is_err())
               {
                 break;
               }
-              auto const c(oc.unwrap());
+              auto const c(oc.expect_ok().character);
               if(c == '\n')
               {
                 break;
@@ -425,12 +440,12 @@ namespace jank::read
             while(true)
             {
               auto const oc(peek());
-              if(oc.is_none())
+              if(oc.is_err())
               {
                 break;
               }
 
-              auto const c(oc.unwrap());
+              auto const c(oc.expect_ok().character);
               if(c == '.')
               {
                 if(contains_dot || is_scientific || !contains_leading_digit)
@@ -486,7 +501,7 @@ namespace jank::read
                 return err(
                   error{ token_start, pos, "invalid ratio: expecting an integer denominator" });
               }
-              else if(std::isdigit(c) == 0)
+              else if(std::iswdigit(c) == 0)
               {
                 if(expecting_exponent)
                 {
@@ -559,16 +574,17 @@ namespace jank::read
             while(true)
             {
               auto const oc(peek());
-              if(oc.is_none())
+              if(oc.is_err())
               {
                 break;
               }
-              auto const c(oc.unwrap());
+              auto const c(oc.expect_ok().character);
+              auto const size(oc.expect_ok().len);
               if(!is_symbol_char(c))
               {
                 break;
               }
-              ++pos;
+              pos += size;
             }
             require_space = true;
             native_persistent_string_view const name{ file.data() + token_start,
@@ -602,7 +618,8 @@ namespace jank::read
             }
 
             auto const oc(peek());
-            if(oc.is_none() || std::isspace(oc.unwrap()))
+            auto const c(oc.expect_ok().character);
+            if(oc.is_err() || std::iswspace(c))
             {
               ++pos;
               return err(
@@ -610,35 +627,26 @@ namespace jank::read
             }
 
             /* Support auto-resolved qualified keywords. */
-            if(oc.unwrap() == ':')
+            if(c == ':')
             {
               ++pos;
             }
 
-            while(pos < file.size())
+            while(true)
             {
               auto const oc(peek());
-              if(oc.is_none())
+              if(oc.is_err())
               {
                 break;
               }
-              auto const c(oc.unwrap());
-              if(is_symbol_char(c))
-              {
-                ++pos;
-                continue;
-              }
-              wchar_t unicode_char;
-              size_t len = std::mbrtowc(&unicode_char, &file[token_start], file.size() - pos, &state);
-              if (len == 0)
+
+              auto const c = oc.expect_ok().character;
+              auto const size(oc.expect_ok().len);
+              if(!is_symbol_char(c))
               {
                 break;
               }
-              if (check_mb_error(len))
-              {
-                return err(error{ token_start, "unexpected character" + static_cast<char>(unicode_char)});
-              }
-              pos += len;
+              pos += size;
             }
             require_space = true;
             native_persistent_string_view const name{ file.data() + token_start + 1,
@@ -667,7 +675,7 @@ namespace jank::read
             while(true)
             {
               auto const oc(peek());
-              if(oc.is_none())
+              if(oc.is_err())
               {
                 ++pos;
                 return err(error{ token_start, "unterminated string" });
@@ -868,19 +876,29 @@ namespace jank::read
       }
     }
 
-    option<char> processor::peek() const
+    result<codepoint, error> processor::peek() const
     {
-      auto const next_pos(pos + 1);
-      if(next_pos >= file.size())
-      {
-        return none;
-      }
-      return some(file[next_pos]);
-    }
+      // auto const next_pos(pos + 1);
+      // if(next_pos >= file.size())
+      // {
+      //   return none;
+      // }
+      // return some(file[next_pos]);
 
-    option<size_t> processor::wide_peek()
-    {
-      
+      auto const next_pos(pos + 1);
+      if (next_pos >= file.size())
+      {
+        return err(error{pos, "No more characters to peek." });
+      }
+      auto const oc = convert_to_codepoint(file.substr(next_pos), next_pos);
+      if (oc.is_err())
+      {
+        return oc.expect_err();
+      }
+      else
+      {
+        return oc.expect_ok();
+      }
     }
   }
 }

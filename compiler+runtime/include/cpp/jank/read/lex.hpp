@@ -127,6 +127,7 @@ namespace jank::read
 
 namespace jank::read::lex
 {
+  struct codepoint;
   struct processor
   {
     struct iterator
@@ -150,7 +151,7 @@ namespace jank::read::lex
     processor(native_persistent_string_view const &f);
 
     result<token, error> next();
-    option<char> peek() const;
+    result<codepoint, error> peek() const;
     option<error> check_whitespace(native_bool const found_space);
     
     iterator begin();
@@ -162,11 +163,5 @@ namespace jank::read::lex
     /* True when seeing a '/' following a number. */
     native_bool found_slash_after_number{};
     native_persistent_string_view file;
-
-  private:
-    /* State for conversion */
-    void reset_state();
-    native_bool check_mb_error(size_t len);
-    std::mbstate_t state;
   };
 }
