@@ -1,6 +1,7 @@
 #include <magic_enum.hpp>
 
 #include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/obj/ratio.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
@@ -1277,10 +1278,19 @@ namespace jank::read::parse
     {
       return err(error{ token.pos, "Divide by zero" });
     }
-    return object_source_info{ make_box<obj::real>(static_cast<native_real>(ratio_data.numerator)
-                                                   / ratio_data.denominator),
-                               token,
-                               token };
+    auto ratio = obj::ratio::create(ratio_data.numerator, ratio_data.denominator);
+    if(ratio->type == object_type::ratio)
+    {
+      return object_source_info{ expect_object<obj::ratio>(ratio), token, token };
+    }
+    else if(ratio->type == object_type::integer)
+    {
+      return object_source_info{ expect_object<obj::integer>(ratio), token, token };
+    }
+    else
+    {
+      return err(error{ token.pos, "Internal parsing error" });
+    }
   }
 
   processor::object_result processor::parse_real()
