@@ -61,6 +61,12 @@ namespace jank::runtime
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(obj::ratio_data const r)
+  {
+    return expect_object<runtime::obj::ratio>(obj::ratio::create(r.numerator, r.denominator));
+  }
+
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(native_persistent_string_view const &s)
   {
     return make_box<runtime::obj::persistent_string>(s);

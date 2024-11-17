@@ -14,6 +14,8 @@ namespace jank::runtime
     boolean,
     integer,
     real,
+    ratio,
+    ratio_data,
 
     persistent_string,
     persistent_string_sequence,
