@@ -105,7 +105,6 @@ namespace jank::codegen
     analyze::expr::function<analyze::expression> const &root_fn;
     native_persistent_string module_name;
     compilation_target target{};
-    native_persistent_string struct_name;
     native_persistent_string ctor_name;
 
     std::unique_ptr<llvm::LLVMContext> context;

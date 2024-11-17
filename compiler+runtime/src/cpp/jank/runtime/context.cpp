@@ -511,28 +511,23 @@ namespace jank::runtime
   object_ptr context::macroexpand1(object_ptr const o)
   {
     profile::timer timer{ "rt macroexpand1" };
-    return visit_object(
+    return visit_seqable(
       [this](auto const typed_o) -> object_ptr {
         using T = typename decltype(typed_o)::value_type;
 
-        if constexpr(!std::same_as<T, obj::persistent_list>)
+        if constexpr(!behavior::sequenceable<T>)
         {
           return typed_o;
         }
         else
         {
-          if(typed_o->data.empty())
+          auto const first_sym_obj(dyn_cast<obj::symbol>(first(typed_o)));
+          if(!first_sym_obj)
           {
             return typed_o;
           }
 
-          auto const first_sym_obj(typed_o->data.first().unwrap());
-          if(first_sym_obj->type != object_type::symbol)
-          {
-            return typed_o;
-          }
-
-          auto const var(find_var(expect_object<obj::symbol>(first_sym_obj)));
+          auto const var(find_var(first_sym_obj));
           /* None means it's not a var, so not a macro. No meta means no :macro set. */
           if(var.is_none() || var.unwrap()->meta.is_none())
           {
@@ -547,11 +542,11 @@ namespace jank::runtime
           }
 
           /* TODO: Provide &env. */
-          auto const args(make_box<obj::persistent_list>(
-            typed_o->data.rest().conj(obj::nil::nil_const()).conj(typed_o)));
+          auto const args(cons(cons(rest(typed_o), obj::nil::nil_const()), typed_o));
           return apply_to(var.unwrap()->deref(), args);
         }
       },
+      [=]() { return o; },
       o);
   }
 
@@ -588,7 +583,8 @@ namespace jank::runtime
     init.toPtr<void (*)()>()();
 
     auto const fn(
-      jit_prc.interpreter->getSymbolAddress(fmt::format("{}_0", cg_prc.struct_name)).get());
+      jit_prc.interpreter->getSymbolAddress(fmt::format("{}_0", munge(cg_prc.root_fn.unique_name)))
+        .get());
     //fmt::println("calling fn");
     auto const ret(fn.toPtr<object *(*)()>()());
     //fmt::println("ret {}", fmt::ptr(ret));

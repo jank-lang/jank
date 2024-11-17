@@ -157,19 +157,22 @@ jank_object_ptr jank_load_clojure_core_native()
 
   auto const ns(__rt_ctx->intern_ns("clojure.core-native"));
 
+  auto const intern_val([=](native_persistent_string const &name, auto const val) {
+    ns->intern_var(name)->bind_root(convert<decltype(val), object_ptr>::call(val));
+  });
   auto const intern_fn([=](native_persistent_string const &name, auto const fn) {
     ns->intern_var(name)->bind_root(
       make_box<obj::native_function_wrapper>(convert_function(fn))
-        ->with_meta(obj::persistent_hash_map::create_unique(
-          std::make_pair(__rt_ctx->intern_keyword("clojure.core-native", "name").expect_ok(),
-                         make_box(name)))));
+        ->with_meta(obj::persistent_hash_map::create_unique(std::make_pair(
+          __rt_ctx->intern_keyword("name").expect_ok(),
+          make_box(obj::symbol{ __rt_ctx->current_ns()->to_string(), name }.to_string())))));
   });
   auto const intern_fn_obj([=](native_persistent_string const &name, object_ptr const fn) {
-    ns->intern_var(name)->bind_root(
-      with_meta(fn,
-                obj::persistent_hash_map::create_unique(std::make_pair(
-                  __rt_ctx->intern_keyword("clojure.core-native", "name").expect_ok(),
-                  make_box(name)))));
+    ns->intern_var(name)->bind_root(with_meta(
+      fn,
+      obj::persistent_hash_map::create_unique(std::make_pair(
+        __rt_ctx->intern_keyword("name").expect_ok(),
+        make_box(obj::symbol{ __rt_ctx->current_ns()->to_string(), name }.to_string())))));
   });
 
   intern_fn("type", &type);
@@ -320,6 +323,8 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("methods", &core_native::methods);
   intern_fn("get-method", &core_native::get_method);
   intern_fn("prefers", &core_native::prefers);
+  intern_val("int-min", std::numeric_limits<native_integer>::min());
+  intern_val("int-max", std::numeric_limits<native_integer>::max());
 
   {
     auto const fn(

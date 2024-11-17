@@ -410,15 +410,16 @@ namespace jank::evaluate
 
     {
       profile::timer timer{ fmt::format("ir jit compile {}", expr.name) };
-      //fmt::println("{}\n", cg_prc.to_string());
+      fmt::println("{}\n", cg_prc.to_string());
       llvm::cantFail(jit_prc.interpreter->getExecutionEngine().get().addIRModule(
         llvm::orc::ThreadSafeModule{ std::move(cg_prc.module), std::move(cg_prc.context) }));
 
       auto const init(jit_prc.interpreter->getSymbolAddress(cg_prc.ctor_name.c_str()).get());
       init.toPtr<void (*)()>()();
 
-      auto const fn(
-        jit_prc.interpreter->getSymbolAddress(fmt::format("{}_0", cg_prc.struct_name)).get());
+      auto const fn(jit_prc.interpreter
+                      ->getSymbolAddress(fmt::format("{}_0", munge(cg_prc.root_fn.unique_name)))
+                      .get());
       auto const ret(fn.toPtr<object *(*)()>()());
       return ret;
     }

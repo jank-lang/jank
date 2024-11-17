@@ -20,7 +20,6 @@ namespace jank::codegen
     : root_fn{ expr }
     , module_name{ module_name }
     , target{ target }
-    , struct_name{ runtime::munge(root_fn.unique_name) }
     , ctor_name{ runtime::munge(runtime::context::unique_string("jank_global_init")) }
     , context{ std::make_unique<llvm::LLVMContext>() }
     , module{ std::make_unique<llvm::Module>(runtime::context::unique_string(module_name).c_str(),
@@ -37,7 +36,6 @@ namespace jank::codegen
     : root_fn{ expr }
     , module_name(from.module_name)
     , target{ compilation_target::function }
-    , struct_name{ runtime::munge(root_fn.unique_name) }
     , ctor_name{ runtime::munge(runtime::context::unique_string("jank_global_init")) }
     , context{ std::move(from.context) }
     , module{ std::move(from.module) }
@@ -56,10 +54,8 @@ namespace jank::codegen
   void llvm_processor::create_function()
   {
     auto const fn_type(llvm::FunctionType::get(builder->getPtrTy(), false));
-    fn = llvm::Function::Create(fn_type,
-                                llvm::Function::ExternalLinkage,
-                                struct_name.c_str(),
-                                *module);
+    auto const name(munge(root_fn.unique_name));
+    fn = llvm::Function::Create(fn_type, llvm::Function::ExternalLinkage, name.c_str(), *module);
 
     auto const entry(llvm::BasicBlock::Create(*context, "entry", fn));
     builder->SetInsertPoint(entry);
@@ -76,8 +72,9 @@ namespace jank::codegen
     std::vector<llvm::Type *> const arg_types{ arity.params.size() + is_closure,
                                                builder->getPtrTy() };
     auto const fn_type(llvm::FunctionType::get(builder->getPtrTy(), arg_types, false));
+    auto const name(munge(root_fn.unique_name));
     auto fn_value(
-      module->getOrInsertFunction(fmt::format("{}_{}", struct_name, arity.params.size()), fn_type));
+      module->getOrInsertFunction(fmt::format("{}_{}", name, arity.params.size()), fn_type));
     fn = llvm::dyn_cast<llvm::Function>(fn_value.getCallee());
     fn->setLinkage(llvm::Function::ExternalLinkage);
 
@@ -95,18 +92,17 @@ namespace jank::codegen
     if(is_closure)
     {
       auto const context(fn->getArg(0));
+      auto const captures(root_fn.captures());
+      std::vector<llvm::Type *> const capture_types{ captures.size(), builder->getPtrTy() };
+      auto const closure_ctx_type(
+        get_or_insert_struct_type(fmt::format("{}_context", munge(root_fn.unique_name)),
+                                  capture_types));
       size_t index{};
-      for(auto const &capture : arity.frame->captures)
+      for(auto const &capture : captures)
       {
-        auto const captures(root_fn.captures());
-        std::vector<llvm::Type *> const capture_types{ captures.size(), builder->getPtrTy() };
-        auto const closure_ctx_type(
-          get_or_insert_struct_type(fmt::format("{}_context", munge(root_fn.unique_name)),
-                                    capture_types));
         auto const field_ptr(builder->CreateStructGEP(closure_ctx_type, context, index++));
-        locals[capture.first] = builder->CreateLoad(builder->getPtrTy(),
-                                                    field_ptr,
-                                                    munge(capture.first->to_string()).c_str());
+        locals[capture.first]
+          = builder->CreateLoad(builder->getPtrTy(), field_ptr, capture.first->name.c_str());
       }
     }
   }

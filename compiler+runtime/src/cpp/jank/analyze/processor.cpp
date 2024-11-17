@@ -401,16 +401,6 @@ namespace jank::analyze
       unique_name = name;
     }
 
-    /* Allow native name to be overridden using :jank/link-name meta. */
-    auto const link_name_kw(rt_ctx.intern_keyword("jank", "link-name").expect_ok());
-    auto const link_name(
-      runtime::get(full_list->meta.unwrap_or(runtime::obj::nil::nil_const()), link_name_kw));
-    if(link_name != runtime::obj::nil::nil_const())
-    {
-      name = runtime::expect_object<runtime::obj::persistent_string>(link_name)->data;
-      unique_name = runtime::context::unique_string(name);
-    }
-
     native_vector<expr::function_arity<expression>> arities;
 
     if(first_elem->type == runtime::object_type::persistent_vector)
@@ -506,6 +496,7 @@ namespace jank::analyze
     for(auto base(arities.begin()); base != arities.end(); ++base)
     {
       base->fn_ctx->fn = ret;
+      /* TODO: remove these, since we have a ptr to the fn now. */
       base->fn_ctx->name = name;
       base->fn_ctx->unique_name = unique_name;
       if(base + 1 == arities.end())
