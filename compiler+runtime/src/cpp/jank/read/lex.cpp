@@ -274,7 +274,7 @@ namespace jank::read
       size_t len = std::mbrtowc(&wc, sv.data(), sv.size(), &state);
       if (len == static_cast<size_t>(-1))
       {
-        return err(error{ pos, "Unexpected character"} );
+        return err(error{ pos, "Unexpected character" });
       }
       else if (len == static_cast<size_t>(-2))
       {
@@ -282,12 +282,29 @@ namespace jank::read
       }
       return ok(codepoint{ static_cast<char32_t>(wc), len });
     }
+
+    static native_bool is_utf8_char(char32_t c)
+    {
+      if (c <= 0x7FF)
+      {
+        return true;
+      }
+      else if (c <= 0xFFFF)
+      {
+        return c < 0xD800 || c > 0xDFFF;
+      }
+      else if (c <= 0x10FFFF)
+      {
+        return true;
+      }
+      return false;
+    }
     
     static native_bool is_symbol_char(char32_t const c)
     {
       return std::iswalnum(static_cast<wint_t>(c)) != 0 || c == '_' || c == '-' || c == '/'
         || c == '?' || c == '!' || c == '+' || c == '*' || c == '=' || c == '.' || c == '&'
-        || c == '<' || c == '>' || c == '#' || c == '%';
+        || c == '<' || c == '>' || c == '#' || c == '%' || is_utf8_char(c);
     }
 
     result<token, error> processor::next()
@@ -680,7 +697,7 @@ namespace jank::read
                 ++pos;
                 return err(error{ token_start, "unterminated string" });
               }
-              else if(!escaped && oc.unwrap() == '"')
+              else if(!escaped && oc.expect_ok().character == '"')
               {
                 ++pos;
                 break;
@@ -688,7 +705,7 @@ namespace jank::read
 
               if(escaped)
               {
-                switch(oc.unwrap())
+                switch(oc.expect_ok().character)
                 {
                   case '"':
                   case '?':
@@ -707,7 +724,7 @@ namespace jank::read
                 }
                 escaped = false;
               }
-              else if(oc.unwrap() == '\\')
+              else if(oc.expect_ok().character == '\\')
               {
                 escaped = contains_escape = true;
               }
@@ -749,9 +766,20 @@ namespace jank::read
             }
             require_space = false;
             auto const oc(peek());
-            ++pos;
+            char32_t c{};
+            size_t size{};
+            if (oc.is_err())
+            {
+              c = ' ';
+            }
+            else
+            {
+              c = oc.expect_ok().character;
+            }
+            size = oc.expect_ok().len;
+            pos += size;
 
-            switch(oc.unwrap_or(' '))
+            switch(c)
             {
               case '_':
                 ++pos;
@@ -760,8 +788,19 @@ namespace jank::read
               case '?':
                 {
                   auto const maybe_splice(peek());
-                  ++pos;
-                  if(maybe_splice.unwrap_or(' ') == '@')
+                  char32_t c{};
+                  size_t size{};
+                  if (maybe_splice.is_err())
+                  {
+                    c = ' ';
+                  }
+                  else
+                  {
+                    c = maybe_splice.expect_ok().character;
+                  }
+                  size = maybe_splice.expect_ok().len;
+                  pos += size;
+                  if(c == '@')
                   {
                     ++pos;
                     return ok(token{ token_start,
@@ -804,9 +843,20 @@ namespace jank::read
             }
             require_space = false;
             auto const oc(peek());
-            ++pos;
+            char32_t c{};
+            size_t size{};
+            if (oc.is_err())
+            {
+              c = ' ';
+            }
+            else
+            {
+              c = oc.expect_ok().character;
+            }
+            size = oc.expect_ok().len;
+            pos += size;
 
-            switch(oc.unwrap_or(' '))
+            switch(c)
             {
               case '@':
                 {
@@ -831,44 +881,34 @@ namespace jank::read
             return ok(token{ token_start, pos - token_start, token_kind::deref });
           }
         default:
-          // Handle possible non-ascii character (utf-8)
+          /* Handle possible non-ascii character (utf-8) */
           // auto &&e(check_whitespace(found_space));
           // if(e.is_some())
           // {
           //   return err(std::move(e.unwrap()));
           // }
-          // std::mbstate_t state{};
-          // size_t len{};
-          // while (pos < file.size())
+          // while(true)
           // {
-          //   wchar_t wc{};
-          //   len = std::mbrtowc(&wc, &file[token_start], file.size() - pos, &state);
-          //   if (len == static_cast<size_t>(-1))
-          //   {
-          //     return err(error {token_start, native_persistent_string{ "unexpected character: " + wc }});
-          //   }
-          //   else if (len == static_cast<size_t>(-2))
-          //   {
-          //     return err(error {token_start, native_persistent_string{ "invalid character: " + wc}});
-          //   }
-
-          //   if (len == 0)
+          //   auto const oc(peek());
+          //   if(oc.is_err())
           //   {
           //     break;
           //   }
-          //   if (std::iswspace(wc))
+          //   auto const c(oc.expect_ok().character);
+          //   auto const size(oc.expect_ok().len);
+          //   if(!is_symbol_char(c))
           //   {
           //     break;
           //   }
-          //   // if (is_symbol_char(wc))
-          //   // {
-          //   //   ++pos;
-          //   //   continue;
-          //   // }
-          //   pos += len;
+          //   pos += size;
           // }
           // require_space = true;
-          // return ok(token{token_start, pos - token_start, token_kind::symbol, file.substr(token_start, pos - token_start)});
+          // native_persistent_string_view const name{ file.data() + token_start,
+          //                                           ++pos - token_start };
+          // if(name[0] == '/' && name.size() > 1)
+          // {
+          //   return err(error{ token_start, "invalid symbol" });
+          // }
           ++pos;
           return err(
             error{ token_start,
