@@ -274,7 +274,7 @@ namespace jank::read
       size_t len = std::mbrtowc(&wc, sv.data(), sv.size(), &state);
       if (len == static_cast<size_t>(-1))
       {
-        return err(error{ pos, "Unexpected character" });
+        return err(error{ pos, "Unfinished Character" });
       }
       else if (len == static_cast<size_t>(-2))
       {
@@ -302,14 +302,14 @@ namespace jank::read
     
     static native_bool is_symbol_char(char32_t const c)
     {
-      return std::iswalnum(static_cast<wint_t>(c)) != 0 || c == '_' || c == '-' || c == '/'
-        || c == '?' || c == '!' || c == '+' || c == '*' || c == '=' || c == '.' || c == '&'
-        || c == '<' || c == '>' || c == '#' || c == '%' || is_utf8_char(c);
+      return !std::iswspace(c) && (std::iswalnum(static_cast<wint_t>(c)) != 0 || c == '_' || c == '-' || c == '/'
+                                   || c == '?' || c == '!' || c == '+' || c == '*' || c == '=' || c == '.' || c == '&'
+                                   || c == '<' || c == '>' || c == '#' || c == '%' || is_utf8_char(c));
     }
 
     result<token, error> processor::next()
     {
-      
+      std::cout << "Starting Pos: " << pos << "\n";
       /* Skip whitespace. */
       native_bool found_space{};
       while(true)
@@ -338,12 +338,16 @@ namespace jank::read
         start = oc.expect_ok().character;
         len = oc.expect_ok().len;
       }
+      std::cout << "Current character: '" << static_cast<char>(start) << "'\n";
+      std::cout << "++++++++++++++++++++++++++++++++++++\n";
       switch(start)
       {
         case '(':
+          std::cout << "Open Paren Token\n";
           require_space = false;
           return ok(token{ pos++, token_kind::open_paren });
         case ')':
+          std::cout << "Closed Paren Token\n";
           require_space = false;
           return ok(token{ pos++, token_kind::close_paren });
         case '[':
@@ -365,6 +369,7 @@ namespace jank::read
           {
             require_space = false;
 
+            
             auto const ch(peek());
             pos++;
 
@@ -444,6 +449,7 @@ namespace jank::read
         case '-':
         case '0' ... '9':
           {
+            std::cout << "Number Token\n";
             auto &&e(check_whitespace(found_space));
             if(e.is_some())
             {
@@ -537,6 +543,7 @@ namespace jank::read
 
               ++pos;
             }
+            std::cout << "Number Pos: " << pos << "\n";
 
             if(expecting_exponent)
             {
@@ -558,7 +565,7 @@ namespace jank::read
                                  token_kind::real,
                                  std::strtold(file.data() + token_start, nullptr) });
               }
-              else
+
               {
                 return ok(token{ token_start,
                                  pos - token_start,
@@ -583,6 +590,8 @@ namespace jank::read
         case '>':
         case '%':
           {
+            std::cout << "Symbol Token\n";
+            
             auto &&e(check_whitespace(found_space));
             if(e.is_some())
             {
@@ -599,13 +608,16 @@ namespace jank::read
               auto const size(oc.expect_ok().len);
               if(!is_symbol_char(c))
               {
+                std::cout << "This isn't a symbol char: '" << static_cast<char>(c) << "'\n";
                 break;
               }
+              std::cout << "Symbol (char : size): " << static_cast<char>(c) << " : " << size << "\n";              
               pos += size;
             }
             require_space = true;
             native_persistent_string_view const name{ file.data() + token_start,
                                                       ++pos - token_start };
+            std::cout << "Symbol Pos: " << pos << "\n";
             if(name[0] == '/' && name.size() > 1)
             {
               return err(error{ token_start, "invalid symbol" });
@@ -622,12 +634,14 @@ namespace jank::read
             {
               return ok(token{ token_start, pos - token_start, token_kind::boolean, false });
             }
-
+            std::cout << "Symbol: " << name << " : " << name.size() << "\n";
             return ok(token{ token_start, pos - token_start, token_kind::symbol, name });
           }
         /* Keywords. */
         case ':':
           {
+            std::cout << "Keyword Token\n";
+ 
             auto &&e(check_whitespace(found_space));
             if(e.is_some())
             {
@@ -661,13 +675,17 @@ namespace jank::read
               auto const size(oc.expect_ok().len);
               if(!is_symbol_char(c))
               {
+                std::cout << "This isn't a keyword char: '" << static_cast<char>(c) << "'\n";
                 break;
               }
+              std::cout << "Keyword (char : size): " << static_cast<char>(c) << " : " << size << "\n";              
               pos += size;
             }
             require_space = true;
             native_persistent_string_view const name{ file.data() + token_start + 1,
                                                       ++pos - token_start - 1 };
+            std::cout << "Keyword Pos: " << pos << "\n";
+
             if(name[0] == '/' && name.size() > 1)
             {
               return err(error{ token_start, "invalid keyword: starts with /" });
@@ -677,6 +695,8 @@ namespace jank::read
               return err(error{ token_start, "invalid keyword: incorrect number of :" });
             }
 
+            std::cout << "Keyword: " << name << " | Keyword Size: " << name.size() << "\n";
+            std::cout << "Token Start: " << token_start << " | Pos: " << pos << "\n";
             return ok(token{ token_start, pos - token_start, token_kind::keyword, name });
           }
         /* Strings. */
@@ -881,6 +901,7 @@ namespace jank::read
             return ok(token{ token_start, pos - token_start, token_kind::deref });
           }
         default:
+          std::cout << "Default Case\n";
           /* Handle possible non-ascii character (utf-8) */
           // auto &&e(check_whitespace(found_space));
           // if(e.is_some())
