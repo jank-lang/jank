@@ -13,6 +13,7 @@
 #include <jank/util/make_array.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/jit/processor.hpp>
+#include <jank/profile/time.hpp>
 
 namespace jank::jit
 {
@@ -33,73 +34,12 @@ namespace jank::jit
     std::exit(gen_crash_diag ? 70 : 1);
   }
 
-  option<boost::filesystem::path> find_pch()
-  {
-    auto const jank_path(util::process_location().unwrap().parent_path());
-
-    auto dev_path(jank_path / "incremental.pch");
-    if(boost::filesystem::exists(dev_path))
-    {
-      return std::move(dev_path);
-    }
-
-    auto installed_path(fmt::format("{}/incremental.pch", util::binary_cache_dir()));
-    if(boost::filesystem::exists(installed_path))
-    {
-      return std::move(installed_path);
-    }
-
-    return none;
-  }
-
-  option<boost::filesystem::path> build_pch()
-  {
-    auto const jank_path(util::process_location().unwrap().parent_path());
-    auto const script_path(jank_path / "build-pch");
-    auto const include_path(jank_path / "../include");
-    boost::filesystem::path const output_path{ fmt::format("{}/incremental.pch",
-                                                           util::binary_cache_dir()) };
-    boost::filesystem::create_directories(output_path.parent_path());
-    auto const command(fmt::format("{} {} {} {} {}",
-                                   script_path.string(),
-                                   native_persistent_string_view{ JANK_CLANG_PREFIX },
-                                   include_path.string(),
-                                   output_path.string(),
-                                   native_persistent_string_view{ JANK_JIT_FLAGS }));
-
-    std::cerr << "Note: Looks like your first run. Building pre-compiled header… " << std::flush;
-
-    if(std::system(command.c_str()) != 0)
-    {
-      std::cerr << "error!\n"
-                << "Failed to build using this script: " << script_path << "\n";
-      return none;
-    }
-
-    std::cerr << "done!\n";
-    return output_path;
-  }
-
   processor::processor(native_integer const optimization_level)
     : optimization_level{ optimization_level }
   {
     profile::timer timer{ "jit ctor" };
     /* TODO: Pass this into each fn below so we only do this once on startup. */
     auto const jank_path(util::process_location().unwrap().parent_path());
-
-    auto pch_path(find_pch());
-    if(pch_path.is_none())
-    {
-      pch_path = build_pch();
-
-      /* TODO: Better error handling. */
-      if(pch_path.is_none())
-      {
-        throw std::runtime_error{ "unable to find and also unable to build PCH" };
-      }
-    }
-    auto const &pch_path_str(pch_path.unwrap().string());
-
     auto const include_path(jank_path / "../include");
 
     native_persistent_string_view O{ "-O0" };
@@ -133,9 +73,6 @@ namespace jank::jit
       args.emplace_back(strdup(flag.c_str()));
     }
     args.emplace_back(strdup(O.data()));
-    /* We need to include our special incremental PCH. */
-    args.emplace_back("-include-pch");
-    args.emplace_back(strdup(pch_path_str.c_str()));
 
     //fmt::println("jit flags {}", args);
 

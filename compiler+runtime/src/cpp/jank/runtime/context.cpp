@@ -7,8 +7,8 @@
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/obj/persistent_string.hpp>
-#include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/core.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/codegen/processor.hpp>
 #include <jank/evaluate.hpp>
@@ -17,6 +17,7 @@
 #include <jank/util/process_location.hpp>
 #include <jank/util/clang_format.hpp>
 #include <jank/codegen/llvm_processor.hpp>
+#include <jank/profile/time.hpp>
 
 namespace jank::runtime
 {
@@ -199,7 +200,7 @@ namespace jank::runtime
     {
       auto const expr(
         an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement));
-      ret = evaluate::eval(*this, jit_prc, expr.expect_ok());
+      ret = evaluate::eval(expr.expect_ok());
       exprs.emplace_back(expr.expect_ok());
     }
 
@@ -252,7 +253,7 @@ namespace jank::runtime
         an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement));
       if(eval)
       {
-        evaluate::eval(*this, jit_prc, expr.expect_ok());
+        evaluate::eval(expr.expect_ok());
       }
       ret.emplace_back(expr.expect_ok());
     }

@@ -1,6 +1,7 @@
-#include <functional>
-
+#include <clojure/core_native.hpp>
 #include <jank/runtime/convert.hpp>
+#include <jank/runtime/core.hpp>
+#include <jank/runtime/context.hpp>
 
 namespace clojure::core_native
 {

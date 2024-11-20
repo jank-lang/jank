@@ -1,4 +1,6 @@
 #include <jank/runtime/obj/native_vector_sequence.hpp>
+#include <jank/runtime/core.hpp>
+#include <jank/runtime/core/seq_ext.hpp>
 
 namespace jank::runtime
 {

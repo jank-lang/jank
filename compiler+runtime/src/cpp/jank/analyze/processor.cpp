@@ -1,21 +1,20 @@
-#include <iostream>
-#include <atomic>
 #include <set>
 
 #include <boost/core/demangle.hpp>
 
 #include <fmt/core.h>
 
-#include <jank/runtime/obj/character.hpp>
-#include <jank/runtime/obj/persistent_vector.hpp>
-#include <jank/runtime/obj/persistent_array_map.hpp>
+#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/number_like.hpp>
+#include <jank/runtime/core/truthy.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/analyze/step/force_boxed.hpp>
 #include <jank/codegen/processor.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/result.hpp>
+#include <jank/util/scope_exit.hpp>
 
 namespace jank::analyze
 {
@@ -1278,7 +1277,7 @@ namespace jank::analyze
         std::move(exprs),
         o->meta
       }));
-      auto const o(evaluate::eval(rt_ctx, rt_ctx.jit_prc, pre_eval_expr));
+      auto const o(evaluate::eval(pre_eval_expr));
 
       /* TODO: Order lifted constants. Use sub constants during codegen. */
       current_frame->lift_constant(o);
@@ -1363,7 +1362,7 @@ namespace jank::analyze
         std::move(exprs),
         o->meta
       }));
-      auto const o(evaluate::eval(rt_ctx, rt_ctx.jit_prc, pre_eval_expr));
+      auto const o(evaluate::eval(pre_eval_expr));
 
       /* TODO: Order lifted constants. Use sub constants during codegen. */
       current_frame->lift_constant(o);

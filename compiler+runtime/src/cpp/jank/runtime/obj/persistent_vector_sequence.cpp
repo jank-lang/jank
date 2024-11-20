@@ -1,4 +1,7 @@
 #include <jank/runtime/obj/persistent_vector_sequence.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/core.hpp>
+#include <jank/runtime/core/seq_ext.hpp>
 
 namespace jank::runtime
 {

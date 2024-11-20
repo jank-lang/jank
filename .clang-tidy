@@ -22,6 +22,7 @@ readability-*,\
 -cppcoreguidelines-pro-type-static-cast-downcast,\
 -cppcoreguidelines-pro-type-const-cast,\
 -cppcoreguidelines-owning-memory,\
+-cppcoreguidelines-avoid-const-or-ref-data-members,\
 -bugprone-easily-swappable-parameters,\
 -bugprone-reserved-identifier,\
 -readability-redundant-member-init,\
@@ -36,6 +37,7 @@ readability-*,\
 -readability-convert-member-functions-to-static,\
 -readability-isolate-declaration,\
 -readability-qualified-auto,\
+-readability-redundant-declaration,\
 -performance-noexcept-move-constructor,\
 -performance-move-const-arg"
 

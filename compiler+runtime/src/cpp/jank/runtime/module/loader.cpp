@@ -1,12 +1,17 @@
-#include <libzippp.h>
-
 #include <regex>
+#include <iostream>
+
+#include <libzippp.h>
 
 #include <boost/filesystem.hpp>
 
 #include <jank/util/mapped_file.hpp>
 #include <jank/util/process_location.hpp>
 #include <jank/runtime/module/loader.hpp>
+#include <jank/runtime/core.hpp>
+#include <jank/runtime/core/munge.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/profile/time.hpp>
 
 namespace jank::runtime::module
 {

@@ -22,6 +22,7 @@ namespace jank::runtime
 
   namespace detail
   {
+    /* TODO: Replace with std::equal */
     struct object_ptr_equal
     {
       static native_bool equal(object_ptr const l, object_ptr const r)

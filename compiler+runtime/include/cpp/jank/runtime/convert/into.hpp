@@ -1,6 +1,10 @@
 #pragma once
 
 #include <jank/runtime/convert.hpp>
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/detail/type.hpp>
+#include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/core/make_box.hpp>
 
 namespace jank::runtime
 {

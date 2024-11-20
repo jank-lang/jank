@@ -1,5 +1,6 @@
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/erasure.hpp>
 
 namespace jank::runtime
 {

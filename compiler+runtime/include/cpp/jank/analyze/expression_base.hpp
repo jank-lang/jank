@@ -1,5 +1,12 @@
 #pragma once
 
+#include <magic_enum.hpp>
+
+#include <jank/runtime/core/make_box.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
+#include <jank/analyze/local_frame.hpp>
+#include <jank/detail/to_runtime_data.hpp>
+
 namespace jank::analyze
 {
   using namespace jank::runtime;

@@ -1,4 +1,7 @@
+#include <magic_enum.hpp>
+
 #include <jank/runtime/obj/transient_sorted_map.hpp>
+#include <jank/runtime/erasure.hpp>
 
 namespace jank::runtime
 {

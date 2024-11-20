@@ -1,4 +1,6 @@
 #include <jank/runtime/obj/jit_closure.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/runtime/erasure.hpp>
 
 namespace jank::runtime
 {

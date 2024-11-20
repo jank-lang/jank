@@ -3,14 +3,19 @@
 #include <functional>
 
 #include <jank/read/parse.hpp>
-#include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
+#include <jank/runtime/var.hpp>
 #include <jank/analyze/local_frame.hpp>
 #include <jank/analyze/expression.hpp>
 #include <jank/option.hpp>
+
+namespace jank::runtime
+{
+  struct context;
+}
 
 namespace jank::analyze
 {
@@ -151,6 +156,7 @@ namespace jank::analyze
 
     native_unordered_map<runtime::obj::symbol_ptr, special_function_type> specials;
     native_unordered_map<runtime::var_ptr, expression_ptr> vars;
+    /* TODO: Remove this. */
     runtime::context &rt_ctx;
     local_frame_ptr root_frame;
   };

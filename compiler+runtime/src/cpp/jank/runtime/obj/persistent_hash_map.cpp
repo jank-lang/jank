@@ -1,6 +1,8 @@
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/transient_hash_map.hpp>
+#include <jank/runtime/behavior/seqable.hpp>
+#include <jank/runtime/erasure.hpp>
 
 namespace jank::runtime
 {
@@ -35,31 +37,25 @@ namespace jank::runtime
 
   obj::persistent_hash_map_ptr obj::persistent_hash_map::create_from_seq(object_ptr const seq)
   {
-    return make_box<obj::persistent_hash_map>(visit_object(
+    return make_box<obj::persistent_hash_map>(visit_seqable(
       [](auto const typed_seq) -> obj::persistent_hash_map::value_type {
-        using T = typename decltype(typed_seq)::value_type;
-
-        if constexpr(behavior::seqable<T>)
+        detail::native_transient_hash_map transient;
+        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
         {
-          detail::native_transient_hash_map transient;
-          for(auto it(typed_seq->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
+          auto const key(it->first());
+          it = runtime::next_in_place(it);
+          if(!it)
           {
-            auto const key(it->first());
-            it = runtime::next_in_place(it);
-            if(!it)
-            {
-              throw std::runtime_error{ fmt::format("Odd number of elements: {}",
-                                                    typed_seq->to_string()) };
-            }
-            auto const val(it->first());
-            transient.set(key, val);
+            throw std::runtime_error{ fmt::format("Odd number of elements: {}",
+                                                  typed_seq->to_string()) };
           }
-          return transient.persistent();
+          auto const val(it->first());
+          transient.set(key, val);
         }
-        else
-        {
-          throw std::runtime_error{ fmt::format("Not seqable: {}", typed_seq->to_string()) };
-        }
+        return transient.persistent();
+      },
+      [=]() -> obj::persistent_hash_map::value_type {
+        throw std::runtime_error{ fmt::format("Not seqable: {}", runtime::to_string(seq)) };
       },
       seq));
   }

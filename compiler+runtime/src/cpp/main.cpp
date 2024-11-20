@@ -1,5 +1,4 @@
 #include <iostream>
-#include <filesystem>
 
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
@@ -18,11 +17,13 @@
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/behavior/callable.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/codegen/processor.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/native_persistent_string.hpp>
+#include <jank/profile/time.hpp>
 #include <clojure/core_native.hpp>
 
 namespace jank

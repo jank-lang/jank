@@ -1,7 +1,12 @@
 #pragma once
 
+#include <type_traits>
+
+#include <jank/runtime/object.hpp>
+
 namespace jank::runtime::detail
 {
+  /* TODO: Move this somewhere more general. It's used by other collections. */
   struct in_place_unique
   {
   };

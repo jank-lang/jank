@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/detail/type.hpp>
 
 namespace jank::runtime
 {

@@ -1,11 +1,6 @@
 #pragma once
 
-#include <ostream>
-#include <memory>
-
-#include <immer/box.hpp>
-#include <immer/memory_policy.hpp>
-
+#include <jank/runtime/object.hpp>
 #include <jank/option.hpp>
 
 namespace jank::runtime::detail

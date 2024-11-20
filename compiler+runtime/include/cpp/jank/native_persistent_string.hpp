@@ -3,8 +3,15 @@
 #include <bit>
 #include <fmt/format.h>
 
+#include <jank/type.hpp>
+
 namespace jank
 {
+  namespace hash
+  {
+    uint32_t integer(native_hash const input);
+  }
+
   /* This is a not-completely-standard replacement for std::string, with a few goals in mind:
    *
    * 1. Be as fast, or faster, than `std::string` and `folly::fbstring`

@@ -2,6 +2,7 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/symbol.hpp>
+#include <jank/runtime/detail/type.hpp>
 
 namespace jank::runtime
 {
@@ -15,7 +16,7 @@ namespace jank::runtime
   template <>
   struct static_object<object_type::keyword> : gc
   {
-    static constexpr native_bool pointer_free{ true };
+    static constexpr native_bool pointer_free{ false };
     /* Clojure uses this. No idea. https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/Keyword.java */
     static constexpr size_t hash_magic{ 0x9e3779b9 };
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/analyze/expression_base.hpp>
+#include <jank/runtime/obj/persistent_hash_set.hpp>
 
 namespace jank::analyze::expr
 {

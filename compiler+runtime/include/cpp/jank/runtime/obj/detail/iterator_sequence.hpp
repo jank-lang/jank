@@ -1,7 +1,14 @@
 #pragma once
 
+#include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/cons.hpp>
 #include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/core/to_string.hpp>
+
+namespace jank::runtime
+{
+  native_bool equal(object_ptr l, object_ptr r);
+}
 
 namespace jank::runtime::obj::detail
 {
@@ -27,17 +34,17 @@ namespace jank::runtime::obj::detail
     {
       return visit_seqable(
         [this](auto const typed_o) {
-            auto seq(typed_o->seq());
-            for(auto it(begin); it != end; ++it, seq = runtime::next_in_place(seq))
+          auto seq(typed_o->fresh_seq());
+          for(auto it(begin); it != end; ++it, seq = seq->next_in_place())
+          {
+            if(seq == nullptr || !runtime::equal(*it, seq->first()))
             {
-              if(seq == nullptr || !runtime::equal(*it, seq->first()))
-              {
-                return false;
-              }
+              return false;
             }
-            return true;
+          }
+          return true;
         },
-        [](){ return false; },
+        []() { return false; },
         &o);
     }
 

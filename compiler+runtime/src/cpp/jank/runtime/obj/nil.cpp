@@ -1,4 +1,5 @@
 #include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
 
 namespace jank::runtime
 {

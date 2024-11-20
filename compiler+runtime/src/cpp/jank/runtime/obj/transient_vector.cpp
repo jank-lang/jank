@@ -1,3 +1,8 @@
+#include <magic_enum.hpp>
+
+#include <jank/runtime/obj/transient_vector.hpp>
+#include <jank/runtime/erasure.hpp>
+
 namespace jank::runtime
 {
   obj::transient_vector::static_object(runtime::detail::native_persistent_vector &&d)

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <jank/runtime/object.hpp>
+
 namespace jank::runtime
 {
   native_persistent_string munge(native_persistent_string const &o);

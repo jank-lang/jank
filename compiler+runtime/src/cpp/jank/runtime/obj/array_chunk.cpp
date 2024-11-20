@@ -1,4 +1,7 @@
+#include <magic_enum.hpp>
+
 #include <jank/runtime/obj/array_chunk.hpp>
+#include <jank/runtime/erasure.hpp>
 
 namespace jank::runtime
 {

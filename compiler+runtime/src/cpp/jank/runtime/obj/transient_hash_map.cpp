@@ -1,4 +1,9 @@
+#include <magic_enum.hpp>
+
 #include <jank/runtime/obj/transient_hash_map.hpp>
+#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/core/seq.hpp>
 
 namespace jank::runtime
 {

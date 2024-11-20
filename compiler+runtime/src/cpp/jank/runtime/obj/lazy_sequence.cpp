@@ -1,5 +1,6 @@
-#include "jank/runtime/obj/persistent_list.hpp"
+#include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/lazy_sequence.hpp>
+#include <jank/runtime/erasure.hpp>
 
 namespace jank::runtime
 {

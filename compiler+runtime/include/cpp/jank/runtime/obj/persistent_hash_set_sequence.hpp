@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/detail/type.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/obj/detail/iterator_sequence.hpp>
 

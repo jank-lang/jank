@@ -1,10 +1,9 @@
-#include <iostream>
-#include <random>
 #include <cmath>
 
 #include <fmt/compile.h>
 
 #include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/erasure.hpp>
 
 namespace jank::runtime
 {
@@ -142,7 +141,7 @@ namespace jank::runtime
 
   native_real obj::integer::to_real() const
   {
-    return data;
+    return static_cast<native_real>(data);
   }
 
   /***** real *****/

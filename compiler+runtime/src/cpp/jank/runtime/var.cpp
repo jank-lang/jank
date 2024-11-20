@@ -3,6 +3,9 @@
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
+#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/profile/time.hpp>
 
 namespace jank::runtime
 {
@@ -35,12 +38,11 @@ namespace jank::runtime
 
   native_bool var::equal(object const &o) const
   {
-    if(o.type != object_type::var)
+    auto const v(dyn_cast<var>(&o));
+    if(!v)
     {
       return false;
     }
-
-    auto const v(expect_object<var>(&o));
     return n == v->n && name == v->name;
   }
 

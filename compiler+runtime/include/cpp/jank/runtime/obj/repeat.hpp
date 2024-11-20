@@ -1,5 +1,7 @@
 #pragma once
 
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/cons.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 
 namespace jank::runtime

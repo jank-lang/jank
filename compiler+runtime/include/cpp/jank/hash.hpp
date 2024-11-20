@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cstdint>
+
+#include <jank/type.hpp>
+
 namespace jank::runtime
 {
   struct object;

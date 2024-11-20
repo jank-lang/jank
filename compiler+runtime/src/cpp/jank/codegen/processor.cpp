@@ -1,7 +1,8 @@
-#include <jank/runtime/context.hpp>
-#include <jank/runtime/obj/number.hpp>
-#include <jank/runtime/obj/character.hpp>
 #include <jank/codegen/processor.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/core/truthy.hpp>
+#include <jank/runtime/core/munge.hpp>
 #include <jank/util/escape.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 

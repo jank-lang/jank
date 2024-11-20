@@ -1,11 +1,15 @@
 #pragma once
 
+#include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/associatively_readable.hpp>
 #include <jank/runtime/behavior/map_like.hpp>
 
 namespace jank::runtime
 {
   native_bool is_map(object_ptr o);
+  native_bool equal(object_ptr l, object_ptr r);
+  void to_string(object_ptr o, fmt::memory_buffer &buff);
+  void to_code_string(object_ptr o, fmt::memory_buffer &buff);
 
   namespace behavior::detail
   {
@@ -28,11 +32,6 @@ namespace jank::runtime::obj::detail
     static constexpr native_bool is_map_like{ true };
 
     base_persistent_map() = default;
-
-    base_persistent_map(native_box<obj::persistent_array_map> const meta)
-      : meta{ meta }
-    {
-    }
 
     /* behavior::object_like */
     native_bool equal(object const &o) const

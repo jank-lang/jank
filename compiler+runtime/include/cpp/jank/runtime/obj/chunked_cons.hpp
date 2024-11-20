@@ -1,5 +1,9 @@
 #pragma once
 
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/cons.hpp>
+#include <jank/option.hpp>
+
 namespace jank::runtime
 {
   template <>

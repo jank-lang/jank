@@ -1,5 +1,8 @@
 #pragma once
 
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
+
 namespace jank::runtime
 {
   template <>

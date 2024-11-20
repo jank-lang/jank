@@ -7,6 +7,8 @@
 
 #include <fmt/ostream.h>
 
+#include <jank/type.hpp>
+
 namespace jank
 {
   struct none_t

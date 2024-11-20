@@ -1,6 +1,13 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
+
+namespace jank::runtime
+{
+  void to_string(object_ptr o, fmt::memory_buffer &buff);
+  void to_code_string(object_ptr o, fmt::memory_buffer &buff);
+}
 
 namespace jank::runtime::obj::detail
 {
@@ -30,18 +37,18 @@ namespace jank::runtime::obj::detail
     {
       return visit_seqable(
         [this](auto const typed_o) {
-            auto seq(typed_o->fresh_seq());
-            for(auto it(fresh_seq()); it != nullptr;
-                it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
+          auto seq(typed_o->fresh_seq());
+          for(auto it(fresh_seq()); it != nullptr;
+              it = it->next_in_place(), seq = seq->next_in_place())
+          {
+            if(seq == nullptr || !runtime::equal(it, seq->first()))
             {
-              if(seq == nullptr || !runtime::equal(it, seq->first()))
-              {
-                return false;
-              }
+              return false;
             }
-            return true;
+          }
+          return true;
         },
-        [](){ return false; },
+        []() { return false; },
         &o);
     }
 

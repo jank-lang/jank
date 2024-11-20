@@ -1,6 +1,8 @@
 #pragma once
 
 #include <jank/runtime/convert.hpp>
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/erasure.hpp>
 
 namespace jank::runtime
 {

@@ -1,6 +1,9 @@
 #pragma once
 
+#include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
+#include <jank/runtime/obj/array_chunk.hpp>
+#include <jank/runtime/obj/cons.hpp>
 
 namespace jank::runtime
 {

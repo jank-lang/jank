@@ -2,13 +2,9 @@
 
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
-#include <jank/runtime/obj/number.hpp>
-#include <jank/runtime/obj/symbol.hpp>
-#include <jank/runtime/obj/keyword.hpp>
-#include <jank/runtime/obj/persistent_vector.hpp>
-#include <jank/runtime/obj/persistent_array_map.hpp>
-#include <jank/runtime/obj/persistent_string.hpp>
-#include <jank/runtime/obj/persistent_list.hpp>
+#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/core.hpp>
+#include <jank/runtime/context.hpp>
 #include <jank/util/escape.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
@@ -582,15 +578,15 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
-        for(size_t i{ 1 }; i < 3; ++i)
+        for(native_integer i{ 1 }; i < 3; ++i)
         {
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr,
                       make_box<obj::persistent_list>(std::in_place,
-                                                     make_box<obj::integer>(1 * i),
-                                                     make_box<obj::integer>(2 * i),
-                                                     make_box<obj::integer>(3 * i),
-                                                     make_box<obj::integer>(4 * i))));
+                                                     make_box<obj::integer>(1ll * i),
+                                                     make_box<obj::integer>(2ll * i),
+                                                     make_box<obj::integer>(3ll * i),
+                                                     make_box<obj::integer>(4ll * i))));
 
           /* Parens, nums, spaces, commas, and optionally more spaces. */
           auto const len(2 + 4 + 3 + 3 + (i == 2 ? 2 : 0));
@@ -666,15 +662,15 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
-        for(size_t i{ 1 }; i < 3; ++i)
+        for(native_integer i{ 1 }; i < 3; ++i)
         {
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr,
                       make_box<obj::persistent_vector>(runtime::detail::native_persistent_vector{
-                        make_box<obj::integer>(1 * i),
-                        make_box<obj::integer>(2 * i),
-                        make_box<obj::integer>(3 * i),
-                        make_box<obj::integer>(4 * i),
+                        make_box<obj::integer>(1ll * i),
+                        make_box<obj::integer>(2ll * i),
+                        make_box<obj::integer>(3ll * i),
+                        make_box<obj::integer>(4ll * i),
                       })));
 
           /* Brackets, nums, spaces, commas, and optionally more spaces. */
@@ -737,16 +733,16 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
-        for(size_t i{ 1 }; i < 3; ++i)
+        for(native_integer i{ 1 }; i < 3; ++i)
         {
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr,
                       make_box<obj::persistent_array_map>(
                         runtime::detail::in_place_unique{},
-                        make_array_box<object_ptr>(make_box<obj::integer>(1 * i),
-                                                   make_box<obj::integer>(2 * i),
-                                                   make_box<obj::integer>(3 * i),
-                                                   make_box<obj::integer>(4 * i)),
+                        make_array_box<object_ptr>(make_box<obj::integer>(1ll * i),
+                                                   make_box<obj::integer>(2ll * i),
+                                                   make_box<obj::integer>(3ll * i),
+                                                   make_box<obj::integer>(4ll * i)),
                         4)));
 
           /* Brackets, nums, spaces, commas, and optionally more spaces. */

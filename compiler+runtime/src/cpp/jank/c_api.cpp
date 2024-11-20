@@ -1,6 +1,13 @@
 #include <cstdarg>
+#include <cstdint>
+
+#include <utility>
 
 #include <jank/c_api.h>
+#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/runtime/core.hpp>
+#include <jank/profile/time.hpp>
 
 using namespace jank;
 using namespace jank::runtime;
@@ -91,7 +98,7 @@ extern "C"
   jank_object_ptr jank_deref(jank_object_ptr const o)
   {
     auto const o_obj(reinterpret_cast<object *>(o));
-    return behavior::deref(o_obj);
+    return deref(o_obj);
   }
 
   jank_object_ptr jank_call0(jank_object_ptr const f)

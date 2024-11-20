@@ -2,6 +2,11 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/native_persistent_list.hpp>
+#include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
+#include <jank/runtime/obj/persistent_string.hpp>
+#include <jank/runtime/obj/character.hpp>
 
 namespace jank::runtime
 {

@@ -1,3 +1,10 @@
+#include <magic_enum.hpp>
+
+#include <jank/runtime/obj/transient_hash_set.hpp>
+#include <jank/runtime/obj/persistent_hash_set.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/obj/nil.hpp>
+
 namespace jank::runtime
 {
   obj::transient_hash_set::static_object(runtime::detail::native_persistent_hash_set &&d)

@@ -4,8 +4,10 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/LLVMContext.h>
 
+#include <jank/runtime/obj/keyword.hpp>
 #include <jank/analyze/expression.hpp>
 #include <jank/analyze/processor.hpp>
+#include <jank/codegen/processor.hpp>
 
 namespace jank::codegen
 {

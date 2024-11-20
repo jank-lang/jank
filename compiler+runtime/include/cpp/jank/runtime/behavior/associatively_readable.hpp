@@ -1,6 +1,6 @@
 #pragma once
 
-#include <jank/runtime/native_box.hpp>
+#include <jank/runtime/object.hpp>
 
 namespace jank::runtime::behavior
 {

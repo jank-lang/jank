@@ -1,6 +1,7 @@
 #include <CLI/CLI.hpp>
 
 #include <jank/util/cli.hpp>
+#include <jank/runtime/module/loader.hpp>
 
 namespace jank::util::cli
 {

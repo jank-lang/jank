@@ -1,6 +1,8 @@
-#include <iostream>
+#include <magic_enum.hpp>
 
 #include <jank/runtime/obj/native_function_wrapper.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/runtime/core/seq.hpp>
 
 namespace jank::runtime
 {

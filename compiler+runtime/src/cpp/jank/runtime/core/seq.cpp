@@ -1,13 +1,19 @@
 #include <fmt/core.h>
 
+#include <jank/runtime/erasure.hpp>
 #include <jank/runtime/behavior/associatively_readable.hpp>
 #include <jank/runtime/behavior/associatively_writable.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/behavior/conjable.hpp>
 #include <jank/runtime/behavior/countable.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
-#include <jank/runtime/obj/persistent_array_map.hpp>
-#include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/behavior/sequential.hpp>
+#include <jank/runtime/behavior/collection_like.hpp>
+#include <jank/runtime/behavior/transientable.hpp>
+#include <jank/runtime/behavior/indexable.hpp>
+#include <jank/runtime/behavior/stackable.hpp>
+#include <jank/runtime/behavior/chunkable.hpp>
+#include <jank/runtime/core.hpp>
 
 namespace jank::runtime
 {
@@ -1046,7 +1052,7 @@ namespace jank::runtime
 
   object_ptr chunk_buffer(object_ptr const capacity)
   {
-    return make_box<obj::chunk_buffer>(to_int(capacity));
+    return make_box<obj::chunk_buffer>(static_cast<size_t>(to_int(capacity)));
   }
 
   object_ptr chunk_append(object_ptr const buff, object_ptr const val)

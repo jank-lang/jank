@@ -2,6 +2,7 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/persistent_string_sequence.hpp>
+#include <jank/result.hpp>
 
 namespace jank::runtime
 {

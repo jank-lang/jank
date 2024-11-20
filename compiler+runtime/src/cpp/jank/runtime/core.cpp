@@ -1,4 +1,9 @@
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/behavior/comparable.hpp>
+#include <jank/runtime/behavior/nameable.hpp>
+#include <jank/runtime/behavior/derefable.hpp>
+#include <jank/runtime/context.hpp>
 
 namespace jank::runtime
 {
@@ -113,7 +118,7 @@ namespace jank::runtime
     return obj::nil::nil_const();
   }
 
-  object_ptr println(object_ptr const more)
+  object_ptr println(object_ptr const args)
   {
     visit_object(
       [](auto const typed_more) {
@@ -142,7 +147,7 @@ namespace jank::runtime
                                                 typed_more->to_string()) };
         }
       },
-      more);
+      args);
     return obj::nil::nil_const();
   }
 
@@ -174,7 +179,7 @@ namespace jank::runtime
     return obj::nil::nil_const();
   }
 
-  object_ptr prn(object_ptr const more)
+  object_ptr prn(object_ptr const args)
   {
     visit_object(
       [](auto const typed_more) {
@@ -203,7 +208,7 @@ namespace jank::runtime
                                                 typed_more->to_string()) };
         }
       },
-      more);
+      args);
     return obj::nil::nil_const();
   }
 

@@ -1,4 +1,7 @@
 #include <jank/runtime/behavior/metadatable.hpp>
+#include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/obj/nil.hpp>
 
 namespace jank::runtime::behavior::detail
 {

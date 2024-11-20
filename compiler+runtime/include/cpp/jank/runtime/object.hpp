@@ -4,6 +4,8 @@
 
 #include <fmt/format.h>
 
+#include <jank/type.hpp>
+
 /* TODO: Move to obj namespace */
 namespace jank::runtime
 {

@@ -1,5 +1,6 @@
 #include <jank/runtime/obj/cons.hpp>
-#include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/core.hpp>
+#include <jank/runtime/erasure.hpp>
 
 namespace jank::runtime
 {
@@ -67,28 +68,20 @@ namespace jank::runtime
 
   native_bool obj::cons::equal(object const &o) const
   {
-    return visit_object(
+    return visit_seqable(
       [this](auto const typed_o) {
-        using T = typename decltype(typed_o)::value_type;
-
-        if constexpr(!behavior::seqable<T>)
+        auto seq(typed_o->fresh_seq());
+        for(auto it(fresh_seq()); it != nullptr;
+            it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
         {
-          return false;
-        }
-        else
-        {
-          auto seq(typed_o->fresh_seq());
-          for(auto it(fresh_seq()); it != nullptr;
-              it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
+          if(seq == nullptr || !runtime::equal(it, seq->first()))
           {
-            if(seq == nullptr || !runtime::equal(it, seq->first()))
-            {
-              return false;
-            }
+            return false;
           }
-          return true;
         }
+        return true;
       },
+      []() { return false; },
       &o);
   }
 

@@ -1,4 +1,8 @@
+#include <magic_enum.hpp>
+
 #include <jank/runtime/obj/chunk_buffer.hpp>
+#include <jank/runtime/obj/array_chunk.hpp>
+#include <jank/runtime/core/math.hpp>
 
 namespace jank::runtime
 {

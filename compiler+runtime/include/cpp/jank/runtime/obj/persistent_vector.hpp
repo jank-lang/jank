@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/detail/type.hpp>
 #include <jank/runtime/obj/persistent_vector_sequence.hpp>
 
 namespace jank::runtime

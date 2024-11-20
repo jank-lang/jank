@@ -1,7 +1,7 @@
 #pragma once
 
+#include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
-#include <jank/runtime/core/to_string.hpp>
 
 namespace jank::runtime
 {
@@ -9,6 +9,9 @@ namespace jank::runtime
   {
     using persistent_list = static_object<object_type::persistent_list>;
     using persistent_list_ptr = native_box<persistent_list>;
+
+    using persistent_vector = static_object<object_type::persistent_vector>;
+    using persistent_vector_ptr = native_box<persistent_vector>;
   }
 
   template <typename T>
@@ -55,23 +58,6 @@ namespace jank::runtime
   }
 
   object_ptr next_in_place(object_ptr s);
-
-  /* TODO: core header post-erasure? */
-  //template <typename T>
-  //requires behavior::sequenceable<T>
-  //auto rest(native_box<T> const seq)
-  //{
-  //  if(!seq || seq == obj::nil::nil_const())
-  //  {
-  //    return obj::persistent_list::empty();
-  //  }
-  //  auto const ret(seq->next());
-  //  if(ret == nullptr)
-  //  {
-  //    return obj::persistent_list::empty();
-  //  }
-  //  return ret;
-  //}
 
   object_ptr rest(object_ptr s);
 
@@ -134,39 +120,6 @@ namespace jank::runtime
 
   obj::persistent_list_ptr list(object_ptr s);
   obj::persistent_vector_ptr vec(object_ptr s);
-
-  template <typename It>
-  native_bool equal(object const &o, It const begin, It const end)
-  {
-    return visit_seqable(
-      [](auto const typed_o, auto const begin, auto const end) -> native_bool {
-        using T = typename decltype(typed_o)::value_type;
-
-        /* nil is seqable, but we don't want it to be equal to an empty collection.
-           An empty seq itself is nil, but that's different. */
-        if constexpr(std::same_as<T, obj::nil>)
-        {
-          return false;
-        }
-        else
-        {
-          auto seq(typed_o->fresh_seq());
-          auto it(begin);
-          for(; it != end; ++it, seq = runtime::next_in_place(seq))
-          {
-            if(seq == nullptr || !runtime::equal(*it, seq->first()))
-            {
-              return false;
-            }
-          }
-          return seq == nullptr && it == end;
-        }
-      },
-      []() { return false; },
-      &o,
-      begin,
-      end);
-  }
 
   native_bool sequence_equal(object_ptr l, object_ptr r);
 

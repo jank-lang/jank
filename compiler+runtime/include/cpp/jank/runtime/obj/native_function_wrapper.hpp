@@ -3,6 +3,7 @@
 #include <iostream>
 #include <any>
 
+#include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 

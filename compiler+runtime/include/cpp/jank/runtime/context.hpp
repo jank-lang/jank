@@ -145,5 +145,6 @@ namespace jank::runtime
       thread_binding_frames;
   };
 
+  /* NOLINTNEXTLINE */
   extern context *__rt_ctx;
 }

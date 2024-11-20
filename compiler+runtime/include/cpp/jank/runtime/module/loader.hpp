@@ -2,6 +2,9 @@
 
 #include <boost/filesystem/path.hpp>
 
+#include <jank/runtime/object.hpp>
+#include <jank/result.hpp>
+
 namespace jank::runtime
 {
   struct context;

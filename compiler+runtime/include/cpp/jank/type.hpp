@@ -4,6 +4,15 @@
 #include <set>
 #include <string_view>
 
+#include <boost/unordered_map.hpp>
+
+#include <gc/gc_cpp.h>
+#include <gc/gc_allocator.h>
+
+#include <immer/heap/gc_heap.hpp>
+#include <immer/heap/heap_policy.hpp>
+#include <immer/memory_policy.hpp>
+
 #include <folly/FBVector.h>
 
 namespace jank

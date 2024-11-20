@@ -1,10 +1,12 @@
 #pragma once
 
-#include <unordered_map>
-
-#include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/option.hpp>
+
+namespace jank::runtime
+{
+  struct context;
+}
 
 namespace jank::analyze
 {
@@ -116,6 +118,7 @@ namespace jank::analyze
       lifted_constants;
     /* This is only set if the frame type is fn. */
     expr::function_context_ptr fn_ctx{};
+    /* TODO: Remove this. */
     runtime::context &rt_ctx;
   };
 
