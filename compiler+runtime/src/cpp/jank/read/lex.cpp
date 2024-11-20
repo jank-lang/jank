@@ -299,12 +299,18 @@ namespace jank::read
       }
       return false;
     }
+
+    static native_bool is_list_delimiter(char32_t c)
+    {
+      return c == '(' || c == ')' || c == '{' || c == '}' || c == '[' || c == ']';
+    }
     
     static native_bool is_symbol_char(char32_t const c)
     {
-      return !std::iswspace(c) && (std::iswalnum(static_cast<wint_t>(c)) != 0 || c == '_' || c == '-' || c == '/'
-                                   || c == '?' || c == '!' || c == '+' || c == '*' || c == '=' || c == '.' || c == '&'
-                                   || c == '<' || c == '>' || c == '#' || c == '%' || is_utf8_char(c));
+      return !std::iswspace(c) && !is_list_delimiter(c) &&
+        (std::iswalnum(static_cast<wint_t>(c)) != 0 || c == '_' || c == '-' || c == '/'
+         || c == '?' || c == '!' || c == '+' || c == '*' || c == '=' || c == '.' || c == '&'
+         || c == '<' || c == '>' || c == '#' || c == '%' || is_utf8_char(c));
     }
 
     result<token, error> processor::next()
