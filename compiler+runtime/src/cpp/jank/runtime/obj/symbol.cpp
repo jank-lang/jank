@@ -2,7 +2,7 @@
 
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/core/to_string.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 
 namespace jank::runtime
 {

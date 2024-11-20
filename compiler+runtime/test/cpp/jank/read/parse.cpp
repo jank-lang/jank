@@ -2,7 +2,7 @@
 
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/util/escape.hpp>

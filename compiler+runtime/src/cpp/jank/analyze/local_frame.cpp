@@ -3,7 +3,7 @@
 #include <fmt/core.h>
 
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/behavior/number_like.hpp>
 #include <jank/analyze/processor.hpp>

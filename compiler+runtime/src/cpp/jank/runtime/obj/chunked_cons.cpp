@@ -1,5 +1,5 @@
 #include <jank/runtime/obj/chunked_cons.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/behavior/chunkable.hpp>
 

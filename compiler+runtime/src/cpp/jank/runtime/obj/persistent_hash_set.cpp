@@ -1,5 +1,5 @@
 #include <jank/runtime/obj/persistent_hash_set.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 
 namespace jank::runtime
 {

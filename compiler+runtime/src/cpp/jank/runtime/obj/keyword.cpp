@@ -1,5 +1,5 @@
 #include <jank/runtime/obj/keyword.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core/seq.hpp>
 
 namespace jank::runtime
@@ -52,7 +52,7 @@ namespace jank::runtime
 
   native_integer obj::keyword::compare(object const &o) const
   {
-    return visit_type<obj::keyword>([this](auto const typed_o) { return compare(*typed_o); }, &o);
+    return compare(*expect_object<obj::keyword>(&o));
   }
 
   native_integer obj::keyword::compare(obj::keyword const &s) const

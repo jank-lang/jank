@@ -1,6 +1,6 @@
 #include <fmt/core.h>
 
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/associatively_readable.hpp>
 #include <jank/runtime/behavior/associatively_writable.hpp>
 #include <jank/runtime/behavior/callable.hpp>

@@ -4,7 +4,7 @@
 
 #include <jank/read/parse.hpp>
 #include <jank/util/escape.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/util/scope_exit.hpp>

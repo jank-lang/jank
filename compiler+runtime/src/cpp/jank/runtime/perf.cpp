@@ -1,7 +1,7 @@
 #include <nanobench.h>
 
 #include <jank/runtime/perf.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 
 namespace jank::runtime::perf
 {

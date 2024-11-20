@@ -2,7 +2,7 @@
 
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/ns.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/codegen/processor.hpp>

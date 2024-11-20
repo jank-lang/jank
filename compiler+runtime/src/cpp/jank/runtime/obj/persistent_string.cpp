@@ -1,7 +1,7 @@
 #include <fmt/compile.h>
 
 #include <jank/runtime/obj/persistent_string.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/util/escape.hpp>
 

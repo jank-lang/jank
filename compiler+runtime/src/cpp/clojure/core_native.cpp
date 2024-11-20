@@ -2,6 +2,8 @@
 #include <jank/runtime/convert.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/visit.hpp>
 
 namespace clojure::core_native
 {

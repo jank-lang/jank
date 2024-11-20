@@ -3,7 +3,8 @@
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/rtti.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/profile/time.hpp>
 

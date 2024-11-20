@@ -22,7 +22,7 @@
 #include <jank/util/scope_exit.hpp>
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/type.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/seqable.hpp>

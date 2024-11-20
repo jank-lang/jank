@@ -1,6 +1,6 @@
 #include <jank/runtime/obj/multi_function.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core.hpp>
 
 namespace jank::runtime

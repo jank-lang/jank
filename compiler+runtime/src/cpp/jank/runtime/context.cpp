@@ -7,7 +7,7 @@
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/codegen/processor.hpp>

@@ -3,7 +3,7 @@
 #include <fmt/compile.h>
 
 #include <jank/runtime/obj/number.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 
 namespace jank::runtime
 {

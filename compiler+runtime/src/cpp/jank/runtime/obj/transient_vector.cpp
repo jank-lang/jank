@@ -1,7 +1,11 @@
 #include <magic_enum.hpp>
 
 #include <jank/runtime/obj/transient_vector.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/rtti.hpp>
 
 namespace jank::runtime
 {

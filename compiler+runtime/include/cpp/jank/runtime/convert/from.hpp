@@ -2,7 +2,7 @@
 
 #include <jank/runtime/convert.hpp>
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/rtti.hpp>
 
 namespace jank::runtime
 {

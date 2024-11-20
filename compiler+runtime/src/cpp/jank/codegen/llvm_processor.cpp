@@ -4,7 +4,7 @@
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 #include <jank/profile/time.hpp>
 
 namespace jank::codegen

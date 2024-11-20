@@ -2,7 +2,7 @@
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/core/math.hpp>
 #include <jank/runtime/core/make_box.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 
 namespace jank::runtime

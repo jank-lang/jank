@@ -1,5 +1,6 @@
 #include <jank/runtime/core/munge.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/obj/persistent_string.hpp>
+#include <jank/runtime/rtti.hpp>
 
 namespace jank::runtime
 {

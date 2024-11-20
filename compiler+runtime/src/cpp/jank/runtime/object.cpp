@@ -1,6 +1,6 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/core.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 #include <jank/hash.hpp>
 
 namespace jank::runtime

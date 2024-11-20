@@ -1,5 +1,5 @@
 #include <jank/runtime/obj/repeat.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/math.hpp>
 #include <jank/runtime/core/make_box.hpp>
 

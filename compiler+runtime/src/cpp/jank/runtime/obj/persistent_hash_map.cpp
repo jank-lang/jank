@@ -2,7 +2,7 @@
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/transient_hash_map.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 
 namespace jank::runtime
 {

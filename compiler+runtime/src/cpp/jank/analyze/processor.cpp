@@ -4,7 +4,7 @@
 
 #include <fmt/core.h>
 
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/number_like.hpp>
 #include <jank/runtime/core/truthy.hpp>

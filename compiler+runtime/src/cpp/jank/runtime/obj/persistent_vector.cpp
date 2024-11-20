@@ -1,6 +1,6 @@
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/transient_vector.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/seq_ext.hpp>
 #include <jank/runtime/behavior/sequential.hpp>
 

@@ -1,5 +1,5 @@
 #include <jank/runtime/core/truthy.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/rtti.hpp>
 
 namespace jank::runtime
 {

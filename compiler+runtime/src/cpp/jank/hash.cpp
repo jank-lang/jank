@@ -1,5 +1,5 @@
 #include <jank/hash.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 
 namespace jank::hash
 {

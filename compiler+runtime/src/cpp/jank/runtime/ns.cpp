@@ -1,5 +1,5 @@
 #include <jank/runtime/ns.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/rtti.hpp>
 #include <jank/runtime/context.hpp>
 
 namespace jank::runtime

@@ -1,6 +1,9 @@
+#include <magic_enum.hpp>
+
 #include <jank/runtime/obj/jit_closure.hpp>
+#include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/rtti.hpp>
 
 namespace jank::runtime
 {

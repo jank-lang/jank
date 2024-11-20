@@ -1,7 +1,7 @@
 #include <jank/runtime/obj/iterator.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/core.hpp>
-#include <jank/runtime/erasure.hpp>
+#include <jank/runtime/visit.hpp>
 
 namespace jank::runtime
 {
