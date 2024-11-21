@@ -566,29 +566,6 @@ namespace jank::read::lex
         }));
       }
 
-      SUBCASE("Positive no leading digit")
-      {
-        processor p{ ".0" };
-        native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_results({
-                error{ 0, "unexpected character: ." },
-                token{ 1, token_kind::integer, 0ll },
-        }));
-      }
-
-      SUBCASE("Negative no leading digit")
-      {
-        processor p{ "-.0" };
-        native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_results({
-                error{ 0, 1, "invalid number" },
-                error{ 1, "unexpected character: ." },
-                token{ 2, token_kind::integer, 0ll },
-        }));
-      }
-
       SUBCASE("Too many dots")
       {
         {
@@ -597,7 +574,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 3, "invalid number" },
-                  error{ 3, "unexpected character: ." },
+                  token{ 3, 1, token_kind::symbol, "."sv},
           }));
         }
 
@@ -607,8 +584,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 2, "invalid number" },
-                  error{ 2, "unexpected character: ." },
-                  token{ 3, token_kind::integer, 0ll },
+                  token{ 2, 2, token_kind::symbol, ".0"sv },
           }));
         }
         {
@@ -617,8 +593,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 3, "invalid number" },
-                  error{ 3, "unexpected character: ." },
-                  token{ 4, token_kind::integer, 0ll },
+                  token{ 3, 2, token_kind::symbol, ".0"sv },
           }));
         }
       }
@@ -701,12 +676,11 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 3, "invalid number" },
-                  error{ 3, "unexpected character: ." },
+                  token{ 3, 1, token_kind::symbol, "."sv },
                   token{ 5, 4, token_kind::real, 12.3l },
                   error{ 10, 14, "invalid number" },
-                  error{ 14, "unexpected character: ." },
-                  error{ 15, "expected whitespace before next token" },
-                  token{ 15, token_kind::integer, 3ll },
+                  error{ 14, "expected whitespace before next token" },
+                  token{ 14, 2, token_kind::symbol, ".3"sv },
           }));
         }
 
