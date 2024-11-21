@@ -42,7 +42,7 @@ namespace jank::jit
     auto const jank_path(util::process_location().unwrap().parent_path());
     auto const include_path(jank_path / "../include");
 
-    native_persistent_string_view O{ "-O0" };
+    native_persistent_string O{ "-O0" };
     switch(optimization_level)
     {
       case 0:
@@ -72,7 +72,7 @@ namespace jank::jit
     {
       args.emplace_back(strdup(flag.c_str()));
     }
-    args.emplace_back(strdup(O.data()));
+    args.emplace_back(strdup(O.c_str()));
 
     //fmt::println("jit flags {}", args);
 

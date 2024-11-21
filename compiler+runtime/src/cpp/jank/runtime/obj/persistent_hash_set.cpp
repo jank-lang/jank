@@ -64,7 +64,7 @@ namespace jank::runtime
 
   void obj::persistent_hash_set::to_string(fmt::memory_buffer &buff) const
   {
-    return runtime::to_string(data.begin(), data.end(), "#{", '}', buff);
+    runtime::to_string(data.begin(), data.end(), "#{", '}', buff);
   }
 
   native_persistent_string obj::persistent_hash_set::to_string() const
@@ -121,7 +121,7 @@ namespace jank::runtime
     return ret;
   }
 
-  object_ptr obj::persistent_hash_set::call(object_ptr const o)
+  object_ptr obj::persistent_hash_set::call(object_ptr const o) const
   {
     auto const found(data.find(o));
     if(!found)

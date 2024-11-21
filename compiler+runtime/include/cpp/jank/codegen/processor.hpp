@@ -48,7 +48,7 @@ namespace jank::codegen
     native_persistent_string unboxed_name;
   };
 
-  enum class compilation_target
+  enum class compilation_target : uint8_t
   {
     ns,
     function,

@@ -9,7 +9,7 @@
 /* TODO: Move to obj namespace */
 namespace jank::runtime
 {
-  enum class object_type
+  enum class object_type : uint8_t
   {
     nil,
 

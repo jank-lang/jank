@@ -22,7 +22,7 @@ namespace jank::runtime
     static constexpr native_bool is_sequential{ true };
 
     static_object() = default;
-    static_object(static_object &&) = default;
+    static_object(static_object &&) noexcept = default;
     static_object(static_object const &) = default;
     static_object(value_type &&d);
     static_object(value_type const &d);

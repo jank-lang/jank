@@ -428,6 +428,7 @@ namespace jank
       {
         return false;
       }
+      /* NOLINTNEXTLINE(bugprone-suspicious-stringview-data-usage) */
       return traits_type::compare(data(), s.data(), s_sz) == 0;
     }
 
@@ -459,6 +460,7 @@ namespace jank
       {
         return false;
       }
+      /* NOLINTNEXTLINE(bugprone-suspicious-stringview-data-usage) */
       return traits_type::compare(data() + this_sz - s_sz, s.data(), s_sz) == 0;
     }
 
@@ -769,6 +771,7 @@ namespace jank
         constexpr uint8_t word_width{ sizeof(size_type) };
         /* NOTE: We're writing in reverse order here, but it uses one less instruction and
          * is marginally faster than duplicating the code each each case to write in order. */
+        /* NOLINTNEXTLINE(bugprone-switch-missing-default-case) */
         switch((byte_size + word_width - 1) / word_width)
         {
           case 3:

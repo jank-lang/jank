@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string_view>
-
 #include <boost/variant.hpp>
 
 #include <jank/result.hpp>
@@ -9,7 +7,7 @@
 
 namespace jank::read::lex
 {
-  enum class token_kind
+  enum class token_kind : uint8_t
   {
     open_paren,
     close_paren,
@@ -103,7 +101,7 @@ namespace jank::read::lex
 
   std::ostream &operator<<(std::ostream &os, token const &t);
   std::ostream &operator<<(std::ostream &os, token::no_data const &t);
-  std::ostream &operator<<(std::ostream &os, ratio const &t);
+  std::ostream &operator<<(std::ostream &os, ratio const &r);
 }
 
 namespace jank::read

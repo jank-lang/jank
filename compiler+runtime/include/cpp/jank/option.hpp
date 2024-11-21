@@ -74,7 +74,8 @@ namespace jank
     }
 
     template <typename D>
-    constexpr option(option<D> &&o, std::enable_if_t<std::is_constructible_v<T, D>> * = nullptr)
+    requires(std::is_constructible_v<T, D>)
+    constexpr option(option<D> &&o)
       : set{ std::move(o.set) }
     {
       if(set)
@@ -128,8 +129,9 @@ namespace jank
     }
 
     template <typename D>
+    requires(std::is_constructible_v<T, D>)
     // NOLINTNEXTLINE(cppcoreguidelines-c-copy-assignment-signature): It gets this wrong.
-    constexpr std::enable_if_t<std::is_constructible_v<T, D>, option<T> &> operator=(D &&rhs)
+    constexpr option<T> &operator=(D &&rhs)
     {
       reset();
 
@@ -142,7 +144,7 @@ namespace jank
     {
       if(set)
       {
-        reinterpret_cast<T *>(reinterpret_cast<T *>(data))->~T();
+        reinterpret_cast<T *>(data)->~T();
       }
       set = false;
     }

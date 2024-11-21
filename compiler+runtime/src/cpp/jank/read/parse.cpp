@@ -1274,8 +1274,9 @@ namespace jank::read::parse
     {
       return err(error{ token.pos, "Divide by zero" });
     }
-    return object_source_info{ make_box<obj::real>(static_cast<native_real>(ratio_data.numerator)
-                                                   / ratio_data.denominator),
+    return object_source_info{ make_box<obj::real>(
+                                 static_cast<native_real>(ratio_data.numerator)
+                                 / static_cast<native_real>(ratio_data.denominator)),
                                token,
                                token };
   }

@@ -147,12 +147,12 @@ namespace jank::runtime
     return make_box<obj::persistent_hash_map>(std::move(data).persistent());
   }
 
-  object_ptr obj::transient_hash_map::call(object_ptr const o)
+  object_ptr obj::transient_hash_map::call(object_ptr const o) const
   {
     return get(o);
   }
 
-  object_ptr obj::transient_hash_map::call(object_ptr const o, object_ptr const fallback)
+  object_ptr obj::transient_hash_map::call(object_ptr const o, object_ptr const fallback) const
   {
     return get(o, fallback);
   }

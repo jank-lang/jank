@@ -663,7 +663,7 @@ namespace jank::codegen
     auto const fn_type(
       llvm::FunctionType::get(builder->getPtrTy(), { builder->getPtrTy() }, false));
     auto fn(module->getOrInsertFunction("jank_throw", fn_type));
-    llvm::dyn_cast<llvm::Function>(fn.getCallee())->setDoesNotReturn();
+    llvm::cast<llvm::Function>(fn.getCallee())->setDoesNotReturn();
 
     llvm::SmallVector<llvm::Value *, 2> args{ value };
     auto const call(builder->CreateCall(fn, args));
@@ -1236,7 +1236,8 @@ namespace jank::codegen
     }
   }
 
-  llvm::GlobalVariable *llvm_processor::create_global_var(native_persistent_string const &name)
+  llvm::GlobalVariable *
+  llvm_processor::create_global_var(native_persistent_string const &name) const
   {
     return new llvm::GlobalVariable{ builder->getPtrTy(),
                                      false,
@@ -1247,7 +1248,7 @@ namespace jank::codegen
 
   llvm::StructType *
   llvm_processor::get_or_insert_struct_type(std::string const &name,
-                                            std::vector<llvm::Type *> const &fields)
+                                            std::vector<llvm::Type *> const &fields) const
   {
     auto const found(llvm::StructType::getTypeByName(*context, name));
     if(found)
@@ -1260,7 +1261,7 @@ namespace jank::codegen
     return struct_type;
   }
 
-  native_persistent_string llvm_processor::to_string()
+  native_persistent_string llvm_processor::to_string() const
   {
     module->print(llvm::outs(), nullptr);
     return "";

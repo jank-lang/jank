@@ -52,8 +52,8 @@ namespace jank::runtime
     native_box<persistent_type> to_persistent();
 
     /* behavior::callable */
-    object_ptr call(object_ptr);
-    object_ptr call(object_ptr, object_ptr);
+    object_ptr call(object_ptr) const;
+    object_ptr call(object_ptr, object_ptr) const;
 
     void assert_active() const;
 

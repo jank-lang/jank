@@ -42,7 +42,7 @@ namespace jank::runtime
     native_box<persistent_type> to_persistent();
 
     /* behavior::callable */
-    object_ptr call(object_ptr const);
+    object_ptr call(object_ptr const) const;
 
     /* behavior::associatively_readable */
     object_ptr get(object_ptr const idx) const;

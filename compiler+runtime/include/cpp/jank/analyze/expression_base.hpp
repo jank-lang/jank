@@ -11,7 +11,7 @@ namespace jank::analyze
 {
   using namespace jank::runtime;
 
-  enum class expression_position
+  enum class expression_position : uint8_t
   {
     value,
     statement,

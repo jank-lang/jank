@@ -30,7 +30,7 @@ namespace jank::runtime
         return runtime::equal(l, r);
       }
 
-      inline native_bool operator()(object_ptr const l, object_ptr const r) const
+      native_bool operator()(object_ptr const l, object_ptr const r) const
       {
         return runtime::equal(l, r);
       }
@@ -38,7 +38,7 @@ namespace jank::runtime
 
     struct object_ptr_compare
     {
-      inline native_bool operator()(object_ptr const l, object_ptr const r) const
+      native_bool operator()(object_ptr const l, object_ptr const r) const
       {
         return runtime::compare(l, r) < 0;
       }

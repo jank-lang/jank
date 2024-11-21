@@ -72,7 +72,7 @@ namespace jank::runtime
     return make_box<obj::persistent_hash_set>(data.persistent());
   }
 
-  object_ptr obj::transient_hash_set::call(object_ptr const elem)
+  object_ptr obj::transient_hash_set::call(object_ptr const elem) const
   {
     assert_active();
     auto const found(data.find(elem));
@@ -83,7 +83,7 @@ namespace jank::runtime
     return *found;
   }
 
-  object_ptr obj::transient_hash_set::call(object_ptr const elem, object_ptr const fallback)
+  object_ptr obj::transient_hash_set::call(object_ptr const elem, object_ptr const fallback) const
   {
     assert_active();
     auto const found(data.find(elem));
@@ -94,17 +94,17 @@ namespace jank::runtime
     return *found;
   }
 
-  object_ptr obj::transient_hash_set::get(object_ptr const elem)
+  object_ptr obj::transient_hash_set::get(object_ptr const elem) const
   {
     return call(elem);
   }
 
-  object_ptr obj::transient_hash_set::get(object_ptr const elem, object_ptr const fallback)
+  object_ptr obj::transient_hash_set::get(object_ptr const elem, object_ptr const fallback) const
   {
     return call(elem, fallback);
   }
 
-  object_ptr obj::transient_hash_set::get_entry(object_ptr const elem)
+  object_ptr obj::transient_hash_set::get_entry(object_ptr const elem) const
   {
     auto const found = call(elem);
     auto const nil(obj::nil::nil_const());

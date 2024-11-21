@@ -74,7 +74,7 @@ namespace jank::runtime
     return make_box<obj::persistent_vector>(data.persistent());
   }
 
-  object_ptr obj::transient_vector::call(object_ptr const idx)
+  object_ptr obj::transient_vector::call(object_ptr const idx) const
   {
     assert_active();
     if(idx->type == object_type::integer)

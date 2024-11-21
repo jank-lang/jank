@@ -6,6 +6,7 @@ bugprone-*,\
 performance-*,\
 readability-*,\
 -clang-analyzer-cplusplus.NewDeleteLeaks,\
+-clang-analyzer-cplusplus.NewDelete,\
 -modernize-use-trailing-return-type,\
 -modernize-use-nodiscard,\
 -modernize-pass-by-value,\
@@ -23,6 +24,7 @@ readability-*,\
 -cppcoreguidelines-pro-type-const-cast,\
 -cppcoreguidelines-owning-memory,\
 -cppcoreguidelines-avoid-const-or-ref-data-members,\
+-cppcoreguidelines-rvalue-reference-param-not-moved,\
 -bugprone-easily-swappable-parameters,\
 -bugprone-reserved-identifier,\
 -readability-redundant-member-init,\
@@ -38,6 +40,7 @@ readability-*,\
 -readability-isolate-declaration,\
 -readability-qualified-auto,\
 -readability-redundant-declaration,\
+-readability-use-anyofallof,\
 -performance-noexcept-move-constructor,\
 -performance-move-const-arg"
 

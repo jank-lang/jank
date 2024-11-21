@@ -64,7 +64,7 @@ namespace jank::runtime
 
   void obj::persistent_sorted_set::to_string(fmt::memory_buffer &buff) const
   {
-    return runtime::to_string(data.begin(), data.end(), "#{", '}', buff);
+    runtime::to_string(data.begin(), data.end(), "#{", '}', buff);
   }
 
   native_persistent_string obj::persistent_sorted_set::to_string() const

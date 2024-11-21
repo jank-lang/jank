@@ -71,12 +71,12 @@ namespace jank::runtime
 
   native_real add(obj::real_ptr const l, obj::integer_ptr const r)
   {
-    return l->data + r->data;
+    return l->data + static_cast<native_real>(r->data);
   }
 
   native_real add(obj::integer_ptr const l, obj::real_ptr const r)
   {
-    return l->data + r->data;
+    return static_cast<native_real>(l->data) + r->data;
   }
 
   native_real add(object_ptr const l, native_real const r)
@@ -102,12 +102,12 @@ namespace jank::runtime
 
   native_real add(native_integer const l, native_real const r)
   {
-    return l + r;
+    return static_cast<native_real>(l) + r;
   }
 
   native_real add(native_real const l, native_integer const r)
   {
-    return l + r;
+    return l + static_cast<native_real>(r);
   }
 
   object_ptr add(object_ptr const l, native_integer const r)
@@ -198,12 +198,12 @@ namespace jank::runtime
 
   native_real sub(obj::real_ptr const l, obj::integer_ptr const r)
   {
-    return l->data - r->data;
+    return l->data - static_cast<native_real>(r->data);
   }
 
   native_real sub(obj::integer_ptr const l, obj::real_ptr const r)
   {
-    return l->data - r->data;
+    return static_cast<native_real>(l->data) - r->data;
   }
 
   native_real sub(object_ptr const l, native_real const r)
@@ -229,12 +229,12 @@ namespace jank::runtime
 
   native_real sub(native_integer const l, native_real const r)
   {
-    return l - r;
+    return static_cast<native_real>(l) - r;
   }
 
   native_real sub(native_real const l, native_integer const r)
   {
-    return l - r;
+    return l - static_cast<native_real>(r);
   }
 
   object_ptr sub(object_ptr const l, native_integer const r)
@@ -325,12 +325,12 @@ namespace jank::runtime
 
   native_real div(obj::real_ptr const l, obj::integer_ptr const r)
   {
-    return l->data / r->data;
+    return l->data / static_cast<native_real>(r->data);
   }
 
   native_real div(obj::integer_ptr const l, obj::real_ptr const r)
   {
-    return l->data / r->data;
+    return static_cast<native_real>(l->data) / r->data;
   }
 
   native_real div(object_ptr const l, native_real const r)
@@ -356,12 +356,12 @@ namespace jank::runtime
 
   native_real div(native_integer const l, native_real const r)
   {
-    return l / r;
+    return static_cast<native_real>(l) / r;
   }
 
   native_real div(native_real const l, native_integer const r)
   {
-    return l / r;
+    return l / static_cast<native_real>(r);
   }
 
   object_ptr div(object_ptr const l, native_integer const r)
@@ -452,12 +452,12 @@ namespace jank::runtime
 
   native_real mul(obj::real_ptr const l, obj::integer_ptr const r)
   {
-    return l->data * r->data;
+    return l->data * static_cast<native_real>(r->data);
   }
 
   native_real mul(obj::integer_ptr const l, obj::real_ptr const r)
   {
-    return l->data * r->data;
+    return static_cast<native_real>(l->data) * r->data;
   }
 
   native_real mul(object_ptr const l, native_real const r)
@@ -483,12 +483,12 @@ namespace jank::runtime
 
   native_real mul(native_integer const l, native_real const r)
   {
-    return l * r;
+    return static_cast<native_real>(l) * r;
   }
 
   native_real mul(native_real const l, native_integer const r)
   {
-    return l * r;
+    return l * static_cast<native_real>(r);
   }
 
   object_ptr mul(object_ptr const l, native_integer const r)
@@ -874,12 +874,12 @@ namespace jank::runtime
 
   native_bool lt(obj::real_ptr const l, obj::integer_ptr const r)
   {
-    return l->data < r->data;
+    return l->data < static_cast<native_real>(r->data);
   }
 
   native_bool lt(obj::integer_ptr const l, obj::real_ptr const r)
   {
-    return l->data < r->data;
+    return static_cast<native_real>(l->data) < r->data;
   }
 
   native_bool lt(object_ptr const l, native_real const r)
@@ -905,12 +905,12 @@ namespace jank::runtime
 
   native_bool lt(native_integer const l, native_real const r)
   {
-    return l < r;
+    return static_cast<native_real>(l) < r;
   }
 
   native_bool lt(native_real const l, native_integer const r)
   {
-    return l < r;
+    return l < static_cast<native_real>(r);
   }
 
   native_bool lt(object_ptr const l, native_integer const r)
@@ -1001,12 +1001,12 @@ namespace jank::runtime
 
   native_bool lte(obj::real_ptr const l, obj::integer_ptr const r)
   {
-    return l->data <= r->data;
+    return l->data <= static_cast<native_real>(r->data);
   }
 
   native_bool lte(obj::integer_ptr const l, obj::real_ptr const r)
   {
-    return l->data <= r->data;
+    return static_cast<native_real>(l->data) <= r->data;
   }
 
   native_bool lte(object_ptr const l, native_real const r)
@@ -1036,12 +1036,12 @@ namespace jank::runtime
 
   native_bool lte(native_integer const l, native_real const r)
   {
-    return l <= r;
+    return static_cast<native_real>(l) <= r;
   }
 
   native_bool lte(native_real const l, native_integer const r)
   {
-    return l <= r;
+    return l <= static_cast<native_real>(r);
   }
 
   native_bool lte(object_ptr const l, native_integer const r)

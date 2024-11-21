@@ -123,12 +123,12 @@ namespace jank::runtime
     return make_box<obj::persistent_sorted_map>(std::move(copy));
   }
 
-  object_ptr obj::persistent_sorted_map::call(object_ptr const o)
+  object_ptr obj::persistent_sorted_map::call(object_ptr const o) const
   {
     return get(o);
   }
 
-  object_ptr obj::persistent_sorted_map::call(object_ptr const o, object_ptr const fallback)
+  object_ptr obj::persistent_sorted_map::call(object_ptr const o, object_ptr const fallback) const
   {
     return get(o, fallback);
   }

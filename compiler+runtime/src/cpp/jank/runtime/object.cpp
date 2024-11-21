@@ -30,8 +30,8 @@ namespace std
     return jank::hash::visit(const_cast<runtime::object *>(&o));
   }
 
-  // NOLINTNEXTLINE(bugprone-exception-escape): TODO: Sort this out.
   native_bool
+  // NOLINTNEXTLINE(bugprone-exception-escape): TODO: Sort this out.
   equal_to<object_ptr>::operator()(object_ptr const lhs, object_ptr const rhs) const noexcept
   {
     if(!lhs)

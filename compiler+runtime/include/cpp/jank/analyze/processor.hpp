@@ -19,7 +19,7 @@ namespace jank::runtime
 
 namespace jank::analyze
 {
-  enum class source_type
+  enum class source_type : uint8_t
   {
     repl,
     file

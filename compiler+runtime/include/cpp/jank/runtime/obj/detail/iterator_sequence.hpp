@@ -15,8 +15,10 @@ namespace jank::runtime::obj::detail
   template <typename Derived, typename It>
   struct iterator_sequence
   {
+    /* NOLINTNEXTLINE(bugprone-crtp-constructor-accessibility) */
     iterator_sequence() = default;
 
+    /* NOLINTNEXTLINE(bugprone-crtp-constructor-accessibility) */
     iterator_sequence(object_ptr const &c, It const &b, It const &e, size_t const s)
       : coll{ c }
       , begin{ b }
