@@ -1395,7 +1395,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                  { 0, 7, token_kind::keyword, ":  "sv }
+                  { 0, 7, token_kind::keyword, "  "sv }
                 }));                      
       }
       
