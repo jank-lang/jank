@@ -303,7 +303,7 @@ namespace jank::read
     static native_bool is_special_char(char32_t c)
     {
       return c == '(' || c == ')' || c == '{' || c == '}' || c == '[' || c == ']'
-        || c == ':' || c == '"' || c == '^' || c == '\\';
+        || c == '"' || c == '^' || c == '\\' || c == '`' || c == '~';
     }
     
     static native_bool is_symbol_char(char32_t const c)
@@ -376,7 +376,7 @@ namespace jank::read
           {
             require_space = false;
 
-            
+            //std::cout << "Character Token\n";
             auto const ch(peek());
             pos++;
 
@@ -402,6 +402,7 @@ namespace jank::read
               }
               if(pt.is_err() || !is_symbol_char(cpoint))
               {
+                //std::cout << "This isn't a char: '" << static_cast<char>(cpoint) << "'\n";
                 break;
               }
               pos += size;
@@ -409,7 +410,7 @@ namespace jank::read
 
             native_persistent_string_view const data{ file.data() + token_start,
                                                       ++pos - token_start };
-
+            //std::cout << "Character: " << data << " : " << data.size() << "\n";
             return ok(token{ token_start, pos - token_start, token_kind::character, data });
           }
         case ';':
@@ -697,7 +698,7 @@ namespace jank::read
             {
               return err(error{ token_start, "invalid keyword: starts with /" });
             }
-            else if(name[0] == ':' && name.size() == 1)
+            else if(name[0] == ':' && name[1] == ':')
             {
               return err(error{ token_start, "invalid keyword: incorrect number of :" });
             }
@@ -786,6 +787,7 @@ namespace jank::read
         /* Reader macros. */
         case '#':
           {
+            //std::cout << "Reader Macro Token\n";
             auto &&e(check_whitespace(found_space));
             if(e.is_some())
             {
@@ -797,15 +799,17 @@ namespace jank::read
             size_t size{};
             if (oc.is_err())
             {
+              //std::cout << "c now equals = ' '\n";
               c = ' ';
+              ++pos;
             }
             else
             {
               c = oc.expect_ok().character;
+              size = oc.expect_ok().len;
+              pos += size;
             }
-            size = oc.expect_ok().len;
-            pos += size;
-
+            //std::cout << "Reader char: " << static_cast<char>(c) << "\n";
             switch(c)
             {
               case '_':
@@ -814,19 +818,21 @@ namespace jank::read
                   token{ token_start, pos - token_start, token_kind::reader_macro_comment });
               case '?':
                 {
+                  //std::cout << "Question Mark case in Reader macro!\n";
                   auto const maybe_splice(peek());
                   char32_t c{};
                   size_t size{};
                   if (maybe_splice.is_err())
                   {
                     c = ' ';
+                    ++pos;
                   }
                   else
                   {
                     c = maybe_splice.expect_ok().character;
+                    size = maybe_splice.expect_ok().len;
+                    pos += size;
                   }
-                  size = maybe_splice.expect_ok().len;
-                  pos += size;
                   if(c == '@')
                   {
                     ++pos;
@@ -842,14 +848,16 @@ namespace jank::read
                   }
                 }
               default:
+                //std::cout << "Default case in Reader macro!\n";
                 break;
             }
-
+            //std::cout << "Reader Macro Pos: " << pos << " Token Start: " << token_start << "\n";
             return ok(token{ token_start, pos - token_start, token_kind::reader_macro });
           }
         /* Syntax quoting. */
         case '`':
           {
+            //std::cout << "Syntax quoting token\n";
             auto &&e(check_whitespace(found_space));
             if(e.is_some())
             {
@@ -863,6 +871,7 @@ namespace jank::read
         /* Syntax unquoting. */
         case '~':
           {
+            //std::cout << "Syntax unquoting token\n";
             auto &&e(check_whitespace(found_space));
             if(e.is_some())
             {
@@ -875,13 +884,14 @@ namespace jank::read
             if (oc.is_err())
             {
               c = ' ';
+              ++pos;
             }
             else
             {
               c = oc.expect_ok().character;
+              size = oc.expect_ok().len;
+              pos += size;
             }
-            size = oc.expect_ok().len;
-            pos += size;
 
             switch(c)
             {

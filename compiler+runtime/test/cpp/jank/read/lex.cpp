@@ -754,14 +754,13 @@ namespace jank::read::lex
         }));
       }
 
-      SUBCASE("Invalid symbol after a valid char")
+      SUBCASE("Valid lexed character with symbol")
       {
         processor p{ R"(\1:)" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                token{ 0, 2, token_kind::character, "\\1"sv },
-                error{ 2, "invalid keyword: expected non-whitespace character after :" }
+                token{ 0, 3, token_kind::character, "\\1:"sv },
         }));
       }
 
@@ -1004,8 +1003,6 @@ namespace jank::read::lex
         CHECK(tokens
               == make_results({
                 error{ 0, "invalid keyword: incorrect number of :" },
-                error{ 2, "expected whitespace before next token" },
-                token{ 2, 4, token_kind::keyword, "foo"sv }
         }));
       }
 
@@ -1016,8 +1013,6 @@ namespace jank::read::lex
         CHECK(tokens
               == make_results({
                 error{ 0, "invalid keyword: incorrect number of :" },
-                error{ 2, "expected whitespace before next token" },
-                token{ 2, 5, token_kind::keyword, ":foo"sv }
         }));
       }
     }
