@@ -16,6 +16,18 @@
 
 namespace jank::jit
 {
+
+  inline native_persistent_string shared_lib_name(native_persistent_string const &lib)
+#if defined(__APPLE__)
+  {
+    return fmt::format("{}.dylib", lib);
+  }
+#elif defined(__linux__)
+  {
+    return fmt::format("lib{}.so", lib);
+  }
+#endif
+
   static void handle_fatal_llvm_error(void * const user_data,
                                       char const *message,
                                       native_bool const gen_crash_diag)
@@ -83,6 +95,16 @@ namespace jank::jit
   processor::processor(native_integer const optimization_level)
     : optimization_level{ optimization_level }
   {
+  }
+
+  processor::processor(util::cli::options const &opts)
+    : optimization_level{ opts.optimization_level }
+  {
+    for(auto const &library_dir : opts.library_dirs)
+    {
+      library_dirs.emplace_back(boost::filesystem::absolute(library_dir.c_str()));
+    }
+
     profile::timer timer{ "jit ctor" };
     /* TODO: Pass this into each fn below so we only do this once on startup. */
     auto const jank_path(util::process_location().unwrap().parent_path());
@@ -102,7 +124,7 @@ namespace jank::jit
 
     auto const include_path(jank_path / "../include");
 
-    native_persistent_string_view O{ "-O0" };
+    native_persistent_string O{ "-O0" };
     switch(optimization_level)
     {
       case 0:
@@ -137,7 +159,22 @@ namespace jank::jit
     args.emplace_back("-include-pch");
     args.emplace_back(strdup(pch_path_str.c_str()));
 
-    //fmt::println("jit flags {}", args);
+    for(auto const &include_path : opts.include_dirs)
+    {
+      args.emplace_back(strdup(fmt::format("-I{}", include_path).c_str()));
+    }
+
+    for(auto const &library_path : opts.library_dirs)
+    {
+      args.emplace_back(strdup(fmt::format("-L{}", library_path).c_str()));
+    }
+
+    for(auto const &define_macro : opts.define_macros)
+    {
+      args.emplace_back(strdup(fmt::format("-D{}", define_macro).c_str()));
+    }
+
+    // fmt::println("jit flags {}", args);
 
     clang::IncrementalCompilerBuilder compiler_builder;
     compiler_builder.SetCompilerArgs(args);
@@ -148,6 +185,13 @@ namespace jank::jit
     compiler_instance->LoadRequestedPlugins();
 
     interpreter = llvm::cantFail(clang::Interpreter::create(std::move(compiler_instance)));
+
+    auto const &load_result{ load_dynamic_libs(opts.libs) };
+    if(load_result.is_err())
+    {
+      std::cerr << load_result.expect_err().c_str() << "\n";
+      std::exit(1);
+    }
   }
 
   processor::~processor()
@@ -198,5 +242,55 @@ namespace jank::jit
     //fmt::println("// eval_string:\n{}\n", s);
     auto err(interpreter->ParseAndExecute({ s.data(), s.size() }));
     llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
+  }
+
+  option<native_persistent_string>
+  processor::find_dynamic_lib(native_persistent_string const &lib) const
+  {
+    auto const &lib_name{ shared_lib_name(lib) };
+    for(auto const &lib_dir : library_dirs)
+    {
+      auto lib_abs_path{ fmt::format("{}/{}", lib_dir, lib_name) };
+      if(boost::filesystem::exists(lib_abs_path.c_str()))
+      {
+        return lib_abs_path;
+      }
+    }
+
+    return none;
+  }
+
+  result<void, native_persistent_string>
+  processor::load_dynamic_libs(native_vector<native_persistent_string> const &libs) const
+  {
+    for(auto const &lib : libs)
+    {
+      auto const &lib_abs_path{ boost::filesystem::absolute(lib.c_str()) };
+      if(boost::filesystem::exists(lib_abs_path))
+      {
+        auto const &path_str{ lib_abs_path.string() };
+        load_object(path_str);
+      }
+      else
+      {
+        auto const result{ processor::find_dynamic_lib(lib) };
+        if(result.is_none())
+        {
+          return err(fmt::format("Failed to load dynamic library `{}`", lib));
+        }
+        else
+        {
+          load_object(result.unwrap());
+        }
+      }
+    }
+
+    return ok();
+  }
+
+  void processor::load_object(native_persistent_string const &path) const
+  {
+    std::cerr << "Loading dynamic library `" << path << "`\n";
+    llvm::cantFail(interpreter->LoadDynamicLibrary(path.data()));
   }
 }

@@ -29,7 +29,7 @@ namespace jank::runtime
   }
 
   context::context(util::cli::options const &opts)
-    : jit_prc{ opts.optimization_level }
+    : jit_prc{ opts }
     , output_dir{ opts.compilation_path }
     , module_loader{ *this, opts.class_path }
   {
