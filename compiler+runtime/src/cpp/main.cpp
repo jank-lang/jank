@@ -41,7 +41,7 @@ namespace jank
 
     {
       profile::timer timer{ "eval user code" };
-      std::cout << runtime::to_string(__rt_ctx->eval_file(opts.target_file)) << "\n";
+      std::cout << runtime::to_code_string(__rt_ctx->eval_file(opts.target_file)) << "\n";
     }
 
     //ankerl::nanobench::Config config;
@@ -157,7 +157,7 @@ namespace jank
       }
       catch(jank::runtime::object_ptr const o)
       {
-        fmt::println("Exception: {}", jank::runtime::to_string(o));
+        fmt::println("Exception: {}", jank::runtime::to_code_string(o));
       }
       catch(jank::native_persistent_string const &s)
       {
@@ -213,7 +213,7 @@ namespace jank
       }
       catch(jank::runtime::object_ptr const o)
       {
-        fmt::println("Exception: {}", jank::runtime::to_string(o));
+        fmt::println("Exception: {}", jank::runtime::to_code_string(o));
       }
       catch(jank::native_persistent_string const &s)
       {
@@ -288,7 +288,7 @@ catch(std::exception const &e)
 }
 catch(jank::runtime::object_ptr const o)
 {
-  fmt::println("Exception: {}", jank::runtime::to_string(o));
+  fmt::println("Exception: {}", jank::runtime::to_code_string(o));
 }
 catch(jank::native_persistent_string const &s)
 {

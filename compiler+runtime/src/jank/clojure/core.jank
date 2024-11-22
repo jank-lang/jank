@@ -3416,22 +3416,20 @@
           (let [[shift mask imap switch-type skip-check] (prep-hashes ge default tests thens)]
             `(let [~ge ~e] (case* ~ge ~shift ~mask ~default ~imap ~switch-type :hash-identity ~skip-check))))))))
 
-;;; Miscellaneous.
-;; TODO: jank.core
-;(defn sleep [ms]
-;  (let [ms (int ms)]
-;    (native/raw "std::this_thread::sleep_for(std::chrono::milliseconds(~{ ms }->data));")))
-;
-;; Evaluates expr and prints the time it took. Returns the value of expr.
-;(defmacro time [expr]
-;  (let [now `#(native/raw "auto const t(std::chrono::high_resolution_clock::now());
-;                          __value = make_box(std::chrono::duration_cast<std::chrono::nanoseconds>(t.time_since_epoch()).count());")]
-;    `(let [start# (~now)
-;           ret# ~expr
-;           end# (~now)]
-;       (println (str "Elapsed time: " (/ (- end# start#) 1000000.0) " ms"))
-;       ret#)))
-;
+;; Miscellaneous.
+; TODO: jank.core
+(def sleep clojure.core-native/sleep)
+(def current-time clojure.core-native/current-time)
+
+(defmacro time
+  "Evaluates expr and prints the time it took. Returns the value of expr."
+  [expr]
+  `(let [start# (current-time)
+         ret# ~expr
+         end# (current-time)]
+     (println (str "Elapsed time: " (/ (- end# start#) 1000000.0) " ms"))
+     ret#))
+
 ;; Temporarily redefines Vars during a call to func. Each val of
 ;; binding-map will replace the root value of its key which must be
 ;; a Var. After func is called with no args, the root values of all

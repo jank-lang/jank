@@ -150,6 +150,19 @@ namespace clojure::core_native
   {
     return try_object<obj::multi_function>(multifn)->prefer_table;
   }
+
+  object_ptr sleep(object_ptr const ms)
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(to_int(ms)));
+    return obj::nil::nil_const();
+  }
+
+  object_ptr current_time()
+  {
+    using namespace std::chrono;
+    auto const t(high_resolution_clock::now());
+    return make_box(duration_cast<nanoseconds>(t.time_since_epoch()).count());
+  }
 }
 
 jank_object_ptr jank_load_clojure_core_native()
@@ -328,6 +341,8 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("prefers", &core_native::prefers);
   intern_val("int-min", std::numeric_limits<native_integer>::min());
   intern_val("int-max", std::numeric_limits<native_integer>::max());
+  intern_fn("sleep", &core_native::sleep);
+  intern_fn("current-time", &core_native::current_time);
 
   {
     auto const fn(

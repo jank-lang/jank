@@ -860,7 +860,7 @@ namespace jank::codegen
 
       auto const create_fn_type(
         llvm::FunctionType::get(builder->getPtrTy(), { builder->getPtrTy() }, false));
-      auto const create_fn(module->getOrInsertFunction("jank_integer_create", create_fn_type));
+      auto const create_fn(module->getOrInsertFunction("jank_real_create", create_fn_type));
       auto const arg(llvm::ConstantFP::get(builder->getDoubleTy(), r->data));
       auto const call(builder->CreateCall(create_fn, { arg }));
       builder->CreateStore(call, global);
