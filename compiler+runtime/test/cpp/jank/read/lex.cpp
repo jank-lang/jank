@@ -1306,35 +1306,99 @@ namespace jank::read::lex
       }
     }
     
-    // TEST_CASE("UTF-8")
-    // {
-    //   SUBCASE("UTF-8 symbol")
-    //   {
-    //     processor p{ "👍" };
-    //     native_vector<result<token, error>> tokens(p.begin(), p.end());
-    //     CHECK(tokens
-    //           == make_tokens({
-    //               { 0, 4, token_kind::symbol, "👍"sv }
-    //             }));
-    //   }
-    //   SUBCASE("UTF-8 keyword")
-    //   {
-    //     processor p{ ":🍙" };
-    //     native_vector<result<token, error>> tokens(p.begin(), p.end());
-    //     CHECK(tokens
-    //           == make_tokens({
-    //               { 0, 5, token_kind::keyword, "🍙"sv },
-    //     }));
-    //   }
-    //   SUBCASE("Multiple UTF-8 characters symbol")
-    //   {
-    //     processor p{ "😎👍" };
-    //     native_vector<result<token, error>> tokens(p.begin(), p.end());
-    //     CHECK(tokens
-    //           == make_tokens({
-    //               { 0, 8, token_kind::symbol, "😎👍"sv }
-    //             }));
-    //   }
-    // }
+    TEST_CASE("UTF-8")
+    {
+      SUBCASE("UTF-8 symbol")
+      {
+        processor p{ "👍" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                  { 0, 4, token_kind::symbol, "👍"sv }
+                }));
+      }
+      SUBCASE("UTF-8 keyword")
+      {
+        processor p{ ":🍙" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                  { 0, 5, token_kind::keyword, "🍙"sv },
+        }));
+      }
+      SUBCASE("Multiple UTF-8 characters symbol")
+      {
+        processor p{ "😎👍" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                  { 0, 8, token_kind::symbol, "😎👍"sv }
+                }));
+      }
+      SUBCASE("Multiple UTF-8 characters keyword")
+      {
+        processor p{ ":🥩🍗" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                  { 0, 9, token_kind::keyword, "🥩🍗"sv }
+                }));        
+      }
+      SUBCASE("Symbol with UTF-8 characters inside")
+      {
+        processor p{ "one-🍺-please!" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                  { 0, 16, token_kind::symbol, "one-🍺-please!"sv }
+                }));                
+      }
+      SUBCASE("Keyword with UTF-8 characters inside")
+      {
+        processor p{ ":w🍪w" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                  { 0, 7, token_kind::keyword, "w🍪w"sv }
+                }));                
+      }
+      SUBCASE("8-wide UTF-8 character")
+      {
+        processor p{ "🇪🇺" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                  { 0, 8, token_kind::symbol, "🇪🇺"sv }
+                }));                      
+      }
+      SUBCASE("Non-Latin Characters")
+      {
+        processor p{ "ありがとう" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                  { 0, 15, token_kind::symbol, "ありがとう"sv }
+                }));                      
+      }
+      SUBCASE("Non-Latin Characters")
+      {
+        processor p{ ":ありがとう" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                  { 0, 16, token_kind::keyword, "ありがとう"sv }
+                }));                      
+      }
+      SUBCASE("UTF-8 Whitespace Characters")
+      {
+        processor p{ ":  " };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                  { 0, 7, token_kind::keyword, ":  "sv }
+                }));                      
+      }
+      
+    }
   }
 }
