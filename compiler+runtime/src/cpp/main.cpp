@@ -133,9 +133,9 @@ namespace jank
 
     /* TODO: Completion. */
     /* TODO: Syntax highlighting. */
-    while(std::optional<native_transient_string> const &buf = le.readLine())
+    while(auto buf = le.readLine())
     {
-      auto line(std::move(*buf));
+      auto &line(*buf);
       boost::trim(line);
 
       if(line.ends_with("\\"))
@@ -196,9 +196,9 @@ namespace jank
     le.setPrompt("native> ");
     native_transient_string input{};
 
-    while(std::optional<native_transient_string> const &buf = le.readLine())
+    while(auto buf = le.readLine())
     {
-      auto line(std::move(*buf));
+      auto &line(*buf);
       boost::trim(line);
 
       if(line.empty())
