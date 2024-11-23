@@ -7,6 +7,7 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/profile/time.hpp>
 
+/* TODO: Remove exceptions. */
 namespace jank::codegen
 {
   llvm_processor::llvm_processor(analyze::expression_ptr const &expr,
@@ -114,7 +115,7 @@ namespace jank::codegen
   void llvm_processor::gen()
   {
     profile::timer timer{ "ir gen" };
-    if(target == compilation_target::repl)
+    if(target != compilation_target::function)
     {
       create_global_ctor();
     }
@@ -151,8 +152,20 @@ namespace jank::codegen
       builder->CreateRetVoid();
 
       /* TODO: Verify module? */
-      llvm::verifyFunction(*fn);
-      llvm::verifyFunction(*global_ctor_block->getParent());
+      if(llvm::verifyFunction(*fn, &llvm::errs()))
+      {
+        std::cerr << "----------\n";
+        to_string();
+        std::cerr << "----------\n";
+        throw std::runtime_error{ fmt::format("invalid IR function {}", root_fn.name) };
+      }
+      if(llvm::verifyFunction(*global_ctor_block->getParent(), &llvm::errs()))
+      {
+        std::cerr << "----------\n";
+        to_string();
+        std::cerr << "----------\n";
+        throw std::runtime_error{ fmt::format("invalid IR ctor for fn {}", root_fn.name) };
+      }
     }
   }
 
@@ -824,7 +837,7 @@ namespace jank::codegen
       builder->SetInsertPoint(global_ctor_block);
 
       auto const create_fn_type(
-        llvm::FunctionType::get(builder->getPtrTy(), { builder->getPtrTy() }, false));
+        llvm::FunctionType::get(builder->getPtrTy(), { builder->getInt64Ty() }, false));
       auto const create_fn(module->getOrInsertFunction("jank_integer_create", create_fn_type));
       auto const arg(llvm::ConstantInt::getSigned(builder->getInt64Ty(), i->data));
       auto const call(builder->CreateCall(create_fn, { arg }));
@@ -859,7 +872,7 @@ namespace jank::codegen
       builder->SetInsertPoint(global_ctor_block);
 
       auto const create_fn_type(
-        llvm::FunctionType::get(builder->getPtrTy(), { builder->getPtrTy() }, false));
+        llvm::FunctionType::get(builder->getPtrTy(), { builder->getDoubleTy() }, false));
       auto const create_fn(module->getOrInsertFunction("jank_real_create", create_fn_type));
       auto const arg(llvm::ConstantFP::get(builder->getDoubleTy(), r->data));
       auto const call(builder->CreateCall(create_fn, { arg }));
