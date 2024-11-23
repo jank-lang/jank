@@ -675,7 +675,7 @@ namespace jank::codegen
     return call;
   }
 
-  /* TODO: Remove arity from gen */
+  /* TODO: Remove arity from gen? */
   llvm::Value *llvm_processor::gen(analyze::expr::try_<analyze::expression> const &expr,
                                    analyze::expr::function_arity<analyze::expression> const &arity)
   {

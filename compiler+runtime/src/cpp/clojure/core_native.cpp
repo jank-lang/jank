@@ -75,6 +75,16 @@ namespace clojure::core_native
     return try_object<var>(o)->deref();
   }
 
+  object_ptr var_get_root(object_ptr const o)
+  {
+    return try_object<var>(o)->get_root();
+  }
+
+  object_ptr var_bind_root(object_ptr const v, object_ptr const o)
+  {
+    return try_object<var>(v)->bind_root(o);
+  }
+
   object_ptr alter_var_root(object_ptr const o, object_ptr const fn, object_ptr const args)
   {
     return try_object<var>(o)->alter_root(fn, args);
@@ -162,6 +172,99 @@ namespace clojure::core_native
     using namespace std::chrono;
     auto const t(high_resolution_clock::now());
     return make_box(duration_cast<nanoseconds>(t.time_since_epoch()).count());
+  }
+
+  object_ptr in_ns(object_ptr const sym)
+  {
+    __rt_ctx->current_ns_var->set(__rt_ctx->intern_ns(try_object<obj::symbol>(sym))).expect_ok();
+    return obj::nil::nil_const();
+  }
+
+  object_ptr intern_ns(object_ptr const sym)
+  {
+    return __rt_ctx->intern_ns(try_object<obj::symbol>(sym));
+  }
+
+  object_ptr find_ns(object_ptr const sym)
+  {
+    return __rt_ctx->find_ns(try_object<obj::symbol>(sym)).unwrap_or(nullptr)
+      ?: obj::nil::nil_const();
+  }
+
+  object_ptr remove_ns(object_ptr const sym)
+  {
+    return __rt_ctx->remove_ns(try_object<obj::symbol>(sym)).unwrap_or(nullptr)
+      ?: obj::nil::nil_const();
+  }
+
+  object_ptr is_ns(object_ptr const ns_or_sym)
+  {
+    return make_box(ns_or_sym->type == object_type::ns);
+  }
+
+  object_ptr ns_name(object_ptr const ns)
+  {
+    return try_object<runtime::ns>(ns)->name;
+  }
+
+  object_ptr ns_map(object_ptr const ns)
+  {
+    return try_object<runtime::ns>(ns)->get_mappings();
+  }
+
+  object_ptr var_ns(object_ptr const v)
+  {
+    return try_object<runtime::var>(v)->n;
+  }
+
+  object_ptr ns_resolve(object_ptr const ns, object_ptr const sym)
+  {
+    auto const n(try_object<runtime::ns>(ns));
+    auto const found(n->find_var(try_object<obj::symbol>(sym)));
+    if(found.is_some())
+    {
+      return found.unwrap();
+    }
+    return obj::nil::nil_const();
+  }
+
+  object_ptr alias(object_ptr const current_ns, object_ptr const remote_ns, object_ptr const alias)
+  {
+    try_object<ns>(current_ns)
+      ->add_alias(try_object<obj::symbol>(alias), try_object<ns>(remote_ns))
+      .expect_ok();
+    return obj::nil::nil_const();
+  }
+
+  object_ptr refer(object_ptr const current_ns, object_ptr const sym, object_ptr const var)
+  {
+    expect_object<runtime::ns>(current_ns)
+      ->refer(try_object<obj::symbol>(sym), expect_object<runtime::var>(var))
+      .expect_ok();
+    return obj::nil::nil_const();
+  }
+
+  object_ptr load_module(object_ptr const path)
+  {
+    __rt_ctx->load_module(runtime::to_string(path)).expect_ok();
+    return obj::nil::nil_const();
+  }
+
+  object_ptr is_module_loaded(object_ptr const path)
+  {
+    return make_box(__rt_ctx->module_loader.is_loaded(runtime::to_string(path)));
+  }
+
+  object_ptr set_module_loaded(object_ptr const path)
+  {
+    __rt_ctx->module_loader.set_loaded(runtime::to_string(path));
+    return obj::nil::nil_const();
+  }
+
+  object_ptr compile(object_ptr const path)
+  {
+    __rt_ctx->compile_module(runtime::to_string(path)).expect_ok();
+    return obj::nil::nil_const();
   }
 }
 
@@ -313,6 +416,8 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("namespace", &namespace_);
   intern_fn("var?", &core_native::is_var);
   intern_fn("var-get", &core_native::var_get);
+  intern_fn("var-get-root", &core_native::var_get_root);
+  intern_fn("var-bind-root", &core_native::var_bind_root);
   intern_fn("alter-var-root", &core_native::alter_var_root);
   intern_fn("var-bound?", &core_native::is_var_bound);
   intern_fn("var-thread-bound?", &core_native::is_var_thread_bound);
@@ -343,6 +448,20 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_val("int-max", std::numeric_limits<native_integer>::max());
   intern_fn("sleep", &core_native::sleep);
   intern_fn("current-time", &core_native::current_time);
+  intern_fn("create-ns", &core_native::intern_ns);
+  intern_fn("in-ns", &core_native::in_ns);
+  intern_fn("find-ns", &core_native::find_ns);
+  intern_fn("remove-ns", &core_native::remove_ns);
+  intern_fn("ns?", &core_native::is_ns);
+  intern_fn("ns-name", &core_native::ns_name);
+  intern_fn("ns-map", &core_native::ns_map);
+  intern_fn("var-ns", &core_native::var_ns);
+  intern_fn("ns-resolve", &core_native::ns_resolve);
+  intern_fn("alias", &core_native::alias);
+  intern_fn("refer", &core_native::refer);
+  intern_fn("load-module", &core_native::load_module);
+  intern_fn("module-loaded?", &core_native::is_module_loaded);
+  intern_fn("compile", &core_native::compile);
 
   {
     auto const fn(

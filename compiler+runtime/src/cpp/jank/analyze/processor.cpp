@@ -1127,6 +1127,8 @@ namespace jank::analyze
       return err(error{ "each try must have a catch clause" });
     }
 
+    ret.body.propagate_position(position);
+
     return make_box<expression>(std::move(ret));
   }
 
