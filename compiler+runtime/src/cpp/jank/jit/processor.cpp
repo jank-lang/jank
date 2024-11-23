@@ -92,11 +92,6 @@ namespace jank::jit
     return output_path;
   }
 
-  processor::processor(native_integer const optimization_level)
-    : optimization_level{ optimization_level }
-  {
-  }
-
   processor::processor(util::cli::options const &opts)
     : optimization_level{ opts.optimization_level }
   {
@@ -250,7 +245,7 @@ namespace jank::jit
     auto const &lib_name{ shared_lib_name(lib) };
     for(auto const &lib_dir : library_dirs)
     {
-      auto lib_abs_path{ fmt::format("{}/{}", lib_dir, lib_name) };
+      auto lib_abs_path{ fmt::format("{}/{}", lib_dir.string(), lib_name) };
       if(boost::filesystem::exists(lib_abs_path.c_str()))
       {
         return lib_abs_path;

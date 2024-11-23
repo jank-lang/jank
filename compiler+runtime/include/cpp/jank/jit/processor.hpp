@@ -17,7 +17,6 @@ namespace jank::jit
 
   struct processor
   {
-    processor(native_integer const optimization_level);
     processor(util::cli::options const &opts);
     ~processor();
 
