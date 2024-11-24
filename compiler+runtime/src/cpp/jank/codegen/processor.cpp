@@ -1282,10 +1282,10 @@ namespace jank::codegen
     processor prc{ rt_ctx,
                    expr,
                    runtime::module::nest_module(module, runtime::munge(expr.unique_name)),
-                   compiling ? compilation_target::function : compilation_target::repl };
+                   compiling ? compilation_target::function : compilation_target::eval };
 
     /* If we're compiling, we'll create a separate file for this. */
-    if(target != compilation_target::ns)
+    if(target != compilation_target::module)
     {
       auto header_inserter(std::back_inserter(header_buffer));
       fmt::format_to(header_inserter, "{}", prc.declaration_str());

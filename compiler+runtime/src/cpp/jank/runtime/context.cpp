@@ -1,6 +1,7 @@
 #include <exception>
 
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
+#include <llvm/Bitcode/BitcodeWriter.h>
 
 #include <fmt/compile.h>
 
@@ -206,18 +207,16 @@ namespace jank::runtime
 
     if(truthy(compile_files_var->deref()))
     {
-      auto const &current_module(
-        expect_object<obj::persistent_string>(current_module_var->deref())->data);
       auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc));
       auto &fn(boost::get<analyze::expr::function<analyze::expression>>(wrapped_exprs->data));
-      fn.name = "__ns";
-      fn.unique_name = fn.name;
       auto const &module(
         expect_object<runtime::ns>(intern_var("clojure.core", "*ns*").expect_ok()->deref())
           ->to_string());
-      codegen::processor cg_prc{ *this, wrapped_exprs, module, codegen::compilation_target::ns };
-      write_module(current_module, cg_prc.declaration_str());
-      write_module(fmt::format("{}--init", current_module), cg_prc.module_init_str(current_module));
+      fn.name = module::module_to_load_function(module);
+      fn.unique_name = fn.name;
+      codegen::llvm_processor cg_prc{ wrapped_exprs, module, codegen::compilation_target::module };
+      cg_prc.gen();
+      write_module(std::move(cg_prc.ctx));
     }
 
     assert(ret);
@@ -314,25 +313,18 @@ namespace jank::runtime
     return load_module(fmt::format("/{}", module));
   }
 
-  void context::write_module(native_persistent_string_view const &module,
-                             native_persistent_string_view const &contents) const
+  void context::write_module(std::unique_ptr<codegen::reusable_context> const codegen_ctx) const
   {
-    profile::timer timer{ "write_module" };
-    boost::filesystem::path const dir{ native_transient_string{ output_dir } };
-    if(!boost::filesystem::exists(dir))
-    {
-      boost::filesystem::create_directories(dir);
-    }
+    profile::timer timer{ fmt::format("write_module {}", codegen_ctx->module_name) };
+    boost::filesystem::path const module_path{
+      fmt::format("{}/{}.bc", output_dir, module::module_to_path(codegen_ctx->module_name))
+    };
+    boost::filesystem::create_directories(module_path.parent_path());
 
-    /* TODO: This needs to go into sub directories. Also, we should register these modules with
-     * the loader upon writing. */
-    {
-      std::ofstream ofs{
-        fmt::format("{}/{}.cpp", module::module_to_path(output_dir), runtime::munge(module))
-      };
-      ofs << contents;
-      ofs.flush();
-    }
+    std::error_code error{};
+    llvm::raw_fd_ostream os(module_path.c_str(), error, llvm::sys::fs::OpenFlags::OF_None);
+    //codegen_ctx->module->print(os, nullptr);
+    llvm::WriteBitcodeToFile(*codegen_ctx->module, os);
   }
 
   native_persistent_string context::unique_string()
@@ -572,7 +564,7 @@ namespace jank::runtime
       expect_object<runtime::ns>(intern_var("clojure.core", "*ns*").expect_ok()->deref())
         ->to_string());
 
-    codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::repl };
+    codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::eval };
     cg_prc.gen();
     jit_prc.load_ir_module(std::move(cg_prc.ctx->module), std::move(cg_prc.ctx->llvm_ctx));
 

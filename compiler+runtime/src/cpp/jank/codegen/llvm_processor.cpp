@@ -10,7 +10,7 @@
 /* TODO: Remove exceptions. */
 namespace jank::codegen
 {
-  context::context(native_persistent_string const &module_name)
+  reusable_context::reusable_context(native_persistent_string const &module_name)
     : module_name{ module_name }
     , ctor_name{ runtime::munge(runtime::context::unique_string("jank_global_init")) }
     , llvm_ctx{ std::make_unique<llvm::LLVMContext>() }
@@ -35,7 +35,7 @@ namespace jank::codegen
                                  compilation_target const target)
     : target{ target }
     , root_fn{ expr }
-    , ctx{ std::make_unique<context>(module_name) }
+    , ctx{ std::make_unique<reusable_context>(module_name) }
   {
     assert(root_fn.frame.data);
   }
@@ -78,9 +78,10 @@ namespace jank::codegen
     std::vector<llvm::Type *> const arg_types{ arity.params.size() + is_closure,
                                                ctx->builder->getPtrTy() };
     auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
-    auto const name(munge(root_fn.unique_name));
-    auto fn_value(
-      ctx->module->getOrInsertFunction(fmt::format("{}_{}", name, arity.params.size()), fn_type));
+    std::string const name{ munge(root_fn.unique_name) };
+    auto fn_value(ctx->module->getOrInsertFunction(
+      target == compilation_target::module ? name : fmt::format("{}_{}", name, arity.params.size()),
+      fn_type));
     fn = llvm::dyn_cast<llvm::Function>(fn_value.getCallee());
     fn->setLinkage(llvm::Function::ExternalLinkage);
 

@@ -50,9 +50,9 @@ namespace jank::codegen
 
   enum class compilation_target : uint8_t
   {
-    ns,
+    module,
     function,
-    repl
+    eval
   };
 
   /* Codegen processors render a single function expression to a C++ functor. REPL expressions

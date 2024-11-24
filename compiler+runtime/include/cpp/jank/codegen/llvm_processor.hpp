@@ -19,9 +19,9 @@ namespace jank::codegen
   {
   };
 
-  struct context
+  struct reusable_context
   {
-    context(native_persistent_string const &module_name);
+    reusable_context(native_persistent_string const &module_name);
 
     native_persistent_string module_name;
     native_persistent_string ctor_name;
@@ -129,7 +129,7 @@ namespace jank::codegen
     analyze::expression_ptr root_expr{};
     analyze::expr::function<analyze::expression> const &root_fn;
     llvm::Function *fn{};
-    std::unique_ptr<context> ctx;
+    std::unique_ptr<reusable_context> ctx;
     native_unordered_map<obj::symbol_ptr, llvm::Value *> locals;
   };
 }

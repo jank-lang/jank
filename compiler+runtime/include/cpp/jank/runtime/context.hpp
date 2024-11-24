@@ -1,6 +1,5 @@
 #pragma once
 
-#include <mutex>
 #include <list>
 
 #include <folly/Synchronized.h>
@@ -14,9 +13,17 @@
 #include <jank/jit/processor.hpp>
 #include <jank/util/cli.hpp>
 
-namespace jank::jit
+namespace jank
 {
-  struct processor;
+  namespace jit
+  {
+    struct processor;
+  }
+
+  namespace codegen
+  {
+    struct reusable_context;
+  }
 }
 
 namespace jank::runtime
@@ -93,8 +100,7 @@ namespace jank::runtime
     result<void, native_persistent_string>
     compile_module(native_persistent_string_view const &module);
 
-    void write_module(native_persistent_string_view const &module,
-                      native_persistent_string_view const &contents) const;
+    void write_module(std::unique_ptr<codegen::reusable_context> codegen_ctx) const;
 
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */

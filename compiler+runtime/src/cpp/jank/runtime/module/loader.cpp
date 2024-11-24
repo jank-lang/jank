@@ -42,6 +42,16 @@ namespace jank::runtime::module
     return ret;
   }
 
+  native_persistent_string module_to_load_function(native_persistent_string_view const &module)
+  {
+    static std::regex const dot{ "\\." };
+
+    std::string ret{ runtime::munge(module) };
+    ret = std::regex_replace(ret, dot, "_");
+
+    return fmt::format("jank_load_{}", ret);
+  }
+
   native_persistent_string module_to_native_ns_old(native_transient_string module)
   {
     static std::regex const dash{ "-" };

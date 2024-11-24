@@ -36,7 +36,7 @@ namespace jank
     {
       profile::timer timer{ "require clojure.core" };
       jank_load_clojure_core_native();
-      //__rt_ctx->load_module("/clojure.core").expect_ok();
+      __rt_ctx->load_module("/clojure.core").expect_ok();
     }
 
     {
@@ -68,6 +68,7 @@ namespace jank
 
     {
       profile::timer timer{ "require clojure.core" };
+      jank_load_clojure_core_native();
       __rt_ctx->load_module("/clojure.core").expect_ok();
     }
 
@@ -100,7 +101,7 @@ namespace jank
     using namespace jank;
     using namespace jank::runtime;
 
-    //__rt_ctx.load_module("/clojure.core").expect_ok();
+    jank_load_clojure_core_native();
     __rt_ctx->compile_module(opts.target_ns).expect_ok();
   }
 
@@ -117,6 +118,7 @@ namespace jank
 
     {
       profile::timer timer{ "require clojure.core" };
+      jank_load_clojure_core_native();
       __rt_ctx->load_module("/clojure.core").expect_ok();
     }
 

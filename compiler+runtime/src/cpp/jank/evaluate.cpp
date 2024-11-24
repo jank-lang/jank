@@ -399,7 +399,7 @@ namespace jank::evaluate
                           munge(expr.unique_name)));
 
     auto const wrapped_expr(evaluate::wrap_expression(expr));
-    codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::repl };
+    codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::eval };
     cg_prc.gen();
 
     {

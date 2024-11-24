@@ -515,25 +515,6 @@ namespace jank::analyze
 
     boost::get<expr::function<expression>>(ret->data).arities = std::move(arities);
 
-    if(runtime::truthy(rt_ctx.compile_files_var->deref()))
-    {
-      /* Register this module as a dependency of the current module so we can generate
-       * code to load it. */
-      auto const &ns_sym(make_box<runtime::obj::symbol>("clojure.core/*ns*"));
-      auto const &ns_var(rt_ctx.find_var(ns_sym).unwrap());
-      auto const module(
-        runtime::module::nest_module(runtime::to_string(ns_var->deref()), unique_name));
-      auto const &current_module(
-        expect_object<runtime::obj::persistent_string>(rt_ctx.current_module_var->deref())->data);
-      rt_ctx.module_dependencies[current_module].emplace_back(module);
-      //fmt::println("module dep {} -> {}",
-      //             runtime::to_string(rt_ctx.current_module_var->deref()),
-      //             module);
-
-      codegen::processor cg_prc{ rt_ctx, ret, module, codegen::compilation_target::function };
-      rt_ctx.write_module(module, cg_prc.declaration_str());
-    }
-
     return ret;
   }
 
