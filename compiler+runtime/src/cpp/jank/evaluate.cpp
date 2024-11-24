@@ -398,26 +398,18 @@ namespace jank::evaluate
       module::nest_module(expect_object<ns>(__rt_ctx->current_ns_var->deref())->to_string(),
                           munge(expr.unique_name)));
 
-    /* TODO: Clean up. */
     auto const wrapped_expr(evaluate::wrap_expression(expr));
     codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::repl };
     cg_prc.gen();
 
     {
       profile::timer timer{ fmt::format("ir jit compile {}", expr.name) };
-      //fmt::println("{}\n", cg_prc.to_string());
-      llvm::cantFail(__rt_ctx->jit_prc.interpreter->getExecutionEngine().get().addIRModule(
-        llvm::orc::ThreadSafeModule{ std::move(cg_prc.module), std::move(cg_prc.context) }));
+      __rt_ctx->jit_prc.load_ir_module(std::move(cg_prc.ctx->module),
+                                       std::move(cg_prc.ctx->llvm_ctx));
 
-      auto const init(
-        __rt_ctx->jit_prc.interpreter->getSymbolAddress(cg_prc.ctor_name.c_str()).get());
-      init.toPtr<void (*)()>()();
-
-      auto const fn(__rt_ctx->jit_prc.interpreter
-                      ->getSymbolAddress(fmt::format("{}_0", munge(cg_prc.root_fn.unique_name)))
-                      .get());
-      auto const ret(fn.toPtr<object *(*)()>()());
-      return ret;
+      auto const fn(__rt_ctx->jit_prc.find_symbol<object *(*)()>(
+        fmt::format("{}_0", munge(cg_prc.root_fn.unique_name))));
+      return fn();
     }
   }
 

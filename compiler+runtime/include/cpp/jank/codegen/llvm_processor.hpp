@@ -13,8 +13,30 @@ namespace jank::codegen
 {
   using namespace jank::runtime;
 
+  /* We use this to denote that an llvm processor is creating a nested fn. */
+  /* TODO: Can we use a compilation_target for this? */
   struct nested_tag
   {
+  };
+
+  struct context
+  {
+    context(native_persistent_string const &module_name);
+
+    native_persistent_string module_name;
+    native_persistent_string ctor_name;
+
+    std::unique_ptr<llvm::LLVMContext> llvm_ctx;
+    std::unique_ptr<llvm::Module> module;
+    std::unique_ptr<llvm::IRBuilder<>> builder;
+    llvm::Value *nil{};
+    llvm::BasicBlock *global_ctor_block{};
+
+    /* TODO: Is this needed, given lifted constants? */
+    native_unordered_map<object_ptr, llvm::Value *, std::hash<object_ptr>, very_equal_to>
+      literal_globals;
+    native_unordered_map<obj::symbol_ptr, llvm::Value *> var_globals;
+    native_unordered_map<native_persistent_string, llvm::Value *> c_string_globals;
   };
 
   struct llvm_processor
@@ -77,7 +99,7 @@ namespace jank::codegen
                      analyze::expr::function_arity<analyze::expression> const &);
 
     llvm::Value *gen_var(obj::symbol_ptr qualified_name);
-    llvm::Value *gen_c_string(native_persistent_string const &s);
+    llvm::Value *gen_c_string(native_persistent_string const &s) const;
 
     native_persistent_string to_string() const;
 
@@ -86,14 +108,14 @@ namespace jank::codegen
     void create_global_ctor();
     llvm::GlobalVariable *create_global_var(native_persistent_string const &name) const;
 
-    llvm::Value *gen_global(obj::nil_ptr);
-    llvm::Value *gen_global(obj::boolean_ptr b);
-    llvm::Value *gen_global(obj::integer_ptr i);
-    llvm::Value *gen_global(obj::real_ptr r);
-    llvm::Value *gen_global(obj::persistent_string_ptr s);
+    llvm::Value *gen_global(obj::nil_ptr) const;
+    llvm::Value *gen_global(obj::boolean_ptr b) const;
+    llvm::Value *gen_global(obj::integer_ptr i) const;
+    llvm::Value *gen_global(obj::real_ptr r) const;
+    llvm::Value *gen_global(obj::persistent_string_ptr s) const;
     llvm::Value *gen_global(obj::symbol_ptr s);
-    llvm::Value *gen_global(obj::keyword_ptr k);
-    llvm::Value *gen_global(obj::character_ptr c);
+    llvm::Value *gen_global(obj::keyword_ptr k) const;
+    llvm::Value *gen_global(obj::character_ptr c) const;
     llvm::Value *gen_global_from_read_string(object_ptr o);
     llvm::Value *
     gen_function_instance(analyze::expr::function<analyze::expression> const &expr,
@@ -102,25 +124,12 @@ namespace jank::codegen
     llvm::StructType *get_or_insert_struct_type(std::string const &name,
                                                 std::vector<llvm::Type *> const &fields) const;
 
+    compilation_target target{};
     /* This is stored just to keep the expression alive. */
     analyze::expression_ptr root_expr{};
     analyze::expr::function<analyze::expression> const &root_fn;
-    native_persistent_string module_name;
-    compilation_target target{};
-    native_persistent_string ctor_name;
-
-    std::unique_ptr<llvm::LLVMContext> context;
-    std::unique_ptr<llvm::Module> module;
-    std::unique_ptr<llvm::IRBuilder<>> builder;
     llvm::Function *fn{};
-    llvm::Value *nil{};
-
-    /* TODO: Is this needed, given lifted constants? */
-    native_unordered_map<object_ptr, llvm::Value *, std::hash<object_ptr>, very_equal_to>
-      literal_globals;
-    native_unordered_map<obj::symbol_ptr, llvm::Value *> var_globals;
-    native_unordered_map<native_persistent_string, llvm::Value *> c_string_globals;
-    llvm::BasicBlock *global_ctor_block{};
+    std::unique_ptr<context> ctx;
     native_unordered_map<obj::symbol_ptr, llvm::Value *> locals;
   };
 }

@@ -574,26 +574,11 @@ namespace jank::runtime
 
     codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::repl };
     cg_prc.gen();
-    fmt::println("{}\n", cg_prc.to_string());
-    llvm::cantFail(jit_prc.interpreter->getExecutionEngine().get().addIRModule(
-      llvm::orc::ThreadSafeModule{ std::move(cg_prc.module), std::move(cg_prc.context) }));
-
-    /* TODO: Why isn't this being run as a global ctor? */
-    auto const init(jit_prc.interpreter->getSymbolAddress(cg_prc.ctor_name.c_str()).get());
-    //fmt::println("calling ctor");
-    init.toPtr<void (*)()>()();
+    jit_prc.load_ir_module(std::move(cg_prc.ctx->module), std::move(cg_prc.ctx->llvm_ctx));
 
     auto const fn(
-      jit_prc.interpreter->getSymbolAddress(fmt::format("{}_0", munge(cg_prc.root_fn.unique_name)))
-        .get());
-    //fmt::println("calling fn");
-    auto const ret(fn.toPtr<object *(*)()>()());
-    //fmt::println("ret {}", fmt::ptr(ret));
-    //fmt::println("ret type {}", static_cast<int>(ret->type));
-    return make_box(to_string(ret));
-
-    //codegen::processor cg_prc{ *this, wrapped_expr, module, codegen::compilation_target::repl };
-    //return make_box(util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
+      jit_prc.find_symbol<object *(*)()>(fmt::format("{}_0", munge(cg_prc.root_fn.unique_name))));
+    return make_box(to_code_string(fn()));
   }
 
   context::binding_scope::binding_scope(context &rt_ctx)

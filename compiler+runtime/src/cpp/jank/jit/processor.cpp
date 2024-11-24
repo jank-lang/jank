@@ -136,4 +136,15 @@ namespace jank::jit
     auto err(interpreter->ParseAndExecute({ s.data(), s.size() }));
     llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
   }
+
+  void processor::load_ir_module(std::unique_ptr<llvm::Module> m,
+                                 std::unique_ptr<llvm::LLVMContext> llvm_ctx) const
+  {
+    //m->print(llvm::outs(), nullptr);
+
+    auto &ee(interpreter->getExecutionEngine().get());
+    llvm::cantFail(
+      ee.addIRModule(llvm::orc::ThreadSafeModule{ std::move(m), std::move(llvm_ctx) }));
+    llvm::cantFail(ee.initialize(ee.getMainJITDylib()));
+  }
 }
