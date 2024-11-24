@@ -267,11 +267,12 @@ namespace jank::read
       return none;
     }
 
-    static result<codepoint, error> convert_to_codepoint(native_persistent_string_view sv, size_t pos)
+    static result<codepoint, error> convert_to_codepoint(native_persistent_string_view const sv, size_t const pos)
     {
       std::mbstate_t state{};
       wchar_t wc{};
-      size_t len = std::mbrtowc(&wc, sv.data(), sv.size(), &state);
+      auto const len{std::mbrtowc(&wc, sv.data(), sv.size(), &state)};
+      
       if (len == static_cast<size_t>(-1))
       {
         return err(error{ pos, "Unfinished Character" });
@@ -283,7 +284,7 @@ namespace jank::read
       return ok(codepoint{ static_cast<char32_t>(wc), len });
     }
 
-    static native_bool is_utf8_char(char32_t c)
+    static native_bool is_utf8_char(char32_t const c)
     {
       if (c <= 0x7FF)
       {
@@ -300,7 +301,7 @@ namespace jank::read
       return false;
     }
 
-    static native_bool is_special_char(char32_t c)
+    static native_bool is_special_char(char32_t const c)
     {
       return c == '(' || c == ')' || c == '{' || c == '}' || c == '[' || c == ']'
         || c == '"' || c == '^' || c == '\\' || c == '`' || c == '~';
@@ -336,15 +337,12 @@ namespace jank::read
       }
 
       auto const token_start(pos);
-      auto const oc = convert_to_codepoint(file.substr(token_start), token_start);
-      char32_t start{};
-      size_t len{};
-      if (oc.is_ok())
+      auto const oc{convert_to_codepoint(file.substr(token_start), token_start)};
+      if (oc.is_err())
       {
-        start = oc.expect_ok().character;
-        len = oc.expect_ok().len;
+        return oc.expect_err();
       }
-      switch(start)
+      switch(oc.expect_ok().character)
       {
         case '(':
           require_space = false;
@@ -374,14 +372,7 @@ namespace jank::read
             auto const ch(peek());
             pos++;
 
-            char32_t cpoint{};
-            size_t size{};
-            if (ch.is_ok())
-            {
-              cpoint = ch.expect_ok().character;
-              size = ch.expect_ok().len;
-            }
-            if(ch.is_err() || std::iswspace(cpoint))
+            if(ch.is_err() || std::iswspace(ch.expect_ok().character))
             {
               return err(error{ token_start, "Expecting a valid character literal after \\" });
             }
@@ -389,16 +380,11 @@ namespace jank::read
             while(pos <= file.size())
             {
               auto const pt(peek());
-              if (pt.is_ok())
-              {
-                cpoint = pt.expect_ok().character;
-                size = pt.expect_ok().len;
-              }
-              if(pt.is_err() || !is_symbol_char(cpoint))
+              if(pt.is_err() || !is_symbol_char(pt.expect_ok().character))
               {
                 break;
               }
-              pos += size;
+              pos += pt.expect_ok().len;
             }
 
             native_persistent_string_view const data{ file.data() + token_start,
@@ -889,14 +875,15 @@ namespace jank::read
             return ok(token{ token_start, pos - token_start, token_kind::deref });
           }
         default:
-          if (is_symbol_char(start))
+          /* To handle all UTF-8 Characters that could be the beginning of a symbol (e.g an emoji) */
+          if (oc.expect_ok().character != '.' && is_utf8_char(oc.expect_ok().character))
           {
             auto &&e(check_whitespace(found_space));
             if(e.is_some())
             {
               return err(std::move(e.unwrap()));
             }
-            pos += len;
+            pos += oc.expect_ok().len;
             while(pos <= file.size())
             {
               auto const oc(convert_to_codepoint(file.substr(pos), pos));
@@ -904,13 +891,12 @@ namespace jank::read
               {
                 break;
               }
-              auto const c(oc.expect_ok().character);
-              auto const size(oc.expect_ok().len);
-              if(!is_symbol_char(c))
+
+              if(!is_symbol_char(oc.expect_ok().character))
               {
                 break;
               }
-              pos += size;
+              pos += oc.expect_ok().len;
             }
             require_space = true;
             native_persistent_string_view const name{ file.data() + token_start,
@@ -932,7 +918,7 @@ namespace jank::read
       {
         return err(error{pos, "No more characters to peek." });
       }
-      auto const oc = convert_to_codepoint(file.substr(next_pos), next_pos);
+      auto const oc{convert_to_codepoint(file.substr(next_pos), next_pos)};
       if (oc.is_err())
       {
         return oc.expect_err();

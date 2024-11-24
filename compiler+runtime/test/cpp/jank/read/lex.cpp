@@ -574,7 +574,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 3, "invalid number" },
-                  token{ 3, 1, token_kind::symbol, "."sv},
+                  error{ 3, "unexpected character: ." },
           }));
         }
 
@@ -584,7 +584,8 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 2, "invalid number" },
-                  token{ 2, 2, token_kind::symbol, ".0"sv },
+                  error{ 2, "unexpected character: ." },
+                  token{ 3, token_kind::integer, 0ll },
           }));
         }
         {
@@ -593,7 +594,8 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 3, "invalid number" },
-                  token{ 3, 2, token_kind::symbol, ".0"sv },
+                  error{ 3, "unexpected character: ." },
+                  token{ 4, token_kind::integer, 0ll },
           }));
         }
       }
@@ -675,12 +677,13 @@ namespace jank::read::lex
           native_vector<result<token, error>> tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_results({
-                  error{ 0, 3, "invalid number" },
-                  token{ 3, 1, token_kind::symbol, "."sv },
-                  token{ 5, 4, token_kind::real, 12.3l },
-                  error{ 10, 14, "invalid number" },
-                  error{ 14, "expected whitespace before next token" },
-                  token{ 14, 2, token_kind::symbol, ".3"sv },
+                    error{ 0, 3, "invalid number" },
+                    error{ 3, "unexpected character: ." },
+                    token{ 5, 4, token_kind::real, 12.3l },
+                    error{ 10, 14, "invalid number" },
+                    error{ 14, "unexpected character: ." },
+                    error{ 15, "expected whitespace before next token" },
+                    token{ 15, token_kind::integer, 3ll },
           }));
         }
 
@@ -1308,7 +1311,7 @@ namespace jank::read::lex
     
     TEST_CASE("UTF-8")
     {
-      SUBCASE("UTF-8 symbol")
+      SUBCASE("Symbol")
       {
         processor p{ "👍" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
@@ -1317,7 +1320,7 @@ namespace jank::read::lex
                   { 0, 4, token_kind::symbol, "👍"sv }
                 }));
       }
-      SUBCASE("UTF-8 keyword")
+      SUBCASE("Keyword")
       {
         processor p{ ":🍙" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
@@ -1326,7 +1329,7 @@ namespace jank::read::lex
                   { 0, 5, token_kind::keyword, "🍙"sv },
         }));
       }
-      SUBCASE("Multiple UTF-8 characters symbol")
+      SUBCASE("Multiple characters symbol")
       {
         processor p{ "😎👍" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
@@ -1335,7 +1338,7 @@ namespace jank::read::lex
                   { 0, 8, token_kind::symbol, "😎👍"sv }
                 }));
       }
-      SUBCASE("Multiple UTF-8 characters keyword")
+      SUBCASE("Multiple characters keyword")
       {
         processor p{ ":🥩🍗" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
@@ -1344,7 +1347,7 @@ namespace jank::read::lex
                   { 0, 9, token_kind::keyword, "🥩🍗"sv }
                 }));        
       }
-      SUBCASE("Symbol with UTF-8 characters inside")
+      SUBCASE("Symbol with mixed characters inside")
       {
         processor p{ "one-🍺-please!" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
@@ -1353,7 +1356,7 @@ namespace jank::read::lex
                   { 0, 16, token_kind::symbol, "one-🍺-please!"sv }
                 }));                
       }
-      SUBCASE("Keyword with UTF-8 characters inside")
+      SUBCASE("Keyword with mixed characters inside")
       {
         processor p{ ":w🍪w" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
@@ -1362,7 +1365,7 @@ namespace jank::read::lex
                   { 0, 7, token_kind::keyword, "w🍪w"sv }
                 }));                
       }
-      SUBCASE("8-wide UTF-8 character")
+      SUBCASE("8-wide character")
       {
         processor p{ "🇪🇺" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
@@ -1389,16 +1392,34 @@ namespace jank::read::lex
                   { 0, 16, token_kind::keyword, "ありがとう"sv }
                 }));                      
       }
-      SUBCASE("UTF-8 Whitespace Characters")
+      SUBCASE("Whitespace Characters")
       {
         processor p{ ":  " };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
                   { 0, 7, token_kind::keyword, "  "sv }
-                }));                      
+                }));                  
       }
-      
+      SUBCASE("Qualified Symbol")
+      {
+        processor p{ "🐝/🥀" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                  { 0, 9, token_kind::symbol, "🐝/🥀"sv }
+                }));
+      }
+      SUBCASE("Qualified Keyword")
+      {
+        processor p{ ":🐝/🥀" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                  { 0, 10, token_kind::keyword, "🐝/🥀"sv }
+                }));
+      }
+
     }
   }
 }
