@@ -68,9 +68,9 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::def<analyze::expression> const &,
                      analyze::expr::function_arity<analyze::expression> const &);
     llvm::Value *gen(analyze::expr::var_deref<analyze::expression> const &,
-                     analyze::expr::function_arity<analyze::expression> const &);
+                     analyze::expr::function_arity<analyze::expression> const &) const;
     llvm::Value *gen(analyze::expr::var_ref<analyze::expression> const &,
-                     analyze::expr::function_arity<analyze::expression> const &);
+                     analyze::expr::function_arity<analyze::expression> const &) const;
     llvm::Value *gen(analyze::expr::call<analyze::expression> const &,
                      analyze::expr::function_arity<analyze::expression> const &);
     llvm::Value *gen(analyze::expr::primitive_literal<analyze::expression> const &,
@@ -104,7 +104,7 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::native_raw<analyze::expression> const &,
                      analyze::expr::function_arity<analyze::expression> const &);
 
-    llvm::Value *gen_var(obj::symbol_ptr qualified_name);
+    llvm::Value *gen_var(obj::symbol_ptr qualified_name) const;
     llvm::Value *gen_c_string(native_persistent_string const &s) const;
 
     native_persistent_string to_string() const;

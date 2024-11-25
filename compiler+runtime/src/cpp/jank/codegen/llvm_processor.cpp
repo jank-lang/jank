@@ -82,7 +82,7 @@ namespace jank::codegen
     auto fn_value(ctx->module->getOrInsertFunction(
       target == compilation_target::module ? name : fmt::format("{}_{}", name, arity.params.size()),
       fn_type));
-    fn = llvm::dyn_cast<llvm::Function>(fn_value.getCallee());
+    fn = llvm::cast<llvm::Function>(fn_value.getCallee());
     fn->setLinkage(llvm::Function::ExternalLinkage);
 
     auto const entry(llvm::BasicBlock::Create(*ctx->llvm_ctx, "entry", fn));
@@ -217,7 +217,7 @@ namespace jank::codegen
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::var_deref<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &)
+                                   analyze::expr::function_arity<analyze::expression> const &) const
   {
     auto const ref(gen_var(expr.qualified_name));
     auto const fn_type(
@@ -236,7 +236,7 @@ namespace jank::codegen
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::var_ref<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &)
+                                   analyze::expr::function_arity<analyze::expression> const &) const
   {
     auto const var(gen_var(expr.qualified_name));
 
@@ -702,7 +702,7 @@ namespace jank::codegen
     return nullptr;
   }
 
-  llvm::Value *llvm_processor::gen_var(obj::symbol_ptr const qualified_name)
+  llvm::Value *llvm_processor::gen_var(obj::symbol_ptr const qualified_name) const
   {
     auto const found(ctx->var_globals.find(qualified_name));
     if(found != ctx->var_globals.end())

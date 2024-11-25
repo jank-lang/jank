@@ -17,11 +17,6 @@ namespace clang
   class Interpreter;
 }
 
-namespace jank::runtime
-{
-  struct context;
-}
-
 namespace jank::jit
 {
   struct processor
