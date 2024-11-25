@@ -218,7 +218,6 @@ namespace jank::read
     processor::processor(native_persistent_string_view const &f)
       : file{ f }
     {
-      std::setlocale(LC_ALL, "en_US.utf8");
     }
 
     processor::iterator::value_type const &processor::iterator::operator*() const
@@ -267,17 +266,18 @@ namespace jank::read
       return none;
     }
 
-    static result<codepoint, error> convert_to_codepoint(native_persistent_string_view const sv, size_t const pos)
+    static result<codepoint, error>
+    convert_to_codepoint(native_persistent_string_view const sv, size_t const pos)
     {
       std::mbstate_t state{};
       wchar_t wc{};
-      auto const len{std::mbrtowc(&wc, sv.data(), sv.size(), &state)};
-      
-      if (len == static_cast<size_t>(-1))
+      auto const len{ std::mbrtowc(&wc, sv.data(), sv.size(), &state) };
+
+      if(len == static_cast<size_t>(-1))
       {
         return err(error{ pos, "Unfinished Character" });
       }
-      else if (len == static_cast<size_t>(-2))
+      else if(len == static_cast<size_t>(-2))
       {
         return err(error{ pos, "Invalid character" });
       }
@@ -286,15 +286,15 @@ namespace jank::read
 
     static native_bool is_utf8_char(char32_t const c)
     {
-      if (c <= 0x7FF)
+      if(c <= 0x7FF)
       {
         return true;
       }
-      else if (c <= 0xFFFF)
+      else if(c <= 0xFFFF)
       {
         return c < 0xD800 || c > 0xDFFF;
       }
-      else if (c <= 0x10FFFF)
+      else if(c <= 0x10FFFF)
       {
         return true;
       }
@@ -303,16 +303,16 @@ namespace jank::read
 
     static native_bool is_special_char(char32_t const c)
     {
-      return c == '(' || c == ')' || c == '{' || c == '}' || c == '[' || c == ']'
-        || c == '"' || c == '^' || c == '\\' || c == '`' || c == '~';
+      return c == '(' || c == ')' || c == '{' || c == '}' || c == '[' || c == ']' || c == '"'
+        || c == '^' || c == '\\' || c == '`' || c == '~';
     }
-    
+
     static native_bool is_symbol_char(char32_t const c)
     {
-      return !std::iswspace(c) && !is_special_char(c) &&
-        (std::iswalnum(static_cast<wint_t>(c)) != 0 || c == '_' || c == '-' || c == '/'
-         || c == '?' || c == '!' || c == '+' || c == '*' || c == '=' || c == '.' || c == '&'
-         || c == '<' || c == '>' || c == '#' || c == '%' || is_utf8_char(c));
+      return !std::iswspace(c) && !is_special_char(c)
+        && (std::iswalnum(static_cast<wint_t>(c)) != 0 || c == '_' || c == '-' || c == '/'
+            || c == '?' || c == '!' || c == '+' || c == '*' || c == '=' || c == '.' || c == '&'
+            || c == '<' || c == '>' || c == '#' || c == '%' || is_utf8_char(c));
     }
 
     result<token, error> processor::next()
@@ -337,8 +337,8 @@ namespace jank::read
       }
 
       auto const token_start(pos);
-      auto const oc{convert_to_codepoint(file.substr(token_start), token_start)};
-      if (oc.is_err())
+      auto const oc{ convert_to_codepoint(file.substr(token_start), token_start) };
+      if(oc.is_err())
       {
         return oc.expect_err();
       }
@@ -574,7 +574,6 @@ namespace jank::read
         case '>':
         case '%':
           {
-            
             auto &&e(check_whitespace(found_space));
             if(e.is_some())
             {
@@ -619,7 +618,6 @@ namespace jank::read
         /* Keywords. */
         case ':':
           {
- 
             auto &&e(check_whitespace(found_space));
             if(e.is_some())
             {
@@ -649,13 +647,12 @@ namespace jank::read
                 break;
               }
 
-              auto const c = oc.expect_ok().character;
-              auto const size(oc.expect_ok().len);
-              if(!is_symbol_char(c))
+              auto const codepoint(oc.expect_ok());
+              if(!is_symbol_char(codepoint.character))
               {
                 break;
               }
-              pos += size;
+              pos += codepoint.len;
             }
             require_space = true;
             native_persistent_string_view const name{ file.data() + token_start + 1,
@@ -761,7 +758,7 @@ namespace jank::read
             auto const oc(peek());
             char32_t c{};
             size_t size{};
-            if (oc.is_err())
+            if(oc.is_err())
             {
               c = ' ';
               ++pos;
@@ -783,7 +780,7 @@ namespace jank::read
                   auto const maybe_splice(peek());
                   char32_t c{};
                   size_t size{};
-                  if (maybe_splice.is_err())
+                  if(maybe_splice.is_err())
                   {
                     c = ' ';
                     ++pos;
@@ -838,7 +835,7 @@ namespace jank::read
             auto const oc(peek());
             char32_t c{};
             size_t size{};
-            if (oc.is_err())
+            if(oc.is_err())
             {
               c = ' ';
               ++pos;
@@ -876,7 +873,7 @@ namespace jank::read
           }
         default:
           /* To handle all UTF-8 Characters that could be the beginning of a symbol (e.g an emoji) */
-          if (oc.expect_ok().character != '.' && is_utf8_char(oc.expect_ok().character))
+          if(oc.expect_ok().character != '.' && is_utf8_char(oc.expect_ok().character))
           {
             auto &&e(check_whitespace(found_space));
             if(e.is_some())
@@ -914,12 +911,12 @@ namespace jank::read
     result<codepoint, error> processor::peek() const
     {
       auto const next_pos(pos + 1);
-      if (next_pos >= file.size())
+      if(next_pos >= file.size())
       {
-        return err(error{pos, "No more characters to peek." });
+        return err(error{ pos, "No more characters to peek." });
       }
-      auto const oc{convert_to_codepoint(file.substr(next_pos), next_pos)};
-      if (oc.is_err())
+      auto const oc{ convert_to_codepoint(file.substr(next_pos), next_pos) };
+      if(oc.is_err())
       {
         return oc.expect_err();
       }

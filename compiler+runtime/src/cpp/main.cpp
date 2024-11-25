@@ -231,6 +231,9 @@ try
   using namespace jank;
   using namespace jank::runtime;
 
+  /* Set locale */
+  std::locale::global(std::locale(""));
+  
   /* The GC needs to enabled even before arg parsing, since our native types,
    * like strings, use the GC for allocations. It can still be configured later. */
   GC_set_all_interior_pointers(1);
