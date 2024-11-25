@@ -21,7 +21,7 @@ namespace jank::util::cli
     native_transient_string profiler_file{ "jank.profile" };
     native_bool gc_incremental{};
     
-    /* TODO: New category? */
+    /* Native dependencies */
     native_vector<native_persistent_string> include_dirs;
     native_vector<native_persistent_string> library_dirs;
     native_vector<native_persistent_string> define_macros;

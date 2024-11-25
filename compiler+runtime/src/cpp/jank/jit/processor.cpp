@@ -17,7 +17,7 @@
 namespace jank::jit
 {
 
-  inline native_persistent_string shared_lib_name(native_persistent_string const &lib)
+  native_persistent_string shared_lib_name(native_persistent_string const &lib)
 #if defined(__APPLE__)
   {
     return fmt::format("{}.dylib", lib);
@@ -184,8 +184,7 @@ namespace jank::jit
     auto const &load_result{ load_dynamic_libs(opts.libs) };
     if(load_result.is_err())
     {
-      std::cerr << load_result.expect_err().c_str() << "\n";
-      std::exit(1);
+      throw std::runtime_error{ load_result.expect_err().c_str() };
     }
   }
 
@@ -245,7 +244,7 @@ namespace jank::jit
     auto const &lib_name{ shared_lib_name(lib) };
     for(auto const &lib_dir : library_dirs)
     {
-      auto lib_abs_path{ fmt::format("{}/{}", lib_dir.string(), lib_name) };
+      auto const lib_abs_path{ fmt::format("{}/{}", lib_dir.string(), lib_name) };
       if(boost::filesystem::exists(lib_abs_path.c_str()))
       {
         return lib_abs_path;
@@ -285,7 +284,6 @@ namespace jank::jit
 
   void processor::load_object(native_persistent_string const &path) const
   {
-    std::cerr << "Loading dynamic library `" << path << "`\n";
     llvm::cantFail(interpreter->LoadDynamicLibrary(path.data()));
   }
 }
