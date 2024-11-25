@@ -52,7 +52,7 @@ namespace jank::runtime::module
     * subsequent matches are ignored. */
     struct entry
     {
-      option<file_entry> pcm;
+      option<file_entry> bc;
       option<file_entry> cpp;
       option<file_entry> jank;
       option<file_entry> cljc;
@@ -71,7 +71,8 @@ namespace jank::runtime::module
     void set_loaded(native_persistent_string_view const &);
     result<void, native_persistent_string> load_ns(native_persistent_string_view const &module);
     result<void, native_persistent_string> load(native_persistent_string_view const &module);
-    result<void, native_persistent_string> load_pcm(file_entry const &entry) const;
+    result<void, native_persistent_string>
+    load_bc(native_persistent_string const &module, file_entry const &entry) const;
     result<void, native_persistent_string> load_cpp(file_entry const &entry) const;
     result<void, native_persistent_string> load_jank(file_entry const &entry) const;
     result<void, native_persistent_string> load_cljc(file_entry const &entry) const;

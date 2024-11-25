@@ -6,6 +6,7 @@
 #include <clang/Frontend/FrontendDiagnostic.h>
 #include <llvm/Support/Signals.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
+#include <llvm/IRReader/IRReader.h>
 
 #include <fmt/ranges.h>
 
@@ -146,5 +147,25 @@ namespace jank::jit
     llvm::cantFail(
       ee.addIRModule(llvm::orc::ThreadSafeModule{ std::move(m), std::move(llvm_ctx) }));
     llvm::cantFail(ee.initialize(ee.getMainJITDylib()));
+  }
+
+  void processor::load_bitcode(native_persistent_string const &module,
+                               native_persistent_string const &bitcode) const
+  {
+    auto &ee(interpreter->getExecutionEngine().get());
+    auto ctx{ std::make_unique<llvm::LLVMContext>() };
+    llvm::SMDiagnostic err{};
+    llvm::MemoryBufferRef buf{
+      std::string_view{ bitcode.data(), bitcode.size() },
+      module.c_str()
+    };
+    auto ir_module{ llvm::parseIR(buf, err, *ctx) };
+    if(!ir_module)
+    {
+      err.print("jank", llvm::errs());
+      /* TODO: Return a result. */
+      throw std::runtime_error{ fmt::format("unable to load module") };
+    }
+    load_ir_module(std::move(ir_module), std::move(ctx));
   }
 }

@@ -143,6 +143,7 @@ namespace jank::runtime::module
     return module.find('$') != module.rfind('$');
   }
 
+  /* TODO: We can patch libzippp to not copy strings around so much. */
   template <typename F>
   void visit_jar_entry(file_entry const &entry, F const &fn)
   {
@@ -204,15 +205,15 @@ namespace jank::runtime::module
         res.first->second.cpp = entry;
       }
     }
-    else if(ext == ".pcm")
+    else if(ext == ".bc")
     {
       registered = true;
       loader::entry e;
-      e.pcm = entry;
+      e.bc = entry;
       auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
       if(!res.second)
       {
-        res.first->second.pcm = entry;
+        res.first->second.bc = entry;
       }
     }
 
@@ -414,9 +415,9 @@ namespace jank::runtime::module
     }
     else
     {
-      if(entry->second.pcm.is_some())
+      if(entry->second.bc.is_some())
       {
-        res = load_pcm(entry->second.pcm.unwrap());
+        res = load_bc(module, entry->second.bc.unwrap());
       }
       else if(entry->second.cpp.is_some())
       {
@@ -442,9 +443,29 @@ namespace jank::runtime::module
     return ok();
   }
 
-  result<void, native_persistent_string> loader::load_pcm(file_entry const &) const
+  result<void, native_persistent_string>
+  loader::load_bc(native_persistent_string const &module, file_entry const &entry) const
   {
-    return err("Not yet implemented: PCM loading");
+    if(entry.archive_path.is_some())
+    {
+      visit_jar_entry(entry, [&](auto const &str) { rt_ctx.jit_prc.load_bitcode(module, str); });
+    }
+    else
+    {
+      auto const file(util::map_file({ entry.path.data(), entry.path.size() }));
+      if(file.is_err())
+      {
+        throw std::runtime_error{
+          fmt::format("unable to map file {} due to error: {}", entry.path, file.expect_err())
+        };
+      }
+      rt_ctx.jit_prc.load_bitcode(module, { file.expect_ok().head, file.expect_ok().size });
+    }
+
+    auto const load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(module_to_load_function(module)) };
+    load();
+
+    return ok();
   }
 
   result<void, native_persistent_string> loader::load_cpp(file_entry const &entry) const
@@ -500,8 +521,8 @@ namespace jank::runtime::module
                                     jank::detail::to_runtime_data(e.second.cljc),
                                     make_box("cpp"),
                                     jank::detail::to_runtime_data(e.second.cpp),
-                                    make_box("pcm"),
-                                    jank::detail::to_runtime_data(e.second.pcm)));
+                                    make_box("bc"),
+                                    jank::detail::to_runtime_data(e.second.bc)));
     }
 
     return runtime::obj::persistent_array_map::create_unique(make_box("__type"),
