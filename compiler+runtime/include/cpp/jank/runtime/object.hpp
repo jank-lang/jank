@@ -65,6 +65,8 @@ namespace jank::runtime
     jit_function,
     multi_function,
 
+    native_pointer_wrapper,
+
     atom,
     volatile_,
     reduced,
