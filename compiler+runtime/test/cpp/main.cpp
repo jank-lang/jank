@@ -12,6 +12,7 @@
 #include <llvm/Support/TargetSelect.h>
 
 #include <jank/runtime/context.hpp>
+#include <clojure/core_native.hpp>
 
 /* NOLINTNEXTLINE(bugprone-exception-escape): println can throw. */
 int main(int const argc, char const **argv)
@@ -31,6 +32,7 @@ try
   context.setOption("no-breaks", true);
 
   jank::runtime::__rt_ctx = new(GC) jank::runtime::context{};
+  jank_load_clojure_core_native();
   jank::runtime::__rt_ctx->load_module("/clojure.core").expect_ok();
 
   auto const res(context.run());
