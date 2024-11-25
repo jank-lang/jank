@@ -16,23 +16,16 @@ namespace jank::analyze
   {
     return obj::persistent_array_map::create_unique(make_box("__type"),
                                                     make_box("lifted_var"),
-                                                    make_box("native_name"),
-                                                    make_box<obj::symbol>(native_name),
                                                     make_box("var_name"),
                                                     var_name);
   }
 
   object_ptr lifted_constant::to_runtime_data() const
   {
-    return obj::persistent_array_map::create_unique(
-      make_box("__type"),
-      make_box("lifted_constant"),
-      make_box("native_name"),
-      make_box<obj::symbol>(native_name),
-      make_box("unboxed_native_name"),
-      jank::detail::to_runtime_data(unboxed_native_name),
-      make_box("data"),
-      data);
+    return obj::persistent_array_map::create_unique(make_box("__type"),
+                                                    make_box("lifted_constant"),
+                                                    make_box("data"),
+                                                    data);
   }
 
   object_ptr local_binding::to_runtime_data() const
@@ -225,7 +218,7 @@ namespace jank::analyze
     }
 
     /* We use unique native names, just so var names don't clash with the underlying C++ API. */
-    lifted_var lv{ context::unique_symbol(munge(qualified_sym->name)), qualified_sym };
+    lifted_var lv{ qualified_sym };
     closest_fn.lifted_vars.emplace(qualified_sym, std::move(lv));
     return qualified_sym;
   }
@@ -269,7 +262,7 @@ namespace jank::analyze
       },
       constant) };
 
-    lifted_constant l{ std::move(name), std::move(unboxed_name), constant };
+    lifted_constant l{ constant };
     closest_fn.lifted_constants.emplace(constant, std::move(l));
   }
 
