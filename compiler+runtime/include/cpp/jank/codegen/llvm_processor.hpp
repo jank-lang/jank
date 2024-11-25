@@ -7,7 +7,6 @@
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/analyze/expression.hpp>
 #include <jank/analyze/processor.hpp>
-#include <jank/codegen/processor.hpp>
 
 namespace jank::codegen
 {
@@ -17,6 +16,13 @@ namespace jank::codegen
   /* TODO: Can we use a compilation_target for this? */
   struct nested_tag
   {
+  };
+
+  enum class compilation_target : uint8_t
+  {
+    module,
+    function,
+    eval
   };
 
   struct reusable_context

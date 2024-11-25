@@ -93,43 +93,6 @@ namespace jank::jit
     llvm::remove_fatal_error_handler();
   }
 
-  result<option<runtime::object_ptr>, native_persistent_string>
-  processor::eval(codegen::processor &cg_prc) const
-  {
-    profile::timer timer{ "jit eval" };
-    auto const str(cg_prc.declaration_str());
-    //fmt::println("// declaration\n{}\n", str);
-
-    auto declare_res(interpreter->ParseAndExecute({ str.data(), str.size() }));
-    native_bool const declare_error{ declare_res };
-    llvm::logAllUnhandledErrors(std::move(declare_res), llvm::errs(), "error: ");
-    if(declare_error)
-    {
-      return err("compilation error: declaration");
-    }
-
-    auto const expr(cg_prc.expression_str(true));
-    if(expr.empty())
-    {
-      return ok(none);
-    }
-
-    std::string full_expr{ fmt::format("&{}->base", expr) };
-
-    //fmt::println("// expression:\n{}\n", full_expr);
-
-    clang::Value ret;
-    auto expr_res(interpreter->ParseAndExecute(full_expr, &ret));
-    native_bool const expr_error{ expr_res };
-    llvm::logAllUnhandledErrors(std::move(expr_res), llvm::errs(), "error: ");
-    if(expr_error)
-    {
-      return err("compilation error: expression");
-    }
-
-    return ret.convertTo<runtime::object *>();
-  }
-
   void processor::eval_string(native_persistent_string const &s) const
   {
     profile::timer timer{ "jit eval_string" };

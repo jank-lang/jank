@@ -5,7 +5,6 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/behavior/callable.hpp>
-#include <jank/codegen/processor.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/evaluate.hpp>

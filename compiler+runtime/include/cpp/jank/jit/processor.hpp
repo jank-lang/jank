@@ -5,7 +5,6 @@
 #include <clang/Interpreter/Interpreter.h>
 
 #include <jank/result.hpp>
-#include <jank/codegen/processor.hpp>
 
 namespace llvm
 {
@@ -30,8 +29,6 @@ namespace jank::jit
     processor(native_integer optimization_level);
     ~processor();
 
-    result<option<runtime::object_ptr>, native_persistent_string>
-    eval(codegen::processor &cg_prc) const;
     void eval_string(native_persistent_string const &s) const;
     void load_object(native_persistent_string_view const &path) const;
     void load_ir_module(std::unique_ptr<llvm::Module> m,

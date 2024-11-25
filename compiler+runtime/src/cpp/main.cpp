@@ -19,7 +19,6 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/analyze/processor.hpp>
-#include <jank/codegen/processor.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/native_persistent_string.hpp>

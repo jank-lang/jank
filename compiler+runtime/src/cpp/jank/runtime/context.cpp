@@ -11,7 +11,6 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/analyze/processor.hpp>
-#include <jank/codegen/processor.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/util/mapped_file.hpp>
