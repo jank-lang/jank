@@ -32,18 +32,17 @@ namespace jank::analyze
       };
     };
     specials = {
-      {        make_box<symbol>("def"),        make_fn(&processor::analyze_def) },
-      {        make_box<symbol>("fn*"),         make_fn(&processor::analyze_fn) },
-      {      make_box<symbol>("recur"),      make_fn(&processor::analyze_recur) },
-      {         make_box<symbol>("do"),         make_fn(&processor::analyze_do) },
-      {       make_box<symbol>("let*"),        make_fn(&processor::analyze_let) },
-      {      make_box<symbol>("loop*"),       make_fn(&processor::analyze_loop) },
-      {         make_box<symbol>("if"),         make_fn(&processor::analyze_if) },
-      {      make_box<symbol>("quote"),      make_fn(&processor::analyze_quote) },
-      {        make_box<symbol>("var"),   make_fn(&processor::analyze_var_call) },
-      {      make_box<symbol>("throw"),      make_fn(&processor::analyze_throw) },
-      {        make_box<symbol>("try"),        make_fn(&processor::analyze_try) },
-      { make_box<symbol>("native/raw"), make_fn(&processor::analyze_native_raw) },
+      {   make_box<symbol>("def"),      make_fn(&processor::analyze_def) },
+      {   make_box<symbol>("fn*"),       make_fn(&processor::analyze_fn) },
+      { make_box<symbol>("recur"),    make_fn(&processor::analyze_recur) },
+      {    make_box<symbol>("do"),       make_fn(&processor::analyze_do) },
+      {  make_box<symbol>("let*"),      make_fn(&processor::analyze_let) },
+      { make_box<symbol>("loop*"),     make_fn(&processor::analyze_loop) },
+      {    make_box<symbol>("if"),       make_fn(&processor::analyze_if) },
+      { make_box<symbol>("quote"),    make_fn(&processor::analyze_quote) },
+      {   make_box<symbol>("var"), make_fn(&processor::analyze_var_call) },
+      { make_box<symbol>("throw"),    make_fn(&processor::analyze_throw) },
+      {   make_box<symbol>("try"),      make_fn(&processor::analyze_try) },
     };
   }
 
@@ -1107,106 +1106,6 @@ namespace jank::analyze
     ret.body.propagate_position(position);
 
     return make_box<expression>(std::move(ret));
-  }
-
-  processor::expression_result
-  processor::analyze_native_raw(runtime::obj::persistent_list_ptr const &o,
-                                local_frame_ptr &current_frame,
-                                expression_position const position,
-                                option<expr::function_context_ptr> const &fn_ctx,
-                                native_bool const)
-  {
-    if(o->count() != 2)
-    {
-      return err(error{ "invalid native/raw: expects one argument" });
-    }
-
-    auto const &code(o->data.rest().first().unwrap());
-    if(code->type != runtime::object_type::persistent_string)
-    {
-      return err(error{ "invalid native/raw: expects string of C++ code" });
-    }
-
-    auto const code_str(runtime::expect_object<runtime::obj::persistent_string>(code));
-    if(code_str->data.empty())
-    {
-      return make_box<expression>(expr::native_raw<expression>{
-        expression_base{ {}, position, current_frame, true },
-        {}
-      });
-    }
-
-    /* native/raw expressions are broken up into chunks of either literal C++ code or
-     * interpolated jank code, the latter needing to also be analyzed. */
-    decltype(expr::native_raw<expression>::chunks) chunks;
-    static native_persistent_string const interp_start{ "~{" };
-    for(size_t it{}; it < code_str->data.size();)
-    {
-      auto const next_interp(code_str->data.find(interp_start, it));
-      if(next_interp == native_persistent_string::npos)
-      {
-        /* This is the final chunk. */
-        chunks.emplace_back(native_persistent_string_view{ code_str->data.data() + it });
-        break;
-      }
-
-      /* Once we've found the start of an interpolation, we begin lexing/parsing at that
-       * spot, so we can get a jank value. */
-      read::lex::processor l_prc{
-        { code_str->data.data() + next_interp + interp_start.size(),
-         code_str->data.data() + code_str->data.size() }
-      };
-      read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-      auto parsed_obj(p_prc.next());
-      if(parsed_obj.is_err())
-      {
-        return parsed_obj.expect_err_move();
-      }
-      else if(parsed_obj.expect_ok().is_none())
-      {
-        return err(error{ next_interp + interp_start.size(), "invalid native/raw interpolation" });
-      }
-
-      /* We get back an AST expression and keep track of it as a chunk for later codegen. */
-      auto result(analyze(parsed_obj.expect_ok().unwrap().ptr,
-                          current_frame,
-                          expression_position::value,
-                          fn_ctx,
-                          true));
-      if(result.is_err())
-      {
-        return result.expect_err_move();
-      }
-
-      /* C++ code before the next interpolation. */
-      if(next_interp - it > 0)
-      {
-        chunks.emplace_back(
-          native_persistent_string_view{ code_str->data.data() + it, next_interp - it });
-      }
-      chunks.emplace_back(result.expect_ok());
-
-      /* The next token needs to be a }, to match our original ~{. If it's not, either multiple
-       * forms were included in the interpolation or there is no closing }. We don't know for
-       * sure. */
-      auto const next_token(*p_prc.token_current);
-      if(next_token.is_err())
-      {
-        return next_token.expect_err();
-      }
-      else if(next_token.expect_ok().kind != read::lex::token_kind::close_curly_bracket)
-      {
-        return err(error{
-          "invalid native/raw interpolation: ~{ must be followed by a single form and then a }" });
-      }
-      it = next_interp + interp_start.size() + next_token.expect_ok().pos
-        + next_token.expect_ok().size;
-    }
-
-    return make_box<expression>(expr::native_raw<expression>{
-      expression_base{ {}, position, current_frame, true },
-      std::move(chunks)
-    });
   }
 
   processor::expression_result

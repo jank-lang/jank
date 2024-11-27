@@ -468,9 +468,4 @@ namespace jank::evaluate
   {
     return dynamic_call(eval(wrap_expression(expr)));
   }
-
-  object_ptr eval(expr::native_raw<expression> const &expr)
-  {
-    return dynamic_call(eval(wrap_expression(expr)));
-  }
 }

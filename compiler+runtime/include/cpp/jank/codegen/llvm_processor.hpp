@@ -101,8 +101,6 @@ namespace jank::codegen
                      analyze::expr::function_arity<analyze::expression> const &);
     llvm::Value *gen(analyze::expr::try_<analyze::expression> const &,
                      analyze::expr::function_arity<analyze::expression> const &);
-    llvm::Value *gen(analyze::expr::native_raw<analyze::expression> const &,
-                     analyze::expr::function_arity<analyze::expression> const &);
 
     llvm::Value *gen_var(obj::symbol_ptr qualified_name) const;
     llvm::Value *gen_c_string(native_persistent_string const &s) const;

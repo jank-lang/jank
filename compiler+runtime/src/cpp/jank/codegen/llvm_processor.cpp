@@ -709,13 +709,6 @@ namespace jank::codegen
     return gen(expr.body, arity);
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::native_raw<analyze::expression> const &,
-                                   analyze::expr::function_arity<analyze::expression> const &)
-  {
-    throw std::runtime_error{ "no ir codegen for native/raw" };
-    return nullptr;
-  }
-
   llvm::Value *llvm_processor::gen_var(obj::symbol_ptr const qualified_name) const
   {
     auto const found(ctx->var_globals.find(qualified_name));

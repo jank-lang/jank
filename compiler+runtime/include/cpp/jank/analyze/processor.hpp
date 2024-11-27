@@ -118,11 +118,6 @@ namespace jank::analyze
                                   expression_position,
                                   option<expr::function_context_ptr> const &,
                                   native_bool needs_box);
-    expression_result analyze_native_raw(runtime::obj::persistent_list_ptr const &,
-                                         local_frame_ptr &,
-                                         expression_position,
-                                         option<expr::function_context_ptr> const &,
-                                         native_bool needs_box);
     expression_result analyze_primitive_literal(runtime::object_ptr,
                                                 local_frame_ptr &,
                                                 expression_position,
