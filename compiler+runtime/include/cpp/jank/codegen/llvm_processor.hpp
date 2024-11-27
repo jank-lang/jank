@@ -12,12 +12,6 @@ namespace jank::codegen
 {
   using namespace jank::runtime;
 
-  /* We use this to denote that an llvm processor is creating a nested fn. */
-  /* TODO: Can we use a compilation_target for this? */
-  struct nested_tag
-  {
-  };
-
   enum class compilation_target : uint8_t
   {
     module,
@@ -54,13 +48,12 @@ namespace jank::codegen
     llvm_processor(analyze::expr::function<analyze::expression> const &expr,
                    native_persistent_string const &module,
                    compilation_target target);
-    llvm_processor(nested_tag,
-                   analyze::expr::function<analyze::expression> const &expr,
-                   llvm_processor &&);
+    /* For this ctor, we're inheriting the context from another function, which means
+     * we're building a nested function. */
+    llvm_processor(analyze::expr::function<analyze::expression> const &expr,
+                   std::unique_ptr<reusable_context> ctx);
     llvm_processor(llvm_processor const &) = delete;
     llvm_processor(llvm_processor &&) noexcept = default;
-
-    void release(llvm_processor &into) &&;
 
     void gen();
     llvm::Value *gen(analyze::expression_ptr const &,

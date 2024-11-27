@@ -41,18 +41,12 @@ namespace jank::codegen
     assert(root_fn.frame.data);
   }
 
-  llvm_processor::llvm_processor(nested_tag,
-                                 analyze::expr::function<analyze::expression> const &expr,
-                                 llvm_processor &&from)
+  llvm_processor::llvm_processor(analyze::expr::function<analyze::expression> const &expr,
+                                 std::unique_ptr<reusable_context> ctx)
     : target{ compilation_target::function }
     , root_fn{ expr }
-    , ctx{ std::move(from.ctx) }
+    , ctx{ std::move(ctx) }
   {
-  }
-
-  void llvm_processor::release(llvm_processor &into) &&
-  {
-    into.ctx = std::move(ctx);
   }
 
   void llvm_processor::create_function()
@@ -451,10 +445,10 @@ namespace jank::codegen
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
 
-      llvm_processor nested{ nested_tag{}, expr, std::move(*this) };
+      llvm_processor nested{ expr, std::move(ctx) };
       nested.gen();
 
-      std::move(nested).release(*this);
+      ctx = std::move(nested.ctx);
     }
 
     auto const fn_obj(gen_function_instance(expr, fn_arity));
