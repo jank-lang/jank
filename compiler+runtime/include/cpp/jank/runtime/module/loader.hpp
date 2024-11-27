@@ -53,7 +53,6 @@ namespace jank::runtime::module
     struct entry
     {
       option<file_entry> o;
-      option<file_entry> bc;
       option<file_entry> cpp;
       option<file_entry> jank;
       option<file_entry> cljc;
@@ -74,8 +73,6 @@ namespace jank::runtime::module
     result<void, native_persistent_string> load(native_persistent_string_view const &module);
     result<void, native_persistent_string>
     load_o(native_persistent_string const &module, file_entry const &entry) const;
-    result<void, native_persistent_string>
-    load_bc(native_persistent_string const &module, file_entry const &entry) const;
     result<void, native_persistent_string> load_cpp(file_entry const &entry) const;
     result<void, native_persistent_string> load_jank(file_entry const &entry) const;
     result<void, native_persistent_string> load_cljc(file_entry const &entry) const;

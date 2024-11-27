@@ -216,17 +216,6 @@ namespace jank::runtime::module
         res.first->second.o = entry;
       }
     }
-    else if(ext == ".bc")
-    {
-      registered = true;
-      loader::entry e;
-      e.bc = entry;
-      auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
-      if(!res.second)
-      {
-        res.first->second.bc = entry;
-      }
-    }
 
     if(registered)
     {
@@ -403,10 +392,6 @@ namespace jank::runtime::module
       {
         res = load_o(module, entry->second.o.unwrap());
       }
-      else if(entry->second.bc.is_some())
-      {
-        res = load_bc(module, entry->second.bc.unwrap());
-      }
       else if(entry->second.cpp.is_some())
       {
         res = load_cpp(entry->second.cpp.unwrap());
@@ -447,32 +432,6 @@ namespace jank::runtime::module
 
     auto const init{ rt_ctx.jit_prc.find_symbol<void (*)()>("jank_global_init_2393") };
     init();
-
-    auto const load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(module_to_load_function(module)) };
-    load();
-
-    return ok();
-  }
-
-  result<void, native_persistent_string>
-  loader::load_bc(native_persistent_string const &module, file_entry const &entry) const
-  {
-    profile::timer timer{ fmt::format("load ir bitcode {}", module) };
-    if(entry.archive_path.is_some())
-    {
-      visit_jar_entry(entry, [&](auto const &str) { rt_ctx.jit_prc.load_bitcode(module, str); });
-    }
-    else
-    {
-      auto const file(util::map_file({ entry.path.data(), entry.path.size() }));
-      if(file.is_err())
-      {
-        throw std::runtime_error{
-          fmt::format("unable to map file {} due to error: {}", entry.path, file.expect_err())
-        };
-      }
-      rt_ctx.jit_prc.load_bitcode(module, { file.expect_ok().head, file.expect_ok().size });
-    }
 
     auto const load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(module_to_load_function(module)) };
     load();
@@ -533,8 +492,8 @@ namespace jank::runtime::module
                                     jank::detail::to_runtime_data(e.second.cljc),
                                     make_box("cpp"),
                                     jank::detail::to_runtime_data(e.second.cpp),
-                                    make_box("bc"),
-                                    jank::detail::to_runtime_data(e.second.bc)));
+                                    make_box("o"),
+                                    jank::detail::to_runtime_data(e.second.o)));
     }
 
     return runtime::obj::persistent_array_map::create_unique(make_box("__type"),
