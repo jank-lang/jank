@@ -17,7 +17,7 @@
 namespace jank::jit
 {
 
-  native_persistent_string shared_lib_name(native_persistent_string const &lib)
+  native_persistent_string default_shared_lib_name(native_persistent_string const &lib)
 #if defined(__APPLE__)
   {
     return fmt::format("{}.dylib", lib);
@@ -241,13 +241,21 @@ namespace jank::jit
   option<native_persistent_string>
   processor::find_dynamic_lib(native_persistent_string const &lib) const
   {
-    auto const &lib_name{ shared_lib_name(lib) };
+    auto const &default_lib_name{ default_shared_lib_name(lib) };
     for(auto const &lib_dir : library_dirs)
     {
-      auto const lib_abs_path{ fmt::format("{}/{}", lib_dir.string(), lib_name) };
-      if(boost::filesystem::exists(lib_abs_path.c_str()))
+      auto const default_lib_abs_path{ fmt::format("{}/{}", lib_dir.string(), default_lib_name) };
+      if(boost::filesystem::exists(default_lib_abs_path.c_str()))
       {
-        return lib_abs_path;
+        return default_lib_abs_path;
+      }
+      else
+      {
+        auto const lib_abs_path{ fmt::format("{}/{}", lib_dir.string(), lib) };
+        if(boost::filesystem::exists(lib_abs_path))
+        {
+          return lib_abs_path;
+        }
       }
     }
 
@@ -259,11 +267,9 @@ namespace jank::jit
   {
     for(auto const &lib : libs)
     {
-      auto const &lib_abs_path{ boost::filesystem::absolute(lib.c_str()) };
-      if(boost::filesystem::exists(lib_abs_path))
+      if(boost::filesystem::path{ lib.c_str() }.is_absolute())
       {
-        auto const &path_str{ lib_abs_path.string() };
-        load_object(path_str);
+        load_object(lib);
       }
       else
       {
