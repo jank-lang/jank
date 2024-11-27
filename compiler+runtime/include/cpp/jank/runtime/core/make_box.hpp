@@ -63,7 +63,7 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(obj::ratio_data const r)
   {
-    return expect_object<runtime::obj::ratio>(obj::ratio::create(r.numerator, r.denominator));
+    return make_box<runtime::obj::ratio>(r);
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
