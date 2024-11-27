@@ -101,9 +101,23 @@ namespace jank::jit
     llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
   }
 
+  void processor::load_object(native_persistent_string_view const &path) const
+  {
+    auto &ee{ interpreter->getExecutionEngine().get() };
+    auto file{ llvm::MemoryBuffer::getFile(path) };
+    if(!file)
+    {
+      throw std::runtime_error{ fmt::format("failed to load object file: {}", path) };
+    }
+    /* XXX: Object files won't be able to use global ctors until jank is on the ORC
+     * runtime, which likely won't happen until clang::Interpreter is on the ORC runtime. */
+    ee.addObjectFile(std::move(file.get()));
+  }
+
   void processor::load_ir_module(std::unique_ptr<llvm::Module> m,
                                  std::unique_ptr<llvm::LLVMContext> llvm_ctx) const
   {
+    profile::timer timer{ fmt::format("jit ir module {}", m->getName()) };
     //m->print(llvm::outs(), nullptr);
 
     auto &ee(interpreter->getExecutionEngine().get());
@@ -113,7 +127,7 @@ namespace jank::jit
   }
 
   void processor::load_bitcode(native_persistent_string const &module,
-                               native_persistent_string const &bitcode) const
+                               native_persistent_string_view const &bitcode) const
   {
     auto &ee(interpreter->getExecutionEngine().get());
     auto ctx{ std::make_unique<llvm::LLVMContext>() };

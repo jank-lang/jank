@@ -2,6 +2,10 @@
 
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/Bitcode/BitcodeWriter.h>
+#include <llvm/Target/TargetMachine.h>
+#include <llvm/IR/LegacyPassManager.h>
+#include <llvm/MC/TargetRegistry.h>
+#include <llvm/TargetParser/Host.h>
 
 #include <fmt/compile.h>
 
@@ -215,7 +219,7 @@ namespace jank::runtime
       fn.unique_name = fn.name;
       codegen::llvm_processor cg_prc{ wrapped_exprs, module, codegen::compilation_target::module };
       cg_prc.gen();
-      write_module(std::move(cg_prc.ctx));
+      write_module(std::move(cg_prc.ctx)).expect_ok();
     }
 
     assert(ret);
@@ -312,18 +316,47 @@ namespace jank::runtime
     return load_module(fmt::format("/{}", module));
   }
 
-  void context::write_module(std::unique_ptr<codegen::reusable_context> const codegen_ctx) const
+  string_result<void>
+  context::write_module(std::unique_ptr<codegen::reusable_context> const codegen_ctx) const
   {
     profile::timer timer{ fmt::format("write_module {}", codegen_ctx->module_name) };
     boost::filesystem::path const module_path{
-      fmt::format("{}/{}.bc", output_dir, module::module_to_path(codegen_ctx->module_name))
+      fmt::format("{}/{}.o", output_dir, module::module_to_path(codegen_ctx->module_name))
     };
     boost::filesystem::create_directories(module_path.parent_path());
 
-    std::error_code error{};
-    llvm::raw_fd_ostream os(module_path.c_str(), error, llvm::sys::fs::OpenFlags::OF_None);
-    //codegen_ctx->module->print(os, nullptr);
-    llvm::WriteBitcodeToFile(*codegen_ctx->module, os);
+    /* TODO: Is there a better place for this block of code? */
+    std::error_code file_error{};
+    llvm::raw_fd_ostream os(module_path.c_str(), file_error, llvm::sys::fs::OpenFlags::OF_None);
+    if(file_error)
+    {
+      return err(fmt::format("failed to open module file {} with error {}",
+                             module_path.c_str(),
+                             file_error.message()));
+    }
+    //codegen_ctx->module->print(llvm::outs(), nullptr);
+
+    auto const target_triple{ llvm::sys::getDefaultTargetTriple() };
+    std::string target_error;
+    auto const target{ llvm::TargetRegistry::lookupTarget(target_triple, target_error) };
+    if(!target)
+    {
+      return err(target_error);
+    }
+    llvm::TargetOptions opt;
+    auto const target_machine{
+      target->createTargetMachine(target_triple, "generic", "", opt, llvm::Reloc::PIC_)
+    };
+    llvm::legacy::PassManager pass;
+
+    if(target_machine->addPassesToEmitFile(pass, os, nullptr, llvm::CodeGenFileType::ObjectFile))
+    {
+      return err(fmt::format("failed to write module to object file for {}", target_triple));
+    }
+
+    pass.run(*codegen_ctx->module);
+
+    return ok();
   }
 
   native_persistent_string context::unique_string()

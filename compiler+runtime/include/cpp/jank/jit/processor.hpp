@@ -29,7 +29,7 @@ namespace jank::jit
     void load_ir_module(std::unique_ptr<llvm::Module> m,
                         std::unique_ptr<llvm::LLVMContext> llvm_ctx) const;
     void load_bitcode(native_persistent_string const &module,
-                      native_persistent_string const &bitcode) const;
+                      native_persistent_string_view const &bitcode) const;
 
     template <typename T>
     T find_symbol(native_persistent_string const &name) const

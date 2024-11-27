@@ -33,7 +33,7 @@ namespace jank
     using namespace jank::runtime;
 
     {
-      profile::timer timer{ "require clojure.core" };
+      profile::timer timer{ "load clojure.core" };
       jank_load_clojure_core_native();
       __rt_ctx->load_module("/clojure.core").expect_ok();
     }

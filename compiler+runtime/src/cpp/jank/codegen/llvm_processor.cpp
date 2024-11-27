@@ -19,6 +19,7 @@ namespace jank::codegen
     , builder{ std::make_unique<llvm::IRBuilder<>>(*llvm_ctx) }
     , global_ctor_block{ llvm::BasicBlock::Create(*llvm_ctx, "entry") }
   {
+    /* TODO: Set data layout and target triplet for better perf. */
   }
 
   llvm_processor::llvm_processor(analyze::expression_ptr const &expr,
@@ -88,6 +89,8 @@ namespace jank::codegen
     auto const entry(llvm::BasicBlock::Create(*ctx->llvm_ctx, "entry", fn));
     ctx->builder->SetInsertPoint(entry);
 
+    /* TODO: If we're compiling a module, and we're in the load fn, call the global ctor. */
+
     for(size_t i{}; i < arity.params.size(); ++i)
     {
       auto &param(arity.params[i]);
@@ -137,6 +140,8 @@ namespace jank::codegen
       {
         ctx->builder->CreateRet(gen_global(obj::nil::nil_const()));
       }
+
+      /* TODO: Optimization passes. */
     }
 
     if(target != compilation_target::function)
@@ -710,7 +715,7 @@ namespace jank::codegen
       return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), found->second);
     }
 
-    auto &global(ctx->literal_globals[qualified_name]);
+    auto &global(ctx->var_globals[qualified_name]);
     auto const name(fmt::format("var_{}", munge(qualified_name->to_string())));
     auto const var(create_global_var(name));
     ctx->module->insertGlobalVariable(var);
@@ -1238,7 +1243,13 @@ namespace jank::codegen
                                            *ctx->module));
     ctx->global_ctor_block->insertInto(init);
 
-    llvm::appendToGlobalCtors(*ctx->module, init, 65535);
+    /* XXX: Modules are written to object files, which can't use global ctors until
+     * we're on the ORC runtime. Instead, we just generate our load function to call
+     * our global ctor first. */
+    if(target != compilation_target::module)
+    {
+      llvm::appendToGlobalCtors(*ctx->module, init, 65535);
+    }
 
     if(profile::is_enabled())
     {

@@ -205,6 +205,17 @@ namespace jank::runtime::module
         res.first->second.cpp = entry;
       }
     }
+    else if(ext == ".o")
+    {
+      registered = true;
+      loader::entry e;
+      e.o = entry;
+      auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
+      if(!res.second)
+      {
+        res.first->second.o = entry;
+      }
+    }
     else if(ext == ".bc")
     {
       registered = true;
@@ -349,37 +360,10 @@ namespace jank::runtime::module
     profile::timer timer{ "load_ns" };
 
     //fmt::println("loading ns {}", module);
-
-    native_bool const compiling{ truthy(rt_ctx.compile_files_var->deref()) };
-    native_bool const needs_init{ !compiling && entries.contains(fmt::format("{}--init", module)) };
-    if(needs_init)
+    auto res(load(module));
+    if(res.is_err())
     {
-      profile::timer timer{ "load_ns __init" };
-      //fmt::println("loading ns __init {}", module);
-      auto ret(load(fmt::format("{}--init", module)));
-      if(ret.is_err())
-      {
-        return ret;
-      }
-      //fmt::println("evaling ns __init {}", module);
-      rt_ctx.jit_prc.eval_string(
-        fmt::format("{}::__ns__init::__init();", runtime::module::module_to_native_ns(module)));
-    }
-
-    {
-      profile::timer timer{ "load_ns compilation" };
-      auto res(load(module));
-      if(res.is_err())
-      {
-        return res;
-      }
-    }
-
-    if(needs_init)
-    {
-      profile::timer timer{ "load_ns effects" };
-      rt_ctx.jit_prc.eval_string(
-        fmt::format("{}::__ns{{ }}.call();", runtime::module::module_to_native_ns(module)));
+      return res;
     }
 
     return ok();
@@ -415,7 +399,11 @@ namespace jank::runtime::module
     }
     else
     {
-      if(entry->second.bc.is_some())
+      if(entry->second.o.is_some())
+      {
+        res = load_o(module, entry->second.o.unwrap());
+      }
+      else if(entry->second.bc.is_some())
       {
         res = load_bc(module, entry->second.bc.unwrap());
       }
@@ -444,8 +432,32 @@ namespace jank::runtime::module
   }
 
   result<void, native_persistent_string>
+  loader::load_o(native_persistent_string const &module, file_entry const &entry) const
+  {
+    profile::timer timer{ fmt::format("load object {}", module) };
+    if(entry.archive_path.is_some())
+    {
+      /* TODO: */
+      //visit_jar_entry(entry, [&](auto const &str) { rt_ctx.jit_prc.load_bitcode(module, str); });
+    }
+    else
+    {
+      rt_ctx.jit_prc.load_object(entry.path);
+    }
+
+    auto const init{ rt_ctx.jit_prc.find_symbol<void (*)()>("jank_global_init_2393") };
+    init();
+
+    auto const load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(module_to_load_function(module)) };
+    load();
+
+    return ok();
+  }
+
+  result<void, native_persistent_string>
   loader::load_bc(native_persistent_string const &module, file_entry const &entry) const
   {
+    profile::timer timer{ fmt::format("load ir bitcode {}", module) };
     if(entry.archive_path.is_some())
     {
       visit_jar_entry(entry, [&](auto const &str) { rt_ctx.jit_prc.load_bitcode(module, str); });

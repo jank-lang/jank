@@ -100,7 +100,7 @@ namespace jank::runtime
     result<void, native_persistent_string>
     compile_module(native_persistent_string_view const &module);
 
-    void write_module(std::unique_ptr<codegen::reusable_context> codegen_ctx) const;
+    string_result<void> write_module(std::unique_ptr<codegen::reusable_context> codegen_ctx) const;
 
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */
