@@ -12,7 +12,7 @@ namespace jank::runtime
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(void *);
+    static_object(void * const);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;

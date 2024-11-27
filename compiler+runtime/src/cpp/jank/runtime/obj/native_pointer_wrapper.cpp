@@ -2,7 +2,7 @@
 
 namespace jank::runtime
 {
-  obj::native_pointer_wrapper::static_object(void *d)
+  obj::native_pointer_wrapper::static_object(void * const d)
     : data{ d }
   {
   }

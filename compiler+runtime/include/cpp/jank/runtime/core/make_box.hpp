@@ -83,14 +83,6 @@ namespace jank::runtime
   }
 
   template <typename T>
-  requires std::is_pointer_v<T>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto make_box(T const d)
-  {
-    return make_box<obj::native_pointer_wrapper>(static_cast<void *>(d));
-  }
-
-  template <typename T>
   requires std::is_floating_point_v<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(T const d)
