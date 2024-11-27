@@ -1,5 +1,7 @@
 #include <llvm/IR/Verifier.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
+#include <llvm/TargetParser/Host.h>
+#include <llvm/ExecutionEngine/Orc/LLJIT.h>
 
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/runtime/context.hpp>
@@ -19,7 +21,11 @@ namespace jank::codegen
     , builder{ std::make_unique<llvm::IRBuilder<>>(*llvm_ctx) }
     , global_ctor_block{ llvm::BasicBlock::Create(*llvm_ctx, "entry") }
   {
-    /* TODO: Set data layout and target triplet for better perf. */
+    /* The LLVM front-end tips documentation suggests setting the target triple and
+     * data layout to improve back-end codegen performance. */
+    module->setTargetTriple(llvm::sys::getDefaultTargetTriple());
+    module->setDataLayout(
+      __rt_ctx->jit_prc.interpreter->getExecutionEngine().get().getDataLayout());
   }
 
   llvm_processor::llvm_processor(analyze::expression_ptr const &expr,
