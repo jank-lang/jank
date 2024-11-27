@@ -89,7 +89,16 @@ namespace jank::codegen
     auto const entry(llvm::BasicBlock::Create(*ctx->llvm_ctx, "entry", fn));
     ctx->builder->SetInsertPoint(entry);
 
-    /* TODO: If we're compiling a module, and we're in the load fn, call the global ctor. */
+    /* JIT loaded object files don't support global ctors, so we need to call our manually.
+     * Fortunately, we have our load function which we can hook into. So, if we're compiling
+     * a module and we've just created the load function fo that module, the first thing
+     * we want to do is call our global ctor. */
+    if(target == compilation_target::module
+       && root_fn.unique_name == module::module_to_load_function(ctx->module_name))
+    {
+      auto const global_ctor_fn(ctx->global_ctor_block->getParent());
+      ctx->builder->CreateCall(global_ctor_fn, {});
+    }
 
     for(size_t i{}; i < arity.params.size(); ++i)
     {

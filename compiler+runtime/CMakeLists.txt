@@ -470,7 +470,7 @@ add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank
   OUTPUT ${jank_core_libraries_flag}
   COMMAND ${CMAKE_BINARY_DIR}/jank compile clojure.core
-  COMMAND mkdir -p ${CMAKE_BINARY_DIR}/classes; touch ${jank_core_libraries_flag}
+  COMMAND touch ${jank_core_libraries_flag}
 )
 add_custom_target(
   jank_core_libraries

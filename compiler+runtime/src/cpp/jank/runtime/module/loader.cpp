@@ -422,16 +422,13 @@ namespace jank::runtime::module
     profile::timer timer{ fmt::format("load object {}", module) };
     if(entry.archive_path.is_some())
     {
-      /* TODO: */
-      //visit_jar_entry(entry, [&](auto const &str) { rt_ctx.jit_prc.load_bitcode(module, str); });
+      /* TODO: Load object code from string. */
+      //visit_jar_entry(entry, [&](auto const &str) { rt_ctx.jit_prc.load_object(module, str); });
     }
     else
     {
       rt_ctx.jit_prc.load_object(entry.path);
     }
-
-    auto const init{ rt_ctx.jit_prc.find_symbol<void (*)()>("jank_global_init_2393") };
-    init();
 
     auto const load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(module_to_load_function(module)) };
     load();
