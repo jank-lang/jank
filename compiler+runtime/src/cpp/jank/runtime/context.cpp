@@ -29,7 +29,7 @@ namespace jank::runtime
   }
 
   context::context(util::cli::options const &opts)
-    : jit_prc{ opts.optimization_level }
+    : jit_prc{ opts }
     , output_dir{ opts.compilation_path }
     , module_loader{ *this, opts.class_path }
   {
@@ -66,57 +66,6 @@ namespace jank::runtime
     push_thread_bindings(obj::persistent_hash_map::create_unique(
                            std::make_pair(current_ns_var, current_ns_var->deref())))
       .expect_ok();
-  }
-
-  /* TODO: Remove this. */
-  context::context(context const &ctx)
-    : jit_prc{ ctx.jit_prc.optimization_level }
-    , module_dependencies{ ctx.module_dependencies }
-    , output_dir{ ctx.output_dir }
-    , module_loader{ *this, ctx.module_loader.paths }
-  {
-    {
-      auto ns_lock(namespaces.wlock());
-      for(auto const &ns : *ctx.namespaces.rlock())
-      {
-        ns_lock->insert({ ns.first, ns.second->clone(*this) });
-      }
-      *keywords.wlock() = *ctx.keywords.rlock();
-    }
-
-    auto &tbfs(thread_binding_frames[this]);
-    auto const &other_tbfs(thread_binding_frames[&ctx]);
-    for(auto const &v : other_tbfs)
-    {
-      thread_binding_frame frame{ obj::persistent_hash_map::empty() };
-      for(auto it(v.bindings->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
-      {
-        auto const entry(it->first());
-        auto const var(expect_object<var>(entry->data[0]));
-        auto const value(entry->data[1]);
-        auto const new_var(intern_var(var->n->name->name, var->name->name).expect_ok());
-        frame.bindings = frame.bindings->assoc(new_var, value);
-      }
-
-      /* We push to the back, since we're looping from the front of the other list. If we
-       * pushed to the front of this one, we'd reverse the order. */
-      tbfs.push_back(std::move(frame));
-    }
-
-    auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
-    current_ns_var = core->intern_var(make_box<obj::symbol>("clojure.core/*ns*"));
-
-    in_ns_var = intern_var(make_box<obj::symbol>("clojure.core/in-ns")).expect_ok();
-    compile_files_var
-      = intern_var(make_box<obj::symbol>("clojure.core/*compile-files*")).expect_ok();
-    assert_var = core->intern_var(make_box<obj::symbol>("clojure.core/*assert*"));
-
-    current_module_var
-      = make_box<runtime::var>(core, make_box<obj::symbol>("*current-module*"))->set_dynamic(true);
-    no_recur_var
-      = make_box<runtime::var>(core, make_box<obj::symbol>("*no-recur*"))->set_dynamic(true);
-    gensym_env_var
-      = make_box<runtime::var>(core, make_box<obj::symbol>("*gensym-env*"))->set_dynamic(true);
   }
 
   context::~context()

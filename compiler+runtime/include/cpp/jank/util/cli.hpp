@@ -20,6 +20,12 @@ namespace jank::util::cli
     native_bool profiler_enabled{};
     native_transient_string profiler_file{ "jank.profile" };
     native_bool gc_incremental{};
+    
+    /* Native dependencies */
+    native_vector<native_persistent_string> include_dirs;
+    native_vector<native_persistent_string> library_dirs;
+    native_vector<native_persistent_string> define_macros;
+    native_vector<native_persistent_string> libs;
 
     /* Compilation. */
     native_transient_string compilation_path{ "classes" };

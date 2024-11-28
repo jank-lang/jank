@@ -31,7 +31,6 @@ namespace jank::runtime
   {
     context();
     context(util::cli::options const &opts);
-    context(context const &);
     context(context &&) = delete;
     ~context();
 
