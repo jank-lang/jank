@@ -347,6 +347,10 @@ namespace jank::runtime
     auto const target_machine{
       target->createTargetMachine(target_triple, "generic", "", opt, llvm::Reloc::PIC_)
     };
+    if(!target_machine)
+    {
+      return err(fmt::format("failed to create target machine for {}", target_triple));
+    }
     llvm::legacy::PassManager pass;
 
     if(target_machine->addPassesToEmitFile(pass, os, nullptr, llvm::CodeGenFileType::ObjectFile))
