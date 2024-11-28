@@ -1,3 +1,5 @@
+#include <magic_enum.hpp>
+
 #include <jank/runtime/obj/native_pointer_wrapper.hpp>
 #include <jank/runtime/rtti.hpp>
 
