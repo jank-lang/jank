@@ -464,6 +464,12 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("module-loaded?", &core_native::is_module_loaded);
   intern_fn("compile", &core_native::compile);
 
+  /* TODO: jank.math? */
+  intern_fn("sqrt", static_cast<native_real (*)(object_ptr)>(&runtime::sqrt));
+  intern_fn("tan", static_cast<native_real (*)(object_ptr)>(&runtime::tan));
+  intern_fn("abs", static_cast<object_ptr (*)(object_ptr)>(&runtime::abs));
+  intern_fn("pow", static_cast<native_real (*)(object_ptr, object_ptr)>(&runtime::pow));
+
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));

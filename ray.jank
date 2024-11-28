@@ -1,4 +1,10 @@
-(ns ray)
+(ns ray
+  (:require [jank.perf]))
+
+(def sqrt clojure.core-native/sqrt)
+(def tan clojure.core-native/tan)
+(def abs clojure.core-native/abs)
+(def pow clojure.core-native/pow)
 
 ; TODO: jank can't have `or` yet, due to no
 ; syntax quoting in macros. This program doesn't
@@ -178,18 +184,18 @@
                              front-face?)))))))
 
 (defn hit-all [t-min t-max ray hittables]
-  (get (reduce* (fn hit-all-reduce [acc hittable]
-                  (let [hit-info (hit-sphere hittable
-                                             t-min
-                                             (get acc :closest-so-far)
-                                             ray)]
-                    (if (some? hit-info)
-                      (assoc (assoc acc :hit-info hit-info)
-                             :closest-so-far (get hit-info :t))
-                      acc)))
-                {:closest-so-far t-max
-                 :hit-info nil}
-                hittables)
+  (get (reduce (fn hit-all-reduce [acc hittable]
+                 (let [hit-info (hit-sphere hittable
+                                            t-min
+                                            (get acc :closest-so-far)
+                                            ray)]
+                   (if (some? hit-info)
+                     (assoc (assoc acc :hit-info hit-info)
+                            :closest-so-far (get hit-info :t))
+                     acc)))
+               {:closest-so-far t-max
+                :hit-info nil}
+               hittables)
        :hit-info))
 
 (defn scatter-lambertian [ray hit-info]
@@ -261,48 +267,48 @@
                   (vec3-scale (vec3-create 0.5 0.7 1.0) t))))))
 
 (defn rand-scene! []
-  (reduce* (fn rand-scene-reduce [acc i]
-             (let [x (- (mod i 21) 10)
-                   z (- (/ i 21) 6)
-                   choose-mat (rand)
-                   center (vec3-create (+ x (* 0.9 (rand)))
-                                       0.2
-                                       (+ z (* 0.9 (rand))))]
-               (if (< 0.9 (vec3-length (vec3-sub center (vec3-create 4 0.2 0))))
-                 (conj acc (if (< choose-mat 0.8)
-                             {:center center
-                              :radius 0.2
-                              :material {:albedo (vec3-mul (vec3-rand) (vec3-rand))
-                                         :scatter scatter-lambertian}}
-                             (if (< choose-mat 0.95)
-                               {:center center
-                                :radius 0.2
-                                :material {:albedo (vec3-rand+clamp 0.5 1)
-                                           :fuzz (rand-real 0 0.5)
-                                           :scatter scatter-metal}}
-                               {:center center
-                                :radius 0.2
-                                :material {:index-of-refraction 1.5
-                                           :scatter scatter-dialetric}})))
-                 acc)))
-           [{:center (vec3-create 0 -1000 0)
-             :radius 1000
-             :material {:albedo (vec3-create 0.5 0.5 0.5)
-                        :scatter scatter-lambertian}}
-            {:center (vec3-create -4 1 0)
-             :radius 1
-             :material {:albedo (vec3-create 0.4 0.2 0.1)
-                        :scatter scatter-lambertian}}
-            {:center (vec3-create 0 1 0)
-             :radius 1
-             :material {:index-of-refraction 1.5
-                        :scatter scatter-dialetric}}
-            {:center (vec3-create 4 1 0)
-             :radius 1
-             :material {:albedo (vec3-create 0.7 0.6 0.5)
-                        :fuzz 0
-                        :scatter scatter-metal}}]
-           (range 0 200)))
+  (reduce (fn rand-scene-reduce [acc i]
+            (let [x (- (mod i 21) 10)
+                  z (- (/ i 21) 6)
+                  choose-mat (rand)
+                  center (vec3-create (+ x (* 0.9 (rand)))
+                                      0.2
+                                      (+ z (* 0.9 (rand))))]
+              (if (< 0.9 (vec3-length (vec3-sub center (vec3-create 4 0.2 0))))
+                (conj acc (if (< choose-mat 0.8)
+                            {:center center
+                             :radius 0.2
+                             :material {:albedo (vec3-mul (vec3-rand) (vec3-rand))
+                                        :scatter scatter-lambertian}}
+                            (if (< choose-mat 0.95)
+                              {:center center
+                               :radius 0.2
+                               :material {:albedo (vec3-rand+clamp 0.5 1)
+                                          :fuzz (rand-real 0 0.5)
+                                          :scatter scatter-metal}}
+                              {:center center
+                               :radius 0.2
+                               :material {:index-of-refraction 1.5
+                                          :scatter scatter-dialetric}})))
+                acc)))
+          [{:center (vec3-create 0 -1000 0)
+            :radius 1000
+            :material {:albedo (vec3-create 0.5 0.5 0.5)
+                       :scatter scatter-lambertian}}
+           {:center (vec3-create -4 1 0)
+            :radius 1
+            :material {:albedo (vec3-create 0.4 0.2 0.1)
+                       :scatter scatter-lambertian}}
+           {:center (vec3-create 0 1 0)
+            :radius 1
+            :material {:index-of-refraction 1.5
+                       :scatter scatter-dialetric}}
+           {:center (vec3-create 4 1 0)
+            :radius 1
+            :material {:albedo (vec3-create 0.7 0.6 0.5)
+                       :fuzz 0
+                       :scatter scatter-metal}}]
+          (range 0 200)))
 
 (defn -main []
   (do ;prof/profile
@@ -348,22 +354,22 @@
         (println 255)
         (doseq [y y-counter]
           (doseq [x x-counter]
-            (let [sample (reduce* (fn main-reduce [acc _sample-count]
-                                    (let [u (/ (+ x (rand)) (- image-width 1))
-                                          v (/ (+ y (rand)) (- image-height 1))
-                                          rd (vec3-scale (vec3-rand-in-unit-disk) lens-radius)
-                                          offset (vec3-create 0 0 0)
-                                          ray (ray-create (vec3-add origin offset)
-                                                          (vec3-sub (vec3-add (vec3-add lower-left-corner
-                                                                                        (vec3-scale horizontal u))
-                                                                              (vec3-scale vertical v))
-                                                                    (vec3-sub origin offset)))]
-                                      (vec3-add acc (ray-cast ray max-ray-bounces hittables))))
-                                  (vec3-create 0 0 0)
-                                  sample-counter)]
+            (let [sample (reduce (fn main-reduce [acc _sample-count]
+                                   (let [u (/ (+ x (rand)) (- image-width 1))
+                                         v (/ (+ y (rand)) (- image-height 1))
+                                         rd (vec3-scale (vec3-rand-in-unit-disk) lens-radius)
+                                         offset (vec3-create 0 0 0)
+                                         ray (ray-create (vec3-add origin offset)
+                                                         (vec3-sub (vec3-add (vec3-add lower-left-corner
+                                                                                       (vec3-scale horizontal u))
+                                                                             (vec3-scale vertical v))
+                                                                   (vec3-sub origin offset)))]
+                                     (vec3-add acc (ray-cast ray max-ray-bounces hittables))))
+                                 (vec3-create 0 0 0)
+                                 sample-counter)]
               (vec3-print sample samples-per-pixel))))
 
         (println "meow"))))
 
-;(benchmark "ray" -main)
+(jank.perf/benchmark {:label "ray"} (-main))
 ;(-main)

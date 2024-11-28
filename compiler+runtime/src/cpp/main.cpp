@@ -25,6 +25,7 @@
 #include <jank/profile/time.hpp>
 
 #include <jank/compiler_native.hpp>
+#include <jank/perf_native.hpp>
 #include <clojure/core_native.hpp>
 
 namespace jank
@@ -263,6 +264,7 @@ try
 
   jank_load_clojure_core_native();
   jank_load_jank_compiler_native();
+  jank_load_jank_perf_native();
 
   switch(opts.command)
   {

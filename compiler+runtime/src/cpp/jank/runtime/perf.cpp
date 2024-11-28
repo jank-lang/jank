@@ -2,11 +2,13 @@
 
 #include <jank/runtime/perf.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/runtime/context.hpp>
 
 namespace jank::runtime::perf
 {
-  object_ptr benchmark(object_ptr const label, object_ptr const f)
+  object_ptr benchmark(object_ptr const opts, object_ptr const f)
   {
+    auto const label(get(opts, __rt_ctx->intern_keyword("label").expect_ok()));
     auto const label_str(to_string(label));
     visit_object(
       [](auto const typed_f, native_persistent_string const &label) {

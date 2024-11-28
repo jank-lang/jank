@@ -178,6 +178,8 @@ namespace jank::runtime
   native_integer abs(native_integer l);
   native_real abs(native_real l);
 
+  native_real tan(object_ptr l);
+
   native_real sqrt(object_ptr l);
   native_real sqrt(obj::integer_ptr l);
   native_real sqrt(obj::real_ptr l);
