@@ -2,6 +2,12 @@
 #include <llvm/Transforms/Utils/ModuleUtils.h>
 #include <llvm/TargetParser/Host.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
+#include <llvm/Passes/PassBuilder.h>
+#include <llvm/Transforms/InstCombine/InstCombine.h>
+#include <llvm/Transforms/Scalar.h>
+#include <llvm/Transforms/Scalar/GVN.h>
+#include <llvm/Transforms/Scalar/Reassociate.h>
+#include <llvm/Transforms/Scalar/SimplifyCFG.h>
 
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/runtime/context.hpp>
@@ -20,12 +26,40 @@ namespace jank::codegen
                                              *llvm_ctx) }
     , builder{ std::make_unique<llvm::IRBuilder<>>(*llvm_ctx) }
     , global_ctor_block{ llvm::BasicBlock::Create(*llvm_ctx, "entry") }
+    , fpm{ std::make_unique<llvm::FunctionPassManager>() }
+    , lam{ std::make_unique<llvm::LoopAnalysisManager>() }
+    , fam{ std::make_unique<llvm::FunctionAnalysisManager>() }
+    , cgam{ std::make_unique<llvm::CGSCCAnalysisManager>() }
+    , mam{ std::make_unique<llvm::ModuleAnalysisManager>() }
+    , pic{ std::make_unique<llvm::PassInstrumentationCallbacks>() }
+    , si{ std::make_unique<llvm::StandardInstrumentations>(*llvm_ctx,
+                                                           /*DebugLogging*/ true) }
   {
     /* The LLVM front-end tips documentation suggests setting the target triple and
      * data layout to improve back-end codegen performance. */
     module->setTargetTriple(llvm::sys::getDefaultTargetTriple());
     module->setDataLayout(
       __rt_ctx->jit_prc.interpreter->getExecutionEngine().get().getDataLayout());
+
+    /* TODO: Configure these passes based on the CLI optimization flag. */
+
+    /* TODO: Add more passes and measure the order of the passes. */
+
+    si->registerCallbacks(*pic, mam.get());
+
+    /* Do simple "peephole" optimizations and bit-twiddling optzns. */
+    fpm->addPass(llvm::InstCombinePass());
+    /* Reassociate expressions. */
+    fpm->addPass(llvm::ReassociatePass());
+    /* Eliminate Common SubExpressions. */
+    fpm->addPass(llvm::GVNPass());
+    /* Simplify the control flow graph (deleting unreachable blocks, etc). */
+    fpm->addPass(llvm::SimplifyCFGPass());
+
+    llvm::PassBuilder pb;
+    pb.registerModuleAnalyses(*mam);
+    pb.registerFunctionAnalyses(*fam);
+    pb.crossRegisterProxies(*lam, *fam, *cgam, *mam);
   }
 
   llvm_processor::llvm_processor(analyze::expression_ptr const &expr,
@@ -149,9 +183,10 @@ namespace jank::codegen
       {
         ctx->builder->CreateRet(gen_global(obj::nil::nil_const()));
       }
-
-      /* TODO: Optimization passes. */
     }
+
+    /* Run our optimization passes on the function, mutating it. */
+    ctx->fpm->run(*fn, *ctx->fam);
 
     if(target != compilation_target::function)
     {

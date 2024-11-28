@@ -3,6 +3,9 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/LLVMContext.h>
+#include <llvm/Passes/StandardInstrumentations.h>
+#include <llvm/Analysis/LoopAnalysisManager.h>
+#include <llvm/Analysis/CGSCCPassManager.h>
 
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/analyze/expression.hpp>
@@ -37,6 +40,15 @@ namespace jank::codegen
       literal_globals;
     native_unordered_map<obj::symbol_ptr, llvm::Value *> var_globals;
     native_unordered_map<native_persistent_string, llvm::Value *> c_string_globals;
+
+    /* Optimization details. */
+    std::unique_ptr<llvm::FunctionPassManager> fpm;
+    std::unique_ptr<llvm::LoopAnalysisManager> lam;
+    std::unique_ptr<llvm::FunctionAnalysisManager> fam;
+    std::unique_ptr<llvm::CGSCCAnalysisManager> cgam;
+    std::unique_ptr<llvm::ModuleAnalysisManager> mam;
+    std::unique_ptr<llvm::PassInstrumentationCallbacks> pic;
+    std::unique_ptr<llvm::StandardInstrumentations> si;
   };
 
   struct llvm_processor
