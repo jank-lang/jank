@@ -43,8 +43,6 @@ namespace jank::runtime::obj::detail
 
       return visit_map_like(
         [&](auto const typed_o) -> native_bool {
-          using T = typename decltype(typed_o)::value_type;
-
           if(typed_o->count() != count())
           {
             return false;

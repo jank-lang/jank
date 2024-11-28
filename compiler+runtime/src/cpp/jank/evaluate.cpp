@@ -23,7 +23,7 @@ namespace jank::evaluate
    * root frame. So, when wrapping this expr, we give the fn the root frame, but change its
    * type to a fn frame. */
   template <typename E>
-  expression_ptr wrap_expression(E expr)
+  static expression_ptr wrap_expression(E expr)
   {
     auto ret(make_box<expression>(expr::function<expression>{}));
     auto &fn(boost::get<expr::function<expression>>(ret->data));
@@ -102,7 +102,7 @@ namespace jank::evaluate
 
   object_ptr eval(expression_ptr const &ex)
   {
-    profile::timer timer{ "eval ast node" };
+    profile::timer const timer{ "eval ast node" };
     object_ptr ret{};
     boost::apply_visitor([&ret](auto const &typed_ex) { ret = eval(typed_ex); }, ex->data);
 
@@ -399,10 +399,10 @@ namespace jank::evaluate
 
     auto const wrapped_expr(evaluate::wrap_expression(expr));
     codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::eval };
-    cg_prc.gen();
+    cg_prc.gen().expect_ok();
 
     {
-      profile::timer timer{ fmt::format("ir jit compile {}", expr.name) };
+      profile::timer const timer{ fmt::format("ir jit compile {}", expr.name) };
       __rt_ctx->jit_prc.load_ir_module(std::move(cg_prc.ctx->module),
                                        std::move(cg_prc.ctx->llvm_ctx));
 

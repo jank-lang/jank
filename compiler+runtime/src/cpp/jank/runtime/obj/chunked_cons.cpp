@@ -75,7 +75,7 @@ namespace jank::runtime
       head);
   }
 
-  obj::chunked_cons_ptr next_in_place_non_chunked(obj::chunked_cons_ptr const o)
+  static obj::chunked_cons_ptr next_in_place_non_chunked(obj::chunked_cons_ptr const o)
   {
     if(!o->tail)
     {

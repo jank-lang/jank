@@ -84,9 +84,9 @@ namespace jank::analyze
     return *this;
   }
 
-  option<local_frame::find_result> find_local_impl(local_frame_ptr const start,
-                                                   obj::symbol_ptr sym,
-                                                   native_bool const allow_captures)
+  static option<local_frame::find_result> find_local_impl(local_frame_ptr const start,
+                                                          obj::symbol_ptr sym,
+                                                          native_bool const allow_captures)
   {
     decltype(local_frame::find_result::crossed_fns) crossed_fns;
 
@@ -247,7 +247,7 @@ namespace jank::analyze
     }
 
     auto name(context::unique_symbol("const"));
-    option<obj::symbol> unboxed_name{ visit_object(
+    option<obj::symbol> const unboxed_name{ visit_object(
       [&](auto const typed_constant) -> option<obj::symbol> {
         using T = typename decltype(typed_constant)::value_type;
 

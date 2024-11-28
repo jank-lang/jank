@@ -36,7 +36,7 @@ namespace jank::runtime
     return data == b->data;
   }
 
-  void to_string_impl(bool const data, fmt::memory_buffer &buff)
+  static void to_string_impl(bool const data, fmt::memory_buffer &buff)
   {
     format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data ? "true" : "false");
   }
@@ -158,7 +158,7 @@ namespace jank::runtime
     }
 
     auto const r(expect_object<obj::real>(&o));
-    std::hash<native_real> hasher{};
+    std::hash<native_real> const hasher{};
     return hasher(data) == hasher(r->data);
   }
 

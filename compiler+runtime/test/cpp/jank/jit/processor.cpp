@@ -86,7 +86,7 @@ namespace jank::jit
         /* TODO: Clear our rt_ctx for each run. Using the copy ctor leads to odd failures with
          * macros, likely due to interned keywords not being identical. */
         bool passed{ true };
-        std::stringstream captured_output;
+        std::stringstream const captured_output;
 
         fmt::print("testing file {} => ", dir_entry.path().string());
 

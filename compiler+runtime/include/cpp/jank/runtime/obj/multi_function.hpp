@@ -17,8 +17,6 @@ namespace jank::runtime
     static constexpr native_bool pointer_free{ false };
 
     static_object() = default;
-    static_object(static_object &&) = default;
-    static_object(static_object const &) = default;
     static_object(object_ptr name, object_ptr dispatch, object_ptr default_, object_ptr hierarchy);
 
     /* behavior::object_like */

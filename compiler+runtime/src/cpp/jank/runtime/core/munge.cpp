@@ -309,13 +309,13 @@ namespace jank::runtime
     for(auto const &pair : demunge_chars)
     {
       size_t pos{};
-      size_t pattern_length{ pair.first.length() };
+      auto const pattern_length{ pair.first.length() };
       native_transient_string tmp;
       tmp.reserve(ret.size());
 
       while(true)
       {
-        size_t found = ret.find(pair.first, pos);
+        auto const found{ ret.find(pair.first, pos) };
         if(found == native_transient_string::npos)
         {
           tmp.append(ret, pos, ret.size() - pos);

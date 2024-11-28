@@ -30,18 +30,18 @@
 
 namespace jank
 {
-  void run(util::cli::options const &opts)
+  static void run(util::cli::options const &opts)
   {
     using namespace jank;
     using namespace jank::runtime;
 
     {
-      profile::timer timer{ "load clojure.core" };
+      profile::timer const timer{ "load clojure.core" };
       __rt_ctx->load_module("/clojure.core").expect_ok();
     }
 
     {
-      profile::timer timer{ "eval user code" };
+      profile::timer const timer{ "eval user code" };
       std::cout << runtime::to_code_string(__rt_ctx->eval_file(opts.target_file)) << "\n";
     }
 
@@ -62,18 +62,18 @@ namespace jank
     //);
   }
 
-  void run_main(util::cli::options const &opts)
+  static void run_main(util::cli::options const &opts)
   {
     using namespace jank;
     using namespace jank::runtime;
 
     {
-      profile::timer timer{ "require clojure.core" };
+      profile::timer const timer{ "require clojure.core" };
       __rt_ctx->load_module("/clojure.core").expect_ok();
     }
 
     {
-      profile::timer timer{ "eval user code" };
+      profile::timer const timer{ "eval user code" };
       __rt_ctx->load_module("/" + opts.target_module).expect_ok();
 
       auto const main_var(__rt_ctx->find_var(opts.target_module, "-main").unwrap_or(nullptr));
@@ -96,7 +96,7 @@ namespace jank
     }
   }
 
-  void compile(util::cli::options const &opts)
+  static void compile(util::cli::options const &opts)
   {
     using namespace jank;
     using namespace jank::runtime;
@@ -104,7 +104,7 @@ namespace jank
     __rt_ctx->compile_module(opts.target_ns).expect_ok();
   }
 
-  void repl(util::cli::options const &opts)
+  static void repl(util::cli::options const &opts)
   {
     using namespace jank;
     using namespace jank::runtime;
@@ -116,13 +116,13 @@ namespace jank
     }
 
     {
-      profile::timer timer{ "require clojure.core" };
+      profile::timer const timer{ "require clojure.core" };
       __rt_ctx->load_module("/clojure.core").expect_ok();
     }
 
     if(!opts.target_module.empty())
     {
-      profile::timer timer{ "load main" };
+      profile::timer const timer{ "load main" };
       __rt_ctx->load_module("/" + opts.target_module).expect_ok();
       dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
     }
@@ -170,19 +170,19 @@ namespace jank
     }
   }
 
-  void cpp_repl(util::cli::options const &opts)
+  static void cpp_repl(util::cli::options const &opts)
   {
     using namespace jank;
     using namespace jank::runtime;
 
     {
-      profile::timer timer{ "require clojure.core" };
+      profile::timer const timer{ "require clojure.core" };
       __rt_ctx->load_module("/clojure.core").expect_ok();
     }
 
     if(!opts.target_module.empty())
     {
-      profile::timer timer{ "load main" };
+      profile::timer const timer{ "load main" };
       __rt_ctx->load_module("/" + opts.target_module).expect_ok();
       dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
     }
@@ -258,7 +258,7 @@ try
   }
 
   profile::configure(opts);
-  profile::timer timer{ "main" };
+  profile::timer const timer{ "main" };
 
   __rt_ctx = new(GC) runtime::context{ opts };
 

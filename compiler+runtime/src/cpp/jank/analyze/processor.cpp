@@ -158,12 +158,11 @@ namespace jank::analyze
     });
   }
 
-  processor::expression_result
-  processor::analyze_symbol(runtime::obj::symbol_ptr const &sym,
-                            local_frame_ptr &current_frame,
-                            expression_position const position,
-                            option<expr::function_context_ptr> const &fn_ctx,
-                            native_bool needs_box)
+  processor::expression_result processor::analyze_symbol(runtime::obj::symbol_ptr const &sym,
+                                                         local_frame_ptr &current_frame,
+                                                         expression_position const position,
+                                                         option<expr::function_context_ptr> const &,
+                                                         native_bool needs_box)
   {
     assert(!sym->to_string().empty());
 
@@ -784,7 +783,8 @@ namespace jank::analyze
      *     (println a b)) a b))
      * ```
      */
-    runtime::detail::native_persistent_list args{ binding_syms.rbegin(), binding_syms.rend() };
+    runtime::detail::native_persistent_list const args{ binding_syms.rbegin(),
+                                                        binding_syms.rend() };
     auto const params(make_box<runtime::obj::persistent_vector>(binding_syms.persistent()));
     auto const fn(make_box<runtime::obj::persistent_list>(
       o->data.rest().rest().conj(params).conj(make_box<runtime::obj::symbol>("fn*"))));

@@ -161,9 +161,9 @@ namespace jank::codegen
     }
   }
 
-  void llvm_processor::gen()
+  string_result<void> llvm_processor::gen()
   {
-    profile::timer timer{ "ir gen" };
+    profile::timer const timer{ "ir gen" };
     if(target != compilation_target::function)
     {
       create_global_ctor();
@@ -209,9 +209,11 @@ namespace jank::codegen
         std::cerr << "----------\n";
         to_string();
         std::cerr << "----------\n";
-        throw std::runtime_error{ fmt::format("invalid IR module {}", ctx->module_name) };
+        return err(fmt::format("invalid IR module {}", ctx->module_name));
       }
     }
+
+    return ok();
   }
 
   llvm::Value *
@@ -238,7 +240,7 @@ namespace jank::codegen
                                 false));
       auto const fn(ctx->module->getOrInsertFunction("jank_var_bind_root", fn_type));
 
-      llvm::SmallVector<llvm::Value *, 2> args{ ref, gen(expr.value.unwrap(), arity) };
+      llvm::SmallVector<llvm::Value *, 2> const args{ ref, gen(expr.value.unwrap(), arity) };
       ctx->builder->CreateCall(fn, args);
     }
 
@@ -273,7 +275,7 @@ namespace jank::codegen
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
     auto const fn(ctx->module->getOrInsertFunction("jank_deref", fn_type));
 
-    llvm::SmallVector<llvm::Value *, 1> args{ ref };
+    llvm::SmallVector<llvm::Value *, 1> const args{ ref };
     auto const call(ctx->builder->CreateCall(fn, args));
 
     if(expr.position == analyze::expression_position::tail)
@@ -487,7 +489,12 @@ namespace jank::codegen
       llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
 
       llvm_processor nested{ expr, std::move(ctx) };
-      nested.gen();
+      auto const res{ nested.gen() };
+      if(res.is_err())
+      {
+        /* TODO: Return error. */
+        res.expect_ok();
+      }
 
       ctx = std::move(nested.ctx);
     }
@@ -505,7 +512,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(analyze::expr::recur<analyze::expression> const &expr,
                                    analyze::expr::function_arity<analyze::expression> const &arity)
   {
-    analyze::expr::named_recursion<analyze::expression> call_expr{
+    analyze::expr::named_recursion<analyze::expression> const call_expr{
       analyze::expression_base{ {}, expr.position, expr.frame },
       analyze::expr::recursion_reference<analyze::expression>{
                                analyze::expression_base{ {}, expr.position, expr.frame },
@@ -654,7 +661,7 @@ namespace jank::codegen
     auto const truthy_fn_type(
       llvm::FunctionType::get(ctx->builder->getInt8Ty(), { ctx->builder->getPtrTy() }, false));
     auto const fn(ctx->module->getOrInsertFunction("jank_truthy", truthy_fn_type));
-    llvm::SmallVector<llvm::Value *, 1> args{ condition };
+    llvm::SmallVector<llvm::Value *, 1> const args{ condition };
     auto const call(ctx->builder->CreateCall(fn, args));
     auto const cmp(ctx->builder->CreateICmpEQ(call, ctx->builder->getInt8(1), "iftmp"));
 
@@ -726,7 +733,7 @@ namespace jank::codegen
     auto fn(ctx->module->getOrInsertFunction("jank_throw", fn_type));
     llvm::cast<llvm::Function>(fn.getCallee())->setDoesNotReturn();
 
-    llvm::SmallVector<llvm::Value *, 2> args{ value };
+    llvm::SmallVector<llvm::Value *, 2> const args{ value };
     auto const call(ctx->builder->CreateCall(fn, args));
 
     if(expr.position == analyze::expression_position::tail)
@@ -768,8 +775,8 @@ namespace jank::codegen
                                 false));
       auto const fn(ctx->module->getOrInsertFunction("jank_var_intern", fn_type));
 
-      llvm::SmallVector<llvm::Value *, 2> args{ gen_global(make_box(qualified_name->ns)),
-                                                gen_global(make_box(qualified_name->name)) };
+      llvm::SmallVector<llvm::Value *, 2> const args{ gen_global(make_box(qualified_name->ns)),
+                                                      gen_global(make_box(qualified_name->name)) };
       auto const call(ctx->builder->CreateCall(fn, args));
       ctx->builder->CreateStore(call, global);
 
@@ -952,7 +959,7 @@ namespace jank::codegen
         llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
       auto const create_fn(ctx->module->getOrInsertFunction("jank_string_create", create_fn_type));
 
-      llvm::SmallVector<llvm::Value *, 1> args{ gen_c_string(s->data.c_str()) };
+      llvm::SmallVector<llvm::Value *, 1> const args{ gen_c_string(s->data.c_str()) };
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 
@@ -990,8 +997,8 @@ namespace jank::codegen
                                 false));
       auto const create_fn(ctx->module->getOrInsertFunction("jank_symbol_create", create_fn_type));
 
-      llvm::SmallVector<llvm::Value *, 2> args{ gen_global(make_box(s->ns)),
-                                                gen_global(make_box(s->name)) };
+      llvm::SmallVector<llvm::Value *, 2> const args{ gen_global(make_box(s->ns)),
+                                                      gen_global(make_box(s->name)) };
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 
@@ -1041,8 +1048,8 @@ namespace jank::codegen
                                 false));
       auto const create_fn(ctx->module->getOrInsertFunction("jank_keyword_intern", create_fn_type));
 
-      llvm::SmallVector<llvm::Value *, 2> args{ gen_global(make_box(k->sym.ns)),
-                                                gen_global(make_box(k->sym.name)) };
+      llvm::SmallVector<llvm::Value *, 2> const args{ gen_global(make_box(k->sym.ns)),
+                                                      gen_global(make_box(k->sym.name)) };
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 
@@ -1079,7 +1086,7 @@ namespace jank::codegen
       auto const create_fn(
         ctx->module->getOrInsertFunction("jank_character_create", create_fn_type));
 
-      llvm::SmallVector<llvm::Value *, 1> args{ gen_c_string(c->to_string()) };
+      llvm::SmallVector<llvm::Value *, 1> const args{ gen_c_string(c->to_string()) };
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 
@@ -1115,7 +1122,8 @@ namespace jank::codegen
         llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
       auto const create_fn(ctx->module->getOrInsertFunction("jank_read_string", create_fn_type));
 
-      llvm::SmallVector<llvm::Value *, 1> args{ gen_global(make_box(runtime::to_code_string(o))) };
+      llvm::SmallVector<llvm::Value *, 1> const args{ gen_global(
+        make_box(runtime::to_code_string(o))) };
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 

@@ -59,7 +59,7 @@ namespace jank::runtime
   };
 
   template <typename... Args>
-  object_ptr apply_function(obj::native_function_wrapper const &f, Args &&...args)
+  static object_ptr apply_function(obj::native_function_wrapper const &f, Args &&...args)
   {
     constexpr size_t arg_count{ sizeof...(Args) };
     using arity = typename build_arity<arg_count>::type;

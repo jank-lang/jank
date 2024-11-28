@@ -7,7 +7,7 @@
 namespace jank::runtime
 {
   template <typename S>
-  void separate(obj::symbol &sym, S &&s)
+  static void separate(obj::symbol &sym, S &&s)
   {
     auto const found(s.find('/'));
     if(found != native_persistent_string::npos && s.size() > 1)
@@ -105,9 +105,9 @@ namespace jank::runtime
     return name.compare(s.name);
   }
 
-  void to_string_impl(native_persistent_string const &ns,
-                      native_persistent_string const &name,
-                      fmt::memory_buffer &buff)
+  static void to_string_impl(native_persistent_string const &ns,
+                             native_persistent_string const &name,
+                             fmt::memory_buffer &buff)
   {
     if(!ns.empty())
     {

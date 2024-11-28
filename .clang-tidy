@@ -5,6 +5,12 @@ modernize-*,\
 bugprone-*,\
 performance-*,\
 readability-*,\
+misc-const-correctness,\
+misc-use-internal-linkage,\
+misc-static-assert,\
+misc-redundant-expression,\
+misc-misleading-identifier,\
+misc-definitions-in-headers,\
 -clang-analyzer-cplusplus.NewDeleteLeaks,\
 -clang-analyzer-cplusplus.NewDelete,\
 -modernize-use-trailing-return-type,\

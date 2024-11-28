@@ -46,7 +46,7 @@ namespace jank::read
   namespace lex
   {
     template <typename... Ts>
-    std::ostream &operator<<(std::ostream &os, std::variant<Ts...> const &v)
+    static std::ostream &operator<<(std::ostream &os, std::variant<Ts...> const &v)
     {
       boost::apply_visitor(
         [&](auto &&arg) {

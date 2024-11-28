@@ -642,7 +642,6 @@ namespace jank
     [[gnu::const]]
     constexpr native_bool is_blank() const noexcept
     {
-      native_bool ret{ true };
       for(auto const c : *this)
       {
         if(!std::isspace(c))
@@ -650,7 +649,7 @@ namespace jank
           return false;
         }
       }
-      return ret;
+      return true;
     }
 
     /*** Hashing. ***/

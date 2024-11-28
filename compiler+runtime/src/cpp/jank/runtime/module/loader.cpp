@@ -52,26 +52,6 @@ namespace jank::runtime::module
     return fmt::format("jank_load_{}", ret);
   }
 
-  native_persistent_string module_to_native_ns_old(native_transient_string module)
-  {
-    static std::regex const dash{ "-" };
-    static std::regex const dot{ "\\." };
-    static std::regex const last_module{ "\\$[a-zA-Z_0-9]+$" };
-    static std::regex const dollar{ "\\$" };
-
-    fmt::println("// BINGBONG module in: {}", module);
-
-    std::string ret{ module };
-    ret = std::regex_replace(ret, dash, "_");
-    ret = std::regex_replace(ret, dot, "::");
-    ret = std::regex_replace(ret, last_module, "");
-    ret = std::regex_replace(ret, dollar, "::");
-
-    fmt::println("// BINGBONG module out: {}", ret);
-
-    return ret;
-  }
-
   /* This is a somewhat complicated function. We take in a module (doesn't need to be munged) and
    * we return a native namespace name. So foo.bar will become foo::bar. But we also strip off
    * the last nested module, since the way the codegen works is that foo.bar$spam lives in the
@@ -145,7 +125,7 @@ namespace jank::runtime::module
 
   /* TODO: We can patch libzippp to not copy strings around so much. */
   template <typename F>
-  void visit_jar_entry(file_entry const &entry, F const &fn)
+  static void visit_jar_entry(file_entry const &entry, F const &fn)
   {
     auto const &path(entry.archive_path.unwrap());
     libzippp::ZipArchive zf{ std::string{ path } };
@@ -159,11 +139,11 @@ namespace jank::runtime::module
     fn(zip_entry.readAsText());
   }
 
-  void register_entry(native_unordered_map<native_persistent_string, loader::entry> &entries,
-                      boost::filesystem::path const &resource_path,
-                      file_entry const &entry)
+  static void register_entry(native_unordered_map<native_persistent_string, loader::entry> &entries,
+                             boost::filesystem::path const &resource_path,
+                             file_entry const &entry)
   {
-    boost::filesystem::path p{ native_transient_string{ entry.path } };
+    boost::filesystem::path const p{ native_transient_string{ entry.path } };
     /* We need the file path relative to the class path, since the class
      * path portion is not included in part of the module name. For example,
      * the file may live in `src/jank/clojure/core.jank` but the module
@@ -227,8 +207,9 @@ namespace jank::runtime::module
     }
   }
 
-  void register_directory(native_unordered_map<native_persistent_string, loader::entry> &entries,
-                          boost::filesystem::path const &path)
+  static void
+  register_directory(native_unordered_map<native_persistent_string, loader::entry> &entries,
+                     boost::filesystem::path const &path)
   {
     for(auto const &f : boost::filesystem::recursive_directory_iterator{ path })
     {
@@ -239,8 +220,8 @@ namespace jank::runtime::module
     }
   }
 
-  void register_jar(native_unordered_map<native_persistent_string, loader::entry> &entries,
-                    native_persistent_string_view const &path)
+  static void register_jar(native_unordered_map<native_persistent_string, loader::entry> &entries,
+                           native_persistent_string_view const &path)
   {
     libzippp::ZipArchive zf{ std::string{ path } };
     auto success(zf.open(libzippp::ZipArchive::ReadOnly));
@@ -261,8 +242,8 @@ namespace jank::runtime::module
     }
   }
 
-  void register_path(native_unordered_map<native_persistent_string, loader::entry> &entries,
-                     native_persistent_string_view const &path)
+  static void register_path(native_unordered_map<native_persistent_string, loader::entry> &entries,
+                            native_persistent_string_view const &path)
   {
     /* It's entirely possible to have empty entries in the classpath, mainly due to lazy string
      * concatenation. We just ignore them. This means something like "::::" is valid. */
@@ -271,7 +252,7 @@ namespace jank::runtime::module
       return;
     }
 
-    boost::filesystem::path p{ boost::filesystem::canonical(path).lexically_normal() };
+    boost::filesystem::path const p{ boost::filesystem::canonical(path).lexically_normal() };
     if(boost::filesystem::is_directory(p))
     {
       register_directory(entries, p);
@@ -346,7 +327,7 @@ namespace jank::runtime::module
   result<void, native_persistent_string>
   loader::load_ns(native_persistent_string_view const &module)
   {
-    profile::timer timer{ "load_ns" };
+    profile::timer const timer{ "load_ns" };
 
     //fmt::println("loading ns {}", module);
     auto res(load(module));
@@ -419,7 +400,7 @@ namespace jank::runtime::module
   result<void, native_persistent_string>
   loader::load_o(native_persistent_string const &module, file_entry const &entry) const
   {
-    profile::timer timer{ fmt::format("load object {}", module) };
+    profile::timer const timer{ fmt::format("load object {}", module) };
     if(entry.archive_path.is_some())
     {
       /* TODO: Load object code from string. */

@@ -38,7 +38,7 @@ namespace jank::jit
   processor::processor(native_integer const optimization_level)
     : optimization_level{ optimization_level }
   {
-    profile::timer timer{ "jit ctor" };
+    profile::timer const timer{ "jit ctor" };
     /* TODO: Pass this into each fn below so we only do this once on startup. */
     auto const jank_path(util::process_location().unwrap().parent_path());
     auto const include_path(jank_path / "../include");
@@ -95,7 +95,7 @@ namespace jank::jit
 
   void processor::eval_string(native_persistent_string const &s) const
   {
-    profile::timer timer{ "jit eval_string" };
+    profile::timer const timer{ "jit eval_string" };
     //fmt::println("// eval_string:\n{}\n", s);
     auto err(interpreter->ParseAndExecute({ s.data(), s.size() }));
     llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
@@ -111,13 +111,14 @@ namespace jank::jit
     }
     /* XXX: Object files won't be able to use global ctors until jank is on the ORC
      * runtime, which likely won't happen until clang::Interpreter is on the ORC runtime. */
-    ee.addObjectFile(std::move(file.get()));
+    /* TODO: Return result on failure. */
+    llvm::cantFail(ee.addObjectFile(std::move(file.get())));
   }
 
   void processor::load_ir_module(std::unique_ptr<llvm::Module> m,
                                  std::unique_ptr<llvm::LLVMContext> llvm_ctx) const
   {
-    profile::timer timer{ fmt::format("jit ir module {}", m->getName()) };
+    profile::timer const timer{ fmt::format("jit ir module {}", m->getName()) };
     //m->print(llvm::outs(), nullptr);
 
     auto &ee(interpreter->getExecutionEngine().get());
@@ -129,10 +130,9 @@ namespace jank::jit
   void processor::load_bitcode(native_persistent_string const &module,
                                native_persistent_string_view const &bitcode) const
   {
-    auto &ee(interpreter->getExecutionEngine().get());
     auto ctx{ std::make_unique<llvm::LLVMContext>() };
     llvm::SMDiagnostic err{};
-    llvm::MemoryBufferRef buf{
+    llvm::MemoryBufferRef const buf{
       std::string_view{ bitcode.data(), bitcode.size() },
       module.c_str()
     };

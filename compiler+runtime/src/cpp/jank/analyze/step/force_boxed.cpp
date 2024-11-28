@@ -4,7 +4,7 @@
 namespace jank::analyze::step
 {
   template <typename F>
-  void walk(expression_ptr const expr, F const &f)
+  static void walk(expression_ptr const expr, F const &f)
   {
     boost::apply_visitor(
       [&](auto &typed_expr) {

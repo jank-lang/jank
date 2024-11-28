@@ -1,7 +1,5 @@
-#include <unistd.h>
-
 #include <array>
-#include <iostream>
+#include <ostream>
 
 #include <jank/read/lex.hpp>
 
@@ -16,37 +14,40 @@ namespace jank::read::lex
   namespace detail
   {
     template <class T, std::size_t N, std::size_t... I>
-    constexpr std::array<std::remove_cv_t<T>, N> to_array_impl(T (&a)[N], std::index_sequence<I...>)
+    static constexpr std::array<std::remove_cv_t<T>, N>
+    to_array_impl(T (&a)[N], std::index_sequence<I...>)
     {
       return { { a[I]... } };
     }
 
     template <class T, std::size_t N>
-    constexpr std::array<std::remove_cv_t<T>, N> to_array(T (&a)[N])
+    static constexpr std::array<std::remove_cv_t<T>, N> to_array(T (&a)[N])
     {
       return detail::to_array_impl(a, std::make_index_sequence<N>{});
     }
   }
 
-  constexpr std::array<token, 0> make_tokens()
+  static constexpr std::array<token, 0> make_tokens()
   {
     return {};
   }
 
   template <size_t N>
-  constexpr std::array<token, N> make_tokens(token const (&arr)[N])
+  static constexpr std::array<token, N> make_tokens(token const (&arr)[N])
   {
     return detail::to_array(arr);
   }
 
   template <size_t N>
-  constexpr std::array<result<token, error>, N> make_results(result<token, error> const (&arr)[N])
+  static constexpr std::array<result<token, error>, N>
+  make_results(result<token, error> const (&arr)[N])
   {
     return detail::to_array(arr);
   }
 
   template <size_t N>
-  bool operator==(native_vector<result<token, error>> const &v, std::array<token, N> const &a)
+  static bool
+  operator==(native_vector<result<token, error>> const &v, std::array<token, N> const &a)
   {
     if(v.size() != N)
     {
@@ -56,8 +57,8 @@ namespace jank::read::lex
   }
 
   template <size_t N>
-  bool operator==(native_vector<result<token, error>> const &v,
-                  std::array<result<token, error>, N> const &a)
+  static bool operator==(native_vector<result<token, error>> const &v,
+                         std::array<result<token, error>, N> const &a)
   {
     if(v.size() != N)
     {
@@ -68,7 +69,7 @@ namespace jank::read::lex
 
   /* This really helps with doctest comparison outputs. */
   template <typename T>
-  std::ostream &operator<<(std::ostream &os, native_vector<T> const &rs)
+  static std::ostream &operator<<(std::ostream &os, native_vector<T> const &rs)
   {
     os << "[ ";
     for(auto const &r : rs)
@@ -79,7 +80,7 @@ namespace jank::read::lex
   }
 
   template <typename T, size_t N>
-  std::ostream &operator<<(std::ostream &os, std::array<T, N> const &rs)
+  static std::ostream &operator<<(std::ostream &os, std::array<T, N> const &rs)
   {
     os << "[ ";
     for(auto const &r : rs)

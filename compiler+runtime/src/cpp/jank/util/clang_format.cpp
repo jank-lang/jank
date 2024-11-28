@@ -57,7 +57,7 @@ namespace jank::util
   result<native_persistent_string, format_failure>
   format_cpp_source(native_persistent_string const &source)
   {
-    std::string code{ source };
+    std::string const code{ source };
     auto const &style(clang_format_style());
     auto replacements(reformat(style, code, llvm::ArrayRef(tooling::Range(0, code.size()))));
     auto formatted_code(tooling::applyAllReplacements(code, replacements));

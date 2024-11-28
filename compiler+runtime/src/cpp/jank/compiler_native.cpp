@@ -11,7 +11,7 @@ namespace jank::compiler_native
   using namespace jank;
   using namespace jank::runtime;
 
-  object_ptr native_source(object_ptr const form)
+  static object_ptr native_source(object_ptr const form)
   {
     /* We use a clean analyze::processor so we don't share lifted items from other REPL
      * evaluations. */
@@ -23,7 +23,7 @@ namespace jank::compiler_native
         ->to_string());
 
     codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::eval };
-    cg_prc.gen();
+    cg_prc.gen().expect_ok();
 
     cg_prc.ctx->module->print(llvm::outs(), nullptr);
     return obj::nil::nil_const();

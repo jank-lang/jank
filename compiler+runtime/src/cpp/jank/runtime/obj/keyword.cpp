@@ -22,7 +22,7 @@ namespace jank::runtime
     return &base == &o;
   }
 
-  void to_string_impl(obj::symbol const &sym, fmt::memory_buffer &buff)
+  static void to_string_impl(obj::symbol const &sym, fmt::memory_buffer &buff)
   {
     std::back_inserter(buff) = ':';
     sym.to_string(buff);

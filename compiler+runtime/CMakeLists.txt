@@ -64,10 +64,10 @@ set(
   -Wno-gnu-conditional-omitted-operand
   -Wno-implicit-fallthrough
   -Wno-covered-switch-default
+  -Wno-invalid-offsetof
   -fno-common
   -frtti
   -fexceptions
-  -w
   $<$<CONFIG:Debug>:-O0>
   $<$<CONFIG:Release>:-O2>
 )
@@ -100,8 +100,7 @@ set(
   $<$<PLATFORM_ID:Darwin>:${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libc++abi.a>
   )
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  list(APPEND jank_common_compiler_flags #-Werror
-    -DJANK_DEBUG)
+  list(APPEND jank_common_compiler_flags -Werror -DJANK_DEBUG)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
   list(APPEND jank_common_compiler_flags -DJANK_RELEASE)
 endif()

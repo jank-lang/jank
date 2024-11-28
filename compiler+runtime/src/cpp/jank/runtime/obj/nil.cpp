@@ -16,7 +16,7 @@ namespace jank::runtime
 
   native_persistent_string const &obj::nil::to_string() const
   {
-    static native_persistent_string s{ "nil" };
+    static native_persistent_string const s{ "nil" };
     return s;
   }
 

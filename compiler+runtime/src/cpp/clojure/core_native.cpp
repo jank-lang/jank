@@ -10,12 +10,12 @@ namespace clojure::core_native
   using namespace jank;
   using namespace jank::runtime;
 
-  object_ptr subvec(object_ptr const o, object_ptr const start, object_ptr const end)
+  static object_ptr subvec(object_ptr const o, object_ptr const start, object_ptr const end)
   {
     return runtime::subvec(o, runtime::to_int(start), runtime::to_int(end));
   }
 
-  object_ptr not_(object_ptr const o)
+  static object_ptr not_(object_ptr const o)
   {
     if(runtime::is_nil(o))
     {
@@ -24,7 +24,7 @@ namespace clojure::core_native
     return make_box(runtime::is_false(o));
   }
 
-  object_ptr to_unqualified_symbol(object_ptr const o)
+  static object_ptr to_unqualified_symbol(object_ptr const o)
   {
     return runtime::visit_object(
       [&](auto const typed_o) -> object_ptr {
@@ -55,169 +55,170 @@ namespace clojure::core_native
       o);
   }
 
-  object_ptr to_qualified_symbol(object_ptr const ns, object_ptr const name)
+  static object_ptr to_qualified_symbol(object_ptr const ns, object_ptr const name)
   {
     return make_box<obj::symbol>(ns, name);
   }
 
-  object_ptr lazy_seq(object_ptr const o)
+  static object_ptr lazy_seq(object_ptr const o)
   {
     return make_box<obj::lazy_sequence>(o);
   }
 
-  object_ptr is_var(object_ptr const o)
+  static object_ptr is_var(object_ptr const o)
   {
     return make_box(o->type == object_type::var);
   }
 
-  object_ptr var_get(object_ptr const o)
+  static object_ptr var_get(object_ptr const o)
   {
     return try_object<var>(o)->deref();
   }
 
-  object_ptr var_get_root(object_ptr const o)
+  static object_ptr var_get_root(object_ptr const o)
   {
     return try_object<var>(o)->get_root();
   }
 
-  object_ptr var_bind_root(object_ptr const v, object_ptr const o)
+  static object_ptr var_bind_root(object_ptr const v, object_ptr const o)
   {
     return try_object<var>(v)->bind_root(o);
   }
 
-  object_ptr alter_var_root(object_ptr const o, object_ptr const fn, object_ptr const args)
+  static object_ptr alter_var_root(object_ptr const o, object_ptr const fn, object_ptr const args)
   {
     return try_object<var>(o)->alter_root(fn, args);
   }
 
-  object_ptr is_var_bound(object_ptr const o)
+  static object_ptr is_var_bound(object_ptr const o)
   {
     return make_box(try_object<runtime::var>(o)->is_bound());
   }
 
-  object_ptr is_var_thread_bound(object_ptr const o)
+  static object_ptr is_var_thread_bound(object_ptr const o)
   {
     return make_box(try_object<runtime::var>(o)->get_thread_binding() != nullptr);
   }
 
-  object_ptr delay(object_ptr const fn)
+  static object_ptr delay(object_ptr const fn)
   {
     return make_box<obj::delay>(fn);
   }
 
-  object_ptr is_fn(object_ptr const o)
+  static object_ptr is_fn(object_ptr const o)
   {
     return make_box(o->type == object_type::native_function_wrapper
                     || o->type == object_type::jit_function);
   }
 
-  object_ptr is_multi_fn(object_ptr const o)
+  static object_ptr is_multi_fn(object_ptr const o)
   {
     return make_box(o->type == object_type::multi_function);
   }
 
-  object_ptr multi_fn(object_ptr const name,
-                      object_ptr const dispatch_fn,
-                      object_ptr const default_,
-                      object_ptr const hierarchy)
+  static object_ptr multi_fn(object_ptr const name,
+                             object_ptr const dispatch_fn,
+                             object_ptr const default_,
+                             object_ptr const hierarchy)
   {
     return make_box<obj::multi_function>(name, dispatch_fn, default_, hierarchy);
   }
 
-  object_ptr defmethod(object_ptr const multifn, object_ptr const dispatch_val, object_ptr const fn)
+  static object_ptr
+  defmethod(object_ptr const multifn, object_ptr const dispatch_val, object_ptr const fn)
   {
     return try_object<obj::multi_function>(multifn)->add_method(dispatch_val, fn);
   }
 
-  object_ptr remove_all_methods(object_ptr const multifn)
+  static object_ptr remove_all_methods(object_ptr const multifn)
   {
     return try_object<obj::multi_function>(multifn)->reset();
   }
 
-  object_ptr remove_method(object_ptr const multifn, object_ptr const dispatch_val)
+  static object_ptr remove_method(object_ptr const multifn, object_ptr const dispatch_val)
   {
     return try_object<obj::multi_function>(multifn)->remove_method(dispatch_val);
   }
 
-  object_ptr prefer_method(object_ptr const multifn,
-                           object_ptr const dispatch_val_x,
-                           object_ptr const dispatch_val_y)
+  static object_ptr prefer_method(object_ptr const multifn,
+                                  object_ptr const dispatch_val_x,
+                                  object_ptr const dispatch_val_y)
   {
     return try_object<obj::multi_function>(multifn)->prefer_method(dispatch_val_x, dispatch_val_y);
   }
 
-  object_ptr methods(object_ptr const multifn)
+  static object_ptr methods(object_ptr const multifn)
   {
     return try_object<obj::multi_function>(multifn)->method_table;
   }
 
-  object_ptr get_method(object_ptr const multifn, object_ptr const dispatch_val)
+  static object_ptr get_method(object_ptr const multifn, object_ptr const dispatch_val)
   {
     return try_object<obj::multi_function>(multifn)->get_fn(dispatch_val);
   }
 
-  object_ptr prefers(object_ptr const multifn)
+  static object_ptr prefers(object_ptr const multifn)
   {
     return try_object<obj::multi_function>(multifn)->prefer_table;
   }
 
-  object_ptr sleep(object_ptr const ms)
+  static object_ptr sleep(object_ptr const ms)
   {
     std::this_thread::sleep_for(std::chrono::milliseconds(to_int(ms)));
     return obj::nil::nil_const();
   }
 
-  object_ptr current_time()
+  static object_ptr current_time()
   {
     using namespace std::chrono;
     auto const t(high_resolution_clock::now());
     return make_box(duration_cast<nanoseconds>(t.time_since_epoch()).count());
   }
 
-  object_ptr in_ns(object_ptr const sym)
+  static object_ptr in_ns(object_ptr const sym)
   {
     __rt_ctx->current_ns_var->set(__rt_ctx->intern_ns(try_object<obj::symbol>(sym))).expect_ok();
     return obj::nil::nil_const();
   }
 
-  object_ptr intern_ns(object_ptr const sym)
+  static object_ptr intern_ns(object_ptr const sym)
   {
     return __rt_ctx->intern_ns(try_object<obj::symbol>(sym));
   }
 
-  object_ptr find_ns(object_ptr const sym)
+  static object_ptr find_ns(object_ptr const sym)
   {
     return __rt_ctx->find_ns(try_object<obj::symbol>(sym)).unwrap_or(nullptr)
       ?: obj::nil::nil_const();
   }
 
-  object_ptr remove_ns(object_ptr const sym)
+  static object_ptr remove_ns(object_ptr const sym)
   {
     return __rt_ctx->remove_ns(try_object<obj::symbol>(sym)).unwrap_or(nullptr)
       ?: obj::nil::nil_const();
   }
 
-  object_ptr is_ns(object_ptr const ns_or_sym)
+  static object_ptr is_ns(object_ptr const ns_or_sym)
   {
     return make_box(ns_or_sym->type == object_type::ns);
   }
 
-  object_ptr ns_name(object_ptr const ns)
+  static object_ptr ns_name(object_ptr const ns)
   {
     return try_object<runtime::ns>(ns)->name;
   }
 
-  object_ptr ns_map(object_ptr const ns)
+  static object_ptr ns_map(object_ptr const ns)
   {
     return try_object<runtime::ns>(ns)->get_mappings();
   }
 
-  object_ptr var_ns(object_ptr const v)
+  static object_ptr var_ns(object_ptr const v)
   {
     return try_object<runtime::var>(v)->n;
   }
 
-  object_ptr ns_resolve(object_ptr const ns, object_ptr const sym)
+  static object_ptr ns_resolve(object_ptr const ns, object_ptr const sym)
   {
     auto const n(try_object<runtime::ns>(ns));
     auto const found(n->find_var(try_object<obj::symbol>(sym)));
@@ -228,7 +229,8 @@ namespace clojure::core_native
     return obj::nil::nil_const();
   }
 
-  object_ptr alias(object_ptr const current_ns, object_ptr const remote_ns, object_ptr const alias)
+  static object_ptr
+  alias(object_ptr const current_ns, object_ptr const remote_ns, object_ptr const alias)
   {
     try_object<ns>(current_ns)
       ->add_alias(try_object<obj::symbol>(alias), try_object<ns>(remote_ns))
@@ -236,7 +238,7 @@ namespace clojure::core_native
     return obj::nil::nil_const();
   }
 
-  object_ptr refer(object_ptr const current_ns, object_ptr const sym, object_ptr const var)
+  static object_ptr refer(object_ptr const current_ns, object_ptr const sym, object_ptr const var)
   {
     expect_object<runtime::ns>(current_ns)
       ->refer(try_object<obj::symbol>(sym), expect_object<runtime::var>(var))
@@ -244,24 +246,24 @@ namespace clojure::core_native
     return obj::nil::nil_const();
   }
 
-  object_ptr load_module(object_ptr const path)
+  static object_ptr load_module(object_ptr const path)
   {
     __rt_ctx->load_module(runtime::to_string(path)).expect_ok();
     return obj::nil::nil_const();
   }
 
-  object_ptr is_module_loaded(object_ptr const path)
+  static object_ptr is_module_loaded(object_ptr const path)
   {
     return make_box(__rt_ctx->module_loader.is_loaded(runtime::to_string(path)));
   }
 
-  object_ptr set_module_loaded(object_ptr const path)
+  static object_ptr set_module_loaded(object_ptr const path)
   {
     __rt_ctx->module_loader.set_loaded(runtime::to_string(path));
     return obj::nil::nil_const();
   }
 
-  object_ptr compile(object_ptr const path)
+  static object_ptr compile(object_ptr const path)
   {
     __rt_ctx->compile_module(runtime::to_string(path)).expect_ok();
     return obj::nil::nil_const();

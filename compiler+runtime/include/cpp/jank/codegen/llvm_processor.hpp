@@ -67,7 +67,7 @@ namespace jank::codegen
     llvm_processor(llvm_processor const &) = delete;
     llvm_processor(llvm_processor &&) noexcept = default;
 
-    void gen();
+    string_result<void> gen();
     llvm::Value *gen(analyze::expression_ptr const &,
                      analyze::expr::function_arity<analyze::expression> const &);
     llvm::Value *gen(analyze::expr::def<analyze::expression> const &,

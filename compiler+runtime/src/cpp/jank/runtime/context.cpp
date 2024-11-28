@@ -146,7 +146,7 @@ namespace jank::runtime
 
   option<var_ptr> context::find_var(obj::symbol_ptr const &sym)
   {
-    profile::timer timer{ "rt find_var" };
+    profile::timer const timer{ "rt find_var" };
     if(!sym->ns.empty())
     {
       ns_ptr ns{};
@@ -194,7 +194,7 @@ namespace jank::runtime
 
   object_ptr context::eval_string(native_persistent_string_view const &code)
   {
-    profile::timer timer{ "rt eval_string" };
+    profile::timer const timer{ "rt eval_string" };
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
@@ -218,7 +218,7 @@ namespace jank::runtime
       fn.name = module::module_to_load_function(module);
       fn.unique_name = fn.name;
       codegen::llvm_processor cg_prc{ wrapped_exprs, module, codegen::compilation_target::module };
-      cg_prc.gen();
+      cg_prc.gen().expect_ok();
       write_module(std::move(cg_prc.ctx)).expect_ok();
     }
 
@@ -228,7 +228,7 @@ namespace jank::runtime
 
   object_ptr context::read_string(native_persistent_string_view const &code)
   {
-    profile::timer timer{ "rt read_string" };
+    profile::timer const timer{ "rt read_string" };
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
@@ -244,7 +244,7 @@ namespace jank::runtime
   native_vector<analyze::expression_ptr>
   context::analyze_string(native_persistent_string_view const &code, native_bool const eval)
   {
-    profile::timer timer{ "rt analyze_string" };
+    profile::timer const timer{ "rt analyze_string" };
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
@@ -278,7 +278,7 @@ namespace jank::runtime
       absolute_module = module::nest_module(ns->to_string(), module);
     }
 
-    binding_scope preserve{ *this };
+    binding_scope const preserve{ *this };
 
     try
     {
@@ -308,10 +308,10 @@ namespace jank::runtime
   {
     module_dependencies.clear();
 
-    binding_scope preserve{ *this,
-                            obj::persistent_hash_map::create_unique(
-                              std::make_pair(compile_files_var, obj::boolean::true_const()),
-                              std::make_pair(current_module_var, make_box(module))) };
+    binding_scope const preserve{ *this,
+                                  obj::persistent_hash_map::create_unique(
+                                    std::make_pair(compile_files_var, obj::boolean::true_const()),
+                                    std::make_pair(current_module_var, make_box(module))) };
 
     return load_module(fmt::format("/{}", module));
   }
@@ -319,7 +319,7 @@ namespace jank::runtime
   string_result<void>
   context::write_module(std::unique_ptr<codegen::reusable_context> const codegen_ctx) const
   {
-    profile::timer timer{ fmt::format("write_module {}", codegen_ctx->module_name) };
+    profile::timer const timer{ fmt::format("write_module {}", codegen_ctx->module_name) };
     boost::filesystem::path const module_path{
       fmt::format("{}/{}.o", output_dir, module::module_to_path(codegen_ctx->module_name))
     };
@@ -343,7 +343,7 @@ namespace jank::runtime
     {
       return err(target_error);
     }
-    llvm::TargetOptions opt;
+    llvm::TargetOptions const opt;
     auto const target_machine{
       target->createTargetMachine(target_triple, "generic", "", opt, llvm::Reloc::PIC_)
     };
@@ -476,7 +476,7 @@ namespace jank::runtime
   result<var_ptr, native_persistent_string>
   context::intern_var(obj::symbol_ptr const &qualified_sym)
   {
-    profile::timer timer{ "intern_var" };
+    profile::timer const timer{ "intern_var" };
     if(qualified_sym->ns.empty())
     {
       return err(
@@ -523,7 +523,7 @@ namespace jank::runtime
   result<obj::keyword_ptr, native_persistent_string>
   context::intern_keyword(native_persistent_string_view const &s)
   {
-    profile::timer timer{ "rt intern_keyword" };
+    profile::timer const timer{ "rt intern_keyword" };
 
     auto locked_keywords(keywords.wlock());
     auto const found(locked_keywords->find(s));
@@ -539,7 +539,7 @@ namespace jank::runtime
 
   object_ptr context::macroexpand1(object_ptr const o)
   {
-    profile::timer timer{ "rt macroexpand1" };
+    profile::timer const timer{ "rt macroexpand1" };
     return visit_seqable(
       [this](auto const typed_o) -> object_ptr {
         using T = typename decltype(typed_o)::value_type;

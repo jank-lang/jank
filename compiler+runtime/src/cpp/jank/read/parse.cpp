@@ -270,9 +270,9 @@ namespace jank::read::parse
           return ok(none);
         default:
           {
-            native_persistent_string msg{ fmt::format("unexpected token kind: {}",
-                                                      magic_enum::enum_name(latest_token.kind)) };
-            return err(error{ latest_token.pos, std::move(msg) });
+            return err(error{
+              latest_token.pos,
+              fmt::format("unexpected token kind: {}", magic_enum::enum_name(latest_token.kind)) });
           }
       }
     }
