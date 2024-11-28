@@ -3,7 +3,7 @@
 For Debian-based distros, this should be all you need:
 
 ```bash
-sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev entr libffi-dev clang libreadline-dev libzip-dev libbz2-dev doctest-dev libboost-all-dev gcc-14 g++-14
+sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev entr libffi-dev clang libzip-dev libbz2-dev doctest-dev libboost-all-dev gcc-14 g++-14
 ```
 
 For Arch:
