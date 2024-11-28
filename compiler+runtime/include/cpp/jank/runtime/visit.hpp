@@ -536,7 +536,7 @@ namespace jank::runtime
   {
     return visit_seqable(
       fn,
-      [=]() -> decltype(fn(obj::integer_ptr{}, std::forward<Args>(args)...)) {
+      [=]() -> decltype(fn(obj::cons_ptr{}, std::forward<Args>(args)...)) {
         throw std::runtime_error{ "not seqable: " + to_string(const_erased) };
       },
       const_erased,
@@ -578,6 +578,20 @@ namespace jank::runtime
 #pragma clang diagnostic pop
   }
 
+  /* Throws if the object isn't map-like. */
+  template <typename F1, typename... Args>
+  [[gnu::hot]]
+  constexpr auto visit_map_like(F1 const &fn, object const * const const_erased, Args &&...args)
+  {
+    return visit_map_like(
+      fn,
+      [=]() -> decltype(fn(obj::persistent_hash_map_ptr{}, std::forward<Args>(args)...)) {
+        throw std::runtime_error{ "not map-like: " + to_string(const_erased) };
+      },
+      const_erased,
+      std::forward<Args>(args)...);
+  }
+
   template <typename F1, typename F2, typename... Args>
   requires(visitable<F1, Args...> && !std::convertible_to<F2, object const *>)
   [[gnu::hot]]
@@ -606,6 +620,20 @@ namespace jank::runtime
         return else_fn();
     }
 #pragma clang diagnostic pop
+  }
+
+  /* Throws if the object isn't set-like. */
+  template <typename F1, typename... Args>
+  [[gnu::hot]]
+  constexpr auto visit_set_like(F1 const &fn, object const * const const_erased, Args &&...args)
+  {
+    return visit_set_like(
+      fn,
+      [=]() -> decltype(fn(obj::persistent_hash_set_ptr{}, std::forward<Args>(args)...)) {
+        throw std::runtime_error{ "not set-like: " + to_string(const_erased) };
+      },
+      const_erased,
+      std::forward<Args>(args)...);
   }
 
   template <typename F1, typename F2, typename... Args>

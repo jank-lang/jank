@@ -128,12 +128,12 @@ namespace jank::analyze
                                      expression_position,
                                      option<expr::function_context_ptr> const &,
                                      native_bool needs_box);
-    expression_result analyze_map(runtime::obj::persistent_array_map_ptr const &,
+    expression_result analyze_map(object_ptr const &,
                                   local_frame_ptr &,
                                   expression_position,
                                   option<expr::function_context_ptr> const &,
                                   native_bool needs_box);
-    expression_result analyze_set(runtime::obj::persistent_hash_set_ptr const &,
+    expression_result analyze_set(object_ptr const &,
                                   local_frame_ptr &,
                                   expression_position,
                                   option<expr::function_context_ptr> const &,

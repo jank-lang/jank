@@ -492,9 +492,9 @@
    x)
   ([x & more]
    (let [x-res (gensym)]
-     (list 'clojure.core/let [x-res x]
+     (list `let [x-res x]
            (list 'if x-res
-                 (cons 'clojure.core/and more)
+                 (cons `and more)
                  x-res)))))
 
 (defmacro assert
@@ -502,14 +502,14 @@
    logical true."
   ([x]
    (when *assert*
-     (list 'clojure.core/when-not x
-           (list 'throw (list 'clojure.core/ex-info
+     (list `when-not x
+           (list 'throw (list `ex-info
                               "assertion failed"
                               {:assertion (pr-str x)})))))
   ([x message]
    (when *assert*
-     (list 'clojure.core/when-not x
-           (list 'throw (list 'clojure.core/ex-info
+     (list `when-not x
+           (list 'throw (list `ex-info
                               "assertion failed"
                               {:assertion (pr-str x)
                                :message message}))))))

@@ -7,6 +7,9 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/number_like.hpp>
+#include <jank/runtime/behavior/sequential.hpp>
+#include <jank/runtime/behavior/map_like.hpp>
+#include <jank/runtime/behavior/set_like.hpp>
 #include <jank/runtime/core/truthy.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
@@ -1175,88 +1178,109 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_map(runtime::obj::persistent_array_map_ptr const &o,
+  processor::analyze_map(object_ptr const &o,
                          local_frame_ptr &current_frame,
                          expression_position const position,
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
   {
     /* TODO: Detect literal and act accordingly. */
-    native_vector<std::pair<expression_ptr, expression_ptr>> exprs;
-    exprs.reserve(o->data.size());
-    for(auto const &kv : o->data)
-    {
-      auto k_expr(analyze(kv.first, current_frame, expression_position::value, fn_ctx, true));
-      if(k_expr.is_err())
-      {
-        return k_expr.expect_err_move();
-      }
-      auto v_expr(analyze(kv.second, current_frame, expression_position::value, fn_ctx, true));
-      if(v_expr.is_err())
-      {
-        return v_expr.expect_err_move();
-      }
-      exprs.emplace_back(k_expr.expect_ok_move(), v_expr.expect_ok_move());
-    }
+    return visit_map_like(
+      [&](auto const typed_o) -> processor::expression_result {
+        native_vector<std::pair<expression_ptr, expression_ptr>> exprs;
+        exprs.reserve(typed_o->data.size());
+        for(auto const &kv : typed_o->data)
+        {
+          /* The two maps (hash and sorted) have slightly different iterators, so we need to
+           * pull out the entries differently. */
+          object_ptr first{}, second{};
+          if constexpr(requires { kv->first; })
+          {
+            first = kv->first;
+            second = kv->second;
+          }
+          else if constexpr(requires { kv.first; })
+          {
+            first = kv.first;
+            second = kv.second;
+          }
+          auto k_expr(analyze(first, current_frame, expression_position::value, fn_ctx, true));
+          if(k_expr.is_err())
+          {
+            return k_expr.expect_err_move();
+          }
+          auto v_expr(analyze(second, current_frame, expression_position::value, fn_ctx, true));
+          if(v_expr.is_err())
+          {
+            return v_expr.expect_err_move();
+          }
+          exprs.emplace_back(k_expr.expect_ok_move(), v_expr.expect_ok_move());
+        }
 
-    /* TODO: Uniqueness check. */
-    return make_box<expression>(expr::map<expression>{
-      expression_base{ {}, position, current_frame, true },
-      std::move(exprs),
-      o->meta,
-      o
-    });
+        /* TODO: Uniqueness check. */
+        return make_box<expression>(expr::map<expression>{
+          expression_base{ {}, position, current_frame, true },
+          std::move(exprs),
+          typed_o->meta,
+          o
+        });
+      },
+      o);
   }
 
   processor::expression_result
-  processor::analyze_set(runtime::obj::persistent_hash_set_ptr const &o,
+  processor::analyze_set(object_ptr const &o,
                          local_frame_ptr &current_frame,
                          expression_position const position,
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
   {
-    native_vector<expression_ptr> exprs;
-    exprs.reserve(o->count());
-    native_bool literal{ true };
-    for(auto d = o->fresh_seq(); d != nullptr; d = next_in_place(d))
-    {
-      auto res(analyze(d->first(), current_frame, expression_position::value, fn_ctx, true));
-      if(res.is_err())
-      {
-        return res.expect_err_move();
-      }
-      exprs.emplace_back(res.expect_ok_move());
-      if(!boost::get<expr::primitive_literal<expression>>(&exprs.back()->data))
-      {
-        literal = false;
-      }
-    }
+    return visit_set_like(
+      [&](auto const typed_o) -> processor::expression_result {
+        native_vector<expression_ptr> exprs;
+        exprs.reserve(typed_o->count());
+        native_bool literal{ true };
+        for(auto d = typed_o->fresh_seq(); d != nullptr; d = next_in_place(d))
+        {
+          auto res(analyze(d->first(), current_frame, expression_position::value, fn_ctx, true));
+          if(res.is_err())
+          {
+            return res.expect_err_move();
+          }
+          exprs.emplace_back(res.expect_ok_move());
+          if(!boost::get<expr::primitive_literal<expression>>(&exprs.back()->data))
+          {
+            literal = false;
+          }
+        }
 
-    if(literal)
-    {
-      /* Eval the literal to resolve exprs such as quotes. */
-      auto const pre_eval_expr(make_box<expression>(expr::set<expression>{
-        expression_base{ {}, position, current_frame, true },
-        std::move(exprs),
-        o->meta
-      }));
-      auto const o(evaluate::eval(pre_eval_expr));
+        if(literal)
+        {
+          /* Eval the literal to resolve exprs such as quotes. */
+          auto const pre_eval_expr(make_box<expression>(expr::set<expression>{
+            expression_base{ {}, position, current_frame, true },
+            std::move(exprs),
+            typed_o->meta
+          }));
+          auto const constant(evaluate::eval(pre_eval_expr));
 
-      /* TODO: Order lifted constants. Use sub constants during codegen. */
-      current_frame->lift_constant(o);
+          /* TODO: Order lifted constants. Use sub constants during codegen. */
+          current_frame->lift_constant(constant);
 
-      return make_box<expression>(expr::primitive_literal<expression>{
-        expression_base{ {}, position, current_frame, true },
-        o
-      });
-    }
+          return make_box<expression>(expr::primitive_literal<expression>{
+            expression_base{ {}, position, current_frame, true },
+            constant
+          });
+        }
 
-    return make_box<expression>(expr::set<expression>{
-      expression_base{ {}, position, current_frame, true },
-      std::move(exprs),
-      o->meta,
-      o
-    });
+        return make_box<expression>(expr::set<expression>{
+          expression_base{ {}, position, current_frame, true },
+          std::move(exprs),
+          typed_o->meta,
+          typed_o
+        });
+      },
+      o);
   }
 
   processor::expression_result
@@ -1419,11 +1443,11 @@ namespace jank::analyze
         {
           return analyze_vector(typed_o, current_frame, position, fn_ctx, needs_box);
         }
-        else if constexpr(std::same_as<T, runtime::obj::persistent_array_map>)
+        else if constexpr(runtime::behavior::map_like<T>)
         {
           return analyze_map(typed_o, current_frame, position, fn_ctx, needs_box);
         }
-        else if constexpr(std::same_as<T, runtime::obj::persistent_hash_set>)
+        else if constexpr(runtime::behavior::set_like<T>)
         {
           return analyze_set(typed_o, current_frame, position, fn_ctx, needs_box);
         }
@@ -1440,9 +1464,9 @@ namespace jank::analyze
         {
           return analyze_symbol(typed_o, current_frame, position, fn_ctx, needs_box);
         }
-        /* This is used when building code from macros; they may end up being other forms of sequences
-         * and not just lists. */
-        if constexpr(runtime::behavior::seqable<T>)
+        /* This is used when building code from macros; they may end up being other forms of
+         * sequences and not just lists. */
+        if constexpr(runtime::behavior::sequential<T>)
         {
           return analyze_call(runtime::obj::persistent_list::create(typed_o->seq()),
                               current_frame,
