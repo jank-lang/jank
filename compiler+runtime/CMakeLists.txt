@@ -216,7 +216,10 @@ add_library(
   src/cpp/jank/evaluate.cpp
   src/cpp/jank/codegen/llvm_processor.cpp
   src/cpp/jank/jit/processor.cpp
+
+  # Native module sources.
   src/cpp/clojure/core_native.cpp
+  src/cpp/jank/compiler_native.cpp
 )
 
 target_include_directories(

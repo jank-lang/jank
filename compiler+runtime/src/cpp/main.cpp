@@ -23,6 +23,8 @@
 #include <jank/jit/processor.hpp>
 #include <jank/native_persistent_string.hpp>
 #include <jank/profile/time.hpp>
+
+#include <jank/compiler_native.hpp>
 #include <clojure/core_native.hpp>
 
 namespace jank
@@ -34,7 +36,6 @@ namespace jank
 
     {
       profile::timer timer{ "load clojure.core" };
-      jank_load_clojure_core_native();
       __rt_ctx->load_module("/clojure.core").expect_ok();
     }
 
@@ -67,7 +68,6 @@ namespace jank
 
     {
       profile::timer timer{ "require clojure.core" };
-      jank_load_clojure_core_native();
       __rt_ctx->load_module("/clojure.core").expect_ok();
     }
 
@@ -100,7 +100,6 @@ namespace jank
     using namespace jank;
     using namespace jank::runtime;
 
-    jank_load_clojure_core_native();
     __rt_ctx->compile_module(opts.target_ns).expect_ok();
   }
 
@@ -117,7 +116,6 @@ namespace jank
 
     {
       profile::timer timer{ "require clojure.core" };
-      jank_load_clojure_core_native();
       __rt_ctx->load_module("/clojure.core").expect_ok();
     }
 
@@ -262,6 +260,9 @@ try
   profile::timer timer{ "main" };
 
   __rt_ctx = new(GC) runtime::context{ opts };
+
+  jank_load_clojure_core_native();
+  jank_load_jank_compiler_native();
 
   switch(opts.command)
   {

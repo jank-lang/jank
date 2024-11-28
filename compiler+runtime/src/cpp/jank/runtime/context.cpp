@@ -585,26 +585,6 @@ namespace jank::runtime
     return o;
   }
 
-  obj::persistent_string_ptr context::native_source(object_ptr const o)
-  {
-    /* We use a clean analyze::processor so we don't share lifted items from other REPL
-     * evaluations. */
-    analyze::processor an_prc{ *this };
-    auto const expr(an_prc.analyze(o, analyze::expression_position::value).expect_ok());
-    auto const wrapped_expr(evaluate::wrap_expression(expr));
-    auto const &module(
-      expect_object<runtime::ns>(intern_var("clojure.core", "*ns*").expect_ok()->deref())
-        ->to_string());
-
-    codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::eval };
-    cg_prc.gen();
-    jit_prc.load_ir_module(std::move(cg_prc.ctx->module), std::move(cg_prc.ctx->llvm_ctx));
-
-    auto const fn(
-      jit_prc.find_symbol<object *(*)()>(fmt::format("{}_0", munge(cg_prc.root_fn.unique_name))));
-    return make_box(to_code_string(fn()));
-  }
-
   context::binding_scope::binding_scope(context &rt_ctx)
     : rt_ctx{ rt_ctx }
   {

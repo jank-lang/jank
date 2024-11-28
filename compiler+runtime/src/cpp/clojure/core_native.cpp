@@ -460,6 +460,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("alias", &core_native::alias);
   intern_fn("refer", &core_native::refer);
   intern_fn("load-module", &core_native::load_module);
+  intern_fn("set-module-loaded", &core_native::set_module_loaded);
   intern_fn("module-loaded?", &core_native::is_module_loaded);
   intern_fn("compile", &core_native::compile);
 
