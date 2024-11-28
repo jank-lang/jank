@@ -231,7 +231,10 @@ try
   using namespace jank;
   using namespace jank::runtime;
 
-  /* Set locale */
+  /* To handle UTF-8 Text , we set the locale to the current environment locale
+   * Usage of the local locale allows better localization.
+   * Notably this might make text encoding become more platform dependent.
+   */
   std::locale::global(std::locale(""));
   
   /* The GC needs to enabled even before arg parsing, since our native types,

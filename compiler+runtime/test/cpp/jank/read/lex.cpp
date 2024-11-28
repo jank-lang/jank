@@ -1442,6 +1442,16 @@ namespace jank::read::lex
                 { 0, 10, token_kind::keyword, "🐝/🥀"sv }
         }));
       }
+      SUBCASE("Malformed Text")
+      {
+        processor p{ "\xC0\x80" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                error({ 0, "Unfinished Character" }),
+                error({ 1, "Unfinished Character" }),
+              }));
+      }
     }
   }
 }

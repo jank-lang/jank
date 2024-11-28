@@ -9,8 +9,7 @@
 /* NOLINTNEXTLINE(bugprone-exception-escape): println can throw. */
 int main(int const argc, char const **argv)
 try
-{
-  /* Set locale */
+{  
   std::locale::global(std::locale(""));
   
   GC_set_all_interior_pointers(1);

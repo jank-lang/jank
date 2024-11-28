@@ -340,6 +340,7 @@ namespace jank::read
       auto const oc{ convert_to_codepoint(file.substr(token_start), token_start) };
       if(oc.is_err())
       {
+        ++pos;
         return oc.expect_err();
       }
       switch(oc.expect_ok().character)
