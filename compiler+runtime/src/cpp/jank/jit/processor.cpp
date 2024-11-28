@@ -18,6 +18,17 @@
 
 namespace jank::jit
 {
+  static native_persistent_string default_shared_lib_name(native_persistent_string const &lib)
+#if defined(__APPLE__)
+  {
+    return fmt::format("{}.dylib", lib);
+  }
+#elif defined(__linux__)
+  {
+    return fmt::format("lib{}.so", lib);
+  }
+#endif
+
   static void handle_fatal_llvm_error(void * const user_data,
                                       char const *message,
                                       native_bool const gen_crash_diag)
@@ -35,10 +46,16 @@ namespace jank::jit
     std::exit(gen_crash_diag ? 70 : 1);
   }
 
-  processor::processor(native_integer const optimization_level)
-    : optimization_level{ optimization_level }
+  processor::processor(util::cli::options const &opts)
+    : optimization_level{ opts.optimization_level }
   {
     profile::timer const timer{ "jit ctor" };
+
+    for(auto const &library_dir : opts.library_dirs)
+    {
+      library_dirs.emplace_back(boost::filesystem::absolute(library_dir.c_str()));
+    }
+
     /* TODO: Pass this into each fn below so we only do this once on startup. */
     auto const jank_path(util::process_location().unwrap().parent_path());
     auto const include_path(jank_path / "../include");
@@ -75,7 +92,22 @@ namespace jank::jit
     }
     args.emplace_back(strdup(O.c_str()));
 
-    //fmt::println("jit flags {}", args);
+    for(auto const &include_path : opts.include_dirs)
+    {
+      args.emplace_back(strdup(fmt::format("-I{}", include_path).c_str()));
+    }
+
+    for(auto const &library_path : opts.library_dirs)
+    {
+      args.emplace_back(strdup(fmt::format("-L{}", library_path).c_str()));
+    }
+
+    for(auto const &define_macro : opts.define_macros)
+    {
+      args.emplace_back(strdup(fmt::format("-D{}", define_macro).c_str()));
+    }
+
+    // fmt::println("jit flags {}", args);
 
     clang::IncrementalCompilerBuilder compiler_builder;
     compiler_builder.SetCompilerArgs(args);
@@ -86,6 +118,12 @@ namespace jank::jit
     compiler_instance->LoadRequestedPlugins();
 
     interpreter = llvm::cantFail(clang::Interpreter::create(std::move(compiler_instance)));
+
+    auto const &load_result{ load_dynamic_libs(opts.libs) };
+    if(load_result.is_err())
+    {
+      throw std::runtime_error{ load_result.expect_err().c_str() };
+    }
   }
 
   processor::~processor()
@@ -144,5 +182,60 @@ namespace jank::jit
       throw std::runtime_error{ fmt::format("unable to load module") };
     }
     load_ir_module(std::move(ir_module), std::move(ctx));
+  }
+
+  option<native_persistent_string>
+  processor::find_dynamic_lib(native_persistent_string const &lib) const
+  {
+    auto const &default_lib_name{ default_shared_lib_name(lib) };
+    for(auto const &lib_dir : library_dirs)
+    {
+      auto const default_lib_abs_path{ fmt::format("{}/{}", lib_dir.string(), default_lib_name) };
+      if(boost::filesystem::exists(default_lib_abs_path.c_str()))
+      {
+        return default_lib_abs_path;
+      }
+      else
+      {
+        auto const lib_abs_path{ fmt::format("{}/{}", lib_dir.string(), lib) };
+        if(boost::filesystem::exists(lib_abs_path))
+        {
+          return lib_abs_path;
+        }
+      }
+    }
+
+    return none;
+  }
+
+  result<void, native_persistent_string>
+  processor::load_dynamic_libs(native_vector<native_persistent_string> const &libs) const
+  {
+    for(auto const &lib : libs)
+    {
+      if(boost::filesystem::path{ lib.c_str() }.is_absolute())
+      {
+        load_dynamic_library(lib);
+      }
+      else
+      {
+        auto const result{ processor::find_dynamic_lib(lib) };
+        if(result.is_none())
+        {
+          return err(fmt::format("Failed to load dynamic library `{}`", lib));
+        }
+        else
+        {
+          load_dynamic_library(result.unwrap());
+        }
+      }
+    }
+
+    return ok();
+  }
+
+  void processor::load_dynamic_library(native_persistent_string const &path) const
+  {
+    llvm::cantFail(interpreter->LoadDynamicLibrary(path.data()));
   }
 }

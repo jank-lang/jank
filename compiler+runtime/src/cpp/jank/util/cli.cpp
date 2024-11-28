@@ -28,6 +28,23 @@ namespace jank::util::cli
     cli.add_option("-O,--optimization", opts.optimization_level, "The optimization level to use")
       ->check(CLI::Range(0, 3));
 
+    /* Native dependencies. */
+    cli.add_option("-I,--include-dir",
+                   opts.include_dirs,
+                   "Absolute or relative path to the directory for includes resolution. Accepts "
+                   "multiple values");
+    cli.add_option("-L,--library-dir",
+                   opts.library_dirs,
+                   "Absolute or relative path to the directory to search dynamic libraries in. "
+                   "Accepts multiple values");
+    cli.add_option("-D,--define-macro",
+                   opts.define_macros,
+                   "Defines macro value, sets to 1 if omitted. Accepts multiple values");
+    cli.add_option("-l",
+                   opts.libs,
+                   "Library identifiers, absolute or relative paths eg. -lfoo for libfoo.so or "
+                   "foo.dylib. Accepts multiple values");
+
     /* Run subcommand. */
     auto &cli_run(*cli.add_subcommand("run", "Load and run a file"));
     cli_run.fallthrough();
