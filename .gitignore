@@ -1,6 +1,8 @@
 test.jank
 jank-generated.hpp
 a.out
+.jank-native-repl-history
+.jank-repl-history
 
 # Vim files
 /.ycm_extra_conf.py*
