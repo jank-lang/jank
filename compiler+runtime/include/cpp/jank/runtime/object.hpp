@@ -68,6 +68,8 @@ namespace jank::runtime
     jit_closure,
     multi_function,
 
+    native_pointer_wrapper,
+
     atom,
     volatile_,
     reduced,

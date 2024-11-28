@@ -34,6 +34,7 @@
 #include <jank/runtime/obj/jit_closure.hpp>
 #include <jank/runtime/obj/multi_function.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
+#include <jank/runtime/obj/native_pointer_wrapper.hpp>
 #include <jank/runtime/obj/persistent_vector_sequence.hpp>
 #include <jank/runtime/obj/persistent_string_sequence.hpp>
 #include <jank/runtime/obj/persistent_list_sequence.hpp>
@@ -274,6 +275,12 @@ namespace jank::runtime
       case object_type::native_function_wrapper:
         {
           return fn(expect_object<obj::native_function_wrapper>(erased),
+                    std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::native_pointer_wrapper:
+        {
+          return fn(expect_object<obj::native_pointer_wrapper>(erased),
                     std::forward<Args>(args)...);
         }
         break;
