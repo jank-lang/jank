@@ -286,18 +286,23 @@ namespace jank::read
 
     static native_bool is_utf8_char(char32_t const c)
     {
+      /* Checks if the codepoint is within Unicode scalar ranges */
       if(c <= 0x7FF)
       {
+        /* ASCII (U+0000 - U+007F) and 2-byte range (U+0080 - U+07FF) */
         return true;
       }
       else if(c <= 0xFFFF)
       {
+        /* 3-byte range (U+0800 - U+FFFF) */
         return c < 0xD800 || c > 0xDFFF;
       }
       else if(c <= 0x10FFFF)
       {
+        /* 4-byte range (U+10000 - U+10FFFF) */
         return true;
       }
+      /* Outside the range */
       return false;
     }
 
@@ -757,20 +762,10 @@ namespace jank::read
             }
             require_space = false;
             auto const oc(peek());
-            char32_t c{};
-            size_t size{};
-            if(oc.is_err())
-            {
-              c = ' ';
-              ++pos;
-            }
-            else
-            {
-              c = oc.expect_ok().character;
-              size = oc.expect_ok().len;
-              pos += size;
-            }
-            switch(c)
+            auto const cp(oc.unwrap_or(codepoint{ ' ', 1 }));
+            pos += cp.len;
+
+            switch(cp.character)
             {
               case '_':
                 ++pos;
@@ -779,20 +774,11 @@ namespace jank::read
               case '?':
                 {
                   auto const maybe_splice(peek());
-                  char32_t c{};
-                  size_t size{};
-                  if(maybe_splice.is_err())
-                  {
-                    c = ' ';
-                    ++pos;
-                  }
-                  else
-                  {
-                    c = maybe_splice.expect_ok().character;
-                    size = maybe_splice.expect_ok().len;
-                    pos += size;
-                  }
-                  if(c == '@')
+
+                  auto const cp(maybe_splice.unwrap_or(codepoint{ ' ', 1 }));
+                  pos += cp.len;
+
+                  if(cp.character == '@')
                   {
                     ++pos;
                     return ok(token{ token_start,
@@ -834,21 +820,10 @@ namespace jank::read
             }
             require_space = false;
             auto const oc(peek());
-            char32_t c{};
-            size_t size{};
-            if(oc.is_err())
-            {
-              c = ' ';
-              ++pos;
-            }
-            else
-            {
-              c = oc.expect_ok().character;
-              size = oc.expect_ok().len;
-              pos += size;
-            }
 
-            switch(c)
+            auto const cp(oc.unwrap_or(codepoint{ ' ', 1 }));
+            pos += cp.len;
+            switch(cp.character)
             {
               case '@':
                 {
@@ -917,14 +892,7 @@ namespace jank::read
         return err(error{ pos, "No more characters to peek." });
       }
       auto const oc{ convert_to_codepoint(file.substr(next_pos), next_pos) };
-      if(oc.is_err())
-      {
-        return oc.expect_err();
-      }
-      else
-      {
-        return oc.expect_ok();
-      }
+      return oc;
     }
   }
 }

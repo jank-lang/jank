@@ -1334,59 +1334,83 @@ namespace jank::read::lex
 
     TEST_CASE("UTF-8")
     {
-      SUBCASE("Symbol")
+      SUBCASE("Symbols")
       {
-        processor p{ "👍" };
-        native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_tokens({
-                { 0, 4, token_kind::symbol, "👍"sv }
-        }));
+        SUBCASE("Single character")
+        {
+          processor p{ "👍" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 4, token_kind::symbol, "👍"sv }
+          }));
+        }
+        SUBCASE("Multiple characters")
+        {
+          processor p{ "😎👍" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 8, token_kind::symbol, "😎👍"sv }
+          }));
+        }
+        SUBCASE("Symbol with mixed characters inside")
+        {
+          processor p{ "one-🍺-please!" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 16, token_kind::symbol, "one-🍺-please!"sv }
+          }));
+        }
+        SUBCASE("Qualified Symbol")
+        {
+          processor p{ "🐝/🥀" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 9, token_kind::symbol, "🐝/🥀"sv }
+          }));
+        }
       }
-      SUBCASE("Keyword")
+      SUBCASE("Keywords")
       {
-        processor p{ ":🍙" };
-        native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_tokens({
-                { 0, 5, token_kind::keyword, "🍙"sv },
-        }));
-      }
-      SUBCASE("Multiple characters symbol")
-      {
-        processor p{ "😎👍" };
-        native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_tokens({
-                { 0, 8, token_kind::symbol, "😎👍"sv }
-        }));
-      }
-      SUBCASE("Multiple characters keyword")
-      {
-        processor p{ ":🥩🍗" };
-        native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_tokens({
-                { 0, 9, token_kind::keyword, "🥩🍗"sv }
-        }));
-      }
-      SUBCASE("Symbol with mixed characters inside")
-      {
-        processor p{ "one-🍺-please!" };
-        native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_tokens({
-                { 0, 16, token_kind::symbol, "one-🍺-please!"sv }
-        }));
-      }
-      SUBCASE("Keyword with mixed characters inside")
-      {
-        processor p{ ":w🍪w" };
-        native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_tokens({
-                { 0, 7, token_kind::keyword, "w🍪w"sv }
-        }));
+        SUBCASE("Single character")
+        {
+          processor p{ ":🍙" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 5, token_kind::keyword, "🍙"sv },
+          }));
+        }
+        SUBCASE("Multiple characters keyword")
+        {
+          processor p{ ":🥩🍗" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 9, token_kind::keyword, "🥩🍗"sv }
+          }));
+        }
+        SUBCASE("Keyword with mixed characters inside")
+        {
+          processor p{ ":w🍪w" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 7, token_kind::keyword, "w🍪w"sv }
+          }));
+        }
+        SUBCASE("Qualified Keyword")
+        {
+          processor p{ ":🐝/🥀" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 10, token_kind::keyword, "🐝/🥀"sv }
+          }));
+        }
       }
       SUBCASE("8-wide character")
       {
@@ -1424,24 +1448,8 @@ namespace jank::read::lex
                 { 0, 7, token_kind::keyword, "  "sv }
         }));
       }
-      SUBCASE("Qualified Symbol")
-      {
-        processor p{ "🐝/🥀" };
-        native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_tokens({
-                { 0, 9, token_kind::symbol, "🐝/🥀"sv }
-        }));
-      }
-      SUBCASE("Qualified Keyword")
-      {
-        processor p{ ":🐝/🥀" };
-        native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_tokens({
-                { 0, 10, token_kind::keyword, "🐝/🥀"sv }
-        }));
-      }
+
+
       SUBCASE("Malformed Text")
       {
         processor p{ "\xC0\x80" };

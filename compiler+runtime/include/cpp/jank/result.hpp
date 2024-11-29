@@ -184,6 +184,25 @@ namespace jank
       return std::move(boost::get<R>(data));
     }
 
+    constexpr R &unwrap_or(R &fallback)
+    {
+      if(is_ok())
+      {
+        return boost::get<R>(data);
+      }
+      return fallback;
+    }
+
+    /* We don't take const& and return it since that's just asking for lifetime issues. */
+    constexpr R unwrap_or(R fallback) const
+    {
+      if(is_ok())
+      {
+        return boost::get<R>(data);
+      }
+      return std::move(fallback);
+    }
+
     constexpr native_bool operator==(result const &rhs) const
     {
       return rhs.data == data;
