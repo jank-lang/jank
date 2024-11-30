@@ -163,7 +163,6 @@ namespace jank::evaluate
             arg_vals.emplace_back(eval(arg_expr));
           }
 
-          /* TODO: Use apply_to */
           switch(arg_vals.size())
           {
             case 0:
@@ -235,12 +234,6 @@ namespace jank::evaluate
                                   arg_vals[9]);
             default:
               {
-                /* TODO: This could be optimized; making lists sucks right now. */
-                runtime::detail::native_persistent_list all{ arg_vals.rbegin(), arg_vals.rend() };
-                for(size_t i{}; i < 10; ++i)
-                {
-                  all = all.rest();
-                }
                 return dynamic_call(source,
                                     arg_vals[0],
                                     arg_vals[1],
@@ -252,7 +245,7 @@ namespace jank::evaluate
                                     arg_vals[7],
                                     arg_vals[8],
                                     arg_vals[9],
-                                    make_box<obj::persistent_list>(all));
+                                    try_object<obj::persistent_list>(arg_vals[10]));
               }
           }
         }
@@ -303,6 +296,25 @@ namespace jank::evaluate
       return __rt_ctx->intern_keyword(d->sym.ns, d->sym.name).expect_ok();
     }
     return expr.data;
+  }
+
+  object_ptr eval(expr::list<expression> const &expr)
+  {
+    native_vector<object_ptr> ret;
+    for(auto const &e : expr.data_exprs)
+    {
+      ret.emplace_back(eval(e));
+    }
+
+    runtime::detail::native_persistent_list const npl{ ret.rbegin(), ret.rend() };
+    if(expr.meta.is_some())
+    {
+      return make_box<obj::persistent_list>(expr.meta.unwrap(), std::move(npl));
+    }
+    else
+    {
+      return make_box<obj::persistent_list>(std::move(npl));
+    }
   }
 
   object_ptr eval(expr::vector<expression> const &expr)

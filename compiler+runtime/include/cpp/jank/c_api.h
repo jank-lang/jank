@@ -92,6 +92,18 @@ extern "C"
                               jank_object_ptr a8,
                               jank_object_ptr a9,
                               jank_object_ptr a10);
+  jank_object_ptr jank_call11(jank_object_ptr f,
+                              jank_object_ptr a1,
+                              jank_object_ptr a2,
+                              jank_object_ptr a3,
+                              jank_object_ptr a4,
+                              jank_object_ptr a5,
+                              jank_object_ptr a6,
+                              jank_object_ptr a7,
+                              jank_object_ptr a8,
+                              jank_object_ptr a9,
+                              jank_object_ptr a10,
+                              jank_object_ptr rest);
 
   jank_object_ptr jank_nil();
   jank_object_ptr jank_true();
@@ -102,6 +114,7 @@ extern "C"
   jank_object_ptr jank_symbol_create(jank_object_ptr ns, jank_object_ptr name);
   jank_object_ptr jank_character_create(char const *s);
 
+  jank_object_ptr jank_list_create(uint64_t size, ...);
   jank_object_ptr jank_vector_create(uint64_t size, ...);
   jank_object_ptr jank_map_create(uint64_t pairs, ...);
   jank_object_ptr jank_set_create(uint64_t size, ...);

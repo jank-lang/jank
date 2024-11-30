@@ -708,6 +708,7 @@ namespace jank::runtime
                           object_ptr const a10,
                           obj::persistent_list_ptr const rest)
   {
+    /* TODO: Move call fns into var so we can remove these checks. */
     if(source->type == object_type::var)
     {
       source = runtime::deref(source);
@@ -876,92 +877,89 @@ namespace jank::runtime
           case 1:
             return dynamic_call(source, s->first());
           case 2:
-            return dynamic_call(source, s->first(), runtime::next_in_place(s)->first());
+            return dynamic_call(source, s->first(), s->next_in_place()->first());
           case 3:
             return dynamic_call(source,
                                 s->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first());
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first());
           case 4:
             return dynamic_call(source,
                                 s->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first());
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first());
           case 5:
             return dynamic_call(source,
                                 s->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first());
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first());
           case 6:
             return dynamic_call(source,
                                 s->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first());
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first());
           case 7:
             return dynamic_call(source,
                                 s->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first());
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first());
           case 8:
             return dynamic_call(source,
                                 s->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first());
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first());
           case 9:
             return dynamic_call(source,
                                 s->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first());
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first());
           case 10:
             return dynamic_call(source,
                                 s->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first());
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first());
           default:
             return dynamic_call(source,
                                 s->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
                                 obj::persistent_list::create(next_in_place(s)));
         }
-      },
-      [&]() -> object_ptr {
-        throw std::runtime_error{ fmt::format("not seqable: {}", runtime::to_string(args)) };
       },
       args);
   }

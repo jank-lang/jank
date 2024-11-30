@@ -294,6 +294,45 @@ extern "C"
                         a10_obj);
   }
 
+  jank_object_ptr jank_call11(jank_object_ptr const f,
+                              jank_object_ptr const a1,
+                              jank_object_ptr const a2,
+                              jank_object_ptr const a3,
+                              jank_object_ptr const a4,
+                              jank_object_ptr const a5,
+                              jank_object_ptr const a6,
+                              jank_object_ptr const a7,
+                              jank_object_ptr const a8,
+                              jank_object_ptr const a9,
+                              jank_object_ptr const a10,
+                              jank_object_ptr const rest)
+  {
+    auto const f_obj(reinterpret_cast<object *>(f));
+    auto const a1_obj(reinterpret_cast<object *>(a1));
+    auto const a2_obj(reinterpret_cast<object *>(a2));
+    auto const a3_obj(reinterpret_cast<object *>(a3));
+    auto const a4_obj(reinterpret_cast<object *>(a4));
+    auto const a5_obj(reinterpret_cast<object *>(a5));
+    auto const a6_obj(reinterpret_cast<object *>(a6));
+    auto const a7_obj(reinterpret_cast<object *>(a7));
+    auto const a8_obj(reinterpret_cast<object *>(a8));
+    auto const a9_obj(reinterpret_cast<object *>(a9));
+    auto const a10_obj(reinterpret_cast<object *>(a10));
+    auto const rest_obj(reinterpret_cast<object *>(rest));
+    return dynamic_call(f_obj,
+                        a1_obj,
+                        a2_obj,
+                        a3_obj,
+                        a4_obj,
+                        a5_obj,
+                        a6_obj,
+                        a7_obj,
+                        a8_obj,
+                        a9_obj,
+                        a10_obj,
+                        try_object<obj::persistent_list>(rest_obj));
+  }
+
   jank_object_ptr jank_nil()
   {
     return erase(obj::nil::nil_const());
@@ -336,6 +375,26 @@ extern "C"
   {
     assert(s);
     return erase(make_box<obj::character>(read::parse::get_char_from_literal(s).unwrap()));
+  }
+
+  jank_object_ptr jank_list_create(uint64_t const size, ...)
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    va_list args;
+    va_start(args, size);
+
+    native_vector<object_ptr> v;
+
+    for(uint64_t i{}; i < size; ++i)
+    {
+      /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+      v.emplace_back(reinterpret_cast<object *>(va_arg(args, jank_object_ptr)));
+    }
+
+    va_end(args);
+
+    runtime::detail::native_persistent_list const npl{ v.rbegin(), v.rend() };
+    return erase(make_box<obj::persistent_list>(std::move(npl)));
   }
 
   jank_object_ptr jank_vector_create(uint64_t const size, ...)

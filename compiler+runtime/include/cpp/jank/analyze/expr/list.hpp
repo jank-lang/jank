@@ -7,11 +7,11 @@ namespace jank::analyze::expr
   using namespace jank::runtime;
 
   template <typename E>
-  struct vector : expression_base
+  struct list : expression_base
   {
     native_vector<native_box<E>> data_exprs;
     option<object_ptr> meta;
-    obj::persistent_vector_ptr data{};
+    obj::persistent_list_ptr data{};
 
     void propagate_position(expression_position const pos)
     {
@@ -28,7 +28,7 @@ namespace jank::analyze::expr
 
       return merge(static_cast<expression_base const *>(this)->to_runtime_data(),
                    obj::persistent_array_map::create_unique(make_box("__type"),
-                                                            make_box("expr::vector"),
+                                                            make_box("expr::list"),
                                                             make_box("data_exprs"),
                                                             exprs,
                                                             make_box("meta"),

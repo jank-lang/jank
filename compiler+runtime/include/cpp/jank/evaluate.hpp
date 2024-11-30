@@ -14,6 +14,7 @@ namespace jank::evaluate
   runtime::object_ptr eval(analyze::expr::var_ref<analyze::expression> const &);
   runtime::object_ptr eval(analyze::expr::call<analyze::expression> const &);
   runtime::object_ptr eval(analyze::expr::primitive_literal<analyze::expression> const &);
+  runtime::object_ptr eval(analyze::expr::list<analyze::expression> const &);
   runtime::object_ptr eval(analyze::expr::vector<analyze::expression> const &);
   runtime::object_ptr eval(analyze::expr::map<analyze::expression> const &);
   runtime::object_ptr eval(analyze::expr::set<analyze::expression> const &);

@@ -301,12 +301,14 @@ namespace jank::codegen
 
   static native_persistent_string arity_to_call_fn(size_t const arity)
   {
+    /* Anything max_params + 1 or higher gets packed into a list so we
+     * just end up calling max_params + 1 at most. */
     switch(arity)
     {
-      case 0 ... 10:
+      case 0 ... runtime::max_params:
         return fmt::format("jank_call{}", arity);
       default:
-        throw std::runtime_error{ fmt::format("invalid fn arity: {}", arity) };
+        return fmt::format("jank_call{}", runtime::max_params + 1);
     }
   }
 
@@ -384,6 +386,33 @@ namespace jank::codegen
     }
 
     return ret;
+  }
+
+  llvm::Value *llvm_processor::gen(analyze::expr::list<analyze::expression> const &expr,
+                                   analyze::expr::function_arity<analyze::expression> const &arity)
+  {
+    auto const fn_type(
+      llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getInt64Ty() }, true));
+    auto const fn(ctx->module->getOrInsertFunction("jank_list_create", fn_type));
+
+    auto const size(expr.data_exprs.size());
+    std::vector<llvm::Value *> args;
+    args.reserve(1 + size);
+    args.emplace_back(ctx->builder->getInt64(size));
+
+    for(auto const &expr : expr.data_exprs)
+    {
+      args.emplace_back(gen(expr, arity));
+    }
+
+    auto const call(ctx->builder->CreateCall(fn, args));
+
+    if(expr.position == analyze::expression_position::tail)
+    {
+      return ctx->builder->CreateRet(call);
+    }
+
+    return call;
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::vector<analyze::expression> const &expr,

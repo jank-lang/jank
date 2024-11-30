@@ -7,6 +7,7 @@
 #include <jank/analyze/expr/var_ref.hpp>
 #include <jank/analyze/expr/call.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
+#include <jank/analyze/expr/list.hpp>
 #include <jank/analyze/expr/vector.hpp>
 #include <jank/analyze/expr/map.hpp>
 #include <jank/analyze/expr/set.hpp>
@@ -32,6 +33,7 @@ namespace jank::analyze
                                       expr::var_ref<E>,
                                       expr::call<E>,
                                       expr::primitive_literal<E>,
+                                      expr::list<E>,
                                       expr::vector<E>,
                                       expr::map<E>,
                                       expr::set<E>,

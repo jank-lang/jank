@@ -80,6 +80,8 @@ namespace jank::codegen
                      analyze::expr::function_arity<analyze::expression> const &);
     llvm::Value *gen(analyze::expr::primitive_literal<analyze::expression> const &,
                      analyze::expr::function_arity<analyze::expression> const &);
+    llvm::Value *gen(analyze::expr::list<analyze::expression> const &,
+                     analyze::expr::function_arity<analyze::expression> const &);
     llvm::Value *gen(analyze::expr::vector<analyze::expression> const &,
                      analyze::expr::function_arity<analyze::expression> const &);
     llvm::Value *gen(analyze::expr::map<analyze::expression> const &,

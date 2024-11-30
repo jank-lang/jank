@@ -341,18 +341,9 @@ namespace jank::runtime
         break;
       default:
         {
-          /* TODO: Use fmt when possible. */
-          throw std::runtime_error{ "invalid object type: "
-                                    + std::to_string(static_cast<int>(const_erased->type)) };
-          //throw std::runtime_error
-          //{
-          //  fmt::format
-          //  (
-          //    "invalid object type: {} raw value {}",
-          //    magic_enum::enum_name(erased->type),
-          //    static_cast<int>(erased->type)
-          //  )
-          //};
+          throw std::runtime_error{ fmt::format("invalid object type: {} raw value {}",
+                                                magic_enum::enum_name(erased->type),
+                                                static_cast<int>(erased->type)) };
         }
         break;
     }
@@ -537,7 +528,7 @@ namespace jank::runtime
     return visit_seqable(
       fn,
       [=]() -> decltype(fn(obj::cons_ptr{}, std::forward<Args>(args)...)) {
-        throw std::runtime_error{ "not seqable: " + to_string(const_erased) };
+        throw std::runtime_error{ "not seqable: " + to_code_string(const_erased) };
       },
       const_erased,
       std::forward<Args>(args)...);
@@ -586,7 +577,7 @@ namespace jank::runtime
     return visit_map_like(
       fn,
       [=]() -> decltype(fn(obj::persistent_hash_map_ptr{}, std::forward<Args>(args)...)) {
-        throw std::runtime_error{ "not map-like: " + to_string(const_erased) };
+        throw std::runtime_error{ "not map-like: " + to_code_string(const_erased) };
       },
       const_erased,
       std::forward<Args>(args)...);
@@ -630,7 +621,7 @@ namespace jank::runtime
     return visit_set_like(
       fn,
       [=]() -> decltype(fn(obj::persistent_hash_set_ptr{}, std::forward<Args>(args)...)) {
-        throw std::runtime_error{ "not set-like: " + to_string(const_erased) };
+        throw std::runtime_error{ "not set-like: " + to_code_string(const_erased) };
       },
       const_erased,
       std::forward<Args>(args)...);
@@ -675,7 +666,7 @@ namespace jank::runtime
     return visit_number_like(
       fn,
       [=]() -> decltype(fn(obj::integer_ptr{}, std::forward<Args>(args)...)) {
-        throw std::runtime_error{ "not a number: " + to_string(const_erased) };
+        throw std::runtime_error{ "not a number: " + to_code_string(const_erased) };
       },
       const_erased,
       std::forward<Args>(args)...);

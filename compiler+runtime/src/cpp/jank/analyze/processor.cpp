@@ -1387,15 +1387,52 @@ namespace jank::analyze
     }
 
     native_vector<expression_ptr> arg_exprs;
-    arg_exprs.reserve(arg_count);
-    for(auto const &s : o->data.rest())
+    arg_exprs.reserve(std::min(arg_count, runtime::max_params + 1));
+
+    auto it(o->data.rest());
+    for(size_t i{}; i < runtime::max_params && i < arg_count; ++i, it = it.rest())
     {
-      auto arg_expr(analyze(s, current_frame, expression_position::value, fn_ctx, needs_arg_box));
+      auto arg_expr(analyze(it.first().unwrap(),
+                            current_frame,
+                            expression_position::value,
+                            fn_ctx,
+                            needs_arg_box));
       if(arg_expr.is_err())
       {
         return arg_expr;
       }
       arg_exprs.emplace_back(arg_expr.expect_ok());
+    }
+
+    /* If we have more args than a fn allows, we need to pack all of the extras
+     * into a single list and tack that on at the end. So, if max_params is 10, and
+     * we pass 15 args, we'll pass 10 normally and then we'll have a special 11th
+     * arg which is a list containing the 5 remaining params. We rely on dynamic_call
+     * to do the hard work of packing that in the shape the function actually wants,
+     * based on its highest fixed arity flag. */
+    if(runtime::max_params < arg_count)
+    {
+      native_vector<expression_ptr> packed_arg_exprs;
+      for(size_t i{ runtime::max_params }; i < arg_count; ++i, it = it.rest())
+      {
+        auto arg_expr(analyze(it.first().unwrap(),
+                              current_frame,
+                              expression_position::value,
+                              fn_ctx,
+                              needs_arg_box));
+        if(arg_expr.is_err())
+        {
+          return arg_expr;
+        }
+        packed_arg_exprs.emplace_back(arg_expr.expect_ok());
+      }
+      expr::list<expression> list{
+        expression_base{ {}, expression_position::value, current_frame, needs_arg_box },
+        std::move(packed_arg_exprs),
+        none,
+        nullptr
+      };
+      arg_exprs.emplace_back(make_box<expression>(std::move(list)));
     }
 
     auto const recursion_ref(boost::get<expr::recursion_reference<expression>>(&source->data));
