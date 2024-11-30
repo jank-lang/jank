@@ -92,17 +92,17 @@ namespace jank::runtime
 
       SUBCASE("Equality")
       {
-        CHECK(a == b);
-        CHECK(a != c);
+        CHECK_EQ(a, b);
+        CHECK_NE(a, c);
       }
       SUBCASE("Less Than")
       {
-        CHECK(c < a);
+        CHECK_LT(c, a);
         CHECK_FALSE(a < b);
       }
       SUBCASE("Greater Than")
       {
-        CHECK(a > c);
+        CHECK_GT(a, c);
         CHECK_FALSE(c > a);
       }
     }
@@ -224,17 +224,17 @@ namespace jank::runtime
       SUBCASE("Comparison with Native Integer")
       {
         auto const native_int{ 1LL };
-        CHECK(ratio < native_int);
-        CHECK(ratio != native_int);
-        CHECK(native_int > ratio);
-        CHECK(native_int != ratio);
+        CHECK_LT(ratio, native_int);
+        CHECK_NE(ratio, native_int);
+        CHECK_GT(native_int, ratio);
+        CHECK_NE(native_int, ratio);
       }
 
       SUBCASE("Comparison with Native Real")
       {
         auto const native_real{ 0.75L };
-        CHECK(ratio == native_real);
-        CHECK(native_real == ratio);
+        CHECK_EQ(ratio, native_real);
+        CHECK_EQ(native_real, ratio);
       }
     }
 
