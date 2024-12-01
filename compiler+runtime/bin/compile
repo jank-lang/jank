@@ -2,4 +2,6 @@
 
 set -euo pipefail
 
+git_root=$(git rev-parse --show-toplevel)
+"$git_root"/compiler+runtime/bin/format
 cmake --build build "$@"
