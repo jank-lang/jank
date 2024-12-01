@@ -407,25 +407,23 @@ namespace jank::read::lex
       {
         processor p{ "4//5" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(
-          tokens
-          == make_results({ { error(0, 4, "invalid ratio: expecting an integer denominator") } }));
+        CHECK(tokens == make_results({ { error(2, 2, "invalid symbol") } }));
       }
       SUBCASE("Failures - x/x/x")
       {
         processor p{ "4/5/4" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_results({ { error(0, 3, "invalid ratio: expecting an integer denominator") },
-                                { error(3, 3, "invalid symbol") } }));
+        CHECK(
+          tokens
+          == make_results({ { error(2, 3, "invalid ratio") }, { error(3, 3, "invalid symbol") } }));
       }
       SUBCASE("Failures - x/x/x/x")
       {
         processor p{ "4/5/4/5/6/7/7" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_results({ { error(0, 3, "invalid ratio: expecting an integer denominator") },
-                                { error(3, 3, "invalid symbol") } }));
+        CHECK(
+          tokens
+          == make_results({ { error(2, 3, "invalid ratio") }, { error(3, 3, "invalid symbol") } }));
       }
       SUBCASE("Failures - x.x/x")
       {
@@ -442,6 +440,26 @@ namespace jank::read::lex
         CHECK(
           tokens
           == make_results({ { error(0, 5, "invalid ratio: expecting an integer denominator") } }));
+      }
+      SUBCASE("Failures - xex/x")
+      {
+        processor p{ "4e1/5" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                error{ 0, 3,  "invalid ratio" },
+                error{ 3, 3, "invalid symbol" }
+        }));
+      }
+      SUBCASE("Failures - x/xex")
+      {
+        processor p{ "4/5e9" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                error{ 2, 3, "invalid ratio: ratio cannot have scientific notation" },
+                token{ 3, 2, token_kind::symbol, "e9"sv }
+        }));
       }
     }
     TEST_CASE("Integer")
@@ -463,6 +481,100 @@ namespace jank::read::lex
         CHECK(tokens
               == make_tokens({
                 { 0, 4, token_kind::integer, 1234ll }
+        }));
+      }
+
+      SUBCASE("Positive multiple numbers")
+      {
+        processor p{ "0 1234" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 1, token_kind::integer,    0ll },
+                { 2, 4, token_kind::integer, 1234ll },
+        }));
+      }
+
+      SUBCASE("Octal number")
+      {
+        processor p{ "034 -034 08.9 07e1" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                {  0, 3, token_kind::integer,  28ll },
+                {  4, 4, token_kind::integer, -28ll },
+                {  9, 4,    token_kind::real,  8.9l },
+                { 14, 4,    token_kind::real, 70.0l },
+        }));
+      }
+
+      SUBCASE("Invalid octal number")
+      {
+        processor p{ "08 0a -08" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                error{ 0, 2, "invalid number: char 8 are invalid for radix 8" },
+                error{ 3, 5, "invalid number: char a are invalid for radix 8" },
+                error{ 6, 9, "invalid number: char 8 are invalid for radix 8" },
+        }));
+      }
+
+      SUBCASE("Hex numbers")
+      {
+        processor p{ "0x34 0Xab 0x12ab 123 0Xef43 -0x1a" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                {  0, 4, token_kind::integer,    52ll },
+                {  5, 4, token_kind::integer,   171ll },
+                { 10, 6, token_kind::integer,  4779ll },
+                { 17, 3, token_kind::integer,   123ll },
+                { 21, 6, token_kind::integer, 61251ll },
+                { 28, 5, token_kind::integer,   -26ll }
+        }));
+      }
+
+      SUBCASE("Invalid hex numbers")
+      {
+        processor p{ "0xg 0x-2 0x8.4 0x3e-5" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                error{  0,  3, "invalid number: char g are invalid for radix 16" },
+                error{  4,  8, "invalid number: char - are invalid for radix 16" },
+                error{  9, 14, "invalid number: char . are invalid for radix 16" },
+                error{ 15, 21, "invalid number: char - are invalid for radix 16" },
+        }));
+      }
+
+      SUBCASE("Valid arbitrary radix")
+      {
+        processor p{ "2r11 36rz 8R71 19rghi -4r32 16r3e 16r3e4 -32r3e4" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                token{  0, 4, token_kind::integer,     3ll },
+                token{  5, 4, token_kind::integer,    35ll },
+                token{ 10, 4, token_kind::integer,    57ll },
+                token{ 15, 6, token_kind::integer,  6117ll },
+                token{ 22, 5, token_kind::integer,   -14ll },
+                token{ 28, 5, token_kind::integer,    62ll },
+                token{ 34, 6, token_kind::integer,   996ll },
+                token{ 41, 7, token_kind::integer, -3524ll },
+        }));
+      }
+
+      SUBCASE("Invalid arbitrary radix")
+      {
+        processor p{ "2r3 35rz 8re71 19r-ghi" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                error{  0,  3,  "invalid number: char 3 are invalid for radix 2" },
+                error{  4,  8, "invalid number: char z are invalid for radix 35" },
+                error{  9, 14,  "invalid number: char e are invalid for radix 8" },
+                error{ 15, 22, "invalid number: char - are invalid for radix 19" },
         }));
       }
 
@@ -494,9 +606,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_results({
-                  token{ 0, 4, token_kind::integer, 1234ll },
-                  error{ 4, "expected whitespace before next token" },
-                  token{ 4, 3, token_kind::symbol, "abc"sv },
+                  error{ 0, 7, "invalid number: char abc are invalid for radix 10" },
           }));
         }
 
@@ -600,7 +710,6 @@ namespace jank::read::lex
                   error{ 3, "unexpected character: ." },
           }));
         }
-
         {
           processor p{ "0..0" };
           native_vector<result<token, error>> tokens(p.begin(), p.end());
@@ -631,10 +740,8 @@ namespace jank::read::lex
           native_vector<result<token, error>> tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_results({
-                  token{ 0, 5, token_kind::real, 12.34l },
-                  error{ 5, "expected whitespace before next token" },
-                  token{ 5, 3, token_kind::symbol, "abc"sv },
-          }));
+                  error(0, 8, "invalid number: char abc are invalid for radix 10"),
+                }));
         }
 
         SUBCASE("Not required")
@@ -724,9 +831,7 @@ namespace jank::read::lex
                   error{ 13, 16, "unexpected end of real, expecting exponent" },
                   error{ 16, "expected whitespace before next token" },
                   token{ 16, 3, token_kind::symbol, "Foo"sv },
-                  token{ 20, 3, token_kind::real, 300000.0l },
-                  error{ 23, "expected whitespace before next token" },
-                  token{ 23, 3, token_kind::symbol, "fOo"sv },
+                  error{ 20, 26, "invalid number: char fOo are invalid for radix 10" },
           }));
         }
       }
