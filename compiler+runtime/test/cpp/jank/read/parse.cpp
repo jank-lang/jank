@@ -67,6 +67,7 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(is_equiv(runtime::mul(r.expect_ok().unwrap().ptr, make_box(10)), make_box(8)));
+        CHECK(is_equiv(r.expect_ok().unwrap().ptr, obj::ratio::create(4, 5)));
         CHECK(r.expect_ok().unwrap().start
               == lex::token{
                 0,
@@ -82,6 +83,20 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(r.is_err());
+      }
+      SUBCASE("Parse into an integer")
+      {
+        lex::processor lp{ "4/2" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(r.expect_ok().unwrap().start
+              == lex::token{
+                0,
+                3,
+                lex::token_kind::ratio,
+                { .numerator = 4, .denominator = 2 }
+        });
+        CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::integer>(2)));
       }
     }
 

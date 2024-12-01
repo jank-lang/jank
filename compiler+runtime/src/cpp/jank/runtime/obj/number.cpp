@@ -1,5 +1,3 @@
-#include <cmath>
-
 #include <fmt/compile.h>
 
 #include <jank/runtime/obj/number.hpp>

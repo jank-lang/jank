@@ -197,6 +197,7 @@ add_library(
   src/cpp/jank/runtime/obj/cons.cpp
   src/cpp/jank/runtime/obj/range.cpp
   src/cpp/jank/runtime/obj/repeat.cpp
+  src/cpp/jank/runtime/obj/ratio.cpp
   src/cpp/jank/runtime/obj/iterator.cpp
   src/cpp/jank/runtime/obj/lazy_sequence.cpp
   src/cpp/jank/runtime/obj/chunk_buffer.cpp
@@ -429,6 +430,7 @@ if(jank_tests)
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/analyze/box.cpp
     test/cpp/jank/runtime/detail/native_persistent_list.cpp
+    test/cpp/jank/runtime/obj/ratio.cpp
     test/cpp/jank/jit/processor.cpp
   )
   add_executable(jank::test_exe ALIAS jank_test_exe)

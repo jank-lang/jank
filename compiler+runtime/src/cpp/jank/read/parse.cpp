@@ -1274,11 +1274,19 @@ namespace jank::read::parse
     {
       return err(error{ token.pos, "Divide by zero" });
     }
-    return object_source_info{ make_box<obj::real>(
-                                 static_cast<native_real>(ratio_data.numerator)
-                                 / static_cast<native_real>(ratio_data.denominator)),
-                               token,
-                               token };
+    auto const ratio{ obj::ratio::create(ratio_data.numerator, ratio_data.denominator) } ;
+    if(ratio->type == object_type::ratio)
+    {
+      return object_source_info{ expect_object<obj::ratio>(ratio), token, token };
+    }
+    else if(ratio->type == object_type::integer)
+    {
+      return object_source_info{ expect_object<obj::integer>(ratio), token, token };
+    }
+    else
+    {
+      return err(error{ token.pos, "Internal parsing error" });
+    }
   }
 
   processor::object_result processor::parse_real()
