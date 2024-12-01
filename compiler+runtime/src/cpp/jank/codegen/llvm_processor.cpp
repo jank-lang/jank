@@ -756,6 +756,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(analyze::expr::throw_<analyze::expression> const &expr,
                                    analyze::expr::function_arity<analyze::expression> const &arity)
   {
+    /* TODO: Generate direct call to __cxa_throw. */
     auto const value(gen(expr.value, arity));
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
@@ -776,6 +777,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(analyze::expr::try_<analyze::expression> const &expr,
                                    analyze::expr::function_arity<analyze::expression> const &arity)
   {
+    //auto const landing(ctx->builder->CreateLandingPad(ctx->builder->getPtrTy(), 1, "try"));
     /* TODO: Implement try. */
     return gen(expr.body, arity);
   }

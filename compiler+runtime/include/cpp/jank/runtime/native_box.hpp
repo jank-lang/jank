@@ -237,16 +237,18 @@ namespace jank::runtime
   template <typename T>
   using remove_box_t = typename remove_box<T>::type;
 
-  /* TODO: Constexpr these. */
   template <typename T>
   constexpr native_box<T> make_box(native_box<T> const &o)
   {
+    static_assert(sizeof(native_box<T>) == sizeof(T *));
     return o;
   }
 
+  /* TODO: Constexpr these. */
   template <typename T, typename... Args>
   native_box<T> make_box(Args &&...args)
   {
+    static_assert(sizeof(native_box<T>) == sizeof(T *));
     native_box<T> ret;
     if constexpr(T::pointer_free)
     {
