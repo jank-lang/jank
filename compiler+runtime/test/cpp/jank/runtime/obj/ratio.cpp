@@ -1,5 +1,9 @@
 #include <stdexcept>
+
 #include <jank/runtime/obj/ratio.hpp>
+#include <jank/runtime/core/make_box.hpp>
+#include <jank/runtime/core/math.hpp>
+#include <jank/runtime/rtti.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #include <doctest/doctest.h>
@@ -12,7 +16,7 @@ namespace jank::runtime
     {
       SUBCASE("Valid Ratio")
       {
-        obj::ratio_data ratio{ 4, 6 };
+        obj::ratio_data const ratio{ 4, 6 };
         CHECK_EQ(ratio.numerator, 2); // Simplified
         CHECK_EQ(ratio.denominator, 3);
       }
@@ -24,13 +28,13 @@ namespace jank::runtime
 
     TEST_CASE("ToReal Conversion")
     {
-      obj::ratio_data ratio{ 3, 4 };
+      obj::ratio_data const ratio{ 3, 4 };
       CHECK_EQ(ratio.to_real(), doctest::Approx(0.75));
     }
 
     TEST_CASE("Simplify Functionality")
     {
-      obj::ratio_data ratio{ 10, -20 };
+      obj::ratio_data const ratio{ 10, -20 };
       CHECK_EQ(ratio.numerator, -1);
       CHECK_EQ(ratio.denominator, 2);
     }
@@ -57,7 +61,7 @@ namespace jank::runtime
 
     TEST_CASE("Arithmetic Operations")
     {
-      obj::ratio_data a{ 1, 2 }, b{ 1, 3 };
+      obj::ratio_data const a{ 1, 2 }, b{ 1, 3 };
 
       SUBCASE("Addition")
       {
@@ -88,7 +92,7 @@ namespace jank::runtime
 
     TEST_CASE("Comparison Operations")
     {
-      obj::ratio_data a{ 1, 2 }, b{ 2, 4 }, c{ 1, 3 };
+      obj::ratio_data const a{ 1, 2 }, b{ 2, 4 }, c{ 1, 3 };
 
       SUBCASE("Equality")
       {
@@ -109,7 +113,7 @@ namespace jank::runtime
 
     TEST_CASE("Edge Cases and Utility Functions")
     {
-      obj::ratio_data ratio{ 6, -9 };
+      obj::ratio_data const ratio{ 6, -9 };
 
       SUBCASE("Simplify on Negative Denominator")
       {
@@ -132,13 +136,13 @@ namespace jank::runtime
 
     TEST_CASE("Ratio Interaction with Other Data Types")
     {
-      obj::ratio_data ratio{ 3, 4 };
+      obj::ratio_data const ratio{ 3, 4 };
 
       SUBCASE("Addition with Native Integer")
       {
-        auto const native_int{ make_box(2LL) };
-        auto const result{ *(ratio + native_int) };
-        auto const result2{ *(native_int + ratio) };
+        auto const i{ make_box(2) };
+        auto const result{ *(ratio + i) };
+        auto const result2{ *(i + ratio) };
         CHECK_EQ(result.data.numerator, 11);
         CHECK_EQ(result.data.denominator, 4);
         CHECK_EQ(result2.data.numerator, 11);
@@ -146,9 +150,9 @@ namespace jank::runtime
       }
       SUBCASE("Addition with Native Real")
       {
-        auto const native_real{ make_box(0.5) };
-        auto const result{ ratio + native_real };
-        auto const result2{ native_real + ratio };
+        auto const r{ make_box(0.5) };
+        auto const result{ ratio + r };
+        auto const result2{ r + ratio };
         CHECK_EQ(result, doctest::Approx(1.25));
         CHECK_EQ(result2, doctest::Approx(1.25));
       }
@@ -165,9 +169,9 @@ namespace jank::runtime
 
       SUBCASE("Subtraction with Native Real")
       {
-        auto const native_real{ make_box(0.25) };
-        auto const result{ ratio - native_real };
-        auto const result2{ native_real - ratio };
+        auto const r{ make_box(0.25) };
+        auto const result{ ratio - r };
+        auto const result2{ r - ratio };
         CHECK_EQ(result, doctest::Approx(0.5));
         CHECK_EQ(result2, doctest::Approx(-0.5));
       }
@@ -185,18 +189,18 @@ namespace jank::runtime
 
       SUBCASE("Multiplication with Native Real")
       {
-        auto const native_real{ 0.5L };
-        auto const result{ ratio * native_real };
-        auto const result2{ native_real * ratio };
+        native_real const r{ 0.5 };
+        auto const result{ ratio * r };
+        auto const result2{ r * ratio };
         CHECK_EQ(result, doctest::Approx(0.375));
         CHECK_EQ(result2, doctest::Approx(0.375));
       }
 
       SUBCASE("Division with Native Integer")
       {
-        auto const native_int{ 2LL };
-        auto const result{ ratio / native_int };
-        auto const result2{ expect_object<obj::ratio>(native_int / ratio) };
+        native_integer const i{ 2 };
+        auto const result{ ratio / i };
+        auto const result2{ expect_object<obj::ratio>(i / ratio) };
         CHECK_EQ(result->data.numerator, 3);
         CHECK_EQ(result->data.denominator, 8);
         CHECK_EQ(result2->data.numerator, 8);
@@ -205,16 +209,16 @@ namespace jank::runtime
 
       SUBCASE("Division with Native Real")
       {
-        auto const native_real{ 0.5L };
-        auto const result{ ratio / native_real };
-        auto const result2{ native_real / ratio };
+        native_real const r{ 0.5 };
+        auto const result{ ratio / r };
+        auto const result2{ r / ratio };
         CHECK_EQ(result, doctest::Approx(1.5));
         CHECK_EQ(result2, doctest::Approx(1 / 1.5));
       }
 
       SUBCASE("Comparison with Integer Pointer")
       {
-        auto const int_ptr{ make_box(1LL) };
+        auto const int_ptr{ make_box(1) };
         CHECK_LT(ratio, int_ptr);
         CHECK_NE(ratio, int_ptr);
         CHECK_GT(int_ptr, ratio);
@@ -223,37 +227,37 @@ namespace jank::runtime
 
       SUBCASE("Comparison with Native Integer")
       {
-        auto const native_int{ 1LL };
-        CHECK_LT(ratio, native_int);
-        CHECK_NE(ratio, native_int);
-        CHECK_GT(native_int, ratio);
-        CHECK_NE(native_int, ratio);
+        native_integer const i{ 1 };
+        CHECK_LT(ratio, i);
+        CHECK_NE(ratio, i);
+        CHECK_GT(i, ratio);
+        CHECK_NE(i, ratio);
       }
 
       SUBCASE("Comparison with Native Real")
       {
-        auto const native_real{ 0.75L };
-        CHECK_EQ(ratio, native_real);
-        CHECK_EQ(native_real, ratio);
+        native_real const r{ 0.75 };
+        CHECK_EQ(ratio, r);
+        CHECK_EQ(r, ratio);
       }
     }
 
     TEST_CASE("Ratio Mixed Arithmetic and Comparisons")
     {
-      obj::ratio_data ratio{ 5, 8 };
-      auto const native_int{ 3LL };
-      auto const native_real{ 0.25L };
+      obj::ratio_data const ratio{ 5, 8 };
+      native_integer const i{ 3 };
+      native_real const r{ 0.25 };
 
       SUBCASE("Complex Arithmetic Chain")
       {
-        auto const result{ (ratio + native_int)->data - native_real };
+        auto const result{ (ratio + i)->data - r };
         CHECK_EQ(result, doctest::Approx(3.375));
       }
 
       SUBCASE("Mixed Comparison")
       {
-        auto const real_ptr{ make_box(1.0L) };
-        auto const int_ptr{ make_box(1LL) };
+        auto const real_ptr{ make_box(1.0) };
+        auto const int_ptr{ make_box(1) };
 
         CHECK_LT(ratio, real_ptr);
         CHECK_LT(ratio, int_ptr);
@@ -266,24 +270,24 @@ namespace jank::runtime
     {
       SUBCASE("Ratio Divided by Zero")
       {
-        auto const result{ obj::ratio_data(1, 2) / 0.0L };
+        auto const result{ obj::ratio_data(1, 2) / 0.0 };
         CHECK(std::isinf(result));
         CHECK_GT(result, 0);
         CHECK_EQ(result, std::numeric_limits<double>::infinity());
 
-        auto const neg_result{ expect_object<obj::ratio>(-1LL * obj::ratio_data(1, 2))->data
-                               / 0.0L };
+        auto const neg_result{ expect_object<obj::ratio>(-1ll * obj::ratio_data(1, 2))->data
+                               / 0.0 };
         CHECK(std::isinf(neg_result));
         CHECK_LT(neg_result, 0);
         CHECK_EQ(neg_result, -std::numeric_limits<double>::infinity());
 
-        CHECK_THROWS_AS((obj::ratio_data(1, 2) / 0LL), std::invalid_argument);
+        CHECK_THROWS_AS((obj::ratio_data(1, 2) / 0ll), std::invalid_argument);
         CHECK_THROWS_AS((obj::ratio_data(1, 2) / obj::ratio_data(0, 1)), std::invalid_argument);
       }
 
       SUBCASE("Ratio Multiplied by Negative Integer")
       {
-        auto const result{ expect_object<obj::ratio>(obj::ratio_data(2, 3) * -4LL) };
+        auto const result{ expect_object<obj::ratio>(obj::ratio_data(2, 3) * -4ll) };
         CHECK_EQ(result->data.numerator, -8);
         CHECK_EQ(result->data.denominator, 3);
       }

@@ -1,10 +1,13 @@
-#include <jank/runtime/obj/ratio.hpp>
-#include <fmt/compile.h>
 #include <limits>
+#include <numeric>
+
+#include <fmt/compile.h>
+
+#include <jank/runtime/obj/ratio.hpp>
+#include <jank/runtime/visit.hpp>
 
 namespace jank::runtime
 {
-
   static constexpr auto epsilon{ std::numeric_limits<native_real>::epsilon() };
 
   obj::ratio_data::ratio_data(native_integer const numerator, native_integer const denominator)
@@ -26,12 +29,6 @@ namespace jank::runtime
     }
   }
 
-  obj::ratio_data::ratio_data(obj::ratio_data const &data)
-    : numerator{ data.numerator }
-    , denominator{ data.denominator }
-  {
-  }
-
   obj::ratio::static_object(obj::ratio_data const &data)
     : data{ data }
   {
@@ -39,7 +36,7 @@ namespace jank::runtime
 
   object_ptr obj::ratio::create(native_integer const numerator, native_integer const denominator)
   {
-    obj::ratio_data data{ numerator, denominator };
+    obj::ratio_data const data{ numerator, denominator };
     if(data.denominator == 1)
     {
       return make_box<obj::integer>(data.numerator);
@@ -49,7 +46,7 @@ namespace jank::runtime
 
   native_real obj::ratio_data::to_real() const
   {
-    return static_cast<native_real>(numerator) / denominator;
+    return static_cast<native_real>(numerator) / static_cast<native_real>(denominator);
   }
 
   native_integer obj::ratio_data::to_integer() const
@@ -131,7 +128,7 @@ namespace jank::runtime
     object_ptr operator+(obj::ratio_data const &l, obj::ratio_data const &r)
     {
       auto const denom{ l.denominator * r.denominator };
-      auto const num{ l.numerator * r.denominator + r.numerator * l.denominator };
+      auto const num{ (l.numerator * r.denominator) + (r.numerator * l.denominator) };
       return obj::ratio::create(num, denom);
     }
 
@@ -167,7 +164,8 @@ namespace jank::runtime
 
     obj::ratio_ptr operator+(obj::ratio_data const &l, native_integer const r)
     {
-      return make_box<obj::ratio>(obj::ratio_data(l.numerator + r * l.denominator, l.denominator));
+      return make_box<obj::ratio>(
+        obj::ratio_data(l.numerator + (r * l.denominator), l.denominator));
     }
 
     obj::ratio_ptr operator+(native_integer const l, obj::ratio_data const &r)
@@ -178,7 +176,7 @@ namespace jank::runtime
     object_ptr operator-(obj::ratio_data const &l, obj::ratio_data const &r)
     {
       auto const denom{ l.denominator * r.denominator };
-      auto const num{ l.numerator * r.denominator - r.numerator * l.denominator };
+      auto const num{ (l.numerator * r.denominator) - (r.numerator * l.denominator) };
       return obj::ratio::create(num, denom);
     }
 
@@ -214,13 +212,14 @@ namespace jank::runtime
 
     obj::ratio_ptr operator-(obj::ratio_data const &l, native_integer const r)
     {
-      return make_box<obj::ratio>(obj::ratio_data(l.numerator - r * l.denominator, l.denominator));
+      return make_box<obj::ratio>(
+        obj::ratio_data(l.numerator - (r * l.denominator), l.denominator));
     }
 
     obj::ratio_ptr operator-(native_integer const l, obj::ratio_data const &r)
     {
       return make_box<obj::ratio>(
-        obj::ratio_data(l * r.denominator - r.denominator, r.denominator));
+        obj::ratio_data((l * r.denominator) - r.denominator, r.denominator));
     }
 
     object_ptr operator*(obj::ratio_data const &l, obj::ratio_data const &r)
@@ -548,12 +547,12 @@ namespace jank::runtime
       return (l ? 1LL : 0LL) < r;
     }
 
-    native_bool operator>(obj::ratio_data const &l, native_bool r)
+    native_bool operator>(obj::ratio_data const &l, native_bool const r)
     {
       return l > (r ? 1LL : 0LL);
     }
 
-    native_bool operator<(obj::ratio_data const &l, native_bool r)
+    native_bool operator<(obj::ratio_data const &l, native_bool const r)
     {
       return l < (r ? 1LL : 0LL);
     }

@@ -4,6 +4,7 @@
 #include <jank/runtime/detail/native_persistent_list.hpp>
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/obj/ratio.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/character.hpp>
@@ -66,7 +67,7 @@ namespace jank::runtime
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto make_box(obj::ratio_data const r)
+  inline auto make_box(obj::ratio_data const &r)
   {
     return make_box<runtime::obj::ratio>(r);
   }

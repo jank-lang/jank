@@ -1,5 +1,8 @@
 #pragma once
 
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/number.hpp>
+
 namespace jank::runtime
 {
   namespace obj
@@ -7,9 +10,11 @@ namespace jank::runtime
     struct ratio_data
     {
       ratio_data(native_integer const, native_integer const);
-      ratio_data(ratio_data const &);
+      ratio_data(ratio_data const &) = default;
+
       native_real to_real() const;
       native_integer to_integer() const;
+
       native_integer numerator{};
       native_integer denominator{};
     };
@@ -20,12 +25,12 @@ namespace jank::runtime
   {
     static constexpr native_bool pointer_free{ true };
 
-    static_object() = default;
-    static_object(static_object &&) = default;
+    static_object(static_object &&) noexcept = default;
     static_object(static_object const &) = default;
     static_object(obj::ratio_data const &);
 
     static object_ptr create(native_integer const, native_integer const);
+
     /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
@@ -107,6 +112,7 @@ namespace jank::runtime
     native_bool operator<(obj::ratio_data const &l, native_integer r);
     native_bool operator<(native_integer l, obj::ratio_data const &r);
     native_bool operator<(native_bool l, obj::ratio_data const &r);
+    native_bool operator<(obj::ratio_data const &l, native_bool r);
     native_bool operator<=(obj::ratio_data const &l, obj::ratio_data const &r);
     native_bool operator<=(obj::integer_ptr l, obj::ratio_data const &r);
     native_bool operator<=(obj::ratio_data const &l, obj::integer_ptr r);
@@ -126,6 +132,7 @@ namespace jank::runtime
     native_bool operator>(obj::ratio_data const &l, native_integer r);
     native_bool operator>(native_integer l, obj::ratio_data const &r);
     native_bool operator>(native_bool l, obj::ratio_data const &r);
+    native_bool operator>(obj::ratio_data const &l, native_bool r);
     native_bool operator>=(obj::ratio_data const &l, obj::ratio_data const &r);
     native_bool operator>=(obj::integer_ptr l, obj::ratio_data const &r);
     native_bool operator>=(obj::ratio_data const &l, obj::integer_ptr r);

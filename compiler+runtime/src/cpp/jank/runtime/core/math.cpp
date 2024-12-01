@@ -8,7 +8,7 @@
 namespace jank::runtime
 {
   template <typename T>
-  auto to_number(T const &t)
+  static auto to_number(T const &t)
   {
     if constexpr(std::same_as<T, obj::ratio_data>)
     {
