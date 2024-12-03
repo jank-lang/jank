@@ -267,6 +267,50 @@ namespace jank::read
         || c == '<' || c == '>' || c == '#' || c == '%';
     }
 
+    static native_bool is_lower_letter(char const c)
+    {
+      return c >= 'a' && c <= 'z';
+    }
+
+    static native_bool is_upper_letter(char const c)
+    {
+      return c >= 'A' && c <= 'Z';
+    }
+
+    static native_bool is_letter(char const c)
+    {
+      return is_lower_letter(c) || is_upper_letter(c);
+    }
+
+    native_bool processor::is_valid_num_char(char const c) const
+    {
+      if(c == '-' || c == '+' || c == '.')
+      {
+        return radix == 10;
+      }
+      if(radix == 10 && (c == 'e' || c == 'E'))
+      {
+        return true;
+      }
+      if(radix <= 10)
+      {
+        return c >= '0' && c < '0' + radix;
+      }
+      if(radix == 16 && (c == 'x' || c == 'X'))
+      {
+        return true;
+      }
+      if(is_upper_letter(c))
+      {
+        return c < 'A' + radix - 10;
+      }
+      if(is_lower_letter(c))
+      {
+        return c < 'a' + radix - 10;
+      }
+      return c >= '0' && c <= '9';
+    }
+
     result<token, error> processor::next()
     {
       /* Skip whitespace. */
@@ -278,8 +322,7 @@ namespace jank::read
           return ok(token{ pos, token_kind::eof });
         }
 
-        auto const c(file[pos]);
-        if(std::isspace(c) == 0 && c != ',')
+        if(auto const c(file[pos]); std::isspace(c) == 0 && c != ',')
         {
           break;
         }
@@ -288,8 +331,7 @@ namespace jank::read
         ++pos;
       }
 
-      auto const token_start(pos);
-      switch(file[token_start])
+      switch(auto const token_start(pos); file[token_start])
       {
         case '(':
           require_space = false;
@@ -380,18 +422,72 @@ namespace jank::read
           }
         /* Numbers. */
         case '-':
+          {
+            if(found_r)
+            {
+              ++pos;
+              return err(error{ token_start, pos, "invalid number: '-' after radix" });
+            }
+          }
         case '0' ... '9':
           {
-            auto &&e(check_whitespace(found_space));
-            if(e.is_some())
+            if(auto &&e(check_whitespace(found_space)); e.is_some())
             {
               return err(std::move(e.unwrap()));
             }
+
             native_bool contains_leading_digit{ file[token_start] != '-' };
             native_bool contains_dot{};
             native_bool is_scientific{};
             native_bool found_exponent_sign{};
             native_bool expecting_exponent{};
+            auto r_pos{ pos }; /* records the 'r' position if one is found */
+            native_bool found_beginning_negative{};
+
+            if(file[token_start] == '-' && peek().unwrap_or(' ') == '0'
+               && !found_slash_after_number)
+            {
+              contains_leading_digit = true;
+              if(auto const f{ peek(2) }; f.is_some())
+              {
+                if(f != 'x' && f != 'X')
+                {
+                  radix = 8;
+                }
+                if(f == 'x' || f == 'X')
+                {
+                  radix = 16;
+                }
+                if(radix == 8)
+                {
+                  ++pos;
+                }
+                if(radix == 16)
+                {
+                  pos += 2;
+                }
+              }
+            }
+            else if(file[token_start] == '0' && !found_slash_after_number)
+            {
+              contains_leading_digit = true;
+              if(auto const f{ peek() }; f.is_some())
+              {
+                if(f != 'x' && f != 'X')
+                {
+                  radix = 8;
+                }
+                if(f == 'x' || f == 'X')
+                {
+                  radix = 16;
+                }
+                if(radix == 16)
+                {
+                  ++pos;
+                }
+              }
+            }
+
             while(true)
             {
               auto const oc(peek());
@@ -399,9 +495,7 @@ namespace jank::read
               {
                 break;
               }
-
-              auto const c(oc.unwrap());
-              if(c == '.')
+              if(auto const c(oc.unwrap()); c == '.')
               {
                 if(contains_dot || is_scientific || !contains_leading_digit)
                 {
@@ -409,43 +503,96 @@ namespace jank::read
                   return err(error{ token_start, pos, "invalid number" });
                 }
                 contains_dot = true;
+                if(radix != 10 && radix != 8)
+                {
+                  ++pos;
+                  continue;
+                }
+                radix = 10; /* numbers like 02.3 should be parsed as decimal numbers. */
               }
               else if(c == 'e' || c == 'E')
               {
-                if(is_scientific || !contains_leading_digit)
+                if(found_r)
                 {
                   ++pos;
-                  return err(error{ token_start, pos, "invalid number" });
+                  continue;
                 }
-                is_scientific = true;
-                expecting_exponent = true;
+                if(radix < 15)
+                {
+                  /* numbers containing 'e' and radix < 15, then it must be a decimal number. */
+                  radix = 10;
+                  if(is_scientific || !contains_leading_digit)
+                  {
+                    ++pos;
+                    return err(error{ token_start, pos, "invalid number" });
+                  }
+                  if(found_slash_after_number)
+                  {
+                    ++pos;
+                    found_slash_after_number = false;
+                    return err(error{ token_start,
+                                      pos,
+                                      "invalid ratio: ratio cannot have scientific notation" });
+                  }
+                  is_scientific = true;
+                  expecting_exponent = true;
+                }
               }
               else if(c == '+' || c == '-')
               {
-                if(found_exponent_sign || !is_scientific || !expecting_exponent)
+                if(radix == 10)
                 {
-                  ++pos;
-                  return err(error{ token_start, pos, "invalid number" });
+                  if(found_exponent_sign || !is_scientific || !expecting_exponent)
+                  {
+                    ++pos;
+                    return err(error{ token_start, pos, "invalid number" });
+                  }
                 }
                 found_exponent_sign = true;
+              }
+              else if(c == 'r' || c == 'R')
+              {
+                ++pos;
+                if(found_r)
+                {
+                  continue;
+                }
+                found_r = true;
+                r_pos = pos;
+                if(found_slash_after_number || contains_dot || found_exponent_sign
+                   || expecting_exponent)
+                {
+                  return err(error{ token_start,
+                                    pos,
+                                    "invalid number: arbitrary radix number can only integer" });
+                }
               }
               else if(c == '/')
               {
                 require_space = false;
                 ++pos;
                 if(found_exponent_sign || is_scientific || expecting_exponent || contains_dot
-                   || found_slash_after_number)
+                   || found_slash_after_number || (radix != 10 && radix != 8))
                 {
                   return err(error{ token_start, pos, "invalid ratio" });
                 }
                 found_slash_after_number = true;
+                radix = 10; // numbers like 02/3 should be parsed as decimal ratios.
                 /* skip the '/' char and look for the denominator number. */
                 ++pos;
                 auto const denominator(next());
-                if(denominator.is_ok() && denominator.expect_ok().kind == token_kind::integer)
+                found_slash_after_number = false;
+                if(denominator.is_ok())
                 {
+                  if(denominator.expect_ok().kind != token_kind::integer)
+                  {
+                    return err(error{
+                      token_start,
+                      pos,
+                      "invalid ratio: expecting an integer denominator",
+                    });
+                  }
                   auto const &denominator_token(denominator.expect_ok());
-                  found_slash_after_number = false;
                   return ok(
                     token(token_start,
                           pos - token_start,
@@ -453,8 +600,7 @@ namespace jank::read
                           { .numerator = std::strtoll(file.data() + token_start, nullptr, 10),
                             .denominator = boost::get<native_integer>(denominator_token.data) }));
                 }
-                return err(
-                  error{ token_start, pos, "invalid ratio: expecting an integer denominator" });
+                return denominator.expect_err();
               }
               else if(std::isdigit(c) == 0)
               {
@@ -464,15 +610,16 @@ namespace jank::read
                   return err(
                     error{ token_start, pos, "unexpected end of real, expecting exponent" });
                 }
-                break;
+                if(!is_letter(c) || (pos == token_start && file[token_start] != '0'))
+                {
+                  break;
+                }
               }
               else if(expecting_exponent)
               {
                 expecting_exponent = false;
               }
-
               contains_leading_digit = true;
-
               ++pos;
             }
 
@@ -483,26 +630,79 @@ namespace jank::read
             }
 
             /* Tokens beginning with - are ambiguous; it's only a negative number if it has numbers
-             * to follow.
-             * TODO: handle numbers starting with `+` */
+                     * to follow.
+                     * TODO: handle numbers starting with `+` */
             if(file[token_start] != '-' || (pos - token_start) >= 1)
             {
               require_space = true;
               ++pos;
-              if(contains_dot || is_scientific)
+              auto number_start{ token_start };
+              if(file[token_start] == '-' || file[token_start] == '+')
               {
+                number_start = token_start + 1;
+                found_beginning_negative = file[token_start] == '-';
+              }
+              if(found_r)
+              {
+                radix = std::strtoll(file.data() + token_start, nullptr, 10);
+                if(radix < 0)
+                {
+                  radix = -radix;
+                  found_beginning_negative = true;
+                }
+                if(radix < 2 || radix > 36)
+                {
+                  return err(
+                    error{ token_start,
+                           pos,
+                           fmt::format("invalid number: radix {} is out of range", radix) });
+                }
+                number_start = r_pos + 1;
+              }
+
+              /* check for invalid digits */
+              native_vector<char> invalid_digits{};
+              for(auto i{ number_start }; i < pos; i++)
+              {
+                if(!is_valid_num_char(file[i]))
+                {
+                  invalid_digits.emplace_back(file[i]);
+                }
+              }
+              if(invalid_digits.size() > 0)
+              {
+                found_r = false;
+                return err(
+                  error{ token_start,
+                         pos,
+                         fmt::format("invalid number: char {} are invalid for radix {}",
+                                     std::string(invalid_digits.begin(), invalid_digits.end()),
+                                     radix) });
+              }
+              /* real numbers */
+              if(contains_dot || is_scientific || found_exponent_sign)
+              {
+                if(radix != 10 || found_r)
+                {
+                  return err(
+                    error{ token_start,
+                           pos,
+                           fmt::format("invalid number: radix {} number cannot use scientific "
+                                       "notation, have '.', or have '+-' inside the number",
+                                       radix) });
+                }
                 return ok(token{ token_start,
                                  pos - token_start,
                                  token_kind::real,
                                  std::strtold(file.data() + token_start, nullptr) });
               }
-              else
-              {
-                return ok(token{ token_start,
-                                 pos - token_start,
-                                 token_kind::integer,
-                                 std::strtoll(file.data() + token_start, nullptr, 10) });
-              }
+
+              /* integers */
+              auto const parsed_int{ std::strtoll(file.data() + number_start, nullptr, radix)
+                                     * (found_beginning_negative ? -1 : 1) };
+              radix = 10;
+              found_r = false;
+              return ok(token{ token_start, pos - token_start, token_kind::integer, parsed_int });
             }
             /* XXX: Fall through to symbol starting with - */
           }
@@ -668,8 +868,8 @@ namespace jank::read
             pos++;
 
             /* Unescaped strings can be read right from memory, but escaped strings require
-             * some processing first, to turn the escape sequences into the necessary characters.
-             * We use distinct token types for these so we can optimize for the typical case. */
+                     * some processing first, to turn the escape sequences into the necessary characters.
+                     * We use distinct token types for these so we can optimize for the typical case. */
             auto const kind(contains_escape ? token_kind::escaped_string : token_kind::string);
             return ok(token{ token_start,
                              pos - token_start,
@@ -789,14 +989,14 @@ namespace jank::read
       }
     }
 
-    option<char> processor::peek() const
+    option<char> processor::peek(native_integer const ahead) const
     {
-      auto const next_pos(pos + 1);
-      if(next_pos >= file.size())
+      auto const peek_pos(pos + ahead);
+      if(peek_pos >= file.size())
       {
         return none;
       }
-      return some(file[next_pos]);
+      return some(file[peek_pos]);
     }
   }
 }
