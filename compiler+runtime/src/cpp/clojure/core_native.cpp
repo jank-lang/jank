@@ -708,12 +708,17 @@ jank_object_ptr jank_load_clojure_core_native()
     fn->arity_0 = []() -> object * {
       return iterate(__rt_ctx->intern_var("clojure.core", "inc").expect_ok()->deref(), make_box(0));
     };
-    fn->arity_1 = [](object * const end) -> object * { return obj::integer_range::create(end); };
+    fn->arity_1 = [](object * const end) -> object * {
+      return obj::integer_range::create(expect_object<obj::integer>(end)->data);
+    };
     fn->arity_2 = [](object * const start, object * const end) -> object * {
-      return obj::integer_range::create(start, end);
+      return obj::integer_range::create(expect_object<obj::integer>(start)->data,
+                                        expect_object<obj::integer>(end)->data);
     };
     fn->arity_3 = [](object * const start, object * const end, object * const step) -> object * {
-      return obj::integer_range::create(start, end, step);
+      return obj::integer_range::create(expect_object<obj::integer>(start)->data,
+                                        expect_object<obj::integer>(end)->data,
+                                        expect_object<obj::integer>(step)->data);
     };
     intern_fn_obj("integer_range", fn);
   }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "jank/type.hpp"
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/behavior/countable.hpp>
@@ -19,25 +20,28 @@ namespace jank::runtime
     static constexpr native_bool is_sequential{ true };
     static constexpr native_integer chunk_size{ 32 };
 
-    using bounds_check_t = native_bool (*)(object_ptr, object_ptr);
+    using bounds_check_t = native_bool (*)(native_integer, native_integer);
 
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(object_ptr end);
-    static_object(object_ptr start, object_ptr end);
-    static_object(object_ptr start, object_ptr end, object_ptr step);
-    static_object(object_ptr start, object_ptr end, object_ptr step, bounds_check_t bounds_check);
-    static_object(object_ptr start,
-                  object_ptr end,
-                  object_ptr step,
+    static_object(native_integer end);
+    static_object(native_integer start, native_integer end);
+    static_object(native_integer start, native_integer end, native_integer step);
+    static_object(native_integer start,
+                  native_integer end,
+                  native_integer step,
+                  bounds_check_t bounds_check);
+    static_object(native_integer start,
+                  native_integer end,
+                  native_integer step,
                   bounds_check_t bounds_check,
                   obj::array_chunk_ptr chunk,
                   native_box<static_object> chunk_next);
 
-    static object_ptr create(object_ptr end);
-    static object_ptr create(object_ptr start, object_ptr end);
-    static object_ptr create(object_ptr start, object_ptr end, object_ptr step);
+    static object_ptr create(native_integer end);
+    static object_ptr create(native_integer start, native_integer end);
+    static object_ptr create(native_integer start, native_integer end, native_integer step);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -72,9 +76,9 @@ namespace jank::runtime
     size_t count() const;
 
     object base{ object_type::integer_range };
-    object_ptr start{};
-    object_ptr end{};
-    object_ptr step{};
+    native_integer start{};
+    native_integer end{};
+    native_integer step{};
     bounds_check_t bounds_check{};
     mutable obj::array_chunk_ptr chunk{};
     mutable native_box<static_object> chunk_next{};

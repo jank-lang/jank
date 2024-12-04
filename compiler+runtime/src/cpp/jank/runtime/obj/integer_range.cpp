@@ -1,3 +1,6 @@
+#include "jank/runtime/object.hpp"
+#include "jank/runtime/rtti.hpp"
+#include "jank/type.hpp"
 #include <jank/runtime/obj/integer_range.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/core/math.hpp>
@@ -7,44 +10,46 @@
 
 namespace jank::runtime
 {
-  static native_bool positive_step_bounds_check(object_ptr const val, object_ptr const end)
+  static native_bool positive_step_bounds_check(native_integer const val, native_integer const end)
   {
-    return lte(end, val);
+    return end <= val;
   }
 
-  static native_bool negative_step_bounds_check(object_ptr const val, object_ptr const end)
+  static native_bool negative_step_bounds_check(native_integer const val, native_integer const end)
   {
-    return lte(val, end);
+    return val <= end;
   }
 
-  obj::integer_range::static_object(object_ptr const end)
-    : start{ make_box(0) }
+  obj::integer_range::static_object(native_integer const end)
+    : start{ 0 }
     , end{ end }
-    , step{ make_box(1) }
+    , step{ 1 }
     , bounds_check{ positive_step_bounds_check }
   {
   }
 
-  obj::integer_range::static_object(object_ptr const start, object_ptr const end)
+  obj::integer_range::static_object(native_integer const start, native_integer const end)
     : start{ start }
     , end{ end }
-    , step{ make_box(1) }
+    , step{ 1 }
     , bounds_check{ positive_step_bounds_check }
   {
   }
 
-  obj::integer_range::static_object(object_ptr const start, object_ptr const end, object_ptr const step)
+  obj::integer_range::static_object(native_integer const start,
+                                    native_integer const end,
+                                    native_integer const step)
     : start{ start }
     , end{ end }
     , step{ step }
-    , bounds_check{ is_pos(step) ? positive_step_bounds_check : negative_step_bounds_check }
+    , bounds_check{ step > 0 ? positive_step_bounds_check : negative_step_bounds_check }
   {
   }
 
-  obj::integer_range::static_object(object_ptr const start,
-                            object_ptr const end,
-                            object_ptr const step,
-                            obj::integer_range::bounds_check_t const bounds_check)
+  obj::integer_range::static_object(native_integer const start,
+                                    native_integer const end,
+                                    native_integer const step,
+                                    obj::integer_range::bounds_check_t const bounds_check)
     : start{ start }
     , end{ end }
     , step{ step }
@@ -52,12 +57,12 @@ namespace jank::runtime
   {
   }
 
-  obj::integer_range::static_object(object_ptr const start,
-                            object_ptr const end,
-                            object_ptr const step,
-                            obj::integer_range::bounds_check_t const bounds_check,
-                            obj::array_chunk_ptr const chunk,
-                            obj::integer_range_ptr const chunk_next)
+  obj::integer_range::static_object(native_integer const start,
+                                    native_integer const end,
+                                    native_integer const step,
+                                    obj::integer_range::bounds_check_t const bounds_check,
+                                    obj::array_chunk_ptr const chunk,
+                                    obj::integer_range_ptr const chunk_next)
     : start{ start }
     , end{ end }
     , step{ step }
@@ -67,23 +72,25 @@ namespace jank::runtime
   {
   }
 
-  object_ptr obj::integer_range::create(object_ptr const end)
+  object_ptr obj::integer_range::create(native_integer const end)
   {
-    if(is_pos(end))
+    if(end)
     {
-      return make_box<obj::integer_range>(make_box(0), end, make_box(1), positive_step_bounds_check);
+      return make_box<obj::integer_range>(0, end, 1, positive_step_bounds_check);
     }
     return obj::persistent_list::empty();
   }
 
-  object_ptr obj::integer_range::create(object_ptr const start, object_ptr const end)
+  object_ptr obj::integer_range::create(native_integer const start, native_integer const end)
   {
-    return create(start, end, make_box(1));
+    return create(start, end, 1);
   }
 
-  object_ptr obj::integer_range::create(object_ptr const start, object_ptr const end, object_ptr const step)
+  object_ptr obj::integer_range::create(native_integer const start,
+                                        native_integer const end,
+                                        native_integer const step)
   {
-    if((is_pos(step) && lt(end, start)) || (is_neg(step) && lt(start, end)) || is_equiv(start, end))
+    if((step > 0 && end < start) || (step < 0 && start < end) || start == end)
     {
       return obj::persistent_list::empty();
     }
@@ -91,10 +98,10 @@ namespace jank::runtime
     //else if(is_zero(step))
     //{ return make_box<obj::repeat>(start); }
     return make_box<obj::integer_range>(start,
-                                end,
-                                step,
-                                is_pos(step) ? positive_step_bounds_check
-                                             : negative_step_bounds_check);
+                                        end,
+                                        step,
+                                        step > 0 ? positive_step_bounds_check
+                                                 : negative_step_bounds_check);
   }
 
   obj::integer_range_ptr obj::integer_range::seq()
@@ -109,7 +116,7 @@ namespace jank::runtime
 
   object_ptr obj::integer_range::first() const
   {
-    return start;
+    return make_box<obj::integer>(start);
   }
 
   void obj::integer_range::force_chunk() const
@@ -122,12 +129,12 @@ namespace jank::runtime
     native_vector<object_ptr> arr;
     arr.reserve(chunk_size);
     size_t n{};
-    object_ptr val{ start };
+    auto val{ start };
     while(n < chunk_size)
     {
-      arr.emplace_back(val);
+      arr.emplace_back(make_box<obj::integer>(val));
       ++n;
-      val = add(val, step);
+      val += step;
       if(bounds_check(val, end))
       {
         chunk = make_box<obj::array_chunk>(std::move(arr), static_cast<size_t>(0));
@@ -156,12 +163,13 @@ namespace jank::runtime
     if(chunk->count() > 1)
     {
       auto const smaller_chunk(chunk->chunk_next());
-      cached_next = make_box<obj::integer_range>(smaller_chunk->nth(make_box(0)),
-                                         end,
-                                         step,
-                                         bounds_check,
-                                         smaller_chunk,
-                                         chunk_next);
+      cached_next
+        = make_box<obj::integer_range>(expect_object<obj::integer>(smaller_chunk->buffer[0])->data,
+                                       end,
+                                       step,
+                                       bounds_check,
+                                       smaller_chunk,
+                                       chunk_next);
       return cached_next;
     }
     return chunked_next();
@@ -173,7 +181,7 @@ namespace jank::runtime
     if(chunk->count() > 1)
     {
       chunk = chunk->chunk_next_in_place();
-      start = chunk->nth(make_box(0));
+      start = expect_object<obj::integer>(chunk->buffer[0])->data;
       return this;
     }
     return chunk_next;
