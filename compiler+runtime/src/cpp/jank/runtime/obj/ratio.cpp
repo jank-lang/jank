@@ -220,7 +220,7 @@ namespace jank::runtime
     obj::ratio_ptr operator-(native_integer const l, obj::ratio_data const &r)
     {
       return make_box<obj::ratio>(
-        obj::ratio_data(l * r.denominator - r.denominator, r.denominator));
+        obj::ratio_data(l * r.denominator - r.numerator, r.denominator));
     }
 
     object_ptr operator*(obj::ratio_data const &l, obj::ratio_data const &r)
