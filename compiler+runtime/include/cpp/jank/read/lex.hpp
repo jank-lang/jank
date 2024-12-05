@@ -150,14 +150,19 @@ namespace jank::read::lex
     processor(native_persistent_string_view const &f);
 
     result<token, error> next();
-    option<char> peek() const;
+    option<char> peek(native_integer const ahead = 1) const;
     option<error> check_whitespace(native_bool const found_space);
+    native_bool is_valid_num_char(char const c) const;
 
     iterator begin();
     iterator end();
 
     size_t pos{};
-    /* Whether or not the previous token requires a space after it. */
+    native_integer radix{ 10 };
+    /* The 'r' used in arbitrary radix (prefixed with N and then r, where N is the radix (2 <= radix <= 36); */
+    /* e.g. 2r10101 for binary, 16rebed00d for hex) */
+    native_bool found_r{};
+    /* Whether the previous token requires a space after it. */
     native_bool require_space{};
     /* True when seeing a '/' following a number. */
     native_bool found_slash_after_number{};

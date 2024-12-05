@@ -182,6 +182,11 @@ namespace jank::jit
           std::cerr.flush();
         }
       }
+      for(auto const f : failures)
+      {
+        std::cout << f.path << std::endl;
+        std::cout << f.error << std::endl;
+      }
 
       CHECK(failures.empty());
       for(auto const &f : failures)

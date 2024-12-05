@@ -1,10 +1,8 @@
 #include <iostream>
-#include <random>
-#include <cmath>
-
 #include <fmt/compile.h>
 
 #include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/obj/ratio.hpp>
 
 namespace jank::runtime
 {
