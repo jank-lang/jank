@@ -181,7 +181,8 @@ namespace jank::runtime
     if(chunk->count() > 1)
     {
       chunk = chunk->chunk_next_in_place();
-      start = expect_object<obj::integer>(chunk->buffer[0])->data;
+      start = (expect_object<obj::integer>(chunk->buffer[0])->data)
+        + static_cast<native_integer>(chunk->offset);
       return this;
     }
     return chunk_next;
@@ -258,6 +259,14 @@ namespace jank::runtime
 
   size_t obj::integer_range::count() const
   {
-    return 1;
+    if(step == 0)
+    {
+      throw std::runtime_error("Step shouldn't be 0");
+    }
+
+    auto const diff{ end - start };
+    auto const offset{ step > 0 ? -1 : 1 };
+
+    return static_cast<size_t>((diff + offset + step) / step);
   }
 }
