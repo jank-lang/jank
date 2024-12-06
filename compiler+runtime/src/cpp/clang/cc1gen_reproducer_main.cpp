@@ -28,92 +28,115 @@
 
 using namespace clang;
 
-namespace {
+namespace
+{
 
-struct UnsavedFileHash {
-  std::string Name;
-  std::string MD5;
-};
+  struct UnsavedFileHash
+  {
+    std::string Name;
+    std::string MD5;
+  };
 
-struct ClangInvocationInfo {
-  std::string Toolchain;
-  std::string LibclangOperation;
-  std::string LibclangOptions;
-  std::vector<std::string> Arguments;
-  std::vector<std::string> InvocationArguments;
-  std::vector<UnsavedFileHash> UnsavedFileHashes;
-  bool Dump = false;
-};
+  struct ClangInvocationInfo
+  {
+    std::string Toolchain;
+    std::string LibclangOperation;
+    std::string LibclangOptions;
+    std::vector<std::string> Arguments;
+    std::vector<std::string> InvocationArguments;
+    std::vector<UnsavedFileHash> UnsavedFileHashes;
+    bool Dump = false;
+  };
 
 } // end anonymous namespace
 
 LLVM_YAML_IS_SEQUENCE_VECTOR(UnsavedFileHash)
 
-namespace llvm {
-namespace yaml {
+namespace llvm
+{
+  namespace yaml
+  {
 
-template <> struct MappingTraits<UnsavedFileHash> {
-  static void mapping(IO &IO, UnsavedFileHash &Info) {
-    IO.mapRequired("name", Info.Name);
-    IO.mapRequired("md5", Info.MD5);
-  }
-};
+    template <>
+    struct MappingTraits<UnsavedFileHash>
+    {
+      static void mapping(IO &IO, UnsavedFileHash &Info)
+      {
+        IO.mapRequired("name", Info.Name);
+        IO.mapRequired("md5", Info.MD5);
+      }
+    };
 
-template <> struct MappingTraits<ClangInvocationInfo> {
-  static void mapping(IO &IO, ClangInvocationInfo &Info) {
-    IO.mapRequired("toolchain", Info.Toolchain);
-    IO.mapOptional("libclang.operation", Info.LibclangOperation);
-    IO.mapOptional("libclang.opts", Info.LibclangOptions);
-    IO.mapRequired("args", Info.Arguments);
-    IO.mapOptional("invocation-args", Info.InvocationArguments);
-    IO.mapOptional("unsaved_file_hashes", Info.UnsavedFileHashes);
-  }
-};
+    template <>
+    struct MappingTraits<ClangInvocationInfo>
+    {
+      static void mapping(IO &IO, ClangInvocationInfo &Info)
+      {
+        IO.mapRequired("toolchain", Info.Toolchain);
+        IO.mapOptional("libclang.operation", Info.LibclangOperation);
+        IO.mapOptional("libclang.opts", Info.LibclangOptions);
+        IO.mapRequired("args", Info.Arguments);
+        IO.mapOptional("invocation-args", Info.InvocationArguments);
+        IO.mapOptional("unsaved_file_hashes", Info.UnsavedFileHashes);
+      }
+    };
 
-} // end namespace yaml
+  } // end namespace yaml
 } // end namespace llvm
 
-static std::string generateReproducerMetaInfo(const ClangInvocationInfo &Info) {
+static std::string generateReproducerMetaInfo(ClangInvocationInfo const &Info)
+{
   std::string Result;
   llvm::raw_string_ostream OS(Result);
   OS << '{';
   bool NeedComma = false;
   auto EmitKey = [&](StringRef Key) {
-    if (NeedComma)
+    if(NeedComma)
+    {
       OS << ", ";
+    }
     NeedComma = true;
     OS << '"' << Key << "\": ";
   };
   auto EmitStringKey = [&](StringRef Key, StringRef Value) {
-    if (Value.empty())
+    if(Value.empty())
+    {
       return;
+    }
     EmitKey(Key);
     OS << '"' << Value << '"';
   };
   EmitStringKey("libclang.operation", Info.LibclangOperation);
   EmitStringKey("libclang.opts", Info.LibclangOptions);
-  if (!Info.InvocationArguments.empty()) {
+  if(!Info.InvocationArguments.empty())
+  {
     EmitKey("invocation-args");
     OS << '[';
-    for (const auto &Arg : llvm::enumerate(Info.InvocationArguments)) {
-      if (Arg.index())
+    for(auto const &Arg : llvm::enumerate(Info.InvocationArguments))
+    {
+      if(Arg.index())
+      {
         OS << ',';
+      }
       OS << '"' << Arg.value() << '"';
     }
     OS << ']';
   }
   OS << '}';
   // FIXME: Compare unsaved file hashes and report mismatch in the reproducer.
-  if (Info.Dump)
+  if(Info.Dump)
+  {
     llvm::outs() << "REPRODUCER METAINFO: " << OS.str() << "\n";
+  }
   return std::move(OS.str());
 }
 
 /// Generates a reproducer for a set of arguments from a specific invocation.
 static std::optional<driver::Driver::CompilationDiagnosticReport>
-generateReproducerForInvocationArguments(ArrayRef<const char *> Argv,
-                                         const ClangInvocationInfo &Info,
-                                         const llvm::ToolContext &ToolContext) {
+generateReproducerForInvocationArguments(ArrayRef<char const *> Argv,
+                                         ClangInvocationInfo const &Info,
+                                         llvm::ToolContext const &ToolContext)
+{
   using namespace driver;
   auto TargetAndMode = ToolChain::getTargetAndModeFromProgramName(Argv[0]);
 
@@ -122,19 +145,25 @@ generateReproducerForInvocationArguments(ArrayRef<const char *> Argv,
   IntrusiveRefCntPtr<DiagnosticIDs> DiagID(new DiagnosticIDs());
   DiagnosticsEngine Diags(DiagID, &*DiagOpts, new IgnoringDiagConsumer());
   ProcessWarningOptions(Diags, *DiagOpts, /*ReportDiags=*/false);
-  Driver TheDriver(ToolContext.Path, llvm::sys::getDefaultTargetTriple(),
-                   Diags);
+  Driver TheDriver(ToolContext.Path, llvm::sys::getDefaultTargetTriple(), Diags);
   TheDriver.setTargetAndMode(TargetAndMode);
-  if (ToolContext.NeedsPrependArg)
+  if(ToolContext.NeedsPrependArg)
+  {
     TheDriver.setPrependArg(ToolContext.PrependArg);
+  }
 
   std::unique_ptr<Compilation> C(TheDriver.BuildCompilation(Argv));
-  if (C && !C->containsError()) {
-    for (const auto &J : C->getJobs()) {
-      if (const Command *Cmd = dyn_cast<Command>(&J)) {
+  if(C && !C->containsError())
+  {
+    for(auto const &J : C->getJobs())
+    {
+      if(Command const *Cmd = dyn_cast<Command>(&J))
+      {
         Driver::CompilationDiagnosticReport Report;
-        TheDriver.generateCompilationDiagnostics(
-            *C, *Cmd, generateReproducerMetaInfo(Info), &Report);
+        TheDriver.generateCompilationDiagnostics(*C,
+                                                 *Cmd,
+                                                 generateReproducerMetaInfo(Info),
+                                                 &Report);
         return Report;
       }
     }
@@ -143,57 +172,69 @@ generateReproducerForInvocationArguments(ArrayRef<const char *> Argv,
   return std::nullopt;
 }
 
-std::string GetExecutablePath(const char *Argv0, bool CanonicalPrefixes);
+std::string GetExecutablePath(char const *Argv0, bool CanonicalPrefixes);
 
-static void printReproducerInformation(
-    llvm::raw_ostream &OS, const ClangInvocationInfo &Info,
-    const driver::Driver::CompilationDiagnosticReport &Report) {
+static void printReproducerInformation(llvm::raw_ostream &OS,
+                                       ClangInvocationInfo const &Info,
+                                       driver::Driver::CompilationDiagnosticReport const &Report)
+{
   OS << "REPRODUCER:\n";
   OS << "{\n";
   OS << R"("files":[)";
-  for (const auto &File : llvm::enumerate(Report.TemporaryFiles)) {
-    if (File.index())
+  for(auto const &File : llvm::enumerate(Report.TemporaryFiles))
+  {
+    if(File.index())
+    {
       OS << ',';
+    }
     OS << '"' << File.value() << '"';
   }
   OS << "]\n}\n";
 }
 
-int cc1gen_reproducer_main(ArrayRef<const char *> Argv, const char *Argv0,
+int cc1gen_reproducer_main(ArrayRef<char const *> Argv,
+                           char const *Argv0,
                            void *MainAddr,
-                           const llvm::ToolContext &ToolContext) {
-  if (Argv.size() < 1) {
+                           llvm::ToolContext const &ToolContext)
+{
+  if(Argv.size() < 1)
+  {
     llvm::errs() << "error: missing invocation file\n";
     return 1;
   }
   // Parse the invocation descriptor.
   StringRef Input = Argv[0];
-  llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> Buffer =
-      llvm::MemoryBuffer::getFile(Input, /*IsText=*/true);
-  if (!Buffer) {
-    llvm::errs() << "error: failed to read " << Input << ": "
-                 << Buffer.getError().message() << "\n";
+  llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> Buffer
+    = llvm::MemoryBuffer::getFile(Input, /*IsText=*/true);
+  if(!Buffer)
+  {
+    llvm::errs() << "error: failed to read " << Input << ": " << Buffer.getError().message()
+                 << "\n";
     return 1;
   }
   llvm::yaml::Input YAML(Buffer.get()->getBuffer());
   ClangInvocationInfo InvocationInfo;
   YAML >> InvocationInfo;
-  if (Argv.size() > 1 && Argv[1] == StringRef("-v"))
+  if(Argv.size() > 1 && Argv[1] == StringRef("-v"))
+  {
     InvocationInfo.Dump = true;
+  }
 
   // Create an invocation that will produce the reproducer.
-  std::vector<const char *> DriverArgs;
-  for (const auto &Arg : InvocationInfo.Arguments)
+  std::vector<char const *> DriverArgs;
+  for(auto const &Arg : InvocationInfo.Arguments)
+  {
     DriverArgs.push_back(Arg.c_str());
+  }
   std::string Path = GetExecutablePath(Argv0, /*CanonicalPrefixes=*/true);
   DriverArgs[0] = Path.c_str();
-  std::optional<driver::Driver::CompilationDiagnosticReport> Report =
-      generateReproducerForInvocationArguments(DriverArgs, InvocationInfo,
-                                               ToolContext);
+  std::optional<driver::Driver::CompilationDiagnosticReport> Report
+    = generateReproducerForInvocationArguments(DriverArgs, InvocationInfo, ToolContext);
 
   // Emit the information about the reproduce files to stdout.
   int Result = 1;
-  if (Report) {
+  if(Report)
+  {
     printReproducerInformation(llvm::outs(), InvocationInfo, *Report);
     Result = 0;
   }
