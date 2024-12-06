@@ -1274,7 +1274,7 @@ namespace jank::read::parse
     {
       return err(error{ token.pos, "Divide by zero" });
     }
-    auto const ratio{ obj::ratio::create(ratio_data.numerator, ratio_data.denominator) } ;
+    auto const ratio{ obj::ratio::create(ratio_data.numerator, ratio_data.denominator) };
     if(ratio->type == object_type::ratio)
     {
       return object_source_info{ expect_object<obj::ratio>(ratio), token, token };
