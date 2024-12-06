@@ -361,7 +361,8 @@ namespace jank::codegen
                      || std::same_as<T, runtime::obj::real> || std::same_as<T, runtime::obj::symbol>
                      || std::same_as<T, runtime::obj::character>
                      || std::same_as<T, runtime::obj::keyword>
-                     || std::same_as<T, runtime::obj::persistent_string>)
+                     || std::same_as<T, runtime::obj::persistent_string>
+                     || std::same_as<T, runtime::obj::ratio>)
         {
           return gen_global(typed_o);
         }
@@ -1028,6 +1029,45 @@ namespace jank::codegen
       auto const create_fn(ctx->module->getOrInsertFunction("jank_real_create", create_fn_type));
       auto const arg(llvm::ConstantFP::get(ctx->builder->getDoubleTy(), r->data));
       auto const call(ctx->builder->CreateCall(create_fn, { arg }));
+      ctx->builder->CreateStore(call, global);
+
+      if(prev_block == ctx->global_ctor_block)
+      {
+        return call;
+      }
+    }
+
+    return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
+  }
+
+  llvm::Value *llvm_processor::gen_global(obj::ratio_ptr const r) const
+  {
+    if(auto const found(ctx->literal_globals.find(r)); found != ctx->literal_globals.end())
+    {
+      return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), found->second);
+    }
+
+    auto &global(ctx->literal_globals[r]);
+    auto const name(fmt::format("ratio_{}", r->to_hash()));
+    auto const var(create_global_var(name));
+    ctx->module->insertGlobalVariable(var);
+    global = var;
+
+    auto const prev_block(ctx->builder->GetInsertBlock());
+    {
+      llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
+      ctx->builder->SetInsertPoint(ctx->global_ctor_block);
+
+      auto const create_fn_type(
+        llvm::FunctionType::get(ctx->builder->getPtrTy(),
+                                { ctx->builder->getInt64Ty(), ctx->builder->getInt64Ty() },
+                                false));
+      auto const create_fn(ctx->module->getOrInsertFunction("jank_ratio_create", create_fn_type));
+      auto const num_arg(
+        llvm::ConstantInt::getSigned(ctx->builder->getInt64Ty(), r->data.numerator));
+      auto const denom_arg(
+        llvm::ConstantInt::getSigned(ctx->builder->getInt64Ty(), r->data.denominator));
+      auto const call(ctx->builder->CreateCall(create_fn, { num_arg, denom_arg }));
       ctx->builder->CreateStore(call, global);
 
       if(prev_block == ctx->global_ctor_block)
