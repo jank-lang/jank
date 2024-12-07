@@ -780,14 +780,13 @@ namespace jank::read::lex
         }));
       }
 
-      SUBCASE("Invalid symbol after a valid char")
+      SUBCASE("Valid lexed character with symbol")
       {
         processor p{ R"(\1:)" };
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                token{ 0, 2, token_kind::character, "\\1"sv },
-                error{ 2, "invalid keyword: expected non-whitespace character after :" }
+                token{ 0, 3, token_kind::character, "\\1:"sv },
         }));
       }
 
@@ -1030,8 +1029,6 @@ namespace jank::read::lex
         CHECK(tokens
               == make_results({
                 error{ 0, "invalid keyword: incorrect number of :" },
-                error{ 2, "expected whitespace before next token" },
-                token{ 2, 4, token_kind::keyword, "foo"sv }
         }));
       }
 
@@ -1042,8 +1039,6 @@ namespace jank::read::lex
         CHECK(tokens
               == make_results({
                 error{ 0, "invalid keyword: incorrect number of :" },
-                error{ 2, "expected whitespace before next token" },
-                token{ 2, 5, token_kind::keyword, ":foo"sv }
         }));
       }
     }
@@ -1334,6 +1329,136 @@ namespace jank::read::lex
                   { 3, 4, token_kind::keyword, "foo"sv }
           }));
         }
+      }
+    }
+
+    TEST_CASE("UTF-8")
+    {
+      SUBCASE("Symbols")
+      {
+        SUBCASE("Single character")
+        {
+          processor p{ "👍" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 4, token_kind::symbol, "👍"sv }
+          }));
+        }
+        SUBCASE("Multiple characters")
+        {
+          processor p{ "😎👍" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 8, token_kind::symbol, "😎👍"sv }
+          }));
+        }
+        SUBCASE("Symbol with mixed characters inside")
+        {
+          processor p{ "one-🍺-please!" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 16, token_kind::symbol, "one-🍺-please!"sv }
+          }));
+        }
+        SUBCASE("Qualified Symbol")
+        {
+          processor p{ "🐝/🥀" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 9, token_kind::symbol, "🐝/🥀"sv }
+          }));
+        }
+      }
+      SUBCASE("Keywords")
+      {
+        SUBCASE("Single character")
+        {
+          processor p{ ":🍙" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 5, token_kind::keyword, "🍙"sv },
+          }));
+        }
+        SUBCASE("Multiple characters keyword")
+        {
+          processor p{ ":🥩🍗" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 9, token_kind::keyword, "🥩🍗"sv }
+          }));
+        }
+        SUBCASE("Keyword with mixed characters inside")
+        {
+          processor p{ ":w🍪w" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 7, token_kind::keyword, "w🍪w"sv }
+          }));
+        }
+        SUBCASE("Qualified Keyword")
+        {
+          processor p{ ":🐝/🥀" };
+          native_vector<result<token, error>> tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 10, token_kind::keyword, "🐝/🥀"sv }
+          }));
+        }
+      }
+      SUBCASE("8-wide character")
+      {
+        processor p{ "🇪🇺" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 8, token_kind::symbol, "🇪🇺"sv }
+        }));
+      }
+      SUBCASE("Non-Latin Characters")
+      {
+        processor p{ "ありがとう" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 15, token_kind::symbol, "ありがとう"sv }
+        }));
+      }
+      SUBCASE("Non-Latin Characters")
+      {
+        processor p{ ":ありがとう" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 16, token_kind::keyword, "ありがとう"sv }
+        }));
+      }
+      SUBCASE("Whitespace Characters")
+      {
+        processor p{ ":  " };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 7, token_kind::keyword, "  "sv }
+        }));
+      }
+
+
+      SUBCASE("Malformed Text")
+      {
+        processor p{ "\xC0\x80" };
+        native_vector<result<token, error>> tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                error({ 0, "Unfinished Character" }),
+                error({ 1, "Unfinished Character" }),
+              }));
       }
     }
   }
