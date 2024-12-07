@@ -61,10 +61,10 @@ namespace jank::runtime
     /* behavior::sequenceable_in_place */
     native_box<static_object> next_in_place();
 
-    /* behavior::chunkable */
-    obj::array_chunk_ptr chunked_first() const;
-    native_box<static_object> chunked_next() const;
-    void force_chunk() const;
+    /* TODO: behavior::chunkable */
+    /* obj::array_chunk_ptr chunked_first() const; */
+    /* native_box<static_object> chunked_next() const; */
+    /* void force_chunk() const; */
 
     /* behavior::conjable */
     obj::cons_ptr conj(object_ptr head) const;

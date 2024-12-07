@@ -119,38 +119,38 @@ namespace jank::runtime
     return make_box<obj::integer>(start);
   }
 
-  void obj::integer_range::force_chunk() const
-  {
-    if(chunk)
-    {
-      return;
-    }
+  // void obj::integer_range::force_chunk() const
+  // {
+  //   if(chunk)
+  //   {
+  //     return;
+  //   }
 
-    native_vector<object_ptr> arr;
-    arr.reserve(chunk_size);
-    size_t n{};
-    auto val{ start };
-    while(n < chunk_size)
-    {
-      arr.emplace_back(make_box<obj::integer>(val));
-      ++n;
-      val += step;
-      if(bounds_check(val, end))
-      {
-        chunk = make_box<obj::array_chunk>(std::move(arr), static_cast<size_t>(0));
-        return;
-      }
-    }
+  //   native_vector<object_ptr> arr;
+  //   arr.reserve(chunk_size);
+  //   size_t n{};
+  //   auto val{ start };
+  //   while(n < chunk_size)
+  //   {
+  //     arr.emplace_back(make_box<obj::integer>(val));
+  //     ++n;
+  //     val += step;
+  //     if(bounds_check(val, end))
+  //     {
+  //       chunk = make_box<obj::array_chunk>(std::move(arr), static_cast<size_t>(0));
+  //       return;
+  //     }
+  //   }
 
-    if(bounds_check(val, end))
-    {
-      chunk = make_box<obj::array_chunk>(std::move(arr), static_cast<size_t>(0));
-      return;
-    }
+  //   if(bounds_check(val, end))
+  //   {
+  //     chunk = make_box<obj::array_chunk>(std::move(arr), static_cast<size_t>(0));
+  //     return;
+  //   }
 
-    chunk = make_box<obj::array_chunk>(std::move(arr), static_cast<size_t>(0));
-    chunk_next = make_box<obj::integer_range>(val, end, step, bounds_check);
-  }
+  //   chunk = make_box<obj::array_chunk>(std::move(arr), static_cast<size_t>(0));
+  //   chunk_next = make_box<obj::integer_range>(val, end, step, bounds_check);
+  // }
 
   obj::integer_range_ptr obj::integer_range::next() const
   {
@@ -188,21 +188,21 @@ namespace jank::runtime
     return chunk_next;
   }
 
-  obj::array_chunk_ptr obj::integer_range::chunked_first() const
-  {
-    force_chunk();
-    return chunk;
-  }
+  // obj::array_chunk_ptr obj::integer_range::chunked_first() const
+  // {
+  //   force_chunk();
+  //   return chunk;
+  // }
 
-  obj::integer_range_ptr obj::integer_range::chunked_next() const
-  {
-    force_chunk();
-    if(!chunk_next)
-    {
-      return nullptr;
-    }
-    return chunk_next;
-  }
+  // obj::integer_range_ptr obj::integer_range::chunked_next() const
+  // {
+  //   force_chunk();
+  //   if(!chunk_next)
+  //   {
+  //     return nullptr;
+  //   }
+  //   return chunk_next;
+  // }
 
   obj::cons_ptr obj::integer_range::conj(object_ptr const head) const
   {
