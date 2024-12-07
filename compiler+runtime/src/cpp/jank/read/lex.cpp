@@ -165,7 +165,7 @@ namespace jank::read
     struct codepoint
     {
       char32_t character{};
-      size_t len{};
+      uint8_t len{};
     };
 
     native_bool ratio::operator==(ratio const &rhs) const
@@ -281,7 +281,7 @@ namespace jank::read
       {
         return err(error{ pos, "Invalid character" });
       }
-      return ok(codepoint{ static_cast<char32_t>(wc), len });
+      return ok(codepoint{ static_cast<char32_t>(wc), static_cast<uint8_t>(len) });
     }
 
     static native_bool is_utf8_char(char32_t const c)
