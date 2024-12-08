@@ -8,6 +8,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/profile/time.hpp>
+#include <jank/util/scope_exit.hpp>
 
 using namespace jank;
 using namespace jank::runtime;
@@ -814,6 +815,30 @@ extern "C"
   void jank_throw(jank_object_ptr const o)
   {
     throw runtime::object_ptr{ reinterpret_cast<object *>(o) };
+  }
+
+  jank_object_ptr jank_try(jank_object_ptr const try_fn,
+                           jank_object_ptr const catch_fn,
+                           jank_object_ptr const finally_fn)
+  {
+    util::scope_exit const finally{ [=]() {
+      auto const finally_fn_obj(reinterpret_cast<object *>(finally_fn));
+      if(finally_fn_obj != obj::nil::nil_const())
+      {
+        dynamic_call(finally_fn_obj);
+      }
+    } };
+
+    try
+    {
+      auto const try_fn_obj(reinterpret_cast<object *>(try_fn));
+      return dynamic_call(try_fn_obj);
+    }
+    catch(object_ptr const e)
+    {
+      auto const catch_fn_obj(reinterpret_cast<object *>(catch_fn));
+      return dynamic_call(catch_fn_obj, e);
+    }
   }
 
   void jank_profile_enter(char const * const label)

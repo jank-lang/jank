@@ -9,11 +9,111 @@
 #include <jank/jit/processor.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/profile/time.hpp>
+#include <jank/util/scope_exit.hpp>
 
 namespace jank::evaluate
 {
   using namespace jank::runtime;
   using namespace jank::analyze;
+
+  /* TODO: Move postwalk into the nodes. */
+  template <typename T, typename F>
+  requires std::is_base_of_v<expression_base, T>
+  static void walk(T const &expr, F const &f)
+  {
+    if constexpr(std::same_as<T, expr::call<expression>>)
+    {
+      walk(expr.source_expr, f);
+      for(auto const &form : expr.arg_exprs)
+      {
+        walk(form, f);
+      }
+    }
+    else if constexpr(std::same_as<T, expr::def<expression>>)
+    {
+      if(expr.value.is_some())
+      {
+        walk(expr.value.unwrap(), f);
+      }
+    }
+    else if constexpr(std::same_as<T, expr::if_<expression>>)
+    {
+      walk(expr.condition, f);
+      walk(expr.then, f);
+      if(expr.else_.is_some())
+      {
+        walk(expr.else_.unwrap(), f);
+      }
+    }
+    else if constexpr(std::same_as<T, expr::do_<expression>>)
+    {
+      for(auto const &form : expr.values)
+      {
+        walk(form, f);
+      }
+    }
+    else if constexpr(std::same_as<T, expr::let<expression>>)
+    {
+      walk(expr.body, f);
+    }
+    else if constexpr(std::same_as<T, expr::throw_<expression>>)
+    {
+      walk(expr.value, f);
+    }
+    else if constexpr(std::same_as<T, expr::try_<expression>>)
+    {
+      walk(expr.body, f);
+      walk(expr.catch_body.body, f);
+      if(expr.finally_body.is_some())
+      {
+        walk(expr.finally_body.unwrap(), f);
+      }
+    }
+    else if constexpr(std::same_as<T, expr::list<expression>>)
+    {
+      for(auto const &form : expr.data_exprs)
+      {
+        walk(form, f);
+      }
+    }
+    else if constexpr(std::same_as<T, expr::vector<expression>>)
+    {
+      for(auto const &form : expr.data_exprs)
+      {
+        walk(form, f);
+      }
+    }
+    else if constexpr(std::same_as<T, expr::set<expression>>)
+    {
+      for(auto const &form : expr.data_exprs)
+      {
+        walk(form, f);
+      }
+    }
+    else if constexpr(std::same_as<T, expr::map<expression>>)
+    {
+      for(auto const &form : expr.data_exprs)
+      {
+        walk(form.first, f);
+        walk(form.second, f);
+      }
+    }
+    /* TODO: function */
+
+    f(expr);
+  }
+
+  template <typename F>
+  static void walk(expression_ptr const expr, F const &f)
+  {
+    boost::apply_visitor([&](auto &typed_expr) { walk(typed_expr, f); }, expr->data);
+  }
+
+  template <typename F>
+  static void walk(expr::function_arity<expression> const &arity, F const &f)
+  {
+    walk(arity.body, f);
+  }
 
   /* Some expressions don't make sense to eval outright and aren't fns that can be JIT compiled.
    * For those, we wrap them in a fn expression and then JIT compile and call them.
@@ -23,22 +123,37 @@ namespace jank::evaluate
    * root frame. So, when wrapping this expr, we give the fn the root frame, but change its
    * type to a fn frame. */
   template <typename E>
-  static expression_ptr wrap_expression(E expr)
+  static expression_ptr wrap_expression(E expr,
+                                        native_persistent_string const &name,
+                                        native_vector<obj::symbol_ptr> params)
   {
     auto ret(make_box<expression>(expr::function<expression>{}));
     auto &fn(boost::get<expr::function<expression>>(ret->data));
     expr::function_arity<expression> arity;
-    fn.name = "repl_fn";
+    fn.name = name;
     fn.unique_name = context::unique_string(fn.name);
     fn.meta = obj::persistent_hash_map::empty();
-    fn.frame = expr.frame;
 
-    arity.frame = expr.frame;
-    while(arity.frame->parent.is_some())
+    auto const &closest_fn_frame(local_frame::find_closest_fn_frame(*expr.frame));
+
+    arity.frame = make_box<local_frame>(local_frame::frame_type::fn, *__rt_ctx, expr.frame->parent);
+    expr.frame->parent = arity.frame;
+    fn.frame = arity.frame->parent.unwrap_or(arity.frame);
+    fn.frame->lift_constant(fn.meta);
+    arity.frame->fn_ctx = make_box<expr::function_context>();
+    arity.frame->fn_ctx->name = fn.name;
+    arity.frame->fn_ctx->unique_name = fn.unique_name;
+    arity.frame->fn_ctx->fn = ret;
+    arity.fn_ctx = arity.frame->fn_ctx;
+
+    arity.frame->lifted_constants = closest_fn_frame.lifted_constants;
+
+    arity.params = std::move(params);
+    arity.fn_ctx->param_count = arity.params.size();
+    for(auto const sym : arity.params)
     {
-      arity.frame = arity.frame->parent.unwrap();
+      arity.frame->locals.emplace(sym, local_binding{ sym, none, arity.frame });
     }
-    arity.frame->type = local_frame::frame_type::fn;
 
     /* We can't just assign the position here, since we need the position to propagate
      * downward. For example, if this expr is a let, setting its position to tail
@@ -49,32 +164,46 @@ namespace jank::evaluate
 
     /* TODO: Avoid allocation by using existing ptr. */
     arity.body.values.push_back(make_box<expression>(expr));
-    arity.fn_ctx = make_box<expr::function_context>();
-    arity.frame->fn_ctx = arity.fn_ctx;
     arity.body.frame = arity.frame;
-    arity.fn_ctx->name = fn.name;
-    arity.fn_ctx->unique_name = fn.unique_name;
-    arity.fn_ctx->fn = ret;
+
+    walk(arity, [&](auto const form) {
+      using T = std::decay_t<decltype(form)>;
+
+      if constexpr(std::same_as<T, expr::local_reference>)
+      {
+        auto found_local(expr.frame->find_local_or_capture(form.name));
+        if(found_local && !found_local.unwrap().crossed_fns.empty())
+        {
+          arity.frame->captures[form.name] = found_local.unwrap().binding;
+        }
+      }
+    });
+
     fn.arities.emplace_back(std::move(arity));
 
     return ret;
   }
 
-  expression_ptr
-  wrap_expressions(native_vector<expression_ptr> const &exprs, processor const &an_prc)
+  /* TODO: Expression wrapping makes sense in analyze, not eval. We use it all over the place. */
+  expression_ptr wrap_expressions(native_vector<expression_ptr> const &exprs,
+                                  processor const &an_prc,
+                                  native_persistent_string const &name)
   {
     if(exprs.empty())
     {
-      return wrap_expression(expr::primitive_literal<expression>{
-        expression_base{ {}, expression_position::tail, an_prc.root_frame, true },
-        obj::nil::nil_const()
-      });
+      return wrap_expression(
+        expr::primitive_literal<expression>{
+          expression_base{ {}, expression_position::tail, an_prc.root_frame, true },
+          obj::nil::nil_const(),
+      },
+        name,
+        {});
     }
     else
     {
       /* We'll cheat a little and build a fn using just the first expression. Then we can just
        * add the rest. I'd rather do this than duplicate all of the wrapping logic. */
-      auto ret(wrap_expression(exprs[0]));
+      auto ret(wrap_expression(exprs[0], name, {}));
       auto &fn(boost::get<expr::function<expression>>(ret->data));
       auto &body(fn.arities[0].body.values);
       /* We normally wrap one expression, which is a return statement, but we'll be potentially
@@ -94,10 +223,13 @@ namespace jank::evaluate
     }
   }
 
-  expression_ptr wrap_expression(expression_ptr const expr)
+  expression_ptr wrap_expression(expression_ptr const expr,
+                                 native_persistent_string const &name,
+                                 native_vector<obj::symbol_ptr> params)
   {
-    return boost::apply_visitor([](auto const &typed_expr) { return wrap_expression(typed_expr); },
-                                expr->data);
+    return boost::apply_visitor(
+      [&](auto const &typed_expr) { return wrap_expression(typed_expr, name, std::move(params)); },
+      expr->data);
   }
 
   object_ptr eval(expression_ptr const &ex)
@@ -409,7 +541,7 @@ namespace jank::evaluate
       module::nest_module(expect_object<ns>(__rt_ctx->current_ns_var->deref())->to_string(),
                           munge(expr.unique_name)));
 
-    auto const wrapped_expr(evaluate::wrap_expression(expr));
+    auto const wrapped_expr(evaluate::wrap_expression(expr, "repl_fn", {}));
     codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::eval };
     cg_prc.gen().expect_ok();
 
@@ -454,7 +586,7 @@ namespace jank::evaluate
 
   object_ptr eval(expr::let<expression> const &expr)
   {
-    return dynamic_call(eval(wrap_expression(expr)));
+    return dynamic_call(eval(wrap_expression(expr, "let", {})));
   }
 
   object_ptr eval(expr::if_<expression> const &expr)
@@ -478,6 +610,23 @@ namespace jank::evaluate
 
   object_ptr eval(expr::try_<expression> const &expr)
   {
-    return dynamic_call(eval(wrap_expression(expr)));
+    util::scope_exit const finally{ [=]() {
+      if(expr.finally_body)
+      {
+        eval(expr.finally_body.unwrap());
+      }
+    } };
+
+    try
+    {
+      return eval(expr.body);
+    }
+    catch(object_ptr const e)
+    {
+      return dynamic_call(eval(wrap_expression(make_box<expression>(expr.catch_body.body),
+                                               "catch",
+                                               { expr.catch_body.sym })),
+                          e);
+    }
   }
 }

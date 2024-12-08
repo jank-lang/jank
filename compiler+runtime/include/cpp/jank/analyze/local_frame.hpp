@@ -55,7 +55,9 @@ namespace jank::analyze
       root,
       fn,
       let,
-      catch_
+      try_,
+      catch_,
+      finally
     };
 
     static constexpr native_bool pointer_free{ false };
@@ -104,6 +106,7 @@ namespace jank::analyze
 
     frame_type type;
     option<native_box<local_frame>> parent;
+    /* TODO: local_binding_ptr */
     native_unordered_map<runtime::obj::symbol_ptr, local_binding> locals;
     native_unordered_map<runtime::obj::symbol_ptr, local_binding> captures;
     native_unordered_map<runtime::obj::symbol_ptr, lifted_var> lifted_vars;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/analyze/expression_base.hpp>
+#include <jank/analyze/expr/do.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 
 namespace jank::analyze::expr

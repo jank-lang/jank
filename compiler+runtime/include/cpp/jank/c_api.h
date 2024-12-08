@@ -255,6 +255,7 @@ extern "C"
   void jank_set_meta(jank_object_ptr o, jank_object_ptr meta);
 
   void jank_throw(jank_object_ptr o);
+  jank_object_ptr jank_try(jank_object_ptr body, jank_object_ptr catch_, jank_object_ptr finally);
 
   void jank_profile_enter(char const *label);
   void jank_profile_exit(char const *label);

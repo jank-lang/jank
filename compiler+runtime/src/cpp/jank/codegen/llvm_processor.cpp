@@ -13,9 +13,11 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/evaluate.hpp>
 #include <jank/profile/time.hpp>
 
 /* TODO: Remove exceptions. */
+/* TODO: using namespace analyze; */
 namespace jank::codegen
 {
   reusable_context::reusable_context(native_persistent_string const &module_name)
@@ -183,6 +185,11 @@ namespace jank::codegen
       {
         ctx->builder->CreateRet(gen_global(obj::nil::nil_const()));
       }
+    }
+
+    if(target == compilation_target::eval)
+    {
+      //to_string();
     }
 
     /* Run our optimization passes on the function, mutating it. */
@@ -501,6 +508,7 @@ namespace jank::codegen
                                    analyze::expr::function_arity<analyze::expression> const &)
   {
     auto const ret(locals[expr.binding.name]);
+    assert(ret);
 
     if(expr.position == analyze::expression_position::tail)
     {
@@ -763,7 +771,7 @@ namespace jank::codegen
     auto fn(ctx->module->getOrInsertFunction("jank_throw", fn_type));
     llvm::cast<llvm::Function>(fn.getCallee())->setDoesNotReturn();
 
-    llvm::SmallVector<llvm::Value *, 2> const args{ value };
+    llvm::SmallVector<llvm::Value *, 1> const args{ value };
     auto const call(ctx->builder->CreateCall(fn, args));
 
     if(expr.position == analyze::expression_position::tail)
@@ -773,13 +781,41 @@ namespace jank::codegen
     return call;
   }
 
-  /* TODO: Remove arity from gen? */
   llvm::Value *llvm_processor::gen(analyze::expr::try_<analyze::expression> const &expr,
                                    analyze::expr::function_arity<analyze::expression> const &arity)
   {
-    //auto const landing(ctx->builder->CreateLandingPad(ctx->builder->getPtrTy(), 1, "try"));
-    /* TODO: Implement try. */
-    return gen(expr.body, arity);
+    auto const wrapped_body(
+      evaluate::wrap_expression(make_box<analyze::expression>(expr.body), "try_body", {}));
+    auto const wrapped_catch(
+      evaluate::wrap_expression(make_box<analyze::expression>(expr.catch_body.body),
+                                "catch",
+                                { expr.catch_body.sym }));
+    auto const wrapped_finally(expr.finally_body.map([](auto const &finally) {
+      return evaluate::wrap_expression(make_box<analyze::expression>(finally), "finally", {});
+    }));
+
+    auto const body(gen(wrapped_body, arity));
+    auto const catch_(gen(wrapped_catch, arity));
+    auto const finally(
+      wrapped_finally.map([&](auto const &finally) { return gen(finally, arity); }));
+
+    auto const fn_type(llvm::FunctionType::get(
+      ctx->builder->getPtrTy(),
+      { ctx->builder->getPtrTy(), ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
+      false));
+    auto const fn(ctx->module->getOrInsertFunction("jank_try", fn_type));
+
+    llvm::SmallVector<llvm::Value *, 3> const args{ body,
+                                                    catch_,
+                                                    finally.unwrap_or(
+                                                      gen_global(obj::nil::nil_const())) };
+    auto const call(ctx->builder->CreateCall(fn, args));
+
+    if(expr.position == analyze::expression_position::tail)
+    {
+      return ctx->builder->CreateRet(call);
+    }
+    return call;
   }
 
   llvm::Value *llvm_processor::gen_var(obj::symbol_ptr const qualified_name) const

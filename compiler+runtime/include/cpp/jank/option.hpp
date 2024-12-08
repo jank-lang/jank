@@ -34,7 +34,7 @@ namespace jank
     {
       if(set)
       {
-        new(reinterpret_cast<T *>(data)) T{ *reinterpret_cast<T const *>(o.data) };
+        new(reinterpret_cast<T *>(data)) T{ o.unwrap_unchecked() };
       }
     }
 
@@ -44,7 +44,7 @@ namespace jank
       o.set = false;
       if(set)
       {
-        new(reinterpret_cast<T *>(data)) T{ std::move(*reinterpret_cast<T const *>(o.data)) };
+        new(reinterpret_cast<T *>(data)) T{ std::move(o.unwrap_unchecked()) };
       }
     }
 
@@ -69,7 +69,7 @@ namespace jank
     {
       if(set)
       {
-        new(reinterpret_cast<T *>(data)) T{ *reinterpret_cast<D const *>(o.data) };
+        new(reinterpret_cast<T *>(data)) T{ o.unwrap_unchecked() };
       }
     }
 
@@ -80,7 +80,7 @@ namespace jank
     {
       if(set)
       {
-        new(reinterpret_cast<T *>(data)) T{ std::move(*reinterpret_cast<D *>(o.data)) };
+        new(reinterpret_cast<T *>(data)) T{ std::move(o.unwrap_unchecked()) };
       }
       o.reset();
     }
@@ -100,7 +100,7 @@ namespace jank
       set = rhs.set;
       if(set)
       {
-        new(reinterpret_cast<T *>(data)) T{ *reinterpret_cast<T const *>(rhs.data) };
+        new(reinterpret_cast<T *>(data)) T{ rhs.unwrap_unchecked() };
       }
       return *this;
     }
@@ -116,7 +116,7 @@ namespace jank
       set = std::move(rhs.set);
       if(set)
       {
-        new(reinterpret_cast<T *>(data)) T{ std::move(*reinterpret_cast<T const *>(rhs.data)) };
+        new(reinterpret_cast<T *>(data)) T{ std::move(rhs.unwrap_unchecked()) };
       }
       rhs.reset();
       return *this;
@@ -173,11 +173,21 @@ namespace jank
       return *reinterpret_cast<T const *>(data);
     }
 
+    constexpr T &unwrap_unchecked()
+    {
+      return *reinterpret_cast<T *>(data);
+    }
+
+    constexpr T const &unwrap_unchecked() const
+    {
+      return *reinterpret_cast<T const *>(data);
+    }
+
     constexpr T &unwrap_or(T &fallback)
     {
       if(set)
       {
-        return *reinterpret_cast<T *>(data);
+        return unwrap_unchecked();
       }
       return fallback;
     }
@@ -187,7 +197,27 @@ namespace jank
     {
       if(set)
       {
-        return *reinterpret_cast<T const *>(data);
+        return unwrap_unchecked();
+      }
+      return std::move(fallback);
+    }
+
+    template <typename F>
+    constexpr auto map(F &&f) const -> option<decltype(f(std::declval<T>()))>
+    {
+      if(set)
+      {
+        return f(unwrap_unchecked());
+      }
+      return none_t{};
+    }
+
+    template <typename F>
+    constexpr T map_or(T fallback, F &&f) const
+    {
+      if(set)
+      {
+        return f(unwrap_unchecked());
       }
       return std::move(fallback);
     }
@@ -200,7 +230,7 @@ namespace jank
       }
       else if(set)
       {
-        return *reinterpret_cast<T const *>(data) != *reinterpret_cast<T const *>(rhs.data);
+        return unwrap_unchecked() != rhs.unwrap_unchecked();
       }
 
       return false;

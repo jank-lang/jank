@@ -63,6 +63,7 @@ namespace jank::analyze
       return *this;
     }
 
+    /* TODO: Is this operator used? It's missing some members. */
     type = rhs.type;
     parent = rhs.parent;
     locals = rhs.locals;
@@ -246,20 +247,12 @@ namespace jank::analyze
       return;
     }
 
-    auto name(context::unique_symbol("const"));
-    option<obj::symbol> const unboxed_name{ visit_object(
-      [&](auto const typed_constant) -> option<obj::symbol> {
-        using T = typename decltype(typed_constant)::value_type;
-
-        if constexpr(behavior::number_like<T>)
-        {
-          return obj::symbol{ name.ns, name.name + "__unboxed" };
-        }
-        else
-        {
-          return none;
-        }
+    auto const name(context::unique_symbol("const"));
+    auto const unboxed_name{ visit_number_like(
+      [&](auto const) -> option<obj::symbol> {
+        return obj::symbol{ name.ns, name.name + "__unboxed" };
       },
+      []() -> option<obj::symbol> { return none; },
       constant) };
 
     lifted_constant l{ constant };

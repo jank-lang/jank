@@ -159,11 +159,12 @@ namespace jank::runtime
 
     if(truthy(compile_files_var->deref()))
     {
-      auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc));
-      auto &fn(boost::get<analyze::expr::function<analyze::expression>>(wrapped_exprs->data));
       auto const &module(
         expect_object<runtime::ns>(intern_var("clojure.core", "*ns*").expect_ok()->deref())
           ->to_string());
+      /* TODO: Pass in module_to_load_function result */
+      auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc, module));
+      auto &fn(boost::get<analyze::expr::function<analyze::expression>>(wrapped_exprs->data));
       fn.name = module::module_to_load_function(module);
       fn.unique_name = fn.name;
       codegen::llvm_processor cg_prc{ wrapped_exprs, module, codegen::compilation_target::module };
