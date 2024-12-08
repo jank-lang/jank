@@ -486,7 +486,7 @@ namespace jank::read::lex
               == make_tokens({
                 { 0, 3, token_kind::integer,  28ll },
                 { 4, 4, token_kind::integer, -28ll },
-                { 9, 4,    token_kind::real,  8.9l },
+                { 9, 4,    token_kind::real,   8.9 },
         }));
       }
 
@@ -523,16 +523,16 @@ namespace jank::read::lex
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                error{  0,3,"invalid number: char g are invalid for radix 16"          },
+                error{  0,3,      "invalid number: char g are invalid for radix 16" },
                 error{  4,
-                      8,                                                    "invalid number: radix 16 number cannot use scientific notation, have '.', "
-                      "or have '+-' inside the number"                                     },
+                      8, "invalid number: radix 16 number cannot use scientific notation, have '.', "
+ "or have '+-' inside the number" },
                 error{  9,
-                      14,                                                    "invalid number: radix 16 number cannot use scientific notation, have '.', "
-                      "or have '+-' inside the number"                                     },
+                      14, "invalid number: radix 16 number cannot use scientific notation, have '.', "
+ "or have '+-' inside the number" },
                 error{ 15,
-                      21,                                                    "invalid number: radix 16 number cannot use scientific notation, have '.', "
-                      "or have '+-' inside the number" },
+                      21, "invalid number: radix 16 number cannot use scientific notation, have '.', "
+ "or have '+-' inside the number" },
         }));
       }
 
