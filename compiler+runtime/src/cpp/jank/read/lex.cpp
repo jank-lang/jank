@@ -288,6 +288,7 @@ namespace jank::read
     {
       /* Checks if the codepoint is within Unicode scalar ranges */
       if(c <= 0x7FF)
+      /* NOLINTNEXTLINE(bugprone-branch-clone) */
       {
         /* ASCII (U+0000 - U+007F) and 2-byte range (U+0080 - U+07FF) */
         return true;
