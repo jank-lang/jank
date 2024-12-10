@@ -112,9 +112,6 @@ namespace jank::runtime
       [this](auto const typed_o) -> native_integer {
         return (data > typed_o->data) - (data < typed_o->data);
       },
-      [&]() -> native_integer {
-        throw std::runtime_error{ fmt::format("not comparable: {}", runtime::to_string(&o)) };
-      },
       &o);
   }
 
@@ -229,12 +226,12 @@ namespace jank::runtime
 
     object_ptr operator*(obj::integer_ptr const l, obj::ratio_data const &r)
     {
-      return obj::ratio_data(l->data, 1LL) * r;
+      return obj::ratio_data(l->data, 1ll) * r;
     }
 
     object_ptr operator*(obj::ratio_data const &l, obj::integer_ptr const r)
     {
-      return l * obj::ratio_data(r->data, 1LL);
+      return l * obj::ratio_data(r->data, 1ll);
     }
 
     native_real operator*(obj::real_ptr const l, obj::ratio_data const &r)
@@ -259,7 +256,7 @@ namespace jank::runtime
 
     object_ptr operator*(obj::ratio_data const &l, native_integer const r)
     {
-      return l * obj::ratio_data(r, 1LL);
+      return l * obj::ratio_data(r, 1ll);
     }
 
     object_ptr operator*(native_integer const l, obj::ratio_data const &r)
@@ -274,7 +271,7 @@ namespace jank::runtime
 
     object_ptr operator/(obj::integer_ptr const l, obj::ratio_data const &r)
     {
-      return obj::ratio_data(l->data, 1LL) / r;
+      return obj::ratio_data(l->data, 1ll) / r;
     }
 
     obj::ratio_ptr operator/(obj::ratio_data const &l, obj::integer_ptr const r)
@@ -309,7 +306,7 @@ namespace jank::runtime
 
     object_ptr operator/(native_integer const l, obj::ratio_data const &r)
     {
-      return obj::ratio_data(l, 1LL) / r;
+      return obj::ratio_data(l, 1ll) / r;
     }
 
     native_bool operator==(obj::ratio_data const &l, obj::ratio_data const &r)
@@ -539,22 +536,22 @@ namespace jank::runtime
 
     native_bool operator>(native_bool l, obj::ratio_data const &r)
     {
-      return (l ? 1LL : 0LL) > r;
+      return (l ? 1ll : 0ll) > r;
     }
 
     native_bool operator<(native_bool l, obj::ratio_data const &r)
     {
-      return (l ? 1LL : 0LL) < r;
+      return (l ? 1ll : 0ll) < r;
     }
 
     native_bool operator>(obj::ratio_data const &l, native_bool const r)
     {
-      return l > (r ? 1LL : 0LL);
+      return l > (r ? 1ll : 0ll);
     }
 
     native_bool operator<(obj::ratio_data const &l, native_bool const r)
     {
-      return l < (r ? 1LL : 0LL);
+      return l < (r ? 1ll : 0ll);
     }
   }
 }
