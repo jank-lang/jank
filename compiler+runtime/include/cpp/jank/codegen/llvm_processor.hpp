@@ -123,6 +123,7 @@ namespace jank::codegen
     llvm::Value *gen_global(obj::boolean_ptr b) const;
     llvm::Value *gen_global(obj::integer_ptr i) const;
     llvm::Value *gen_global(obj::real_ptr r) const;
+    llvm::Value *gen_global(obj::ratio_ptr r) const;
     llvm::Value *gen_global(obj::persistent_string_ptr s) const;
     llvm::Value *gen_global(obj::symbol_ptr s);
     llvm::Value *gen_global(obj::keyword_ptr k) const;
