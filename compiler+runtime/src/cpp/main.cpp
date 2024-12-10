@@ -35,7 +35,7 @@ namespace jank
 
     {
       profile::timer const timer{ "load clojure.core" };
-      __rt_ctx->load_module("/clojure.core").expect_ok();
+      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
 
     {
@@ -67,12 +67,12 @@ namespace jank
 
     {
       profile::timer const timer{ "require clojure.core" };
-      __rt_ctx->load_module("/clojure.core").expect_ok();
+      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
 
     {
       profile::timer const timer{ "eval user code" };
-      __rt_ctx->load_module("/" + opts.target_module).expect_ok();
+      __rt_ctx->load_module("/" + opts.target_module, module::origin::latest).expect_ok();
 
       auto const main_var(__rt_ctx->find_var(opts.target_module, "-main").unwrap_or(nullptr));
       if(main_var)
@@ -115,13 +115,13 @@ namespace jank
 
     {
       profile::timer const timer{ "require clojure.core" };
-      __rt_ctx->load_module("/clojure.core").expect_ok();
+      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
 
     if(!opts.target_module.empty())
     {
       profile::timer const timer{ "load main" };
-      __rt_ctx->load_module("/" + opts.target_module).expect_ok();
+      __rt_ctx->load_module("/" + opts.target_module, module::origin::latest).expect_ok();
       dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
     }
 
@@ -186,13 +186,13 @@ namespace jank
 
     {
       profile::timer const timer{ "require clojure.core" };
-      __rt_ctx->load_module("/clojure.core").expect_ok();
+      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
 
     if(!opts.target_module.empty())
     {
       profile::timer const timer{ "load main" };
-      __rt_ctx->load_module("/" + opts.target_module).expect_ok();
+      __rt_ctx->load_module("/" + opts.target_module, module::origin::latest).expect_ok();
       dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
     }
 

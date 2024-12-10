@@ -214,7 +214,7 @@ namespace jank::runtime
   }
 
   result<void, native_persistent_string>
-  context::load_module(native_persistent_string_view const &module)
+  context::load_module(native_persistent_string_view const &module, module::origin const ori)
   {
     auto const ns(current_ns());
 
@@ -232,16 +232,7 @@ namespace jank::runtime
 
     try
     {
-      result<void, native_persistent_string> res{ ok() };
-      if(absolute_module.find('$') == native_persistent_string::npos)
-      {
-        res = module_loader.load_ns(absolute_module);
-      }
-      else
-      {
-        res = module_loader.load(absolute_module);
-      }
-      return res;
+      return module_loader.load(absolute_module, ori);
     }
     catch(std::exception const &e)
     {
@@ -263,7 +254,7 @@ namespace jank::runtime
                                     std::make_pair(compile_files_var, obj::boolean::true_const()),
                                     std::make_pair(current_module_var, make_box(module))) };
 
-    return load_module(fmt::format("/{}", module));
+    return load_module(fmt::format("/{}", module), module::origin::source);
   }
 
   string_result<void>
