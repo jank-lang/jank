@@ -632,7 +632,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_results({
-                  token{ 0, 5, token_kind::real, 12.34l },
+                  token{ 0, 5, token_kind::real, 12.34 },
                   error{ 5, "expected whitespace before next token" },
                   token{ 5, 3, token_kind::symbol, "abc"sv },
           }));
@@ -725,7 +725,7 @@ namespace jank::read::lex
                   error{ 13, 16, "unexpected end of real, expecting exponent" },
                   error{ 16, "expected whitespace before next token" },
                   token{ 16, 3, token_kind::symbol, "Foo"sv },
-                  token{ 20, 3, token_kind::real, 300000.0l },
+                  token{ 20, 3, token_kind::real, 300000.0 },
                   error{ 23, "expected whitespace before next token" },
                   token{ 23, 3, token_kind::symbol, "fOo"sv },
           }));
