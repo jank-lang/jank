@@ -24,6 +24,7 @@ namespace jank
   template <typename T>
   struct option
   {
+    /* NOLINTNEXTLINE(bugprone-sizeof-expression): Safe to do this. */
     using storage_type = char[sizeof(T)];
     using value_type = T;
 
@@ -203,7 +204,7 @@ namespace jank
     }
 
     template <typename F>
-    constexpr auto map(F &&f) const -> option<decltype(f(std::declval<T>()))>
+    constexpr auto map(F const &f) const -> option<decltype(f(std::declval<T>()))>
     {
       if(set)
       {
@@ -213,7 +214,7 @@ namespace jank
     }
 
     template <typename F>
-    constexpr T map_or(T fallback, F &&f) const
+    constexpr T map_or(T fallback, F const &f) const
     {
       if(set)
       {

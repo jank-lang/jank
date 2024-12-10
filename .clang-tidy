@@ -33,6 +33,7 @@ misc-definitions-in-headers,\
 -cppcoreguidelines-rvalue-reference-param-not-moved,\
 -bugprone-easily-swappable-parameters,\
 -bugprone-reserved-identifier,\
+-bugprone-multi-level-implicit-pointer-conversion,\
 -readability-redundant-member-init,\
 -readability-implicit-bool-conversion,\
 -readability-magic-numbers,\
