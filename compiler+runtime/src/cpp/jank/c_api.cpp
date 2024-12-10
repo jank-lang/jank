@@ -359,6 +359,12 @@ extern "C"
     return erase(make_box(r));
   }
 
+  jank_object_ptr
+  jank_ratio_create(jank_native_integer const numerator, jank_native_integer const denominator)
+  {
+    return erase(make_box(runtime::obj::ratio_data(numerator, denominator)));
+  }
+
   jank_object_ptr jank_string_create(char const *s)
   {
     assert(s);

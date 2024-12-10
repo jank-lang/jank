@@ -5,6 +5,6 @@ set -euo pipefail
 git_root=$(git rev-parse --show-toplevel)
 
 for i in $(git status | grep -E "modified:.*[hc]pp" | sed 's/modified:\s*//'); do
-  "$git_root"/compiler+runtime/build/llvm-install/usr/local/bin/clang-format -i "$i"
-  echo "formatted" "$i"
+  "${git_root}"/compiler+runtime/build/llvm-install/usr/local/bin/clang-format -i "${i}"
+  echo "formatted" "${i}"
 done
