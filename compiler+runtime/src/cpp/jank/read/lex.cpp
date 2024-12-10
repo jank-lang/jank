@@ -46,7 +46,7 @@ namespace jank::read
   namespace lex
   {
     template <typename... Ts>
-    std::ostream &operator<<(std::ostream &os, std::variant<Ts...> const &v)
+    static std::ostream &operator<<(std::ostream &os, std::variant<Ts...> const &v)
     {
       boost::apply_visitor(
         [&](auto &&arg) {
@@ -553,7 +553,7 @@ namespace jank::read
                 return ok(token{ token_start,
                                  pos - token_start,
                                  token_kind::real,
-                                 std::strtold(file.data() + token_start, nullptr) });
+                                 std::strtod(file.data() + token_start, nullptr) });
               }
 
               {

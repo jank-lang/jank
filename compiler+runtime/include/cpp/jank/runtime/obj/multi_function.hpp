@@ -3,16 +3,12 @@
 #include <mutex>
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/symbol.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 
 namespace jank::runtime
 {
-  namespace obj
-  {
-    using persistent_hash_map = static_object<object_type::persistent_hash_map>;
-    using persistent_hash_map_ptr = native_box<persistent_hash_map>;
-  }
-
   template <>
   struct static_object<object_type::multi_function>
     : gc
@@ -21,8 +17,6 @@ namespace jank::runtime
     static constexpr native_bool pointer_free{ false };
 
     static_object() = default;
-    static_object(static_object &&) = default;
-    static_object(static_object const &) = default;
     static_object(object_ptr name, object_ptr dispatch, object_ptr default_, object_ptr hierarchy);
 
     /* behavior::object_like */
@@ -95,7 +89,7 @@ namespace jank::runtime
     obj::persistent_hash_map_ptr method_table{};
     mutable obj::persistent_hash_map_ptr method_cache{};
     obj::persistent_hash_map_ptr prefer_table{};
-    obj::symbol_ptr name;
+    obj::symbol_ptr name{};
     std::recursive_mutex data_lock;
   };
 

@@ -11,6 +11,11 @@ namespace jank::analyze::expr
   {
     runtime::object_ptr data{};
 
+    void propagate_position(expression_position const pos)
+    {
+      position = pos;
+    }
+
     runtime::object_ptr to_runtime_data() const
     {
       using namespace runtime::obj;

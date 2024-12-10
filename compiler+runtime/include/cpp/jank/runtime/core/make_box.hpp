@@ -2,6 +2,12 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/native_persistent_list.hpp>
+#include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/obj/ratio.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
+#include <jank/runtime/obj/persistent_string.hpp>
+#include <jank/runtime/obj/character.hpp>
 
 namespace jank::runtime
 {
@@ -61,18 +67,21 @@ namespace jank::runtime
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(obj::ratio_data const &r)
+  {
+    return make_box<runtime::obj::ratio>(r);
+  }
+
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(native_persistent_string_view const &s)
   {
     return make_box<runtime::obj::persistent_string>(s);
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline runtime::object_ptr make_box(char const * const s)
+  inline runtime::obj::persistent_string_ptr make_box(char const * const s)
   {
-    if(!s) [[unlikely]]
-    {
-      return runtime::obj::nil::nil_const();
-    }
+    assert(s);
     return make_box<runtime::obj::persistent_string>(s);
   }
 

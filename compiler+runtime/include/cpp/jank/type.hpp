@@ -4,6 +4,15 @@
 #include <set>
 #include <string_view>
 
+#include <boost/unordered_map.hpp>
+
+#include <gc/gc_cpp.h>
+#include <gc/gc_allocator.h>
+
+#include <immer/heap/gc_heap.hpp>
+#include <immer/heap/heap_policy.hpp>
+#include <immer/memory_policy.hpp>
+
 #include <folly/FBVector.h>
 
 namespace jank
@@ -17,7 +26,7 @@ namespace jank
                                              false>;
 
   using native_integer = long long;
-  using native_real = long double;
+  using native_real = double;
   using native_bool = bool;
   using native_hash = uint32_t;
   using native_persistent_string_view = std::string_view;
@@ -34,6 +43,7 @@ namespace jank
   using native_unordered_map
     = boost::unordered_map<K, V, Hash, Pred, native_allocator<std::pair<K const, V>>>;
 
+  /* TODO: This will leak if it's stored in a GC-tracked object. */
   using native_transient_string = std::string;
 }
 

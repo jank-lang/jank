@@ -1,4 +1,5 @@
 #include <jank/runtime/obj/persistent_sorted_set.hpp>
+#include <jank/runtime/visit.hpp>
 
 namespace jank::runtime
 {
@@ -21,35 +22,49 @@ namespace jank::runtime
 
   obj::persistent_sorted_set_ptr obj::persistent_sorted_set::create_from_seq(object_ptr const seq)
   {
-    return make_box<obj::persistent_sorted_set>(visit_object(
+    return make_box<obj::persistent_sorted_set>(visit_seqable(
       [](auto const typed_seq) -> obj::persistent_sorted_set::value_type {
-        using T = typename decltype(typed_seq)::value_type;
-
-        if constexpr(behavior::seqable<T>)
+        detail::native_transient_sorted_set transient;
+        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
         {
-          detail::native_transient_sorted_set transient;
-          for(auto it(typed_seq->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
-          {
-            transient.insert_v(it->first());
-          }
-          return transient.persistent();
+          transient.insert_v(it->first());
         }
-        else
-        {
-          throw std::runtime_error{ fmt::format("Not seqable: {}", typed_seq->to_string()) };
-        }
+        return transient.persistent();
       },
       seq));
   }
 
   native_bool obj::persistent_sorted_set::equal(object const &o) const
   {
-    return runtime::equal(o, data.begin(), data.end());
+    if(&o == &base)
+    {
+      return true;
+    }
+
+    return visit_set_like(
+      [&](auto const typed_o) -> native_bool {
+        if(typed_o->count() != count())
+        {
+          return false;
+        }
+
+        for(auto const entry : data)
+        {
+          if(!typed_o->contains(entry))
+          {
+            return false;
+          }
+        }
+
+        return true;
+      },
+      []() { return false; },
+      &o);
   }
 
   void obj::persistent_sorted_set::to_string(fmt::memory_buffer &buff) const
   {
-    return runtime::to_string(data.begin(), data.end(), "#{", '}', buff);
+    runtime::to_string(data.begin(), data.end(), "#{", '}', buff);
   }
 
   native_persistent_string obj::persistent_sorted_set::to_string() const

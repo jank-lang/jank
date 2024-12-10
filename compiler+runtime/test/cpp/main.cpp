@@ -1,10 +1,18 @@
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
 
+#include <gc/gc.h>
+#include <gc/gc_cpp.h>
+
+#include <fmt/format.h>
+
 #include <llvm-c/Target.h>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/ManagedStatic.h>
 #include <llvm/Support/TargetSelect.h>
+
+#include <jank/runtime/context.hpp>
+#include <clojure/core_native.hpp>
 
 /* NOLINTNEXTLINE(bugprone-exception-escape): println can throw. */
 int main(int const argc, char const **argv)
@@ -26,7 +34,12 @@ try
   context.setOption("no-breaks", true);
 
   jank::runtime::__rt_ctx = new(GC) jank::runtime::context{};
-  jank::runtime::__rt_ctx->load_module("/clojure.core").expect_ok();
+  jank_load_clojure_core_native();
+  /* TODO: Load latest here.
+   * We're loading from source always due to a bug in how we generate symbols which is
+   * leading to duplicate symbols being generated. */
+  jank::runtime::__rt_ctx->load_module("/clojure.core", jank::runtime::module::origin::source)
+    .expect_ok();
 
   auto const res(context.run());
   if(context.shouldExit())

@@ -2,6 +2,9 @@
 
 #include <boost/filesystem/path.hpp>
 
+#include <jank/runtime/object.hpp>
+#include <jank/result.hpp>
+
 namespace jank::runtime
 {
   struct context;
@@ -14,6 +17,16 @@ namespace jank::jit
 
 namespace jank::runtime::module
 {
+  enum class origin : uint8_t
+  {
+    /* Regardless of which binaries are present, and how new they are,
+     * this will always select the source. */
+    source,
+    /* Will choose a binary or the source, depending on which is newer.
+     * If both exist and are equally new, the binary is preferred. */
+    latest,
+  };
+
   struct file_entry
   {
     object_ptr to_runtime_data() const;
@@ -27,6 +40,7 @@ namespace jank::runtime::module
 
   native_persistent_string path_to_module(boost::filesystem::path const &path);
   native_persistent_string module_to_path(native_persistent_string_view const &module);
+  native_persistent_string module_to_load_function(native_persistent_string_view const &module);
   native_persistent_string module_to_native_ns(native_persistent_string_view const &orig_module);
   native_persistent_string
   nest_module(native_persistent_string const &module, native_persistent_string const &sub);
@@ -48,7 +62,7 @@ namespace jank::runtime::module
     * subsequent matches are ignored. */
     struct entry
     {
-      option<file_entry> pcm;
+      option<file_entry> o;
       option<file_entry> cpp;
       option<file_entry> jank;
       option<file_entry> cljc;
@@ -65,12 +79,14 @@ namespace jank::runtime::module
 
     native_bool is_loaded(native_persistent_string_view const &) const;
     void set_loaded(native_persistent_string_view const &);
-    result<void, native_persistent_string> load_ns(native_persistent_string_view const &module);
-    result<void, native_persistent_string> load(native_persistent_string_view const &module);
-    result<void, native_persistent_string> load_pcm(file_entry const &entry) const;
-    result<void, native_persistent_string> load_cpp(file_entry const &entry) const;
-    result<void, native_persistent_string> load_jank(file_entry const &entry) const;
-    result<void, native_persistent_string> load_cljc(file_entry const &entry) const;
+
+    string_result<void> load(native_persistent_string_view const &module, origin const ori);
+
+    string_result<void>
+    load_o(native_persistent_string const &module, file_entry const &entry) const;
+    string_result<void> load_cpp(file_entry const &entry) const;
+    string_result<void> load_jank(file_entry const &entry) const;
+    string_result<void> load_cljc(file_entry const &entry) const;
 
     object_ptr to_runtime_data() const;
 

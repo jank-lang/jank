@@ -1,4 +1,5 @@
 #include <jank/hash.hpp>
+#include <jank/runtime/visit.hpp>
 
 namespace jank::hash
 {

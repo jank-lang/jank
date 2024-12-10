@@ -17,7 +17,7 @@ runs:
     - if: runner.os == 'Linux'
       name: Install apt packages
       shell: bash
-      run: sudo apt-get install -y curl git zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev entr libffi-dev clang libjemalloc-dev libreadline-dev libzstd-dev
+      run: sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev entr libffi-dev clang libreadline-dev libzip-dev libbz2-dev doctest-dev libboost-all-dev gcc-14 g++-14
     - if: runner.os == 'macOS'
       name: Install brew packages
       shell: bash

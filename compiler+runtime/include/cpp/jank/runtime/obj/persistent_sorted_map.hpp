@@ -3,6 +3,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/persistent_sorted_map_sequence.hpp>
 #include <jank/runtime/obj/detail/base_persistent_map.hpp>
+#include <jank/runtime/detail/native_persistent_array_map.hpp>
 
 namespace jank::runtime
 {
@@ -79,8 +80,8 @@ namespace jank::runtime
     native_box<static_object> conj(object_ptr head) const;
 
     /* behavior::callable */
-    object_ptr call(object_ptr);
-    object_ptr call(object_ptr, object_ptr);
+    object_ptr call(object_ptr) const;
+    object_ptr call(object_ptr, object_ptr) const;
 
     /* behavior::transientable */
     obj::transient_sorted_map_ptr to_transient() const;

@@ -1,4 +1,5 @@
 #include <jank/runtime/obj/character.hpp>
+#include <jank/runtime/rtti.hpp>
 #include <jank/util/escape.hpp>
 
 namespace jank::runtime

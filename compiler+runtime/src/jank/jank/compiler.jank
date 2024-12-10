@@ -1,4 +1,3 @@
 (ns jank.compiler)
 
-(defn native-source [form]
-  (native/raw "__value = __rt_ctx->native_source(~{ form });"))
+(def native-source jank.compiler-native/native-source)

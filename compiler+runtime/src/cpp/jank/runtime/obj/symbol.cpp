@@ -1,14 +1,13 @@
-#include <iostream>
-#include <sstream>
-
 #include <fmt/compile.h>
 
 #include <jank/runtime/obj/symbol.hpp>
+#include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/visit.hpp>
 
 namespace jank::runtime
 {
   template <typename S>
-  void separate(obj::symbol &sym, S &&s)
+  static void separate(obj::symbol &sym, S &&s)
   {
     auto const found(s.find('/'));
     if(found != native_persistent_string::npos && s.size() > 1)
@@ -50,6 +49,12 @@ namespace jank::runtime
     : ns{ ns }
     , name{ n }
     , meta{ meta }
+  {
+  }
+
+  obj::symbol::static_object(object_ptr const ns, object_ptr const n)
+    : ns{ runtime::to_string(ns) }
+    , name{ runtime::to_string(n) }
   {
   }
 
@@ -100,9 +105,9 @@ namespace jank::runtime
     return name.compare(s.name);
   }
 
-  void to_string_impl(native_persistent_string const &ns,
-                      native_persistent_string const &name,
-                      fmt::memory_buffer &buff)
+  static void to_string_impl(native_persistent_string const &ns,
+                             native_persistent_string const &name,
+                             fmt::memory_buffer &buff)
   {
     if(!ns.empty())
     {

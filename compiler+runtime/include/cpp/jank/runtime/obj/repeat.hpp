@@ -1,5 +1,7 @@
 #pragma once
 
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/cons.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 
 namespace jank::runtime
@@ -8,6 +10,7 @@ namespace jank::runtime
   struct static_object<object_type::repeat> : gc
   {
     static constexpr native_bool pointer_free{ false };
+    static constexpr native_bool is_sequential{ true };
     static constexpr native_integer infinite{ -1 };
 
     static_object() = default;

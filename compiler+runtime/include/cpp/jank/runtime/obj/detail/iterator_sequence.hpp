@@ -1,15 +1,24 @@
 #pragma once
 
+#include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/cons.hpp>
 #include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/core/to_string.hpp>
+
+namespace jank::runtime
+{
+  native_bool equal(object_ptr l, object_ptr r);
+}
 
 namespace jank::runtime::obj::detail
 {
   template <typename Derived, typename It>
   struct iterator_sequence
   {
+    /* NOLINTNEXTLINE(bugprone-crtp-constructor-accessibility) */
     iterator_sequence() = default;
 
+    /* NOLINTNEXTLINE(bugprone-crtp-constructor-accessibility) */
     iterator_sequence(object_ptr const &c, It const &b, It const &e, size_t const s)
       : coll{ c }
       , begin{ b }
@@ -25,27 +34,19 @@ namespace jank::runtime::obj::detail
     /* behavior::object_like */
     native_bool equal(object const &o) const
     {
-      return visit_object(
+      return visit_seqable(
         [this](auto const typed_o) {
-          using T = typename decltype(typed_o)::value_type;
-
-          if constexpr(!behavior::seqable<T>)
+          auto seq(typed_o->fresh_seq());
+          for(auto it(begin); it != end; ++it, seq = seq->next_in_place())
           {
-            return false;
-          }
-          else
-          {
-            auto seq(typed_o->seq());
-            for(auto it(begin); it != end; ++it, seq = runtime::next_in_place(seq))
+            if(seq == nullptr || !runtime::equal(*it, seq->first()))
             {
-              if(seq == nullptr || !runtime::equal(*it, seq->first()))
-              {
-                return false;
-              }
+              return false;
             }
-            return true;
           }
+          return true;
         },
+        []() { return false; },
         &o);
     }
 

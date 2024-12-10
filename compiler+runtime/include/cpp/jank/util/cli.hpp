@@ -4,7 +4,7 @@
 
 namespace jank::util::cli
 {
-  enum class command
+  enum class command : uint8_t
   {
     run,
     compile,
@@ -20,8 +20,8 @@ namespace jank::util::cli
     native_bool profiler_enabled{};
     native_transient_string profiler_file{ "jank.profile" };
     native_bool gc_incremental{};
-    
-    /* Native dependencies */
+
+    /* Native dependencies. */
     native_vector<native_persistent_string> include_dirs;
     native_vector<native_persistent_string> library_dirs;
     native_vector<native_persistent_string> define_macros;

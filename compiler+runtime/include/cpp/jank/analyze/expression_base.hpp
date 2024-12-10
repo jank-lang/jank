@@ -1,33 +1,35 @@
 #pragma once
 
+#include <magic_enum.hpp>
+
+#include <jank/runtime/core/make_box.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
+#include <jank/analyze/local_frame.hpp>
+#include <jank/detail/to_runtime_data.hpp>
+
 namespace jank::analyze
 {
   using namespace jank::runtime;
 
-  enum class expression_type
+  enum class expression_position : uint8_t
   {
-    nested,
+    value,
     statement,
-    return_statement
+    tail
   };
-
-  inline native_bool is_statement(expression_type const expr_type)
-  {
-    return expr_type != expression_type::nested;
-  }
 
   /* Common base class for every expression. */
   struct expression_base : gc
   {
     object_ptr to_runtime_data() const
     {
-      return obj::persistent_array_map::create_unique(make_box("expr_type"),
-                                                      make_box(magic_enum::enum_name(expr_type)),
+      return obj::persistent_array_map::create_unique(make_box("position"),
+                                                      make_box(magic_enum::enum_name(position)),
                                                       make_box("needs_box"),
                                                       make_box(needs_box));
     }
 
-    expression_type expr_type{};
+    expression_position position{};
     local_frame_ptr frame{};
     native_bool needs_box{ true };
   };

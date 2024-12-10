@@ -1,5 +1,9 @@
 #include <jank/runtime/obj/range.hpp>
 #include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/core/math.hpp>
+#include <jank/runtime/core/make_box.hpp>
+#include <jank/runtime/visit.hpp>
+#include <jank/runtime/behavior/metadatable.hpp>
 
 namespace jank::runtime
 {
@@ -126,18 +130,18 @@ namespace jank::runtime
       val = add(val, step);
       if(bounds_check(val, end))
       {
-        chunk = make_box<obj::array_chunk>(std::move(arr), 0);
+        chunk = make_box<obj::array_chunk>(std::move(arr), static_cast<size_t>(0));
         return;
       }
     }
 
     if(bounds_check(val, end))
     {
-      chunk = make_box<obj::array_chunk>(std::move(arr), 0);
+      chunk = make_box<obj::array_chunk>(std::move(arr), static_cast<size_t>(0));
       return;
     }
 
-    chunk = make_box<obj::array_chunk>(std::move(arr), 0);
+    chunk = make_box<obj::array_chunk>(std::move(arr), static_cast<size_t>(0));
     chunk_next = make_box<obj::range>(val, end, step, bounds_check);
   }
 
@@ -198,29 +202,21 @@ namespace jank::runtime
 
   native_bool obj::range::equal(object const &o) const
   {
-    return visit_object(
+    return visit_seqable(
       [this](auto const typed_o) {
-        using T = typename decltype(typed_o)::value_type;
-
-        if constexpr(!behavior::seqable<T>)
+        auto seq(typed_o->fresh_seq());
+        /* TODO: This is common code; can it be shared? */
+        for(auto it(fresh_seq()); it != nullptr;
+            it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
         {
-          return false;
-        }
-        else
-        {
-          auto seq(typed_o->fresh_seq());
-          /* TODO: This is common code; can it be shared? */
-          for(auto it(fresh_seq()); it != nullptr;
-              it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
+          if(seq == nullptr || !runtime::equal(it, seq->first()))
           {
-            if(seq == nullptr || !runtime::equal(it, seq->first()))
-            {
-              return false;
-            }
+            return false;
           }
-          return true;
         }
+        return true;
       },
+      []() { return false; },
       &o);
   }
 

@@ -1,4 +1,7 @@
 #include <jank/runtime/obj/multi_function.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/runtime/rtti.hpp>
+#include <jank/runtime/core.hpp>
 
 namespace jank::runtime
 {
@@ -228,7 +231,7 @@ namespace jank::runtime
   {
     std::lock_guard<std::recursive_mutex> const locked{ data_lock };
 
-    if(is_preferred(behavior::deref(hierarchy), y, x))
+    if(is_preferred(deref(hierarchy), y, x))
     {
       throw std::runtime_error{ fmt::format(
         "Preference conflict in multimethod '{}': {} is already preferred to {}",
@@ -288,7 +291,7 @@ namespace jank::runtime
     static object_ptr const isa{
       __rt_ctx->intern_var("clojure.core", "isa?").expect_ok()->deref()
     };
-    return truthy(dynamic_call(isa, behavior::deref(hierarchy), x, y));
+    return truthy(dynamic_call(isa, deref(hierarchy), x, y));
   }
 
   native_bool obj::multi_function::is_dominant(object_ptr const hierarchy,
@@ -312,7 +315,7 @@ namespace jank::runtime
 
   object_ptr obj::multi_function::get_method(object_ptr const dispatch_val)
   {
-    if(cached_hierarchy != behavior::deref(hierarchy))
+    if(cached_hierarchy != deref(hierarchy))
     {
       reset_cache();
     }

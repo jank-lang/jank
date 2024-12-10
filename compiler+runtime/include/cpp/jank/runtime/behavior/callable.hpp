@@ -1,5 +1,6 @@
 #pragma once
 
+#include <jank/runtime/object.hpp>
 #include <jank/option.hpp>
 
 namespace jank::runtime
@@ -91,6 +92,7 @@ namespace jank::runtime
 
   namespace behavior
   {
+    /* TODO: I think we can use CRTP here. */
     struct callable
     {
       using arity_flag_t = uint8_t;

@@ -15,13 +15,19 @@ namespace jank::analyze::expr
   {
     using pair_type = std::pair<obj::symbol_ptr, native_box<E>>;
 
-    let(expression_type const type, native_bool const needs_box, local_frame_ptr const f)
+    let(expression_position const type, native_bool const needs_box, local_frame_ptr const f)
       : expression_base{ gc{}, type, f, needs_box }
     {
     }
 
     native_vector<pair_type> pairs;
     do_<E> body;
+
+    void propagate_position(expression_position const pos)
+    {
+      position = pos;
+      body.propagate_position(pos);
+    }
 
     object_ptr to_runtime_data() const
     {

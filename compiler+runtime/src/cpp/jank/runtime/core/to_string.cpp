@@ -1,4 +1,5 @@
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/visit.hpp>
 
 namespace jank::runtime
 {

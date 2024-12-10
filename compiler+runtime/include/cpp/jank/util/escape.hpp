@@ -1,5 +1,8 @@
 #pragma once
 
+#include <jank/native_persistent_string.hpp>
+#include <jank/result.hpp>
+
 namespace jank::util
 {
   /* This provides a fmt extension for escaping strings and wrapping them in

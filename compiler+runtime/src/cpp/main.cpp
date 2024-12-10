@@ -15,27 +15,32 @@
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/behavior/callable.hpp>
 #include <jank/analyze/processor.hpp>
-#include <jank/codegen/processor.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/native_persistent_string.hpp>
+#include <jank/profile/time.hpp>
+
+#include <jank/compiler_native.hpp>
+#include <jank/perf_native.hpp>
+#include <clojure/core_native.hpp>
 
 namespace jank
 {
-  void run(util::cli::options const &opts)
+  static void run(util::cli::options const &opts)
   {
     using namespace jank;
     using namespace jank::runtime;
 
     {
-      profile::timer timer{ "require clojure.core" };
-      __rt_ctx->load_module("/clojure.core").expect_ok();
+      profile::timer const timer{ "load clojure.core" };
+      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
 
     {
-      profile::timer timer{ "eval user code" };
-      std::cout << runtime::to_string(__rt_ctx->eval_file(opts.target_file)) << "\n";
+      profile::timer const timer{ "eval user code" };
+      std::cout << runtime::to_code_string(__rt_ctx->eval_file(opts.target_file)) << "\n";
     }
 
     //ankerl::nanobench::Config config;
@@ -55,19 +60,19 @@ namespace jank
     //);
   }
 
-  void run_main(util::cli::options const &opts)
+  static void run_main(util::cli::options const &opts)
   {
     using namespace jank;
     using namespace jank::runtime;
 
     {
-      profile::timer timer{ "require clojure.core" };
-      __rt_ctx->load_module("/clojure.core").expect_ok();
+      profile::timer const timer{ "require clojure.core" };
+      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
 
     {
-      profile::timer timer{ "eval user code" };
-      __rt_ctx->load_module("/" + opts.target_module).expect_ok();
+      profile::timer const timer{ "eval user code" };
+      __rt_ctx->load_module("/" + opts.target_module, module::origin::latest).expect_ok();
 
       auto const main_var(__rt_ctx->find_var(opts.target_module, "-main").unwrap_or(nullptr));
       if(main_var)
@@ -89,16 +94,15 @@ namespace jank
     }
   }
 
-  void compile(util::cli::options const &opts)
+  static void compile(util::cli::options const &opts)
   {
     using namespace jank;
     using namespace jank::runtime;
 
-    //__rt_ctx.load_module("/clojure.core").expect_ok();
     __rt_ctx->compile_module(opts.target_ns).expect_ok();
   }
 
-  void repl(util::cli::options const &opts)
+  static void repl(util::cli::options const &opts)
   {
     using namespace jank;
     using namespace jank::runtime;
@@ -110,14 +114,14 @@ namespace jank
     }
 
     {
-      profile::timer timer{ "require clojure.core" };
-      __rt_ctx->load_module("/clojure.core").expect_ok();
+      profile::timer const timer{ "require clojure.core" };
+      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
 
     if(!opts.target_module.empty())
     {
-      profile::timer timer{ "load main" };
-      __rt_ctx->load_module("/" + opts.target_module).expect_ok();
+      profile::timer const timer{ "load main" };
+      __rt_ctx->load_module("/" + opts.target_module, module::origin::latest).expect_ok();
       dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
     }
 
@@ -159,7 +163,7 @@ namespace jank
       }
       catch(jank::runtime::object_ptr const o)
       {
-        fmt::println("Exception: {}", jank::runtime::to_string(o));
+        fmt::println("Exception: {}", jank::runtime::to_code_string(o));
       }
       catch(jank::native_persistent_string const &s)
       {
@@ -175,20 +179,20 @@ namespace jank
     }
   }
 
-  void cpp_repl(util::cli::options const &opts)
+  static void cpp_repl(util::cli::options const &opts)
   {
     using namespace jank;
     using namespace jank::runtime;
 
     {
-      profile::timer timer{ "require clojure.core" };
-      __rt_ctx->load_module("/clojure.core").expect_ok();
+      profile::timer const timer{ "require clojure.core" };
+      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
 
     if(!opts.target_module.empty())
     {
-      profile::timer timer{ "load main" };
-      __rt_ctx->load_module("/" + opts.target_module).expect_ok();
+      profile::timer const timer{ "load main" };
+      __rt_ctx->load_module("/" + opts.target_module, module::origin::latest).expect_ok();
       dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
     }
 
@@ -226,7 +230,7 @@ namespace jank
       }
       catch(jank::runtime::object_ptr const o)
       {
-        fmt::println("Exception: {}", jank::runtime::to_string(o));
+        fmt::println("Exception: {}", jank::runtime::to_code_string(o));
       }
       catch(jank::native_persistent_string const &s)
       {
@@ -263,11 +267,9 @@ try
 
   llvm::llvm_shutdown_obj Y{};
 
-  llvm::InitializeAllTargetInfos();
-  llvm::InitializeAllTargets();
-  llvm::InitializeAllTargetMCs();
-  llvm::InitializeAllAsmPrinters();
-  llvm::InitializeAllAsmParsers();
+  llvm::InitializeNativeTarget();
+  llvm::InitializeNativeTargetAsmParser();
+  llvm::InitializeNativeTargetAsmPrinter();
 
   auto const parse_result(util::cli::parse(argc, argv));
   if(parse_result.is_err())
@@ -282,9 +284,13 @@ try
   }
 
   profile::configure(opts);
-  profile::timer timer{ "main" };
+  profile::timer const timer{ "main" };
 
   __rt_ctx = new(GC) runtime::context{ opts };
+
+  jank_load_clojure_core_native();
+  jank_load_jank_compiler_native();
+  jank_load_jank_perf_native();
 
   switch(opts.command)
   {
@@ -312,7 +318,7 @@ catch(std::exception const &e)
 }
 catch(jank::runtime::object_ptr const o)
 {
-  fmt::println("Exception: {}", jank::runtime::to_string(o));
+  fmt::println("Exception: {}", jank::runtime::to_code_string(o));
 }
 catch(jank::native_persistent_string const &s)
 {

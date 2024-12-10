@@ -3,6 +3,10 @@
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
+#include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/rtti.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/profile/time.hpp>
 
 namespace jank::runtime
 {
@@ -35,12 +39,11 @@ namespace jank::runtime
 
   native_bool var::equal(object const &o) const
   {
-    if(o.type != object_type::var)
+    auto const v(dyn_cast<var>(&o));
+    if(!v)
     {
       return false;
     }
-
-    auto const v(expect_object<var>(&o));
     return n == v->n && name == v->name;
   }
 
@@ -49,7 +52,7 @@ namespace jank::runtime
     return n == v.n && name == v.name;
   }
 
-  void to_string_impl(ns_ptr const n, obj::symbol_ptr const &name, fmt::memory_buffer &buff)
+  static void to_string_impl(ns_ptr const n, obj::symbol_ptr const &name, fmt::memory_buffer &buff)
   {
     format_to(std::back_inserter(buff), FMT_COMPILE("#'{}/{}"), n->name->name, name->name);
   }
@@ -94,13 +97,13 @@ namespace jank::runtime
 
   object_ptr var::get_root() const
   {
-    profile::timer timer{ "var get_root" };
+    profile::timer const timer{ "var get_root" };
     return *root.rlock();
   }
 
   var_ptr var::bind_root(object_ptr const r)
   {
-    profile::timer timer{ "var bind_root" };
+    profile::timer const timer{ "var bind_root" };
     *root.wlock() = r;
     return this;
   }
@@ -114,7 +117,7 @@ namespace jank::runtime
 
   string_result<void> var::set(object_ptr const r) const
   {
-    profile::timer timer{ "var set" };
+    profile::timer const timer{ "var set" };
 
     auto const binding(get_thread_binding());
     if(!binding)

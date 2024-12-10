@@ -1,6 +1,13 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
+
+namespace jank::runtime
+{
+  void to_string(object_ptr o, fmt::memory_buffer &buff);
+  void to_code_string(object_ptr o, fmt::memory_buffer &buff);
+}
 
 namespace jank::runtime::obj::detail
 {
@@ -8,6 +15,7 @@ namespace jank::runtime::obj::detail
   struct base_persistent_map_sequence : gc
   {
     static constexpr native_bool pointer_free{ false };
+    static constexpr native_bool is_sequential{ true };
 
     using parent_type = static_object<OT>;
     using iterator_type = It;
@@ -27,28 +35,20 @@ namespace jank::runtime::obj::detail
     /* behavior::object_like */
     native_bool equal(object const &o) const
     {
-      return visit_object(
+      return visit_seqable(
         [this](auto const typed_o) {
-          using T = typename decltype(typed_o)::value_type;
-
-          if constexpr(!behavior::seqable<T>)
+          auto seq(typed_o->fresh_seq());
+          for(auto it(fresh_seq()); it != nullptr;
+              it = it->next_in_place(), seq = seq->next_in_place())
           {
-            return false;
-          }
-          else
-          {
-            auto seq(typed_o->fresh_seq());
-            for(auto it(fresh_seq()); it != nullptr;
-                it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
+            if(seq == nullptr || !runtime::equal(it, seq->first()))
             {
-              if(seq == nullptr || !runtime::equal(it, seq->first()))
-              {
-                return false;
-              }
+              return false;
             }
-            return true;
           }
+          return true;
         },
+        []() { return false; },
         &o);
     }
 

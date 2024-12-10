@@ -1,4 +1,6 @@
 #include <jank/runtime/obj/native_array_sequence.hpp>
+#include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/core/seq_ext.hpp>
 
 namespace jank::runtime
 {

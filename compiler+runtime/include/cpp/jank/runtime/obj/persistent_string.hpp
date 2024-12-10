@@ -2,10 +2,10 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/persistent_string_sequence.hpp>
+#include <jank/result.hpp>
 
 namespace jank::runtime
 {
-  /* TODO: Seqable. */
   template <>
   struct static_object<object_type::persistent_string> : gc
   {

@@ -64,6 +64,7 @@ set(
   -Wno-gnu-conditional-omitted-operand
   -Wno-implicit-fallthrough
   -Wno-covered-switch-default
+  -Wno-invalid-offsetof
   -fno-common
   -frtti
   -fexceptions
@@ -99,8 +100,7 @@ set(
   $<$<PLATFORM_ID:Darwin>:${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libc++abi.a>
   )
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  list(APPEND jank_common_compiler_flags #-Werror
-    -DJANK_DEBUG)
+  list(APPEND jank_common_compiler_flags -Werror -DJANK_DEBUG)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
   list(APPEND jank_common_compiler_flags -DJANK_RELEASE)
 endif()
@@ -128,14 +128,11 @@ if(
   )
 endif()
 
-# TODO: Optimize
-llvm_map_components_to_libnames(jank_llvm_libs ${LLVM_TARGETS_TO_BUILD} support lineeditor orcjit native core)
-
 function(jank_hook_llvm target)
   set(tgt "${target}")
   target_include_directories("${tgt}" SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
   target_compile_definitions("${tgt}" PRIVATE ${LLVM_DEFINITIONS})
-  target_link_libraries("${tgt}" PRIVATE ${jank_llvm_libs})
+  target_link_directories("${tgt}" PRIVATE ${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib)
 endfunction()
 # ---- Clang/LLVM ----
 
@@ -147,6 +144,7 @@ endfunction()
 
 add_library(
   jank_lib STATIC
+  src/cpp/jank/c_api.cpp
   src/cpp/jank/hash.cpp
   src/cpp/jank/util/cli.cpp
   src/cpp/jank/util/sha256.cpp
@@ -175,6 +173,7 @@ add_library(
   src/cpp/jank/runtime/obj/number.cpp
   src/cpp/jank/runtime/obj/native_function_wrapper.cpp
   src/cpp/jank/runtime/obj/jit_function.cpp
+  src/cpp/jank/runtime/obj/jit_closure.cpp
   src/cpp/jank/runtime/obj/multi_function.cpp
   src/cpp/jank/runtime/obj/native_pointer_wrapper.cpp
   src/cpp/jank/runtime/obj/symbol.cpp
@@ -198,6 +197,7 @@ add_library(
   src/cpp/jank/runtime/obj/cons.cpp
   src/cpp/jank/runtime/obj/range.cpp
   src/cpp/jank/runtime/obj/repeat.cpp
+  src/cpp/jank/runtime/obj/ratio.cpp
   src/cpp/jank/runtime/obj/iterator.cpp
   src/cpp/jank/runtime/obj/lazy_sequence.cpp
   src/cpp/jank/runtime/obj/chunk_buffer.cpp
@@ -211,13 +211,17 @@ add_library(
   src/cpp/jank/runtime/obj/reduced.cpp
   src/cpp/jank/runtime/behavior/callable.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
-  src/cpp/jank/runtime/behavior/derefable.cpp
   src/cpp/jank/analyze/processor.cpp
   src/cpp/jank/analyze/local_frame.cpp
   src/cpp/jank/analyze/step/force_boxed.cpp
   src/cpp/jank/evaluate.cpp
-  src/cpp/jank/codegen/processor.cpp
+  src/cpp/jank/codegen/llvm_processor.cpp
   src/cpp/jank/jit/processor.cpp
+
+  # Native module sources.
+  src/cpp/clojure/core_native.cpp
+  src/cpp/jank/compiler_native.cpp
+  src/cpp/jank/perf_native.cpp
 )
 
 target_include_directories(
@@ -239,10 +243,6 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/fmt/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
 )
-target_precompile_headers(
-  jank_lib
-  PUBLIC ${PROJECT_SOURCE_DIR}/include/cpp/jank/prelude.hpp
-)
 
 set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 
@@ -263,7 +263,9 @@ target_link_libraries(
   bdwgc::gc bdwgc::gccpp
   libzippp::libzippp
   readline
-  clangInterpreter
+  libclang.so
+  libclang-cpp.so
+  libLLVM.so
   Boost::filesystem
   OpenSSL::Crypto
 )
@@ -273,22 +275,6 @@ jank_hook_llvm(jank_lib)
 # Build a string of all of our JIT compilation flags so we can load them up in the runtime.
 set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags})
 list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str)
-
-# Build a string of all include flags for jank. This will be used for building the PCH at build
-# time as well as building the PCH on first run, after installation.
-get_target_property(jank_lib_includes_prop jank_lib INCLUDE_DIRECTORIES)
-set(jank_lib_includes "")
-foreach(dir ${jank_lib_includes_prop})
-  # System includes are just the path, but normal includes have this format:
-  # $<BUILD_INTERFACE:/home/jeaye/projects/jank/compiler+runtime/include/cpp>
-  # We need to strip all of that out.
-  if(${dir} MATCHES "BUILD_INTERFACE:")
-    string(REGEX REPLACE "\\$<BUILD_INTERFACE:(.*)>" "\\1" dir_path ${dir})
-    list(APPEND jank_lib_includes -I${dir_path})
-  else()
-    list(APPEND jank_lib_includes -isystem ${dir})
-  endif()
-endforeach()
 
 target_include_directories(
     jank_lib
@@ -443,7 +429,8 @@ if(jank_tests)
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/analyze/box.cpp
-    test/cpp/jank/runtime/detail/list_type.cpp
+    test/cpp/jank/runtime/detail/native_persistent_list.cpp
+    test/cpp/jank/runtime/obj/ratio.cpp
     test/cpp/jank/jit/processor.cpp
   )
   add_executable(jank::test_exe ALIAS jank_test_exe)
@@ -475,47 +462,6 @@ if(jank_tests)
 endif()
 # ---- Tests ----
 
-# ---- Incremental PCH ----
-# jank has two types of pre-compiled headers, since Clang's JIT compiler is picky. The first
-# PCH is handled normally via CMake using `target_precompile_headers` and it's used for AOT builts.
-# However, once we boot up jank, the first thing we do is load a PCH so that the JIT environment
-# can know all of the types and functions within the jank runtime. This second PCH is our
-# "incremental" PCH, named that way since it uses Clang's -fincremental-extensions flag.
-#
-# Here, we set up the incremental PCH to be built whenever the normal PCH is changed or the script
-# for building the incremental PCH changes. Any other changes don't matter.
-
-# Build a string of all of our AOT compilation flags so we can share them with our incremental PCH.
-set(jank_pch_compile_flags_list ${jank_common_compiler_flags} -w)
-list(JOIN jank_pch_compile_flags_list " " jank_pch_compile_flags_str)
-
-set(jank_incremental_pch_flag ${CMAKE_BINARY_DIR}/incremental.pch)
-
-separate_arguments(jank_incremental_pch_cxx_flags UNIX_COMMAND ${CMAKE_CXX_FLAGS})
-list(REMOVE_ITEM jank_incremental_pch_cxx_flags -fPIC)
-add_custom_command(
-  DEPENDS ${CMAKE_BINARY_DIR}/jank
-  OUTPUT ${jank_incremental_pch_flag}
-  COMMAND_EXPAND_LISTS
-  VERBATIM
-  COMMAND ${CMAKE_CXX_COMPILER}
-          ${jank_incremental_pch_cxx_flags}
-          ${jank_common_compiler_flags} ${jank_aot_compiler_flags}
-          ${jank_lib_includes}
-          -Xclang -fincremental-extensions
-          -Xclang -emit-pch
-          -x c++-header
-          -w
-          -c ${PROJECT_SOURCE_DIR}/include/cpp/jank/prelude.hpp
-          -o ${jank_incremental_pch_flag}
-)
-add_custom_target(
-  jank_incremental_pch
-  ALL
-  DEPENDS ${jank_incremental_pch_flag}
-)
-# ---- Incremental PCH ----
-
 # ---- Compiled Clojure libraries ----
 # We do a bit of a dance here, to have a custom command generate a file
 # which is a then a dependency of a custom target. This is because custom
@@ -527,11 +473,10 @@ add_custom_target(
 # change, or whenever the jank binary changes.
 set(jank_core_libraries_flag ${CMAKE_BINARY_DIR}/classes/core-libraries)
 add_custom_command(
-  # TODO: Depend on jank's actual PCH.
-  DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank ${jank_incremental_pch_flag}
+  DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank
   OUTPUT ${jank_core_libraries_flag}
   COMMAND ${CMAKE_BINARY_DIR}/jank compile clojure.core
-  COMMAND mkdir -p ${CMAKE_BINARY_DIR}/classes; touch ${jank_core_libraries_flag}
+  COMMAND touch ${jank_core_libraries_flag}
 )
 add_custom_target(
   jank_core_libraries

@@ -1,4 +1,19 @@
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/core.hpp>
+#include <jank/runtime/visit.hpp>
 #include <jank/hash.hpp>
+
+namespace jank::runtime
+{
+  bool very_equal_to::operator()(object_ptr const lhs, object_ptr const rhs) const noexcept
+  {
+    if(lhs->type != rhs->type)
+    {
+      return false;
+    }
+    return equal(lhs, rhs);
+  }
+}
 
 namespace std
 {
@@ -15,8 +30,8 @@ namespace std
     return jank::hash::visit(const_cast<runtime::object *>(&o));
   }
 
-  // NOLINTNEXTLINE(bugprone-exception-escape): TODO: Sort this out.
   native_bool
+  // NOLINTNEXTLINE(bugprone-exception-escape): TODO: Sort this out.
   equal_to<object_ptr>::operator()(object_ptr const lhs, object_ptr const rhs) const noexcept
   {
     if(!lhs)

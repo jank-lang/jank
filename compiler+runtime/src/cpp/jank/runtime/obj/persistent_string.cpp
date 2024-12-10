@@ -1,6 +1,8 @@
 #include <fmt/compile.h>
 
 #include <jank/runtime/obj/persistent_string.hpp>
+#include <jank/runtime/rtti.hpp>
+#include <jank/runtime/core/make_box.hpp>
 #include <jank/util/escape.hpp>
 
 namespace jank::runtime
@@ -48,9 +50,7 @@ namespace jank::runtime
 
   native_integer obj::persistent_string::compare(object const &o) const
   {
-    return visit_type<obj::persistent_string>(
-      [this](auto const typed_o) { return compare(*typed_o); },
-      &o);
+    return compare(*try_object<obj::persistent_string>(&o));
   }
 
   native_integer obj::persistent_string::compare(obj::persistent_string const &s) const

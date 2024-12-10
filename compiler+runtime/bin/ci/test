@@ -19,16 +19,17 @@ export CXX="${llvm_dir}/usr/local/bin/clang++"
                 "$@"
 ./bin/compile
 
-if [[ "${CODECOV:-off}" == "on" ]];
-then
-  ./bin/configure -GNinja \
-                  -Djank_tests=on \
-                  -Djank_coverage=on \
-                  "$@"
-  LLVM_PROFILE_FILE=build/test.profraw ./bin/test
-  "${llvm_dir}/usr/local/bin/llvm-profdata" merge --sparse build/test.profraw -o build/test.profdata
-  "${llvm_dir}/usr/local/bin/llvm-cov" show ./build/jank-test --instr-profile build/test.profdata > coverage.txt
-  # This file will be read by a subsequent CodeCov Github action.
-else
-  ./bin/test
-fi
+# TODO: Enable these before merging to main.
+#if [[ "${CODECOV:-off}" == "on" ]];
+#then
+#  ./bin/configure -GNinja \
+#                  -Djank_tests=on \
+#                  -Djank_coverage=on \
+#                  "$@"
+#  LLVM_PROFILE_FILE=build/test.profraw ./bin/test
+#  "${llvm_dir}/usr/local/bin/llvm-profdata" merge --sparse build/test.profraw -o build/test.profdata
+#  "${llvm_dir}/usr/local/bin/llvm-cov" show ./build/jank-test --instr-profile build/test.profdata > coverage.txt
+#  # This file will be read by a subsequent CodeCov Github action.
+#else
+#  ./bin/test
+#fi

@@ -16,6 +16,11 @@ namespace jank::analyze::expr
     obj::symbol_ptr name{};
     option<native_box<E>> value;
 
+    void propagate_position(expression_position const pos)
+    {
+      position = pos;
+    }
+
     object_ptr to_runtime_data() const
     {
       return merge(static_cast<expression_base const *>(this)->to_runtime_data(),

@@ -5,7 +5,8 @@
 #include <folly/Synchronized.h>
 
 #include <jank/runtime/obj/symbol.hpp>
-#include <jank/runtime/behavior/metadatable.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
+#include <jank/result.hpp>
 
 namespace jank::runtime
 {

@@ -5,7 +5,14 @@ modernize-*,\
 bugprone-*,\
 performance-*,\
 readability-*,\
+misc-const-correctness,\
+misc-use-internal-linkage,\
+misc-static-assert,\
+misc-redundant-expression,\
+misc-misleading-identifier,\
+misc-definitions-in-headers,\
 -clang-analyzer-cplusplus.NewDeleteLeaks,\
+-clang-analyzer-cplusplus.NewDelete,\
 -modernize-use-trailing-return-type,\
 -modernize-use-nodiscard,\
 -modernize-pass-by-value,\
@@ -22,8 +29,11 @@ readability-*,\
 -cppcoreguidelines-pro-type-static-cast-downcast,\
 -cppcoreguidelines-pro-type-const-cast,\
 -cppcoreguidelines-owning-memory,\
+-cppcoreguidelines-avoid-const-or-ref-data-members,\
+-cppcoreguidelines-rvalue-reference-param-not-moved,\
 -bugprone-easily-swappable-parameters,\
 -bugprone-reserved-identifier,\
+-bugprone-multi-level-implicit-pointer-conversion,\
 -readability-redundant-member-init,\
 -readability-implicit-bool-conversion,\
 -readability-magic-numbers,\
@@ -36,6 +46,8 @@ readability-*,\
 -readability-convert-member-functions-to-static,\
 -readability-isolate-declaration,\
 -readability-qualified-auto,\
+-readability-redundant-declaration,\
+-readability-use-anyofallof,\
 -performance-noexcept-move-constructor,\
 -performance-move-const-arg"
 

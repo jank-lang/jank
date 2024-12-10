@@ -4,16 +4,19 @@
 
 #include <fmt/format.h>
 
+#include <jank/type.hpp>
+
 /* TODO: Move to obj namespace */
 namespace jank::runtime
 {
-  enum class object_type
+  enum class object_type : uint8_t
   {
     nil,
 
     boolean,
     integer,
     real,
+    ratio,
 
     persistent_string,
     persistent_string_sequence,
@@ -63,6 +66,7 @@ namespace jank::runtime
 
     native_function_wrapper,
     jit_function,
+    jit_closure,
     multi_function,
 
     native_pointer_wrapper,
@@ -128,6 +132,14 @@ namespace jank::runtime
       { t->base } -> std::same_as<object &>;
     };
   }
+
+  /* This isn't a great name, but it represents more than just value equality, since it
+   * also includes type equality. Otherwise, [] equals '(). This is important when deduping
+   * constants during codegen, since we don't want to be lossy in how we generate values. */
+  struct very_equal_to
+  {
+    bool operator()(object_ptr const lhs, object_ptr const rhs) const noexcept;
+  };
 }
 
 namespace std

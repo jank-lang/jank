@@ -1,3 +1,12 @@
+#include <magic_enum.hpp>
+
+#include <jank/runtime/obj/transient_vector.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/rtti.hpp>
+
 namespace jank::runtime
 {
   obj::transient_vector::static_object(runtime::detail::native_persistent_vector &&d)
@@ -65,7 +74,7 @@ namespace jank::runtime
     return make_box<obj::persistent_vector>(data.persistent());
   }
 
-  object_ptr obj::transient_vector::call(object_ptr const idx)
+  object_ptr obj::transient_vector::call(object_ptr const idx) const
   {
     assert_active();
     if(idx->type == object_type::integer)

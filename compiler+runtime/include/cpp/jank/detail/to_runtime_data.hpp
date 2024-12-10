@@ -2,6 +2,9 @@
 
 #include <boost/filesystem/path.hpp>
 
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/core/make_box.hpp>
+
 namespace jank::detail
 {
   using namespace jank::runtime;

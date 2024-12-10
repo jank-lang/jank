@@ -1,5 +1,9 @@
-#include "jank/runtime/obj/persistent_list.hpp"
 #include <jank/runtime/obj/lazy_sequence.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
+#include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/behavior/metadatable.hpp>
+#include <jank/runtime/rtti.hpp>
 
 namespace jank::runtime
 {
@@ -71,29 +75,7 @@ namespace jank::runtime
 
   native_bool obj::lazy_sequence::equal(object const &o) const
   {
-    return visit_object(
-      [this](auto const typed_o) {
-        using T = typename decltype(typed_o)::value_type;
-
-        if constexpr(!behavior::seqable<T>)
-        {
-          return false;
-        }
-        else
-        {
-          auto seq(typed_o->fresh_seq());
-          for(auto it(fresh_seq()); it != nullptr;
-              it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
-          {
-            if(seq == nullptr || !runtime::equal(it, seq->first()))
-            {
-              return false;
-            }
-          }
-          return true;
-        }
-      },
-      &o);
+    return sequence_equal(this, &o);
   }
 
   void obj::lazy_sequence::to_string(fmt::memory_buffer &buff) const

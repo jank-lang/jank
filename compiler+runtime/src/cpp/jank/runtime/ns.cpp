@@ -1,5 +1,6 @@
 #include <jank/runtime/ns.hpp>
-#include <jank/runtime/obj/persistent_string.hpp>
+#include <jank/runtime/rtti.hpp>
+#include <jank/runtime/context.hpp>
 
 namespace jank::runtime
 {

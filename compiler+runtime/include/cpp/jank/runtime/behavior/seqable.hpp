@@ -19,6 +19,7 @@ namespace jank::runtime::behavior
     { t->fresh_seq() } -> std::convertible_to<object_ptr>;
   };
 
+  /* TODO: Rename to sequence_like. */
   template <typename T>
   concept sequenceable = requires(T * const t) {
     { t->first() } -> std::convertible_to<object_ptr>;

@@ -6,6 +6,7 @@
 #include <clang/Frontend/FrontendDiagnostic.h>
 #include <llvm/Support/Signals.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
+#include <llvm/IRReader/IRReader.h>
 
 #include <fmt/ranges.h>
 
@@ -13,11 +14,11 @@
 #include <jank/util/make_array.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/jit/processor.hpp>
+#include <jank/profile/time.hpp>
 
 namespace jank::jit
 {
-
-  native_persistent_string default_shared_lib_name(native_persistent_string const &lib)
+  static native_persistent_string default_shared_lib_name(native_persistent_string const &lib)
 #if defined(__APPLE__)
   {
     return fmt::format("{}.dylib", lib);
@@ -45,78 +46,18 @@ namespace jank::jit
     std::exit(gen_crash_diag ? 70 : 1);
   }
 
-  option<boost::filesystem::path> find_pch()
-  {
-    auto const jank_path(util::process_location().unwrap().parent_path());
-
-    auto dev_path(jank_path / "incremental.pch");
-    if(boost::filesystem::exists(dev_path))
-    {
-      return std::move(dev_path);
-    }
-
-    auto installed_path(fmt::format("{}/incremental.pch", util::binary_cache_dir()));
-    if(boost::filesystem::exists(installed_path))
-    {
-      return std::move(installed_path);
-    }
-
-    return none;
-  }
-
-  option<boost::filesystem::path> build_pch()
-  {
-    auto const jank_path(util::process_location().unwrap().parent_path());
-    auto const script_path(jank_path / "build-pch");
-    auto const include_path(jank_path / "../include");
-    boost::filesystem::path const output_path{ fmt::format("{}/incremental.pch",
-                                                           util::binary_cache_dir()) };
-    boost::filesystem::create_directories(output_path.parent_path());
-    auto const command(fmt::format("{} {} {} {} {}",
-                                   script_path.string(),
-                                   native_persistent_string_view{ JANK_CLANG_PREFIX },
-                                   include_path.string(),
-                                   output_path.string(),
-                                   native_persistent_string_view{ JANK_JIT_FLAGS }));
-
-    std::cerr << "Note: Looks like your first run. Building pre-compiled header… " << std::flush;
-
-    if(std::system(command.c_str()) != 0)
-    {
-      std::cerr << "error!\n"
-                << "Failed to build using this script: " << script_path << "\n";
-      return none;
-    }
-
-    std::cerr << "done!\n";
-    return output_path;
-  }
-
   processor::processor(util::cli::options const &opts)
     : optimization_level{ opts.optimization_level }
   {
+    profile::timer const timer{ "jit ctor" };
+
     for(auto const &library_dir : opts.library_dirs)
     {
       library_dirs.emplace_back(boost::filesystem::absolute(library_dir.c_str()));
     }
 
-    profile::timer timer{ "jit ctor" };
     /* TODO: Pass this into each fn below so we only do this once on startup. */
     auto const jank_path(util::process_location().unwrap().parent_path());
-
-    auto pch_path(find_pch());
-    if(pch_path.is_none())
-    {
-      pch_path = build_pch();
-
-      /* TODO: Better error handling. */
-      if(pch_path.is_none())
-      {
-        throw std::runtime_error{ "unable to find and also unable to build PCH" };
-      }
-    }
-    auto const &pch_path_str(pch_path.unwrap().string());
-
     auto const include_path(jank_path / "../include");
 
     native_persistent_string O{ "-O0" };
@@ -149,10 +90,7 @@ namespace jank::jit
     {
       args.emplace_back(strdup(flag.c_str()));
     }
-    args.emplace_back(strdup(O.data()));
-    /* We need to include our special incremental PCH. */
-    args.emplace_back("-include-pch");
-    args.emplace_back(strdup(pch_path_str.c_str()));
+    args.emplace_back(strdup(O.c_str()));
 
     for(auto const &include_path : opts.include_dirs)
     {
@@ -193,49 +131,57 @@ namespace jank::jit
     llvm::remove_fatal_error_handler();
   }
 
-  result<option<runtime::object_ptr>, native_persistent_string>
-  processor::eval(codegen::processor &cg_prc) const
-  {
-    profile::timer timer{ "jit eval" };
-    auto const str(cg_prc.declaration_str());
-    //fmt::println("// declaration\n{}\n", str);
-
-    auto declare_res(interpreter->ParseAndExecute({ str.data(), str.size() }));
-    native_bool const declare_error{ declare_res };
-    llvm::logAllUnhandledErrors(std::move(declare_res), llvm::errs(), "error: ");
-    if(declare_error)
-    {
-      return err("compilation error: declaration");
-    }
-
-    auto const expr(cg_prc.expression_str(true));
-    if(expr.empty())
-    {
-      return ok(none);
-    }
-
-    std::string full_expr{ fmt::format("&{}->base", expr) };
-
-    //fmt::println("// expression:\n{}\n", full_expr);
-
-    clang::Value ret;
-    auto expr_res(interpreter->ParseAndExecute(full_expr, &ret));
-    native_bool const expr_error{ expr_res };
-    llvm::logAllUnhandledErrors(std::move(expr_res), llvm::errs(), "error: ");
-    if(expr_error)
-    {
-      return err("compilation error: expression");
-    }
-
-    return ret.convertTo<runtime::object *>();
-  }
-
   void processor::eval_string(native_persistent_string const &s) const
   {
-    profile::timer timer{ "jit eval_string" };
+    profile::timer const timer{ "jit eval_string" };
     //fmt::println("// eval_string:\n{}\n", s);
     auto err(interpreter->ParseAndExecute({ s.data(), s.size() }));
     llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
+  }
+
+  void processor::load_object(native_persistent_string_view const &path) const
+  {
+    auto &ee{ interpreter->getExecutionEngine().get() };
+    auto file{ llvm::MemoryBuffer::getFile(path) };
+    if(!file)
+    {
+      throw std::runtime_error{ fmt::format("failed to load object file: {}", path) };
+    }
+    /* XXX: Object files won't be able to use global ctors until jank is on the ORC
+     * runtime, which likely won't happen until clang::Interpreter is on the ORC runtime. */
+    /* TODO: Return result on failure. */
+    llvm::cantFail(ee.addObjectFile(std::move(file.get())));
+  }
+
+  void processor::load_ir_module(std::unique_ptr<llvm::Module> m,
+                                 std::unique_ptr<llvm::LLVMContext> llvm_ctx) const
+  {
+    profile::timer const timer{ fmt::format("jit ir module {}", m->getName()) };
+    //m->print(llvm::outs(), nullptr);
+
+    auto &ee(interpreter->getExecutionEngine().get());
+    llvm::cantFail(
+      ee.addIRModule(llvm::orc::ThreadSafeModule{ std::move(m), std::move(llvm_ctx) }));
+    llvm::cantFail(ee.initialize(ee.getMainJITDylib()));
+  }
+
+  void processor::load_bitcode(native_persistent_string const &module,
+                               native_persistent_string_view const &bitcode) const
+  {
+    auto ctx{ std::make_unique<llvm::LLVMContext>() };
+    llvm::SMDiagnostic err{};
+    llvm::MemoryBufferRef const buf{
+      std::string_view{ bitcode.data(), bitcode.size() },
+      module.c_str()
+    };
+    auto ir_module{ llvm::parseIR(buf, err, *ctx) };
+    if(!ir_module)
+    {
+      err.print("jank", llvm::errs());
+      /* TODO: Return a result. */
+      throw std::runtime_error{ fmt::format("unable to load module") };
+    }
+    load_ir_module(std::move(ir_module), std::move(ctx));
   }
 
   option<native_persistent_string>
@@ -269,7 +215,7 @@ namespace jank::jit
     {
       if(boost::filesystem::path{ lib.c_str() }.is_absolute())
       {
-        load_object(lib);
+        load_dynamic_library(lib);
       }
       else
       {
@@ -280,7 +226,7 @@ namespace jank::jit
         }
         else
         {
-          load_object(result.unwrap());
+          load_dynamic_library(result.unwrap());
         }
       }
     }
@@ -288,7 +234,7 @@ namespace jank::jit
     return ok();
   }
 
-  void processor::load_object(native_persistent_string const &path) const
+  void processor::load_dynamic_library(native_persistent_string const &path) const
   {
     llvm::cantFail(interpreter->LoadDynamicLibrary(path.data()));
   }

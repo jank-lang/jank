@@ -1,4 +1,8 @@
+#include <magic_enum.hpp>
+
 #include <jank/runtime/obj/delay.hpp>
+#include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/core/make_box.hpp>
 
 namespace jank::runtime
 {
