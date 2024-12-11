@@ -2,16 +2,15 @@
 
 set -euo pipefail
 
-here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 success=true
 clang_format="./build/llvm-install/usr/local/bin/clang-format"
 
-for file in $(find include/cpp src/cpp test/cpp -type f);
+while IFS= read -r -d '' file
 do
   set +e
-    clang-format --dry-run --Werror "${file}" || success=false
+    "${clang_format}" --dry-run --Werror "${file}" || success=false
   set -e
-done
+done < <(find include/cpp src/cpp test/cpp -type f -print0)
 
 if [[ "${success}" == false ]];
 then
