@@ -619,7 +619,6 @@ namespace jank::codegen
      * if a new fn is created. */
     auto const is_closure(!fn_expr.captures().empty());
 
-    /* TODO: We need to worry about arg packing here. */
     llvm::SmallVector<llvm::Value *> arg_handles;
     llvm::SmallVector<llvm::Type *> arg_types;
     arg_handles.reserve(expr.arg_exprs.size() + is_closure);
