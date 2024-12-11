@@ -12,8 +12,8 @@ namespace jank::util::cli
 
     /* Runtime. */
     cli.add_option(
-      "--class-path",
-      opts.class_path,
+      "--module-path",
+      opts.module_path,
       fmt::format(
         "A {} separated list of directories, JAR files, and ZIP files to search for modules",
         runtime::module::loader::module_separator));
@@ -58,7 +58,7 @@ namespace jank::util::cli
     cli_compile.add_option("--runtime", opts.target_runtime, "The runtime of the compiled program")
       ->check(CLI::IsMember({ "dynamic", "static" }));
     cli_compile
-      .add_option("ns", opts.target_ns, "The entrypoint namespace (must be on class path)")
+      .add_option("ns", opts.target_ns, "The entrypoint namespace (must be on module path)")
       ->required();
 
     /* REPL subcommand. */

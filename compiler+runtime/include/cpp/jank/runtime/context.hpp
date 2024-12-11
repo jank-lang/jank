@@ -81,7 +81,7 @@ namespace jank::runtime
     native_vector<analyze::expression_ptr>
     analyze_string(native_persistent_string_view const &code, native_bool const eval = true);
 
-    /* Finds the specified module on the class path and loads it. If
+    /* Finds the specified module on the module path and loads it. If
      * the module is already loaded, nothing is done.
      *
      * Modules are considered absolute if they begin with a forward slash. Otherwise, they

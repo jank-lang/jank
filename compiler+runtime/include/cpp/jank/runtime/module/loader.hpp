@@ -50,16 +50,16 @@ namespace jank::runtime::module
 
   struct loader
   {
-    /* A module entry represents one or more files on the classpath which prove that module.
-    * Modules can either be directly on the filesystem or within JARs.
-    *
-    * A module entry may not have any file path, yet it may have multiple. For example, a
-    * foo.jank path may also have a corresponding foo.cpp path, which has a corresponding foo.pcm
-    * path. That's three paths for one module. The case where it lacks any path is when it
-    * comes from the REPL.
-    *
-    * As with the JVM, the first match for a module in the classpath is the one taken. Any
-    * subsequent matches are ignored. */
+    /* A module entry represents one or more files on the module path which prove that module.
+     * Modules can either be directly on the filesystem or within JARs.
+     *
+     * A module entry may not have any file path, yet it may have multiple. For example, a
+     * foo.jank path may also have a corresponding foo.cpp path, which has a corresponding foo.pcm
+     * path. That's three paths for one module. The case where it lacks any path is when it
+     * comes from the REPL.
+     *
+     * As with the JVM, the first match for a module in the module path is the one taken. Any
+     * subsequent matches are ignored. */
     struct entry
     {
       option<file_entry> o;

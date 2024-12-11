@@ -39,7 +39,7 @@ namespace jank::runtime
   context::context(util::cli::options const &opts)
     : jit_prc{ opts }
     , output_dir{ opts.compilation_path }
-    , module_loader{ *this, opts.class_path }
+    , module_loader{ *this, opts.module_path }
   {
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
     auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));
