@@ -1192,7 +1192,6 @@ namespace jank::analyze
       expression_base{ {}, position, current_frame, true },
       std::move(exprs),
       o->meta,
-      o
     });
   }
 
@@ -1246,7 +1245,6 @@ namespace jank::analyze
           expression_base{ {}, position, current_frame, true },
           std::move(exprs),
           typed_o->meta,
-          o
         });
       },
       o);
@@ -1301,7 +1299,6 @@ namespace jank::analyze
           expression_base{ {}, position, current_frame, true },
           std::move(exprs),
           typed_o->meta,
-          typed_o
         });
       },
       o);
@@ -1449,7 +1446,6 @@ namespace jank::analyze
         expression_base{ {}, expression_position::value, current_frame, needs_arg_box },
         std::move(packed_arg_exprs),
         none,
-        nullptr
       };
       arg_exprs.emplace_back(make_box<expression>(std::move(list)));
     }
