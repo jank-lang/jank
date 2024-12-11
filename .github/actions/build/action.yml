@@ -17,11 +17,11 @@ runs:
     - if: runner.os == 'Linux'
       name: Install apt packages
       shell: bash
-      run: sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev entr libffi-dev clang libreadline-dev libzip-dev libbz2-dev doctest-dev libboost-all-dev gcc-14 g++-14
+      run: sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev entr libffi-dev clang libzip-dev libbz2-dev doctest-dev libboost-all-dev gcc-14 g++-14
     - if: runner.os == 'macOS'
       name: Install brew packages
       shell: bash
-      run: HOMEBREW_NO_AUTO_UPDATE=1 brew install curl git zip openssl double-conversion pkg-config ninja python cmake gnupg zlib
+      run: HOMEBREW_NO_AUTO_UPDATE=1 brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost libzip lbzip2
     - name: Cache Clang/LLVM
       uses: actions/cache@v3
       with:
