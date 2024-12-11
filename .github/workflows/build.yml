@@ -31,7 +31,8 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - uses: ./.github/actions/build
+      - name: Build and test
+        uses: ./.github/actions/build
         id: build
         with:
           update_release: ${{ matrix.build_type == 'Release' }}
