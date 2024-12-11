@@ -18,8 +18,7 @@ jobs:
             cxx: clang++-14
           - os: ubuntu-24.04
             build_type: Debug
-            # TODO: Fix error found here: https://github.com/jank-lang/jank/actions/runs/12267754047/job/34228411660
-            #codecov: on
+            codecov: on
             analysis: on
     runs-on: ${{ matrix.os }}
     env:
