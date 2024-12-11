@@ -10,7 +10,7 @@ do
   set +e
     "${clang_format}" --dry-run --Werror "${file}" || success=false
   set -e
-done < <(find include/cpp src/cpp test/cpp -type f -print0)
+done < <(find include/cpp src/cpp test/cpp -type f -print0 || true)
 
 if [[ "${success}" == false ]];
 then
