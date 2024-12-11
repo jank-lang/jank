@@ -28,6 +28,10 @@ runs:
         path: |
           ${{ github.workspace }}/build
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+    - name: Validate formatting
+      shell: bash
+      working-directory: ${{ github.workspace }}/compiler+runtime
+      run: ${{ github.workspace }}/compiler+runtime/bin/ci/validate-formatting
     - name: Compile and test
       shell: bash
       working-directory: ${{ github.workspace }}/compiler+runtime

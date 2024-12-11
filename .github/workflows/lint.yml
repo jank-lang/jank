@@ -19,19 +19,3 @@ jobs:
       - name: Lint bash scripts
         working-directory: ${{ github.workspace }}/compiler+runtime
         run: ./bin/ci/lint
-          # TODO: Enable once 19 is released.
-          #- name: Run clang-format on compiler+runtime/include/cpp
-          #  uses: jidicula/clang-format-action@v4.11.0
-          #  with:
-          #    clang-format-version: 18
-          #    check-path: compiler+runtime/include/cpp
-          #- name: Run clang-format on compiler+runtime/src/cpp
-          #  uses: jidicula/clang-format-action@v4.11.0
-          #  with:
-          #    clang-format-version: 18
-          #    check-path: compiler+runtime/src/cpp
-          #- name: Run clang-format on compiler+runtime/test/cpp
-          #  uses: jidicula/clang-format-action@v4.11.0
-          #  with:
-          #    clang-format-version: 18
-          #    check-path: compiler+runtime/test/cpp

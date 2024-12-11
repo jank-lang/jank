@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+success=true
+clang_format="./build/llvm-install/usr/local/bin/clang-format"
+
+for file in $(find include/cpp src/cpp test/cpp -type f);
+do
+  set +e
+    clang-format --dry-run --Werror "${file}" || success=false
+  set -e
+done
+
+if [[ "${success}" == false ]];
+then
+  exit 1
+fi
