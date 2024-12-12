@@ -1,18 +1,14 @@
 #pragma once
 
-#include "jank/type.hpp"
+#include "jank/runtime/obj/number.hpp"
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/behavior/seqable.hpp>
-#include <jank/runtime/behavior/countable.hpp>
 #include <jank/runtime/obj/array_chunk.hpp>
 #include <jank/runtime/obj/cons.hpp>
 
 namespace jank::runtime
 {
-  /* A range from X to Y, exclusive, incrementing by S. This is for non-integer values.
-   * For integer values, use integer_range. This is not countable in constant time, due
-   * to floating point shenanigans. */
-  /* TODO: integer_range */
+  /* An integer range from X to Y, exclusive, incrementing by S. */
+  /* For non-integer values, use the range object */
   template <>
   struct static_object<object_type::integer_range> : gc
   {
@@ -45,17 +41,17 @@ namespace jank::runtime
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
-    native_persistent_string to_string();
-    void to_string(fmt::memory_buffer &buff);
-    native_persistent_string to_code_string();
+    native_persistent_string to_string() const;
+    void to_string(fmt::memory_buffer &buff) const;
+    native_persistent_string to_code_string() const;
     native_hash to_hash() const;
 
     /* behavior::seqable */
-    native_box<static_object> seq();
+    native_box<static_object> seq() const;
     native_box<static_object> fresh_seq() const;
 
     /* behavior::sequenceable */
-    object_ptr first() const;
+    obj::integer_ptr first() const;
     native_box<static_object> next() const;
 
     /* behavior::sequenceable_in_place */

@@ -1,5 +1,4 @@
-#include <jank/runtime/obj/integer_range.hpp>
-#include <jank/runtime/obj/number.hpp>
+#include "jank/runtime/obj/integer_range.hpp"
 #include <jank/runtime/core/math.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/visit.hpp>
@@ -55,7 +54,7 @@ namespace jank::runtime
 
   object_ptr obj::integer_range::create(native_integer const end)
   {
-    if(end)
+    if(end > 0)
     {
       return make_box<obj::integer_range>(0, end, 1, positive_step_bounds_check);
     }
@@ -75,9 +74,8 @@ namespace jank::runtime
     {
       return obj::persistent_list::empty();
     }
-    /* TODO: Repeat object. */
-    //else if(is_zero(step))
-    //{ return make_box<obj::repeat>(start); }
+    else if(step == 0)
+    { return make_box<obj::repeat>(make_box<obj::integer>(start)); }
     return make_box<obj::integer_range>(start,
                                         end,
                                         step,
@@ -85,7 +83,7 @@ namespace jank::runtime
                                                  : negative_step_bounds_check);
   }
 
-  obj::integer_range_ptr obj::integer_range::seq()
+  obj::integer_range_ptr obj::integer_range::seq() const
   {
     return this;
   }
@@ -95,14 +93,14 @@ namespace jank::runtime
     return make_box<obj::integer_range>(start, end, step, bounds_check);
   }
 
-  object_ptr obj::integer_range::first() const
+  obj::integer_ptr obj::integer_range::first() const
   {
     return make_box<obj::integer>(start);
   }
 
   obj::integer_range_ptr obj::integer_range::next() const
   {
-    if(count() < 1)
+    if(count() <= 1)
     {
       return nullptr;
     }
@@ -144,17 +142,17 @@ namespace jank::runtime
       &o);
   }
 
-  void obj::integer_range::to_string(fmt::memory_buffer &buff)
+  void obj::integer_range::to_string(fmt::memory_buffer &buff) const
   {
     runtime::to_string(seq(), buff);
   }
 
-  native_persistent_string obj::integer_range::to_string()
+  native_persistent_string obj::integer_range::to_string() const
   {
     return runtime::to_string(seq());
   }
 
-  native_persistent_string obj::integer_range::to_code_string()
+  native_persistent_string obj::integer_range::to_code_string() const
   {
     return runtime::to_code_string(seq());
   }
@@ -167,7 +165,7 @@ namespace jank::runtime
   obj::integer_range_ptr obj::integer_range::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(fresh_seq());
+    auto const ret(fresh_seq());
     ret->meta = meta;
     return ret;
   }

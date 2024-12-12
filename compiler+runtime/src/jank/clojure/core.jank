@@ -1927,23 +1927,23 @@
    (iterate inc 0))
   ([end]
    (if (integer? end)
-     (clojure.core-native/integer_range end)
+     (clojure.core-native/integer-range end)
      (clojure.core-native/range end)))
   ([start end]
    (if (and (integer? start) (integer? end))
-     (clojure.core-native/integer_range start end)
+     (clojure.core-native/integer-range start end)
      (clojure.core-native/range start end)))
   ([start end step]
    (if (and (integer? start) (integer? end) (integer? step))
-     (clojure.core-native/integer_range start end step)
+     (clojure.core-native/integer-range start end step)
      (clojure.core-native/range start end step))))
 
-  (def nth
-   "Returns the value at the index. get returns nil if index out of
+(def nth
+  "Returns the value at the index. get returns nil if index out of
    bounds, nth throws an exception unless not-found is supplied.  nth
    also works for strings, Java arrays, regex Matchers and Lists, and,
-   in O(n) time, for sequences."
-   clojure.core-native/nth)
+  in O(n) time, for sequences."
+  clojure.core-native/nth)
 
 (defn nthnext
   "Returns the nth next of coll, (seq coll) when n is 0."

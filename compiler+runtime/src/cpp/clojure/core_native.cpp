@@ -720,7 +720,7 @@ jank_object_ptr jank_load_clojure_core_native()
                                         expect_object<obj::integer>(end)->data,
                                         expect_object<obj::integer>(step)->data);
     };
-    intern_fn_obj("integer_range", fn);
+    intern_fn_obj("integer-range", fn);
   }
 
   {
