@@ -1,4 +1,3 @@
-#include "jank/type.hpp"
 #include <jank/runtime/obj/integer_range.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/core/math.hpp>
@@ -19,8 +18,7 @@ namespace jank::runtime
   }
 
   obj::integer_range::static_object(native_integer const end)
-    : start{ 0 }
-    , end{ end }
+    : end{ end }
     , step{ 1 }
     , bounds_check{ positive_step_bounds_check }
   {
