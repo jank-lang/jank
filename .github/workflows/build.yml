@@ -11,7 +11,9 @@ jobs:
       matrix:
         # TODO: sanitize: [On, Off]
         os: [ubuntu-24.04]
-        build_type: [Debug, Release]
+        # TODO: Enable release once we no longer have a Clang crash:
+        # https://github.com/jank-lang/jank/actions/runs/12269972895/job/34234432107
+        build_type: [Debug]
         include:
           - os: ubuntu-24.04
             cc: clang-14
