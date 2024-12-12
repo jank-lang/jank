@@ -92,7 +92,8 @@ namespace jank::runtime
      * Module /meow.cat refers to module meow.cat
      * Module meow.cat refers to foo.bar$meow.cat
      */
-    result<void, native_persistent_string> load_module(native_persistent_string_view const &module);
+    result<void, native_persistent_string>
+    load_module(native_persistent_string_view const &module, module::origin ori);
 
     /* Does all the same work as load_module, but also writes compiled files to the file system. */
     result<void, native_persistent_string>

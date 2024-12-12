@@ -3,6 +3,8 @@
 
 namespace jank::analyze::step
 {
+  /* TODO: This is more a walk_tail. A general walk would apply to all nodes. */
+  /* TODO: This needs to be recursive to work properly. */
   template <typename F>
   static void walk(expression_ptr const expr, F const &f)
   {
@@ -30,6 +32,17 @@ namespace jank::analyze::step
           if(!typed_expr.body.values.empty())
           {
             boost::apply_visitor(f, typed_expr.body.values.back()->data);
+          }
+        }
+        else if constexpr(std::same_as<T, expr::try_<expression>>)
+        {
+          if(!typed_expr.body.values.empty())
+          {
+            boost::apply_visitor(f, typed_expr.body.values.back()->data);
+          }
+          if(!typed_expr.catch_body.body.values.empty())
+          {
+            boost::apply_visitor(f, typed_expr.catch_body.body.values.back()->data);
           }
         }
         else

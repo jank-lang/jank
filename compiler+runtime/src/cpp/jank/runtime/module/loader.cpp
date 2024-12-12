@@ -324,22 +324,7 @@ namespace jank::runtime::module
     loaded.emplace(module);
   }
 
-  result<void, native_persistent_string>
-  loader::load_ns(native_persistent_string_view const &module)
-  {
-    profile::timer const timer{ "load_ns" };
-
-    //fmt::println("loading ns {}", module);
-    auto res(load(module));
-    if(res.is_err())
-    {
-      return res;
-    }
-
-    return ok();
-  }
-
-  result<void, native_persistent_string> loader::load(native_persistent_string_view const &module)
+  string_result<void> loader::load(native_persistent_string_view const &module, origin const ori)
   {
     static std::regex const underscore{ "_" };
     native_transient_string patched_module{ module };
@@ -350,13 +335,14 @@ namespace jank::runtime::module
       return err(fmt::format("unable to find module: {}", module));
     }
 
-    result<void, native_persistent_string> res{ err(
-      fmt::format("no sources for registered module: {}", module)) };
+    string_result<void> res{ err(fmt::format("no sources for registered module: {}", module)) };
 
     //fmt::println("loading nested module {}", module);
 
+    /* When we're compiling, we always load from source. Otherwise, we
+     * load from source if we specifically chose to do so. */
     bool const compiling{ truthy(rt_ctx.compile_files_var->deref()) };
-    if(compiling)
+    if(compiling || ori == origin::source)
     {
       if(entry->second.jank.is_some())
       {
@@ -369,6 +355,9 @@ namespace jank::runtime::module
     }
     else
     {
+      /* TODO: origin must be latest, so we need to find that. Even if there
+       * is a binary, we need to only choose it if it's as new, or newer, than
+       * the source. */
       if(entry->second.o.is_some())
       {
         res = load_o(module, entry->second.o.unwrap());
@@ -397,7 +386,7 @@ namespace jank::runtime::module
     return ok();
   }
 
-  result<void, native_persistent_string>
+  string_result<void>
   loader::load_o(native_persistent_string const &module, file_entry const &entry) const
   {
     profile::timer const timer{ fmt::format("load object {}", module) };
@@ -417,7 +406,7 @@ namespace jank::runtime::module
     return ok();
   }
 
-  result<void, native_persistent_string> loader::load_cpp(file_entry const &entry) const
+  string_result<void> loader::load_cpp(file_entry const &entry) const
   {
     if(entry.archive_path.is_some())
     {
@@ -437,7 +426,7 @@ namespace jank::runtime::module
     return ok();
   }
 
-  result<void, native_persistent_string> loader::load_jank(file_entry const &entry) const
+  string_result<void> loader::load_jank(file_entry const &entry) const
   {
     if(entry.archive_path.is_some())
     {
@@ -451,7 +440,7 @@ namespace jank::runtime::module
     return ok();
   }
 
-  result<void, native_persistent_string> loader::load_cljc(file_entry const &) const
+  string_result<void> loader::load_cljc(file_entry const &) const
   {
     return err("Not yet implemented: CLJC loading");
   }

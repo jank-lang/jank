@@ -1,0 +1,12 @@
+((fn* [fun]
+  (try
+    (fun true)
+    (catch _
+      (fun false))
+    (finally
+      )))
+
+ (fn* [throw?]
+   (if throw?
+     (throw :success)
+     :success)))

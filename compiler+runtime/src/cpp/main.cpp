@@ -35,7 +35,7 @@ namespace jank
 
     {
       profile::timer const timer{ "load clojure.core" };
-      __rt_ctx->load_module("/clojure.core").expect_ok();
+      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
 
     {
@@ -67,12 +67,12 @@ namespace jank
 
     {
       profile::timer const timer{ "require clojure.core" };
-      __rt_ctx->load_module("/clojure.core").expect_ok();
+      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
 
     {
       profile::timer const timer{ "eval user code" };
-      __rt_ctx->load_module("/" + opts.target_module).expect_ok();
+      __rt_ctx->load_module("/" + opts.target_module, module::origin::latest).expect_ok();
 
       auto const main_var(__rt_ctx->find_var(opts.target_module, "-main").unwrap_or(nullptr));
       if(main_var)
@@ -115,13 +115,13 @@ namespace jank
 
     {
       profile::timer const timer{ "require clojure.core" };
-      __rt_ctx->load_module("/clojure.core").expect_ok();
+      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
 
     if(!opts.target_module.empty())
     {
       profile::timer const timer{ "load main" };
-      __rt_ctx->load_module("/" + opts.target_module).expect_ok();
+      __rt_ctx->load_module("/" + opts.target_module, module::origin::latest).expect_ok();
       dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
     }
 
@@ -186,13 +186,13 @@ namespace jank
 
     {
       profile::timer const timer{ "require clojure.core" };
-      __rt_ctx->load_module("/clojure.core").expect_ok();
+      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
 
     if(!opts.target_module.empty())
     {
       profile::timer const timer{ "load main" };
-      __rt_ctx->load_module("/" + opts.target_module).expect_ok();
+      __rt_ctx->load_module("/" + opts.target_module, module::origin::latest).expect_ok();
       dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
     }
 
@@ -254,6 +254,12 @@ try
   using namespace jank;
   using namespace jank::runtime;
 
+  /* To handle UTF-8 Text , we set the locale to the current environment locale
+   * Usage of the local locale allows better localization.
+   * Notably this might make text encoding become more platform dependent.
+   */
+  std::locale::global(std::locale(""));
+  
   /* The GC needs to enabled even before arg parsing, since our native types,
    * like strings, use the GC for allocations. It can still be configured later. */
   GC_set_all_interior_pointers(1);

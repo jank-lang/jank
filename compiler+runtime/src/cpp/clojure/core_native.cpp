@@ -248,7 +248,7 @@ namespace clojure::core_native
 
   static object_ptr load_module(object_ptr const path)
   {
-    __rt_ctx->load_module(runtime::to_string(path)).expect_ok();
+    __rt_ctx->load_module(runtime::to_string(path), module::origin::latest).expect_ok();
     return obj::nil::nil_const();
   }
 

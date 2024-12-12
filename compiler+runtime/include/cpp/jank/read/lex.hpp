@@ -125,6 +125,7 @@ namespace jank::read
 
 namespace jank::read::lex
 {
+  struct codepoint;
   struct processor
   {
     struct iterator
@@ -148,9 +149,9 @@ namespace jank::read::lex
     processor(native_persistent_string_view const &f);
 
     result<token, error> next();
-    option<char> peek() const;
+    result<codepoint, error> peek() const;
     option<error> check_whitespace(native_bool const found_space);
-
+    
     iterator begin();
     iterator end();
 

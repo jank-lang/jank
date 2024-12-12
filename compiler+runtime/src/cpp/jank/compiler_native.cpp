@@ -17,7 +17,7 @@ namespace jank::compiler_native
      * evaluations. */
     analyze::processor an_prc{ *__rt_ctx };
     auto const expr(an_prc.analyze(form, analyze::expression_position::value).expect_ok());
-    auto const wrapped_expr(evaluate::wrap_expression(expr));
+    auto const wrapped_expr(evaluate::wrap_expression(expr, "native_source", {}));
     auto const &module(
       expect_object<runtime::ns>(__rt_ctx->intern_var("clojure.core", "*ns*").expect_ok()->deref())
         ->to_string());

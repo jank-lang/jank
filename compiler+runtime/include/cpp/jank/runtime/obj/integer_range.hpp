@@ -80,9 +80,11 @@ namespace jank::runtime
     native_integer end{};
     native_integer step{};
     bounds_check_t bounds_check{};
-    mutable obj::array_chunk_ptr chunk{};
-    mutable native_box<static_object> chunk_next{};
-    mutable native_box<static_object> cached_next{};
+
+    /* TODO: behavior::chunkable */
+    /* mutable obj::array_chunk_ptr chunk{}; */
+    /* mutable native_box<static_object> chunk_next{}; */
+    /* mutable native_box<static_object> cached_next{}; */
     option<object_ptr> meta{};
   };
 

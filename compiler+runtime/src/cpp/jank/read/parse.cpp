@@ -2,6 +2,7 @@
 
 #include <magic_enum.hpp>
 
+#include <jank/runtime/obj/ratio.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/util/escape.hpp>
 #include <jank/runtime/visit.hpp>

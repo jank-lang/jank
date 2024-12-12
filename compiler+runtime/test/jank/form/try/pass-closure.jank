@@ -1,0 +1,8 @@
+(let* [a 1]
+  (try
+    (throw a)
+    (catch e
+      (when (= a e)
+        :success))
+    (finally
+      (assert (= 1 a)))))

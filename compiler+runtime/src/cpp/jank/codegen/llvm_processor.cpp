@@ -13,11 +13,14 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/evaluate.hpp>
 #include <jank/profile/time.hpp>
 
 /* TODO: Remove exceptions. */
 namespace jank::codegen
 {
+  using namespace jank::analyze;
+
   reusable_context::reusable_context(native_persistent_string const &module_name)
     : module_name{ module_name }
     , ctor_name{ runtime::munge(runtime::context::unique_string("jank_global_init")) }
@@ -62,16 +65,14 @@ namespace jank::codegen
     pb.crossRegisterProxies(*lam, *fam, *cgam, *mam);
   }
 
-  llvm_processor::llvm_processor(analyze::expression_ptr const &expr,
+  llvm_processor::llvm_processor(expression_ptr const &expr,
                                  native_persistent_string const &module_name,
                                  compilation_target const target)
-    : llvm_processor{ boost::get<analyze::expr::function<analyze::expression>>(expr->data),
-                      module_name,
-                      target }
+    : llvm_processor{ boost::get<expr::function<expression>>(expr->data), module_name, target }
   {
   }
 
-  llvm_processor::llvm_processor(analyze::expr::function<analyze::expression> const &expr,
+  llvm_processor::llvm_processor(expr::function<expression> const &expr,
                                  native_persistent_string const &module_name,
                                  compilation_target const target)
     : target{ target }
@@ -81,7 +82,7 @@ namespace jank::codegen
     assert(root_fn.frame.data);
   }
 
-  llvm_processor::llvm_processor(analyze::expr::function<analyze::expression> const &expr,
+  llvm_processor::llvm_processor(expr::function<expression> const &expr,
                                  std::unique_ptr<reusable_context> ctx)
     : target{ compilation_target::function }
     , root_fn{ expr }
@@ -102,8 +103,7 @@ namespace jank::codegen
     ctx->builder->SetInsertPoint(entry);
   }
 
-  void
-  llvm_processor::create_function(analyze::expr::function_arity<analyze::expression> const &arity)
+  void llvm_processor::create_function(expr::function_arity<expression> const &arity)
   {
     auto const captures(root_fn.captures());
     auto const is_closure(!captures.empty());
@@ -185,6 +185,11 @@ namespace jank::codegen
       }
     }
 
+    if(target == compilation_target::eval)
+    {
+      //to_string();
+    }
+
     /* Run our optimization passes on the function, mutating it. */
     ctx->fpm->run(*fn, *ctx->fam);
 
@@ -217,8 +222,7 @@ namespace jank::codegen
   }
 
   llvm::Value *
-  llvm_processor::gen(analyze::expression_ptr const &ex,
-                      analyze::expr::function_arity<analyze::expression> const &fn_arity)
+  llvm_processor::gen(expression_ptr const &ex, expr::function_arity<expression> const &fn_arity)
   {
     llvm::Value *ret{};
     boost::apply_visitor(
@@ -227,8 +231,8 @@ namespace jank::codegen
     return ret;
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::def<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &arity)
+  llvm::Value *llvm_processor::gen(expr::def<expression> const &expr,
+                                   expr::function_arity<expression> const &arity)
   {
     auto const ref(gen_var(expr.name));
 
@@ -244,7 +248,7 @@ namespace jank::codegen
       ctx->builder->CreateCall(fn, args);
     }
 
-    option<std::reference_wrapper<analyze::lifted_constant const>> meta;
+    option<std::reference_wrapper<lifted_constant const>> meta;
     if(expr.name->meta.is_some())
     {
       meta = expr.frame->find_lifted_constant(expr.name->meta.unwrap()).unwrap();
@@ -259,7 +263,7 @@ namespace jank::codegen
       ctx->builder->CreateCall(set_meta_fn, { ref, meta });
     }
 
-    if(expr.position == analyze::expression_position::tail)
+    if(expr.position == expression_position::tail)
     {
       return ctx->builder->CreateRet(ref);
     }
@@ -267,8 +271,8 @@ namespace jank::codegen
     return ref;
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::var_deref<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &) const
+  llvm::Value *llvm_processor::gen(expr::var_deref<expression> const &expr,
+                                   expr::function_arity<expression> const &) const
   {
     auto const ref(gen_var(expr.qualified_name));
     auto const fn_type(
@@ -278,7 +282,7 @@ namespace jank::codegen
     llvm::SmallVector<llvm::Value *, 1> const args{ ref };
     auto const call(ctx->builder->CreateCall(fn, args));
 
-    if(expr.position == analyze::expression_position::tail)
+    if(expr.position == expression_position::tail)
     {
       return ctx->builder->CreateRet(call);
     }
@@ -286,12 +290,12 @@ namespace jank::codegen
     return call;
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::var_ref<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &) const
+  llvm::Value *llvm_processor::gen(expr::var_ref<expression> const &expr,
+                                   expr::function_arity<expression> const &) const
   {
     auto const var(gen_var(expr.qualified_name));
 
-    if(expr.position == analyze::expression_position::tail)
+    if(expr.position == expression_position::tail)
     {
       return ctx->builder->CreateRet(var);
     }
@@ -312,8 +316,8 @@ namespace jank::codegen
     }
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::call<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &arity)
+  llvm::Value *llvm_processor::gen(expr::call<expression> const &expr,
+                                   expr::function_arity<expression> const &arity)
   {
     auto const callee(gen(expr.source_expr, arity));
 
@@ -337,7 +341,7 @@ namespace jank::codegen
     auto const fn(ctx->module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
     auto const call(ctx->builder->CreateCall(fn, arg_handles));
 
-    if(expr.position == analyze::expression_position::tail)
+    if(expr.position == expression_position::tail)
     {
       return ctx->builder->CreateRet(call);
     }
@@ -345,9 +349,8 @@ namespace jank::codegen
     return call;
   }
 
-  llvm::Value *
-  llvm_processor::gen(analyze::expr::primitive_literal<analyze::expression> const &expr,
-                      analyze::expr::function_arity<analyze::expression> const &)
+  llvm::Value *llvm_processor::gen(expr::primitive_literal<expression> const &expr,
+                                   expr::function_arity<expression> const &)
   {
     auto const ret(runtime::visit_object(
       [&](auto const typed_o) -> llvm::Value * {
@@ -358,7 +361,8 @@ namespace jank::codegen
                      || std::same_as<T, runtime::obj::real> || std::same_as<T, runtime::obj::symbol>
                      || std::same_as<T, runtime::obj::character>
                      || std::same_as<T, runtime::obj::keyword>
-                     || std::same_as<T, runtime::obj::persistent_string>)
+                     || std::same_as<T, runtime::obj::persistent_string>
+                     || std::same_as<T, runtime::obj::ratio>)
         {
           return gen_global(typed_o);
         }
@@ -380,7 +384,7 @@ namespace jank::codegen
       },
       expr.data));
 
-    if(expr.position == analyze::expression_position::tail)
+    if(expr.position == expression_position::tail)
     {
       return ctx->builder->CreateRet(ret);
     }
@@ -388,8 +392,8 @@ namespace jank::codegen
     return ret;
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::list<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &arity)
+  llvm::Value *llvm_processor::gen(expr::list<expression> const &expr,
+                                   expr::function_arity<expression> const &arity)
   {
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getInt64Ty() }, true));
@@ -407,7 +411,7 @@ namespace jank::codegen
 
     auto const call(ctx->builder->CreateCall(fn, args));
 
-    if(expr.position == analyze::expression_position::tail)
+    if(expr.position == expression_position::tail)
     {
       return ctx->builder->CreateRet(call);
     }
@@ -415,8 +419,8 @@ namespace jank::codegen
     return call;
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::vector<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &arity)
+  llvm::Value *llvm_processor::gen(expr::vector<expression> const &expr,
+                                   expr::function_arity<expression> const &arity)
   {
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getInt64Ty() }, true));
@@ -434,7 +438,7 @@ namespace jank::codegen
 
     auto const call(ctx->builder->CreateCall(fn, args));
 
-    if(expr.position == analyze::expression_position::tail)
+    if(expr.position == expression_position::tail)
     {
       return ctx->builder->CreateRet(call);
     }
@@ -442,8 +446,8 @@ namespace jank::codegen
     return call;
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::map<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &arity)
+  llvm::Value *llvm_processor::gen(expr::map<expression> const &expr,
+                                   expr::function_arity<expression> const &arity)
   {
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getInt64Ty() }, true));
@@ -462,7 +466,7 @@ namespace jank::codegen
 
     auto const call(ctx->builder->CreateCall(fn, args));
 
-    if(expr.position == analyze::expression_position::tail)
+    if(expr.position == expression_position::tail)
     {
       return ctx->builder->CreateRet(call);
     }
@@ -470,8 +474,8 @@ namespace jank::codegen
     return call;
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::set<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &arity)
+  llvm::Value *llvm_processor::gen(expr::set<expression> const &expr,
+                                   expr::function_arity<expression> const &arity)
   {
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getInt64Ty() }, true));
@@ -489,7 +493,7 @@ namespace jank::codegen
 
     auto const call(ctx->builder->CreateCall(fn, args));
 
-    if(expr.position == analyze::expression_position::tail)
+    if(expr.position == expression_position::tail)
     {
       return ctx->builder->CreateRet(call);
     }
@@ -497,12 +501,13 @@ namespace jank::codegen
     return call;
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::local_reference const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &)
+  llvm::Value *
+  llvm_processor::gen(expr::local_reference const &expr, expr::function_arity<expression> const &)
   {
     auto const ret(locals[expr.binding.name]);
+    assert(ret);
 
-    if(expr.position == analyze::expression_position::tail)
+    if(expr.position == expression_position::tail)
     {
       return ctx->builder->CreateRet(ret);
     }
@@ -510,9 +515,8 @@ namespace jank::codegen
     return ret;
   }
 
-  llvm::Value *
-  llvm_processor::gen(analyze::expr::function<analyze::expression> const &expr,
-                      analyze::expr::function_arity<analyze::expression> const &fn_arity)
+  llvm::Value *llvm_processor::gen(expr::function<expression> const &expr,
+                                   expr::function_arity<expression> const &fn_arity)
   {
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
@@ -530,7 +534,7 @@ namespace jank::codegen
 
     auto const fn_obj(gen_function_instance(expr, fn_arity));
 
-    if(expr.position == analyze::expression_position::tail)
+    if(expr.position == expression_position::tail)
     {
       return ctx->builder->CreateRet(fn_obj);
     }
@@ -538,60 +542,17 @@ namespace jank::codegen
     return fn_obj;
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::recur<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &arity)
+  llvm::Value *llvm_processor::gen(expr::recur<expression> const &expr,
+                                   expr::function_arity<expression> const &arity)
   {
-    analyze::expr::named_recursion<analyze::expression> const call_expr{
-      analyze::expression_base{ {}, expr.position, expr.frame },
-      analyze::expr::recursion_reference<analyze::expression>{
-                               analyze::expression_base{ {}, expr.position, expr.frame },
-                               root_fn.arities[0].fn_ctx },
-      expr.args,
-      expr.arg_exprs
-    };
-    auto const call(gen(call_expr, arity));
-    return call;
-  }
-
-  llvm::Value *
-  llvm_processor::gen(analyze::expr::recursion_reference<analyze::expression> const &expr,
-                      analyze::expr::function_arity<analyze::expression> const &arity)
-  {
-    /* With each recursion reference, we generate a new function instance. This is different
-     * from what Clojure does, but is functionally the same so long as one doesn't rely on
-     * identity checks for this sort of thing.
-     *
-     * We generate a new fn instance because the C fns generated for a jank fn don't belong
-     * inside of a class which has a `this` which can just be used. They're standalone. So,
-     * if you want an instance of that fn within the fn itself, we need to make one. For
-     * closures, this will copy the current context to the new one. */
-    auto const fn_obj(gen_function_instance(
-      boost::get<analyze::expr::function<analyze::expression>>(expr.fn_ctx->fn->data),
-      arity));
-
-    if(expr.position == analyze::expression_position::tail)
-    {
-      return ctx->builder->CreateRet(fn_obj);
-    }
-
-    return fn_obj;
-  }
-
-  llvm::Value *llvm_processor::gen(analyze::expr::named_recursion<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &arity)
-  {
-    auto const fn_expr(boost::get<analyze::expr::function<analyze::expression>>(
-      expr.recursion_ref.fn_ctx->fn->data));
-    /* Named recursion is a special kind of call. We can't go always through a var, since there
-     * may not be one. We can't just use the fn's name, since we could be recursing into a
-     * different arity. Finally, we need to keep in account whether or not this fn is a closure.
-     *
-     * For named recursion calls, we don't use dynamic_call. We just call the generated C fn
-     * directly. This doesn't impede interactivity, since the whole thing will be redefined
-     * if a new fn is created. */
+    /* The codegen for the special recur form is very similar to the named recursion
+     * codegen, but it's simpler. The key difference is that named recursion requires
+     * arg packing, whereas the special recur form does not. This means, for variadic
+     * functions, the special recur form will be expected to supply a sequence for the
+     * variadic argument. */
+    auto const fn_expr(boost::get<expr::function<expression>>(root_fn.arities[0].fn_ctx->fn->data));
     auto const is_closure(!fn_expr.captures().empty());
 
-    /* TODO: We need to worry about arg packing here. */
     llvm::SmallVector<llvm::Value *> arg_handles;
     llvm::SmallVector<llvm::Type *> arg_types;
     arg_handles.reserve(expr.arg_exprs.size() + is_closure);
@@ -615,7 +576,7 @@ namespace jank::codegen
     auto const fn(ctx->module->getOrInsertFunction(call_fn_name, fn_type));
     auto const call(ctx->builder->CreateCall(fn, arg_handles));
 
-    if(expr.position == analyze::expression_position::tail)
+    if(expr.position == expression_position::tail)
     {
       return ctx->builder->CreateRet(call);
     }
@@ -623,8 +584,93 @@ namespace jank::codegen
     return call;
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::let<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &arity)
+  llvm::Value *llvm_processor::gen(expr::recursion_reference<expression> const &expr,
+                                   expr::function_arity<expression> const &arity)
+  {
+    /* With each recursion reference, we generate a new function instance. This is different
+     * from what Clojure does, but is functionally the same so long as one doesn't rely on
+     * identity checks for this sort of thing.
+     *
+     * We generate a new fn instance because the C fns generated for a jank fn don't belong
+     * inside of a class which has a `this` which can just be used. They're standalone. So,
+     * if you want an instance of that fn within the fn itself, we need to make one. For
+     * closures, this will copy the current context to the new one. */
+    auto const fn_obj(
+      gen_function_instance(boost::get<expr::function<expression>>(expr.fn_ctx->fn->data), arity));
+
+    if(expr.position == expression_position::tail)
+    {
+      return ctx->builder->CreateRet(fn_obj);
+    }
+
+    return fn_obj;
+  }
+
+  llvm::Value *llvm_processor::gen(expr::named_recursion<expression> const &expr,
+                                   expr::function_arity<expression> const &arity)
+  {
+    auto const fn_expr(boost::get<expr::function<expression>>(expr.recursion_ref.fn_ctx->fn->data));
+    /* Named recursion is a special kind of call. We can't go always through a var, since there
+     * may not be one. We can't just use the fn's name, since we could be recursing into a
+     * different arity. Finally, we need to keep in account whether or not this fn is a closure.
+     *
+     * For named recursion calls, we don't use dynamic_call. We just call the generated C fn
+     * directly. This doesn't impede interactivity, since the whole thing will be redefined
+     * if a new fn is created. */
+    auto const is_closure(!fn_expr.captures().empty());
+
+    /* TODO: We need to worry about arg packing here. */
+    llvm::SmallVector<llvm::Value *> arg_handles;
+    llvm::SmallVector<llvm::Type *> arg_types;
+    arg_handles.reserve(expr.arg_exprs.size() + is_closure);
+    arg_types.reserve(expr.arg_exprs.size() + is_closure);
+
+    if(arity.fn_ctx->is_variadic)
+    {
+      arg_handles.emplace_back(
+        gen_function_instance(boost::get<expr::function<expression>>(arity.fn_ctx->fn->data),
+                              arity));
+      arg_types.emplace_back(ctx->builder->getPtrTy());
+    }
+    else if(is_closure)
+    {
+      arg_handles.emplace_back(ctx->builder->GetInsertBlock()->getParent()->getArg(0));
+      arg_types.emplace_back(ctx->builder->getPtrTy());
+    }
+
+    for(auto const &arg_expr : expr.arg_exprs)
+    {
+      arg_handles.emplace_back(gen(arg_expr, arity));
+      arg_types.emplace_back(ctx->builder->getPtrTy());
+    }
+
+    llvm::Value *call{};
+    if(arity.fn_ctx->is_variadic)
+    {
+      auto const call_fn_name(arity_to_call_fn(expr.arg_exprs.size()));
+      auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
+      auto const fn(ctx->module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
+      call = ctx->builder->CreateCall(fn, arg_handles);
+    }
+    else
+    {
+      auto const call_fn_name(
+        fmt::format("{}_{}", munge(fn_expr.unique_name), expr.arg_exprs.size()));
+      auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
+      auto const fn(ctx->module->getOrInsertFunction(call_fn_name, fn_type));
+      call = ctx->builder->CreateCall(fn, arg_handles);
+    }
+
+    if(expr.position == expression_position::tail)
+    {
+      return ctx->builder->CreateRet(call);
+    }
+
+    return call;
+  }
+
+  llvm::Value *llvm_processor::gen(expr::let<expression> const &expr,
+                                   expr::function_arity<expression> const &arity)
   {
     auto old_locals(locals);
     for(auto const &pair : expr.pairs)
@@ -648,8 +694,8 @@ namespace jank::codegen
     return ret;
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::do_<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &arity)
+  llvm::Value *llvm_processor::gen(expr::do_<expression> const &expr,
+                                   expr::function_arity<expression> const &arity)
   {
     llvm::Value *last{};
     for(auto const &form : expr.values)
@@ -659,12 +705,12 @@ namespace jank::codegen
 
     switch(expr.position)
     {
-      case analyze::expression_position::statement:
-      case analyze::expression_position::value:
+      case expression_position::statement:
+      case expression_position::value:
         {
           return last;
         }
-      case analyze::expression_position::tail:
+      case expression_position::tail:
         {
           if(expr.values.empty())
           {
@@ -679,13 +725,13 @@ namespace jank::codegen
     }
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::if_<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &arity)
+  llvm::Value *llvm_processor::gen(expr::if_<expression> const &expr,
+                                   expr::function_arity<expression> const &arity)
   {
     /* If we're in return position, our then/else branches will generate return instructions
      * for us. Since LLVM basic blocks can only have one terminating instruction, we need
      * to take care to not generate our own, too. */
-    auto const is_return(expr.position == analyze::expression_position::tail);
+    auto const is_return(expr.position == expression_position::tail);
     auto const condition(gen(expr.condition, arity));
     auto const truthy_fn_type(
       llvm::FunctionType::get(ctx->builder->getInt8Ty(), { ctx->builder->getPtrTy() }, false));
@@ -723,7 +769,7 @@ namespace jank::codegen
     else
     {
       else_ = gen_global(obj::nil::nil_const());
-      if(expr.position == analyze::expression_position::tail)
+      if(expr.position == expression_position::tail)
       {
         else_ = ctx->builder->CreateRet(else_);
       }
@@ -753,8 +799,8 @@ namespace jank::codegen
     return nullptr;
   }
 
-  llvm::Value *llvm_processor::gen(analyze::expr::throw_<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &arity)
+  llvm::Value *llvm_processor::gen(expr::throw_<expression> const &expr,
+                                   expr::function_arity<expression> const &arity)
   {
     /* TODO: Generate direct call to __cxa_throw. */
     auto const value(gen(expr.value, arity));
@@ -763,23 +809,50 @@ namespace jank::codegen
     auto fn(ctx->module->getOrInsertFunction("jank_throw", fn_type));
     llvm::cast<llvm::Function>(fn.getCallee())->setDoesNotReturn();
 
-    llvm::SmallVector<llvm::Value *, 2> const args{ value };
+    llvm::SmallVector<llvm::Value *, 1> const args{ value };
     auto const call(ctx->builder->CreateCall(fn, args));
 
-    if(expr.position == analyze::expression_position::tail)
+    if(expr.position == expression_position::tail)
     {
       return ctx->builder->CreateRet(call);
     }
     return call;
   }
 
-  /* TODO: Remove arity from gen? */
-  llvm::Value *llvm_processor::gen(analyze::expr::try_<analyze::expression> const &expr,
-                                   analyze::expr::function_arity<analyze::expression> const &arity)
+  llvm::Value *llvm_processor::gen(expr::try_<expression> const &expr,
+                                   expr::function_arity<expression> const &arity)
   {
-    //auto const landing(ctx->builder->CreateLandingPad(ctx->builder->getPtrTy(), 1, "try"));
-    /* TODO: Implement try. */
-    return gen(expr.body, arity);
+    auto const wrapped_body(
+      evaluate::wrap_expression(make_box<expression>(expr.body), "try_body", {}));
+    auto const wrapped_catch(evaluate::wrap_expression(make_box<expression>(expr.catch_body.body),
+                                                       "catch",
+                                                       { expr.catch_body.sym }));
+    auto const wrapped_finally(expr.finally_body.map([](auto const &finally) {
+      return evaluate::wrap_expression(make_box<expression>(finally), "finally", {});
+    }));
+
+    auto const body(gen(wrapped_body, arity));
+    auto const catch_(gen(wrapped_catch, arity));
+    auto const finally(
+      wrapped_finally.map([&](auto const &finally) { return gen(finally, arity); }));
+
+    auto const fn_type(llvm::FunctionType::get(
+      ctx->builder->getPtrTy(),
+      { ctx->builder->getPtrTy(), ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
+      false));
+    auto const fn(ctx->module->getOrInsertFunction("jank_try", fn_type));
+
+    llvm::SmallVector<llvm::Value *, 3> const args{ body,
+                                                    catch_,
+                                                    finally.unwrap_or(
+                                                      gen_global(obj::nil::nil_const())) };
+    auto const call(ctx->builder->CreateCall(fn, args));
+
+    if(expr.position == expression_position::tail)
+    {
+      return ctx->builder->CreateRet(call);
+    }
+    return call;
   }
 
   llvm::Value *llvm_processor::gen_var(obj::symbol_ptr const qualified_name) const
@@ -956,6 +1029,45 @@ namespace jank::codegen
       auto const create_fn(ctx->module->getOrInsertFunction("jank_real_create", create_fn_type));
       auto const arg(llvm::ConstantFP::get(ctx->builder->getDoubleTy(), r->data));
       auto const call(ctx->builder->CreateCall(create_fn, { arg }));
+      ctx->builder->CreateStore(call, global);
+
+      if(prev_block == ctx->global_ctor_block)
+      {
+        return call;
+      }
+    }
+
+    return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
+  }
+
+  llvm::Value *llvm_processor::gen_global(obj::ratio_ptr const r) const
+  {
+    if(auto const found(ctx->literal_globals.find(r)); found != ctx->literal_globals.end())
+    {
+      return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), found->second);
+    }
+
+    auto &global(ctx->literal_globals[r]);
+    auto const name(fmt::format("ratio_{}", r->to_hash()));
+    auto const var(create_global_var(name));
+    ctx->module->insertGlobalVariable(var);
+    global = var;
+
+    auto const prev_block(ctx->builder->GetInsertBlock());
+    {
+      llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
+      ctx->builder->SetInsertPoint(ctx->global_ctor_block);
+
+      auto const create_fn_type(
+        llvm::FunctionType::get(ctx->builder->getPtrTy(),
+                                { ctx->builder->getInt64Ty(), ctx->builder->getInt64Ty() },
+                                false));
+      auto const create_fn(ctx->module->getOrInsertFunction("jank_ratio_create", create_fn_type));
+      auto const num_arg(
+        llvm::ConstantInt::getSigned(ctx->builder->getInt64Ty(), r->data.numerator));
+      auto const denom_arg(
+        llvm::ConstantInt::getSigned(ctx->builder->getInt64Ty(), r->data.denominator));
+      auto const call(ctx->builder->CreateCall(create_fn, { num_arg, denom_arg }));
       ctx->builder->CreateStore(call, global);
 
       if(prev_block == ctx->global_ctor_block)
@@ -1189,12 +1301,12 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::gen_function_instance(
-    analyze::expr::function<analyze::expression> const &expr,
-    analyze::expr::function_arity<analyze::expression> const &fn_arity)
+  llvm::Value *
+  llvm_processor::gen_function_instance(expr::function<expression> const &expr,
+                                        expr::function_arity<expression> const &fn_arity)
   {
-    analyze::expr::function_arity<analyze::expression> const *variadic_arity{};
-    analyze::expr::function_arity<analyze::expression> const *highest_fixed_arity{};
+    expr::function_arity<expression> const *variadic_arity{};
+    expr::function_arity<expression> const *highest_fixed_arity{};
     auto const captures(expr.captures());
     for(auto const &arity : expr.arities)
     {
@@ -1257,8 +1369,8 @@ namespace jank::codegen
       for(auto const &capture : captures)
       {
         auto const field_ptr(ctx->builder->CreateStructGEP(closure_ctx_type, closure_obj, index++));
-        analyze::expr::local_reference const local_ref{
-          analyze::expression_base{ {}, analyze::expression_position::value, expr.frame },
+        expr::local_reference const local_ref{
+          expression_base{ {}, expression_position::value, expr.frame },
           capture.first,
           *capture.second
         };

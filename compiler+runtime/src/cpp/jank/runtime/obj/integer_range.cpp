@@ -57,21 +57,6 @@ namespace jank::runtime
   {
   }
 
-  obj::integer_range::static_object(native_integer const start,
-                                    native_integer const end,
-                                    native_integer const step,
-                                    obj::integer_range::bounds_check_t const bounds_check,
-                                    obj::array_chunk_ptr const chunk,
-                                    obj::integer_range_ptr const chunk_next)
-    : start{ start }
-    , end{ end }
-    , step{ step }
-    , bounds_check{ bounds_check }
-    , chunk{ chunk }
-    , chunk_next{ chunk_next }
-  {
-  }
-
   object_ptr obj::integer_range::create(native_integer const end)
   {
     if(end)
@@ -119,90 +104,24 @@ namespace jank::runtime
     return make_box<obj::integer>(start);
   }
 
-  // void obj::integer_range::force_chunk() const
-  // {
-  //   if(chunk)
-  //   {
-  //     return;
-  //   }
-
-  //   native_vector<object_ptr> arr;
-  //   arr.reserve(chunk_size);
-  //   size_t n{};
-  //   auto val{ start };
-  //   while(n < chunk_size)
-  //   {
-  //     arr.emplace_back(make_box<obj::integer>(val));
-  //     ++n;
-  //     val += step;
-  //     if(bounds_check(val, end))
-  //     {
-  //       chunk = make_box<obj::array_chunk>(std::move(arr), static_cast<size_t>(0));
-  //       return;
-  //     }
-  //   }
-
-  //   if(bounds_check(val, end))
-  //   {
-  //     chunk = make_box<obj::array_chunk>(std::move(arr), static_cast<size_t>(0));
-  //     return;
-  //   }
-
-  //   chunk = make_box<obj::array_chunk>(std::move(arr), static_cast<size_t>(0));
-  //   chunk_next = make_box<obj::integer_range>(val, end, step, bounds_check);
-  // }
-
   obj::integer_range_ptr obj::integer_range::next() const
   {
-    if(cached_next)
+    if(count() < 1)
     {
-      return cached_next;
+      return nullptr;
     }
-
-    force_chunk();
-    if(chunk->count() > 1)
-    {
-      auto const smaller_chunk(chunk->chunk_next());
-      cached_next
-        = make_box<obj::integer_range>(expect_object<obj::integer>(smaller_chunk->buffer[0])->data,
-                                       end,
-                                       step,
-                                       bounds_check,
-                                       smaller_chunk,
-                                       chunk_next);
-      return cached_next;
-    }
-    return chunked_next();
+    return make_box<obj::integer_range>(start + step, end, step, bounds_check);
   }
 
   obj::integer_range_ptr obj::integer_range::next_in_place()
   {
-    force_chunk();
-    if(chunk->count() > 1)
+    if(count() <= 1)
     {
-      chunk = chunk->chunk_next_in_place();
-      start = (expect_object<obj::integer>(chunk->buffer[0])->data)
-        + static_cast<native_integer>(chunk->offset);
-      return this;
+      return nullptr;
     }
-    return chunk_next;
+    start += step;
+    return this;
   }
-
-  // obj::array_chunk_ptr obj::integer_range::chunked_first() const
-  // {
-  //   force_chunk();
-  //   return chunk;
-  // }
-
-  // obj::integer_range_ptr obj::integer_range::chunked_next() const
-  // {
-  //   force_chunk();
-  //   if(!chunk_next)
-  //   {
-  //     return nullptr;
-  //   }
-  //   return chunk_next;
-  // }
 
   obj::cons_ptr obj::integer_range::conj(object_ptr const head) const
   {
@@ -266,6 +185,12 @@ namespace jank::runtime
 
     auto const diff{ end - start };
     auto const offset{ step > 0 ? -1 : 1 };
+
+    if((step > 0 && diff > std::numeric_limits<native_integer>::max() - step + offset)
+       || (step < 0 && diff < std::numeric_limits<native_integer>::min() - step + offset))
+    {
+      throw std::runtime_error("[Integer-Range] Overflow occurred in arithmetic");
+    }
 
     return static_cast<size_t>((diff + offset + step) / step);
   }

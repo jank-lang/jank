@@ -110,6 +110,7 @@ extern "C"
   jank_object_ptr jank_false();
   jank_object_ptr jank_integer_create(jank_native_integer i);
   jank_object_ptr jank_real_create(jank_native_real r);
+  jank_object_ptr jank_ratio_create(jank_native_integer numerator, jank_native_integer denominator);
   jank_object_ptr jank_string_create(char const *s);
   jank_object_ptr jank_symbol_create(jank_object_ptr ns, jank_object_ptr name);
   jank_object_ptr jank_character_create(char const *s);
@@ -255,6 +256,8 @@ extern "C"
   void jank_set_meta(jank_object_ptr o, jank_object_ptr meta);
 
   void jank_throw(jank_object_ptr o);
+  jank_object_ptr
+  jank_try(jank_object_ptr try_fn, jank_object_ptr catch_fn, jank_object_ptr finally_fn);
 
   void jank_profile_enter(char const *label);
   void jank_profile_exit(char const *label);

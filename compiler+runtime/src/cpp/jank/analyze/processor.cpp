@@ -259,7 +259,7 @@ namespace jank::analyze
 
     auto const params(runtime::expect_object<runtime::obj::persistent_vector>(params_obj));
 
-    local_frame_ptr frame{
+    auto frame{
       make_box<local_frame>(local_frame::frame_type::fn, current_frame->rt_ctx, current_frame)
     };
 
@@ -958,8 +958,17 @@ namespace jank::analyze
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
   {
+    auto try_frame(
+      make_box<local_frame>(local_frame::frame_type::try_, current_frame->rt_ctx, current_frame));
+    /* We introduce a new frame so that we can register the sym as a local.
+     * It holds the exception value which was caught. */
+    auto catch_frame(
+      make_box<local_frame>(local_frame::frame_type::catch_, current_frame->rt_ctx, current_frame));
+    auto finally_frame(make_box<local_frame>(local_frame::frame_type::finally,
+                                             current_frame->rt_ctx,
+                                             current_frame));
     expr::try_<expression> ret{
-      expression_base{ {}, position, current_frame }
+      expression_base{ {}, position, try_frame }
     };
 
     /* Clojure JVM doesn't support recur across try/catch/finally, so we don't either. */
@@ -984,18 +993,27 @@ namespace jank::analyze
       auto const item(it->first());
       auto const type(runtime::visit_seqable(
         [](auto const typed_item) {
-          auto const first(typed_item->seq()->first());
-          if(runtime::equal(first, &catch_))
+          using T = typename decltype(typed_item)::value_type;
+
+          if constexpr(std::same_as<T, obj::nil>)
           {
-            return try_expression_type::catch_;
-          }
-          else if(runtime::equal(first, &finally_))
-          {
-            return try_expression_type::finally_;
+            return try_expression_type::other;
           }
           else
           {
-            return try_expression_type::other;
+            auto const first(typed_item->seq()->first());
+            if(runtime::equal(first, &catch_))
+            {
+              return try_expression_type::catch_;
+            }
+            else if(runtime::equal(first, &finally_))
+            {
+              return try_expression_type::finally_;
+            }
+            else
+            {
+              return try_expression_type::other;
+            }
           }
         },
         []() { return try_expression_type::other; },
@@ -1012,7 +1030,7 @@ namespace jank::analyze
 
             auto const is_last(it->next() == nullptr);
             auto const form_type(is_last ? position : expression_position::statement);
-            auto form(analyze(item, current_frame, form_type, fn_ctx, is_last));
+            auto form(analyze(item, try_frame, form_type, fn_ctx, is_last));
             if(form.is_err())
             {
               return form.expect_err_move();
@@ -1053,17 +1071,12 @@ namespace jank::analyze
               return err(error{ "symbol for catch must be unqualified" });
             }
 
-            /* We introduce a new frame so that we can register the sym as a local.
-             * It holds the exception value which was caught. */
-            auto frame(make_box<local_frame>(local_frame::frame_type::catch_,
-                                             current_frame->rt_ctx,
-                                             current_frame));
-            frame->locals.emplace(sym, local_binding{ sym, none, current_frame });
+            catch_frame->locals.emplace(sym, local_binding{ sym, none, catch_frame });
 
             /* Now we just turn the body into a do block and have the do analyzer handle the rest. */
             auto const do_list(
               catch_list->data.rest().rest().conj(make_box<runtime::obj::symbol>("do")));
-            auto do_res(analyze(make_box(do_list), frame, position, fn_ctx, true));
+            auto do_res(analyze(make_box(do_list), catch_frame, position, fn_ctx, true));
             if(do_res.is_err())
             {
               return do_res.expect_err_move();
@@ -1086,7 +1099,7 @@ namespace jank::analyze
             auto const do_list(
               finally_list->data.rest().conj(make_box<runtime::obj::symbol>("do")));
             auto do_res(analyze(make_box(do_list),
-                                current_frame,
+                                finally_frame,
                                 expression_position::statement,
                                 fn_ctx,
                                 false));
@@ -1106,7 +1119,13 @@ namespace jank::analyze
       return err(error{ "each try must have a catch clause" });
     }
 
+    ret.body.frame = try_frame;
     ret.body.propagate_position(position);
+    ret.catch_body.body.frame = catch_frame;
+    if(ret.finally_body.is_some())
+    {
+      ret.finally_body.unwrap().frame = finally_frame;
+    }
 
     return make_box<expression>(std::move(ret));
   }
