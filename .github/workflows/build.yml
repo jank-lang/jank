@@ -37,7 +37,7 @@ jobs:
         uses: ./.github/actions/build
         id: build
         with:
-          update_release: ${{ matrix.build_type == 'Release' }}
+          update_release: ${{ github.ref == 'refs/heads/main' && matrix.build_type == 'Release' }}
       - name: Update latest release
         if: success() && github.ref == 'refs/heads/main' && ${{ matrix.build_type == 'Release' }}
         uses: pyTooling/Actions/releaser@main
