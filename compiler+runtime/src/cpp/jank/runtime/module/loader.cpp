@@ -132,7 +132,7 @@ namespace jank::runtime::module
     auto const success(zf.open(libzippp::ZipArchive::ReadOnly));
     if(!success)
     {
-      throw std::runtime_error{ fmt::format("Failed to open jar on classpath: {}", path) };
+      throw std::runtime_error{ fmt::format("Failed to open jar on module path: {}", path) };
     }
 
     auto const &zip_entry(zf.getEntry(std::string{ entry.path }));
@@ -144,7 +144,7 @@ namespace jank::runtime::module
                              file_entry const &entry)
   {
     boost::filesystem::path const p{ native_transient_string{ entry.path } };
-    /* We need the file path relative to the class path, since the class
+    /* We need the file path relative to the module path, since the class
      * path portion is not included in part of the module name. For example,
      * the file may live in `src/jank/clojure/core.jank` but the module
      * should be `clojure.core`, not `src.jank.clojure.core`. */
@@ -227,7 +227,7 @@ namespace jank::runtime::module
     auto success(zf.open(libzippp::ZipArchive::ReadOnly));
     if(!success)
     {
-      std::cerr << fmt::format("Failed to open jar on classpath: {}\n", path);
+      std::cerr << fmt::format("Failed to open jar on module path: {}\n", path);
       return;
     }
 
@@ -245,7 +245,7 @@ namespace jank::runtime::module
   static void register_path(native_unordered_map<native_persistent_string, loader::entry> &entries,
                             native_persistent_string_view const &path)
   {
-    /* It's entirely possible to have empty entries in the classpath, mainly due to lazy string
+    /* It's entirely possible to have empty entries in the module path, mainly due to lazy string
      * concatenation. We just ignore them. This means something like "::::" is valid. */
     if(path.empty() || !boost::filesystem::exists(path))
     {
@@ -279,7 +279,7 @@ namespace jank::runtime::module
     paths += fmt::format(":{}", rt_ctx.output_dir);
     this->paths = paths;
 
-    //fmt::println("classpaths: {}", paths);
+    //fmt::println("module paths: {}", paths);
 
     size_t start{};
     size_t i{ paths.find(module_separator, start) };

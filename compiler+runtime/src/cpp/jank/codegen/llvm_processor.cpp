@@ -263,6 +263,21 @@ namespace jank::codegen
       ctx->builder->CreateCall(set_meta_fn, { ref, meta });
     }
 
+    auto const set_dynamic_fn_type(
+      llvm::FunctionType::get(ctx->builder->getPtrTy(),
+                              { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
+                              false));
+
+    auto const set_dynamic_fn(
+      ctx->module->getOrInsertFunction("jank_var_set_dynamic", set_dynamic_fn_type));
+
+    auto const dynamic{ truthy(get(expr.name->meta.unwrap_or(obj::nil::nil_const()),
+                                   __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+
+    auto const dynamic_global{ gen_global(make_box(dynamic)) };
+
+    ctx->builder->CreateCall(set_dynamic_fn, { ref, dynamic_global });
+
     if(expr.position == expression_position::tail)
     {
       return ctx->builder->CreateRet(ref);
@@ -619,7 +634,6 @@ namespace jank::codegen
      * if a new fn is created. */
     auto const is_closure(!fn_expr.captures().empty());
 
-    /* TODO: We need to worry about arg packing here. */
     llvm::SmallVector<llvm::Value *> arg_handles;
     llvm::SmallVector<llvm::Type *> arg_types;
     arg_handles.reserve(expr.arg_exprs.size() + is_closure);

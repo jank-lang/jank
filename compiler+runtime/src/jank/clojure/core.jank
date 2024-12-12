@@ -3770,8 +3770,8 @@
             to-refer)))
 
 (defn load
-  "Loads Clojure code from resources in classpath. A path is interpreted as
-   classpath-relative if it begins with a slash or relative to the root
+  "Loads Clojure code from resources in the module path. A path is interpreted as
+   module-path-relative if it begins with a slash or relative to the root
    directory for the current namespace otherwise."
   [& paths]
   (if (empty? paths)
@@ -3870,9 +3870,9 @@
 (defn compile
   "Compiles the namespace named by the symbol lib into a set of
    classfiles. The source for the lib must be in a proper
-   classpath-relative directory. The output files will go into the
+   module-path-relative directory. The output files will go into the
    directory specified by *compile-path*, and that directory too must
-   be in the classpath."
+   be in the module path."
   [path]
   (clojure.core-native/compile path))
 
@@ -3885,19 +3885,19 @@
 
    Libs
 
-   A 'lib' is a named set of resources in classpath whose contents define a
+   A 'lib' is a named set of resources in module path whose contents define a
    library of Clojure code. Lib names are symbols and each lib is associated
    with a Clojure namespace and a Java package that share its name. A lib's
-   name also locates its root directory within classpath using Java's
-   package name to classpath-relative path mapping. All resources in a lib
+   name also locates its root directory within module path using Java's
+   package name to module path-relative path mapping. All resources in a lib
    should be contained in the directory structure under its root directory.
    All definitions a lib makes should be in its associated namespace.
 
    'require loads a lib by loading its root resource. The root resource path
    is derived from the lib name in the following manner:
    Consider a lib named by the symbol 'x.y.z; it has the root directory
-   <classpath>/x/y/, and its root resource is <classpath>/x/y/z.clj, or
-   <classpath>/x/y/z.cljc if <classpath>/x/y/z.clj does not exist. The
+   <module path>/x/y/, and its root resource is <module path>/x/y/z.clj, or
+   <module path>/x/y/z.cljc if <module path>/x/y/z.clj does not exist. The
    root resource should contain code to create the lib's
    namespace (usually by using the ns macro) and load any additional
    lib resources.

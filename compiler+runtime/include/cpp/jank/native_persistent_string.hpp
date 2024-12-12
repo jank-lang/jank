@@ -670,7 +670,7 @@ namespace jank
     }
 
     /*** Conversions. ***/
-    constexpr operator native_transient_string() const noexcept
+    constexpr operator native_transient_string() const
     {
       return { data(), size() };
     }

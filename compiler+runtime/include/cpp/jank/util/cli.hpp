@@ -16,7 +16,7 @@ namespace jank::util::cli
   struct options
   {
     /* Runtime. */
-    native_transient_string class_path;
+    native_transient_string module_path;
     native_bool profiler_enabled{};
     native_transient_string profiler_file{ "jank.profile" };
     native_bool gc_incremental{};

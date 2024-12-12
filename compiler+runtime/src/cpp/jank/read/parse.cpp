@@ -15,6 +15,7 @@ namespace jank::read::parse
   using namespace jank::runtime;
 
   result<native_persistent_string, char_parse_error>
+
   parse_character_in_base(native_persistent_string const &char_literal, int const base)
   {
     try
@@ -1275,7 +1276,7 @@ namespace jank::read::parse
     {
       return err(error{ token.pos, "Divide by zero" });
     }
-    auto const ratio{ obj::ratio::create(ratio_data.numerator, ratio_data.denominator) } ;
+    auto const ratio{ obj::ratio::create(ratio_data.numerator, ratio_data.denominator) };
     if(ratio->type == object_type::ratio)
     {
       return object_source_info{ expect_object<obj::ratio>(ratio), token, token };

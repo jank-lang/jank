@@ -259,7 +259,7 @@ try
    * Notably this might make text encoding become more platform dependent.
    */
   std::locale::global(std::locale(""));
-  
+
   /* The GC needs to enabled even before arg parsing, since our native types,
    * like strings, use the GC for allocations. It can still be configured later. */
   GC_set_all_interior_pointers(1);

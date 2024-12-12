@@ -58,7 +58,7 @@ function build()
         -DLLVM_ENABLE_RUNTIMES=all \
         -DLLVM_BUILD_LLVM_DYLIB=ON \
         -DLLVM_LINK_LLVM_DYLIB=ON \
-        -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" \
+        -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt" \
         -DLLVM_TARGETS_TO_BUILD="host" \
         -DLLVM_ENABLE_EH=ON \
         -DLLVM_ENABLE_RTTI=ON \

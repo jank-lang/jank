@@ -263,7 +263,6 @@ target_link_libraries(
   fmt::fmt
   bdwgc::gc bdwgc::gccpp
   libzippp::libzippp
-  readline
   libclang.so
   libclang-cpp.so
   libLLVM.so
