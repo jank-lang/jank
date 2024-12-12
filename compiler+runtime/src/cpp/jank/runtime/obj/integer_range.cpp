@@ -1,5 +1,3 @@
-#include "jank/runtime/object.hpp"
-#include "jank/runtime/rtti.hpp"
 #include "jank/type.hpp"
 #include <jank/runtime/obj/integer_range.hpp>
 #include <jank/runtime/obj/number.hpp>
