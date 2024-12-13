@@ -55,6 +55,7 @@ namespace jank::runtime
     cons,
     lazy_sequence,
     range,
+    integer_range,
     repeat,
     iterator,
     native_array_sequence,
