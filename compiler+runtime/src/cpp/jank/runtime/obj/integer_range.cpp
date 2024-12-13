@@ -18,7 +18,8 @@ namespace jank::runtime
   }
 
   obj::integer_range::static_object(obj::integer_ptr const end)
-    : end{ end }
+    : start{ make_box<obj::integer>(0) }
+    , end{ end }
     , step{ make_box<obj::integer>(1) }
     , bounds_check{ positive_step_bounds_check }
   {
@@ -68,7 +69,7 @@ namespace jank::runtime
 
   object_ptr obj::integer_range::create(obj::integer_ptr const start, obj::integer_ptr const end)
   {
-    return create(start, end, make_box<obj::integer_ptr>(1));
+    return create(start, end, make_box<obj::integer>(1));
   }
 
   object_ptr obj::integer_range::create(obj::integer_ptr const start,
@@ -182,26 +183,21 @@ namespace jank::runtime
 
   size_t obj::integer_range::count() const
   {
-    if(is_zero(step))
+    auto const s{ step->data };
+    if(s == 0)
     {
-      throw std::runtime_error("Step shouldn't be 0");
+      throw std::runtime_error("[Integer-Range] Step shouldn't be 0");
     }
 
-    auto const diff{ sub(start, step) };
-    auto const offset{ lt(static_cast<native_integer>(0), step) ? -1 : 1 };
+    auto const diff{ sub(end, start) };
+    auto const offset{ s > 0 ? -1 : 1 };
 
-    if((lt(static_cast<native_integer>(0), step)
-        && lt(sub(std::numeric_limits<native_integer>::max(),
-                  add(step, static_cast<native_integer>(offset))),
-              diff))
-       || (lt(step, static_cast<native_integer>(0))
-           && lt(diff,
-                 sub(std::numeric_limits<native_integer>::min(),
-                     add(step, static_cast<native_integer>(offset))))))
+    if((s > 0 && diff > std::numeric_limits<native_integer>::max() - s + offset)
+       || (s < 0 && diff < std::numeric_limits<native_integer>::min() - s + offset))
     {
       throw std::runtime_error("[Integer-Range] Overflow occurred in arithmetic");
     }
 
-    return static_cast<size_t>(div(add(diff + offset, step), step));
+    return static_cast<size_t>((diff + offset + s) / s);
   }
 }
