@@ -3,30 +3,30 @@
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/visit.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  obj::iterator::static_object(object_ptr const fn, object_ptr const start)
+  iterator::iterator(object_ptr const fn, object_ptr const start)
     : fn{ fn }
     , current{ start }
   {
   }
 
-  obj::iterator_ptr obj::iterator::seq()
+  iterator_ptr iterator::seq()
   {
     return this;
   }
 
-  obj::iterator_ptr obj::iterator::fresh_seq() const
+  iterator_ptr iterator::fresh_seq() const
   {
-    return make_box<obj::iterator>(fn, current);
+    return make_box<iterator>(fn, current);
   }
 
-  object_ptr obj::iterator::first() const
+  object_ptr iterator::first() const
   {
     return current;
   }
 
-  obj::iterator_ptr obj::iterator::next() const
+  iterator_ptr iterator::next() const
   {
     if(cached_next)
     {
@@ -34,13 +34,13 @@ namespace jank::runtime
     }
 
     auto const next(dynamic_call(fn, current));
-    auto const ret(make_box<obj::iterator>(fn, next));
+    auto const ret(make_box<iterator>(fn, next));
     cached_next = ret;
 
     return ret;
   }
 
-  obj::iterator_ptr obj::iterator::next_in_place()
+  iterator_ptr iterator::next_in_place()
   {
     if(cached_next)
     {
@@ -56,7 +56,7 @@ namespace jank::runtime
     return this;
   }
 
-  native_bool obj::iterator::equal(object const &o) const
+  native_bool iterator::equal(object const &o) const
   {
     return visit_seqable(
       [this](auto const typed_o) {
@@ -75,28 +75,28 @@ namespace jank::runtime
       &o);
   }
 
-  void obj::iterator::to_string(fmt::memory_buffer &buff)
+  void iterator::to_string(fmt::memory_buffer &buff)
   {
     runtime::to_string(seq(), buff);
   }
 
-  native_persistent_string obj::iterator::to_string()
+  native_persistent_string iterator::to_string()
   {
     return runtime::to_string(seq());
   }
 
-  native_persistent_string obj::iterator::to_code_string()
+  native_persistent_string iterator::to_code_string()
   {
     return runtime::to_code_string(seq());
   }
 
-  native_hash obj::iterator::to_hash() const
+  native_hash iterator::to_hash() const
   {
     return hash::ordered(&base);
   }
 
-  obj::cons_ptr obj::iterator::conj(object_ptr const head) const
+  cons_ptr iterator::conj(object_ptr const head) const
   {
-    return make_box<obj::cons>(head, this);
+    return make_box<cons>(head, this);
   }
 }

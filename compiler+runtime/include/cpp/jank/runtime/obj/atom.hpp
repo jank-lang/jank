@@ -3,15 +3,17 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  template <>
-  struct static_object<object_type::atom> : gc
+  using atom_ptr = native_box<struct atom>;
+
+  struct atom : gc
   {
+    static constexpr object_type obj_type{ object_type::atom };
     static constexpr native_bool pointer_free{ false };
 
-    static_object() = default;
-    static_object(object_ptr o);
+    atom() = default;
+    atom(object_ptr o);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -46,10 +48,4 @@ namespace jank::runtime
     object base{ object_type::atom };
     std::atomic<object *> val{};
   };
-
-  namespace obj
-  {
-    using atom = static_object<object_type::atom>;
-    using atom_ptr = native_box<atom>;
-  }
 }

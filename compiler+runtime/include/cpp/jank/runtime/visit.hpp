@@ -360,7 +360,7 @@ namespace jank::runtime
   [[gnu::hot]]
   constexpr auto visit_type(F const &fn, object const * const const_erased, Args &&...args)
   {
-    if(const_erased->type == detail::object_type_to_enum<T>::value)
+    if(const_erased->type == T::obj_type)
     {
       return fn(expect_object<T>(const_erased), std::forward<Args>(args)...);
     }

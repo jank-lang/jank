@@ -3,20 +3,22 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  template <>
-  struct static_object<object_type::jit_function>
+  using jit_function_ptr = native_box<struct jit_function>;
+
+  struct jit_function
     : gc
     , behavior::callable
   {
+    static constexpr object_type obj_type{ object_type::jit_function };
     static constexpr native_bool pointer_free{ false };
 
-    static_object() = default;
-    static_object(static_object &&) = default;
-    static_object(static_object const &) = default;
-    static_object(arity_flag_t arity_flags);
-    static_object(object_ptr meta);
+    jit_function() = default;
+    jit_function(jit_function &&) noexcept = default;
+    jit_function(jit_function const &) = default;
+    jit_function(arity_flag_t arity_flags);
+    jit_function(object_ptr meta);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -26,7 +28,7 @@ namespace jank::runtime
     native_hash to_hash() const;
 
     /* behavior::metadatable */
-    native_box<static_object> with_meta(object_ptr m);
+    jit_function_ptr with_meta(object_ptr m);
 
     /* behavior::callable */
     object_ptr call() final;
@@ -103,10 +105,4 @@ namespace jank::runtime
     option<object_ptr> meta;
     arity_flag_t arity_flags{};
   };
-
-  namespace obj
-  {
-    using jit_function = static_object<object_type::jit_function>;
-    using jit_function_ptr = native_box<jit_function>;
-  }
 }

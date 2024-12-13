@@ -10,25 +10,25 @@
 
 namespace jank::runtime
 {
-  var::static_object(ns_ptr const &n, obj::symbol_ptr const &name)
+  var::var(ns_ptr const &n, obj::symbol_ptr const &name)
     : n{ n }
     , name{ name }
     , root{ make_box<var_unbound_root>(this) }
   {
   }
 
-  var::static_object(ns_ptr const &n, obj::symbol_ptr const &name, object_ptr const root)
+  var::var(ns_ptr const &n, obj::symbol_ptr const &name, object_ptr const root)
     : n{ n }
     , name{ name }
     , root{ root }
   {
   }
 
-  var::static_object(ns_ptr const &n,
-                     obj::symbol_ptr const &name,
-                     object_ptr const root,
-                     native_bool const dynamic,
-                     native_bool const thread_bound)
+  var::var(ns_ptr const &n,
+           obj::symbol_ptr const &name,
+           object_ptr const root,
+           native_bool const dynamic,
+           native_bool const thread_bound)
     : n{ n }
     , name{ name }
     , root{ root }
@@ -182,7 +182,7 @@ namespace jank::runtime
     return make_box<var>(n, name, get_root(), dynamic.load(), thread_bound.load());
   }
 
-  var_thread_binding::static_object(object_ptr const value, std::thread::id const id)
+  var_thread_binding::var_thread_binding(object_ptr const value, std::thread::id const id)
     : value{ value }
     , thread_id{ id }
   {
@@ -213,7 +213,7 @@ namespace jank::runtime
     return hash::visit(value);
   }
 
-  var_unbound_root::static_object(var_ptr const var)
+  var_unbound_root::var_unbound_root(var_ptr const var)
     : var{ var }
   {
   }

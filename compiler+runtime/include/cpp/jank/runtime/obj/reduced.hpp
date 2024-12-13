@@ -2,15 +2,17 @@
 
 #include <jank/runtime/object.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  template <>
-  struct static_object<object_type::reduced> : gc
+  using reduced_ptr = native_box<struct reduced>;
+
+  struct reduced : gc
   {
+    static constexpr object_type obj_type{ object_type::reduced };
     static constexpr native_bool pointer_free{ false };
 
-    static_object() = default;
-    static_object(object_ptr o);
+    reduced() = default;
+    reduced(object_ptr o);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -25,10 +27,4 @@ namespace jank::runtime
     object base{ object_type::reduced };
     object_ptr val{};
   };
-
-  namespace obj
-  {
-    using reduced = static_object<object_type::reduced>;
-    using reduced_ptr = native_box<reduced>;
-  }
 }

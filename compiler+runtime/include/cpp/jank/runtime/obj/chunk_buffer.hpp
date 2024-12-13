@@ -2,22 +2,19 @@
 
 #include <jank/runtime/object.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  namespace obj
-  {
-    using array_chunk = static_object<object_type::array_chunk>;
-    using array_chunk_ptr = native_box<array_chunk>;
-  }
+  using array_chunk_ptr = native_box<struct array_chunk>;
+  using chunk_buffer_ptr = native_box<struct chunk_buffer>;
 
-  template <>
-  struct static_object<object_type::chunk_buffer> : gc
+  struct chunk_buffer : gc
   {
+    static constexpr object_type obj_type{ object_type::chunk_buffer };
     static constexpr native_bool pointer_free{ false };
 
-    static_object() = default;
-    static_object(size_t capacity);
-    static_object(object_ptr capacity);
+    chunk_buffer() = default;
+    chunk_buffer(size_t capacity);
+    chunk_buffer(object_ptr capacity);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -36,10 +33,4 @@ namespace jank::runtime
     native_vector<object_ptr> buffer;
     size_t capacity{};
   };
-
-  namespace obj
-  {
-    using chunk_buffer = static_object<object_type::chunk_buffer>;
-    using chunk_buffer_ptr = native_box<chunk_buffer>;
-  }
 }

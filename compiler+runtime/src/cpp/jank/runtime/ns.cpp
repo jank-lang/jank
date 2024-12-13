@@ -4,7 +4,7 @@
 
 namespace jank::runtime
 {
-  ns::static_object(obj::symbol_ptr const &name, context &c)
+  ns::ns(obj::symbol_ptr const &name, context &c)
     : name{ name }
     , vars{ obj::persistent_hash_map::empty() }
     , aliases{ obj::persistent_hash_map::empty() }
@@ -56,8 +56,7 @@ namespace jank::runtime
     return { expect_object<var>(*found) };
   }
 
-  result<void, native_persistent_string>
-  ns::add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns)
+  result<void, native_persistent_string> ns::add_alias(obj::symbol_ptr const &sym, ns_ptr const &ns)
   {
     auto locked_aliases(aliases.wlock());
     auto const found((*locked_aliases)->data.find(sym));

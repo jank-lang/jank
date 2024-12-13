@@ -2,24 +2,20 @@
 
 #include <jank/runtime/object.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  namespace obj
-  {
-    using persistent_array_map = static_object<object_type::persistent_array_map>;
-    using persistent_array_map_ptr = native_box<persistent_array_map>;
-    using cons = static_object<object_type::cons>;
-    using cons_ptr = native_box<cons>;
-  }
+  using persistent_array_map_ptr = native_box<struct persistent_array_map>;
+  using cons_ptr = native_box<struct cons>;
+  using nil_ptr = native_box<struct nil>;
 
-  template <>
-  struct static_object<object_type::nil> : gc
+  struct nil : gc
   {
+    static constexpr object_type obj_type{ object_type::nil };
     static constexpr native_bool pointer_free{ true };
 
-    static native_box<static_object> nil_const();
+    static nil_ptr nil_const();
 
-    static_object() = default;
+    nil() = default;
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -32,7 +28,7 @@ namespace jank::runtime
     native_integer compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(static_object const &) const;
+    native_integer compare(nil const &) const;
 
     /* behavior::associatively_readable */
     object_ptr get(object_ptr const key);
@@ -42,26 +38,20 @@ namespace jank::runtime
 
     /* behavior::associatively_writable */
     obj::persistent_array_map_ptr assoc(object_ptr key, object_ptr val) const;
-    native_box<static_object> dissoc(object_ptr key) const;
+    nil_ptr dissoc(object_ptr key) const;
 
     /* behavior::seqable */
-    native_box<static_object> seq();
-    native_box<static_object> fresh_seq() const;
+    nil_ptr seq();
+    nil_ptr fresh_seq() const;
 
     /* behavior::sequenceable */
-    native_box<static_object> first() const;
-    native_box<static_object> next() const;
+    nil_ptr first() const;
+    nil_ptr next() const;
     obj::cons_ptr conj(object_ptr head) const;
 
     /* behavior::sequenceable_in_place */
-    native_box<static_object> next_in_place();
+    nil_ptr next_in_place();
 
     object base{ object_type::nil };
   };
-
-  namespace obj
-  {
-    using nil = static_object<object_type::nil>;
-    using nil_ptr = native_box<nil>;
-  }
 }

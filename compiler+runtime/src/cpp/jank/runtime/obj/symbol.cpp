@@ -4,10 +4,10 @@
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/visit.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
   template <typename S>
-  static void separate(obj::symbol &sym, S &&s)
+  static void separate(symbol &sym, S &&s)
   {
     auto const found(s.find('/'));
     if(found != native_persistent_string::npos && s.size() > 1)
@@ -21,65 +21,65 @@ namespace jank::runtime
     }
   }
 
-  obj::symbol::static_object(native_persistent_string const &d)
+  symbol::symbol(native_persistent_string const &d)
   {
     separate(*this, d);
   }
 
-  obj::symbol::static_object(native_persistent_string &&d)
+  symbol::symbol(native_persistent_string &&d)
   {
     separate(*this, std::move(d));
   }
 
-  obj::symbol::static_object(native_persistent_string const &ns, native_persistent_string const &n)
+  symbol::symbol(native_persistent_string const &ns, native_persistent_string const &n)
     : ns{ ns }
     , name{ n }
   {
   }
 
-  obj::symbol::static_object(native_persistent_string &&ns, native_persistent_string &&n)
+  symbol::symbol(native_persistent_string &&ns, native_persistent_string &&n)
     : ns{ std::move(ns) }
     , name{ std::move(n) }
   {
   }
 
-  obj::symbol::static_object(native_persistent_string const &ns,
-                             native_persistent_string const &n,
-                             object_ptr const meta)
+  symbol::symbol(native_persistent_string const &ns,
+                 native_persistent_string const &n,
+                 object_ptr const meta)
     : ns{ ns }
     , name{ n }
     , meta{ meta }
   {
   }
 
-  obj::symbol::static_object(object_ptr const ns, object_ptr const n)
+  symbol::symbol(object_ptr const ns, object_ptr const n)
     : ns{ runtime::to_string(ns) }
     , name{ runtime::to_string(n) }
   {
   }
 
-  native_bool obj::symbol::equal(object const &o) const
+  native_bool symbol::equal(object const &o) const
   {
     if(o.type != object_type::symbol)
     {
       return false;
     }
 
-    auto const s(expect_object<obj::symbol>(&o));
+    auto const s(expect_object<symbol>(&o));
     return ns == s->ns && name == s->name;
   }
 
-  native_bool obj::symbol::equal(obj::symbol const &s) const
+  native_bool symbol::equal(symbol const &s) const
   {
     return ns == s.ns && name == s.name;
   }
 
-  native_integer obj::symbol::compare(object const &o) const
+  native_integer symbol::compare(object const &o) const
   {
-    return visit_type<obj::symbol>([this](auto const typed_o) { return compare(*typed_o); }, &o);
+    return visit_type<symbol>([this](auto const typed_o) { return compare(*typed_o); }, &o);
   }
 
-  native_integer obj::symbol::compare(obj::symbol const &s) const
+  native_integer symbol::compare(symbol const &s) const
   {
     if(equal(s))
     {
@@ -119,24 +119,24 @@ namespace jank::runtime
     }
   }
 
-  void obj::symbol::to_string(fmt::memory_buffer &buff) const
+  void symbol::to_string(fmt::memory_buffer &buff) const
   {
     to_string_impl(ns, name, buff);
   }
 
-  native_persistent_string obj::symbol::to_string() const
+  native_persistent_string symbol::to_string() const
   {
     fmt::memory_buffer buff;
     to_string_impl(ns, name, buff);
     return native_persistent_string{ buff.data(), buff.size() };
   }
 
-  native_persistent_string obj::symbol::to_code_string() const
+  native_persistent_string symbol::to_code_string() const
   {
     return to_string();
   }
 
-  native_hash obj::symbol::to_hash() const
+  native_hash symbol::to_hash() const
   {
     if(hash)
     {
@@ -146,41 +146,41 @@ namespace jank::runtime
     return hash = hash::combine(hash::string(name), hash::string(ns));
   }
 
-  obj::symbol_ptr obj::symbol::with_meta(object_ptr const m) const
+  symbol_ptr symbol::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(make_box<obj::symbol>(ns, name));
+    auto ret(make_box<symbol>(ns, name));
     ret->meta = meta;
     return ret;
   }
 
-  native_persistent_string const &obj::symbol::get_name() const
+  native_persistent_string const &symbol::get_name() const
   {
     return name;
   }
 
-  native_persistent_string const &obj::symbol::get_namespace() const
+  native_persistent_string const &symbol::get_namespace() const
   {
     return ns;
   }
 
-  bool obj::symbol::operator==(obj::symbol const &rhs) const
+  bool symbol::operator==(symbol const &rhs) const
   {
     return ns == rhs.ns && name == rhs.name;
   }
 
-  bool obj::symbol::operator<(obj::symbol const &rhs) const
+  bool symbol::operator<(symbol const &rhs) const
   {
     return to_hash() < rhs.to_hash();
   }
 
-  void obj::symbol::set_ns(native_persistent_string const &s)
+  void symbol::set_ns(native_persistent_string const &s)
   {
     ns = s;
     hash = 0;
   }
 
-  void obj::symbol::set_name(native_persistent_string const &s)
+  void symbol::set_name(native_persistent_string const &s)
   {
     name = s;
     hash = 0;

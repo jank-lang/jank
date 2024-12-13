@@ -3,27 +3,26 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/type.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  template <>
-  struct static_object<object_type::transient_vector> : gc
+  using transient_vector_ptr = native_box<struct transient_vector>;
+
+  struct transient_vector : gc
   {
+    static constexpr object_type obj_type{ object_type::transient_vector };
     static constexpr bool pointer_free{ false };
 
-    using value_type = detail::native_transient_vector;
-    using persistent_type = static_object<object_type::persistent_vector>;
+    using value_type = runtime::detail::native_transient_vector;
+    using persistent_type_ptr = native_box<struct persistent_vector>;
 
-    static_object() = default;
-    static_object(static_object &&) noexcept = default;
-    static_object(static_object const &) = default;
-    static_object(detail::native_persistent_vector const &d);
-    static_object(detail::native_persistent_vector &&d);
-    static_object(value_type &&d);
+    transient_vector() = default;
+    transient_vector(transient_vector &&) noexcept = default;
+    transient_vector(transient_vector const &) = default;
+    transient_vector(runtime::detail::native_persistent_vector const &d);
+    transient_vector(runtime::detail::native_persistent_vector &&d);
+    transient_vector(value_type &&d);
 
-    static native_box<static_object> empty()
-    {
-      return make_box<static_object>();
-    }
+    static transient_vector_ptr empty();
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -36,10 +35,10 @@ namespace jank::runtime
     size_t count() const;
 
     /* behavior::conjable_in_place */
-    native_box<static_object> conj_in_place(object_ptr head);
+    transient_vector_ptr conj_in_place(object_ptr head);
 
     /* behavior::persistentable */
-    native_box<persistent_type> to_persistent();
+    persistent_type_ptr to_persistent();
 
     /* behavior::callable */
     object_ptr call(object_ptr const) const;
@@ -50,7 +49,7 @@ namespace jank::runtime
     object_ptr get_entry(object_ptr const idx) const;
     native_bool contains(object_ptr const elem) const;
 
-    native_box<static_object> pop_in_place();
+    transient_vector_ptr pop_in_place();
 
     void assert_active() const;
 
@@ -59,10 +58,4 @@ namespace jank::runtime
     mutable native_hash hash{};
     native_bool active{ true };
   };
-
-  namespace obj
-  {
-    using transient_vector = static_object<object_type::transient_vector>;
-    using transient_vector_ptr = native_box<transient_vector>;
-  }
 }

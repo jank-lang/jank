@@ -5,67 +5,66 @@
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/util/escape.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  obj::persistent_string::static_object(native_persistent_string const &d)
+  persistent_string::persistent_string(native_persistent_string const &d)
     : data{ d }
   {
   }
 
-  obj::persistent_string::static_object(native_persistent_string &&d)
+  persistent_string::persistent_string(native_persistent_string &&d)
     : data{ std::move(d) }
   {
   }
 
-  native_bool obj::persistent_string::equal(object const &o) const
+  native_bool persistent_string::equal(object const &o) const
   {
     if(o.type != object_type::persistent_string)
     {
       return false;
     }
 
-    auto const s(expect_object<obj::persistent_string>(&o));
+    auto const s(expect_object<persistent_string>(&o));
     return data == s->data;
   }
 
-  native_persistent_string const &obj::persistent_string::to_string() const
+  native_persistent_string const &persistent_string::to_string() const
   {
     return data;
   }
 
-  void obj::persistent_string::to_string(fmt::memory_buffer &buff) const
+  void persistent_string::to_string(fmt::memory_buffer &buff) const
   {
     fmt::format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data);
   }
 
-  native_persistent_string obj::persistent_string::to_code_string() const
+  native_persistent_string persistent_string::to_code_string() const
   {
     return fmt::format(R"("{}")", util::escape(to_string()));
   }
 
-  native_hash obj::persistent_string::to_hash() const
+  native_hash persistent_string::to_hash() const
   {
     return data.to_hash();
   }
 
-  native_integer obj::persistent_string::compare(object const &o) const
+  native_integer persistent_string::compare(object const &o) const
   {
-    return compare(*try_object<obj::persistent_string>(&o));
+    return compare(*try_object<persistent_string>(&o));
   }
 
-  native_integer obj::persistent_string::compare(obj::persistent_string const &s) const
+  native_integer persistent_string::compare(persistent_string const &s) const
   {
     return data.compare(s.data);
   }
 
-  result<obj::persistent_string_ptr, native_persistent_string>
-  obj::persistent_string::substring(native_integer start) const
+  string_result<persistent_string_ptr> persistent_string::substring(native_integer start) const
   {
     return substring(start, static_cast<native_integer>(data.size()));
   }
 
-  result<obj::persistent_string_ptr, native_persistent_string>
-  obj::persistent_string::substring(native_integer const start, native_integer const end) const
+  string_result<persistent_string_ptr>
+  persistent_string::substring(native_integer const start, native_integer const end) const
   {
     if(start < 0)
     {
@@ -87,7 +86,7 @@ namespace jank::runtime
     return ok(make_box(data.substr(start, end)));
   }
 
-  native_integer obj::persistent_string::first_index_of(object_ptr const m) const
+  native_integer persistent_string::first_index_of(object_ptr const m) const
   {
     auto const s(runtime::to_string(m));
     auto const found(data.find(s));
@@ -98,7 +97,7 @@ namespace jank::runtime
     return static_cast<native_integer>(found);
   }
 
-  native_integer obj::persistent_string::last_index_of(object_ptr const m) const
+  native_integer persistent_string::last_index_of(object_ptr const m) const
   {
     auto const s(runtime::to_string(m));
     auto const found(data.rfind(s));
@@ -109,26 +108,26 @@ namespace jank::runtime
     return static_cast<native_integer>(found);
   }
 
-  size_t obj::persistent_string::count() const
+  size_t persistent_string::count() const
   {
     return data.size();
   }
 
-  obj::persistent_string_sequence_ptr obj::persistent_string::seq() const
+  persistent_string_sequence_ptr persistent_string::seq() const
   {
     if(data.empty())
     {
       return nullptr;
     }
-    return make_box<obj::persistent_string_sequence>(const_cast<obj::persistent_string *>(this));
+    return make_box<persistent_string_sequence>(const_cast<persistent_string *>(this));
   }
 
-  obj::persistent_string_sequence_ptr obj::persistent_string::fresh_seq() const
+  persistent_string_sequence_ptr persistent_string::fresh_seq() const
   {
     if(data.empty())
     {
       return nullptr;
     }
-    return make_box<obj::persistent_string_sequence>(const_cast<obj::persistent_string *>(this));
+    return make_box<persistent_string_sequence>(const_cast<persistent_string *>(this));
   }
 }

@@ -86,17 +86,10 @@ namespace jank::runtime
   {
     object_type type{};
   };
-
-  template <object_type T>
-  struct static_object;
 }
-
-#include <jank/runtime/native_box.hpp>
 
 namespace jank::runtime
 {
-  using object_ptr = native_box<object>;
-
   namespace behavior
   {
     /* Every object implements this behavior and it's the only behavior in common with
@@ -104,6 +97,8 @@ namespace jank::runtime
      * instead just be a part of this. */
     template <typename T>
     concept object_like = requires(T * const t) {
+      { T::obj_type } -> std::convertible_to<object_type>;
+
       /* Determines is the specified object is equal, but not necessarily identical, to
        * the current object. Identical means having the same address, the same identity.
        * Equal just means having equal values. Equivalent means having equal values of the
@@ -128,10 +123,17 @@ namespace jank::runtime
       /* Every object needs to have this base field, which is the actual object field.
        * When we pass around object pointers, we pass around pointers to this field within
        * the overall object. This field stores the type of the object and we use that
-       * type to shift the object pointer and cast it into the fully typed static_object. */
+       * type to shift the object pointer and cast it into the fully typed object. */
       { t->base } -> std::same_as<object &>;
     };
   }
+}
+
+#include <jank/runtime/native_box.hpp>
+
+namespace jank::runtime
+{
+  using object_ptr = native_box<object>;
 
   /* This isn't a great name, but it represents more than just value equality, since it
    * also includes type equality. Otherwise, [] equals '(). This is important when deduping

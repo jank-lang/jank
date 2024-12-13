@@ -21,12 +21,12 @@ namespace jank::runtime::obj::detail
 {
   /* Array maps and hash maps share a lot of common code, so we have a common base.
    * No virtual fns are used, so this structure won't survive release optimizations. */
-  template <object_type OT, object_type ST, typename V>
+  template <typename PT, typename ST, typename V>
   struct base_persistent_map : gc
   {
+    using parent_type = PT;
+    using sequence_type = ST;
     using value_type = V;
-    using parent_type = static_object<OT>;
-    using sequence_type = static_object<ST>;
 
     static constexpr native_bool pointer_free{ false };
     static constexpr native_bool is_map_like{ true };
@@ -179,7 +179,7 @@ namespace jank::runtime::obj::detail
       return ret;
     }
 
-    object base{ OT };
+    object base{ PT::obj_type };
     option<object_ptr> meta;
     mutable native_hash hash{};
   };

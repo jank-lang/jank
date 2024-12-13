@@ -5,36 +5,27 @@
 #include <jank/runtime/obj/detail/iterator_sequence.hpp>
 #include <jank/runtime/detail/native_persistent_list.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  namespace obj
-  {
-    using persistent_list = static_object<object_type::persistent_list>;
-    using persistent_list_ptr = native_box<persistent_list>;
-  }
+  using persistent_list_ptr = native_box<struct persistent_list>;
+  using persistent_list_sequence_ptr = native_box<struct persistent_list_sequence>;
 
-  template <>
-  struct static_object<object_type::persistent_list_sequence>
+  struct persistent_list_sequence
     : gc
-    , obj::detail::iterator_sequence<static_object<object_type::persistent_list_sequence>,
+    , obj::detail::iterator_sequence<persistent_list_sequence,
                                      runtime::detail::native_persistent_list::iterator>
   {
+    static constexpr object_type obj_type{ object_type::persistent_list_sequence };
     static constexpr native_bool pointer_free{ false };
     static constexpr native_bool is_sequential{ true };
 
-    static_object() = default;
-    static_object(static_object &&) = default;
-    static_object(static_object const &) = default;
+    persistent_list_sequence() = default;
+    persistent_list_sequence(persistent_list_sequence &&) noexcept = default;
+    persistent_list_sequence(persistent_list_sequence const &) = default;
     using obj::detail::iterator_sequence<
-      static_object<object_type::persistent_list_sequence>,
+      persistent_list_sequence,
       runtime::detail::native_persistent_list::iterator>::iterator_sequence;
 
     object base{ object_type::persistent_list_sequence };
   };
-
-  namespace obj
-  {
-    using persistent_list_sequence = static_object<object_type::persistent_list_sequence>;
-    using persistent_list_sequence_ptr = native_box<persistent_list_sequence>;
-  }
 }

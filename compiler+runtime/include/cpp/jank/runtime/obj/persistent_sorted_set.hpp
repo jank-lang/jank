@@ -3,49 +3,46 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/persistent_sorted_set_sequence.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  namespace obj
-  {
-    using transient_sorted_set = static_object<object_type::transient_sorted_set>;
-    using transient_sorted_set_ptr = native_box<transient_sorted_set>;
-  }
+  using transient_sorted_set_ptr = native_box<struct transient_sorted_set>;
+  using persistent_sorted_set_ptr = native_box<struct persistent_sorted_set>;
 
-  template <>
-  struct static_object<object_type::persistent_sorted_set> : gc
+  struct persistent_sorted_set : gc
   {
-    using value_type = runtime::detail::native_persistent_sorted_set;
-
+    static constexpr object_type obj_type{ object_type::persistent_sorted_set };
     static constexpr native_bool pointer_free{ false };
     static constexpr native_bool is_set_like{ true };
 
-    static_object() = default;
-    static_object(static_object &&) noexcept = default;
-    static_object(static_object const &) = default;
-    static_object(value_type &&d);
-    static_object(value_type const &d);
-    static_object(object_ptr meta, value_type &&d);
+    using value_type = runtime::detail::native_persistent_sorted_set;
+
+    persistent_sorted_set() = default;
+    persistent_sorted_set(persistent_sorted_set &&) noexcept = default;
+    persistent_sorted_set(persistent_sorted_set const &) = default;
+    persistent_sorted_set(value_type &&d);
+    persistent_sorted_set(value_type const &d);
+    persistent_sorted_set(object_ptr meta, value_type &&d);
 
     template <typename... Args>
-    static_object(std::in_place_t, Args &&...args)
+    persistent_sorted_set(std::in_place_t, Args &&...args)
       : data{ std::forward<Args>(args)... }
     {
     }
 
     template <typename... Args>
-    static_object(object_ptr const meta, std::in_place_t, Args &&...args)
+    persistent_sorted_set(object_ptr const meta, std::in_place_t, Args &&...args)
       : data{ std::forward<Args>(args)... }
       , meta{ meta }
     {
     }
 
-    static native_box<static_object> empty()
+    static persistent_sorted_set_ptr empty()
     {
-      static auto const ret(make_box<static_object>());
+      static auto const ret(make_box<persistent_sorted_set>());
       return ret;
     }
 
-    static native_box<static_object> create_from_seq(object_ptr const seq);
+    static persistent_sorted_set_ptr create_from_seq(object_ptr const seq);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -55,17 +52,17 @@ namespace jank::runtime
     native_hash to_hash() const;
 
     /* behavior::metadatable */
-    native_box<static_object> with_meta(object_ptr m) const;
+    persistent_sorted_set_ptr with_meta(object_ptr m) const;
 
     /* behavior::seqable */
-    obj::persistent_sorted_set_sequence_ptr seq() const;
-    obj::persistent_sorted_set_sequence_ptr fresh_seq() const;
+    persistent_sorted_set_sequence_ptr seq() const;
+    persistent_sorted_set_sequence_ptr fresh_seq() const;
 
     /* behavior::countable */
     size_t count() const;
 
     /* behavior::conjable */
-    native_box<static_object> conj(object_ptr head) const;
+    persistent_sorted_set_ptr conj(object_ptr head) const;
 
     /* behavior::callable */
     object_ptr call(object_ptr);
@@ -74,13 +71,10 @@ namespace jank::runtime
     obj::transient_sorted_set_ptr to_transient() const;
 
     native_bool contains(object_ptr o) const;
-    native_box<static_object> disj(object_ptr o) const;
+    persistent_sorted_set_ptr disj(object_ptr o) const;
 
     object base{ object_type::persistent_sorted_set };
     value_type data;
     option<object_ptr> meta;
   };
-
-  using persistent_sorted_set = static_object<object_type::persistent_sorted_set>;
-  using persistent_sorted_set_ptr = native_box<persistent_sorted_set>;
 }

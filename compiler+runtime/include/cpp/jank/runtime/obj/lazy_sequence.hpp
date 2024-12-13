@@ -4,26 +4,23 @@
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/option.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  namespace obj
-  {
-    using cons = static_object<object_type::cons>;
-    using cons_ptr = native_box<cons>;
-  }
+  using cons_ptr = native_box<struct cons>;
+  using lazy_sequence_ptr = native_box<struct lazy_sequence>;
 
   /* TODO: IPending analog, to implement `realized?`. */
-  template <>
-  struct static_object<object_type::lazy_sequence> : gc
+  struct lazy_sequence : gc
   {
+    static constexpr object_type obj_type{ object_type::lazy_sequence };
     static constexpr native_bool pointer_free{ false };
     static constexpr native_bool is_sequential{ true };
 
-    static_object() = default;
-    static_object(static_object &&) = default;
-    static_object(static_object const &) = default;
-    static_object(object_ptr fn);
-    static_object(object_ptr fn, object_ptr sequence);
+    lazy_sequence() = default;
+    lazy_sequence(lazy_sequence &&) noexcept = default;
+    lazy_sequence(lazy_sequence const &) = default;
+    lazy_sequence(object_ptr fn);
+    lazy_sequence(object_ptr fn, object_ptr sequence);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -33,19 +30,19 @@ namespace jank::runtime
     native_hash to_hash() const;
 
     /* behavior::seqable */
-    native_box<static_object> seq() const;
-    native_box<static_object> fresh_seq() const;
+    lazy_sequence_ptr seq() const;
+    lazy_sequence_ptr fresh_seq() const;
 
     /* behavior::sequenceable */
     object_ptr first() const;
-    native_box<static_object> next() const;
+    lazy_sequence_ptr next() const;
     obj::cons_ptr conj(object_ptr head) const;
 
     /* behavior::sequenceable_in_place */
-    native_box<static_object> next_in_place();
+    lazy_sequence_ptr next_in_place();
 
     /* behavior::metadatable */
-    native_box<static_object> with_meta(object_ptr m) const;
+    lazy_sequence_ptr with_meta(object_ptr m) const;
 
   private:
     object_ptr resolve_fn() const;
@@ -59,10 +56,4 @@ namespace jank::runtime
     mutable object_ptr sequence{};
     option<object_ptr> meta;
   };
-
-  namespace obj
-  {
-    using lazy_sequence = static_object<object_type::lazy_sequence>;
-    using lazy_sequence_ptr = native_box<lazy_sequence>;
-  }
 }

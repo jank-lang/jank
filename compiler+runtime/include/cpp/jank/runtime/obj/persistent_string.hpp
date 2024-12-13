@@ -4,22 +4,24 @@
 #include <jank/runtime/obj/persistent_string_sequence.hpp>
 #include <jank/result.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  template <>
-  struct static_object<object_type::persistent_string> : gc
+  using persistent_string_ptr = native_box<struct persistent_string>;
+
+  struct persistent_string : gc
   {
+    static constexpr object_type obj_type{ object_type::persistent_string };
     static constexpr native_bool pointer_free{ false };
 
-    static_object() = default;
-    static_object(static_object &&) = default;
-    static_object(static_object const &) = default;
-    static_object(native_persistent_string const &d);
-    static_object(native_persistent_string &&d);
+    persistent_string() = default;
+    persistent_string(persistent_string &&) noexcept = default;
+    persistent_string(persistent_string const &) = default;
+    persistent_string(native_persistent_string const &d);
+    persistent_string(native_persistent_string &&d);
 
-    static native_box<static_object> empty()
+    static persistent_string_ptr empty()
     {
-      static auto const ret(make_box<static_object>());
+      static auto const ret(make_box<persistent_string>());
       return ret;
     }
 
@@ -34,12 +36,10 @@ namespace jank::runtime
     native_integer compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(static_object const &) const;
+    native_integer compare(persistent_string const &) const;
 
-    result<native_box<static_object>, native_persistent_string>
-    substring(native_integer start) const;
-    result<native_box<static_object>, native_persistent_string>
-    substring(native_integer start, native_integer end) const;
+    string_result<persistent_string_ptr> substring(native_integer start) const;
+    string_result<persistent_string_ptr> substring(native_integer start, native_integer end) const;
 
     /* Returns -1 when not found. Turns the arg into a string, so it accepts anything.
      * Searches for the whole string, not just a char. */
@@ -56,10 +56,4 @@ namespace jank::runtime
     object base{ object_type::persistent_string };
     native_persistent_string data;
   };
-
-  namespace obj
-  {
-    using persistent_string = static_object<object_type::persistent_string>;
-    using persistent_string_ptr = native_box<persistent_string>;
-  }
 }

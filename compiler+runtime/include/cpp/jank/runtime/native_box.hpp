@@ -120,20 +120,23 @@ namespace jank::runtime
     {
     }
 
-    template <object_type T>
-    native_box(static_object<T> * const typed_data)
+    template <typename T>
+    requires behavior::object_like<T>
+    native_box(T * const typed_data)
       : data{ &typed_data->base }
     {
     }
 
-    template <object_type T>
-    native_box(static_object<T> const * const typed_data)
+    template <typename T>
+    requires behavior::object_like<T>
+    native_box(T const * const typed_data)
       : data{ typed_data ? const_cast<object *>(&typed_data->base) : nullptr }
     {
     }
 
-    template <object_type T>
-    native_box(native_box<static_object<T>> const typed_data)
+    template <typename T>
+    requires behavior::object_like<T>
+    native_box(native_box<T> const typed_data)
       : data{ typed_data ? &typed_data->base : nullptr }
     {
     }
@@ -165,14 +168,16 @@ namespace jank::runtime
       return data == rhs.data;
     }
 
-    template <object_type T>
-    native_bool operator==(static_object<T> const &rhs) const
+    template <typename T>
+    requires behavior::object_like<T>
+    native_bool operator==(T const &rhs) const
     {
       return data == &rhs->base;
     }
 
-    template <object_type T>
-    native_bool operator==(native_box<static_object<T>> const &rhs) const
+    template <typename T>
+    requires behavior::object_like<T>
+    native_bool operator==(native_box<T> const &rhs) const
     {
       return data == &rhs->base;
     }
@@ -187,14 +192,16 @@ namespace jank::runtime
       return data != rhs.data;
     }
 
-    template <object_type T>
-    native_bool operator!=(static_object<T> const &rhs) const
+    template <typename T>
+    requires behavior::object_like<T>
+    native_bool operator!=(T const &rhs) const
     {
       return data != &rhs->base;
     }
 
-    template <object_type T>
-    native_bool operator!=(native_box<static_object<T>> const &rhs) const
+    template <typename T>
+    requires behavior::object_like<T>
+    native_bool operator!=(native_box<T> const &rhs) const
     {
       return data != &rhs->base;
     }

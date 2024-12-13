@@ -13,20 +13,21 @@ namespace jank::runtime
 {
   struct context;
 
-  template <>
-  struct static_object<object_type::ns> : gc
+  using ns_ptr = native_box<struct ns>;
+
+  struct ns : gc
   {
+    static constexpr object_type obj_type{ object_type::ns };
     static constexpr native_bool pointer_free{ false };
 
-    static_object() = delete;
-    static_object(obj::symbol_ptr const &name, context &c);
+    ns() = delete;
+    ns(obj::symbol_ptr const &name, context &c);
 
     var_ptr intern_var(native_persistent_string_view const &);
     var_ptr intern_var(obj::symbol_ptr const &);
     option<var_ptr> find_var(obj::symbol_ptr const &);
 
-    result<void, native_persistent_string>
-    add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns);
+    result<void, native_persistent_string> add_alias(obj::symbol_ptr const &sym, ns_ptr const &ns);
     option<ns_ptr> find_alias(obj::symbol_ptr const &sym) const;
 
     result<void, native_persistent_string> refer(obj::symbol_ptr const sym, var_ptr const var);
@@ -40,9 +41,9 @@ namespace jank::runtime
     void to_string(fmt::memory_buffer &buff) const;
     native_hash to_hash() const;
 
-    native_bool operator==(static_object const &rhs) const;
+    native_bool operator==(ns const &rhs) const;
 
-    native_box<static_object> clone(context &rt_ctx) const;
+    ns_ptr clone(context &rt_ctx) const;
 
     object base{ object_type::ns };
     obj::symbol_ptr name{};
@@ -51,7 +52,4 @@ namespace jank::runtime
     folly::Synchronized<obj::persistent_hash_map_ptr> aliases;
     context &rt_ctx;
   };
-
-  using ns = static_object<object_type::ns>;
-  using ns_ptr = native_box<ns>;
 }

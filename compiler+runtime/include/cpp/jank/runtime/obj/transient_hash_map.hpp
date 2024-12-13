@@ -3,27 +3,26 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/type.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  template <>
-  struct static_object<object_type::transient_hash_map> : gc
+  using transient_hash_map_ptr = native_box<struct transient_hash_map>;
+
+  struct transient_hash_map : gc
   {
+    static constexpr object_type obj_type{ object_type::transient_hash_map };
     static constexpr bool pointer_free{ false };
 
-    using value_type = detail::native_transient_hash_map;
-    using persistent_type = static_object<object_type::persistent_hash_map>;
+    using value_type = runtime::detail::native_transient_hash_map;
+    using persistent_type_ptr = native_box<struct persistent_hash_map>;
 
-    static_object() = default;
-    static_object(static_object &&) noexcept = default;
-    static_object(static_object const &) = default;
-    static_object(detail::native_persistent_hash_map const &d);
-    static_object(detail::native_persistent_hash_map &&d);
-    static_object(value_type &&d);
+    transient_hash_map() = default;
+    transient_hash_map(transient_hash_map &&) noexcept = default;
+    transient_hash_map(transient_hash_map const &) = default;
+    transient_hash_map(runtime::detail::native_persistent_hash_map const &d);
+    transient_hash_map(runtime::detail::native_persistent_hash_map &&d);
+    transient_hash_map(value_type &&d);
 
-    static native_box<static_object> empty()
-    {
-      return make_box<static_object>();
-    }
+    static transient_hash_map_ptr empty();
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -42,14 +41,14 @@ namespace jank::runtime
     native_bool contains(object_ptr key) const;
 
     /* behavior::associatively_writable_in_place */
-    native_box<static_object> assoc_in_place(object_ptr const key, object_ptr const val);
-    native_box<static_object> dissoc_in_place(object_ptr const key);
+    transient_hash_map_ptr assoc_in_place(object_ptr const key, object_ptr const val);
+    transient_hash_map_ptr dissoc_in_place(object_ptr const key);
 
     /* behavior::conjable_in_place */
-    native_box<static_object> conj_in_place(object_ptr head);
+    transient_hash_map_ptr conj_in_place(object_ptr head);
 
     /* behavior::persistentable */
-    native_box<persistent_type> to_persistent();
+    persistent_type_ptr to_persistent();
 
     /* behavior::callable */
     object_ptr call(object_ptr) const;
@@ -62,10 +61,4 @@ namespace jank::runtime
     mutable native_hash hash{};
     native_bool active{ true };
   };
-
-  namespace obj
-  {
-    using transient_hash_map = static_object<object_type::transient_hash_map>;
-    using transient_hash_map_ptr = native_box<transient_hash_map>;
-  }
 }

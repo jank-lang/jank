@@ -3,15 +3,16 @@
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/seq_ext.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  obj::persistent_vector_sequence::static_object(obj::persistent_vector_ptr const v)
+  persistent_vector_sequence::persistent_vector_sequence(persistent_vector_ptr const v)
     : vec{ v }
   {
     assert(!v->data.empty());
   }
 
-  obj::persistent_vector_sequence::static_object(obj::persistent_vector_ptr const v, size_t const i)
+  persistent_vector_sequence::persistent_vector_sequence(persistent_vector_ptr const v,
+                                                         size_t const i)
     : vec{ v }
     , index{ i }
   {
@@ -20,45 +21,41 @@ namespace jank::runtime
   }
 
   /* behavior::objectable */
-  native_bool obj::persistent_vector_sequence::equal(object const &o) const
+  native_bool persistent_vector_sequence::equal(object const &o) const
   {
     return runtime::equal(
       o,
-      vec->data.begin()
-        + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
+      vec->data.begin() + static_cast<decltype(persistent_vector::data)::difference_type>(index),
       vec->data.end());
   }
 
-  void obj::persistent_vector_sequence::to_string(fmt::memory_buffer &buff) const
+  void persistent_vector_sequence::to_string(fmt::memory_buffer &buff) const
   {
-    runtime::to_string(
-      vec->data.begin()
-        + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
-      vec->data.end(),
-      "(",
-      ')',
-      buff);
+    runtime::to_string(vec->data.begin()
+                         + static_cast<decltype(persistent_vector::data)::difference_type>(index),
+                       vec->data.end(),
+                       "(",
+                       ')',
+                       buff);
   }
 
-  native_persistent_string obj::persistent_vector_sequence::to_string() const
+  native_persistent_string persistent_vector_sequence::to_string() const
   {
     fmt::memory_buffer buff;
-    runtime::to_string(
-      vec->data.begin()
-        + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
-      vec->data.end(),
-      "(",
-      ')',
-      buff);
+    runtime::to_string(vec->data.begin()
+                         + static_cast<decltype(persistent_vector::data)::difference_type>(index),
+                       vec->data.end(),
+                       "(",
+                       ')',
+                       buff);
     return { buff.data(), buff.size() };
   }
 
-  native_persistent_string obj::persistent_vector_sequence::to_code_string() const
+  native_persistent_string persistent_vector_sequence::to_code_string() const
   {
     fmt::memory_buffer buff;
     runtime::to_code_string(
-      vec->data.begin()
-        + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
+      vec->data.begin() + static_cast<decltype(persistent_vector::data)::difference_type>(index),
       vec->data.end(),
       "(",
       ')',
@@ -66,38 +63,37 @@ namespace jank::runtime
     return { buff.data(), buff.size() };
   }
 
-  native_hash obj::persistent_vector_sequence::to_hash() const
+  native_hash persistent_vector_sequence::to_hash() const
   {
-    return hash::ordered(
-      vec->data.begin()
-        + static_cast<decltype(obj::persistent_vector::data)::difference_type>(index),
-      vec->data.end());
+    return hash::ordered(vec->data.begin()
+                           + static_cast<decltype(persistent_vector::data)::difference_type>(index),
+                         vec->data.end());
   }
 
   /* behavior::countable */
-  size_t obj::persistent_vector_sequence::count() const
+  size_t persistent_vector_sequence::count() const
   {
     return vec->data.size() - index;
   }
 
   /* behavior::seqable */
-  obj::persistent_vector_sequence_ptr obj::persistent_vector_sequence::seq()
+  persistent_vector_sequence_ptr persistent_vector_sequence::seq()
   {
     return this;
   }
 
-  obj::persistent_vector_sequence_ptr obj::persistent_vector_sequence::fresh_seq() const
+  persistent_vector_sequence_ptr persistent_vector_sequence::fresh_seq() const
   {
-    return make_box<obj::persistent_vector_sequence>(vec, index);
+    return make_box<persistent_vector_sequence>(vec, index);
   }
 
   /* behavior::sequenceable */
-  object_ptr obj::persistent_vector_sequence::first() const
+  object_ptr persistent_vector_sequence::first() const
   {
     return vec->data[index];
   }
 
-  obj::persistent_vector_sequence_ptr obj::persistent_vector_sequence::next() const
+  persistent_vector_sequence_ptr persistent_vector_sequence::next() const
   {
     auto n(index);
     ++n;
@@ -107,10 +103,10 @@ namespace jank::runtime
       return nullptr;
     }
 
-    return make_box<obj::persistent_vector_sequence>(vec, n);
+    return make_box<persistent_vector_sequence>(vec, n);
   }
 
-  obj::persistent_vector_sequence_ptr obj::persistent_vector_sequence::next_in_place()
+  persistent_vector_sequence_ptr persistent_vector_sequence::next_in_place()
   {
     ++index;
 
@@ -122,8 +118,8 @@ namespace jank::runtime
     return this;
   }
 
-  obj::cons_ptr obj::persistent_vector_sequence::conj(object_ptr const head)
+  cons_ptr persistent_vector_sequence::conj(object_ptr const head)
   {
-    return make_box<obj::cons>(head, this);
+    return make_box<cons>(head, this);
   }
 }

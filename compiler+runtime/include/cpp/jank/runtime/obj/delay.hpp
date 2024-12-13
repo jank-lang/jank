@@ -2,15 +2,17 @@
 
 #include <jank/runtime/object.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  template <>
-  struct static_object<object_type::delay> : gc
+  using delay_ptr = native_box<struct delay>;
+
+  struct delay : gc
   {
+    static constexpr object_type obj_type{ object_type::delay };
     static constexpr native_bool pointer_free{ false };
 
-    static_object() = default;
-    static_object(object_ptr fn);
+    delay() = default;
+    delay(object_ptr fn);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -28,10 +30,4 @@ namespace jank::runtime
     object_ptr error{};
     std::mutex mutex;
   };
-
-  namespace obj
-  {
-    using delay = static_object<object_type::delay>;
-    using delay_ptr = native_box<delay>;
-  }
 }

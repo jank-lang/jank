@@ -4,50 +4,43 @@
 #include <jank/runtime/detail/type.hpp>
 #include <jank/runtime/obj/persistent_vector_sequence.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  namespace obj
-  {
-    using transient_vector = static_object<object_type::transient_vector>;
-    using transient_vector_ptr = native_box<transient_vector>;
-  }
+  using transient_vector_ptr = native_box<struct transient_vector>;
+  using persistent_vector_ptr = native_box<struct persistent_vector>;
 
-  template <>
-  struct static_object<object_type::persistent_vector> : gc
+  struct persistent_vector : gc
   {
-    using transient_type = static_object<object_type::transient_vector>;
-    using value_type = runtime::detail::native_persistent_vector;
-
+    static constexpr object_type obj_type{ object_type::persistent_vector };
     static constexpr native_bool pointer_free{ false };
     static constexpr native_bool is_sequential{ true };
 
-    static_object() = default;
-    static_object(static_object &&) noexcept = default;
-    static_object(static_object const &) = default;
-    static_object(value_type &&d);
-    static_object(value_type const &d);
-    static_object(object_ptr meta, value_type &&d);
+    using transient_type = transient_vector;
+    using value_type = runtime::detail::native_persistent_vector;
+
+    persistent_vector() = default;
+    persistent_vector(persistent_vector &&) noexcept = default;
+    persistent_vector(persistent_vector const &) = default;
+    persistent_vector(value_type &&d);
+    persistent_vector(value_type const &d);
+    persistent_vector(object_ptr meta, value_type &&d);
 
     template <typename... Args>
-    static_object(std::in_place_t, Args &&...args)
+    persistent_vector(std::in_place_t, Args &&...args)
       : data{ std::forward<Args>(args)... }
     {
     }
 
     template <typename... Args>
-    static_object(object_ptr const meta, std::in_place_t, Args &&...args)
+    persistent_vector(object_ptr const meta, std::in_place_t, Args &&...args)
       : data{ std::forward<Args>(args)... }
       , meta{ meta }
     {
     }
 
-    static native_box<static_object> create(object_ptr s);
+    static persistent_vector_ptr create(object_ptr s);
 
-    static native_box<static_object> empty()
-    {
-      static auto const ret(make_box<static_object>());
-      return ret;
-    }
+    static persistent_vector_ptr empty();
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -60,10 +53,10 @@ namespace jank::runtime
     native_integer compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(static_object const &) const;
+    native_integer compare(persistent_vector const &) const;
 
     /* behavior::metadatable */
-    native_box<static_object> with_meta(object_ptr m) const;
+    persistent_vector_ptr with_meta(object_ptr m) const;
 
     /* behavior::seqable */
     obj::persistent_vector_sequence_ptr seq() const;
@@ -79,11 +72,11 @@ namespace jank::runtime
     native_bool contains(object_ptr key) const;
 
     /* behavior::conjable */
-    native_box<static_object> conj(object_ptr head) const;
+    persistent_vector_ptr conj(object_ptr head) const;
 
     /* behavior::stackable */
     object_ptr peek() const;
-    native_box<static_object> pop() const;
+    persistent_vector_ptr pop() const;
 
     /* behavior::indexable */
     object_ptr nth(object_ptr index) const;
@@ -97,10 +90,4 @@ namespace jank::runtime
     option<object_ptr> meta;
     mutable native_hash hash{};
   };
-
-  namespace obj
-  {
-    using persistent_vector = static_object<object_type::persistent_vector>;
-    using persistent_vector_ptr = native_box<persistent_vector>;
-  }
 }

@@ -11,13 +11,13 @@ namespace jank::runtime
 
 namespace jank::runtime::obj::detail
 {
-  template <object_type OT, typename It>
+  template <typename PT, typename It>
   struct base_persistent_map_sequence : gc
   {
     static constexpr native_bool pointer_free{ false };
     static constexpr native_bool is_sequential{ true };
 
-    using parent_type = static_object<OT>;
+    using parent_type = PT;
     using iterator_type = It;
 
     base_persistent_map_sequence() = default;
@@ -166,7 +166,7 @@ namespace jank::runtime::obj::detail
       return make_box<obj::cons>(head, static_cast<parent_type *>(this));
     }
 
-    object base{ OT };
+    object base{ PT::obj_type };
     object_ptr coll{};
     iterator_type begin{}, end{};
   };

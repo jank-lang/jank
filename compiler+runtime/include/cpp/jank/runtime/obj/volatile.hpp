@@ -2,15 +2,17 @@
 
 #include <jank/runtime/object.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  template <>
-  struct static_object<object_type::volatile_> : gc
+  using volatile_ptr = native_box<struct volatile_>;
+
+  struct volatile_ : gc
   {
+    static constexpr object_type obj_type{ object_type::volatile_ };
     static constexpr native_bool pointer_free{ false };
 
-    static_object() = default;
-    static_object(object_ptr o);
+    volatile_() = default;
+    volatile_(object_ptr o);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -27,10 +29,4 @@ namespace jank::runtime
     object base{ object_type::volatile_ };
     object_ptr val{};
   };
-
-  namespace obj
-  {
-    using volatile_ = static_object<object_type::volatile_>;
-    using volatile_ptr = native_box<volatile_>;
-  }
 }

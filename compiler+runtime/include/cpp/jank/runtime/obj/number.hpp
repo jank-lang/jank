@@ -2,20 +2,22 @@
 
 #include <jank/runtime/object.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  template <>
-  struct static_object<object_type::boolean> : gc
+  using boolean_ptr = native_box<struct boolean>;
+
+  struct boolean : gc
   {
+    static constexpr object_type obj_type{ object_type::boolean };
     static constexpr native_bool pointer_free{ true };
 
-    static native_box<static_object> true_const();
-    static native_box<static_object> false_const();
+    static boolean_ptr true_const();
+    static boolean_ptr false_const();
 
-    static_object() = default;
-    static_object(static_object &&) = default;
-    static_object(static_object const &) = default;
-    static_object(native_bool const d);
+    boolean() = default;
+    boolean(boolean &&) noexcept = default;
+    boolean(boolean const &) = default;
+    boolean(native_bool const d);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -28,21 +30,23 @@ namespace jank::runtime
     native_integer compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(static_object const &) const;
+    native_integer compare(boolean const &) const;
 
     object base{ object_type::boolean };
     native_bool data{};
   };
 
-  template <>
-  struct static_object<object_type::integer> : gc
+  using integer_ptr = native_box<struct integer>;
+
+  struct integer : gc
   {
+    static constexpr object_type obj_type{ object_type::integer };
     static constexpr native_bool pointer_free{ true };
 
-    static_object() = default;
-    static_object(static_object &&) = default;
-    static_object(static_object const &) = default;
-    static_object(native_integer const d);
+    integer() = default;
+    integer(integer &&) noexcept = default;
+    integer(integer const &) = default;
+    integer(native_integer const d);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -55,7 +59,7 @@ namespace jank::runtime
     native_integer compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(static_object const &) const;
+    native_integer compare(integer const &) const;
 
     /* behavior::number_like */
     native_integer to_integer() const;
@@ -65,15 +69,15 @@ namespace jank::runtime
     object base{ object_type::integer };
   };
 
-  template <>
-  struct static_object<object_type::real> : gc
+  struct real : gc
   {
+    static constexpr object_type obj_type{ object_type::real };
     static constexpr native_bool pointer_free{ true };
 
-    static_object() = default;
-    static_object(static_object &&) = default;
-    static_object(static_object const &) = default;
-    static_object(native_real const d);
+    real() = default;
+    real(real &&) noexcept = default;
+    real(real const &) = default;
+    real(native_real const d);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -86,7 +90,7 @@ namespace jank::runtime
     native_integer compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(static_object const &) const;
+    native_integer compare(real const &) const;
 
     /* behavior::number_like */
     native_integer to_integer() const;
@@ -95,16 +99,4 @@ namespace jank::runtime
     native_real data{};
     object base{ object_type::real };
   };
-
-  namespace obj
-  {
-    using boolean = static_object<object_type::boolean>;
-    using boolean_ptr = native_box<boolean>;
-
-    using integer = static_object<object_type::integer>;
-    using integer_ptr = native_box<integer>;
-
-    using real = static_object<object_type::real>;
-    using real_ptr = native_box<real>;
-  }
 }

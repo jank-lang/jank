@@ -3,27 +3,26 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/type.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  template <>
-  struct static_object<object_type::transient_hash_set> : gc
+  using transient_hash_set_ptr = native_box<struct transient_hash_set>;
+
+  struct transient_hash_set : gc
   {
+    static constexpr object_type obj_type{ object_type::transient_hash_set };
     static constexpr bool pointer_free{ false };
 
-    using value_type = detail::native_transient_hash_set;
-    using persistent_type = static_object<object_type::persistent_hash_set>;
+    using value_type = runtime::detail::native_transient_hash_set;
+    using persistent_type_ptr = native_box<struct persistent_hash_set>;
 
-    static_object() = default;
-    static_object(static_object &&) noexcept = default;
-    static_object(static_object const &) = default;
-    static_object(detail::native_persistent_hash_set const &d);
-    static_object(detail::native_persistent_hash_set &&d);
-    static_object(value_type &&d);
+    transient_hash_set() = default;
+    transient_hash_set(transient_hash_set &&) noexcept = default;
+    transient_hash_set(transient_hash_set const &) = default;
+    transient_hash_set(runtime::detail::native_persistent_hash_set const &d);
+    transient_hash_set(runtime::detail::native_persistent_hash_set &&d);
+    transient_hash_set(value_type &&d);
 
-    static native_box<static_object> empty()
-    {
-      return make_box<static_object>();
-    }
+    static transient_hash_set_ptr empty();
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -36,10 +35,10 @@ namespace jank::runtime
     size_t count() const;
 
     /* behavior::conjable_in_place */
-    native_box<static_object> conj_in_place(object_ptr elem);
+    transient_hash_set_ptr conj_in_place(object_ptr elem);
 
     /* behavior::persistentable */
-    native_box<persistent_type> to_persistent();
+    persistent_type_ptr to_persistent();
 
     /* behavior::callable */
     object_ptr call(object_ptr const) const;
@@ -51,7 +50,7 @@ namespace jank::runtime
     object_ptr get_entry(object_ptr const elem) const;
     native_bool contains(object_ptr const elem) const;
 
-    native_box<static_object> disjoin_in_place(object_ptr const elem);
+    transient_hash_set_ptr disjoin_in_place(object_ptr const elem);
 
     void assert_active() const;
 
@@ -60,10 +59,4 @@ namespace jank::runtime
     mutable native_hash hash{};
     native_bool active{ true };
   };
-
-  namespace obj
-  {
-    using transient_hash_set = static_object<object_type::transient_hash_set>;
-    using transient_hash_set_ptr = native_box<transient_hash_set>;
-  }
 }

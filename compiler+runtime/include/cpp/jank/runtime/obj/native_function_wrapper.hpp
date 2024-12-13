@@ -60,79 +60,79 @@ namespace jank::runtime
     }
   };
 
-  template <>
-  struct static_object<object_type::native_function_wrapper>
-    : gc
-    , behavior::callable
-  {
-    static constexpr native_bool pointer_free{ false };
-
-    static_object() = default;
-    static_object(static_object &&) = default;
-    static_object(static_object const &) = default;
-    static_object(obj::detail::function_type &&d);
-    static_object(obj::detail::function_type const &d);
-
-    /* behavior::object_like */
-    native_bool equal(object const &) const;
-    native_persistent_string to_string() const;
-    void to_string(fmt::memory_buffer &buff) const;
-    native_persistent_string to_code_string() const;
-    native_hash to_hash() const;
-
-    /* behavior::callable */
-    object_ptr call() final;
-    object_ptr call(object_ptr) final;
-    object_ptr call(object_ptr, object_ptr) final;
-    object_ptr call(object_ptr, object_ptr, object_ptr) final;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr) final;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) final;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) final;
-    object_ptr
-      call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr)
-        final;
-    object_ptr call(object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr) final;
-    object_ptr call(object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr) final;
-    object_ptr call(object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr) final;
-
-    object_ptr this_object_ptr() final;
-
-    /* behavior::metadatable */
-    native_box<static_object> with_meta(object_ptr m) const;
-
-    object base{ object_type::native_function_wrapper };
-    obj::detail::function_type data{};
-    option<object_ptr> meta;
-  };
-
   namespace obj
   {
-    using native_function_wrapper = static_object<object_type::native_function_wrapper>;
-    using native_function_wrapper_ptr = native_box<native_function_wrapper>;
+
+    using native_function_wrapper_ptr = native_box<struct native_function_wrapper>;
+
+    struct native_function_wrapper
+      : gc
+      , behavior::callable
+    {
+      static constexpr object_type obj_type{ object_type::native_function_wrapper };
+      static constexpr native_bool pointer_free{ false };
+
+      native_function_wrapper() = default;
+      native_function_wrapper(native_function_wrapper &&) noexcept = default;
+      native_function_wrapper(native_function_wrapper const &) = default;
+      native_function_wrapper(obj::detail::function_type &&d);
+      native_function_wrapper(obj::detail::function_type const &d);
+
+      /* behavior::object_like */
+      native_bool equal(object const &) const;
+      native_persistent_string to_string() const;
+      void to_string(fmt::memory_buffer &buff) const;
+      native_persistent_string to_code_string() const;
+      native_hash to_hash() const;
+
+      /* behavior::callable */
+      object_ptr call() final;
+      object_ptr call(object_ptr) final;
+      object_ptr call(object_ptr, object_ptr) final;
+      object_ptr call(object_ptr, object_ptr, object_ptr) final;
+      object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr) final;
+      object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) final;
+      object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) final;
+      object_ptr
+        call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr)
+          final;
+      object_ptr call(object_ptr,
+                      object_ptr,
+                      object_ptr,
+                      object_ptr,
+                      object_ptr,
+                      object_ptr,
+                      object_ptr,
+                      object_ptr) final;
+      object_ptr call(object_ptr,
+                      object_ptr,
+                      object_ptr,
+                      object_ptr,
+                      object_ptr,
+                      object_ptr,
+                      object_ptr,
+                      object_ptr,
+                      object_ptr) final;
+      object_ptr call(object_ptr,
+                      object_ptr,
+                      object_ptr,
+                      object_ptr,
+                      object_ptr,
+                      object_ptr,
+                      object_ptr,
+                      object_ptr,
+                      object_ptr,
+                      object_ptr) final;
+
+      object_ptr this_object_ptr() final;
+
+      /* behavior::metadatable */
+      native_function_wrapper_ptr with_meta(object_ptr m) const;
+
+      object base{ object_type::native_function_wrapper };
+      obj::detail::function_type data{};
+      option<object_ptr> meta;
+    };
   }
 
   namespace detail
