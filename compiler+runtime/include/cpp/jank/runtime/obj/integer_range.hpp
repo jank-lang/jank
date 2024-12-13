@@ -1,6 +1,5 @@
 #pragma once
 
-#include "jank/runtime/obj/number.hpp"
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/array_chunk.hpp>
 #include <jank/runtime/obj/cons.hpp>
@@ -14,30 +13,29 @@ namespace jank::runtime
   {
     static constexpr native_bool pointer_free{ false };
     static constexpr native_bool is_sequential{ true };
-    static constexpr native_integer chunk_size{ 32 };
 
-    using bounds_check_t = native_bool (*)(native_integer, native_integer);
+    using bounds_check_t = native_bool (*)(obj::integer_ptr, obj::integer_ptr);
 
     static_object() = default;
     static_object(static_object &&) = default;
     static_object(static_object const &) = default;
-    static_object(native_integer end);
-    static_object(native_integer start, native_integer end);
-    static_object(native_integer start, native_integer end, native_integer step);
-    static_object(native_integer start,
-                  native_integer end,
-                  native_integer step,
+    static_object(obj::integer_ptr end);
+    static_object(obj::integer_ptr start, obj::integer_ptr end);
+    static_object(obj::integer_ptr start, obj::integer_ptr end, obj::integer_ptr step);
+    static_object(obj::integer_ptr start,
+                  obj::integer_ptr end,
+                  obj::integer_ptr step,
                   bounds_check_t bounds_check);
-    static_object(native_integer start,
-                  native_integer end,
-                  native_integer step,
+    static_object(obj::integer_ptr start,
+                  obj::integer_ptr end,
+                  obj::integer_ptr step,
                   bounds_check_t bounds_check,
                   obj::array_chunk_ptr chunk,
                   native_box<static_object> chunk_next);
 
-    static object_ptr create(native_integer end);
-    static object_ptr create(native_integer start, native_integer end);
-    static object_ptr create(native_integer start, native_integer end, native_integer step);
+    static object_ptr create(obj::integer_ptr end);
+    static object_ptr create(obj::integer_ptr start, obj::integer_ptr end);
+    static object_ptr create(obj::integer_ptr start, obj::integer_ptr end, obj::integer_ptr step);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -72,9 +70,9 @@ namespace jank::runtime
     size_t count() const;
 
     object base{ object_type::integer_range };
-    native_integer start{};
-    native_integer end{};
-    native_integer step{};
+    obj::integer_ptr start{};
+    obj::integer_ptr end{};
+    obj::integer_ptr step{};
     bounds_check_t bounds_check{};
 
     /* TODO: behavior::chunkable */

@@ -1,4 +1,3 @@
-#include "jank/runtime/obj/integer_range.hpp"
 #include <jank/runtime/core/math.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/visit.hpp>
@@ -6,44 +5,47 @@
 
 namespace jank::runtime
 {
-  static native_bool positive_step_bounds_check(native_integer const val, native_integer const end)
+  static native_bool
+  positive_step_bounds_check(obj::integer_ptr const val, obj::integer_ptr const end)
   {
-    return end <= val;
+    return lte(end, val);
   }
 
-  static native_bool negative_step_bounds_check(native_integer const val, native_integer const end)
+  static native_bool
+  negative_step_bounds_check(obj::integer_ptr const val, obj::integer_ptr const end)
   {
-    return val <= end;
+    return lte(val, end);
   }
 
-  obj::integer_range::static_object(native_integer const end)
+  obj::integer_range::static_object(obj::integer_ptr const end)
     : end{ end }
-    , step{ 1 }
+    , step{ make_box<obj::integer>(1) }
     , bounds_check{ positive_step_bounds_check }
   {
   }
 
-  obj::integer_range::static_object(native_integer const start, native_integer const end)
+  obj::integer_range::static_object(obj::integer_ptr const start, obj::integer_ptr const end)
     : start{ start }
     , end{ end }
-    , step{ 1 }
+    , step{ make_box<obj::integer>(1) }
     , bounds_check{ positive_step_bounds_check }
   {
   }
 
-  obj::integer_range::static_object(native_integer const start,
-                                    native_integer const end,
-                                    native_integer const step)
+  obj::integer_range::static_object(obj::integer_ptr const start,
+                                    obj::integer_ptr const end,
+                                    obj::integer_ptr const step)
     : start{ start }
     , end{ end }
     , step{ step }
-    , bounds_check{ step > 0 ? positive_step_bounds_check : negative_step_bounds_check }
+    , bounds_check{ lt(static_cast<native_integer>(0), step) ? positive_step_bounds_check
+                                                             : negative_step_bounds_check }
   {
   }
 
-  obj::integer_range::static_object(native_integer const start,
-                                    native_integer const end,
-                                    native_integer const step,
+  obj::integer_range::static_object(obj::integer_ptr const start,
+                                    obj::integer_ptr const end,
+                                    obj::integer_ptr const step,
                                     obj::integer_range::bounds_check_t const bounds_check)
     : start{ start }
     , end{ end }
@@ -52,35 +54,40 @@ namespace jank::runtime
   {
   }
 
-  object_ptr obj::integer_range::create(native_integer const end)
+  object_ptr obj::integer_range::create(obj::integer_ptr const end)
   {
-    if(end > 0)
+    if(is_pos(end))
     {
-      return make_box<obj::integer_range>(0, end, 1, positive_step_bounds_check);
+      return make_box<obj::integer_range>(make_box<obj::integer>(0),
+                                          end,
+                                          make_box<obj::integer>(1),
+                                          positive_step_bounds_check);
     }
     return obj::persistent_list::empty();
   }
 
-  object_ptr obj::integer_range::create(native_integer const start, native_integer const end)
+  object_ptr obj::integer_range::create(obj::integer_ptr const start, obj::integer_ptr const end)
   {
-    return create(start, end, 1);
+    return create(start, end, make_box<obj::integer_ptr>(1));
   }
 
-  object_ptr obj::integer_range::create(native_integer const start,
-                                        native_integer const end,
-                                        native_integer const step)
+  object_ptr obj::integer_range::create(obj::integer_ptr const start,
+                                        obj::integer_ptr const end,
+                                        obj::integer_ptr const step)
   {
-    if((step > 0 && end < start) || (step < 0 && start < end) || start == end)
+    if((is_pos(step) && lt(end, start)) || (is_neg(step) && lt(start, end)) || is_equiv(start, end))
     {
       return obj::persistent_list::empty();
     }
-    else if(step == 0)
-    { return make_box<obj::repeat>(make_box<obj::integer>(start)); }
+    else if(is_zero(step))
+    {
+      return make_box<obj::repeat>(make_box<obj::integer>(start));
+    }
     return make_box<obj::integer_range>(start,
                                         end,
                                         step,
-                                        step > 0 ? positive_step_bounds_check
-                                                 : negative_step_bounds_check);
+                                        is_pos(step) ? positive_step_bounds_check
+                                                     : negative_step_bounds_check);
   }
 
   obj::integer_range_ptr obj::integer_range::seq() const
@@ -104,7 +111,10 @@ namespace jank::runtime
     {
       return nullptr;
     }
-    return make_box<obj::integer_range>(start + step, end, step, bounds_check);
+    return make_box<obj::integer_range>(make_box<obj::integer>(add(start, step)),
+                                        end,
+                                        step,
+                                        bounds_check);
   }
 
   obj::integer_range_ptr obj::integer_range::next_in_place()
@@ -113,7 +123,7 @@ namespace jank::runtime
     {
       return nullptr;
     }
-    start += step;
+    start = make_box<obj::integer>(add(start, step));
     return this;
   }
 
@@ -172,20 +182,26 @@ namespace jank::runtime
 
   size_t obj::integer_range::count() const
   {
-    if(step == 0)
+    if(is_zero(step))
     {
       throw std::runtime_error("Step shouldn't be 0");
     }
 
-    auto const diff{ end - start };
-    auto const offset{ step > 0 ? -1 : 1 };
+    auto const diff{ sub(start, step) };
+    auto const offset{ lt(static_cast<native_integer>(0), step) ? -1 : 1 };
 
-    if((step > 0 && diff > std::numeric_limits<native_integer>::max() - step + offset)
-       || (step < 0 && diff < std::numeric_limits<native_integer>::min() - step + offset))
+    if((lt(static_cast<native_integer>(0), step)
+        && lt(sub(std::numeric_limits<native_integer>::max(),
+                  add(step, static_cast<native_integer>(offset))),
+              diff))
+       || (lt(step, static_cast<native_integer>(0))
+           && lt(diff,
+                 sub(std::numeric_limits<native_integer>::min(),
+                     add(step, static_cast<native_integer>(offset))))))
     {
       throw std::runtime_error("[Integer-Range] Overflow occurred in arithmetic");
     }
 
-    return static_cast<size_t>((diff + offset + step) / step);
+    return static_cast<size_t>(div(add(diff + offset, step), step));
   }
 }

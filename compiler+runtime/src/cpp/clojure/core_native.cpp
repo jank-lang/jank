@@ -1,3 +1,4 @@
+#include "jank/runtime/rtti.hpp"
 #include <clojure/core_native.hpp>
 #include <jank/runtime/convert.hpp>
 #include <jank/runtime/core.hpp>
@@ -709,16 +710,16 @@ jank_object_ptr jank_load_clojure_core_native()
       return iterate(__rt_ctx->intern_var("clojure.core", "inc").expect_ok()->deref(), make_box(0));
     };
     fn->arity_1 = [](object * const end) -> object * {
-      return obj::integer_range::create(expect_object<obj::integer>(end)->data);
+      return obj::integer_range::create(try_object<obj::integer>(end));
     };
     fn->arity_2 = [](object * const start, object * const end) -> object * {
-      return obj::integer_range::create(expect_object<obj::integer>(start)->data,
-                                        expect_object<obj::integer>(end)->data);
+      return obj::integer_range::create(try_object<obj::integer>(start),
+                                        try_object<obj::integer>(end));
     };
     fn->arity_3 = [](object * const start, object * const end, object * const step) -> object * {
-      return obj::integer_range::create(expect_object<obj::integer>(start)->data,
-                                        expect_object<obj::integer>(end)->data,
-                                        expect_object<obj::integer>(step)->data);
+      return obj::integer_range::create(try_object<obj::integer>(start),
+                                        try_object<obj::integer>(end),
+                                        try_object<obj::integer>(step));
     };
     intern_fn_obj("integer-range", fn);
   }
