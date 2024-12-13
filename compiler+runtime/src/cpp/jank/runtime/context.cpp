@@ -162,6 +162,15 @@ namespace jank::runtime
       auto const &module(
         expect_object<runtime::ns>(intern_var("clojure.core", "*ns*").expect_ok()->deref())
           ->to_string());
+      /* No matter what's in the fn, we'll return nil. */
+      exprs.emplace_back(
+        make_box<analyze::expression>(analyze::expr::primitive_literal<analyze::expression>{
+          analyze::expression_base{ {},
+                                   analyze::expression_position::tail,
+                                   an_prc.root_frame,
+                                   true },
+          obj::nil::nil_const()
+      }));
       /* TODO: Pass in module_to_load_function result */
       auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc, module));
       auto &fn(boost::get<analyze::expr::function<analyze::expression>>(wrapped_exprs->data));
