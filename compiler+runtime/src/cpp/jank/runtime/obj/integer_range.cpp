@@ -103,7 +103,7 @@ namespace jank::runtime
 
   obj::integer_ptr obj::integer_range::first() const
   {
-    return make_box<obj::integer>(start);
+    return start;
   }
 
   obj::integer_range_ptr obj::integer_range::next() const
