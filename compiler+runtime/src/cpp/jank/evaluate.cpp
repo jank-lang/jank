@@ -208,11 +208,16 @@ namespace jank::evaluate
       auto &body(fn.arities[0].body.values);
       /* We normally wrap one expression, which is a return statement, but we'll be potentially
        * adding more, so let's not make assumptions yet. */
-      body[0]->get_base()->position = expression_position::statement;
+      body[0]->propagate_position(expression_position::statement);
 
-      for(auto const &expr : exprs)
+      if(exprs.size() > 1)
       {
-        body.emplace_back(expr);
+        for(auto it(exprs.begin() + 1); it != exprs.end(); ++it)
+        {
+          auto &expr(*it);
+          expr->propagate_position(expression_position::statement);
+          body.emplace_back(expr);
+        }
       }
 
       /* Finally, mark the last body item as our return. */

@@ -107,7 +107,7 @@ namespace jank::jit
       args.emplace_back(strdup(fmt::format("-D{}", define_macro).c_str()));
     }
 
-    // fmt::println("jit flags {}", args);
+    //fmt::println("jit flags {}", args);
 
     clang::IncrementalCompilerBuilder compiler_builder;
     compiler_builder.SetCompilerArgs(args);
