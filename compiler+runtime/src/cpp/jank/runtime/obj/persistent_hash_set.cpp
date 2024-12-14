@@ -20,6 +20,12 @@ namespace jank::runtime::obj
   {
   }
 
+  persistent_hash_set_ptr persistent_hash_set::empty()
+  {
+    static auto const ret(make_box<persistent_hash_set>());
+    return ret;
+  }
+
   persistent_hash_set_ptr persistent_hash_set::create_from_seq(object_ptr const seq)
   {
     return make_box<persistent_hash_set>(visit_seqable(

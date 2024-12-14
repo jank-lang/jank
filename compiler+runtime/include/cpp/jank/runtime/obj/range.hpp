@@ -1,12 +1,12 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/behavior/seqable.hpp>
-#include <jank/runtime/obj/array_chunk.hpp>
-#include <jank/runtime/obj/cons.hpp>
+#include <jank/option.hpp>
 
 namespace jank::runtime::obj
 {
+  using array_chunk_ptr = native_box<struct array_chunk>;
+  using cons_ptr = native_box<struct cons>;
   using range_ptr = native_box<struct range>;
 
   /* A range from X to Y, exclusive, incrementing by S. This is for non-integer values.

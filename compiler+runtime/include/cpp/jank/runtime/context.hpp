@@ -9,7 +9,6 @@
 #include <jank/runtime/module/loader.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
-#include <jank/runtime/obj/keyword.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/util/cli.hpp>
 
@@ -28,6 +27,11 @@ namespace jank
 
 namespace jank::runtime
 {
+  namespace obj
+  {
+    using keyword_ptr = native_box<struct keyword>;
+  }
+
   /* This is a singleton, as much as I fought it for actual years. Trying to have multiple
    * contexts is limited firstly by there being a single, global JIT compilation context
    * and process in which global memory exists. Secondly, by the fact that interned keywords

@@ -413,12 +413,12 @@ namespace jank::runtime
 
   native_bool is_simple_keyword(object_ptr const o)
   {
-    return o->type == object_type::keyword && expect_object<obj::keyword>(o)->sym.ns.empty();
+    return o->type == object_type::keyword && expect_object<obj::keyword>(o)->sym->ns.empty();
   }
 
   native_bool is_qualified_keyword(object_ptr const o)
   {
-    return o->type == object_type::keyword && !expect_object<obj::keyword>(o)->sym.ns.empty();
+    return o->type == object_type::keyword && !expect_object<obj::keyword>(o)->sym->ns.empty();
   }
 
   native_bool is_callable(object_ptr const o)

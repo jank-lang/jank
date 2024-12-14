@@ -1,8 +1,10 @@
 #include <fmt/compile.h>
 
 #include <jank/runtime/obj/persistent_string.hpp>
+#include <jank/runtime/obj/persistent_string_sequence.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core/make_box.hpp>
+#include <jank/runtime/core/to_string.hpp>
 #include <jank/util/escape.hpp>
 
 namespace jank::runtime::obj

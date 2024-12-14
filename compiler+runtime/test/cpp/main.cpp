@@ -12,6 +12,7 @@
 #include <llvm/Support/TargetSelect.h>
 
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/core/to_string.hpp>
 #include <clojure/core_native.hpp>
 
 /* NOLINTNEXTLINE(bugprone-exception-escape): println can throw. */

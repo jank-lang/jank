@@ -1,11 +1,11 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/cons.hpp>
 #include <jank/option.hpp>
 
 namespace jank::runtime::obj
 {
+  using cons_ptr = native_box<struct cons>;
   using chunked_cons_ptr = native_box<struct chunked_cons>;
 
   struct chunked_cons : gc

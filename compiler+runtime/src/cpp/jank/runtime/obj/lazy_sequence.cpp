@@ -1,9 +1,12 @@
 #include <jank/runtime/obj/lazy_sequence.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/obj/cons.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/runtime/rtti.hpp>
+#include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/core/to_string.hpp>
 
 namespace jank::runtime::obj
 {

@@ -1,12 +1,13 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/persistent_sorted_set_sequence.hpp>
+#include <jank/runtime/detail/type.hpp>
 
 namespace jank::runtime::obj
 {
   using transient_sorted_set_ptr = native_box<struct transient_sorted_set>;
   using persistent_sorted_set_ptr = native_box<struct persistent_sorted_set>;
+  using persistent_sorted_set_sequence_ptr = native_box<struct persistent_sorted_set_sequence>;
 
   struct persistent_sorted_set : gc
   {

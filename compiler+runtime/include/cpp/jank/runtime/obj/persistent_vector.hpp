@@ -2,12 +2,12 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/type.hpp>
-#include <jank/runtime/obj/persistent_vector_sequence.hpp>
 
 namespace jank::runtime::obj
 {
   using transient_vector_ptr = native_box<struct transient_vector>;
   using persistent_vector_ptr = native_box<struct persistent_vector>;
+  using persistent_vector_sequence_ptr = native_box<struct persistent_vector_sequence>;
 
   struct persistent_vector : gc
   {
@@ -59,8 +59,8 @@ namespace jank::runtime::obj
     persistent_vector_ptr with_meta(object_ptr m) const;
 
     /* behavior::seqable */
-    obj::persistent_vector_sequence_ptr seq() const;
-    obj::persistent_vector_sequence_ptr fresh_seq() const;
+    persistent_vector_sequence_ptr seq() const;
+    persistent_vector_sequence_ptr fresh_seq() const;
 
     /* behavior::countable */
     size_t count() const;

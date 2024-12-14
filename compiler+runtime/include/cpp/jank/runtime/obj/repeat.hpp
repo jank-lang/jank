@@ -1,11 +1,11 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/cons.hpp>
-#include <jank/runtime/behavior/seqable.hpp>
+#include <jank/option.hpp>
 
 namespace jank::runtime::obj
 {
+  using cons_ptr = native_box<struct cons>;
   using repeat_ptr = native_box<struct repeat>;
 
   struct repeat : gc

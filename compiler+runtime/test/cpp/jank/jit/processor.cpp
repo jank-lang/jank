@@ -15,6 +15,7 @@
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/core/to_string.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/jit/processor.hpp>
 

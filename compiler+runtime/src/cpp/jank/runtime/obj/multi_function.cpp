@@ -1,4 +1,7 @@
 #include <jank/runtime/obj/multi_function.hpp>
+#include <jank/runtime/obj/persistent_hash_set.hpp>
+#include <jank/runtime/obj/persistent_vector_sequence.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core.hpp>

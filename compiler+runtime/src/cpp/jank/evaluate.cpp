@@ -430,7 +430,7 @@ namespace jank::evaluate
     if(expr.data->type == object_type::keyword)
     {
       auto const d(expect_object<obj::keyword>(expr.data));
-      return __rt_ctx->intern_keyword(d->sym.ns, d->sym.name).expect_ok();
+      return __rt_ctx->intern_keyword(d->sym->ns, d->sym->name).expect_ok();
     }
     return expr.data;
   }

@@ -3,6 +3,8 @@
 #include <boost/filesystem/path.hpp>
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/symbol.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/core/make_box.hpp>
 
 namespace jank::detail

@@ -1205,8 +1205,8 @@ namespace jank::codegen
                                 false));
       auto const create_fn(ctx->module->getOrInsertFunction("jank_keyword_intern", create_fn_type));
 
-      llvm::SmallVector<llvm::Value *, 2> const args{ gen_global(make_box(k->sym.ns)),
-                                                      gen_global(make_box(k->sym.name)) };
+      llvm::SmallVector<llvm::Value *, 2> const args{ gen_global(make_box(k->sym->ns)),
+                                                      gen_global(make_box(k->sym->name)) };
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/analyze/expression_base.hpp>
 
 namespace jank::analyze::expr

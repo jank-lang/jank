@@ -3,12 +3,12 @@
 #include <mutex>
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/symbol.hpp>
-#include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 
 namespace jank::runtime::obj
 {
+  using symbol_ptr = native_box<struct symbol>;
+  using persistent_hash_map_ptr = native_box<struct persistent_hash_map>;
   using multi_function_ptr = native_box<struct multi_function>;
 
   struct multi_function
@@ -70,7 +70,7 @@ namespace jank::runtime::obj
     object_ptr this_object_ptr() final;
 
     multi_function_ptr reset();
-    obj::persistent_hash_map_ptr reset_cache();
+    persistent_hash_map_ptr reset_cache();
     multi_function_ptr add_method(object_ptr dispatch_val, object_ptr method);
     multi_function_ptr remove_method(object_ptr dispatch_val);
     multi_function_ptr prefer_method(object_ptr x, object_ptr y);
@@ -88,10 +88,10 @@ namespace jank::runtime::obj
     object_ptr default_dispatch_value{};
     object_ptr hierarchy{};
     mutable object_ptr cached_hierarchy{};
-    obj::persistent_hash_map_ptr method_table{};
-    mutable obj::persistent_hash_map_ptr method_cache{};
-    obj::persistent_hash_map_ptr prefer_table{};
-    obj::symbol_ptr name{};
+    persistent_hash_map_ptr method_table{};
+    mutable persistent_hash_map_ptr method_cache{};
+    persistent_hash_map_ptr prefer_table{};
+    symbol_ptr name{};
     std::recursive_mutex data_lock;
   };
 }

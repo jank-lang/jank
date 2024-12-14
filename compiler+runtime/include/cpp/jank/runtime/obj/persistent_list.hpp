@@ -1,12 +1,12 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/persistent_list_sequence.hpp>
 #include <jank/runtime/detail/native_persistent_list.hpp>
 
 namespace jank::runtime::obj
 {
   using persistent_list_ptr = native_box<struct persistent_list>;
+  using persistent_list_sequence_ptr = native_box<struct persistent_list_sequence>;
 
   struct persistent_list : gc
   {

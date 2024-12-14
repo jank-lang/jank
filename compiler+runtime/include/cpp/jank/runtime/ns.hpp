@@ -1,17 +1,17 @@
 #pragma once
 
-#include <functional>
-#include <unordered_map>
-#include <mutex>
-
 #include <folly/Synchronized.h>
 
-#include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/var.hpp>
 
 namespace jank::runtime
 {
   struct context;
+
+  namespace obj
+  {
+    using symbol_ptr = native_box<struct symbol>;
+  }
 
   using ns_ptr = native_box<struct ns>;
 

@@ -1,8 +1,10 @@
 #include <magic_enum.hpp>
 
 #include <jank/runtime/obj/native_function_wrapper.hpp>
+#include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/core/to_string.hpp>
 
 namespace jank::runtime::obj
 {

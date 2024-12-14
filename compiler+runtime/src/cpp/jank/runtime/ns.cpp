@@ -1,6 +1,7 @@
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
 
 namespace jank::runtime
 {

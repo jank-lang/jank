@@ -1,12 +1,13 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/persistent_hash_set_sequence.hpp>
+#include <jank/runtime/detail/type.hpp>
 
 namespace jank::runtime::obj
 {
   using transient_hash_set_ptr = native_box<struct transient_hash_set>;
   using persistent_hash_set_ptr = native_box<struct persistent_hash_set>;
+  using persistent_hash_set_sequence_ptr = native_box<struct persistent_hash_set_sequence>;
 
   struct persistent_hash_set : gc
   {
@@ -36,11 +37,7 @@ namespace jank::runtime::obj
     {
     }
 
-    static persistent_hash_set_ptr empty()
-    {
-      static auto const ret(make_box<persistent_hash_set>());
-      return ret;
-    }
+    static persistent_hash_set_ptr empty();
 
     static persistent_hash_set_ptr create_from_seq(object_ptr const seq);
 

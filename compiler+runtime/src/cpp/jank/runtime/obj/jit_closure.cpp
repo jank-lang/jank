@@ -2,8 +2,10 @@
 
 #include <jank/runtime/obj/jit_closure.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
+#include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/rtti.hpp>
+#include <jank/runtime/core/to_string.hpp>
 
 namespace jank::runtime::obj
 {

@@ -1,11 +1,16 @@
 #pragma once
 
-#include <jank/runtime/obj/symbol.hpp>
 #include <jank/option.hpp>
+#include <jank/runtime/object.hpp>
 
 namespace jank::runtime
 {
   struct context;
+
+  namespace obj
+  {
+    using symbol_ptr = native_box<struct symbol>;
+  }
 }
 
 namespace jank::analyze

@@ -7,9 +7,13 @@
 #include <llvm/Analysis/LoopAnalysisManager.h>
 #include <llvm/Analysis/CGSCCPassManager.h>
 
-#include <jank/runtime/obj/keyword.hpp>
 #include <jank/analyze/expression.hpp>
 #include <jank/analyze/processor.hpp>
+
+namespace jank::runtime::obj
+{
+  using keyword_ptr = native_box<struct keyword>;
+}
 
 namespace jank::codegen
 {

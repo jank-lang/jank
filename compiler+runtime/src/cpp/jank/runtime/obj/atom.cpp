@@ -1,6 +1,7 @@
 #include <magic_enum.hpp>
 
 #include <jank/runtime/obj/atom.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/core.hpp>
 

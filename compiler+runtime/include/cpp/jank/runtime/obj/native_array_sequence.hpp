@@ -1,11 +1,11 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/cons.hpp>
 
 namespace jank::runtime::obj
 {
   using native_array_sequence_ptr = native_box<struct native_array_sequence>;
+  using cons_ptr = native_box<struct cons>;
 
   struct native_array_sequence : gc
   {

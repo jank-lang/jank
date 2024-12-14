@@ -1,10 +1,10 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/cons.hpp>
 
 namespace jank::runtime::obj
 {
+  using cons_ptr = native_box<struct cons>;
   using persistent_string_ptr = native_box<struct persistent_string>;
   using persistent_string_sequence_ptr = native_box<struct persistent_string_sequence>;
 

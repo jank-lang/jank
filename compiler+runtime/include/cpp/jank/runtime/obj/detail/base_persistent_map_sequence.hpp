@@ -7,6 +7,11 @@ namespace jank::runtime
 {
   void to_string(object_ptr o, fmt::memory_buffer &buff);
   void to_code_string(object_ptr o, fmt::memory_buffer &buff);
+
+  namespace obj
+  {
+    using cons_ptr = native_box<struct cons>;
+  }
 }
 
 namespace jank::runtime::obj::detail

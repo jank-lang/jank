@@ -1,12 +1,12 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/detail/type.hpp>
 
 namespace jank::runtime::obj
 {
   using persistent_array_map_ptr = native_box<struct persistent_array_map>;
+  using symbol_ptr = native_box<struct symbol>;
   using keyword_ptr = native_box<struct keyword>;
 
   /* The correct way to create a keyword for normal use is through interning via the RT context. */
@@ -49,8 +49,7 @@ namespace jank::runtime::obj
     native_bool operator==(keyword const &rhs) const;
 
     object base{ object_type::keyword };
-    /* TODO: Box this. */
-    obj::symbol sym;
+    symbol_ptr sym;
   };
 }
 

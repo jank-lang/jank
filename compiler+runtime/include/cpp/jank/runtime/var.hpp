@@ -4,9 +4,9 @@
 
 #include <folly/Synchronized.h>
 
-#include <jank/runtime/obj/symbol.hpp>
-#include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/result.hpp>
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/symbol.hpp>
 
 namespace jank::runtime
 {
@@ -14,6 +14,11 @@ namespace jank::runtime
   using var_ptr = native_box<struct var>;
   using var_thread_binding_ptr = native_box<struct var_thread_binding>;
   using var_unbound_root_ptr = native_box<struct var_unbound_root>;
+
+  namespace obj
+  {
+    using persistent_hash_map_ptr = native_box<struct persistent_hash_map>;
+  }
 
   struct var : gc
   {

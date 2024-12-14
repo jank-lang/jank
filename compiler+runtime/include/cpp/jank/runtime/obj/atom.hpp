@@ -1,11 +1,11 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/persistent_vector.hpp>
 
 namespace jank::runtime::obj
 {
   using atom_ptr = native_box<struct atom>;
+  using persistent_vector_ptr = native_box<struct persistent_vector>;
 
   struct atom : gc
   {
@@ -28,7 +28,7 @@ namespace jank::runtime::obj
     /* Replaces the old value with the specified value. Returns the new value. */
     object_ptr reset(object_ptr o);
     /* Same as reset, but returns a vector of the old value and the new value. */
-    obj::persistent_vector_ptr reset_vals(object_ptr o);
+    persistent_vector_ptr reset_vals(object_ptr o);
 
     /* Atomically updates the value of the atom with the specified fn. Returns the new value. */
     object_ptr swap(object_ptr fn);
@@ -37,11 +37,10 @@ namespace jank::runtime::obj
     object_ptr swap(object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest);
 
     /* Same as swap, but returns a vector of the old value and the new value. */
-    obj::persistent_vector_ptr swap_vals(object_ptr fn);
-    obj::persistent_vector_ptr swap_vals(object_ptr fn, object_ptr a1);
-    obj::persistent_vector_ptr swap_vals(object_ptr fn, object_ptr a1, object_ptr a2);
-    obj::persistent_vector_ptr
-    swap_vals(object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest);
+    persistent_vector_ptr swap_vals(object_ptr fn);
+    persistent_vector_ptr swap_vals(object_ptr fn, object_ptr a1);
+    persistent_vector_ptr swap_vals(object_ptr fn, object_ptr a1, object_ptr a2);
+    persistent_vector_ptr swap_vals(object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest);
 
     object_ptr compare_and_set(object_ptr old_val, object_ptr new_val);
 
