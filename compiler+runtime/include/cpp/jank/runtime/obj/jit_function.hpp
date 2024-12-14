@@ -72,7 +72,7 @@ namespace jank::runtime::obj
     arity_flag_t get_arity_flags() const final;
     object_ptr this_object_ptr() final;
 
-    object base{ object_type::jit_function };
+    object base{ obj_type };
     object *(*arity_0)(){};
     object *(*arity_1)(object *){};
     object *(*arity_2)(object *, object *){};

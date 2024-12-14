@@ -53,7 +53,7 @@ namespace jank::runtime::obj
     obj::persistent_string_sequence_ptr seq() const;
     obj::persistent_string_sequence_ptr fresh_seq() const;
 
-    object base{ object_type::persistent_string };
+    object base{ obj_type };
     native_persistent_string data;
   };
 }

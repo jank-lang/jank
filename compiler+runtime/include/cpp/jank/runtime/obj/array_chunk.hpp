@@ -30,7 +30,7 @@ namespace jank::runtime::obj
     object_ptr nth(object_ptr index) const;
     object_ptr nth(object_ptr index, object_ptr fallback) const;
 
-    object base{ object_type::array_chunk };
+    object base{ obj_type };
     native_vector<object_ptr> buffer;
     size_t offset{};
   };

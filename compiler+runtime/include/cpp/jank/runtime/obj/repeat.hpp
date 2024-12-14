@@ -46,7 +46,7 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     repeat_ptr with_meta(object_ptr m) const;
 
-    object base{ object_type::repeat };
+    object base{ obj_type };
     object_ptr value{};
     object_ptr count{};
     option<object_ptr> meta{};

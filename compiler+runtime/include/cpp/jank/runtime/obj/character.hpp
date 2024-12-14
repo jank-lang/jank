@@ -24,7 +24,7 @@ namespace jank::runtime::obj
     native_persistent_string to_code_string() const;
     native_hash to_hash() const;
 
-    object base{ object_type::character };
+    object base{ obj_type };
     /* Holds the raw form of the character bytes. Supports Unicode. */
     native_persistent_string data;
   };

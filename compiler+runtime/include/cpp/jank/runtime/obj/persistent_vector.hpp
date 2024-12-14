@@ -85,7 +85,7 @@ namespace jank::runtime::obj
     /* behavior::transientable */
     obj::transient_vector_ptr to_transient() const;
 
-    object base{ object_type::persistent_vector };
+    object base{ obj_type };
     value_type data;
     option<object_ptr> meta;
     mutable native_hash hash{};

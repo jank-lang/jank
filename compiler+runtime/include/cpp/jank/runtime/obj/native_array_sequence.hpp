@@ -48,7 +48,7 @@ namespace jank::runtime::obj
     /* behavior::sequenceable_in_place */
     native_array_sequence_ptr next_in_place();
 
-    object base{ object_type::native_array_sequence };
+    object base{ obj_type };
     object_ptr *arr{};
     size_t index{};
     size_t size{};

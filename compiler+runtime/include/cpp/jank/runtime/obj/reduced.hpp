@@ -24,7 +24,7 @@ namespace jank::runtime::obj
     /* behavior::derefable */
     object_ptr deref() const;
 
-    object base{ object_type::reduced };
+    object base{ obj_type };
     object_ptr val{};
   };
 }

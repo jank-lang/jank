@@ -129,7 +129,7 @@ namespace jank::runtime
       /* behavior::metadatable */
       native_function_wrapper_ptr with_meta(object_ptr m) const;
 
-      object base{ object_type::native_function_wrapper };
+      object base{ obj_type };
       obj::detail::function_type data{};
       option<object_ptr> meta;
     };

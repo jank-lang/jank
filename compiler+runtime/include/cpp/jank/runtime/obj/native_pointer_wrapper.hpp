@@ -29,7 +29,7 @@ namespace jank::runtime::obj
       return reinterpret_cast<T *>(data);
     }
 
-    object base{ object_type::native_pointer_wrapper };
+    object base{ obj_type };
     void *data{};
   };
 }

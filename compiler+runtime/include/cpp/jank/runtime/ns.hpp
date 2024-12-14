@@ -45,7 +45,7 @@ namespace jank::runtime
 
     ns_ptr clone(context &rt_ctx) const;
 
-    object base{ object_type::ns };
+    object base{ obj_type };
     obj::symbol_ptr name{};
     /* TODO: Benchmark the use of atomics here. That's what Clojure uses. */
     folly::Synchronized<obj::persistent_hash_map_ptr> vars;

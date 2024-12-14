@@ -26,7 +26,7 @@ namespace jank::runtime::obj
 
     object_ptr reset(object_ptr o);
 
-    object base{ object_type::volatile_ };
+    object base{ obj_type };
     object_ptr val{};
   };
 }

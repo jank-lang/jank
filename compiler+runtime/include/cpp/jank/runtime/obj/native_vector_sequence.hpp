@@ -42,7 +42,7 @@ namespace jank::runtime::obj
     /* behavior::sequenceable_in_place */
     native_vector_sequence_ptr next_in_place();
 
-    object base{ object_type::native_vector_sequence };
+    object base{ obj_type };
     native_vector<object_ptr> data{};
     size_t index{};
   };

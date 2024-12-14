@@ -74,7 +74,7 @@ namespace jank::runtime::obj
     native_bool contains(object_ptr o) const;
     persistent_sorted_set_ptr disj(object_ptr o) const;
 
-    object base{ object_type::persistent_sorted_set };
+    object base{ obj_type };
     value_type data;
     option<object_ptr> meta;
   };

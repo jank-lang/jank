@@ -26,6 +26,6 @@ namespace jank::runtime::obj
       persistent_list_sequence,
       runtime::detail::native_persistent_list::iterator>::iterator_sequence;
 
-    object base{ object_type::persistent_list_sequence };
+    object base{ obj_type };
   };
 }

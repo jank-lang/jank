@@ -55,7 +55,7 @@ namespace jank::runtime::obj
     void set_ns(native_persistent_string const &);
     void set_name(native_persistent_string const &);
 
-    object base{ object_type::symbol };
+    object base{ obj_type };
 
     /* These require mutation fns, since changing them will affect the hash. */
     native_persistent_string ns;

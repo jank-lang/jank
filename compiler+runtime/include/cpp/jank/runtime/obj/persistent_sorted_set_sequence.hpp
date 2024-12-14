@@ -25,6 +25,6 @@ namespace jank::runtime::obj
       persistent_sorted_set_sequence,
       runtime::detail::native_persistent_sorted_set::const_iterator>::iterator_sequence;
 
-    object base{ object_type::persistent_sorted_set_sequence };
+    object base{ obj_type };
   };
 }

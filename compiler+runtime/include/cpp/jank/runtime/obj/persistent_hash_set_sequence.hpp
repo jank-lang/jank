@@ -25,6 +25,6 @@ namespace jank::runtime::obj
       persistent_hash_set_sequence,
       runtime::detail::native_persistent_hash_set::iterator>::iterator_sequence;
 
-    object base{ object_type::persistent_hash_set_sequence };
+    object base{ obj_type };
   };
 }

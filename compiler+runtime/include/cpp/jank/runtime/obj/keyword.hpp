@@ -48,7 +48,7 @@ namespace jank::runtime::obj
 
     native_bool operator==(keyword const &rhs) const;
 
-    object base{ object_type::keyword };
+    object base{ obj_type };
     symbol_ptr sym;
   };
 }

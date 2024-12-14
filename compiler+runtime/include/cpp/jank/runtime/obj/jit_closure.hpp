@@ -73,7 +73,7 @@ namespace jank::runtime::obj
 
     object_ptr this_object_ptr() final;
 
-    object base{ object_type::jit_closure };
+    object base{ obj_type };
     void *context{};
     object *(*arity_0)(void *){};
     object *(*arity_1)(void *, object *){};

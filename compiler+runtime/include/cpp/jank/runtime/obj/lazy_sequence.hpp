@@ -50,7 +50,7 @@ namespace jank::runtime::obj
 
   public:
     /* TODO: Synchronize. */
-    object base{ object_type::lazy_sequence };
+    object base{ obj_type };
     mutable object_ptr fn{};
     mutable object_ptr fn_result{};
     mutable object_ptr sequence{};

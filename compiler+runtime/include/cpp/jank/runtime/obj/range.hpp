@@ -68,7 +68,7 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     range_ptr with_meta(object_ptr m) const;
 
-    object base{ object_type::range };
+    object base{ obj_type };
     object_ptr start{};
     object_ptr end{};
     object_ptr step{};

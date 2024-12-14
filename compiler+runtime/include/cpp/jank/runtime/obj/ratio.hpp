@@ -48,7 +48,7 @@ namespace jank::runtime::obj
     native_integer to_integer() const;
     native_real to_real() const;
 
-    object base{ object_type::ratio };
+    object base{ obj_type };
     ratio_data data;
   };
 

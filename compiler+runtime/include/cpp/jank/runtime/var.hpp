@@ -67,7 +67,7 @@ namespace jank::runtime
 
     var_ptr clone() const;
 
-    object base{ object_type::var };
+    object base{ obj_type };
     ns_ptr n{};
     /* Unqualified. */
     obj::symbol_ptr name{};
@@ -96,7 +96,7 @@ namespace jank::runtime
     native_persistent_string to_code_string() const;
     native_hash to_hash() const;
 
-    object base{ object_type::var_thread_binding };
+    object base{ obj_type };
     object_ptr value{};
     std::thread::id thread_id;
   };
@@ -120,7 +120,7 @@ namespace jank::runtime
     native_persistent_string to_code_string() const;
     native_hash to_hash() const;
 
-    object base{ object_type::var_unbound_root };
+    object base{ obj_type };
     var_ptr var{};
   };
 }

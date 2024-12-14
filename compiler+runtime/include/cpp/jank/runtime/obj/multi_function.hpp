@@ -83,7 +83,7 @@ namespace jank::runtime::obj
     object_ptr get_method(object_ptr dispatch_val);
     object_ptr find_and_cache_best_method(object_ptr dispatch_val);
 
-    object base{ object_type::multi_function };
+    object base{ obj_type };
     object_ptr dispatch{};
     object_ptr default_dispatch_value{};
     object_ptr hierarchy{};

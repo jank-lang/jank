@@ -32,7 +32,7 @@ namespace jank::runtime::obj
     /* behavior::comparable extended */
     native_integer compare(boolean const &) const;
 
-    object base{ object_type::boolean };
+    object base{ obj_type };
     native_bool data{};
   };
 
@@ -66,7 +66,7 @@ namespace jank::runtime::obj
     native_real to_real() const;
 
     native_integer data{};
-    object base{ object_type::integer };
+    object base{ obj_type };
   };
 
   struct real : gc
@@ -97,6 +97,6 @@ namespace jank::runtime::obj
     native_real to_real() const;
 
     native_real data{};
-    object base{ object_type::real };
+    object base{ obj_type };
   };
 }

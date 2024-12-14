@@ -46,7 +46,7 @@ namespace jank::runtime::obj
     object_ptr chunked_first() const;
     object_ptr chunked_next() const;
 
-    object base{ object_type::chunked_cons };
+    object base{ obj_type };
     object_ptr head{};
     object_ptr tail{};
     option<object_ptr> meta;

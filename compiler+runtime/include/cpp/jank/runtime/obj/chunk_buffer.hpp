@@ -29,7 +29,7 @@ namespace jank::runtime::obj
     void append(object_ptr o);
     obj::array_chunk_ptr chunk();
 
-    object base{ object_type::chunk_buffer };
+    object base{ obj_type };
     native_vector<object_ptr> buffer;
     size_t capacity{};
   };

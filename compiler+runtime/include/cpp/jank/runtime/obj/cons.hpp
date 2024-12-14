@@ -42,7 +42,7 @@ namespace jank::runtime::obj
     /* behavior::conjable */
     cons_ptr conj(object_ptr head) const;
 
-    object base{ object_type::cons };
+    object base{ obj_type };
     object_ptr head{};
     object_ptr tail{};
     mutable native_hash hash{};

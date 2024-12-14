@@ -24,7 +24,7 @@ namespace jank::runtime::obj
     /* behavior::derefable */
     object_ptr deref();
 
-    object base{ object_type::delay };
+    object base{ obj_type };
     object_ptr val{};
     object_ptr fn{};
     object_ptr error{};

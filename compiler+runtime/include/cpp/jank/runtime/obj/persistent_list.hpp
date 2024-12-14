@@ -78,7 +78,7 @@ namespace jank::runtime::obj
     object_ptr peek() const;
     persistent_list_ptr pop() const;
 
-    object base{ object_type::persistent_list };
+    object base{ obj_type };
     value_type data;
     option<object_ptr> meta;
   };

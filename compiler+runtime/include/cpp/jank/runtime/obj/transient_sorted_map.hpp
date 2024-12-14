@@ -56,7 +56,7 @@ namespace jank::runtime::obj
 
     void assert_active() const;
 
-    object base{ object_type::transient_sorted_map };
+    object base{ obj_type };
     value_type data;
     mutable native_hash hash{};
     native_bool active{ true };
