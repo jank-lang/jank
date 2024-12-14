@@ -50,6 +50,7 @@
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/rtti.hpp>
+#include <jank/runtime/core/to_string.hpp>
 
 namespace jank::runtime
 {

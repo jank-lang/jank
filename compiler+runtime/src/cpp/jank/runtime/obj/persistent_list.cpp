@@ -1,5 +1,6 @@
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/core/seq_ext.hpp>
 
 namespace jank::runtime::obj

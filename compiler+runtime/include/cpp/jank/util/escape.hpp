@@ -6,12 +6,12 @@
 namespace jank::util
 {
   /* This provides a fmt extension for escaping strings and wrapping them in
-  * quotes. It's largely adapted from here:
-  * https://github.com/fmtlib/fmt/issues/825#issuecomment-1227501168
-  *
-  * Usage just looks like:
-  * fmt::format("{}", util::escaped_quoted_view(s))
-  */
+   * quotes. It's largely adapted from here:
+   * https://github.com/fmtlib/fmt/issues/825#issuecomment-1227501168
+   *
+   * Usage just looks like:
+   * fmt::format("{}", util::escaped_quoted_view(s))
+   */
   template <typename S = native_persistent_string_view>
   struct escape_view
   {

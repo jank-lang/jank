@@ -3,6 +3,7 @@
 #include <jank/runtime/obj/transient_hash_map.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/runtime/core/seq.hpp>
 
 namespace jank::runtime::obj
 {

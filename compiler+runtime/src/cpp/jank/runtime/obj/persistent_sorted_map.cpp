@@ -2,6 +2,7 @@
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/transient_sorted_map.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/runtime/core/seq.hpp>
 
 namespace jank::runtime::obj
 {

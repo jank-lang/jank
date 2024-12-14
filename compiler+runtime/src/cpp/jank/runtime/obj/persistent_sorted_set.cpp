@@ -1,5 +1,6 @@
 #include <jank/runtime/obj/persistent_sorted_set.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/runtime/core/seq.hpp>
 
 namespace jank::runtime::obj
 {

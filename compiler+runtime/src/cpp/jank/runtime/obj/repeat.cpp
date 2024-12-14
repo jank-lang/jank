@@ -2,6 +2,7 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/math.hpp>
 #include <jank/runtime/core/make_box.hpp>
+#include <jank/runtime/core/seq.hpp>
 
 namespace jank::runtime::obj
 {
