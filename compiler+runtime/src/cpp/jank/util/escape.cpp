@@ -1,3 +1,5 @@
+#include <fmt/format.h>
+
 #include <jank/util/escape.hpp>
 
 namespace jank::util

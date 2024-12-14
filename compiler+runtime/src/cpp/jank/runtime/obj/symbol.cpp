@@ -1,5 +1,6 @@
 #include <fmt/compile.h>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/visit.hpp>

@@ -1,5 +1,6 @@
 #include <codecvt>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/util/escape.hpp>
 #include <jank/runtime/visit.hpp>

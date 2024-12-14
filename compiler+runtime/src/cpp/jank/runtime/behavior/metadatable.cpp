@@ -1,3 +1,4 @@
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/core/to_string.hpp>

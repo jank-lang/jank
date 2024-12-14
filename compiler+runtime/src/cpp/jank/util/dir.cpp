@@ -1,6 +1,9 @@
 #include <clang/Basic/Version.h>
 #include <llvm/TargetParser/Host.h>
 
+#include <fmt/format.h>
+
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/util/sha256.hpp>
 

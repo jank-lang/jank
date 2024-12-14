@@ -2,6 +2,7 @@
 
 #include <fmt/core.h>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/munge.hpp>

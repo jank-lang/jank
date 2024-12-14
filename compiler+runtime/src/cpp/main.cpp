@@ -11,6 +11,7 @@
 
 #include <folly/FBString.h>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/util/mapped_file.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>

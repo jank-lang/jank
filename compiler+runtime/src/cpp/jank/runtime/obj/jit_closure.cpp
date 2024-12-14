@@ -1,3 +1,4 @@
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/jit_closure.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/keyword.hpp>

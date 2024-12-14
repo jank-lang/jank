@@ -1,3 +1,4 @@
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/array_chunk.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/core/to_string.hpp>

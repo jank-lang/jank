@@ -79,13 +79,10 @@ set(
   -w
 )
 
-# TODO: Remove FMT_HEADER_ONLY once the extern template Clang bug is fixed.
 set(
   jank_common_compiler_flags
   -std=gnu++20
   -DIMMER_HAS_LIBGC=1 -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1
-  -DFMT_HEADER_ONLY=1
-  #-DLIBASSERT_USE_MAGIC_ENUM=1
   #-DLIBASSERT_USE_FMT=1
   #-DLIBASSERT_STATIC_DEFINE=1
   #-stdlib=libc++

@@ -2,6 +2,7 @@
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
+#include <jank/native_persistent_string/fmt.hpp>
 
 namespace jank::runtime
 {

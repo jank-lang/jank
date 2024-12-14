@@ -1,3 +1,8 @@
+#include <fstream>
+
+#include <fmt/format.h>
+#include <fmt/ostream.h>
+
 #include <jank/profile/time.hpp>
 
 namespace jank::profile

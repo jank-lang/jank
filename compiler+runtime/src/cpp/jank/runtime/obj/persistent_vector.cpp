@@ -1,3 +1,4 @@
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/transient_vector.hpp>
 #include <jank/runtime/visit.hpp>

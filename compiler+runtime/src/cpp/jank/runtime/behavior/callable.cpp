@@ -1,5 +1,6 @@
 #include <fmt/core.h>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/visit.hpp>

@@ -9,6 +9,7 @@
 
 #include <fmt/compile.h>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>

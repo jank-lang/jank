@@ -6,6 +6,7 @@
 
 #include <fmt/color.h>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/util/mapped_file.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/read/lex.hpp>

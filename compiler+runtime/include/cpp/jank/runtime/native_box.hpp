@@ -1,7 +1,5 @@
 #pragma once
 
-#include <fmt/ostream.h>
-
 #include <jank/runtime/object.hpp>
 
 namespace jank::runtime
@@ -318,12 +316,4 @@ namespace jank::runtime
   {
     return os << "box(" << o.data << ")";
   }
-}
-
-namespace fmt
-{
-  template <typename T>
-  struct formatter<jank::runtime::native_box<T>> : fmt::ostream_formatter
-  {
-  };
 }

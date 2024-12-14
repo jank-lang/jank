@@ -3,9 +3,6 @@
 #include <cassert>
 #include <utility> // move, forward
 #include <type_traits>
-#include <ostream>
-
-#include <fmt/ostream.h>
 
 #include <jank/type.hpp>
 
@@ -268,22 +265,4 @@ namespace jank
   }
 
   constexpr inline none_t none = none_t{};
-
-  template <typename T>
-  std::ostream &operator<<(std::ostream &os, option<T> const &o)
-  {
-    if(o.is_none())
-    {
-      return os << "none";
-    }
-    return os << "some(" << o.unwrap() << ")";
-  }
-}
-
-namespace fmt
-{
-  template <typename T>
-  struct formatter<jank::option<T>> : fmt::ostream_formatter
-  {
-  };
 }

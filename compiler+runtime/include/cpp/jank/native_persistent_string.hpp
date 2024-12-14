@@ -1,7 +1,6 @@
 #pragma once
 
 #include <bit>
-#include <fmt/format.h>
 
 #include <jank/type.hpp>
 
@@ -925,18 +924,6 @@ namespace jank
     return os << static_cast<native_persistent_string_view>(s);
   }
 }
-
-template <>
-struct fmt::formatter<jank::native_persistent_string> : private formatter<fmt::string_view>
-{
-  using formatter<fmt::string_view>::parse;
-
-  template <typename Context>
-  auto format(jank::native_persistent_string const &s, Context &ctx) const
-  {
-    return formatter<fmt::string_view>::format({ s.data(), s.size() }, ctx);
-  }
-};
 
 namespace std
 {

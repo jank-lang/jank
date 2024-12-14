@@ -1,5 +1,6 @@
 #include <fmt/core.h>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/associatively_readable.hpp>
 #include <jank/runtime/behavior/associatively_writable.hpp>

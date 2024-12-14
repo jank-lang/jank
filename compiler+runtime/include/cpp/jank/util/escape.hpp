@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fmt/base.h>
+
 #include <jank/native_persistent_string.hpp>
 #include <jank/result.hpp>
 

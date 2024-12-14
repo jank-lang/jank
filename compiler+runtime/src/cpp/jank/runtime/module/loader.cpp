@@ -12,6 +12,7 @@
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/profile/time.hpp>
+#include <jank/native_persistent_string/fmt.hpp>
 
 namespace jank::runtime::module
 {

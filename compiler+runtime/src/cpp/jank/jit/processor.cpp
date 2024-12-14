@@ -10,6 +10,7 @@
 
 #include <fmt/ranges.h>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/util/process_location.hpp>
 #include <jank/util/make_array.hpp>
 #include <jank/util/dir.hpp>

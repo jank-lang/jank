@@ -9,6 +9,7 @@
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/profile/time.hpp>
+#include <jank/native_persistent_string/fmt.hpp>
 
 namespace jank::runtime
 {
