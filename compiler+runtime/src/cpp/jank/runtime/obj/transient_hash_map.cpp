@@ -1,5 +1,3 @@
-#include <magic_enum.hpp>
-
 #include <jank/runtime/obj/transient_hash_map.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
@@ -39,7 +37,7 @@ namespace jank::runtime::obj
   void transient_hash_map::to_string(fmt::memory_buffer &buff) const
   {
     auto inserter(std::back_inserter(buff));
-    fmt::format_to(inserter, "{}@{}", magic_enum::enum_name(base.type), fmt::ptr(&base));
+    fmt::format_to(inserter, "{}@{}", object_type_str(base.type), fmt::ptr(&base));
   }
 
   native_persistent_string transient_hash_map::to_string() const

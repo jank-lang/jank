@@ -39,7 +39,7 @@ namespace jank::runtime::obj
     fmt::format_to(std::back_inserter(buff),
                    "{} ({}@{})",
                    name->to_string(),
-                   magic_enum::enum_name(base.type),
+                   object_type_str(base.type),
                    fmt::ptr(&base));
   }
 

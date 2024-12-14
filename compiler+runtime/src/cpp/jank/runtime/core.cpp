@@ -47,7 +47,7 @@ namespace jank::runtime
 
   native_persistent_string type(object_ptr const o)
   {
-    return magic_enum::enum_name(o->type);
+    return object_type_str(o->type);
   }
 
   native_bool is_nil(object_ptr const o)

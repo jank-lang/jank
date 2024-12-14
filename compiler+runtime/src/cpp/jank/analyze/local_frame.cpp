@@ -278,7 +278,7 @@ namespace jank::analyze
       make_box("__type"),
       make_box("local_frame"),
       make_box("type"),
-      make_box(magic_enum::enum_name(type)),
+      make_box(frame_type_str(type)),
       make_box("parent"),
       jank::detail::to_runtime_data(parent),
       make_box("locals"),

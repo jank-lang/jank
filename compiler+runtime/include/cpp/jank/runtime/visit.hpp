@@ -348,7 +348,7 @@ namespace jank::runtime
       default:
         {
           throw std::runtime_error{ fmt::format("invalid object type: {} raw value {}",
-                                                magic_enum::enum_name(erased->type),
+                                                object_type_str(erased->type),
                                                 static_cast<int>(erased->type)) };
         }
         break;

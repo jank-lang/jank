@@ -1,5 +1,3 @@
-#include <magic_enum.hpp>
-
 #include <jank/runtime/obj/jit_closure.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/keyword.hpp>
@@ -40,7 +38,7 @@ namespace jank::runtime::obj
       std::back_inserter(buff),
       "{} ({}@{})",
       (name->type == object_type::nil ? "unknown" : expect_object<persistent_string>(name)->data),
-      magic_enum::enum_name(base.type),
+      object_type_str(base.type),
       fmt::ptr(&base));
   }
 

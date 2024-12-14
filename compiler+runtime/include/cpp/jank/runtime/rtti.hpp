@@ -1,7 +1,5 @@
 #pragma once
 
-#include <magic_enum.hpp>
-
 #include <jank/runtime/object.hpp>
 
 namespace jank::runtime
@@ -70,8 +68,8 @@ namespace jank::runtime
     if(o->type != T::obj_type)
     {
       throw std::runtime_error{ fmt::format("invalid object type (expected {}, found {})",
-                                            magic_enum::enum_name(T::obj_type),
-                                            magic_enum::enum_name(o->type)) };
+                                            object_type_str(T::obj_type),
+                                            object_type_str(o->type)) };
     }
     return reinterpret_cast<T *>(reinterpret_cast<char *>(const_cast<object *>(o))
                                  - offsetof(T, base));

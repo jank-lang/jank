@@ -49,6 +49,69 @@ namespace jank::read::lex
     eof,
   };
 
+  constexpr char const *token_kind_str(token_kind const kind)
+  {
+    switch(kind)
+    {
+      case token_kind::open_paren:
+        return "open_paren";
+      case token_kind::close_paren:
+        return "close_paren";
+      case token_kind::open_square_bracket:
+        return "open_square_bracket";
+      case token_kind::close_square_bracket:
+        return "close_square_bracket";
+      case token_kind::open_curly_bracket:
+        return "open_curly_bracket";
+      case token_kind::close_curly_bracket:
+        return "close_curly_bracket";
+      case token_kind::single_quote:
+        return "single_quote";
+      case token_kind::meta_hint:
+        return "meta_hint";
+      case token_kind::reader_macro:
+        return "reader_macro";
+      case token_kind::reader_macro_comment:
+        return "reader_macro_comment";
+      case token_kind::reader_macro_conditional:
+        return "reader_macro_conditional";
+      case token_kind::reader_macro_conditional_splice:
+        return "reader_macro_conditional_splice";
+      case token_kind::syntax_quote:
+        return "syntax_quote";
+      case token_kind::unquote:
+        return "unquote";
+      case token_kind::unquote_splice:
+        return "unquote_splice";
+      case token_kind::deref:
+        return "deref";
+      case token_kind::comment:
+        return "comment";
+      case token_kind::nil:
+        return "nil";
+      case token_kind::boolean:
+        return "boolean";
+      case token_kind::character:
+        return "character";
+      case token_kind::symbol:
+        return "symbol";
+      case token_kind::keyword:
+        return "keyword";
+      case token_kind::integer:
+        return "integer";
+      case token_kind::real:
+        return "real";
+      case token_kind::ratio:
+        return "ratio";
+      case token_kind::string:
+        return "string";
+      case token_kind::escaped_string:
+        return "escaped_string";
+      case token_kind::eof:
+        return "eof";
+    }
+  }
+
   struct ratio
   {
     native_integer numerator{};

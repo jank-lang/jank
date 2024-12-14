@@ -1,5 +1,3 @@
-#include <magic_enum.hpp>
-
 #include <jank/runtime/obj/array_chunk.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/core/to_string.hpp>
@@ -38,10 +36,7 @@ namespace jank::runtime::obj
 
   void array_chunk::to_string(fmt::memory_buffer &buff) const
   {
-    fmt::format_to(std::back_inserter(buff),
-                   "{}@{}",
-                   magic_enum::enum_name(base.type),
-                   fmt::ptr(&base));
+    fmt::format_to(std::back_inserter(buff), "{}@{}", object_type_str(base.type), fmt::ptr(&base));
   }
 
   native_persistent_string array_chunk::to_code_string() const

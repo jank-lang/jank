@@ -1,7 +1,5 @@
 #pragma once
 
-#include <magic_enum.hpp>
-
 #include <jank/detail/to_runtime_data.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/core/seq.hpp>
@@ -19,13 +17,26 @@ namespace jank::analyze
     tail
   };
 
+  constexpr char const *expression_position_str(expression_position const pos)
+  {
+    switch(pos)
+    {
+      case expression_position::value:
+        return "value";
+      case expression_position::statement:
+        return "statement";
+      case expression_position::tail:
+        return "tail";
+    }
+  }
+
   /* Common base class for every expression. */
   struct expression_base : gc
   {
     object_ptr to_runtime_data() const
     {
       return obj::persistent_array_map::create_unique(make_box("position"),
-                                                      make_box(magic_enum::enum_name(position)),
+                                                      make_box(expression_position_str(position)),
                                                       make_box("needs_box"),
                                                       make_box(needs_box));
     }

@@ -782,8 +782,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not indexable: {}",
-                                                magic_enum::enum_name(o->type)) };
+          throw std::runtime_error{ fmt::format("not indexable: {}", object_type_str(o->type)) };
         }
       },
       o);
@@ -823,8 +822,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not indexable: {}",
-                                                magic_enum::enum_name(o->type)) };
+          throw std::runtime_error{ fmt::format("not indexable: {}", object_type_str(o->type)) };
         }
       },
       o);
@@ -847,8 +845,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not stackable: {}",
-                                                magic_enum::enum_name(o->type)) };
+          throw std::runtime_error{ fmt::format("not stackable: {}", object_type_str(o->type)) };
         }
       },
       o);
@@ -871,8 +868,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not stackable: {}",
-                                                magic_enum::enum_name(o->type)) };
+          throw std::runtime_error{ fmt::format("not stackable: {}", object_type_str(o->type)) };
         }
       },
       o);

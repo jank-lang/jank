@@ -95,7 +95,7 @@ namespace jank::analyze
     {
       /* TODO: Error handling. */
       return err(error{ fmt::format("invalid def: name must be a symbol, not {}",
-                                    magic_enum::enum_name(sym_obj->type)) });
+                                    object_type_str(sym_obj->type)) });
     }
 
     auto const sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
@@ -1538,7 +1538,7 @@ namespace jank::analyze
         else
         {
           std::cerr << fmt::format("unsupported analysis of type {} with value {}\n",
-                                   magic_enum::enum_name(typed_o->base.type),
+                                   object_type_str(typed_o->base.type),
                                    typed_o->to_string());
           return err(error{ "unimplemented analysis" });
         }

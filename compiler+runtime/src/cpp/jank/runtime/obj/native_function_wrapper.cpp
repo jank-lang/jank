@@ -1,5 +1,3 @@
-#include <magic_enum.hpp>
-
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/context.hpp>
@@ -25,10 +23,7 @@ namespace jank::runtime::obj
 
   void native_function_wrapper::to_string(fmt::memory_buffer &buff) const
   {
-    fmt::format_to(std::back_inserter(buff),
-                   "{}@{}",
-                   magic_enum::enum_name(base.type),
-                   fmt::ptr(&base));
+    fmt::format_to(std::back_inserter(buff), "{}@{}", object_type_str(base.type), fmt::ptr(&base));
   }
 
   native_persistent_string native_function_wrapper::to_string() const

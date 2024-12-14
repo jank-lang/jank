@@ -1,5 +1,3 @@
-#include <magic_enum.hpp>
-
 #include <jank/runtime/obj/chunk_buffer.hpp>
 #include <jank/runtime/obj/array_chunk.hpp>
 #include <jank/runtime/core/math.hpp>
@@ -37,10 +35,7 @@ namespace jank::runtime::obj
 
   void chunk_buffer::to_string(fmt::memory_buffer &buff) const
   {
-    fmt::format_to(std::back_inserter(buff),
-                   "{}@{}",
-                   magic_enum::enum_name(base.type),
-                   fmt::ptr(&base));
+    fmt::format_to(std::back_inserter(buff), "{}@{}", object_type_str(base.type), fmt::ptr(&base));
   }
 
   native_persistent_string chunk_buffer::to_code_string() const

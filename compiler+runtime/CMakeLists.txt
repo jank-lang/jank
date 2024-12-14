@@ -68,6 +68,7 @@ set(
   -fno-common
   -frtti
   -fexceptions
+  -ftime-trace
   $<$<CONFIG:Debug>:-O0>
   $<$<CONFIG:Release>:-O2>
 )

@@ -65,6 +65,25 @@ namespace jank::analyze
       finally
     };
 
+    static constexpr char const *frame_type_str(frame_type const type)
+    {
+      switch(type)
+      {
+        case frame_type::root:
+          return "root";
+        case frame_type::fn:
+          return "fn";
+        case frame_type::let:
+          return "let";
+        case frame_type::try_:
+          return "try_";
+        case frame_type::catch_:
+          return "catch_";
+        case frame_type::finally:
+          return "finally";
+      }
+    }
+
     static constexpr native_bool pointer_free{ false };
 
     local_frame() = delete;
