@@ -1,0 +1,169 @@
+#include <jank/runtime/obj/detail/base_persistent_map.hpp>
+#include <jank/runtime/behavior/associatively_readable.hpp>
+#include <jank/runtime/behavior/map_like.hpp>
+#include <jank/runtime/visit.hpp>
+
+namespace jank::runtime::obj::detail
+{
+  template <typename PT, typename ST, typename V>
+  native_bool base_persistent_map<PT, ST, V>::equal(object const &o) const
+  {
+    if(&o == &base)
+    {
+      return true;
+    }
+
+    return visit_map_like(
+      [&](auto const typed_o) -> native_bool {
+        if(typed_o->count() != count())
+        {
+          return false;
+        }
+
+        for(auto const &entry : static_cast<PT const *>(this)->data)
+        {
+          auto const found(typed_o->contains(entry.first));
+
+          if(!found || !runtime::equal(entry.second, typed_o->get(entry.first)))
+          {
+            return false;
+          }
+        }
+
+        return true;
+      },
+      []() { return false; },
+      &o);
+  }
+
+  template <typename PT, typename ST, typename V>
+  void base_persistent_map<PT, ST, V>::to_string_impl(typename V::const_iterator const &begin,
+                                                      typename V::const_iterator const &end,
+                                                      fmt::memory_buffer &buff,
+                                                      native_bool const to_code)
+  {
+    auto inserter(std::back_inserter(buff));
+    inserter = '{';
+    for(auto i(begin); i != end; ++i)
+    {
+      auto const pair(*i);
+      if(to_code)
+      {
+        runtime::to_code_string(pair.first, buff);
+      }
+      else
+      {
+        runtime::to_string(pair.first, buff);
+      }
+      inserter = ' ';
+
+      if(to_code)
+      {
+        runtime::to_code_string(pair.second, buff);
+      }
+      else
+      {
+        runtime::to_string(pair.second, buff);
+      }
+      auto n(i);
+      if(++n != end)
+      {
+        inserter = ',';
+        inserter = ' ';
+      }
+    }
+    inserter = '}';
+  }
+
+  template <typename PT, typename ST, typename V>
+  void base_persistent_map<PT, ST, V>::to_string(fmt::memory_buffer &buff) const
+  {
+    to_string_impl(static_cast<PT const *>(this)->data.begin(),
+                   static_cast<PT const *>(this)->data.end(),
+                   buff,
+                   false);
+  }
+
+  template <typename PT, typename ST, typename V>
+  native_persistent_string base_persistent_map<PT, ST, V>::to_string() const
+  {
+    fmt::memory_buffer buff;
+    to_string_impl(static_cast<PT const *>(this)->data.begin(),
+                   static_cast<PT const *>(this)->data.end(),
+                   buff,
+                   false);
+    return native_persistent_string{ buff.data(), buff.size() };
+  }
+
+  template <typename PT, typename ST, typename V>
+  native_persistent_string base_persistent_map<PT, ST, V>::to_code_string() const
+  {
+    fmt::memory_buffer buff;
+    to_string_impl(static_cast<PT const *>(this)->data.begin(),
+                   static_cast<PT const *>(this)->data.end(),
+                   buff,
+                   true);
+    return native_persistent_string{ buff.data(), buff.size() };
+  }
+
+  template <typename PT, typename ST, typename V>
+  native_hash base_persistent_map<PT, ST, V>::to_hash() const
+  {
+    if(hash)
+    {
+      return hash;
+    }
+
+    return hash = hash::unordered(static_cast<PT const *>(this)->data.begin(),
+                                  static_cast<PT const *>(this)->data.end());
+  }
+
+  template <typename PT, typename ST, typename V>
+  native_box<ST> base_persistent_map<PT, ST, V>::seq() const
+  {
+    if(static_cast<PT const *>(this)->data.empty())
+    {
+      return nullptr;
+    }
+    return make_box<ST>(static_cast<PT const *>(this),
+                        static_cast<PT const *>(this)->data.begin(),
+                        static_cast<PT const *>(this)->data.end());
+  }
+
+  template <typename PT, typename ST, typename V>
+  native_box<ST> base_persistent_map<PT, ST, V>::fresh_seq() const
+  {
+    if(static_cast<PT const *>(this)->data.empty())
+    {
+      return nullptr;
+    }
+    return make_box<ST>(static_cast<PT const *>(this),
+                        static_cast<PT const *>(this)->data.begin(),
+                        static_cast<PT const *>(this)->data.end());
+  }
+
+  template <typename PT, typename ST, typename V>
+  size_t base_persistent_map<PT, ST, V>::count() const
+  {
+    return static_cast<PT const *>(this)->data.size();
+  }
+
+  template <typename PT, typename ST, typename V>
+  native_box<PT> base_persistent_map<PT, ST, V>::with_meta(object_ptr const m) const
+  {
+    auto const meta(behavior::detail::validate_meta(m));
+    auto ret(make_box<PT>(static_cast<PT const *>(this)->data));
+    ret->meta = meta;
+    return ret;
+  }
+
+  template struct base_persistent_map<persistent_array_map,
+                                      persistent_array_map_sequence,
+                                      runtime::detail::native_persistent_array_map>;
+  template struct base_persistent_map<persistent_hash_map,
+                                      persistent_hash_map_sequence,
+                                      runtime::detail::native_persistent_hash_map>;
+  template struct base_persistent_map<persistent_sorted_map,
+                                      persistent_sorted_map_sequence,
+                                      runtime::detail::native_persistent_sorted_map>;
+}
