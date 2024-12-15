@@ -7,8 +7,8 @@ namespace jank::runtime
 {
   native_bool is_map(object_ptr o);
   native_bool equal(object_ptr l, object_ptr r);
-  void to_string(object_ptr o, fmt::memory_buffer &buff);
-  void to_code_string(object_ptr o, fmt::memory_buffer &buff);
+  void to_string(object_ptr o, util::string_builder &buff);
+  void to_code_string(object_ptr o, util::string_builder &buff);
 
   namespace behavior::detail
   {
@@ -34,9 +34,9 @@ namespace jank::runtime::obj::detail
     native_bool equal(object const &o) const;
     static void to_string_impl(typename V::const_iterator const &begin,
                                typename V::const_iterator const &end,
-                               fmt::memory_buffer &buff,
+                               util::string_builder &buff,
                                native_bool const to_code);
-    void to_string(fmt::memory_buffer &buff) const;
+    void to_string(util::string_builder &buff) const;
 
     native_persistent_string to_string() const;
     native_persistent_string to_code_string() const;

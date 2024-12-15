@@ -1,3 +1,5 @@
+#include <fmt/format.h>
+
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/visit.hpp>
@@ -99,12 +101,11 @@ namespace jank::runtime
 
         if constexpr(behavior::sequenceable<T>)
         {
-          fmt::memory_buffer buff;
-          auto inserter(std::back_inserter(buff));
+          util::string_builder buff;
           runtime::to_string(typed_args->first(), buff);
           for(auto it(next_in_place(typed_args)); it != nullptr; it = next_in_place(it))
           {
-            fmt::format_to(inserter, " ");
+            buff(' ');
             runtime::to_string(it->first(), buff);
           }
           std::fwrite(buff.data(), 1, buff.size(), stdout);
@@ -131,12 +132,11 @@ namespace jank::runtime
         }
         else if constexpr(behavior::sequenceable<T>)
         {
-          fmt::memory_buffer buff;
-          auto inserter(std::back_inserter(buff));
+          util::string_builder buff;
           runtime::to_string(typed_more->first(), buff);
           for(auto it(next_in_place(typed_more)); it != nullptr; it = next_in_place(it))
           {
-            fmt::format_to(inserter, " ");
+            buff(' ');
             runtime::to_string(it->first(), buff);
           }
           std::fwrite(buff.data(), 1, buff.size(), stdout);
@@ -160,12 +160,11 @@ namespace jank::runtime
 
         if constexpr(behavior::sequenceable<T>)
         {
-          fmt::memory_buffer buff;
-          auto inserter(std::back_inserter(buff));
+          util::string_builder buff;
           runtime::to_code_string(typed_args->first(), buff);
           for(auto it(next_in_place(typed_args)); it != nullptr; it = next_in_place(it))
           {
-            fmt::format_to(inserter, " ");
+            buff(' ');
             runtime::to_code_string(it->first(), buff);
           }
           std::fwrite(buff.data(), 1, buff.size(), stdout);
@@ -192,12 +191,11 @@ namespace jank::runtime
         }
         else if constexpr(behavior::sequenceable<T>)
         {
-          fmt::memory_buffer buff;
-          auto inserter(std::back_inserter(buff));
+          util::string_builder buff;
           runtime::to_code_string(typed_more->first(), buff);
           for(auto it(next_in_place(typed_more)); it != nullptr; it = next_in_place(it))
           {
-            fmt::format_to(inserter, " ");
+            buff(' ');
             runtime::to_code_string(it->first(), buff);
           }
           std::fwrite(buff.data(), 1, buff.size(), stdout);

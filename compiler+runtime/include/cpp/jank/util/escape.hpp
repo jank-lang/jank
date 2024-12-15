@@ -66,9 +66,14 @@ namespace jank::util
     return escape_view<native_persistent_string_view>{ sv, q, e };
   }
 
+  struct unescape_error
+  {
+    native_persistent_string message;
+  };
+
   /* These provide normal escaping/unescaping, with no quoting. */
-  string_result<native_transient_string> unescape(native_transient_string const &input);
-  native_transient_string escape(native_transient_string const &input);
+  result<native_persistent_string, unescape_error> unescape(native_persistent_string const &input);
+  native_persistent_string escape(native_persistent_string const &input);
 }
 
 template <typename S>

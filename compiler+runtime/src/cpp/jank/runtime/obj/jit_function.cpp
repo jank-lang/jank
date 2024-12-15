@@ -1,3 +1,5 @@
+#include <fmt/format.h>
+
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
@@ -25,12 +27,12 @@ namespace jank::runtime::obj
 
   native_persistent_string jit_function::to_string()
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     to_string(buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
-  void jit_function::to_string(fmt::memory_buffer &buff)
+  void jit_function::to_string(util::string_builder &buff)
   {
     auto const name(
       get(meta.unwrap_or(nil::nil_const()), __rt_ctx->intern_keyword("name").expect_ok()));

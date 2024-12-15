@@ -1,5 +1,7 @@
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 
+#include <fmt/format.h>
+
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/ns.hpp>

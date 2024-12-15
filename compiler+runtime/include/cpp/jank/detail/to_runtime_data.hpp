@@ -31,7 +31,8 @@ namespace jank::detail
   template <typename T>
   object_ptr to_runtime_data(native_box<T> const &d)
   {
-    return make_box(fmt::format("box({})", reinterpret_cast<void const *>(d.data)));
+    util::string_builder sb;
+    return make_box(sb("box(")(reinterpret_cast<void const *>(d.data))(")").release());
   }
 
   inline object_ptr to_runtime_data(native_persistent_string const &d)

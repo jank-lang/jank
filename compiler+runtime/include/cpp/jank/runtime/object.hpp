@@ -2,9 +2,8 @@
 
 #include <concepts>
 
-#include <fmt/format.h>
-
 #include <jank/type.hpp>
+#include <jank/util/string_builder.hpp>
 
 /* TODO: Move to obj namespace */
 namespace jank::runtime
@@ -207,6 +206,7 @@ namespace jank::runtime
       case object_type::var_unbound_root:
         return "var_unbound_root";
     }
+    return "unknown";
   }
 
   struct object
@@ -234,7 +234,7 @@ namespace jank::runtime::behavior
      * is distinct from its code representation, which doesn't yet have a corresponding
      * function in this behavior. */
     { t->to_string() } -> std::convertible_to<native_persistent_string>;
-    { t->to_string(std::declval<fmt::memory_buffer &>()) } -> std::same_as<void>;
+    { t->to_string(std::declval<util::string_builder &>()) } -> std::same_as<void>;
 
     /* Returns the code representation of the object. */
     { t->to_code_string() } -> std::convertible_to<native_persistent_string>;

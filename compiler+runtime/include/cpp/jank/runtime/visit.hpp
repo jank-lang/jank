@@ -68,7 +68,7 @@ namespace jank::runtime
   template <typename F, typename... Args>
   requires visitable<F, Args...>
   [[gnu::hot]]
-  constexpr auto visit_object(F const &fn, object const * const const_erased, Args &&...args)
+  auto visit_object(F const &fn, object const * const const_erased, Args &&...args)
   {
     assert(const_erased);
     auto * const erased(const_cast<object *>(const_erased));
@@ -348,9 +348,12 @@ namespace jank::runtime
         break;
       default:
         {
-          throw std::runtime_error{ fmt::format("invalid object type: {} raw value {}",
-                                                object_type_str(erased->type),
-                                                static_cast<int>(erased->type)) };
+          util::string_builder sb;
+          sb("invalid object type: ");
+          sb(object_type_str(erased->type));
+          sb(" raw value ");
+          sb(static_cast<int>(erased->type));
+          throw std::runtime_error{ sb.str() };
         }
         break;
     }

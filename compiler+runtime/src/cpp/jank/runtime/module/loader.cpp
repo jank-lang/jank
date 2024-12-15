@@ -5,6 +5,8 @@
 
 #include <boost/filesystem.hpp>
 
+#include <fmt/format.h>
+
 #include <jank/util/mapped_file.hpp>
 #include <jank/util/process_location.hpp>
 #include <jank/runtime/module/loader.hpp>

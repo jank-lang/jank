@@ -25,23 +25,23 @@ namespace jank::runtime::obj
     return runtime::equal(o, str->data.begin() + index, str->data.end());
   }
 
-  void persistent_string_sequence::to_string(fmt::memory_buffer &buff) const
+  void persistent_string_sequence::to_string(util::string_builder &buff) const
   {
     runtime::to_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
   }
 
   native_persistent_string persistent_string_sequence::to_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     runtime::to_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
-    return { buff.data(), buff.size() };
+    return buff.release();
   }
 
   native_persistent_string persistent_string_sequence::to_code_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     runtime::to_code_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
-    return { buff.data(), buff.size() };
+    return buff.release();
   }
 
   native_hash persistent_string_sequence::to_hash() const

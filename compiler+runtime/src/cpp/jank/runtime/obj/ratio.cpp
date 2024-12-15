@@ -1,8 +1,6 @@
 #include <limits>
 #include <numeric>
 
-#include <fmt/compile.h>
-
 #include <jank/runtime/obj/ratio.hpp>
 #include <jank/runtime/visit.hpp>
 
@@ -64,16 +62,16 @@ namespace jank::runtime::obj
     return data.to_integer();
   }
 
-  void ratio::to_string(fmt::memory_buffer &buff) const
+  void ratio::to_string(util::string_builder &buff) const
   {
-    format_to(std::back_inserter(buff), FMT_COMPILE("{}/{}"), data.numerator, data.denominator);
+    buff(data.numerator)('/')(data.denominator);
   }
 
   native_persistent_string ratio::to_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     to_string(buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
   native_persistent_string ratio::to_code_string() const

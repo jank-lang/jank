@@ -62,14 +62,18 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr native_box<T> try_object(object const * const o)
+  native_box<T> try_object(object const * const o)
   {
     assert(o);
     if(o->type != T::obj_type)
     {
-      throw std::runtime_error{ fmt::format("invalid object type (expected {}, found {})",
-                                            object_type_str(T::obj_type),
-                                            object_type_str(o->type)) };
+      util::string_builder sb;
+      sb("invalid object type (expected ");
+      sb(object_type_str(T::obj_type));
+      sb(" found ");
+      sb(object_type_str(o->type));
+      sb(")");
+      throw std::runtime_error{ sb.str() };
     }
     return reinterpret_cast<T *>(reinterpret_cast<char *>(const_cast<object *>(o))
                                  - offsetof(T, base));

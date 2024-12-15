@@ -55,21 +55,22 @@ namespace jank::runtime
     return n == v.n && name == v.name;
   }
 
-  static void to_string_impl(ns_ptr const n, obj::symbol_ptr const &name, fmt::memory_buffer &buff)
+  static void
+  to_string_impl(ns_ptr const n, obj::symbol_ptr const &name, util::string_builder &buff)
   {
-    format_to(std::back_inserter(buff), FMT_COMPILE("#'{}/{}"), n->name->name, name->name);
+    buff("#'")(n->name->name)('/')(name->name);
   }
 
-  void var::to_string(fmt::memory_buffer &buff) const
+  void var::to_string(util::string_builder &buff) const
   {
     to_string_impl(n, name, buff);
   }
   native_persistent_string var::to_string() const
   /* TODO: Maybe cache this. */
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     to_string_impl(n, name, buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
   native_persistent_string var::to_code_string() const
@@ -206,7 +207,7 @@ namespace jank::runtime
     return var_thread_binding::to_string();
   }
 
-  void var_thread_binding::to_string(fmt::memory_buffer &buff) const
+  void var_thread_binding::to_string(util::string_builder &buff) const
   {
     runtime::to_string(value, buff);
   }
@@ -228,12 +229,12 @@ namespace jank::runtime
 
   native_persistent_string var_unbound_root::to_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     to_string(buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
-  void var_unbound_root::to_string(fmt::memory_buffer &buff) const
+  void var_unbound_root::to_string(util::string_builder &buff) const
   {
     fmt::format_to(std::back_inserter(buff),
                    "unbound@{} for var {}",

@@ -1,3 +1,5 @@
+#include <fmt/format.h>
+
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>

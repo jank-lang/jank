@@ -151,6 +151,7 @@ add_library(
   src/cpp/jank/util/scope_exit.cpp
   src/cpp/jank/util/escape.cpp
   src/cpp/jank/util/clang_format.cpp
+  src/cpp/jank/util/string_builder.cpp
   src/cpp/jank/profile/time.cpp
   src/cpp/jank/read/lex.cpp
   src/cpp/jank/read/parse.cpp
@@ -426,6 +427,7 @@ if(jank_tests)
     jank_test_exe
     test/cpp/main.cpp
     test/cpp/jank/native_persistent_string.cpp
+    test/cpp/jank/util/string_builder.cpp
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/analyze/box.cpp

@@ -69,23 +69,23 @@ namespace jank::runtime::obj
       &o);
   }
 
-  void persistent_hash_set::to_string(fmt::memory_buffer &buff) const
+  void persistent_hash_set::to_string(util::string_builder &buff) const
   {
     runtime::to_string(data.begin(), data.end(), "#{", '}', buff);
   }
 
   native_persistent_string persistent_hash_set::to_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     runtime::to_string(data.begin(), data.end(), "#{", '}', buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
   native_persistent_string persistent_hash_set::to_code_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     runtime::to_code_string(data.begin(), data.end(), "#{", '}', buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
   /* TODO: Cache this. */

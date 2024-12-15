@@ -1,3 +1,5 @@
+#include <fmt/format.h>
+
 #include <jank/runtime/obj/atom.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/behavior/callable.hpp>
@@ -18,12 +20,12 @@ namespace jank::runtime::obj
 
   native_persistent_string atom::to_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     to_string(buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
-  void atom::to_string(fmt::memory_buffer &buff) const
+  void atom::to_string(util::string_builder &buff) const
   {
     fmt::format_to(std::back_inserter(buff), "{}@{}", object_type_str(base.type), fmt::ptr(&base));
   }

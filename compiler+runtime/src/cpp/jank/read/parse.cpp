@@ -1,5 +1,7 @@
 #include <codecvt>
 
+#include <fmt/format.h>
+
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/util/escape.hpp>
@@ -1319,7 +1321,7 @@ namespace jank::read::parse
     auto res(util::unescape({ sv.data(), sv.size() }));
     if(res.is_err())
     {
-      return err(error{ token.pos, res.expect_err_move() });
+      return err(error{ token.pos, res.expect_err().message });
     }
     return object_source_info{ make_box<obj::persistent_string>(res.expect_ok_move()),
                                token,

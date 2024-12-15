@@ -1,4 +1,4 @@
-#include <fmt/compile.h>
+#include <fmt/format.h>
 
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/number.hpp>
@@ -35,21 +35,16 @@ namespace jank::runtime::obj
     return data == b->data;
   }
 
-  static void to_string_impl(bool const data, fmt::memory_buffer &buff)
+  void boolean::to_string(util::string_builder &buff) const
   {
-    format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data ? "true" : "false");
-  }
-
-  void boolean::to_string(fmt::memory_buffer &buff) const
-  {
-    to_string_impl(data, buff);
+    buff(data);
   }
 
   native_persistent_string boolean::to_string() const
   {
-    fmt::memory_buffer buff;
-    to_string_impl(data, buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    util::string_builder buff;
+    buff(data);
+    return buff.release();
   }
 
   native_persistent_string boolean::to_code_string() const
@@ -98,12 +93,13 @@ namespace jank::runtime::obj
 
   native_persistent_string integer::to_string() const
   {
-    return fmt::format(FMT_COMPILE("{}"), data);
+    util::string_builder sb;
+    return sb(data).release();
   }
 
-  void integer::to_string(fmt::memory_buffer &buff) const
+  void integer::to_string(util::string_builder &buff) const
   {
-    fmt::format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data);
+    buff(data);
   }
 
   native_persistent_string integer::to_code_string() const
@@ -163,12 +159,13 @@ namespace jank::runtime::obj
 
   native_persistent_string real::to_string() const
   {
-    return fmt::format(FMT_COMPILE("{}"), data);
+    util::string_builder sb;
+    return sb(data).release();
   }
 
-  void real::to_string(fmt::memory_buffer &buff) const
+  void real::to_string(util::string_builder &buff) const
   {
-    fmt::format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data);
+    buff(data);
   }
 
   native_persistent_string real::to_code_string() const

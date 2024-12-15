@@ -1,3 +1,5 @@
+#include <fmt/format.h>
+
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/chunked_cons.hpp>
 #include <jank/runtime/visit.hpp>
@@ -171,7 +173,7 @@ namespace jank::runtime::obj
       &o);
   }
 
-  void chunked_cons::to_string(fmt::memory_buffer &buff) const
+  void chunked_cons::to_string(util::string_builder &buff) const
   {
     runtime::to_string(seq(), buff);
   }

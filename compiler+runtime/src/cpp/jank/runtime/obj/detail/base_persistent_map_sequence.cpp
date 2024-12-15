@@ -35,14 +35,13 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename IT>
-  void base_persistent_map_sequence<PT, IT>::to_string_impl(fmt::memory_buffer &buff,
+  void base_persistent_map_sequence<PT, IT>::to_string_impl(util::string_builder &buff,
                                                             native_bool const to_code) const
   {
-    auto inserter(std::back_inserter(buff));
-    fmt::format_to(inserter, "(");
+    buff('(');
     for(auto i(begin); i != end; ++i)
     {
-      fmt::format_to(inserter, "[");
+      buff('[');
       if(to_code)
       {
         runtime::to_code_string((*i).first, buff);
@@ -51,7 +50,7 @@ namespace jank::runtime::obj::detail
       {
         runtime::to_string((*i).first, buff);
       }
-      fmt::format_to(inserter, " ");
+      buff(' ');
       if(to_code)
       {
         runtime::to_code_string((*i).second, buff);
@@ -60,18 +59,18 @@ namespace jank::runtime::obj::detail
       {
         runtime::to_string((*i).second, buff);
       }
-      fmt::format_to(inserter, "]");
+      buff(']');
       auto n(i);
       if(++n != end)
       {
-        fmt::format_to(inserter, " ");
+        buff(' ');
       }
     }
-    fmt::format_to(inserter, ")");
+    buff(')');
   }
 
   template <typename PT, typename IT>
-  void base_persistent_map_sequence<PT, IT>::to_string(fmt::memory_buffer &buff) const
+  void base_persistent_map_sequence<PT, IT>::to_string(util::string_builder &buff) const
   {
     return to_string_impl(buff, false);
   }
@@ -79,17 +78,17 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename IT>
   native_persistent_string base_persistent_map_sequence<PT, IT>::to_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     to_string_impl(buff, false);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
   template <typename PT, typename IT>
   native_persistent_string base_persistent_map_sequence<PT, IT>::to_code_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     to_string_impl(buff, true);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
   template <typename PT, typename IT>

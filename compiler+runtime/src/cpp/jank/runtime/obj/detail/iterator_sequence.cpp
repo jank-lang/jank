@@ -46,7 +46,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename Derived, typename It>
-  void iterator_sequence<Derived, It>::to_string(fmt::memory_buffer &buff) const
+  void iterator_sequence<Derived, It>::to_string(util::string_builder &buff) const
   {
     runtime::to_string(begin, end, "(", ')', buff);
   }
@@ -54,17 +54,17 @@ namespace jank::runtime::obj::detail
   template <typename Derived, typename It>
   native_persistent_string iterator_sequence<Derived, It>::to_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     runtime::to_string(begin, end, "(", ')', buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
   template <typename Derived, typename It>
   native_persistent_string iterator_sequence<Derived, It>::to_code_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     runtime::to_code_string(begin, end, "(", ')', buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
   template <typename Derived, typename It>

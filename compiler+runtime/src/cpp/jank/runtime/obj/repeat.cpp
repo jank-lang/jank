@@ -99,7 +99,7 @@ namespace jank::runtime::obj
       &o);
   }
 
-  void repeat::to_string(fmt::memory_buffer &buff)
+  void repeat::to_string(util::string_builder &buff)
   {
     runtime::to_string(seq(), buff);
   }

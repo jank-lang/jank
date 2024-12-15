@@ -1,13 +1,13 @@
 #include <fmt/format.h>
 
 #include <jank/util/escape.hpp>
+#include <jank/util/string_builder.hpp>
 
 namespace jank::util
 {
-  string_result<native_transient_string> unescape(native_transient_string const &input)
+  result<native_persistent_string, unescape_error> unescape(native_persistent_string const &input)
   {
-    native_transient_string ss;
-    ss.reserve(input.size());
+    util::string_builder sb{ input.size() };
     native_bool escape{};
 
     for(auto const c : input)
@@ -20,7 +20,7 @@ namespace jank::util
         }
         else
         {
-          ss += c;
+          sb(c);
         }
       }
       else
@@ -28,102 +28,101 @@ namespace jank::util
         switch(c)
         {
           case 'n':
-            ss += '\n';
+            sb('\n');
             break;
           case 't':
-            ss += '\t';
+            sb('\t');
             break;
           case 'r':
-            ss += '\r';
+            sb('\r');
             break;
           case '\\':
-            ss += '\\';
+            sb('\\');
             break;
           case '"':
-            ss += '"';
+            sb('"');
             break;
           case 'a':
-            ss += '\a';
+            sb('\a');
             break;
           case 'v':
-            ss += '\v';
+            sb('\v');
             break;
           case '?':
-            ss += '\?';
+            sb('\?');
             break;
           case 'f':
-            ss += '\f';
+            sb('\f');
             break;
           case 'b':
-            ss += '\b';
+            sb('\b');
             break;
           default:
-            return err(fmt::format("invalid escape sequence: \\{}", c));
+            return err(unescape_error{ fmt::format("invalid escape sequence: \\{}", c) });
         }
         escape = false;
       }
     }
 
-    return ok(std::move(ss));
+    return ok(sb.release());
   }
 
-  native_transient_string escape(native_transient_string const &input)
+  native_persistent_string escape(native_persistent_string const &input)
   {
-    native_transient_string ss;
     /* We can expect on relocation, since escaping anything will result in a larger string.
-      * I'm not going to guess at the stats, to predict a better allocation, until this shows
-      * up in the profiler, though. */
-    ss.reserve(input.size());
+     * I'm not going to guess at the stats, to predict a better allocation, until this shows
+     * up in the profiler, though. */
+    util::string_builder sb{ input.size() };
 
     for(auto const c : input)
     {
       switch(c)
       {
         case '\n':
-          ss += '\\';
-          ss += 'n';
+          sb('\\');
+          sb('n');
           break;
         case '\t':
-          ss += '\\';
-          ss += 't';
+          sb('\\');
+          sb('t');
           break;
         case '\r':
-          ss += '\\';
-          ss += 'r';
+          sb('\\');
+          sb('r');
           break;
         case '\\':
-          ss += '\\';
-          ss += '\\';
+          sb('\\');
+          sb('\\');
           break;
         case '"':
-          ss += '\\';
-          ss += '"';
+          sb('\\');
+          sb('"');
           break;
         case '\a':
-          ss += '\\';
-          ss += 'a';
+          sb('\\');
+          sb('a');
           break;
         case '\v':
-          ss += '\\';
-          ss += 'v';
+          sb('\\');
+          sb('v');
           break;
         case '\?':
-          ss += '\\';
-          ss += '?';
+          sb('\\');
+          sb('?');
           break;
         case '\f':
-          ss += '\\';
-          ss += 'f';
+          sb('\\');
+          sb('f');
           break;
         case '\b':
-          ss += '\\';
-          ss += 'b';
+          sb('\\');
+          sb('b');
           break;
         default:
-          ss += c;
+          sb(c);
       }
     }
 
-    return ss;
+    return sb.release();
   }
 }

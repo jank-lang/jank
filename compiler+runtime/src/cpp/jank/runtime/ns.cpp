@@ -1,3 +1,5 @@
+#include <fmt/format.h>
+
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/context.hpp>
@@ -131,7 +133,7 @@ namespace jank::runtime
     return to_string();
   }
 
-  void ns::to_string(fmt::memory_buffer &buff) const
+  void ns::to_string(util::string_builder &buff) const
   {
     name->to_string(buff);
   }

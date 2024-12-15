@@ -1,3 +1,5 @@
+#include <fmt/format.h>
+
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/transient_vector.hpp>
@@ -114,23 +116,23 @@ namespace jank::runtime::obj
     }
   }
 
-  void persistent_vector::to_string(fmt::memory_buffer &buff) const
+  void persistent_vector::to_string(util::string_builder &buff) const
   {
     runtime::to_string(data.begin(), data.end(), "[", ']', buff);
   }
 
   native_persistent_string persistent_vector::to_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     runtime::to_string(data.begin(), data.end(), "[", ']', buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
   native_persistent_string persistent_vector::to_code_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     runtime::to_code_string(data.begin(), data.end(), "[", ']', buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
   native_hash persistent_vector::to_hash() const

@@ -1,4 +1,4 @@
-#include <fmt/compile.h>
+#include <fmt/format.h>
 
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
@@ -36,14 +36,15 @@ namespace jank::runtime::obj
     return data;
   }
 
-  void persistent_string::to_string(fmt::memory_buffer &buff) const
+  void persistent_string::to_string(util::string_builder &buff) const
   {
-    fmt::format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data);
+    buff(data);
   }
 
   native_persistent_string persistent_string::to_code_string() const
   {
-    return fmt::format(R"("{}")", util::escape(to_string()));
+    util::string_builder sb;
+    return sb('"')(util::escape(data))('"').release();
   }
 
   native_hash persistent_string::to_hash() const

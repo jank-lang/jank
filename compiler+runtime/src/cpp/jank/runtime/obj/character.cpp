@@ -1,3 +1,5 @@
+#include <fmt/format.h>
+
 #include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/util/escape.hpp>
@@ -54,9 +56,9 @@ namespace jank::runtime::obj
     return data == c->data;
   }
 
-  void character::to_string(fmt::memory_buffer &buff) const
+  void character::to_string(util::string_builder &buff) const
   {
-    fmt::format_to(std::back_inserter(buff), "{}", data);
+    buff(data);
   }
 
   native_persistent_string character::to_string() const

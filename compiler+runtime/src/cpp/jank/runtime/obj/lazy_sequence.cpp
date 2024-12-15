@@ -81,7 +81,7 @@ namespace jank::runtime::obj
     return sequence_equal(this, &o);
   }
 
-  void lazy_sequence::to_string(fmt::memory_buffer &buff) const
+  void lazy_sequence::to_string(util::string_builder &buff) const
   {
     runtime::to_string(seq(), buff);
   }

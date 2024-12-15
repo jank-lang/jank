@@ -1,3 +1,5 @@
+#include <fmt/format.h>
+
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/visit.hpp>
@@ -57,23 +59,23 @@ namespace jank::runtime::obj
     return runtime::equal(o, data.begin(), data.end());
   }
 
-  void persistent_list::to_string(fmt::memory_buffer &buff) const
+  void persistent_list::to_string(util::string_builder &buff) const
   {
     runtime::to_string(data.begin(), data.end(), "(", ')', buff);
   }
 
   native_persistent_string persistent_list::to_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     runtime::to_string(data.begin(), data.end(), "(", ')', buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
   native_persistent_string persistent_list::to_code_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     runtime::to_code_string(data.begin(), data.end(), "(", ')', buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
   /* TODO: Cache this. */

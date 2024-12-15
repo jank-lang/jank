@@ -75,7 +75,7 @@ namespace jank::runtime::obj
       &o);
   }
 
-  void iterator::to_string(fmt::memory_buffer &buff)
+  void iterator::to_string(util::string_builder &buff)
   {
     runtime::to_string(seq(), buff);
   }

@@ -39,7 +39,7 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename ST, typename V>
   void base_persistent_map<PT, ST, V>::to_string_impl(typename V::const_iterator const &begin,
                                                       typename V::const_iterator const &end,
-                                                      fmt::memory_buffer &buff,
+                                                      util::string_builder &buff,
                                                       native_bool const to_code)
   {
     auto inserter(std::back_inserter(buff));
@@ -76,7 +76,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  void base_persistent_map<PT, ST, V>::to_string(fmt::memory_buffer &buff) const
+  void base_persistent_map<PT, ST, V>::to_string(util::string_builder &buff) const
   {
     to_string_impl(static_cast<PT const *>(this)->data.begin(),
                    static_cast<PT const *>(this)->data.end(),
@@ -87,23 +87,23 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename ST, typename V>
   native_persistent_string base_persistent_map<PT, ST, V>::to_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     to_string_impl(static_cast<PT const *>(this)->data.begin(),
                    static_cast<PT const *>(this)->data.end(),
                    buff,
                    false);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
   template <typename PT, typename ST, typename V>
   native_persistent_string base_persistent_map<PT, ST, V>::to_code_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     to_string_impl(static_cast<PT const *>(this)->data.begin(),
                    static_cast<PT const *>(this)->data.end(),
                    buff,
                    true);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
   template <typename PT, typename ST, typename V>

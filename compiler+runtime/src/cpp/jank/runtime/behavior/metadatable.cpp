@@ -1,3 +1,5 @@
+#include <fmt/format.h>
+
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/runtime/core/seq.hpp>
@@ -10,7 +12,7 @@ namespace jank::runtime::behavior::detail
   {
     if(!m)
     {
-      throw std::runtime_error{ fmt::format("invalid meta: nullptr") };
+      throw std::runtime_error{ "invalid meta: nullptr" };
     }
 
     if(!is_map(m) && m != obj::nil::nil_const())

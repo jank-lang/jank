@@ -1,6 +1,3 @@
-#include <fmt/compile.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/visit.hpp>
@@ -108,28 +105,28 @@ namespace jank::runtime::obj
 
   static void to_string_impl(native_persistent_string const &ns,
                              native_persistent_string const &name,
-                             fmt::memory_buffer &buff)
+                             util::string_builder &buff)
   {
     if(!ns.empty())
     {
-      format_to(std::back_inserter(buff), FMT_COMPILE("{}/{}"), ns, name);
+      buff(ns)('/')(name);
     }
     else
     {
-      format_to(std::back_inserter(buff), FMT_COMPILE("{}"), name);
+      buff(name);
     }
   }
 
-  void symbol::to_string(fmt::memory_buffer &buff) const
+  void symbol::to_string(util::string_builder &buff) const
   {
     to_string_impl(ns, name, buff);
   }
 
   native_persistent_string symbol::to_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     to_string_impl(ns, name, buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
   native_persistent_string symbol::to_code_string() const

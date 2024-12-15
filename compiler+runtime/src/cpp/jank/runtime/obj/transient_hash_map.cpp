@@ -1,3 +1,5 @@
+#include <fmt/format.h>
+
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/transient_hash_map.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
@@ -35,7 +37,7 @@ namespace jank::runtime::obj
     return &base == &o;
   }
 
-  void transient_hash_map::to_string(fmt::memory_buffer &buff) const
+  void transient_hash_map::to_string(util::string_builder &buff) const
   {
     auto inserter(std::back_inserter(buff));
     fmt::format_to(inserter, "{}@{}", object_type_str(base.type), fmt::ptr(&base));
@@ -43,9 +45,9 @@ namespace jank::runtime::obj
 
   native_persistent_string transient_hash_map::to_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     to_string(buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
   native_persistent_string transient_hash_map::to_code_string() const

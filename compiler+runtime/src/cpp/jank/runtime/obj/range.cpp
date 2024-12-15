@@ -220,7 +220,7 @@ namespace jank::runtime::obj
       &o);
   }
 
-  void range::to_string(fmt::memory_buffer &buff)
+  void range::to_string(util::string_builder &buff)
   {
     runtime::to_string(seq(), buff);
   }

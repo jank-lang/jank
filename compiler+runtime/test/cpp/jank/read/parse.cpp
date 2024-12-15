@@ -1,5 +1,7 @@
 #include <unistd.h>
 
+#include <fmt/format.h>
+
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/rtti.hpp>

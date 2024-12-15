@@ -1,3 +1,5 @@
+#include <fmt/format.h>
+
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/cons.hpp>
 #include <jank/runtime/core.hpp>
@@ -86,7 +88,7 @@ namespace jank::runtime::obj
       &o);
   }
 
-  void cons::to_string(fmt::memory_buffer &buff) const
+  void cons::to_string(util::string_builder &buff) const
   {
     runtime::to_string(seq(), buff);
   }

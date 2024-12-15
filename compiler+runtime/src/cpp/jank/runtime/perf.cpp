@@ -1,5 +1,7 @@
 #include <nanobench.h>
 
+#include <fmt/format.h>
+
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/perf.hpp>
 #include <jank/runtime/visit.hpp>

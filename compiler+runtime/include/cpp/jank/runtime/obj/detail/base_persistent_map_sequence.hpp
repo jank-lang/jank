@@ -5,8 +5,8 @@
 
 namespace jank::runtime
 {
-  void to_string(object_ptr o, fmt::memory_buffer &buff);
-  void to_code_string(object_ptr o, fmt::memory_buffer &buff);
+  void to_string(object_ptr o, util::string_builder &buff);
+  void to_code_string(object_ptr o, util::string_builder &buff);
 
   namespace obj
   {
@@ -29,8 +29,8 @@ namespace jank::runtime::obj::detail
 
     /* behavior::object_like */
     native_bool equal(object const &o) const;
-    void to_string_impl(fmt::memory_buffer &buff, native_bool const to_code) const;
-    void to_string(fmt::memory_buffer &buff) const;
+    void to_string_impl(util::string_builder &buff, native_bool const to_code) const;
+    void to_string(util::string_builder &buff) const;
     native_persistent_string to_string() const;
     native_persistent_string to_code_string() const;
     native_hash to_hash() const;

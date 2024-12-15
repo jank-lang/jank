@@ -9,6 +9,8 @@
 #include <llvm/Transforms/Scalar/Reassociate.h>
 #include <llvm/Transforms/Scalar/SimplifyCFG.h>
 
+#include <fmt/format.h>
+
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/runtime/context.hpp>

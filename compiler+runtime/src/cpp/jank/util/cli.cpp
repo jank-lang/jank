@@ -1,5 +1,7 @@
 #include <CLI/CLI.hpp>
 
+#include <fmt/format.h>
+
 #include <jank/util/cli.hpp>
 #include <jank/runtime/module/loader.hpp>
 

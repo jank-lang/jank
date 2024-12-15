@@ -23,22 +23,22 @@ namespace jank::runtime::obj
     return &base == &o;
   }
 
-  static void to_string_impl(symbol const &sym, fmt::memory_buffer &buff)
+  static void to_string_impl(symbol const &sym, util::string_builder &buff)
   {
     std::back_inserter(buff) = ':';
     sym.to_string(buff);
   }
 
-  void keyword::to_string(fmt::memory_buffer &buff) const
+  void keyword::to_string(util::string_builder &buff) const
   {
     to_string_impl(*sym, buff);
   }
 
   native_persistent_string keyword::to_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     to_string_impl(*sym, buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
   native_persistent_string keyword::to_code_string() const
