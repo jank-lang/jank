@@ -66,7 +66,7 @@ set(
   -Wno-covered-switch-default
   -Wno-invalid-offsetof
   -fno-common
-  -frtti
+  -fno-rtti
   -fexceptions
   -ftime-trace
   $<$<CONFIG:Debug>:-O0>
