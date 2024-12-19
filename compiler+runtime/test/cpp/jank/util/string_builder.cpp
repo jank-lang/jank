@@ -11,7 +11,7 @@ namespace jank::util
   {
     TEST_CASE("empty")
     {
-      string_builder sb;
+      string_builder const sb;
       CHECK_EQ("", sb.view());
     }
 
@@ -26,14 +26,14 @@ namespace jank::util
         }
         CHECK_EQ(initial_capacity / 2, sb.pos);
         CHECK_EQ(initial_capacity, sb.capacity);
-        native_transient_string input(initial_capacity / 2, ' ');
+        native_transient_string const input(initial_capacity / 2, ' ');
         CHECK_EQ(input, sb.view());
       }
 
       SUBCASE("no resize: full")
       {
         string_builder sb;
-        native_transient_string input(initial_capacity - 1, 'a');
+        native_transient_string const input(initial_capacity - 1, 'a');
         sb(input);
         CHECK_EQ(input.size(), sb.pos);
         CHECK_EQ(initial_capacity, sb.capacity);
@@ -43,7 +43,7 @@ namespace jank::util
       SUBCASE("resize: full + 1")
       {
         string_builder sb;
-        native_transient_string input(initial_capacity, 'a');
+        native_transient_string const input(initial_capacity, 'a');
         sb(input);
         CHECK_EQ(input.size(), sb.pos);
         CHECK_EQ(initial_capacity * 2, sb.capacity);
@@ -53,7 +53,7 @@ namespace jank::util
       SUBCASE("resize: full + a bunch")
       {
         string_builder sb;
-        native_transient_string input((initial_capacity * 3) + 5, '.');
+        native_transient_string const input((initial_capacity * 3) + 5, '.');
         sb(input);
         CHECK_EQ(input.size(), sb.pos);
         CHECK_EQ(initial_capacity * 4, sb.capacity);
