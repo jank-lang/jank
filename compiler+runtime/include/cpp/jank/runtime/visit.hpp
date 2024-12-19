@@ -51,6 +51,7 @@
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/rtti.hpp>
+#include <jank/runtime/core/to_string.hpp>
 
 namespace jank::runtime
 {
@@ -68,7 +69,7 @@ namespace jank::runtime
   template <typename F, typename... Args>
   requires visitable<F, Args...>
   [[gnu::hot]]
-  constexpr auto visit_object(F const &fn, object const * const const_erased, Args &&...args)
+  auto visit_object(F const &fn, object const * const const_erased, Args &&...args)
   {
     assert(const_erased);
     auto * const erased(const_cast<object *>(const_erased));
@@ -353,9 +354,12 @@ namespace jank::runtime
         break;
       default:
         {
-          throw std::runtime_error{ fmt::format("invalid object type: {} raw value {}",
-                                                magic_enum::enum_name(erased->type),
-                                                static_cast<int>(erased->type)) };
+          util::string_builder sb;
+          sb("invalid object type: ");
+          sb(object_type_str(erased->type));
+          sb(" raw value ");
+          sb(static_cast<int>(erased->type));
+          throw std::runtime_error{ sb.str() };
         }
         break;
     }
@@ -366,7 +370,7 @@ namespace jank::runtime
   [[gnu::hot]]
   constexpr auto visit_type(F const &fn, object const * const const_erased, Args &&...args)
   {
-    if(const_erased->type == detail::object_type_to_enum<T>::value)
+    if(const_erased->type == T::obj_type)
     {
       return fn(expect_object<T>(const_erased), std::forward<Args>(args)...);
     }

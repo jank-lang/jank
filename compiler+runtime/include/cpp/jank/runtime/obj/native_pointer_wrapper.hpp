@@ -2,22 +2,24 @@
 
 #include <jank/runtime/object.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  template <>
-  struct static_object<object_type::native_pointer_wrapper> : gc
+  using native_pointer_wrapper_ptr = native_box<struct native_pointer_wrapper>;
+
+  struct native_pointer_wrapper : gc
   {
+    static constexpr object_type obj_type{ object_type::native_pointer_wrapper };
     static constexpr native_bool pointer_free{ false };
 
-    static_object() = default;
-    static_object(static_object &&) = default;
-    static_object(static_object const &) = default;
-    static_object(void * const);
+    native_pointer_wrapper() = default;
+    native_pointer_wrapper(native_pointer_wrapper &&) noexcept = default;
+    native_pointer_wrapper(native_pointer_wrapper const &) = default;
+    native_pointer_wrapper(void * const);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
-    void to_string(fmt::memory_buffer &buff) const;
+    void to_string(util::string_builder &buff) const;
     native_persistent_string to_code_string() const;
     native_hash to_hash() const;
 
@@ -27,14 +29,7 @@ namespace jank::runtime
       return reinterpret_cast<T *>(data);
     }
 
-    object base{ object_type::native_pointer_wrapper };
-
+    object base{ obj_type };
     void *data{};
   };
-
-  namespace obj
-  {
-    using native_pointer_wrapper = static_object<object_type::native_pointer_wrapper>;
-    using native_pointer_wrapper_ptr = native_box<native_pointer_wrapper>;
-  }
 }

@@ -1,5 +1,6 @@
 #include <jank/hash.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/runtime/core/seq.hpp>
 
 namespace jank::hash
 {

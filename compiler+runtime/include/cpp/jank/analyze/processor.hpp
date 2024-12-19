@@ -3,10 +3,6 @@
 #include <functional>
 
 #include <jank/read/parse.hpp>
-#include <jank/runtime/obj/symbol.hpp>
-#include <jank/runtime/obj/persistent_list.hpp>
-#include <jank/runtime/obj/persistent_vector.hpp>
-#include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/var.hpp>
 #include <jank/analyze/local_frame.hpp>
 #include <jank/analyze/expression.hpp>
@@ -15,6 +11,14 @@
 namespace jank::runtime
 {
   struct context;
+
+  namespace obj
+  {
+    using symbol_ptr = native_box<struct symbol>;
+    using persistent_list_ptr = native_box<struct persistent_list>;
+    using persistent_vector_ptr = native_box<struct persistent_vector>;
+    using persistent_array_map_ptr = native_box<struct persistent_array_map>;
+  }
 }
 
 namespace jank::analyze

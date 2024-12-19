@@ -1,17 +1,19 @@
 #pragma once
 
+#include <fmt/base.h>
+
 #include <jank/native_persistent_string.hpp>
 #include <jank/result.hpp>
 
 namespace jank::util
 {
   /* This provides a fmt extension for escaping strings and wrapping them in
-  * quotes. It's largely adapted from here:
-  * https://github.com/fmtlib/fmt/issues/825#issuecomment-1227501168
-  *
-  * Usage just looks like:
-  * fmt::format("{}", util::escaped_quoted_view(s))
-  */
+   * quotes. It's largely adapted from here:
+   * https://github.com/fmtlib/fmt/issues/825#issuecomment-1227501168
+   *
+   * Usage just looks like:
+   * fmt::format("{}", util::escaped_quoted_view(s))
+   */
   template <typename S = native_persistent_string_view>
   struct escape_view
   {
@@ -64,9 +66,14 @@ namespace jank::util
     return escape_view<native_persistent_string_view>{ sv, q, e };
   }
 
+  struct unescape_error
+  {
+    native_persistent_string message;
+  };
+
   /* These provide normal escaping/unescaping, with no quoting. */
-  string_result<native_transient_string> unescape(native_transient_string const &input);
-  native_transient_string escape(native_transient_string const &input);
+  result<native_persistent_string, unescape_error> unescape(native_persistent_string const &input);
+  native_persistent_string escape(native_persistent_string const &input);
 }
 
 template <typename S>

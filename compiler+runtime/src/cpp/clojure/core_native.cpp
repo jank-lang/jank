@@ -1,4 +1,6 @@
-#include "jank/runtime/rtti.hpp"
+#include <fmt/format.h>
+
+#include <jank/native_persistent_string/fmt.hpp>
 #include <clojure/core_native.hpp>
 #include <jank/runtime/convert.hpp>
 #include <jank/runtime/core.hpp>
@@ -45,7 +47,7 @@ namespace clojure::core_native
         }
         else if constexpr(std::same_as<T, obj::keyword>)
         {
-          return make_box<obj::symbol>(typed_o->sym);
+          return typed_o->sym;
         }
         else
         {

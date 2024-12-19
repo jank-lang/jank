@@ -4,6 +4,7 @@
 
 #include <fmt/core.h>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/number_like.hpp>
@@ -95,7 +96,7 @@ namespace jank::analyze
     {
       /* TODO: Error handling. */
       return err(error{ fmt::format("invalid def: name must be a symbol, not {}",
-                                    magic_enum::enum_name(sym_obj->type)) });
+                                    object_type_str(sym_obj->type)) });
     }
 
     auto const sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
@@ -477,7 +478,8 @@ namespace jank::analyze
     }
 
     auto const meta(runtime::obj::persistent_hash_map::create_unique(
-      std::make_pair(rt_ctx.intern_keyword("source").expect_ok(), make_box(full_list->to_string())),
+      std::make_pair(rt_ctx.intern_keyword("source").expect_ok(),
+                     make_box(full_list->to_code_string())),
       std::make_pair(
         rt_ctx.intern_keyword("name").expect_ok(),
         make_box(runtime::obj::symbol{ runtime::__rt_ctx->current_ns()->to_string(), name }
@@ -1538,7 +1540,7 @@ namespace jank::analyze
         else
         {
           std::cerr << fmt::format("unsupported analysis of type {} with value {}\n",
-                                   magic_enum::enum_name(typed_o->base.type),
+                                   object_type_str(typed_o->base.type),
                                    typed_o->to_string());
           return err(error{ "unimplemented analysis" });
         }

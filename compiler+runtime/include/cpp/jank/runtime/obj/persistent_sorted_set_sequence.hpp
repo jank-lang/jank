@@ -5,36 +5,26 @@
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/obj/detail/iterator_sequence.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  namespace obj
-  {
-    using persistent_sorted_set = static_object<object_type::persistent_sorted_set>;
-    using persistent_sorted_set_ptr = native_box<persistent_sorted_set>;
-  }
+  using persistent_sorted_set_ptr = native_box<struct persistent_sorted_set>;
+  using persistent_sorted_set_sequence_ptr = native_box<struct persistent_sorted_set_sequence>;
 
-  template <>
-  struct static_object<object_type::persistent_sorted_set_sequence>
+  struct persistent_sorted_set_sequence
     : gc
-    , obj::detail::iterator_sequence<static_object<object_type::persistent_sorted_set_sequence>,
+    , obj::detail::iterator_sequence<persistent_sorted_set_sequence,
                                      runtime::detail::native_persistent_sorted_set::const_iterator>
   {
+    static constexpr object_type obj_type{ object_type::persistent_sorted_set_sequence };
     static constexpr native_bool pointer_free{ false };
     static constexpr native_bool is_sequential{ true };
 
-    static_object(static_object &&) = default;
-    static_object(static_object const &) = default;
+    persistent_sorted_set_sequence(persistent_sorted_set_sequence &&) noexcept = default;
+    persistent_sorted_set_sequence(persistent_sorted_set_sequence const &) = default;
     using obj::detail::iterator_sequence<
-      static_object<object_type::persistent_sorted_set_sequence>,
+      persistent_sorted_set_sequence,
       runtime::detail::native_persistent_sorted_set::const_iterator>::iterator_sequence;
 
-    object base{ object_type::persistent_sorted_set_sequence };
+    object base{ obj_type };
   };
-
-  namespace obj
-  {
-    using persistent_sorted_set_sequence
-      = static_object<object_type::persistent_sorted_set_sequence>;
-    using persistent_sorted_set_sequence_ptr = native_box<persistent_sorted_set_sequence>;
-  }
 }

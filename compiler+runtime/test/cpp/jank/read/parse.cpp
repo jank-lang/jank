@@ -1,10 +1,14 @@
 #include <unistd.h>
 
+#include <fmt/format.h>
+
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/obj/persistent_hash_set.hpp>
+#include <jank/runtime/obj/keyword.hpp>
 #include <jank/util/escape.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */

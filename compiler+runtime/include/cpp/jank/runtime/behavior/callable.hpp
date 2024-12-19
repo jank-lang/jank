@@ -9,8 +9,7 @@ namespace jank::runtime
 
   namespace obj
   {
-    using persistent_list = static_object<object_type::persistent_list>;
-    using persistent_list_ptr = native_box<persistent_list>;
+    using persistent_list_ptr = native_box<struct persistent_list>;
   }
 
   constexpr size_t const max_params{ 10 };

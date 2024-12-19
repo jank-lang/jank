@@ -1,61 +1,61 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/persistent_list_sequence.hpp>
 #include <jank/runtime/detail/native_persistent_list.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  object_ptr seq(object_ptr s);
+  using persistent_list_ptr = native_box<struct persistent_list>;
+  using persistent_list_sequence_ptr = native_box<struct persistent_list_sequence>;
 
-  template <>
-  struct static_object<object_type::persistent_list> : gc
+  struct persistent_list : gc
   {
     using value_type = runtime::detail::native_persistent_list;
 
+    static constexpr object_type obj_type{ object_type::persistent_list };
     static constexpr native_bool pointer_free{ false };
     static constexpr native_bool is_sequential{ true };
 
     /* Create from a sequence. */
-    static native_box<static_object> create(object_ptr s);
-    static native_box<static_object> create(native_box<static_object> s);
+    static persistent_list_ptr create(object_ptr s);
+    static persistent_list_ptr create(persistent_list_ptr s);
 
-    static_object() = default;
-    static_object(static_object &&) noexcept = default;
-    static_object(static_object const &) = default;
-    static_object(value_type const &d);
-    static_object(object_ptr meta, value_type const &d);
+    persistent_list() = default;
+    persistent_list(persistent_list &&) noexcept = default;
+    persistent_list(persistent_list const &) = default;
+    persistent_list(value_type const &d);
+    persistent_list(object_ptr meta, value_type const &d);
 
     /* TODO: This is broken when `args` is a value_type list we're looking to wrap in another list.
      * It just uses the copy ctor. */
     template <typename... Args>
-    static_object(std::in_place_t, Args &&...args)
+    persistent_list(std::in_place_t, Args &&...args)
       : data{ std::forward<Args>(args)... }
     {
     }
 
     template <typename... Args>
-    static_object(object_ptr const meta, std::in_place_t, Args &&...args)
+    persistent_list(object_ptr const meta, std::in_place_t, Args &&...args)
       : data{ std::forward<Args>(args)... }
       , meta{ meta }
     {
     }
 
-    static native_box<static_object> empty()
+    static persistent_list_ptr empty()
     {
-      static auto const ret(make_box<static_object>());
+      static auto const ret(make_box<persistent_list>());
       return ret;
     }
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
-    void to_string(fmt::memory_buffer &buff) const;
+    void to_string(util::string_builder &buff) const;
     native_persistent_string to_code_string() const;
     native_hash to_hash() const;
 
     /* behavior::metadatable */
-    native_box<static_object> with_meta(object_ptr m) const;
+    persistent_list_ptr with_meta(object_ptr m) const;
 
     /* behavior::seqable */
     obj::persistent_list_sequence_ptr seq() const;
@@ -65,7 +65,7 @@ namespace jank::runtime
     size_t count() const;
 
     /* behavior::conjable */
-    native_box<static_object> conj(object_ptr head) const;
+    persistent_list_ptr conj(object_ptr head) const;
 
     /* behavior::sequenceable */
     object_ptr first() const;
@@ -76,16 +76,10 @@ namespace jank::runtime
 
     /* behavior::stackable */
     object_ptr peek() const;
-    native_box<static_object> pop() const;
+    persistent_list_ptr pop() const;
 
-    object base{ object_type::persistent_list };
+    object base{ obj_type };
     value_type data;
     option<object_ptr> meta;
   };
-
-  namespace obj
-  {
-    using persistent_list = static_object<object_type::persistent_list>;
-    using persistent_list_ptr = native_box<persistent_list>;
-  }
 }

@@ -4,6 +4,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/type.hpp>
 #include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/core/make_box.hpp>
 
 namespace jank::runtime
@@ -114,7 +115,7 @@ namespace jank::runtime
   {
     static object_ptr call(V<Input> const &o)
     {
-      detail::native_transient_vector trans;
+      runtime::detail::native_transient_vector trans;
       for(auto const &e : o)
       {
         trans.push_back(convert<Input, object_ptr>::call(e));

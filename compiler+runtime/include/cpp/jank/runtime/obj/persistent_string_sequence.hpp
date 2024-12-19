@@ -1,31 +1,28 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/cons.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  namespace obj
-  {
-    using persistent_string = static_object<object_type::persistent_string>;
-    using persistent_string_ptr = native_box<persistent_string>;
-  }
+  using cons_ptr = native_box<struct cons>;
+  using persistent_string_ptr = native_box<struct persistent_string>;
+  using persistent_string_sequence_ptr = native_box<struct persistent_string_sequence>;
 
-  template <>
-  struct static_object<object_type::persistent_string_sequence> : gc
+  struct persistent_string_sequence : gc
   {
+    static constexpr object_type obj_type{ object_type::persistent_string_sequence };
     static constexpr native_bool pointer_free{ false };
     static constexpr native_bool is_sequential{ true };
 
-    static_object() = default;
-    static_object(static_object &&) = default;
-    static_object(static_object const &) = default;
-    static_object(obj::persistent_string_ptr const s);
-    static_object(obj::persistent_string_ptr const s, size_t const i);
+    persistent_string_sequence() = default;
+    persistent_string_sequence(persistent_string_sequence &&) noexcept = default;
+    persistent_string_sequence(persistent_string_sequence const &) = default;
+    persistent_string_sequence(obj::persistent_string_ptr const s);
+    persistent_string_sequence(obj::persistent_string_ptr const s, size_t const i);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
-    void to_string(fmt::memory_buffer &buff) const;
+    void to_string(util::string_builder &buff) const;
     native_persistent_string to_string() const;
     native_persistent_string to_code_string() const;
     native_hash to_hash() const;
@@ -34,25 +31,19 @@ namespace jank::runtime
     size_t count() const;
 
     /* behavior::seqable */
-    native_box<static_object> seq();
-    native_box<static_object> fresh_seq() const;
+    persistent_string_sequence_ptr seq();
+    persistent_string_sequence_ptr fresh_seq() const;
 
     /* behavior::sequenceable */
     object_ptr first() const;
-    native_box<static_object> next() const;
+    persistent_string_sequence_ptr next() const;
     obj::cons_ptr conj(object_ptr head);
 
     /* behavior::sequenceable_in_place */
-    native_box<static_object> next_in_place();
+    persistent_string_sequence_ptr next_in_place();
 
-    object base{ object_type::persistent_string_sequence };
+    object base{ obj_type };
     obj::persistent_string_ptr str{};
     size_t index{};
   };
-
-  namespace obj
-  {
-    using persistent_string_sequence = static_object<object_type::persistent_string_sequence>;
-    using persistent_string_sequence_ptr = native_box<persistent_string_sequence>;
-  }
 }

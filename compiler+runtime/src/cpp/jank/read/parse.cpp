@@ -1,13 +1,15 @@
 #include <codecvt>
 
-#include <magic_enum.hpp>
+#include <fmt/format.h>
 
-#include <jank/runtime/obj/ratio.hpp>
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/util/escape.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/obj/symbol.hpp>
+#include <jank/runtime/obj/ratio.hpp>
 #include <jank/util/scope_exit.hpp>
 
 namespace jank::read::parse
@@ -274,7 +276,7 @@ namespace jank::read::parse
           {
             return err(error{
               latest_token.pos,
-              fmt::format("unexpected token kind: {}", magic_enum::enum_name(latest_token.kind)) });
+              fmt::format("unexpected token kind: {}", lex::token_kind_str(latest_token.kind)) });
           }
       }
     }
@@ -1027,7 +1029,7 @@ namespace jank::read::parse
           else
           {
             return err(fmt::format("unsupported collection type: {}",
-                                   magic_enum::enum_name(typed_form->base.type)));
+                                   object_type_str(typed_form->base.type)));
           }
         },
         /* For anything else, do nothing special aside from quoting. Hopefully that works. */
@@ -1319,7 +1321,7 @@ namespace jank::read::parse
     auto res(util::unescape({ sv.data(), sv.size() }));
     if(res.is_err())
     {
-      return err(error{ token.pos, res.expect_err_move() });
+      return err(error{ token.pos, res.expect_err().message });
     }
     return object_source_info{ make_box<obj::persistent_string>(res.expect_ok_move()),
                                token,

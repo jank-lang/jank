@@ -1,8 +1,6 @@
 #include <iostream>
 #include <iomanip>
 
-#include <magic_enum.hpp>
-
 #include <jank/read/lex.hpp>
 
 using namespace std::string_view_literals;
@@ -201,8 +199,8 @@ namespace jank::read
 
     std::ostream &operator<<(std::ostream &os, token const &t)
     {
-      return os << "token(" << t.pos << ", " << t.size << ", " << magic_enum::enum_name(t.kind)
-                << ", " << t.data << ")";
+      return os << "token(" << t.pos << ", " << t.size << ", " << token_kind_str(t.kind) << ", "
+                << t.data << ")";
     }
 
     std::ostream &operator<<(std::ostream &os, token::no_data const &)

@@ -11,11 +11,13 @@
 
 #include <folly/FBString.h>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/util/mapped_file.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/core/to_string.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>

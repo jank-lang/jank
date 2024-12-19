@@ -1,37 +1,34 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/detail/type.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  namespace obj
-  {
-    using persistent_array_map = static_object<object_type::persistent_array_map>;
-    using persistent_array_map_ptr = native_box<persistent_array_map>;
-  }
+  using persistent_array_map_ptr = native_box<struct persistent_array_map>;
+  using symbol_ptr = native_box<struct symbol>;
+  using keyword_ptr = native_box<struct keyword>;
 
   /* The correct way to create a keyword for normal use is through interning via the RT context. */
-  template <>
-  struct static_object<object_type::keyword> : gc
+  struct keyword : gc
   {
+    static constexpr object_type obj_type{ object_type::keyword };
     static constexpr native_bool pointer_free{ false };
     /* Clojure uses this. No idea. https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/Keyword.java */
     static constexpr size_t hash_magic{ 0x9e3779b9 };
 
-    static_object() = default;
-    static_object(static_object &&) = default;
-    static_object(static_object const &) = default;
-    static_object(detail::must_be_interned, native_persistent_string_view const &s);
-    static_object(detail::must_be_interned,
-                  native_persistent_string_view const &ns,
-                  native_persistent_string_view const &n);
+    keyword() = default;
+    keyword(keyword &&) noexcept = default;
+    keyword(keyword const &) = default;
+    keyword(runtime::detail::must_be_interned, native_persistent_string_view const &s);
+    keyword(runtime::detail::must_be_interned,
+            native_persistent_string_view const &ns,
+            native_persistent_string_view const &n);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
-    void to_string(fmt::memory_buffer &buff) const;
+    void to_string(util::string_builder &buff) const;
     native_persistent_string to_code_string() const;
     native_hash to_hash() const;
 
@@ -39,7 +36,7 @@ namespace jank::runtime
     native_integer compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(static_object const &) const;
+    native_integer compare(keyword const &) const;
 
     /* behavior::nameable */
     native_persistent_string const &get_name() const;
@@ -49,18 +46,11 @@ namespace jank::runtime
     object_ptr call(object_ptr);
     object_ptr call(object_ptr, object_ptr);
 
-    native_bool operator==(static_object const &rhs) const;
+    native_bool operator==(keyword const &rhs) const;
 
-    object base{ object_type::keyword };
-    /* TODO: Box this. */
-    obj::symbol sym;
+    object base{ obj_type };
+    symbol_ptr sym;
   };
-
-  namespace obj
-  {
-    using keyword = static_object<object_type::keyword>;
-    using keyword_ptr = native_box<keyword>;
-  }
 }
 
 namespace std

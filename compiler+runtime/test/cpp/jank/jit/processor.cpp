@@ -6,6 +6,7 @@
 
 #include <fmt/color.h>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/util/mapped_file.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/read/lex.hpp>
@@ -15,6 +16,7 @@
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/core/to_string.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/jit/processor.hpp>
 

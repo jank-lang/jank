@@ -1,10 +1,16 @@
 #pragma once
 
-#include <jank/runtime/obj/number.hpp>
-#include <jank/runtime/obj/ratio.hpp>
+#include <jank/runtime/object.hpp>
 
 namespace jank::runtime
 {
+  namespace obj
+  {
+    using integer_ptr = native_box<struct integer>;
+    using real_ptr = native_box<struct real>;
+    using ratio_ptr = native_box<struct ratio>;
+  }
+
   object_ptr add(object_ptr l, object_ptr r);
   object_ptr add(obj::integer_ptr l, object_ptr r);
   object_ptr add(object_ptr l, obj::integer_ptr r);

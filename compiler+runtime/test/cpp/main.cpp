@@ -11,7 +11,9 @@
 #include <llvm/Support/ManagedStatic.h>
 #include <llvm/Support/TargetSelect.h>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/core/to_string.hpp>
 #include <clojure/core_native.hpp>
 
 /* NOLINTNEXTLINE(bugprone-exception-escape): println can throw. */
