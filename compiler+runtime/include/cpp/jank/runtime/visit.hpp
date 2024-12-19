@@ -29,6 +29,7 @@
 #include <jank/runtime/obj/array_chunk.hpp>
 #include <jank/runtime/obj/chunked_cons.hpp>
 #include <jank/runtime/obj/range.hpp>
+#include <jank/runtime/obj/integer_range.hpp>
 #include <jank/runtime/obj/repeat.hpp>
 #include <jank/runtime/obj/ratio.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
@@ -201,6 +202,11 @@ namespace jank::runtime
       case object_type::range:
         {
           return fn(expect_object<obj::range>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::integer_range:
+        {
+          return fn(expect_object<obj::integer_range>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::repeat:
@@ -454,6 +460,11 @@ namespace jank::runtime
       case object_type::range:
         {
           return fn(expect_object<obj::range>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::integer_range:
+        {
+          return fn(expect_object<obj::integer_range>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::repeat:

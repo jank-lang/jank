@@ -54,6 +54,7 @@ namespace jank::runtime
     cons,
     lazy_sequence,
     range,
+    integer_range,
     repeat,
     iterator,
     native_array_sequence,
@@ -160,6 +161,8 @@ namespace jank::runtime
         return "lazy_sequence";
       case object_type::range:
         return "range";
+      case object_type::integer_range:
+        return "integer_range";
       case object_type::repeat:
         return "repeat";
       case object_type::iterator:
