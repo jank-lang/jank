@@ -1918,13 +1918,25 @@
    f must be free of side-effects"
   clojure.core-native/iterate)
 
-; TODO: integer_range
-(def range
+(defn range
   "Returns a lazy seq of nums from start (inclusive) to end
    (exclusive), by step, where start defaults to 0, step to 1, and end to
    infinity. When step is equal to 0, returns an infinite sequence of
    start. When start is equal to end, returns empty list."
-  clojure.core-native/range)
+  ([]
+   (iterate inc 0))
+  ([end]
+   (if (integer? end)
+     (clojure.core-native/integer-range end)
+     (clojure.core-native/range end)))
+  ([start end]
+   (if (and (integer? start) (integer? end))
+     (clojure.core-native/integer-range start end)
+     (clojure.core-native/range start end)))
+  ([start end step]
+   (if (and (integer? start) (integer? end) (integer? step))
+     (clojure.core-native/integer-range start end step)
+     (clojure.core-native/range start end step))))
 
 (def nth
   "Returns the value at the index. get returns nil if index out of
