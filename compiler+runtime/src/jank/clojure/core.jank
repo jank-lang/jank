@@ -3769,17 +3769,40 @@
             nil
             to-refer)))
 
+;; TODO: Should be a ref instead of atom
+(defonce ^:dynamic
+  ^{:private true
+    :doc "An atom holding a sorted set of symbols representing loaded libs"}
+  *loaded-libs* (atom (sorted-set)))
+
+(defonce ^:dynamic
+  ^{:private true
+    :doc "A stack of paths currently being loaded by this thread"}
+  *pending-paths* ())
+
+(defn- check-cyclic-dependency
+  "Detects and rejects non-trivial cyclic load dependencies. The
+  exception message shows the dependency chain with the cycle
+  highlighted. Ignores the trivial case of a file attempting to load
+  itself because that can occur when a gen-class'd class loads its
+  implementation."
+  [path]
+  (when (some #{path} (rest *pending-paths*))
+    (let [pending (map #(if (= % path) (str "[ " % " ]") %)
+                       (cons path *pending-paths*))
+          chain (apply str (interpose "->" pending))]
+      (throw-if true (str "Cyclic load dependency: " chain)))))
+
 (defn load
   "Loads Clojure code from resources in the module path. A path is interpreted as
    module-path-relative if it begins with a slash or relative to the root
    directory for the current namespace otherwise."
   [& paths]
-  (if (empty? paths)
-    nil
-    (let [path (first paths)]
-      ; TODO: Check for cyclic deps, once we have dynamic vars.
-      (clojure.core-native/load-module path)
-      (recur (rest paths)))))
+  (doseq [path paths]
+    (check-cyclic-dependency path)
+    (when-not (= path (first *pending-paths*))
+      (binding [*pending-paths* (conj *pending-paths* path)]
+        (clojure.core-native/load-module path)))))
 
 (defn- load-one
   "Loads a lib given its name. If `need-ns?`, ensures that the associated
@@ -3790,11 +3813,7 @@
   (throw-if (and need-ns? (not (find-ns lib)))
             (str "namespace " lib " not found after loading " (root-resource lib)))
   (when require?
-    nil
-    ; TODO: Support this.
-    ;(dosync
-    ; (commute *loaded-libs* conj lib))
-    ))
+    (swap! *loaded-libs* conj lib)))
 
 (defn- load-all
   "Loads a lib given its name and forces a load of any libs it directly or
@@ -3802,13 +3821,10 @@
    exists after loading. If require, records the load so any duplicate loads
    can be skipped."
   [lib need-ns? require?]
-  ; TODO: Port once we have dynamic vars
-  ;(dosync
-  ; (commute *loaded-libs* #(reduce conj %1 %2)
-  ;          (binding [*loaded-libs* (ref (sorted-set))]
-  ;            (load-one lib need-ns require)
-  ;            @*loaded-libs*)))
-  nil)
+  (swap! *loaded-libs* #(reduce conj %1 %2)
+         (binding [*loaded-libs* (atom (sorted-set))]
+           (load-one lib need-ns? require?)
+           @*loaded-libs*)))
 
 (defn- load-lib
   "Loads a lib with options"
@@ -3822,9 +3838,7 @@
         use (:use opts)
         verbose (:verbose opts)
         as-alias (:as-alias opts)
-        ; TODO: Dynamic var
-        ;loaded (contains? @*loaded-libs* lib)
-        loaded? (clojure.core-native/module-loaded? lib)
+        loaded? (contains? @*loaded-libs* lib)
         need-ns? (or as use)
         load (cond reload-all load-all
                    reload load-one
@@ -3971,22 +3985,16 @@
         refer-full-clojure? (not-any? (fn [ref]
                                         (= :refer-clojure (first ref)))
                                       references)]
-    ; TODO: Rewrite this with syntax quoting.
-    (list 'do
-          (list 'clojure.core/in-ns (list 'quote name))
-          ; TODO: with-loading-context
-          (concat '(do) ;with-loading-context
-                  (when (and (not= name 'clojure.core) refer-full-clojure?)
-                    [(list 'clojure.core/refer '(quote clojure.core))])
-                  (map process-reference references))
-          (list 'if (list '= (list 'quote name) (list 'quote 'clojure.core))
-                'nil
-                (list 'let (vector 'name (list 'quote name))
-                      (list 'clojure.core-native/set-module-loaded 'name)
-                      ; TODO: Dynamic vars
-                      ;(dosync (commute @#'*loaded-libs* conj '~name))
-                      'nil))
-          )))
+    `(do
+       (clojure.core/in-ns '~name)
+       ; TODO: with-loading-context
+       (do ; with-loading-context
+         ~@(when (and (not= name 'clojure.core) refer-full-clojure?)
+             `((clojure.core/refer '~'clojure.core)))
+         ~@(map process-reference references))
+       (if (= '~name 'clojure.core)
+          nil
+          (do (swap! *loaded-libs* conj '~name) nil)))))
 
 (defmacro refer-clojure
   "Same as (refer 'clojure.core <filters>)"
