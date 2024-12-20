@@ -49,13 +49,10 @@ There are pre-compiled binaries for Ubuntu 24.04, which are built to follow the
 ; Many core functions for working with immutable data.
 (apply + (distinct [12 8 12 16 8 6])) ; => 42
 
-; Interop with C++ can happen through inline C++.
+; Interop with C++ can happen *seamlessly*.
 (defn sleep [ms]
-  (let [ms (int ms)]
-    ; A special ~{ } syntax can be used from inline C++ to interpolate
-    ; back into jank code.
-    (native/raw "auto const duration(std::chrono::milliseconds(~{ ms }->data));
-                 std::this_thread::sleep_for(duration);")))
+  (let [duration (c++/std.chrono.milliseconds ms)]
+    (c++/std.this_thread.sleep_for duration)))
 ```
 
 ## Docs
