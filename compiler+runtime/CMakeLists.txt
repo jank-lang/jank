@@ -255,6 +255,7 @@ target_compile_options(jank_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_
 include(FetchContent)
 include(cmake/dependency/bdwgc.cmake)
 include(cmake/dependency/fmt.cmake)
+include(cmake/dependency/ftxui.cmake)
 include(cmake/dependency/libzippp.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
@@ -269,6 +270,7 @@ target_link_libraries(
   libclang-cpp.so
   libLLVM.so
   Boost::filesystem
+  ftxui::screen ftxui::dom ftxui::component
   OpenSSL::Crypto
 )
 
@@ -499,3 +501,6 @@ if(NOT CMAKE_SKIP_INSTALL_RULES)
   include(cmake/install.cmake)
 endif()
 # ---- Install rules ----
+
+# Summary
+include(cmake/summary.cmake)

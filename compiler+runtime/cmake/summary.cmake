@@ -1,0 +1,13 @@
+function(jank_message msg)
+  message(STATUS "${msg}")
+endfunction()
+
+jank_message("┌─ jank options ─────────────────────")
+jank_message("│ build type         : ${CMAKE_BUILD_TYPE}")
+jank_message("│ jank version       : ${jank_version}")
+jank_message("│ jank tests         : ${jank_tests}")
+jank_message("│ jank coverage      : ${jank_coverage}")
+jank_message("│ jank analysis      : ${jank_analysis}")
+jank_message("│ llvm version       : ${LLVM_PACKAGE_VERSION}")
+jank_message("│ clang prefix       : ${CLANG_INSTALL_PREFIX}")
+jank_message("└─────────────────────────────────────")
