@@ -264,6 +264,18 @@ namespace jank::read
       return none;
     }
 
+    static int cast_char32_t_as_int(char32_t const c)
+    {
+      if(c > static_cast<char32_t>(INT_MAX))
+      {
+        throw std::runtime_error("Value out of range for wint_t");
+      }
+
+      // Perform the safe conversion
+      auto const safe_char = static_cast<int>(c);
+      return safe_char;
+    }
+
     static result<codepoint, error>
     convert_to_codepoint(native_persistent_string_view const sv, size_t const pos)
     {
@@ -313,7 +325,7 @@ namespace jank::read
 
     static native_bool is_symbol_char(char32_t const c)
     {
-      return !std::iswspace(c) && !is_special_char(c)
+      return !std::iswspace(cast_char32_t_as_int(c)) && !is_special_char(c)
         && (std::iswalnum(static_cast<wint_t>(c)) != 0 || c == '_' || c == '-' || c == '/'
             || c == '?' || c == '!' || c == '+' || c == '*' || c == '=' || c == '.' || c == '&'
             || c == '<' || c == '>' || c == '#' || c == '%' || is_utf8_char(c));
@@ -377,7 +389,7 @@ namespace jank::read
             auto const ch(peek());
             pos++;
 
-            if(ch.is_err() || std::iswspace(ch.expect_ok().character))
+            if(ch.is_err() || std::iswspace(cast_char32_t_as_int(ch.expect_ok().character)))
             {
               return err(error{ token_start, "Expecting a valid character literal after \\" });
             }
@@ -514,7 +526,7 @@ namespace jank::read
                 return err(
                   error{ token_start, pos, "invalid ratio: expecting an integer denominator" });
               }
-              else if(std::iswdigit(c) == 0)
+              else if(std::iswdigit(cast_char32_t_as_int(c)) == 0)
               {
                 if(expecting_exponent)
                 {
@@ -631,7 +643,7 @@ namespace jank::read
 
             auto const oc(peek());
             auto const c(oc.expect_ok().character);
-            if(oc.is_err() || std::iswspace(c))
+            if(oc.is_err() || std::iswspace(cast_char32_t_as_int(c)))
             {
               ++pos;
               return err(
