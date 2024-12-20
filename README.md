@@ -23,7 +23,7 @@ jank's host is LLVM and its interop is with C++.
 For the current progress of jank and its usability, see the tables here: https://jank-lang.org/progress/
 
 The current tl;dr for jank's usability is: **still getting there, but not ready for
-use yet**.
+use yet. Check back in a few months!**
 
 ## Latest binaries
 There are pre-compiled binaries for Ubuntu 24.04, which are built to follow the
