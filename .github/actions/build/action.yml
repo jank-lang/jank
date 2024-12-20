@@ -27,7 +27,7 @@ runs:
       uses: actions/cache/restore@v4
       with:
         path: |
-          ${{ github.workspace }}/build
+          ${{ github.workspace }}/compiler+runtime/build
         key: ${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
     - name: Compile and test
       shell: bash
@@ -38,7 +38,7 @@ runs:
       uses: actions/cache/save@v4
       with:
         path: |
-          ${{ github.workspace }}/build
+          ${{ github.workspace }}/compiler+runtime/build
         key: ${{ steps.restore-clang-cache.outputs.cache-primary-key }}
     # We need to validate formatting after building, since we build Clang/LLVM as part of our
     # build process and we need clang-format from that local Clang build in order to have
