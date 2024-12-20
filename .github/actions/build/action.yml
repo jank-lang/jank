@@ -22,16 +22,24 @@ runs:
       name: Install brew packages
       shell: bash
       run: HOMEBREW_NO_AUTO_UPDATE=1 brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost libzip lbzip2
-    - name: Cache Clang/LLVM
-      uses: actions/cache@v3
+    - name: Restore cached Clang/LLVM
+      id: restore-clang-cache
+      uses: actions/cache/restore@v4
       with:
         path: |
           ${{ github.workspace }}/build
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+        key: ${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
     - name: Compile and test
       shell: bash
       working-directory: ${{ github.workspace }}/compiler+runtime
       run: ${{ github.workspace }}/compiler+runtime/bin/ci/test -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+    - name: Store cached Clang/LLVM
+      id: save-clang-cache
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ${{ github.workspace }}/build
+        key: ${{ steps.restore-clang-cache.outputs.cache-primary-key }}
     # We need to validate formatting after building, since we build Clang/LLVM as part of our
     # build process and we need clang-format from that local Clang build in order to have
     # consistent formatting results.
