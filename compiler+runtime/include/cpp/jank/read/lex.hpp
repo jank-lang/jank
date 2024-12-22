@@ -110,14 +110,16 @@ namespace jank::read::lex
       case token_kind::eof:
         return "eof";
     }
+    return "unknown";
   }
 
   struct ratio
   {
-    native_integer numerator{};
-    native_integer denominator{};
     native_bool operator==(ratio const &rhs) const;
     native_bool operator!=(ratio const &rhs) const;
+
+    native_integer numerator{};
+    native_integer denominator{};
   };
 
   struct token

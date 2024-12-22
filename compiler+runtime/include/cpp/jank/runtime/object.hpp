@@ -5,7 +5,6 @@
 #include <jank/type.hpp>
 #include <jank/util/string_builder.hpp>
 
-/* TODO: Move to obj namespace */
 namespace jank::runtime
 {
   enum class object_type : uint8_t
