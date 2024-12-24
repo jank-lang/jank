@@ -27,6 +27,14 @@ namespace jank::runtime::module
     latest,
   };
 
+  enum class module_type : uint8_t
+  {
+    o,
+    cpp,
+    jank,
+    cljc
+  };
+
   struct file_entry
   {
     object_ptr to_runtime_data() const;
@@ -68,6 +76,24 @@ namespace jank::runtime::module
       option<file_entry> cljc;
     };
 
+    struct find_result
+    {
+      /*
+       * All the sources for a module
+       */
+      entry sources;
+      /*
+       * On the basis of origin, source that should be loaded.
+       */
+      option<module_type> to_load;
+
+      find_result(entry const &sources, module_type const to_load)
+        : sources{ sources }
+        , to_load{ to_load }
+      {
+      }
+    };
+
     /* These separators match what the JVM does on each system. */
 #ifdef _WIN32
     static constexpr char module_separator{ ';' };
@@ -80,6 +106,8 @@ namespace jank::runtime::module
     native_bool is_loaded(native_persistent_string_view const &) const;
     void set_loaded(native_persistent_string_view const &);
 
+    string_result<find_result>
+    find(native_persistent_string_view const &module, origin const ori);
     string_result<void> load(native_persistent_string_view const &module, origin const ori);
 
     string_result<void>
