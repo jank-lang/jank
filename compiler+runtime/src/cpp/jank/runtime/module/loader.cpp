@@ -202,11 +202,11 @@ namespace jank::runtime::module
 
     if(registered)
     {
-      //fmt::println("register_entry {} {} {} {}",
-      //             entry.archive_path,
-      //             entry.path,
-      //             module_path.string(),
-      //             path_to_module(module_path));
+    //   fmt::println("register_entry {} {} {} {}",
+    //               entry.archive_path.unwrap_or("None"),
+    //               entry.path,
+    //               module_path.string(),
+    //               path_to_module(module_path));
     }
   }
 
@@ -327,7 +327,8 @@ namespace jank::runtime::module
     loaded.emplace(module);
   }
 
-  string_result<void> loader::load(native_persistent_string_view const &module, origin const ori)
+  string_result<loader::find_result>
+  loader::find(native_persistent_string_view const &module, origin const ori)
   {
     static std::regex const underscore{ "_" };
     native_transient_string patched_module{ module };
@@ -338,45 +339,99 @@ namespace jank::runtime::module
       return err(fmt::format("unable to find module: {}", module));
     }
 
-    string_result<void> res{ err(fmt::format("no sources for registered module: {}", module)) };
+    auto const with_module_type{ [&](module_type const type) {
+      loader::find_result res{ entry->second, type };
+      return res;
+    } };
 
     //fmt::println("loading nested module {}", module);
 
-    /* When we're compiling, we always load from source. Otherwise, we
-     * load from source if we specifically chose to do so. */
-    bool const compiling{ truthy(rt_ctx.compile_files_var->deref()) };
-    if(compiling || ori == origin::source)
+    if(ori == origin::source)
     {
       if(entry->second.jank.is_some())
       {
-        res = load_jank(entry->second.jank.unwrap());
+        return with_module_type(module_type::jank);
       }
       else if(entry->second.cljc.is_some())
       {
-        res = load_cljc(entry->second.cljc.unwrap());
+        return with_module_type(module_type::cljc);
       }
     }
     else
     {
-      /* TODO: origin must be latest, so we need to find that. Even if there
-       * is a binary, we need to only choose it if it's as new, or newer, than
-       * the source. */
-      if(entry->second.o.is_some())
+      if(entry->second.o.is_some()
+         && (entry->second.jank.is_some() || entry->second.cljc.is_some()))
       {
-        res = load_o(module, entry->second.o.unwrap());
+        auto const o_file_path{ native_transient_string{ entry->second.o.unwrap().path } };
+
+        native_transient_string source_path{};
+        module_type module_type{};
+
+        if(entry->second.jank.is_some())
+        {
+          source_path = entry->second.jank.unwrap().path;
+          module_type = module_type::jank;
+        }
+        else
+        {
+          source_path = entry->second.cljc.unwrap().path;
+          module_type = module_type::cljc;
+        }
+
+        if(boost::filesystem::last_write_time(o_file_path)
+           >= boost::filesystem::last_write_time(source_path))
+        {
+          return with_module_type(module_type::o);
+        }
+        else
+        {
+          return with_module_type(module_type);
+        }
       }
       else if(entry->second.cpp.is_some())
       {
-        res = load_cpp(entry->second.cpp.unwrap());
+        return with_module_type(module_type::cpp);
       }
       else if(entry->second.jank.is_some())
       {
-        res = load_jank(entry->second.jank.unwrap());
+        return with_module_type(module_type::jank);
       }
       else if(entry->second.cljc.is_some())
       {
-        res = load_cljc(entry->second.cljc.unwrap());
+        return with_module_type(module_type::cljc);
       }
+    }
+
+    return err(fmt::format("no sources for registered module: {}", module));
+  }
+
+  string_result<void> loader::load(native_persistent_string_view const &module, origin const ori)
+  {
+    auto const &found_module{ loader::find(module, ori) };
+    if(found_module.is_err())
+    {
+      return err(std::move(found_module.expect_err()));
+    }
+
+    string_result<void> res(err(fmt::format("Couldn't load module: {}", module)));
+
+    auto const module_type_to_load{ found_module.expect_ok().to_load.unwrap() };
+    auto const &module_sources{ found_module.expect_ok().sources };
+
+    switch(module_type_to_load)
+    {
+      case module_type::jank:
+        res = load_jank(module_sources.jank.unwrap());
+        break;
+      case module_type::o:
+        res = load_o(module, module_sources.o.unwrap());
+        break;
+      case module_type::cpp:
+        res = load_cpp(module_sources.cpp.unwrap());
+        break;
+      case module_type::cljc:
+        res = load_cljc(module_sources.cljc.unwrap());
+        break;
     }
 
     if(res.is_err())

@@ -101,7 +101,7 @@ namespace jank
     using namespace jank;
     using namespace jank::runtime;
 
-    //__rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
+    __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     __rt_ctx->compile_module(opts.target_ns).expect_ok();
   }
 
