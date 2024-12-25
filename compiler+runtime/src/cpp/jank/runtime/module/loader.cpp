@@ -202,11 +202,11 @@ namespace jank::runtime::module
 
     if(registered)
     {
-    //   fmt::println("register_entry {} {} {} {}",
-    //               entry.archive_path.unwrap_or("None"),
-    //               entry.path,
-    //               module_path.string(),
-    //               path_to_module(module_path));
+      //   fmt::println("register_entry {} {} {} {}",
+      //               entry.archive_path.unwrap_or("None"),
+      //               entry.path,
+      //               module_path.string(),
+      //               path_to_module(module_path));
     }
   }
 
@@ -407,6 +407,11 @@ namespace jank::runtime::module
 
   string_result<void> loader::load(native_persistent_string_view const &module, origin const ori)
   {
+    if(loader::is_loaded(module))
+    {
+      return ok();
+    }
+
     auto const &found_module{ loader::find(module, ori) };
     if(found_module.is_err())
     {
@@ -439,7 +444,7 @@ namespace jank::runtime::module
       return res;
     }
 
-    loaded.emplace(module);
+    loader::set_loaded(module);
 
     return ok();
   }
