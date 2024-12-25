@@ -1,3 +1,4 @@
+#include <boost/filesystem/operations.hpp>
 #include <regex>
 #include <iostream>
 
@@ -139,7 +140,7 @@ namespace jank::runtime::module
     }
 
     auto const &zip_entry(zf.getEntry(std::string{ entry.path }));
-    fn(zip_entry.readAsText());
+    fn(zip_entry);
   }
 
   static void register_entry(native_unordered_map<native_persistent_string, loader::entry> &entries,
@@ -317,6 +318,31 @@ namespace jank::runtime::module
       make_box(path));
   }
 
+  native_bool file_entry::exists() const
+  {
+    auto const is_archive{ archive_path.is_some() };
+    if(is_archive && !boost::filesystem::exists(native_transient_string{ archive_path.unwrap() }))
+    {
+      return false;
+    }
+    else
+    {
+      native_bool source_exists{};
+      if(is_archive)
+      {
+        visit_jar_entry(*this, [&](auto const &zip_entry) { source_exists = zip_entry.isFile(); });
+      }
+
+      return source_exists || boost::filesystem::exists(native_transient_string{ path });
+    }
+  }
+
+  std::time_t file_entry::last_modified_at() const
+  {
+    auto const source_path{ archive_path.unwrap_or(path) };
+    return boost::filesystem::last_write_time(native_transient_string{ source_path });
+  }
+
   native_bool loader::is_loaded(native_persistent_string_view const &module) const
   {
     return loaded.contains(module);
@@ -339,66 +365,63 @@ namespace jank::runtime::module
       return err(fmt::format("unable to find module: {}", module));
     }
 
-    auto const with_module_type{ [&](module_type const type) {
-      loader::find_result res{ entry->second, type };
-      return res;
-    } };
-
-    //fmt::println("loading nested module {}", module);
-
     if(ori == origin::source)
     {
       if(entry->second.jank.is_some())
       {
-        return with_module_type(module_type::jank);
+        return find_result{ entry->second, module_type::jank };
       }
       else if(entry->second.cljc.is_some())
       {
-        return with_module_type(module_type::cljc);
+        return find_result{ entry->second, module_type::cljc };
       }
     }
     else
     {
-      if(entry->second.o.is_some()
+      if(entry->second.o.is_some() && entry->second.o.unwrap().archive_path.is_none()
          && (entry->second.jank.is_some() || entry->second.cljc.is_some()))
       {
         auto const o_file_path{ native_transient_string{ entry->second.o.unwrap().path } };
 
-        native_transient_string source_path{};
+        std::time_t source_modified_time{};
         module_type module_type{};
 
-        if(entry->second.jank.is_some())
+        if(entry->second.jank.is_some() && entry->second.jank.unwrap().exists())
         {
-          source_path = entry->second.jank.unwrap().path;
+          source_modified_time = entry->second.jank.unwrap().last_modified_at();
           module_type = module_type::jank;
         }
-        else
+        else if(entry->second.cljc.is_some() && entry->second.cljc.unwrap().exists())
         {
-          source_path = entry->second.cljc.unwrap().path;
+          source_modified_time = entry->second.cljc.unwrap().last_modified_at();
           module_type = module_type::cljc;
         }
-
-        if(boost::filesystem::last_write_time(o_file_path)
-           >= boost::filesystem::last_write_time(source_path))
+        else
         {
-          return with_module_type(module_type::o);
+          return err(
+            fmt::format("Found a binary ({}), without a source", entry->second.o.unwrap().path));
+        }
+
+        if(boost::filesystem::last_write_time(o_file_path) >= source_modified_time)
+        {
+          return find_result{ entry->second, module_type::o };
         }
         else
         {
-          return with_module_type(module_type);
+          return find_result{ entry->second, module_type };
         }
       }
       else if(entry->second.cpp.is_some())
       {
-        return with_module_type(module_type::cpp);
+        return find_result{ entry->second, module_type::cpp };
       }
       else if(entry->second.jank.is_some())
       {
-        return with_module_type(module_type::jank);
+        return find_result{ entry->second, module_type::jank };
       }
       else if(entry->second.cljc.is_some())
       {
-        return with_module_type(module_type::cljc);
+        return find_result{ entry->second, module_type::cljc };
       }
     }
 
@@ -473,7 +496,9 @@ namespace jank::runtime::module
   {
     if(entry.archive_path.is_some())
     {
-      visit_jar_entry(entry, [&](auto const &str) { rt_ctx.jit_prc.eval_string(str); });
+      visit_jar_entry(entry, [&](auto const &zip_entry) {
+        rt_ctx.jit_prc.eval_string(zip_entry.readAsText());
+      });
     }
     else
     {
@@ -493,7 +518,8 @@ namespace jank::runtime::module
   {
     if(entry.archive_path.is_some())
     {
-      visit_jar_entry(entry, [&](auto const &str) { rt_ctx.eval_string(str); });
+      visit_jar_entry(entry,
+                      [&](auto const &zip_entry) { rt_ctx.eval_string(zip_entry.readAsText()); });
     }
     else
     {

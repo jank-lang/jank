@@ -38,6 +38,8 @@ namespace jank::runtime::module
   struct file_entry
   {
     object_ptr to_runtime_data() const;
+    native_bool exists() const;
+    std::time_t last_modified_at() const;
 
     /* If the file is within a JAR, this will be the path to the JAR. */
     option<native_persistent_string> archive_path;
@@ -78,20 +80,10 @@ namespace jank::runtime::module
 
     struct find_result
     {
-      /*
-       * All the sources for a module
-       */
+      /* All the sources for a module */
       entry sources;
-      /*
-       * On the basis of origin, source that should be loaded.
-       */
+      /* On the basis of origin, source that should be loaded. */
       option<module_type> to_load;
-
-      find_result(entry const &sources, module_type const to_load)
-        : sources{ sources }
-        , to_load{ to_load }
-      {
-      }
     };
 
     /* These separators match what the JVM does on each system. */
@@ -106,8 +98,7 @@ namespace jank::runtime::module
     native_bool is_loaded(native_persistent_string_view const &) const;
     void set_loaded(native_persistent_string_view const &);
 
-    string_result<find_result>
-    find(native_persistent_string_view const &module, origin const ori);
+    string_result<find_result> find(native_persistent_string_view const &module, origin const ori);
     string_result<void> load(native_persistent_string_view const &module, origin const ori);
 
     string_result<void>
