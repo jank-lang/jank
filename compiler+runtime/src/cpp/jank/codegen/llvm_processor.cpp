@@ -292,7 +292,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(expr::var_deref<expression> const &expr,
                                    expr::function_arity<expression> const &) const
   {
-    auto const ref(gen_var(expr.qualified_name));
+    auto const ref(gen_var(make_box<obj::symbol>(expr.var->n, expr.var->name)));
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
     auto const fn(ctx->module->getOrInsertFunction("jank_deref", fn_type));
