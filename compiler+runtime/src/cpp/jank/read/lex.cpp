@@ -306,17 +306,6 @@ namespace jank::read
       return false;
     }
 
-    static int safe_cast_char32_t_to_int(char32_t input)
-    {
-      // Check if the value exceeds the limit for wint_t
-      if(input > static_cast<char32_t>(INT_MAX))
-      {
-        throw std::runtime_error("value out of range for int");
-      }
-      // Perform the safe conversion
-      return static_cast<int>(input);
-    }
-
     static native_bool is_special_char(char32_t const c)
     {
       return c == '(' || c == ')' || c == '{' || c == '}' || c == '[' || c == ']' || c == '"'
@@ -325,7 +314,7 @@ namespace jank::read
 
     static native_bool is_symbol_char(char32_t const c)
     {
-      return !std::iswspace(safe_cast_char32_t_to_int(c)) && !is_special_char(c)
+      return !std::iswspace(static_cast<wint_t>(c)) && !is_special_char(c)
         && (std::iswalnum(static_cast<wint_t>(c)) != 0 || c == '_' || c == '-' || c == '/'
             || c == '?' || c == '!' || c == '+' || c == '*' || c == '=' || c == '.' || c == '&'
             || c == '<' || c == '>' || c == '#' || c == '%' || is_utf8_char(c));
@@ -429,7 +418,7 @@ namespace jank::read
             auto const ch(peek());
             pos++;
 
-            if(ch.is_err() || std::iswspace(safe_cast_char32_t_to_int(ch.expect_ok().character)))
+            if(ch.is_err() || std::iswspace(static_cast<wint_t>(ch.expect_ok().character)))
             {
               return err(error{ token_start, "Expecting a valid character literal after \\" });
             }
@@ -675,7 +664,7 @@ namespace jank::read
                 }
                 return denominator.expect_err();
               }
-              else if(std::iswdigit(safe_cast_char32_t_to_int(c)) == 0)
+              else if(std::iswdigit(static_cast<wint_t>(c)) == 0)
               {
                 if(expecting_exponent)
                 {
@@ -800,7 +789,7 @@ namespace jank::read
                 return err(
                   error{ token_start,
                          pos,
-                         fmt::format("invalid number: char {} are invalid for radix {}",
+                         fmt::format("invalid number: chars '{}' are invalid for radix {}",
                                      std::string(invalid_digits.begin(), invalid_digits.end()),
                                      radix) });
               }
@@ -823,8 +812,13 @@ namespace jank::read
               }
 
               /* integers */
+              errno = 0;
               auto const parsed_int{ std::strtoll(file.data() + number_start, nullptr, radix)
                                      * (found_beginning_negative ? -1 : 1) };
+              if(errno == ERANGE)
+              {
+                return err(error{ token_start, pos, "number out of range" });
+              }
               return ok(token{ token_start, pos - token_start, token_kind::integer, parsed_int });
             }
             /* XXX: Fall through to symbol starting with - */
@@ -896,7 +890,7 @@ namespace jank::read
 
             auto const oc(peek());
             auto const c(oc.expect_ok().character);
-            if(oc.is_err() || std::iswspace(safe_cast_char32_t_to_int(c)))
+            if(oc.is_err() || std::iswspace(static_cast<wint_t>(c)))
             {
               ++pos;
               return err(

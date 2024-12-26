@@ -556,8 +556,8 @@ namespace jank::read::lex
         processor p{ "36r0123456789abcdefghijklmnopqrstuvwxyz" };
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
-              == make_tokens({
-                { 0, 39, token_kind::integer, 9223372036854775807ll }
+              == make_results({
+                error{ 0, 39, "number out of range" }
         }));
 
         processor p2{ "2r1111111111111111111111111111111111111111111" };
