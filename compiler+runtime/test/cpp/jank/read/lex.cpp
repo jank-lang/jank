@@ -515,9 +515,9 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                error{ 0, 2, "invalid number: char 8 are invalid for radix 8" },
-                error{ 3, 5, "invalid number: char a are invalid for radix 8" },
-                error{ 6, 9, "invalid number: char 8 are invalid for radix 8" },
+                error{ 0, 2, "invalid number: chars '8' are invalid for radix 8" },
+                error{ 3, 5, "invalid number: chars 'a' are invalid for radix 8" },
+                error{ 6, 9, "invalid number: chars '8' are invalid for radix 8" },
         }));
       }
 
@@ -540,9 +540,9 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                error{ 0, 6, "invalid number: char abc are invalid for radix 10" },
-                error{ 7, 12, "invalid number: char g are invalid for radix 16" },
-                error{ 13, 16, "invalid number: char 8 are invalid for radix 8" },
+                error{ 0, 6, "invalid number: chars 'abc' are invalid for radix 10" },
+                error{ 7, 12, "invalid number: chars 'g' are invalid for radix 16" },
+                error{ 13, 16, "invalid number: chars '8' are invalid for radix 8" },
                 error{ 17, 21, "arbitrary radix number can only be an integer" },
                 error{ 21, 21, "unexpected character: ." },
                 error{ 22, 22, "expected whitespace before next token" },
@@ -556,8 +556,8 @@ namespace jank::read::lex
         processor p{ "36r0123456789abcdefghijklmnopqrstuvwxyz" };
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
-              == make_tokens({
-                { 0, 39, token_kind::integer, 9223372036854775807ll }
+              == make_results({
+                error{ 0, 39, "number out of range" }
         }));
 
         processor p2{ "2r1111111111111111111111111111111111111111111" };
@@ -592,10 +592,10 @@ namespace jank::read::lex
         CHECK(tokens
               == make_results({
                 token{ 0, 3, token_kind::integer, 123ll },
-                error{ 4, 8, "invalid number: char g are invalid for radix 16" },
+                error{ 4, 8, "invalid number: chars 'g' are invalid for radix 16" },
                 token{ 9, 3, token_kind::integer, 7ll },
                 token{ 13, 3, token_kind::integer, -12ll },
-                error{ 17, 22, "invalid number: char z are invalid for radix 10" },
+                error{ 17, 22, "invalid number: chars 'z' are invalid for radix 10" },
                 token{ 23, 5, token_kind::integer, 255ll }
         }));
       }
@@ -634,12 +634,12 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                error{  0,  3,          "invalid number: char g are invalid for radix 16" },
-                error{  4,  8,          "invalid number: char - are invalid for radix 16" },
-                error{  9, 14,          "invalid number: char . are invalid for radix 16" },
-                error{ 15, 21,          "invalid number: char - are invalid for radix 16" },
+                error{  0,  3,          "invalid number: chars 'g' are invalid for radix 16" },
+                error{  4,  8,          "invalid number: chars '-' are invalid for radix 16" },
+                error{  9, 14,          "invalid number: chars '.' are invalid for radix 16" },
+                error{ 15, 21,          "invalid number: chars '-' are invalid for radix 16" },
                 error{ 22, 24, "unexpected end of radix 16 number, expecting more digits" },
-                error{ 25, 27,          "invalid number: char x are invalid for radix 10" }
+                error{ 25, 27,          "invalid number: chars 'x' are invalid for radix 10" }
         }));
       }
 
@@ -649,7 +649,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                error{ 0, 3, "invalid number: char x are invalid for radix 10" },
+                error{ 0, 3, "invalid number: chars 'x' are invalid for radix 10" },
         }));
       }
 
@@ -671,7 +671,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                error{ 0, 4, "invalid number: char x are invalid for radix 16" },
+                error{ 0, 4, "invalid number: chars 'x' are invalid for radix 16" },
         }));
       }
 
@@ -681,7 +681,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                error{ 0, 4, "invalid number: char x are invalid for radix 16" },
+                error{ 0, 4, "invalid number: chars 'x' are invalid for radix 16" },
         }));
       }
 
@@ -691,7 +691,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                error{ 0, 4, "invalid number: char . are invalid for radix 16" },
+                error{ 0, 4, "invalid number: chars '.' are invalid for radix 16" },
         }));
       }
 
@@ -718,10 +718,10 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                error{  0,  3,        "invalid number: char 3 are invalid for radix 2" },
-                error{  4,  8,       "invalid number: char z are invalid for radix 35" },
-                error{  9, 14,        "invalid number: char e are invalid for radix 8" },
-                error{ 15, 22,       "invalid number: char - are invalid for radix 19" },
+                error{  0,  3,        "invalid number: chars '3' are invalid for radix 2" },
+                error{  4,  8,       "invalid number: chars 'z' are invalid for radix 35" },
+                error{  9, 14,        "invalid number: chars 'e' are invalid for radix 8" },
+                error{ 15, 22,       "invalid number: chars '-' are invalid for radix 19" },
                 error{ 23, 25, "unexpected end of radix number, expecting more digits" },
                 error{ 26, 29, "unexpected end of radix number, expecting more digits" }
         }));
@@ -774,7 +774,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                error{ 0, 4, "invalid number: char r are invalid for radix 2" },
+                error{ 0, 4, "invalid number: chars 'r' are invalid for radix 2" },
         }));
       }
 
@@ -784,7 +784,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                error{ 0, 4, "invalid number: char r are invalid for radix 2" },
+                error{ 0, 4, "invalid number: chars 'r' are invalid for radix 2" },
         }));
       }
 
@@ -828,7 +828,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_results({
-                  error{ 0, 7, "invalid number: char abc are invalid for radix 10" },
+                  error{ 0, 7, "invalid number: chars 'abc' are invalid for radix 10" },
           }));
         }
 
@@ -1055,7 +1055,7 @@ namespace jank::read::lex
                   error{ 13, 16, "unexpected end of real, expecting exponent" },
                   error{ 16, "expected whitespace before next token" },
                   token{ 16, 3, token_kind::symbol, "Foo"sv },
-                  error{ 20, 26, "invalid number: char fOo are invalid for radix 10" },
+                  error{ 20, 26, "invalid number: chars 'fOo' are invalid for radix 10" },
           }));
         }
       }

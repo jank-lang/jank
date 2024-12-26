@@ -10,6 +10,12 @@ namespace jank::analyze::expr
   template <typename E>
   struct var_deref : expression_base
   {
+    /* Holds the fully qualified name for the originally resolved var.
+     * It will be useful to know that the var deref happened through a
+     * referred var, for static analysis and error reporting.
+     *
+     * For all the other purposes, `var` member should be used that points
+     * to the actual value of the var.. */
     runtime::obj::symbol_ptr qualified_name{};
     runtime::var_ptr var{};
 
