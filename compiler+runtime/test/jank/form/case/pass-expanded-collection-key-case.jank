@@ -1,0 +1,161 @@
+;; case-star-collections-tests.clj
+
+;; ==================================================
+;; Test 1: (case [:key1 :key2])
+;; ==================================================
+
+;; Value position
+(let [xfn (let* [G__ [:key1 :key2]]
+            (case* G__ 0 0 :default
+                       {0 (condp = G__ [:key1 :key2] :matched :default)
+                        1 (condp = G__ :key :not-matched :default)}
+              :compact :hash-equiv nil))]
+  (assert (= xfn :matched) "Test 1 Value Position"))
+
+;; Tail position
+(let [f (fn []
+          (let* [G__ [:key1 :key2]]
+            (case* G__ 0 0 :default
+                       {0 (condp = G__ [:key1 :key2] :matched :default)
+                        1 (condp = G__ :key :not-matched :default)}
+              :compact :hash-equiv nil)))]
+  (assert (= (f) :matched) "Test 1 Tail Position"))
+
+;; Statement position
+(let [f (fn []
+          (let* [G__ [:key1 :key2]]
+            (case* G__ 0 0 :default
+                       {0 (condp = G__ [:key1 :key2] :matched :default)
+                        1 (condp = G__ :key :not-matched :default)}
+              :compact :hash-equiv nil))
+          0)]
+  (assert (= (f) 0) "Test 1 Statement Position"))
+
+;; ==================================================
+;; Test 2: (case {:a 1 :b 2})
+;; ==================================================
+
+;; Value position
+(let [xfn (let* [G__ {:a 1 :b 2}]
+            (case* G__ 0 0 :default
+                       {0 (condp = G__ {:a 1 :b 2} :map-match :default)
+                        1 (condp = G__ {:a 3 :b 4} :not-matched :default)}
+              :compact :hash-equiv nil))]
+  (assert (= xfn :map-match) "Test 2 Value Position"))
+
+;; Tail position
+(let [f (fn []
+          (let* [G__ {:a 1 :b 2}]
+            (case* G__ 0 0 :default
+                       {0 (condp = G__ {:a 1 :b 2} :map-match :default)
+                        1 (condp = G__ {:a 3 :b 4} :not-matched :default)}
+              :compact :hash-equiv nil)))]
+  (assert (= (f) :map-match) "Test 2 Tail Position"))
+
+;; Statement position
+(let [f (fn []
+          (let* [G__ {:a 1 :b 2}]
+            (case* G__ 0 0 :default
+                       {0 (condp = G__ {:a 1 :b 2} :map-match :default)
+                        1 (condp = G__ {:a 3 :b 4} :not-matched :default)}
+              :compact :hash-equiv nil))
+          0)]
+  (assert (= (f) 0) "Test 2 Statement Position"))
+
+;; ==================================================
+;; Test 3: (case [1 2 3])
+;; ==================================================
+
+;; Value position
+(let [xfn (let* [G__ [1 2 3]]
+            (case* G__ 0 0 :default
+                       {0 (condp = G__ [1 2 3] :vector-match :default)
+                        1 (condp = G__ [4 5 6] :not-matched :default)
+                        2 (condp = G__ 1 :one :default)}
+              :compact :hash-equiv nil))]
+  (assert (= xfn :vector-match) "Test 3 Value Position"))
+
+;; Tail position
+(let [f (fn []
+          (let* [G__ [1 2 3]]
+            (case* G__ 0 0 :default
+                       {0 (condp = G__ [1 2 3] :vector-match :default)
+                        1 (condp = G__ [4 5 6] :not-matched :default)
+                        2 (condp = G__ 1 :one :default)}
+              :compact :hash-equiv nil)))]
+  (assert (= (f) :vector-match) "Test 3 Tail Position"))
+
+;; Statement position
+(let [f (fn []
+          (let* [G__ [1 2 3]]
+            (case* G__ 0 0 :default
+                       {0 (condp = G__ [1 2 3] :vector-match :default)
+                        1 (condp = G__ [4 5 6] :not-matched :default)
+                        2 (condp = G__ 1 :one :default)}
+              :compact :hash-equiv nil))
+          0)]
+  (assert (= (f) 0) "Test 3 Statement Position"))
+
+;; ==================================================
+;; Test 4: (case [[1 2]])
+;; ==================================================
+
+;; Value position
+(let [xfn (let* [G__ [[1 2]]]
+            (case* G__ 0 0 :default
+                       {0 (condp = G__ [[1 2]] :vector-match :default)
+                        1 (condp = G__ [{:a 1}] :map-list-match :default)}
+              :compact :hash-equiv nil))]
+  (assert (= xfn :vector-match) "Test 4 Value Position"))
+
+;; Tail position
+(let [f (fn []
+          (let* [G__ [[1 2]]]
+            (case* G__ 0 0 :default
+                       {0 (condp = G__ [[1 2]] :vector-match :default)
+                        1 (condp = G__ [{:a 1}] :map-list-match :default)}
+              :compact :hash-equiv nil)))]
+  (assert (= (f) :vector-match) "Test 4 Tail Position"))
+
+;; Statement position
+(let [f (fn []
+          (let* [G__ [[1 2]]]
+            (case* G__ 0 0 :default
+                       {0 (condp = G__ [[1 2]] :vector-match :default)
+                        1 (condp = G__ [{:a 1}] :map-list-match :default)}
+              :compact :hash-equiv nil))
+          0)]
+  (assert (= (f) 0) "Test 4 Statement Position"))
+
+;; ==================================================
+;; Test 5: (case {:a 1})
+;; ==================================================
+
+;; Value position
+(let [xfn (let* [G__ {:a 1}]
+            (case* G__ 0 0 :default
+                       {0 (condp = G__ {:a 1} :map-match :default)
+                        1 (condp = G__ {:b 2} :different-map :default)}
+              :compact :hash-equiv nil))]
+  (assert (= xfn :map-match) "Test 5 Value Position"))
+
+;; Tail position
+(let [f (fn []
+          (let* [G__ {:a 1}]
+            (case* G__ 0 0 :default
+                       {0 (condp = G__ {:a 1} :map-match :default)
+                        1 (condp = G__ {:b 2} :different-map :default)}
+              :compact :hash-equiv nil)))]
+  (assert (= (f) :map-match) "Test 5 Tail Position"))
+
+;; Statement position
+(let [f (fn []
+          (let* [G__ {:a 1}]
+            (case* G__ 0 0 :default
+                       {0 (condp = G__ {:a 1} :map-match :default)
+                        1 (condp = G__ {:b 2} :different-map :default)}
+              :compact :hash-equiv nil))
+          0)]
+  (assert (= (f) 0) "Test 5 Statement Position"))
+
+:success

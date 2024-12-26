@@ -300,7 +300,6 @@ namespace jank::analyze
       switch_type_enum = expr::case_<expression>::switch_type::hash_identity;
     }
 
-    std::cout << "analyze_case: expr position is " << expression_position_str(position) << "\n";
     auto case_expr{
       make_box<expression>(expr::case_<expression>{ expression_base{ {}, position, f, needs_box },
                                                    value_expr.expect_ok(),
@@ -1015,8 +1014,6 @@ namespace jank::analyze
                               else_expr_opt }
         )
     };
-    std::cout << "analyze_if: if expr position is "
-              << expression_position_str(if_expr->get_base()->position) << "\n";
     return if_expr;
   }
 

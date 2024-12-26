@@ -847,7 +847,6 @@ extern "C"
       }
       integer = (integer >> shift) & mask;
     }
-    std::cout << "shift_mask_case_integer output: " << integer << "\n";
     return integer;
   }
 
@@ -869,9 +868,6 @@ extern "C"
 
   void jank_throw(jank_object_ptr const o)
   {
-    auto const o_obj(reinterpret_cast<object *>(o));
-    std::cout << "throw object type: " << object_type_str(o_obj->type) << "\n";
-    std::cout << "throw object to_string: " << to_string(o_obj) << "\n";
     throw object_ptr{ reinterpret_cast<object *>(o) };
   }
 

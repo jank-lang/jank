@@ -2,5 +2,4 @@
 (def x 1)
 
 (case 1
-  x :one
-  )
+  x :one)
