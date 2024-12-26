@@ -1,0 +1,128 @@
+(case 1 1   :one
+  2         :two
+  "3"       :three
+  :default)
+
+(case "3" 1   :one
+  2           :two
+  "3"         :three
+  :default)
+
+(case true true  :yes
+  false          :no
+  :default)
+
+(case nil
+  nil   :empty
+  false :false-value
+  :default)
+
+(case 0
+  0 :zero
+  1 :one
+  2 :two
+  :default)
+
+(case "hello" "world"   :world
+  "hello"               :greeting
+  "Clojure"             :language
+  :default)
+
+;(let* [clojure_core-G__-4480 "FB"]
+;  (case* clojure_core-G__-4480 0 0 :default
+;             {2782171365 (clojure.core/condp clojure.core/= clojure_core-G__-4480 3731966369 (clojure.core/condp clojure.core/= clojure_core-G__-4480 (quote "FB")                                                        :hash-collision
+;                                                                                               (quote "Ea")                                                                                                               :hash-collision
+;                                                                                               :default)
+;                           :default)}
+;    :compact :hash-equiv #{3731966369}))
+
+
+(case 3.14
+  3.14 :pi
+  2.71 :e
+  1.61 :phi
+  :default)
+
+(assert
+ (=
+  (case 1
+    1   :one
+    2   :two
+    "3" :three
+    :default)
+  :one))
+
+(assert
+ (=
+  (case "3"
+    1   :one
+    2   :two
+    "3" :three
+    :default)
+  :three))
+
+(assert
+ (=
+  (case true
+    true  :yes
+    false :no
+    :default)
+  :yes))
+
+(assert
+ (=
+  (case nil
+    nil   :empty
+    false :false-value
+    :default)
+  :empty))
+
+(assert
+ (=
+  (case 0
+    0 :zero
+    1 :one
+    2 :two
+    :default)
+  :zero))
+
+(assert
+ (=
+  (case "hello"
+    "world"   :world
+    "hello"   :greeting
+    "Clojure" :language
+    :default)
+  :greeting))
+
+(assert
+ (=
+  (case 3.14
+    3.14 :pi
+    2.71 :e
+    1.61 :phi
+    :default)
+  :pi))
+
+(assert
+ (=
+  (case 'symbol symbol  :symbol-match
+    other               :symbol-no-match
+    :symbol-fallback)
+  :symbol-match))
+
+;does not work in jank yet
+;(assert
+;  (=
+;    (case \a \a      \b
+;      \c             \d
+;      :not-found)
+;    \b))
+(assert
+ (=
+   (case "AaAaAaAa" "AaAaAaAa"  :hasha
+     "BBBBBBBB"                 :hashb
+     :default), :hasha))
+
+
+:success

@@ -217,7 +217,7 @@ namespace jank::codegen
     }
 
     /* Run our optimization passes on the function, mutating it. */
-    ctx->fpm->run(*fn, *ctx->fam);
+    // ctx->fpm->run(*fn, *ctx->fam);
 
     if(target != compilation_target::function)
     {
@@ -243,7 +243,7 @@ namespace jank::codegen
         return err(fmt::format("invalid IR module {}", ctx->module_name));
       }
     }
-
+    // llvm::verifyModule(*ctx->module, &llvm::errs());
     return ok();
   }
 
@@ -830,6 +830,10 @@ namespace jank::codegen
     /* If we're in return position, our then/else branches will generate return instructions
      * for us. Since LLVM basic blocks can only have one terminating instruction, we need
      * to take care to not generate our own, too. */
+    std::cout << "llvm_processor::gen: if position is " << expression_position_str(expr.position)
+              << "\n";
+    std::cout << "llvm_processor::gen: if.then position is "
+              << expression_position_str(expr.then->get_base()->position) << "\n";
     auto const is_return(expr.position == expression_position::tail);
     auto const condition(gen(expr.condition, arity));
     auto const truthy_fn_type(
@@ -902,6 +906,7 @@ namespace jank::codegen
                                    expr::function_arity<expression> const &arity)
   {
     /* TODO: Generate direct call to __cxa_throw. */
+    std::cout << "gen throw: position is " << expression_position_str(expr.position) << "\n";
     auto const value(gen(expr.value, arity));
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
@@ -953,6 +958,207 @@ namespace jank::codegen
     }
     return call;
   }
+
+  llvm::Value *llvm_processor::gen(expr::case_<expression> const &expr,
+                                   expr::function_arity<expression> const &arity)
+  {
+    auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
+    auto const position{ expr.position };
+    auto const value(gen(expr.value_expr, arity));
+    auto const is_return{ position == expression_position::tail };
+    std::cout << "llvm_processor::gen case expr position is " << expression_position_str(position)
+              << "\n";
+
+    auto const integer_fn_type(llvm::FunctionType::get(
+      ctx->builder->getInt64Ty(),
+      { ctx->builder->getPtrTy(), ctx->builder->getInt64Ty(), ctx->builder->getInt64Ty() },
+      false));
+    auto const fn(ctx->module->getOrInsertFunction("shift_mask_case_integer", integer_fn_type));
+    llvm::SmallVector<llvm::Value *, 3> const args{
+      value,
+      llvm::ConstantInt::getSigned(ctx->builder->getInt64Ty(), expr.shift),
+      llvm::ConstantInt::getSigned(ctx->builder->getInt64Ty(), expr.mask)
+    };
+    auto const call(ctx->builder->CreateCall(fn, args));
+    auto const switch_val(ctx->builder->CreateIntCast(call, ctx->builder->getInt64Ty(), true));
+    auto const default_block = llvm::BasicBlock::Create(*ctx->llvm_ctx, "default", current_fn);
+    auto const switch_
+      = ctx->builder->CreateSwitch(switch_val, default_block, expr.transformed_keys.size());
+    auto const merge_block
+      = is_return ? nullptr : llvm::BasicBlock::Create(*ctx->llvm_ctx, "merge", current_fn);
+
+    ctx->builder->SetInsertPoint(default_block);
+    auto const default_val{ gen(expr.default_expr, arity) };
+    if(!is_return)
+    {
+      ctx->builder->CreateBr(merge_block);
+    }
+    auto const default_block_exit = ctx->builder->GetInsertBlock();
+
+    llvm::SmallVector<llvm::BasicBlock *> case_blocks;
+    llvm::SmallVector<llvm::Value *> case_values;
+    for(size_t block_counter = 0; block_counter < expr.transformed_keys.size(); ++block_counter)
+    {
+      auto const block_name = fmt::format("case_{}", block_counter);
+      auto const block{ llvm::BasicBlock::Create(*ctx->llvm_ctx, block_name, current_fn) };
+      switch_->addCase(llvm::ConstantInt::getSigned(ctx->builder->getInt64Ty(),
+                                                    expr.transformed_keys[block_counter]),
+                       block);
+
+      ctx->builder->SetInsertPoint(block);
+      auto const case_val{ gen(expr.exprs[block_counter], arity) };
+      case_values.push_back(case_val);
+      if(!is_return)
+      {
+        ctx->builder->CreateBr(merge_block);
+      }
+      case_blocks.push_back(ctx->builder->GetInsertBlock());
+    }
+
+    // Handle value position with PHI node
+    if(!is_return)
+    {
+      ctx->builder->SetInsertPoint(merge_block);
+      auto const phi = ctx->builder->CreatePHI(ctx->builder->getPtrTy(),
+                                               expr.transformed_keys.size() + 1,
+                                               "switch_tmp");
+      phi->addIncoming(default_val, default_block_exit);
+      for(size_t i = 0; i < case_blocks.size(); ++i)
+      {
+        phi->addIncoming(case_values[i], case_blocks[i]);
+      }
+      return phi;
+    }
+    return nullptr;
+  }
+
+  // llvm::Value *llvm_processor::gen(expr::case_<expression> const &expr,
+  //                                  expr::function_arity<expression> const &arity)
+  // {
+  //   std::cout << "llvm_processor::gen: case position is " << expression_position_str(expr.position)
+  //             << "\n";
+  //   auto const is_return(expr.position == expression_position::tail);
+  //   auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
+  //   auto const value(gen(expr.value_expr, arity));
+  //
+  //   // Call jank_to_integer to transform value into an integer for the switch statement
+  //   auto const integer_fn_type(
+  //     llvm::FunctionType::get(ctx->builder->getInt64Ty(), { ctx->builder->getPtrTy() }, false));
+  //   auto const fn(ctx->module->getOrInsertFunction("jank_to_integer", integer_fn_type));
+  //   llvm::SmallVector<llvm::Value *, 1> const args{ value };
+  //   auto const call(ctx->builder->CreateCall(fn, args));
+  //   auto const switch_val(ctx->builder->CreateIntCast(call, ctx->builder->getInt64Ty(), true));
+  //
+  //   // Create default and merge blocks
+  //   auto const default_block{ llvm::BasicBlock::Create(*ctx->llvm_ctx, "default", current_fn) };
+  //   auto const merge_block{
+  //     is_return ? nullptr : llvm::BasicBlock::Create(*ctx->llvm_ctx, "case_merge", current_fn)
+  //   };
+  //
+  //   // Create the switch instruction
+  //   auto const switch_ = ctx->builder->CreateSwitch(switch_val, default_block, expr.keys.size());
+  //
+  //   // Generate the default block
+  //   ctx->builder->SetInsertPoint(default_block);
+  //   auto const default_val{ gen(expr.default_expr, arity) };
+  //
+  //   if(!is_return)
+  //   {
+  //     std::cout
+  //       << "llvm_processor::gen: case default block is not in return position, br to merge_block"
+  //       << "\n";
+  //     ctx->builder->CreateBr(merge_block);
+  //   }
+  //
+  //   // Track the current block for PHI node creation
+  //   // auto const default_block_exit = ctx->builder->GetInsertBlock();
+  //
+  //   // Generate each case block
+  //   // is 4 the right size for these vectors? maybe not useing a fixed number here.
+  //   llvm::SmallVector<llvm::BasicBlock *, 4> case_block_exits;
+  //   llvm::SmallVector<llvm::Value *, 4> case_values;
+  //
+  //   for(size_t block_counter = 0; block_counter < expr.keys.size(); ++block_counter)
+  //   {
+  //     auto const block_name = fmt::format("case_{}", block_counter);
+  //     auto const block {llvm::BasicBlock::Create(*ctx->llvm_ctx, block_name, current_fn)};
+  //     switch_->addCase(
+  //       llvm::ConstantInt::getSigned(ctx->builder->getInt64Ty(), expr.keys[block_counter]),
+  //       block);
+  //
+  //     ctx->builder->SetInsertPoint(block);
+  //     auto const case_val = gen(expr.exprs[block_counter], arity);
+  //     case_values.emplace_back(std::move(case_val));
+  //
+  //     if(!is_return)
+  //     {
+  //       ctx->builder->CreateBr(merge_block);
+  //     }
+  //
+  //     case_block_exits.emplace_back(std::move(block));
+  //   }
+  //
+  //   // If not in a tail position, generate the merge block and PHI node
+  //   if(!is_return)
+  //   {
+  //     current_fn->insert(current_fn->end(), merge_block);
+  //     ctx->builder->SetInsertPoint(merge_block);
+  //     auto const phi = ctx->builder->CreatePHI(ctx->builder->getPtrTy(),
+  //                                              static_cast<unsigned>(case_block_exits.size() + 1),
+  //                                              "case_tmp");
+  //     phi->addIncoming(default_val, default_block);
+  //
+  //     for(size_t i = 0; i < case_block_exits.size(); ++i)
+  //     {
+  //       std::cout << "llvm_processor::gen: case block " << i << " is " << case_block_exits[i]->getName().str()
+  //                 << "\n";
+  //       std::cout << "llvm_processor::gen: case block " << i << " value is " << case_values[i]
+  //                 << "\n";
+  //       phi->addIncoming(case_values[i], case_block_exits[i]);
+  //     }
+  //     ctx->module->print(llvm::outs(), nullptr);
+  //     return phi;
+  //   }
+  //   ctx->module->print(llvm::outs(), nullptr);
+  //   return nullptr;
+  // }
+
+  // llvm::Value *llvm_processor::gen(expr::case_<expression> const &expr,
+  //                                  expr::function_arity<expression> const &arity)
+  // {
+  //   auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
+  //   auto const value(gen(expr.value_expr, arity));
+  //
+  //   auto const integer_fn_type(
+  //     llvm::FunctionType::get(ctx->builder->getInt64Ty(), { ctx->builder->getPtrTy() }, false));
+  //   auto const fn(ctx->module->getOrInsertFunction("jank_to_integer", integer_fn_type));
+  //   llvm::SmallVector<llvm::Value *, 1> const args{ value };
+  //   auto const call(ctx->builder->CreateCall(fn, args));
+  //   auto const switch_val(ctx->builder->CreateIntCast(call, ctx->builder->getInt64Ty(), true));
+  //
+  //   auto const default_block = llvm::BasicBlock::Create(*ctx->llvm_ctx, "default", current_fn);
+  //   auto const switch_ = ctx->builder->CreateSwitch(switch_val, default_block, expr.keys.size());
+  //
+  //   {
+  //     llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
+  //     ctx->builder->SetInsertPoint(default_block);
+  //     ctx->builder->Insert(gen(expr.default_expr, arity));
+  //     // ctx->builder->CreateRet(gen(expr.default_expr, arity));
+  //   }
+  //
+  //   for(size_t block_counter = 0; block_counter < expr.keys.size(); ++block_counter)
+  //   {
+  //     auto const block_name = fmt::format("case_{}", block_counter);
+  //     auto const block = llvm::BasicBlock::Create(*ctx->llvm_ctx, block_name, current_fn);
+  //     switch_->addCase(
+  //       llvm::ConstantInt::getSigned(ctx->builder->getInt64Ty(), expr.keys[block_counter]),
+  //       block);
+  //     ctx->builder->SetInsertPoint(block);
+  //     // ctx->builder->CreateRet(gen(expr.exprs[block_counter], arity));
+  //     ctx->builder->Insert(gen(expr.exprs[block_counter], arity));
+  //   }
+  //   return switch_;
+  // }
 
   llvm::Value *llvm_processor::gen_var(obj::symbol_ptr const qualified_name) const
   {
@@ -1424,7 +1630,7 @@ namespace jank::codegen
                                     == variadic_arity->fn_ctx->param_count - 1);
 
     /* If there's a variadic arity, the highest fixed args is however many precede the "rest"
-     * args. Otherwise, the highest fixed args is just the highest fixed arity. */
+         * args. Otherwise, the highest fixed args is just the highest fixed arity. */
     auto const highest_fixed_args(variadic_arity ? variadic_arity->fn_ctx->param_count - 1
                                                  : highest_fixed_arity->fn_ctx->param_count);
 
@@ -1531,8 +1737,8 @@ namespace jank::codegen
     ctx->global_ctor_block->insertInto(init);
 
     /* XXX: Modules are written to object files, which can't use global ctors until
-     * we're on the ORC runtime. Instead, we just generate our load function to call
-     * our global ctor first. */
+         * we're on the ORC runtime. Instead, we just generate our load function to call
+         * our global ctor first. */
     if(target != compilation_target::module)
     {
       llvm::appendToGlobalCtors(*ctx->module, init, 65535);

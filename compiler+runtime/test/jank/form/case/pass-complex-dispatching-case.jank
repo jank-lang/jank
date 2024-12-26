@@ -1,0 +1,16 @@
+(case* 42
+  {1 0, (+ 40 2) 1}
+  ["one" "computed 42"]
+  "default")
+
+(case* 15
+  (zipmap (range 10 20) (range 10))
+  (mapv #(str "key " %) (range 10))
+  "default")
+
+(case* "special-key"
+  {"special-key" 0, "another-key" 1}
+  ["special" "another"]
+  "default")
+
+:success

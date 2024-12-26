@@ -1,0 +1,43 @@
+; The `case` is the return value of a function
+(defn case-test []
+  (case 2
+    1 :one
+    2 :two
+    :default))
+
+(assert (= (case-test) :two))
+
+(defn case-test []
+  (case 2
+    1 :one
+    2 :two
+    :default))
+
+(assert (= (case-test) :two))
+
+(defn case-test-2 []
+  (case "hello"
+    "world" :world
+    "hello" :greeting
+    :default))
+
+(assert (= (case-test-2) :greeting))
+
+(defn case-test-3 []
+  (case true
+    true  :yes
+    false :no
+    :default))
+
+(assert (= (case-test-3) :yes))
+
+(defn case-test-4 []
+  (case 3.14
+    3.14 :pi
+    2.71 :e
+    1.61 :phi
+    :default))
+
+(assert (= (case-test-4) :pi))
+
+:success
