@@ -378,6 +378,16 @@ namespace jank::runtime::module
     }
     else
     {
+      /* Ignoring object files from the archives here for security and portability
+       * reasons.
+       *
+       * Security:
+       * A dependency can include a binary version of a module that doesn't belong
+       * to it.
+       *
+       * Portability:
+       * Unlike class files, object files are tied to the OS, architecture, c++ stdlib etc,
+       * making it hard to share them. */
       if(entry->second.o.is_some() && entry->second.o.unwrap().archive_path.is_none()
          && (entry->second.jank.is_some() || entry->second.cljc.is_some()))
       {
@@ -438,7 +448,7 @@ namespace jank::runtime::module
     auto const &found_module{ loader::find(module, ori) };
     if(found_module.is_err())
     {
-      return err(std::move(found_module.expect_err()));
+      return err(found_module.expect_err());
     }
 
     string_result<void> res(err(fmt::format("Couldn't load module: {}", module)));
