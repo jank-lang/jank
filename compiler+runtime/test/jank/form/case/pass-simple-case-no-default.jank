@@ -1,0 +1,56 @@
+; does not work in jank yet
+;; test case in value position
+;(let [xfn
+;      (case 1
+;        1 :one
+;        2 :two)]
+;  (assert (= xfn :one)))
+;
+;; Since the value is 1, we expect :one
+;
+;; test case in statement position
+;(let [xfn (fn []
+;            (case 1
+;              1 :one
+;              2 :two)
+;            :arbitrary-value)]
+;  (assert (= (xfn) :arbitrary-value)))
+;
+;; test case in return position
+;(assert
+;  (=
+;    (case 1
+;      1 :one
+;      2 :two)
+;    :one))
+;
+;; Since the value is 1, we expect :one
+;
+;; test case in value position
+;(let [xfn
+;      (case "3"
+;        1 :one
+;        2 :two)]
+;  (assert (= xfn :default)))
+;
+;; Since "3" doesn't match 1 or 2, we expect :default
+;
+;; test case in statement position
+;(let [xfn (fn []
+;            (case "3"
+;              1 :one
+;              2 :two)
+;            :arbitrary-value)]
+;  (assert (= (xfn) :arbitrary-value)))
+;
+;; test case in return position
+;(assert
+;  (=
+;    (case "3"
+;      1 :one
+;      2 :two)
+;    :default))
+;
+;; Since "3" doesn't match 1 or 2, we expect :default
+;
+:success

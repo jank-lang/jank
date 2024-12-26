@@ -1,0 +1,4 @@
+; failure because case constants are non-literal
+(let [x 1]
+  (case 1
+    x :one))

@@ -1,0 +1,192 @@
+; Test 1: (case [:key1 :key2])
+; test case in value position
+(let [xfn
+      (case [:key1 :key2]
+        [:key1 :key2] :matched
+        :key          :not-matched
+        :default)]
+  (assert (= xfn :matched)))
+
+; test case in statement position
+(let [xfn (fn []
+            (case [:key1 :key2]
+              [:key1 :key2] :matched
+              :key          :not-matched
+              :default)
+            0)]
+  (assert (= (xfn) 0)))
+
+; test case in return position
+(assert
+ (=
+  (case [:key1 :key2]
+    [:key1 :key2] :matched
+    :key          :not-matched
+    :default)
+  :matched))
+
+
+; Test 2: (case {:a 1 :b 2})
+; test case in value position
+(let [xfn
+      (case {:a 1 :b 2}
+        {:a 1 :b 2} :map-match
+        {:a 3 :b 4} :not-matched
+        :default)]
+  (assert (= xfn :map-match)))
+
+; test case in statement position
+(let [xfn (fn []
+            (case {:a 1 :b 2}
+              {:a 1 :b 2} :map-match
+              {:a 3 :b 4} :not-matched
+              :default)
+            0)]
+  (assert (= (xfn) 0)))
+
+; test case in return position
+(assert
+ (=
+  (case {:a 1 :b 2}
+    {:a 1 :b 2} :map-match
+    {:a 3 :b 4} :not-matched
+    :default)
+  :map-match))
+
+
+; Test 3: (case [1 2 3])
+; test case in value position
+(let [xfn
+      (case [1 2 3] [1 2 3] :vector-match
+        [4 5 6]             :not-matched
+        1                   :one
+        :default)]
+  (assert (= xfn :vector-match)))
+
+; test case in statement position
+(let [xfn (fn []
+            (case [1 2 3]
+              [1 2 3] :vector-match
+              [4 5 6] :not-matched
+              :default)
+            0)]
+  (assert (= (xfn) 0)))
+
+; test case in return position
+(assert
+ (=
+  (case [1 2 3]
+    [1 2 3] :vector-match
+    [4 5 6] :not-matched
+    :default)
+  :vector-match))
+
+
+; Test 4: (case [[1 2]])
+; test case in value position
+(let [xfn
+      (case [[1 2]]
+        [[1 2]]  :vector-match
+        [{:a 1}] :map-list-match
+        :default)]
+  (assert (= xfn :vector-match)))
+
+; test case in statement position
+(let [xfn (fn []
+            (case [[1 2]]
+              [[1 2]]  :vector-match
+              [{:a 1}] :map-list-match
+              :default)
+            0)]
+  (assert (= (xfn) 0)))
+
+; test case in return position
+(assert
+ (=
+  (case [[1 2]]
+    [[1 2]]  :vector-match
+    [{:a 1}] :map-list-match
+    :default)
+  :vector-match))
+
+
+; Test 5: (case {:a 1})
+; test case in value position
+(let [xfn
+      (case {:a 1}
+        {:a 1} :map-match
+        {:b 2} :different-map
+        :default)]
+  (assert (= xfn :map-match)))
+
+; test case in statement position
+(let [xfn (fn []
+            (case {:a 1}
+              {:a 1} :map-match
+              {:b 2} :different-map
+              :default)
+            0)]
+  (assert (= (xfn) 0)))
+
+; test case in return position
+(assert
+ (=
+  (case {:a 1}
+    {:a 1} :map-match
+    {:b 2} :different-map
+    :default)
+  :map-match))
+
+; test case in value position
+(let [xfn
+      (case [1 2]
+        #{1 2} :set-match
+        [1 2]  :vector-match
+        :default)]
+  (assert (= xfn :vector-match)))
+
+; test case in statement position
+(let [xfn (fn []
+            (case [1 2]
+              #{1 2} :set-match
+              [1 2]  :vector-match
+              :default)
+            0)]
+  (assert (= (xfn) 0)))
+
+; test case in return position
+(assert
+ (=
+  (case [1 2]
+    #{1 2} :set-match
+    [1 2]  :vector-match
+    :default)
+  :vector-match))
+
+; test case in value position
+(let [xfn
+      (case #{1 2}
+        #{1 2} :set-match
+        [1 2]  :vector-match
+        :default)]
+  (assert (= xfn :set-match)))
+
+; test case in statement position
+(let [xfn (fn []
+            (case #{1 2}
+              #{1 2} :set-match
+              [1 2]  :vector-match
+              :default)
+            0)]
+  (assert (= (xfn) 0)))
+
+; test case in return position
+(assert
+ (=
+  (case #{1 2}
+    #{1 2} :set-match
+    [1 2]  :vector-match
+    :default)
+  :set-match))
+
+:success

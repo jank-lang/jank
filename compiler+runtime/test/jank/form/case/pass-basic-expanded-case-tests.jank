@@ -1,0 +1,363 @@
+;; case-star-tests.clj
+
+;; ==================================================
+;; Test 1: (case 1 1 :one 2 :two "3" :three :default)
+;; ==================================================
+(let [test-val 1]
+  ;; Value position
+  (let [x (let* [G__ test-val]
+            (case* G__ 1 31 :default
+                       {0  (condp = G__ 1 :one
+                             :default)
+                        1  (condp = G__ 2 :two
+                             :default)
+                        16 (condp = G__ "3" :three
+                             :default)}
+              :compact :hash-equiv nil))]
+    (assert (= x :one) "Test 1 Value Position"))
+
+  ;; Tail position
+  (let [f (fn []
+            (let* [G__ test-val]
+              (case* G__ 1 31 :default
+                         {0  (condp = G__ 1 :one
+                               :default)
+                          1  (condp = G__ 2 :two
+                               :default)
+                          16 (condp = G__ "3" :three
+                               :default)}
+                :compact :hash-equiv nil)))]
+    (assert (= (f) :one) "Test 1 Tail Position"))
+
+  ;; Statement position
+  (let [f (fn []
+            (let* [G__ test-val]
+              (case* G__ 1 31 :default
+                         {0  (condp = G__ 1 :one
+                               :default)
+                          1  (condp = G__ 2 :two
+                               :default)
+                          16 (condp = G__ "3" :three
+                               :default)}
+                :compact :hash-equiv nil))
+            :ignored)]
+    (assert (= (f) :ignored) "Test 1 Statement Position")))
+
+;; ==================================================
+;; Test 2: (case "3" 1 :one 2 :two "3" :three :default)
+;; ==================================================
+(let [test-val "3"]
+  ;; Value position
+  (let [x (let* [G__ test-val]
+            (case* G__ 1 31 :default
+                       {0  (condp = G__ 1 :one
+                             :default)
+                        1  (condp = G__ 2 :two
+                             :default)
+                        16 (condp = G__ "3" :three
+                             :default)}
+              :compact :hash-equiv nil))]
+    (assert (= x :three) "Test 2 Value Position"))
+
+  ;; Tail position
+  (let [f (fn []
+            (let* [G__ test-val]
+              (case* G__ 1 31 :default
+                         {0  (condp = G__ 1 :one
+                               :default)
+                          1  (condp = G__ 2 :two
+                               :default)
+                          16 (condp = G__ "3" :three
+                               :default)}
+                :compact :hash-equiv nil)))]
+    (assert (= (f) :three) "Test 2 Tail Position"))
+
+  ;; Statement position
+  (let [f (fn []
+            (let* [G__ test-val]
+              (case* G__ 1 31 :default
+                         {0  (condp = G__ 1 :one
+                               :default)
+                          1  (condp = G__ 2 :two
+                               :default)
+                          16 (condp = G__ "3" :three
+                               :default)}
+                :compact :hash-equiv nil))
+            :ignored)]
+    (assert (= (f) :ignored) "Test 2 Statement Position")))
+
+;; ==================================================
+;; Test 3: (case true true :yes false :no :default)
+;; ==================================================
+(let [test-val true]
+  ;; Value position
+  (let [x (let* [G__ test-val]
+            (case* G__ 0 0 :default
+                       {1231 (condp = G__ true :yes
+                               :default)
+                        1237 (condp = G__ false :no
+                               :default)}
+              :compact :hash-equiv nil))]
+    (assert (= x :yes) "Test 3 Value Position"))
+
+  ;; Tail position
+  (let [f (fn []
+            (let* [G__ test-val]
+              (case* G__ 0 0 :default
+                         {1231 (condp = G__ true :yes
+                                 :default)
+                          1237 (condp = G__ false :no
+                                 :default)}
+                :compact :hash-equiv nil)))]
+    (assert (= (f) :yes) "Test 3 Tail Position"))
+
+  ;; Statement position
+  (let [f (fn []
+            (let* [G__ test-val]
+              (case* G__ 0 0 :default
+                         {1231 (condp = G__ true :yes
+                                 :default)
+                          1237 (condp = G__ false :no
+                                 :default)}
+                :compact :hash-equiv nil))
+            :ignored)]
+    (assert (= (f) :ignored) "Test 3 Statement Position")))
+
+;; ==================================================
+;; Test 4: (case nil nil :empty false :false-value :default)
+;; ==================================================
+(let [test-val nil]
+  ;; Value position
+  (let [x (let* [G__ test-val]
+            (case* G__ 0 0 :default
+                       {0    (condp = G__ nil :empty
+                               :default)
+                        1237 (condp = G__ false :false-value
+                               :default)}
+              :compact :hash-equiv nil))]
+    (assert (= x :empty) "Test 4 Value Position"))
+
+  ;; Tail position
+  (let [f (fn []
+            (let* [G__ test-val]
+              (case* G__ 0 0 :default
+                         {0    (condp = G__ nil :empty
+                                 :default)
+                          1237 (condp = G__ false :false-value
+                                 :default)}
+                :compact :hash-equiv nil)))]
+    (assert (= (f) :empty) "Test 4 Tail Position"))
+
+  ;; Statement position
+  (let [f (fn []
+            (let* [G__ test-val]
+              (case* G__ 0 0 :default
+                         {0    (condp = G__ nil :empty
+                                 :default)
+                          1237 (condp = G__ false :false-value
+                                 :default)}
+                :compact :hash-equiv nil))
+            :ignored)]
+    (assert (= (f) :ignored) "Test 4 Statement Position")))
+
+;; ==================================================
+;; Test 5: (case 0 0 :zero 1 :one 2 :two :default)
+;; ==================================================
+(let [test-val 0]
+  ;; Value position
+  (let [x (let* [G__ test-val]
+            (case* G__ 0 0 :default
+                       {0 (condp = G__ 0 :zero
+                            :default)
+                        1 (condp = G__ 1 :one
+                            :default)
+                        2 (condp = G__ 2 :two
+                            :default)}
+              :compact :int))]
+    (assert (= x :zero) "Test 5 Value Position"))
+
+  ;; Tail position
+  (let [f (fn []
+            (let* [G__ test-val]
+              (case* G__ 0 0 :default
+                         {0 (condp = G__ 0 :zero
+                              :default)
+                          1 (condp = G__ 1 :one
+                              :default)
+                          2 (condp = G__ 2 :two
+                              :default)}
+                :compact :int)))]
+    (assert (= (f) :zero) "Test 5 Tail Position"))
+
+  ;; Statement position
+  (let [f (fn []
+            (let* [G__ test-val]
+              (case* G__ 0 0 :default
+                         {0 (condp = G__ 0 :zero
+                              :default)
+                          1 (condp = G__ 1 :one
+                              :default)
+                          2 (condp = G__ 2 :two
+                              :default)}
+                :compact :int))
+            :ignored)]
+    (assert (= (f) :ignored) "Test 5 Statement Position")))
+
+;; ==================================================
+;; Test 6: (case "hello" "world" :world "hello" :greeting "Clojure" :language :default)
+;; ==================================================
+(let [test-val "hello"]
+  ;; Value position
+  (let [x (let* [G__ test-val]
+            (case* G__ 3 3 :default
+                       {0 (condp = G__ "hello" :greeting
+                            :default)
+                        2 (condp = G__ "Clojure" :language
+                            :default)
+                        3 (condp = G__ "world" :world
+                            :default)}
+              :compact :hash-equiv nil))]
+    (assert (= x :greeting) "Test 6 Value Position"))
+
+  ;; Tail position
+  (let [f (fn []
+            (let* [G__ test-val]
+              (case* G__ 3 3 :default
+                         {0 (condp = G__ "hello" :greeting
+                              :default)
+                          2 (condp = G__ "Clojure" :language
+                              :default)
+                          3 (condp = G__ "world" :world
+                              :default)}
+                :compact :hash-equiv nil)))]
+    (assert (= (f) :greeting) "Test 6 Tail Position"))
+
+  ;; Statement position
+  (let [f (fn []
+            (let* [G__ test-val]
+              (case* G__ 3 3 :default
+                         {0 (condp = G__ "hello" :greeting
+                              :default)
+                          2 (condp = G__ "Clojure" :language
+                              :default)
+                          3 (condp = G__ "world" :world
+                              :default)}
+                :compact :hash-equiv nil))
+            :ignored)]
+    (assert (= (f) :ignored) "Test 6 Statement Position")))
+
+;; ==================================================
+;; Test 7: (case 3.14 3.14 :pi 2.71 :e 1.61 :phi :default)
+;; ==================================================
+(let [test-val 3.14]
+  ;; Value position
+  (let [x (let* [G__ test-val]
+            (case* G__ 0 3 :default
+                       {0 (condp = G__ 1.61 :phi
+                            :default)
+                        2 (condp = G__ 2.71 :e
+                            :default)
+                        3 (condp = G__ 3.14 :pi
+                            :default)}
+              :compact :hash-equiv nil))]
+    (assert (= x :pi) "Test 7 Value Position"))
+
+  ;; Tail position
+  (let [f (fn []
+            (let* [G__ test-val]
+              (case* G__ 0 3 :default
+                         {0 (condp = G__ 1.61 :phi
+                              :default)
+                          2 (condp = G__ 2.71 :e
+                              :default)
+                          3 (condp = G__ 3.14 :pi
+                              :default)}
+                :compact :hash-equiv nil)))]
+    (assert (= (f) :pi) "Test 7 Tail Position"))
+
+  ;; Statement position
+  (let [f (fn []
+            (let* [G__ test-val]
+              (case* G__ 0 3 :default
+                         {0 (condp = G__ 1.61 :phi
+                              :default)
+                          2 (condp = G__ 2.71 :e
+                              :default)
+                          3 (condp = G__ 3.14 :pi
+                              :default)}
+                :compact :hash-equiv nil))
+            :ignored)]
+    (assert (= (f) :ignored) "Test 7 Statement Position")))
+
+;; ==================================================
+;; Test 8: Symbol case
+;; ==================================================
+(let [test-val 'symbol]
+  ;; Value position
+  (let [x (let* [G__ test-val]
+            (case* G__ 5 1 :symbol-fallback
+                       {0 (condp = G__ 'other :symbol-no-match
+                            :symbol-fallback)
+                        1 (condp = G__ 'symbol :symbol-match
+                            :symbol-fallback)}
+              :compact :hash-equiv nil))]
+    (assert (= x :symbol-match) "Symbol Value Position"))
+
+  ;; Tail position
+  (let [f (fn []
+            (let* [G__ test-val]
+              (case* G__ 5 1 :symbol-fallback
+                         {0 (condp = G__ 'other :symbol-no-match
+                              :symbol-fallback)
+                          1 (condp = G__ 'symbol :symbol-match
+                              :symbol-fallback)}
+                :compact :hash-equiv nil)))]
+    (assert (= (f) :symbol-match) "Symbol Tail Position"))
+
+  ;; Statement position
+  (let [f (fn []
+            (let* [G__ test-val]
+              (case* G__ 5 1 :symbol-fallback
+                         {0 (condp = G__ 'other :symbol-no-match
+                              :symbol-fallback)
+                          1 (condp = G__ 'symbol :symbol-match
+                              :symbol-fallback)}
+                :compact :hash-equiv nil))
+            :ignored)]
+    (assert (= (f) :ignored) "Symbol Statement Position")))
+
+;; ==================================================
+;; Test 9: Hash collision case
+;; ==================================================
+(let [test-val "AaAaAaAa"]
+  ;; Value position
+  (let [x (let* [G__ test-val]
+            (case* G__ 0 0 :default
+                       {1434879973 (condp = G__ "BBBBBBBB" :hashb
+                                     "AaAaAaAa"            :hasha
+                                     :default)}
+              :compact :hash-equiv #{1434879973}))]
+    (assert (= x :hasha) "Hash Collision Value Position"))
+
+  ;; Tail position
+  (let [f (fn []
+            (let* [G__ test-val]
+              (case* G__ 0 0 :default
+                         {1434879973 (condp = G__ "BBBBBBBB" :hashb
+                                       "AaAaAaAa"            :hasha
+                                       :default)}
+                :compact :hash-equiv #{1434879973})))]
+    (assert (= (f) :hasha) "Hash Collision Tail Position"))
+
+  ;; Statement position
+  (let [f (fn []
+            (let* [G__ test-val]
+              (case* G__ 0 0 :default
+                         {1434879973 (condp = G__ "BBBBBBBB" :hashb
+                                       "AaAaAaAa"            :hasha
+                                       :default)}
+                :compact :hash-equiv #{1434879973}))
+            :ignored)]
+    (assert (= (f) :ignored) "Hash Collision Statement Position")))
+
+:success

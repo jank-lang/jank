@@ -1,0 +1,12 @@
+; Failure due to invalid keys in the nested `case`
+(let [y (case 2
+          1 (case "inner"
+              "inner" :inner-match
+              :default)
+          2 (case "inner"
+              "inner" :inner-match
+              "inner" :duplicate)
+          :default)]
+  (case y
+    :inner-match :outer-result
+    :default))

@@ -1,0 +1,49 @@
+; test case in value position
+(let [xfn
+      (case [1 2]
+        #{1 2} :set-match
+        [1 2] :vector-match
+        :default)]
+  (assert (= xfn :vector-match)))
+
+; test case in statement position
+(let [xfn (fn []
+            (case [1 2]
+              #{1 2} :set-match
+              [1 2] :vector-match
+              :default)
+            0)]
+  (assert (= (xfn) 0)))
+
+; test case in return position
+(assert (= (case [1 2]
+             #{1 2} :set-match
+             [1 2] :vector-match
+             :default)
+           :vector-match))
+
+; test case in value position
+(let [xfn
+      (case #{1 2}
+        #{1 2} :set-match
+        [1 2] :vector-match
+        :default)]
+  (assert (= xfn :set-match)))
+
+; test case in statement position
+(let [xfn (fn []
+            (case #{1 2}
+              #{1 2} :set-match
+              [1 2] :vector-match
+              :default)
+            0)]
+  (assert (= (xfn) 0)))
+
+; test case in return position
+(assert (= (case #{1 2}
+             #{1 2} :set-match
+             [1 2] :vector-match
+             :default)
+           :set-match))
+
+:success

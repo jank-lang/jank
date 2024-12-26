@@ -817,6 +817,42 @@ extern "C"
     return to_hash(o_obj);
   }
 
+  native_integer to_integer(object const *o)
+  {
+    if(o->type == object_type::integer)
+    {
+      return dyn_cast<obj::integer>(o)->data;
+    }
+
+    return to_hash(o);
+  }
+
+  jank_native_integer jank_to_integer(jank_object_ptr const o)
+  {
+    auto const o_obj(reinterpret_cast<object *>(o));
+    return to_integer(o_obj);
+  }
+
+  jank_native_integer shift_mask_case_integer(jank_object_ptr const o,
+                                              jank_native_integer const shift,
+                                              jank_native_integer const mask)
+  {
+    auto const o_obj(reinterpret_cast<object *>(o));
+    auto integer{ to_integer(o_obj) };
+    if(mask != 0)
+    {
+      if(o_obj->type == object_type::integer)
+      {
+        integer = integer >= std::numeric_limits<int32_t>::min()
+                   && integer <= std::numeric_limits<int32_t>::max()
+          ? integer
+          : to_hash(make_box(integer));
+      }
+      integer = (integer >> shift) & mask;
+    }
+    return integer;
+  }
+
   void jank_set_meta(jank_object_ptr const o, jank_object_ptr const meta)
   {
     auto const o_obj(reinterpret_cast<object *>(o));
@@ -835,7 +871,7 @@ extern "C"
 
   void jank_throw(jank_object_ptr const o)
   {
-    throw runtime::object_ptr{ reinterpret_cast<object *>(o) };
+    throw object_ptr{ reinterpret_cast<object *>(o) };
   }
 
   jank_object_ptr jank_try(jank_object_ptr const try_fn,

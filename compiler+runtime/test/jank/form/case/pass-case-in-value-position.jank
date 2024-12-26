@@ -1,0 +1,108 @@
+; The `case` is used in the value position of another expression
+(let [x (case 1
+          1       1
+          2       2
+          :default)]
+  (assert (= (+ x 1) 2)))
+
+(let [x (case 2
+          1       1
+          2       2
+          :default)]
+  (assert (= (+ x 1) 3)))
+
+(let [x (case 3
+          1       1
+          2       2
+          :default)]
+  (assert (keyword? x))
+  (assert (= x :default)))
+
+(let [x (case "hello"
+          "hello" "world"
+          "foo"   "bar"
+          :default)]
+  (assert (= x "world")))
+
+
+(let [x (case :foo
+          :foo    :bar
+          :baz    :quux
+          :none)]
+  (assert (= x :bar)))
+
+;
+(let [x (case nil
+          nil     true
+          :else   false)]
+  (assert (= x true)))
+
+(let [x (case true
+          true    "yes"
+          false   "no"
+          "maybe")]
+  (assert (= x "yes")))
+
+(let [x (case false
+          true    "yes"
+          false   "no"
+          "maybe")]
+  (assert (= x "no")))
+
+(let [x (case [1 2 3]
+          [1 2 3]  :match
+          [4 5 6]  :no-match
+          :fallback)]
+  (assert (= x :match)))
+
+(let [x (case {:a 1 :b 2}
+          {:a 1 :b 2} :map-match
+          {:c 3 :d 4} :map-no-match
+          :map-fallback)]
+  (assert (= x :map-match)))
+
+(let [x (case #{1 2 3}
+          #{1 2 3} :set-match
+          #{4 5 6} :set-no-match
+          :set-fallback)]
+  (assert (= x :set-match)))
+
+(let [x (case 1.5
+          1.5     :float-match
+          2.5     :float-no-match
+          :float-fallback)]
+  (assert (= x :float-match)))
+
+(let [x (case [1 2]
+          [1 3] "almost"
+          [1 2] "exact"
+          "nope")]
+  (assert (= x "exact")))
+
+(let [x (case [1 2]
+          [1]     "short"
+          [1 2 3] "long"
+          [1 2]   "exact"
+          "other")]
+  (assert (= x "exact")))
+
+(let [x (case 1
+          (1 2)    "tuple-match"
+          3        "not-match"
+          "nope")]
+  (assert (= x "tuple-match")))
+
+(let [x (case 'symbol
+          symbol  :symbol-match
+          other   :symbol-no-match
+          :symbol-fallback)]
+  (assert (= x :symbol-match)))
+
+; does not work in jank yet
+;(let [x
+;      (case \a \a      \b
+;        \c             \d
+;        :not-found)
+;      ]
+;  (assert (= x \b)))
+:success

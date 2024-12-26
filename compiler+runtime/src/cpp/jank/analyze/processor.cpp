@@ -47,6 +47,7 @@ namespace jank::analyze
       {   make_box<symbol>("var"), make_fn(&processor::analyze_var_call) },
       { make_box<symbol>("throw"),    make_fn(&processor::analyze_throw) },
       {   make_box<symbol>("try"),      make_fn(&processor::analyze_try) },
+      { make_box<symbol>("case*"),     make_fn(&processor::analyze_case) },
     };
   }
 
@@ -59,8 +60,8 @@ namespace jank::analyze
     }
 
     /* We wrap all of the expressions we get in an anonymous fn so that we can call it easily.
-     * This also simplifies codegen, since we only ever codegen a single fn, even if that fn
-     * represents a ns, a single REPL expression, or an actual source fn. */
+             * This also simplifies codegen, since we only ever codegen a single fn, even if that fn
+             * represents a ns, a single REPL expression, or an actual source fn. */
     runtime::detail::native_transient_vector fn;
     fn.push_back(make_box<runtime::obj::symbol>("fn*"));
     fn.push_back(make_box<runtime::obj::persistent_vector>());
@@ -166,6 +167,158 @@ namespace jank::analyze
     });
   }
 
+  processor::expression_result processor::analyze_case(obj::persistent_list_ptr const &o,
+                                                       local_frame_ptr &f,
+                                                       expression_position const position,
+                                                       option<expr::function_context_ptr> const &fc,
+                                                       native_bool const needs_box)
+  {
+    if(auto const length(o->count()); length != 8 && length != 9)
+    {
+      return err(error{ "invalid case: incorrect number of elements in form" });
+    }
+
+    auto const first(o->data.first().unwrap());
+    if(first.data->type != object_type::symbol)
+    {
+      return err(error{ "invalid case: first element must be 'case*'" });
+    }
+    if(runtime::expect_object<obj::symbol>(first).data->name != "case*")
+    {
+      return err(error{ "invalid case: first element must be 'case*'" });
+    }
+
+    auto it{ o->data.rest() };
+    auto const value_expr_obj{ it.first().unwrap() };
+    auto const value_expr{ analyze(value_expr_obj, f, expression_position::value, fc, needs_box) };
+
+    it = it.rest();
+    auto const shift_obj{ it.first().unwrap() };
+    if(shift_obj.data->type != object_type::integer)
+    {
+      return err(error{ "expected integer for shift" });
+    }
+    auto const shift{ runtime::expect_object<runtime::obj::integer>(shift_obj) };
+
+    it = it.rest();
+    auto const mask_obj{ it.first().unwrap() };
+    if(mask_obj.data->type != object_type::integer)
+    {
+      return err(error{ "expected integer for mask" });
+    }
+    auto const mask{ runtime::expect_object<runtime::obj::integer>(mask_obj) };
+
+    it = it.rest();
+    auto const default_expr_obj{ it.first().unwrap() };
+    auto const default_expr{ analyze(default_expr_obj, f, position, fc, needs_box) };
+
+    it = it.rest();
+    auto const imap_obj{ it.first().unwrap() };
+    auto const keys_exprs{ visit_map_like(
+      [&](auto const &typed_map) -> string_result<keys_and_exprs> {
+        keys_and_exprs ret{};
+        for(auto auto_{ typed_map->seq() }; auto_ != nullptr; auto_ = auto_->next())
+        {
+          auto const e{ auto_->first() };
+          auto const k{ runtime::nth(e, make_box(0)) };
+          auto const v{ runtime::nth(e, make_box(1)) };
+          if(k.data->type != object_type::integer)
+          {
+            return err("Map key for case* is expected to be an integer");
+          }
+          auto const transformed_key{ runtime::expect_object<obj::integer>(k) };
+          auto const expr{ analyze(v, f, position, fc, needs_box) };
+          if(expr.is_err())
+          {
+            return err(expr.expect_err().message);
+          }
+          ret.keys.push_back(transformed_key->data);
+          ret.exprs.push_back(expr.expect_ok());
+        }
+        return ret;
+      },
+      [&]() -> string_result<keys_and_exprs> {
+        return err("Expect map-like for case keys and exprs");
+      },
+      imap_obj) };
+    if(keys_exprs.is_err())
+    {
+      return err(error{ keys_exprs.expect_err() });
+    }
+
+    it = it.rest();
+    auto const is_compact_obj{ it.first().unwrap() };
+    if(is_compact_obj.data->type != object_type::keyword)
+    {
+      return err(error{ "expected keyword for compact" });
+    }
+    auto const compact{ runtime::expect_object<obj::keyword>(is_compact_obj) };
+    auto const is_compact{ compact->sym->get_name() == "compact" };
+
+    it = it.rest();
+    auto const switch_type_obj = it.first().unwrap();
+    if(switch_type_obj.data->type != object_type::keyword)
+    {
+      return err(error{ "expected keyword for switch_type" });
+    }
+    auto const switch_type = runtime::expect_object<obj::keyword>(switch_type_obj);
+
+    it = it.rest();
+    obj::persistent_hash_set_ptr collided_keys;
+    // check if the iterator is at the end
+    if(it.empty())
+    {
+      collided_keys = obj::persistent_hash_set::empty();
+    }
+    else
+    {
+      auto const collided_keys_obj{ it.first().unwrap() };
+      if(collided_keys_obj.data->type != object_type::persistent_hash_set
+         && collided_keys_obj.data->type != object_type::nil)
+      {
+        return err(error{ "expected hash set for collided_keys" });
+      }
+      if(collided_keys_obj.data->type == object_type::nil)
+      {
+        collided_keys = obj::persistent_hash_set::empty();
+      }
+      else
+      {
+        collided_keys = runtime::expect_object<obj::persistent_hash_set>(collided_keys_obj);
+      }
+    }
+
+    auto const switch_type_name = switch_type->sym->get_name();
+    auto switch_type_enum = expr::case_<expression>::switch_type::integers;
+
+    if(switch_type_name == "hashes")
+    {
+      switch_type_enum = expr::case_<expression>::switch_type::hashes;
+    }
+    else if(switch_type_name == "hash-equiv")
+    {
+      switch_type_enum = expr::case_<expression>::switch_type::hash_equiv;
+    }
+    else if(switch_type_name == "hash-identity")
+    {
+      switch_type_enum = expr::case_<expression>::switch_type::hash_identity;
+    }
+
+    auto case_expr{
+      make_box<expression>(expr::case_<expression>{ expression_base{ {}, position, f, needs_box },
+                                                   value_expr.expect_ok(),
+                                                   shift->data,
+                                                   mask->data,
+                                                   default_expr.expect_ok(),
+                                                   keys_exprs.expect_ok().keys,
+                                                   keys_exprs.expect_ok().exprs,
+                                                   is_compact, switch_type_enum,
+                                                   collided_keys }
+      )
+    };
+    return case_expr;
+  }
+
   processor::expression_result processor::analyze_symbol(runtime::obj::symbol_ptr const &sym,
                                                          local_frame_ptr &current_frame,
                                                          expression_position const position,
@@ -193,12 +346,12 @@ namespace jank::analyze
         unwrapped_local.binding.has_boxed_usage = true;
 
         /* The first time we reference a captured local from within a function, we get here.
-         * We determine that we had to cross one or more function scopes to find the relevant
-         * local, so it's a new capture. We register the capture above, but we need to search
-         * again to get the binding within our current function, since the one we have now
-         * is the originating binding.
-         *
-         * All future lookups for this capatured local, in this function, will skip this branch. */
+                         * We determine that we had to cross one or more function scopes to find the relevant
+                         * local, so it's a new capture. We register the capture above, but we need to search
+                         * again to get the binding within our current function, since the one we have now
+                         * is the originating binding.
+                         *
+                         * All future lookups for this capatured local, in this function, will skip this branch. */
         found_local = current_frame->find_local_or_capture(sym);
       }
 
@@ -219,7 +372,7 @@ namespace jank::analyze
     }
 
     /* If it's not a local and it matches a fn's name, we're dealing with a
-     * reference to a fn. We don't want to go to var lookup now. */
+             * reference to a fn. We don't want to go to var lookup now. */
     auto const found_named_recursion(current_frame->find_named_recursion(sym));
     if(found_named_recursion.is_some())
     {
@@ -339,7 +492,7 @@ namespace jank::analyze
     }
 
     /* We do this after building the symbols vector, since the & symbol isn't a param
-     * and would cause an off-by-one error. */
+             * and would cause an off-by-one error. */
     if(param_symbols.size() > runtime::max_params)
     {
       /* TODO: Suggestion: use & args to capture the rest */
@@ -371,8 +524,8 @@ namespace jank::analyze
     }
 
     /* If it turns out this function uses recur, we need to ensure that its tail expression
-     * is boxed. This is because unboxed values may use IIFE for initialization, which will
-     * not work with the generated while/continue we use for recursion. */
+             * is boxed. This is because unboxed values may use IIFE for initialization, which will
+             * not work with the generated while/continue we use for recursion. */
     if(fn_ctx->is_tail_recursive)
     {
       body_do = step::force_boxed(std::move(body_do));
@@ -488,7 +641,7 @@ namespace jank::analyze
     }
 
     /* The variadic arity, if present, must have at least as many fixed params as the
-     * highest non-variadic arity. Clojure requires this. */
+             * highest non-variadic arity. Clojure requires this. */
     if(found_variadic > 0)
     {
       for(auto const &arity : arities)
@@ -651,6 +804,8 @@ namespace jank::analyze
                          expression_position const position,
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const needs_box)
+  // (let* [vec-2426 [1 3] a (clojure.core/nth vec-2426 0 nil) b (clojure.core/nth vec-2426 1 nil)])
+
   {
     if(o->count() < 2)
     {
@@ -785,49 +940,49 @@ namespace jank::analyze
     }
 
     /* We take the lazy way out here. Clojure JVM handles loop* with two cases:
-     *
-     * 1. Statements, which expand the loop inline and use labels, gotos, and mutation
-     * 2. Expressions, which wrap the loop in a fn which does the same
-     *
-     * We do something similar to the second, but we transform the loop into just function
-     * recursion and call the function on the spot. It works for both cases, though it's
-     * marginally less efficient.
-     *
-     * However, there's an additional snag. If we just transform the loop into a fn to
-     * call immediately, we get something like this:
-     *
-     * ```
-     * (loop* [a 1
-     *         b 2]
-     *   (println a b))
-     * ```
-     *
-     * Becoming this:
-     *
-     * ```
-     * ((fn* [a b]
-     *   (println a b)) 1 2)
-     * ```
-     *
-     * This works great, but loop* can actually be used as a let*. That means we can do something
-     * like this:
-     *
-     * ```
-     * (loop* [a 1
-     *         b (* 2 a)]
-     *   (println a b))
-     * ```
-     *
-     * But we can't translate that like the one above, since we'd be referring to `a` before it
-     * was bound. So we get around this by actually just lifting all of this into a let*:
-     *
-     * ```
-     * (let* [a 1
-     *        b (* 2 a)]
-     *   ((fn* [a b]
-     *     (println a b)) a b))
-     * ```
-     */
+             *
+             * 1. Statements, which expand the loop inline and use labels, gotos, and mutation
+             * 2. Expressions, which wrap the loop in a fn which does the same
+             *
+             * We do something similar to the second, but we transform the loop into just function
+             * recursion and call the function on the spot. It works for both cases, though it's
+             * marginally less efficient.
+             *
+             * However, there's an additional snag. If we just transform the loop into a fn to
+             * call immediately, we get something like this:
+             *
+             * ```
+             * (loop* [a 1
+             *         b 2]
+             *   (println a b))
+             * ```
+             *
+             * Becoming this:
+             *
+             * ```
+             * ((fn* [a b]
+             *   (println a b)) 1 2)
+             * ```
+             *
+             * This works great, but loop* can actually be used as a let*. That means we can do something
+             * like this:
+             *
+             * ```
+             * (loop* [a 1
+             *         b (* 2 a)]
+             *   (println a b))
+             * ```
+             *
+             * But we can't translate that like the one above, since we'd be referring to `a` before it
+             * was bound. So we get around this by actually just lifting all of this into a let*:
+             *
+             * ```
+             * (let* [a 1
+             *        b (* 2 a)]
+             *   ((fn* [a b]
+             *     (println a b)) a b))
+             * ```
+             */
     runtime::detail::native_persistent_list const args{ binding_syms.rbegin(),
                                                         binding_syms.rend() };
     auto const params(make_box<runtime::obj::persistent_vector>(binding_syms.persistent()));
@@ -850,7 +1005,7 @@ namespace jank::analyze
                         native_bool needs_box)
   {
     /* We can't (yet) guarantee that each branch of an if returns the same unboxed type,
-     * so we're unable to unbox them. */
+             * so we're unable to unbox them. */
     needs_box = true;
 
     auto const form_count(o->count());
@@ -894,12 +1049,15 @@ namespace jank::analyze
       else_expr_opt = else_expr.expect_ok();
     }
 
-    return make_box<expression>(expr::if_<expression>{
-      expression_base{ {}, position, current_frame, needs_box },
-      condition_expr.expect_ok(),
-      then_expr.expect_ok(),
-      else_expr_opt
-    });
+    auto const if_expr{
+      make_box<expression>(
+        expr::if_<expression>{ expression_base{ {}, position, current_frame, needs_box },
+                              condition_expr.expect_ok(),
+                              then_expr.expect_ok(),
+                              else_expr_opt }
+        )
+    };
+    return if_expr;
   }
 
   processor::expression_result
@@ -1011,7 +1169,7 @@ namespace jank::analyze
     auto try_frame(
       make_box<local_frame>(local_frame::frame_type::try_, current_frame->rt_ctx, current_frame));
     /* We introduce a new frame so that we can register the sym as a local.
-     * It holds the exception value which was caught. */
+             * It holds the exception value which was caught. */
     auto catch_frame(
       make_box<local_frame>(local_frame::frame_type::catch_, current_frame->rt_ctx, current_frame));
     auto finally_frame(make_box<local_frame>(local_frame::frame_type::finally,
@@ -1277,7 +1435,7 @@ namespace jank::analyze
         for(auto const &kv : typed_o->data)
         {
           /* The two maps (hash and sorted) have slightly different iterators, so we need to
-           * pull out the entries differently. */
+                               * pull out the entries differently. */
           object_ptr first{}, second{};
           if constexpr(std::same_as<T, obj::persistent_sorted_map>)
           {
@@ -1416,7 +1574,7 @@ namespace jank::analyze
       auto const var_deref(boost::get<expr::var_deref<expression>>(&source->data));
 
       /* If this expression doesn't need to be boxed, based on where it's called, we can dig
-       * into the call details itself to see if the function supports unboxed returns. Most don't. */
+                   * into the call details itself to see if the function supports unboxed returns. Most don't. */
       if(var_deref && var_deref->var->meta.is_some())
       {
         auto const arity_meta(
@@ -1438,9 +1596,9 @@ namespace jank::analyze
         {
           auto const fn_res(vars.find(var_deref->var));
           /* If we don't have a valid var_deref, we know the var exists, but we
-           * don't have an AST node for it. This means the var came in through
-           * a pre-compiled module. In that case, we can only rely on meta to
-           * tell us what we need. */
+                               * don't have an AST node for it. This means the var came in through
+                               * a pre-compiled module. In that case, we can only rely on meta to
+                               * tell us what we need. */
           if(fn_res != vars.end())
           {
             auto const fn(boost::get<expr::function<expression>>(&fn_res->second->data));
@@ -1486,11 +1644,11 @@ namespace jank::analyze
     }
 
     /* If we have more args than a fn allows, we need to pack all of the extras
-     * into a single list and tack that on at the end. So, if max_params is 10, and
-     * we pass 15 args, we'll pass 10 normally and then we'll have a special 11th
-     * arg which is a list containing the 5 remaining params. We rely on dynamic_call
-     * to do the hard work of packing that in the shape the function actually wants,
-     * based on its highest fixed arity flag. */
+             * into a single list and tack that on at the end. So, if max_params is 10, and
+             * we pass 15 args, we'll pass 10 normally and then we'll have a special 11th
+             * arg which is a list containing the 5 remaining params. We rely on dynamic_call
+             * to do the hard work of packing that in the shape the function actually wants,
+             * based on its highest fixed arity flag. */
     if(runtime::max_params < arg_count)
     {
       native_vector<expression_ptr> packed_arg_exprs;
@@ -1588,7 +1746,7 @@ namespace jank::analyze
           return analyze_symbol(typed_o, current_frame, position, fn_ctx, needs_box);
         }
         /* This is used when building code from macros; they may end up being other forms of
-         * sequences and not just lists. */
+                         * sequences and not just lists. */
         if constexpr(runtime::behavior::sequential<T>)
         {
           return analyze_call(runtime::obj::persistent_list::create(typed_o->seq()),
