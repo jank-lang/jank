@@ -255,17 +255,6 @@ namespace clojure::core_native
     return obj::nil::nil_const();
   }
 
-  static object_ptr is_module_loaded(object_ptr const path)
-  {
-    return make_box(__rt_ctx->module_loader.is_loaded(runtime::to_string(path)));
-  }
-
-  static object_ptr set_module_loaded(object_ptr const path)
-  {
-    __rt_ctx->module_loader.set_loaded(runtime::to_string(path));
-    return obj::nil::nil_const();
-  }
-
   static object_ptr compile(object_ptr const path)
   {
     __rt_ctx->compile_module(runtime::to_string(path)).expect_ok();
@@ -465,8 +454,6 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("alias", &core_native::alias);
   intern_fn("refer", &core_native::refer);
   intern_fn("load-module", &core_native::load_module);
-  intern_fn("set-module-loaded", &core_native::set_module_loaded);
-  intern_fn("module-loaded?", &core_native::is_module_loaded);
   intern_fn("compile", &core_native::compile);
 
   /* TODO: jank.math? */

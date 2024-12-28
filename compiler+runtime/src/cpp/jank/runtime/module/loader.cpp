@@ -343,16 +343,6 @@ namespace jank::runtime::module
     return boost::filesystem::last_write_time(native_transient_string{ source_path });
   }
 
-  native_bool loader::is_loaded(native_persistent_string_view const &module) const
-  {
-    return loaded.contains(module);
-  }
-
-  void loader::set_loaded(native_persistent_string_view const &module)
-  {
-    loaded.emplace(module);
-  }
-
   string_result<loader::find_result>
   loader::find(native_persistent_string_view const &module, origin const ori)
   {
@@ -440,11 +430,6 @@ namespace jank::runtime::module
 
   string_result<void> loader::load(native_persistent_string_view const &module, origin const ori)
   {
-    if(loader::is_loaded(module))
-    {
-      return ok();
-    }
-
     auto const &found_module{ loader::find(module, ori) };
     if(found_module.is_err())
     {
@@ -476,8 +461,6 @@ namespace jank::runtime::module
     {
       return res;
     }
-
-    loader::set_loaded(module);
 
     return ok();
   }

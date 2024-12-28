@@ -3817,8 +3817,8 @@
 
 (defn- load-all
   "Loads a lib given its name and forces a load of any libs it directly or
-   indirectly loads. If need-ns, ensures that the associated namespace
-   exists after loading. If require, records the load so any duplicate loads
+   indirectly loads. If need-ns?, ensures that the associated namespace
+   exists after loading. If require?, records the load so any duplicate loads
    can be skipped."
   [lib need-ns? require?]
   (swap! *loaded-libs* #(reduce conj %1 %2)
