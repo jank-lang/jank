@@ -11,7 +11,6 @@ namespace jank::util
     auto const new_capacity{ std::bit_ceil(required) };
     auto const new_data{ new(PointerFreeGC) string_builder::value_type[new_capacity] };
     string_builder::traits_type::copy(new_data, sb.buffer, sb.pos);
-    delete sb.buffer;
     sb.buffer = new_data;
     sb.capacity = new_capacity;
   }
@@ -44,7 +43,6 @@ namespace jank::util
 
   string_builder::~string_builder()
   {
-    delete buffer;
   }
 
   string_builder &string_builder::operator()(native_bool const d) &
