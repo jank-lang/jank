@@ -34,6 +34,8 @@ namespace jank::jit
     void load_bitcode(native_persistent_string const &module,
                       native_persistent_string_view const &bitcode) const;
 
+    string_result<void> remove_symbol(native_persistent_string const &name) const;
+
     template <typename T>
     T find_symbol(native_persistent_string const &name) const
     {

@@ -78,6 +78,11 @@ namespace clojure::core_native
     return try_object<var>(o)->deref();
   }
 
+  static object_ptr intern_var(object_ptr const sym)
+  {
+    return __rt_ctx->intern_var(try_object<obj::symbol>(sym)).expect_ok();
+  }
+
   static object_ptr var_get_root(object_ptr const o)
   {
     return try_object<var>(o)->get_root();
@@ -410,6 +415,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("namespace", &namespace_);
   intern_fn("var?", &core_native::is_var);
   intern_fn("var-get", &core_native::var_get);
+  intern_fn("intern-var", &core_native::intern_var);
   intern_fn("var-get-root", &core_native::var_get_root);
   intern_fn("var-bind-root", &core_native::var_bind_root);
   intern_fn("alter-var-root", &core_native::alter_var_root);

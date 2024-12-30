@@ -39,19 +39,13 @@ namespace jank::runtime::module
   native_persistent_string module_to_path(native_persistent_string_view const &module)
   {
     static std::regex const dot{ "\\." };
-
-    std::string ret{ runtime::munge(module) };
-    ret = std::regex_replace(ret, dot, "/");
-
-    return ret;
+    return runtime::munge_extra(module, dot, "/");
   }
 
   native_persistent_string module_to_load_function(native_persistent_string_view const &module)
   {
     static std::regex const dot{ "\\." };
-
-    std::string ret{ runtime::munge(module) };
-    ret = std::regex_replace(ret, dot, "_");
+    std::string ret{ runtime::munge_extra(module, dot, "_") };
 
     return fmt::format("jank_load_{}", ret);
   }
@@ -469,6 +463,13 @@ namespace jank::runtime::module
   loader::load_o(native_persistent_string const &module, file_entry const &entry) const
   {
     profile::timer const timer{ fmt::format("load object {}", module) };
+    auto const res{ rt_ctx.jit_prc.remove_symbol(module_to_load_function(module)) };
+
+    if(res.is_err())
+    {
+      return res.expect_err();
+    }
+
     if(entry.archive_path.is_some())
     {
       /* TODO: Load object code from string. */

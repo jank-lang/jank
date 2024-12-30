@@ -3638,7 +3638,7 @@
 
 (def find-ns
   "Returns the namespace named by the symbol or nil if it doesn't exist."
-  clojure.core-native/create-ns)
+  clojure.core-native/find-ns)
 
 (def remove-ns
   "Removes the namespace named by the symbol. Use with caution.
@@ -3992,13 +3992,32 @@
          ~@(when (and (not= name 'clojure.core) refer-full-clojure?)
              `((clojure.core/refer '~'clojure.core)))
          ~@(map process-reference references))
-       (if (= '~name 'clojure.core)
+       (if (= '~name '~'clojure.core)
           nil
-          (do (swap! *loaded-libs* conj '~name) nil)))))
+          (do (swap! @#'*loaded-libs* conj '~name) nil)))))
 
 (defmacro refer-clojure
   "Same as (refer 'clojure.core <filters>)"
   [& filters]
   `(clojure.core/refer '~'clojure.core ~@filters))
+
+(defn intern
+  "Finds or creates a var named by the symbol name in the namespace
+  ns (which can be a symbol or a namespace), setting its root binding
+  to val if supplied. The namespace must exist. The var will adopt any
+  metadata from the name symbol.  Returns the var."
+  ([ns name]
+     (let [v (clojure.core-native/intern-var
+               (clojure.core-native/->qualified-symbol
+                 (the-ns ns) name))]
+       (when (meta name) (clojure.core-native/reset-meta! v (meta name)))
+       v))
+  ([ns name val]
+     (let [v (clojure.core-native/intern-var
+               (clojure.core-native/->qualified-symbol
+                 (the-ns ns) name))]
+       (clojure.core-native/var-bind-root v val)
+       (when (meta name) (clojure.core-native/reset-meta! v (meta name)))
+       v)))
 
 (println "Bottom of clojure.core")

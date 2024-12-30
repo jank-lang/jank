@@ -134,7 +134,7 @@ namespace jank::evaluate
     auto &fn(boost::get<expr::function<expression>>(ret->data));
     expr::function_arity<expression> arity;
     fn.name = name;
-    fn.unique_name = context::unique_string(fn.name);
+    fn.unique_name = __rt_ctx->unique_string(fn.name);
     fn.meta = obj::persistent_hash_map::empty();
 
     auto const &closest_fn_frame(local_frame::find_closest_fn_frame(*expr.frame));

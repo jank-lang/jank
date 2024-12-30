@@ -914,7 +914,7 @@ namespace jank::read::parse
         auto gensym(get(env, sym));
         if(gensym->type == object_type::nil)
         {
-          gensym = make_box<obj::symbol>(context::unique_symbol(sym->name));
+          gensym = make_box<obj::symbol>(__rt_ctx->unique_symbol(sym->name));
           __rt_ctx->gensym_env_var->set(assoc(env, sym, gensym)).expect_ok();
         }
         sym = expect_object<obj::symbol>(gensym);

@@ -248,7 +248,7 @@ namespace jank::analyze
       return;
     }
 
-    auto const name(context::unique_symbol("const"));
+    auto const name(__rt_ctx->unique_symbol("const"));
     auto const unboxed_name{ visit_number_like(
       [&](auto const) -> option<obj::symbol> {
         return obj::symbol{ name.ns, name.name + "__unboxed" };
