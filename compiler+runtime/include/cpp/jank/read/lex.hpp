@@ -4,6 +4,7 @@
 
 #include <jank/result.hpp>
 #include <jank/option.hpp>
+#include <jank/error.hpp>
 
 namespace jank::read::lex
 {
@@ -122,23 +123,47 @@ namespace jank::read::lex
     native_integer denominator{};
   };
 
+  struct movable_position : source_position
+  {
+    movable_position &operator++();
+    movable_position operator++(int);
+    movable_position &operator+=(size_t count);
+    native_bool operator==(movable_position const &rhs) const;
+    native_bool operator!=(movable_position const &rhs) const;
+    movable_position operator+(size_t count) const;
+
+    operator size_t() const;
+
+    struct processor const *proc{};
+  };
+
   struct token
   {
     token() = default;
     token(token_kind const k);
-    token(size_t const p, token_kind const k);
-    token(size_t const p, token_kind const k, native_integer const);
-    token(size_t const p, token_kind const k, native_real const);
-    token(size_t const p, token_kind const k, native_persistent_string_view const);
-    token(size_t const p, token_kind const k, native_bool const);
-
-    token(size_t const p, size_t const s, token_kind const k);
-    token(size_t const p, size_t const s, token_kind const k, native_integer const);
-    token(size_t const p, size_t const s, token_kind const k, native_real const);
-    token(size_t const p, size_t const s, token_kind const k, native_persistent_string_view const);
-    token(size_t const p, size_t const s, token_kind const k, char const * const);
-    token(size_t const p, size_t const s, token_kind const k, native_bool const);
-    token(size_t const p, size_t const s, token_kind const k, ratio const);
+    token(movable_position const &s, token_kind const k);
+    token(movable_position const &s, movable_position const &e, token_kind const k);
+    token(movable_position const &s,
+          movable_position const &e,
+          token_kind const k,
+          native_integer const);
+    token(movable_position const &s,
+          movable_position const &e,
+          token_kind const k,
+          native_real const);
+    token(movable_position const &s,
+          movable_position const &e,
+          token_kind const k,
+          native_persistent_string_view const);
+    token(movable_position const &s,
+          movable_position const &e,
+          token_kind const k,
+          char const * const);
+    token(movable_position const &s,
+          movable_position const &e,
+          token_kind const k,
+          native_bool const);
+    token(movable_position const &s, movable_position const &e, token_kind const k, ratio const);
 
     native_bool operator==(token const &rhs) const;
     native_bool operator!=(token const &rhs) const;
@@ -152,8 +177,7 @@ namespace jank::read::lex
     /* For some values, when comparing tokens, the position doesn't matter.
      * For example, EOF tokens. In these cases, this cardinal value is used. */
     static constexpr size_t ignore_pos{ std::numeric_limits<size_t>::max() };
-    size_t pos{ ignore_pos };
-    size_t size{ 1 };
+    source_position start, end;
     token_kind kind{ token_kind::eof };
     boost::variant<no_data,
                    native_integer,
@@ -164,32 +188,11 @@ namespace jank::read::lex
       data;
   };
 
+  std::ostream &operator<<(std::ostream &os, movable_position const &p);
   std::ostream &operator<<(std::ostream &os, token const &t);
   std::ostream &operator<<(std::ostream &os, token::no_data const &t);
   std::ostream &operator<<(std::ostream &os, ratio const &r);
-}
 
-namespace jank::read
-{
-  struct error
-  {
-    error(size_t const s, native_persistent_string const &m);
-    error(size_t const s, size_t const e, native_persistent_string const &m);
-    error(native_persistent_string const &m);
-
-    native_bool operator==(error const &rhs) const;
-    native_bool operator!=(error const &rhs) const;
-
-    size_t start{};
-    size_t end{};
-    native_persistent_string message;
-  };
-
-  std::ostream &operator<<(std::ostream &os, error const &e);
-}
-
-namespace jank::read::lex
-{
   struct codepoint;
 
   struct processor
@@ -198,7 +201,7 @@ namespace jank::read::lex
     {
       using iterator_category = std::input_iterator_tag;
       using difference_type = std::ptrdiff_t;
-      using value_type = result<token, error>;
+      using value_type = result<token, error_ptr>;
       using pointer = value_type *;
       using reference = value_type &;
 
@@ -214,14 +217,14 @@ namespace jank::read::lex
 
     processor(native_persistent_string_view const &f);
 
-    result<token, error> next();
-    result<codepoint, error> peek(native_integer const ahead = 1) const;
-    option<error> check_whitespace(native_bool const found_space);
+    result<token, error_ptr> next();
+    result<codepoint, error_ptr> peek(size_t const ahead = 1) const;
+    option<error_ptr> check_whitespace(native_bool const found_space);
 
     iterator begin();
     iterator end();
 
-    size_t pos{};
+    movable_position pos;
     /* Whether the previous token requires a space after it. */
     native_bool require_space{};
     /* True when seeing a '/' following a number. */

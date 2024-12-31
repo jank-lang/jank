@@ -65,6 +65,7 @@ set(
   -Wno-implicit-fallthrough
   -Wno-covered-switch-default
   -Wno-invalid-offsetof
+  # TODO: Ignore deprecations
   -fno-common
   -fno-rtti
   -fexceptions
@@ -153,6 +154,8 @@ add_library(
   src/cpp/jank/util/clang_format.cpp
   src/cpp/jank/util/string_builder.cpp
   src/cpp/jank/profile/time.cpp
+  src/cpp/jank/error.cpp
+  src/cpp/jank/read/source.cpp
   src/cpp/jank/read/lex.cpp
   src/cpp/jank/read/parse.cpp
   src/cpp/jank/runtime/core.cpp
@@ -244,6 +247,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/magic_enum/include/magic_enum>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/fmt/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
 )
 
@@ -259,7 +263,7 @@ include(cmake/dependency/ftxui.cmake)
 include(cmake/dependency/libzippp.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
-find_package(Boost REQUIRED COMPONENTS filesystem)
+find_package(Boost REQUIRED CONFIG COMPONENTS filesystem)
 
 target_link_libraries(
   jank_lib PRIVATE
@@ -270,7 +274,7 @@ target_link_libraries(
   libclang-cpp.so
   libLLVM.so
   Boost::filesystem
-  ftxui::screen ftxui::dom ftxui::component
+  ftxui::screen ftxui::dom
   OpenSSL::Crypto
 )
 

@@ -255,9 +255,16 @@ namespace jank::runtime
   {
     static_assert(sizeof(native_box<T>) == sizeof(T *));
     native_box<T> ret;
-    if constexpr(T::pointer_free)
+    if constexpr(requires { T::pointer_free; })
     {
-      ret.data = new(PointerFreeGC) T{ std::forward<Args>(args)... };
+      if constexpr(T::pointer_free)
+      {
+        ret.data = new(PointerFreeGC) T{ std::forward<Args>(args)... };
+      }
+      else
+      {
+        ret.data = new(GC) T{ std::forward<Args>(args)... };
+      }
     }
     else
     {

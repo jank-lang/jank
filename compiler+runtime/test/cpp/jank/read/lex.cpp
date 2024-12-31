@@ -118,7 +118,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 1, token_kind::comment, ""sv }
+                { 0, 1, 1, 1, token_kind::comment, ""sv }
         }));
       }
 
@@ -128,8 +128,8 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 1, token_kind::comment, ""sv },
-                { 2, 1, token_kind::comment, ""sv }
+                { 0, 1, 1, 1, token_kind::comment, ""sv },
+                { 2, 2, 1, 1, token_kind::comment, ""sv }
         }));
       }
 
@@ -139,7 +139,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 12, token_kind::comment, " Hello hello"sv }
+                { 0, 1, 1, 12, token_kind::comment, " Hello hello"sv }
         }));
       }
 
@@ -149,7 +149,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 22, token_kind::comment, " Hello hello ; \"hi hi\""sv }
+                { 0, 1, 1, 22, token_kind::comment, " Hello hello ; \"hi hi\""sv }
         }));
       }
 
@@ -159,7 +159,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 17, token_kind::comment, " Hello hello 12"sv }
+                { 0, 1, 1, 17, token_kind::comment, " Hello hello 12"sv }
         }));
       }
 
@@ -169,9 +169,9 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 1, token_kind::integer,       1ll },
-                { 2, 1, token_kind::integer,       2ll },
-                { 4, 5, token_kind::comment, " meow"sv }
+                { 0, 1, 1, 1, token_kind::integer,       1ll },
+                { 2, 1, 1, 1, token_kind::integer,       2ll },
+                { 4, 1, 1, 5, token_kind::comment, " meow"sv }
         }));
       }
 
@@ -181,9 +181,9 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 1, token_kind::integer,       1ll },
-                { 2, 5, token_kind::comment, " meow"sv },
-                { 9, 1, token_kind::integer,       2ll }
+                { 0, 1, 1, 1, token_kind::integer,       1ll },
+                { 2, 1, 1, 5, token_kind::comment, " meow"sv },
+                { 9, 1, 1, 1, token_kind::integer,       2ll }
         }));
       }
     }
@@ -196,8 +196,8 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0,  token_kind::open_paren },
-                { 1, token_kind::close_paren }
+                { 0, 1, 1,  token_kind::open_paren },
+                { 1, 1, 1, token_kind::close_paren }
         }));
       }
 
@@ -207,10 +207,10 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0,  token_kind::open_paren },
-                { 1,  token_kind::open_paren },
-                { 2, token_kind::close_paren },
-                { 3, token_kind::close_paren }
+                { 0, 1, 1,  token_kind::open_paren },
+                { 1, 1, 1,  token_kind::open_paren },
+                { 2, 1, 1, token_kind::close_paren },
+                { 3, 1, 1, token_kind::close_paren }
         }));
       }
 
@@ -222,7 +222,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, token_kind::open_paren }
+                  { 0, 1, 1, token_kind::open_paren }
           }));
         }
 
@@ -232,7 +232,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, token_kind::close_paren }
+                  { 0, 1, 1, token_kind::close_paren }
           }));
         }
       }
@@ -246,8 +246,8 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0,  token_kind::open_square_bracket },
-                { 1, token_kind::close_square_bracket }
+                { 0, 1, 1,  token_kind::open_square_bracket },
+                { 1, 1, 1, token_kind::close_square_bracket }
         }));
       }
 
@@ -257,10 +257,10 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0,  token_kind::open_square_bracket },
-                { 1,  token_kind::open_square_bracket },
-                { 2, token_kind::close_square_bracket },
-                { 3, token_kind::close_square_bracket }
+                { 0, 1, 1,  token_kind::open_square_bracket },
+                { 1, 1, 1,  token_kind::open_square_bracket },
+                { 2, 1, 1, token_kind::close_square_bracket },
+                { 3, 1, 1, token_kind::close_square_bracket }
         }));
       }
 
@@ -270,16 +270,16 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, token_kind::open_square_bracket },
-                { 1, token_kind::open_paren },
-                { 2, 3, token_kind::symbol, "foo"sv },
-                { 6, token_kind::open_square_bracket },
-                { 7, token_kind::integer, 1ll },
-                { 9, token_kind::integer, 2ll },
-                { 10, token_kind::close_square_bracket },
-                { 11, token_kind::close_paren },
-                { 13, token_kind::integer, 2ll },
-                { 14, token_kind::close_square_bracket },
+                { 0, 1, 1, token_kind::open_square_bracket },
+                { 1, 1, 1, token_kind::open_paren },
+                { 2, 1, 1, 3, token_kind::symbol, "foo"sv },
+                { 6, 1, 1, token_kind::open_square_bracket },
+                { 7, 1, 1, token_kind::integer, 1ll },
+                { 9, 1, 1, token_kind::integer, 2ll },
+                { 10, 1, 1, token_kind::close_square_bracket },
+                { 11, 1, 1, token_kind::close_paren },
+                { 13, 1, 1, token_kind::integer, 2ll },
+                { 14, 1, 1, token_kind::close_square_bracket },
         }));
       }
 
@@ -291,7 +291,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, token_kind::open_square_bracket }
+                  { 0, 1, 1, token_kind::open_square_bracket }
           }));
         }
 
@@ -301,7 +301,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, token_kind::close_square_bracket }
+                  { 0, 1, 1, token_kind::close_square_bracket }
           }));
         }
       }
@@ -315,7 +315,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 3, token_kind::nil }
+                { 0, 1, 1, 3, token_kind::nil }
         }));
       }
 
@@ -325,7 +325,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 4, token_kind::symbol, "nili"sv }
+                { 0, 1, 1, 4, token_kind::symbol, "nili"sv }
         }));
       }
 
@@ -335,7 +335,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 4, token_kind::symbol, "onil"sv }
+                { 0, 1, 1, 4, token_kind::symbol, "onil"sv }
         }));
       }
     }
@@ -348,8 +348,8 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 4, token_kind::boolean,  true },
-                { 5, 5, token_kind::boolean, false }
+                { 0, 1, 1, 4, token_kind::boolean,  true },
+                { 5, 1, 1, 5, token_kind::boolean, false }
         }));
       }
 
@@ -359,8 +359,8 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 5, token_kind::symbol,  "true-"sv },
-                { 6, 6, token_kind::symbol, "falsey"sv }
+                { 0, 1, 1, 5, token_kind::symbol,  "true-"sv },
+                { 6, 1, 1, 6, token_kind::symbol, "falsey"sv }
         }));
       }
 
@@ -370,8 +370,8 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 6, token_kind::symbol, "sotrue"sv },
-                { 7, 6, token_kind::symbol, "ffalse"sv }
+                { 0, 1, 1, 6, token_kind::symbol, "sotrue"sv },
+                { 7, 1, 1, 6, token_kind::symbol, "ffalse"sv }
         }));
       }
     }
@@ -383,7 +383,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 3, token_kind::ratio, { .numerator = 4, .denominator = 5 } }
+                { 0, 1, 1, 3, token_kind::ratio, { .numerator = 4, .denominator = 5 } }
         }));
       }
       SUBCASE("Success - -x/x")
@@ -392,7 +392,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 4, token_kind::ratio, { .numerator = -4, .denominator = 5 } }
+                { 0, 1, 1, 4, token_kind::ratio, { .numerator = -4, .denominator = 5 } }
         }));
       }
       SUBCASE("Success - -x/-x")
@@ -401,7 +401,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 5, token_kind::ratio, { .numerator = -4, .denominator = -5 } }
+                { 0, 1, 1, 5, token_kind::ratio, { .numerator = -4, .denominator = -5 } }
         }));
       }
       SUBCASE("Failures - x//x")
@@ -459,7 +459,7 @@ namespace jank::read::lex
         CHECK(tokens
               == make_results({
                 error{ 2, 3, "invalid ratio: ratio cannot have scientific notation" },
-                token{ 3, 2, token_kind::symbol, "e9"sv }
+                token{ 3, 1, 1, 2, token_kind::symbol, "e9"sv }
         }));
       }
     }
@@ -471,7 +471,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, token_kind::integer, 0ll }
+                { 0, 1, 1, token_kind::integer, 0ll }
         }));
       }
 
@@ -481,7 +481,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 4, token_kind::integer, 1234ll }
+                { 0, 1, 1, 4, token_kind::integer, 1234ll }
         }));
       }
 
@@ -491,8 +491,8 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 1, token_kind::integer,    0ll },
-                { 2, 4, token_kind::integer, 1234ll },
+                { 0, 1, 1, 1, token_kind::integer,    0ll },
+                { 2, 1, 1, 4, token_kind::integer, 1234ll },
         }));
       }
 
@@ -502,10 +502,10 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                {  0, 3, token_kind::integer,  28ll },
-                {  4, 4, token_kind::integer, -28ll },
-                {  9, 4,    token_kind::real,   8.9 },
-                { 14, 4,    token_kind::real,  70.0 },
+                {  0, 1, 1, 3, token_kind::integer,  28ll },
+                {  4, 1, 1, 4, token_kind::integer, -28ll },
+                {  9, 1, 1, 4,    token_kind::real,   8.9 },
+                { 14, 1, 1, 4,    token_kind::real,  70.0 },
         }));
       }
 
@@ -527,10 +527,10 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                {  0, 6, token_kind::integer, 83ll },
-                {  7, 4, token_kind::integer, 83ll },
-                { 12, 3, token_kind::integer, 28ll },
-                { 16, 2, token_kind::integer,  0ll }
+                {  0, 1, 1, 6, token_kind::integer, 83ll },
+                {  7, 1, 1, 4, token_kind::integer, 83ll },
+                { 12, 1, 1, 3, token_kind::integer, 28ll },
+                { 16, 1, 1, 2, token_kind::integer,  0ll }
         }));
       }
 
@@ -546,7 +546,7 @@ namespace jank::read::lex
                 error{ 17, 21, "arbitrary radix number can only be an integer" },
                 error{ 21, 21, "unexpected character: ." },
                 error{ 22, 22, "expected whitespace before next token" },
-                token{ 22, 1, token_kind::integer, 2ll },
+                token{ 22, 1, 1, 1, token_kind::integer, 2ll },
         }));
       }
 
@@ -564,7 +564,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens2(p2.begin(), p2.end());
         CHECK(tokens2
               == make_tokens({
-                { 0, 45, token_kind::integer, 8796093022207ll }
+                { 0, 1, 1, 45, token_kind::integer, 8796093022207ll }
         }));
       }
 
@@ -591,12 +591,12 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                token{ 0, 3, token_kind::integer, 123ll },
+                token{ 0, 1, 1, 3, token_kind::integer, 123ll },
                 error{ 4, 8, "invalid number: chars 'g' are invalid for radix 16" },
-                token{ 9, 3, token_kind::integer, 7ll },
-                token{ 13, 3, token_kind::integer, -12ll },
+                token{ 9, 1, 1, 3, token_kind::integer, 7ll },
+                token{ 13, 1, 1, 3, token_kind::integer, -12ll },
                 error{ 17, 22, "invalid number: chars 'z' are invalid for radix 10" },
-                token{ 23, 5, token_kind::integer, 255ll }
+                token{ 23, 1, 1, 5, token_kind::integer, 255ll }
         }));
       }
 
@@ -606,9 +606,9 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                {  0, 5, token_kind::integer,   -3ll },
-                {  6, 5, token_kind::integer,  -63ll },
-                { 12, 6, token_kind::integer, -255ll }
+                {  0, 1, 1, 5, token_kind::integer,   -3ll },
+                {  6, 1, 1, 5, token_kind::integer,  -63ll },
+                { 12, 1, 1, 6, token_kind::integer, -255ll }
         }));
       }
 
@@ -618,13 +618,13 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                {  0, 4, token_kind::integer,    52ll },
-                {  5, 4, token_kind::integer,   171ll },
-                { 10, 6, token_kind::integer,  4779ll },
-                { 17, 3, token_kind::integer,   123ll },
-                { 21, 6, token_kind::integer, 61251ll },
-                { 28, 5, token_kind::integer,   -26ll },
-                { 34, 3, token_kind::integer,     0ll },
+                {  0, 1, 1, 4, token_kind::integer,    52ll },
+                {  5, 1, 1, 4, token_kind::integer,   171ll },
+                { 10, 1, 1, 6, token_kind::integer,  4779ll },
+                { 17, 1, 1, 3, token_kind::integer,   123ll },
+                { 21, 1, 1, 6, token_kind::integer, 61251ll },
+                { 28, 1, 1, 5, token_kind::integer,   -26ll },
+                { 34, 1, 1, 3, token_kind::integer,     0ll },
         }));
       }
 
@@ -659,9 +659,9 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                token{ 0, 3, token_kind::real, 2.0 },
+                token{ 0, 1, 1, 3, token_kind::real, 2.0 },
                 error{ 3, 3, "expected whitespace before next token" },
-                token{ 3, 2, token_kind::symbol, "x1"sv },
+                token{ 3, 1, 1, 2, token_kind::symbol, "x1"sv },
         }));
       }
 
@@ -701,14 +701,14 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                token{  0, 4, token_kind::integer,     3ll },
-                token{  5, 4, token_kind::integer,    35ll },
-                token{ 10, 4, token_kind::integer,    57ll },
-                token{ 15, 6, token_kind::integer,  6117ll },
-                token{ 22, 5, token_kind::integer,   -14ll },
-                token{ 28, 5, token_kind::integer,    62ll },
-                token{ 34, 6, token_kind::integer,   996ll },
-                token{ 41, 7, token_kind::integer, -3524ll },
+                token{  0, 1, 1, 4, token_kind::integer,     3ll },
+                token{  5, 1, 1, 4, token_kind::integer,    35ll },
+                token{ 10, 1, 1, 4, token_kind::integer,    57ll },
+                token{ 15, 1, 1, 6, token_kind::integer,  6117ll },
+                token{ 22, 1, 1, 5, token_kind::integer,   -14ll },
+                token{ 28, 1, 1, 5, token_kind::integer,    62ll },
+                token{ 34, 1, 1, 6, token_kind::integer,   996ll },
+                token{ 41, 1, 1, 7, token_kind::integer, -3524ll },
         }));
       }
 
@@ -764,7 +764,7 @@ namespace jank::read::lex
         CHECK(tokens
               == make_results({
                 error{ 0, 3, "invalid number: arbitrary radix numbers can only be integers" },
-                token{ 3, 2, token_kind::symbol, "r1"sv },
+                token{ 3, 1, 1, 2, token_kind::symbol, "r1"sv },
         }));
       }
 
@@ -796,7 +796,7 @@ namespace jank::read::lex
               == make_results({
                 error{ 0, 2, "arbitrary radix number can only be an integer" },
                 error{ 2, 2, "unexpected character: ." },
-                token{ 3, 1, token_kind::integer, 0ll }
+                token{ 3, 1, 1, 1, token_kind::integer, 0ll }
         }));
       }
 
@@ -806,7 +806,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 2, token_kind::integer, -1ll }
+                { 0, 1, 1, 2, token_kind::integer, -1ll }
         }));
       }
 
@@ -816,7 +816,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 5, token_kind::integer, -1234ll }
+                { 0, 1, 1, 5, token_kind::integer, -1234ll }
         }));
       }
 
@@ -838,9 +838,9 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_results({
-                  token{ 0, token_kind::open_paren },
-                  token{ 1, 4, token_kind::integer, 1234ll },
-                  token{ 5, token_kind::close_paren },
+                  token{ 0, 1, 1, token_kind::open_paren },
+                  token{ 1, 1, 1, 4, token_kind::integer, 1234ll },
+                  token{ 5, 1, 1, token_kind::close_paren },
           }));
         }
       }
@@ -854,7 +854,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 2, token_kind::real, 0.0 }
+                { 0, 1, 1, 2, token_kind::real, 0.0 }
         }));
       }
 
@@ -864,7 +864,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 3, token_kind::real, 0.0 }
+                { 0, 1, 1, 3, token_kind::real, 0.0 }
         }));
       }
 
@@ -874,7 +874,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 3, token_kind::real, -1.0 }
+                { 0, 1, 1, 3, token_kind::real, -1.0 }
         }));
       }
 
@@ -884,7 +884,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 4, token_kind::real, -1.5 }
+                { 0, 1, 1, 4, token_kind::real, -1.5 }
         }));
       }
 
@@ -894,7 +894,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 10, token_kind::real, -1234.1234 }
+                { 0, 1, 1, 10, token_kind::real, -1234.1234 }
         }));
       }
 
@@ -905,7 +905,7 @@ namespace jank::read::lex
         CHECK(tokens
               == make_results({
                 error{ 0, "unexpected character: ." },
-                token{ 1, token_kind::integer, 0ll },
+                token{ 1, 1, 1, token_kind::integer, 0ll },
         }));
       }
 
@@ -917,7 +917,7 @@ namespace jank::read::lex
               == make_results({
                 error{ 0, 1, "invalid number" },
                 error{ 1, "unexpected character: ." },
-                token{ 2, token_kind::integer, 0ll },
+                token{ 2, 1, 1, token_kind::integer, 0ll },
         }));
       }
 
@@ -939,7 +939,7 @@ namespace jank::read::lex
                 == make_results({
                   error{ 0, 2, "invalid number" },
                   error{ 2, "unexpected character: ." },
-                  token{ 3, token_kind::integer, 0ll },
+                  token{ 3, 1, 1, token_kind::integer, 0ll },
           }));
         }
         {
@@ -949,7 +949,7 @@ namespace jank::read::lex
                 == make_results({
                   error{ 0, 3, "invalid number" },
                   error{ 3, "unexpected character: ." },
-                  token{ 4, token_kind::integer, 0ll },
+                  token{ 4, 1, 1, token_kind::integer, 0ll },
           }));
         }
       }
@@ -962,9 +962,9 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_results({
-                  token{ 0, 5, token_kind::real, 12.34 },
+                  token{ 0, 1, 1, 5, token_kind::real, 12.34 },
                   error{ 5, "expected whitespace before next token" },
-                  token{ 5, 3, token_kind::symbol, "abc"sv },
+                  token{ 5, 1, 1, 3, token_kind::symbol, "abc"sv },
           }));
         }
 
@@ -974,9 +974,9 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_results({
-                  token{ 0, token_kind::open_paren },
-                  token{ 1, 5, token_kind::real, 12.34 },
-                  token{ 6, token_kind::close_paren },
+                  token{ 0, 1, 1, token_kind::open_paren },
+                  token{ 1, 1, 1, 5, token_kind::real, 12.34 },
+                  token{ 6, 1, 1, token_kind::close_paren },
           }));
         }
       }
@@ -989,12 +989,12 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_results({
-                  token{  0, 3,      token_kind::real,   1000.0 },
-                  token{  4, 4,      token_kind::real,   -100.0 },
-                  token{  9, 5,      token_kind::real,    0.002 },
-                  token{ 15, 7,      token_kind::real, 2.23e-07 },
-                  token{ 23, 7,      token_kind::real, -1.2e+19 },
-                  token{ 30, 2, token_kind::character,  "\\a"sv },
+                  token{  0, 1, 1, 3,      token_kind::real,   1000.0 },
+                  token{  4, 1, 1, 4,      token_kind::real,   -100.0 },
+                  token{  9, 1, 1, 5,      token_kind::real,    0.002 },
+                  token{ 15, 1, 1, 7,      token_kind::real, 2.23e-07 },
+                  token{ 23, 1, 1, 7,      token_kind::real, -1.2e+19 },
+                  token{ 30, 1, 1, 2, token_kind::character,  "\\a"sv },
           }));
         }
 
@@ -1005,7 +1005,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 2, "unexpected end of real, expecting exponent" },
-                  token{ 3, 5, token_kind::real, 2.3 },
+                  token{ 3, 1, 1, 5, token_kind::real, 2.3 },
                   error{ 9, 13, "unexpected end of real, expecting exponent" },
                   error{ 14, 19, "unexpected end of real, expecting exponent" },
           }));
@@ -1017,10 +1017,10 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_results({
-                  token{ 0, 4, token_kind::real, 12.3 },
+                  token{ 0, 1, 1, 4, token_kind::real, 12.3 },
                   error{ 5, 9, "invalid number" },
                   error{ 9, "expected whitespace before next token" },
-                  token{ 9, token_kind::symbol, "-"sv },
+                  token{ 9, 1, 1, token_kind::symbol, "-"sv },
                   error{ 11, 16, "unexpected end of real, expecting exponent" },
           }));
         }
@@ -1033,11 +1033,11 @@ namespace jank::read::lex
                 == make_results({
                   error{ 0, 3, "invalid number" },
                   error{ 3, "unexpected character: ." },
-                  token{ 5, 4, token_kind::real, 12.3 },
+                  token{ 5, 1, 1, 4, token_kind::real, 12.3 },
                   error{ 10, 14, "invalid number" },
                   error{ 14, "unexpected character: ." },
                   error{ 15, "expected whitespace before next token" },
-                  token{ 15, token_kind::integer, 3ll },
+                  token{ 15, 1, 1, token_kind::integer, 3ll },
           }));
         }
 
@@ -1048,13 +1048,13 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 3, "invalid number" },
-                  token{ 3, 2, token_kind::symbol, "e4"sv },
+                  token{ 3, 1, 1, 2, token_kind::symbol, "e4"sv },
                   error{ 6, 10, "invalid number" },
                   error{ 10, "expected whitespace before next token" },
-                  token{ 10, 2, token_kind::symbol, "E3"sv },
+                  token{ 10, 1, 1, 2, token_kind::symbol, "E3"sv },
                   error{ 13, 16, "unexpected end of real, expecting exponent" },
                   error{ 16, "expected whitespace before next token" },
-                  token{ 16, 3, token_kind::symbol, "Foo"sv },
+                  token{ 16, 1, 1, 3, token_kind::symbol, "Foo"sv },
                   error{ 20, 26, "invalid number: chars 'fOo' are invalid for radix 10" },
           }));
         }
@@ -1085,7 +1085,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 2, token_kind::character, "\\a"sv }
+                { 0, 1, 1, 2, token_kind::character, "\\a"sv }
         }));
       }
 
@@ -1095,7 +1095,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 2, token_kind::character, "\\1"sv }
+                { 0, 1, 1, 2, token_kind::character, "\\1"sv }
         }));
       }
 
@@ -1105,7 +1105,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 3, token_kind::character, "\\11"sv }
+                { 0, 1, 1, 3, token_kind::character, "\\11"sv }
         }));
       }
 
@@ -1115,7 +1115,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                token{ 0, 3, token_kind::character, "\\1:"sv },
+                token{ 0, 1, 1, 3, token_kind::character, "\\1:"sv },
         }));
       }
 
@@ -1125,10 +1125,10 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                {  0, 2, token_kind::character,       "\\1"sv },
-                {  3, 8, token_kind::character, "\\newline"sv },
-                { 11, 2, token_kind::character,       "\\'"sv },
-                { 14, 2, token_kind::character,      "\\\\"sv }
+                {  0, 1, 1, 2, token_kind::character,       "\\1"sv },
+                {  3, 1, 1, 8, token_kind::character, "\\newline"sv },
+                { 11, 1, 1, 2, token_kind::character,       "\\'"sv },
+                { 14, 1, 1, 2, token_kind::character,      "\\\\"sv }
         }));
       }
 
@@ -1138,9 +1138,9 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                token{ 0, 2, token_kind::character, "\\a"sv },
-                token{ 2, token_kind::syntax_quote },
-                token{ 3, 3, token_kind::keyword, "kw"sv }
+                token{ 0, 1, 1, 2, token_kind::character, "\\a"sv },
+                token{ 2, 1, 1, token_kind::syntax_quote },
+                token{ 3, 1, 1, 3, token_kind::keyword, "kw"sv }
         }));
       }
     }
@@ -1153,7 +1153,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, token_kind::symbol, "a"sv }
+                { 0, 1, 1, token_kind::symbol, "a"sv }
         }));
       }
 
@@ -1163,7 +1163,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 3, token_kind::symbol, "abc"sv }
+                { 0, 1, 1, 3, token_kind::symbol, "abc"sv }
         }));
       }
 
@@ -1173,7 +1173,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, token_kind::symbol, "/"sv }
+                { 0, 1, 1, token_kind::symbol, "/"sv }
         }));
       }
 
@@ -1203,7 +1203,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 6, token_kind::symbol, "abc123"sv }
+                { 0, 1, 1, 6, token_kind::symbol, "abc123"sv }
         }));
       }
 
@@ -1213,7 +1213,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 22, token_kind::symbol, "abc_.123/-foo+?=!&<>#%"sv }
+                { 0, 1, 1, 22, token_kind::symbol, "abc_.123/-foo+?=!&<>#%"sv }
         }));
       }
 
@@ -1223,7 +1223,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, token_kind::symbol, "-"sv }
+                { 0, 1, 1, token_kind::symbol, "-"sv }
         }));
       }
 
@@ -1233,7 +1233,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 5, token_kind::symbol, "-main"sv }
+                { 0, 1, 1, 5, token_kind::symbol, "-main"sv }
         }));
       }
 
@@ -1243,8 +1243,8 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, token_kind::single_quote },
-                { 1, 3, token_kind::symbol, "foo"sv }
+                { 0, 1, 1, token_kind::single_quote },
+                { 1, 1, 1, 3, token_kind::symbol, "foo"sv }
         }));
       }
     }
@@ -1257,7 +1257,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 2, token_kind::keyword, "a"sv }
+                { 0, 1, 1, 2, token_kind::keyword, "a"sv }
         }));
       }
 
@@ -1267,7 +1267,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 4, token_kind::keyword, "abc"sv }
+                { 0, 1, 1, 4, token_kind::keyword, "abc"sv }
         }));
       }
 
@@ -1287,7 +1287,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 2, token_kind::keyword, "/"sv }
+                { 0, 1, 1, 2, token_kind::keyword, "/"sv }
         }));
       }
 
@@ -1317,7 +1317,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 7, token_kind::keyword, "abc123"sv }
+                { 0, 1, 1, 7, token_kind::keyword, "abc123"sv }
         }));
       }
 
@@ -1327,7 +1327,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 21, token_kind::keyword, "abc_.123/-foo+?=!&<>"sv }
+                { 0, 1, 1, 21, token_kind::keyword, "abc_.123/-foo+?=!&<>"sv }
         }));
       }
 
@@ -1337,7 +1337,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 9, token_kind::keyword, ":foo-bar"sv }
+                { 0, 1, 1, 9, token_kind::keyword, ":foo-bar"sv }
         }));
       }
 
@@ -1347,7 +1347,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 9, token_kind::keyword, ":foo/bar"sv }
+                { 0, 1, 1, 9, token_kind::keyword, ":foo/bar"sv }
         }));
       }
 
@@ -1380,7 +1380,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 2, token_kind::string, ""sv }
+                { 0, 1, 1, 2, token_kind::string, ""sv }
         }));
       }
       SUBCASE("Single-char")
@@ -1389,7 +1389,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 3, token_kind::string, "a"sv }
+                { 0, 1, 1, 3, token_kind::string, "a"sv }
         }));
       }
 
@@ -1399,7 +1399,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 5, token_kind::string, "abc"sv }
+                { 0, 1, 1, 5, token_kind::string, "abc"sv }
         }));
       }
 
@@ -1409,7 +1409,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 5, token_kind::string, "123"sv }
+                { 0, 1, 1, 5, token_kind::string, "123"sv }
         }));
       }
 
@@ -1419,7 +1419,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 40, token_kind::string, "and then() there was abc_123/-foo?!&<>"sv }
+                { 0, 1, 1, 40, token_kind::string, "and then() there was abc_123/-foo?!&<>"sv }
         }));
       }
 
@@ -1429,7 +1429,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 15, token_kind::string, "foo\nbar\nspam\t"sv }
+                { 0, 1, 1, 15, token_kind::string, "foo\nbar\nspam\t"sv }
         }));
       }
 
@@ -1439,14 +1439,15 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 22, token_kind::escaped_string, "foo\\\"\\nbar\\nspam\\t\\r"sv }
+                { 0, 1, 1, 22, token_kind::escaped_string, "foo\\\"\\nbar\\nspam\\t\\r"sv }
         }));
 
         processor q{ R"("\??\' \\ a\a b\b f\f v\v")" };
         native_vector<result<token, error>> const tokens2(q.begin(), q.end());
-        CHECK(tokens2
-              == make_tokens({
-                { 0, 26, token_kind::escaped_string, "\\\?\?\\' \\\\ a\\a b\\b f\\f v\\v"sv }
+        CHECK(
+          tokens2
+          == make_tokens({
+            { 0, 1, 1, 26, token_kind::escaped_string, "\\\?\?\\' \\\\ a\\a b\\b f\\f v\\v"sv }
         }));
       }
 
@@ -1469,7 +1470,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 1, token_kind::meta_hint }
+                { 0, 1, 1, 1, token_kind::meta_hint }
         }));
       }
 
@@ -1479,8 +1480,8 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 1, token_kind::meta_hint },
-                { 2, 4, token_kind::keyword, "foo"sv }
+                { 0, 1, 1, 1, token_kind::meta_hint },
+                { 2, 1, 1, 4, token_kind::keyword, "foo"sv }
         }));
       }
     }
@@ -1493,7 +1494,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 1, token_kind::reader_macro }
+                { 0, 1, 1, 1, token_kind::reader_macro }
         }));
       }
 
@@ -1505,7 +1506,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 2, token_kind::reader_macro_comment }
+                  { 0, 1, 1, 2, token_kind::reader_macro_comment }
           }));
         }
 
@@ -1515,9 +1516,9 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 2, token_kind::reader_macro_comment },
-                  { 2, 1,  token_kind::open_square_bracket },
-                  { 3, 1, token_kind::close_square_bracket }
+                  { 0, 1, 1, 2, token_kind::reader_macro_comment },
+                  { 2, 1, 1, 1,  token_kind::open_square_bracket },
+                  { 3, 1, 1, 1, token_kind::close_square_bracket }
           }));
         }
       }
@@ -1530,7 +1531,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 2, token_kind::reader_macro_conditional }
+                  { 0, 1, 1, 2, token_kind::reader_macro_conditional }
           }));
         }
 
@@ -1540,9 +1541,9 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 2, token_kind::reader_macro_conditional },
-                  { 2, 1,               token_kind::open_paren },
-                  { 3, 1,              token_kind::close_paren }
+                  { 0, 1, 1, 2, token_kind::reader_macro_conditional },
+                  { 2, 1, 1, 1,               token_kind::open_paren },
+                  { 3, 1, 1, 1,              token_kind::close_paren }
           }));
         }
       }
@@ -1555,9 +1556,9 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 1,        token_kind::reader_macro },
-                  { 1, 1,  token_kind::open_curly_bracket },
-                  { 2, 1, token_kind::close_curly_bracket }
+                  { 0, 1, 1, 1,        token_kind::reader_macro },
+                  { 1, 1, 1, 1,  token_kind::open_curly_bracket },
+                  { 2, 1, 1, 1, token_kind::close_curly_bracket }
           }));
         }
 
@@ -1569,9 +1570,9 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 1,        token_kind::reader_macro },
-                  { 2, 1,  token_kind::open_curly_bracket },
-                  { 3, 1, token_kind::close_curly_bracket }
+                  { 0, 1, 1, 1,        token_kind::reader_macro },
+                  { 2, 1, 1, 1,  token_kind::open_curly_bracket },
+                  { 3, 1, 1, 1, token_kind::close_curly_bracket }
           }));
         }
       }
@@ -1585,7 +1586,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 1, token_kind::syntax_quote }
+                { 0, 1, 1, 1, token_kind::syntax_quote }
         }));
       }
 
@@ -1595,8 +1596,8 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 1, token_kind::syntax_quote },
-                { 2, 4, token_kind::keyword, "foo"sv }
+                { 0, 1, 1, 1, token_kind::syntax_quote },
+                { 2, 1, 1, 4, token_kind::keyword, "foo"sv }
         }));
       }
 
@@ -1608,7 +1609,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 1, token_kind::unquote }
+                  { 0, 1, 1, 1, token_kind::unquote }
           }));
         }
 
@@ -1618,8 +1619,8 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 1, token_kind::unquote },
-                  { 2, 4, token_kind::keyword, "foo"sv }
+                  { 0, 1, 1, 1, token_kind::unquote },
+                  { 2, 1, 1, 4, token_kind::keyword, "foo"sv }
           }));
         }
       }
@@ -1632,7 +1633,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 2, token_kind::unquote_splice }
+                  { 0, 1, 1, 2, token_kind::unquote_splice }
           }));
         }
 
@@ -1642,9 +1643,9 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 1, token_kind::unquote },
-                  { 2, 1, token_kind::deref },
-                  { 3, 4, token_kind::keyword, "foo"sv }
+                  { 0, 1, 1, 1, token_kind::unquote },
+                  { 2, 1, 1, 1, token_kind::deref },
+                  { 3, 1, 1, 4, token_kind::keyword, "foo"sv }
           }));
         }
 
@@ -1654,8 +1655,8 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 2, token_kind::unquote_splice },
-                  { 3, 4, token_kind::keyword, "foo"sv }
+                  { 0, 1, 1, 2, token_kind::unquote_splice },
+                  { 3, 1, 1, 4, token_kind::keyword, "foo"sv }
           }));
         }
       }
@@ -1671,7 +1672,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 4, token_kind::symbol, "👍"sv }
+                  { 0, 1, 1, 4, token_kind::symbol, "👍"sv }
           }));
         }
         SUBCASE("Multiple characters")
@@ -1680,7 +1681,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 8, token_kind::symbol, "😎👍"sv }
+                  { 0, 1, 1, 8, token_kind::symbol, "😎👍"sv }
           }));
         }
         SUBCASE("Symbol with mixed characters inside")
@@ -1689,7 +1690,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 16, token_kind::symbol, "one-🍺-please!"sv }
+                  { 0, 1, 1, 16, token_kind::symbol, "one-🍺-please!"sv }
           }));
         }
         SUBCASE("Qualified Symbol")
@@ -1698,7 +1699,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 9, token_kind::symbol, "🐝/🥀"sv }
+                  { 0, 1, 1, 9, token_kind::symbol, "🐝/🥀"sv }
           }));
         }
       }
@@ -1710,7 +1711,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 5, token_kind::keyword, "🍙"sv },
+                  { 0, 1, 1, 5, token_kind::keyword, "🍙"sv },
           }));
         }
         SUBCASE("Multiple characters keyword")
@@ -1719,7 +1720,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 9, token_kind::keyword, "🥩🍗"sv }
+                  { 0, 1, 1, 9, token_kind::keyword, "🥩🍗"sv }
           }));
         }
         SUBCASE("Keyword with mixed characters inside")
@@ -1728,7 +1729,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 7, token_kind::keyword, "w🍪w"sv }
+                  { 0, 1, 1, 7, token_kind::keyword, "w🍪w"sv }
           }));
         }
         SUBCASE("Qualified Keyword")
@@ -1737,7 +1738,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 10, token_kind::keyword, "🐝/🥀"sv }
+                  { 0, 1, 1, 10, token_kind::keyword, "🐝/🥀"sv }
           }));
         }
       }
@@ -1747,7 +1748,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 8, token_kind::symbol, "🇪🇺"sv }
+                { 0, 1, 1, 8, token_kind::symbol, "🇪🇺"sv }
         }));
       }
       SUBCASE("Non-Latin Characters")
@@ -1756,7 +1757,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 15, token_kind::symbol, "ありがとう"sv }
+                { 0, 1, 1, 15, token_kind::symbol, "ありがとう"sv }
         }));
       }
       SUBCASE("Non-Latin Characters")
@@ -1765,7 +1766,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 16, token_kind::keyword, "ありがとう"sv }
+                { 0, 1, 1, 16, token_kind::keyword, "ありがとう"sv }
         }));
       }
       SUBCASE("Whitespace Characters")
@@ -1774,7 +1775,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 7, token_kind::keyword, "  "sv }
+                { 0, 1, 1, 7, token_kind::keyword, "  "sv }
         }));
       }
 

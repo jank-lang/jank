@@ -16,7 +16,6 @@ namespace jank::runtime
 /* TODO: Rename file to processor. */
 namespace jank::read::parse
 {
-
   struct char_parse_error
   {
     native_persistent_string error;
@@ -27,18 +26,18 @@ namespace jank::read::parse
 
   option<char> get_char_from_literal(native_persistent_string const &s);
 
+  struct object_source_info
+  {
+    native_bool operator==(object_source_info const &rhs) const;
+    native_bool operator!=(object_source_info const &rhs) const;
+
+    runtime::object_ptr ptr{};
+    lex::token start, end;
+  };
+
   struct processor
   {
-    struct object_source_info
-    {
-      native_bool operator==(object_source_info const &rhs) const;
-      native_bool operator!=(object_source_info const &rhs) const;
-
-      runtime::object_ptr ptr{};
-      lex::token start, end;
-    };
-
-    using object_result = result<option<object_source_info>, error>;
+    using object_result = result<option<object_source_info>, error_ptr>;
 
     struct shorthand_function_details
     {

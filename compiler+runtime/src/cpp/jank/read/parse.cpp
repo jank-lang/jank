@@ -10,6 +10,7 @@
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/ratio.hpp>
+#include <jank/runtime/behavior/map_like.hpp>
 #include <jank/util/scope_exit.hpp>
 
 namespace jank::read::parse
@@ -17,7 +18,6 @@ namespace jank::read::parse
   using namespace jank::runtime;
 
   result<native_persistent_string, char_parse_error>
-
   parse_character_in_base(native_persistent_string const &char_literal, int const base)
   {
     try
@@ -38,7 +38,7 @@ namespace jank::read::parse
        */
       if(chars_processed != char_literal.size())
       {
-        return err("Invalid unicode digit");
+        return err("Invalid Unicode digit");
       }
 
 #pragma clang diagnostic push
@@ -52,7 +52,7 @@ namespace jank::read::parse
 
       if(converter.converted() != 1)
       {
-        return err("Out of range");
+        return err("Unicode character is out of range");
       }
 
       return ok(converted);
@@ -97,14 +97,12 @@ namespace jank::read::parse
     return none;
   }
 
-  native_bool
-  processor::object_source_info::operator==(processor::object_source_info const &rhs) const
+  native_bool object_source_info::operator==(object_source_info const &rhs) const
   {
     return !(*this != rhs);
   }
 
-  native_bool
-  processor::object_source_info::operator!=(processor::object_source_info const &rhs) const
+  native_bool object_source_info::operator!=(object_source_info const &rhs) const
   {
     return ptr != rhs.ptr || start != rhs.start || end != rhs.end;
   }
@@ -195,8 +193,10 @@ namespace jank::read::parse
         case lex::token_kind::close_curly_bracket:
           if(expected_closer != latest_token.kind)
           {
-            return err(error{ latest_token.pos,
-                              native_persistent_string{ "unexpected closing character" } });
+            return make_error(error::kind::parse_unexpected_closing_character,
+                              "Unexpected closing character",
+                              latest_token.start,
+                              latest_token.end);
           }
           ++token_current;
           expected_closer = none;
@@ -274,9 +274,11 @@ namespace jank::read::parse
           return ok(none);
         default:
           {
-            return err(error{
-              latest_token.pos,
-              fmt::format("unexpected token kind: {}", lex::token_kind_str(latest_token.kind)) });
+            return make_error(
+              error::kind::internal_parse_failure,
+              fmt::format("Unexpected token kind: {}", lex::token_kind_str(latest_token.kind)),
+              latest_token.start,
+              latest_token.end);
           }
       }
     }
@@ -306,7 +308,9 @@ namespace jank::read::parse
     }
     if(expected_closer.is_some())
     {
-      return err(error{ start_token.pos, "Unterminated list" });
+      return make_error(error::kind::parse_unterminated_list,
+                        "Unterminated list",
+                        start_token.start);
     }
 
     expected_closer = prev_expected_closer;
@@ -341,7 +345,9 @@ namespace jank::read::parse
     }
     if(expected_closer.is_some())
     {
-      return err(error{ start_token.pos, "Unterminated vector" });
+      return make_error(error::kind::parse_unterminated_vector,
+                        "Unterminated vector",
+                        start_token.start);
     }
 
     expected_closer = prev_expected_closer;
@@ -375,7 +381,9 @@ namespace jank::read::parse
 
       if(++it == end())
       {
-        return err(error{ start_token.pos, "odd number of items in map" });
+        return make_error(error::kind::parse_odd_entries_in_map,
+                          "Odd number of items in map",
+                          start_token.start);
       }
 
       if(it.latest.unwrap().is_err())
@@ -388,7 +396,7 @@ namespace jank::read::parse
     }
     if(expected_closer.is_some())
     {
-      return err(error{ start_token.pos, "Unterminated map" });
+      return make_error(error::kind::parse_unterminated_map, "Unterminated map", start_token.start);
     }
 
     expected_closer = prev_expected_closer;
@@ -411,7 +419,10 @@ namespace jank::read::parse
     }
     else if(val_result.expect_ok().is_none())
     {
-      return err(error{ start_token.pos, native_persistent_string{ "invalid value after quote" } });
+      return make_error(error::kind::parse_invalid_quote,
+                        "Invalid value after quote",
+                        start_token.start,
+                        latest_token.end);
     }
 
     return object_source_info{ erase(make_box<obj::persistent_list>(
@@ -424,10 +435,9 @@ namespace jank::read::parse
 
   processor::object_result processor::parse_character()
   {
-    auto const token((*token_current).expect_ok());
+    auto const start_token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(boost::get<native_persistent_string_view>(token.data));
-
+    auto const sv(boost::get<native_persistent_string_view>(start_token.data));
     auto const character(get_char_from_literal(sv));
 
     if(character.is_none())
@@ -441,21 +451,26 @@ namespace jank::read::parse
         if(char_bytes.is_ok())
         {
           return object_source_info{ make_box<obj::character>(char_bytes.expect_ok()),
-                                     token,
-                                     token };
+                                     start_token,
+                                     start_token };
         }
         else
         {
-          return err(error{
-            token.pos,
-            fmt::format("Error reading character `{}`: {}", sv, char_bytes.expect_err().error) });
+          return make_error(
+            error::kind::parse_invalid_unicode,
+            fmt::format("Error reading character `{}`: {}", sv, char_bytes.expect_err().error),
+            start_token.start);
         }
       }
 
-      return err(error{ token.pos, fmt::format("invalid character literal `{}`", sv) });
+      return make_error(error::kind::parse_invalid_character,
+                        fmt::format("Invalid character literal `{}`", sv),
+                        start_token.start);
     }
 
-    return object_source_info{ make_box<obj::character>(character.unwrap()), token, token };
+    return object_source_info{ make_box<obj::character>(character.unwrap()),
+                               start_token,
+                               start_token };
   }
 
   processor::object_result processor::parse_meta_hint()
@@ -469,8 +484,10 @@ namespace jank::read::parse
     }
     else if(meta_val_result.expect_ok().is_none())
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "invalid meta value after meta hint" } });
+      return make_error(error::kind::parse_invalid_meta_hint_value,
+                        "Invalid meta value after meta hint",
+                        start_token.start,
+                        latest_token.end);
     }
 
     auto meta_result(visit_object(
@@ -484,17 +501,16 @@ namespace jank::read::parse
             latest_token
           };
         }
-        /* TODO: Concept for map-like. */
-        if constexpr(std::same_as<T, obj::persistent_hash_map>
-                     || std::same_as<T, obj::persistent_array_map>)
+        if constexpr(behavior::map_like<T>)
         {
           return object_source_info{ typed_val, start_token, latest_token };
         }
         else
         {
-          return err(error{
-            start_token.pos,
-            native_persistent_string{ "value after meta hint ^ must be a keyword or map" } });
+          return make_error(error::kind::parse_invalid_meta_hint_value,
+                            "Value after meta hint ^ must be a keyword or map",
+                            start_token.start,
+                            latest_token.end);
         }
       },
       meta_val_result.expect_ok().unwrap().ptr));
@@ -510,8 +526,10 @@ namespace jank::read::parse
     }
     else if(target_val_result.expect_ok().is_none())
     {
-      return err(error{ start_token.pos,
-                        native_persistent_string{ "invalid target value after meta hint" } });
+      return make_error(error::kind::parse_invalid_meta_hint_target,
+                        "Invalid target value after meta hint",
+                        start_token.start,
+                        latest_token.end);
     }
 
     return visit_object(
@@ -536,9 +554,10 @@ namespace jank::read::parse
         }
         else
         {
-          return err(
-            error{ start_token.pos,
-                   native_persistent_string{ "target value for meta hint must accept metadata" } });
+          return make_error(error::kind::parse_invalid_meta_hint_target,
+                            "Target value for meta hint must accept metadata",
+                            start_token.start,
+                            latest_token.end);
         }
       },
       target_val_result.expect_ok().unwrap().ptr);
@@ -567,8 +586,9 @@ namespace jank::read::parse
       case lex::token_kind::single_quote:
         return parse_reader_macro_var_quote();
       default:
-        return err(
-          error{ start_token.pos, native_persistent_string{ "unsupported reader macro" } });
+        return make_error(error::kind::parse_unsupported_reader_macro,
+                          "Unsupported reader macro",
+                          start_token.start);
     }
 #pragma clang diagnostic pop
   }
@@ -598,7 +618,10 @@ namespace jank::read::parse
     }
     if(expected_closer.is_some())
     {
-      return err(error{ start_token.pos, "Unterminated set" });
+      return make_error(error::kind::parse_unterminated_set,
+                        "Unterminated set",
+                        start_token.start,
+                        latest_token.end);
     }
 
     expected_closer = prev_expected_closer;
@@ -613,8 +636,9 @@ namespace jank::read::parse
 
     if(shorthand.is_some())
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "nested #() forms are not allowed" } });
+      return make_error(error::kind::parse_nested_shorthand_function,
+                        "Nested #() forms are not allowed",
+                        start_token.start);
     }
 
     shorthand = shorthand_function_details{};
@@ -626,13 +650,17 @@ namespace jank::read::parse
     }
     else if(list_result.expect_ok().is_none())
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after #( must be present" } });
+      return make_error(error::kind::parse_invalid_shorthand_function,
+                        "Value after #( must be present",
+                        start_token.start,
+                        latest_token.end);
     }
     else if(list_result.expect_ok().unwrap().ptr->type != object_type::persistent_list)
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after #( must be a list" } });
+      return make_error(error::kind::parse_invalid_shorthand_function,
+                        "Value after #( must be a list",
+                        start_token.start,
+                        latest_token.end);
     }
 
     auto const call(expect_object<obj::persistent_list>(list_result.expect_ok().unwrap().ptr));
@@ -673,13 +701,17 @@ namespace jank::read::parse
     }
     else if(sym_result.expect_ok().is_none())
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after #' must be present" } });
+      return make_error(error::kind::parse_invalid_reader_var,
+                        "Value after #' must be present",
+                        start_token.start,
+                        latest_token.end);
     }
     else if(sym_result.expect_ok().unwrap().ptr->type != object_type::symbol)
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after #' must be a symbol" } });
+      return make_error(error::kind::parse_invalid_reader_var,
+                        "Value after #' must be a symbol",
+                        start_token.start,
+                        latest_token.end);
     }
 
     auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
@@ -703,8 +735,10 @@ namespace jank::read::parse
     }
     else if(ignored_result.expect_ok().is_none())
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after #_ must be present" } });
+      return make_error(error::kind::parse_invalid_reader_comment,
+                        "Value after #_ must be present",
+                        start_token.start,
+                        latest_token.end);
     }
 
     return ok(none);
@@ -722,13 +756,17 @@ namespace jank::read::parse
     }
     else if(list_result.expect_ok().is_none())
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after #? must be present" } });
+      return make_error(error::kind::parse_invalid_reader_conditional,
+                        "Value after #? must be present",
+                        start_token.start,
+                        latest_token.end);
     }
     else if(list_result.expect_ok().unwrap().ptr->type != object_type::persistent_list)
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after #? must be a list" } });
+      return make_error(error::kind::parse_invalid_reader_conditional,
+                        "Value after #? must be a list",
+                        start_token.start,
+                        latest_token.end);
     }
 
     auto const list(expect_object<obj::persistent_list>(list_result.expect_ok().unwrap().ptr));
@@ -736,8 +774,10 @@ namespace jank::read::parse
 
     if(list.data->count() % 2 == 1)
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "#? expects an even number of forms" } });
+      return make_error(error::kind::parse_invalid_reader_conditional,
+                        "#? expects an even number of forms",
+                        start_token.start,
+                        latest_token.end);
     }
 
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
@@ -755,8 +795,10 @@ namespace jank::read::parse
         {
           if(!truthy(splicing_allowed_var->deref()))
           {
-            return err(error{ start_token.pos,
-                              native_persistent_string{ "#?@ splice must not be top-level" } });
+            return make_error(error::kind::parse_invalid_reader_splice,
+                              "#?@ splice must not be top-level",
+                              start_token.start,
+                              latest_token.end);
           }
 
           auto const s(next_in_place(it)->first());
@@ -777,9 +819,11 @@ namespace jank::read::parse
 
               return object_source_info{ first, start_token, list_end };
             },
-            [=]() -> processor::object_result {
-              return err(error{ start_token.pos,
-                                native_persistent_string{ "#?@ splice must be a sequence" } });
+            [&]() -> processor::object_result {
+              return make_error(error::kind::parse_invalid_reader_splice,
+                                "#?@ splice must be a sequence",
+                                start_token.start,
+                                latest_token.end);
             },
             s);
         }
@@ -1062,14 +1106,19 @@ namespace jank::read::parse
     }
     else if(quoted_form.expect_ok().is_none())
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after ` must be present" } });
+      return make_error(error::kind::parse_invalid_syntax_quote,
+                        "Value after ` must be present",
+                        start_token.start,
+                        latest_token.end);
     }
 
     auto const res(syntax_quote(quoted_form.expect_ok().unwrap().ptr));
     if(res.is_err())
     {
-      return err(error{ start_token.pos, res.expect_err() });
+      return make_error(error::kind::parse_invalid_syntax_quote,
+                        res.expect_err(),
+                        start_token.start,
+                        latest_token.end);
     }
 
     return object_source_info{ res.expect_ok(), start_token, quoted_form.expect_ok().unwrap().end };
@@ -1086,8 +1135,10 @@ namespace jank::read::parse
     }
     else if(val_result.expect_ok().is_none())
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "invalid value after unquote" } });
+      return make_error(error::kind::parse_invalid_syntax_unquote,
+                        "Invalid value after unquote",
+                        start_token.start,
+                        latest_token.end);
     }
 
     return object_source_info{
@@ -1111,7 +1162,10 @@ namespace jank::read::parse
     }
     else if(val_result.expect_ok().is_none())
     {
-      return err(error{ start_token.pos, native_persistent_string{ "invalid value after @" } });
+      return make_error(error::kind::parse_invalid_reader_deref,
+                        "Invalid value after @",
+                        start_token.start,
+                        latest_token.end);
     }
 
     return object_source_info{ erase(make_box<obj::persistent_list>(
@@ -1138,9 +1192,9 @@ namespace jank::read::parse
 
   processor::object_result processor::parse_symbol()
   {
-    auto const token((*token_current).expect_ok());
+    auto const start_token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(boost::get<native_persistent_string_view>(token.data));
+    auto const sv(boost::get<native_persistent_string_view>(start_token.data));
     auto const slash(sv.find('/'));
     native_persistent_string ns, name;
     if(slash != native_persistent_string::npos)
@@ -1164,7 +1218,10 @@ namespace jank::read::parse
           auto const resolved_ns(__rt_ctx->resolve_ns(make_box<obj::symbol>(ns_portion)));
           if(resolved_ns.is_none())
           {
-            return err(error{ token.pos, fmt::format("unknown namespace: {}", ns_portion) });
+            return make_error(error::kind::parse_unresolved_namespace,
+                              fmt::format("Unknown namespace '{}'", ns_portion),
+                              start_token.start,
+                              latest_token.end);
           }
           ns = resolved_ns.unwrap()->name->name;
         }
@@ -1209,8 +1266,10 @@ namespace jank::read::parse
         }
         else
         {
-          return err(error{ token.pos,
-                            native_persistent_string{ "arg literal must be %, %&, or %integer" } });
+          return make_error(error::kind::parse_invalid_shorthand_function_parameter,
+                            "Arg literal must be %, %&, or %integer",
+                            start_token.start,
+                            latest_token.end);
         }
 
         /* This is a hack. We're building up an anonymous function, but that form could be within
@@ -1221,14 +1280,14 @@ namespace jank::read::parse
         name = name + "#";
       }
     }
-    return object_source_info{ make_box<obj::symbol>(ns, name), token, token };
+    return object_source_info{ make_box<obj::symbol>(ns, name), start_token, start_token };
   }
 
   processor::object_result processor::parse_keyword()
   {
-    auto const token((*token_current).expect_ok());
+    auto const start_token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(boost::get<native_persistent_string_view>(token.data));
+    auto const sv(boost::get<native_persistent_string_view>(start_token.data));
     /* A :: keyword either resolves to the current ns or an alias, depending on
      * whether or not it's qualified. */
     native_bool const resolved{ sv[0] != ':' };
@@ -1255,9 +1314,11 @@ namespace jank::read::parse
     auto const intern_res(__rt_ctx->intern_keyword(ns, name, resolved));
     if(intern_res.is_err())
     {
-      return err(intern_res.expect_err());
+      return make_error(error::kind::parse_invalid_keyword,
+                        intern_res.expect_err(),
+                        start_token.start);
     }
-    return object_source_info{ intern_res.expect_ok(), token, token };
+    return object_source_info{ intern_res.expect_ok(), start_token, start_token };
   }
 
   processor::object_result processor::parse_integer()
@@ -1276,7 +1337,9 @@ namespace jank::read::parse
     auto const &ratio_data(boost::get<lex::ratio>(token.data));
     if(ratio_data.denominator == 0)
     {
-      return err(error{ token.pos, "Divide by zero" });
+      return make_error(error::kind::parse_invalid_ratio,
+                        "A ratio may not have a denominator of zero",
+                        token.start);
     }
     auto const ratio{ obj::ratio::create(ratio_data.numerator, ratio_data.denominator) };
     if(ratio->type == object_type::ratio)
@@ -1289,7 +1352,9 @@ namespace jank::read::parse
     }
     else
     {
-      return err(error{ token.pos, "Internal parsing error" });
+      return make_error(error::kind::internal_parse_failure,
+                        "Unexpected token ratio data",
+                        token.start);
     }
   }
 
@@ -1321,7 +1386,10 @@ namespace jank::read::parse
     auto res(util::unescape({ sv.data(), sv.size() }));
     if(res.is_err())
     {
-      return err(error{ token.pos, res.expect_err().message });
+      /* TODO: Return exact position of error. */
+      return make_error(error::kind::parse_invalid_escaped_string,
+                        res.expect_err().message,
+                        token.start);
     }
     return object_source_info{ make_box<obj::persistent_string>(res.expect_ok_move()),
                                token,
