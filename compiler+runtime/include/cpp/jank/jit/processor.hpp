@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/filesystem/path.hpp>
 #include <memory>
 
 #include <clang/Interpreter/Interpreter.h>
@@ -37,10 +38,14 @@ namespace jank::jit
     string_result<void> remove_symbol(native_persistent_string const &name) const;
 
     template <typename T>
-    T find_symbol(native_persistent_string const &name) const
+    string_result<T> find_symbol(native_persistent_string const &name) const
     {
-      auto const sym(interpreter->getSymbolAddress(name.c_str()).get());
-      return sym.toPtr<T>();
+      if(auto symbol{ interpreter->getSymbolAddress(name.c_str()) })
+      {
+        return symbol.get().toPtr<T>();
+      }
+
+      return err("Failed to find symbol");
     }
 
     result<void, native_persistent_string>

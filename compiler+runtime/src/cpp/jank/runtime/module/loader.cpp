@@ -463,11 +463,21 @@ namespace jank::runtime::module
   loader::load_o(native_persistent_string const &module, file_entry const &entry) const
   {
     profile::timer const timer{ fmt::format("load object {}", module) };
-    auto const res{ rt_ctx.jit_prc.remove_symbol(module_to_load_function(module)) };
 
-    if(res.is_err())
+    /* While loading an object, if the main ns loading symbol exists, then
+     * we don't need to load the object file again.
+     *
+     * Existence of the `jank_load_<module>` symbol (also a function),
+     * means that all the required symbols exist and are already defined.
+     * We call this symbol to re-initialize all the vars in the namespace.
+     * */
+    auto const load_function_name{ module_to_load_function(module) };
+
+    auto const existing_load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(load_function_name) };
+    if(existing_load.is_ok())
     {
-      return res.expect_err();
+      existing_load.expect_ok()();
+      return ok();
     }
 
     if(entry.archive_path.is_some())
@@ -480,7 +490,7 @@ namespace jank::runtime::module
       rt_ctx.jit_prc.load_object(entry.path);
     }
 
-    auto const load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(module_to_load_function(module)) };
+    auto const load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(load_function_name).expect_ok() };
     load();
 
     return ok();

@@ -558,8 +558,10 @@ namespace jank::evaluate
       __rt_ctx->jit_prc.load_ir_module(std::move(cg_prc.ctx->module),
                                        std::move(cg_prc.ctx->llvm_ctx));
 
-      auto const fn(__rt_ctx->jit_prc.find_symbol<object *(*)()>(
-        fmt::format("{}_0", munge(cg_prc.root_fn.unique_name))));
+      auto const fn(
+        __rt_ctx->jit_prc
+          .find_symbol<object *(*)()>(fmt::format("{}_0", munge(cg_prc.root_fn.unique_name)))
+          .expect_ok());
       return fn();
     }
   }
