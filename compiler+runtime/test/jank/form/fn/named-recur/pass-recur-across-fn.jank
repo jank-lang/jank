@@ -1,0 +1,7 @@
+(let* [result :success
+       foo (fn* foo [loop?]
+             ((fn* bar []
+                (if loop?
+                  (foo false)
+                  result))))]
+  (foo true))
