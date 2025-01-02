@@ -373,6 +373,7 @@ namespace jank::runtime::module
        * Unlike class files, object files are tied to the OS, architecture, c++ stdlib etc,
        * making it hard to share them. */
       if(entry->second.o.is_some() && entry->second.o.unwrap().archive_path.is_none()
+         && entry->second.o.unwrap().exists()
          && (entry->second.jank.is_some() || entry->second.cljc.is_some()))
       {
         auto const o_file_path{ native_transient_string{ entry->second.o.unwrap().path } };
