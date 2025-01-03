@@ -295,7 +295,7 @@ namespace jank::read::parse
       ->push_thread_bindings(obj::persistent_hash_map::create_unique(
         std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
       .expect_ok();
-    util::scope_exit const finally{ [&]() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
     runtime::detail::native_transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
@@ -314,6 +314,7 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
+
     return object_source_info{
       make_box<obj::persistent_list>(std::in_place, ret.rbegin(), ret.rend()),
       start_token,
@@ -332,7 +333,7 @@ namespace jank::read::parse
       ->push_thread_bindings(obj::persistent_hash_map::create_unique(
         std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
       .expect_ok();
-    util::scope_exit const finally{ [&]() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
     runtime::detail::native_transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
@@ -368,7 +369,7 @@ namespace jank::read::parse
       ->push_thread_bindings(obj::persistent_hash_map::create_unique(
         std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
       .expect_ok();
-    util::scope_exit const finally{ [&]() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
     runtime::detail::native_persistent_array_map ret;
     for(auto it(begin()); it != end(); ++it)
@@ -605,7 +606,7 @@ namespace jank::read::parse
       ->push_thread_bindings(obj::persistent_hash_map::create_unique(
         std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
       .expect_ok();
-    util::scope_exit const finally{ [&]() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
     runtime::detail::native_transient_hash_set ret;
     for(auto it(begin()); it != end(); ++it)
@@ -930,7 +931,7 @@ namespace jank::read::parse
                  (splice ? "clojure.core/unquote-splicing" : "clojure.core/unquote"))
           ->equal(*item);
       },
-      []() { return false; },
+      [] { return false; },
       form);
   }
 

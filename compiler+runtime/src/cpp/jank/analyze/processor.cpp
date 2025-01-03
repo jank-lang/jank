@@ -26,7 +26,6 @@ namespace jank
                               native_persistent_string const &message,
                               read::source const &source)
   {
-    /* TODO: File name. */
     return runtime::make_box<error::base>(gc{}, kind, message, source);
   }
 }
@@ -1018,7 +1017,7 @@ namespace jank::analyze
     if(found_var.is_none())
     {
       return make_error(error::kind::analysis_unresolved_var,
-                        fmt::format("unable to resolve var '{}'", qualified_sym->to_string()),
+                        fmt::format("Unable to resolve var '{}'", qualified_sym->to_string()),
                         meta_source(o));
     }
 

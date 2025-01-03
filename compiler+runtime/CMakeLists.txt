@@ -65,7 +65,8 @@ set(
   -Wno-implicit-fallthrough
   -Wno-covered-switch-default
   -Wno-invalid-offsetof
-  # TODO: Ignore deprecations
+  -Wno-deprecated-declarations
+  -Wno-c++23-extensions
   -fno-common
   -fno-rtti
   -fexceptions
@@ -154,7 +155,9 @@ add_library(
   src/cpp/jank/util/clang_format.cpp
   src/cpp/jank/util/string_builder.cpp
   src/cpp/jank/profile/time.cpp
+  src/cpp/jank/ui/highlight.cpp
   src/cpp/jank/error.cpp
+  src/cpp/jank/error/report.cpp
   src/cpp/jank/read/source.cpp
   src/cpp/jank/read/lex.cpp
   src/cpp/jank/read/parse.cpp

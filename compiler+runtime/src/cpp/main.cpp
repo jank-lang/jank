@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
@@ -10,10 +11,6 @@
 #include <llvm/LineEditor/LineEditor.h>
 
 #include <fmt/format.h>
-
-#include <ftxui/dom/elements.hpp>
-#include <ftxui/screen/screen.hpp>
-#include <ftxui/screen/string.hpp>
 
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/util/mapped_file.hpp>
@@ -27,6 +24,8 @@
 #include <jank/jit/processor.hpp>
 #include <jank/native_persistent_string.hpp>
 #include <jank/profile/time.hpp>
+#include <jank/error/report.hpp>
+#include <jank/util/scope_exit.hpp>
 
 #include <jank/compiler_native.hpp>
 #include <jank/perf_native.hpp>
@@ -38,101 +37,11 @@ namespace jank
   {
     using namespace jank;
     using namespace jank::runtime;
-    using namespace ftxui;
 
-    //auto header = [&](std::string const &title) {
-    //  auto const padding_count(80 - 2 - title.size());
-    //  std::string padding;
-    //  for(size_t i{}; i < padding_count; ++i)
-    //  {
-    //    padding.insert(padding.size(), "─");
-    //  }
-    //  return hbox({
-    //    text("─ "),
-    //    text(title) | color(Color::BlueLight),
-    //    text(" "),
-    //    text(padding),
-    //  });
-    //};
-
-    //auto error = [&] {
-    //  return vbox({ header("analysis/unresolved-symbol"),
-    //                hbox({
-    //                  text("error: ") | bold | color(Color::Red),
-    //                  text("Unable to resolve symbol 'sleep'") | bold,
-    //                }) });
-    //};
-
-    //auto snippet = [&] {
-    //  auto content
-    //    = hbox({ vbox({
-    //               text("3"),
-    //               text("4"),
-    //               text("5"),
-    //               text(" "),
-    //             }) | color(Color::GrayLight),
-    //             separator(),
-    //             vbox(hbox({
-    //                    text("("),
-    //                    text("defn ") | color(Color::Orange1),
-    //                    text("nap ") | color(Color::Green),
-    //                    text("[]"),
-    //                  }),
-    //                  hbox({
-    //                    text("  ("),
-    //                    text("let ") | color(Color::Orange1),
-    //                    text("["),
-    //                    text("minutes "),
-    //                    text("5") | color(Color::Magenta),
-    //                    text("]"),
-    //                  }),
-    //                  hbox({
-    //                    text("    ("),
-    //                    text("sleep "),
-    //                    text("minutes)))"),
-    //                  }),
-    //                  text("     ^^^^^ unable to resolve symbol") | color(Color::Red)) });
-    //  return window(text(" src/kitten/nap.jank:5:6 "), content);
-    //};
-
-    //auto context = [&] {
-    //  return vbox(
-    //    { header("context"),
-    //      vbox({
-    //        hbox({ text("compiling module "), text("kitten.main") | color(Color::Yellow) }),
-    //        hbox({
-    //          text("└─ requiring module "),
-    //          text("kitten.nap") | color(Color::Yellow),
-
-    //        }),
-    //        hbox({
-    //          text("   └─ compiling function "),
-    //          text("kitten.nap/") | color(Color::Yellow),
-    //          text("nap") | color(Color::Green),
-    //        }),
-    //      }) });
-    //};
-
-    //auto document = vbox({
-    //  error(),
-    //  text("\n"),
-    //  snippet(),
-    //  text("\n"),
-    //  context(),
-    //});
-
-    //// Limit the size of the document to 80 char.
-    //document = document | size(WIDTH, LESS_THAN, 80);
-
-    //auto screen = Screen::Create(Dimension::Full(), Dimension::Fit(document));
-    //Render(screen, document);
-
-    //std::cout << screen.ToString() << '\0' << std::endl;
-
-    //{
-    //  profile::timer const timer{ "load clojure.core" };
-    //  __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
-    //}
+    {
+      profile::timer const timer{ "load clojure.core" };
+      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
+    }
 
     {
       profile::timer const timer{ "eval user code" };
@@ -232,6 +141,9 @@ namespace jank
     le.setPrompt(get_prompt("=> "));
     native_transient_string input{};
 
+    auto const tmp{ boost::filesystem::temp_directory_path() };
+    auto const path{ tmp / boost::filesystem::unique_path("jank-repl-%%%%.jank") };
+
     /* TODO: Completion. */
     /* TODO: Syntax highlighting. */
     while(auto buf = le.readLine())
@@ -242,15 +154,22 @@ namespace jank
       if(line.ends_with("\\"))
       {
         input.append(line.substr(0, line.size() - 1));
+        input.append("\n");
         le.setPrompt(get_prompt("=>... "));
         continue;
       }
 
       input += line;
 
+      util::scope_exit const finally{ [&] { boost::filesystem::remove(path); } };
       try
       {
-        auto const res(__rt_ctx->eval_string(input));
+        {
+          std::ofstream ofs{ path.string() };
+          ofs << input;
+        }
+
+        auto const res(__rt_ctx->eval_file(path.c_str()));
         fmt::println("{}", runtime::to_code_string(res));
       }
       /* TODO: Unify error handling. JEEZE! */
@@ -268,10 +187,11 @@ namespace jank
       }
       catch(jank::error_ptr const &e)
       {
-        fmt::println("Exception: {}", e->message);
+        jank::error::report(e);
       }
 
       input.clear();
+      std::cout << "\n";
       le.setPrompt(get_prompt("=> "));
     }
   }
@@ -335,7 +255,7 @@ namespace jank
       }
       catch(jank::error_ptr const &e)
       {
-        fmt::println("Exception: {}", e->message);
+        jank::error::report(e);
       }
 
       input.clear();
@@ -423,7 +343,7 @@ catch(jank::native_persistent_string const &s)
 }
 catch(jank::error_ptr const &e)
 {
-  fmt::println("Exception: {}", e->message);
+  jank::error::report(e);
 }
 catch(...)
 {

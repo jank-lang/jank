@@ -4,6 +4,8 @@
 
 #include <jank/read/lex.hpp>
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/runtime/core/to_string.hpp>
 
 using namespace std::string_view_literals;
 
@@ -284,9 +286,12 @@ namespace jank::read::lex
                               native_persistent_string const &message,
                               movable_position const &start)
   {
-    /* TODO: File name. */
-    /* NOLINTNEXTLINE(cppcoreguidelines-slicing) */
-    return runtime::make_box<error::base>(gc{}, kind, message, source{ "", start, start });
+    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
+    return runtime::make_box<error::base>(gc{},
+                                          kind,
+                                          message,
+                                          /* NOLINTNEXTLINE(cppcoreguidelines-slicing) */
+                                          source{ runtime::to_string(file), start, start });
   }
 
   static error_ptr make_error(error::kind const kind,
@@ -294,8 +299,16 @@ namespace jank::read::lex
                               movable_position const &start,
                               movable_position const &end)
   {
-    /* NOLINTNEXTLINE(cppcoreguidelines-slicing) */
-    return runtime::make_box<error::base>(gc{}, kind, message, source{ "", start, end });
+    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
+    fmt::println("make_error message '{}' file '{}'",
+                 message.c_str(),
+                 runtime::to_string(file).c_str());
+    __builtin_debugtrap();
+    return runtime::make_box<error::base>(gc{},
+                                          kind,
+                                          message,
+                                          /* NOLINTNEXTLINE(cppcoreguidelines-slicing) */
+                                          source{ runtime::to_string(file), start, end });
   }
 
   option<error_ptr> processor::check_whitespace(native_bool const found_space)

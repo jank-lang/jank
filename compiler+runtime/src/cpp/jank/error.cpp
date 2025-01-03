@@ -1,4 +1,6 @@
 #include <jank/error.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/runtime/core/to_string.hpp>
 
 namespace jank::error
 {
@@ -22,17 +24,22 @@ namespace jank
 {
   error_ptr make_error(error::kind const kind, native_persistent_string const &message)
   {
-    /* TODO: File name. */
-    return runtime::make_box<error::base>(gc{}, kind, message, read::source{ "", {}, {} });
+    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
+    return runtime::make_box<error::base>(gc{},
+                                          kind,
+                                          message,
+                                          read::source{ runtime::to_string(file), {}, {} });
   }
 
   error_ptr make_error(error::kind const kind,
                        native_persistent_string const &message,
                        read::source_position const &start)
   {
-    /* TODO: File name. */
-    /* NOLINTNEXTLINE(cppcoreguidelines-slicing) */
-    return runtime::make_box<error::base>(gc{}, kind, message, read::source{ "", start, start });
+    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
+    return runtime::make_box<error::base>(gc{},
+                                          kind,
+                                          message,
+                                          read::source{ runtime::to_string(file), start, start });
   }
 
   error_ptr make_error(error::kind const kind,
@@ -40,7 +47,10 @@ namespace jank
                        read::source_position const &start,
                        read::source_position const &end)
   {
-    /* NOLINTNEXTLINE(cppcoreguidelines-slicing) */
-    return runtime::make_box<error::base>(gc{}, kind, message, read::source{ "", start, end });
+    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
+    return runtime::make_box<error::base>(gc{},
+                                          kind,
+                                          message,
+                                          read::source{ runtime::to_string(file), start, end });
   }
 }
