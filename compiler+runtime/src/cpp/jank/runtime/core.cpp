@@ -448,7 +448,7 @@ namespace jank::runtime
 
   object_ptr gensym(object_ptr const o)
   {
-    return make_box<obj::symbol>(runtime::context::unique_symbol(to_string(o)));
+    return make_box<obj::symbol>(__rt_ctx->unique_symbol(to_string(o)));
   }
 
   object_ptr atom(object_ptr const o)

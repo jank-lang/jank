@@ -1,3 +1,5 @@
+#include <regex>
+
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/rtti.hpp>
@@ -281,6 +283,14 @@ namespace jank::runtime
     }
 
     return munged;
+  }
+
+  native_persistent_string munge_extra(native_persistent_string const &o,
+                                       std::regex const &search,
+                                       char const * const replace)
+  {
+    std::string ret{ munge(o) };
+    return std::regex_replace(ret, search, replace);
   }
 
   /* TODO: Support symbols and other data; Clojure takes in anything and passes it through str. */

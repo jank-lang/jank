@@ -50,6 +50,8 @@ namespace jank::runtime
     /* TODO: Benchmark the use of atomics here. That's what Clojure uses. */
     folly::Synchronized<obj::persistent_hash_map_ptr> vars;
     folly::Synchronized<obj::persistent_hash_map_ptr> aliases;
+
+    std::atomic_uint64_t symbol_counter{};
     context &rt_ctx;
   };
 }

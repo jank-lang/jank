@@ -8,6 +8,7 @@
 #include <llvm/TargetParser/Host.h>
 
 #include <fmt/compile.h>
+#include <regex>
 
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/read/lex.hpp>
@@ -15,6 +16,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/munge.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
@@ -264,7 +266,7 @@ namespace jank::runtime
                                     std::make_pair(compile_files_var, obj::boolean::true_const()),
                                     std::make_pair(current_module_var, make_box(module))) };
 
-    return load_module(fmt::format("/{}", module), module::origin::source);
+    return load_module(fmt::format("/{}", module), module::origin::latest);
   }
 
   string_result<void>
@@ -285,7 +287,7 @@ namespace jank::runtime
                              module_path.c_str(),
                              file_error.message()));
     }
-    //codegen_ctx->module->print(llvm::outs(), nullptr);
+    // codegen_ctx->module->print(llvm::outs(), nullptr);
 
     auto const target_triple{ llvm::sys::getDefaultTargetTriple() };
     std::string target_error;
@@ -321,8 +323,12 @@ namespace jank::runtime
 
   native_persistent_string context::unique_string(native_persistent_string_view const &prefix)
   {
-    static std::atomic_size_t index{ 1 };
-    return fmt::format(FMT_COMPILE("{}-{}"), prefix.data(), index++);
+    static std::regex const dot{ "\\." };
+    auto const ns{ current_ns() };
+    return fmt::format(FMT_COMPILE("{}-{}-{}"),
+                       runtime::munge_extra(ns->name->get_name(), dot, "_"),
+                       prefix.data(),
+                       ++ns->symbol_counter);
   }
 
   obj::symbol context::unique_symbol()
