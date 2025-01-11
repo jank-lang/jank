@@ -68,7 +68,7 @@ set(
   -fno-common
   -frtti
   -fexceptions
-  $<$<CONFIG:Debug>:-O0>
+  $<$<CONFIG:Debug>:-O1>
   $<$<CONFIG:Release>:-O2>
 )
 

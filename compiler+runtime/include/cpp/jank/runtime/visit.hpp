@@ -325,11 +325,6 @@ namespace jank::runtime
           return fn(expect_object<obj::delay>(erased), std::forward<Args>(args)...);
         }
         break;
-      case object_type::delay:
-        {
-          return fn(expect_object<obj::delay>(erased), std::forward<Args>(args)...);
-        }
-        break;
       case object_type::ns:
         {
           return fn(expect_object<ns>(erased), std::forward<Args>(args)...);

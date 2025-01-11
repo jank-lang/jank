@@ -11,10 +11,6 @@ install(
   ARCHIVE DESTINATION lib
 )
 install(
-  PROGRAMS ${CMAKE_SOURCE_DIR}/bin/build-pch
-  DESTINATION bin
-)
-install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/src/jank
   DESTINATION src
 )
@@ -71,7 +67,7 @@ jank_glob_install_without_prefix(
   PATTERN "${CLANG_INSTALL_PREFIX}/include/*"
 )
 
-install(FILES ${CMAKE_SOURCE_DIR}/../.clang-format DESTINATION share)
+install(FILES ${CMAKE_SOURCE_DIR}/clang-format DESTINATION share)
 
 if(PROJECT_IS_TOP_LEVEL)
   include(CPack)

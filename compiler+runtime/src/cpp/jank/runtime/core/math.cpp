@@ -1390,7 +1390,7 @@ namespace jank::runtime
   native_real tan(object_ptr const l)
   {
     return visit_number_like(
-      [](auto const typed_l) -> native_real { return std::tanf(typed_l->to_real()); },
+      [](auto const typed_l) -> native_real { return tanf(typed_l->to_real()); },
       l);
   }
 

@@ -1,0 +1,121 @@
+﻿# This file is installed with jank destination
+---
+BasedOnStyle: Microsoft
+#AllowBreakBeforeNoexceptSpecifier: OnlyWithParen
+#AllowShortCompoundRequirementOnASingleLine: 'true'
+#BracedInitializerIndentWidth: 2
+#BreakAdjacentStringLiterals: 'true'
+#KeepEmptyLinesAtEOF: 'false'
+#RemoveParentheses: Leave
+#SpacesInParens: Never
+AccessModifierOffset: -2
+AlignAfterOpenBracket: Align
+AlignArrayOfStructures: Right
+AlignConsecutiveAssignments: 'false'
+AlignConsecutiveBitFields: 'false'
+AlignConsecutiveDeclarations: 'false'
+AlignConsecutiveMacros: 'false'
+AlignEscapedNewlines: Left
+AlignOperands: 'false'
+AlignTrailingComments: 'false'
+AllowAllArgumentsOnNextLine: 'false'
+AllowAllConstructorInitializersOnNextLine: 'false'
+AllowAllParametersOfDeclarationOnNextLine: 'false'
+AllowShortBlocksOnASingleLine: 'false'
+AllowShortCaseLabelsOnASingleLine: 'false'
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: All
+AllowShortLoopsOnASingleLine: 'false'
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: 'false'
+AlwaysBreakTemplateDeclarations: 'Yes'
+BinPackArguments: 'false'
+BinPackParameters: 'false'
+BitFieldColonSpacing: Both
+BreakAfterAttributes: Always
+BreakArrays: 'false'
+BreakBeforeBinaryOperators: All
+BreakBeforeBraces: Custom
+BreakBeforeConceptDeclarations: Always
+BreakBeforeInlineASMColon: OnlyMultiline
+BreakBeforeTernaryOperators: 'true'
+BreakConstructorInitializers: BeforeComma
+BreakInheritanceList: BeforeComma
+BreakStringLiterals: 'true'
+ColumnLimit: '100'
+CompactNamespaces: 'false'
+ConstructorInitializerAllOnOneLineOrOnePerLine: 'false'
+ConstructorInitializerIndentWidth: '2'
+ContinuationIndentWidth: '2'
+Cpp11BracedListStyle: 'false'
+DerivePointerAlignment: 'false'
+EmptyLineAfterAccessModifier: Never
+EmptyLineBeforeAccessModifier: LogicalBlock
+ExperimentalAutoDetectBinPacking: 'false'
+FixNamespaceComments: 'false'
+IncludeBlocks: Preserve
+IndentAccessModifiers: 'false'
+IndentCaseBlocks: 'true'
+IndentCaseLabels: 'true'
+IndentExternBlock: 'true'
+IndentGotoLabels: 'false'
+IndentPPDirectives: BeforeHash
+IndentRequiresClause: 'false'
+IndentWidth: '2'
+IndentWrappedFunctionNames: 'false'
+InsertBraces: 'true'
+InsertNewlineAtEOF: 'true'
+# CI isn't supporting this, even though it should be in 16.
+#IntegerLiteralSeparator:
+#  Binary: 8
+#  BinaryMinDigits: 8
+#  Decimal: 3
+#  DecimalMinDigits: 5
+#  Hex: -1
+KeepEmptyLinesAtTheStartOfBlocks: 'false'
+LambdaBodyIndentation: Signature
+Language: Cpp
+LineEnding: LF
+MaxEmptyLinesToKeep: '2'
+NamespaceIndentation: All
+PPIndentWidth: 2
+PackConstructorInitializers: Never
+PenaltyReturnTypeOnItsOwnLine: 1
+PointerAlignment: Right
+QualifierAlignment: Custom
+QualifierOrder: [ 'static', 'constexpr', 'inline', 'volatile', 'friend', 'restrict', 'type', 'const' ]
+ReflowComments: 'false'
+RemoveBracesLLVM: 'false'
+RemoveSemicolon: 'true'
+RequiresClausePosition: OwnLine
+RequiresExpressionIndentation: OuterScope
+SeparateDefinitionBlocks: Always
+ShortNamespaceLines: 0
+SortIncludes: 'false'
+SortUsingDeclarations: 'false'
+SpaceAfterCStyleCast: 'false'
+SpaceAfterLogicalNot: 'false'
+SpaceAfterTemplateKeyword: 'true'
+SpaceAroundPointerQualifiers: Both
+SpaceBeforeAssignmentOperators: 'true'
+SpaceBeforeCaseColon: 'false'
+SpaceBeforeCpp11BracedList: 'false'
+SpaceBeforeCtorInitializerColon: 'true'
+SpaceBeforeInheritanceColon: 'true'
+SpaceBeforeParens: Never
+SpaceBeforeRangeBasedForLoopColon: 'true'
+SpaceInEmptyParentheses: 'false'
+SpacesBeforeTrailingComments: '1'
+SpacesInAngles: 'false'
+SpacesInCStyleCastParentheses: 'false'
+SpacesInLineCommentPrefix:
+  Minimum: 1
+  Maximum: -1
+SpacesInParentheses: 'false'
+SpacesInSquareBrackets: 'false'
+Standard: c++20
+TabWidth: '2'
+UseTab: Never
+
+...
