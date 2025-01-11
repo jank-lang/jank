@@ -1,5 +1,6 @@
 #include <fmt/core.h>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/associatively_readable.hpp>
 #include <jank/runtime/behavior/associatively_writable.hpp>
@@ -782,8 +783,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not indexable: {}",
-                                                magic_enum::enum_name(o->type)) };
+          throw std::runtime_error{ fmt::format("not indexable: {}", object_type_str(o->type)) };
         }
       },
       o);
@@ -823,8 +823,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not indexable: {}",
-                                                magic_enum::enum_name(o->type)) };
+          throw std::runtime_error{ fmt::format("not indexable: {}", object_type_str(o->type)) };
         }
       },
       o);
@@ -847,8 +846,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not stackable: {}",
-                                                magic_enum::enum_name(o->type)) };
+          throw std::runtime_error{ fmt::format("not stackable: {}", object_type_str(o->type)) };
         }
       },
       o);
@@ -871,8 +869,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not stackable: {}",
-                                                magic_enum::enum_name(o->type)) };
+          throw std::runtime_error{ fmt::format("not stackable: {}", object_type_str(o->type)) };
         }
       },
       o);
@@ -900,7 +897,7 @@ namespace jank::runtime
   {
     return visit_seqable(
       [=](auto const typed_args) -> native_persistent_string {
-        fmt::memory_buffer buff;
+        util::string_builder buff;
         buff.reserve(16);
         runtime::to_string(o, buff);
         if(0 < sequence_length(typed_args))
@@ -912,7 +909,7 @@ namespace jank::runtime
             runtime::to_string(it->first(), buff);
           }
         }
-        return native_persistent_string{ buff.data(), buff.size() };
+        return buff.release();
       },
       args);
   }

@@ -1,3 +1,5 @@
+#include <fmt/format.h>
+
 #include <jank/runtime/detail/native_persistent_array_map.hpp>
 #include <jank/runtime/core.hpp>
 

@@ -26,6 +26,7 @@ extern "C"
 
   jank_object_ptr jank_var_intern(jank_object_ptr ns, jank_object_ptr name);
   jank_object_ptr jank_var_bind_root(jank_object_ptr var, jank_object_ptr val);
+  jank_object_ptr jank_var_set_dynamic(jank_object_ptr var, jank_object_ptr dynamic);
 
   jank_object_ptr jank_keyword_intern(jank_object_ptr ns, jank_object_ptr name);
 
@@ -256,7 +257,8 @@ extern "C"
   void jank_set_meta(jank_object_ptr o, jank_object_ptr meta);
 
   void jank_throw(jank_object_ptr o);
-  jank_object_ptr jank_try(jank_object_ptr body, jank_object_ptr catch_, jank_object_ptr finally);
+  jank_object_ptr
+  jank_try(jank_object_ptr try_fn, jank_object_ptr catch_fn, jank_object_ptr finally_fn);
 
   void jank_profile_enter(char const *label);
   void jank_profile_exit(char const *label);

@@ -3,56 +3,47 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  namespace obj
-  {
-    using cons = static_object<object_type::cons>;
-    using cons_ptr = native_box<cons>;
-  }
+  using cons_ptr = native_box<struct cons>;
+  using iterator_ptr = native_box<struct iterator>;
 
   /* TODO: Rename to iterator_sequence. */
-  template <>
-  struct static_object<object_type::iterator> : gc
+  struct iterator : gc
   {
+    static constexpr object_type obj_type{ object_type::iterator };
     static constexpr native_bool pointer_free{ false };
     static constexpr native_bool is_sequential{ true };
 
-    static_object() = default;
-    static_object(static_object &&) = default;
-    static_object(static_object const &) = default;
-    static_object(object_ptr const fn, object_ptr const start);
+    iterator() = default;
+    iterator(iterator &&) noexcept = default;
+    iterator(iterator const &) = default;
+    iterator(object_ptr const fn, object_ptr const start);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string to_string();
-    void to_string(fmt::memory_buffer &buff);
+    void to_string(util::string_builder &buff);
     native_persistent_string to_code_string();
     native_hash to_hash() const;
 
     /* behavior::seqable */
-    native_box<static_object> seq();
-    native_box<static_object> fresh_seq() const;
+    iterator_ptr seq();
+    iterator_ptr fresh_seq() const;
 
     /* behavior::sequenceable */
     object_ptr first() const;
-    native_box<static_object> next() const;
+    iterator_ptr next() const;
     obj::cons_ptr conj(object_ptr head) const;
 
     /* behavior::sequenceable_in_place */
-    native_box<static_object> next_in_place();
+    iterator_ptr next_in_place();
 
-    object base{ object_type::iterator };
+    object base{ obj_type };
     /* TODO: Support chunking. */
     object_ptr fn{};
     object_ptr current{};
     object_ptr previous{};
-    mutable native_box<static_object> cached_next{};
+    mutable iterator_ptr cached_next{};
   };
-
-  namespace obj
-  {
-    using iterator = static_object<object_type::iterator>;
-    using iterator_ptr = native_box<iterator>;
-  }
 }

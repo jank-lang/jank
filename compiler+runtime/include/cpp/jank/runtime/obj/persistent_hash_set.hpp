@@ -1,61 +1,55 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/persistent_hash_set_sequence.hpp>
+#include <jank/runtime/detail/type.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  namespace obj
-  {
-    using transient_hash_set = static_object<object_type::transient_hash_set>;
-    using transient_hash_set_ptr = native_box<transient_hash_set>;
-  }
+  using transient_hash_set_ptr = native_box<struct transient_hash_set>;
+  using persistent_hash_set_ptr = native_box<struct persistent_hash_set>;
+  using persistent_hash_set_sequence_ptr = native_box<struct persistent_hash_set_sequence>;
 
-  template <>
-  struct static_object<object_type::persistent_hash_set> : gc
+  struct persistent_hash_set : gc
   {
-    using value_type = runtime::detail::native_persistent_hash_set;
-
+    static constexpr object_type obj_type{ object_type::persistent_hash_set };
     static constexpr native_bool pointer_free{ false };
     static constexpr native_bool is_set_like{ true };
 
-    static_object() = default;
-    static_object(static_object &&) noexcept = default;
-    static_object(static_object const &) = default;
-    static_object(value_type &&d);
-    static_object(value_type const &d);
-    static_object(object_ptr meta, value_type &&d);
+    using value_type = runtime::detail::native_persistent_hash_set;
+
+    persistent_hash_set() = default;
+    persistent_hash_set(persistent_hash_set &&) noexcept = default;
+    persistent_hash_set(persistent_hash_set const &) = default;
+    persistent_hash_set(value_type &&d);
+    persistent_hash_set(value_type const &d);
+    persistent_hash_set(object_ptr meta, value_type &&d);
 
     template <typename... Args>
-    static_object(std::in_place_t, Args &&...args)
+    persistent_hash_set(std::in_place_t, Args &&...args)
       : data{ std::forward<Args>(args)... }
     {
     }
 
     template <typename... Args>
-    static_object(object_ptr const meta, std::in_place_t, Args &&...args)
+    persistent_hash_set(object_ptr const meta, std::in_place_t, Args &&...args)
       : data{ std::forward<Args>(args)... }
       , meta{ meta }
     {
     }
 
-    static native_box<static_object> empty()
-    {
-      static auto const ret(make_box<static_object>());
-      return ret;
-    }
+    static persistent_hash_set_ptr empty();
 
-    static native_box<static_object> create_from_seq(object_ptr const seq);
+    static persistent_hash_set_ptr create_from_seq(object_ptr const seq);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
-    void to_string(fmt::memory_buffer &buff) const;
+    void to_string(util::string_builder &buff) const;
     native_persistent_string to_code_string() const;
     native_hash to_hash() const;
 
     /* behavior::metadatable */
-    native_box<static_object> with_meta(object_ptr m) const;
+    persistent_hash_set_ptr with_meta(object_ptr m) const;
 
     /* behavior::seqable */
     obj::persistent_hash_set_sequence_ptr seq() const;
@@ -65,7 +59,7 @@ namespace jank::runtime
     size_t count() const;
 
     /* behavior::conjable */
-    native_box<static_object> conj(object_ptr head) const;
+    persistent_hash_set_ptr conj(object_ptr head) const;
 
     /* behavior::callable */
     object_ptr call(object_ptr) const;
@@ -74,13 +68,10 @@ namespace jank::runtime
     obj::transient_hash_set_ptr to_transient() const;
 
     native_bool contains(object_ptr o) const;
-    native_box<static_object> disj(object_ptr o) const;
+    persistent_hash_set_ptr disj(object_ptr o) const;
 
-    object base{ object_type::persistent_hash_set };
+    object base{ obj_type };
     value_type data;
     option<object_ptr> meta;
   };
-
-  using persistent_hash_set = static_object<object_type::persistent_hash_set>;
-  using persistent_hash_set_ptr = native_box<persistent_hash_set>;
 }

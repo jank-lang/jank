@@ -1,7 +1,6 @@
 #pragma once
 
 #include <jank/analyze/expression_base.hpp>
-#include <jank/runtime/obj/persistent_hash_set.hpp>
 
 namespace jank::analyze::expr
 {
@@ -12,7 +11,6 @@ namespace jank::analyze::expr
   {
     native_vector<native_box<E>> data_exprs;
     option<object_ptr> meta;
-    object_ptr data{};
 
     void propagate_position(expression_position const pos)
     {

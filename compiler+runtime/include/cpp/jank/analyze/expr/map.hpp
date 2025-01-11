@@ -11,7 +11,6 @@ namespace jank::analyze::expr
   {
     native_vector<std::pair<native_box<E>, native_box<E>>> data_exprs;
     option<object_ptr> meta;
-    object_ptr data{};
 
     void propagate_position(expression_position const pos)
     {

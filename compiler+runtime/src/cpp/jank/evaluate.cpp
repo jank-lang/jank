@@ -1,5 +1,8 @@
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 
+#include <fmt/format.h>
+
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/visit.hpp>
@@ -208,11 +211,16 @@ namespace jank::evaluate
       auto &body(fn.arities[0].body.values);
       /* We normally wrap one expression, which is a return statement, but we'll be potentially
        * adding more, so let's not make assumptions yet. */
-      body[0]->get_base()->position = expression_position::statement;
+      body[0]->propagate_position(expression_position::statement);
 
-      for(auto const &expr : exprs)
+      if(exprs.size() > 1)
       {
-        body.emplace_back(expr);
+        for(auto it(exprs.begin() + 1); it != exprs.end(); ++it)
+        {
+          auto &expr(*it);
+          expr->propagate_position(expression_position::statement);
+          body.emplace_back(expr);
+        }
       }
 
       /* Finally, mark the last body item as our return. */
@@ -425,7 +433,7 @@ namespace jank::evaluate
     if(expr.data->type == object_type::keyword)
     {
       auto const d(expect_object<obj::keyword>(expr.data));
-      return __rt_ctx->intern_keyword(d->sym.ns, d->sym.name).expect_ok();
+      return __rt_ctx->intern_keyword(d->sym->ns, d->sym->name).expect_ok();
     }
     return expr.data;
   }

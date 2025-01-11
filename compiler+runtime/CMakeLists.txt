@@ -66,8 +66,9 @@ set(
   -Wno-covered-switch-default
   -Wno-invalid-offsetof
   -fno-common
-  -frtti
+  -fno-rtti
   -fexceptions
+  #-ftime-trace
   $<$<CONFIG:Debug>:-O1>
   $<$<CONFIG:Release>:-O2>
 )
@@ -78,13 +79,10 @@ set(
   -w
 )
 
-# TODO: Remove FMT_HEADER_ONLY once the extern template Clang bug is fixed.
 set(
   jank_common_compiler_flags
   -std=gnu++20
   -DIMMER_HAS_LIBGC=1 -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1
-  -DFMT_HEADER_ONLY=1
-  #-DLIBASSERT_USE_MAGIC_ENUM=1
   #-DLIBASSERT_USE_FMT=1
   #-DLIBASSERT_STATIC_DEFINE=1
   #-stdlib=libc++
@@ -153,6 +151,7 @@ add_library(
   src/cpp/jank/util/scope_exit.cpp
   src/cpp/jank/util/escape.cpp
   src/cpp/jank/util/clang_format.cpp
+  src/cpp/jank/util/string_builder.cpp
   src/cpp/jank/profile/time.cpp
   src/cpp/jank/read/lex.cpp
   src/cpp/jank/read/parse.cpp
@@ -187,6 +186,8 @@ add_library(
   src/cpp/jank/runtime/obj/transient_hash_map.cpp
   src/cpp/jank/runtime/obj/persistent_sorted_map.cpp
   src/cpp/jank/runtime/obj/transient_sorted_map.cpp
+  src/cpp/jank/runtime/obj/detail/base_persistent_map.cpp
+  src/cpp/jank/runtime/obj/detail/base_persistent_map_sequence.cpp
   src/cpp/jank/runtime/obj/transient_vector.cpp
   src/cpp/jank/runtime/obj/persistent_hash_set.cpp
   src/cpp/jank/runtime/obj/transient_hash_set.cpp
@@ -196,6 +197,7 @@ add_library(
   src/cpp/jank/runtime/obj/persistent_string_sequence.cpp
   src/cpp/jank/runtime/obj/cons.cpp
   src/cpp/jank/runtime/obj/range.cpp
+  src/cpp/jank/runtime/obj/integer_range.cpp
   src/cpp/jank/runtime/obj/repeat.cpp
   src/cpp/jank/runtime/obj/ratio.cpp
   src/cpp/jank/runtime/obj/iterator.cpp
@@ -203,6 +205,7 @@ add_library(
   src/cpp/jank/runtime/obj/chunk_buffer.cpp
   src/cpp/jank/runtime/obj/array_chunk.cpp
   src/cpp/jank/runtime/obj/chunked_cons.cpp
+  src/cpp/jank/runtime/obj/detail/iterator_sequence.cpp
   src/cpp/jank/runtime/obj/native_array_sequence.cpp
   src/cpp/jank/runtime/obj/native_vector_sequence.cpp
   src/cpp/jank/runtime/obj/atom.cpp
@@ -262,7 +265,6 @@ target_link_libraries(
   fmt::fmt
   bdwgc::gc bdwgc::gccpp
   libzippp::libzippp
-  readline
   libclang.so
   libclang-cpp.so
   libLLVM.so
@@ -275,13 +277,6 @@ jank_hook_llvm(jank_lib)
 # Build a string of all of our JIT compilation flags so we can load them up in the runtime.
 set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags})
 list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str)
-
-target_include_directories(
-    jank_lib
-    SYSTEM
-    PUBLIC
-    "$<$<PLATFORM_ID:Darwin>:/opt/homebrew/include>"
-)
 
 target_include_directories(
     jank_lib
@@ -433,6 +428,7 @@ if(jank_tests)
     jank_test_exe
     test/cpp/main.cpp
     test/cpp/jank/native_persistent_string.cpp
+    test/cpp/jank/util/string_builder.cpp
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/analyze/box.cpp
@@ -495,9 +491,7 @@ add_custom_target(
 # ---- Clang format YAML ----
 # We copy this into our binary directory so that jank can use it to format code. It's also
 # installed alongside jank, for the same reason.
-#
-# Comment out by @haruki7049
-#file(COPY ${CMAKE_SOURCE_DIR}/../.clang-format DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/clang-format DESTINATION ${CMAKE_BINARY_DIR}/.clang-format)
 # ---- Clang format YAML ----
 
 # ---- Install rules ----

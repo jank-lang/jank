@@ -1,10 +1,14 @@
+#include <fmt/format.h>
+
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
+#include <jank/native_persistent_string/fmt.hpp>
 
 namespace jank::runtime
 {
-  ns::static_object(obj::symbol_ptr const &name, context &c)
+  ns::ns(obj::symbol_ptr const &name, context &c)
     : name{ name }
     , vars{ obj::persistent_hash_map::empty() }
     , aliases{ obj::persistent_hash_map::empty() }
@@ -56,8 +60,7 @@ namespace jank::runtime
     return { expect_object<var>(*found) };
   }
 
-  result<void, native_persistent_string>
-  ns::add_alias(obj::symbol_ptr const &sym, native_box<static_object> const &ns)
+  result<void, native_persistent_string> ns::add_alias(obj::symbol_ptr const &sym, ns_ptr const &ns)
   {
     auto locked_aliases(aliases.wlock());
     auto const found((*locked_aliases)->data.find(sym));
@@ -130,7 +133,7 @@ namespace jank::runtime
     return to_string();
   }
 
-  void ns::to_string(fmt::memory_buffer &buff) const
+  void ns::to_string(util::string_builder &buff) const
   {
     name->to_string(buff);
   }

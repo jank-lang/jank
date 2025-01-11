@@ -1,67 +1,63 @@
-#include <fmt/compile.h>
+#include <fmt/format.h>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/visit.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
   /***** boolean *****/
-  obj::boolean_ptr obj::boolean::true_const()
+  boolean_ptr boolean::true_const()
   {
-    static obj::boolean r{ true };
+    static boolean r{ true };
     return &r;
   }
 
-  obj::boolean_ptr obj::boolean::false_const()
+  boolean_ptr boolean::false_const()
   {
-    static obj::boolean r{ false };
+    static boolean r{ false };
     return &r;
   }
 
-  obj::boolean::static_object(native_bool const d)
+  boolean::boolean(native_bool const d)
     : data{ d }
   {
   }
 
-  native_bool obj::boolean::equal(object const &o) const
+  native_bool boolean::equal(object const &o) const
   {
     if(o.type != object_type::boolean)
     {
       return false;
     }
 
-    auto const b(expect_object<obj::boolean>(&o));
+    auto const b(expect_object<boolean>(&o));
     return data == b->data;
   }
 
-  static void to_string_impl(bool const data, fmt::memory_buffer &buff)
+  void boolean::to_string(util::string_builder &buff) const
   {
-    format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data ? "true" : "false");
+    buff(data);
   }
 
-  void obj::boolean::to_string(fmt::memory_buffer &buff) const
+  native_persistent_string boolean::to_string() const
   {
-    to_string_impl(data, buff);
+    util::string_builder buff;
+    buff(data);
+    return buff.release();
   }
 
-  native_persistent_string obj::boolean::to_string() const
-  {
-    fmt::memory_buffer buff;
-    to_string_impl(data, buff);
-    return native_persistent_string{ buff.data(), buff.size() };
-  }
-
-  native_persistent_string obj::boolean::to_code_string() const
+  native_persistent_string boolean::to_code_string() const
   {
     return to_string();
   }
 
-  native_hash obj::boolean::to_hash() const
+  native_hash boolean::to_hash() const
   {
     return data ? 1231 : 1237;
   }
 
-  native_integer obj::boolean::compare(object const &o) const
+  native_integer boolean::compare(object const &o) const
   {
     return visit_number_like(
       [this](auto const typed_o) -> native_integer {
@@ -73,49 +69,50 @@ namespace jank::runtime
       &o);
   }
 
-  native_integer obj::boolean::compare(obj::boolean const &o) const
+  native_integer boolean::compare(boolean const &o) const
   {
     return (data > o.data) - (data < o.data);
   }
 
   /***** integer *****/
-  obj::integer::static_object(native_integer const d)
+  integer::integer(native_integer const d)
     : data{ d }
   {
   }
 
-  native_bool obj::integer::equal(object const &o) const
+  native_bool integer::equal(object const &o) const
   {
     if(o.type != object_type::integer)
     {
       return false;
     }
 
-    auto const i(expect_object<obj::integer>(&o));
+    auto const i(expect_object<integer>(&o));
     return data == i->data;
   }
 
-  native_persistent_string obj::integer::to_string() const
+  native_persistent_string integer::to_string() const
   {
-    return fmt::format(FMT_COMPILE("{}"), data);
+    util::string_builder sb;
+    return sb(data).release();
   }
 
-  void obj::integer::to_string(fmt::memory_buffer &buff) const
+  void integer::to_string(util::string_builder &buff) const
   {
-    fmt::format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data);
+    buff(data);
   }
 
-  native_persistent_string obj::integer::to_code_string() const
+  native_persistent_string integer::to_code_string() const
   {
     return to_string();
   }
 
-  native_hash obj::integer::to_hash() const
+  native_hash integer::to_hash() const
   {
     return hash::integer(data);
   }
 
-  native_integer obj::integer::compare(object const &o) const
+  native_integer integer::compare(object const &o) const
   {
     return visit_number_like(
       [this](auto const typed_o) -> native_integer {
@@ -127,60 +124,61 @@ namespace jank::runtime
       &o);
   }
 
-  native_integer obj::integer::compare(obj::integer const &o) const
+  native_integer integer::compare(integer const &o) const
   {
     return (data > o.data) - (data < o.data);
   }
 
-  native_integer obj::integer::to_integer() const
+  native_integer integer::to_integer() const
   {
     return data;
   }
 
-  native_real obj::integer::to_real() const
+  native_real integer::to_real() const
   {
     return static_cast<native_real>(data);
   }
 
   /***** real *****/
-  obj::real::static_object(native_real const d)
+  real::real(native_real const d)
     : data{ d }
   {
   }
 
-  native_bool obj::real::equal(object const &o) const
+  native_bool real::equal(object const &o) const
   {
     if(o.type != object_type::real)
     {
       return false;
     }
 
-    auto const r(expect_object<obj::real>(&o));
+    auto const r(expect_object<real>(&o));
     std::hash<native_real> const hasher{};
     return hasher(data) == hasher(r->data);
   }
 
-  native_persistent_string obj::real::to_string() const
+  native_persistent_string real::to_string() const
   {
-    return fmt::format(FMT_COMPILE("{}"), data);
+    util::string_builder sb;
+    return sb(data).release();
   }
 
-  void obj::real::to_string(fmt::memory_buffer &buff) const
+  void real::to_string(util::string_builder &buff) const
   {
-    fmt::format_to(std::back_inserter(buff), FMT_COMPILE("{}"), data);
+    buff(data);
   }
 
-  native_persistent_string obj::real::to_code_string() const
+  native_persistent_string real::to_code_string() const
   {
     return to_string();
   }
 
-  native_hash obj::real::to_hash() const
+  native_hash real::to_hash() const
   {
     return hash::real(data);
   }
 
-  native_integer obj::real::compare(object const &o) const
+  native_integer real::compare(object const &o) const
   {
     return visit_number_like(
       [this](auto const typed_o) -> native_integer {
@@ -192,17 +190,17 @@ namespace jank::runtime
       &o);
   }
 
-  native_integer obj::real::compare(obj::real const &o) const
+  native_integer real::compare(real const &o) const
   {
     return (data > o.data) - (data < o.data);
   }
 
-  native_integer obj::real::to_integer() const
+  native_integer real::to_integer() const
   {
     return static_cast<native_integer>(data);
   }
 
-  native_real obj::real::to_real() const
+  native_real real::to_real() const
   {
     return data;
   }

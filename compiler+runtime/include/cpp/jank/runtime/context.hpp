@@ -9,7 +9,6 @@
 #include <jank/runtime/module/loader.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
-#include <jank/runtime/obj/keyword.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/util/cli.hpp>
 
@@ -28,6 +27,11 @@ namespace jank
 
 namespace jank::runtime
 {
+  namespace obj
+  {
+    using keyword_ptr = native_box<struct keyword>;
+  }
+
   /* This is a singleton, as much as I fought it for actual years. Trying to have multiple
    * contexts is limited firstly by there being a single, global JIT compilation context
    * and process in which global memory exists. Secondly, by the fact that interned keywords
@@ -81,7 +85,7 @@ namespace jank::runtime
     native_vector<analyze::expression_ptr>
     analyze_string(native_persistent_string_view const &code, native_bool const eval = true);
 
-    /* Finds the specified module on the class path and loads it. If
+    /* Finds the specified module on the module path and loads it. If
      * the module is already loaded, nothing is done.
      *
      * Modules are considered absolute if they begin with a forward slash. Otherwise, they
@@ -92,7 +96,8 @@ namespace jank::runtime
      * Module /meow.cat refers to module meow.cat
      * Module meow.cat refers to foo.bar$meow.cat
      */
-    result<void, native_persistent_string> load_module(native_persistent_string_view const &module);
+    result<void, native_persistent_string>
+    load_module(native_persistent_string_view const &module, module::origin ori);
 
     /* Does all the same work as load_module, but also writes compiled files to the file system. */
     result<void, native_persistent_string>

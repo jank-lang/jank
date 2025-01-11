@@ -1,32 +1,35 @@
+#include <fmt/format.h>
+
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/cons.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/visit.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  obj::cons::static_object(object_ptr const head, object_ptr const tail)
+  cons::cons(object_ptr const head, object_ptr const tail)
     : head{ head }
-    , tail{ tail == obj::nil::nil_const() ? nullptr : tail }
+    , tail{ tail == nil::nil_const() ? nullptr : tail }
   {
     assert(head);
   }
 
-  obj::cons_ptr obj::cons::seq() const
+  cons_ptr cons::seq() const
   {
-    return const_cast<obj::cons *>(this);
+    return const_cast<cons *>(this);
   }
 
-  obj::cons_ptr obj::cons::fresh_seq() const
+  cons_ptr cons::fresh_seq() const
   {
-    return make_box<obj::cons>(head, tail);
+    return make_box<cons>(head, tail);
   }
 
-  object_ptr obj::cons::first() const
+  object_ptr cons::first() const
   {
     return head;
   }
 
-  object_ptr obj::cons::next() const
+  object_ptr cons::next() const
   {
     if(!tail)
     {
@@ -36,7 +39,7 @@ namespace jank::runtime
     return runtime::seq(tail);
   }
 
-  obj::cons_ptr obj::cons::next_in_place()
+  cons_ptr cons::next_in_place()
   {
     if(!tail)
     {
@@ -51,7 +54,7 @@ namespace jank::runtime
         {
           head = typed_tail->first();
           tail = typed_tail->next();
-          if(tail == obj::nil::nil_const())
+          if(tail == nil::nil_const())
           {
             tail = nullptr;
           }
@@ -66,7 +69,7 @@ namespace jank::runtime
     return this;
   }
 
-  native_bool obj::cons::equal(object const &o) const
+  native_bool cons::equal(object const &o) const
   {
     return visit_seqable(
       [this](auto const typed_o) {
@@ -85,22 +88,22 @@ namespace jank::runtime
       &o);
   }
 
-  void obj::cons::to_string(fmt::memory_buffer &buff) const
+  void cons::to_string(util::string_builder &buff) const
   {
     runtime::to_string(seq(), buff);
   }
 
-  native_persistent_string obj::cons::to_string() const
+  native_persistent_string cons::to_string() const
   {
     return runtime::to_string(seq());
   }
 
-  native_persistent_string obj::cons::to_code_string() const
+  native_persistent_string cons::to_code_string() const
   {
     return runtime::to_code_string(seq());
   }
 
-  native_hash obj::cons::to_hash() const
+  native_hash cons::to_hash() const
   {
     if(hash != 0)
     {
@@ -110,12 +113,12 @@ namespace jank::runtime
     return hash = hash::ordered(&base);
   }
 
-  obj::cons_ptr obj::cons::conj(object_ptr const head) const
+  cons_ptr cons::conj(object_ptr const head) const
   {
-    return make_box<obj::cons>(head, this);
+    return make_box<cons>(head, this);
   }
 
-  obj::cons_ptr obj::cons::with_meta(object_ptr const m) const
+  cons_ptr cons::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

@@ -16,9 +16,6 @@
 [submodule "compiler+runtime/third-party/immer"]
 	path = compiler+runtime/third-party/immer
 	url = https://github.com/jank-lang/immer.git
-[submodule "compiler+runtime/third-party/magic_enum"]
-	path = compiler+runtime/third-party/magic_enum
-	url = https://github.com/jank-lang/magic_enum.git
 [submodule "compiler+runtime/third-party/cli11"]
 	path = compiler+runtime/third-party/cli11
 	url = https://github.com/jank-lang/CLI11.git

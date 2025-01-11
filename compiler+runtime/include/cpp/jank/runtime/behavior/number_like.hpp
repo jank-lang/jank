@@ -1,6 +1,6 @@
 #pragma once
 
-#include <jank/runtime/obj/number.hpp>
+#include <jank/type.hpp>
 
 namespace jank::runtime::behavior
 {

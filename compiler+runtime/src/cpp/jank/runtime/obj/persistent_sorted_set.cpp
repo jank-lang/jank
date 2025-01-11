@@ -1,30 +1,32 @@
 #include <jank/runtime/obj/persistent_sorted_set.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/runtime/core/seq.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  obj::persistent_sorted_set::static_object(runtime::detail::native_persistent_sorted_set &&d)
+  persistent_sorted_set::persistent_sorted_set(runtime::detail::native_persistent_sorted_set &&d)
     : data{ std::move(d) }
   {
   }
 
-  obj::persistent_sorted_set::static_object(runtime::detail::native_persistent_sorted_set const &d)
+  persistent_sorted_set::persistent_sorted_set(
+    runtime::detail::native_persistent_sorted_set const &d)
     : data{ d }
   {
   }
 
-  obj::persistent_sorted_set::static_object(object_ptr const meta,
-                                            runtime::detail::native_persistent_sorted_set &&d)
+  persistent_sorted_set::persistent_sorted_set(object_ptr const meta,
+                                               runtime::detail::native_persistent_sorted_set &&d)
     : data{ std::move(d) }
     , meta{ meta }
   {
   }
 
-  obj::persistent_sorted_set_ptr obj::persistent_sorted_set::create_from_seq(object_ptr const seq)
+  persistent_sorted_set_ptr persistent_sorted_set::create_from_seq(object_ptr const seq)
   {
-    return make_box<obj::persistent_sorted_set>(visit_seqable(
-      [](auto const typed_seq) -> obj::persistent_sorted_set::value_type {
-        detail::native_transient_sorted_set transient;
+    return make_box<persistent_sorted_set>(visit_seqable(
+      [](auto const typed_seq) -> persistent_sorted_set::value_type {
+        runtime::detail::native_transient_sorted_set transient;
         for(auto it(typed_seq->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
         {
           transient.insert_v(it->first());
@@ -34,7 +36,7 @@ namespace jank::runtime
       seq));
   }
 
-  native_bool obj::persistent_sorted_set::equal(object const &o) const
+  native_bool persistent_sorted_set::equal(object const &o) const
   {
     if(&o == &base)
     {
@@ -62,92 +64,89 @@ namespace jank::runtime
       &o);
   }
 
-  void obj::persistent_sorted_set::to_string(fmt::memory_buffer &buff) const
+  void persistent_sorted_set::to_string(util::string_builder &buff) const
   {
     runtime::to_string(data.begin(), data.end(), "#{", '}', buff);
   }
 
-  native_persistent_string obj::persistent_sorted_set::to_string() const
+  native_persistent_string persistent_sorted_set::to_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     runtime::to_string(data.begin(), data.end(), "#{", '}', buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
-  native_persistent_string obj::persistent_sorted_set::to_code_string() const
+  native_persistent_string persistent_sorted_set::to_code_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     runtime::to_code_string(data.begin(), data.end(), "#{", '}', buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
   /* TODO: Cache this. */
-  native_hash obj::persistent_sorted_set::to_hash() const
+  native_hash persistent_sorted_set::to_hash() const
   {
     return hash::unordered(data.begin(), data.end());
   }
 
-  obj::persistent_sorted_set_sequence_ptr obj::persistent_sorted_set::seq() const
+  persistent_sorted_set_sequence_ptr persistent_sorted_set::seq() const
   {
     return fresh_seq();
   }
 
-  obj::persistent_sorted_set_sequence_ptr obj::persistent_sorted_set::fresh_seq() const
+  persistent_sorted_set_sequence_ptr persistent_sorted_set::fresh_seq() const
   {
     if(data.empty())
     {
       return nullptr;
     }
-    return make_box<obj::persistent_sorted_set_sequence>(this,
-                                                         data.begin(),
-                                                         data.end(),
-                                                         data.size());
+    return make_box<persistent_sorted_set_sequence>(this, data.begin(), data.end(), data.size());
   }
 
-  size_t obj::persistent_sorted_set::count() const
+  size_t persistent_sorted_set::count() const
   {
     return data.size();
   }
 
-  obj::persistent_sorted_set_ptr obj::persistent_sorted_set::with_meta(object_ptr const m) const
+  persistent_sorted_set_ptr persistent_sorted_set::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(make_box<obj::persistent_sorted_set>(data));
+    auto ret(make_box<persistent_sorted_set>(data));
     ret->meta = meta;
     return ret;
   }
 
-  obj::persistent_sorted_set_ptr obj::persistent_sorted_set::conj(object_ptr const head) const
+  persistent_sorted_set_ptr persistent_sorted_set::conj(object_ptr const head) const
   {
     auto set(data.insert_v(head));
-    auto ret(make_box<obj::persistent_sorted_set>(std::move(set)));
+    auto ret(make_box<persistent_sorted_set>(std::move(set)));
     return ret;
   }
 
-  object_ptr obj::persistent_sorted_set::call(object_ptr const o)
+  object_ptr persistent_sorted_set::call(object_ptr const o)
   {
     auto const found(data.find(o));
     if(found != data.end())
     {
       return found.get();
     }
-    return obj::nil::nil_const();
+    return nil::nil_const();
   }
 
-  obj::transient_sorted_set_ptr obj::persistent_sorted_set::to_transient() const
+  transient_sorted_set_ptr persistent_sorted_set::to_transient() const
   {
-    return make_box<obj::transient_sorted_set>(data);
+    return make_box<transient_sorted_set>(data);
   }
 
-  native_bool obj::persistent_sorted_set::contains(object_ptr const o) const
+  native_bool persistent_sorted_set::contains(object_ptr const o) const
   {
     return data.find(o) != data.end();
   }
 
-  obj::persistent_sorted_set_ptr obj::persistent_sorted_set::disj(object_ptr const o) const
+  persistent_sorted_set_ptr persistent_sorted_set::disj(object_ptr const o) const
   {
     auto set(data.erase_key(o));
-    auto ret(make_box<obj::persistent_sorted_set>(std::move(set)));
+    auto ret(make_box<persistent_sorted_set>(std::move(set)));
     return ret;
   }
 }

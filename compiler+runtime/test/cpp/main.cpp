@@ -11,13 +11,17 @@
 #include <llvm/Support/ManagedStatic.h>
 #include <llvm/Support/TargetSelect.h>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/core/to_string.hpp>
 #include <clojure/core_native.hpp>
 
 /* NOLINTNEXTLINE(bugprone-exception-escape): println can throw. */
 int main(int const argc, char const **argv)
 try
 {
+  std::locale::global(std::locale(""));
+
   GC_set_all_interior_pointers(1);
   GC_enable();
 
@@ -33,7 +37,11 @@ try
 
   jank::runtime::__rt_ctx = new(GC) jank::runtime::context{};
   jank_load_clojure_core_native();
-  jank::runtime::__rt_ctx->load_module("/clojure.core").expect_ok();
+  /* TODO: Load latest here.
+   * We're loading from source always due to a bug in how we generate symbols which is
+   * leading to duplicate symbols being generated. */
+  jank::runtime::__rt_ctx->load_module("/clojure.core", jank::runtime::module::origin::source)
+    .expect_ok();
 
   auto const res(context.run());
   if(context.shouldExit())

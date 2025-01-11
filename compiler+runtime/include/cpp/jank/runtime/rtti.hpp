@@ -1,23 +1,9 @@
 #pragma once
 
-#include <magic_enum.hpp>
-
 #include <jank/runtime/object.hpp>
 
 namespace jank::runtime
 {
-  namespace detail
-  {
-    template <typename T>
-    struct object_type_to_enum;
-
-    template <object_type O>
-    struct object_type_to_enum<static_object<O>>
-    {
-      static constexpr object_type value{ O };
-    };
-  }
-
   /* Most of the system is polymorphic using type-erased objects. Given any object, an erase call
    * will get you what you need. If you don't need to type-erase, though, don't! */
   template <typename T>
@@ -56,7 +42,7 @@ namespace jank::runtime
   constexpr native_box<T> isa(object const * const o)
   {
     assert(o);
-    return o->type == detail::object_type_to_enum<T>::value;
+    return o->type == T::obj_type;
   }
 
   template <typename T>
@@ -65,7 +51,7 @@ namespace jank::runtime
   constexpr native_box<T> dyn_cast(object const * const o)
   {
     assert(o);
-    if(o->type != detail::object_type_to_enum<T>::value)
+    if(o->type != T::obj_type)
     {
       return nullptr;
     }
@@ -76,15 +62,18 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr native_box<T> try_object(object const * const o)
+  native_box<T> try_object(object const * const o)
   {
     assert(o);
-    if(o->type != detail::object_type_to_enum<T>::value)
+    if(o->type != T::obj_type)
     {
-      throw std::runtime_error{ fmt::format(
-        "invalid object type (expected {}, found {})",
-        magic_enum::enum_name(detail::object_type_to_enum<T>::value),
-        magic_enum::enum_name(o->type)) };
+      util::string_builder sb;
+      sb("invalid object type (expected ");
+      sb(object_type_str(T::obj_type));
+      sb(" found ");
+      sb(object_type_str(o->type));
+      sb(")");
+      throw std::runtime_error{ sb.str() };
     }
     return reinterpret_cast<T *>(reinterpret_cast<char *>(const_cast<object *>(o))
                                  - offsetof(T, base));
@@ -99,7 +88,7 @@ namespace jank::runtime
   constexpr native_box<T> expect_object(object_ptr const o)
   {
     assert(o);
-    assert(o->type == detail::object_type_to_enum<T>::value);
+    assert(o->type == T::obj_type);
     return reinterpret_cast<T *>(reinterpret_cast<char *>(o.data) - offsetof(T, base));
   }
 
@@ -109,7 +98,7 @@ namespace jank::runtime
   constexpr native_box<T> expect_object(object const * const o)
   {
     assert(o);
-    assert(o->type == detail::object_type_to_enum<T>::value);
+    assert(o->type == T::obj_type);
     return reinterpret_cast<T *>(reinterpret_cast<char *>(const_cast<object *>(o))
                                  - offsetof(T, base));
   }

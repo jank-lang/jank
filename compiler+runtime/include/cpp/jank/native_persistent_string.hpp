@@ -1,7 +1,6 @@
 #pragma once
 
 #include <bit>
-#include <fmt/format.h>
 
 #include <jank/type.hpp>
 
@@ -10,6 +9,11 @@ namespace jank
   namespace hash
   {
     uint32_t integer(native_hash const input);
+  }
+
+  namespace util
+  {
+    struct string_builder;
   }
 
   /* This is a not-completely-standard replacement for std::string, with a few goals in mind:
@@ -61,6 +65,8 @@ namespace jank
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
     static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
+
+    friend struct util::string_builder;
 
     constexpr native_persistent_string() noexcept
     {
@@ -670,7 +676,7 @@ namespace jank
     }
 
     /*** Conversions. ***/
-    constexpr operator native_transient_string() const noexcept
+    constexpr operator native_transient_string() const
     {
       return { data(), size() };
     }
@@ -925,18 +931,6 @@ namespace jank
     return os << static_cast<native_persistent_string_view>(s);
   }
 }
-
-template <>
-struct fmt::formatter<jank::native_persistent_string> : private formatter<fmt::string_view>
-{
-  using formatter<fmt::string_view>::parse;
-
-  template <typename Context>
-  auto format(jank::native_persistent_string const &s, Context &ctx) const
-  {
-    return formatter<fmt::string_view>::format({ s.data(), s.size() }, ctx);
-  }
-};
 
 namespace std
 {

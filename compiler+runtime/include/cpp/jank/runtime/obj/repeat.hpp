@@ -1,21 +1,23 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/cons.hpp>
-#include <jank/runtime/behavior/seqable.hpp>
+#include <jank/option.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  template <>
-  struct static_object<object_type::repeat> : gc
+  using cons_ptr = native_box<struct cons>;
+  using repeat_ptr = native_box<struct repeat>;
+
+  struct repeat : gc
   {
+    static constexpr object_type obj_type{ object_type::repeat };
     static constexpr native_bool pointer_free{ false };
     static constexpr native_bool is_sequential{ true };
     static constexpr native_integer infinite{ -1 };
 
-    static_object() = default;
-    static_object(object_ptr value);
-    static_object(object_ptr count, object_ptr value);
+    repeat() = default;
+    repeat(object_ptr value);
+    repeat(object_ptr count, object_ptr value);
 
     static object_ptr create(object_ptr value);
     static object_ptr create(object_ptr count, object_ptr value);
@@ -23,36 +25,30 @@ namespace jank::runtime
     /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string to_string();
-    void to_string(fmt::memory_buffer &buff);
+    void to_string(util::string_builder &buff);
     native_persistent_string to_code_string();
     native_hash to_hash() const;
 
     /* behavior::seqable */
-    native_box<static_object> seq();
-    native_box<static_object> fresh_seq() const;
+    repeat_ptr seq();
+    repeat_ptr fresh_seq() const;
 
     /* behavior::sequenceable */
     object_ptr first() const;
-    native_box<static_object> next() const;
+    repeat_ptr next() const;
 
     /* behavior::sequenceable_in_place */
-    native_box<static_object> next_in_place();
+    repeat_ptr next_in_place();
 
     /* behavior::conjable */
     obj::cons_ptr conj(object_ptr head) const;
 
     /* behavior::metadatable */
-    native_box<static_object> with_meta(object_ptr m) const;
+    repeat_ptr with_meta(object_ptr m) const;
 
-    object base{ object_type::repeat };
+    object base{ obj_type };
     object_ptr value{};
     object_ptr count{};
     option<object_ptr> meta{};
   };
-
-  namespace obj
-  {
-    using repeat = static_object<object_type::repeat>;
-    using repeat_ptr = native_box<repeat>;
-  }
 }

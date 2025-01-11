@@ -1,3 +1,6 @@
+#include <fmt/format.h>
+
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/comparable.hpp>
@@ -47,7 +50,7 @@ namespace jank::runtime
 
   native_persistent_string type(object_ptr const o)
   {
-    return magic_enum::enum_name(o->type);
+    return object_type_str(o->type);
   }
 
   native_bool is_nil(object_ptr const o)
@@ -98,12 +101,11 @@ namespace jank::runtime
 
         if constexpr(behavior::sequenceable<T>)
         {
-          fmt::memory_buffer buff;
-          auto inserter(std::back_inserter(buff));
+          util::string_builder buff;
           runtime::to_string(typed_args->first(), buff);
           for(auto it(next_in_place(typed_args)); it != nullptr; it = next_in_place(it))
           {
-            fmt::format_to(inserter, " ");
+            buff(' ');
             runtime::to_string(it->first(), buff);
           }
           std::fwrite(buff.data(), 1, buff.size(), stdout);
@@ -130,12 +132,11 @@ namespace jank::runtime
         }
         else if constexpr(behavior::sequenceable<T>)
         {
-          fmt::memory_buffer buff;
-          auto inserter(std::back_inserter(buff));
+          util::string_builder buff;
           runtime::to_string(typed_more->first(), buff);
           for(auto it(next_in_place(typed_more)); it != nullptr; it = next_in_place(it))
           {
-            fmt::format_to(inserter, " ");
+            buff(' ');
             runtime::to_string(it->first(), buff);
           }
           std::fwrite(buff.data(), 1, buff.size(), stdout);
@@ -159,12 +160,11 @@ namespace jank::runtime
 
         if constexpr(behavior::sequenceable<T>)
         {
-          fmt::memory_buffer buff;
-          auto inserter(std::back_inserter(buff));
+          util::string_builder buff;
           runtime::to_code_string(typed_args->first(), buff);
           for(auto it(next_in_place(typed_args)); it != nullptr; it = next_in_place(it))
           {
-            fmt::format_to(inserter, " ");
+            buff(' ');
             runtime::to_code_string(it->first(), buff);
           }
           std::fwrite(buff.data(), 1, buff.size(), stdout);
@@ -191,12 +191,11 @@ namespace jank::runtime
         }
         else if constexpr(behavior::sequenceable<T>)
         {
-          fmt::memory_buffer buff;
-          auto inserter(std::back_inserter(buff));
+          util::string_builder buff;
           runtime::to_code_string(typed_more->first(), buff);
           for(auto it(next_in_place(typed_more)); it != nullptr; it = next_in_place(it))
           {
-            fmt::format_to(inserter, " ");
+            buff(' ');
             runtime::to_code_string(it->first(), buff);
           }
           std::fwrite(buff.data(), 1, buff.size(), stdout);
@@ -413,12 +412,12 @@ namespace jank::runtime
 
   native_bool is_simple_keyword(object_ptr const o)
   {
-    return o->type == object_type::keyword && expect_object<obj::keyword>(o)->sym.ns.empty();
+    return o->type == object_type::keyword && expect_object<obj::keyword>(o)->sym->ns.empty();
   }
 
   native_bool is_qualified_keyword(object_ptr const o)
   {
-    return o->type == object_type::keyword && !expect_object<obj::keyword>(o)->sym.ns.empty();
+    return o->type == object_type::keyword && !expect_object<obj::keyword>(o)->sym->ns.empty();
   }
 
   native_bool is_callable(object_ptr const o)

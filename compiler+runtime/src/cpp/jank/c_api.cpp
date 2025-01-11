@@ -89,6 +89,13 @@ extern "C"
     return erase(var_obj->bind_root(val_obj));
   }
 
+  jank_object_ptr jank_var_set_dynamic(jank_object_ptr const var, jank_object_ptr const dynamic)
+  {
+    auto const var_obj(try_object<runtime::var>(reinterpret_cast<object *>(var)));
+    auto const dynamic_obj(reinterpret_cast<object *>(dynamic));
+    return erase(var_obj->set_dynamic(truthy(dynamic_obj)));
+  }
+
   jank_object_ptr jank_keyword_intern(jank_object_ptr const ns, jank_object_ptr const name)
   {
     auto const ns_obj(reinterpret_cast<object *>(ns));
@@ -387,7 +394,7 @@ extern "C"
   jank_object_ptr jank_list_create(uint64_t const size, ...)
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    va_list args;
+    va_list args{};
     va_start(args, size);
 
     native_vector<object_ptr> v;
@@ -407,7 +414,7 @@ extern "C"
   jank_object_ptr jank_vector_create(uint64_t const size, ...)
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    va_list args;
+    va_list args{};
     va_start(args, size);
 
     obj::transient_vector trans;
@@ -426,7 +433,7 @@ extern "C"
   jank_object_ptr jank_map_create(uint64_t const pairs, ...)
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    va_list args;
+    va_list args{};
     va_start(args, pairs);
 
     /* TODO: Could optimize to build an array map, if it's small enough. */
@@ -447,7 +454,7 @@ extern "C"
   jank_object_ptr jank_set_create(uint64_t const size, ...)
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    va_list args;
+    va_list args{};
     va_start(args, size);
 
     obj::transient_hash_set trans;

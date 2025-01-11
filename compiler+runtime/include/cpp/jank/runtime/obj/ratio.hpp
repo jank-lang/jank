@@ -1,40 +1,40 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/number.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  namespace obj
+  struct ratio_data
   {
-    struct ratio_data
-    {
-      ratio_data(native_integer const, native_integer const);
-      ratio_data(ratio_data const &) = default;
+    ratio_data(native_integer const, native_integer const);
+    ratio_data(ratio_data const &) = default;
 
-      native_real to_real() const;
-      native_integer to_integer() const;
+    native_real to_real() const;
+    native_integer to_integer() const;
 
-      native_integer numerator{};
-      native_integer denominator{};
-    };
-  }
+    native_integer numerator{};
+    native_integer denominator{};
+  };
 
-  template <>
-  struct static_object<object_type::ratio> : gc
+  using integer_ptr = native_box<struct integer>;
+  using real_ptr = native_box<struct real>;
+  using ratio_ptr = native_box<struct ratio>;
+
+  struct ratio : gc
   {
+    static constexpr object_type obj_type{ object_type::ratio };
     static constexpr native_bool pointer_free{ true };
 
-    static_object(static_object &&) noexcept = default;
-    static_object(static_object const &) = default;
-    static_object(obj::ratio_data const &);
+    ratio(ratio &&) noexcept = default;
+    ratio(ratio const &) = default;
+    ratio(ratio_data const &);
 
     static object_ptr create(native_integer const, native_integer const);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
     native_persistent_string to_string() const;
-    void to_string(fmt::memory_buffer &buff) const;
+    void to_string(util::string_builder &buff) const;
     native_persistent_string to_code_string() const;
     native_hash to_hash() const;
 
@@ -42,105 +42,99 @@ namespace jank::runtime
     native_integer compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(static_object const &) const;
+    native_integer compare(ratio const &) const;
 
     /* behavior::number_like */
     native_integer to_integer() const;
     native_real to_real() const;
 
-    object base{ object_type::ratio };
-    obj::ratio_data data;
+    object base{ obj_type };
+    ratio_data data;
   };
 
-  namespace obj
-  {
-    using ratio = static_object<object_type::ratio>;
-    using ratio_ptr = native_box<ratio>;
-
-    object_ptr operator+(obj::ratio_data const &l, obj::ratio_data const &r);
-    obj::ratio_ptr operator+(obj::integer_ptr l, obj::ratio_data const &r);
-    obj::ratio_ptr operator+(obj::ratio_data const &l, obj::integer_ptr r);
-    native_real operator+(obj::real_ptr l, obj::ratio_data const &r);
-    native_real operator+(obj::ratio_data const &l, obj::real_ptr r);
-    native_real operator+(obj::ratio_data const &l, native_real r);
-    native_real operator+(native_real l, obj::ratio_data const &r);
-    obj::ratio_ptr operator+(obj::ratio_data const &l, native_integer r);
-    obj::ratio_ptr operator+(native_integer l, obj::ratio_data const &r);
-    object_ptr operator-(obj::ratio_data const &l, obj::ratio_data const &r);
-    obj::ratio_ptr operator-(obj::integer_ptr l, obj::ratio_data const &r);
-    obj::ratio_ptr operator-(obj::ratio_data const &l, obj::integer_ptr r);
-    native_real operator-(obj::real_ptr l, obj::ratio_data const &r);
-    native_real operator-(obj::ratio_data const &l, obj::real_ptr r);
-    native_real operator-(obj::ratio_data const &l, native_real r);
-    native_real operator-(native_real l, obj::ratio_data const &r);
-    obj::ratio_ptr operator-(obj::ratio_data const &l, native_integer r);
-    obj::ratio_ptr operator-(native_integer l, obj::ratio_data const &r);
-    object_ptr operator*(obj::ratio_data const &l, obj::ratio_data const &r);
-    object_ptr operator*(obj::integer_ptr l, obj::ratio_data const &r);
-    object_ptr operator*(obj::ratio_data const &l, obj::integer_ptr r);
-    native_real operator*(obj::real_ptr l, obj::ratio_data const &r);
-    native_real operator*(obj::ratio_data const &l, obj::real_ptr r);
-    native_real operator*(obj::ratio_data const &l, native_real r);
-    native_real operator*(native_real l, obj::ratio_data const &r);
-    object_ptr operator*(obj::ratio_data const &l, native_integer r);
-    object_ptr operator*(native_integer l, obj::ratio_data const &r);
-    object_ptr operator/(obj::ratio_data const &l, obj::ratio_data const &r);
-    object_ptr operator/(obj::integer_ptr l, obj::ratio_data const &r);
-    obj::ratio_ptr operator/(obj::ratio_data const &l, obj::integer_ptr r);
-    native_real operator/(obj::real_ptr l, obj::ratio_data const &r);
-    native_real operator/(obj::ratio_data const &l, obj::real_ptr r);
-    native_real operator/(obj::ratio_data const &l, native_real r);
-    native_real operator/(native_real l, obj::ratio_data const &r);
-    obj::ratio_ptr operator/(obj::ratio_data const &l, native_integer r);
-    object_ptr operator/(native_integer l, obj::ratio_data const &r);
-    native_bool operator==(obj::ratio_data const &l, obj::ratio_data const &r);
-    native_bool operator==(obj::integer_ptr l, obj::ratio_data const &r);
-    native_bool operator==(obj::ratio_data const &l, obj::integer_ptr r);
-    native_bool operator==(obj::real_ptr l, obj::ratio_data const &r);
-    native_bool operator==(obj::ratio_data const &l, obj::real_ptr r);
-    native_bool operator==(obj::ratio_data const &l, native_real r);
-    native_bool operator==(native_real l, obj::ratio_data const &r);
-    native_bool operator==(obj::ratio_data const &l, native_integer r);
-    native_bool operator==(native_integer l, obj::ratio_data const &r);
-    native_bool operator<(obj::ratio_data const &l, obj::ratio_data const &r);
-    native_bool operator<(obj::integer_ptr l, obj::ratio_data const &r);
-    native_bool operator<(obj::ratio_data const &l, obj::integer_ptr r);
-    native_bool operator<(obj::real_ptr l, obj::ratio_data const &r);
-    native_bool operator<(obj::ratio_data const &l, obj::real_ptr r);
-    native_bool operator<(obj::ratio_data const &l, native_real r);
-    native_bool operator<(native_real l, obj::ratio_data const &r);
-    native_bool operator<(obj::ratio_data const &l, native_integer r);
-    native_bool operator<(native_integer l, obj::ratio_data const &r);
-    native_bool operator<(native_bool l, obj::ratio_data const &r);
-    native_bool operator<(obj::ratio_data const &l, native_bool r);
-    native_bool operator<=(obj::ratio_data const &l, obj::ratio_data const &r);
-    native_bool operator<=(obj::integer_ptr l, obj::ratio_data const &r);
-    native_bool operator<=(obj::ratio_data const &l, obj::integer_ptr r);
-    native_bool operator<=(obj::real_ptr l, obj::ratio_data const &r);
-    native_bool operator<=(obj::ratio_data const &l, obj::real_ptr r);
-    native_bool operator<=(obj::ratio_data const &l, native_real r);
-    native_bool operator<=(native_real l, obj::ratio_data const &r);
-    native_bool operator<=(obj::ratio_data const &l, native_integer r);
-    native_bool operator<=(native_integer l, obj::ratio_data const &r);
-    native_bool operator>(obj::ratio_data const &l, obj::ratio_data const &r);
-    native_bool operator>(obj::integer_ptr l, obj::ratio_data const &r);
-    native_bool operator>(obj::ratio_data const &l, obj::integer_ptr r);
-    native_bool operator>(obj::real_ptr l, obj::ratio_data const &r);
-    native_bool operator>(obj::ratio_data const &l, obj::real_ptr r);
-    native_bool operator>(obj::ratio_data const &l, native_real r);
-    native_bool operator>(native_real l, obj::ratio_data const &r);
-    native_bool operator>(obj::ratio_data const &l, native_integer r);
-    native_bool operator>(native_integer l, obj::ratio_data const &r);
-    native_bool operator>(native_bool l, obj::ratio_data const &r);
-    native_bool operator>(obj::ratio_data const &l, native_bool r);
-    native_bool operator>=(obj::ratio_data const &l, obj::ratio_data const &r);
-    native_bool operator>=(obj::integer_ptr l, obj::ratio_data const &r);
-    native_bool operator>=(obj::ratio_data const &l, obj::integer_ptr r);
-    native_bool operator>=(obj::real_ptr l, obj::ratio_data const &r);
-    native_bool operator>=(obj::ratio_data const &l, obj::real_ptr r);
-    native_bool operator>=(obj::ratio_data const &l, native_real r);
-    native_bool operator>=(native_real l, obj::ratio_data const &r);
-    native_bool operator>=(obj::ratio_data const &l, native_integer r);
-    native_bool operator>=(native_integer l, obj::ratio_data const &r);
-  }
+  object_ptr operator+(ratio_data const &l, ratio_data const &r);
+  ratio_ptr operator+(integer_ptr l, ratio_data const &r);
+  ratio_ptr operator+(ratio_data const &l, integer_ptr r);
+  native_real operator+(real_ptr l, ratio_data const &r);
+  native_real operator+(ratio_data const &l, real_ptr r);
+  native_real operator+(ratio_data const &l, native_real r);
+  native_real operator+(native_real l, ratio_data const &r);
+  ratio_ptr operator+(ratio_data const &l, native_integer r);
+  ratio_ptr operator+(native_integer l, ratio_data const &r);
+  object_ptr operator-(ratio_data const &l, ratio_data const &r);
+  ratio_ptr operator-(integer_ptr l, ratio_data const &r);
+  ratio_ptr operator-(ratio_data const &l, integer_ptr r);
+  native_real operator-(real_ptr l, ratio_data const &r);
+  native_real operator-(ratio_data const &l, real_ptr r);
+  native_real operator-(ratio_data const &l, native_real r);
+  native_real operator-(native_real l, ratio_data const &r);
+  ratio_ptr operator-(ratio_data const &l, native_integer r);
+  ratio_ptr operator-(native_integer l, ratio_data const &r);
+  object_ptr operator*(ratio_data const &l, ratio_data const &r);
+  object_ptr operator*(integer_ptr l, ratio_data const &r);
+  object_ptr operator*(ratio_data const &l, integer_ptr r);
+  native_real operator*(real_ptr l, ratio_data const &r);
+  native_real operator*(ratio_data const &l, real_ptr r);
+  native_real operator*(ratio_data const &l, native_real r);
+  native_real operator*(native_real l, ratio_data const &r);
+  object_ptr operator*(ratio_data const &l, native_integer r);
+  object_ptr operator*(native_integer l, ratio_data const &r);
+  object_ptr operator/(ratio_data const &l, ratio_data const &r);
+  object_ptr operator/(integer_ptr l, ratio_data const &r);
+  ratio_ptr operator/(ratio_data const &l, integer_ptr r);
+  native_real operator/(real_ptr l, ratio_data const &r);
+  native_real operator/(ratio_data const &l, real_ptr r);
+  native_real operator/(ratio_data const &l, native_real r);
+  native_real operator/(native_real l, ratio_data const &r);
+  ratio_ptr operator/(ratio_data const &l, native_integer r);
+  object_ptr operator/(native_integer l, ratio_data const &r);
+  native_bool operator==(ratio_data const &l, ratio_data const &r);
+  native_bool operator==(integer_ptr l, ratio_data const &r);
+  native_bool operator==(ratio_data const &l, integer_ptr r);
+  native_bool operator==(real_ptr l, ratio_data const &r);
+  native_bool operator==(ratio_data const &l, real_ptr r);
+  native_bool operator==(ratio_data const &l, native_real r);
+  native_bool operator==(native_real l, ratio_data const &r);
+  native_bool operator==(ratio_data const &l, native_integer r);
+  native_bool operator==(native_integer l, ratio_data const &r);
+  native_bool operator<(ratio_data const &l, ratio_data const &r);
+  native_bool operator<(integer_ptr l, ratio_data const &r);
+  native_bool operator<(ratio_data const &l, integer_ptr r);
+  native_bool operator<(real_ptr l, ratio_data const &r);
+  native_bool operator<(ratio_data const &l, real_ptr r);
+  native_bool operator<(ratio_data const &l, native_real r);
+  native_bool operator<(native_real l, ratio_data const &r);
+  native_bool operator<(ratio_data const &l, native_integer r);
+  native_bool operator<(native_integer l, ratio_data const &r);
+  native_bool operator<(native_bool l, ratio_data const &r);
+  native_bool operator<(ratio_data const &l, native_bool r);
+  native_bool operator<=(ratio_data const &l, ratio_data const &r);
+  native_bool operator<=(integer_ptr l, ratio_data const &r);
+  native_bool operator<=(ratio_data const &l, integer_ptr r);
+  native_bool operator<=(real_ptr l, ratio_data const &r);
+  native_bool operator<=(ratio_data const &l, real_ptr r);
+  native_bool operator<=(ratio_data const &l, native_real r);
+  native_bool operator<=(native_real l, ratio_data const &r);
+  native_bool operator<=(ratio_data const &l, native_integer r);
+  native_bool operator<=(native_integer l, ratio_data const &r);
+  native_bool operator>(ratio_data const &l, ratio_data const &r);
+  native_bool operator>(integer_ptr l, ratio_data const &r);
+  native_bool operator>(ratio_data const &l, integer_ptr r);
+  native_bool operator>(real_ptr l, ratio_data const &r);
+  native_bool operator>(ratio_data const &l, real_ptr r);
+  native_bool operator>(ratio_data const &l, native_real r);
+  native_bool operator>(native_real l, ratio_data const &r);
+  native_bool operator>(ratio_data const &l, native_integer r);
+  native_bool operator>(native_integer l, ratio_data const &r);
+  native_bool operator>(native_bool l, ratio_data const &r);
+  native_bool operator>(ratio_data const &l, native_bool r);
+  native_bool operator>=(ratio_data const &l, ratio_data const &r);
+  native_bool operator>=(integer_ptr l, ratio_data const &r);
+  native_bool operator>=(ratio_data const &l, integer_ptr r);
+  native_bool operator>=(real_ptr l, ratio_data const &r);
+  native_bool operator>=(ratio_data const &l, real_ptr r);
+  native_bool operator>=(ratio_data const &l, native_real r);
+  native_bool operator>=(native_real l, ratio_data const &r);
+  native_bool operator>=(ratio_data const &l, native_integer r);
+  native_bool operator>=(native_integer l, ratio_data const &r);
 }

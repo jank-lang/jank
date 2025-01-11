@@ -1,6 +1,5 @@
 #pragma once
 
-#include <jank/runtime/obj/symbol.hpp>
 #include <jank/analyze/expression_base.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 

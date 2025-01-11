@@ -7,11 +7,8 @@ namespace jank::runtime
 {
   namespace obj
   {
-    using persistent_list = static_object<object_type::persistent_list>;
-    using persistent_list_ptr = native_box<persistent_list>;
-
-    using persistent_vector = static_object<object_type::persistent_vector>;
-    using persistent_vector_ptr = native_box<persistent_vector>;
+    using persistent_list_ptr = native_box<struct persistent_list>;
+    using persistent_vector_ptr = native_box<struct persistent_vector>;
   }
 
   template <typename T>

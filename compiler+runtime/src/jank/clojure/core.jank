@@ -1918,13 +1918,25 @@
    f must be free of side-effects"
   clojure.core-native/iterate)
 
-; TODO: integer_range
-(def range
+(defn range
   "Returns a lazy seq of nums from start (inclusive) to end
    (exclusive), by step, where start defaults to 0, step to 1, and end to
    infinity. When step is equal to 0, returns an infinite sequence of
    start. When start is equal to end, returns empty list."
-  clojure.core-native/range)
+  ([]
+   (iterate inc 0))
+  ([end]
+   (if (integer? end)
+     (clojure.core-native/integer-range end)
+     (clojure.core-native/range end)))
+  ([start end]
+   (if (and (integer? start) (integer? end))
+     (clojure.core-native/integer-range start end)
+     (clojure.core-native/range start end)))
+  ([start end step]
+   (if (and (integer? start) (integer? end) (integer? step))
+     (clojure.core-native/integer-range start end step)
+     (clojure.core-native/range start end step))))
 
 (def nth
   "Returns the value at the index. get returns nil if index out of
@@ -3757,17 +3769,40 @@
             nil
             to-refer)))
 
+;; TODO: Should be a ref instead of atom
+(defonce ^:dynamic
+  ^{:private true
+    :doc "An atom holding a sorted set of symbols representing loaded libs"}
+  *loaded-libs* (atom (sorted-set)))
+
+(defonce ^:dynamic
+  ^{:private true
+    :doc "A stack of paths currently being loaded by this thread"}
+  *pending-paths* ())
+
+(defn- check-cyclic-dependency
+  "Detects and rejects non-trivial cyclic load dependencies. The
+  exception message shows the dependency chain with the cycle
+  highlighted. Ignores the trivial case of a file attempting to load
+  itself because that can occur when a gen-class'd class loads its
+  implementation."
+  [path]
+  (when (some #{path} (rest *pending-paths*))
+    (let [pending (map #(if (= % path) (str "[ " % " ]") %)
+                       (cons path *pending-paths*))
+          chain (apply str (interpose "->" pending))]
+      (throw-if true (str "Cyclic load dependency: " chain)))))
+
 (defn load
-  "Loads Clojure code from resources in classpath. A path is interpreted as
-   classpath-relative if it begins with a slash or relative to the root
+  "Loads Clojure code from resources in the module path. A path is interpreted as
+   module-path-relative if it begins with a slash or relative to the root
    directory for the current namespace otherwise."
   [& paths]
-  (if (empty? paths)
-    nil
-    (let [path (first paths)]
-      ; TODO: Check for cyclic deps, once we have dynamic vars.
-      (clojure.core-native/load-module path)
-      (recur (rest paths)))))
+  (doseq [path paths]
+    (check-cyclic-dependency path)
+    (when-not (= path (first *pending-paths*))
+      (binding [*pending-paths* (conj *pending-paths* path)]
+        (clojure.core-native/load-module path)))))
 
 (defn- load-one
   "Loads a lib given its name. If `need-ns?`, ensures that the associated
@@ -3778,11 +3813,7 @@
   (throw-if (and need-ns? (not (find-ns lib)))
             (str "namespace " lib " not found after loading " (root-resource lib)))
   (when require?
-    nil
-    ; TODO: Support this.
-    ;(dosync
-    ; (commute *loaded-libs* conj lib))
-    ))
+    (swap! *loaded-libs* conj lib)))
 
 (defn- load-all
   "Loads a lib given its name and forces a load of any libs it directly or
@@ -3790,13 +3821,10 @@
    exists after loading. If require, records the load so any duplicate loads
    can be skipped."
   [lib need-ns? require?]
-  ; TODO: Port once we have dynamic vars
-  ;(dosync
-  ; (commute *loaded-libs* #(reduce conj %1 %2)
-  ;          (binding [*loaded-libs* (ref (sorted-set))]
-  ;            (load-one lib need-ns require)
-  ;            @*loaded-libs*)))
-  nil)
+  (swap! *loaded-libs* #(reduce conj %1 %2)
+         (binding [*loaded-libs* (atom (sorted-set))]
+           (load-one lib need-ns? require?)
+           @*loaded-libs*)))
 
 (defn- load-lib
   "Loads a lib with options"
@@ -3810,9 +3838,7 @@
         use (:use opts)
         verbose (:verbose opts)
         as-alias (:as-alias opts)
-        ; TODO: Dynamic var
-        ;loaded (contains? @*loaded-libs* lib)
-        loaded? (clojure.core-native/module-loaded? lib)
+        loaded? (contains? @*loaded-libs* lib)
         need-ns? (or as use)
         load (cond reload-all load-all
                    reload load-one
@@ -3858,9 +3884,9 @@
 (defn compile
   "Compiles the namespace named by the symbol lib into a set of
    classfiles. The source for the lib must be in a proper
-   classpath-relative directory. The output files will go into the
+   module-path-relative directory. The output files will go into the
    directory specified by *compile-path*, and that directory too must
-   be in the classpath."
+   be in the module path."
   [path]
   (clojure.core-native/compile path))
 
@@ -3873,19 +3899,19 @@
 
    Libs
 
-   A 'lib' is a named set of resources in classpath whose contents define a
+   A 'lib' is a named set of resources in module path whose contents define a
    library of Clojure code. Lib names are symbols and each lib is associated
    with a Clojure namespace and a Java package that share its name. A lib's
-   name also locates its root directory within classpath using Java's
-   package name to classpath-relative path mapping. All resources in a lib
+   name also locates its root directory within module path using Java's
+   package name to module path-relative path mapping. All resources in a lib
    should be contained in the directory structure under its root directory.
    All definitions a lib makes should be in its associated namespace.
 
    'require loads a lib by loading its root resource. The root resource path
    is derived from the lib name in the following manner:
    Consider a lib named by the symbol 'x.y.z; it has the root directory
-   <classpath>/x/y/, and its root resource is <classpath>/x/y/z.clj, or
-   <classpath>/x/y/z.cljc if <classpath>/x/y/z.clj does not exist. The
+   <module path>/x/y/, and its root resource is <module path>/x/y/z.clj, or
+   <module path>/x/y/z.cljc if <module path>/x/y/z.clj does not exist. The
    root resource should contain code to create the lib's
    namespace (usually by using the ns macro) and load any additional
    lib resources.
@@ -3959,22 +3985,16 @@
         refer-full-clojure? (not-any? (fn [ref]
                                         (= :refer-clojure (first ref)))
                                       references)]
-    ; TODO: Rewrite this with syntax quoting.
-    (list 'do
-          (list 'clojure.core/in-ns (list 'quote name))
-          ; TODO: with-loading-context
-          (concat '(do) ;with-loading-context
-                  (when (and (not= name 'clojure.core) refer-full-clojure?)
-                    [(list 'clojure.core/refer '(quote clojure.core))])
-                  (map process-reference references))
-          (list 'if (list '= (list 'quote name) (list 'quote 'clojure.core))
-                'nil
-                (list 'let (vector 'name (list 'quote name))
-                      (list 'clojure.core-native/set-module-loaded 'name)
-                      ; TODO: Dynamic vars
-                      ;(dosync (commute @#'*loaded-libs* conj '~name))
-                      'nil))
-          )))
+    `(do
+       (clojure.core/in-ns '~name)
+       ; TODO: with-loading-context
+       (do ; with-loading-context
+         ~@(when (and (not= name 'clojure.core) refer-full-clojure?)
+             `((clojure.core/refer '~'clojure.core)))
+         ~@(map process-reference references))
+       (if (= '~name 'clojure.core)
+          nil
+          (do (swap! *loaded-libs* conj '~name) nil)))))
 
 (defmacro refer-clojure
   "Same as (refer 'clojure.core <filters>)"

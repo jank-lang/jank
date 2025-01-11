@@ -1,6 +1,5 @@
 #pragma once
 
-#include <jank/runtime/obj/symbol.hpp>
 #include <jank/analyze/local_frame.hpp>
 #include <jank/analyze/expr/do.hpp>
 #include <jank/analyze/expression_base.hpp>
@@ -9,6 +8,11 @@
 namespace jank::analyze
 {
   struct expression;
+}
+
+namespace jank::runtime::obj
+{
+  using persistent_hash_map_ptr = native_box<struct persistent_hash_map>;
 }
 
 namespace jank::analyze::expr

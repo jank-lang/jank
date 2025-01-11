@@ -1,39 +1,41 @@
+#include <fmt/format.h>
+
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/chunked_cons.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/make_box.hpp>
+#include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/behavior/chunkable.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  obj::chunked_cons::static_object(object_ptr const head, object_ptr const tail)
+  chunked_cons::chunked_cons(object_ptr const head, object_ptr const tail)
     : head{ head }
-    , tail{ tail == obj::nil::nil_const() ? nullptr : tail }
+    , tail{ tail == nil::nil_const() ? nullptr : tail }
   {
     assert(head);
   }
 
-  obj::chunked_cons::static_object(object_ptr const meta,
-                                   object_ptr const head,
-                                   object_ptr const tail)
+  chunked_cons::chunked_cons(object_ptr const meta, object_ptr const head, object_ptr const tail)
     : head{ head }
-    , tail{ tail == obj::nil::nil_const() ? nullptr : tail }
+    , tail{ tail == nil::nil_const() ? nullptr : tail }
     , meta{ meta }
   {
     assert(head);
     assert(meta);
   }
 
-  obj::chunked_cons_ptr obj::chunked_cons::seq() const
+  chunked_cons_ptr chunked_cons::seq() const
   {
-    return const_cast<obj::chunked_cons *>(this);
+    return const_cast<chunked_cons *>(this);
   }
 
-  obj::chunked_cons_ptr obj::chunked_cons::fresh_seq() const
+  chunked_cons_ptr chunked_cons::fresh_seq() const
   {
-    return make_box<obj::chunked_cons>(head, tail);
+    return make_box<chunked_cons>(head, tail);
   }
 
-  object_ptr obj::chunked_cons::first() const
+  object_ptr chunked_cons::first() const
   {
     return visit_object(
       [&](auto const typed_head) -> object_ptr {
@@ -52,7 +54,7 @@ namespace jank::runtime
       head);
   }
 
-  object_ptr obj::chunked_cons::next() const
+  object_ptr chunked_cons::next() const
   {
     return visit_object(
       [&](auto const typed_head) -> object_ptr {
@@ -62,7 +64,7 @@ namespace jank::runtime
         {
           if(1 < typed_head->count())
           {
-            return make_box<obj::chunked_cons>(typed_head->chunk_next(), tail);
+            return make_box<chunked_cons>(typed_head->chunk_next(), tail);
           }
           return tail;
         }
@@ -75,7 +77,7 @@ namespace jank::runtime
       head);
   }
 
-  static obj::chunked_cons_ptr next_in_place_non_chunked(obj::chunked_cons_ptr const o)
+  static chunked_cons_ptr next_in_place_non_chunked(chunked_cons_ptr const o)
   {
     if(!o->tail)
     {
@@ -83,14 +85,14 @@ namespace jank::runtime
     }
 
     return visit_object(
-      [&](auto const typed_tail) -> obj::chunked_cons_ptr {
+      [&](auto const typed_tail) -> chunked_cons_ptr {
         using T = typename decltype(typed_tail)::value_type;
 
         if constexpr(behavior::sequenceable<T>)
         {
           o->head = typed_tail->first();
           o->tail = typed_tail->next();
-          if(o->tail == obj::nil::nil_const())
+          if(o->tail == nil::nil_const())
           {
             o->tail = nullptr;
           }
@@ -104,10 +106,10 @@ namespace jank::runtime
       o->tail);
   }
 
-  obj::chunked_cons_ptr obj::chunked_cons::next_in_place()
+  chunked_cons_ptr chunked_cons::next_in_place()
   {
     return visit_object(
-      [&](auto const typed_head) -> obj::chunked_cons_ptr {
+      [&](auto const typed_head) -> chunked_cons_ptr {
         using T = typename decltype(typed_head)::value_type;
 
         if constexpr(behavior::chunk_like<T>)
@@ -127,7 +129,7 @@ namespace jank::runtime
       head);
   }
 
-  object_ptr obj::chunked_cons::chunked_first() const
+  object_ptr chunked_cons::chunked_first() const
   {
     return visit_object(
       [&](auto const typed_head) -> object_ptr {
@@ -139,7 +141,7 @@ namespace jank::runtime
         }
         else
         {
-          auto const buffer(make_box<obj::chunk_buffer>(static_cast<size_t>(1)));
+          auto const buffer(make_box<chunk_buffer>(static_cast<size_t>(1)));
           buffer->append(typed_head);
           return buffer->chunk();
         }
@@ -147,12 +149,12 @@ namespace jank::runtime
       head);
   }
 
-  object_ptr obj::chunked_cons::chunked_next() const
+  object_ptr chunked_cons::chunked_next() const
   {
     return tail;
   }
 
-  native_bool obj::chunked_cons::equal(object const &o) const
+  native_bool chunked_cons::equal(object const &o) const
   {
     return visit_seqable(
       [this](auto const typed_o) {
@@ -171,32 +173,32 @@ namespace jank::runtime
       &o);
   }
 
-  void obj::chunked_cons::to_string(fmt::memory_buffer &buff) const
+  void chunked_cons::to_string(util::string_builder &buff) const
   {
     runtime::to_string(seq(), buff);
   }
 
-  native_persistent_string obj::chunked_cons::to_string() const
+  native_persistent_string chunked_cons::to_string() const
   {
     return runtime::to_string(seq());
   }
 
-  native_persistent_string obj::chunked_cons::to_code_string() const
+  native_persistent_string chunked_cons::to_code_string() const
   {
     return runtime::to_code_string(seq());
   }
 
-  native_hash obj::chunked_cons::to_hash() const
+  native_hash chunked_cons::to_hash() const
   {
     return hash::ordered(&base);
   }
 
-  obj::cons_ptr obj::chunked_cons::conj(object_ptr const head) const
+  cons_ptr chunked_cons::conj(object_ptr const head) const
   {
-    return make_box<obj::cons>(head, this);
+    return make_box<cons>(head, this);
   }
 
-  obj::chunked_cons_ptr obj::chunked_cons::with_meta(object_ptr const m) const
+  chunked_cons_ptr chunked_cons::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

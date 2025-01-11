@@ -23,10 +23,10 @@ jank's host is LLVM and its interop is with C++.
 For the current progress of jank and its usability, see the tables here: https://jank-lang.org/progress/
 
 The current tl;dr for jank's usability is: **still getting there, but not ready for
-use yet**.
+use yet. Check back in a few months!**
 
 ## Latest binaries
-There are pre-compiled binaries for Ubuntu 22.04, which are built to follow the
+There are pre-compiled binaries for Ubuntu 24.04, which are built to follow the
 `main` branch. You can download a tarball with everything you need here: https://github.com/jank-lang/jank/releases/tag/latest
 
 ## Appetizer
@@ -49,13 +49,10 @@ There are pre-compiled binaries for Ubuntu 22.04, which are built to follow the
 ; Many core functions for working with immutable data.
 (apply + (distinct [12 8 12 16 8 6])) ; => 42
 
-; Interop with C++ can happen through inline C++.
+; Interop with C++ can happen *seamlessly*.
 (defn sleep [ms]
-  (let [ms (int ms)]
-    ; A special ~{ } syntax can be used from inline C++ to interpolate
-    ; back into jank code.
-    (native/raw "auto const duration(std::chrono::milliseconds(~{ ms }->data));
-                 std::this_thread::sleep_for(duration);")))
+  (let [duration (c++/std.chrono.milliseconds ms)]
+    (c++/std.this_thread.sleep_for duration)))
 ```
 
 ## Docs

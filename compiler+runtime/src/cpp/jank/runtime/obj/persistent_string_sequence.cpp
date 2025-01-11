@@ -3,15 +3,16 @@
 #include <jank/runtime/core/seq_ext.hpp>
 #include <jank/runtime/core/make_box.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  obj::persistent_string_sequence::static_object(obj::persistent_string_ptr const s)
+  persistent_string_sequence::persistent_string_sequence(persistent_string_ptr const s)
     : str{ s }
   {
     assert(!s->data.empty());
   }
 
-  obj::persistent_string_sequence::static_object(obj::persistent_string_ptr const s, size_t const i)
+  persistent_string_sequence::persistent_string_sequence(persistent_string_ptr const s,
+                                                         size_t const i)
     : str{ s }
     , index{ i }
   {
@@ -19,59 +20,59 @@ namespace jank::runtime
   }
 
   /* behavior::objectable */
-  native_bool obj::persistent_string_sequence::equal(object const &o) const
+  native_bool persistent_string_sequence::equal(object const &o) const
   {
     return runtime::equal(o, str->data.begin() + index, str->data.end());
   }
 
-  void obj::persistent_string_sequence::to_string(fmt::memory_buffer &buff) const
+  void persistent_string_sequence::to_string(util::string_builder &buff) const
   {
     runtime::to_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
   }
 
-  native_persistent_string obj::persistent_string_sequence::to_string() const
+  native_persistent_string persistent_string_sequence::to_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     runtime::to_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
-    return { buff.data(), buff.size() };
+    return buff.release();
   }
 
-  native_persistent_string obj::persistent_string_sequence::to_code_string() const
+  native_persistent_string persistent_string_sequence::to_code_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     runtime::to_code_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
-    return { buff.data(), buff.size() };
+    return buff.release();
   }
 
-  native_hash obj::persistent_string_sequence::to_hash() const
+  native_hash persistent_string_sequence::to_hash() const
   {
     return hash::ordered(str->data.begin() + index, str->data.end());
   }
 
   /* behavior::countable */
-  size_t obj::persistent_string_sequence::count() const
+  size_t persistent_string_sequence::count() const
   {
     return str->data.size() - index;
   }
 
   /* behavior::seqable */
-  obj::persistent_string_sequence_ptr obj::persistent_string_sequence::seq()
+  persistent_string_sequence_ptr persistent_string_sequence::seq()
   {
     return this;
   }
 
-  obj::persistent_string_sequence_ptr obj::persistent_string_sequence::fresh_seq() const
+  persistent_string_sequence_ptr persistent_string_sequence::fresh_seq() const
   {
-    return make_box<obj::persistent_string_sequence>(str, index);
+    return make_box<persistent_string_sequence>(str, index);
   }
 
   /* behavior::sequenceable */
-  object_ptr obj::persistent_string_sequence::first() const
+  object_ptr persistent_string_sequence::first() const
   {
     return make_box(str->data[index]);
   }
 
-  obj::persistent_string_sequence_ptr obj::persistent_string_sequence::next() const
+  persistent_string_sequence_ptr persistent_string_sequence::next() const
   {
     auto n(index);
     ++n;
@@ -81,10 +82,10 @@ namespace jank::runtime
       return nullptr;
     }
 
-    return make_box<obj::persistent_string_sequence>(str, n);
+    return make_box<persistent_string_sequence>(str, n);
   }
 
-  obj::persistent_string_sequence_ptr obj::persistent_string_sequence::next_in_place()
+  persistent_string_sequence_ptr persistent_string_sequence::next_in_place()
   {
     ++index;
 
@@ -96,8 +97,8 @@ namespace jank::runtime
     return this;
   }
 
-  obj::cons_ptr obj::persistent_string_sequence::conj(object_ptr const head)
+  cons_ptr persistent_string_sequence::conj(object_ptr const head)
   {
-    return make_box<obj::cons>(head, this);
+    return make_box<cons>(head, this);
   }
 }

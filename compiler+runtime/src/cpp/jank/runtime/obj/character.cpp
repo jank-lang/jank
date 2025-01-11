@@ -1,8 +1,11 @@
+#include <fmt/format.h>
+
 #include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/util/escape.hpp>
+#include <jank/native_persistent_string/fmt.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
   static native_persistent_string get_literal_from_char_bytes(native_persistent_string const &bytes)
   {
@@ -32,43 +35,43 @@ namespace jank::runtime
     }
   }
 
-  obj::character::static_object(native_persistent_string const &d)
+  character::character(native_persistent_string const &d)
     : data{ d }
   {
   }
 
-  obj::character::static_object(char const ch)
+  character::character(char const ch)
     : data{ 1, ch }
   {
   }
 
-  native_bool obj::character::equal(object const &o) const
+  native_bool character::equal(object const &o) const
   {
     if(o.type != object_type::character)
     {
       return false;
     }
 
-    auto const c(expect_object<obj::character>(&o));
+    auto const c(expect_object<character>(&o));
     return data == c->data;
   }
 
-  void obj::character::to_string(fmt::memory_buffer &buff) const
+  void character::to_string(util::string_builder &buff) const
   {
-    fmt::format_to(std::back_inserter(buff), "{}", data);
+    buff(data);
   }
 
-  native_persistent_string obj::character::to_string() const
+  native_persistent_string character::to_string() const
   {
     return data;
   }
 
-  native_persistent_string obj::character::to_code_string() const
+  native_persistent_string character::to_code_string() const
   {
     return get_literal_from_char_bytes(data);
   }
 
-  native_hash obj::character::to_hash() const
+  native_hash character::to_hash() const
   {
     return data.to_hash();
   }

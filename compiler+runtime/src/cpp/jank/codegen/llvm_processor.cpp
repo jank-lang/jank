@@ -9,6 +9,9 @@
 #include <llvm/Transforms/Scalar/Reassociate.h>
 #include <llvm/Transforms/Scalar/SimplifyCFG.h>
 
+#include <fmt/format.h>
+
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
@@ -263,6 +266,21 @@ namespace jank::codegen
       ctx->builder->CreateCall(set_meta_fn, { ref, meta });
     }
 
+    auto const set_dynamic_fn_type(
+      llvm::FunctionType::get(ctx->builder->getPtrTy(),
+                              { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
+                              false));
+
+    auto const set_dynamic_fn(
+      ctx->module->getOrInsertFunction("jank_var_set_dynamic", set_dynamic_fn_type));
+
+    auto const dynamic{ truthy(get(expr.name->meta.unwrap_or(obj::nil::nil_const()),
+                                   __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+
+    auto const dynamic_global{ gen_global(make_box(dynamic)) };
+
+    ctx->builder->CreateCall(set_dynamic_fn, { ref, dynamic_global });
+
     if(expr.position == expression_position::tail)
     {
       return ctx->builder->CreateRet(ref);
@@ -274,7 +292,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(expr::var_deref<expression> const &expr,
                                    expr::function_arity<expression> const &) const
   {
-    auto const ref(gen_var(expr.qualified_name));
+    auto const ref(gen_var(make_box<obj::symbol>(expr.var->n, expr.var->name)));
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
     auto const fn(ctx->module->getOrInsertFunction("jank_deref", fn_type));
@@ -610,6 +628,8 @@ namespace jank::codegen
                                    expr::function_arity<expression> const &arity)
   {
     auto const fn_expr(boost::get<expr::function<expression>>(expr.recursion_ref.fn_ctx->fn->data));
+    auto const &captures(fn_expr.captures());
+
     /* Named recursion is a special kind of call. We can't go always through a var, since there
      * may not be one. We can't just use the fn's name, since we could be recursing into a
      * different arity. Finally, we need to keep in account whether or not this fn is a closure.
@@ -617,9 +637,30 @@ namespace jank::codegen
      * For named recursion calls, we don't use dynamic_call. We just call the generated C fn
      * directly. This doesn't impede interactivity, since the whole thing will be redefined
      * if a new fn is created. */
-    auto const is_closure(!fn_expr.captures().empty());
+    auto const is_closure(!captures.empty());
 
-    /* TODO: We need to worry about arg packing here. */
+    /* We may have a named recursion in a closure which crosses another function in order to
+     * recurse. For example:
+     *
+     * ```clojure
+     * (let [a 1]
+     *   (fn foo []
+     *     (fn bar []
+     *       (println a)
+     *       (foo))))
+     * ```
+     *
+     * Here, the `(foo)` call is a named recursion, but we're not actually in the `foo` fn.
+     * We need to "cross" `bar` in order to get back into `foo`. This is an important
+     * distinction, since the closure context for `foo` and `bar` may be different, such
+     * as if `bar` closes over more data than `foo` does.
+     *
+     * In this case of a named recursion which crosses a fn, we can't use the current fn's
+     * closure context. We need to build a new one. */
+    auto const crosses_fn(
+      boost::get<expr::function<expression>>(&expr.recursion_ref.fn_ctx->fn->data)
+      != boost::get<expr::function<expression>>(&arity.fn_ctx->fn->data));
+
     llvm::SmallVector<llvm::Value *> arg_handles;
     llvm::SmallVector<llvm::Type *> arg_types;
     arg_handles.reserve(expr.arg_exprs.size() + is_closure);
@@ -634,8 +675,43 @@ namespace jank::codegen
     }
     else if(is_closure)
     {
-      arg_handles.emplace_back(ctx->builder->GetInsertBlock()->getParent()->getArg(0));
-      arg_types.emplace_back(ctx->builder->getPtrTy());
+      /* TODO: If nested closures all build their contexts on their parents, we can always
+       * pass a nested closure upward for a named recursion. This would require sorted captures
+       * based on lexical scope though, which is a big jump from what we currently have. */
+      if(crosses_fn)
+      {
+        auto const &fn(boost::get<expr::function<expression>>(expr.recursion_ref.fn_ctx->fn->data));
+        std::vector<llvm::Type *> const capture_types{ captures.size(), ctx->builder->getPtrTy() };
+        auto const closure_ctx_type(
+          get_or_insert_struct_type(fmt::format("{}_context", munge(fn.unique_name)),
+                                    capture_types));
+
+        auto const malloc_fn_type(
+          llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getInt64Ty() }, false));
+        auto const malloc_fn(ctx->module->getOrInsertFunction("GC_malloc", malloc_fn_type));
+        auto const closure_obj(
+          ctx->builder->CreateCall(malloc_fn, { llvm::ConstantExpr::getSizeOf(closure_ctx_type) }));
+
+        size_t index{};
+        for(auto const &capture : captures)
+        {
+          auto const field_ptr(
+            ctx->builder->CreateStructGEP(closure_ctx_type, closure_obj, index++));
+          expr::local_reference const local_ref{
+            expression_base{ {}, expression_position::value, fn.frame },
+            capture.first,
+            *capture.second
+          };
+          ctx->builder->CreateStore(gen(local_ref, arity), field_ptr);
+        }
+        arg_handles.emplace_back(closure_obj);
+        arg_types.emplace_back(ctx->builder->getPtrTy());
+      }
+      else
+      {
+        arg_handles.emplace_back(ctx->builder->GetInsertBlock()->getParent()->getArg(0));
+        arg_types.emplace_back(ctx->builder->getPtrTy());
+      }
     }
 
     for(auto const &arg_expr : expr.arg_exprs)
@@ -1191,8 +1267,8 @@ namespace jank::codegen
                                 false));
       auto const create_fn(ctx->module->getOrInsertFunction("jank_keyword_intern", create_fn_type));
 
-      llvm::SmallVector<llvm::Value *, 2> const args{ gen_global(make_box(k->sym.ns)),
-                                                      gen_global(make_box(k->sym.name)) };
+      llvm::SmallVector<llvm::Value *, 2> const args{ gen_global(make_box(k->sym->ns)),
+                                                      gen_global(make_box(k->sym->name)) };
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 

@@ -1,12 +1,18 @@
 #include <codecvt>
 
-#include <magic_enum.hpp>
+#include <fmt/format.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#include <jank/native_persistent_string/fmt.hpp>
+#pragma clang diagnostic pop
 #include <jank/read/parse.hpp>
 #include <jank/util/escape.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/obj/symbol.hpp>
+#include <jank/runtime/obj/ratio.hpp>
 #include <jank/util/scope_exit.hpp>
 
 namespace jank::read::parse
@@ -14,6 +20,7 @@ namespace jank::read::parse
   using namespace jank::runtime;
 
   result<native_persistent_string, char_parse_error>
+
   parse_character_in_base(native_persistent_string const &char_literal, int const base)
   {
     try
@@ -43,7 +50,6 @@ namespace jank::read::parse
        * We'll use it while we can. It'll be gone in C++26. */
       std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
 #pragma clang diagnostic pop
-
       native_persistent_string const converted(converter.to_bytes(codepoint));
 
       if(converter.converted() != 1)
@@ -272,7 +278,7 @@ namespace jank::read::parse
           {
             return err(error{
               latest_token.pos,
-              fmt::format("unexpected token kind: {}", magic_enum::enum_name(latest_token.kind)) });
+              fmt::format("unexpected token kind: {}", lex::token_kind_str(latest_token.kind)) });
           }
       }
     }
@@ -1025,7 +1031,7 @@ namespace jank::read::parse
           else
           {
             return err(fmt::format("unsupported collection type: {}",
-                                   magic_enum::enum_name(typed_form->base.type)));
+                                   object_type_str(typed_form->base.type)));
           }
         },
         /* For anything else, do nothing special aside from quoting. Hopefully that works. */
@@ -1274,7 +1280,7 @@ namespace jank::read::parse
     {
       return err(error{ token.pos, "Divide by zero" });
     }
-    auto const ratio{ obj::ratio::create(ratio_data.numerator, ratio_data.denominator) } ;
+    auto const ratio{ obj::ratio::create(ratio_data.numerator, ratio_data.denominator) };
     if(ratio->type == object_type::ratio)
     {
       return object_source_info{ expect_object<obj::ratio>(ratio), token, token };
@@ -1317,7 +1323,7 @@ namespace jank::read::parse
     auto res(util::unescape({ sv.data(), sv.size() }));
     if(res.is_err())
     {
-      return err(error{ token.pos, res.expect_err_move() });
+      return err(error{ token.pos, res.expect_err().message });
     }
     return object_source_info{ make_box<obj::persistent_string>(res.expect_ok_move()),
                                token,

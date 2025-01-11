@@ -9,6 +9,7 @@
 
 #include <fmt/compile.h>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
@@ -39,7 +40,7 @@ namespace jank::runtime
   context::context(util::cli::options const &opts)
     : jit_prc{ opts }
     , output_dir{ opts.compilation_path }
-    , module_loader{ *this, opts.class_path }
+    , module_loader{ *this, opts.module_path }
   {
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
     auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));
@@ -162,6 +163,15 @@ namespace jank::runtime
       auto const &module(
         expect_object<runtime::ns>(intern_var("clojure.core", "*ns*").expect_ok()->deref())
           ->to_string());
+      /* No matter what's in the fn, we'll return nil. */
+      exprs.emplace_back(
+        make_box<analyze::expression>(analyze::expr::primitive_literal<analyze::expression>{
+          analyze::expression_base{ {},
+                                   analyze::expression_position::tail,
+                                   an_prc.root_frame,
+                                   true },
+          obj::nil::nil_const()
+      }));
       /* TODO: Pass in module_to_load_function result */
       auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc, module));
       auto &fn(boost::get<analyze::expr::function<analyze::expression>>(wrapped_exprs->data));
@@ -214,7 +224,7 @@ namespace jank::runtime
   }
 
   result<void, native_persistent_string>
-  context::load_module(native_persistent_string_view const &module)
+  context::load_module(native_persistent_string_view const &module, module::origin const ori)
   {
     auto const ns(current_ns());
 
@@ -232,16 +242,7 @@ namespace jank::runtime
 
     try
     {
-      result<void, native_persistent_string> res{ ok() };
-      if(absolute_module.find('$') == native_persistent_string::npos)
-      {
-        res = module_loader.load_ns(absolute_module);
-      }
-      else
-      {
-        res = module_loader.load(absolute_module);
-      }
-      return res;
+      return module_loader.load(absolute_module, ori);
     }
     catch(std::exception const &e)
     {
@@ -263,7 +264,7 @@ namespace jank::runtime
                                     std::make_pair(compile_files_var, obj::boolean::true_const()),
                                     std::make_pair(current_module_var, make_box(module))) };
 
-    return load_module(fmt::format("/{}", module));
+    return load_module(fmt::format("/{}", module), module::origin::source);
   }
 
   string_result<void>

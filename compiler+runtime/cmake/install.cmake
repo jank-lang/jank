@@ -10,10 +10,6 @@ install(
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
 )
-install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/src/jank
-  DESTINATION src
-)
 
 # So vcpkg puts all of the headers we need for all of our dependencies
 # into one include prefix based on our target triplet. This is excellent,

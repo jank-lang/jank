@@ -1,3 +1,6 @@
+#include <fmt/format.h>
+
+#include <jank/native_persistent_string/fmt.hpp>
 #include <clojure/core_native.hpp>
 #include <jank/runtime/convert.hpp>
 #include <jank/runtime/core.hpp>
@@ -44,7 +47,7 @@ namespace clojure::core_native
         }
         else if constexpr(std::same_as<T, obj::keyword>)
         {
-          return make_box<obj::symbol>(typed_o->sym);
+          return typed_o->sym;
         }
         else
         {
@@ -248,7 +251,7 @@ namespace clojure::core_native
 
   static object_ptr load_module(object_ptr const path)
   {
-    __rt_ctx->load_module(runtime::to_string(path)).expect_ok();
+    __rt_ctx->load_module(runtime::to_string(path), module::origin::latest).expect_ok();
     return obj::nil::nil_const();
   }
 
@@ -700,6 +703,27 @@ jank_object_ptr jank_load_clojure_core_native()
       return obj::range::create(start, end, step);
     };
     intern_fn_obj("range", fn);
+  }
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
+    fn->arity_0 = []() -> object * {
+      return iterate(__rt_ctx->intern_var("clojure.core", "inc").expect_ok()->deref(), make_box(0));
+    };
+    fn->arity_1 = [](object * const end) -> object * {
+      return obj::integer_range::create(try_object<obj::integer>(end));
+    };
+    fn->arity_2 = [](object * const start, object * const end) -> object * {
+      return obj::integer_range::create(try_object<obj::integer>(start),
+                                        try_object<obj::integer>(end));
+    };
+    fn->arity_3 = [](object * const start, object * const end, object * const step) -> object * {
+      return obj::integer_range::create(try_object<obj::integer>(start),
+                                        try_object<obj::integer>(end),
+                                        try_object<obj::integer>(step));
+    };
+    intern_fn_obj("integer-range", fn);
   }
 
   {

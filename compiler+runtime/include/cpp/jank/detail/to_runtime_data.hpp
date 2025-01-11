@@ -3,6 +3,8 @@
 #include <boost/filesystem/path.hpp>
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/symbol.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/core/make_box.hpp>
 
 namespace jank::detail
@@ -29,7 +31,8 @@ namespace jank::detail
   template <typename T>
   object_ptr to_runtime_data(native_box<T> const &d)
   {
-    return make_box(fmt::format("box({})", reinterpret_cast<void const *>(d.data)));
+    util::string_builder sb;
+    return make_box(sb("box(")(reinterpret_cast<void const *>(d.data))(")").release());
   }
 
   inline object_ptr to_runtime_data(native_persistent_string const &d)

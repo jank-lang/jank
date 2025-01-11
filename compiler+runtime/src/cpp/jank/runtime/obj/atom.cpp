@@ -1,73 +1,71 @@
-#include <magic_enum.hpp>
+#include <fmt/format.h>
 
 #include <jank/runtime/obj/atom.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/core.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::obj
 {
-  obj::atom::static_object(object_ptr const o)
+  atom::atom(object_ptr const o)
     : val{ o }
   {
     assert(val);
   }
 
-  native_bool obj::atom::equal(object const &o) const
+  native_bool atom::equal(object const &o) const
   {
     return &o == &base;
   }
 
-  native_persistent_string obj::atom::to_string() const
+  native_persistent_string atom::to_string() const
   {
-    fmt::memory_buffer buff;
+    util::string_builder buff;
     to_string(buff);
-    return native_persistent_string{ buff.data(), buff.size() };
+    return buff.release();
   }
 
-  void obj::atom::to_string(fmt::memory_buffer &buff) const
+  void atom::to_string(util::string_builder &buff) const
   {
-    fmt::format_to(std::back_inserter(buff),
-                   "{}@{}",
-                   magic_enum::enum_name(base.type),
-                   fmt::ptr(&base));
+    fmt::format_to(std::back_inserter(buff), "{}@{}", object_type_str(base.type), fmt::ptr(&base));
   }
 
-  native_persistent_string obj::atom::to_code_string() const
+  native_persistent_string atom::to_code_string() const
   {
     return to_string();
   }
 
-  native_hash obj::atom::to_hash() const
+  native_hash atom::to_hash() const
   {
     return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  object_ptr obj::atom::deref() const
+  object_ptr atom::deref() const
   {
     return val.load();
   }
 
-  object_ptr obj::atom::reset(object_ptr const o)
+  object_ptr atom::reset(object_ptr const o)
   {
     assert(o);
     val = o;
     return o;
   }
 
-  obj::persistent_vector_ptr obj::atom::reset_vals(object_ptr const o)
+  persistent_vector_ptr atom::reset_vals(object_ptr const o)
   {
     while(true)
     {
       auto v(val.load());
       if(val.compare_exchange_weak(v, o))
       {
-        return make_box<obj::persistent_vector>(std::in_place, v, o);
+        return make_box<persistent_vector>(std::in_place, v, o);
       }
     }
   }
 
   /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
-  object_ptr obj::atom::swap(object_ptr const fn)
+  object_ptr atom::swap(object_ptr const fn)
   {
     while(true)
     {
@@ -81,7 +79,7 @@ namespace jank::runtime
   }
 
   /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
-  object_ptr obj::atom::swap(object_ptr fn, object_ptr a1)
+  object_ptr atom::swap(object_ptr fn, object_ptr a1)
   {
     while(true)
     {
@@ -95,7 +93,7 @@ namespace jank::runtime
   }
 
   /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
-  object_ptr obj::atom::swap(object_ptr fn, object_ptr a1, object_ptr a2)
+  object_ptr atom::swap(object_ptr fn, object_ptr a1, object_ptr a2)
   {
     while(true)
     {
@@ -109,7 +107,7 @@ namespace jank::runtime
   }
 
   /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
-  object_ptr obj::atom::swap(object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest)
+  object_ptr atom::swap(object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest)
   {
     while(true)
     {
@@ -122,7 +120,7 @@ namespace jank::runtime
     }
   }
 
-  obj::persistent_vector_ptr obj::atom::swap_vals(object_ptr const fn)
+  persistent_vector_ptr atom::swap_vals(object_ptr const fn)
   {
     while(true)
     {
@@ -130,12 +128,12 @@ namespace jank::runtime
       auto const next(dynamic_call(fn, v));
       if(val.compare_exchange_weak(v, next))
       {
-        return make_box<obj::persistent_vector>(std::in_place, v, next);
+        return make_box<persistent_vector>(std::in_place, v, next);
       }
     }
   }
 
-  obj::persistent_vector_ptr obj::atom::swap_vals(object_ptr fn, object_ptr a1)
+  persistent_vector_ptr atom::swap_vals(object_ptr fn, object_ptr a1)
   {
     while(true)
     {
@@ -143,12 +141,12 @@ namespace jank::runtime
       auto const next(dynamic_call(fn, v, a1));
       if(val.compare_exchange_weak(v, next))
       {
-        return make_box<obj::persistent_vector>(std::in_place, v, next);
+        return make_box<persistent_vector>(std::in_place, v, next);
       }
     }
   }
 
-  obj::persistent_vector_ptr obj::atom::swap_vals(object_ptr fn, object_ptr a1, object_ptr a2)
+  persistent_vector_ptr atom::swap_vals(object_ptr fn, object_ptr a1, object_ptr a2)
   {
     while(true)
     {
@@ -156,13 +154,13 @@ namespace jank::runtime
       auto const next(dynamic_call(fn, v, a1, a2));
       if(val.compare_exchange_weak(v, next))
       {
-        return make_box<obj::persistent_vector>(std::in_place, v, next);
+        return make_box<persistent_vector>(std::in_place, v, next);
       }
     }
   }
 
-  obj::persistent_vector_ptr
-  obj::atom::swap_vals(object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest)
+  persistent_vector_ptr
+  atom::swap_vals(object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest)
   {
     while(true)
     {
@@ -170,12 +168,12 @@ namespace jank::runtime
       auto const next(apply_to(fn, conj(a1, conj(a2, rest))));
       if(val.compare_exchange_weak(v, next))
       {
-        return make_box<obj::persistent_vector>(std::in_place, v, next);
+        return make_box<persistent_vector>(std::in_place, v, next);
       }
     }
   }
 
-  object_ptr obj::atom::compare_and_set(object_ptr old_val, object_ptr new_val)
+  object_ptr atom::compare_and_set(object_ptr old_val, object_ptr new_val)
   {
     object *old{ old_val };
     return make_box(val.compare_exchange_weak(old, new_val));

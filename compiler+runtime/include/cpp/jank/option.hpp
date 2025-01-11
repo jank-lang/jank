@@ -3,9 +3,6 @@
 #include <cassert>
 #include <utility> // move, forward
 #include <type_traits>
-#include <ostream>
-
-#include <fmt/ostream.h>
 
 #include <jank/type.hpp>
 
@@ -24,6 +21,7 @@ namespace jank
   template <typename T>
   struct option
   {
+    /* NOLINTNEXTLINE(bugprone-sizeof-expression): Safe to do this. */
     using storage_type = char[sizeof(T)];
     using value_type = T;
 
@@ -203,7 +201,7 @@ namespace jank
     }
 
     template <typename F>
-    constexpr auto map(F &&f) const -> option<decltype(f(std::declval<T>()))>
+    constexpr auto map(F const &f) const -> option<decltype(f(std::declval<T>()))>
     {
       if(set)
       {
@@ -213,7 +211,7 @@ namespace jank
     }
 
     template <typename F>
-    constexpr T map_or(T fallback, F &&f) const
+    constexpr T map_or(T fallback, F const &f) const
     {
       if(set)
       {
@@ -267,22 +265,4 @@ namespace jank
   }
 
   constexpr inline none_t none = none_t{};
-
-  template <typename T>
-  std::ostream &operator<<(std::ostream &os, option<T> const &o)
-  {
-    if(o.is_none())
-    {
-      return os << "none";
-    }
-    return os << "some(" << o.unwrap() << ")";
-  }
-}
-
-namespace fmt
-{
-  template <typename T>
-  struct formatter<jank::option<T>> : fmt::ostream_formatter
-  {
-  };
 }
