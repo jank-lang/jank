@@ -36,7 +36,6 @@
 
             # Libs.
             boehmgc
-            # TODO: CMake fails to find boost::preprocessor.
             boost
             cli11
             fmt
